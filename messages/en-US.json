@@ -348,16 +348,16 @@
     "defaultMessage": "{role, select, member {Member} watcher {Watcher} creator {Creator} contributor {Contributor} other {{role}}}"
   },
   "activity.typeField.attached": {
-    "defaultMessage": "{actor} attached the field {field} to the {owner, select, contract_type_field {contract type} matter_type_field {matter type} other {type}} {type}"
+    "defaultMessage": "{actor} attached the field {field} to the {owner, select, contract_type_field {contract type} matter_type_field {matter type} request_type_field {request type} other {type}} {type}"
   },
   "activity.typeField.detached": {
-    "defaultMessage": "{actor} detached the field {field} from the {owner, select, contract_type_field {contract type} matter_type_field {matter type} other {type}} {type}"
+    "defaultMessage": "{actor} detached the field {field} from the {owner, select, contract_type_field {contract type} matter_type_field {matter type} request_type_field {request type} other {type}} {type}"
   },
   "activity.typeField.reordered": {
-    "defaultMessage": "{actor} reordered the fields on the {owner, select, contract_type_field {contract type} matter_type_field {matter type} other {type}} {type}"
+    "defaultMessage": "{actor} reordered the fields on the {owner, select, contract_type_field {contract type} matter_type_field {matter type} request_type_field {request type} other {type}} {type}"
   },
   "activity.typeField.requiredChanged": {
-    "defaultMessage": "{actor} made the field {field} {required, select, true {required} other {optional}} on the {owner, select, contract_type_field {contract type} matter_type_field {matter type} other {type}} {type}"
+    "defaultMessage": "{actor} made the field {field} {required, select, true {required} other {optional}} on the {owner, select, contract_type_field {contract type} matter_type_field {matter type} request_type_field {request type} other {type}} {type}"
   },
   "activity.unknown": {
     "defaultMessage": "{actor} — {action}"
@@ -3545,14 +3545,86 @@
   "settings.reminders.title": {
     "defaultMessage": "Reminder lead times"
   },
+  "settings.requestTypeEditor.allAttached": {
+    "defaultMessage": "Every field this target allows is attached."
+  },
   "settings.requestTypeEditor.allTypes": {
     "defaultMessage": "All request types"
+  },
+  "settings.requestTypeEditor.attach": {
+    "defaultMessage": "Attach field"
+  },
+  "settings.requestTypeEditor.attached": {
+    "defaultMessage": "{name} attached."
+  },
+  "settings.requestTypeEditor.basicAttachments": {
+    "defaultMessage": "Attachments"
+  },
+  "settings.requestTypeEditor.basicAttachmentsType": {
+    "defaultMessage": "Files"
+  },
+  "settings.requestTypeEditor.basicDescription": {
+    "defaultMessage": "Description"
+  },
+  "settings.requestTypeEditor.basicDescriptionType": {
+    "defaultMessage": "Long text"
+  },
+  "settings.requestTypeEditor.basicLocked": {
+    "defaultMessage": "{name} is always collected and can't be changed."
+  },
+  "settings.requestTypeEditor.basicSummary": {
+    "defaultMessage": "Summary"
+  },
+  "settings.requestTypeEditor.basicSummaryType": {
+    "defaultMessage": "Text"
+  },
+  "settings.requestTypeEditor.basicUrgency": {
+    "defaultMessage": "Urgency"
+  },
+  "settings.requestTypeEditor.basicUrgencyType": {
+    "defaultMessage": "Low · medium · high · critical"
+  },
+  "settings.requestTypeEditor.basicsCaption": {
+    "defaultMessage": "Basics are always on the form"
   },
   "settings.requestTypeEditor.description": {
     "defaultMessage": "Description"
   },
+  "settings.requestTypeEditor.detach": {
+    "defaultMessage": "Detach {name}"
+  },
+  "settings.requestTypeEditor.detached": {
+    "defaultMessage": "{name} detached."
+  },
   "settings.requestTypeEditor.displayName": {
     "defaultMessage": "Display name"
+  },
+  "settings.requestTypeEditor.empty": {
+    "defaultMessage": "No catalog fields are on this form yet."
+  },
+  "settings.requestTypeEditor.fieldColumn": {
+    "defaultMessage": "Field"
+  },
+  "settings.requestTypeEditor.formFields": {
+    "defaultMessage": "Form fields"
+  },
+  "settings.requestTypeEditor.globalCaption": {
+    "defaultMessage": "{type} · global"
+  },
+  "settings.requestTypeEditor.help": {
+    "defaultMessage": "Drag to reorder. Which fields you can attach follows the target; detaching a field keeps its catalog definition."
+  },
+  "settings.requestTypeEditor.moved": {
+    "defaultMessage": "{name} moved to position {position} of {total}."
+  },
+  "settings.requestTypeEditor.reorder": {
+    "defaultMessage": "Reorder {name}, position {position} of {total}. Use the arrow keys to move it."
+  },
+  "settings.requestTypeEditor.requiredColumn": {
+    "defaultMessage": "Required"
+  },
+  "settings.requestTypeEditor.requiredFor": {
+    "defaultMessage": "{name} required"
   },
   "settings.requestTypeEditor.slug": {
     "defaultMessage": "Slug"
@@ -3619,6 +3691,15 @@
   },
   "settings.requestTypes.edit": {
     "defaultMessage": "Edit {name}"
+  },
+  "settings.requestTypes.fieldsColumn": {
+    "defaultMessage": "Form fields"
+  },
+  "settings.requestTypes.fieldsCount": {
+    "defaultMessage": "{count, plural, one {# field} other {# fields}}"
+  },
+  "settings.requestTypes.fieldsPrefix": {
+    "defaultMessage": "Form fields:"
   },
   "settings.requestTypes.help": {
     "defaultMessage": "Every form collects summary, description, attachments, and urgency. Attached catalog fields carry their values into the converted matter or contract."

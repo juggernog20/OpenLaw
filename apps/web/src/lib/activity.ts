@@ -856,9 +856,9 @@ const TAXONOMY_VERBS = [
 ] as const satisfies readonly (keyof typeof TAXONOMY)[];
 
 /**
- * The two type-field prefixes attach the same catalog to two different
- * types, so they share four sentences and name which type inside them,
- * for the reason the taxonomies do.
+ * The three type-field prefixes attach the same catalog to three
+ * different types, so they share four sentences and name which type
+ * inside them, for the reason the taxonomies do.
  */
 const TYPE_FIELD = {
   attached: defineMessage({
@@ -866,21 +866,21 @@ const TYPE_FIELD = {
     defaultMessage:
       "{actor} attached the field {field} to the {owner, select, " +
       "contract_type_field {contract type} matter_type_field {matter type} " +
-      "other {type}} {type}",
+      "request_type_field {request type} other {type}} {type}",
   }),
   detached: defineMessage({
     id: "activity.typeField.detached",
     defaultMessage:
       "{actor} detached the field {field} from the {owner, select, " +
       "contract_type_field {contract type} matter_type_field {matter type} " +
-      "other {type}} {type}",
+      "request_type_field {request type} other {type}} {type}",
   }),
   reordered: defineMessage({
     id: "activity.typeField.reordered",
     defaultMessage:
       "{actor} reordered the fields on the {owner, select, " +
       "contract_type_field {contract type} matter_type_field {matter type} " +
-      "other {type}} {type}",
+      "request_type_field {request type} other {type}} {type}",
   }),
   requiredChanged: defineMessage({
     id: "activity.typeField.requiredChanged",
@@ -888,7 +888,7 @@ const TYPE_FIELD = {
       "{actor} made the field {field} {required, select, true {required} " +
       "other {optional}} on the {owner, select, " +
       "contract_type_field {contract type} matter_type_field {matter type} " +
-      "other {type}} {type}",
+      "request_type_field {request type} other {type}} {type}",
   }),
 } as const;
 
@@ -1976,6 +1976,7 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
   // ---- Fields attached to a type ----
   ...typeFieldArms("contract_type_field"),
   ...typeFieldArms("matter_type_field"),
+  ...typeFieldArms("request_type_field"),
 
   // ---- The Entities registry (M7) ----
   // Its own feed is not mounted yet (DD-017's clarification), so the

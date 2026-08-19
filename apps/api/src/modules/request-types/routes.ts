@@ -30,6 +30,16 @@
  * the machinery already holds; the check constraint holds the same
  * invariant at the table, for the writes no route makes.
  *
+ * **The target also decides the form**, so the validator does one more
+ * thing: a re-point whose scope rule would exclude fields already
+ * attached is refused and names them (INT-002). The Administrator
+ * detaches first — guards refuse and explain, they do not delete
+ * quietly (SET-003). The rule itself is neither this file's nor the
+ * attachment mount's; both read `form-definition.ts`.
+ *
+ * The row carries one more column for the same reason: ST12's **Form
+ * fields** count, read over the whole answer set rather than per row.
+ *
  * In-use counts read zero until `requests` exists in M20, exactly as
  * matter types read zero until M22.
  */
@@ -46,10 +56,17 @@ import {
 import type { ChangedFields } from "@openlaw/shared";
 import { httpError } from "../../lib/problem.js";
 import { taxonomyRoutes } from "../../lib/taxonomy-routes.js";
+import {
+  formFieldCounts,
+  formFieldScopeRule,
+  strandedFieldNames,
+  strandRefusal,
+  TARGET_MODULES,
+  type TargetModule,
+} from "./form-definition.js";
 
-/** The two modules a request type may convert into (INT-002). */
-const TargetModuleSchema = z.enum(["matter", "contract"]);
-type TargetModule = z.infer<typeof TargetModuleSchema>;
+/** The two modules a request type may convert into, on the wire. */
+const TargetModuleSchema = z.enum(TARGET_MODULES);
 
 /** The taxonomy a module's target type comes from. */
 const TARGET_TABLES = { matter: matterTypes, contract: contractTypes } as const;
@@ -96,12 +113,23 @@ export const requestTypesRoutes = taxonomyRoutes({
     rowSchema: {
       targetModule: TargetModuleSchema.nullable(),
       targetTypeId: z.string().nullable(),
+      /** ST12's Form fields column: how many catalog fields this type's
+       * portal form collects, over and above the four fixed basics. */
+      formFieldCount: z.number().int(),
     },
-    projectRow: (row) => {
+    // The count is not on the row, so it is read once over the whole
+    // answer set rather than per row — see the hook.
+    loadContext: (db, rows) =>
+      formFieldCounts(
+        db,
+        rows.map((row) => row.id),
+      ),
+    projectRow: (row, counts) => {
       const type = row as RequestType;
       return {
         targetModule: type.targetModule as TargetModule | null,
         targetTypeId: targetTypeId(type),
+        formFieldCount: counts.get(type.id) ?? 0,
       };
     },
     patchSchema: {
@@ -145,6 +173,21 @@ export const requestTypesRoutes = taxonomyRoutes({
       }
 
       if (module === currentModule && typeId === currentTypeId) return {};
+
+      // The strand refusal (INT-002): a target decides which catalog
+      // fields the form may collect, so re-pointing it can leave
+      // attached fields with nowhere to land. The change is refused and
+      // names them — the Administrator detaches first — and the read
+      // sits under the row lock the machinery already holds, so nothing
+      // attaches between the check and the write.
+      if (module !== currentModule) {
+        const stranded = await strandedFieldNames(
+          tx,
+          current.id,
+          formFieldScopeRule(module).scopes,
+        );
+        if (stranded.length > 0) throw httpError(409, strandRefusal(stranded));
+      }
 
       const changed: ChangedFields = {};
       if (module !== currentModule) {

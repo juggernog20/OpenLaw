@@ -14,22 +14,28 @@
  * adapter — the contract (CTR-016) and matter (MTR-011) editors are
  * configuration, not copies.
  *
- * Two parts are per mount (#354, ST14).
+ * Three parts are per mount (#354, #355, ST14).
  *
  * **The right card is optional.** A mount with no attachment surface
- * omits `attachments` and the screen is the left card alone. Request
- * types mount that way until #355 builds their form definition.
+ * omits `attachments` and the screen is the left card alone.
  *
  * **The left card takes one more control.** `identityExtra` draws below
  * the slug — ST14's Target select and its help line. It is the mount's
  * own column, so it owns its own save, exactly as the extras hook owns
  * its own columns on the API side.
+ *
+ * **The right card takes locked rows above the attachments.** `basics`
+ * is what a form always collects whatever an Administrator configures
+ * — ST14's Summary, Description, Attachments, and Urgency (INT-002).
+ * They are stated, not configured: no catalog row is behind them,
+ * nothing detaches them, and their required flags are facts, so the
+ * card draws them disabled and never offers them in the Attach menu.
  */
 
 import { useRef, useState, type DragEvent, type ReactNode } from "react";
 import { Link } from "react-router";
 import { FormattedMessage, useIntl, type IntlShape, type MessageDescriptor } from "react-intl";
-import { ArrowLeft, GripVertical, Plus, X } from "lucide-react";
+import { ArrowLeft, GripVertical, Lock, Plus, X } from "lucide-react";
 import { PageTitle } from "./page-title";
 import { SettingsCard } from "./settings-card";
 import { StatusNote, type FieldStatus } from "./status-note";
@@ -83,6 +89,26 @@ export interface EditorCatalogRow {
   displayName: string;
   moduleScope: string;
   fieldType: EditorFieldType;
+}
+
+/**
+ * One row the mount states rather than configures: what this kind of
+ * form always collects (ST14's four basics — INT-002 fixes Summary,
+ * Description, Attachments, and Urgency on every request form).
+ *
+ * It is not an attachment. There is no catalog row behind it, nothing
+ * detaches it, and its required flag is a fact rather than a control —
+ * the card draws it locked and disabled so an Administrator can read
+ * the contract without being invited to change it.
+ */
+export interface EditorBasicRow {
+  /** React key and test handle; never shown. */
+  key: string;
+  name: MessageDescriptor;
+  /** The type caption beside the name — "Long text", or the DES-018
+   * severity ramp for Urgency. */
+  caption: MessageDescriptor;
+  isRequired: boolean;
 }
 
 /** The identity half of the API seam — the one call every mount makes. */
@@ -140,6 +166,22 @@ export interface TypeEditorAttachmentsMessages {
   help: MessageDescriptor;
 }
 
+/**
+ * The rows a mount states rather than configures, and the two lines
+ * that make them readable (ST14's four basics).
+ *
+ * The three travel together for `TypeEditorAttachments`' reason: a
+ * locked row with no caption saying why it is locked, or a lock glyph a
+ * screen reader cannot name, is not a half-built row — it is a bug.
+ */
+export interface TypeEditorBasics {
+  rows: readonly EditorBasicRow[];
+  /** The header caption over them — "Basics are always on the form". */
+  caption: MessageDescriptor;
+  /** What a reader hears in place of the grip on a locked row. */
+  locked: MessageDescriptor;
+}
+
 /** Both halves, which is what the contract and matter mounts pass. */
 export type TypeEditorMessages = TypeEditorIdentityMessages & TypeEditorAttachmentsMessages;
 
@@ -158,6 +200,13 @@ export interface TypeEditorAttachments {
   catalog: EditorCatalogRow[];
   api: TypeEditorAttachmentsApi;
   messages: TypeEditorAttachmentsMessages;
+  /**
+   * Rows the mount states rather than configures, drawn locked above
+   * the attachments (ST14's four basics). The two type editors have
+   * none: every field on a contract type is attached, so there is
+   * nothing to state.
+   */
+  basics?: TypeEditorBasics;
 }
 
 /** The Fields pane's vocabulary, reused verbatim across modules (one
@@ -188,6 +237,7 @@ function AttachedFieldsCard({
   catalog,
   api,
   messages,
+  basics,
 }: Readonly<TypeEditorAttachments & { typeId: string }>) {
   const intl = useIntl();
 
@@ -213,6 +263,9 @@ function AttachedFieldsCard({
   const attachable: EditorCatalogRow[] = catalog.filter(
     (field) => !rows.some((row) => row.fieldId === field.id),
   );
+  // A const binding, so the guard below narrows inside JSX — a property
+  // access would not.
+  const locked = basics;
 
   function noteRow(fieldId: string, status: FieldStatus, detail?: string) {
     setRowStatus((current) => ({ ...current, [fieldId]: status }));
@@ -310,7 +363,16 @@ function AttachedFieldsCard({
       <SettingsCard
         title={<FormattedMessage {...messages.attachedFields} />}
         flush
-        actions={<StatusNote status={orderStatus} detail={orderError} />}
+        actions={
+          <span className="flex items-center gap-2">
+            {locked && (
+              <span className="text-sm text-muted">
+                <FormattedMessage {...locked.caption} />
+              </span>
+            )}
+            <StatusNote status={orderStatus} detail={orderError} />
+          </span>
+        }
       >
         {/* Keyboard moves and detaches are announced here; the row
             order itself is silent to a reader (WCAG 4.1.3). */}
@@ -330,7 +392,58 @@ function AttachedFieldsCard({
           </span>
           <span className="w-11 shrink-0" />
         </div>
-        <ul tabIndex={-1}>
+        {/* The rows the form always collects, above the ones an
+            Administrator chose. Their own list, not the reorderable
+            one: nothing here moves, detaches, or takes focus.
+
+            No dimming, though the mock draws the row at 60%: the lock,
+            the disabled box, and the muted caption already say locked,
+            and fading text the reader still has to read would drop it
+            under DES-011's contrast floor. */}
+        {locked && locked.rows.length > 0 && (
+          // Two lists in one card, so each says which it is: a reader
+          // moving between them hears "always on the form" and the
+          // card's own title rather than two anonymous lists.
+          <ul aria-label={intl.formatMessage(locked.caption)}>
+            {locked.rows.map((basic) => (
+              <li
+                key={basic.key}
+                className="flex h-11 items-center border-b border-border-muted pe-3"
+              >
+                <span className="flex w-9 shrink-0 justify-center">
+                  <Lock size={16} aria-hidden="true" className="text-muted" />
+                  <span className="sr-only">
+                    <FormattedMessage
+                      {...locked.locked}
+                      values={{ name: intl.formatMessage(basic.name) }}
+                    />
+                  </span>
+                </span>
+                <span className="flex min-w-0 flex-1 items-center gap-2 ps-1">
+                  <span className="truncate text-base font-medium text-primary">
+                    <FormattedMessage {...basic.name} />
+                  </span>
+                  <span className="text-sm whitespace-nowrap text-muted">
+                    <FormattedMessage {...basic.caption} />
+                  </span>
+                </span>
+                <span className="flex w-24 items-center px-3">
+                  <Checkbox
+                    checked={basic.isRequired}
+                    disabled
+                    aria-label={intl.formatMessage(messages.requiredFor, {
+                      name: intl.formatMessage(basic.name),
+                    })}
+                  />
+                </span>
+                {/* The detach column, kept empty so the locked rows and
+                    the attached ones line up as one table. */}
+                <span className="w-11 shrink-0" />
+              </li>
+            ))}
+          </ul>
+        )}
+        <ul tabIndex={-1} aria-label={intl.formatMessage(messages.attachedFields)}>
           {rows.map((row, index) => (
             <li
               key={row.fieldId}

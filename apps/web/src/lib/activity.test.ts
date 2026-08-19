@@ -147,6 +147,18 @@ const SAMPLE_PAYLOADS: { [A in ActivityAction]: ActivityPayloadMap[A] } = {
     fieldSlug: "court",
     isRequired: true,
   },
+  "request_type_field.attached": {
+    typeSlug: "nda_request",
+    fieldSlug: "counterparty_name",
+    isRequired: false,
+  },
+  "request_type_field.detached": { typeSlug: "nda_request", fieldSlug: "counterparty_name" },
+  "request_type_field.reordered": { typeSlug: "nda_request", order: ["counterparty_name"] },
+  "request_type_field.required_changed": {
+    typeSlug: "nda_request",
+    fieldSlug: "counterparty_name",
+    isRequired: true,
+  },
 
   // ---- The contract statuses ----
   "contract_status.created": { slug: "in-review", displayName: "In review", stage: "review" },

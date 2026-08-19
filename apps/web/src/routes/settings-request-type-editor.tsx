@@ -23,9 +23,15 @@
  * decides whether to re-point it. A target whose type is hard-deleted
  * never reaches here: the FK demotes the row to the module alone.
  *
- * The right card — the form definition — arrives with #355. Until then
- * the screen is the left card alone, which is what `attachments`
- * being optional is for.
+ * **The right card is the form definition** (#355). It opens with the
+ * four basics — Summary, Description, Attachments, and Urgency — as
+ * locked rows stating what every request form collects (INT-002), and
+ * below them the catalog fields the Administrator attached. Which
+ * fields the Attach menu offers follows the target, the same rule the
+ * API refuses on: contract-scoped and global under Contract,
+ * matter-scoped and global under Matter, global only with no target.
+ * So the target lives here rather than inside the select — changing it
+ * changes what the menu offers, on the pick, with no reload.
  */
 
 import { useState } from "react";
@@ -42,7 +48,8 @@ import { Label } from "../components/ui/label";
 import {
   TypeEditorScreen,
   type EditorTypeRow,
-  type TypeEditorIdentityApi,
+  type TypeEditorApi,
+  type TypeEditorBasics,
 } from "../components/type-editor-screen";
 
 /** The two modules a request type may convert into (INT-002). */
@@ -66,20 +73,27 @@ export async function settingsRequestTypeEditorLoader({ params }: LoaderFunction
   if (!user) return redirect((await needsSetup()) ? "/auth/setup" : "/auth/login");
   if (user.role !== "administrator") return redirect("/settings/profile");
   const id = params.typeId!;
-  const [typeRes, matterRes, contractRes] = await Promise.all([
+  const [typeRes, matterRes, contractRes, attachedRes, catalogRes] = await Promise.all([
     api.GET("/api/v1/request-types/{id}", { params: { path: { id } } }),
     // Archived rows ride along so a target archived after it was picked
     // still reads as itself; the picker filters them out.
     api.GET("/api/v1/matter-types", { params: { query: { includeArchived: "true" } } }),
     api.GET("/api/v1/contract-types", { params: { query: { includeArchived: "true" } } }),
+    api.GET("/api/v1/request-types/{id}/fields", { params: { path: { id } } }),
+    // The whole live catalog: which of it may attach follows the target,
+    // and the target changes without a reload.
+    api.GET("/api/v1/fields", {}),
   ]);
-  if (!typeRes.data || !matterRes.data || !contractRes.data) {
+  if (!typeRes.data || !matterRes.data || !contractRes.data || !attachedRes.data) {
     throw new Error("The request type could not be read.");
   }
+  if (!catalogRes.data) throw new Error("The field catalog could not be read.");
   return {
     requestType: typeRes.data.requestType,
     matterTypes: matterRes.data.matterTypes,
     contractTypes: contractRes.data.contractTypes,
+    attachedFields: attachedRes.data.attachedFields,
+    catalog: catalogRes.data.fields,
   };
 }
 
@@ -95,7 +109,102 @@ const MESSAGES = defineMessages({
   },
   // No `inUse`: requests land in M20, so the caption would read
   // "0 requests" on every type — the pane omits it for the same reason.
+  attachedFields: {
+    id: "settings.requestTypeEditor.formFields",
+    defaultMessage: "Form fields",
+  },
+  fieldColumn: { id: "settings.requestTypeEditor.fieldColumn", defaultMessage: "Field" },
+  requiredColumn: { id: "settings.requestTypeEditor.requiredColumn", defaultMessage: "Required" },
+  requiredFor: { id: "settings.requestTypeEditor.requiredFor", defaultMessage: "{name} required" },
+  detach: { id: "settings.requestTypeEditor.detach", defaultMessage: "Detach {name}" },
+  detached: { id: "settings.requestTypeEditor.detached", defaultMessage: "{name} detached." },
+  attach: { id: "settings.requestTypeEditor.attach", defaultMessage: "Attach field" },
+  attached: { id: "settings.requestTypeEditor.attached", defaultMessage: "{name} attached." },
+  allAttached: {
+    id: "settings.requestTypeEditor.allAttached",
+    defaultMessage: "Every field this target allows is attached.",
+  },
+  empty: {
+    id: "settings.requestTypeEditor.empty",
+    defaultMessage: "No catalog fields are on this form yet.",
+  },
+  reorder: {
+    id: "settings.requestTypeEditor.reorder",
+    defaultMessage:
+      "Reorder {name}, position {position} of {total}. Use the arrow keys to move it.",
+  },
+  moved: {
+    id: "settings.requestTypeEditor.moved",
+    defaultMessage: "{name} moved to position {position} of {total}.",
+  },
+  globalCaption: {
+    id: "settings.requestTypeEditor.globalCaption",
+    defaultMessage: "{type} · global",
+  },
+  help: {
+    id: "settings.requestTypeEditor.help",
+    defaultMessage:
+      "Drag to reorder. Which fields you can attach follows the target; detaching a field keeps its catalog definition.",
+  },
 });
+
+/**
+ * The four basics (INT-002): what every request form collects, whatever
+ * an Administrator configures. Summary, Description, and Urgency are
+ * required; Attachments are optional. Urgency wears the DES-018
+ * severity ramp.
+ */
+const BASICS = defineMessages({
+  caption: {
+    id: "settings.requestTypeEditor.basicsCaption",
+    defaultMessage: "Basics are always on the form",
+  },
+  locked: {
+    id: "settings.requestTypeEditor.basicLocked",
+    defaultMessage: "{name} is always collected and can't be changed.",
+  },
+  summary: { id: "settings.requestTypeEditor.basicSummary", defaultMessage: "Summary" },
+  summaryType: { id: "settings.requestTypeEditor.basicSummaryType", defaultMessage: "Text" },
+  description: { id: "settings.requestTypeEditor.basicDescription", defaultMessage: "Description" },
+  descriptionType: {
+    id: "settings.requestTypeEditor.basicDescriptionType",
+    defaultMessage: "Long text",
+  },
+  attachments: {
+    id: "settings.requestTypeEditor.basicAttachments",
+    defaultMessage: "Attachments",
+  },
+  attachmentsType: {
+    id: "settings.requestTypeEditor.basicAttachmentsType",
+    defaultMessage: "Files",
+  },
+  urgency: { id: "settings.requestTypeEditor.basicUrgency", defaultMessage: "Urgency" },
+  urgencyType: {
+    id: "settings.requestTypeEditor.basicUrgencyType",
+    defaultMessage: "Low · medium · high · critical",
+  },
+});
+
+const BASICS_SLOT: TypeEditorBasics = {
+  caption: BASICS.caption,
+  locked: BASICS.locked,
+  rows: [
+    { key: "summary", name: BASICS.summary, caption: BASICS.summaryType, isRequired: true },
+    {
+      key: "description",
+      name: BASICS.description,
+      caption: BASICS.descriptionType,
+      isRequired: true,
+    },
+    {
+      key: "attachments",
+      name: BASICS.attachments,
+      caption: BASICS.attachmentsType,
+      isRequired: false,
+    },
+    { key: "urgency", name: BASICS.urgency, caption: BASICS.urgencyType, isRequired: true },
+  ],
+};
 
 /** The target control's own vocabulary. */
 const TARGET = defineMessages({
@@ -139,8 +248,8 @@ const TARGET = defineMessages({
   },
 });
 
-/** The shared editor's identity seam over the request-types routes. */
-const EDITOR_API: TypeEditorIdentityApi = {
+/** The shared editor's API seam over the request-types routes. */
+const EDITOR_API: TypeEditorApi = {
   async update(id, body) {
     const { data, error } = await api.PATCH("/api/v1/request-types/{id}", {
       params: { path: { id } },
@@ -148,7 +257,45 @@ const EDITOR_API: TypeEditorIdentityApi = {
     });
     return { data: data?.requestType, detail: problemDetail(error) };
   },
+  async attach(id, fieldId) {
+    const { data, error } = await api.POST("/api/v1/request-types/{id}/fields", {
+      params: { path: { id } },
+      body: { fieldId },
+    });
+    return { data: data?.attachedField, detail: problemDetail(error) };
+  },
+  async detach(id, fieldId) {
+    const { error, response } = await api.DELETE("/api/v1/request-types/{id}/fields/{fieldId}", {
+      params: { path: { id, fieldId } },
+    });
+    return { ok: response?.ok === true, detail: problemDetail(error) };
+  },
+  async setRequired(id, fieldId, isRequired) {
+    const { data, error } = await api.PATCH("/api/v1/request-types/{id}/fields/{fieldId}", {
+      params: { path: { id, fieldId } },
+      body: { isRequired },
+    });
+    return { data: data?.attachedField, detail: problemDetail(error) };
+  },
+  async reorder(id, fieldIds) {
+    const { data, error } = await api.PUT("/api/v1/request-types/{id}/fields/order", {
+      params: { path: { id } },
+      body: { fieldIds },
+    });
+    return { data: data?.attachedFields, detail: problemDetail(error) };
+  },
 };
+
+/**
+ * Which catalog scopes this target allows — the client half of the
+ * rule the API refuses on (INT-002). It offers only what would be
+ * accepted, so the Attach menu never shows a field the server would
+ * turn away.
+ */
+function attachableScopes(module: TargetModule | null): readonly string[] {
+  if (module === null) return ["global"];
+  return [module, "global"];
+}
 
 /** The select's value for one target — `""`, `matter`, `contract:<id>`. */
 function targetValue(target: Target): string {
@@ -177,11 +324,23 @@ function helpState(target: Target): string {
 function TargetControl({
   typeId,
   initial,
+  onTargetSaved,
   matterTypes,
   contractTypes,
 }: Readonly<{
   typeId: string;
   initial: Target;
+  /**
+   * The saved target, handed up so the other card's Attach menu can
+   * scope itself by it.
+   *
+   * **Only what the server accepted goes up.** The select moves on the
+   * pick, because a control that lags its own click is a broken
+   * control — but the menu is scoped by the persisted target, so it
+   * can never offer a field the API would refuse under a target the
+   * API does not yet hold.
+   */
+  onTargetSaved: (saved: Target) => void;
   matterTypes: TargetTypeRow[];
   contractTypes: TargetTypeRow[];
 }>) {
@@ -220,10 +379,12 @@ function TargetControl({
       })
       .catch(() => ({ data: undefined, error: undefined }));
     if (data) {
-      setTarget({
+      const saved: Target = {
         module: data.requestType.targetModule ?? null,
         typeId: data.requestType.targetTypeId,
-      });
+      };
+      setTarget(saved);
+      onTargetSaved(saved);
       setStatus("saved");
     } else {
       // A refusal leaves the row as it was, so the control goes back to
@@ -294,8 +455,17 @@ function TargetControl({
 }
 
 export function SettingsRequestTypeEditorPage() {
-  const { requestType, matterTypes, contractTypes } =
+  const { requestType, matterTypes, contractTypes, attachedFields, catalog } =
     useLoaderData<typeof settingsRequestTypeEditorLoader>();
+  // The **saved** target lives on the screen because both cards read
+  // it: the select on the left writes it, and the Attach menu on the
+  // right is scoped by it. It moves only when the server has taken the
+  // change, so the menu never offers a field the API would refuse.
+  const [target, setTarget] = useState<Target>({
+    module: requestType.targetModule ?? null,
+    typeId: requestType.targetTypeId,
+  });
+  const scopes = attachableScopes(target.module);
   // The shared screen reads identity; the target is this mount's own.
   const identity: EditorTypeRow = requestType;
   return (
@@ -308,14 +478,19 @@ export function SettingsRequestTypeEditorPage() {
       identityExtra={
         <TargetControl
           typeId={requestType.id}
-          initial={{
-            module: requestType.targetModule ?? null,
-            typeId: requestType.targetTypeId,
-          }}
+          initial={target}
+          onTargetSaved={setTarget}
           matterTypes={matterTypes}
           contractTypes={contractTypes}
         />
       }
+      attachments={{
+        initialAttached: attachedFields,
+        catalog: catalog.filter((field) => scopes.includes(field.moduleScope)),
+        api: EDITOR_API,
+        messages: MESSAGES,
+        basics: BASICS_SLOT,
+      }}
     />
   );
 }

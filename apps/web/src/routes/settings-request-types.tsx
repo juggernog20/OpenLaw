@@ -16,7 +16,9 @@
  * "Contract · NDA", "Contract", "No target" — a request type whose
  * targeted type was hard-deleted has demoted to the module alone, and
  * the column says so without ceremony. ST12's **Form fields** column
- * joins them with the form definition (#355).
+ * beside it counts the catalog fields on that type's portal form
+ * (#355) — never the four basics, which are on every form and would
+ * say the same thing on every row.
  *
  * Nothing here is system-protected. There is no fallback request type,
  * so a row an Administrator names "Other" archives and deletes like any
@@ -39,6 +41,9 @@ import {
 interface RequestTypeRow extends TaxonomyPaneRow {
   targetModule: "matter" | "contract" | null;
   targetTypeId: string | null;
+  /** The catalog fields on this type's portal form, over and above the
+   * four basics every form collects (INT-002). */
+  formFieldCount: number;
 }
 
 /** The section URL forwards to its first pane (SET-001 deep links). */
@@ -148,6 +153,12 @@ const COLUMNS = defineMessages({
     defaultMessage:
       "{module, select, matter {Matter · {name}} contract {Contract · {name}} other {{name}}}",
   },
+  fieldsColumn: { id: "settings.requestTypes.fieldsColumn", defaultMessage: "Form fields" },
+  fieldsPrefix: { id: "settings.requestTypes.fieldsPrefix", defaultMessage: "Form fields:" },
+  fieldsCount: {
+    id: "settings.requestTypes.fieldsCount",
+    defaultMessage: "{count, plural, one {# field} other {# fields}}",
+  },
 });
 
 /** The shared pane's API seam over the request-types routes. */
@@ -213,6 +224,17 @@ export function SettingsRequestTypesPage() {
                 />
               );
             },
+          },
+          {
+            header: COLUMNS.fieldsColumn,
+            prefix: COLUMNS.fieldsPrefix,
+            width: "w-28",
+            // The catalog fields only: the four basics are on every
+            // form, so counting them would say the same thing on every
+            // row and hide the number that differs.
+            cell: (row) => (
+              <FormattedMessage {...COLUMNS.fieldsCount} values={{ count: row.formFieldCount }} />
+            ),
           },
         ],
       }}

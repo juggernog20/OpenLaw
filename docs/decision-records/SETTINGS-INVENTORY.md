@@ -167,3 +167,24 @@ recorded in a decision, and decisions win over the mocks.
 The tick is on this row alone, and that is a gap rather than a convention: every other frame whose
 milestone has landed is equally shipped and says only its number. Marking the rest belongs to a sweep
 of the whole table — the M19 Intake pass owns the next one, and it can mark them all at once.
+
+## Amendment (2026-08-20, M19 — the form definition, #355) — ST14's Urgency row
+
+ST14's Form fields card draws Urgency with the pre-DES-018 wording, `Low · normal · high · urgent`.
+DES-018 settles one severity ramp for every ordinal scale, and INT-002 already records that the
+request form's Urgency wears it. **The frame is redrawn** rather than left as a deviation, because
+this one is a plain contradiction of a shipped decision and not a considered departure from it: the
+row now reads `Low · medium · high · critical`, which is what the editor renders.
+
+Nothing else in the card moves. The four basics keep their locked rows, their lock glyph, and their
+disabled required boxes exactly as drawn — Summary, Description, and Urgency ticked, Attachments
+clear — and the attached catalog fields below them keep the grip, the required box, and the detach
+action the two type editors already draw.
+
+**One frame deviation, recorded rather than redrawn:** the mock draws each locked row at 60% opacity,
+and the build does not. DES-011 sets a 4.5:1 floor on body text, and fading a row an Administrator
+still has to read takes it under that floor. The lock glyph, the disabled required box, and the muted
+type caption say "locked" without dimming anything, so the shipped rows carry full contrast.
+
+The ST12 **Form fields** column ships as drawn, counting the catalog fields on the form and never the
+four basics, which are on every form and would say the same number on every row.

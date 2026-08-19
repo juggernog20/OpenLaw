@@ -893,6 +893,59 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/v1/request-types/{id}/fields": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** One request type's attached fields in per-type order — the type editor's Attached fields card */
+    get: operations["listRequestTypeFields"];
+    put?: never;
+    /** Attach a catalog field to a request type: the scopes this type's target allows (INT-002), appended to the per-type order, optional from the start unless isRequired says otherwise */
+    post: operations["attachRequestTypeField"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/request-types/{id}/fields/{fieldId}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    /** Detach a field from a request type: the join row goes, the catalog definition and stored values stay (MTR-014) */
+    delete: operations["detachRequestTypeField"];
+    options?: never;
+    head?: never;
+    /** Set an attachment's required flag: per attachment, so a field can be required for one type and optional elsewhere; hard enforcement arrives with the record milestone (M20) */
+    patch: operations["setRequestTypeFieldRequired"];
+    trace?: never;
+  };
+  "/api/v1/request-types/{id}/fields/order": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    /** Apply a full permutation of one type's attached fields (SET-003 immediate apply); per-type orders renumber from 1 */
+    put: operations["reorderRequestTypeFields"];
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/v1/contract-statuses": {
     parameters: {
       query?: never;
@@ -5223,6 +5276,7 @@ export interface operations {
               inUseCount: number;
               targetModule: ("matter" | "contract") | null;
               targetTypeId: string | null;
+              formFieldCount: number;
             }[];
           };
         };
@@ -5271,6 +5325,7 @@ export interface operations {
               inUseCount: number;
               targetModule: ("matter" | "contract") | null;
               targetTypeId: string | null;
+              formFieldCount: number;
             };
           };
         };
@@ -5315,6 +5370,7 @@ export interface operations {
               inUseCount: number;
               targetModule: ("matter" | "contract") | null;
               targetTypeId: string | null;
+              formFieldCount: number;
             };
           };
         };
@@ -5397,6 +5453,7 @@ export interface operations {
               inUseCount: number;
               targetModule: ("matter" | "contract") | null;
               targetTypeId: string | null;
+              formFieldCount: number;
             };
           };
         };
@@ -5445,6 +5502,7 @@ export interface operations {
               inUseCount: number;
               targetModule: ("matter" | "contract") | null;
               targetTypeId: string | null;
+              formFieldCount: number;
             }[];
           };
         };
@@ -5495,6 +5553,7 @@ export interface operations {
               inUseCount: number;
               targetModule: ("matter" | "contract") | null;
               targetTypeId: string | null;
+              formFieldCount: number;
             };
           };
         };
@@ -5539,7 +5598,266 @@ export interface operations {
               inUseCount: number;
               targetModule: ("matter" | "contract") | null;
               targetTypeId: string | null;
+              formFieldCount: number;
             };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  listRequestTypeFields: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            attachedFields: {
+              fieldId: string;
+              slug: string;
+              displayName: string;
+              /** @enum {string} */
+              fieldType:
+                | "text"
+                | "long_text"
+                | "number"
+                | "date"
+                | "boolean"
+                | "single_select"
+                | "multi_select"
+                | "user"
+                | "entity";
+              /** @enum {string} */
+              moduleScope: "matter" | "contract" | "entity" | "global";
+              displayOrder: number;
+              isRequired: boolean;
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  attachRequestTypeField: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          fieldId: string;
+          isRequired?: boolean;
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            attachedField: {
+              fieldId: string;
+              slug: string;
+              displayName: string;
+              /** @enum {string} */
+              fieldType:
+                | "text"
+                | "long_text"
+                | "number"
+                | "date"
+                | "boolean"
+                | "single_select"
+                | "multi_select"
+                | "user"
+                | "entity";
+              /** @enum {string} */
+              moduleScope: "matter" | "contract" | "entity" | "global";
+              displayOrder: number;
+              isRequired: boolean;
+            };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  detachRequestTypeField: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+        fieldId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  setRequestTypeFieldRequired: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+        fieldId: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          isRequired: boolean;
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            attachedField: {
+              fieldId: string;
+              slug: string;
+              displayName: string;
+              /** @enum {string} */
+              fieldType:
+                | "text"
+                | "long_text"
+                | "number"
+                | "date"
+                | "boolean"
+                | "single_select"
+                | "multi_select"
+                | "user"
+                | "entity";
+              /** @enum {string} */
+              moduleScope: "matter" | "contract" | "entity" | "global";
+              displayOrder: number;
+              isRequired: boolean;
+            };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  reorderRequestTypeFields: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          fieldIds: string[];
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            attachedFields: {
+              fieldId: string;
+              slug: string;
+              displayName: string;
+              /** @enum {string} */
+              fieldType:
+                | "text"
+                | "long_text"
+                | "number"
+                | "date"
+                | "boolean"
+                | "single_select"
+                | "multi_select"
+                | "user"
+                | "entity";
+              /** @enum {string} */
+              moduleScope: "matter" | "contract" | "entity" | "global";
+              displayOrder: number;
+              isRequired: boolean;
+            }[];
           };
         };
       };

@@ -46,6 +46,7 @@ const SEEDS = [
     "Mutual or one-way NDA with a counterparty.",
     "contract",
     "ct-nda",
+    4,
   ],
   [
     "r2",
@@ -54,6 +55,7 @@ const SEEDS = [
     "Review of a counterparty contract or redline.",
     "contract",
     null,
+    2,
   ],
   [
     "r3",
@@ -62,6 +64,7 @@ const SEEDS = [
     "One-off question — no record is created up front.",
     null,
     null,
+    0,
   ],
 ] as const;
 
@@ -81,21 +84,25 @@ interface StubRow {
   inUseCount: number;
   targetModule: "matter" | "contract" | null;
   targetTypeId: string | null;
+  formFieldCount: number;
 }
 
 function seededTypes(): StubRow[] {
-  return SEEDS.map(([id, slug, displayName, description, targetModule, targetTypeId], index) => ({
-    id,
-    slug,
-    displayName,
-    description,
-    displayOrder: index + 1,
-    isSystemDefault: true,
-    archivedAt: null,
-    inUseCount: 0,
-    targetModule,
-    targetTypeId,
-  }));
+  return SEEDS.map(
+    ([id, slug, displayName, description, targetModule, targetTypeId, formFieldCount], index) => ({
+      id,
+      slug,
+      displayName,
+      description,
+      displayOrder: index + 1,
+      isSystemDefault: true,
+      archivedAt: null,
+      inUseCount: 0,
+      targetModule,
+      targetTypeId,
+      formFieldCount,
+    }),
+  );
 }
 
 interface TypesCalls {
@@ -141,6 +148,7 @@ function typesApi(calls: TypesCalls, rows: StubRow[] = seededTypes()) {
           inUseCount: 0,
           targetModule: null,
           targetTypeId: null,
+          formFieldCount: 0,
         },
       });
     }
@@ -150,6 +158,14 @@ function typesApi(calls: TypesCalls, rows: StubRow[] = seededTypes()) {
       return json(200, {
         requestTypes: ids.map((id, index) => ({ ...byId(id), displayOrder: index + 1 })),
       });
+    }
+    // The rest of the editor's own reads, for the row the Edit
+    // affordance opens — its form definition and the catalog behind it.
+    if (/^\/api\/v1\/request-types\/[^/]+\/fields$/.test(path) && call.method === "GET") {
+      return json(200, { attachedFields: [] });
+    }
+    if (path === "/api/v1/fields" && call.method === "GET") {
+      return json(200, { fields: [] });
     }
     const rename = /^\/api\/v1\/request-types\/([^/]+)$/.exec(path);
     // The editor's own read, for the row the Edit affordance opens.
@@ -246,6 +262,7 @@ describe("the seeded list (INT-002)", () => {
         inUseCount: 0,
         targetModule: null,
         targetTypeId: null,
+        formFieldCount: 0,
       },
     ];
     const calls = newCalls();
@@ -308,6 +325,29 @@ describe("the Target column (INT-002)", () => {
     const [nda] = within(typeList()).getAllByRole("listitem");
     expect(within(nda!).getByText("Contract")).toBeInTheDocument();
     expect(within(nda!).queryByText("Contract · NDA")).not.toBeInTheDocument();
+  });
+});
+
+describe("the Form fields column (#355)", () => {
+  it("counts each type's live attachments, and reads the sr-only prefix", async () => {
+    stubApi({ signedIn: ADMIN, extra: typesApi(newCalls()) });
+    renderAt("/settings/intake/request-types");
+    await screen.findByText("NDA request");
+    const [nda, review, question] = within(typeList()).getAllByRole("listitem");
+    expect(within(nda!).getByText("4 fields")).toBeInTheDocument();
+    expect(within(review!).getByText("2 fields")).toBeInTheDocument();
+    expect(within(question!).getByText("0 fields")).toBeInTheDocument();
+    expect(screen.getByText("Form fields")).toBeInTheDocument();
+    expect(within(nda!).getByText("Form fields:")).toBeInTheDocument();
+  });
+
+  it("pluralizes one field in the singular", async () => {
+    const rows = seededTypes();
+    rows[2] = { ...rows[2]!, formFieldCount: 1 };
+    stubApi({ signedIn: ADMIN, extra: typesApi(newCalls(), rows) });
+    renderAt("/settings/intake/request-types");
+    await screen.findByText("Legal question");
+    expect(screen.getByText("1 field")).toBeInTheDocument();
   });
 });
 
