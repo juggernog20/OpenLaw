@@ -140,6 +140,7 @@ export function SettingsContractTypesPage() {
       initialRows={contractTypes}
       tabs={<ContractsSettingsTabs />}
       editor={{ path: (row) => `/settings/contracts/types/${row.id}`, label: MESSAGES.edit }}
+      protectedRow={{ slug: "other", label: MESSAGES.locked }}
       api={PANE_API}
       messages={MESSAGES}
     />

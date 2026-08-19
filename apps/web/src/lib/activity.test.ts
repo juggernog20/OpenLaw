@@ -126,6 +126,13 @@ const SAMPLE_PAYLOADS: { [A in ActivityAction]: ActivityPayloadMap[A] } = {
   "entity_type.archived": TAXONOMY_ARCHIVE,
   "entity_type.restored": TAXONOMY_NAMED,
   "entity_type.deleted": TAXONOMY_NAMED,
+  "request_type.created": TAXONOMY_NAMED,
+  "request_type.renamed": TAXONOMY_RENAME,
+  "request_type.updated": TAXONOMY_UPDATE,
+  "request_type.reordered": { order: ["nda_request", "legal_question"] },
+  "request_type.archived": TAXONOMY_ARCHIVE,
+  "request_type.restored": TAXONOMY_NAMED,
+  "request_type.deleted": TAXONOMY_NAMED,
 
   // ---- Fields attached to a type ----
   "contract_type_field.attached": TYPE_FIELD_ATTACH,

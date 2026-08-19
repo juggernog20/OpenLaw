@@ -3,7 +3,7 @@
 /**
  * The taxonomy Types pane (#85: one machinery, every type table), from
  * the ST6 frame of settings.pen: a configurable type list with the
- * `other` row locked, drag or arrow-key reorder, an inline draft row
+ * mount's fallback row locked, drag or arrow-key reorder, an inline draft row
  * for add, and the SET-003 archive-guard modal (ST8) with its
  * reassignment select. Every mutation applies immediately on save. The
  * shared anatomy lives in the ListEditor component (DES-020); this
@@ -59,8 +59,10 @@ export interface TaxonomyPaneMessages {
   addName: MessageDescriptor;
   help: MessageDescriptor;
   renameLabel: MessageDescriptor;
-  inUse: MessageDescriptor;
-  locked: MessageDescriptor;
+  /** The right-aligned usage caption ("3 matters"). A mount whose
+   * records do not exist yet, and which therefore has nothing but a
+   * zero to print, omits it and draws no caption at all. */
+  inUse?: MessageDescriptor;
   archive: MessageDescriptor;
   restore: MessageDescriptor;
   reorder: MessageDescriptor;
@@ -86,6 +88,23 @@ export interface TaxonomyPaneMessages {
  */
 export interface TaxonomyPaneEditor {
   path: (row: TaxonomyPaneRow) => string;
+  label: MessageDescriptor;
+}
+
+/**
+ * The mount's system-protected row, mirroring the API's `protectedSlug`
+ * (#351): the slug archive and delete refuse, and the lock's accessible
+ * name. The three type taxonomies pass `other`, so a non-null fallback
+ * type always exists.
+ *
+ * A mount with no fallback row omits the pair and locks nothing —
+ * request types have none, because no record needs a non-null request
+ * type once conversion is done. The slug and its label travel together
+ * for the reason the editor pair does: a lock with no explanation is
+ * an unreadable refusal.
+ */
+export interface TaxonomyPaneProtectedRow {
+  slug: string;
   label: MessageDescriptor;
 }
 
@@ -223,6 +242,7 @@ export function TaxonomyTypesPane({
   initialRows,
   tabs,
   editor,
+  protectedRow,
   api,
   messages,
 }: Readonly<{
@@ -231,6 +251,8 @@ export function TaxonomyTypesPane({
   tabs: ReactNode;
   /** Each row's editor screen and label; omit for modules without one. */
   editor?: TaxonomyPaneEditor;
+  /** The mount's fallback row; omit for modules that have none. */
+  protectedRow?: TaxonomyPaneProtectedRow;
   api: TaxonomyPaneApi;
   messages: TaxonomyPaneMessages;
 }>) {
@@ -378,9 +400,10 @@ export function TaxonomyTypesPane({
           rowError={rowError}
           renameLabel={(row) => intl.formatMessage(messages.renameLabel, { name: row.displayName })}
           onRename={(row, displayName) => void rename(row, displayName)}
-          rowMeta={(row) => (
-            <FormattedMessage {...messages.inUse} values={{ count: row.inUseCount }} />
-          )}
+          rowMeta={
+            messages.inUse &&
+            ((row) => <FormattedMessage {...messages.inUse!} values={{ count: row.inUseCount }} />)
+          }
           rowActions={
             editor &&
             ((row) => (
@@ -398,8 +421,8 @@ export function TaxonomyTypesPane({
             ))
           }
           protectedLabel={(row) =>
-            row.slug === "other"
-              ? intl.formatMessage(messages.locked, { name: row.displayName })
+            protectedRow && row.slug === protectedRow.slug
+              ? intl.formatMessage(protectedRow.label, { name: row.displayName })
               : null
           }
           archiveLabel={(row) => intl.formatMessage(messages.archive, { name: row.displayName })}

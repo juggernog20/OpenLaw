@@ -705,7 +705,7 @@ interface Arm {
 }
 
 /**
- * The settings taxonomies say the same seven things about five
+ * The settings taxonomies say the same seven things about seven
  * different lists, so they share seven sentences and name which list
  * inside them.
  *
@@ -728,6 +728,7 @@ const TAXONOMY = {
     defaultMessage:
       "{actor} added the {kind, select, contract_type {contract type} " +
       "matter_type {matter type} entity_type {entity type} " +
+      "request_type {request type} " +
       "contract_status {contract status} field {field} " +
       "approver_group {approver group} other {type}} {name}",
   }),
@@ -736,6 +737,7 @@ const TAXONOMY = {
     defaultMessage:
       "{actor} renamed the {kind, select, contract_type {contract type} " +
       "matter_type {matter type} entity_type {entity type} " +
+      "request_type {request type} " +
       "contract_status {contract status} field {field} " +
       "approver_group {approver group} other {type}} {name}",
   }),
@@ -744,6 +746,7 @@ const TAXONOMY = {
     defaultMessage:
       "{actor} changed the {kind, select, contract_type {contract type} " +
       "matter_type {matter type} entity_type {entity type} " +
+      "request_type {request type} " +
       "contract_status {contract status} field {field} " +
       "approver_group {approver group} other {type}} {name}",
   }),
@@ -752,6 +755,7 @@ const TAXONOMY = {
     defaultMessage:
       "{actor} reordered the {kind, select, contract_type {contract type} " +
       "matter_type {matter type} entity_type {entity type} " +
+      "request_type {request type} " +
       "contract_status {contract status} field {field} " +
       "approver_group {approver group} other {type}} list",
   }),
@@ -760,6 +764,7 @@ const TAXONOMY = {
     defaultMessage:
       "{actor} archived the {kind, select, contract_type {contract type} " +
       "matter_type {matter type} entity_type {entity type} " +
+      "request_type {request type} " +
       "contract_status {contract status} field {field} " +
       "approver_group {approver group} other {type}} {name}",
   }),
@@ -768,6 +773,7 @@ const TAXONOMY = {
     defaultMessage:
       "{actor} restored the {kind, select, contract_type {contract type} " +
       "matter_type {matter type} entity_type {entity type} " +
+      "request_type {request type} " +
       "contract_status {contract status} field {field} " +
       "approver_group {approver group} other {type}} {name}",
   }),
@@ -776,6 +782,7 @@ const TAXONOMY = {
     defaultMessage:
       "{actor} deleted the {kind, select, contract_type {contract type} " +
       "matter_type {matter type} entity_type {entity type} " +
+      "request_type {request type} " +
       "contract_status {contract status} field {field} " +
       "approver_group {approver group} other {type}} {name}",
   }),
@@ -823,8 +830,8 @@ function taxonomyArms<Kind extends string, Verb extends keyof typeof TAXONOMY>(
   >;
 }
 
-/** The seven a settings taxonomy writes (contract, matter, and entity
- * types), in one place because three lists share them. */
+/** The seven a settings taxonomy writes (contract, matter, entity, and
+ * request types), in one place because four lists share them. */
 const TAXONOMY_VERBS = [
   "created",
   "renamed",
@@ -1883,6 +1890,7 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
   ...taxonomyArms("contract_type", Tag, TAXONOMY_VERBS),
   ...taxonomyArms("matter_type", Tag, TAXONOMY_VERBS),
   ...taxonomyArms("entity_type", Tag, TAXONOMY_VERBS),
+  ...taxonomyArms("request_type", Tag, TAXONOMY_VERBS),
   // A status has a stage rather than a description, so it never writes
   // the `updated` verb.
   ...taxonomyArms("contract_status", GitCommitHorizontal, [

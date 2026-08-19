@@ -139,6 +139,7 @@ export function SettingsEntityTypesPage() {
     <TaxonomyTypesPane
       initialRows={entityTypes}
       tabs={<EntitiesSettingsTabs />}
+      protectedRow={{ slug: "other", label: MESSAGES.locked }}
       api={PANE_API}
       messages={MESSAGES}
     />

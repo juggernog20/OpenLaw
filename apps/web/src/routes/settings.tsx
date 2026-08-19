@@ -31,6 +31,7 @@ import {
   ChevronDown,
   ChevronRight,
   FilePen,
+  Inbox,
   KeyRound,
   Landmark,
   Palette,
@@ -173,9 +174,8 @@ const ORGANIZATION_GROUP: SettingsGroup = {
       ],
     },
     // Each module section points at its first pane; more panes join as
-    // tabs inside the section as their tickets land. Matters sits
-    // before Contracts, and Entities after Contracts (Intake, between
-    // them, is unshipped and so omitted), per the SET-001 rail order.
+    // tabs inside the section as their tickets land. The SET-001 rail
+    // order runs Matters, Contracts, Intake, Entities.
     {
       id: "matters",
       path: "/settings/matters/types",
@@ -187,6 +187,14 @@ const ORGANIZATION_GROUP: SettingsGroup = {
       path: "/settings/contracts/types",
       icon: FilePen,
       label: defineMessage({ id: "settings.section.contracts", defaultMessage: "Contracts" }),
+    },
+    // #353: the Intake section, Request types its first pane (INT-002).
+    // Deflection links (INT-004) joins it as a second tab.
+    {
+      id: "intake",
+      path: "/settings/intake/request-types",
+      icon: Inbox,
+      label: defineMessage({ id: "settings.section.intake", defaultMessage: "Intake" }),
     },
     {
       id: "entities",
