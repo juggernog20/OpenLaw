@@ -2,7 +2,7 @@
 
 /**
  * The per-type field attachment machinery (#85: one machinery, every
- * type editor): list in per-type order, attach with a per-module scope
+ * type editor): list in per-type order, attach with a per-mount scope
  * rule, the per-attachment required flag, reorder, and detach,
  * instantiated per module — contract types (CTR-016) and matter types
  * (MTR-011) mount the same routes with their own join tables, scope
@@ -14,6 +14,12 @@
  * Everything sits behind SET-002's single role gate — Administrators
  * only — and every mutation appends to the activity log (DD-017)
  * inside the same transaction.
+ *
+ * **The scope rule is per mount, and it may be per row.** A mount
+ * whose rule is one line for every type states it once, as the two
+ * type editors do. A mount whose rule depends on the type itself —
+ * request types read their target (INT-002) — passes a function, which
+ * the attach route resolves against the row it has already locked.
  */
 
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
@@ -24,12 +30,14 @@ import {
   contractTypeFields,
   eq,
   fields,
+  FIELD_MODULE_SCOPES,
   FIELD_TYPES,
   isNotNull,
   isNull,
   matterTypeFields,
   type Executor,
   type Field,
+  type FieldModuleScope,
   type Transaction,
 } from "@openlaw/db";
 import { requireRole } from "../auth/guards.js";
@@ -40,6 +48,18 @@ import type { TaxonomyRow, TaxonomyTable } from "./taxonomy-routes.js";
 /** The join tables are one shape by construction (`typeFieldColumns`). */
 export type TypeFieldsTable = typeof contractTypeFields | typeof matterTypeFields;
 export type TypeFieldRow = TypeFieldsTable["$inferSelect"];
+
+/**
+ * What may attach to a type, and what to say when something else
+ * tries: the CTR-016 scope rule and its siblings, in one value.
+ */
+export interface TypeFieldScopeRule {
+  /** The field scopes this rule allows — the catalog's own vocabulary,
+   * so a mount cannot name a scope no field can carry. */
+  scopes: readonly [FieldModuleScope, ...FieldModuleScope[]];
+  /** The refusal line when a field's scope is outside them. */
+  refusal: string;
+}
 
 export interface TypeFieldRoutesConfig {
   typesTable: TaxonomyTable;
@@ -52,12 +72,20 @@ export interface TypeFieldRoutesConfig {
   idInfix: string;
   /** Prose vocabulary, e.g. `contract type`. */
   noun: string;
-  /** The scope rule for this module's types (CTR-016 / MTR-011). */
-  attachableScopes: readonly [string, ...string[]];
-  /** The refusal line when a field's scope is outside the rule. */
-  scopeRefusal: string;
+  /**
+   * The scope rule for this mount (CTR-016 / MTR-011 / INT-002).
+   *
+   * One rule serves every type of the mount, unless the rule is the
+   * type's own business: a function is resolved against the locked type
+   * row on every attach, so a row whose state changes between requests
+   * is judged by the rule its current state asks for.
+   */
+  scopeRule: TypeFieldScopeRule | ((type: TaxonomyRow) => TypeFieldScopeRule);
   /** The attach summary's scope fragment, e.g. `contract-scoped and
-   * global fields only (CTR-016)`. */
+   * global fields only (CTR-016)`. It is the mount's static
+   * description: a rule that is a function of the row has no one line
+   * the OpenAPI document could state, so the mount says what its rule
+   * reads instead. */
   scopeSummary: string;
   /** DD-017 action prefix, e.g. `contract_type_field`. */
   actionPrefix: TypeFieldActionPrefix;
@@ -74,7 +102,25 @@ export interface TypeFieldRoutesConfig {
  * Attached fields card.
  */
 export function typeFieldRoutes(config: TypeFieldRoutesConfig): FastifyPluginAsyncZod {
-  const { typesTable, joinTable, path, noun } = config;
+  const { typesTable, joinTable, path, noun, scopeRule } = config;
+
+  /**
+   * The rule for one type: the mount's constant, or the mount's
+   * function read against the row the route has locked. Nothing is
+   * memoized — a row re-pointed between two requests is judged by the
+   * rule it carries now, not the one it carried then.
+   */
+  const scopeRuleFor: (type: TaxonomyRow) => TypeFieldScopeRule =
+    typeof scopeRule === "function" ? scopeRule : () => scopeRule;
+  /**
+   * The scopes an attachment of this mount may carry, for the response
+   * schema's `moduleScope`. A constant rule is its own answer, so a
+   * mount that passes one declares exactly what it always has. A rule
+   * read off the row has no single static answer, so the mount declares
+   * the whole field-scope vocabulary rather than a narrower one that
+   * some row could contradict.
+   */
+  const declaredScopes = typeof scopeRule === "function" ? FIELD_MODULE_SCOPES : scopeRule.scopes;
 
   /** One attachment, joined to the catalog columns the editor renders. */
   const AttachedFieldSchema = z.object({
@@ -82,13 +128,12 @@ export function typeFieldRoutes(config: TypeFieldRoutesConfig): FastifyPluginAsy
     slug: z.string(),
     displayName: z.string(),
     fieldType: z.enum(FIELD_TYPES),
-    moduleScope: z.enum(config.attachableScopes),
+    moduleScope: z.enum(declaredScopes),
     displayOrder: z.number().int(),
     isRequired: z.boolean(),
   });
   const AttachedFieldEnvelope = z.object({ attachedField: AttachedFieldSchema });
   const AttachedFieldListEnvelope = z.object({ attachedFields: z.array(AttachedFieldSchema) });
-  const attachableScopes = new Set<string>(config.attachableScopes);
 
   function toRow(join: TypeFieldRow, field: Field) {
     return {
@@ -182,8 +227,11 @@ export function typeFieldRoutes(config: TypeFieldRoutesConfig): FastifyPluginAsy
             .limit(1)
             .for("update");
           if (!field) throw httpError(404, "No field exists with this id.");
-          if (!attachableScopes.has(field.moduleScope)) {
-            throw httpError(400, config.scopeRefusal);
+          // The rule is resolved here, under the type's own lock: what
+          // it reads off the row cannot change while this attach runs.
+          const rule = scopeRuleFor(type);
+          if (!rule.scopes.includes(field.moduleScope)) {
+            throw httpError(400, rule.refusal);
           }
           if (field.archivedAt) {
             throw httpError(409, `${field.displayName} is archived — restore it first.`);

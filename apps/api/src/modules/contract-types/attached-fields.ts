@@ -5,7 +5,9 @@
  * shared per-type field attachment machinery (`typeFieldRoutes`,
  * extracted with #85) mounted on `contract_type_fields` with the
  * CTR-016 scope rule — contract-scoped and global fields only; other
- * modules' scopes are refused. See the factory for the behavior set.
+ * modules' scopes are refused. The rule is one line for every contract
+ * type, so the mount states it as a constant. See the factory for the
+ * behavior set.
  */
 
 import { contractTypeFields, contractTypes } from "@openlaw/db";
@@ -18,8 +20,10 @@ export const attachedFieldsRoutes = typeFieldRoutes({
   tag: "contract-types",
   idInfix: "ContractType",
   noun: "contract type",
-  attachableScopes: ["contract", "global"],
-  scopeRefusal: "Only contract-scoped and global fields attach to contract types.",
+  scopeRule: {
+    scopes: ["contract", "global"],
+    refusal: "Only contract-scoped and global fields attach to contract types.",
+  },
   scopeSummary: "contract-scoped and global fields only (CTR-016)",
   actionPrefix: "contract_type_field",
   // No `requiredMilestone`: the contract record enforces the flag from
