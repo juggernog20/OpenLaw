@@ -123,6 +123,28 @@ const removeLink = async (id: string) =>
     cookies: adminCookies,
   });
 
+/** Adds a request type of this suite's own, returning its id. */
+const addRequestType = async (displayName: string): Promise<string> => {
+  const res = await harness.app.inject({
+    method: "POST",
+    url: "/api/v1/request-types",
+    cookies: adminCookies,
+    payload: { displayName },
+  });
+  expect(res.statusCode, res.body).toBe(201);
+  return res.json().requestType.id;
+};
+
+const archiveRequestType = async (id: string): Promise<void> => {
+  const res = await harness.app.inject({
+    method: "POST",
+    url: `/api/v1/request-types/${id}/archive`,
+    cookies: adminCookies,
+    payload: {},
+  });
+  expect(res.statusCode, res.body).toBe(200);
+};
+
 const auditRows = () =>
   harness.db
     .select()
@@ -288,6 +310,19 @@ describe("POST /intake-links", () => {
     expect(await listLinks()).toEqual([]);
   });
 
+  it("refuses an archived request type — a link is placed on a live form or the home", async () => {
+    const retiredId = await addRequestType("Retired request");
+    await archiveRequestType(retiredId);
+    const res = await createLink({
+      label: "Nobody's form",
+      url: "https://example.com/x",
+      requestTypeId: retiredId,
+    });
+    expect(res.statusCode, res.body).toBe(400);
+    expect(res.json().detail).toContain("archived");
+    expect(await listLinks()).toEqual([]);
+  });
+
   it("narrates the creation, naming the placement rather than its id", async () => {
     await addLink({
       label: "Standard contract templates",
@@ -349,6 +384,40 @@ describe("PATCH /intake-links/:id", () => {
     });
     expect(res.statusCode, res.body).toBe(400);
     expect((await listLinks())[0]!.requestTypeId).toBeNull();
+  });
+
+  /**
+   * The live rule cuts one way: a move must land on a live request
+   * type, but a link placed while the type was live stays put when the
+   * type is archived afterwards — an edit of its label, with the
+   * placement re-sent unchanged as the dialog sends it, must not
+   * refuse. The ST13 picker keeps the archived type on offer for
+   * exactly that row.
+   */
+  it("refuses a move onto an archived request type, but not an edit of a link already there", async () => {
+    const sunsetId = await addRequestType("Sunset request");
+    const resident = await addLink({
+      label: "Old guidance",
+      url: "https://example.com/old",
+      requestTypeId: sunsetId,
+    });
+    const wanderer = await addLink({ label: "Wanderer", url: "https://example.com/w" });
+    await archiveRequestType(sunsetId);
+
+    const moved = await patchLink(wanderer.id, { requestTypeId: sunsetId });
+    expect(moved.statusCode, moved.body).toBe(400);
+    expect(moved.json().detail).toContain("archived");
+    expect((await listLinks()).map((row) => row.requestTypeId)).toEqual([sunsetId, null]);
+
+    const edited = await patchLink(resident.id, {
+      label: "Old guidance (retired)",
+      requestTypeId: sunsetId,
+    });
+    expect(edited.statusCode, edited.body).toBe(200);
+    expect(edited.json().intakeLink).toMatchObject({
+      label: "Old guidance (retired)",
+      requestTypeId: sunsetId,
+    });
   });
 
   it("refuses an unknown key and an empty body", async () => {

@@ -956,7 +956,7 @@ export interface paths {
     /** The INT-004 deflection links in panel order; a link with no request type belongs to the portal home panel */
     get: operations["listIntakeLinks"];
     put?: never;
-    /** Add a deflection link: a label over an absolute http/https URL, placed on the portal home (no request type) or on one request type's form; the row appends to the panel order */
+    /** Add a deflection link: a label over an absolute http/https URL, placed on the portal home (no request type) or on one live request type's form; the row appends to the panel order */
     post: operations["createIntakeLink"];
     delete?: never;
     options?: never;
@@ -978,7 +978,7 @@ export interface paths {
     delete: operations["deleteIntakeLink"];
     options?: never;
     head?: never;
-    /** Edit a deflection link's label, URL, or placement; passing `requestTypeId: null` moves it to the portal home panel */
+    /** Edit a deflection link's label, URL, or placement; a move targets a live request type, and `requestTypeId: null` moves the link to the portal home panel */
     patch: operations["updateIntakeLink"];
     trace?: never;
   };

@@ -7328,7 +7328,7 @@
       },
       "post": {
         "operationId": "createIntakeLink",
-        "summary": "Add a deflection link: a label over an absolute http/https URL, placed on the portal home (no request type) or on one request type's form; the row appends to the panel order",
+        "summary": "Add a deflection link: a label over an absolute http/https URL, placed on the portal home (no request type) or on one live request type's form; the row appends to the panel order",
         "tags": ["intake-links"],
         "requestBody": {
           "required": true,
@@ -7425,7 +7425,7 @@
     "/api/v1/intake-links/{id}": {
       "patch": {
         "operationId": "updateIntakeLink",
-        "summary": "Edit a deflection link's label, URL, or placement; passing `requestTypeId: null` moves it to the portal home panel",
+        "summary": "Edit a deflection link's label, URL, or placement; a move targets a live request type, and `requestTypeId: null` moves the link to the portal home panel",
         "tags": ["intake-links"],
         "requestBody": {
           "required": true,

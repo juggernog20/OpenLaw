@@ -17,6 +17,10 @@
  * request type sits on the portal home panel; a link naming one sits on
  * that form instead (INT-004). `PATCH` takes the placement like any
  * other field, so a link moves between the two without being recreated.
+ * A placement being assigned must be a live request type — an archived
+ * form takes no submissions, so a link scoped to it deflects nobody —
+ * but a link already sitting on a type archived later stays put until
+ * an Administrator moves it, the same tolerance the ST14 target keeps.
  *
  * **The URL is validated and stored as entered.** It has to be an
  * absolute `http`/`https` address — a bare `wiki/legal`, a `mailto:`,
@@ -127,19 +131,34 @@ export const intakeLinksRoutes: FastifyPluginAsyncZod = async (app) => {
    * hard-deleted between this check and the insert, and the same lock
    * the FK itself takes. A stronger one would queue behind an unrelated
    * rename of the type, which has nothing to do with this link.
+   *
+   * `mustBeLive` is the assignment rule: a link is placed on a live
+   * request type only — an archived form takes no submissions, so a
+   * link scoped to it deflects nobody — and the ST13 picker offers live
+   * types alone (the rule the ST14 target picker follows). It is false
+   * where the call only names a placement the row already holds: a type
+   * archived after the link was placed does not invalidate the link,
+   * and a label edit or a removal must not refuse over it.
    */
   async function placementName(
     tx: Transaction,
     requestTypeId: string | null,
+    opts: { mustBeLive: boolean },
   ): Promise<string | null> {
     if (requestTypeId === null) return null;
     const [row] = await tx
-      .select({ displayName: requestTypes.displayName })
+      .select({ displayName: requestTypes.displayName, archivedAt: requestTypes.archivedAt })
       .from(requestTypes)
       .where(eq(requestTypes.id, requestTypeId))
       .limit(1)
       .for("key share");
     if (!row) throw httpError(400, "No request type exists with this id.");
+    if (opts.mustBeLive && row.archivedAt !== null) {
+      throw httpError(
+        400,
+        "This request type is archived. Place the link on a live one, or on the portal home.",
+      );
+    }
     return row.displayName;
   }
 
@@ -168,7 +187,7 @@ export const intakeLinksRoutes: FastifyPluginAsyncZod = async (app) => {
         summary:
           "Add a deflection link: a label over an absolute http/https " +
           "URL, placed on the portal home (no request type) or on one " +
-          "request type's form; the row appends to the panel order",
+          "live request type's form; the row appends to the panel order",
         tags: ["intake-links"],
         body: z.object({
           label: LabelSchema,
@@ -186,7 +205,7 @@ export const intakeLinksRoutes: FastifyPluginAsyncZod = async (app) => {
       const requestTypeId = request.body.requestTypeId ?? null;
 
       const row = await app.db.transaction(async (tx) => {
-        const placement = await placementName(tx, requestTypeId);
+        const placement = await placementName(tx, requestTypeId, { mustBeLive: true });
         // The order spans both placements, as the pane's one list does.
         const existing = await tx
           .select({ displayOrder: intakeLinks.displayOrder })
@@ -219,8 +238,9 @@ export const intakeLinksRoutes: FastifyPluginAsyncZod = async (app) => {
       schema: {
         operationId: "updateIntakeLink",
         summary:
-          "Edit a deflection link's label, URL, or placement; passing " +
-          "`requestTypeId: null` moves it to the portal home panel",
+          "Edit a deflection link's label, URL, or placement; a move " +
+          "targets a live request type, and `requestTypeId: null` moves " +
+          "the link to the portal home panel",
         tags: ["intake-links"],
         params: z.object({ id: z.string() }),
         // Strict: a link has three editable dimensions and no fourth,
@@ -263,14 +283,18 @@ export const intakeLinksRoutes: FastifyPluginAsyncZod = async (app) => {
         if (requestTypeId !== target.requestTypeId) {
           patch.requestTypeId = requestTypeId;
           changed.placement = {
-            from: await placementName(tx, target.requestTypeId),
-            to: await placementName(tx, requestTypeId),
+            // The move's destination must be live; where the link came
+            // from only has to be named.
+            from: await placementName(tx, target.requestTypeId, { mustBeLive: false }),
+            to: await placementName(tx, requestTypeId, { mustBeLive: true }),
           };
         } else if (movesPlacement) {
           // Unchanged, but still worth validating: a request type id
           // that does not exist has to refuse whether or not it is the
-          // one the row already holds.
-          await placementName(tx, requestTypeId);
+          // one the row already holds. Existence only — the row may
+          // legitimately be sitting on a type archived after it was
+          // placed, and re-sending that placement is not a move.
+          await placementName(tx, requestTypeId, { mustBeLive: false });
         }
 
         // An edit that changes nothing answers with the row and writes
@@ -375,7 +399,7 @@ export const intakeLinksRoutes: FastifyPluginAsyncZod = async (app) => {
     async (request, reply) => {
       await app.db.transaction(async (tx) => {
         const target = await lockedLink(tx, request.params.id);
-        const placement = await placementName(tx, target.requestTypeId);
+        const placement = await placementName(tx, target.requestTypeId, { mustBeLive: false });
         await tx.delete(intakeLinks).where(eq(intakeLinks.id, target.id));
         await recordActivity(tx, {
           entityType: "system",
