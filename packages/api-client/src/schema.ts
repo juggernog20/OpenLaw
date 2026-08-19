@@ -5221,6 +5221,8 @@ export interface operations {
               isSystemDefault: boolean;
               archivedAt: string | null;
               inUseCount: number;
+              targetModule: ("matter" | "contract") | null;
+              targetTypeId: string | null;
             }[];
           };
         };
@@ -5267,6 +5269,8 @@ export interface operations {
               isSystemDefault: boolean;
               archivedAt: string | null;
               inUseCount: number;
+              targetModule: ("matter" | "contract") | null;
+              targetTypeId: string | null;
             };
           };
         };
@@ -5309,6 +5313,8 @@ export interface operations {
               isSystemDefault: boolean;
               archivedAt: string | null;
               inUseCount: number;
+              targetModule: ("matter" | "contract") | null;
+              targetTypeId: string | null;
             };
           };
         };
@@ -5367,6 +5373,8 @@ export interface operations {
         "application/json": {
           displayName?: string;
           description?: string | null;
+          targetModule?: ("matter" | "contract") | null;
+          targetTypeId?: string | null;
         };
       };
     };
@@ -5387,6 +5395,8 @@ export interface operations {
               isSystemDefault: boolean;
               archivedAt: string | null;
               inUseCount: number;
+              targetModule: ("matter" | "contract") | null;
+              targetTypeId: string | null;
             };
           };
         };
@@ -5433,6 +5443,8 @@ export interface operations {
               isSystemDefault: boolean;
               archivedAt: string | null;
               inUseCount: number;
+              targetModule: ("matter" | "contract") | null;
+              targetTypeId: string | null;
             }[];
           };
         };
@@ -5481,6 +5493,8 @@ export interface operations {
               isSystemDefault: boolean;
               archivedAt: string | null;
               inUseCount: number;
+              targetModule: ("matter" | "contract") | null;
+              targetTypeId: string | null;
             };
           };
         };
@@ -5523,6 +5537,8 @@ export interface operations {
               isSystemDefault: boolean;
               archivedAt: string | null;
               inUseCount: number;
+              targetModule: ("matter" | "contract") | null;
+              targetTypeId: string | null;
             };
           };
         };

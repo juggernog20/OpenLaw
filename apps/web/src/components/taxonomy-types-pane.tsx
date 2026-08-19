@@ -10,6 +10,14 @@
  * component owns the behavior, and each module's pane mounts it with
  * its own vocabulary and API adapter — the Contracts pane (CTR-002)
  * and the Matters pane (MTR-001) are configuration, not copies.
+ *
+ * **A mount's own columns (DES-020 amendment, ST12).** The three type
+ * taxonomies have nothing to say about a row beyond its name and its
+ * in-use count, so they draw ST6's one-line row and its right-aligned
+ * caption. Request types have the target, so they declare `columns`:
+ * the card grows a header strip, the mount's cells sit between the name
+ * and the row's actions, and the row grows a second line for the
+ * description a requester reads in the portal picker.
  */
 
 import { useRef, useState, type ReactNode, type SubmitEvent as FormSubmitEvent } from "react";
@@ -31,19 +39,29 @@ export interface TaxonomyPaneRow {
   id: string;
   slug: string;
   displayName: string;
+  /** The row's own line, drawn under the name by a pane that asks for
+   * it (`columns.description`) and edited on the type editor. */
+  description: string | null;
   displayOrder: number;
   isSystemDefault: boolean;
   archivedAt: string | null;
   inUseCount: number;
 }
 
-/** The API seam each module's pane implements over its own routes. */
-export interface TaxonomyPaneApi {
-  create(displayName: string): Promise<ApiResult<TaxonomyPaneRow>>;
-  rename(id: string, displayName: string): Promise<ApiResult<TaxonomyPaneRow>>;
-  reorder(ids: string[]): Promise<ApiResult<TaxonomyPaneRow[]>>;
-  archive(id: string, reassignToId?: string): Promise<ApiResult<TaxonomyPaneRow>>;
-  restore(id: string): Promise<ApiResult<TaxonomyPaneRow>>;
+/**
+ * The API seam each module's pane implements over its own routes.
+ *
+ * The row type is the mount's, not the machinery's: a mount that
+ * projects columns of its own — request types project the target —
+ * names them here, and its columns then read them without a cast. A
+ * mount with nothing extra takes the default and is unchanged.
+ */
+export interface TaxonomyPaneApi<Row extends TaxonomyPaneRow = TaxonomyPaneRow> {
+  create(displayName: string): Promise<ApiResult<Row>>;
+  rename(id: string, displayName: string): Promise<ApiResult<Row>>;
+  reorder(ids: string[]): Promise<ApiResult<Row[]>>;
+  archive(id: string, reassignToId?: string): Promise<ApiResult<Row>>;
+  restore(id: string): Promise<ApiResult<Row>>;
 }
 
 /**
@@ -86,8 +104,8 @@ export interface TaxonomyPaneMessages {
  * editor screen (entity types — no per-type field attachments per
  * ENT-001) omit the pair.
  */
-export interface TaxonomyPaneEditor {
-  path: (row: TaxonomyPaneRow) => string;
+export interface TaxonomyPaneEditor<Row extends TaxonomyPaneRow = TaxonomyPaneRow> {
+  path: (row: Row) => string;
   label: MessageDescriptor;
 }
 
@@ -108,9 +126,42 @@ export interface TaxonomyPaneProtectedRow {
   label: MessageDescriptor;
 }
 
+/** One of a mount's own columns, drawn between the name and the row's
+ * actions. The header and the cell share the width class, so the strip
+ * and the rows line up as one table (DES-021). */
+export interface TaxonomyPaneColumn<Row extends TaxonomyPaneRow = TaxonomyPaneRow> {
+  header: MessageDescriptor;
+  /** The cell's sr-only prefix (DES-021's table variant): a row named
+   * "Contract review" whose target reads "Contract" is two different
+   * facts, and a reader needs the column named to tell them apart. */
+  prefix: MessageDescriptor;
+  /** The shared width, e.g. `w-40` — one class, two places. */
+  width: string;
+  cell: (row: Row) => ReactNode;
+}
+
+/**
+ * A mount's own columns (DES-020 amendment, ST12).
+ *
+ * The three type taxonomies declare none: their rows are one line with
+ * a right-aligned in-use caption, which is what ST6 draws. Request
+ * types declare a Target column, and the caption they would draw says
+ * "0 requests" on every row until M20 — so the columns take its place,
+ * the card grows a header strip to name them, and each row grows a
+ * second line for the description a requester reads in the portal.
+ */
+export interface TaxonomyPaneColumns<Row extends TaxonomyPaneRow = TaxonomyPaneRow> {
+  /** The header over the name cell — "Request type". */
+  name: MessageDescriptor;
+  /** The mount's columns, in draw order. */
+  meta: readonly TaxonomyPaneColumn<Row>[];
+  /** Draw each row's description under its name (ST12's two-line row). */
+  description?: boolean;
+}
+
 const byDisplayOrder = (a: TaxonomyPaneRow, b: TaxonomyPaneRow) => a.displayOrder - b.displayOrder;
 
-function ArchiveTypeDialog({
+function ArchiveTypeDialog<Row extends TaxonomyPaneRow>({
   target,
   liveTypes,
   api,
@@ -119,13 +170,13 @@ function ArchiveTypeDialog({
   onArchived,
   onArchivedCloseFocus,
 }: Readonly<{
-  target: TaxonomyPaneRow;
+  target: Row;
   /** Reassignment candidates: every live type but the target. */
-  liveTypes: TaxonomyPaneRow[];
-  api: TaxonomyPaneApi;
+  liveTypes: Row[];
+  api: TaxonomyPaneApi<Row>;
   messages: TaxonomyPaneMessages;
   onOpenChange: (open: boolean) => void;
-  onArchived: (row: TaxonomyPaneRow) => void;
+  onArchived: (row: Row) => void;
   /** Where focus lands after a successful archive — the row's archive
    * button unmounts with the row, so the default restore has no home. */
   onArchivedCloseFocus: () => void;
@@ -238,28 +289,31 @@ function ArchiveTypeDialog({
   );
 }
 
-export function TaxonomyTypesPane({
+export function TaxonomyTypesPane<Row extends TaxonomyPaneRow = TaxonomyPaneRow>({
   initialRows,
   tabs,
   editor,
   protectedRow,
+  columns,
   api,
   messages,
 }: Readonly<{
-  initialRows: TaxonomyPaneRow[];
+  initialRows: Row[];
   /** The module's section head (title + tab strip). */
   tabs: ReactNode;
   /** Each row's editor screen and label; omit for modules without one. */
-  editor?: TaxonomyPaneEditor;
+  editor?: TaxonomyPaneEditor<Row>;
   /** The mount's fallback row; omit for modules that have none. */
   protectedRow?: TaxonomyPaneProtectedRow;
-  api: TaxonomyPaneApi;
+  /** The mount's own columns; omit for the one-line ST6 anatomy. */
+  columns?: TaxonomyPaneColumns<Row>;
+  api: TaxonomyPaneApi<Row>;
   messages: TaxonomyPaneMessages;
 }>) {
   const intl = useIntl();
   const navigate = useNavigate();
 
-  const [rows, setRows] = useState<TaxonomyPaneRow[]>(initialRows);
+  const [rows, setRows] = useState<Row[]>(initialRows);
   const [rowStatus, setRowStatus] = useState<Record<string, FieldStatus>>({});
   const [rowError, setRowError] = useState<Record<string, string | undefined>>({});
   const [orderStatus, setOrderStatus] = useState<FieldStatus>("idle");
@@ -267,7 +321,7 @@ export function TaxonomyTypesPane({
   const [adding, setAdding] = useState(false);
   const [addStatus, setAddStatus] = useState<FieldStatus>("idle");
   const [addError, setAddError] = useState<string | undefined>(undefined);
-  const [archiveTarget, setArchiveTarget] = useState<TaxonomyPaneRow | null>(null);
+  const [archiveTarget, setArchiveTarget] = useState<Row | null>(null);
   const [announcement, setAnnouncement] = useState("");
   const listRef = useRef<HTMLUListElement>(null);
   const createInFlight = useRef(false);
@@ -284,11 +338,11 @@ export function TaxonomyTypesPane({
     setRowError((current) => ({ ...current, [id]: detail }));
   }
 
-  function replaceRow(row: TaxonomyPaneRow) {
+  function replaceRow(row: Row) {
     setRows((current) => current.map((existing) => (existing.id === row.id ? row : existing)));
   }
 
-  async function rename(row: TaxonomyPaneRow, displayName: string) {
+  async function rename(row: Row, displayName: string) {
     noteRow(row.id, "saving");
     const { data, detail } = await api
       .rename(row.id, displayName)
@@ -370,7 +424,7 @@ export function TaxonomyTypesPane({
     }
   }
 
-  async function restore(row: TaxonomyPaneRow) {
+  async function restore(row: Row) {
     noteRow(row.id, "saving");
     const { data, detail } = await api
       .restore(row.id)
@@ -404,6 +458,44 @@ export function TaxonomyTypesPane({
           rowError={rowError}
           renameLabel={(row) => intl.formatMessage(messages.renameLabel, { name: row.displayName })}
           onRename={(row, displayName) => void rename(row, displayName)}
+          columnsHeader={
+            columns && (
+              <div className="flex h-9 items-center border-b border-border-default pe-3 text-xs font-semibold text-muted">
+                {/* The grip column has no header, and neither do the
+                    trailing actions (ST12). */}
+                <span className="w-9 shrink-0" aria-hidden="true" />
+                <span className="flex min-w-0 flex-1 items-center gap-2 ps-1">
+                  <span className="min-w-0 flex-1">
+                    <FormattedMessage {...columns.name} />
+                  </span>
+                  {columns.meta.map((column) => (
+                    <span key={column.header.id} className={`${column.width} shrink-0`}>
+                      <FormattedMessage {...column.header} />
+                    </span>
+                  ))}
+                </span>
+                <span className="w-15" aria-hidden="true" />
+              </div>
+            )
+          }
+          nameSlotClassName={columns ? "min-w-0 flex-1" : undefined}
+          rowCaption={columns?.description ? (row) => row.description : undefined}
+          rowDetails={
+            columns
+              ? (row) =>
+                  columns.meta.map((column) => (
+                    <span
+                      key={column.header.id}
+                      className={`${column.width} shrink-0 truncate text-sm text-muted`}
+                    >
+                      <span className="sr-only">
+                        <FormattedMessage {...column.prefix} />{" "}
+                      </span>
+                      {column.cell(row)}
+                    </span>
+                  ))
+              : undefined
+          }
           rowMeta={
             inUse && ((row) => <FormattedMessage {...inUse} values={{ count: row.inUseCount }} />)
           }

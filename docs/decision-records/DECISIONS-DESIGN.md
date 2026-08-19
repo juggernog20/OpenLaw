@@ -1356,6 +1356,25 @@ The M6 build diverged from four clauses above. The build stands; the superseded 
 3. **Archive guard.** A third guard outcome shipped beside reassign and block. The policy is SET-003's, not new here — an in-use archive requires a reassignment target, so with no other live row to take the records the archive cannot proceed. This record covers only how the modal draws that state: select and danger CTA disabled, with an explanatory line ("No other active type can take its contracts. Add or restore another type first."). At a zero count the select stays drawn and disabled with a "No reassignment" placeholder, as written.
 4. **Show archived.** The header-strip toggle renders only when archived rows exist. A taxonomy with nothing archived draws no toggle.
 
+### Amendment (2026-08-20, [#354](https://github.com/juggernog20/OpenLaw/issues/354)) — the two-line row, for a pane whose rows carry columns
+
+The row-anatomy clause above says "Rows never grow a second line — description and anything richer belong to the type-editor screen", and DES-021's third normalization point repeats it. **That clause is superseded for panes that declare columns**, and stands everywhere else. The request types pane (frame ST12) is the surface that reversed it, and this is the rule it establishes.
+
+**A pane that declares columns gets the header strip, the cells, and the second line together.** These three are one decision, not three: the moment a taxonomy has something to say about a row beyond its name, the right-aligned in-use caption is the wrong shape for it, and once the row is a table row the name column has room the one-line row did not have. Request types declare one column today (Target) and a second with the form definition (Form fields). Rows with a caption are **52px**; rows without stay at 44px. The caption is the row's description, 12px `text-secondary`, truncated to one line.
+
+**Why the description moved back onto the list here, when DES-020 sent it to the editor.** A contract type's description explains an internal taxonomy to the Administrator who maintains it, and the editor is where they are. A request type's description is **requester-facing copy** — it is what a business user reads in the portal picker to choose between "Contract review" and "Legal question" (INT-002). An Administrator auditing their front door needs to read the list the way a requester will, and opening three editors to do it is the same failure the Target column exists to prevent.
+
+**The three type taxonomies declare no columns and are unchanged** — one line, the in-use caption, 44px. This is the shape of the whole extension: the mount asks, and a mount that does not ask gets what it always had.
+
+**Sanctioned extension points, added to DES-021's list.** A column is a header, an sr-only cell prefix (DES-021's rule — a row named "Contract review" whose Target cell reads "Contract" is two different facts), a width shared by the header and the cell, and the cell itself. The cells sit between the name column and the trailing actions, where the in-use caption sits on a pane with none. A pane never declares both.
+
+### Recorded normalization points (ST12 deviations accepted)
+
+1. ST12 draws archive alone in the trailing slot. The pencil that opens the DES-022 editor screen joins it, per the #86 amendment's trailing-action cluster — the editor is where the target and the form live, and a list with no way into it is a dead end.
+2. ST12 and ST14 draw 25px-tall 12px buttons; they render through the shipped Button component, as DES-020's first normalization point already settled for ST6/ST8.
+3. ST14's left card draws Display name, Description, and Target and no Slug row. The slug row stays: it is DES-022's identity anatomy, the slug is real for request types (it keys the portal form and the API), and a mock omission is not a decision to drop it.
+4. ST14 draws no in-use caption, and none renders — `requests` land in M20, so the count would read "0 requests" on every type. The caption's slot in DES-022's identity card is optional for the same reason the pane's is.
+
 ## DES-021: List-editor table variant and the field-editor dialog (extends DES-020)
 
 - **Status:** Accepted
@@ -1381,7 +1400,7 @@ The ListEditor component (extracted at this pane, the rule-of-three moment) is t
 
 1. The scope pill maps to the paired status families: `status-neutral` for module scopes, `status-info` for `global` (the frame's `#EFF1F3/#57606A` and `#DDF4FF/#0969DA` are those tokens' Light values).
 2. The AI-prompt sparkle renders the Lucide `sparkles` glyph at 16px in `status-info-fg` where the frame draws 14px — DES-008's size ramp floors at 16. Fields without a prompt draw an em dash with an sr-only "No AI prompt".
-3. ST11 draws no edit affordance; the trailing pencil button is this record's addition — the seeded prompts and the options lists are editable (CTR-008/CTR-016), and the list row deliberately never grows a second line (DES-020).
+3. ST11 draws no edit affordance; the trailing pencil button is this record's addition — the seeded prompts and the options lists are editable (CTR-008/CTR-016), and ~~the list row deliberately never grows a second line (DES-020)~~ _(the second-line clause is amended by DES-020's M19/4 amendment: a pane that declares columns may draw the row's description under its name. The fields catalog declares columns and no caption, so this pane is unchanged.)_
 
 ### Rationale
 
@@ -1430,6 +1449,16 @@ The list row stays one line only because this screen exists; writing its anatomy
 ### Consequences
 
 `/settings/contracts/types/:id` (#84) is the reference implementation, reached from a pencil icon button in the list row's trailing actions (the DES-021 slot; here it navigates instead of opening a dialog, because the editor is a screen). The M22 matters editor and M19 request-type editor reuse this shape with their own vocabulary.
+
+### Amendment (2026-08-20, [#354](https://github.com/juggernog20/OpenLaw/issues/354)) — both cards are optional slots, not fixed furniture
+
+The request-type editor (frame ST14) mounts this screen and diverges from it twice, in both directions. Neither is a new shape; both are this shape with a slot filled or left empty.
+
+**The right card is optional.** ST14's Form fields card arrives with the form definition, so the editor ships as the identity card alone. A screen with one card is not a broken two-card screen: it is the same layout with nothing in the second slot, and the card lands when the mount has something to put there.
+
+**The identity card takes one more control.** ST14 draws a Target select and its help line under the slug — one native select, options grouped by module ("No target"; Matter, then each live matter type; Contract, then each live contract type), an 11px `text-secondary` help line stating what conversion will do with the chosen state, and a `status-warning` line flagging a target whose type has since been archived. It commits on pick (SET-003) with its own micro-state beside the control, because it writes the mount's own column rather than the shared identity.
+
+**The usage caption is optional too**, for the reason DES-020's is: a mount whose records do not exist yet has nothing but a zero to print. Request types draw none until `requests` land in M20.
 
 ## DES-023: The comment surface — tier badges, the Legal Only row wash, and the segmented composer
 
@@ -3349,57 +3378,57 @@ Point 6 is stated because the honest answer is unusual. It would be easy to impl
 
 ## Index of decisions
 
-| #       | Decision                                                                                                                                                             | Status   |
-| ------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
-| DES-001 | Ship three themes (Light / Warm / Dark) as user-selectable from v1                                                                                                   | Accepted |
-| DES-002 | Light is the default theme; Warm and Dark are user-selectable                                                                                                        | Accepted |
-| DES-003 | Design language anchor — "utility-tool with character," GitHub-Primer-shaped                                                                                         | Accepted |
-| DES-004 | Component substrate — shadcn/ui + Tailwind + CSS variables + Radix primitives                                                                                        | Accepted |
-| DES-005 | Color tokens — semantic, theme-aware, four surface tiers, paired status pills                                                                                        | Accepted |
-| DES-006 | Typography ramp — Inter, 8-step size scale, 3 weights, reserved mono                                                                                                 | Accepted |
-| DES-007 | Spacing scale + density target — Tailwind default + 5 layout tokens + 4 chrome dimensions, normalized to 48/8/16                                                     | Accepted |
-| DES-008 | Iconography — Lucide as the v1 icon library, sizes 16/20/24, currentColor inheritance                                                                                | Accepted |
-| DES-009 | Confidentiality affordance — 3-tier pattern (inline marker / detail banner / composer warning)                                                                       | Accepted |
-| DES-010 | Keyboard contract — `/`, `Esc`, `?` global keys; Radix component defaults; Cmd-K deferred                                                                            | Accepted |
-| DES-011 | Accessibility floor — WCAG 2.2 AA contract; AAA aspirational on text; no formal audit in v1                                                                          | Accepted |
-| DES-012 | Responsive layout primitives — container queries for content, single 768px viewport breakpoint for the mobile shell                                                  | Accepted |
-| DES-013 | Internationalization architecture — every string wrapped in ICU MessageFormat from day one; `Intl.*` for formatting; en-US the only v1 locale                        | Accepted |
-| DES-014 | Date / time / currency display conventions — relative-then-short-absolute; UTC-stored / browser-detected display; ISO 4217 currency; no compact-number abbreviations | Accepted |
-| DES-015 | Content tone register — terse, direct, second-person imperative ("GitHub voice, not Mailchimp voice")                                                                | Accepted |
-| DES-016 | Record-page right side — VS Code-style activity bar with page-scoped applets                                                                                         | Accepted |
-| DES-017 | Editing model — per-field inline commit, no page edit mode                                                                                                           | Accepted |
-| DES-018 | Chromatic discipline — status families kept, one severity ramp (grey/yellow/orange/red), uniform light-blue avatars with photo override                              | Accepted |
-| DES-019 | Shell chrome color variables — per-theme chrome mapping, Warm terracotta avatar (amends DES-018)                                                                     | Accepted |
-| DES-020 | List-editor pattern — the shared anatomy for taxonomy settings panes                                                                                                 | Accepted |
-| DES-021 | List-editor table variant and the field-editor dialog (extends DES-020)                                                                                              | Accepted |
-| DES-022 | The type-editor screen — identity card plus attachment table (extends DES-020)                                                                                       | Accepted |
-| DES-023 | The comment surface — tier badges, the Legal Only row wash, and the segmented composer                                                                               | Accepted |
-| DES-024 | The mention affordances — typeahead, chip, and the promotion confirmation (extends DES-023)                                                                          | Accepted |
-| DES-025 | The corrected comment row — edited marker, two tombstones, and the overflow menu (extends DES-023)                                                                   | Accepted |
-| DES-026 | The history panel interior — narrated row, medallion, and load-more foot (extends DES-016)                                                                           | Accepted |
-| DES-027 | The audit-log pane — filter bar, narrated table row, and the export foot (extends DES-021, DES-026)                                                                  | Accepted |
-| DES-028 | The confidential record page — the Tier 2 banner and the flag control (extends DES-009)                                                                              | Accepted |
-| DES-029 | The confidential marker and the composer notice — DES-009's Tier 1 and Tier 3                                                                                        | Accepted |
-| DES-030 | The shell scroll model — one viewport tall, and `main` owns the scroll                                                                                               | Accepted |
-| DES-031 | The paging foot — table placement, the thread's head control, and where focus lands (extends DES-026)                                                                | Accepted |
-| DES-032 | The record-page section strip — routed tabs under the breadcrumb (extends DES-016, DES-030)                                                                          | Accepted |
-| DES-033 | The folder tree and the record-scoped batch drop (extends DES-032, DES-025)                                                                                          | Accepted |
-| DES-034 | The stage pipeline — six fixed steps beside the status pill (extends DES-005, DES-032)                                                                               | Accepted |
-| DES-035 | The record's Approvals section — the roster table and its row actions (extends DES-032, DES-020, DES-005)                                                            | Accepted |
-| DES-036 | The signing half of the record — the envelope row, the send dialog, and the sub-bar chip (extends DES-035, DES-034, DES-005)                                         | Accepted |
-| DES-037 | The envelope's ending on the row, and the webhook note (extends DES-036, DES-035)                                                                                    | Accepted |
-| DES-038 | The envelope row's action cell and the void dialog (extends DES-037, DES-036, DES-035)                                                                               | Accepted |
-| DES-039 | The executed copy on the row, and the last two withheld notes (extends DES-038, DES-037, DES-036, DES-035)                                                           | Accepted |
-| DES-040 | The term on the Contract card — five fields, and the blanks the type forces (extends DES-017, DES-032)                                                               | Accepted |
-| DES-041 | The Term timeline card — the gutter, the two marks, and the open end (extends DES-040, DES-032, DES-012)                                                             | Accepted |
-| DES-042 | The Key dates section — one union, one Source chip, and the next deadline named (extends DES-035, DES-032, DES-040)                                                  | Accepted |
-| DES-043 | The renewal-pending banner, the Renew dialog, and the confirmed-renewal row (extends DES-035, DES-040, DES-017, DES-009)                                             | Accepted |
-| DES-044 | The Renew dialog's four exits, and the prefilled create (extends DES-043, DES-035, DES-033, DES-017)                                                                 | Accepted |
-| DES-045 | The link dialog, the picker, the refusal rendering, and the confidentiality nudge (extends DES-032, DES-024, DES-009)                                                | Accepted |
-| DES-046 | The managed list table — the width floor, the resize handle, the column menu, and the views control (extends DES-031, DES-021, DES-007)                              | Accepted |
-| DES-047 | The Team roster is an activity-bar applet (amends DES-016, DES-032, DES-028)                                                                                         | Accepted |
-| DES-048 | Date inputs are a calendar popover (amends DES-014, DES-040)                                                                                                         | Accepted |
-| DES-049 | The notification centre — the header bell, its counter badge, and the panel behind it (extends DES-026, DES-031, DES-016)                                            | Accepted |
-| DES-050 | The notification preferences pane — one row per event group, two switch columns (extends DES-017, DES-012, DES-011)                                                  | Accepted |
-| DES-051 | The email copy register (closes DES-015's deferral)                                                                                                                  | Accepted |
-| DES-052 | The value-list editor — the list-editor anatomy for a list of values (extends DES-020, DES-021)                                                                      | Accepted |
+| #       | Decision                                                                                                                                                             | Status                                    |
+| ------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------- |
+| DES-001 | Ship three themes (Light / Warm / Dark) as user-selectable from v1                                                                                                   | Accepted                                  |
+| DES-002 | Light is the default theme; Warm and Dark are user-selectable                                                                                                        | Accepted                                  |
+| DES-003 | Design language anchor — "utility-tool with character," GitHub-Primer-shaped                                                                                         | Accepted                                  |
+| DES-004 | Component substrate — shadcn/ui + Tailwind + CSS variables + Radix primitives                                                                                        | Accepted                                  |
+| DES-005 | Color tokens — semantic, theme-aware, four surface tiers, paired status pills                                                                                        | Accepted                                  |
+| DES-006 | Typography ramp — Inter, 8-step size scale, 3 weights, reserved mono                                                                                                 | Accepted                                  |
+| DES-007 | Spacing scale + density target — Tailwind default + 5 layout tokens + 4 chrome dimensions, normalized to 48/8/16                                                     | Accepted                                  |
+| DES-008 | Iconography — Lucide as the v1 icon library, sizes 16/20/24, currentColor inheritance                                                                                | Accepted                                  |
+| DES-009 | Confidentiality affordance — 3-tier pattern (inline marker / detail banner / composer warning)                                                                       | Accepted                                  |
+| DES-010 | Keyboard contract — `/`, `Esc`, `?` global keys; Radix component defaults; Cmd-K deferred                                                                            | Accepted                                  |
+| DES-011 | Accessibility floor — WCAG 2.2 AA contract; AAA aspirational on text; no formal audit in v1                                                                          | Accepted                                  |
+| DES-012 | Responsive layout primitives — container queries for content, single 768px viewport breakpoint for the mobile shell                                                  | Accepted                                  |
+| DES-013 | Internationalization architecture — every string wrapped in ICU MessageFormat from day one; `Intl.*` for formatting; en-US the only v1 locale                        | Accepted                                  |
+| DES-014 | Date / time / currency display conventions — relative-then-short-absolute; UTC-stored / browser-detected display; ISO 4217 currency; no compact-number abbreviations | Accepted                                  |
+| DES-015 | Content tone register — terse, direct, second-person imperative ("GitHub voice, not Mailchimp voice")                                                                | Accepted                                  |
+| DES-016 | Record-page right side — VS Code-style activity bar with page-scoped applets                                                                                         | Accepted                                  |
+| DES-017 | Editing model — per-field inline commit, no page edit mode                                                                                                           | Accepted                                  |
+| DES-018 | Chromatic discipline — status families kept, one severity ramp (grey/yellow/orange/red), uniform light-blue avatars with photo override                              | Accepted                                  |
+| DES-019 | Shell chrome color variables — per-theme chrome mapping, Warm terracotta avatar (amends DES-018)                                                                     | Accepted                                  |
+| DES-020 | List-editor pattern — the shared anatomy for taxonomy settings panes                                                                                                 | Accepted; two-line row amended in M19/4   |
+| DES-021 | List-editor table variant and the field-editor dialog (extends DES-020)                                                                                              | Accepted                                  |
+| DES-022 | The type-editor screen — identity card plus attachment table (extends DES-020)                                                                                       | Accepted; optional slots amended in M19/4 |
+| DES-023 | The comment surface — tier badges, the Legal Only row wash, and the segmented composer                                                                               | Accepted                                  |
+| DES-024 | The mention affordances — typeahead, chip, and the promotion confirmation (extends DES-023)                                                                          | Accepted                                  |
+| DES-025 | The corrected comment row — edited marker, two tombstones, and the overflow menu (extends DES-023)                                                                   | Accepted                                  |
+| DES-026 | The history panel interior — narrated row, medallion, and load-more foot (extends DES-016)                                                                           | Accepted                                  |
+| DES-027 | The audit-log pane — filter bar, narrated table row, and the export foot (extends DES-021, DES-026)                                                                  | Accepted                                  |
+| DES-028 | The confidential record page — the Tier 2 banner and the flag control (extends DES-009)                                                                              | Accepted                                  |
+| DES-029 | The confidential marker and the composer notice — DES-009's Tier 1 and Tier 3                                                                                        | Accepted                                  |
+| DES-030 | The shell scroll model — one viewport tall, and `main` owns the scroll                                                                                               | Accepted                                  |
+| DES-031 | The paging foot — table placement, the thread's head control, and where focus lands (extends DES-026)                                                                | Accepted                                  |
+| DES-032 | The record-page section strip — routed tabs under the breadcrumb (extends DES-016, DES-030)                                                                          | Accepted                                  |
+| DES-033 | The folder tree and the record-scoped batch drop (extends DES-032, DES-025)                                                                                          | Accepted                                  |
+| DES-034 | The stage pipeline — six fixed steps beside the status pill (extends DES-005, DES-032)                                                                               | Accepted                                  |
+| DES-035 | The record's Approvals section — the roster table and its row actions (extends DES-032, DES-020, DES-005)                                                            | Accepted                                  |
+| DES-036 | The signing half of the record — the envelope row, the send dialog, and the sub-bar chip (extends DES-035, DES-034, DES-005)                                         | Accepted                                  |
+| DES-037 | The envelope's ending on the row, and the webhook note (extends DES-036, DES-035)                                                                                    | Accepted                                  |
+| DES-038 | The envelope row's action cell and the void dialog (extends DES-037, DES-036, DES-035)                                                                               | Accepted                                  |
+| DES-039 | The executed copy on the row, and the last two withheld notes (extends DES-038, DES-037, DES-036, DES-035)                                                           | Accepted                                  |
+| DES-040 | The term on the Contract card — five fields, and the blanks the type forces (extends DES-017, DES-032)                                                               | Accepted                                  |
+| DES-041 | The Term timeline card — the gutter, the two marks, and the open end (extends DES-040, DES-032, DES-012)                                                             | Accepted                                  |
+| DES-042 | The Key dates section — one union, one Source chip, and the next deadline named (extends DES-035, DES-032, DES-040)                                                  | Accepted                                  |
+| DES-043 | The renewal-pending banner, the Renew dialog, and the confirmed-renewal row (extends DES-035, DES-040, DES-017, DES-009)                                             | Accepted                                  |
+| DES-044 | The Renew dialog's four exits, and the prefilled create (extends DES-043, DES-035, DES-033, DES-017)                                                                 | Accepted                                  |
+| DES-045 | The link dialog, the picker, the refusal rendering, and the confidentiality nudge (extends DES-032, DES-024, DES-009)                                                | Accepted                                  |
+| DES-046 | The managed list table — the width floor, the resize handle, the column menu, and the views control (extends DES-031, DES-021, DES-007)                              | Accepted                                  |
+| DES-047 | The Team roster is an activity-bar applet (amends DES-016, DES-032, DES-028)                                                                                         | Accepted                                  |
+| DES-048 | Date inputs are a calendar popover (amends DES-014, DES-040)                                                                                                         | Accepted                                  |
+| DES-049 | The notification centre — the header bell, its counter badge, and the panel behind it (extends DES-026, DES-031, DES-016)                                            | Accepted                                  |
+| DES-050 | The notification preferences pane — one row per event group, two switch columns (extends DES-017, DES-012, DES-011)                                                  | Accepted                                  |
+| DES-051 | The email copy register (closes DES-015's deferral)                                                                                                                  | Accepted                                  |
+| DES-052 | The value-list editor — the list-editor anatomy for a list of values (extends DES-020, DES-021)                                                                      | Accepted                                  |

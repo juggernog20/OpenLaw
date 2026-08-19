@@ -17,14 +17,27 @@
  * guard reads zero on every row and archive needs no reassignment —
  * exactly where matter types sit until M22.
  *
- * The target columns are seeded and stored by this change but are not
- * yet read or written through the API; the editor (#354) owns the
- * projection, so this suite asserts the seeded targets at the table.
+ * **The target rides the extras hook (#354).** The module and the one
+ * type id join the row projection and the strict PATCH body, and the
+ * validator holds the three-state invariant over HTTP. The check
+ * constraint holds the same invariant at the table, which the last
+ * describe asserts directly — a refusal a route could never reach is
+ * still the one that has to hold.
+ *
  * Asserted at the HTTP seam plus direct table reads.
  */
 
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { activityLog, asc, contractTypes, eq, inArray, requestTypes, users } from "@openlaw/db";
+import {
+  activityLog,
+  asc,
+  contractTypes,
+  eq,
+  inArray,
+  matterTypes,
+  requestTypes,
+  users,
+} from "@openlaw/db";
 import { provisionUser } from "../../auth/instance.js";
 import {
   signInCookies as harnessSignInCookies,
@@ -72,6 +85,8 @@ interface TypeRow {
   isSystemDefault: boolean;
   archivedAt: string | null;
   inUseCount: number;
+  targetModule: "matter" | "contract" | null;
+  targetTypeId: string | null;
 }
 
 const listTypes = async (includeArchived = false): Promise<TypeRow[]> => {
@@ -212,24 +227,34 @@ describe("GET /request-types", () => {
     });
   });
 
-  it("does not project the target through the API yet — the editor owns it (#354)", async () => {
+  it("projects the target as the module and the one type id (#354)", async () => {
+    const [nda] = await harness.db
+      .select()
+      .from(contractTypes)
+      .where(eq(contractTypes.slug, "nda"))
+      .limit(1);
     const rows = await listTypes();
+    const bySlug = new Map(rows.map((row) => [row.slug, row]));
+    // The two type columns collapse to one on the wire: the check
+    // constraint already says at most one is set, and which table it
+    // names is the module's to say.
+    expect(bySlug.get("nda_request")).toMatchObject({
+      targetModule: "contract",
+      targetTypeId: nda!.id,
+    });
+    expect(bySlug.get("contract_review")).toMatchObject({
+      targetModule: "contract",
+      targetTypeId: null,
+    });
+    expect(bySlug.get("legal_question")).toMatchObject({
+      targetModule: null,
+      targetTypeId: null,
+    });
     for (const row of rows) {
-      expect(row).not.toHaveProperty("targetModule");
+      // The columns themselves stay behind the projection.
       expect(row).not.toHaveProperty("targetContractTypeId");
       expect(row).not.toHaveProperty("targetMatterTypeId");
     }
-  });
-
-  it("refuses a PATCH that names a target column, because no mount declares one yet", async () => {
-    const question = await typeBySlug("legal_question");
-    const res = await harness.app.inject({
-      method: "PATCH",
-      url: `/api/v1/request-types/${question.id}`,
-      cookies: adminCookies,
-      payload: { targetModule: "matter" },
-    });
-    expect(res.statusCode, res.body).toBe(400);
   });
 });
 
@@ -587,6 +612,213 @@ describe("the DD-017 audit trail", () => {
       inUseCount: 0,
       reassignedTo: null,
     });
+  });
+});
+
+describe("PATCH /request-types/:id — the three-state target (INT-002)", () => {
+  /** PATCHes one type and answers the raw reply, so a refusal is read
+   * as the problem document it is. */
+  const patch = (id: string, payload: Record<string, unknown>) =>
+    harness.app.inject({
+      method: "PATCH",
+      url: `/api/v1/request-types/${id}`,
+      cookies: adminCookies,
+      payload,
+    });
+
+  /** A throwaway request type, so the seeds keep their targets. */
+  async function addType(displayName: string): Promise<TypeRow> {
+    const res = await harness.app.inject({
+      method: "POST",
+      url: "/api/v1/request-types",
+      cookies: adminCookies,
+      payload: { displayName },
+    });
+    expect(res.statusCode, res.body).toBe(201);
+    return res.json().requestType;
+  }
+
+  const contractTypeBySlug = async (slug: string) => {
+    const [row] = await harness.db
+      .select()
+      .from(contractTypes)
+      .where(eq(contractTypes.slug, slug))
+      .limit(1);
+    expect(row, slug).toBeDefined();
+    return row!;
+  };
+
+  it("takes all three states, and the module alone clears a named type", async () => {
+    const nda = await contractTypeBySlug("nda");
+    const row = await addType("Target walk");
+
+    const toType = await patch(row.id, { targetModule: "contract", targetTypeId: nda.id });
+    expect(toType.statusCode, toType.body).toBe(200);
+    expect(toType.json().requestType).toMatchObject({
+      targetModule: "contract",
+      targetTypeId: nda.id,
+    });
+
+    // The module and the type id are one value: naming the module alone
+    // rewrites the target whole, so the NDA type does not survive it.
+    const toModule = await patch(row.id, { targetModule: "contract" });
+    expect(toModule.statusCode, toModule.body).toBe(200);
+    expect(toModule.json().requestType).toMatchObject({
+      targetModule: "contract",
+      targetTypeId: null,
+    });
+
+    const toNothing = await patch(row.id, { targetModule: null });
+    expect(toNothing.statusCode, toNothing.body).toBe(200);
+    expect(toNothing.json().requestType).toMatchObject({
+      targetModule: null,
+      targetTypeId: null,
+    });
+  });
+
+  it("re-points a contract target at a matter type in one PATCH", async () => {
+    const [litigation] = await harness.db
+      .select()
+      .from(matterTypes)
+      .where(eq(matterTypes.slug, "litigation"))
+      .limit(1);
+    expect(litigation, "litigation").toBeDefined();
+    const nda = await contractTypeBySlug("nda");
+    const row = await addType("Re-point");
+    await patch(row.id, { targetModule: "contract", targetTypeId: nda.id });
+
+    const res = await patch(row.id, {
+      targetModule: "matter",
+      targetTypeId: litigation!.id,
+    });
+    expect(res.statusCode, res.body).toBe(200);
+    expect(res.json().requestType).toMatchObject({
+      targetModule: "matter",
+      targetTypeId: litigation!.id,
+    });
+    // The other module's column is cleared, not left dangling.
+    const [stored] = await harness.db
+      .select()
+      .from(requestTypes)
+      .where(eq(requestTypes.id, row.id))
+      .limit(1);
+    expect(stored).toMatchObject({
+      targetModule: "matter",
+      targetMatterTypeId: litigation!.id,
+      targetContractTypeId: null,
+    });
+  });
+
+  it("refuses a type id under the wrong module as an RFC 9457 problem", async () => {
+    const nda = await contractTypeBySlug("nda");
+    const row = await addType("Wrong module");
+    const res = await patch(row.id, { targetModule: "matter", targetTypeId: nda.id });
+    expect(res.statusCode, res.body).toBe(400);
+    expect(res.headers["content-type"]).toContain("application/problem+json");
+    expect(res.json().detail).toContain("matter type");
+  });
+
+  it("refuses a type id with no module at all", async () => {
+    const nda = await contractTypeBySlug("nda");
+    const row = await addType("No module");
+    const res = await patch(row.id, { targetModule: null, targetTypeId: nda.id });
+    expect(res.statusCode, res.body).toBe(400);
+    expect(res.json().detail).toContain("module");
+  });
+
+  it("refuses a type id that names no row at all", async () => {
+    const row = await addType("Dead id");
+    const res = await patch(row.id, {
+      targetModule: "contract",
+      targetTypeId: "00000000-0000-4000-8000-000000000000",
+    });
+    expect(res.statusCode, res.body).toBe(400);
+  });
+
+  it("refuses an archived type: the picker offers live types only", async () => {
+    const row = await addType("Archived target");
+    const [archived] = await harness.db
+      .insert(contractTypes)
+      .values({
+        slug: "target_archived",
+        displayName: "Target archived",
+        displayOrder: 98,
+        archivedAt: new Date(),
+      })
+      .returning();
+
+    const res = await patch(row.id, { targetModule: "contract", targetTypeId: archived!.id });
+    expect(res.statusCode, res.body).toBe(400);
+
+    await harness.db.delete(contractTypes).where(eq(contractTypes.id, archived!.id));
+  });
+
+  it("refuses a module that is neither matter nor contract", async () => {
+    const row = await addType("Bad module");
+    const res = await patch(row.id, { targetModule: "knowledge" });
+    expect(res.statusCode, res.body).toBe(400);
+  });
+
+  it("narrates a target change in the activity log, both halves by name", async () => {
+    const nda = await contractTypeBySlug("nda");
+    const row = await addType("Narrated target");
+    await patch(row.id, { targetModule: "contract", targetTypeId: nda.id });
+    await patch(row.id, { targetModule: null });
+
+    const rows = await auditRows();
+    const updates = rows.filter(
+      (entry) =>
+        entry.action === "request_type.updated" &&
+        (entry.payload as { slug?: string }).slug === row.slug,
+    );
+    expect(updates).toHaveLength(2);
+    expect((updates[0]!.payload as { changed: unknown }).changed).toMatchObject({
+      targetModule: { from: null, to: "contract" },
+      targetType: { from: null, to: nda.displayName },
+    });
+    expect((updates[1]!.payload as { changed: unknown }).changed).toMatchObject({
+      targetModule: { from: "contract", to: null },
+      targetType: { from: nda.displayName, to: null },
+    });
+  });
+
+  it("writes nothing and narrates nothing when the target is re-sent unchanged", async () => {
+    const nda = await contractTypeBySlug("nda");
+    const row = await addType("Unchanged target");
+    await patch(row.id, { targetModule: "contract", targetTypeId: nda.id });
+    const before = (await auditRows()).length;
+
+    const res = await patch(row.id, { targetModule: "contract", targetTypeId: nda.id });
+    expect(res.statusCode, res.body).toBe(200);
+    expect((await auditRows()).length).toBe(before);
+  });
+
+  it("leaves the target alone when a PATCH names neither key", async () => {
+    const nda = await contractTypeBySlug("nda");
+    const row = await addType("Rename only");
+    await patch(row.id, { targetModule: "contract", targetTypeId: nda.id });
+
+    const res = await patch(row.id, { displayName: "Rename only, renamed" });
+    expect(res.statusCode, res.body).toBe(200);
+    expect(res.json().requestType).toMatchObject({
+      targetModule: "contract",
+      targetTypeId: nda.id,
+    });
+  });
+
+  it("demotes to the module alone over HTTP when the targeted type is deleted", async () => {
+    const [created] = await harness.db
+      .insert(contractTypes)
+      .values({ slug: "demote_http", displayName: "Demote over HTTP", displayOrder: 97 })
+      .returning();
+    const row = await addType("Demoted");
+    await patch(row.id, { targetModule: "contract", targetTypeId: created!.id });
+
+    await harness.db.delete(contractTypes).where(eq(contractTypes.id, created!.id));
+
+    const after = await typeBySlug(row.slug);
+    // "Contract · Demote over HTTP" reads "Contract" — never a dangling id.
+    expect(after).toMatchObject({ targetModule: "contract", targetTypeId: null });
   });
 });
 

@@ -5815,6 +5815,27 @@
                             "type": "integer",
                             "minimum": -9007199254740991,
                             "maximum": 9007199254740991
+                          },
+                          "targetModule": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "enum": ["matter", "contract"]
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "targetTypeId": {
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
                           }
                         },
                         "required": [
@@ -5825,7 +5846,9 @@
                           "displayOrder",
                           "isSystemDefault",
                           "archivedAt",
-                          "inUseCount"
+                          "inUseCount",
+                          "targetModule",
+                          "targetTypeId"
                         ],
                         "additionalProperties": false
                       }
@@ -5925,6 +5948,27 @@
                           "type": "integer",
                           "minimum": -9007199254740991,
                           "maximum": 9007199254740991
+                        },
+                        "targetModule": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "enum": ["matter", "contract"]
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "targetTypeId": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
                         }
                       },
                       "required": [
@@ -5935,7 +5979,9 @@
                         "displayOrder",
                         "isSystemDefault",
                         "archivedAt",
-                        "inUseCount"
+                        "inUseCount",
+                        "targetModule",
+                        "targetTypeId"
                       ],
                       "additionalProperties": false
                     }
@@ -6028,6 +6074,27 @@
                           "type": "integer",
                           "minimum": -9007199254740991,
                           "maximum": 9007199254740991
+                        },
+                        "targetModule": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "enum": ["matter", "contract"]
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "targetTypeId": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
                         }
                       },
                       "required": [
@@ -6038,7 +6105,9 @@
                         "displayOrder",
                         "isSystemDefault",
                         "archivedAt",
-                        "inUseCount"
+                        "inUseCount",
+                        "targetModule",
+                        "targetTypeId"
                       ],
                       "additionalProperties": false
                     }
@@ -6082,6 +6151,27 @@
                       {
                         "type": "string",
                         "maxLength": 500
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "targetModule": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "enum": ["matter", "contract"]
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "targetTypeId": {
+                    "anyOf": [
+                      {
+                        "type": "string"
                       },
                       {
                         "type": "null"
@@ -6158,6 +6248,27 @@
                           "type": "integer",
                           "minimum": -9007199254740991,
                           "maximum": 9007199254740991
+                        },
+                        "targetModule": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "enum": ["matter", "contract"]
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "targetTypeId": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
                         }
                       },
                       "required": [
@@ -6168,7 +6279,9 @@
                         "displayOrder",
                         "isSystemDefault",
                         "archivedAt",
-                        "inUseCount"
+                        "inUseCount",
+                        "targetModule",
+                        "targetTypeId"
                       ],
                       "additionalProperties": false
                     }
@@ -6303,6 +6416,27 @@
                             "type": "integer",
                             "minimum": -9007199254740991,
                             "maximum": 9007199254740991
+                          },
+                          "targetModule": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "enum": ["matter", "contract"]
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "targetTypeId": {
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
                           }
                         },
                         "required": [
@@ -6313,7 +6447,9 @@
                           "displayOrder",
                           "isSystemDefault",
                           "archivedAt",
-                          "inUseCount"
+                          "inUseCount",
+                          "targetModule",
+                          "targetTypeId"
                         ],
                         "additionalProperties": false
                       }
@@ -6422,6 +6558,27 @@
                           "type": "integer",
                           "minimum": -9007199254740991,
                           "maximum": 9007199254740991
+                        },
+                        "targetModule": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "enum": ["matter", "contract"]
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "targetTypeId": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
                         }
                       },
                       "required": [
@@ -6432,7 +6589,9 @@
                         "displayOrder",
                         "isSystemDefault",
                         "archivedAt",
-                        "inUseCount"
+                        "inUseCount",
+                        "targetModule",
+                        "targetTypeId"
                       ],
                       "additionalProperties": false
                     }
@@ -6525,6 +6684,27 @@
                           "type": "integer",
                           "minimum": -9007199254740991,
                           "maximum": 9007199254740991
+                        },
+                        "targetModule": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "enum": ["matter", "contract"]
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "targetTypeId": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
                         }
                       },
                       "required": [
@@ -6535,7 +6715,9 @@
                         "displayOrder",
                         "isSystemDefault",
                         "archivedAt",
-                        "inUseCount"
+                        "inUseCount",
+                        "targetModule",
+                        "targetTypeId"
                       ],
                       "additionalProperties": false
                     }

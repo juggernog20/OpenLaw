@@ -993,7 +993,7 @@ Structured request envelope, created only via portal forms. Not a work container
 
 Source: **INT-002**
 
-`request_types`: MTR-001 machinery (`slug`, `display_name`, `description`, `display_order`, `is_system_default`, `archived_at`, timestamps) + **target**: `target_matter_type_id` / `target_contract_type_id` (both nullable; at most one set). Admin-managed via Intake Settings → Request Types.
+`request_types`: MTR-001 machinery (`slug`, `display_name`, `description`, `display_order`, `is_system_default`, `archived_at`, timestamps) + the **three-state target** (INT-002's M19/4 addendum): `target_module` (nullable — `matter` or `contract`), `target_matter_type_id` and `target_contract_type_id` (both nullable FKs, `on delete set null`). One check constraint holds all three together — with no module both type ids are NULL; under `matter`, `target_contract_type_id` is NULL and `target_matter_type_id` may be set or NULL; under `contract`, the mirror — so "no target", "the Contract module", and "the NDA contract type" are the only shapes the table accepts. `on delete set null` demotes rather than strands: deleting the targeted type leaves the module standing. No row is system-protected; there is no fallback request type, because no record needs a non-null request type once conversion is done. Admin-managed via Intake Settings → Request types.
 
 `request_type_fields`: (`request_type_id`, `field_id`, `display_order`, `is_required`, `created_at`), compound PK on the first two. Attachable fields: scope matching the target module, or `global`.
 

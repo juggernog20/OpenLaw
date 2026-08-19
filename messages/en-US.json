@@ -216,7 +216,7 @@
     "defaultMessage": "{actor} exported the audit log"
   },
   "activity.field": {
-    "defaultMessage": "{key, select, title {Title} description {Description} owner {Owner} entity {Signing entity} priority {Priority} risk {Risk} contractType {Contract type} value {Value} status {Status} termType {Term type} effectiveDate {Effective date} expiryDate {Expiry date} renewalPeriodMonths {Renewal period (months)} noticePeriodDays {Notice period (days)} date {Date} label {Event} note {Note} primaryCounterparty {Primary counterparty} primaryDocument {Primary document} displayName {Name} display_name {Display name} name {Name} role {Role} email {Email} stage {Stage} moduleScope {Scope} isRequired {Required} theme {Theme} timezone {Timezone} avatar {Avatar} logo {Logo} defaultLocale {Default language} defaultTimezone {Default timezone} authMode {Sign-in method} allowedEmailDomains {Allowed email domains} reminderOffsetDays {Reminder lead times} smtpUrl {SMTP server} smtpFrom {From address} issuer {Issuer} domain {Email domain} clientId {Client ID} clientSecret {Client secret} environment {Environment} integrationKey {Integration key} apiUserId {User ID} privateKey {RSA private key} webhookSecret {Connect HMAC secret} legalName {Legal name} entityType {Entity type} jurisdiction {Jurisdiction} formedOn {Formed on} registrationNumber {Registration number} taxId {Tax ID} registeredAgent {Registered agent} registeredAddress {Registered address} other {{key}}}"
+    "defaultMessage": "{key, select, title {Title} description {Description} owner {Owner} entity {Signing entity} priority {Priority} risk {Risk} contractType {Contract type} value {Value} status {Status} termType {Term type} effectiveDate {Effective date} expiryDate {Expiry date} renewalPeriodMonths {Renewal period (months)} noticePeriodDays {Notice period (days)} date {Date} label {Event} note {Note} primaryCounterparty {Primary counterparty} primaryDocument {Primary document} displayName {Name} display_name {Display name} name {Name} role {Role} email {Email} stage {Stage} moduleScope {Scope} isRequired {Required} targetModule {Target} targetType {Target type} theme {Theme} timezone {Timezone} avatar {Avatar} logo {Logo} defaultLocale {Default language} defaultTimezone {Default timezone} authMode {Sign-in method} allowedEmailDomains {Allowed email domains} reminderOffsetDays {Reminder lead times} smtpUrl {SMTP server} smtpFrom {From address} issuer {Issuer} domain {Email domain} clientId {Client ID} clientSecret {Client secret} environment {Environment} integrationKey {Integration key} apiUserId {User ID} privateKey {RSA private key} webhookSecret {Connect HMAC secret} legalName {Legal name} entityType {Entity type} jurisdiction {Jurisdiction} formedOn {Formed on} registrationNumber {Registration number} taxId {Tax ID} registeredAgent {Registered agent} registeredAddress {Registered address} other {{key}}}"
   },
   "activity.field.narrowed": {
     "defaultMessage": "{actor} narrowed the field {name} to one module"
@@ -301,6 +301,9 @@
   },
   "activity.ssoProvider.updated": {
     "defaultMessage": "{actor} changed the identity provider {provider}"
+  },
+  "activity.targetModule": {
+    "defaultMessage": "{module, select, matter {Matter} contract {Contract} other {{module}}}"
   },
   "activity.task.added": {
     "defaultMessage": "{actor} added the task {title}"
@@ -3542,6 +3545,51 @@
   "settings.reminders.title": {
     "defaultMessage": "Reminder lead times"
   },
+  "settings.requestTypeEditor.allTypes": {
+    "defaultMessage": "All request types"
+  },
+  "settings.requestTypeEditor.description": {
+    "defaultMessage": "Description"
+  },
+  "settings.requestTypeEditor.displayName": {
+    "defaultMessage": "Display name"
+  },
+  "settings.requestTypeEditor.slug": {
+    "defaultMessage": "Slug"
+  },
+  "settings.requestTypeEditor.slugNote": {
+    "defaultMessage": "Slug is immutable — it keys the portal form, reporting, and the API."
+  },
+  "settings.requestTypeEditor.target": {
+    "defaultMessage": "Target"
+  },
+  "settings.requestTypeEditor.targetArchivedFlag": {
+    "defaultMessage": "{name} is archived. Requests of this type convert with no type until you pick a live one."
+  },
+  "settings.requestTypeEditor.targetArchivedOption": {
+    "defaultMessage": "{name} (archived)"
+  },
+  "settings.requestTypeEditor.targetContractGroup": {
+    "defaultMessage": "Contract"
+  },
+  "settings.requestTypeEditor.targetContractModule": {
+    "defaultMessage": "Contract"
+  },
+  "settings.requestTypeEditor.targetError": {
+    "defaultMessage": "The target could not be saved."
+  },
+  "settings.requestTypeEditor.targetHelp": {
+    "defaultMessage": "{state, select, matter {Converting a request of this type creates a matter; the reviewer picks the matter type at conversion.} matterType {Converting a request of this type creates a matter of the {name} type.} contract {Converting a request of this type creates a contract; the reviewer picks the contract type at conversion.} contractType {Converting a request of this type creates a contract of the {name} type.} other {Converting a request of this type creates no record. It is answered in the thread and resolved there.}}"
+  },
+  "settings.requestTypeEditor.targetMatterGroup": {
+    "defaultMessage": "Matter"
+  },
+  "settings.requestTypeEditor.targetMatterModule": {
+    "defaultMessage": "Matter"
+  },
+  "settings.requestTypeEditor.targetNone": {
+    "defaultMessage": "No target"
+  },
   "settings.requestTypes.add": {
     "defaultMessage": "Add request type"
   },
@@ -3569,11 +3617,17 @@
   "settings.requestTypes.count": {
     "defaultMessage": "{count, plural, one {# type} other {# types}}"
   },
+  "settings.requestTypes.edit": {
+    "defaultMessage": "Edit {name}"
+  },
   "settings.requestTypes.help": {
     "defaultMessage": "Every form collects summary, description, attachments, and urgency. Attached catalog fields carry their values into the converted matter or contract."
   },
   "settings.requestTypes.moved": {
     "defaultMessage": "{name} moved to position {position} of {total}."
+  },
+  "settings.requestTypes.nameColumn": {
+    "defaultMessage": "Request type"
   },
   "settings.requestTypes.noCandidates": {
     "defaultMessage": "No other active type can take its requests. Add or restore another type first."
@@ -3595,6 +3649,18 @@
   },
   "settings.requestTypes.restore": {
     "defaultMessage": "Restore {name}"
+  },
+  "settings.requestTypes.targetColumn": {
+    "defaultMessage": "Target"
+  },
+  "settings.requestTypes.targetModule": {
+    "defaultMessage": "{module, select, matter {Matter} contract {Contract} other {No target}}"
+  },
+  "settings.requestTypes.targetPrefix": {
+    "defaultMessage": "Target:"
+  },
+  "settings.requestTypes.targetType": {
+    "defaultMessage": "{module, select, matter {Matter · {name}} contract {Contract · {name}} other {{name}}}"
   },
   "settings.requestTypes.title": {
     "defaultMessage": "Request types"

@@ -318,6 +318,7 @@ function changeLabel(intl: IntlShape, key: string, context: NarrationContext): s
         "displayName {Name} display_name {Display name} name {Name} " +
         "role {Role} email {Email} " +
         "stage {Stage} moduleScope {Scope} isRequired {Required} " +
+        "targetModule {Target} targetType {Target type} " +
         "theme {Theme} timezone {Timezone} avatar {Avatar} logo {Logo} " +
         "defaultLocale {Default language} defaultTimezone {Default timezone} " +
         "authMode {Sign-in method} allowedEmailDomains {Allowed email domains} " +
@@ -383,6 +384,18 @@ function changeValue(
   // where the column says `evergreen`. Its ICU message carries an
   // `other` arm, so a kind this build no longer has still renders.
   if (key === "termType") return termTypeLabel(intl, value as TermType);
+  // INT-002's target module is a stored slug, so the feed says "Contract"
+  // where the column says `contract`. Its `other` arm covers a module
+  // this build no longer has.
+  if (key === "targetModule") {
+    return intl.formatMessage(
+      {
+        id: "activity.targetModule",
+        defaultMessage: "{module, select, matter {Matter} contract {Contract} other {{module}}}",
+      },
+      { module: value as string },
+    );
+  }
   if (typeof value === "boolean") {
     return intl.formatMessage(
       {

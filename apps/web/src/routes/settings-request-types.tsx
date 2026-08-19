@@ -9,12 +9,14 @@
  * the Matters one. The loader is the client half of SET-002's gate; the
  * API's 403 is the real refusal.
  *
- * Three parts of ST12 are deliberately not here yet. The **Target** and
- * **Form fields** columns and the per-row editor affordance arrive with
- * the request type editor (#354) and the form definition (#355), and
- * they take the place ST6 gives the in-use caption — which is why this
- * mount draws no caption: `requests` land in M20, so the count would
- * read "0 requests" on every row.
+ * **The Target column and the two-line row are this mount's own.** They
+ * take the place ST6 gives the in-use caption — which is why this mount
+ * draws no caption: `requests` land in M20, so the count would read
+ * "0 requests" on every row. The column reads the three states plainly:
+ * "Contract · NDA", "Contract", "No target" — a request type whose
+ * targeted type was hard-deleted has demoted to the module alone, and
+ * the column says so without ceremony. ST12's **Form fields** column
+ * joins them with the form definition (#355).
  *
  * Nothing here is system-protected. There is no fallback request type,
  * so a row an Administrator names "Other" archives and deletes like any
@@ -22,12 +24,22 @@
  */
 
 import { redirect, useLoaderData } from "react-router";
-import { defineMessages } from "react-intl";
+import { defineMessages, FormattedMessage } from "react-intl";
 import { api } from "../lib/api";
 import { problemDetail } from "../lib/messages";
 import { currentUser, needsSetup } from "../lib/session";
 import { IntakeSettingsTabs } from "../components/intake-settings-tabs";
-import { TaxonomyTypesPane, type TaxonomyPaneApi } from "../components/taxonomy-types-pane";
+import {
+  TaxonomyTypesPane,
+  type TaxonomyPaneApi,
+  type TaxonomyPaneRow,
+} from "../components/taxonomy-types-pane";
+
+/** One request type on the pane: the shared row plus the target. */
+interface RequestTypeRow extends TaxonomyPaneRow {
+  targetModule: "matter" | "contract" | null;
+  targetTypeId: string | null;
+}
 
 /** The section URL forwards to its first pane (SET-001 deep links). */
 export function settingsIntakeIndexLoader() {
@@ -38,11 +50,26 @@ export async function settingsRequestTypesLoader() {
   const user = await currentUser();
   if (!user) return redirect((await needsSetup()) ? "/auth/setup" : "/auth/login");
   if (user.role !== "administrator") return redirect("/settings/profile");
-  const { data } = await api.GET("/api/v1/request-types", {
-    params: { query: { includeArchived: "true" } },
-  });
-  if (!data) throw new Error("The request types could not be read.");
-  return { requestTypes: data.requestTypes };
+  const [typesRes, matterRes, contractRes] = await Promise.all([
+    api.GET("/api/v1/request-types", { params: { query: { includeArchived: "true" } } }),
+    // The row carries the target's id; its name lives in the taxonomy
+    // it points at. Archived rows ride along, because a target archived
+    // after it was picked still has to read as itself.
+    api.GET("/api/v1/matter-types", { params: { query: { includeArchived: "true" } } }),
+    api.GET("/api/v1/contract-types", { params: { query: { includeArchived: "true" } } }),
+  ]);
+  if (!typesRes.data || !matterRes.data || !contractRes.data) {
+    throw new Error("The request types could not be read.");
+  }
+  return {
+    requestTypes: typesRes.data.requestTypes,
+    targetTypeNames: Object.fromEntries(
+      [...matterRes.data.matterTypes, ...contractRes.data.contractTypes].map((row) => [
+        row.id,
+        row.displayName,
+      ]),
+    ),
+  };
 }
 
 /** The INT-002 vocabulary over the shared pane's message slots. */
@@ -102,10 +129,29 @@ const MESSAGES = defineMessages({
     defaultMessage: "The type could not be archived.",
   },
   archiveSubmit: { id: "settings.requestTypes.archiveSubmit", defaultMessage: "Archive type" },
+  edit: { id: "settings.requestTypes.edit", defaultMessage: "Edit {name}" },
+});
+
+/** ST12's two mount-specific column heads and the Target cell's three
+ * states. "Contract · NDA" names a type; "Contract" is the module
+ * alone, which is where a hard-deleted target type leaves the row. */
+const COLUMNS = defineMessages({
+  nameColumn: { id: "settings.requestTypes.nameColumn", defaultMessage: "Request type" },
+  targetColumn: { id: "settings.requestTypes.targetColumn", defaultMessage: "Target" },
+  targetPrefix: { id: "settings.requestTypes.targetPrefix", defaultMessage: "Target:" },
+  targetModule: {
+    id: "settings.requestTypes.targetModule",
+    defaultMessage: "{module, select, matter {Matter} contract {Contract} other {No target}}",
+  },
+  targetType: {
+    id: "settings.requestTypes.targetType",
+    defaultMessage:
+      "{module, select, matter {Matter · {name}} contract {Contract · {name}} other {{name}}}",
+  },
 });
 
 /** The shared pane's API seam over the request-types routes. */
-const PANE_API: TaxonomyPaneApi = {
+const PANE_API: TaxonomyPaneApi<RequestTypeRow> = {
   async create(displayName) {
     const { data, error } = await api.POST("/api/v1/request-types", { body: { displayName } });
     return { data: data?.requestType, detail: problemDetail(error) };
@@ -137,13 +183,39 @@ const PANE_API: TaxonomyPaneApi = {
 };
 
 export function SettingsRequestTypesPage() {
-  const { requestTypes } = useLoaderData<typeof settingsRequestTypesLoader>();
+  const { requestTypes, targetTypeNames } = useLoaderData<typeof settingsRequestTypesLoader>();
   return (
-    <TaxonomyTypesPane
+    <TaxonomyTypesPane<RequestTypeRow>
       initialRows={requestTypes}
       tabs={<IntakeSettingsTabs />}
       api={PANE_API}
       messages={MESSAGES}
+      editor={{ path: (row) => `/settings/intake/request-types/${row.id}`, label: MESSAGES.edit }}
+      columns={{
+        name: COLUMNS.nameColumn,
+        description: true,
+        meta: [
+          {
+            header: COLUMNS.targetColumn,
+            prefix: COLUMNS.targetPrefix,
+            width: "w-40",
+            cell: (row) => {
+              const name = row.targetTypeId ? targetTypeNames[row.targetTypeId] : undefined;
+              // No name means the module alone — either it was never
+              // given a type, or the type it named was hard-deleted and
+              // the FK demoted the row rather than stranding it.
+              return name === undefined ? (
+                <FormattedMessage {...COLUMNS.targetModule} values={{ module: row.targetModule }} />
+              ) : (
+                <FormattedMessage
+                  {...COLUMNS.targetType}
+                  values={{ module: row.targetModule, name }}
+                />
+              );
+            },
+          },
+        ],
+      }}
     />
   );
 }
