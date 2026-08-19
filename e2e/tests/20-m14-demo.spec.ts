@@ -449,6 +449,22 @@ function moveControl(page: Page): Locator {
  * status the record holds without that ambiguity, and the pill's own
  * following of the label has web coverage of its own.
  */
+/**
+ * Which stage the strip is on, read while a dialog is open over it.
+ *
+ * An open dialog takes the page behind it out of the accessibility
+ * tree, so no role query reaches the strip and the menu cannot be
+ * opened at all. The trigger still carries its stage in its own label,
+ * though, and a CSS locator is not filtered by `aria-hidden` — so the
+ * one thing that can still be read behind a dialog is read that way.
+ */
+async function expectStageBehindDialog(page: Page, stage: StageName): Promise<void> {
+  await expect(page.locator('button[aria-label$="move contract"]')).toHaveAttribute(
+    "aria-label",
+    `${stage} — move contract`,
+  );
+}
+
 async function expectStatus(page: Page, status: StatusOption): Promise<void> {
   await moveControl(page).click();
   await expect(
@@ -826,7 +842,7 @@ test.describe.serial("M14 demo path", () => {
       // And nothing moved. The gate warns before the fact rather than
       // after it, so the record is exactly where it was — on the screen
       // behind the dialog and at the seam.
-      await expectStatus(page, approval);
+      await expectStageBehindDialog(page, "Approval");
       expect((await readContract(page.request, number)).stage).toBe("approval");
 
       // The confirmation. It never blocks (CTR-012): one deliberate

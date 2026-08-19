@@ -819,7 +819,6 @@ test.describe("M16 demo path", () => {
       );
       await expect(noticeRow).toContainText(shortDate(termed.noticeDeadline!));
       await expect(noticeRow).toContainText("Derived");
-      await expect(noticeRow).toContainText("Next deadline");
       await expect(deadlineRow(memberPage, "Current term expires")).toHaveCount(1);
       // The surface is this milestone's own, so it is scanned and
       // asserted rather than reported (#48, DES-011).
@@ -888,14 +887,15 @@ test.describe("M16 demo path", () => {
       await expect(addDialog).toBeHidden();
 
       // The screen half: three dates in one list, the team's own row
-      // told from the term's by the Source chip, and the next deadline
-      // named in words rather than only in colour.
+      // told from the term's by the Source chip. Which date is next is
+      // said by the order alone — the DES-042 amendment took the Due
+      // column and its "Next deadline" words out, because a distance
+      // and the date beside it are the same fact said twice.
       const keyRow = deadlineRow(memberPage, KEY_DATE_LABEL);
       await expect(keyRow).toHaveCount(1);
       await expect(keyRow).toContainText(KEY_DATE_NOTE);
       await expect(keyRow).toContainText("Key date");
-      await expect(keyRow).toContainText("Next deadline");
-      await expect(keyDatesCard(memberPage).getByText("Next deadline")).toHaveCount(1);
+      await expect(keyDatesCard(memberPage).getByText("Next deadline")).toHaveCount(0);
       await expect(keyDatesCard(memberPage).getByRole("img", { name: "3 dates" })).toBeVisible();
 
       // The seam half: one union, ordered nearest-first, and exactly one
