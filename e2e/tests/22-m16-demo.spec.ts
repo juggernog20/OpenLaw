@@ -963,7 +963,12 @@ test.describe("M16 demo path", () => {
       // will: a second read, after the walk has been elsewhere, finds
       // the record exactly where the person left it.
       await openSection(memberPage, number, "Key dates", "/key-dates");
-      await expect(deadlineRow(memberPage, "Current term expires")).toContainText("Past");
+      // The row still carries the expiry the term lapsed on. The word
+      // "Past" went with the Due column in the DES-042 amendment — the
+      // date says it, and saying it twice is what the amendment removed.
+      await expect(deadlineRow(memberPage, "Current term expires")).toContainText(
+        shortDate(lapsedExpiry),
+      );
       const stillPending = await readContract(memberPage.request, number);
       expect(stillPending.expiryDate).toBe(lapsedExpiry);
       expect(stillPending.renewalPendingConfirmation).toBe(true);
