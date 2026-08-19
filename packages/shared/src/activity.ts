@@ -66,8 +66,11 @@ type Prefixed<P extends string, M> = { [K in keyof M & string as `${P}.${K}`]: M
 
 /** The taxonomy tables' audit namespaces. */
 export type TaxonomyActionPrefix = "contract_type" | "matter_type" | "entity_type" | "request_type";
-/** The two catalogs of fields attached to a type. */
-export type TypeFieldActionPrefix = "contract_type_field" | "matter_type_field";
+/** The catalogs of fields attached to a type — two type editors, and
+ * the request type's form definition (INT-002), which is the same
+ * machinery over the same catalog. */
+export type TypeFieldActionPrefix =
+  "contract_type_field" | "matter_type_field" | "request_type_field";
 
 /**
  * The seven verbs a settings taxonomy writes. A rename carries the pair
@@ -783,6 +786,7 @@ export type ActivityPayloadMap = UserPayloads &
   Prefixed<"request_type", TaxonomyPayloads> &
   Prefixed<"contract_type_field", TypeFieldPayloads> &
   Prefixed<"matter_type_field", TypeFieldPayloads> &
+  Prefixed<"request_type_field", TypeFieldPayloads> &
   ContractStatusPayloads &
   FieldCatalogPayloads &
   ApproverGroupPayloads &

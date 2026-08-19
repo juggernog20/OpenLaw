@@ -24,8 +24,10 @@
  *
  * **The mount's own columns.** `extras` adds keys to the row
  * projection and to the strict PATCH body, validates them under the
- * row lock, and narrates them in the `updated` payload. A mount that
- * passes none is the plain taxonomy the three type tables are.
+ * row lock, and narrates them in the `updated` payload. A column the
+ * row does not carry — a count over another table — is read once per
+ * answer set, never row by row. A mount that passes no extras is the
+ * plain taxonomy the three type tables are.
  */
 
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
@@ -106,14 +108,29 @@ export interface TaxonomyExtrasPatchInput<TPatch extends z.ZodRawShape = z.ZodRa
 export interface TaxonomyExtras<
   TRow extends z.ZodRawShape = z.ZodRawShape,
   TPatch extends z.ZodRawShape = z.ZodRawShape,
+  TContext = undefined,
 > {
   /** Extra keys on the row schema, so they appear in the list and the
    * single-row responses and in the OpenAPI document. */
   rowSchema: TRow;
+  /**
+   * What the projection needs that the rows do not carry, read once
+   * over exactly the rows about to be projected.
+   *
+   * A column that counts rows in another table — request types count
+   * the fields on their form (INT-002) — cannot be read off the row,
+   * and reading it row by row would be an N+1 behind one list. This is
+   * `TaxonomyUsage.counts` in the general: one batched read, on the
+   * caller's executor, answering something keyed by row.
+   *
+   * Omitted, `projectRow` is handed `undefined` — the three type
+   * taxonomies project off the row alone.
+   */
+  loadContext?: (db: Executor, rows: readonly TaxonomyRow[]) => Promise<TContext>;
   /** Every key `rowSchema` declares and no other, read off the row the
-   * machinery selected. A mount casts to its own row type — it owns its
-   * table. */
-  projectRow: (row: TaxonomyRow) => z.infer<z.ZodObject<TRow>>;
+   * machinery selected and whatever `loadContext` answered. A mount
+   * casts to its own row type — it owns its table. */
+  projectRow: (row: TaxonomyRow, context: TContext) => z.infer<z.ZodObject<TRow>>;
   /** Extra keys the strict PATCH body accepts. The body stays strict:
    * a key no mount declared is still refused rather than stripped, and
    * a mount may not declare a machinery-owned column (`slug` above
@@ -135,6 +152,7 @@ export interface TaxonomyExtras<
 interface TaxonomyRoutesBase<
   TRow extends z.ZodRawShape = z.ZodRawShape,
   TPatch extends z.ZodRawShape = z.ZodRawShape,
+  TContext = undefined,
 > {
   table: TaxonomyTable;
   /** URL segment under /api/v1, e.g. `contract-types`. */
@@ -170,19 +188,20 @@ interface TaxonomyRoutesBase<
   /** The mount's own columns on the row, the PATCH body, and the
    * `updated` payload. Omitted, the mount is the plain taxonomy the
    * three type tables are. */
-  extras?: TaxonomyExtras<TRow, TPatch>;
+  extras?: TaxonomyExtras<TRow, TPatch, TContext>;
 }
 
 export type TaxonomyRoutesConfig<
   TRow extends z.ZodRawShape = z.ZodRawShape,
   TPatch extends z.ZodRawShape = z.ZodRawShape,
+  TContext = undefined,
 > =
-  | (TaxonomyRoutesBase<TRow, TPatch> & {
+  | (TaxonomyRoutesBase<TRow, TPatch, TContext> & {
       /** The milestone whose records arm `usage` (M8 / M22). */
       recordsMilestone: string;
       usage?: never;
     })
-  | (TaxonomyRoutesBase<TRow, TPatch> & {
+  | (TaxonomyRoutesBase<TRow, TPatch, TContext> & {
       recordsMilestone?: never;
       /** The module's live-usage counter and reassignment mover. */
       usage: TaxonomyUsage;
@@ -254,7 +273,8 @@ export function recordNounPhrase(recordNoun: { singular: string; plural: string 
 export function taxonomyRoutes<
   TRow extends z.ZodRawShape = z.ZodRawShape,
   TPatch extends z.ZodRawShape = z.ZodRawShape,
->(config: TaxonomyRoutesConfig<TRow, TPatch>): FastifyPluginAsyncZod {
+  TContext = undefined,
+>(config: TaxonomyRoutesConfig<TRow, TPatch, TContext>): FastifyPluginAsyncZod {
   const { table, path, noun } = config;
   // A mount adds keys and redefines none: a key the machinery already
   // declares would silently take over the projection or the body, so it
@@ -289,12 +309,26 @@ export function taxonomyRoutes<
   // The system-protected row's clause in the generated summaries. Empty
   // for a mount with no protected row, which then does not promise one.
   const protectedClause = config.protectedSlug ? `\`${config.protectedSlug}\` refuses` : "";
-  // The one place the extras' types are erased: past here the machinery
-  // treats a mount's keys as opaque, and `RowSchema` is what holds them
-  // to what `rowSchema` declared.
-  const projectExtras = config.extras?.projectRow as ProjectExtras | undefined;
+  const extras = config.extras;
 
   return async (app) => {
+    /**
+     * The mount's projection for one answer set, with whatever
+     * `loadContext` had to read for it already in hand.
+     *
+     * This is the one place the extras' types are erased: past here the
+     * machinery treats a mount's keys as opaque, and `RowSchema` is
+     * what holds them to what `rowSchema` declared.
+     */
+    async function projectExtrasFor(
+      db: Executor,
+      rows: readonly TaxonomyRow[],
+    ): Promise<ProjectExtras | undefined> {
+      if (!extras) return undefined;
+      const context = (await extras.loadContext?.(db, rows)) as TContext;
+      return (row) => extras.projectRow(row, context) as Record<string, unknown>;
+    }
+
     /** Locks and returns one row, or 404s — every :id mutation starts here. */
     async function lockedType(tx: Transaction, id: string): Promise<TaxonomyRow> {
       const [row] = await tx.select().from(table).where(eq(table.id, id)).limit(1).for("update");
@@ -310,7 +344,11 @@ export function taxonomyRoutes<
 
     /** One row as its envelope value, with its live count. */
     async function rowJson(row: TaxonomyRow) {
-      return toRow(row, await usageCounts(app.db, [row.id]), projectExtras);
+      const [counts, projectExtras] = await Promise.all([
+        usageCounts(app.db, [row.id]),
+        projectExtrasFor(app.db, [row]),
+      ]);
+      return toRow(row, counts, projectExtras);
     }
 
     /** "3 entities" / "1 entity" — the guard refusals' count phrase. */
@@ -341,10 +379,13 @@ export function taxonomyRoutes<
           .from(table)
           .where(request.query.includeArchived === "true" ? undefined : isNull(table.archivedAt))
           .orderBy(asc(table.displayOrder), asc(table.createdAt));
-        const counts = await usageCounts(
-          app.db,
-          rows.map((row) => row.id),
-        );
+        const [counts, projectExtras] = await Promise.all([
+          usageCounts(
+            app.db,
+            rows.map((row) => row.id),
+          ),
+          projectExtrasFor(app.db, rows),
+        ]);
         return { [config.keyPlural]: rows.map((row) => toRow(row, counts, projectExtras)) };
       },
     );
@@ -584,10 +625,13 @@ export function taxonomyRoutes<
           });
           return reordered;
         });
-        const counts = await usageCounts(
-          app.db,
-          rows.map((row) => row.id),
-        );
+        const [counts, projectExtras] = await Promise.all([
+          usageCounts(
+            app.db,
+            rows.map((row) => row.id),
+          ),
+          projectExtrasFor(app.db, rows),
+        ]);
         return { [config.keyPlural]: rows.map((row) => toRow(row, counts, projectExtras)) };
       },
     );
