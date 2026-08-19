@@ -2170,6 +2170,8 @@ This is not a fifth strip under DES-032: it is the same strip, reflowed, and onl
 
 **8. Two normalizations off the mock.** The glyphs are 12px rather than the mock's 12 and 10 — one sub-16 step, the size the checkbox indicator already uses for a glyph inside a control (DES-008 governs standalone icons, and these are interior to a compact metadata strip). The marker pill takes the shipped status pill's `px-2 py-0.5` and `font-medium` rather than the mock's raw 3/10 padding and 600 weight, because the two pills sit side by side on the same row and a half-pixel disagreement between them would read as a mistake.
 
+**9. On a wide shell the breadcrumb group takes the row's slack, so the strip is pinned against the record actions.** The three groups sit on one line and the free space has to go somewhere. Giving it to the breadcrumb group — `flex-1` from `@5xl/shell` up — parks the strip a fixed distance from the right edge. Sizing that group to its own content instead, which is what the row did first, hung the strip off the title and the status label: the label is renameable (CTR-001), so the strip moved when an Administrator renamed a status, and it moved again on every record the reader opened. The strip is the one thing on this row a reader returns to across records, so it is the one thing that may not wander. This governs the wide row only — under `@5xl/shell` the row wraps by clause 4 and the strip takes clause 5's `grow basis-0` on its own line.
+
 ### Rationale
 
 The pipeline is the reason CTR-001 has a fixed backbone at all. A reader who does not know that "Redlining with counterparty" is a review-stage status cannot read the pill; the pipeline is what turns a team's private vocabulary back into the six words every contract shares.
@@ -3009,6 +3011,20 @@ Every column therefore has a real `defaultWidth` in the catalogue, the stretchin
 
 **2. Cells truncate; they never wrap.** Every cell is single-line with `truncate`, and any cell whose text can outrun its column carries the full text as a `title`. A row is one line tall at DES-007's density (`py-2.5`), so thirty rows scan as thirty rows. Wrapping is what made one short title look like a defect.
 
+**A cell that draws a shape clips instead, because the ellipsis belongs to text.** A status pill is the case: it is a coloured shape with a rounded end, and an ellipsis inside it has to eat that end to make room for itself. The result reads as a broken pill rather than as a long status name, which is the opposite of what the mark is for. So a column may declare itself `clip`, and its cell is cut on a clean vertical edge at the column boundary — the shape is whole as far as it goes, and clause 1's sideways scroll reaches the rest.
+
+This is a carve-out for shapes, not a second option for text. A text run in a narrow column still ellipsizes: there the mark sits at the end of a line and says the one thing it is good at saying. Two columns cannot make the same content clip in one list and ellipsize in another, because the flag belongs to the catalogue's column and not to a layout.
+
+The pill also has to be held at its intrinsic width for the cut to land in the right place. An inline shape is shrink-to-fit by default, so a narrow cell squeezes it to its longest word and lets the remainder of the name spill out past its own background — loose text beside a coloured shape, which is worse than either the ellipsis or the cut. The shape takes `width: max-content`, and the cell clips shape and text on the same edge.
+
+A status name is whatever an Administrator called it (CTR-001), so no column floor can promise the pill fits. That is why this is a rendering rule and not a wider `minWidth` on the Status column.
+
+**The `title` is measured on hover, and it carries the spoken text rather than the drawn text.** Two refinements this clause needed once it was built. A `title` on every cell pops a tooltip repeating text the reader can already read, which is noise in a strip they are scanning thirty rows of — only a clipped cell has anything to add, and whether a cell is clipped changes with every column drag. So it is measured when the pointer arrives: no observer per cell, and nothing to re-sync when a column moves. And the text is the cell's accessible name, not its `textContent`. A cell can draw text nobody should hear — the initials on an avatar abbreviate the name beside them — and can mean text it never draws, which is what the `aria-label` on DES-009's "CONFI" marker is. The reader hovering is asking what the cell says, not what it drew.
+
+Headings take the same treatment, and need it because clause 1's floors deliberately sit under them. A column dragged narrow truncates its own name rather than stopping at a width the heading chose, so the heading is a clipped text run like any other.
+
+`title` is a pointer affordance and this clause only ever asked for one. It is not reachable from the keyboard and does not appear on touch, and it is not the sole route to the text: a cell is clipped here by a width the reader chose, and clause 1's sideways scroll and the drag that narrowed it both reach the whole value.
+
 **3. The resize handle is a keyboard control that also takes a drag, and it shows.** On the trailing edge of each resizable header cell sits a 9px-wide, full-height strip with `cursor: col-resize`, straddling the column boundary. It draws a 1px rule on that boundary at rest, in `border-default` — the colour of every other rule in the table — and firms up to `border-strong` under the pointer, on focus, and for the length of a drag. A draggable edge has to look like an edge before anyone reaches for it, and a hover-only affordance in a header strip is one nobody discovers.
 
 **The rule belongs to the boundary, not to the handle**, and since clause 1 makes every column resizable, every column carries both. Only the filler goes without, because the card's own border is its edge.
@@ -3364,6 +3380,212 @@ Point 6 is stated because the honest answer is unusual. It would be easy to impl
 
 `apps/web/src/components/list-editor.tsx` gains three optional inputs — the remove pair, and a `busy` flag for a save that covers the whole list — and its rename and archive pairs become optional. Every existing caller passes what it always passed and renders identically. The surface is `apps/web/src/routes/settings-reminders.tsx` behind `/settings/reminders`, and `apps/api/src/modules/org/routes.ts` carries the `GET`/`PUT` pair the pane reads and writes. The next value list — a digest send hour, a retention window, any admin-tuned ladder — builds to this record rather than re-deriving it; if it needs the value to be editable in place rather than removed and re-added, that is a third variant and a fourth record, not a local deviation here.
 
+## DES-053: The status moves from the strip — the current stage is the trigger (extends DES-034, DES-017, DES-032)
+
+- **Status:** Accepted
+- **Date:** 2026-08-19
+
+### Context
+
+#325 asks for a control that makes a status change feel like the deliberate step it is, and names what it replaces: a plain `<select>` in the Contract card, indistinguishable from the four other selects beside it. A status change is not like setting a priority. It is the sentence the whole record is read through, and CTR-012 already treats one class of it as worth stopping for.
+
+Three constraints were fixed before the first sketch.
+
+**Movement is free** (CTR-001). Any status to any status — forwards, backwards, and skipping — because deals collapse and redlines reopen after sign-off. So nothing here may fill up, ratchet, or lock; the six stages are a position, never a progress bar.
+
+**The chrome is spent** (DES-032, DES-034). The record already carries a 48px nav, a ~64px sub-bar that wraps to two lines under 1024px, and a 36px section strip. DES-032 closed the door on a new permanent horizontal band, so a "next step" ribbon across the top of the body was never available.
+
+**The record already says where the contract is, twice.** The sub-bar pill takes the renameable status label; the six-stage strip beside it takes the fixed stage that label maps to (CTR-001, one datum at two zooms). Both were readings. Neither did anything.
+
+Six iterations are drawn in `designs/stage-component-design.pen` — a command palette, a status card of its own, a move panel carrying the whole flow, a 400px phone sheet with the soft gate as its second page, a history applet in the DES-016 rail, and frame **06 — Current stage opens the menu**. Frame 06 is the one this record builds.
+
+### Decision
+
+**1. The strip stays a reading, and exactly one of its six items is pressable.** The item is the one the contract is on. Every other stage is what it always was: a name, a check where the marker has been past, and no affordance. One pressable stage rather than six, because a stage is not what commits — see point 3 — so five of the six presses would have been a guess about which status was meant.
+
+**2. The trigger is the current stage's pill, wearing a border and a chevron.** It keeps its DES-005 stage family, so the strip still reads as one sequence at a glance. What says it can be pressed is a `border-border-default` outline and a 12px `chevron-down` — never colour alone (DES-011) — and it carries the strip's own 12px interior glyph size that DES-034 records. It takes a `min-h-6` floor so a pressable row of an 11px strip still offers DES-011's 24px target, the standard focus ring, and the button vocabulary's own hover.
+
+**3. The menu offers statuses, and names each one's stage.** A status is what commits; a stage is derived from it, and two statuses may share one (CTR-001, and the seeds prove it — "Internal review" and "With counterparty" are both `review`). So the trigger is labelled with a stage and the list under it is not, and every row carries its stage on the right in muted 11px text. Without that column the two `review` rows would read as an unexplained pair.
+
+**4. The list is flat, in the seam's own order, and every status is one press away.** No grouping, no distance ordering, no greying of what is "backwards". CTR-001's rule is that movement is free, and a menu that ranked its rows would be the first surface to imply otherwise.
+
+**5. The status the record holds is checked, and picking it again commits nothing.** The rows are a `menuitemradio` group, because the record holds exactly one status: the check says where the contract is, in the menu as well as on the strip. Re-picking the checked row is not a move, and sending it would write an activity entry saying a contract moved to where it already was (DD-017).
+
+**6. The status leaves the Contract card.** One datum gets one control. The card keeps every other inline field; the status commits from the strip, which is on screen in all six sections rather than on the Overview alone.
+
+**7. The move prints the refusal alone, and the control carries the rest.** The seam's own refusal is printed beside the strip, where the press was made — a refusal has nowhere else to go, and the soft gate's own is still cleared as its dialog opens so the two never speak at once (DES-035 clause 12). "Saving…" and "Saved" are not printed. The trigger is disabled while the write is out, and it redraws on the new stage the moment the write answers, so the strip is already both the progress and the receipt; a word beside it would say a second time what the reader is looking at, and on a write this short the two would only flash past.
+
+This is the one carve-out from DES-017's micro-state trio, and it is available only because this control both blocks and redraws itself. A field whose control looks the same after its write keeps all three states — the pane and the card fields are unchanged.
+
+**8. The soft gate is untouched** (CTR-012). The browser does not work out whether a move crosses the approval line; it sends the commit, and the seam's refusal is what raises the shipped dialog. The gate warns and never blocks, and it now warns about a press made in a different place — which is exactly why the rule stayed at the seam.
+
+**9. A viewer who may not move the contract gets no trigger at all.** Absent, not disabled. An archived record and a Contributor (CTR-021) both read the strip exactly as it read before this record: where the contract sits is a fact about it, not an affordance. Nothing greys out, so nobody has to work out why.
+
+### Recorded normalization points
+
+1. **The mock redraws the strip as a segmented control**, on a 32px track with 3px of padding and a 4px-radius chip. The build keeps DES-034's strip geometry and its `rounded-pill` current item, and adds the border and chevron to it. The change under test is the affordance, not the chrome, and a second geometry for the same strip would be a second thing to keep true.
+2. **The mock draws a stage dot on every menu row.** The build does not. The stage is named in words on each row, which is the carrier DES-011 asks for, and a dot would need a colour map of its own — the `onhold` family inverts its pair, so `ended` alone would need a second rule.
+3. **The mock pins a "suggested next" row at the top of the menu.** Not built: there is no flow in the product. CTR-001 has an order of stages, not a configured graph over statuses, so the only suggestion available would be a guess dressed as a recommendation. This is the first thing to add to the menu if a flow ever lands.
+4. **The mock draws the soft gate as a popover in the menu's place.** The build keeps CTR-012's shipped dialog. The gate is a decision with two named people on it, and it already reads well; redrawing it was not what #325 asked for.
+5. **A stage the build cannot place leaves no trigger.** `CONTRACT_STAGES` is checked exhaustively against the generated API union, so this needs a server newer than its own schema. The strip already drew that case as "not placed"; the move control is absent with it, and the seam stays the authority.
+
+### Rationale
+
+Point 1 is the whole record. The reader's eye is already on the strip — it is the only thing on the sub-bar that answers "where is this?" — so the act costs no search. Fusing a CTA to the strip instead (Salesforce's Path) was measured on the real chrome and rejected: at 1024px DES-034 already wraps this row, and a button wide enough to name its target truncates the contract's title to nothing.
+
+Point 3 is the vocabulary, enforced. It would have been easy to draw six pressable stages and call it a stage picker, and it would have been wrong the first time a team kept two `review` statuses — which the seeds already do. The record commits a status; the strip is a reading of the stage that status maps to; the menu is the only place where the difference has to be drawn, and it is drawn as words.
+
+Point 5 is the smallest rule with the largest effect on the activity feed. Radix answers a pick on the checked row, and without the guard the feed would fill with moves to where the contract already was.
+
+Point 9 follows the convention the nav, the settings rail, and the archive action already keep. A disabled control is a question — a reader has to work out whether it is their role, the record's state, or a bug — and the answer here is never actionable by the person asking.
+
+### Alternatives considered
+
+- **A primary "Move to [next status]" button in the sub-bar**, which is #325's own first idea. Rejected: naming the next status needs a flow, and there is not one. Without it the button names a guess, and a guess in a CTA is worse than no CTA. Revisit with the flow.
+- **Every stage in the strip pressable.** Rejected with point 3: two statuses may share a stage, so half the presses could not be answered without a second question.
+- **Redrawing the strip to show statuses rather than stages.** Rejected: eight configurable labels, some of them sentences, in a slot the sub-bar cannot grow. The strip is fixed and short precisely because the stage list is.
+- **Keeping the card's select as well.** Rejected: two controls for one datum, and DES-017's inline rule does not ask for a field to be editable twice.
+- **A move panel in the DES-016 activity rail** (frame 05), which would also have carried the contract's history through the flow. Rejected for now: it puts the act one press further away and behind an applet toggle, and the rail is already three applets deep. Worth revisiting when the history it would show exists as a surface.
+- **A command palette move** (frame 01) and **a phone sheet** (frame 04). Rejected as the primary path, not as paths: the trigger is a real button in the tab order and the menu is arrow-key operable, which is the keyboard story this surface owes. On a narrow shell the strip wraps to the sub-bar's second line (DES-034) and the trigger wraps with it.
+- **A confirmation on every move.** Rejected: CTR-012 already spends the one confirmation this act gets, on the one crossing that earns it. A second would be the confirmation nobody reads.
+
+### Consequences
+
+`apps/web/src/components/stage-pipeline.tsx` gains one optional `move` input and the `MoveMenu` it draws. Without it the component renders exactly as before, which is what every read-only mount gets.
+
+The Contract card loses its Status field. `contracts.form.status` goes; `contracts.stage.move` and `contracts.stage.moveTo` arrive. The trigger's accessible name is `{stage} — move contract`, which leads with the visible word so speech input can still ask for it by what it says (WCAG 2.5.3).
+
+Six e2e specs drove the status through `getByLabel("Status")`. They now open the menu and pick a row, and the two that asserted which status was held read the menu's checked row instead — the sub-bar pill cannot answer it, because a status label and a stage name are often the same word.
+
+The seeded `redlining` status is renamed to **"With counterparty"** by `0056_redlining_status_rename.sql`, guarded on the old text so an install that renamed it keeps its own name. `0009` seeded it as "Redlining with counterparty", which names the act; a status says where the contract sits, so the label says who holds it. Drawing the status list in a menu is where the wrong word showed.
+
+## DES-054: The collapsible settings card — the header is the disclosure (extends DES-020, DES-011)
+
+- **Status:** Accepted
+- **Date:** 2026-08-19
+
+### Context
+
+The Integrations pane is a credential form and nothing else. `SETTINGS-INVENTORY.md`'s M15 amendment recorded why: ST7 draws a **summary row** for DocuSign — logo, name, a "Connected" pill, a Configure button — and the build replaced it with the form itself, because the button implied a second screen the pane does not have.
+
+That trade landed the pane on the other extreme. Five credential fields, two of them write-only, a read-only webhook URL, a switch, and a remove button are on screen at all times on an install where the connector was set up once and has worked ever since. The AI-analysis card joins the same pane in M31 (SET-007), so the pane's steady state is two full credential forms stacked.
+
+There is a disclosure in Settings already: `RailSubgroup` collapses the Security group in the rail (SET-001 amendment). Nothing yet collapses a card.
+
+### Decision
+
+**1. A settings card can be a disclosure, and it is opt-in.** `SettingsCard` gains `collapsible`; without it the card renders exactly as it did, which is what all thirty existing call sites get.
+
+**2. The card's own title is the button.** Not a caret at the far end, not a second control beside the name. The button takes the header strip's free width, so the target is the header rather than the six letters in it — and the header still holds its `actions` slot, which stays outside the button, because a control inside a button is not a control.
+
+**3. The anatomy is the rail's disclosure, one level up.** A 16px `ChevronRight` closed and `ChevronDown` open, `text-muted`, before the name; `aria-expanded` and `aria-controls` on the button; the body **conditionally rendered, not hidden with CSS**, which is what `RailSubgroup` does and what keeps a closed card out of the tab order without an `inert` of its own.
+
+**4. A closed card carries the card's own bottom edge.** The header strip drops its bottom rule and takes `rounded-b-card`, so a closed card is a header and not a header with a line under it and a border under that.
+
+**5. The state is the card's own, and it does not persist.** Local state, reset by navigation, the same as the rail's groups. Nothing about which cards a person left open is worth a row.
+
+**6. The E-signature card opens on an install with no connector and starts closed once one is stored.** The setup is the only thing the pane is for until it is done; after that the credentials are reference. This is the rule any Integrations card follows — closed once it holds a working configuration.
+
+**7. A closed card says what it is, on the header, in one chip.** `bg-status-neutral-bg` "Not connected", `bg-status-success-bg` "Connected", `bg-status-onhold-bg` "Turned off" — the three states the connector row can be in, on the `rounded-pill` 11px chip anatomy the entities list already uses. Without it, closing the card would hide the one fact somebody opens this pane to check.
+
+### Rationale
+
+This is ST7's summary row, reconciled with the build rather than against it. The mock was right that the steady state of an integration is a name and a status; the build was right that Configure must not open a second screen. A disclosure is both: the summary is the header, and the form is behind it, in place.
+
+The title-as-button is what makes it cheap. A card that grows a caret grows a control; a card whose heading is already the button grows nothing, and the reader who wants the form clicks the word they were already reading.
+
+The rail's disclosure is reused rather than re-decided because two disclosures in Settings that behave differently is worse than either behaviour. Conditional rendering, not CSS, is the part worth naming: a `hidden` body keeps five focusable credential fields in the tab order of a card that is visibly shut.
+
+### Alternatives considered
+
+- **A caret at the trailing end of the strip, as V12's card chrome drew it.** Rejected: DES-041 already declined that caret for the record's cards, and it makes the target an icon where the whole header could be one.
+- **Every settings card collapsible.** Rejected: a list-editor pane is one card and the pane's whole reason for existing; collapsing it hides the pane behind itself. The Integrations pane is the case where a card is a stored configuration rather than the destination.
+- **Closed by default, always.** Rejected with clause 6: on an install with no connector that hides the only thing to do behind a click, on the one visit where the pane has a job.
+- **Persisting open cards per user.** Rejected: a preference row for something a click restores.
+- **`hidden` or `max-height` on the body instead of unmounting it.** Rejected with clause 3 — and an animated height would be chrome motion on a surface DES-003 gives no motion budget.
+
+### Consequences
+
+`SettingsCard` gains `collapsible` and `defaultOpen`, a `useId` for `aria-controls`, and a `display: contents` wrapper around the body so a plain card lays out exactly as before and a `flush` body still reaches both edges.
+
+`SettingsESignaturePage` sets `collapsible`, `defaultOpen={!connector.configured}`, and a `ConnectionChip` in the header's `actions` slot. Three ICU messages arrive: `settings.eSignature.chip.connected`, `.notConnected`, `.turnedOff`. No new tokens — the chip uses three existing status families.
+
+`SETTINGS-INVENTORY.md`'s M15 delta 1 is **partly discharged**: the pane now has ST7's collapsed summary treatment, without ST7's Configure button and without a second screen. The M31 redraw it schedules is still owed, and it now has two collapsed cards to draw rather than one row and one form.
+
+The M15 e2e spec opens the card before it fills the form, because a rerun inherits whichever state the last run left.
+
+### Amendment (2026-08-19): closed by default, always
+
+**Clause 6 is superseded.** An Integrations card starts **closed**, connector or no connector. `SettingsESignaturePage` passes `defaultOpen={false}`.
+
+The clause traded the pane's steady state for its first visit. That first visit happens once per install; every visit after it opens on a credential form nobody asked for. The chip on the header already says "Not connected", which is the same instruction the open form was there to give, and the form is one click behind the name.
+
+This also makes the pane one shape rather than two. With the AI card joining in M31 (SET-007), a pane whose cards open or not depending on what is stored reads as a pane that lost track of itself. Closed, it is a list of integrations and their states — which is what ST7 drew.
+
+The "Closed by default, always" alternative above is therefore **accepted**, not rejected.
+
+## DES-055: The record's overflow menu — the acts that belong to the whole contract (extends DES-034, DES-017, DES-053)
+
+- **Status:** Accepted
+- **Date:** 2026-08-19
+
+### Context
+
+The contract record's sub-bar ends in one control: an Archive button, secondary variant, sitting where DES-034 clause 3 puts the record actions. It has been the only member of that group since M8.
+
+A single naked button in a slot named "the record actions" is a slot that cannot grow. The next act that belongs to the contract rather than to one of its fields has nowhere to go but beside it, and DES-034 clause 4 already wraps this row at 1024px with one button on it.
+
+The button also has the wrong weight. Archiving is a soft delete — the seam calls it that, and says "nothing is deleted, and restore is the way back" — but a permanent button in the chrome reads as the record's primary act, which it is not. What a reader does with a contract record is read it and edit its fields; archiving it is the rare last thing.
+
+### Decision
+
+**1. The record actions become one overflow menu.** The trigger is the house pattern the key-dates and tasks rows already use: a `ghost` `size="icon"` button carrying Lucide's `MoreHorizontal` at 16px, opening a `DropdownMenu` aligned to its end. It is the last thing in the sub-bar, where the Archive button stood.
+
+A fixed-width trigger is also what DES-034 clause 9 needs. The strip is pinned against this group, so a group whose width changes with its contents would unpin it — which is exactly what a button that says "Archive" on one record and "Restore" on the next was doing.
+
+**2. A row a reader may not act on is absent, not disabled** — the convention the nav, the settings rail, and DES-053 clause 9 already keep. So the menu is not all-or-nothing: **copying a link is not a change to the record**, and a Contributor gets that row where they get no other. A Contributor's menu holds one row; an archived record's holds two.
+
+**3. Rename opens no editor.** The title has exactly one editor — the field on the Contract card (DES-017) — and DES-053 already refused a second control for one datum. So the row is a way to that field, not a way around it: it takes the reader to the Overview section if they are on another one, scrolls the field to the middle of the viewport, focuses it, and selects its text so the next keystroke is the new name. The commit is the field's own, on blur or Enter, in one PATCH. An archived record has no editable title, so it has no rename row.
+
+Centring rather than merely revealing is deliberate: the sub-bar and the section strip are sticky, and `scrollIntoView` alone can leave the field under them. The scroll is instant — DES-003 spends the motion budget on hover and focus, and this is neither.
+
+**4. Copying says so in the row, and the menu stays open to let it.** The row swaps to a `check` glyph and "Copied" for 2 seconds — the same pattern and the same 2 seconds the e-signature pane's copy button already spends — and its `onSelect` prevents the default close. Closing the menu on the press would take the only confirmation with it, and a note in the chrome for a clipboard write is chrome for something that changed nothing.
+
+The link is the record's own address, `/contracts/{number}`, not the reader's current one. A link copied from the Documents section should open the record, not a section the person receiving it may not be looking for.
+
+**5. Archive keeps DES-053 clause 7's treatment: the refusal prints, the progress and the receipt do not.** The trigger is inert while the write is out, and the record answers in full when it lands — the row flips to "Restore", the Archived pill appears in this same row, the archived note appears over the body, and every field freezes. "Saving…" and "Saved" beside all of that would be the flash DES-053 clause 7 removed, on the other act that commits from this bar.
+
+**6. There is no Delete.** Archive **is** the soft delete for a contract, there is no route that destroys one, and the activity log (DD-017) is the reason. A menu is the surface where a Delete row would look natural and cost nothing to add, which is precisely why this record says it does not exist: the absence is a decision, not an omission. It is the first thing to revisit if a retention policy ever lands.
+
+### Recorded normalization points
+
+1. **The ask was a hamburger.** The build uses `MoreHorizontal`. In this system a hamburger means navigation, and every overflow menu already shipped — the tasks row, the key-dates row, the documents row, the column menu — uses the ellipsis. A second glyph for one meaning is the drift DES-008 exists to prevent.
+
+### Rationale
+
+Clause 2 is the clause worth defending. It would have been simpler to keep the whole menu behind `canEdit` and match the button it replaces exactly. But the button was only ever mutations, and the menu is not — the moment it holds one row that changes nothing, "who may see this menu" and "who may act in it" stop being the same question. Answering them separately is what lets the record offer a Contributor something useful in the chrome for the first time.
+
+Clause 3 is where a menu earns its keep without earning a second editor. "Rename" is what a reader looks for when the title is wrong; the field is what actually renames it. Pointing one at the other costs no new state, no dialog, and no second commit path — and it keeps the audit entry identical to the one an inline rename has always written.
+
+Clause 6 is the shortest clause and the one most likely to be reopened. Recording it as an absence with a reason means the next person to ask finds an answer rather than a gap.
+
+### Alternatives considered
+
+- **Keeping the Archive button and adding the menu beside it.** Rejected: two controls in the slot DES-034 gives one group, on a row that already wraps at 1024px.
+- **A menu behind `canEdit`, matching the button it replaces.** Rejected with clause 2 — it would hide the copy row from the readers most likely to be sent a link rather than to find one.
+- **Rename in a dialog.** Rejected: it is a second editor for a datum that has one, which is DES-053's own rejected alternative wearing a different hat.
+- **A toast for the copy.** Rejected: this system has no toast, and DES-017's micro-state is for writes to the record. A clipboard write is neither.
+- **"Duplicate contract" and "Export".** Not built: neither has a route behind it. They are the two rows to add first if they get one.
+- **A Delete row that archives.** Rejected outright: a row labelled Delete that does not delete is the worst of both, and the audit trail is the reason the act is a soft delete in the first place.
+
+### Consequences
+
+`apps/web/src/components/contracts/record-actions-menu.tsx` is the component; the contract record's sub-bar is its only mount. The record gains `renaming` state and a `focusTitle` helper; it loses the `Archive`/`ArchiveRestore` imports and the button they dressed.
+
+Three ICU messages arrive — `contracts.record.actions`, `.copyLink`, `.rename`. `contracts.record.archive` and `.restore` stay, on menu rows now. No new tokens.
+
+Anything that drove the record by pressing an "Archive" button now opens the menu first. The M8 e2e spec's Contributor check asserts the menu's rows rather than the absence of a button, which is the stronger assertion — it proves what the reader _is_ offered, not only what they are not.
+
 ## Index of decisions
 
 | #       | Decision                                                                                                                                                             | Status   |
@@ -3420,3 +3642,6 @@ Point 6 is stated because the honest answer is unusual. It would be easy to impl
 | DES-050 | The notification preferences pane — one row per event group, two switch columns (extends DES-017, DES-012, DES-011)                                                  | Accepted |
 | DES-051 | The email copy register (closes DES-015's deferral)                                                                                                                  | Accepted |
 | DES-052 | The value-list editor — the list-editor anatomy for a list of values (extends DES-020, DES-021)                                                                      | Accepted |
+| DES-053 | The status moves from the strip — the current stage is the trigger (extends DES-034, DES-017, DES-032)                                                               | Accepted |
+| DES-054 | The collapsible settings card — the header is the disclosure (extends DES-020, DES-011)                                                                              | Accepted |
+| DES-055 | The record's overflow menu — the acts that belong to the whole contract (extends DES-034, DES-017, DES-053)                                                          | Accepted |
