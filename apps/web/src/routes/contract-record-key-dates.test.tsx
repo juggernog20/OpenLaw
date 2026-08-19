@@ -8,8 +8,9 @@
  * What the section draws: the CTR-009 union in one table — the team's
  * own named dates beside the contract's expiry and its derived notice
  * deadline — with the head's count badge and its upcoming/past tally,
- * the Source chip that tells the three apart, and the next deadline
- * named in words rather than only in colour.
+ * and the Source chip that tells the three apart. It draws no distance
+ * and no next-deadline mark: the seam's order says both (DES-042
+ * amended), and the Date cell says the rest.
  *
  * What it offers: "Add date", the row's own edit, and the row's remove.
  * What it must not offer is asserted just as hard — the two derived rows
@@ -17,10 +18,9 @@
  * Contract card, and a read-only or archived record carries no control
  * anywhere.
  *
- * The order, the day counts, and which date is next are the seam's
- * answer (DES-040 clause 4), so these tests hand them over in the
- * response rather than recomputing them. The section must never work
- * them out itself.
+ * The order and the day counts are the seam's answer (DES-040 clause 4),
+ * so these tests hand them over in the response rather than recomputing
+ * them. The section must never work them out itself.
  */
 
 import { describe, expect, it } from "vitest";
@@ -247,21 +247,29 @@ describe("the record's Key dates section (CTR-009)", () => {
     expect(strip.getByRole("img", { name: "3 upcoming dates" })).toBeInTheDocument();
   });
 
-  it("names the next deadline in words, not only in colour", async () => {
+  it("says how far off a date is by its order alone, with no Due column", async () => {
     stubApi({ signedIn: MEMBER, extra: recordApi(UNION).handler });
     renderAt("/contracts/42/key-dates");
 
     const card = await section();
+    // Three columns and the action cell. The Due column is gone (DES-042
+    // amended): a distance and the word "Past" are the Date cell said
+    // twice, and the nearest date is the one on top.
+    expect(card.getAllByRole("columnheader").map((cell) => cell.textContent)).toEqual([
+      "Date",
+      "Event",
+      "Source",
+      "Actions",
+    ]);
+    expect(card.queryByText("Next deadline")).not.toBeInTheDocument();
+    expect(card.queryByText("Past")).not.toBeInTheDocument();
+    expect(card.queryByText(/^in \d/)).not.toBeInTheDocument();
+
+    // What is left says it: the seam's order puts the nearest upcoming
+    // date first and the one behind us last.
     const rows = card.getAllByRole("row").slice(1);
-    // Exactly one row says it, and it is the one the seam marked.
-    expect(card.getAllByText("Next deadline")).toHaveLength(1);
-    expect(rows[0]).toHaveTextContent("Next deadline");
-    // The distance is read from the seam's own day count, so the pill
-    // and the order can never disagree.
-    expect(rows[0]).toHaveTextContent("in 4 weeks");
-    expect(rows[2]).toHaveTextContent("in 4 months");
-    // A date behind us says so; how far behind is the Date column's job.
-    expect(rows[3]).toHaveTextContent("Past");
+    expect(rows[0]).toHaveTextContent("Renewal notice deadline");
+    expect(rows[3]).toHaveTextContent("Phase 1 delivery acceptance");
   });
 
   it("draws the section's own empty line when the record has no dates at all", async () => {

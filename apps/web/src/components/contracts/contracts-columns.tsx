@@ -18,7 +18,7 @@
  * notice deadline; a triage pass wants Owner and status.
  *
  * **Sortable is not the same as shown.** A column offers a sort by naming
- * an API sort key, and four of these deliberately name none: the notice
+ * an API sort key, and some of these deliberately name none: the notice
  * deadline, the days remaining, and the renewal proposal are derived at
  * read, so no index can serve an ordering the row does not hold (CTR-006),
  * and the value is an amount, a currency, and a cadence with no honest
@@ -29,7 +29,7 @@ import { Link } from "react-router";
 import { FormattedMessage } from "react-intl";
 import type { IntlShape } from "react-intl";
 import { FileText } from "lucide-react";
-import { formatDayDistance, formatShortDate } from "../../lib/format";
+import { formatShortDate } from "../../lib/format";
 import {
   contractReference,
   formatContractValue,
@@ -270,8 +270,30 @@ const COLUMNS: ColumnDef<ContractRow>[] = [
       intl.formatMessage({ id: "contracts.column.daysRemaining", defaultMessage: "Term left" }),
     defaultWidth: 120,
     minWidth: 100,
-    render: (row) =>
-      row.daysRemaining === null ? <NotRecorded /> : formatDayDistance(row.daysRemaining),
+    // A count of days, not a relative phrase. "Next year" is true of any
+    // date between 6 and 18 months out, and a renewals sweep is reading
+    // this column to tell those apart. The overrun wording carries the
+    // same count the other way, because a term that ran out last month
+    // is a fact the row still has to state.
+    render: (row, intl) => {
+      const days = row.daysRemaining;
+      if (days === null) return <NotRecorded />;
+      return days < 0
+        ? intl.formatMessage(
+            {
+              id: "contracts.column.termOverrun",
+              defaultMessage: "{days, plural, one {# day over} other {# days over}}",
+            },
+            { days: -days },
+          )
+        : intl.formatMessage(
+            {
+              id: "contracts.column.termLeft",
+              defaultMessage: "{days, plural, one {# day} other {# days}}",
+            },
+            { days },
+          );
+    },
   },
   {
     key: "termType",
@@ -289,8 +311,9 @@ const COLUMNS: ColumnDef<ContractRow>[] = [
       intl.formatMessage({ id: "contracts.column.entity", defaultMessage: "Our entity" }),
     defaultWidth: 170,
     minWidth: 120,
-    // CTR-011's our side. Not sortable: the seam's sort registry does not
-    // carry it, and adding one wants its own index.
+    // CTR-011's our side, ordered by legal name with case folded — the
+    // same shape as the other three name sorts.
+    sortKey: "entity",
     render: (row) => row.entity?.legalName ?? <NotRecorded />,
   },
   {

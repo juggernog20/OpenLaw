@@ -995,6 +995,12 @@
   "contracts.column.status": {
     "defaultMessage": "Status"
   },
+  "contracts.column.termLeft": {
+    "defaultMessage": "{days, plural, one {# day} other {# days}}"
+  },
+  "contracts.column.termOverrun": {
+    "defaultMessage": "{days, plural, one {# day over} other {# days over}}"
+  },
   "contracts.column.termType": {
     "defaultMessage": "Term"
   },
@@ -1019,9 +1025,6 @@
   "contracts.confidential.field": {
     "defaultMessage": "Confidential — restrict to the contract team"
   },
-  "contracts.confidential.hint": {
-    "defaultMessage": "Everyone outside the contract team loses the record and everything on it. The Owner and Administrators keep it."
-  },
   "contracts.confidential.manageTeam": {
     "defaultMessage": "Manage team"
   },
@@ -1041,7 +1044,7 @@
     "defaultMessage": "Nobody is recorded on the other side yet."
   },
   "contracts.counterparty.hint": {
-    "defaultMessage": "Type an unknown name to create it. Add its details later."
+    "defaultMessage": "Type an unknown name to create it."
   },
   "contracts.counterparty.makePrimary": {
     "defaultMessage": "Make primary"
@@ -1114,9 +1117,6 @@
   },
   "contracts.form.description": {
     "defaultMessage": "Description"
-  },
-  "contracts.form.draftNote": {
-    "defaultMessage": "New contracts start in Draft. Set everything else on the record."
   },
   "contracts.form.effectiveDate": {
     "defaultMessage": "Effective date"
@@ -1404,7 +1404,7 @@
     "defaultMessage": "Show archived"
   },
   "contracts.showEnded": {
-    "defaultMessage": "Show ended"
+    "defaultMessage": "Show inactive"
   },
   "contracts.softGate.error": {
     "defaultMessage": "The status could not be changed."
@@ -1528,9 +1528,6 @@
   },
   "contracts.value.currencyPlaceholder": {
     "defaultMessage": "Currency…"
-  },
-  "contracts.value.empty": {
-    "defaultMessage": "No value is recorded. Many contracts have none."
   },
   "contracts.value.hint": {
     "defaultMessage": "Empty the amount to take the value off."
@@ -1916,12 +1913,6 @@
   "documents.details.title": {
     "defaultMessage": "Edit details"
   },
-  "documents.dropChain": {
-    "defaultMessage": "Folder structure is kept. To add a round to an existing chain, use Add version on that document."
-  },
-  "documents.dropHint": {
-    "defaultMessage": "Drop files or folders here — each file becomes a new document at version 1"
-  },
   "documents.empty": {
     "defaultMessage": "No documents on this contract yet."
   },
@@ -2189,9 +2180,6 @@
   "keyDates.column.date": {
     "defaultMessage": "Date"
   },
-  "keyDates.column.due": {
-    "defaultMessage": "Due"
-  },
   "keyDates.column.event": {
     "defaultMessage": "Event"
   },
@@ -2239,12 +2227,6 @@
   },
   "keyDates.needLabel": {
     "defaultMessage": "Name what the date is."
-  },
-  "keyDates.next": {
-    "defaultMessage": "Next deadline"
-  },
-  "keyDates.past": {
-    "defaultMessage": "Past"
   },
   "keyDates.remove": {
     "defaultMessage": "Remove date"

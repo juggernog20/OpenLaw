@@ -327,12 +327,6 @@ export function CreateContractDialog({
             confidential={confidential}
             onChange={setConfidential}
           />
-          <p className="text-sm text-muted">
-            <FormattedMessage
-              id="contracts.form.draftNote"
-              defaultMessage="New contracts start in Draft. Set everything else on the record."
-            />
-          </p>
           {error && (
             <p role="alert" className="text-xs text-status-danger-fg">
               {error}

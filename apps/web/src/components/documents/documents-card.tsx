@@ -593,6 +593,9 @@ export function DocumentsCard({
   const [pageError, setPageError] = useState<string | null>(null);
   /** The row focus is moved to after a page appends. */
   const landing = useRef<HTMLTableRowElement>(null);
+  /** The section itself, so the page-wide drop handler can tell a drag
+   * outside it from one the section is already answering. */
+  const surface = useRef<HTMLElement>(null);
   useEffect(() => {
     if (appended) landing.current?.focus();
   }, [appended]);
@@ -1236,6 +1239,67 @@ export function DocumentsCard({
     });
   }
 
+  /**
+   * The page is the target, not only the section (DES-033 §7, widened).
+   *
+   * Somebody dragging a file into the window has already said what they
+   * want. Making them find a small rectangle first is a gesture the
+   * reader can miss, and a miss costs them the file: the browser's own
+   * default for a dropped file is to open it and leave the record.
+   *
+   * The section keeps its own handlers, and this one answers only for a
+   * drag outside it. That is what keeps a folder row's drop the
+   * folder's: inside the section, the row and the section already
+   * decide between themselves where the files are filed.
+   *
+   * A drag over an open dialog is left alone. The batch confirmation is
+   * itself the answer to a drop, and the composer has its own file
+   * control — neither should take a second drop underneath.
+   */
+  useEffect(() => {
+    if (frozen) return;
+    const outside = (event: DragEvent) => {
+      const node = event.target as Node | null;
+      if (node && surface.current?.contains(node)) return false;
+      return document.querySelector('[role="dialog"], [role="alertdialog"]') === null;
+    };
+    const over = (event: DragEvent) => {
+      if (!outside(event) || !dragCarriesFiles(event.dataTransfer)) return;
+      // Without this the browser opens the dropped file instead of
+      // handing it over.
+      event.preventDefault();
+      // The section takes a copy of what is dropped and moves nothing.
+      if (event.dataTransfer) event.dataTransfer.dropEffect = "copy";
+      setDragging(true);
+    };
+    // A null related target is the pointer leaving the window itself;
+    // crossing between two elements of the page is not leaving it.
+    const leave = (event: DragEvent) => {
+      if (event.relatedTarget !== null) return;
+      setDragging(false);
+      setDragFolder(null);
+    };
+    const drop = (event: DragEvent) => {
+      if (!outside(event)) return;
+      event.preventDefault();
+      setDragging(false);
+      setDragFolder(null);
+      void openDrop(event.dataTransfer, null);
+    };
+    window.addEventListener("dragover", over);
+    window.addEventListener("dragleave", leave);
+    window.addEventListener("dragend", leave);
+    window.addEventListener("drop", drop);
+    return () => {
+      window.removeEventListener("dragover", over);
+      window.removeEventListener("dragleave", leave);
+      window.removeEventListener("dragend", leave);
+      window.removeEventListener("drop", drop);
+    };
+    // `openDrop` reads nothing that changes between renders — it hands
+    // what the drop carried to `setBatch` and nothing else.
+  }, [frozen]);
+
   /** Everything a document row draws from, built once and handed to
    * every listing — the record root's and each open folder's. */
   const rowContext: RowContext = {
@@ -1262,14 +1326,17 @@ export function DocumentsCard({
 
   return (
     <section
+      ref={surface}
       aria-labelledby="contract-documents-heading"
       className={cn(
         "w-full overflow-hidden rounded-card border border-border-default bg-raised",
         dragging && "outline outline-2 outline-offset-2 outline-link",
       )}
-      // The whole section is the target (DES-033 §7). A frozen record
-      // takes no drop at all: an archived record's paper is frozen, and
-      // a Contributor is offered no control anywhere else here either.
+      // The whole section is the target (DES-033 §7), and so is the
+      // page around it — the effect above answers for everything
+      // outside. A frozen record takes no drop at all: an archived
+      // record's paper is frozen, and a Contributor is offered no
+      // control anywhere else here either.
       onDragOver={(event) => {
         if (frozen || !dragCarriesFiles(event.dataTransfer)) return;
         // Without this the browser opens the dropped file instead of
@@ -1436,28 +1503,6 @@ export function DocumentsCard({
                 inside the folder, by the tree above. */}
             <DocumentRows documents={documents} depth={0} rows={rowContext} />
           </table>
-        </div>
-      )}
-      {/* What a drop on this surface means, said on the surface
-          (DES-033 §8). One gesture, one meaning: a dropped file is
-          always a new document at version 1, and appending a round
-          stays a deliberate act on a named document. Drawn only for
-          somebody who may drop — a control drawn for nobody is worse
-          than none. */}
-      {!frozen && (
-        <div className="border-t border-border-default px-4 py-3">
-          <p className="text-sm text-muted">
-            <FormattedMessage
-              id="documents.dropHint"
-              defaultMessage="Drop files or folders here — each file becomes a new document at version 1"
-            />
-          </p>
-          <p className="text-sm text-muted">
-            <FormattedMessage
-              id="documents.dropChain"
-              defaultMessage="Folder structure is kept. To add a round to an existing chain, use Add version on that document."
-            />
-          </p>
         </div>
       )}
       {/* Under the table's own rows and inside the section's card, so
@@ -1715,7 +1760,13 @@ function DocumentRows({
                   )}
                   <FileText size={16} aria-hidden="true" className="mt-1 shrink-0 text-muted" />
                   <span className="flex min-w-0 flex-col">
-                    <span className="flex items-center gap-1.5">
+                    {/* The name line takes the toggle's own height, so
+                        the name and its marks sit on the same band as
+                        the chevron and the pills in the other columns.
+                        Without it the shorter text line hugs the top of
+                        the taller row and reads a couple of pixels
+                        high. */}
+                    <span className="flex min-h-6 items-center gap-1.5">
                       {/* A long file name truncates to one line
                           rather than pushing the row's height
                           around; the full name is still there on
@@ -3062,10 +3113,15 @@ function DeleteDialog({
 function KindCell({ version, intl }: Readonly<{ version: DocumentVersion; intl: IntlShape }>) {
   return (
     <td className="px-4 py-2.5">
-      <span
-        className={`inline-flex whitespace-nowrap rounded-pill px-2 py-0.5 text-xs font-medium ${KIND_PILL[version.kind]}`}
-      >
-        {kindLabel(intl, version.kind)}
+      {/* The pill sits in a flex line rather than a text line, so it
+          centres on the row instead of on a baseline the cell has no
+          text to share. */}
+      <span className="flex items-center">
+        <span
+          className={`whitespace-nowrap rounded-pill px-2 py-0.5 text-xs font-medium ${KIND_PILL[version.kind]}`}
+        >
+          {kindLabel(intl, version.kind)}
+        </span>
       </span>
     </td>
   );

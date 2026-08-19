@@ -2647,7 +2647,7 @@ function CounterpartiesField({
       <p className="text-xs text-muted">
         <FormattedMessage
           id="contracts.counterparty.hint"
-          defaultMessage="Type an unknown name to create it. Add its details later."
+          defaultMessage="Type an unknown name to create it."
         />
       </p>
     </div>
@@ -2933,7 +2933,10 @@ function ValueField({
           ))}
         </select>
       </div>
-      {value ? (
+      {/* Only once there is a value to read back. Empty, the three
+          controls are the whole field: they already say the amount is
+          blank, so a line under them saying the same is noise. */}
+      {value && (
         <>
           {/* What the record says it is worth, read back as DES-014
               renders it — the three controls hold the parts, this is
@@ -2946,13 +2949,6 @@ function ValueField({
             />
           </p>
         </>
-      ) : (
-        <p className="text-base text-muted">
-          <FormattedMessage
-            id="contracts.value.empty"
-            defaultMessage="No value is recorded. Many contracts have none."
-          />
-        </p>
       )}
     </div>
   );

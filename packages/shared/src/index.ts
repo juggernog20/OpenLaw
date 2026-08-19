@@ -301,6 +301,7 @@ export const CONTRACT_SORT_KEYS = [
   "status",
   "owner",
   "counterparty",
+  "entity",
   "risk",
   "priority",
   "effectiveDate",

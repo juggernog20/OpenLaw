@@ -704,9 +704,9 @@ describe("the /contracts/:number record page", () => {
     renderAt("/contracts/42");
     const user = userEvent.setup();
 
-    expect(
-      await screen.findByText("No value is recorded. Many contracts have none."),
-    ).toBeVisible();
+    // Empty, the three controls are the whole field — there is no
+    // read-back line under them to wait for.
+    expect(await screen.findByLabelText("Amount")).toHaveValue(null);
     await user.type(screen.getByLabelText("Amount"), "480000");
     // Moving between the three controls stays inside one field, so
     // neither of these blurs commits anything on its own.
@@ -784,7 +784,9 @@ describe("the /contracts/:number record page", () => {
     // The currency and the cadence go with it — the group clears whole.
     expect(screen.getByLabelText("Currency")).toHaveValue("");
     expect(screen.getByLabelText("Cadence")).toHaveValue("one_time");
-    expect(screen.getByText("No value is recorded. Many contracts have none.")).toBeVisible();
+    // And the read-back line goes with them: with no value there is
+    // nothing to read back.
+    expect(screen.queryByText("$5,000.00")).not.toBeInTheDocument();
   });
 
   it("refuses an amount with no currency without sending it", async () => {
@@ -4127,7 +4129,6 @@ describe("the contract record's confidentiality surfaces (M10/4)", () => {
     // control that vanished would leave it unreadable on the card.
     expect(flag).toBeDisabled();
     expect(flag).toBeChecked();
-    expect(screen.getByText(/Everyone outside the contract team loses the record/)).toBeVisible();
   });
 
   it("gives a Contributor on the team the inert control too", async () => {
@@ -7861,25 +7862,32 @@ describe("the multi-file batch on the contract record (M13/4, DOC-011, DES-033)"
     expect(within(dialog).getByText("…and 4 more files")).toBeVisible();
   });
 
-  it("says what a drop on this section means, and says it once", async () => {
+  it("takes a drop anywhere on the page, and files it at the record root", async () => {
     stubApi({ signedIn: MEMBER, extra: batchApi([]).handler });
     renderAt("/contracts/42/documents");
 
-    const section = await documentsSection();
-    // One gesture, one meaning (DES-033 §8): a dropped file is always a
-    // new document, and appending a round is a deliberate act on a
-    // named document. The hint promises the folder clause now that the
-    // drop can carry one (DES-033 normalization point 9).
-    expect(
-      within(section).getByText(
-        "Drop files or folders here — each file becomes a new document at version 1",
-      ),
-    ).toBeVisible();
-    expect(
-      within(section).getByText(
-        "Folder structure is kept. To add a round to an existing chain, use Add version on that document.",
-      ),
-    ).toBeVisible();
+    // Somebody dragging a file into the window has already said what
+    // they want; the section is not a target they should have to find.
+    await documentsSection();
+    dropOn(globalThis.document.body, [file("one.pdf")]);
+
+    const dialog = await screen.findByRole("dialog");
+    expect(within(dialog).getByRole("heading", { name: "Import 1 file" })).toBeVisible();
+    expect(within(dialog).getByText("Record root")).toBeVisible();
+  });
+
+  it("takes no drop on the page of an archived record", async () => {
+    const record = recordApi(contractRow({ archivedAt: "2026-08-01T00:00:00.000Z" }), [
+      person("u1", "creator"),
+    ]);
+    stubApi({ signedIn: MEMBER, extra: record.handler });
+    renderAt("/contracts/42/documents");
+
+    await documentsSection();
+    dropOn(globalThis.document.body, [file("one.pdf")]);
+
+    // Frozen is frozen off the section as well as on it.
+    expect(screen.queryByRole("dialog")).toBeNull();
   });
 });
 

@@ -2098,6 +2098,10 @@ Appending a round stays a deliberate act on a named document, reached from that 
 
 11. **The drop targets are the section and each folder row, and only one of them lights up.** §7 names both targets and stops there. The row that will take the drop takes the section's own outline treatment, and the section keeps its own — the drop is still on the section, filed one level in. Two lit rows would promise a drop that lands twice, so one folder is marked at a time.
 
+12. **The page is the target too, and §8's hint is gone.** Two changes, one reason. §7 made the section the drop target; the Documents tab now takes a drop anywhere in the window and files it at the record root, exactly as a drop on the section does. Somebody dragging a file into the window has already said what they want, and the cost of missing a small rectangle is not nothing: the browser's own default for a dropped file is to open it and leave the record. The section and each folder row keep their own handlers, so a drop inside the section still decides between root and folder the way point 11 says; the page answers only for what lands outside. A drag over an open dialog is left alone — the batch confirmation is itself the answer to a drop, and the composer has its own file control.
+
+    §8's two hint lines come off with it. A hint that names one rectangle is wrong once the whole page is the target, and the sentence it was left saying — where a drop lands, and that a round goes on the document — is what the batch confirmation already says at the moment it matters, with the destination readout point 9 kept. The section's outline stays the only drag affordance. Worth revisiting if the outline proves too quiet for a drag that starts far down a long page; a page-level affordance would need its own decision.
+
 ### Rationale
 
 Drawing folders as rows of the existing table is the whole reason this stays cheap. The columns, the row height, the paging foot, the pills, and the doc panel are all M11's and all unchanged; a folder is a row that fills fewer of them. A separate tree pane would have been a second surface to keep in step with the first, and DES-032 has just spent the record page's remaining chrome budget.
@@ -2669,10 +2673,11 @@ Thirteen ICU messages, all new. No new tokens: the bars and marks are fills from
 
 Grill rows **I.H1**, **I.H2**, **I.H3**, **I.X1**, **I.X2**, **I.X3**, **I.B1**, **I.B2**, **I.B6**, **I.B7**, and **I.B8** are discharged. **I.B3**, **I.B4**, and **I.B5** stay open, waiting on the confirmed roll — the same wait **G.R5** is in.
 
-## DES-042: The Key dates section — one union, one Source chip, and the next deadline named (extends DES-035, DES-032, DES-040)
+## DES-042: The Key dates section — one union, one Source chip, and the order as the answer (extends DES-035, DES-032, DES-040)
 
 - **Status:** Accepted
 - **Date:** 2026-08-17
+- **Amended:** 2026-08-19 — the Due column is withdrawn (clauses 5, 9, 10)
 
 ### Context
 
@@ -2701,6 +2706,8 @@ DES-035 clause 1 made Approvals a fourth section on the DES-032 strip. This is a
 
 **5. The columns are the mock's, minus the two with nothing behind them: Date, Event, Source, Due, and a trailing action cell.** Owner goes (clause context 1) and Reminders goes (context 2). Neither leaves a blank: a column drawn empty asks the reader to work out what is missing, and the answer here is "nothing — the product does not have this".
 
+_Amended 2026-08-19._ **Due goes too, and the columns are Date, Event, Source, and the action cell.** It is the third of the mock's six to be dropped, and the first dropped for a reason the mock could not have known: the column held no datum of its own. Owner and Reminders were cut because the product has nothing to put in them; Due is cut because everything in it was the Date cell said a second way. See clauses 9 and 10, both withdrawn.
+
 **6. The Date cell is one line through the DES-014 short-date helper, not the mock's two.** The mock splits "Oct 2" over "2026" because it always prints the year. The standing helper already decides when a year is needed — it grows one exactly when the date is not in the current year — and a second rule for this one cell would be a second rule to keep true.
 
 **7. The Event cell names the row, and the note is its second line.** A key date says what the team called it. The two derived rows are named here in the record's own copy, because the seam holds no label for a date it did not store (DES-013): "Current term expires", and "Renewal notice deadline — 90 days before expiry", which is the mock's own sentence with the record's own notice period in it. The note sits under the name at `text-xs text-muted` — the secondary line DES-035 clause 5 already spends on "a fact about this row", rather than a sixth column on a table that has no width for one.
@@ -2709,7 +2716,11 @@ DES-035 clause 1 made Approvals a fourth section on the DES-032 strip. This is a
 
 **9. Due carries the distance, and past is one word.** An upcoming row reads the seam's `daysAway` through `formatDayDistance` — "in 3 days", "in 8 weeks", "in 5 months" — which steps the unit up as the distance grows, so a date most of a year out never reads as "in 291 days". A row behind us reads "Past", the mock's own word: how far behind is the Date cell's answer, and this column exists to say what is coming.
 
+_Withdrawn 2026-08-19._ **Neither half survived its own sentence.** "Past" was already answered by the Date cell, as the clause itself admits, and by the row order clause 4 fixes — past rows come after upcoming ones. The distance was the same date in a second unit, under a header that read as a second date column: a table with **Date** and **Due** side by side asks the reader which one is the deadline, and the answer is that both are. A reader who can see "12 Mar" can see that it is coming. The column is gone; `formatDayDistance` goes with it, having no other caller.
+
 **10. Exactly one row is the next deadline, it takes the `warning` pill, and it says so in words.** The pill families are `warning` for the next date and `neutral` for every other, which is what the C6 mock paints. Colour is never the sole carrier (DES-011), so "Next deadline" is drawn under the pill at `text-xs text-muted` on the one row that has it. `warning` rather than `danger` because a date that is coming is not a failure — CTR-006's engine is notify-only, and nothing on this surface asserts that a lapse happened.
+
+_Withdrawn 2026-08-19._ **The order already names the next deadline, so the surface stops naming it twice.** CTR-009 commits that the earliest upcoming date is the next deadline, and clause 4 makes the seam sort on exactly that: the next deadline is the first row. A mark on the row a reader's eye lands on first adds a word, not a fact. The seam still answers `isNext` — no contract changes, and a surface that needs the mark out of table order can still take it — but this table does not draw it, and DES-011 has nothing left to police here because no colour is carrying a meaning any more.
 
 **11. Row actions live in one overflow menu, and the two derived rows have none at all.** The menu is DES-035 clause 9's — the shipped `DropdownMenu` on a `ghost` `icon` Button labelled "Actions for {label}" — holding **Edit date** and **Remove date**. The expiry is edited on the Overview's Contract card (DES-040) and the notice deadline is a subtraction rather than a field, so neither offers a trigger. Absent, never disabled: a greyed-out "Edit" on the notice deadline is an invitation to work out why, and the answer is a lesson about derivation.
 
@@ -2740,6 +2751,8 @@ The next deadline being the seam's is the same call DES-040 clause 4 made one le
 - **A confirmation on remove.** Rejected: the entry keeps the date (DD-017) and re-adding it is one dialog. Confirmations spent on recoverable acts are confirmations nobody reads on the unrecoverable ones.
 - **Editing a key date inline, cell by cell.** Rejected: a label is meaningless without its date, and DES-017 carves the compound edit out for exactly this pairing.
 - **Deriving the day counts in the browser from each date.** Rejected with clause 4: the seam already answers them and it is the seam that ordered the list.
+- **Keeping the distance, folded under the date as a second line** (considered 2026-08-19, with the Due column's withdrawal). Rejected: it moves the duplication rather than removing it, and clause 6 already spent the Date cell's second line question once. If a reader is found who needs the distance, the place to put it is that second line — but nobody has asked for it, and a row that repeats itself is not made shorter by stacking.
+- **Renaming Due to "In" or "Countdown" and keeping the column** (same date). Rejected: a better header does not give the column a datum. The problem was never the word.
 
 ### Consequences
 
@@ -2749,9 +2762,13 @@ A term commit on the Overview — the term type, the expiry, or the notice perio
 
 `formatDayDistance()` joins the DES-014 helper layer: a day count in, the largest unit that still reads out. It takes a count rather than a date precisely because the count is the seam's.
 
+_Amended 2026-08-19._ `formatDayDistance()` is **removed** with the Due column. It had one caller, and a helper layer that keeps a formatter nothing formats with is a layer that has to be read before it can be ignored. `formatDeadline()` is the surviving relative-date helper, and a surface that later wants a distance can bring the function back with its caller.
+
 The record now has five sections. `designs/contracts.pen` frame **C6 — Contract detail · Key dates** is the reference, with clauses 5, 6, 7, 8, 9, 11, and 13 recording where the build departs from it and why.
 
 Thirty-four ICU messages, all new — thirty on the card and its dialog, three on the activity narrator's new verbs, and one on the tab. No new tokens: the pills and chips reuse the DES-005 families already shipped, and the card reuses the Approvals section's own surfaces and its menu trigger.
+
+_Amended 2026-08-19._ Three of those messages go with the column — `keyDates.column.due`, `keyDates.past`, and `keyDates.next` — leaving thirty-one. `DEADLINE_PILL` goes too: the neutral and warning families are still shipped, but this surface no longer distinguishes rows by colour at all.
 
 The activity narrator gains three verbs — added, edited, removed — and three changed-key labels (`date`, `label`, `note`). Each sentence names the date it is about, because a removal deletes the row and the entry is then all that is left of it.
 
