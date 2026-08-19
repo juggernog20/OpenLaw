@@ -50,9 +50,16 @@ import { documentFolders } from "./document-folders.js";
 import { uuidPk } from "./helpers.js";
 
 /**
- * What a version is, in the negotiation's own words (CTR-014). The five
+ * What a version is, in the negotiation's own words (CTR-014). The six
  * uploaded kinds land here; `generated_redline` waits for redline
  * compare (M32), which is the first feature that writes one.
+ *
+ * The two `draft_*` kinds are **originating** rounds — paper somebody
+ * wrote — and the two `redline_*` kinds are **markups** of a round that
+ * already exists. That is why both sides need a draft: a counterparty's
+ * first paper marks up nothing, so `redline_theirs` would claim a round
+ * that is not there, and `draft_ours` would name the wrong author
+ * (#326).
  *
  * Code branches on the kind — the chain view colours it, and the
  * executed pin is offered against it — so the set is fixed rather than
@@ -60,6 +67,7 @@ import { uuidPk } from "./helpers.js";
  */
 export const DOCUMENT_VERSION_KINDS = [
   "draft_ours",
+  "draft_theirs",
   "redline_theirs",
   "redline_ours",
   "executed",
@@ -291,7 +299,7 @@ export const documentVersions = pgTable(
     ),
     check(
       "document_versions_kind_check",
-      sql`${table.kind} in ('draft_ours', 'redline_theirs', 'redline_ours', 'executed', 'amendment')`,
+      sql`${table.kind} in ('draft_ours', 'draft_theirs', 'redline_theirs', 'redline_ours', 'executed', 'amendment')`,
     ),
   ],
 );

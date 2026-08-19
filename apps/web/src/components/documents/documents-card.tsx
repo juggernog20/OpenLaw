@@ -228,19 +228,32 @@ const FOLDER_INDENT = 18;
 
 /**
  * The kind, as the C4 mock colors it: our own work reads as the calm
- * informational pair, their redline as the one that wants attention, a
+ * informational pair, their paper as the one that wants attention, a
  * signed copy as settled, and an amendment as a plain fact. Paired
  * bg+fg from one family per DES-005 — never mixed across families.
+ *
+ * **The color says whose paper it is; the label says what the round
+ * is.** So `draft_theirs` takes the same amber as `redline_theirs`
+ * (#326) rather than a sixth family. The two axes are already split
+ * this way — `draft_ours` and `redline_ours` share the informational
+ * pair for exactly the same reason — and giving the sixth kind its own
+ * color would make the column encode two facts at once, leaving the
+ * reader to work out which one a color meant. The palette also has no
+ * spare family that would not misread: `assigned` is within a shade of
+ * the confidentiality marker (DES-009) on the light theme, `neutral` is
+ * the amendment's, and the two red families would call a routine round
+ * a problem.
  */
 const KIND_PILL: Record<DocumentVersionKind, string> = {
   draft_ours: "bg-status-info-bg text-status-info-fg",
   redline_ours: "bg-status-info-bg text-status-info-fg",
+  draft_theirs: "bg-status-warning-bg text-status-warning-fg",
   redline_theirs: "bg-status-warning-bg text-status-warning-fg",
   executed: "bg-status-success-bg text-status-success-fg",
   amendment: "bg-status-neutral-bg text-status-neutral-fg",
 };
 
-/** The five CTR-014 kinds, named as the negotiation names them. The
+/** The six CTR-014 kinds, named as the negotiation names them. The
  * value is selected inside the message rather than pasted in as a
  * translated fragment, so a locale that inflects it has the raw value
  * to work with (DES-013). */
@@ -249,9 +262,9 @@ function kindLabel(intl: IntlShape, kind: DocumentVersionKind): string {
     {
       id: "documents.kind",
       defaultMessage:
-        "{kind, select, draft_ours {Draft · ours} redline_theirs {Redline · theirs} " +
-        "redline_ours {Redline · ours} executed {Executed} amendment {Amendment} " +
-        "other {Unknown}}",
+        "{kind, select, draft_ours {Draft · ours} draft_theirs {Draft · theirs} " +
+        "redline_theirs {Redline · theirs} redline_ours {Redline · ours} " +
+        "executed {Executed} amendment {Amendment} other {Unknown}}",
     },
     { kind },
   );

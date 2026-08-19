@@ -8666,7 +8666,13 @@ export interface operations {
                 id: string;
                 versionNumber: number;
                 /** @enum {string} */
-                kind: "draft_ours" | "redline_theirs" | "redline_ours" | "executed" | "amendment";
+                kind:
+                  | "draft_ours"
+                  | "draft_theirs"
+                  | "redline_theirs"
+                  | "redline_ours"
+                  | "executed"
+                  | "amendment";
                 note: string | null;
                 originalFilename: string;
                 mimeType: string;
@@ -8735,7 +8741,13 @@ export interface operations {
            * @description What this version is in the negotiation (CTR-014). Defaults to `draft_ours`. Must be sent before the file part.
            * @enum {string}
            */
-          kind?: "draft_ours" | "redline_theirs" | "redline_ours" | "executed" | "amendment";
+          kind?:
+            | "draft_ours"
+            | "draft_theirs"
+            | "redline_theirs"
+            | "redline_ours"
+            | "executed"
+            | "amendment";
           /** @description What changed in this round, kept beside the file. Must be sent before the file part. */
           note?: string;
           /** @description Where the file is filed: a folder already on this record (DOC-006), or omitted for the record root. Must be sent before the file part. */
@@ -8762,7 +8774,13 @@ export interface operations {
                 id: string;
                 versionNumber: number;
                 /** @enum {string} */
-                kind: "draft_ours" | "redline_theirs" | "redline_ours" | "executed" | "amendment";
+                kind:
+                  | "draft_ours"
+                  | "draft_theirs"
+                  | "redline_theirs"
+                  | "redline_ours"
+                  | "executed"
+                  | "amendment";
                 note: string | null;
                 originalFilename: string;
                 mimeType: string;
@@ -8830,7 +8848,13 @@ export interface operations {
            * @description What this version is in the negotiation (CTR-014). Defaults to `draft_ours`. Must be sent before the file part.
            * @enum {string}
            */
-          kind?: "draft_ours" | "redline_theirs" | "redline_ours" | "executed" | "amendment";
+          kind?:
+            | "draft_ours"
+            | "draft_theirs"
+            | "redline_theirs"
+            | "redline_ours"
+            | "executed"
+            | "amendment";
           /** @description What changed in this round, kept beside the file. Must be sent before the file part. */
           note?: string;
         };
@@ -8853,7 +8877,13 @@ export interface operations {
                 id: string;
                 versionNumber: number;
                 /** @enum {string} */
-                kind: "draft_ours" | "redline_theirs" | "redline_ours" | "executed" | "amendment";
+                kind:
+                  | "draft_ours"
+                  | "draft_theirs"
+                  | "redline_theirs"
+                  | "redline_ours"
+                  | "executed"
+                  | "amendment";
                 note: string | null;
                 originalFilename: string;
                 mimeType: string;
@@ -8933,7 +8963,13 @@ export interface operations {
                 id: string;
                 versionNumber: number;
                 /** @enum {string} */
-                kind: "draft_ours" | "redline_theirs" | "redline_ours" | "executed" | "amendment";
+                kind:
+                  | "draft_ours"
+                  | "draft_theirs"
+                  | "redline_theirs"
+                  | "redline_ours"
+                  | "executed"
+                  | "amendment";
                 note: string | null;
                 originalFilename: string;
                 mimeType: string;
@@ -9017,7 +9053,13 @@ export interface operations {
                 id: string;
                 versionNumber: number;
                 /** @enum {string} */
-                kind: "draft_ours" | "redline_theirs" | "redline_ours" | "executed" | "amendment";
+                kind:
+                  | "draft_ours"
+                  | "draft_theirs"
+                  | "redline_theirs"
+                  | "redline_ours"
+                  | "executed"
+                  | "amendment";
                 note: string | null;
                 originalFilename: string;
                 mimeType: string;
@@ -9091,7 +9133,13 @@ export interface operations {
                 id: string;
                 versionNumber: number;
                 /** @enum {string} */
-                kind: "draft_ours" | "redline_theirs" | "redline_ours" | "executed" | "amendment";
+                kind:
+                  | "draft_ours"
+                  | "draft_theirs"
+                  | "redline_theirs"
+                  | "redline_ours"
+                  | "executed"
+                  | "amendment";
                 note: string | null;
                 originalFilename: string;
                 mimeType: string;
@@ -9172,7 +9220,13 @@ export interface operations {
                 id: string;
                 versionNumber: number;
                 /** @enum {string} */
-                kind: "draft_ours" | "redline_theirs" | "redline_ours" | "executed" | "amendment";
+                kind:
+                  | "draft_ours"
+                  | "draft_theirs"
+                  | "redline_theirs"
+                  | "redline_ours"
+                  | "executed"
+                  | "amendment";
                 note: string | null;
                 originalFilename: string;
                 mimeType: string;
@@ -9246,7 +9300,13 @@ export interface operations {
                 id: string;
                 versionNumber: number;
                 /** @enum {string} */
-                kind: "draft_ours" | "redline_theirs" | "redline_ours" | "executed" | "amendment";
+                kind:
+                  | "draft_ours"
+                  | "draft_theirs"
+                  | "redline_theirs"
+                  | "redline_ours"
+                  | "executed"
+                  | "amendment";
                 note: string | null;
                 originalFilename: string;
                 mimeType: string;
@@ -9320,7 +9380,13 @@ export interface operations {
                 id: string;
                 versionNumber: number;
                 /** @enum {string} */
-                kind: "draft_ours" | "redline_theirs" | "redline_ours" | "executed" | "amendment";
+                kind:
+                  | "draft_ours"
+                  | "draft_theirs"
+                  | "redline_theirs"
+                  | "redline_ours"
+                  | "executed"
+                  | "amendment";
                 note: string | null;
                 originalFilename: string;
                 mimeType: string;
@@ -9394,7 +9460,13 @@ export interface operations {
                 id: string;
                 versionNumber: number;
                 /** @enum {string} */
-                kind: "draft_ours" | "redline_theirs" | "redline_ours" | "executed" | "amendment";
+                kind:
+                  | "draft_ours"
+                  | "draft_theirs"
+                  | "redline_theirs"
+                  | "redline_ours"
+                  | "executed"
+                  | "amendment";
                 note: string | null;
                 originalFilename: string;
                 mimeType: string;

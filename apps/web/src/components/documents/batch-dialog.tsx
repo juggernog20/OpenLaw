@@ -523,9 +523,9 @@ export function BatchDialog({
                       {
                         id: "documents.kind",
                         defaultMessage:
-                          "{kind, select, draft_ours {Draft · ours} redline_theirs {Redline · theirs} " +
-                          "redline_ours {Redline · ours} executed {Executed} amendment {Amendment} " +
-                          "other {Unknown}}",
+                          "{kind, select, draft_ours {Draft · ours} draft_theirs {Draft · theirs} " +
+                          "redline_theirs {Redline · theirs} redline_ours {Redline · ours} " +
+                          "executed {Executed} amendment {Amendment} other {Unknown}}",
                       },
                       { kind: option },
                     )}
