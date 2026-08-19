@@ -946,6 +946,59 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/v1/intake-links": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** The INT-004 deflection links in panel order; a link with no request type belongs to the portal home panel */
+    get: operations["listIntakeLinks"];
+    put?: never;
+    /** Add a deflection link: a label over an absolute http/https URL, placed on the portal home (no request type) or on one live request type's form; the row appends to the panel order */
+    post: operations["createIntakeLink"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/intake-links/{id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    /** Remove a deflection link outright (INT-004): nothing points at a link and there is no history to keep, so there is no archive and no guard */
+    delete: operations["deleteIntakeLink"];
+    options?: never;
+    head?: never;
+    /** Edit a deflection link's label, URL, or placement; a move targets a live request type, and `requestTypeId: null` moves the link to the portal home panel */
+    patch: operations["updateIntakeLink"];
+    trace?: never;
+  };
+  "/api/v1/intake-links/order": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    /** Apply a full permutation of the deflection links (SET-003 immediate apply); display orders renumber from 1 */
+    put: operations["reorderIntakeLinks"];
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/v1/contract-statuses": {
     parameters: {
       query?: never;
@@ -5857,6 +5910,207 @@ export interface operations {
               moduleScope: "matter" | "contract" | "entity" | "global";
               displayOrder: number;
               isRequired: boolean;
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  listIntakeLinks: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            intakeLinks: {
+              id: string;
+              label: string;
+              url: string;
+              requestTypeId: string | null;
+              displayOrder: number;
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  createIntakeLink: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          label: string;
+          url: string;
+          requestTypeId?: string | null;
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            intakeLink: {
+              id: string;
+              label: string;
+              url: string;
+              requestTypeId: string | null;
+              displayOrder: number;
+            };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  deleteIntakeLink: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  updateIntakeLink: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          label?: string;
+          url?: string;
+          requestTypeId?: string | null;
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            intakeLink: {
+              id: string;
+              label: string;
+              url: string;
+              requestTypeId: string | null;
+              displayOrder: number;
+            };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  reorderIntakeLinks: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          ids: string[];
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            intakeLinks: {
+              id: string;
+              label: string;
+              url: string;
+              requestTypeId: string | null;
+              displayOrder: number;
             }[];
           };
         };

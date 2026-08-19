@@ -94,6 +94,18 @@ The decision above knew two target states: a specific matter or contract type, o
 - **Alternatives considered** — Nothing (loses free deflection); building conditional logic now (reverses MTR-014's deferral).
 - **Consequences** — `intake_links` (id, label, url, request_type_id nullable = home panel, display_order) — settings-managed. Settings inventory row added.
 
+### Addendum (2026-08-20, [#356](https://github.com/juggernog20/OpenLaw/issues/356)) — deleting a request type takes its links with it, and the URL is validated but never normalized
+
+The decision above named the table and left two questions to whoever built it. M19/6 built it, and these are the answers.
+
+**A link's placement is its audience, so the FK cascades.** `intake_links.request_type_id` is `on delete cascade`. The sibling target FKs on `request_types` are `on delete set null` — they **demote**, turning "Contract · NDA" into "Contract" — and the same move here would do the opposite of demoting: a link an Administrator scoped to the Contract review form would appear, unasked, on the portal home in front of every requester. Widening an audience is not a demotion. Cascade also matches `request_type_fields`, the other child of `request_types`: the type carries its form definition and its deflection panel alike, and the blast radius is small either way, because a request type may only be hard-deleted when nothing has used it. An Administrator who wants the link to survive the type moves it to the portal home first, deliberately.
+
+**The URL is validated as an absolute `http`/`https` address and stored exactly as entered.** Absolute, because the panel renders in a portal a requester reaches from their own browser, so a relative path would resolve against the portal and land nowhere; `http` or `https` only, because a `mailto:` is not deflection and a `javascript:` is an attack. Nothing normalizes it after that — no lower-casing, no trailing-slash trimming, no re-encoding — because a URL is a string a person pasted from somewhere that works, and a normalizer that is right 99% of the time is a link that is broken 1% of the time. The settings row renders it **without its scheme**, which is presentation and not storage.
+
+**A link is removed, never archived.** Nothing points at a link and there is no history to keep, so there is no `archived_at`, no restore, no guard modal, and no slug — a link has no machine identity for anything to refer to. The pane is the DES-052 value list for exactly that reason.
+
+**A placement being assigned must be a live request type.** An archived form takes no submissions, so a link scoped to it deflects nobody; the API refuses the assignment and the pane's picker offers live types only. The rule cuts one way: a link placed while the type was live stays put when the type is archived afterwards — the picker keeps that one archived type on offer for that row, so a label edit never forces a placement move. This is the same tolerance the INT-002 target keeps for an archived target type.
+
 ## INT-005 — No auto-classification: the form is the classification
 
 - **Status** — Accepted
@@ -138,12 +150,12 @@ The decision above knew two target states: a specific matter or contract type, o
 
 ## Index of decisions
 
-| #       | Decision                                                                     | Status                                               |
-| ------- | ---------------------------------------------------------------------------- | ---------------------------------------------------- |
-| INT-001 | Intake model: JSM-style structured forms + portal; email notifications only  | Accepted; lifecycle revised by INT-007               |
-| INT-002 | Request types mapped to target types; forms reuse the fields catalog         | Accepted; three-state target added by M19/4 addendum |
-| INT-003 | Requester updates: email notifications only; no status-poke button           | Accepted                                             |
-| INT-004 | Deflection links panel in v1; conditional form logic stays deferred          | Accepted                                             |
-| INT-005 | No auto-classification: the form is the classification                       | Accepted                                             |
-| INT-006 | Triage: one Inbox, pickup assignment, four actions, lossless re-convert      | Accepted; revised by INT-007                         |
-| INT-007 | Disposition-at-pickup: triage decides the outcome; no parked in-review state | Accepted                                             |
+| #       | Decision                                                                     | Status                                                         |
+| ------- | ---------------------------------------------------------------------------- | -------------------------------------------------------------- |
+| INT-001 | Intake model: JSM-style structured forms + portal; email notifications only  | Accepted; lifecycle revised by INT-007                         |
+| INT-002 | Request types mapped to target types; forms reuse the fields catalog         | Accepted; three-state target added by M19/4 addendum           |
+| INT-003 | Requester updates: email notifications only; no status-poke button           | Accepted                                                       |
+| INT-004 | Deflection links panel in v1; conditional form logic stays deferred          | Accepted; delete behavior and URL rule added by M19/6 addendum |
+| INT-005 | No auto-classification: the form is the classification                       | Accepted                                                       |
+| INT-006 | Triage: one Inbox, pickup assignment, four actions, lossless re-convert      | Accepted; revised by INT-007                                   |
+| INT-007 | Disposition-at-pickup: triage decides the outcome; no parked in-review state | Accepted                                                       |

@@ -65,6 +65,7 @@ import { matterAttachedFieldsRoutes } from "./modules/matter-types/attached-fiel
 import { requestTypeFieldsRoutes } from "./modules/request-types/attached-fields.js";
 import { requestTypesRoutes } from "./modules/request-types/routes.js";
 import { fieldsRoutes } from "./modules/fields/routes.js";
+import { intakeLinksRoutes } from "./modules/intake-links/routes.js";
 import { listViewsRoutes } from "./modules/list-views/routes.js";
 import { notificationsRoutes } from "./modules/notifications/routes.js";
 import { morningRoundTriggerRoutes } from "./modules/notifications/round-trigger.js";
@@ -400,6 +401,7 @@ export async function buildApp(deps: AppDeps, opts: FastifyServerOptions = {}) {
   await app.register(matterAttachedFieldsRoutes, { prefix: "/api/v1" });
   await app.register(requestTypesRoutes, { prefix: "/api/v1" });
   await app.register(requestTypeFieldsRoutes, { prefix: "/api/v1" });
+  await app.register(intakeLinksRoutes, { prefix: "/api/v1" });
   await app.register(contractStatusesRoutes, { prefix: "/api/v1" });
   await app.register(approverGroupsRoutes, { prefix: "/api/v1" });
   await app.register(contractsRoutes, { prefix: "/api/v1" });

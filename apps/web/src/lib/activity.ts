@@ -479,6 +479,69 @@ function directChange(
 }
 
 /**
+ * What a deflection-link entry calls the link it names.
+ *
+ * Its own fallback rather than {@link named}'s, because that one is a
+ * person's — "removed the deflection link someone" is not a sentence.
+ */
+function linkNamed(intl: IntlShape, payload: Payload): string {
+  return (
+    text(payload, "label") ??
+    intl.formatMessage({ id: "activity.unnamed", defaultMessage: "(unnamed)" })
+  );
+}
+
+/**
+ * The old→new pairs a deflection-link edit carries (INT-004).
+ *
+ * Its own reader rather than {@link changesFrom}, because two of its
+ * three keys mean something else in the shared catalog: `label` there is
+ * a key date's event name, and a link's placement has no key there at
+ * all. Three keys, three nouns, one ICU `select` — the `other` arm
+ * covers a key this build no longer writes, which the append-only log
+ * can still be holding.
+ *
+ * A placement of `null` reads as "Portal home" rather than "not set":
+ * the portal home panel is a real place a link sits, not the absence of
+ * one.
+ */
+function intakeLinkChanges(intl: IntlShape, payload: Payload): NarratedChange[] {
+  const changed = payload.changed;
+  if (typeof changed !== "object" || changed === null || Array.isArray(changed)) return [];
+  const placement = (value: unknown): string =>
+    typeof value === "string" && value !== ""
+      ? value
+      : intl.formatMessage({
+          id: "activity.intakeLink.portalHome",
+          defaultMessage: "Portal home",
+        });
+  const side = (key: string, value: unknown): string =>
+    key === "placement"
+      ? placement(value)
+      : typeof value === "string" && value !== ""
+        ? value
+        : notSet(intl);
+  return Object.entries(changed as Record<string, unknown>).flatMap(([key, pair]) => {
+    if (typeof pair !== "object" || pair === null) return [];
+    const { from, to } = pair as { from?: unknown; to?: unknown };
+    return [
+      {
+        label: intl.formatMessage(
+          {
+            id: "activity.intakeLink.field",
+            defaultMessage:
+              "{key, select, label {Label} url {Address} placement {Placement} other {{key}}}",
+          },
+          { key },
+        ),
+        from: side(key, from),
+        to: side(key, to),
+      },
+    ];
+  });
+}
+
+/**
  * What a folder entry calls the folder it names, when it says.
  *
  * Its own fallback rather than {@link named}'s, because that one is a
@@ -1914,6 +1977,53 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
     "restored",
     "deleted",
   ]),
+  // The INT-004 deflection links (#356). Not a taxonomy mount: a link
+  // has no slug and no archive, and the thing it is named by is its
+  // label — so it gets four sentences of its own rather than seven
+  // borrowed ones. Each says "deflection link" out loud, because a
+  // reader of the audit log has nothing else to tell it from the
+  // taxonomies above.
+  "intake_link.created": {
+    icon: Link2,
+    message: defineMessage({
+      id: "activity.intakeLink.created",
+      defaultMessage:
+        "{actor} added the deflection link {name} to " +
+        "{onHome, select, true {the portal home} other {{placement}}}",
+    }),
+    // A boolean select rather than a sentinel string: the placement is
+    // a request type's display name, and a type an Administrator named
+    // "Portal home" must not be able to pick the wrong arm.
+    values: (intl, payload) => ({
+      name: linkNamed(intl, payload),
+      onHome: String(text(payload, "placement") === null),
+      placement: text(payload, "placement") ?? "",
+    }),
+  },
+  "intake_link.updated": {
+    icon: PencilLine,
+    message: defineMessage({
+      id: "activity.intakeLink.updated",
+      defaultMessage: "{actor} changed the deflection link {name}",
+    }),
+    values: (intl, payload) => ({ name: linkNamed(intl, payload) }),
+    changes: (intl, payload) => intakeLinkChanges(intl, payload),
+  },
+  "intake_link.reordered": {
+    icon: ListOrdered,
+    message: defineMessage({
+      id: "activity.intakeLink.reordered",
+      defaultMessage: "{actor} reordered the deflection links",
+    }),
+  },
+  "intake_link.deleted": {
+    icon: Trash2,
+    message: defineMessage({
+      id: "activity.intakeLink.deleted",
+      defaultMessage: "{actor} removed the deflection link {name}",
+    }),
+    values: (intl, payload) => ({ name: linkNamed(intl, payload) }),
+  },
   // The catalog is unordered (DES-021), names through its editor dialog
   // rather than a rename verb, and is never hard-deleted.
   ...taxonomyArms("field", Tags, ["created", "updated", "archived", "restored"]),

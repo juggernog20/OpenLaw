@@ -175,6 +175,26 @@ type ContractStatusPayloads = {
 };
 
 /**
+ * The deflection links (INT-004). Four verbs, not the taxonomy's seven:
+ * a link has no slug to key it, and it is removed outright rather than
+ * archived — nothing points at one and there is no history to keep — so
+ * `archived` and `restored` are sentences nobody would ever read.
+ *
+ * `placement` is the request type's **display name**, or null for the
+ * portal home panel. The name rather than the id, because the id is
+ * meaningless to somebody reading the log after the type is gone, and
+ * the log is append-only.
+ */
+type IntakeLinkPayloads = {
+  "intake_link.created": { label: string; url: string; placement: string | null };
+  "intake_link.updated": { label: string; changed: ChangedFields };
+  /** The labels in their new order — for the reason `placement` carries
+   * a name: ids do not survive the rows they name. */
+  "intake_link.reordered": { order: string[] };
+  "intake_link.deleted": { label: string; url: string; placement: string | null };
+};
+
+/**
  * The field catalog (DES-021). Unordered and never hard-deleted, so it
  * writes neither `reordered` nor `deleted`. The two scope moves keep
  * their own verbs, because the scope decides which modules may attach
@@ -788,6 +808,7 @@ export type ActivityPayloadMap = UserPayloads &
   Prefixed<"matter_type_field", TypeFieldPayloads> &
   Prefixed<"request_type_field", TypeFieldPayloads> &
   ContractStatusPayloads &
+  IntakeLinkPayloads &
   FieldCatalogPayloads &
   ApproverGroupPayloads &
   ApprovalPayloads &
