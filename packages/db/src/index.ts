@@ -138,6 +138,9 @@ export { alias } from "drizzle-orm/pg-core";
  * takes — the contracts list's severity ramp orders `priority` and `risk`
  * through one function. Re-exported for the operators' reason. */
 export type { AnyPgColumn } from "drizzle-orm/pg-core";
+/** The shape every configurable-taxonomy table has (#85), so the one
+ * machinery that serves them can name what it takes. */
+export type { TaxonomyTable } from "./schema/helpers.js";
 
 export type Db = NodePgDatabase<typeof schema> & { $client: pg.Pool };
 

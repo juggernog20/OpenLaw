@@ -25,4 +25,5 @@ export const matterTypesRoutes = taxonomyRoutes({
   actionPrefix: "matter_type",
   recordsMilestone: "M22",
   recordNoun: { singular: "matter", plural: "matters" },
+  protectedSlug: "other",
 });
