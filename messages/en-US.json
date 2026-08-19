@@ -239,6 +239,24 @@
   "activity.folder.unnamed": {
     "defaultMessage": "unnamed"
   },
+  "activity.intakeLink.created": {
+    "defaultMessage": "{actor} added the deflection link {name} to {onHome, select, true {the portal home} other {{placement}}}"
+  },
+  "activity.intakeLink.deleted": {
+    "defaultMessage": "{actor} removed the deflection link {name}"
+  },
+  "activity.intakeLink.field": {
+    "defaultMessage": "{key, select, label {Label} url {Address} placement {Placement} other {{key}}}"
+  },
+  "activity.intakeLink.portalHome": {
+    "defaultMessage": "Portal home"
+  },
+  "activity.intakeLink.reordered": {
+    "defaultMessage": "{actor} reordered the deflection links"
+  },
+  "activity.intakeLink.updated": {
+    "defaultMessage": "{actor} changed the deflection link {name}"
+  },
   "activity.keyDate.added": {
     "defaultMessage": "{actor} added the key date {label} on {date}"
   },
@@ -3242,6 +3260,9 @@
   "settings.group.security": {
     "defaultMessage": "Security"
   },
+  "settings.intake.tab.links": {
+    "defaultMessage": "Deflection links"
+  },
   "settings.intake.tab.requestTypes": {
     "defaultMessage": "Request types"
   },
@@ -3250,6 +3271,84 @@
   },
   "settings.intake.title": {
     "defaultMessage": "Intake"
+  },
+  "settings.intakeLinks.add": {
+    "defaultMessage": "Add link"
+  },
+  "settings.intakeLinks.addTitle": {
+    "defaultMessage": "Add link"
+  },
+  "settings.intakeLinks.archivedOption": {
+    "defaultMessage": "{name} (archived)"
+  },
+  "settings.intakeLinks.count": {
+    "defaultMessage": "{count, plural, one {# link} other {# links}}"
+  },
+  "settings.intakeLinks.createError": {
+    "defaultMessage": "The link could not be added."
+  },
+  "settings.intakeLinks.createSubmit": {
+    "defaultMessage": "Add link"
+  },
+  "settings.intakeLinks.edit": {
+    "defaultMessage": "Edit {name}"
+  },
+  "settings.intakeLinks.editError": {
+    "defaultMessage": "The link could not be saved."
+  },
+  "settings.intakeLinks.editSubmit": {
+    "defaultMessage": "Save"
+  },
+  "settings.intakeLinks.editTitle": {
+    "defaultMessage": "Edit {name}"
+  },
+  "settings.intakeLinks.help": {
+    "defaultMessage": "Shown under \"Before you submit…\" on the portal home. Links assigned to a request type show on that form instead. Drag a row, or focus its handle and use the arrow keys, to reorder. Removing a link deletes it — there is no archive."
+  },
+  "settings.intakeLinks.labelHelp": {
+    "defaultMessage": "What the panel reads as — an answer, not an address."
+  },
+  "settings.intakeLinks.labelLabel": {
+    "defaultMessage": "Label"
+  },
+  "settings.intakeLinks.labelMissing": {
+    "defaultMessage": "Name the link."
+  },
+  "settings.intakeLinks.moved": {
+    "defaultMessage": "{name} moved to position {position} of {total}."
+  },
+  "settings.intakeLinks.pageTitle": {
+    "defaultMessage": "Deflection links"
+  },
+  "settings.intakeLinks.placementHelp": {
+    "defaultMessage": "The portal home shows the link to everybody. A request type shows it on that form only."
+  },
+  "settings.intakeLinks.placementLabel": {
+    "defaultMessage": "Placement"
+  },
+  "settings.intakeLinks.placementPrefix": {
+    "defaultMessage": "Placement:"
+  },
+  "settings.intakeLinks.portalHome": {
+    "defaultMessage": "Portal home"
+  },
+  "settings.intakeLinks.remove": {
+    "defaultMessage": "Remove {name}"
+  },
+  "settings.intakeLinks.reorder": {
+    "defaultMessage": "Reorder {name}, position {position} of {total}. Use the arrow keys to move it."
+  },
+  "settings.intakeLinks.title": {
+    "defaultMessage": "Deflection links"
+  },
+  "settings.intakeLinks.urlHelp": {
+    "defaultMessage": "A full web address, starting with http:// or https://."
+  },
+  "settings.intakeLinks.urlInvalid": {
+    "defaultMessage": "Enter a full web address that starts with http:// or https://."
+  },
+  "settings.intakeLinks.urlLabel": {
+    "defaultMessage": "Address"
   },
   "settings.matterTypeEditor.allAttached": {
     "defaultMessage": "Every global field is attached."

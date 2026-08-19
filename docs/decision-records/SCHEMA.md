@@ -1001,6 +1001,18 @@ Source: **INT-002**
 
 ---
 
+### `intake_links`
+
+Source: **INT-004** (delete behavior and URL rule per its M19/6 addendum)
+
+The "Before you submit…" deflection panel, Admin-managed via Intake Settings → Deflection links: (`id`, `label`, `url`, `request_type_id` nullable, `display_order`, timestamps). A NULL `request_type_id` is the **portal home** panel — everybody sees the link whatever they came to ask; a request type names the form the link shows on instead.
+
+`request_type_id` is `on delete cascade`, not `set null`. A link's placement is its **audience**, so setting it NULL would publish a link scoped to one form to every requester on the portal home, which is the opposite of the demotion `request_types`' own target FKs perform. Cascade matches `request_type_fields`, the other child of `request_types`, and a request type is only hard-deletable when nothing has used it.
+
+`url` is validated as an absolute `http`/`https` address and stored **exactly as entered** — nothing normalizes it. The settings row renders it without its scheme; that is presentation. There is no `slug` and no `archived_at`: nothing points at a link and there is no history to keep, so a link is removed outright (the DES-052 value-list pane).
+
+---
+
 ### `comments`
 
 Source: **DD-016**, **CMT-001–009**

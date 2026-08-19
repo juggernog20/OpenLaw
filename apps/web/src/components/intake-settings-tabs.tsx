@@ -2,9 +2,9 @@
 
 /**
  * The Intake settings section head on the shared SettingsSectionTabs
- * anatomy (#85), per the ST12 frame of settings.pen. Request types is
- * the only pane this ticket; Deflection links (ST13, INT-004) joins the
- * strip with its own ticket, the same way the Contracts strip grew.
+ * anatomy (#85), per the ST12 and ST13 frames of settings.pen: Request
+ * types (INT-002) and Deflection links (INT-004), in the order both
+ * frames draw them.
  */
 
 import { FormattedMessage, useIntl } from "react-intl";
@@ -16,6 +16,10 @@ const TABS = [
     label: (
       <FormattedMessage id="settings.intake.tab.requestTypes" defaultMessage="Request types" />
     ),
+  },
+  {
+    path: "/settings/intake/links",
+    label: <FormattedMessage id="settings.intake.tab.links" defaultMessage="Deflection links" />,
   },
 ] as const;
 

@@ -69,6 +69,7 @@ import {
   SettingsRequestTypeEditorPage,
   settingsRequestTypeEditorLoader,
 } from "./routes/settings-request-type-editor";
+import { SettingsIntakeLinksPage, settingsIntakeLinksLoader } from "./routes/settings-intake-links";
 import { SettingsGeneralPage, settingsGeneralLoader } from "./routes/settings-general";
 import { SettingsUsersPage, settingsUsersLoader } from "./routes/settings-users";
 import {
@@ -236,6 +237,13 @@ export const routes: RouteObject[] = [
         path: "intake/request-types/:typeId",
         loader: settingsRequestTypeEditorLoader,
         element: <SettingsRequestTypeEditorPage />,
+      },
+      {
+        // #356: the INT-004 deflection links (ST13). "links" rather
+        // than "deflection-links": the section already says Intake.
+        path: "intake/links",
+        loader: settingsIntakeLinksLoader,
+        element: <SettingsIntakeLinksPage />,
       },
       { path: "entities", loader: settingsEntitiesIndexLoader, element: <></> },
       {

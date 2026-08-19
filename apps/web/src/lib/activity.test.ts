@@ -173,6 +173,23 @@ const SAMPLE_PAYLOADS: { [A in ActivityAction]: ActivityPayloadMap[A] } = {
   "contract_status.restored": { slug: "in-review", displayName: "In review" },
   "contract_status.deleted": { slug: "in-review", displayName: "In review", stage: "review" },
 
+  // ---- The deflection links (INT-004) ----
+  "intake_link.created": {
+    label: "NDA FAQ",
+    url: "https://wiki.example.com/nda-faq",
+    placement: null,
+  },
+  "intake_link.updated": {
+    label: "NDA FAQ",
+    changed: { placement: { from: null, to: "Contract review" } },
+  },
+  "intake_link.reordered": { order: ["NDA FAQ", "Purchasing policy"] },
+  "intake_link.deleted": {
+    label: "NDA FAQ",
+    url: "https://wiki.example.com/nda-faq",
+    placement: "Contract review",
+  },
+
   // ---- The field catalog ----
   "field.created": {
     slug: "governing-law",

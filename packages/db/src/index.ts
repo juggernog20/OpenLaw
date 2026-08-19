@@ -34,6 +34,7 @@ import * as documentsSchema from "./schema/documents.js";
 import * as entitiesSchema from "./schema/entities.js";
 import * as entityTypesSchema from "./schema/entity-types.js";
 import * as fieldsSchema from "./schema/fields.js";
+import * as intakeLinksSchema from "./schema/intake-links.js";
 import * as listViewsSchema from "./schema/list-views.js";
 import * as matterTypeFieldsSchema from "./schema/matter-type-fields.js";
 import * as matterTypesSchema from "./schema/matter-types.js";
@@ -67,6 +68,7 @@ export * from "./schema/documents.js";
 export * from "./schema/entities.js";
 export * from "./schema/entity-types.js";
 export * from "./schema/fields.js";
+export * from "./schema/intake-links.js";
 export * from "./schema/list-views.js";
 export * from "./schema/matter-type-fields.js";
 export * from "./schema/matter-types.js";
@@ -102,6 +104,7 @@ export const schema = {
   ...entitiesSchema,
   ...entityTypesSchema,
   ...fieldsSchema,
+  ...intakeLinksSchema,
   ...listViewsSchema,
   ...matterTypeFieldsSchema,
   ...matterTypesSchema,
