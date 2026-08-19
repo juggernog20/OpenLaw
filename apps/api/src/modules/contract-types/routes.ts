@@ -30,4 +30,5 @@ export const contractTypesRoutes = taxonomyRoutes({
   actionPrefix: "contract_type",
   usage: contractTypeUsage,
   recordNoun: { singular: "contract", plural: "contracts" },
+  protectedSlug: "other",
 });

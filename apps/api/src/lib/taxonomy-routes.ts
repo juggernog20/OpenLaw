@@ -8,33 +8,41 @@
  * the same routes with their own tables, vocabulary, and audit
  * actions. Everything sits behind SET-002's single role gate —
  * Administrators only — and every mutation appends to the activity
- * log (DD-017) inside the same transaction. Each table's `other` row
- * is system-protected here, not just in the UI: archive and delete
- * refuse it regardless of what a client sends. In-use counts are per
- * mount: a module whose record milestone has landed arms `usage`
- * (entities #100, contracts #113) and gets genuine counts plus the
- * live SET-003 guard; matter types read zero until M22 arms theirs.
+ * log (DD-017) inside the same transaction.
+ *
+ * Three things are per mount, and nothing else is.
+ *
+ * **In-use counts.** A module whose record milestone has landed arms
+ * `usage` (entities #100, contracts #113) and gets genuine counts plus
+ * the live SET-003 guard; matter types read zero until M22 arms theirs.
+ *
+ * **The system-protected row.** `protectedSlug` names the fallback row
+ * archive and delete refuse here, not just in the UI, regardless of
+ * what a client sends. The three type taxonomies pass `other`. A mount
+ * with no fallback row omits it and protects nothing, so a row an
+ * Administrator happens to name "Other" never inherits the lock.
+ *
+ * **The mount's own columns.** `extras` adds keys to the row
+ * projection and to the strict PATCH body, validates them under the
+ * row lock, and narrates them in the `updated` payload. A mount that
+ * passes none is the plain taxonomy the three type tables are.
  */
 
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
 import { z } from "zod";
-import {
-  asc,
-  contractTypes,
-  entityTypes,
-  eq,
-  isNull,
-  matterTypes,
-  type Executor,
-  type Transaction,
-} from "@openlaw/db";
+import { asc, eq, isNull, type Executor, type TaxonomyTable, type Transaction } from "@openlaw/db";
+import type { ChangedFields } from "@openlaw/shared";
 import { requireRole } from "../auth/guards.js";
 import { recordActivity, type TaxonomyActionPrefix } from "./activity.js";
 import { HttpError, httpError, problemResponse } from "./problem.js";
 import { freeSlug } from "./slug.js";
 
-/** The taxonomy tables are one shape by construction (`taxonomyColumns`). */
-export type TaxonomyTable = typeof contractTypes | typeof matterTypes | typeof entityTypes;
+/**
+ * The taxonomy tables are one shape by construction
+ * (`taxonomyColumns`), and a mount may carry columns of its own beside
+ * it — those are the extras hook's business, never the machinery's.
+ */
+export type { TaxonomyTable };
 export type TaxonomyRow = TaxonomyTable["$inferSelect"];
 
 /**
@@ -57,7 +65,75 @@ export interface TaxonomyUsage {
   ): Promise<number>;
 }
 
-interface TaxonomyRoutesBase {
+/**
+ * What a mount's extras answer once the machinery has locked the row
+ * and is about to write it.
+ */
+export interface TaxonomyExtrasPatch {
+  /** Columns to write, merged into the machinery's own patch. Nothing
+   * to write is an empty object — the route then behaves exactly as it
+   * does when no column changed. */
+  columns?: Record<string, unknown>;
+  /** What the `updated` activity payload should narrate, in the same
+   * `changed` map the description edit already writes. */
+  changed?: ChangedFields;
+}
+
+/** The locked row, and the body that asked for the change. */
+export interface TaxonomyExtrasPatchInput<TPatch extends z.ZodRawShape = z.ZodRawShape> {
+  /** The PATCH route's transaction — the extras' own reads and writes
+   * commit or roll back with the machinery's. */
+  tx: Transaction;
+  /** The row, read `for update`: nothing else may write it until this
+   * transaction ends, so a refusal here is a refusal on live values. */
+  row: TaxonomyRow;
+  /** The validated body: the mount's own keys, typed from
+   * `patchSchema`, beside the two the machinery always accepts. */
+  body: z.infer<z.ZodObject<TPatch>> & { displayName?: string; description?: string | null };
+}
+
+/**
+ * A mount's own columns, wired into the shared machinery (#85's second
+ * extension point, after `usage`).
+ *
+ * The three type taxonomies carry nothing beyond the shared columns and
+ * pass no extras at all, which is exactly today's behavior. A mount
+ * that does carry more — request types carry a target (INT-002) —
+ * declares here what the row projects, what the strict PATCH body
+ * accepts on top of the shared keys, and what happens under the row
+ * lock before the write.
+ */
+export interface TaxonomyExtras<
+  TRow extends z.ZodRawShape = z.ZodRawShape,
+  TPatch extends z.ZodRawShape = z.ZodRawShape,
+> {
+  /** Extra keys on the row schema, so they appear in the list and the
+   * single-row responses and in the OpenAPI document. */
+  rowSchema: TRow;
+  /** Every key `rowSchema` declares and no other, read off the row the
+   * machinery selected. A mount casts to its own row type — it owns its
+   * table. */
+  projectRow: (row: TaxonomyRow) => z.infer<z.ZodObject<TRow>>;
+  /** Extra keys the strict PATCH body accepts. The body stays strict:
+   * a key no mount declared is still refused rather than stripped. */
+  patchSchema?: TPatch;
+  /**
+   * Runs inside the PATCH transaction, under the row's `for update`
+   * lock, before the write — the same place the SET-003 archive guard
+   * reads its count. It validates what the body asked for against the
+   * locked row, refuses with `httpError` (which surfaces as an
+   * RFC 9457 problem like every other refusal), and answers the columns
+   * to write and what to narrate.
+   */
+  applyPatch?: (
+    input: TaxonomyExtrasPatchInput<TPatch>,
+  ) => TaxonomyExtrasPatch | Promise<TaxonomyExtrasPatch>;
+}
+
+interface TaxonomyRoutesBase<
+  TRow extends z.ZodRawShape = z.ZodRawShape,
+  TPatch extends z.ZodRawShape = z.ZodRawShape,
+> {
   table: TaxonomyTable;
   /** URL segment under /api/v1, e.g. `contract-types`. */
   path: string;
@@ -78,15 +154,33 @@ interface TaxonomyRoutesBase {
   /** What uses a type once records exist, both grammatical numbers —
    * the guard refusals pluralize by count. */
   recordNoun: { singular: string; plural: string };
+  /**
+   * The slug of the system-protected row: archive and hard delete
+   * refuse it here, not just in the UI, whatever a client sends. The
+   * three type taxonomies pass `other`, so a non-null fallback type
+   * always exists.
+   *
+   * A mount with no fallback row omits it and then no row is
+   * protected — the lock must follow the decision that a row is a
+   * fallback, never the name an Administrator happened to type.
+   */
+  protectedSlug?: string;
+  /** The mount's own columns on the row, the PATCH body, and the
+   * `updated` payload. Omitted, the mount is the plain taxonomy the
+   * three type tables are. */
+  extras?: TaxonomyExtras<TRow, TPatch>;
 }
 
-export type TaxonomyRoutesConfig =
-  | (TaxonomyRoutesBase & {
+export type TaxonomyRoutesConfig<
+  TRow extends z.ZodRawShape = z.ZodRawShape,
+  TPatch extends z.ZodRawShape = z.ZodRawShape,
+> =
+  | (TaxonomyRoutesBase<TRow, TPatch> & {
       /** The milestone whose records arm `usage` (M8 / M22). */
       recordsMilestone: string;
       usage?: never;
     })
-  | (TaxonomyRoutesBase & {
+  | (TaxonomyRoutesBase<TRow, TPatch> & {
       recordsMilestone?: never;
       /** The module's live-usage counter and reassignment mover. */
       usage: TaxonomyUsage;
@@ -105,10 +199,33 @@ const TaxonomyRowSchema = z.object({
   inUseCount: z.number().int(),
 });
 
+/**
+ * The columns the machinery writes itself, and which a mount's extras
+ * may therefore never write: the slug is immutable by rule (CTR-002),
+ * the display name and the description have their own audit verbs, the
+ * display order belongs to the reorder route, and `archived_at`
+ * belongs to archive and restore. `is_system_default` is absent on
+ * purpose — the machinery never writes it, so it is a mount's to own.
+ */
+const MACHINERY_COLUMNS: ReadonlySet<string> = new Set([
+  "id",
+  "slug",
+  "displayName",
+  "description",
+  "displayOrder",
+  "archivedAt",
+  "createdAt",
+  "updatedAt",
+]);
+
 const DisplayNameSchema = z.string().trim().min(1).max(100);
 const DescriptionSchema = z.string().trim().max(500);
 
-function toRow(row: TaxonomyRow, counts: Map<string, number>) {
+/** The mount's extra keys for one row, with their shape already
+ * checked against `rowSchema` at the mount. */
+type ProjectExtras = (row: TaxonomyRow) => Record<string, unknown>;
+
+function toRow(row: TaxonomyRow, counts: Map<string, number>, projectExtras?: ProjectExtras) {
   return {
     id: row.id,
     slug: row.slug,
@@ -118,6 +235,7 @@ function toRow(row: TaxonomyRow, counts: Map<string, number>) {
     isSystemDefault: row.isSystemDefault,
     archivedAt: row.archivedAt?.toISOString() ?? null,
     inUseCount: counts.get(row.id) ?? 0,
+    ...projectExtras?.(row),
   };
 }
 
@@ -130,13 +248,45 @@ export function recordNounPhrase(recordNoun: { singular: string; plural: string 
  * The routes, mounted per module: `taxonomyRoutes(config)` is a
  * Fastify plugin serving `/{path}` with the full DES-020 behavior set.
  */
-export function taxonomyRoutes(config: TaxonomyRoutesConfig): FastifyPluginAsyncZod {
+export function taxonomyRoutes<
+  TRow extends z.ZodRawShape = z.ZodRawShape,
+  TPatch extends z.ZodRawShape = z.ZodRawShape,
+>(config: TaxonomyRoutesConfig<TRow, TPatch>): FastifyPluginAsyncZod {
   const { table, path, noun } = config;
+  // A mount adds keys and redefines none: a key the machinery already
+  // declares would silently take over the projection or the body, so it
+  // fails here, when the mount is built, rather than at a request.
+  for (const key of Object.keys(config.extras?.rowSchema ?? {})) {
+    if (key in TaxonomyRowSchema.shape) {
+      throw new Error(
+        `The ${noun} extras redeclare \`${key}\` on the row, which the taxonomy owns.`,
+      );
+    }
+  }
+  for (const key of Object.keys(config.extras?.patchSchema ?? {})) {
+    if (key === "displayName" || key === "description") {
+      throw new Error(
+        `The ${noun} extras redeclare \`${key}\` on the body, which the taxonomy owns.`,
+      );
+    }
+  }
   // "a contract type", but "an entity type" — the indefinite article
   // rides the noun into every generated summary.
   const aNoun = `${/^[aeiou]/i.test(noun) ? "an" : "a"} ${noun}`;
-  const RowEnvelope = z.object({ [config.keySingular]: TaxonomyRowSchema });
-  const ListEnvelope = z.object({ [config.keyPlural]: z.array(TaxonomyRowSchema) });
+  // A mount with no extras gets `TaxonomyRowSchema` itself, so its
+  // OpenAPI row and its responses are the ones it has always had.
+  const RowSchema = config.extras
+    ? TaxonomyRowSchema.extend(config.extras.rowSchema)
+    : TaxonomyRowSchema;
+  const RowEnvelope = z.object({ [config.keySingular]: RowSchema });
+  const ListEnvelope = z.object({ [config.keyPlural]: z.array(RowSchema) });
+  // The system-protected row's clause in the generated summaries. Empty
+  // for a mount with no protected row, which then does not promise one.
+  const protectedClause = config.protectedSlug ? `\`${config.protectedSlug}\` refuses` : "";
+  // The one place the extras' types are erased: past here the machinery
+  // treats a mount's keys as opaque, and `RowSchema` is what holds them
+  // to what `rowSchema` declared.
+  const projectExtras = config.extras?.projectRow as ProjectExtras | undefined;
 
   return async (app) => {
     /** Locks and returns one row, or 404s — every :id mutation starts here. */
@@ -154,11 +304,16 @@ export function taxonomyRoutes(config: TaxonomyRoutesConfig): FastifyPluginAsync
 
     /** One row as its envelope value, with its live count. */
     async function rowJson(row: TaxonomyRow) {
-      return toRow(row, await usageCounts(app.db, [row.id]));
+      return toRow(row, await usageCounts(app.db, [row.id]), projectExtras);
     }
 
     /** "3 entities" / "1 entity" — the guard refusals' count phrase. */
     const inUsePhrase = recordNounPhrase(config.recordNoun);
+
+    /** The mount's fallback row, which archive and delete refuse. A
+     * mount with no fallback protects nothing. */
+    const isProtected = (row: TaxonomyRow) =>
+      config.protectedSlug !== undefined && row.slug === config.protectedSlug;
 
     app.get(
       `/${path}`,
@@ -184,7 +339,7 @@ export function taxonomyRoutes(config: TaxonomyRoutesConfig): FastifyPluginAsync
           app.db,
           rows.map((row) => row.id),
         );
-        return { [config.keyPlural]: rows.map((row) => toRow(row, counts)) };
+        return { [config.keyPlural]: rows.map((row) => toRow(row, counts, projectExtras)) };
       },
     );
 
@@ -269,32 +424,64 @@ export function taxonomyRoutes(config: TaxonomyRoutesConfig): FastifyPluginAsync
           summary:
             `Rename ${aNoun}'s display name (DES-017 in-place ` +
             "rename) or edit its description; the slug never " +
-            "changes, and even `other` may rename",
+            `changes${config.protectedSlug ? `, and even \`${config.protectedSlug}\` may rename` : ""}`,
           tags: [config.tag],
           params: z.object({ id: z.string() }),
-          // Strict: slug immutability is an explicit refusal, not a strip.
+          // Strict: slug immutability is an explicit refusal, not a
+          // strip. A mount's extras widen the accepted keys and nothing
+          // else — an undeclared key is still refused.
           body: z.strictObject({
             displayName: DisplayNameSchema.optional(),
             description: DescriptionSchema.nullable().optional(),
+            ...config.extras?.patchSchema,
           }),
           response: { 200: RowEnvelope, default: problemResponse },
         },
       },
       async (request) => {
-        const body = request.body;
+        const body: Record<string, unknown> = request.body;
         const row = await app.db.transaction(async (tx) => {
           const target = await lockedType(tx, request.params.id);
 
-          const patch: Partial<TaxonomyRow> = {};
-          const displayName = body.displayName?.trim();
+          const patch: Record<string, unknown> = {};
+          const displayName = (body.displayName as string | undefined)?.trim();
           if (displayName !== undefined && displayName !== target.displayName) {
             patch.displayName = displayName;
           }
+          const rawDescription = body.description as string | null | undefined;
           const description =
-            body.description !== undefined ? body.description?.trim() || null : undefined;
+            rawDescription !== undefined ? rawDescription?.trim() || null : undefined;
           if (description !== undefined && description !== target.description) {
             patch.description = description;
           }
+          // The mount's own columns, decided under the row lock the
+          // machinery already holds: a refusal here is a refusal on live
+          // values, and it rolls back with everything else. The body is
+          // the mount's own shape by construction — the strict schema
+          // above was built from `patchSchema` — so the cast below is
+          // the same erasure `projectExtras` makes.
+          const extra = await config.extras?.applyPatch?.({
+            tx,
+            row: target,
+            body: body as TaxonomyExtrasPatchInput<TPatch>["body"],
+          });
+          // A mount may write its own columns and no others. Reaching
+          // for one the machinery writes — the immutable slug above
+          // all — is a mount bug, so it fails as one rather than
+          // quietly overwriting the row.
+          for (const column of Object.keys(extra?.columns ?? {})) {
+            if (MACHINERY_COLUMNS.has(column)) {
+              throw new Error(
+                `The ${noun} extras tried to write \`${column}\`, which the taxonomy machinery owns.`,
+              );
+            }
+          }
+          Object.assign(patch, extra?.columns);
+          const changed: ChangedFields = {};
+          if (patch.description !== undefined) {
+            changed.description = { from: target.description, to: patch.description };
+          }
+          Object.assign(changed, extra?.changed);
           // Nothing changed: answer with the row and write no misleading
           // from==to audit entry.
           if (Object.keys(patch).length === 0) return target;
@@ -313,19 +500,20 @@ export function taxonomyRoutes(config: TaxonomyRoutesConfig): FastifyPluginAsync
               actorId: request.user.id,
               action: `${config.actionPrefix}.renamed`,
               visibility: "admin_only",
-              payload: { slug: target.slug, from: target.displayName, to: patch.displayName },
+              payload: {
+                slug: target.slug,
+                from: target.displayName,
+                to: patch.displayName as string,
+              },
             });
           }
-          if (patch.description !== undefined) {
+          if (Object.keys(changed).length > 0) {
             await recordActivity(tx, {
               entityType: "system",
               actorId: request.user.id,
               action: `${config.actionPrefix}.updated`,
               visibility: "admin_only",
-              payload: {
-                slug: target.slug,
-                changed: { description: { from: target.description, to: patch.description } },
-              },
+              payload: { slug: target.slug, changed },
             });
           }
           return updated!;
@@ -394,7 +582,7 @@ export function taxonomyRoutes(config: TaxonomyRoutesConfig): FastifyPluginAsync
           app.db,
           rows.map((row) => row.id),
         );
-        return { [config.keyPlural]: rows.map((row) => toRow(row, counts)) };
+        return { [config.keyPlural]: rows.map((row) => toRow(row, counts, projectExtras)) };
       },
     );
 
@@ -407,9 +595,11 @@ export function taxonomyRoutes(config: TaxonomyRoutesConfig): FastifyPluginAsync
           summary: config.usage
             ? `Archive ${aNoun} (SET-003 guarded): a type still used by ` +
               `${config.recordNoun.plural} requires a reassignment target, ` +
-              `which takes them; nothing is deleted; \`other\` refuses`
+              `which takes them; nothing is deleted` +
+              (protectedClause ? `; ${protectedClause}` : "")
             : `Archive ${aNoun} (SET-003 guarded): it leaves pickers ` +
-              "and the default list; nothing is deleted; `other` refuses",
+              "and the default list; nothing is deleted" +
+              (protectedClause ? `; ${protectedClause}` : ""),
           tags: [config.tag],
           params: z.object({ id: z.string() }),
           body: z.object({ reassignToId: z.string().optional() }),
@@ -420,8 +610,11 @@ export function taxonomyRoutes(config: TaxonomyRoutesConfig): FastifyPluginAsync
         const { reassignToId } = request.body;
         const row = await app.db.transaction(async (tx) => {
           const target = await lockedType(tx, request.params.id);
-          if (target.slug === "other") {
-            throw httpError(409, "The Other type is system-protected and can't be archived.");
+          if (isProtected(target)) {
+            throw httpError(
+              409,
+              `The ${target.displayName} type is system-protected and can't be archived.`,
+            );
           }
           if (target.archivedAt) throw httpError(409, `This ${noun} is already archived.`);
 
@@ -535,11 +728,17 @@ export function taxonomyRoutes(config: TaxonomyRoutesConfig): FastifyPluginAsync
         preHandler: requireRole("administrator"),
         schema: {
           operationId: `delete${config.idSingular}`,
-          summary: config.usage
-            ? `Hard-delete ${aNoun}; \`other\` refuses (${config.decision}), ` +
-              `and so does a type still used by ${config.recordNoun.plural}`
-            : `Hard-delete ${aNoun}; \`other\` refuses (${config.decision}), and ` +
-              `once ${config.recordNoun.plural} exist (${config.recordsMilestone}) an in-use type will refuse too`,
+          summary: protectedClause
+            ? config.usage
+              ? `Hard-delete ${aNoun}; ${protectedClause} (${config.decision}), ` +
+                `and so does a type still used by ${config.recordNoun.plural}`
+              : `Hard-delete ${aNoun}; ${protectedClause} (${config.decision}), and ` +
+                `once ${config.recordNoun.plural} exist (${config.recordsMilestone}) an in-use type will refuse too`
+            : config.usage
+              ? `Hard-delete ${aNoun} (${config.decision}); a type still used ` +
+                `by ${config.recordNoun.plural} refuses`
+              : `Hard-delete ${aNoun} (${config.decision}); once ` +
+                `${config.recordNoun.plural} exist (${config.recordsMilestone}) an in-use type will refuse`,
           tags: [config.tag],
           params: z.object({ id: z.string() }),
           // z.undefined() = a bodyless 204; z.null() would advertise a
@@ -550,8 +749,11 @@ export function taxonomyRoutes(config: TaxonomyRoutesConfig): FastifyPluginAsync
       async (request, reply) => {
         await app.db.transaction(async (tx) => {
           const target = await lockedType(tx, request.params.id);
-          if (target.slug === "other") {
-            throw httpError(409, "The Other type is system-protected and can't be deleted.");
+          if (isProtected(target)) {
+            throw httpError(
+              409,
+              `The ${target.displayName} type is system-protected and can't be deleted.`,
+            );
           }
           // An in-use type refuses cleanly — the records' FK would refuse
           // anyway, as a bare 500. Archive with a reassignment is the way.

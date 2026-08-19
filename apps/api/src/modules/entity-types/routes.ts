@@ -29,4 +29,5 @@ export const entityTypesRoutes = taxonomyRoutes({
   actionPrefix: "entity_type",
   recordNoun: { singular: "entity", plural: "entities" },
   usage: entityTypeUsage,
+  protectedSlug: "other",
 });
