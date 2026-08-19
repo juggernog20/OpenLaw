@@ -115,7 +115,9 @@ export interface TaxonomyExtras<
    * table. */
   projectRow: (row: TaxonomyRow) => z.infer<z.ZodObject<TRow>>;
   /** Extra keys the strict PATCH body accepts. The body stays strict:
-   * a key no mount declared is still refused rather than stripped. */
+   * a key no mount declared is still refused rather than stripped, and
+   * a mount may not declare a machinery-owned column (`slug` above
+   * all) — the mount fails when it is built. */
   patchSchema?: TPatch;
   /**
    * Runs inside the PATCH transaction, under the row's `for update`
@@ -201,11 +203,12 @@ const TaxonomyRowSchema = z.object({
 
 /**
  * The columns the machinery writes itself, and which a mount's extras
- * may therefore never write: the slug is immutable by rule (CTR-002),
- * the display name and the description have their own audit verbs, the
- * display order belongs to the reorder route, and `archived_at`
- * belongs to archive and restore. `is_system_default` is absent on
- * purpose — the machinery never writes it, so it is a mount's to own.
+ * may therefore neither write nor put on the PATCH body: the slug is
+ * immutable by rule (CTR-002), the display name and the description
+ * have their own audit verbs, the display order belongs to the reorder
+ * route, and `archived_at` belongs to archive and restore.
+ * `is_system_default` is absent on purpose — the machinery never
+ * writes it, so it is a mount's to own.
  */
 const MACHINERY_COLUMNS: ReadonlySet<string> = new Set([
   "id",
@@ -257,16 +260,19 @@ export function taxonomyRoutes<
   // declares would silently take over the projection or the body, so it
   // fails here, when the mount is built, rather than at a request.
   for (const key of Object.keys(config.extras?.rowSchema ?? {})) {
-    if (key in TaxonomyRowSchema.shape) {
+    if (Object.hasOwn(TaxonomyRowSchema.shape, key)) {
       throw new Error(
         `The ${noun} extras redeclare \`${key}\` on the row, which the taxonomy owns.`,
       );
     }
   }
+  // The body may not name a machinery column either: `slug` above all —
+  // accepting it and ignoring it would turn the explicit immutability
+  // refusal into a silent strip.
   for (const key of Object.keys(config.extras?.patchSchema ?? {})) {
-    if (key === "displayName" || key === "description") {
+    if (MACHINERY_COLUMNS.has(key)) {
       throw new Error(
-        `The ${noun} extras redeclare \`${key}\` on the body, which the taxonomy owns.`,
+        `The ${noun} extras declare \`${key}\` on the body, a column the taxonomy machinery owns.`,
       );
     }
   }

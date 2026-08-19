@@ -362,6 +362,15 @@ describe("the extras hook", () => {
         patchSchema: { description: z.string().optional() },
       }),
     ).toThrow(/description/);
+    // The immutable slug may not enter the body either: accepted and
+    // ignored, it would be a silent strip of the explicit refusal.
+    expect(
+      rebuild({
+        rowSchema: {},
+        projectRow: () => ({}),
+        patchSchema: { slug: z.string().optional() },
+      }),
+    ).toThrow(/slug/);
   });
 
   it("refuses to let a mount write a column the machinery owns", async () => {
