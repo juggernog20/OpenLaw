@@ -60,6 +60,11 @@ import {
   settingsMattersIndexLoader,
   settingsMatterTypesLoader,
 } from "./routes/settings-matter-types";
+import {
+  SettingsRequestTypesPage,
+  settingsIntakeIndexLoader,
+  settingsRequestTypesLoader,
+} from "./routes/settings-request-types";
 import { SettingsGeneralPage, settingsGeneralLoader } from "./routes/settings-general";
 import { SettingsUsersPage, settingsUsersLoader } from "./routes/settings-users";
 import {
@@ -214,6 +219,13 @@ export const routes: RouteObject[] = [
         path: "contracts/approver-groups",
         loader: settingsApproverGroupsLoader,
         element: <SettingsApproverGroupsPage />,
+      },
+      // #353: the Intake section, Request types its first pane (INT-002).
+      { path: "intake", loader: settingsIntakeIndexLoader, element: <></> },
+      {
+        path: "intake/request-types",
+        loader: settingsRequestTypesLoader,
+        element: <SettingsRequestTypesPage />,
       },
       { path: "entities", loader: settingsEntitiesIndexLoader, element: <></> },
       {

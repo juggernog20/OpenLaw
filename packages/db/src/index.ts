@@ -39,6 +39,7 @@ import * as matterTypeFieldsSchema from "./schema/matter-type-fields.js";
 import * as matterTypesSchema from "./schema/matter-types.js";
 import * as notificationsSchema from "./schema/notifications.js";
 import * as orgSchema from "./schema/org.js";
+import * as requestTypesSchema from "./schema/request-types.js";
 import * as signingConnectorsSchema from "./schema/signing-connectors.js";
 import { resealStoredSecrets, type SecretsRewrap } from "./rewrap.js";
 
@@ -70,6 +71,7 @@ export * from "./schema/matter-type-fields.js";
 export * from "./schema/matter-types.js";
 export * from "./schema/notifications.js";
 export * from "./schema/org.js";
+export * from "./schema/request-types.js";
 export * from "./schema/signing-connectors.js";
 export * from "./migration-journal.js";
 export * from "./rewrap.js";
@@ -103,6 +105,7 @@ export const schema = {
   ...matterTypesSchema,
   ...notificationsSchema,
   ...orgSchema,
+  ...requestTypesSchema,
   ...signingConnectorsSchema,
 };
 

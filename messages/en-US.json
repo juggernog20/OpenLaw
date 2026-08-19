@@ -321,25 +321,25 @@
     "defaultMessage": "(untitled)"
   },
   "activity.taxonomy.archived": {
-    "defaultMessage": "{actor} archived the {kind, select, contract_type {contract type} matter_type {matter type} entity_type {entity type} contract_status {contract status} field {field} approver_group {approver group} other {type}} {name}"
+    "defaultMessage": "{actor} archived the {kind, select, contract_type {contract type} matter_type {matter type} entity_type {entity type} request_type {request type} contract_status {contract status} field {field} approver_group {approver group} other {type}} {name}"
   },
   "activity.taxonomy.created": {
-    "defaultMessage": "{actor} added the {kind, select, contract_type {contract type} matter_type {matter type} entity_type {entity type} contract_status {contract status} field {field} approver_group {approver group} other {type}} {name}"
+    "defaultMessage": "{actor} added the {kind, select, contract_type {contract type} matter_type {matter type} entity_type {entity type} request_type {request type} contract_status {contract status} field {field} approver_group {approver group} other {type}} {name}"
   },
   "activity.taxonomy.deleted": {
-    "defaultMessage": "{actor} deleted the {kind, select, contract_type {contract type} matter_type {matter type} entity_type {entity type} contract_status {contract status} field {field} approver_group {approver group} other {type}} {name}"
+    "defaultMessage": "{actor} deleted the {kind, select, contract_type {contract type} matter_type {matter type} entity_type {entity type} request_type {request type} contract_status {contract status} field {field} approver_group {approver group} other {type}} {name}"
   },
   "activity.taxonomy.renamed": {
-    "defaultMessage": "{actor} renamed the {kind, select, contract_type {contract type} matter_type {matter type} entity_type {entity type} contract_status {contract status} field {field} approver_group {approver group} other {type}} {name}"
+    "defaultMessage": "{actor} renamed the {kind, select, contract_type {contract type} matter_type {matter type} entity_type {entity type} request_type {request type} contract_status {contract status} field {field} approver_group {approver group} other {type}} {name}"
   },
   "activity.taxonomy.reordered": {
-    "defaultMessage": "{actor} reordered the {kind, select, contract_type {contract type} matter_type {matter type} entity_type {entity type} contract_status {contract status} field {field} approver_group {approver group} other {type}} list"
+    "defaultMessage": "{actor} reordered the {kind, select, contract_type {contract type} matter_type {matter type} entity_type {entity type} request_type {request type} contract_status {contract status} field {field} approver_group {approver group} other {type}} list"
   },
   "activity.taxonomy.restored": {
-    "defaultMessage": "{actor} restored the {kind, select, contract_type {contract type} matter_type {matter type} entity_type {entity type} contract_status {contract status} field {field} approver_group {approver group} other {type}} {name}"
+    "defaultMessage": "{actor} restored the {kind, select, contract_type {contract type} matter_type {matter type} entity_type {entity type} request_type {request type} contract_status {contract status} field {field} approver_group {approver group} other {type}} {name}"
   },
   "activity.taxonomy.updated": {
-    "defaultMessage": "{actor} changed the {kind, select, contract_type {contract type} matter_type {matter type} entity_type {entity type} contract_status {contract status} field {field} approver_group {approver group} other {type}} {name}"
+    "defaultMessage": "{actor} changed the {kind, select, contract_type {contract type} matter_type {matter type} entity_type {entity type} request_type {request type} contract_status {contract status} field {field} approver_group {approver group} other {type}} {name}"
   },
   "activity.teamRole": {
     "defaultMessage": "{role, select, member {Member} watcher {Watcher} creator {Creator} contributor {Contributor} other {{role}}}"
@@ -3239,6 +3239,15 @@
   "settings.group.security": {
     "defaultMessage": "Security"
   },
+  "settings.intake.tab.requestTypes": {
+    "defaultMessage": "Request types"
+  },
+  "settings.intake.tabsLabel": {
+    "defaultMessage": "Intake panes"
+  },
+  "settings.intake.title": {
+    "defaultMessage": "Intake"
+  },
   "settings.matterTypeEditor.allAttached": {
     "defaultMessage": "Every global field is attached."
   },
@@ -3533,6 +3542,63 @@
   "settings.reminders.title": {
     "defaultMessage": "Reminder lead times"
   },
+  "settings.requestTypes.add": {
+    "defaultMessage": "Add request type"
+  },
+  "settings.requestTypes.addName": {
+    "defaultMessage": "New request type name"
+  },
+  "settings.requestTypes.archive": {
+    "defaultMessage": "Archive {name}"
+  },
+  "settings.requestTypes.archiveError": {
+    "defaultMessage": "The type could not be archived."
+  },
+  "settings.requestTypes.archiveSubmit": {
+    "defaultMessage": "Archive type"
+  },
+  "settings.requestTypes.archiveTitle": {
+    "defaultMessage": "Archive {name}"
+  },
+  "settings.requestTypes.archiveWarning": {
+    "defaultMessage": "{count, plural, =0 {{name} is not used by any requests — it can be archived without reassignment.} one {{name} is used by # request. Pick a replacement type — that request moves to it when the type is archived.} other {{name} is used by # requests. Pick a replacement type — those requests move to it when the type is archived.}}"
+  },
+  "settings.requestTypes.auditNote": {
+    "defaultMessage": "The change applies immediately and is recorded in the audit log."
+  },
+  "settings.requestTypes.count": {
+    "defaultMessage": "{count, plural, one {# type} other {# types}}"
+  },
+  "settings.requestTypes.help": {
+    "defaultMessage": "Every form collects summary, description, attachments, and urgency. Attached catalog fields carry their values into the converted matter or contract."
+  },
+  "settings.requestTypes.moved": {
+    "defaultMessage": "{name} moved to position {position} of {total}."
+  },
+  "settings.requestTypes.noCandidates": {
+    "defaultMessage": "No other active type can take its requests. Add or restore another type first."
+  },
+  "settings.requestTypes.pageTitle": {
+    "defaultMessage": "Request types"
+  },
+  "settings.requestTypes.reassignLabel": {
+    "defaultMessage": "Reassign {count, plural, =0 {requests} one {# request} other {# requests}} to"
+  },
+  "settings.requestTypes.reassignNone": {
+    "defaultMessage": "No reassignment"
+  },
+  "settings.requestTypes.renameLabel": {
+    "defaultMessage": "Rename {name}"
+  },
+  "settings.requestTypes.reorder": {
+    "defaultMessage": "Reorder {name}, position {position} of {total}. Use the arrow keys to move it."
+  },
+  "settings.requestTypes.restore": {
+    "defaultMessage": "Restore {name}"
+  },
+  "settings.requestTypes.title": {
+    "defaultMessage": "Request types"
+  },
   "settings.section.appearance": {
     "defaultMessage": "Appearance"
   },
@@ -3550,6 +3616,9 @@
   },
   "settings.section.general": {
     "defaultMessage": "General"
+  },
+  "settings.section.intake": {
+    "defaultMessage": "Intake"
   },
   "settings.section.integrations": {
     "defaultMessage": "Integrations"

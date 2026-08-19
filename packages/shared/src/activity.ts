@@ -65,7 +65,7 @@ type Prefixed<P extends string, M> = { [K in keyof M & string as `${P}.${K}`]: M
 // ---------------------------------------------------------------------
 
 /** The taxonomy tables' audit namespaces. */
-export type TaxonomyActionPrefix = "contract_type" | "matter_type" | "entity_type";
+export type TaxonomyActionPrefix = "contract_type" | "matter_type" | "entity_type" | "request_type";
 /** The two catalogs of fields attached to a type. */
 export type TypeFieldActionPrefix = "contract_type_field" | "matter_type_field";
 
@@ -780,6 +780,7 @@ export type ActivityPayloadMap = UserPayloads &
   Prefixed<"contract_type", TaxonomyPayloads> &
   Prefixed<"matter_type", TaxonomyPayloads> &
   Prefixed<"entity_type", TaxonomyPayloads> &
+  Prefixed<"request_type", TaxonomyPayloads> &
   Prefixed<"contract_type_field", TypeFieldPayloads> &
   Prefixed<"matter_type_field", TypeFieldPayloads> &
   ContractStatusPayloads &
