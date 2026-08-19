@@ -1154,9 +1154,6 @@
   "contracts.form.risk": {
     "defaultMessage": "Risk"
   },
-  "contracts.form.status": {
-    "defaultMessage": "Status"
-  },
   "contracts.form.submit": {
     "defaultMessage": "Create"
   },
@@ -1205,11 +1202,17 @@
   "contracts.ownerUnassigned": {
     "defaultMessage": "Unassigned"
   },
+  "contracts.record.actions": {
+    "defaultMessage": "Contract actions"
+  },
   "contracts.record.archive": {
     "defaultMessage": "Archive"
   },
   "contracts.record.archivedNote": {
     "defaultMessage": "This contract is archived — it is out of the contract list. Restore it to edit."
+  },
+  "contracts.record.copyLink": {
+    "defaultMessage": "Copy link"
   },
   "contracts.record.documentTitle": {
     "defaultMessage": "{reference} {title}"
@@ -1231,6 +1234,9 @@
   },
   "contracts.record.readOnlyNote": {
     "defaultMessage": "This record is read-only. Ask a Legal Team Member to make a change."
+  },
+  "contracts.record.rename": {
+    "defaultMessage": "Rename contract"
   },
   "contracts.record.restore": {
     "defaultMessage": "Restore"
@@ -1423,6 +1429,12 @@
   },
   "contracts.stage.done": {
     "defaultMessage": "done"
+  },
+  "contracts.stage.move": {
+    "defaultMessage": "{stage} — move contract"
+  },
+  "contracts.stage.moveTo": {
+    "defaultMessage": "Move to"
   },
   "contracts.stage.pipeline": {
     "defaultMessage": "Stage"
@@ -3013,6 +3025,15 @@
   },
   "settings.contracts.title": {
     "defaultMessage": "Contracts"
+  },
+  "settings.eSignature.chip.connected": {
+    "defaultMessage": "Connected"
+  },
+  "settings.eSignature.chip.notConnected": {
+    "defaultMessage": "Not connected"
+  },
+  "settings.eSignature.chip.turnedOff": {
+    "defaultMessage": "Turned off"
   },
   "settings.eSignature.connected": {
     "defaultMessage": "Connected to {account}."

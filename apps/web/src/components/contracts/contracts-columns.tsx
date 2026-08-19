@@ -64,8 +64,11 @@ const COLUMNS: ColumnDef<ContractRow>[] = [
     // thing in this column — the C-1 under it needs a third of it. The
     // budget is the text plus the cell's 16px insets plus the 20px the
     // sort glyph's slot holds open whether or not the glyph is showing.
+    // The floor is under that budget on purpose: a reader dragging this
+    // column narrow is telling us they read the C-1 and not the heading,
+    // and the heading truncates rather than holding the column open.
     defaultWidth: 128,
-    minWidth: 96,
+    minWidth: 80,
     sortKey: "number",
     render: (row, intl) => (
       <span className="text-muted">{contractReference(intl, row.number)}</span>
@@ -81,7 +84,7 @@ const COLUMNS: ColumnDef<ContractRow>[] = [
     // old table starved. The number is what it takes once a drag pins it,
     // and the floor is what the table's own min-width is built on.
     defaultWidth: 280,
-    minWidth: 200,
+    minWidth: 176,
     required: true,
     sortKey: "title",
     render: (row) => (
@@ -113,7 +116,7 @@ const COLUMNS: ColumnDef<ContractRow>[] = [
     label: (intl) =>
       intl.formatMessage({ id: "contracts.column.counterparty", defaultMessage: "Counterparty" }),
     defaultWidth: 150,
-    minWidth: 100,
+    minWidth: 88,
     sortKey: "counterparty",
     // One name per row: the primary is what a list can show, and the
     // record holds the rest (CTR-011). The cell needs no truncating span
@@ -132,7 +135,7 @@ const COLUMNS: ColumnDef<ContractRow>[] = [
     header: <FormattedMessage id="contracts.column.type" defaultMessage="Type" />,
     label: (intl) => intl.formatMessage({ id: "contracts.column.type", defaultMessage: "Type" }),
     defaultWidth: 112,
-    minWidth: 90,
+    minWidth: 80,
     sortKey: "type",
     render: (row) => <span className="text-muted">{row.contractTypeName}</span>,
   },
@@ -142,13 +145,22 @@ const COLUMNS: ColumnDef<ContractRow>[] = [
     label: (intl) =>
       intl.formatMessage({ id: "contracts.column.status", defaultMessage: "Status" }),
     defaultWidth: 140,
-    minWidth: 110,
+    minWidth: 96,
     // Orders by the pipeline an Administrator arranged, not the alphabet
     // — the seam's own note says why (CTR-001).
     sortKey: "status",
+    // A status name is whatever an Administrator called it (CTR-001), so
+    // no floor can promise the pill fits. The cell cuts it instead.
+    clip: true,
     render: (row) => (
       <span
-        className={`inline-flex rounded-pill px-2 py-0.5 text-xs font-medium ${STAGE_PILL[row.stage]}`}
+        // `w-max` is what keeps the pill whole. An inline-flex box is
+        // shrink-to-fit, so in a narrow cell it would squeeze down to its
+        // longest word and let the rest of the name spill out past its own
+        // background — a coloured shape with loose text beside it. Holding
+        // it at max-content means the cell clips the pill and its text
+        // together, on the same edge.
+        className={`inline-flex w-max rounded-pill px-2 py-0.5 text-xs font-medium ${STAGE_PILL[row.stage]}`}
       >
         {row.statusName}
       </span>
@@ -159,7 +171,7 @@ const COLUMNS: ColumnDef<ContractRow>[] = [
     header: <FormattedMessage id="contracts.column.value" defaultMessage="Value" />,
     label: (intl) => intl.formatMessage({ id: "contracts.column.value", defaultMessage: "Value" }),
     defaultWidth: 130,
-    minWidth: 100,
+    minWidth: 88,
     // No sort: an amount, a currency, and a cadence have no single order
     // without an exchange rate (CTR-010).
     render: (row, intl) =>
@@ -178,7 +190,7 @@ const COLUMNS: ColumnDef<ContractRow>[] = [
     header: <FormattedMessage id="contracts.column.owner" defaultMessage="Owner" />,
     label: (intl) => intl.formatMessage({ id: "contracts.column.owner", defaultMessage: "Owner" }),
     defaultWidth: 160,
-    minWidth: 120,
+    minWidth: 104,
     sortKey: "owner",
     render: (row) =>
       row.manager ? (
@@ -201,7 +213,7 @@ const COLUMNS: ColumnDef<ContractRow>[] = [
     header: <FormattedMessage id="contracts.column.risk" defaultMessage="Risk" />,
     label: (intl) => intl.formatMessage({ id: "contracts.column.risk", defaultMessage: "Risk" }),
     defaultWidth: 110,
-    minWidth: 90,
+    minWidth: 80,
     sortKey: "risk",
     // Not assessed is not low (CTR-005), and `riskLabel` is the one place
     // that distinction is worded.
@@ -217,7 +229,7 @@ const COLUMNS: ColumnDef<ContractRow>[] = [
     label: (intl) =>
       intl.formatMessage({ id: "contracts.column.priority", defaultMessage: "Priority" }),
     defaultWidth: 110,
-    minWidth: 90,
+    minWidth: 80,
     sortKey: "priority",
     render: (row, intl) => severityLabel(intl, row.priority),
   },
@@ -227,7 +239,7 @@ const COLUMNS: ColumnDef<ContractRow>[] = [
     label: (intl) =>
       intl.formatMessage({ id: "contracts.column.effectiveDate", defaultMessage: "Starts" }),
     defaultWidth: 120,
-    minWidth: 100,
+    minWidth: 88,
     sortKey: "effectiveDate",
     render: (row) => (row.effectiveDate ? formatShortDate(row.effectiveDate) : <NotRecorded />),
   },
@@ -237,7 +249,7 @@ const COLUMNS: ColumnDef<ContractRow>[] = [
     label: (intl) =>
       intl.formatMessage({ id: "contracts.column.expiryDate", defaultMessage: "Expires" }),
     defaultWidth: 120,
-    minWidth: 100,
+    minWidth: 88,
     sortKey: "expiryDate",
     render: (row) =>
       row.expiryDate ? (
@@ -258,7 +270,7 @@ const COLUMNS: ColumnDef<ContractRow>[] = [
     label: (intl) =>
       intl.formatMessage({ id: "contracts.column.noticeDeadline", defaultMessage: "Notice by" }),
     defaultWidth: 120,
-    minWidth: 100,
+    minWidth: 88,
     // Derived at read and never stored (CTR-006), so there is nothing to
     // order on.
     render: (row) => (row.noticeDeadline ? formatShortDate(row.noticeDeadline) : <NotRecorded />),
@@ -269,7 +281,7 @@ const COLUMNS: ColumnDef<ContractRow>[] = [
     label: (intl) =>
       intl.formatMessage({ id: "contracts.column.daysRemaining", defaultMessage: "Term left" }),
     defaultWidth: 120,
-    minWidth: 100,
+    minWidth: 88,
     // A count of days, not a relative phrase. "Next year" is true of any
     // date between 6 and 18 months out, and a renewals sweep is reading
     // this column to tell those apart. The overrun wording carries the
@@ -301,7 +313,7 @@ const COLUMNS: ColumnDef<ContractRow>[] = [
     label: (intl) =>
       intl.formatMessage({ id: "contracts.column.termType", defaultMessage: "Term" }),
     defaultWidth: 130,
-    minWidth: 100,
+    minWidth: 88,
     render: (row, intl) => <span className="text-muted">{termTypeLabel(intl, row.termType)}</span>,
   },
   {
@@ -310,7 +322,7 @@ const COLUMNS: ColumnDef<ContractRow>[] = [
     label: (intl) =>
       intl.formatMessage({ id: "contracts.column.entity", defaultMessage: "Our entity" }),
     defaultWidth: 170,
-    minWidth: 120,
+    minWidth: 104,
     // CTR-011's our side, ordered by legal name with case folded — the
     // same shape as the other three name sorts.
     sortKey: "entity",
@@ -322,7 +334,7 @@ const COLUMNS: ColumnDef<ContractRow>[] = [
     label: (intl) =>
       intl.formatMessage({ id: "contracts.column.createdAt", defaultMessage: "Created" }),
     defaultWidth: 130,
-    minWidth: 100,
+    minWidth: 88,
     sortKey: "createdAt",
     render: (row) => <span className="text-muted">{formatShortDate(row.createdAt)}</span>,
   },
@@ -332,7 +344,7 @@ const COLUMNS: ColumnDef<ContractRow>[] = [
     label: (intl) =>
       intl.formatMessage({ id: "contracts.column.updatedAt", defaultMessage: "Updated" }),
     defaultWidth: 130,
-    minWidth: 100,
+    minWidth: 88,
     sortKey: "updatedAt",
     render: (row) => <span className="text-muted">{formatShortDate(row.updatedAt)}</span>,
   },
@@ -343,12 +355,20 @@ const COLUMNS: ColumnDef<ContractRow>[] = [
  *
  * The default seven are the C1 mock's columns. The six pinned ones sum to
  * 820px, and Title stretches over whatever the card has spare, so the
- * table's own minimum is 820 plus Title's 200px floor — 1020px. The list
- * therefore fits comfortably in a 1280px window and still fits a 1120px
+ * table's own minimum is 820 plus Title's 176px floor — 996px. The list
+ * therefore fits comfortably in a 1280px window and still fits a 1024px
  * one, and below that it scrolls sideways rather than starving the Title
  * (DES-046 clause 1). Title's own 280px is what it takes the moment a drag
  * pins it. Each width is its heading's text plus the cell's 32px of insets
  * plus, on a sortable column, the 20px its sort glyph holds open.
+ *
+ * **The floors sit under the headings, not on them.** Every `minWidth`
+ * here is short of what its heading needs to render in full, so a reader
+ * dragging a column down truncates the heading rather than hitting a stop
+ * the heading placed there. The heading is the thing they already know —
+ * they are dragging the column because they want the cells. The floors
+ * are still wide enough for a few characters of value plus the insets, so
+ * no column can be dragged to a sliver that reads as a rendering fault.
  */
 export const CONTRACTS_CATALOGUE: ColumnCatalogue<ContractRow> = {
   surface: "contracts",

@@ -44,6 +44,8 @@ function connector(overrides: Record<string, unknown> = {}) {
     apiUserId: "the-user-id",
     hasPrivateKey: true,
     hasWebhookSecret: true,
+    enabled: true,
+    disabledAt: null,
     webhookUrl: WEBHOOK_URL,
     updatedAt: "2026-08-16T09:00:00.000Z",
     ...overrides,
@@ -116,6 +118,16 @@ function newCalls(): ConnectorCalls {
   return { saves: [], tests: 0 };
 }
 
+/**
+ * Opens the DocuSign card.
+ *
+ * Every Integrations card starts closed (DES-054 amendment), connector
+ * or no connector, so every test about the form has to open it first.
+ */
+async function openDocusign(user: ReturnType<typeof userEvent.setup>) {
+  await user.click(await screen.findByRole("button", { name: "DocuSign", expanded: false }));
+}
+
 describe("the E-signature pane (#245)", () => {
   it("bounces a non-Administrator to their settings home", async () => {
     stubApi({ signedIn: MEMBER });
@@ -138,16 +150,61 @@ describe("the E-signature pane (#245)", () => {
   });
 
   it("forwards the bare section URL to the E-signature pane", async () => {
+    const user = userEvent.setup();
     stubApi({ signedIn: ADMIN, extra: connectorApi({}, newCalls()) });
     renderAt("/settings/integrations");
 
+    await openDocusign(user);
     expect(await screen.findByLabelText("Integration key")).toHaveValue("the-integration-key");
   });
 
-  it("shows the stored configuration with both secret fields blank", async () => {
+  it("keeps the card closed, and says it is connected on the header", async () => {
+    const user = userEvent.setup();
     stubApi({ signedIn: ADMIN, extra: connectorApi({}, newCalls()) });
     renderAt("/settings/integrations/e-signature");
 
+    // The credentials are set and there is nothing to do, so the card
+    // shows its name and its state and holds the rest back.
+    expect(await screen.findByText("Connected")).toBeVisible();
+    expect(screen.queryByLabelText("Integration key")).not.toBeInTheDocument();
+
+    await openDocusign(user);
+    expect(await screen.findByLabelText("Integration key")).toBeVisible();
+  });
+
+  it("says a stored connector is turned off when it is", async () => {
+    stubApi({
+      signedIn: ADMIN,
+      extra: connectorApi(
+        { connector: connector({ enabled: false, disabledAt: "2026-08-17T09:00:00.000Z" }) },
+        newCalls(),
+      ),
+    });
+    renderAt("/settings/integrations/e-signature");
+
+    expect(await screen.findByText("Turned off")).toBeVisible();
+  });
+
+  it("starts closed when nothing is connected yet, and says so on the header", async () => {
+    const user = userEvent.setup();
+    stubApi({ signedIn: ADMIN, extra: connectorApi({ connector: unconfigured() }, newCalls()) });
+    renderAt("/settings/integrations/e-signature");
+
+    // The card holds its form back either way: the pane is a list of
+    // integrations and their states, and the chip carries the state.
+    expect(await screen.findByText("Not connected")).toBeVisible();
+    expect(screen.queryByLabelText("Integration key")).not.toBeInTheDocument();
+
+    await openDocusign(user);
+    expect(await screen.findByLabelText("Integration key")).toBeVisible();
+  });
+
+  it("shows the stored configuration with both secret fields blank", async () => {
+    const user = userEvent.setup();
+    stubApi({ signedIn: ADMIN, extra: connectorApi({}, newCalls()) });
+    renderAt("/settings/integrations/e-signature");
+
+    await openDocusign(user);
     expect(await screen.findByLabelText("Integration key")).toHaveValue("the-integration-key");
     expect(screen.getByLabelText("User ID")).toHaveValue("the-user-id");
     expect(screen.getByLabelText("Environment")).toHaveValue("demo");
@@ -161,9 +218,11 @@ describe("the E-signature pane (#245)", () => {
   });
 
   it("shows the webhook URL read-only, to paste into DocuSign Connect", async () => {
+    const user = userEvent.setup();
     stubApi({ signedIn: ADMIN, extra: connectorApi({}, newCalls()) });
     renderAt("/settings/integrations/e-signature");
 
+    await openDocusign(user);
     const field = await screen.findByLabelText("Webhook URL");
     expect(field).toHaveValue(WEBHOOK_URL);
     expect(field).toHaveAttribute("readonly");
@@ -175,6 +234,7 @@ describe("the E-signature pane (#245)", () => {
     stubApi({ signedIn: ADMIN, extra: connectorApi({}, calls) });
     renderAt("/settings/integrations/e-signature");
 
+    await openDocusign(user);
     await user.selectOptions(await screen.findByLabelText("Environment"), "production");
     await user.click(screen.getByRole("button", { name: "Save connector" }));
 
@@ -196,6 +256,7 @@ describe("the E-signature pane (#245)", () => {
     stubApi({ signedIn: ADMIN, extra: connectorApi({}, calls) });
     renderAt("/settings/integrations/e-signature");
 
+    await openDocusign(user);
     await user.type(await screen.findByLabelText("Connect HMAC secret"), "rotated-secret");
     await user.click(screen.getByRole("button", { name: "Save connector" }));
 
@@ -215,9 +276,11 @@ describe("the E-signature pane (#245)", () => {
   });
 
   it("requires both secrets on an install with no connector", async () => {
+    const user = userEvent.setup();
     stubApi({ signedIn: ADMIN, extra: connectorApi({ connector: unconfigured() }, newCalls()) });
     renderAt("/settings/integrations/e-signature");
 
+    await openDocusign(user);
     expect(await screen.findByLabelText("RSA private key")).toBeRequired();
     expect(screen.getByLabelText("Connect HMAC secret")).toBeRequired();
     expect(
@@ -228,9 +291,11 @@ describe("the E-signature pane (#245)", () => {
   });
 
   it("offers no connection test until something is configured", async () => {
+    const user = userEvent.setup();
     stubApi({ signedIn: ADMIN, extra: connectorApi({ connector: unconfigured() }, newCalls()) });
     renderAt("/settings/integrations/e-signature");
 
+    await openDocusign(user);
     expect(await screen.findByRole("button", { name: "Test connection" })).toBeDisabled();
   });
 
@@ -240,6 +305,7 @@ describe("the E-signature pane (#245)", () => {
     stubApi({ signedIn: ADMIN, extra: connectorApi({}, calls) });
     renderAt("/settings/integrations/e-signature");
 
+    await openDocusign(user);
     await user.click(await screen.findByRole("button", { name: "Test connection" }));
 
     expect(await screen.findByText("Connected to Acme Inc.")).toBeVisible();
@@ -263,6 +329,7 @@ describe("the E-signature pane (#245)", () => {
     });
     renderAt("/settings/integrations/e-signature");
 
+    await openDocusign(user);
     await user.click(await screen.findByRole("button", { name: "Test connection" }));
 
     expect(
@@ -277,6 +344,7 @@ describe("the E-signature pane (#245)", () => {
     stubApi({ signedIn: ADMIN, extra: connectorApi({}, newCalls()) });
     renderAt("/settings/integrations/e-signature");
 
+    await openDocusign(user);
     await user.click(await screen.findByRole("button", { name: "Test connection" }));
     expect(await screen.findByText("Connected to Acme Inc.")).toBeVisible();
 
@@ -301,6 +369,7 @@ describe("the E-signature pane (#245)", () => {
     });
     renderAt("/settings/integrations/e-signature");
 
+    await openDocusign(user);
     await user.type(await screen.findByLabelText("Integration key"), "a-key");
     await user.type(screen.getByLabelText("User ID"), "a-user");
     await user.type(screen.getByLabelText("RSA private key"), "-----BEGIN RSA PRIVATE KEY-----");

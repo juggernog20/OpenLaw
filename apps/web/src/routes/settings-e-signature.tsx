@@ -31,6 +31,7 @@ import { api } from "../lib/api";
 import { formatShortDate } from "../lib/format";
 import { problemDetail } from "../lib/messages";
 import { currentUser, needsSetup } from "../lib/session";
+import { cn } from "../lib/utils";
 import { PageTitle } from "../components/page-title";
 import { SettingsCard } from "../components/settings-card";
 import { StatusNote, type FieldStatus } from "../components/status-note";
@@ -307,6 +308,13 @@ export function SettingsESignaturePage() {
       />
       <SettingsCard
         title={<FormattedMessage id="settings.eSignature.docusign" defaultMessage="DocuSign" />}
+        collapsible
+        // Every Integrations card starts closed (DES-054 amendment),
+        // connector or no connector. The pane's steady state is a list
+        // of integrations and their states; the chip beside the name
+        // says the part worth knowing, and the form is one click away.
+        defaultOpen={false}
+        actions={<ConnectionChip connector={connector} />}
       >
         <p className="text-sm text-muted">
           <FormattedMessage
@@ -588,6 +596,44 @@ export function SettingsESignaturePage() {
       )}
     </>
   );
+}
+
+/**
+ * What the connector is, in three words, beside its name.
+ *
+ * A closed card shows its header and nothing else, so the header has
+ * to carry the one fact somebody opens this pane to check. The three
+ * states are the three the row can be in: never set up, set up and
+ * sending, set up and turned off.
+ */
+function ConnectionChip({ connector }: Readonly<{ connector: Connector }>) {
+  const [label, tone] = !connector.configured
+    ? [
+        <FormattedMessage
+          key="off"
+          id="settings.eSignature.chip.notConnected"
+          defaultMessage="Not connected"
+        />,
+        "bg-status-neutral-bg text-status-neutral-fg",
+      ]
+    : connector.enabled
+      ? [
+          <FormattedMessage
+            key="on"
+            id="settings.eSignature.chip.connected"
+            defaultMessage="Connected"
+          />,
+          "bg-status-success-bg text-status-success-fg",
+        ]
+      : [
+          <FormattedMessage
+            key="paused"
+            id="settings.eSignature.chip.turnedOff"
+            defaultMessage="Turned off"
+          />,
+          "bg-status-onhold-bg text-status-onhold-fg",
+        ];
+  return <span className={cn("rounded-pill px-2 py-0.5 text-xs font-medium", tone)}>{label}</span>;
 }
 
 /**

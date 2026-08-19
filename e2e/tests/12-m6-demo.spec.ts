@@ -29,7 +29,7 @@ import {
 /** The CTR-001 seed whose rename the demo performs, and its canonical
  * display name to restore (and start from) on the never-reset instance. */
 const RENAMED_SLUG = "redlining";
-const CANONICAL_NAME = "Redlining with counterparty";
+const CANONICAL_NAME = "With counterparty";
 
 /** Per-run rows carry these prefixes so a crashed earlier run's
  * leftovers can be swept before the journey starts. */

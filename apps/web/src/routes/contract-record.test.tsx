@@ -151,7 +151,7 @@ const OPTIONS = {
   ],
   contractStatuses: [
     { id: "s-draft", slug: "draft", displayName: "Draft", stage: "draft" },
-    { id: "s-redlining", slug: "redlining", displayName: "Redlining", stage: "review" },
+    { id: "s-redlining", slug: "redlining", displayName: "With counterparty", stage: "review" },
     { id: "s-active", slug: "active", displayName: "Active", stage: "active" },
   ],
   users: PEOPLE,
@@ -224,6 +224,38 @@ async function openTeam(user: ReturnType<typeof userEvent.setup>) {
     await user.click(icon);
   }
   return screen.getByRole("complementary", { name: "Team" });
+}
+
+/** The strip's move control (DES-053): the current stage's pill, which
+ * is the one item of the six that can be pressed. Queried by its
+ * accessible name rather than its role, so it is still reachable behind
+ * an open dialog — the soft gate hides the page from the a11y tree. */
+function moveControl(stage: string) {
+  return screen.getByLabelText(`${stage} — move contract`);
+}
+
+/** Opens the move menu and picks a status by the label it wears. Does
+ * not wait for the commit that follows. */
+async function moveTo(user: ReturnType<typeof userEvent.setup>, status: string) {
+  await user.click(await screen.findByRole("button", { name: /move contract$/ }));
+  await user.click(await screen.findByRole("menuitemradio", { name: new RegExp(`^${status}`) }));
+}
+
+/** The record's overflow menu (DES-055), opened by its sub-bar trigger.
+ * Only one Radix menu is mounted at a time, so the row can be asked for
+ * by name even where a section draws a row of the same name. */
+async function recordAction(user: ReturnType<typeof userEvent.setup>, name: string) {
+  await user.click(await screen.findByRole("button", { name: "Contract actions" }));
+  await user.click(await screen.findByRole("menuitem", { name }));
+}
+
+/** The rows the record's overflow menu offers, in order. */
+async function recordActions(user: ReturnType<typeof userEvent.setup>) {
+  await user.click(await screen.findByRole("button", { name: "Contract actions" }));
+  const menu = await screen.findByRole("menu");
+  return within(menu)
+    .getAllByRole("menuitem")
+    .map((item) => item.textContent);
 }
 
 /** jsdom does not fire the clip's width transitionend, so a close
@@ -583,7 +615,10 @@ describe("the /contracts/:number record page", () => {
     ).toHaveLength(1);
 
     expect(screen.getByLabelText("Title")).toHaveValue("Acme master services agreement");
-    expect(screen.getByLabelText("Status")).toHaveValue("s-draft");
+    // The status is not a field of the card any more (DES-053): it
+    // commits from the strip, on the stage the record sits on.
+    expect(moveControl("Draft")).toBeInTheDocument();
+    expect(screen.queryByLabelText("Status")).not.toBeInTheDocument();
     expect(screen.getByLabelText("Priority")).toHaveValue("medium");
     // Risk stays empty until legal assesses it (CTR-005).
     expect(screen.getByLabelText("Risk")).toHaveValue("");
@@ -660,7 +695,7 @@ describe("the /contracts/:number record page", () => {
     renderAt("/contracts/42");
     const user = userEvent.setup();
 
-    await user.selectOptions(await screen.findByLabelText("Status"), "s-active");
+    await moveTo(user, "Active");
     await waitFor(() => expect(api.patches).toEqual([{ statusId: "s-active" }]));
     const subbar = screen.getByRole("region", { name: "Acme master services agreement" });
     // The pipeline beside the pill says "Active" too, so the pill is
@@ -673,10 +708,25 @@ describe("the /contracts/:number record page", () => {
     ).toHaveLength(1);
 
     // Backwards too — deals collapse and reopen (CTR-001).
-    await user.selectOptions(screen.getByLabelText("Status"), "s-redlining");
+    await moveTo(user, "With counterparty");
     await waitFor(() =>
       expect(api.patches).toEqual([{ statusId: "s-active" }, { statusId: "s-redlining" }]),
     );
+  });
+
+  it("commits nothing when the status the record already holds is picked again", async () => {
+    const api = recordApi(contractRow());
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42");
+    const user = userEvent.setup();
+
+    await moveTo(user, "Draft");
+
+    // The record is already on Draft, so that press is not a move. An
+    // entry saying the contract moved to where it was is worse than no
+    // entry at all (DD-017).
+    await waitFor(() => expect(screen.queryByRole("menu")).not.toBeInTheDocument());
+    expect(api.patches).toEqual([]);
   });
 
   it("sets priority and risk from the shared severity ramp, and clears risk again", async () => {
@@ -1203,24 +1253,25 @@ describe("the /contracts/:number record page", () => {
     renderAt("/contracts/42");
     const user = userEvent.setup();
 
-    await user.selectOptions(await screen.findByLabelText("Status"), "s-active");
+    await moveTo(user, "Active");
     expect(
       await screen.findByText("The status must be a live contract status."),
     ).toBeInTheDocument();
-    // The select still shows the saved truth — nothing was adopted.
-    expect(screen.getByLabelText("Status")).toHaveValue("s-draft");
+    // The strip still shows the saved truth — nothing was adopted.
+    expect(moveControl("Draft")).toBeInTheDocument();
   });
 
-  it("keeps a saved status the picker no longer offers selectable as itself", async () => {
+  it("keeps a saved status the picker no longer offers pickable as itself", async () => {
     const api = recordApi(contractRow({ statusId: "s-archived", statusName: "Superseded" }));
     stubApi({ signedIn: MEMBER, extra: api.handler });
     renderAt("/contracts/42");
+    const user = userEvent.setup();
 
-    const select = await screen.findByLabelText("Status");
-    expect(select).toHaveValue("s-archived");
-    expect(
-      within(select as HTMLElement).getByRole("option", { name: "Superseded" }),
-    ).toBeInTheDocument();
+    await user.click(await screen.findByRole("button", { name: /move contract$/ }));
+    const row = await screen.findByRole("menuitemradio", { name: /^Superseded/ });
+    // Checked, so the menu says where the record is rather than leaving
+    // every row unpicked and the reader guessing.
+    expect(row).toHaveAttribute("aria-checked", "true");
   });
 
   it("lists the contract team, and names who made the record", async () => {
@@ -1329,7 +1380,7 @@ describe("the /contracts/:number record page", () => {
     renderAt("/contracts/42");
     const user = userEvent.setup();
 
-    await user.click(await screen.findByRole("button", { name: "Archive" }));
+    await recordAction(user, "Archive");
     await waitFor(() => expect(api.posts).toEqual(["archive"]));
     expect(screen.getByText(/This contract is archived/)).toBeInTheDocument();
     for (const label of [
@@ -1337,7 +1388,6 @@ describe("the /contracts/:number record page", () => {
       "Contract type",
       "Owner",
       "Our entity",
-      "Status",
       "Priority",
       "Risk",
       // The value freezes as a group, like it commits as one.
@@ -1348,6 +1398,10 @@ describe("the /contracts/:number record page", () => {
     ]) {
       expect(screen.getByLabelText(label)).toBeDisabled();
     }
+    // The move control does not freeze — it goes (DES-053). An
+    // archived record is facts until it is restored, and the strip is
+    // the reading it always was.
+    expect(screen.queryByRole("button", { name: /move contract$/ })).not.toBeInTheDocument();
     // The counterparties freeze too — the parties still read, but
     // nothing about them can be changed. The picker is asked for by
     // role: the recorded-parties list shares its accessible name.
@@ -1375,11 +1429,56 @@ describe("the /contracts/:number record page", () => {
     expect(await screen.findByLabelText("Payment terms")).toBeDisabled();
     await user.click(screen.getByRole("link", { name: "Overview" }));
 
-    await user.click(await screen.findByRole("button", { name: "Restore" }));
+    // Archived, the menu keeps the way back and drops the rename: a
+    // record with no editable title is offered no editor for it.
+    expect(await recordActions(user)).toEqual(["Copy link", "Restore"]);
+    await user.keyboard("{Escape}");
+
+    await recordAction(user, "Restore");
     await waitFor(() => expect(api.posts).toEqual(["archive", "restore"]));
     expect(screen.queryByText(/This contract is archived/)).not.toBeInTheDocument();
     expect(screen.getByLabelText("Title")).toBeEnabled();
-    expect(screen.getByRole("button", { name: "Archive" })).toBeInTheDocument();
+    expect(await recordActions(user)).toEqual(["Copy link", "Rename contract", "Archive"]);
+  });
+
+  it("renames from the menu by taking the reader to the title field, from any section", async () => {
+    const api = recordApi(contractRow());
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    // Started on a section the title field is not on, which is the case
+    // the menu has to answer: the field is behind the Overview tab.
+    renderAt("/contracts/42/fields");
+    const user = userEvent.setup();
+
+    await screen.findByRole("button", { name: "Contract actions" });
+    await recordAction(user, "Rename contract");
+
+    const title = await screen.findByLabelText<HTMLInputElement>("Title");
+    await waitFor(() => expect(title).toHaveFocus());
+    // Selected whole, so the next keystroke is the new name.
+    expect(title.selectionStart).toBe(0);
+    expect(title.selectionEnd).toBe("Acme master services agreement".length);
+
+    // The menu opened no editor of its own — this is the DES-017 field,
+    // committing on blur as it always has, in one PATCH.
+    await user.keyboard("Acme MSA");
+    await user.tab();
+    await waitFor(() => expect(api.patches).toEqual([{ title: "Acme MSA" }]));
+  });
+
+  it("copies a link to the record and says so without closing the menu", async () => {
+    stubApi({ signedIn: MEMBER, extra: recordApi(contractRow()).handler });
+    // Copying from a section: the link is the record's address, not the
+    // reader's, so it drops the section.
+    renderAt("/contracts/42/documents");
+    const user = userEvent.setup();
+
+    await user.click(await screen.findByRole("button", { name: "Contract actions" }));
+    await user.click(await screen.findByRole("menuitem", { name: "Copy link" }));
+
+    expect(await navigator.clipboard.readText()).toBe(`${window.location.origin}/contracts/42`);
+    // The row says it worked, which it can only do with the menu still
+    // open — closing would take the one confirmation with it.
+    expect(await screen.findByRole("menuitem", { name: "Copied" })).toBeInTheDocument();
   });
 
   it("draws the type's attached fields in attachment order and commits one by slug", async () => {
@@ -1708,7 +1807,7 @@ describe("the contract record's stage pipeline (M14/2)", () => {
     const { pipeline } = await pipelineOn(contractRow());
     const user = userEvent.setup();
 
-    await user.selectOptions(await screen.findByLabelText("Status"), "s-active");
+    await moveTo(user, "Active");
 
     await waitFor(() =>
       expect(steps(pipeline)).toEqual([
@@ -1726,8 +1825,8 @@ describe("the contract record's stage pipeline (M14/2)", () => {
     const { pipeline } = await pipelineOn(contractRow({ statusId: "s-active", stage: "active" }));
     const user = userEvent.setup();
 
-    // Redlining maps to `review` — two stages behind where it sits.
-    await user.selectOptions(await screen.findByLabelText("Status"), "s-redlining");
+    // The redline status maps to `review` — two stages behind where it sits.
+    await moveTo(user, "With counterparty");
 
     await waitFor(() =>
       expect(steps(pipeline)).toEqual([
@@ -1751,6 +1850,8 @@ describe("the contract record's stage pipeline (M14/2)", () => {
     );
 
     expect(steps(pipeline).find((step) => step.current)?.stage).toBe("Active");
+    // Facts, so the current stage is a pill again and not a trigger.
+    expect(screen.queryByRole("button", { name: /move contract$/ })).not.toBeInTheDocument();
   });
 
   it("reads the same for a Contributor, who reads the record rather than edits it", async () => {
@@ -1762,6 +1863,26 @@ describe("the contract record's stage pipeline (M14/2)", () => {
 
     const pipeline = await screen.findByRole("list", { name: "Stage" });
     expect(steps(pipeline).find((step) => step.current)?.stage).toBe("Active");
+    expect(screen.queryByRole("button", { name: /move contract$/ })).not.toBeInTheDocument();
+  });
+
+  it("names every status the record may hold, each beside the stage it maps to", async () => {
+    await pipelineOn(contractRow());
+    const user = userEvent.setup();
+
+    await user.click(await screen.findByRole("button", { name: "Draft — move contract" }));
+
+    // Statuses, not stages: what commits is the label, and two labels
+    // may share one stage (CTR-001). The stage is named on each row
+    // because that pair would otherwise read as unexplained.
+    const rows = screen.getAllByRole("menuitemradio");
+    expect(rows.map((row) => row.textContent)).toEqual([
+      "DraftDraft",
+      "With counterpartyReview",
+      "ActiveActive",
+    ]);
+    // Where the record is now, marked in the menu as well as the strip.
+    expect(rows[0]).toHaveAttribute("aria-checked", "true");
   });
 });
 
@@ -1862,7 +1983,7 @@ describe("the contract record's section tabs (DES-032)", () => {
     const subbar = within(screen.getByRole("region", { name: /Acme master services agreement/ }));
     expect(subbar.getByRole("link", { name: "Contracts" })).toBeInTheDocument();
     expect(subbar.getByText("C-42")).toBeInTheDocument();
-    expect(subbar.getByRole("button", { name: "Archive" })).toBeInTheDocument();
+    expect(subbar.getByRole("button", { name: "Contract actions" })).toBeInTheDocument();
     // The roster lives in the activity bar beside all sections, so the
     // DES-028 banner's "Manage team" fragment resolves from any of them.
     const team = await openTeam(user);
@@ -1919,12 +2040,13 @@ describe("a Contributor on the contract record (M9/1)", () => {
     expect(screen.getByText(/This record is read-only/)).toBeInTheDocument();
 
     // Every control is inert, exactly as an archived record renders.
+    // The status is not among them: it has no control on this page for
+    // this viewer at all (DES-053).
     for (const label of [
       "Title",
       "Contract type",
       "Owner",
       "Our entity",
-      "Status",
       "Priority",
       "Risk",
       "Amount",
@@ -1940,10 +2062,12 @@ describe("a Contributor on the contract record (M9/1)", () => {
     await userEvent.setup().click(screen.getByRole("link", { name: "Fields" }));
     expect(await screen.findByLabelText("Payment terms")).toBeDisabled();
 
-    // Archive and restore are record-level actions a Contributor never
-    // gets, so they are absent rather than permanently disabled.
-    expect(screen.queryByRole("button", { name: "Archive" })).not.toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "Restore" })).not.toBeInTheDocument();
+    // Archive, restore, and rename are record-level mutations a
+    // Contributor never gets, so the menu drops those rows rather than
+    // drawing them permanently disabled. It keeps the one row that
+    // changes nothing (DES-055 clause 2).
+    expect(await recordActions(userEvent.setup())).toEqual(["Copy link"]);
+    await userEvent.setup().keyboard("{Escape}");
     // The team and party controls freeze the way an archived record
     // freezes them — inert where they stand, gone where the archived
     // record drops them.
@@ -1965,7 +2089,11 @@ describe("a Contributor on the contract record (M9/1)", () => {
 
   it("still names the type, status, and Owner the record holds, with no picker list to read them from", async () => {
     const api = contributorApi(
-      contractRow({ manager: person("u2"), statusId: "s-redlining", statusName: "Redlining" }),
+      contractRow({
+        manager: person("u2"),
+        statusId: "s-redlining",
+        statusName: "With counterparty",
+      }),
     );
     stubApi({ signedIn: CONTRIBUTOR, extra: api.handler });
     renderAt("/contracts/42");
@@ -1974,8 +2102,18 @@ describe("a Contributor on the contract record (M9/1)", () => {
     // Each one names what is stored, not a blank — the row carries the
     // names, so no options read is needed to draw them.
     expect(await screen.findByLabelText("Contract type")).toHaveDisplayValue("MSA");
-    expect(screen.getByLabelText("Status")).toHaveDisplayValue("Redlining");
     expect(screen.getByLabelText("Owner")).toHaveDisplayValue("Nadia Counsel");
+    // The status has no control at all for this viewer (DES-053): the
+    // sub-bar pill names it, and the strip is the reading it always
+    // was — no trigger to press and none disabled to work out.
+    const subbar = screen.getByRole("region", { name: "Acme master services agreement" });
+    const pipeline = within(subbar).getByRole("list", { name: "Stage" });
+    expect(
+      within(subbar)
+        .getAllByText("With counterparty")
+        .filter((node) => !pipeline.contains(node)),
+    ).toHaveLength(1);
+    expect(screen.queryByRole("button", { name: /move contract$/ })).not.toBeInTheDocument();
   });
 
   it("says archived once on an archived contract, and never offers the restore", async () => {
@@ -1988,7 +2126,7 @@ describe("a Contributor on the contract record (M9/1)", () => {
     // and two notes over one card would say the same thing twice.
     expect(await screen.findByText(/This contract is archived/)).toBeInTheDocument();
     expect(screen.queryByText(/This record is read-only/)).not.toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "Restore" })).not.toBeInTheDocument();
+    expect(await recordActions(userEvent.setup())).toEqual(["Copy link"]);
     expect(screen.getByLabelText("Title")).toBeDisabled();
     expect(api.posts).toEqual([]);
   });

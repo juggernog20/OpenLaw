@@ -44,6 +44,20 @@ export interface ColumnDef<Row> {
   minWidth: number;
   /** Trailing alignment for a column of actions. */
   align?: "start" | "end";
+  /**
+   * The cell holds a shape rather than a text run — a status pill — so it
+   * clips at the column edge instead of ending in an ellipsis (DES-046
+   * clause 2).
+   *
+   * An ellipsis is a typographic mark, and it reads as "this text carries
+   * on" only while it is sitting at the end of text. Put it on a pill and
+   * it lands inside a coloured shape whose rounded end has been eaten to
+   * make room for it, which reads as a broken pill rather than as a long
+   * status name. A clean vertical cut at the column edge is the honest
+   * mark: the shape is whole as far as it goes, and the table scrolls
+   * sideways to the rest of it.
+   */
+  clip?: boolean;
   /** A column the reader may not hide — the list is unreadable without
    * it, so the menu shows it checked and disabled. */
   required?: boolean;

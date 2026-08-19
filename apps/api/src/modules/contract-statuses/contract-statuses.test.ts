@@ -176,9 +176,7 @@ describe("GET /contract-statuses", () => {
       // count is zero — a real query since #113, not a placeholder.
       expect(row.inUseCount).toBe(0);
     }
-    expect(rows.find((row) => row.slug === "redlining")!.displayName).toBe(
-      "Redlining with counterparty",
-    );
+    expect(rows.find((row) => row.slug === "redlining")!.displayName).toBe("With counterparty");
   });
 });
 

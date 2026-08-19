@@ -9,8 +9,9 @@
  * context for reading any part of it, and every section gets the
  * column the roster used to occupy. Every field edits in place and
  * commits individually per DES-017 — no page edit mode, no dirty
- * state, no Save chrome — with the Owner, the type, status, priority,
- * and risk as selects.
+ * state, no Save chrome — with the Owner, the type, priority, and risk
+ * as selects. The status is the one field that does not live in a card:
+ * it commits from the sub-bar's own stage strip (DES-053).
  *
  * Six sections, six addresses. **Overview** (`/contracts/42`) is
  * the record's own columns: the Contract card, the Description card
@@ -96,6 +97,12 @@
  * progress: transitions are unrestricted, so a status change that lands
  * on an earlier stage moves the marker back.
  *
+ * The marker is also the way the contract is moved (DES-053). For a
+ * viewer who may write, the current stage's pill is a menu trigger, and
+ * the menu offers every status the record may hold — forwards,
+ * backwards, and skipping. The soft gate is unchanged: it is the seam's
+ * refusal that raises the dialog, from wherever the commit was sent.
+ *
  * Archive (soft delete — for mistakes and imports, not for ending a
  * contract) and restore live in the sub-bar; an archived record reads
  * as facts until restored.
@@ -139,15 +146,7 @@ import {
   type LoaderFunctionArgs,
 } from "react-router";
 import { FormattedMessage, defineMessage, useIntl, type IntlShape } from "react-intl";
-import {
-  Archive,
-  ArchiveRestore,
-  ChevronRight,
-  FileText,
-  PenLine,
-  Settings,
-  X,
-} from "lucide-react";
+import { ChevronRight, FileText, PenLine, Settings, X } from "lucide-react";
 import { RENEWAL_EXPIRY_MOVED_PROBLEM_TYPE, SOFT_GATE_PROBLEM_TYPE } from "@openlaw/shared";
 import { api } from "../lib/api";
 import { authClient } from "../lib/auth-client";
@@ -219,6 +218,7 @@ import { ConfidentialToggle } from "../components/confidential-toggle";
 import { ConfirmRenewalDialog } from "../components/contracts/confirm-renewal-dialog";
 import { CreateContractDialog } from "../components/contracts/create-contract-dialog";
 import { KeyDatesCard } from "../components/contracts/key-dates-card";
+import { RecordActionsMenu } from "../components/contracts/record-actions-menu";
 import { RelatedContractsCard } from "../components/contracts/related-contracts-card";
 import type { ContractRelations } from "../lib/relations";
 import { TasksCard } from "../components/contracts/tasks-card";
@@ -500,6 +500,27 @@ const SETTINGS_APPLET: Applet = {
   group: "below-divider",
   href: "/settings/contracts",
 };
+
+/**
+ * Puts the reader in front of the title field, whole and selected — the
+ * one editor the title has (DES-017), and what the menu's Rename row
+ * resolves to (DES-055 clause 3).
+ *
+ * Reached by id rather than by ref because the caller is the sub-bar
+ * and the field is in the Overview section, which may have mounted a
+ * navigation later. A section that does not draw the field is a no-op.
+ */
+function focusTitle() {
+  const field = document.getElementById("contract-title");
+  if (!(field instanceof HTMLInputElement)) return;
+  // Centred rather than merely visible: the sub-bar and the section
+  // strip are sticky, and "into view" alone can leave the field under
+  // them. No smooth behaviour — DES-003 spends the motion budget on
+  // hover and focus, and this is neither.
+  field.scrollIntoView({ block: "center" });
+  field.focus({ preventScroll: true });
+  field.select();
+}
 
 /**
  * Every piece of state below seeds from the loaded contract, so moving
@@ -1212,6 +1233,38 @@ function ContractRecord() {
     }));
   }
 
+  /**
+   * Renaming, from the record's own menu (DES-055 clause 3).
+   *
+   * This opens no editor of its own. The title has one editor — the
+   * field on the Contract card (DES-017) — so the menu's job is to put
+   * the reader in front of it: the Overview section if they are
+   * somewhere else, then the field, focused with its text selected so
+   * the next keystroke is the new name.
+   *
+   * The field lives under the Overview tab, so a reader on another
+   * section has to get there first. The wish outlives the navigation
+   * in a ref rather than in state — nothing renders differently for
+   * holding it, and a state flag would only cost the section it
+   * navigated to a second render.
+   */
+  const renaming = useRef(false);
+
+  function startRename() {
+    if (tab === "overview") {
+      focusTitle();
+      return;
+    }
+    renaming.current = true;
+    void navigate(`/contracts/${saved.number}`);
+  }
+
+  useEffect(() => {
+    if (!renaming.current || tab !== "overview") return;
+    renaming.current = false;
+    focusTitle();
+  }, [tab]);
+
   async function archiveOrRestore() {
     setArchiveStatus("saving");
     setArchiveError(undefined);
@@ -1353,7 +1406,14 @@ function ContractRecord() {
               "@5xl/shell:h-(--height-subbar) @5xl/shell:flex-nowrap @5xl/shell:py-0",
             )}
           >
-            <div className="flex w-full min-w-0 items-center gap-2 @5xl/shell:w-auto">
+            {/* The breadcrumb group takes the row's slack on a wide
+                shell (DES-034 clause 9), so the strip beside it is
+                pinned against the record actions instead of floating on
+                the title and the status label. Both of those vary per
+                record — and the label is renameable — so a group sized
+                to its own content moved the strip every time the reader
+                opened a different contract or changed its status. */}
+            <div className="flex w-full min-w-0 items-center gap-2 @5xl/shell:w-auto @5xl/shell:flex-1">
               <Link
                 to="/contracts"
                 className="shrink-0 rounded-chip text-base text-link hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-link"
@@ -1414,36 +1474,75 @@ function ContractRecord() {
               <EnvelopeChip envelope={signing.envelopes[0] ?? null} />
             </div>
             {/* CTR-001's six-stage backbone, beside the pill that names
-                the status behind it (grill-plan D.8). It reads on an
-                archived record and for a Contributor exactly as it
-                reads for anyone else: where the contract sits is a fact
-                about it, not an affordance. */}
-            <StagePipeline stage={saved.stage} />
-            {/* Archive and restore are mutations, so a read-only viewer
-              is offered neither — absent, not disabled, the same
-              convention the nav and the settings rail follow. */}
-            {canEdit && (
-              <div className="flex shrink-0 items-center gap-2">
-                <StatusNote status={archiveStatus} detail={archiveError} />
-                <Button
-                  variant="secondary"
-                  disabled={archiveStatus === "saving"}
-                  onClick={() => void archiveOrRestore()}
-                >
-                  {archived ? (
-                    <>
-                      <ArchiveRestore size={16} aria-hidden="true" />
-                      <FormattedMessage id="contracts.record.restore" defaultMessage="Restore" />
-                    </>
-                  ) : (
-                    <>
-                      <Archive size={16} aria-hidden="true" />
-                      <FormattedMessage id="contracts.record.archive" defaultMessage="Archive" />
-                    </>
-                  )}
-                </Button>
-              </div>
+                the status behind it (grill-plan D.8), and — for a
+                viewer who may write — the control that moves the
+                contract (DES-053). The current stage is the trigger, so
+                the act sits where the reader already looks and reaches
+                every section rather than the Overview alone. Frozen, it
+                falls back to the reading it has always been: an
+                archived record and a Contributor get no trigger at all,
+                because where the contract sits is a fact about it and
+                not an affordance. */}
+            <StagePipeline
+              stage={saved.stage}
+              move={
+                frozen
+                  ? undefined
+                  : {
+                      statuses: statusOptions,
+                      statusId: saved.statusId,
+                      busy: fieldStatus.statusId === "saving",
+                      onPick: (statusId) => void changeStatus(statusId),
+                    }
+              }
+            />
+            {/* DES-017's micro-state, beside the control that raised it
+                rather than in the card the field left. A refusal the
+                soft gate owns is cleared as its dialog opens, so the
+                two never speak at once (DES-035 clause 12).
+
+                The move prints the refusal alone (DES-053 clause 7).
+                The control carries the other two states itself: it is
+                disabled while the write is out, and it redraws on the
+                new stage when the write answers. A word for either
+                would repeat what the reader is already looking at, and
+                on a write this short it would only flash. */}
+            {!frozen && (
+              <StatusNote
+                status={fieldStatus.statusId === "error" ? "error" : "idle"}
+                detail={fieldError.statusId}
+              />
             )}
+            {/* The record's own acts, behind one trigger (DES-055).
+                Copying a link is not a change, so every reader gets
+                that row; rename and archive are mutations, so a
+                read-only viewer is offered neither — absent, not
+                disabled, the same convention the nav and the settings
+                rail follow. An archived record has no editable title,
+                so it loses the rename row and keeps the restore one.
+
+                The archive refusal prints beside the trigger. Its
+                progress and its receipt do not: the trigger is inert
+                while the write is out, and the record answers it in
+                full — the row flips to "Restore", the Archived pill
+                lands in this row, and every field freezes. This is
+                DES-053 clause 7's rule, on the other act that commits
+                from the sub-bar. */}
+            <div className="flex shrink-0 items-center gap-2">
+              {canEdit && (
+                <StatusNote
+                  status={archiveStatus === "error" ? "error" : "idle"}
+                  detail={archiveError}
+                />
+              )}
+              <RecordActionsMenu
+                number={saved.number}
+                archived={archived}
+                busy={archiveStatus === "saving"}
+                onRename={frozen ? undefined : startRename}
+                onArchive={canEdit ? () => void archiveOrRestore() : undefined}
+              />
+            </div>
           </section>
           {/* DES-032's section strip, under the breadcrumb and inside
               the chrome: a tab strip that scrolled away with the record
@@ -1769,35 +1868,13 @@ function ContractRecord() {
                       setParties(next);
                     }}
                   />
-                  <div className="flex flex-col gap-1.5">
-                    <Label htmlFor="contract-status">
-                      <FormattedMessage id="contracts.form.status" defaultMessage="Status" />
-                    </Label>
-                    <div className="flex items-center gap-2">
-                      {/* Inert while a status commit is in flight, the
-                          way the Confidential flag's own control is. The
-                          soft gate is why it matters here: a second pick
-                          landing behind the first would raise a dialog
-                          about a status nobody is moving to any more. */}
-                      <select
-                        id="contract-status"
-                        value={saved.statusId}
-                        className={CONTROL_CLASS}
-                        disabled={frozen || fieldStatus.statusId === "saving"}
-                        onChange={(event) => void changeStatus(event.target.value)}
-                      >
-                        {statusOptions.map((option) => (
-                          <option key={option.id} value={option.id}>
-                            {option.displayName}
-                          </option>
-                        ))}
-                      </select>
-                      <StatusNote
-                        status={fieldStatus.statusId ?? "idle"}
-                        detail={fieldError.statusId}
-                      />
-                    </div>
-                  </div>
+                  {/* The status is not a field of this card any more
+                      (DES-053). It commits from the sub-bar's stage
+                      strip, which is on screen in every section, and a
+                      second control for one datum would be two places
+                      to keep in step. What the record holds is still
+                      read here — the sub-bar pill says it, two rows
+                      up. */}
                   <div className="flex flex-col gap-1.5">
                     <Label htmlFor="contract-priority">
                       <FormattedMessage id="contracts.form.priority" defaultMessage="Priority" />

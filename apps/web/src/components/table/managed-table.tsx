@@ -20,7 +20,11 @@
  * column keeps exactly the width it says it has.
  *
  * **Cells truncate, never wrap** (clause 2), so a row is one line tall and
- * thirty rows scan as thirty rows.
+ * thirty rows scan as thirty rows. A column that draws a shape rather than
+ * a text run says `clip`, and its cell is cut at the column edge instead of
+ * ending in an ellipsis the shape has no room for. Either way the cell
+ * carries what it could not show as a `title`, measured when the pointer
+ * arrives rather than kept in sync with every drag.
  *
  * **The resize handle is a keyboard control that also takes a drag**
  * (clause 3), which is why it is a `role="separator"` with a width in
@@ -31,7 +35,7 @@
  * a saved view is compared against (DD-019 clause 5).
  */
 
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type MouseEvent, type ReactNode } from "react";
 import { useIntl, FormattedMessage } from "react-intl";
 import { ArrowDown, ArrowUp, ChevronsUpDown } from "lucide-react";
 import type { SortDirection } from "@openlaw/shared";
@@ -48,6 +52,63 @@ import {
  * enough to land on a width you meant (DES-007). */
 const NUDGE = 16;
 const NUDGE_FAST = 64;
+
+/** Does this element's content outrun the box it is drawn in? */
+const isClipped = (el: HTMLElement) => el.scrollWidth > el.clientWidth;
+
+/**
+ * Put the full text on the hovered element as a `title` when it does not
+ * fit, and take the `title` off again when it does (clause 2).
+ *
+ * **Measured on hover, not stored.** A `title` on every cell pops a
+ * tooltip repeating text the reader is already reading, which is noise in
+ * a strip they are scanning thirty rows of — only a clipped cell has
+ * anything to add. Whether a cell is clipped is a layout fact that changes
+ * with every column drag, so it takes a measurement rather than a flag,
+ * and hover is the cheapest honest moment to take one: the pointer has
+ * arrived, the tooltip has not appeared yet, and there is no observer per
+ * cell and no state to re-sync when a column moves.
+ *
+ * **This is the pointer affordance clause 2 asked for, and only that.** A
+ * `title` is not reachable from the keyboard and does not appear on touch.
+ * It is not carrying anything the reader cannot get another way: a cell is
+ * clipped here by a width they chose, and clause 1's sideways scroll and
+ * the drag that narrowed it both reach the whole value.
+ */
+function titleWhenClipped(el: HTMLElement, full: () => string) {
+  if (isClipped(el)) el.title = full();
+  else el.removeAttribute("title");
+}
+
+/**
+ * A cell's text as it would be read out, which is not what `textContent`
+ * answers.
+ *
+ * A cell can draw text that nobody should hear: the initials on an avatar
+ * are decoration beside the name they abbreviate, so `textContent` on the
+ * Owner cell says "BWBlair Wentworth". A cell can also mean text it never
+ * draws: DES-009's marker draws "CONFI" precisely because the word does
+ * not fit, and carries the word itself as an `aria-label`. Skipping
+ * `aria-hidden` and preferring `aria-label` is the accessible name in the
+ * two shapes this table holds, and it is the same text the tooltip should
+ * be showing — the reader is asking what the cell says, not what it drew.
+ */
+function spokenText(node: Node): string {
+  let out = "";
+  for (const child of node.childNodes) {
+    if (child.nodeType === Node.TEXT_NODE) {
+      out += child.textContent ?? "";
+    } else if (child instanceof Element && child.getAttribute("aria-hidden") !== "true") {
+      // A separate element is a separate word: the Archived pill sits
+      // beside a contract's title rather than inside it.
+      out += ` ${child.getAttribute("aria-label") ?? spokenText(child)}`;
+    }
+  }
+  return out;
+}
+
+/** `spokenText` with the joins tidied, which is what a tooltip shows. */
+const cellTitle = (cell: HTMLElement) => spokenText(cell).replace(/\s+/g, " ").trim();
 
 export function ManagedTable<Row>({
   catalogue,
@@ -220,7 +281,13 @@ export function ManagedTable<Row>({
                   {shown.map(({ def }) => (
                     <td
                       key={def.key}
-                      className={`truncate px-4 py-2.5 text-sm ${def.align === "end" ? "text-end" : ""}`}
+                      className={`overflow-hidden whitespace-nowrap px-4 py-2.5 text-sm ${
+                        // A shape clips; only text ends in an ellipsis.
+                        def.clip ? "text-clip" : "text-ellipsis"
+                      } ${def.align === "end" ? "text-end" : ""}`}
+                      onMouseEnter={(event: MouseEvent<HTMLTableCellElement>) => {
+                        titleWhenClipped(event.currentTarget, () => cellTitle(event.currentTarget));
+                      }}
                     >
                       {def.render(row, intl)}
                     </td>
@@ -315,7 +382,18 @@ function HeaderCell<Row>({
           onClick={onSort}
           className="group flex w-full items-center gap-1 truncate rounded-chip text-start font-medium focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-link"
         >
-          <span className="truncate">{def.header}</span>
+          <span
+            className="truncate"
+            // The floors sit under the headings on purpose, so a narrow
+            // column truncates its own name (see the contracts catalogue).
+            // The heading is the one text in the table with a plain-string
+            // twin already to hand, so it needs no walk of the DOM.
+            onMouseEnter={(event: MouseEvent<HTMLSpanElement>) => {
+              titleWhenClipped(event.currentTarget, () => def.label(intl));
+            }}
+          >
+            {def.header}
+          </span>
           {sort === null ? (
             // Only on hover or focus: an unsorted column advertising that
             // it could be sorted on every row of the strip is noise.
@@ -331,7 +409,14 @@ function HeaderCell<Row>({
           )}
         </button>
       ) : (
-        <span className="block truncate">{def.header}</span>
+        <span
+          className="block truncate"
+          onMouseEnter={(event: MouseEvent<HTMLSpanElement>) => {
+            titleWhenClipped(event.currentTarget, () => def.label(intl));
+          }}
+        >
+          {def.header}
+        </span>
       )}
       <ResizeHandle
         def={def}

@@ -430,19 +430,46 @@ async function expectPipelineAt(page: Page, stage: StageName): Promise<void> {
 }
 
 /**
- * The record's own Status control — the renameable label, beside the
- * fixed stage the pipeline marks (CTR-001: one datum at two zooms).
- *
- * The control rather than the sub-bar's pill, and by its label rather
- * than by where it sits. The pill carries no accessible name of its
- * own, and a status label and a stage name are often the same word — on
- * a contract at `draft` they always are — so the pill can only be told
- * from the pipeline's current-stage pill structurally. The select says
- * which status the record holds without that ambiguity, and the pill's
- * own following of the label has web coverage of its own.
+ * The record's own move control (DES-053) — the current stage's pill in
+ * the strip, which is the one item of the six that can be pressed.
  */
-function statusSelect(page: Page): Locator {
-  return page.getByLabel("Status", { exact: true });
+function moveControl(page: Page): Locator {
+  return page.getByRole("button", { name: /move contract$/ });
+}
+
+/**
+ * Which status the record holds, read from the menu rather than from
+ * the sub-bar's pill.
+ *
+ * The pill carries no accessible name of its own, and a status label
+ * and a stage name are often the same word — on a contract at `draft`
+ * they always are — so the pill can only be told from the strip's own
+ * current-stage pill structurally. The menu's checked row says which
+ * status the record holds without that ambiguity, and the pill's own
+ * following of the label has web coverage of its own.
+ */
+async function expectStatus(page: Page, status: StatusOption): Promise<void> {
+  await moveControl(page).click();
+  await expect(
+    page
+      .getByRole("menuitemradio")
+      .filter({ hasText: new RegExp(`^${status.displayName}`) })
+      .first(),
+  ).toBeChecked();
+  // Back to where the leg found the page: a menu left open would sit
+  // over whatever the next step reads.
+  await page.keyboard.press("Escape");
+  await expect(page.getByRole("menu")).toBeHidden();
+}
+
+/** Opens the move menu and picks one status by the label it wears. */
+async function pickFrom(page: Page, status: StatusOption): Promise<void> {
+  await moveControl(page).click();
+  await page
+    .getByRole("menuitemradio")
+    .filter({ hasText: new RegExp(`^${status.displayName}`) })
+    .first()
+    .click();
 }
 
 /**
@@ -482,7 +509,7 @@ async function pickStatus(page: Page, number: number, status: StatusOption) {
       response.url().endsWith(`/api/v1/contracts/${number}`) &&
       response.request().method() === "PATCH",
   );
-  await statusSelect(page).selectOption(status.id);
+  await pickFrom(page, status);
   return await answered;
 }
 
@@ -620,13 +647,13 @@ test.describe.serial("M14 demo path", () => {
 
       const toReview = await pickStatus(page, number, review);
       expect(toReview.status(), await toReview.text()).toBe(200);
-      await expect(statusSelect(page)).toHaveValue(review.id);
+      await expectStatus(page, review);
       await expectPipelineAt(page, "Review");
       expect((await readContract(page.request, number)).stage).toBe("review");
 
       const toApproval = await pickStatus(page, number, approval);
       expect(toApproval.status(), await toApproval.text()).toBe(200);
-      await expect(statusSelect(page)).toHaveValue(approval.id);
+      await expectStatus(page, approval);
       await expectPipelineAt(page, "Approval");
       const atApproval = await readContract(page.request, number);
       expect(atApproval.stage).toBe("approval");
@@ -798,7 +825,7 @@ test.describe.serial("M14 demo path", () => {
       // And nothing moved. The gate warns before the fact rather than
       // after it, so the record is exactly where it was — on the screen
       // behind the dialog and at the seam.
-      await expect(statusSelect(page)).toHaveValue(approval.id);
+      await expectStatus(page, approval);
       expect((await readContract(page.request, number)).stage).toBe("approval");
 
       // The confirmation. It never blocks (CTR-012): one deliberate
@@ -821,7 +848,7 @@ test.describe.serial("M14 demo path", () => {
 
       // The screen half: the marker moved past approval, and approval
       // now carries its check.
-      await expect(statusSelect(page)).toHaveValue(signature.id);
+      await expectStatus(page, signature);
       await expectPipelineAt(page, "Signature");
       // The seam half: the contract is at the signature stage, and the
       // ask it went past is still open — the gate skipped sign-off, it
