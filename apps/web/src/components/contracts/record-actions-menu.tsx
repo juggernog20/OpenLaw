@@ -51,6 +51,8 @@ export function RecordActionsMenu({
   const intl = useIntl();
   const [copied, setCopied] = useState(false);
   const copiedTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  /** Set when Rename is picked, read once the menu has finished closing. */
+  const renameWanted = useRef(false);
 
   useEffect(() => {
     return () => {
@@ -91,7 +93,19 @@ export function RecordActionsMenu({
           <MoreHorizontal size={16} aria-hidden="true" />
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
+      <DropdownMenuContent
+        align="end"
+        onCloseAutoFocus={(event) => {
+          if (!renameWanted.current) return;
+          renameWanted.current = false;
+          // Radix pulls the focus back to the trigger as it closes, and
+          // it does that after `onSelect` has run. Renaming ends in the
+          // title field, so the menu gives up its own restore and lets
+          // `onRename` place the focus once the menu is gone.
+          event.preventDefault();
+          onRename?.();
+        }}
+      >
         {/* Copying is the one row every reader gets, including one who
             may not write: a link to a record is not a change to it. */}
         <DropdownMenuItem
@@ -120,7 +134,7 @@ export function RecordActionsMenu({
             (DES-017). An archived record has no editable title, so the
             row is absent rather than disabled. */}
         {onRename && (
-          <DropdownMenuItem onSelect={onRename}>
+          <DropdownMenuItem onSelect={() => (renameWanted.current = true)}>
             <Pencil size={16} aria-hidden="true" />
             <FormattedMessage id="contracts.record.rename" defaultMessage="Rename contract" />
           </DropdownMenuItem>

@@ -33,6 +33,7 @@ import {
   ensureMemberInert,
   onboardActivatedMember,
   signInAs,
+  startsWithName,
   sweepOrSay,
   type OnboardedMember,
 } from "./helpers.js";
@@ -266,7 +267,7 @@ async function pickFrom(page: Page, status: StatusOption): Promise<void> {
   await moveControl(page).click();
   await page
     .getByRole("menuitemradio")
-    .filter({ hasText: new RegExp(`^${status.displayName}`) })
+    .filter({ hasText: startsWithName(status.displayName) })
     .first()
     .click();
 }

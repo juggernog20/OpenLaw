@@ -60,16 +60,21 @@ export function SettingsCard({
           // the header, not just the words. The negative inset keeps
           // the title on the card's own gutter while the focus ring
           // still clears it.
-          <button
-            type="button"
-            aria-expanded={open}
-            aria-controls={bodyId}
-            onClick={() => setOpen((current) => !current)}
-            className="-mx-1.5 flex flex-1 items-center gap-2 rounded-button px-1.5 py-1 text-start focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-link"
-          >
-            <Chevron size={16} aria-hidden="true" className="text-muted" />
-            <h2 className="text-base font-semibold">{title}</h2>
-          </button>
+          // The heading wraps the button rather than sitting inside it:
+          // a button may not contain heading content, and a reader that
+          // walks the page by its headings needs this one to stay one.
+          <h2 className="flex-1 text-base font-semibold">
+            <button
+              type="button"
+              aria-expanded={open}
+              aria-controls={bodyId}
+              onClick={() => setOpen((current) => !current)}
+              className="-mx-1.5 flex w-full items-center gap-2 rounded-button px-1.5 py-1 text-start focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-link"
+            >
+              <Chevron size={16} aria-hidden="true" className="text-muted" />
+              {title}
+            </button>
+          </h2>
         ) : (
           <h2 className="text-base font-semibold">{title}</h2>
         )}

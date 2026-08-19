@@ -415,7 +415,7 @@ describe("the /contracts destination", () => {
     ).toBeNull();
   });
 
-  it("reveals ended contracts behind the Show inactive toggle (CTR-019)", async () => {
+  it("reveals ended contracts behind the Show ended toggle (CTR-019)", async () => {
     const api = listApi(
       [contractRow()],
       [],
@@ -440,11 +440,11 @@ describe("the /contracts destination", () => {
     expect(screen.queryByText("C-9")).not.toBeInTheDocument();
 
     // The toggle re-reads with includeEnded and the deal appears.
-    await user.click(screen.getByRole("switch", { name: "Show inactive" }));
+    await user.click(screen.getByRole("switch", { name: "Show ended" }));
     expect(await screen.findByText("C-9")).toBeInTheDocument();
 
     // And back: the toggle off re-reads the default list.
-    await user.click(screen.getByRole("switch", { name: "Show inactive" }));
+    await user.click(screen.getByRole("switch", { name: "Show ended" }));
     await waitFor(() => expect(screen.queryByText("C-9")).not.toBeInTheDocument());
     expect(screen.getByText("C-42")).toBeInTheDocument();
   });

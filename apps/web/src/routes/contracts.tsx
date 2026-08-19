@@ -433,7 +433,7 @@ export function ContractsPage() {
             </p>
           )}
           <Label htmlFor="contracts-show-ended">
-            <FormattedMessage id="contracts.showEnded" defaultMessage="Show inactive" />
+            <FormattedMessage id="contracts.showEnded" defaultMessage="Show ended" />
           </Label>
           <Switch
             id="contracts-show-ended"

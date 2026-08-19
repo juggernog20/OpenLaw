@@ -247,7 +247,7 @@ describe("the record's Key dates section (CTR-009)", () => {
     expect(strip.getByRole("img", { name: "3 upcoming dates" })).toBeInTheDocument();
   });
 
-  it("says how far off a date is by its order alone, with no Due column", async () => {
+  it("draws no Due column and no distance label, and keeps the seam's row order", async () => {
     stubApi({ signedIn: MEMBER, extra: recordApi(UNION).handler });
     renderAt("/contracts/42/key-dates");
 

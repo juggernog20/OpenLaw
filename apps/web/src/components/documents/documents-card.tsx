@@ -1259,7 +1259,9 @@ export function DocumentsCard({
   useEffect(() => {
     if (frozen) return;
     const outside = (event: DragEvent) => {
-      const node = event.target as Node | null;
+      // A window handler answers for every target, and not every target
+      // is a Node — `contains` throws on one that is not.
+      const node = event.target instanceof Node ? event.target : null;
       if (node && surface.current?.contains(node)) return false;
       return document.querySelector('[role="dialog"], [role="alertdialog"]') === null;
     };
@@ -1280,7 +1282,10 @@ export function DocumentsCard({
       setDragFolder(null);
     };
     const drop = (event: DragEvent) => {
-      if (!outside(event)) return;
+      // The same file check the dragover does. Without it a dropped
+      // link or a dropped selection is swallowed by a section that
+      // has no use for it.
+      if (!outside(event) || !dragCarriesFiles(event.dataTransfer)) return;
       event.preventDefault();
       setDragging(false);
       setDragFolder(null);

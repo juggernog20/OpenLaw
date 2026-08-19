@@ -224,7 +224,12 @@ function moveControl(stage: string) {
  * produces. */
 async function pickStatus(user: ReturnType<typeof userEvent.setup>, status: string) {
   await user.click(await screen.findByRole("button", { name: /move contract$/ }));
-  await user.click(await screen.findByRole("menuitemradio", { name: new RegExp(`^${status}`) }));
+  // The name is the status and then its stage, matched on its start and
+  // literally: a status name is the install's own words, and regex
+  // punctuation in one would otherwise pick the wrong row.
+  await user.click(
+    await screen.findByRole("menuitemradio", { name: (name: string) => name.startsWith(status) }),
+  );
 }
 
 describe("the soft gate on the contract record", () => {

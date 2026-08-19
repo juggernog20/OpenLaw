@@ -238,7 +238,12 @@ function moveControl(stage: string) {
  * not wait for the commit that follows. */
 async function moveTo(user: ReturnType<typeof userEvent.setup>, status: string) {
   await user.click(await screen.findByRole("button", { name: /move contract$/ }));
-  await user.click(await screen.findByRole("menuitemradio", { name: new RegExp(`^${status}`) }));
+  // A row's name is the status followed by its stage, so the match is on
+  // what the name starts with — literally, because a status name is the
+  // install's own words and may carry regex punctuation.
+  await user.click(
+    await screen.findByRole("menuitemradio", { name: (name: string) => name.startsWith(status) }),
+  );
 }
 
 /** The record's overflow menu (DES-055), opened by its sub-bar trigger.
@@ -8026,6 +8031,24 @@ describe("the multi-file batch on the contract record (M13/4, DOC-011, DES-033)"
 
     // Frozen is frozen off the section as well as on it.
     expect(screen.queryByRole("dialog")).toBeNull();
+  });
+
+  it("leaves a drop that carries no file to the page it landed on", async () => {
+    stubApi({ signedIn: MEMBER, extra: batchApi([]).handler });
+    renderAt("/contracts/42/documents");
+
+    await documentsSection();
+
+    // Dragged text, or a dragged link — the section has no use for it.
+    // It must not open the importer, and it must not take the drop away
+    // from whatever else on the page would have answered for it.
+    const dataTransfer = { types: ["text/plain"], files: [], items: [] };
+    fireEvent.dragOver(globalThis.document.body, { dataTransfer });
+    const dropped = fireEvent.drop(globalThis.document.body, { dataTransfer });
+
+    expect(screen.queryByRole("dialog")).toBeNull();
+    // `fireEvent` answers false when a listener called preventDefault.
+    expect(dropped).toBe(true);
   });
 });
 

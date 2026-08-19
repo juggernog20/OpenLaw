@@ -93,6 +93,11 @@ function connectorApi(
           apiUserId: body.apiUserId,
           hasPrivateKey: stored.hasPrivateKey || body.privateKey !== undefined,
           hasWebhookSecret: stored.hasWebhookSecret || body.webhookSecret !== undefined,
+          // Saving credentials is not turning the connector back on.
+          // The defaults would say enabled, and the header chip would
+          // then read Connected on an install that is turned off.
+          enabled: stored.enabled,
+          disabledAt: stored.disabledAt,
         });
       }
       return json(200, { connector: stored });

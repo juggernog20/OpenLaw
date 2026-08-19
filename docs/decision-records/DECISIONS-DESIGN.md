@@ -3387,7 +3387,7 @@ Point 6 is stated because the honest answer is unusual. It would be easy to impl
 
 ### Context
 
-#325 asks for a control that makes a status change feel like the deliberate step it is, and names what it replaces: a plain `<select>` in the Contract card, indistinguishable from the four other selects beside it. A status change is not like setting a priority. It is the sentence the whole record is read through, and CTR-012 already treats one class of it as worth stopping for.
+Issue `#325` asks for a control that makes a status change feel like the deliberate step it is, and names what it replaces: a plain `<select>` in the Contract card, indistinguishable from the four other selects beside it. A status change is not like setting a priority. It is the sentence the whole record is read through, and CTR-012 already treats one class of it as worth stopping for.
 
 Three constraints were fixed before the first sketch.
 
