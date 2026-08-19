@@ -275,6 +275,10 @@ export function TaxonomyTypesPane({
   const live = rows.filter((row) => !row.archivedAt).sort(byDisplayOrder);
   const archived = rows.filter((row) => row.archivedAt).sort(byDisplayOrder);
 
+  // A const binding, so the `inUse &&` guard below narrows inside the
+  // rowMeta closure — a property access would not.
+  const inUse = messages.inUse;
+
   function noteRow(id: string, status: FieldStatus, detail?: string) {
     setRowStatus((current) => ({ ...current, [id]: status }));
     setRowError((current) => ({ ...current, [id]: detail }));
@@ -401,8 +405,7 @@ export function TaxonomyTypesPane({
           renameLabel={(row) => intl.formatMessage(messages.renameLabel, { name: row.displayName })}
           onRename={(row, displayName) => void rename(row, displayName)}
           rowMeta={
-            messages.inUse &&
-            ((row) => <FormattedMessage {...messages.inUse!} values={{ count: row.inUseCount }} />)
+            inUse && ((row) => <FormattedMessage {...inUse} values={{ count: row.inUseCount }} />)
           }
           rowActions={
             editor &&
