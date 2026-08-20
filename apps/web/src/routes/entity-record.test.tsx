@@ -273,4 +273,40 @@ describe("the /entities/:entityId record page", () => {
     renderAt("/entities/e1");
     expect(await screen.findByRole("heading", { name: "Sign in" })).toBeInTheDocument();
   });
+
+  it("shows the entity in the URL after moving between two records (#372)", async () => {
+    const first = recordApi(entityRow());
+    const second = entityRow({
+      id: "e2",
+      legalName: "Bishopsgate Trading Ltd",
+      entityTypeId: "t-llc",
+      entityTypeName: "LLC",
+      jurisdiction: "Ireland",
+      registrationNumber: "551204",
+    });
+    stubApi({
+      signedIn: MEMBER,
+      extra: (call) => {
+        if (call.url.pathname === "/api/v1/entities/e2" && call.method === "GET") {
+          return json(200, { entity: second });
+        }
+        return first.handler(call);
+      },
+    });
+    const { router } = renderAt("/entities/e1");
+    expect(
+      await screen.findByRole("heading", { level: 1, name: "Aldgate Holdings Ltd" }),
+    ).toBeInTheDocument();
+
+    await router.navigate("/entities/e2");
+
+    expect(
+      await screen.findByRole("heading", { level: 1, name: "Bishopsgate Trading Ltd" }),
+    ).toBeInTheDocument();
+    // Every seeded draft moves with the record, not just the heading.
+    expect(screen.getByLabelText("Legal name")).toHaveValue("Bishopsgate Trading Ltd");
+    expect(screen.getByLabelText("Entity type")).toHaveValue("t-llc");
+    expect(screen.getByLabelText("Formation jurisdiction")).toHaveValue("Ireland");
+    expect(screen.getByLabelText("Registration no.")).toHaveValue("551204");
+  });
 });
