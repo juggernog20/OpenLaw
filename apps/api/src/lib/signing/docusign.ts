@@ -25,6 +25,7 @@
 
 import { createHmac, createPrivateKey, createSign, timingSafeEqual } from "node:crypto";
 import { Readable } from "node:stream";
+import type { ReadableStream as WebReadableStream } from "node:stream/web";
 import type { SigningEnvironment } from "@openlaw/db";
 import {
   EnvelopeNotFoundError,
@@ -568,7 +569,12 @@ class DocuSignProvider implements SigningProvider {
     if (!response.body) {
       throw new SigningRefusedError("DocuSign returned no executed document for that envelope.");
     }
-    return Readable.fromWeb(response.body);
+    // `lib.dom` joins this program through `@better-auth/sso` (its types
+    // reach samlify, and `@xmldom/xmldom` references the lib), so
+    // `response.body` is typed as the DOM stream rather than Node's.
+    // They are the same object at runtime — undici serves the call — and
+    // `Readable.fromWeb` wants the Node declaration of it.
+    return Readable.fromWeb(response.body as unknown as WebReadableStream<Uint8Array>);
   }
 
   verifyWebhook(body: Buffer, headers: Readonly<Record<string, string>>): WebhookDelivery {

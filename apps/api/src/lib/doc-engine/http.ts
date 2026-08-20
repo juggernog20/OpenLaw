@@ -70,6 +70,15 @@ export interface HttpDocEngineOptions {
 /**
  * `fetch`'s options do not declare `duplex`, which every runtime
  * nonetheless requires when the body is a stream.
+ *
+ * The init is built as a named value rather than an inline literal on
+ * purpose. `lib.dom` joins this program through `@better-auth/sso` (its
+ * types reach samlify, and `@xmldom/xmldom` references the lib), so the
+ * global `RequestInit` is the DOM one, which has no `duplex` at all. An
+ * object literal passed straight to `fetch` is excess-property checked
+ * against it and refused; a value of this type is not. The runtime is
+ * unaffected either way — undici is what actually serves the call, and
+ * it requires the flag.
  */
 type StreamingRequestInit = RequestInit & { duplex: "half" };
 
@@ -226,16 +235,17 @@ export function createHttpDocEngine(options: HttpDocEngineOptions): DocEngine {
     if (search) url.search = search.toString();
     const call = new Attempt(path, timeoutMs);
     let response: Response;
+    const init: StreamingRequestInit = {
+      method: "POST",
+      body: Readable.toWeb(body) as ReadableStream,
+      // Required whenever the body is a stream: the request starts
+      // before the body has finished being written.
+      duplex: "half",
+      headers: { "content-type": "application/octet-stream" },
+      signal: call.signal,
+    };
     try {
-      response = await fetch(url, {
-        method: "POST",
-        body: Readable.toWeb(body) as ReadableStream,
-        // Required whenever the body is a stream: the request starts
-        // before the body has finished being written.
-        duplex: "half",
-        headers: { "content-type": "application/octet-stream" },
-        signal: call.signal,
-      } satisfies StreamingRequestInit);
+      response = await fetch(url, init);
     } catch (error) {
       call.settle();
       throw call.failed(error);

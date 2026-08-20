@@ -129,7 +129,12 @@ describe("the Profile pane (SET-006, #67)", () => {
       signedIn: MEMBER,
       extra: (call: StubCall) => {
         if (call.url.pathname === "/api/auth/two-factor/enable" && call.method === "POST") {
-          return json(200, { totpURI: TOTP_URI, backupCodes: ["AAAAA-11111", "BBBBB-22222"] });
+          return json(200, {
+            // 1.7 says which factor it enrolled; the screen narrows on it.
+            method: "totp",
+            totpURI: TOTP_URI,
+            backupCodes: ["AAAAA-11111", "BBBBB-22222"],
+          });
         }
         if (call.url.pathname === "/api/auth/two-factor/verify-totp" && call.method === "POST") {
           return json(200, { token: "tok", user: {} });
@@ -228,7 +233,7 @@ describe("the Profile pane (SET-006, #67)", () => {
       signedIn: MEMBER,
       extra: (call: StubCall) => {
         if (call.url.pathname === "/api/auth/two-factor/enable" && call.method === "POST") {
-          return json(200, { totpURI: TOTP_URI, backupCodes: ["AAAAA-11111"] });
+          return json(200, { method: "totp", totpURI: TOTP_URI, backupCodes: ["AAAAA-11111"] });
         }
         if (call.url.pathname === "/api/auth/two-factor/verify-totp" && call.method === "POST") {
           return json(401, { code: "INVALID_CODE", message: "Invalid code" });
@@ -251,6 +256,35 @@ describe("the Profile pane (SET-006, #67)", () => {
     ).toBeVisible();
     // Still on the verify step — the secret stays on screen for a rescan.
     expect(within(dialog).getByText("JBSWY3DPEHPK3PXP")).toBeVisible();
+  });
+
+  it("refuses to walk an enrolment that is not TOTP", async () => {
+    const user = userEvent.setup();
+    stubApi({
+      signedIn: MEMBER,
+      extra: (call: StubCall) => {
+        if (call.url.pathname === "/api/auth/two-factor/enable" && call.method === "POST") {
+          // The other factor better-auth 1.7 can answer with. This
+          // install configures no sendOTP, so reaching it means the
+          // server is set up differently from what this screen draws —
+          // there is no QR code and no backup codes to show.
+          return json(200, { method: "otp" });
+        }
+        return undefined;
+      },
+    });
+    renderAt("/settings/profile");
+
+    await user.click(await screen.findByRole("button", { name: "Turn on two-factor" }));
+    const dialog = await screen.findByRole("dialog");
+    await user.type(within(dialog).getByLabelText("Password"), "correct-horse-battery");
+    await user.click(within(dialog).getByRole("button", { name: "Continue" }));
+
+    expect(
+      await within(dialog).findByText("The server could not be reached. Try again."),
+    ).toBeVisible();
+    // It stopped at the password step rather than drawing an empty QR.
+    expect(within(dialog).queryByLabelText("Code")).not.toBeInTheDocument();
   });
 
   it("rejects an oversized avatar client-side without calling the API", async () => {

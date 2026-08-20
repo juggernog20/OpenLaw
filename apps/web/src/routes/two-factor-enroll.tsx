@@ -64,6 +64,15 @@ export function TwoFactorEnrollPage() {
         wrongPassword();
         return;
       }
+      // From better-auth 1.7 the answer says which second factor it
+      // enrolled. TOTP is the only one this install can return — the
+      // e-mail OTP fallback is deliberately not configured (no sendOTP,
+      // TECH-008) — so anything else is a misconfiguration, not a state
+      // this screen can walk the user through.
+      if (res.data.method !== "totp") {
+        setError(networkError(intl));
+        return;
+      }
       setStep({ name: "verify", totpURI: res.data.totpURI, backupCodes: res.data.backupCodes });
     } catch {
       setError(networkError(intl));
