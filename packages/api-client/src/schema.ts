@@ -1059,7 +1059,7 @@ export interface paths {
     };
     get?: never;
     put?: never;
-    /** Submit a Request through a request type's portal form (INT-001). The Requester is the session; the type must be live; Summary, Description, and Urgency are required, as is every attached field the type marks required; values are accepted for exactly the fields the type attaches */
+    /** Submit a Request through a request type's portal form (INT-001). The Requester is the session; the type must be live; Summary, Description, and Urgency are required, as is every attached field the type marks required; values are accepted for exactly the fields the type attaches, and a user or entity field's value must name a live row */
     post: operations["submitRequest"];
     delete?: never;
     options?: never;

@@ -546,3 +546,112 @@ describe("one requester's Requests", () => {
     expect((await storedRequest(theirs.json().request.id)).requesterId).not.toBe(requesterId);
   });
 });
+
+describe("the two field types that name a row", () => {
+  // The portal's pickers offer a requester no people and no entities,
+  // so any id in a `user` or `entity` field arrived against the API —
+  // and the seam holds it to the contract record's rule: the id must
+  // name a live row, or the value is one nothing could ever render.
+  let userSlug: string;
+  let entitySlug: string;
+  let liveEntityId: string;
+
+  beforeAll(async () => {
+    for (const field of [
+      { displayName: "Requesting manager", fieldType: "user" },
+      { displayName: "Contracting entity", fieldType: "entity" },
+    ] as const) {
+      const created = await harness.app.inject({
+        method: "POST",
+        url: "/api/v1/fields",
+        cookies: adminCookies,
+        payload: {
+          displayName: field.displayName,
+          moduleScope: "global",
+          fieldType: field.fieldType,
+          fieldTag: "legal",
+        },
+      });
+      expect(created.statusCode, created.body).toBe(201);
+      if (field.fieldType === "user") userSlug = created.json().field.slug;
+      else entitySlug = created.json().field.slug;
+
+      const attached = await harness.app.inject({
+        method: "POST",
+        url: `/api/v1/request-types/${typeIds.get("nda_request")}/fields`,
+        cookies: adminCookies,
+        payload: { fieldId: created.json().field.id, isRequired: false },
+      });
+      expect(attached.statusCode, attached.body).toBe(201);
+    }
+
+    liveEntityId = await createEntity("Orion Cloud Holdings LLC");
+  });
+
+  async function createEntity(legalName: string): Promise<string> {
+    const types = await harness.app.inject({
+      method: "GET",
+      url: "/api/v1/entities/types",
+      cookies: adminCookies,
+    });
+    expect(types.statusCode, types.body).toBe(200);
+    const created = await harness.app.inject({
+      method: "POST",
+      url: "/api/v1/entities",
+      cookies: adminCookies,
+      payload: { legalName, entityTypeId: types.json().entityTypes[0].id },
+    });
+    expect(created.statusCode, created.body).toBe(201);
+    return created.json().entity.id;
+  }
+
+  /** A complete submission against "NDA request", which is where the
+   * two reference fields are attached. */
+  function ndaBody(customFields: Record<string, unknown>) {
+    return {
+      requestTypeId: typeIds.get("nda_request"),
+      summary: "Mutual NDA with Orion Cloud",
+      description: "For the pilot kicking off next month.",
+      urgency: "medium",
+      customFields,
+    };
+  }
+
+  it("refuses a user id that names nobody, naming the field", async () => {
+    const res = await submit(ndaBody({ [userSlug]: "00000000-0000-0000-0000-000000000000" }));
+    expect(res.statusCode, res.body).toBe(400);
+    expect(res.json().detail).toContain("Requesting manager");
+    expect(res.json().detail).toContain("live person");
+  });
+
+  it("refuses an entity id that names nothing", async () => {
+    const res = await submit(ndaBody({ [entitySlug]: "00000000-0000-0000-0000-000000000000" }));
+    expect(res.statusCode, res.body).toBe(400);
+    expect(res.json().detail).toContain("Contracting entity");
+    expect(res.json().detail).toContain("live entity");
+  });
+
+  it("refuses an archived entity — nothing new points at what has left", async () => {
+    const archivedId = await createEntity("Wound Down GmbH");
+    const archived = await harness.app.inject({
+      method: "POST",
+      url: `/api/v1/entities/${archivedId}/archive`,
+      cookies: adminCookies,
+      payload: {},
+    });
+    expect(archived.statusCode, archived.body).toBe(200);
+
+    const res = await submit(ndaBody({ [entitySlug]: archivedId }));
+    expect(res.statusCode, res.body).toBe(400);
+    expect(res.json().detail).toContain("live entity");
+  });
+
+  it("accepts live references and stores them keyed by slug", async () => {
+    const res = await submit(ndaBody({ [userSlug]: requesterId, [entitySlug]: liveEntityId }));
+    expect(res.statusCode, res.body).toBe(201);
+    expect((await storedRequest(res.json().request.id)).customFields).toEqual({
+      [userSlug]: requesterId,
+      [entitySlug]: liveEntityId,
+    });
+  });
+});

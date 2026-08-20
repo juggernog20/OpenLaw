@@ -55,12 +55,15 @@
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
 import { z } from "zod";
 import {
+  entities,
   eq,
   requestTypeFields,
   requestTypes,
   requests,
   SEVERITY_LEVELS,
+  users,
   type CustomFieldValue,
+  type Transaction,
 } from "@openlaw/db";
 import { requireAuth } from "../../auth/guards.js";
 import { recordActivity, RECORD_ACTIVITY_TIER } from "../../lib/activity.js";
@@ -69,6 +72,7 @@ import {
   CustomFieldsInput,
   CustomFieldsSchema,
   hasCustomFieldValue,
+  listNames,
   selectAttachedFields,
   type AttachedCustomField,
 } from "../../lib/custom-fields.js";
@@ -91,11 +95,6 @@ const RequestSchema = z.object({
   createdAt: z.string(),
 });
 
-/** "A", "A and B", "A, B, and C" — the refusal reads as a sentence.
- * The same shape `assertRequiredCustomFields` uses, because this
- * refusal names basics and attached fields in one list. */
-const nameList = new Intl.ListFormat("en-US", { style: "long", type: "conjunction" });
-
 export const requestsRoutes: FastifyPluginAsyncZod = async (app) => {
   app.post(
     "/requests",
@@ -108,7 +107,8 @@ export const requestsRoutes: FastifyPluginAsyncZod = async (app) => {
           "(INT-001). The Requester is the session; the type must be " +
           "live; Summary, Description, and Urgency are required, as is " +
           "every attached field the type marks required; values are " +
-          "accepted for exactly the fields the type attaches",
+          "accepted for exactly the fields the type attaches, and a " +
+          "user or entity field's value must name a live row",
         tags: ["requests"],
         body: z.strictObject({
           requestTypeId: z.string(),
@@ -147,6 +147,20 @@ export const requestsRoutes: FastifyPluginAsyncZod = async (app) => {
         // that is what makes the refusal and the screen agree.
         const attached = await selectAttachedFields(tx, requestTypeFields, requestType.id);
         const customFields = collectValues(attached, body.customFields ?? {});
+
+        // The two field types that name a row hold an id, and the id
+        // must name a live one — the contract record's rule, applied
+        // here for the same reason: a value nothing can resolve is a
+        // name no surface could ever render. The portal's pickers
+        // offer a requester no rows at all, so any id arriving here
+        // was sent against the API rather than picked from a list.
+        for (const field of attached) {
+          const value = customFields[field.slug];
+          if (value === undefined) continue;
+          if (field.fieldType === "user" || field.fieldType === "entity") {
+            await assertLiveReference(tx, field, value as string);
+          }
+        }
 
         // The one refusal, over the basics and the attachments
         // together. Two refusals would make a requester press Submit
@@ -244,6 +258,44 @@ function collectValues(
   return values;
 }
 
+/**
+ * The two field types that name a row: `user` and `entity` store an
+ * id, so the write checks the id is a live one — the contract
+ * record's `lockedReference` rule, restated here because
+ * `coerceCustomFieldValue` leaves that question to the record module.
+ * Locked, so a concurrent archive cannot slip between the check and
+ * the insert. Archived is refused for the reason it is refused there:
+ * nothing new gets pointed at someone who has left.
+ */
+async function assertLiveReference(
+  tx: Transaction,
+  field: AttachedCustomField,
+  id: string,
+): Promise<void> {
+  if (field.fieldType === "user") {
+    // Anyone live: a custom person field carries no role floor.
+    const [person] = await tx
+      .select({ id: users.id, archivedAt: users.archivedAt })
+      .from(users)
+      .where(eq(users.id, id))
+      .limit(1)
+      .for("update");
+    if (!person || person.archivedAt) {
+      throw httpError(400, `${field.displayName}: pick a live person.`);
+    }
+    return;
+  }
+  const [entity] = await tx
+    .select({ id: entities.id, archivedAt: entities.archivedAt })
+    .from(entities)
+    .where(eq(entities.id, id))
+    .limit(1)
+    .for("update");
+  if (!entity || entity.archivedAt) {
+    throw httpError(400, `${field.displayName}: pick a live entity.`);
+  }
+}
+
 /** The required rule for basics and attachments alike: one refusal that
  * names every gap, in the order the form draws them. */
 function assertAnswered(checks: readonly { name: string; answered: boolean }[]): void {
@@ -251,6 +303,6 @@ function assertAnswered(checks: readonly { name: string; answered: boolean }[]):
   if (missing.length === 0) return;
   throw httpError(
     400,
-    `Fill ${nameList.format(missing)} first — the form requires ${missing.length === 1 ? "it" : "them"}.`,
+    `Fill ${listNames(missing)} first — the form requires ${missing.length === 1 ? "it" : "them"}.`,
   );
 }

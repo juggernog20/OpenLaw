@@ -165,8 +165,11 @@ export function assertRequiredCustomFields(
   );
 }
 
-/** "A", "A and B", "A, B, and C" — the refusal reads as a sentence. */
-function listNames(names: readonly string[]): string {
+/** "A", "A and B", "A, B, and C" — the refusal reads as a sentence.
+ * Exported for the refusals that name basics and attached fields in
+ * one list (the Request submission), so every missing-field sentence
+ * reads the same. */
+export function listNames(names: readonly string[]): string {
   if (names.length === 1) return names[0]!;
   if (names.length === 2) return `${names[0]} and ${names[1]}`;
   return `${names.slice(0, -1).join(", ")}, and ${names.at(-1)}`;
