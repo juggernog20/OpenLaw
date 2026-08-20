@@ -206,7 +206,7 @@ _Avoid_: task, deadline, compliance item
 What a requester supplies on a Request. It maps 1:1 to **priority** at conversion; **risk** is never requester-set [INT-002, MTR-012].
 
 **Deflection link**:
-An Administrator-configured label and web address in the portal's "Before you submit…" panel, there to answer a question before it becomes a Request. Its **placement** is either the portal home — everybody sees it whatever they came to ask — or one request type, which shows it on that form alone. A deflection link is removed rather than archived: nothing points at one and there is no history to keep [INT-004].
+An Administrator-configured label and absolute `http` or `https` web address in the portal's "Before you submit…" panel, there to answer a question before it becomes a Request. Its **placement** is either the portal home — everybody sees it whatever they came to ask — or one request type, which shows it on that form alone. A deflection link is removed rather than archived: nothing points at one and there is no history to keep [INT-004].
 _Avoid_: help link, FAQ link, self-service link, knowledge link (a Knowledge item is its own thing, and M28's)
 
 **Approver group**:

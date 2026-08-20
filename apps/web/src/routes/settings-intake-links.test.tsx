@@ -74,7 +74,7 @@ function newCalls(): LinkCalls {
 function linksApi(
   calls: LinkCalls,
   rows: StubLink[] = seededLinks(),
-  options: { createFails?: string; deleteFails?: string } = {},
+  options: { createFails?: string; deleteFails?: string; orderFails?: string } = {},
 ) {
   const byId = (id: string) => rows.find((row) => row.id === id)!;
   return (call: StubCall): Response | undefined => {
@@ -103,6 +103,7 @@ function linksApi(
     }
     if (path === "/api/v1/intake-links/order" && call.method === "PUT") {
       calls.orders.push(call.body);
+      if (options.orderFails) return problem(409, options.orderFails);
       const { ids } = call.body as { ids: string[] };
       return json(200, {
         intakeLinks: ids.map((id, index) => ({ ...byId(id), displayOrder: index + 1 })),
@@ -163,7 +164,9 @@ describe("the panel (ST13)", () => {
     await screen.findByText("Purchasing policy");
     const items = within(linkList()).getAllByRole("listitem");
     expect(items).toHaveLength(3);
-    expect(items.map((item) => within(item).getByText(/^wiki\.acme\.com/).textContent)).toEqual([
+    // The host is followed by its path separator, so the pattern matches
+    // the host itself rather than anything that merely starts with it.
+    expect(items.map((item) => within(item).getByText(/^wiki\.acme\.com\//).textContent)).toEqual([
       "wiki.acme.com/legal/nda-faq",
       "wiki.acme.com/procurement/policy",
       "wiki.acme.com/legal/templates",
@@ -233,6 +236,43 @@ describe("the panel (ST13)", () => {
     expect(
       await screen.findByText("Purchasing policy moved to position 1 of 3."),
     ).toBeInTheDocument();
+  });
+
+  it("puts back the confirmed order when the reorder is refused", async () => {
+    const calls = newCalls();
+    stubApi({
+      signedIn: ADMIN,
+      extra: linksApi(calls, seededLinks(), {
+        orderFails: "The list moved under you. Reload and try again.",
+      }),
+    });
+    renderAt("/settings/intake/links");
+    const user = userEvent.setup();
+    await user.click(
+      await screen.findByRole("button", {
+        name: "Reorder Purchasing policy, position 2 of 3. Use the arrow keys to move it.",
+      }),
+    );
+    await user.keyboard("{ArrowUp}");
+    await waitFor(() => expect(calls.orders).toEqual([{ ids: ["l2", "l1", "l3"] }]));
+
+    // SET-003 immediate apply draws the move at once, so the refusal has
+    // to undo it: the rows go back to the order the server still holds,
+    // and the pane says why rather than leaving a move that never landed.
+    expect(
+      await screen.findByText("The list moved under you. Reload and try again."),
+    ).toBeInTheDocument();
+    await waitFor(() =>
+      expect(
+        within(linkList())
+          .getAllByRole("listitem")
+          .map((item) => within(item).getByText(/^wiki\.acme\.com\//).textContent),
+      ).toEqual([
+        "wiki.acme.com/legal/nda-faq",
+        "wiki.acme.com/procurement/policy",
+        "wiki.acme.com/legal/templates",
+      ]),
+    );
   });
 });
 

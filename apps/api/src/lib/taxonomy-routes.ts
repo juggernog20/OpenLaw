@@ -77,7 +77,10 @@ export interface TaxonomyExtrasPatch {
    * does when no column changed. */
   columns?: Record<string, unknown>;
   /** What the `updated` activity payload should narrate, in the same
-   * `changed` map the description edit already writes. */
+   * `changed` map the description edit already writes. Valid on its own:
+   * a mount that wrote its own columns through `tx` still gets its
+   * DD-017 entry, and the route re-reads the row so the answer reflects
+   * the write. */
   changed?: ChangedFields;
 }
 
@@ -530,14 +533,22 @@ export function taxonomyRoutes<
           }
           Object.assign(changed, extra?.changed);
           // Nothing changed: answer with the row and write no misleading
-          // from==to audit entry.
-          if (Object.keys(patch).length === 0) return target;
+          // from==to audit entry. Both maps have to be empty. A mount may
+          // narrate a change it made through `tx` itself, without a column
+          // for the machinery to write — returning early on `patch` alone
+          // would drop that mount's DD-017 entry on the floor.
+          if (Object.keys(patch).length === 0 && Object.keys(changed).length === 0) {
+            return target;
+          }
 
-          const [updated] = await tx
-            .update(table)
-            .set(patch)
-            .where(eq(table.id, target.id))
-            .returning();
+          // An empty `set` is not a statement Drizzle will build, so a
+          // mount that wrote its own columns through `tx` gets a re-read
+          // instead — the answer is then the row as it now stands rather
+          // than as it was locked.
+          const [updated] =
+            Object.keys(patch).length === 0
+              ? [await lockedType(tx, target.id)]
+              : await tx.update(table).set(patch).where(eq(table.id, target.id)).returning();
           // A rename stays its own audit verb — the M9 viewer narrates
           // "renamed" rather than a generic edit; other columns share one
           // `updated` entry with the fields-route changed map.

@@ -21,7 +21,7 @@
 import { describe, expect, it } from "vitest";
 import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { json, renderAt, stubApi, type StubCall } from "../testing/helpers";
+import { json, problem, renderAt, stubApi, type StubCall } from "../testing/helpers";
 
 const ADMIN = {
   id: "u1",
@@ -186,12 +186,7 @@ function editorApi(
     }
     if (path === `/api/v1/request-types/${row.id}` && call.method === "PATCH") {
       calls.patches.push(call.body);
-      if (refuse) {
-        return new Response(JSON.stringify({ status: refuse.status, detail: refuse.detail }), {
-          status: refuse.status,
-          headers: { "content-type": "application/problem+json" },
-        });
-      }
+      if (refuse) return problem(refuse.status, refuse.detail);
       current = { ...current, ...(call.body as Partial<StubType>) };
       return json(200, { requestType: current });
     }

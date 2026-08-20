@@ -4,8 +4,8 @@
  * The taxonomy machinery's two per-mount extension points (#351), at
  * the HTTP seam of a mount that turns both on: the `extras` hook and
  * the configurable `protectedSlug`. Request types (#350) are the mount
- * that will need them; this suite proves the machinery serves them
- * before that mount exists.
+ * that needs them; this suite proves the machinery serves them on its
+ * own terms, so a failure here names the machinery rather than a mount.
  *
  * The probe mount below is the factory with both options on, over the
  * `entity_types` table and beside the ordinary entity-types mount in
@@ -131,6 +131,45 @@ const rogueTypesRoutes = taxonomyRoutes({
   },
 });
 
+/**
+ * A mount whose extras write their own column through `tx` and hand the
+ * machinery narration alone. Handing back no `columns` is legitimate —
+ * the write already happened — and what must not follow is a silent
+ * exit that drops the DD-017 entry for it.
+ */
+const narratorTypesRoutes = taxonomyRoutes({
+  table: entityTypes,
+  path: "narrator-types",
+  tag: "narrator-types",
+  idSingular: "NarratorType",
+  idPlural: "NarratorTypes",
+  keySingular: "narratorType",
+  keyPlural: "narratorTypes",
+  noun: "narrator type",
+  decision: "#351",
+  actionPrefix: "entity_type",
+  recordsMilestone: "M27",
+  recordNoun: { singular: "narrator", plural: "narrators" },
+  extras: {
+    // `isSystemDefault` is the machinery's own row key, so it needs no
+    // projection here — only a way onto the PATCH body.
+    rowSchema: {},
+    projectRow: () => ({}),
+    patchSchema: { isSystemDefault: z.boolean().optional() },
+    applyPatch: async ({ tx, row, body }) => {
+      const wanted = body.isSystemDefault;
+      if (wanted === undefined || wanted === row.isSystemDefault) return {};
+      await tx
+        .update(entityTypes)
+        .set({ isSystemDefault: wanted })
+        .where(eq(entityTypes.id, row.id));
+      // No `columns`: this mount did its own writing, so all the
+      // machinery has left to do is say what happened.
+      return { changed: { isSystemDefault: { from: row.isSystemDefault, to: wanted } } };
+    },
+  },
+});
+
 let harness: TestHarness;
 /** The harness's database, with the probe mounts beside the plain one. */
 let app: Awaited<ReturnType<typeof buildApp>>;
@@ -149,6 +188,7 @@ beforeAll(async () => {
   app = await buildApp(testDeps({ db: harness.db }));
   await app.register(probeTypesRoutes, { prefix: "/api/v1" });
   await app.register(rogueTypesRoutes, { prefix: "/api/v1" });
+  await app.register(narratorTypesRoutes, { prefix: "/api/v1" });
   await app.ready();
 }, 120_000);
 
@@ -282,6 +322,29 @@ describe("the extras hook", () => {
       description: { from: null, to: "Told in the log." },
       isSystemDefault: { from: false, to: true },
     });
+  });
+
+  it("still narrates when the mount did its own writing and handed back no columns", async () => {
+    // Same table, other mount: the row is added through the probe and
+    // changed through the narrator, whose extras write the column
+    // themselves. Nothing is left for the machinery to write, and the
+    // question is whether the entry survives that.
+    const probe = await addProbeType("Self-writing probe");
+    const res = await app.inject({
+      method: "PATCH",
+      url: `/api/v1/narrator-types/${probe.id}`,
+      cookies: adminCookies,
+      payload: { isSystemDefault: true },
+    });
+    expect(res.statusCode, res.body).toBe(200);
+    // The mount's own write is committed, and the answer reflects it
+    // rather than the row as it was locked.
+    expect(res.json().narratorType.isSystemDefault).toBe(true);
+    expect((await probeTypeBySlug(probe.slug)).isSystemDefault).toBe(true);
+
+    const payload = await latestUpdatedPayload();
+    expect(payload?.slug).toBe(probe.slug);
+    expect(payload?.changed).toEqual({ isSystemDefault: { from: false, to: true } });
   });
 
   it("keeps the body strict — a key no mount declared is still refused", async () => {

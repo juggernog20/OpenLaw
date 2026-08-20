@@ -408,13 +408,18 @@ export function ListEditor<Row extends ListEditorRow>({
               >
                 <span className={reorder ? "w-9 shrink-0" : "w-4 shrink-0"} aria-hidden="true" />
                 {/* ST5's archived treatment: identity at half opacity,
-                    a neutral pill, restore in the trailing slot. */}
+                    a neutral pill, restore in the trailing slot.
+
+                    The half opacity rides on the name alone, never on the
+                    slot. `text-muted` starts near the 4.5:1 floor, so
+                    halving it puts the caption around 2:1 in all three
+                    themes — under DES's WCAG AA contract for body text. */}
                 <span className="flex min-w-0 flex-1 items-center gap-2 ps-1">
                   {rowCaption ? (
                     <span
-                      className={`flex min-w-0 flex-col gap-0.5 opacity-50 ${nameSlotClassName ?? "flex-1"}`}
+                      className={`flex min-w-0 flex-col gap-0.5 ${nameSlotClassName ?? "flex-1"}`}
                     >
-                      <span className="truncate text-base font-medium text-primary">
+                      <span className="truncate text-base font-medium text-primary opacity-50">
                         {row.displayName}
                       </span>
                       <span className="truncate text-sm text-muted">{rowCaption(row)}</span>

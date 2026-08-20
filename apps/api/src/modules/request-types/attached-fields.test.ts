@@ -449,6 +449,12 @@ describe("the strand refusal on a target change (INT-002)", () => {
     const res = await setTarget(type.id, { targetModule: "contract", targetTypeId: ndaTypeId });
     expect(res.statusCode, res.body).toBe(200);
     expect(res.json().requestType.targetTypeId).toBe(ndaTypeId);
+    // Narrowing to a type inside the module the field already fits
+    // moves no scope, so the form stands exactly as it was. Without
+    // this, a strand check that ran on every target write — and
+    // detached the field — would still pass the assertions above.
+    expect(res.json().requestType.formFieldCount).toBe(1);
+    expect((await listAttached(type.id)).map((row) => row.slug)).toEqual(["same_module_value"]);
   });
 });
 

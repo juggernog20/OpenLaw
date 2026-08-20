@@ -435,6 +435,11 @@ export function SettingsIntakeLinksPage() {
   /** One validated move from the grip (arrow key or drop): commit the
    * whole order and announce where the row landed. */
   async function move(fromIndex: number, toIndex: number) {
+    // One move at a time. A second move started while the first is in
+    // flight would take the first move's optimistic order as its
+    // rollback target, so a refusal would restore an order the server
+    // never held. The type editor's grip guards the same way.
+    if (orderStatus === "saving") return;
     const moved = links[fromIndex]!;
     const next = [...links];
     next.splice(fromIndex, 1);

@@ -1454,7 +1454,7 @@ The list row stays one line only because this screen exists; writing its anatomy
 
 The request-type editor (frame ST14) mounts this screen and diverges from it twice, in both directions. Neither is a new shape; both are this shape with a slot filled or left empty.
 
-**The right card is optional.** ST14's Form fields card arrives with the form definition, so the editor ships as the identity card alone. A screen with one card is not a broken two-card screen: it is the same layout with nothing in the second slot, and the card lands when the mount has something to put there.
+**The right card is optional.** A mount with no form definition ships as the identity card alone; ST14 has one, so it draws the Form fields card. A screen with one card is not a broken two-card screen: it is the same layout with nothing in the second slot, and the card lands when the mount has something to put there.
 
 **The identity card takes one more control.** ST14 draws a Target select and its help line under the slug — one native select, options grouped by module ("No target"; Matter, then each live matter type; Contract, then each live contract type), an 11px `text-secondary` help line stating what conversion will do with the chosen state, and a `status-warning` line flagging a target whose type has since been archived. It commits on pick (SET-003) with its own micro-state beside the control, because it writes the mount's own column rather than the shared identity.
 

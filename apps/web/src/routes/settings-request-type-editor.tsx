@@ -368,6 +368,11 @@ function TargetControl({
   }
 
   async function commit(next: Target) {
+    // One target write at a time. The select below is disabled while a
+    // save is in flight; this is the second lock, because a pick that
+    // arrived anyway would take the in-flight target as its rollback
+    // value and a refusal would restore a target the server never held.
+    if (status === "saving") return;
     const previous = target;
     setTarget(next);
     setStatus("saving");
@@ -406,6 +411,9 @@ function TargetControl({
           id="request-type-target"
           className={`${CONTROL_CLASS} w-80`}
           value={targetValue(target)}
+          // Shut while the write is in flight, so a second pick cannot
+          // land on top of one the server has not answered yet.
+          disabled={status === "saving"}
           aria-describedby={
             // The archived flag is part of what the control means, so a
             // reader hears it with the control rather than after it.
