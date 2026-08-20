@@ -70,7 +70,13 @@ export function TwoFactorEnrollPage() {
       // TECH-008) — so anything else is a misconfiguration, not a state
       // this screen can walk the user through.
       if (res.data.method !== "totp") {
-        setError(networkError(intl));
+        setError(
+          intl.formatMessage({
+            id: "auth.enroll.error.method",
+            defaultMessage:
+              "Two-factor authentication is not configured correctly on this install. Contact an Administrator.",
+          }),
+        );
         return;
       }
       setStep({ name: "verify", totpURI: res.data.totpURI, backupCodes: res.data.backupCodes });

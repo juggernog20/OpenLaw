@@ -236,7 +236,13 @@ export function SettingsProfilePage() {
       // TECH-008) — so anything else is a misconfiguration, not a state
       // this dialog can walk the user through.
       if (res.data.method !== "totp") {
-        setDialogError(networkError(intl));
+        setDialogError(
+          intl.formatMessage({
+            id: "auth.enroll.error.method",
+            defaultMessage:
+              "Two-factor authentication is not configured correctly on this install. Contact an Administrator.",
+          }),
+        );
         return;
       }
       setTotpDialog({

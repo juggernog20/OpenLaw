@@ -81,7 +81,13 @@ DO $$
 DECLARE
   clashing text;
 BEGIN
-  SELECT string_agg(format('(%s, %s)', "issuer", "account_id"), '; ')
+  -- Ordered so a refusal reads the same on every attempt. Without it the
+  -- list follows whatever order the scan returned, and an operator
+  -- comparing the message across two upgrade runs would see it move.
+  SELECT string_agg(
+           format('(%s, %s)', "issuer", "account_id"),
+           '; ' ORDER BY "issuer", "account_id"
+         )
     INTO clashing
     FROM (
       SELECT "issuer", "account_id"

@@ -281,9 +281,15 @@ describe("the Profile pane (SET-006, #67)", () => {
     await user.click(within(dialog).getByRole("button", { name: "Continue" }));
 
     expect(
-      await within(dialog).findByText("The server could not be reached. Try again."),
+      await within(dialog).findByText(
+        "Two-factor authentication is not configured correctly on this install. Contact an Administrator.",
+      ),
     ).toBeVisible();
     // It stopped at the password step rather than drawing an empty QR.
+    // Both halves matter: the backup-codes step has no Code field
+    // either, so only the password field still being there says the
+    // dialog held its ground rather than walking on to the wrong step.
+    expect(within(dialog).getByLabelText("Password")).toBeVisible();
     expect(within(dialog).queryByLabelText("Code")).not.toBeInTheDocument();
   });
 

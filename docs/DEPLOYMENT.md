@@ -274,13 +274,15 @@ One migration, `0060_account_issuer`, can refuse instead. It is the only one tha
 
 From this release the authentication library identifies an account by **who asserted the subject** — a new `issuer` column — rather than by the provider row it was filed under. Every account already in your database needs a truthful value before the new code runs. The migration works it out: a password account gets `local:credential`, and an account from an identity provider gets that provider's own issuer, which your install already recorded when an Administrator registered it.
 
-If the app container will not start, read its log. The migration stops in two cases, and names which:
+**If the app container will not start, read its log.** The migration stops in two cases and names which. Fix what it names, then run the upgrade again:
 
 - **`Cannot resolve an issuer for accounts under provider(s): …`** — accounts are filed under an identity provider your database no longer has. It was deleted while people were still linked to it. Either re-register that provider under the same provider ID, or delete the account rows that point at it (the people keep their accounts; they re-link on their next sign-in through the provider).
 
 - **`Two accounts share one 1.7 identity: …`** — two accounts would become the same identity, which happens if one identity provider was registered twice under different IDs and the same person signed in through both. Decide which row is the real one and delete the other.
 
-**Nothing of this migration is half-applied either way.** It opens a transaction of its own, so a refusal applies none of it — the `issuer` column is not there at all. If your upgrade skipped several releases, migrations from those releases stay applied; they only add things, and the old image runs on them unchanged. So: start the old image again and it runs as before. Fix what the message names, then upgrade again — the migration re-runs from the top and completes.
+**Nothing of this migration is half-applied either way.** It opens a transaction of its own, so a refusal applies none of it — the `issuer` column is not there at all. If your upgrade skipped several releases, migrations from those releases stay applied; they only add things, and the old image runs on them unchanged.
+
+So you have two safe moves, in either order. **Start the old image again** and it runs as before, on the same data, for as long as you need. **Correct what the log named, then re-run `docker compose up -d`** — the migration starts from the top and completes.
 
 This is deliberately a full stop rather than a best effort. An account left without a correct issuer is not a cosmetic problem: it is a person who cannot sign in and cannot reset their password, and it would be discovered by them rather than by you.
 
