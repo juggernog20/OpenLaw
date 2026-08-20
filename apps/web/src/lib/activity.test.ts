@@ -126,6 +126,13 @@ const SAMPLE_PAYLOADS: { [A in ActivityAction]: ActivityPayloadMap[A] } = {
   "entity_type.archived": TAXONOMY_ARCHIVE,
   "entity_type.restored": TAXONOMY_NAMED,
   "entity_type.deleted": TAXONOMY_NAMED,
+  "request_type.created": TAXONOMY_NAMED,
+  "request_type.renamed": TAXONOMY_RENAME,
+  "request_type.updated": TAXONOMY_UPDATE,
+  "request_type.reordered": { order: ["nda_request", "legal_question"] },
+  "request_type.archived": TAXONOMY_ARCHIVE,
+  "request_type.restored": TAXONOMY_NAMED,
+  "request_type.deleted": TAXONOMY_NAMED,
 
   // ---- Fields attached to a type ----
   "contract_type_field.attached": TYPE_FIELD_ATTACH,
@@ -138,6 +145,18 @@ const SAMPLE_PAYLOADS: { [A in ActivityAction]: ActivityPayloadMap[A] } = {
   "matter_type_field.required_changed": {
     typeSlug: "dispute",
     fieldSlug: "court",
+    isRequired: true,
+  },
+  "request_type_field.attached": {
+    typeSlug: "nda_request",
+    fieldSlug: "counterparty_name",
+    isRequired: false,
+  },
+  "request_type_field.detached": { typeSlug: "nda_request", fieldSlug: "counterparty_name" },
+  "request_type_field.reordered": { typeSlug: "nda_request", order: ["counterparty_name"] },
+  "request_type_field.required_changed": {
+    typeSlug: "nda_request",
+    fieldSlug: "counterparty_name",
     isRequired: true,
   },
 
@@ -153,6 +172,23 @@ const SAMPLE_PAYLOADS: { [A in ActivityAction]: ActivityPayloadMap[A] } = {
   },
   "contract_status.restored": { slug: "in-review", displayName: "In review" },
   "contract_status.deleted": { slug: "in-review", displayName: "In review", stage: "review" },
+
+  // ---- The deflection links (INT-004) ----
+  "intake_link.created": {
+    label: "NDA FAQ",
+    url: "https://wiki.example.com/nda-faq",
+    placement: null,
+  },
+  "intake_link.updated": {
+    label: "NDA FAQ",
+    changed: { placement: { from: null, to: "Contract review" } },
+  },
+  "intake_link.reordered": { order: ["NDA FAQ", "Purchasing policy"] },
+  "intake_link.deleted": {
+    label: "NDA FAQ",
+    url: "https://wiki.example.com/nda-faq",
+    placement: "Contract review",
+  },
 
   // ---- The field catalog ----
   "field.created": {

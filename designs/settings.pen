@@ -26381,9 +26381,9 @@
                                         {
                                           "type": "text",
                                           "id": "Qaw05",
-                                          "name": "t Low · normal · hig",
+                                          "name": "t Low · medium · hi",
                                           "fill": "$text-secondary",
-                                          "content": "Low · normal · high · urgent",
+                                          "content": "Low · medium · high · critical",
                                           "fontFamily": "$font",
                                           "fontSize": 12,
                                           "fontWeight": "normal"

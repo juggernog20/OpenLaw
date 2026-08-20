@@ -318,6 +318,7 @@ function changeLabel(intl: IntlShape, key: string, context: NarrationContext): s
         "displayName {Name} display_name {Display name} name {Name} " +
         "role {Role} email {Email} " +
         "stage {Stage} moduleScope {Scope} isRequired {Required} " +
+        "targetModule {Target} targetType {Target type} " +
         "theme {Theme} timezone {Timezone} avatar {Avatar} logo {Logo} " +
         "defaultLocale {Default language} defaultTimezone {Default timezone} " +
         "authMode {Sign-in method} allowedEmailDomains {Allowed email domains} " +
@@ -383,6 +384,18 @@ function changeValue(
   // where the column says `evergreen`. Its ICU message carries an
   // `other` arm, so a kind this build no longer has still renders.
   if (key === "termType") return termTypeLabel(intl, value as TermType);
+  // INT-002's target module is a stored slug, so the feed says "Contract"
+  // where the column says `contract`. Its `other` arm covers a module
+  // this build no longer has.
+  if (key === "targetModule") {
+    return intl.formatMessage(
+      {
+        id: "activity.targetModule",
+        defaultMessage: "{module, select, matter {Matter} contract {Contract} other {{module}}}",
+      },
+      { module: value as string },
+    );
+  }
   if (typeof value === "boolean") {
     return intl.formatMessage(
       {
@@ -463,6 +476,69 @@ function directChange(
       to: changeValue(intl, key, payload.to, context),
     },
   ];
+}
+
+/**
+ * What a deflection-link entry calls the link it names.
+ *
+ * Its own fallback rather than {@link named}'s, because that one is a
+ * person's — "removed the deflection link someone" is not a sentence.
+ */
+function linkNamed(intl: IntlShape, payload: Payload): string {
+  return (
+    text(payload, "label") ??
+    intl.formatMessage({ id: "activity.unnamed", defaultMessage: "(unnamed)" })
+  );
+}
+
+/**
+ * The old→new pairs a deflection-link edit carries (INT-004).
+ *
+ * Its own reader rather than {@link changesFrom}, because two of its
+ * three keys mean something else in the shared catalog: `label` there is
+ * a key date's event name, and a link's placement has no key there at
+ * all. Three keys, three nouns, one ICU `select` — the `other` arm
+ * covers a key this build no longer writes, which the append-only log
+ * can still be holding.
+ *
+ * A placement of `null` reads as "Portal home" rather than "not set":
+ * the portal home panel is a real place a link sits, not the absence of
+ * one.
+ */
+function intakeLinkChanges(intl: IntlShape, payload: Payload): NarratedChange[] {
+  const changed = payload.changed;
+  if (typeof changed !== "object" || changed === null || Array.isArray(changed)) return [];
+  const placement = (value: unknown): string =>
+    typeof value === "string" && value !== ""
+      ? value
+      : intl.formatMessage({
+          id: "activity.intakeLink.portalHome",
+          defaultMessage: "Portal home",
+        });
+  const side = (key: string, value: unknown): string =>
+    key === "placement"
+      ? placement(value)
+      : typeof value === "string" && value !== ""
+        ? value
+        : notSet(intl);
+  return Object.entries(changed as Record<string, unknown>).flatMap(([key, pair]) => {
+    if (typeof pair !== "object" || pair === null) return [];
+    const { from, to } = pair as { from?: unknown; to?: unknown };
+    return [
+      {
+        label: intl.formatMessage(
+          {
+            id: "activity.intakeLink.field",
+            defaultMessage:
+              "{key, select, label {Label} url {Address} placement {Placement} other {{key}}}",
+          },
+          { key },
+        ),
+        from: side(key, from),
+        to: side(key, to),
+      },
+    ];
+  });
 }
 
 /**
@@ -705,7 +781,7 @@ interface Arm {
 }
 
 /**
- * The settings taxonomies say the same seven things about five
+ * The settings taxonomies say the same seven things about seven
  * different lists, so they share seven sentences and name which list
  * inside them.
  *
@@ -728,6 +804,7 @@ const TAXONOMY = {
     defaultMessage:
       "{actor} added the {kind, select, contract_type {contract type} " +
       "matter_type {matter type} entity_type {entity type} " +
+      "request_type {request type} " +
       "contract_status {contract status} field {field} " +
       "approver_group {approver group} other {type}} {name}",
   }),
@@ -736,6 +813,7 @@ const TAXONOMY = {
     defaultMessage:
       "{actor} renamed the {kind, select, contract_type {contract type} " +
       "matter_type {matter type} entity_type {entity type} " +
+      "request_type {request type} " +
       "contract_status {contract status} field {field} " +
       "approver_group {approver group} other {type}} {name}",
   }),
@@ -744,6 +822,7 @@ const TAXONOMY = {
     defaultMessage:
       "{actor} changed the {kind, select, contract_type {contract type} " +
       "matter_type {matter type} entity_type {entity type} " +
+      "request_type {request type} " +
       "contract_status {contract status} field {field} " +
       "approver_group {approver group} other {type}} {name}",
   }),
@@ -752,6 +831,7 @@ const TAXONOMY = {
     defaultMessage:
       "{actor} reordered the {kind, select, contract_type {contract type} " +
       "matter_type {matter type} entity_type {entity type} " +
+      "request_type {request type} " +
       "contract_status {contract status} field {field} " +
       "approver_group {approver group} other {type}} list",
   }),
@@ -760,6 +840,7 @@ const TAXONOMY = {
     defaultMessage:
       "{actor} archived the {kind, select, contract_type {contract type} " +
       "matter_type {matter type} entity_type {entity type} " +
+      "request_type {request type} " +
       "contract_status {contract status} field {field} " +
       "approver_group {approver group} other {type}} {name}",
   }),
@@ -768,6 +849,7 @@ const TAXONOMY = {
     defaultMessage:
       "{actor} restored the {kind, select, contract_type {contract type} " +
       "matter_type {matter type} entity_type {entity type} " +
+      "request_type {request type} " +
       "contract_status {contract status} field {field} " +
       "approver_group {approver group} other {type}} {name}",
   }),
@@ -776,6 +858,7 @@ const TAXONOMY = {
     defaultMessage:
       "{actor} deleted the {kind, select, contract_type {contract type} " +
       "matter_type {matter type} entity_type {entity type} " +
+      "request_type {request type} " +
       "contract_status {contract status} field {field} " +
       "approver_group {approver group} other {type}} {name}",
   }),
@@ -823,8 +906,8 @@ function taxonomyArms<Kind extends string, Verb extends keyof typeof TAXONOMY>(
   >;
 }
 
-/** The seven a settings taxonomy writes (contract, matter, and entity
- * types), in one place because three lists share them. */
+/** The seven a settings taxonomy writes (contract, matter, entity, and
+ * request types), in one place because four lists share them. */
 const TAXONOMY_VERBS = [
   "created",
   "renamed",
@@ -836,9 +919,9 @@ const TAXONOMY_VERBS = [
 ] as const satisfies readonly (keyof typeof TAXONOMY)[];
 
 /**
- * The two type-field prefixes attach the same catalog to two different
- * types, so they share four sentences and name which type inside them,
- * for the reason the taxonomies do.
+ * The three type-field prefixes attach the same catalog to three
+ * different types, so they share four sentences and name which type
+ * inside them, for the reason the taxonomies do.
  */
 const TYPE_FIELD = {
   attached: defineMessage({
@@ -846,21 +929,21 @@ const TYPE_FIELD = {
     defaultMessage:
       "{actor} attached the field {field} to the {owner, select, " +
       "contract_type_field {contract type} matter_type_field {matter type} " +
-      "other {type}} {type}",
+      "request_type_field {request type} other {type}} {type}",
   }),
   detached: defineMessage({
     id: "activity.typeField.detached",
     defaultMessage:
       "{actor} detached the field {field} from the {owner, select, " +
       "contract_type_field {contract type} matter_type_field {matter type} " +
-      "other {type}} {type}",
+      "request_type_field {request type} other {type}} {type}",
   }),
   reordered: defineMessage({
     id: "activity.typeField.reordered",
     defaultMessage:
       "{actor} reordered the fields on the {owner, select, " +
       "contract_type_field {contract type} matter_type_field {matter type} " +
-      "other {type}} {type}",
+      "request_type_field {request type} other {type}} {type}",
   }),
   requiredChanged: defineMessage({
     id: "activity.typeField.requiredChanged",
@@ -868,7 +951,7 @@ const TYPE_FIELD = {
       "{actor} made the field {field} {required, select, true {required} " +
       "other {optional}} on the {owner, select, " +
       "contract_type_field {contract type} matter_type_field {matter type} " +
-      "other {type}} {type}",
+      "request_type_field {request type} other {type}} {type}",
   }),
 } as const;
 
@@ -1883,6 +1966,7 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
   ...taxonomyArms("contract_type", Tag, TAXONOMY_VERBS),
   ...taxonomyArms("matter_type", Tag, TAXONOMY_VERBS),
   ...taxonomyArms("entity_type", Tag, TAXONOMY_VERBS),
+  ...taxonomyArms("request_type", Tag, TAXONOMY_VERBS),
   // A status has a stage rather than a description, so it never writes
   // the `updated` verb.
   ...taxonomyArms("contract_status", GitCommitHorizontal, [
@@ -1893,6 +1977,53 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
     "restored",
     "deleted",
   ]),
+  // The INT-004 deflection links (#356). Not a taxonomy mount: a link
+  // has no slug and no archive, and the thing it is named by is its
+  // label — so it gets four sentences of its own rather than seven
+  // borrowed ones. Each says "deflection link" out loud, because a
+  // reader of the audit log has nothing else to tell it from the
+  // taxonomies above.
+  "intake_link.created": {
+    icon: Link2,
+    message: defineMessage({
+      id: "activity.intakeLink.created",
+      defaultMessage:
+        "{actor} added the deflection link {name} to " +
+        "{onHome, select, true {the portal home} other {{placement}}}",
+    }),
+    // A boolean select rather than a sentinel string: the placement is
+    // a request type's display name, and a type an Administrator named
+    // "Portal home" must not be able to pick the wrong arm.
+    values: (intl, payload) => ({
+      name: linkNamed(intl, payload),
+      onHome: String(text(payload, "placement") === null),
+      placement: text(payload, "placement") ?? "",
+    }),
+  },
+  "intake_link.updated": {
+    icon: PencilLine,
+    message: defineMessage({
+      id: "activity.intakeLink.updated",
+      defaultMessage: "{actor} changed the deflection link {name}",
+    }),
+    values: (intl, payload) => ({ name: linkNamed(intl, payload) }),
+    changes: (intl, payload) => intakeLinkChanges(intl, payload),
+  },
+  "intake_link.reordered": {
+    icon: ListOrdered,
+    message: defineMessage({
+      id: "activity.intakeLink.reordered",
+      defaultMessage: "{actor} reordered the deflection links",
+    }),
+  },
+  "intake_link.deleted": {
+    icon: Trash2,
+    message: defineMessage({
+      id: "activity.intakeLink.deleted",
+      defaultMessage: "{actor} removed the deflection link {name}",
+    }),
+    values: (intl, payload) => ({ name: linkNamed(intl, payload) }),
+  },
   // The catalog is unordered (DES-021), names through its editor dialog
   // rather than a rename verb, and is never hard-deleted.
   ...taxonomyArms("field", Tags, ["created", "updated", "archived", "restored"]),
@@ -1955,6 +2086,7 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
   // ---- Fields attached to a type ----
   ...typeFieldArms("contract_type_field"),
   ...typeFieldArms("matter_type_field"),
+  ...typeFieldArms("request_type_field"),
 
   // ---- The Entities registry (M7) ----
   // Its own feed is not mounted yet (DD-017's clarification), so the

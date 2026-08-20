@@ -205,6 +205,10 @@ _Avoid_: task, deadline, compliance item
 **Urgency**:
 What a requester supplies on a Request. It maps 1:1 to **priority** at conversion; **risk** is never requester-set [INT-002, MTR-012].
 
+**Deflection link**:
+An Administrator-configured label and absolute `http` or `https` web address in the portal's "Before you submit…" panel, there to answer a question before it becomes a Request. Its **placement** is either the portal home — everybody sees it whatever they came to ask — or one request type, which shows it on that form alone. A deflection link is removed rather than archived: nothing points at one and there is no history to keep [INT-004].
+_Avoid_: help link, FAQ link, self-service link, knowledge link (a Knowledge item is its own thing, and M28's)
+
 **Approver group**:
 An Administrator-managed template naming a reusable set of approvers — "Commercial sign-off" = GC plus CFO. Members must be Member+ users. Applying a group copies its members onto the Contract at apply time, so a later edit or archive never changes an approval already requested [CTR-012].
 _Avoid_: approval group, approver team, sign-off rule

@@ -139,6 +139,7 @@ export function SettingsMatterTypesPage() {
       initialRows={matterTypes}
       tabs={<MattersSettingsTabs />}
       editor={{ path: (row) => `/settings/matters/types/${row.id}`, label: MESSAGES.edit }}
+      protectedRow={{ slug: "other", label: MESSAGES.locked }}
       api={PANE_API}
       messages={MESSAGES}
     />

@@ -65,9 +65,12 @@ type Prefixed<P extends string, M> = { [K in keyof M & string as `${P}.${K}`]: M
 // ---------------------------------------------------------------------
 
 /** The taxonomy tables' audit namespaces. */
-export type TaxonomyActionPrefix = "contract_type" | "matter_type" | "entity_type";
-/** The two catalogs of fields attached to a type. */
-export type TypeFieldActionPrefix = "contract_type_field" | "matter_type_field";
+export type TaxonomyActionPrefix = "contract_type" | "matter_type" | "entity_type" | "request_type";
+/** The catalogs of fields attached to a type — two type editors, and
+ * the request type's form definition (INT-002), which is the same
+ * machinery over the same catalog. */
+export type TypeFieldActionPrefix =
+  "contract_type_field" | "matter_type_field" | "request_type_field";
 
 /**
  * The seven verbs a settings taxonomy writes. A rename carries the pair
@@ -169,6 +172,26 @@ type ContractStatusPayloads = {
   };
   "contract_status.restored": { slug: string; displayName: string };
   "contract_status.deleted": { slug: string; displayName: string; stage: string };
+};
+
+/**
+ * The deflection links (INT-004). Four verbs, not the taxonomy's seven:
+ * a link has no slug to key it, and it is removed outright rather than
+ * archived — nothing points at one and there is no history to keep — so
+ * `archived` and `restored` are sentences nobody would ever read.
+ *
+ * `placement` is the request type's **display name**, or null for the
+ * portal home panel. The name rather than the id, because the id is
+ * meaningless to somebody reading the log after the type is gone, and
+ * the log is append-only.
+ */
+type IntakeLinkPayloads = {
+  "intake_link.created": { label: string; url: string; placement: string | null };
+  "intake_link.updated": { label: string; changed: ChangedFields };
+  /** The labels in their new order — for the reason `placement` carries
+   * a name: ids do not survive the rows they name. */
+  "intake_link.reordered": { order: string[] };
+  "intake_link.deleted": { label: string; url: string; placement: string | null };
 };
 
 /**
@@ -780,9 +803,12 @@ export type ActivityPayloadMap = UserPayloads &
   Prefixed<"contract_type", TaxonomyPayloads> &
   Prefixed<"matter_type", TaxonomyPayloads> &
   Prefixed<"entity_type", TaxonomyPayloads> &
+  Prefixed<"request_type", TaxonomyPayloads> &
   Prefixed<"contract_type_field", TypeFieldPayloads> &
   Prefixed<"matter_type_field", TypeFieldPayloads> &
+  Prefixed<"request_type_field", TypeFieldPayloads> &
   ContractStatusPayloads &
+  IntakeLinkPayloads &
   FieldCatalogPayloads &
   ApproverGroupPayloads &
   ApprovalPayloads &

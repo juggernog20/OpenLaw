@@ -15,6 +15,12 @@
  * treatment. The panes own their data, API calls, and guard dialogs —
  * this component owns the anatomy.
  *
+ * **The two-line row (DES-020 amendment, ST12).** A pane whose rows
+ * carry a line of their own — a request type's description, which a
+ * requester reads in the portal picker — passes `rowCaption`, and the
+ * row grows from 44px to 52px to hold it. A pane that passes none
+ * draws the one-line row every other mount draws.
+ *
  * **The value-list variant (DES-052).** A pane whose rows are values
  * rather than named things — the NOT-004 reminder lead times — keeps the
  * card, the row geometry, the grip, and the inline add, and drops the
@@ -82,6 +88,10 @@ export interface ListEditorProps<Row extends ListEditorRow> {
   /** Wraps the name cell (e.g. `min-w-0 flex-1` so fixed-width detail
    * cells align as table columns — DES-021); unset renders it bare. */
   nameSlotClassName?: string;
+  /** A second line under the name — the row's own description (ST12).
+   * A pane that passes it gets the 52px two-line row in place of the
+   * 44px one-line row; a pane that does not is unchanged. */
+  rowCaption?: (row: Row) => ReactNode;
   /** The right-aligned caption (usage counts). */
   rowMeta?: (row: Row) => ReactNode;
   /** Extra trailing icon actions before archive (e.g. an edit button). */
@@ -133,6 +143,7 @@ export function ListEditor<Row extends ListEditorRow>({
   onRename,
   rowDetails,
   nameSlotClassName,
+  rowCaption,
   rowMeta,
   rowActions,
   protectedLabel,
@@ -209,6 +220,26 @@ export function ListEditor<Row extends ListEditorRow>({
       >
         {row.displayName}
       </button>
+    );
+  }
+
+  /**
+   * The name cell in its slot: bare, wrapped for column alignment, or —
+   * when the pane draws a caption — stacked over the row's second line.
+   */
+  function nameSlot(row: Row) {
+    if (!rowCaption) {
+      return nameSlotClassName ? (
+        <span className={nameSlotClassName}>{nameCell(row)}</span>
+      ) : (
+        nameCell(row)
+      );
+    }
+    return (
+      <span className={`flex min-w-0 flex-col gap-0.5 ${nameSlotClassName ?? "flex-1"}`}>
+        <span className="flex min-w-0">{nameCell(row)}</span>
+        <span className="truncate text-sm text-muted">{rowCaption(row)}</span>
+      </span>
     );
   }
 
@@ -317,7 +348,7 @@ export function ListEditor<Row extends ListEditorRow>({
               }}
               onDragOver={reorder && ((event) => event.preventDefault())}
               onDrop={reorder && ((event) => drop(event, index))}
-              className="flex h-11 items-center border-b border-border-muted pe-3"
+              className={`flex ${rowCaption ? "h-13" : "h-11"} items-center border-b border-border-muted pe-3`}
             >
               {reorder && (
                 <span className="flex w-9 shrink-0 justify-center">
@@ -349,11 +380,7 @@ export function ListEditor<Row extends ListEditorRow>({
               <span
                 className={`flex min-w-0 flex-1 items-center gap-2 ${reorder ? "ps-1" : "ps-4"}`}
               >
-                {nameSlotClassName ? (
-                  <span className={nameSlotClassName}>{nameCell(row)}</span>
-                ) : (
-                  nameCell(row)
-                )}
+                {nameSlot(row)}
                 {rowDetails?.(row)}
               </span>
               {rowMeta && (
@@ -375,14 +402,33 @@ export function ListEditor<Row extends ListEditorRow>({
           )}
           {showArchived &&
             archivedRows.map((row) => (
-              <li key={row.id} className="flex h-11 items-center border-b border-border-muted pe-3">
+              <li
+                key={row.id}
+                className={`flex ${rowCaption ? "h-13" : "h-11"} items-center border-b border-border-muted pe-3`}
+              >
                 <span className={reorder ? "w-9 shrink-0" : "w-4 shrink-0"} aria-hidden="true" />
                 {/* ST5's archived treatment: identity at half opacity,
-                    a neutral pill, restore in the trailing slot. */}
+                    a neutral pill, restore in the trailing slot.
+
+                    The half opacity rides on the name alone, never on the
+                    slot. `text-muted` starts near the 4.5:1 floor, so
+                    halving it puts the caption around 2:1 in all three
+                    themes — under DES's WCAG AA contract for body text. */}
                 <span className="flex min-w-0 flex-1 items-center gap-2 ps-1">
-                  <span className="text-base font-medium text-primary opacity-50">
-                    {row.displayName}
-                  </span>
+                  {rowCaption ? (
+                    <span
+                      className={`flex min-w-0 flex-col gap-0.5 ${nameSlotClassName ?? "flex-1"}`}
+                    >
+                      <span className="truncate text-base font-medium text-primary opacity-50">
+                        {row.displayName}
+                      </span>
+                      <span className="truncate text-sm text-muted">{rowCaption(row)}</span>
+                    </span>
+                  ) : (
+                    <span className="text-base font-medium text-primary opacity-50">
+                      {row.displayName}
+                    </span>
+                  )}
                   {rowDetails && (
                     <span className="flex items-center gap-2 opacity-50">{rowDetails(row)}</span>
                   )}

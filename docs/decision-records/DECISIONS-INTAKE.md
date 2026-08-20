@@ -62,6 +62,30 @@ Disposition of the former technical queue, per **INT-001**'s form-first revision
 - **Alternatives considered** — Independent per-type form builder: re-keying at conversion. One generic form: collects nothing structured.
 - **Consequences** — `request_types`, `request_type_fields`, `request_attachments` + `requests` core columns in SCHEMA.md. Settings surface added. Conditional form logic (Q6) would layer on `request_type_fields` if ever adopted.
 
+### Addendum (2026-08-20, [#354](https://github.com/juggernog20/OpenLaw/issues/354)) — the target has three states, and the basics are fixed
+
+The decision above knew two target states: a specific matter or contract type, or nothing. The editor built in M19/4 needed a third, and it earns its place — so the target is written down here as what it is.
+
+**The target is a module, and optionally a type inside it.** `target_module` is NULL, `matter`, or `contract`. Under `matter` or `contract` a type id may name one specific type, and under NULL nothing may. So "NDA request" targets the NDA contract type, **"Contract review" targets the Contract module and leaves the type to the reviewer at conversion**, and "Legal question" targets nothing at all. The middle state is the new one: a request type can promise a contract without pre-deciding which kind, which is what an intake form for "review this counterparty paper" honestly knows at submission. It costs conversion nothing — INT-006's rule is that triage confirms rather than classifies, and a module-only target still hands the triager the module, the collected values, and one choice instead of two.
+
+**One check constraint holds all three columns together**, so the invariant is the table's rather than the route's: with no module, both type ids are NULL; under `matter`, `target_contract_type_id` is NULL and `target_matter_type_id` may be set or NULL; under `contract`, the mirror. The module-only state is the one where the module's own type id is NULL. On the wire it is two values — the module and the optional type id — because which of the two id columns holds it is the module's to say.
+
+**Deleting a targeted type demotes; it never strands.** Both type FKs are `on delete set null` while `target_module` stays, so hard-deleting the NDA contract type turns "Contract · NDA" into "Contract" — a state the model already has. Archiving a targeted type is left alone: the target picker offers live types only, the editor flags a target whose type is archived, and conversion (M21) reads an archived target type as no type.
+
+**The basics are fixed and are not columns.** Every portal form collects Summary, Description, Attachments, and Urgency. Summary, Description, and Urgency are required; Attachments are optional. The editor draws the four as locked rows so an Administrator can read the contract without being invited to change it, and nothing in the schema records them — a fixed set is a fact about the form, not a configuration of it. Urgency carries the DES-018 severity ramp (`low`, `medium`, `high`, `critical`), as this decision already recorded.
+
+### Addendum (2026-08-20, M19/7, [#357](https://github.com/juggernog20/OpenLaw/issues/357)) — one attached field can outlive the scope that admitted it, and M20 will meet it
+
+Changing a request type's target is refused when the new target's scope rule would exclude fields already on the form; the refusal names them and the Administrator detaches first (SET-003's house style — guards refuse and explain). **The refusal reads live attached fields only, and an archived catalog field is therefore invisible to it.** That leaves one reachable state, recorded here rather than closed, because M20 is where it will next be seen.
+
+**The sequence.** Attach a contract-scoped field to a contract-targeting request type. Archive that field in the catalog — allowed; a field is archived, never deleted (MTR-014 value retention). Re-point the request type to Matter — allowed, because the only attachment that would have stranded is now archived and the check does not see it. Restore the field. The attachment is live again, so it renders on the editor and counts in the ST12 Form fields column, under a target whose scope no longer admits it.
+
+**Why this is the right end of the trade.** The alternative is a refusal an Administrator cannot act on. While the field is archived the editor does not draw its row — the form definition lists live fields — so a target change refused on its account would name a row that is not on the screen and offer no way to detach it. That is a dead end; the state above is not. It is visible the moment it happens, it is repairable by a plain detach, and nothing about it is silent: the field is on the form, drawn like every other, and its scope caption says what it is.
+
+**What it costs, and who pays.** Nothing is corrupted — the attachment row is well formed, the required flag still applies, and the portal (M20) renders the field and collects its value like any other. The cost arrives at conversion (M21): a contract-scoped value collected under a matter-targeting form has no field to land in on the created matter, so it is a collected value with nowhere to go. **M20 and M21 should treat "attached but out of scope for the current target" as a state that exists**, not as one the API prevents. Widening the strand check to include archived attachments is the obvious fix and is deliberately not taken here — it would trade a visible, repairable state for an invisible, unrepairable refusal, and the honest place to solve it is wherever the portal or the Inbox decides what an out-of-scope collected value means.
+
+**Not to be confused with the archived _target type_.** That case is settled above: the picker offers live types only, the editor flags an archived target, and conversion reads it as no type. This addendum is about an archived **catalog field**, on the other side of the attachment.
+
 ## INT-003 — Requester updates: email notifications only; no status-poke button
 
 - **Status** — Accepted
@@ -81,6 +105,18 @@ Disposition of the former technical queue, per **INT-001**'s form-first revision
 - **Rationale** — Deflection is the highest-leverage intake win at near-zero cost; the conditional-logic engine is not.
 - **Alternatives considered** — Nothing (loses free deflection); building conditional logic now (reverses MTR-014's deferral).
 - **Consequences** — `intake_links` (id, label, url, request_type_id nullable = home panel, display_order) — settings-managed. Settings inventory row added.
+
+### Addendum (2026-08-20, [#356](https://github.com/juggernog20/OpenLaw/issues/356)) — deleting a request type takes its links with it, and the URL is validated but never normalized
+
+The decision above named the table and left two questions to whoever built it. M19/6 built it, and these are the answers.
+
+**A link's placement is its audience, so the FK cascades.** `intake_links.request_type_id` is `on delete cascade`. The sibling target FKs on `request_types` are `on delete set null` — they **demote**, turning "Contract · NDA" into "Contract" — and the same move here would do the opposite of demoting: a link an Administrator scoped to the Contract review form would appear, unasked, on the portal home in front of every requester. Widening an audience is not a demotion. Cascade also matches `request_type_fields`, the other child of `request_types`: the type carries its form definition and its deflection panel alike, and the blast radius is small either way, because a request type may only be hard-deleted when nothing has used it. An Administrator who wants the link to survive the type moves it to the portal home first, deliberately.
+
+**The URL is validated as an absolute `http`/`https` address and stored exactly as entered.** Absolute, because the panel renders in a portal a requester reaches from their own browser, so a relative path would resolve against the portal and land nowhere; `http` or `https` only, because a `mailto:` is not deflection and a `javascript:` is an attack. Nothing normalizes it after that — no lower-casing, no trailing-slash trimming, no re-encoding — because a URL is a string a person pasted from somewhere that works, and a normalizer that is right 99% of the time is a link that is broken 1% of the time. The settings row renders it **without its scheme**, which is presentation and not storage.
+
+**A link is removed, never archived.** Nothing points at a link and there is no history to keep, so there is no `archived_at`, no restore, no guard modal, and no slug — a link has no machine identity for anything to refer to. The pane is the DES-052 value list for exactly that reason.
+
+**A placement being assigned must be a live request type.** An archived form takes no submissions, so a link scoped to it deflects nobody; the API refuses the assignment and the pane's picker offers live types only. The rule cuts one way: a link placed while the type was live stays put when the type is archived afterwards — the picker keeps that one archived type on offer for that row, so a label edit never forces a placement move. This is the same tolerance the INT-002 target keeps for an archived target type.
 
 ## INT-005 — No auto-classification: the form is the classification
 
@@ -126,12 +162,12 @@ Disposition of the former technical queue, per **INT-001**'s form-first revision
 
 ## Index of decisions
 
-| #       | Decision                                                                     | Status                                 |
-| ------- | ---------------------------------------------------------------------------- | -------------------------------------- |
-| INT-001 | Intake model: JSM-style structured forms + portal; email notifications only  | Accepted; lifecycle revised by INT-007 |
-| INT-002 | Request types mapped to target types; forms reuse the fields catalog         | Accepted                               |
-| INT-003 | Requester updates: email notifications only; no status-poke button           | Accepted                               |
-| INT-004 | Deflection links panel in v1; conditional form logic stays deferred          | Accepted                               |
-| INT-005 | No auto-classification: the form is the classification                       | Accepted                               |
-| INT-006 | Triage: one Inbox, pickup assignment, four actions, lossless re-convert      | Accepted; revised by INT-007           |
-| INT-007 | Disposition-at-pickup: triage decides the outcome; no parked in-review state | Accepted                               |
+| #       | Decision                                                                     | Status                                                         |
+| ------- | ---------------------------------------------------------------------------- | -------------------------------------------------------------- |
+| INT-001 | Intake model: JSM-style structured forms + portal; email notifications only  | Accepted; lifecycle revised by INT-007                         |
+| INT-002 | Request types mapped to target types; forms reuse the fields catalog         | Accepted; three-state target added by M19/4 addendum           |
+| INT-003 | Requester updates: email notifications only; no status-poke button           | Accepted                                                       |
+| INT-004 | Deflection links panel in v1; conditional form logic stays deferred          | Accepted; delete behavior and URL rule added by M19/6 addendum |
+| INT-005 | No auto-classification: the form is the classification                       | Accepted                                                       |
+| INT-006 | Triage: one Inbox, pickup assignment, four actions, lossless re-convert      | Accepted; revised by INT-007                                   |
+| INT-007 | Disposition-at-pickup: triage decides the outcome; no parked in-review state | Accepted                                                       |

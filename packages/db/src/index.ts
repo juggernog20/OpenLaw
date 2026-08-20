@@ -34,11 +34,14 @@ import * as documentsSchema from "./schema/documents.js";
 import * as entitiesSchema from "./schema/entities.js";
 import * as entityTypesSchema from "./schema/entity-types.js";
 import * as fieldsSchema from "./schema/fields.js";
+import * as intakeLinksSchema from "./schema/intake-links.js";
 import * as listViewsSchema from "./schema/list-views.js";
 import * as matterTypeFieldsSchema from "./schema/matter-type-fields.js";
 import * as matterTypesSchema from "./schema/matter-types.js";
 import * as notificationsSchema from "./schema/notifications.js";
 import * as orgSchema from "./schema/org.js";
+import * as requestTypeFieldsSchema from "./schema/request-type-fields.js";
+import * as requestTypesSchema from "./schema/request-types.js";
 import * as signingConnectorsSchema from "./schema/signing-connectors.js";
 import { resealStoredSecrets, type SecretsRewrap } from "./rewrap.js";
 
@@ -65,11 +68,14 @@ export * from "./schema/documents.js";
 export * from "./schema/entities.js";
 export * from "./schema/entity-types.js";
 export * from "./schema/fields.js";
+export * from "./schema/intake-links.js";
 export * from "./schema/list-views.js";
 export * from "./schema/matter-type-fields.js";
 export * from "./schema/matter-types.js";
 export * from "./schema/notifications.js";
 export * from "./schema/org.js";
+export * from "./schema/request-type-fields.js";
+export * from "./schema/request-types.js";
 export * from "./schema/signing-connectors.js";
 export * from "./migration-journal.js";
 export * from "./rewrap.js";
@@ -98,11 +104,14 @@ export const schema = {
   ...entitiesSchema,
   ...entityTypesSchema,
   ...fieldsSchema,
+  ...intakeLinksSchema,
   ...listViewsSchema,
   ...matterTypeFieldsSchema,
   ...matterTypesSchema,
   ...notificationsSchema,
   ...orgSchema,
+  ...requestTypeFieldsSchema,
+  ...requestTypesSchema,
   ...signingConnectorsSchema,
 };
 
@@ -138,6 +147,9 @@ export { alias } from "drizzle-orm/pg-core";
  * takes — the contracts list's severity ramp orders `priority` and `risk`
  * through one function. Re-exported for the operators' reason. */
 export type { AnyPgColumn } from "drizzle-orm/pg-core";
+/** The shape every configurable-taxonomy table has (#85), so the one
+ * machinery that serves them can name what it takes. */
+export type { TaxonomyTable } from "./schema/helpers.js";
 
 export type Db = NodePgDatabase<typeof schema> & { $client: pg.Pool };
 
