@@ -28,6 +28,15 @@ export async function homeLoader({ request }: LoaderFunctionArgs) {
   if (!user) {
     return redirect((await needsSetup()) ? "/auth/setup" : "/auth/login");
   }
+  // Role-based landing (INT-001, #376): the portal is a Business User's
+  // whole surface, so the staff application's front door forwards them
+  // to it. This is also where a redeemed magic link lands — the verify
+  // endpoint's callback is "/" — which is what puts a requester in the
+  // portal without the issuance API having to know about the portal at
+  // all, and keeps a staff break-glass link landing in the staff app.
+  // Every staff destination bounces here when its role floor refuses, so
+  // this one redirect covers the whole tree.
+  if (user.role === "business_user") return redirect("/portal");
   // SET-004: the wizard runs on first Administrator login — any admin
   // landing here while onboarding is open belongs there instead. A
   // failed status read deliberately falls through to home: the wizard

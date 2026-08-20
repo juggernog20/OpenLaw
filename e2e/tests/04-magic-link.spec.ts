@@ -89,7 +89,11 @@ test.describe.serial("magic link → JIT provisioning → route guards", () => {
 
   test("redeeming the link JIT-provisions a Business User", async ({ page }) => {
     await page.goto(magicLink);
-    await expect(page).toHaveURL("/");
+    // The verify endpoint's callback is "/", and the root guard forwards
+    // a Business User from there to the portal — the surface that is
+    // theirs (INT-001, #376).
+    await expect(page).toHaveURL(/\/portal$/);
+    await expect(page.getByRole("heading", { name: "What do you need from Legal?" })).toBeVisible();
 
     // DD-010: an unknown identity on an allowed domain is admitted as
     // exactly a Business User — the me endpoint carries the live role.

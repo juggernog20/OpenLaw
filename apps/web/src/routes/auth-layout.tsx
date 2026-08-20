@@ -1,14 +1,21 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-/** Centered single-card shell shared by every pre-app auth screen. */
+/**
+ * Centered single-card shell shared by every pre-app auth screen.
+ *
+ * It is a route layout for the /auth tree and a plain wrapper anywhere
+ * else: the portal entry screen (#376) sits in its own route tree but is
+ * the same pre-session card, and one shell is what keeps the two from
+ * drifting apart.
+ */
 
-import { useLayoutEffect } from "react";
+import { useLayoutEffect, type ReactNode } from "react";
 import { Outlet } from "react-router";
 import { FormattedMessage } from "react-intl";
 import { SkipLink } from "../components/skip-link";
 import { setDocumentTheme } from "../lib/theme";
 
-export function AuthLayout() {
+export function AuthLayout({ children }: Readonly<{ children?: ReactNode }>) {
   // Pre-login screens render Light unconditionally (#44): presentation
   // only — the person's stored preference and its local mirror survive,
   // and the shell re-applies them after sign-in. The index.html boot
@@ -25,7 +32,7 @@ export function AuthLayout() {
           <p className="mb-6 text-center text-lg font-semibold">
             <FormattedMessage id="auth.brand" defaultMessage="OpenLaw" />
           </p>
-          <Outlet />
+          {children ?? <Outlet />}
         </div>
       </main>
     </div>
