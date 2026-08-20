@@ -25,7 +25,7 @@
  * where the contract's own reach rule already lives, so the thread and
  * the record answer out of one rule rather than two that could drift.
  *
- * An arm carries three things and no more:
+ * An arm carries four things and no more:
  *
  * - `readerRoles` — the roles that reach any thread of this type at all.
  *   It is the route guard's list, and it is per-arm because the roles are
@@ -33,6 +33,11 @@
  *   request thread has to admit the Business User who raised it (DD-013).
  * - `resolve` — the audience rule: this viewer's standing on this record,
  *   or `null` where there is nothing here for them.
+ * - `mentionCandidates` — who a comment on this record can address
+ *   (CMT-007), each with the tiers they hear. It is per-arm because the
+ *   addressees come from the audience rule: a contract's roster is its
+ *   team and the staff roles, and a request's will be its Requester and
+ *   Member+ staff.
  * - `notifyPosted` — what a new comment on this type of record raises
  *   through the Notifier seam (NOT-002). It is here rather than at the
  *   route because the events differ by type: a contract comment is group
@@ -106,7 +111,7 @@ export interface PostedComment {
   mentioned: readonly string[];
 }
 
-/** One entity type's answer to the three questions the thread asks of a
+/** One entity type's answer to the four questions the thread asks of a
  * record. Nothing else about the record belongs here: the routes read the
  * `comments` rows themselves, and they are the same rows whichever arm
  * resolved the audience. */
