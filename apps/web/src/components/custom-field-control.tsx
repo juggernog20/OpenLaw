@@ -160,10 +160,11 @@ export function CustomFieldControl({
         <div
           id={id}
           aria-describedby={describedBy}
-          // No `aria-required` here: it is not allowed on `group`, and
-          // a checkbox group's demand is carried by the label the
-          // surface draws the asterisk into.
-          aria-invalid={invalid || undefined}
+          // No `aria-required` or `aria-invalid` here: neither is
+          // allowed on `group`. The group's demand is carried by the
+          // label the surface draws the asterisk into, and a refusal
+          // is carried by the checkboxes below — `checkbox` is a role
+          // `aria-invalid` is allowed on.
           role="group"
           aria-labelledby={`${id}-label`}
           className="flex flex-wrap gap-x-4 gap-y-2"
@@ -175,6 +176,7 @@ export function CustomFieldControl({
               <Checkbox
                 checked={chosen.includes(option)}
                 disabled={disabled}
+                aria-invalid={invalid || undefined}
                 onCheckedChange={(next) =>
                   onDraft(
                     next === true
