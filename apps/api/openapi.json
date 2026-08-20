@@ -8110,6 +8110,348 @@
         }
       }
     },
+    "/api/v1/portal/requests": {
+      "get": {
+        "operationId": "listMyRequests",
+        "summary": "The session user's own Requests, newest first (DD-013). There is no way to ask for anybody else's, and a converted Request stays on the list (INT-001)",
+        "tags": ["requests"],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "requests": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "number": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          },
+                          "status": {
+                            "type": "string",
+                            "enum": ["new", "converted", "resolved", "declined"]
+                          },
+                          "summary": {
+                            "type": "string"
+                          },
+                          "requestType": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "string"
+                              },
+                              "slug": {
+                                "type": "string"
+                              },
+                              "displayName": {
+                                "type": "string"
+                              }
+                            },
+                            "required": ["id", "slug", "displayName"],
+                            "additionalProperties": false
+                          },
+                          "createdAt": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "number",
+                          "status",
+                          "summary",
+                          "requestType",
+                          "createdAt"
+                        ],
+                        "additionalProperties": false
+                      }
+                    }
+                  },
+                  "required": ["requests"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/portal/requests/{number}": {
+      "get": {
+        "operationId": "readMyRequest",
+        "summary": "One of the session user's own Requests by its R-### number (DD-013): the envelope, the values the form collected with the fields that name them, and the decline reason when it was declined (INT-006). Another requester's Request answers 404",
+        "tags": ["requests"],
+        "parameters": [
+          {
+            "schema": {
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
+            },
+            "in": "path",
+            "name": "number",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "request": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "number": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "status": {
+                          "type": "string",
+                          "enum": ["new", "converted", "resolved", "declined"]
+                        },
+                        "summary": {
+                          "type": "string"
+                        },
+                        "requestType": {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string"
+                            },
+                            "slug": {
+                              "type": "string"
+                            },
+                            "displayName": {
+                              "type": "string"
+                            }
+                          },
+                          "required": ["id", "slug", "displayName"],
+                          "additionalProperties": false
+                        },
+                        "createdAt": {
+                          "type": "string"
+                        },
+                        "description": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "urgency": {
+                          "type": "string",
+                          "enum": ["low", "medium", "high", "critical"]
+                        },
+                        "customFields": {
+                          "type": "object",
+                          "propertyNames": {
+                            "type": "string"
+                          },
+                          "additionalProperties": {
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "number"
+                              },
+                              {
+                                "type": "boolean"
+                              },
+                              {
+                                "type": "array",
+                                "items": {
+                                  "type": "string"
+                                }
+                              }
+                            ]
+                          }
+                        },
+                        "declinedReason": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "number",
+                        "status",
+                        "summary",
+                        "requestType",
+                        "createdAt",
+                        "description",
+                        "urgency",
+                        "customFields",
+                        "declinedReason"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "fields": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "fieldId": {
+                            "type": "string"
+                          },
+                          "slug": {
+                            "type": "string"
+                          },
+                          "displayName": {
+                            "type": "string"
+                          },
+                          "description": {
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "fieldType": {
+                            "type": "string",
+                            "enum": [
+                              "text",
+                              "long_text",
+                              "number",
+                              "date",
+                              "boolean",
+                              "single_select",
+                              "multi_select",
+                              "user",
+                              "entity"
+                            ]
+                          },
+                          "options": {
+                            "anyOf": [
+                              {
+                                "type": "array",
+                                "items": {
+                                  "type": "string"
+                                }
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "displayOrder": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          },
+                          "isRequired": {
+                            "type": "boolean"
+                          }
+                        },
+                        "required": [
+                          "fieldId",
+                          "slug",
+                          "displayName",
+                          "description",
+                          "fieldType",
+                          "options",
+                          "displayOrder",
+                          "isRequired"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "customFieldRefs": {
+                      "type": "object",
+                      "properties": {
+                        "users": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "string"
+                              },
+                              "displayName": {
+                                "type": "string"
+                              }
+                            },
+                            "required": ["id", "displayName"],
+                            "additionalProperties": false
+                          }
+                        },
+                        "entities": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "string"
+                              },
+                              "legalName": {
+                                "type": "string"
+                              }
+                            },
+                            "required": ["id", "legalName"],
+                            "additionalProperties": false
+                          }
+                        }
+                      },
+                      "required": ["users", "entities"],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": ["request", "fields", "customFieldRefs"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/contract-statuses": {
       "get": {
         "operationId": "listContractStatuses",

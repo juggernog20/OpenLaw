@@ -161,6 +161,12 @@
      number of request types and the mock's six is not the count. */
   --grid-template-columns-portal-picker: repeat(auto-fill, minmax(16rem, 1fr));
 
+  /* One label-and-value row of the portal's "What you submitted" card
+     (I7): a fixed label column and the value taking the rest. Applied
+     only above the row's own container width — below it the pair
+     stacks, per DES-012. */
+  --grid-template-columns-value-row: 12.5rem 1fr;
+
   /* ------------------------------------------------------------------ *
    * Chrome dimensions — fixed sizes for the application shell.         *
    * Per DES-007 these are bare CSS variables, not utility-generating.  *

@@ -255,6 +255,12 @@ export function stubApi(state: ApiState) {
     if (call.url.pathname === "/api/v1/portal/intake-links" && call.method === "GET") {
       return json(200, { intakeLinks: [] });
     }
+    // And the caller's own Requests (M20/5, DD-013), which the home
+    // reads on every render. Empty by default for the two reads above's
+    // reason; only the my-requests suite supplies rows, through `extra`.
+    if (call.url.pathname === "/api/v1/portal/requests" && call.method === "GET") {
+      return json(200, { requests: [] });
+    }
     if (call.url.pathname === "/api/v1/onboarding" && call.method === "GET") {
       return json(200, state.onboarding ?? { completed: true, emailConfigured: true });
     }

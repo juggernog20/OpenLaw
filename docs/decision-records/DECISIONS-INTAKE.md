@@ -71,6 +71,32 @@ The Administrator built the front door in M19 behind `requireRole("administrator
 
 **The picker addresses a form by slug, at `/portal/new/:slug`.** The slug is the request type's machine identity and never changes (INT-002), so a bookmarked or shared form address survives a rename; an id would be correct and unreadable.
 
+### Addendum (2026-08-21, M20/5, [#379](https://github.com/juggernog20/OpenLaw/issues/379)) — the requester's own two reads, and what the detail says without a thread
+
+The decision above says a requester sees their requests, their status, and a thread on each. M20/5 built the first two. These are the choices it settled.
+
+**The reads sit on the portal mount and in the `requests` module, and the two halves say different things.** `GET /portal/requests` and `GET /portal/requests/{number}` answer my-requests and the detail. The mount names the audience — the M20/3 addendum's rule, that a requester-facing read is its own route rather than a loosened gate on a staff one. The module names the record — the M20/4 addendum's rule, that one module owns the Request whichever surface asks. M21's Inbox reads the same rows at its own address with its own projection, so neither route ever has to mean two things.
+
+**Another requester's Request is answered 404, not 403.** To a requester it does not exist (DD-013), and a refusal that told the two apart would confirm the row is there. A number nobody has and a number somebody else has get the same status and the same sentence. The scoping is part of the lookup rather than a check after it, so there is no branch where the row was read and then refused.
+
+**My-requests is a block on the portal home, not an address of its own.** I5 draws it there, under the picker and the deflection panel, and the I7 back link names it "Your requests" and points at the home. A returning requester scrolls; a first visitor meets the picker first, which is the order a front door should have.
+
+**The empty list points at the picker above it, and drops the pointer when there is no picker.** A first visit should teach the loop rather than state a fact about zero. On an instance whose Administrator has archived every request type there is nothing above to point at, so the block states the fact alone.
+
+**The row carries the request type, which I5's row does not.** A requester who has submitted through three different doors cannot tell an NDA request from a contract review by the summary alone, and the front door is what decided what Legal collected. It renders under the summary rather than as a sixth column.
+
+**The detail is addressed by the R-### number**, because that is the reference a requester quotes and the one the row links on. A reference that is not the caller's lands back on the portal home — the rule the form's loader already applies to a stale form link (the M20/4 addendum): a stale bookmark is not a fault a requester can act on, and the home is where their own list is.
+
+**A converted Request opens, and the page names no record it cannot open.** Conversion never takes the requester's window away (DD-018), so the row stays on the list and the detail keeps answering. What the Request became is not on the wire at all: a Business User cannot open a Contract or a Matter, and a reference they could not follow would be a dead end dressed as a fact. The banner says Legal is working on it and that this page is still theirs.
+
+**The Description is a submitted value, not the thread's first message.** I7 draws it as the opening message of the conversation. Nothing writes a comment row at submission — the Description is a column on the Request — so a thread that drew it would be drawing a message that does not exist. It is the first row of "What you submitted", and the thread (#381) draws comment rows and nothing else.
+
+**The banner is keyed to the status, and on `declined` it is the reason.** I7 draws one information-toned line for a `new` Request. The other three arms are M21's to write, so each gets its own line and its own status tokens, and the declined arm carries the recorded reason itself — INT-006 makes "no" arrive with a why, and a line _about_ a reason is not the reason.
+
+**The values are labelled through the type's live attached fields.** The detail reads `selectAttachedFields` — the same read the form drew its boxes from and the submission route checked against — so a value is named exactly as the box that collected it was. A value whose field the Administrator has since detached or archived stays on the row and is not drawn: the label that would name it is no longer on this form, which is the rule every record surface already applies. A `user` or `entity` value is resolved into a name before it is answered, because a bare id is not something anybody can read.
+
+**The Attachments row waits for uploads.** The submission form draws an inert Attachments box because there it is a promise about a control. On the detail it would be a statement about the Request, and "no attachments" is a claim this build cannot make, so the row lands with the uploads (M20/6).
+
 ## INT-002 — Request types mapped to target types; forms reuse the fields catalog
 
 - **Status** — Accepted
@@ -218,12 +244,12 @@ M19/6 built the configuration; M20/3 built the panel a requester sees. Three thi
 
 ## Index of decisions
 
-| #       | Decision                                                                     | Status                                                                                                                                          |
-| ------- | ---------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
-| INT-001 | Intake model: JSM-style structured forms + portal; email notifications only  | Accepted; lifecycle revised by INT-007; landing and dead-link mechanics added by M20/2 addendum; requester-facing reads added by M20/3 addendum |
-| INT-002 | Request types mapped to target types; forms reuse the fields catalog         | Accepted; three-state target added by M19/4 addendum; out-of-scope attachment recorded by M19/7 addendum; submission added by M20/4 addendum    |
-| INT-003 | Requester updates: email notifications only; no status-poke button           | Accepted                                                                                                                                        |
-| INT-004 | Deflection links panel in v1; conditional form logic stays deferred          | Accepted; delete behavior and URL rule added by M19/6 addendum; portal rendering added by M20/3 addendum                                        |
-| INT-005 | No auto-classification: the form is the classification                       | Accepted                                                                                                                                        |
-| INT-006 | Triage: one Inbox, pickup assignment, four actions, lossless re-convert      | Accepted; revised by INT-007                                                                                                                    |
-| INT-007 | Disposition-at-pickup: triage decides the outcome; no parked in-review state | Accepted                                                                                                                                        |
+| #       | Decision                                                                     | Status                                                                                                                                                                                                      |
+| ------- | ---------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| INT-001 | Intake model: JSM-style structured forms + portal; email notifications only  | Accepted; lifecycle revised by INT-007; landing and dead-link mechanics added by M20/2 addendum; requester-facing reads added by M20/3 addendum; my-requests and the request detail added by M20/5 addendum |
+| INT-002 | Request types mapped to target types; forms reuse the fields catalog         | Accepted; three-state target added by M19/4 addendum; out-of-scope attachment recorded by M19/7 addendum; submission added by M20/4 addendum                                                                |
+| INT-003 | Requester updates: email notifications only; no status-poke button           | Accepted                                                                                                                                                                                                    |
+| INT-004 | Deflection links panel in v1; conditional form logic stays deferred          | Accepted; delete behavior and URL rule added by M19/6 addendum; portal rendering added by M20/3 addendum                                                                                                    |
+| INT-005 | No auto-classification: the form is the classification                       | Accepted                                                                                                                                                                                                    |
+| INT-006 | Triage: one Inbox, pickup assignment, four actions, lossless re-convert      | Accepted; revised by INT-007                                                                                                                                                                                |
+| INT-007 | Disposition-at-pickup: triage decides the outcome; no parked in-review state | Accepted                                                                                                                                                                                                    |

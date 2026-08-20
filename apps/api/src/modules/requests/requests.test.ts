@@ -44,6 +44,16 @@ const MEMBER = {
   password: "correct-horse-battery",
 } as const;
 
+/** One row of my-requests, as the list read answers it. */
+interface MyRequestRow {
+  id: string;
+  number: number;
+  status: string;
+  summary: string;
+  requestType: { id: string; slug: string; displayName: string };
+  createdAt: string;
+}
+
 let harness: TestHarness;
 let adminCookies: Record<string, string>;
 let requesterCookies: Record<string, string>;
@@ -547,6 +557,185 @@ describe("one requester's Requests", () => {
   });
 });
 
+/**
+ * My-requests and the request detail (#379): the two reads a Requester
+ * makes of their own asks. What they answer is settled by DD-013 — the
+ * session and nobody else — so most of what is asserted here is what is
+ * *absent*.
+ */
+describe("my-requests", () => {
+  /** The caller's list, as the portal home reads it. */
+  async function myRequests(cookies = requesterCookies) {
+    const res = await harness.app.inject({
+      method: "GET",
+      url: "/api/v1/portal/requests",
+      cookies,
+    });
+    expect(res.statusCode, res.body).toBe(200);
+    return res.json().requests as MyRequestRow[];
+  }
+
+  it("answers the row the list draws: number, summary, type, status, and age", async () => {
+    const created = await submit(completeBody({ summary: "Row shape" }));
+    expect(created.statusCode, created.body).toBe(201);
+    const { number } = created.json().request;
+
+    const row = (await myRequests()).find((candidate) => candidate.number === number);
+    expect(row).toBeDefined();
+    expect(row!.summary).toBe("Row shape");
+    expect(row!.status).toBe("new");
+    expect(row!.requestType.displayName).toBe("Contract review");
+    expect(row!.requestType.slug).toBe("contract_review");
+    // The age is the reader's to compute; the row carries the stamp.
+    expect(Date.parse(row!.createdAt)).not.toBeNaN();
+  });
+
+  it("answers newest first", async () => {
+    const first = await submit(completeBody({ summary: "Older" }));
+    const second = await submit(completeBody({ summary: "Newer" }));
+    expect(first.statusCode, first.body).toBe(201);
+    expect(second.statusCode, second.body).toBe(201);
+
+    const numbers = (await myRequests()).map((row) => row.number);
+    expect(numbers.indexOf(second.json().request.number)).toBeLessThan(
+      numbers.indexOf(first.json().request.number),
+    );
+  });
+
+  it("never carries another requester's Request", async () => {
+    const theirs = await submit(completeBody({ summary: "Not yours" }), otherCookies);
+    expect(theirs.statusCode, theirs.body).toBe(201);
+    const theirNumber = theirs.json().request.number;
+
+    expect((await myRequests()).map((row) => row.number)).not.toContain(theirNumber);
+    // And the other way round, so the rule is the scoping and not an
+    // accident of who submitted more.
+    expect((await myRequests(otherCookies)).map((row) => row.number)).toContain(theirNumber);
+  });
+
+  it("applies the same rule to Member+ staff, who see only what they submitted", async () => {
+    const staff = await submit(completeBody({ summary: "A lawyer's own ask" }), memberCookies);
+    const requester = await submit(completeBody({ summary: "Not the lawyer's" }));
+    expect(staff.statusCode, staff.body).toBe(201);
+    expect(requester.statusCode, requester.body).toBe(201);
+
+    const numbers = (await myRequests(memberCookies)).map((row) => row.number);
+    expect(numbers).toContain(staff.json().request.number);
+    // A Legal Team Member is a Requester on this surface and nothing
+    // more: the staff view of every Request is M21's, at its own
+    // address.
+    expect(numbers).not.toContain(requester.json().request.number);
+  });
+
+  it("refuses a caller with no session", async () => {
+    const res = await harness.app.inject({ method: "GET", url: "/api/v1/portal/requests" });
+    expect(res.statusCode, res.body).toBe(401);
+  });
+});
+
+describe("the request detail", () => {
+  async function readDetail(number: number, cookies = requesterCookies) {
+    return await harness.app.inject({
+      method: "GET",
+      url: `/api/v1/portal/requests/${number}`,
+      cookies,
+    });
+  }
+
+  it("answers the envelope and the values with the fields that name them", async () => {
+    const created = await submit(
+      completeBody({
+        summary: "Detail shape",
+        customFields: { counterparty: "Orion Cloud", paper_side: "Theirs" },
+      }),
+    );
+    expect(created.statusCode, created.body).toBe(201);
+
+    const res = await readDetail(created.json().request.number);
+    expect(res.statusCode, res.body).toBe(200);
+    const detail = res.json();
+    expect(detail.request.number).toBe(created.json().request.number);
+    expect(detail.request.status).toBe("new");
+    expect(detail.request.urgency).toBe("high");
+    expect(detail.request.summary).toBe("Detail shape");
+    expect(detail.request.description).toContain("liability cap");
+    expect(detail.request.requestType.displayName).toBe("Contract review");
+    expect(detail.request.declinedReason).toBeNull();
+    expect(detail.request.customFields).toEqual({
+      counterparty: "Orion Cloud",
+      paper_side: "Theirs",
+    });
+    // The labels come from the same attached-fields read the form drew
+    // its boxes from, so a value is named exactly as the box was.
+    expect(detail.fields.map((field: { displayName: string }) => field.displayName)).toEqual([
+      "Counterparty",
+      "Deal desk region",
+      "Paper side",
+    ]);
+  });
+
+  it("refuses another requester's Request the way it refuses one that does not exist", async () => {
+    const theirs = await submit(completeBody({ summary: "Not yours" }), otherCookies);
+    expect(theirs.statusCode, theirs.body).toBe(201);
+
+    const trespass = await readDetail(theirs.json().request.number);
+    // 404 rather than 403: a refusal that told the two apart would
+    // confirm the row is there (DD-013).
+    expect(trespass.statusCode, trespass.body).toBe(404);
+
+    const nobodys = await readDetail(9_999_999);
+    expect(nobodys.statusCode, nobodys.body).toBe(404);
+    expect(trespass.json().detail).toBe(nobodys.json().detail);
+  });
+
+  it("keeps answering a converted Request, and keeps it on the list", async () => {
+    // Conversion is M21's to write; what M20 owes is that it takes
+    // nothing away (INT-001, DD-018). Status is set directly here
+    // because no route writes it yet.
+    const created = await submit(completeBody({ summary: "Became a contract" }));
+    expect(created.statusCode, created.body).toBe(201);
+    const { id, number } = created.json().request;
+    await harness.db.update(requests).set({ status: "converted" }).where(eq(requests.id, id));
+
+    const res = await readDetail(number);
+    expect(res.statusCode, res.body).toBe(200);
+    expect(res.json().request.status).toBe("converted");
+
+    const list = await harness.app.inject({
+      method: "GET",
+      url: "/api/v1/portal/requests",
+      cookies: requesterCookies,
+    });
+    expect(list.statusCode, list.body).toBe(200);
+    expect((list.json().requests as MyRequestRow[]).map((row) => row.number)).toContain(number);
+  });
+
+  it("carries the decline reason on a declined Request (INT-006)", async () => {
+    const created = await submit(completeBody({ summary: "Turned down" }));
+    expect(created.statusCode, created.body).toBe(201);
+    const { id, number } = created.json().request;
+    await harness.db
+      .update(requests)
+      .set({ status: "declined", declinedReason: "Procurement owns vendor paper under $10k." })
+      .where(eq(requests.id, id));
+
+    const res = await readDetail(number);
+    expect(res.statusCode, res.body).toBe(200);
+    expect(res.json().request.status).toBe("declined");
+    expect(res.json().request.declinedReason).toBe("Procurement owns vendor paper under $10k.");
+  });
+
+  it("refuses a caller with no session", async () => {
+    const created = await submit(completeBody({ summary: "Needs a session" }));
+    expect(created.statusCode, created.body).toBe(201);
+    const res = await harness.app.inject({
+      method: "GET",
+      url: `/api/v1/portal/requests/${created.json().request.number}`,
+    });
+    expect(res.statusCode, res.body).toBe(401);
+  });
+});
+
 describe("the two field types that name a row", () => {
   // The portal's pickers offer a requester no people and no entities,
   // so any id in a `user` or `entity` field arrived against the API —
@@ -653,5 +842,23 @@ describe("the two field types that name a row", () => {
       [userSlug]: requesterId,
       [entitySlug]: liveEntityId,
     });
+  });
+
+  it("resolves both into a name on the detail, so the row is never a bare id", async () => {
+    const created = await submit(ndaBody({ [userSlug]: requesterId, [entitySlug]: liveEntityId }));
+    expect(created.statusCode, created.body).toBe(201);
+
+    const res = await harness.app.inject({
+      method: "GET",
+      url: `/api/v1/portal/requests/${created.json().request.number}`,
+      cookies: requesterCookies,
+    });
+    expect(res.statusCode, res.body).toBe(200);
+    expect(res.json().customFieldRefs.users).toEqual([
+      { id: requesterId, displayName: REQUESTER.displayName },
+    ]);
+    expect(res.json().customFieldRefs.entities).toEqual([
+      { id: liveEntityId, legalName: "Orion Cloud Holdings LLC" },
+    ]);
   });
 });

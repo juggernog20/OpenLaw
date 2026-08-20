@@ -10,8 +10,7 @@
  * too, and on this surface they are a Requester like anybody else.
  *
  * The body is the request type picker, the "Before you submit…" panel,
- * and the my-requests list; the last of the three arrives with its own
- * build (#378 onward).
+ * and the my-requests list, in the order I5 stacks them.
  *
  * **The picker draws the Administrator's live types in their order.**
  * Both reads come from the portal's own requester-facing routes, not
@@ -44,23 +43,28 @@ import { authClient } from "../lib/auth-client";
 import { currentUser } from "../lib/session";
 import { PageTitle } from "../components/page-title";
 import { DeflectionPanel } from "../components/portal/deflection-panel";
+import { MyRequests, REQUEST_TYPE_PICKER_ID } from "../components/portal/my-requests";
 import { PortalShell } from "../components/portal/portal-shell";
 import { Card, CardContent } from "../components/ui/card";
 
 export async function portalHomeLoader() {
   const user = await currentUser();
   if (!user) return redirect("/portal/enter");
-  const [typesRes, linksRes] = await Promise.all([
+  const [typesRes, linksRes, requestsRes] = await Promise.all([
     api.GET("/api/v1/portal/request-types"),
     api.GET("/api/v1/portal/intake-links"),
+    // Scoped to the session by the route itself (DD-013). The home asks
+    // for "my requests" and there is no other list to ask for.
+    api.GET("/api/v1/portal/requests"),
   ]);
-  if (!typesRes.data || !linksRes.data) {
+  if (!typesRes.data || !linksRes.data || !requestsRes.data) {
     throw new Error("The portal home could not be read.");
   }
   return {
     user,
     requestTypes: typesRes.data.requestTypes,
     deflectionLinks: linksRes.data.intakeLinks,
+    requests: requestsRes.data.requests,
   };
 }
 
@@ -70,7 +74,8 @@ const TITLE = defineMessage({
 });
 
 export function PortalHomePage() {
-  const { user, requestTypes, deflectionLinks } = useLoaderData<typeof portalHomeLoader>();
+  const { user, requestTypes, deflectionLinks, requests } =
+    useLoaderData<typeof portalHomeLoader>();
   const intl = useIntl();
   const navigate = useNavigate();
 
@@ -97,6 +102,12 @@ export function PortalHomePage() {
       </div>
       {requestTypes.length > 0 ? (
         <ul
+          id={REQUEST_TYPE_PICKER_ID}
+          // The empty my-requests block points here. A scroll target is
+          // not a focus target on its own, so the list takes the focus
+          // the jump sends it and a keyboard reader arrives at the
+          // cards rather than back at the top of the page (DES-011).
+          tabIndex={-1}
           aria-label={intl.formatMessage({
             id: "portal.home.pickerLabel",
             defaultMessage: "Request types",
@@ -131,6 +142,10 @@ export function PortalHomePage() {
         </Card>
       )}
       <DeflectionPanel links={deflectionLinks} />
+      {/* Last on the page, as I5 stacks it: the picker is what a first
+          visit needs, and a returning requester scrolls to the list
+          that is theirs. */}
+      <MyRequests requests={requests} hasRequestTypes={requestTypes.length > 0} />
     </PortalShell>
   );
 }

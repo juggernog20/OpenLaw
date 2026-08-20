@@ -1067,6 +1067,40 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/v1/portal/requests": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** The session user's own Requests, newest first (DD-013). There is no way to ask for anybody else's, and a converted Request stays on the list (INT-001) */
+    get: operations["listMyRequests"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/portal/requests/{number}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** One of the session user's own Requests by its R-### number (DD-013): the envelope, the values the form collected with the fields that name them, and the decline reason when it was declined (INT-006). Another requester's Request answers 404 */
+    get: operations["readMyRequest"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/v1/contract-statuses": {
     parameters: {
       query?: never;
@@ -6375,6 +6409,131 @@ export interface operations {
                 [key: string]: string | number | boolean | string[];
               };
               createdAt: string;
+            };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  listMyRequests: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            requests: {
+              id: string;
+              number: number;
+              /** @enum {string} */
+              status: "new" | "converted" | "resolved" | "declined";
+              summary: string;
+              requestType: {
+                id: string;
+                slug: string;
+                displayName: string;
+              };
+              createdAt: string;
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  readMyRequest: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        number: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            request: {
+              id: string;
+              number: number;
+              /** @enum {string} */
+              status: "new" | "converted" | "resolved" | "declined";
+              summary: string;
+              requestType: {
+                id: string;
+                slug: string;
+                displayName: string;
+              };
+              createdAt: string;
+              description: string | null;
+              /** @enum {string} */
+              urgency: "low" | "medium" | "high" | "critical";
+              customFields: {
+                [key: string]: string | number | boolean | string[];
+              };
+              declinedReason: string | null;
+            };
+            fields: {
+              fieldId: string;
+              slug: string;
+              displayName: string;
+              description: string | null;
+              /** @enum {string} */
+              fieldType:
+                | "text"
+                | "long_text"
+                | "number"
+                | "date"
+                | "boolean"
+                | "single_select"
+                | "multi_select"
+                | "user"
+                | "entity";
+              options: string[] | null;
+              displayOrder: number;
+              isRequired: boolean;
+            }[];
+            customFieldRefs: {
+              users: {
+                id: string;
+                displayName: string;
+              }[];
+              entities: {
+                id: string;
+                legalName: string;
+              }[];
             };
           };
         };
