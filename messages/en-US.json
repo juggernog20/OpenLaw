@@ -293,6 +293,9 @@
   "activity.reminderOffset": {
     "defaultMessage": "{days, plural, =0 {day of} one {# day} other {# days}}"
   },
+  "activity.request.created": {
+    "defaultMessage": "{actor} submitted this request"
+  },
   "activity.signer.erased": {
     "defaultMessage": "{actor} erased an external signer's name and address from {entriesRedacted, plural, =0 {no entries} one {# entry} other {# entries}}"
   },
@@ -2417,6 +2420,66 @@
   "portal.entry.title": {
     "defaultMessage": "Legal request portal"
   },
+  "portal.form.attachments": {
+    "defaultMessage": "Attachments"
+  },
+  "portal.form.attachmentsPending": {
+    "defaultMessage": "You'll be able to attach files here."
+  },
+  "portal.form.back": {
+    "defaultMessage": "All request types"
+  },
+  "portal.form.confirmationBack": {
+    "defaultMessage": "Back to the portal"
+  },
+  "portal.form.confirmationBody": {
+    "defaultMessage": "Quote {reference} when you talk to Legal about it. You'll get updates by email and here in the portal."
+  },
+  "portal.form.confirmationHeading": {
+    "defaultMessage": "Request {reference} is with Legal"
+  },
+  "portal.form.description": {
+    "defaultMessage": "Description"
+  },
+  "portal.form.descriptionHint": {
+    "defaultMessage": "What is it, who is on the other side, and what do you need from Legal?"
+  },
+  "portal.form.fieldRequired": {
+    "defaultMessage": "{field} is required."
+  },
+  "portal.form.footerNote": {
+    "defaultMessage": "You'll get email updates and can track progress here."
+  },
+  "portal.form.missingRequired": {
+    "defaultMessage": "Fill {fields} first — {count, plural, one {the form requires it} other {the form requires them}}."
+  },
+  "portal.form.numberInvalid": {
+    "defaultMessage": "{fieldName}: enter this as a number."
+  },
+  "portal.form.pageTitle": {
+    "defaultMessage": "New request"
+  },
+  "portal.form.requiredMark": {
+    "defaultMessage": "(required)"
+  },
+  "portal.form.submit": {
+    "defaultMessage": "Submit request"
+  },
+  "portal.form.submitError": {
+    "defaultMessage": "The request could not be submitted."
+  },
+  "portal.form.summary": {
+    "defaultMessage": "Summary"
+  },
+  "portal.form.summaryHint": {
+    "defaultMessage": "One line — what do you need?"
+  },
+  "portal.form.urgency": {
+    "defaultMessage": "Urgency"
+  },
+  "portal.form.urgencyHint": {
+    "defaultMessage": "How soon Legal should look at it."
+  },
   "portal.home.lead": {
     "defaultMessage": "Pick a request type — the form collects what Legal needs to get started."
   },
@@ -2536,6 +2599,9 @@
   },
   "renewal.vehicle.successorBlurb": {
     "defaultMessage": "Standalone record linked as the renewal."
+  },
+  "requests.reference": {
+    "defaultMessage": "R-{number, number, ::group-off}"
   },
   "role.administrator": {
     "defaultMessage": "Administrator"

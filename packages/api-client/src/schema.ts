@@ -1033,6 +1033,40 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/v1/portal/request-types/{slug}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** One request type's form definition (INT-002): the type, its attached catalog fields in display order, and the deflection links placed on this form. The four basics — Summary, Description, Attachments, Urgency — are fixed on every form and are drawn by the portal, so they are not answered here */
+    get: operations["readPortalRequestForm"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/requests": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Submit a Request through a request type's portal form (INT-001). The Requester is the session; the type must be live; Summary, Description, and Urgency are required, as is every attached field the type marks required; values are accepted for exactly the fields the type attaches */
+    post: operations["submitRequest"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/v1/contract-statuses": {
     parameters: {
       query?: never;
@@ -6219,6 +6253,129 @@ export interface operations {
               url: string;
               displayOrder: number;
             }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  readPortalRequestForm: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        slug: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            requestType: {
+              id: string;
+              slug: string;
+              displayName: string;
+              description: string | null;
+              displayOrder: number;
+            };
+            fields: {
+              fieldId: string;
+              slug: string;
+              displayName: string;
+              description: string | null;
+              /** @enum {string} */
+              fieldType:
+                | "text"
+                | "long_text"
+                | "number"
+                | "date"
+                | "boolean"
+                | "single_select"
+                | "multi_select"
+                | "user"
+                | "entity";
+              options: string[] | null;
+              displayOrder: number;
+              isRequired: boolean;
+            }[];
+            intakeLinks: {
+              id: string;
+              label: string;
+              url: string;
+              displayOrder: number;
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  submitRequest: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          requestTypeId: string;
+          summary: string;
+          description: string;
+          /** @enum {string} */
+          urgency: "low" | "medium" | "high" | "critical";
+          customFields?: {
+            [key: string]: (string | number | boolean | string[]) | null;
+          };
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            request: {
+              id: string;
+              number: number;
+              requestTypeId: string;
+              /** @enum {string} */
+              status: "new";
+              summary: string;
+              description: string | null;
+              /** @enum {string} */
+              urgency: "low" | "medium" | "high" | "critical";
+              customFields: {
+                [key: string]: string | number | boolean | string[];
+              };
+              createdAt: string;
+            };
           };
         };
       };

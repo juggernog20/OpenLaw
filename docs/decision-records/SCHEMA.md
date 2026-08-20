@@ -984,11 +984,13 @@ Structured request envelope, created only via portal forms. Not a work container
 | `description`              | text        | nullable                                                                                                          |
 | `urgency`                  | text (enum) | `low                                                                                                              | medium | high | critical`(levels per **DES-018**), requester-supplied; maps 1:1 to`priority`at conversion (MTR-012 —`risk` never requester-set) |
 | `custom_fields`            | jsonb       | collected form values keyed by field slug per **INT-002**; carried into the converted record                      |
-| `converted_matter_id`      | UUID        | FK → `matters.id`, nullable                                                                                       |
+| `converted_matter_id`      | UUID        | → `matters.id`, nullable; the FK constraint lands with `matters` in M22 (see below)                               |
 | `converted_contract_id`    | UUID        | FK → `contracts.id`, nullable                                                                                     |
 | `declined_reason`          | text        | nullable                                                                                                          |
 | `created_at`, `updated_at` | timestamptz |                                                                                                                   |
 | `archived_at`              | timestamptz | soft delete                                                                                                       |
+
+The table landed with M20/4 (#378). Two notes on what it holds today. `converted_matter_id` carries **no foreign key constraint yet** — `matters` arrives in M22, and the constraint arrives with the table it points at; the column is here because a Request converts into one of two shapes and a table that could record only one of them would misstate the model. A check constraint holds the two conversion columns to at most one non-null, so "a Request becomes one record, not two" is the table's rule rather than the conversion route's. `status` and `urgency` each carry a check constraint closing them to their listed values, the house rule for every closed union in this schema.
 
 ---
 

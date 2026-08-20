@@ -67,6 +67,7 @@ import { requestTypesRoutes } from "./modules/request-types/routes.js";
 import { fieldsRoutes } from "./modules/fields/routes.js";
 import { intakeLinksRoutes } from "./modules/intake-links/routes.js";
 import { portalRoutes } from "./modules/portal/routes.js";
+import { requestsRoutes } from "./modules/requests/routes.js";
 import { listViewsRoutes } from "./modules/list-views/routes.js";
 import { notificationsRoutes } from "./modules/notifications/routes.js";
 import { morningRoundTriggerRoutes } from "./modules/notifications/round-trigger.js";
@@ -404,6 +405,7 @@ export async function buildApp(deps: AppDeps, opts: FastifyServerOptions = {}) {
   await app.register(requestTypeFieldsRoutes, { prefix: "/api/v1" });
   await app.register(intakeLinksRoutes, { prefix: "/api/v1" });
   await app.register(portalRoutes, { prefix: "/api/v1" });
+  await app.register(requestsRoutes, { prefix: "/api/v1" });
   await app.register(contractStatusesRoutes, { prefix: "/api/v1" });
   await app.register(approverGroupsRoutes, { prefix: "/api/v1" });
   await app.register(contractsRoutes, { prefix: "/api/v1" });

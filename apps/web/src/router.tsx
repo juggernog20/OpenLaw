@@ -22,6 +22,7 @@ import { HomePage, homeLoader } from "./routes/home";
 import { LinkExpiredPage, linkExpiredLoader } from "./routes/link-expired";
 import { LoginPage, loginLoader } from "./routes/login";
 import { PortalHomePage, portalHomeLoader } from "./routes/portal";
+import { PortalRequestFormPage, portalRequestFormLoader } from "./routes/portal-request-form";
 import { PortalEntryPage, portalEntryLoader } from "./routes/portal-entry";
 import { SetPasswordPage } from "./routes/set-password";
 import { SettingsLayout, settingsIndexLoader, settingsLoader } from "./routes/settings";
@@ -346,6 +347,18 @@ export const routes: RouteObject[] = [
       // signed-out costume, so the emailed link, the dead-link page, and
       // the sign-out redirect all name one place.
       { path: "enter", loader: portalEntryLoader, element: <PortalEntryPage /> },
+      // One request type's form, addressed by the slug the picker
+      // links on (INT-002). A slug that names nothing, or names an
+      // archived type, lands back on the home — see the loader.
+      {
+        path: "new/:slug",
+        loader: portalRequestFormLoader,
+        element: (
+          <KeyedByParam name="slug">
+            <PortalRequestFormPage />
+          </KeyedByParam>
+        ),
+      },
     ],
   },
 ];

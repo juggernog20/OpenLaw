@@ -175,6 +175,32 @@ type ContractStatusPayloads = {
 };
 
 /**
+ * The Request record (INT-001, INT-002). One verb for now: a Request is
+ * born on the portal and everything that happens to it afterwards —
+ * conversion, resolution, decline — is the Inbox's (M21), so those
+ * verbs land with the routes that write them.
+ *
+ * The payload carries the Request's `number` and **no free text at
+ * all** — not the summary, and not the collected values, only the
+ * slugs that were answered. A `contract.*` payload carries its title so
+ * an entry goes on naming the record after a rename; a Request needs
+ * no such thing, because R-42 *is* its name and the number never
+ * changes. And the difference matters here: every one of those strings
+ * is the requester's own words, DD-017 forbids `UPDATE` and `DELETE` on
+ * the log, and text that enters a payload can never leave it — which is
+ * the same reason CMT-008 keeps comment bodies out of `comment.*`.
+ */
+type RequestPayloads = {
+  "request.created": {
+    number: number;
+    requestType: string;
+    urgency: string;
+    /** The slugs the form answered, never the values. */
+    customFields: string[];
+  };
+};
+
+/**
  * The deflection links (INT-004). Four verbs, not the taxonomy's seven:
  * a link has no slug to key it, and it is removed outright rather than
  * archived — nothing points at one and there is no history to keep — so
@@ -808,6 +834,7 @@ export type ActivityPayloadMap = UserPayloads &
   Prefixed<"matter_type_field", TypeFieldPayloads> &
   Prefixed<"request_type_field", TypeFieldPayloads> &
   ContractStatusPayloads &
+  RequestPayloads &
   IntakeLinkPayloads &
   FieldCatalogPayloads &
   ApproverGroupPayloads &

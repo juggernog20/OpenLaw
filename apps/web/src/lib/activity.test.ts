@@ -399,6 +399,14 @@ const SAMPLE_PAYLOADS: { [A in ActivityAction]: ActivityPayloadMap[A] } = {
   "comment.deleted": { commentId: "cmt_1" },
   "comment.redacted": { commentId: "cmt_1" },
 
+  // ---- The Request record ----
+  "request.created": {
+    number: 42,
+    requestType: "Contract review",
+    urgency: "high",
+    customFields: ["counterparty"],
+  },
+
   // ---- The record's paper ----
   "document.created": {
     documentId: "doc_1",
