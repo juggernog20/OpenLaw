@@ -114,6 +114,15 @@ describe("role-based landing", () => {
     expect(await screen.findByRole("heading", { name: PORTAL_HOME })).toBeInTheDocument();
   });
 
+  it("routes a Business User off the settings surface to the portal", async () => {
+    // Settings has no Member+ floor — every signed-in person owns a
+    // profile — so it needs its own business_user bounce for the
+    // "always at the portal" rule to hold across the whole staff tree.
+    stubApi({ signedIn: REQUESTER });
+    renderAt("/settings/appearance");
+    expect(await screen.findByRole("heading", { name: PORTAL_HOME })).toBeInTheDocument();
+  });
+
   it("keeps Member+ staff in the full application", async () => {
     stubApi({ signedIn: MEMBER });
     renderAt("/");
