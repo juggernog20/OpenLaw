@@ -1,22 +1,24 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 /**
- * The Portal shell and its front door (#376). A Business User asks for
- * a link, is told one is on its way, and lands in the portal; the
- * portal wears its own chrome and turns no signed-in person away; and
- * the whole email step disappears when the Administrator's magic-link
- * toggle is off.
+ * The Portal shell and its front door (#376), and the home it opens on
+ * (#377). A Business User asks for a link, is told one is on its way,
+ * and lands in the portal; the portal wears its own chrome and turns no
+ * signed-in person away; the whole email step disappears when the
+ * Administrator's magic-link toggle is off; and the home offers the
+ * live request types over the "Before you submit…" panel.
  *
  * The magic-link mechanics — issuance, the domain allowlist, the
  * identical answer for an ineligible address, redemption — are covered
- * at the API's HTTP seam and are deliberately not re-tested here. What
- * this suite asserts is what a visitor at a URL can see.
+ * at the API's HTTP seam and are deliberately not re-tested here. So is
+ * which rows the two portal reads answer with. What this suite asserts
+ * is what a visitor at a URL can see.
  */
 
 import { describe, expect, it } from "vitest";
 import { screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { json, problem, renderAt, stubApi } from "../testing/helpers";
+import { json, problem, renderAt, stubApi, type StubCall } from "../testing/helpers";
 
 const REQUESTER = {
   id: "u9",
@@ -34,6 +36,59 @@ const MEMBER = {
 
 const PORTAL_HOME = "What do you need from Legal?";
 const PORTAL_DOOR = "Legal request portal";
+
+interface HomeType {
+  id: string;
+  slug: string;
+  displayName: string;
+  description: string | null;
+  displayOrder: number;
+}
+
+interface HomeLink {
+  id: string;
+  label: string;
+  url: string;
+  displayOrder: number;
+}
+
+/** The two reads the home makes, answered from a fixture. */
+function portalHome(state: { requestTypes?: HomeType[]; intakeLinks?: HomeLink[] }) {
+  return (call: StubCall) => {
+    if (call.url.pathname === "/api/v1/portal/request-types" && call.method === "GET") {
+      return json(200, { requestTypes: state.requestTypes ?? [] });
+    }
+    if (call.url.pathname === "/api/v1/portal/intake-links" && call.method === "GET") {
+      return json(200, { intakeLinks: state.intakeLinks ?? [] });
+    }
+    return undefined;
+  };
+}
+
+/** The seeded types, in the order an Administrator arranged them. */
+const SEED_TYPES: HomeType[] = [
+  {
+    id: "rt1",
+    slug: "nda_request",
+    displayName: "NDA request",
+    description: "Mutual or one-way NDA with a counterparty.",
+    displayOrder: 1,
+  },
+  {
+    id: "rt2",
+    slug: "contract_review",
+    displayName: "Contract review",
+    description: "Review of a counterparty contract or redline.",
+    displayOrder: 2,
+  },
+  {
+    id: "rt3",
+    slug: "legal_question",
+    displayName: "Legal question",
+    description: null,
+    displayOrder: 3,
+  },
+];
 
 describe("the portal front door", () => {
   it("sends an unauthenticated visitor to the entry screen", async () => {
@@ -147,13 +202,6 @@ describe("the portal chrome", () => {
     expect(screen.getByRole("link", { name: "Skip to content" })).toHaveAttribute("href", "#main");
   });
 
-  it("says so when there is nothing to pick", async () => {
-    stubApi({ signedIn: REQUESTER });
-    renderAt("/portal");
-    expect(await screen.findByRole("heading", { name: PORTAL_HOME })).toBeInTheDocument();
-    expect(screen.getByText(/No request types are available yet/)).toBeInTheDocument();
-  });
-
   it("draws no staff navigation and no staff-only affordances", async () => {
     // Asserted for a Member+ session on purpose: this role has every
     // staff destination, so anything staff-shaped leaking into the
@@ -192,5 +240,145 @@ describe("the portal chrome", () => {
     await user.click(within(header).getByRole("button", { name: "Sign out" }));
 
     expect(await screen.findByRole("heading", { name: PORTAL_DOOR })).toBeInTheDocument();
+  });
+});
+
+describe("the request type picker", () => {
+  it("offers the live types in the Administrator's display order", async () => {
+    stubApi({ signedIn: REQUESTER, extra: portalHome({ requestTypes: SEED_TYPES }) });
+    renderAt("/portal");
+
+    const picker = await screen.findByRole("list", { name: "Request types" });
+    const names = within(picker)
+      .getAllByRole("link")
+      .map((link) => link.textContent);
+    expect(names).toEqual([
+      "NDA requestMutual or one-way NDA with a counterparty.",
+      "Contract reviewReview of a counterparty contract or redline.",
+      "Legal question",
+    ]);
+  });
+
+  it("starts each type's form from its slug", async () => {
+    stubApi({ signedIn: REQUESTER, extra: portalHome({ requestTypes: SEED_TYPES }) });
+    renderAt("/portal");
+
+    expect(await screen.findByRole("link", { name: /^NDA request/ })).toHaveAttribute(
+      "href",
+      "/portal/new/nda_request",
+    );
+  });
+
+  it("draws a type with no description as its name alone", async () => {
+    stubApi({ signedIn: REQUESTER, extra: portalHome({ requestTypes: [SEED_TYPES[2]!] }) });
+    renderAt("/portal");
+
+    const card = await screen.findByRole("link", { name: "Legal question" });
+    expect(card).toBeInTheDocument();
+  });
+
+  it("says so when there is nothing to pick", async () => {
+    // The API leaves archived types out, so an instance whose
+    // Administrator has archived every one of them arrives here.
+    stubApi({ signedIn: REQUESTER, extra: portalHome({ requestTypes: [] }) });
+    renderAt("/portal");
+
+    expect(await screen.findByRole("heading", { name: PORTAL_HOME })).toBeInTheDocument();
+    expect(screen.getByText(/No request types are available yet/)).toBeInTheDocument();
+    expect(screen.queryByRole("list", { name: "Request types" })).not.toBeInTheDocument();
+    expect(screen.queryByText(/Pick a request type/)).not.toBeInTheDocument();
+  });
+
+  it.each([
+    ["the request types", "/api/v1/portal/request-types"],
+    ["the deflection links", "/api/v1/portal/intake-links"],
+  ])("lands on the error boundary when %s cannot be read", async (_name, path) => {
+    // A half-drawn home is worse than none: a picker with no panel
+    // reads as an instance that configured no deflection, and a panel
+    // with no picker reads as one that archived every type. Either
+    // failed read takes the whole page.
+    stubApi({
+      signedIn: REQUESTER,
+      extra: (call) =>
+        call.url.pathname === path && call.method === "GET"
+          ? problem(500, "The portal home could not be read.")
+          : undefined,
+    });
+    renderAt("/portal");
+
+    expect(
+      await screen.findByRole("heading", { name: "Something went wrong." }),
+    ).toBeInTheDocument();
+  });
+});
+
+describe("the deflection panel", () => {
+  const LINKS: HomeLink[] = [
+    {
+      id: "dl1",
+      label: "Standard NDA template — self-serve",
+      url: "https://Wiki.Acme.com/Legal/NDA?from=Portal",
+      displayOrder: 1,
+    },
+    {
+      id: "dl2",
+      label: "When does a contract need legal review?",
+      url: "http://intranet.acme.com/legal/review",
+      displayOrder: 2,
+    },
+  ];
+
+  it("lists the home panel's links in panel order", async () => {
+    stubApi({
+      signedIn: REQUESTER,
+      extra: portalHome({ requestTypes: SEED_TYPES, intakeLinks: LINKS }),
+    });
+    renderAt("/portal");
+
+    const panel = await screen.findByRole("region", { name: "Before you submit" });
+    expect(
+      within(panel)
+        .getAllByRole("link")
+        .map((link) => link.textContent),
+    ).toEqual(LINKS.map((link) => link.label));
+  });
+
+  it("points each link at the address exactly as it was stored", async () => {
+    // INT-004: nothing normalizes the URL. The panel shows the label
+    // and follows the string the Administrator pasted.
+    stubApi({
+      signedIn: REQUESTER,
+      extra: portalHome({ requestTypes: SEED_TYPES, intakeLinks: LINKS }),
+    });
+    renderAt("/portal");
+
+    const panel = await screen.findByRole("region", { name: "Before you submit" });
+    for (const link of LINKS) {
+      expect(within(panel).getByRole("link", { name: link.label })).toHaveAttribute(
+        "href",
+        link.url,
+      );
+    }
+  });
+
+  it("draws no panel when the Administrator has placed no link on the home", async () => {
+    stubApi({
+      signedIn: REQUESTER,
+      extra: portalHome({ requestTypes: SEED_TYPES, intakeLinks: [] }),
+    });
+    renderAt("/portal");
+
+    await screen.findByRole("list", { name: "Request types" });
+    expect(screen.queryByRole("region", { name: "Before you submit" })).not.toBeInTheDocument();
+  });
+
+  it("stays on the home when there is no form to fill in", async () => {
+    // A deflection link is still worth following when the picker is
+    // empty — it may be the answer the requester came for.
+    stubApi({ signedIn: REQUESTER, extra: portalHome({ requestTypes: [], intakeLinks: LINKS }) });
+    renderAt("/portal");
+
+    expect(await screen.findByRole("region", { name: "Before you submit" })).toBeInTheDocument();
+    expect(screen.getByText(/No request types are available yet/)).toBeInTheDocument();
   });
 });

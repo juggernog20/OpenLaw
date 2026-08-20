@@ -155,6 +155,12 @@
   --spacing-card-x: 16px;
   --spacing-card-y: 10px;
 
+  /* The portal's request type picker (I5): as many cards across as the
+     column fits, none narrower than 16rem. A named template rather than
+     a fixed column count, because an Administrator may configure any
+     number of request types and the mock's six is not the count. */
+  --grid-template-columns-portal-picker: repeat(auto-fill, minmax(16rem, 1fr));
+
   /* ------------------------------------------------------------------ *
    * Chrome dimensions — fixed sizes for the application shell.         *
    * Per DES-007 these are bare CSS variables, not utility-generating.  *

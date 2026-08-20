@@ -59,6 +59,18 @@ The decision above says the portal is the requester's home and DD-010's magic li
 
 **The entry screen is its own address, `/portal/enter`.** Not the portal home in a signed-out costume: the emailed link, the dead-link page, and sign-out all need somewhere to name. It wears the same centered Light card as the `/auth` screens, because it is the same pre-session moment.
 
+### Addendum (2026-08-21, M20/3, [#377](https://github.com/juggernog20/OpenLaw/issues/377)) — the requester reads the Administrator's configuration through a mount of its own
+
+The Administrator built the front door in M19 behind `requireRole("administrator")`. That gate is right for the routes that write the configuration and wrong for the person it was built for: a Business User has to read the same request types and deflection links to pick one. M20/3 settled how.
+
+**The requester-facing reads are a separate `portal` mount, not a loosened gate.** `GET /portal/request-types` and `GET /portal/intake-links` sit behind `requireAuth` — a session and nothing else, the portal's own rule. The Intake Settings routes are untouched and still refuse a Business User with a 403. Widening an existing route's gate would have made one route mean two things and left the Administrator's projection in front of a requester; a second mount keeps each route saying one thing.
+
+**The requester's projection is narrower than the Administrator's, and the difference is deliberate.** A request type is answered as its id, slug, display name, description, and display order. The archive stamp, the conversion target, the in-use count, and the form-field count are all facts about administering the taxonomy, and none of them belongs in front of the person filling the form in. A deflection link is answered as its id, label, URL, and panel order — no placement key, because the home panel is the only answer the route gives.
+
+**Archived request types are absent, with no `includeArchived` escape.** An archived form takes no submissions (the INT-004 addendum), so offering one would be offering a dead end. The Administrator-facing list keeps its `includeArchived=true`, because administering a taxonomy means seeing what is in it.
+
+**The picker addresses a form by slug, at `/portal/new/:slug`.** The slug is the request type's machine identity and never changes (INT-002), so a bookmarked or shared form address survives a rename; an id would be correct and unreadable.
+
 ## INT-002 — Request types mapped to target types; forms reuse the fields catalog
 
 - **Status** — Accepted
@@ -130,6 +142,16 @@ The decision above named the table and left two questions to whoever built it. M
 
 **A placement being assigned must be a live request type.** An archived form takes no submissions, so a link scoped to it deflects nobody; the API refuses the assignment and the pane's picker offers live types only. The rule cuts one way: a link placed while the type was live stays put when the type is archived afterwards — the picker keeps that one archived type on offer for that row, so a label edit never forces a placement move. This is the same tolerance the INT-002 target keeps for an archived target type.
 
+### Addendum (2026-08-21, M20/3, [#377](https://github.com/juggernog20/OpenLaw/issues/377)) — how the panel reads on the portal
+
+M19/6 built the configuration; M20/3 built the panel a requester sees. Three things came out of it.
+
+**The panel shows the label and nothing else.** The settings row draws the address without its scheme because an Administrator checking their own configuration needs to recognise the target. A requester does not: the label is the sentence written for them, and a URL beside it is machinery on a surface that has none. What the link points at is the stored string, unchanged — absolute, unnormalized, scheme intact.
+
+**A deflection link opens beside the portal, not over it.** `target="_blank"`, with `rel="noreferrer"`. A requester who follows a link is usually part-way through deciding whether to submit at all, and taking the portal away to show them a wiki page costs them the place they were in. `noreferrer` keeps the portal's address out of the destination's logs, which matters because the destination is by definition somewhere else.
+
+**No links means no panel.** An instance whose Administrator has configured none draws nothing rather than an empty "Before you submit…" heading — a heading over nothing deflects nobody. The panel is independent of the picker in both directions: it renders when the picker is empty, because a link may be the answer the requester came for.
+
 ## INT-005 — No auto-classification: the form is the classification
 
 - **Status** — Accepted
@@ -174,12 +196,12 @@ The decision above named the table and left two questions to whoever built it. M
 
 ## Index of decisions
 
-| #       | Decision                                                                     | Status                                                                                          |
-| ------- | ---------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
-| INT-001 | Intake model: JSM-style structured forms + portal; email notifications only  | Accepted; lifecycle revised by INT-007; landing and dead-link mechanics added by M20/2 addendum |
-| INT-002 | Request types mapped to target types; forms reuse the fields catalog         | Accepted; three-state target added by M19/4 addendum                                            |
-| INT-003 | Requester updates: email notifications only; no status-poke button           | Accepted                                                                                        |
-| INT-004 | Deflection links panel in v1; conditional form logic stays deferred          | Accepted; delete behavior and URL rule added by M19/6 addendum                                  |
-| INT-005 | No auto-classification: the form is the classification                       | Accepted                                                                                        |
-| INT-006 | Triage: one Inbox, pickup assignment, four actions, lossless re-convert      | Accepted; revised by INT-007                                                                    |
-| INT-007 | Disposition-at-pickup: triage decides the outcome; no parked in-review state | Accepted                                                                                        |
+| #       | Decision                                                                     | Status                                                                                                                                          |
+| ------- | ---------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| INT-001 | Intake model: JSM-style structured forms + portal; email notifications only  | Accepted; lifecycle revised by INT-007; landing and dead-link mechanics added by M20/2 addendum; requester-facing reads added by M20/3 addendum |
+| INT-002 | Request types mapped to target types; forms reuse the fields catalog         | Accepted; three-state target added by M19/4 addendum                                                                                            |
+| INT-003 | Requester updates: email notifications only; no status-poke button           | Accepted                                                                                                                                        |
+| INT-004 | Deflection links panel in v1; conditional form logic stays deferred          | Accepted; delete behavior and URL rule added by M19/6 addendum; portal rendering added by M20/3 addendum                                        |
+| INT-005 | No auto-classification: the form is the classification                       | Accepted                                                                                                                                        |
+| INT-006 | Triage: one Inbox, pickup assignment, four actions, lossless re-convert      | Accepted; revised by INT-007                                                                                                                    |
+| INT-007 | Disposition-at-pickup: triage decides the outcome; no parked in-review state | Accepted                                                                                                                                        |
