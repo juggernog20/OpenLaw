@@ -47,6 +47,18 @@ Disposition of the former technical queue, per **INT-001**'s form-first revision
 - **Alternatives considered** — Conversational envelope with bidirectional Slack/email bridging (recommended, declined — surface-area anticipation cost). Thin ticket without conversation: answers evaporate. Ticket-as-work: duplicates matters/contracts. Email-to-intake as capture: unstructured.
 - **Consequences** — DD-010 annotated in DECISIONS.md. The portal is a real v1 build surface (submission forms + my-requests + threads). Email sending infrastructure is required (tech-stack queue already has it); email _receiving_ drops out of v1 scope. Request types + form definition become the next structural question. FUTURE-FEATURES: email capture with AI prefill; ChatOps capture.
 
+### Addendum (2026-08-21, M20/2, [#376](https://github.com/juggernog20/OpenLaw/issues/376)) — the portal is reached by role, not by callback URL, and the dead-link page sends the fresh link itself
+
+The decision above says the portal is the requester's home and DD-010's magic link is the door. Building the shell settled two mechanics the decision left open, and both came out the opposite way from the obvious one.
+
+**Landing is decided by role at "/", not by pointing the magic link at the portal.** The plain reading — make the redemption callback `/portal` — puts every redeemed link in the portal, including an Administrator's break-glass link on an instance whose identity provider is down. So the callback stays `/` and the staff application's front door forwards a Business User to `/portal` instead. The redirect is one line in one loader and it covers more than redemption: SSO, password sign-in, a bookmark, and every staff destination that refuses its role floor by bouncing to `/`. The issuance API is left knowing nothing about the portal, which is why nothing in it needed re-testing. **The rule is: a signed-in Business User is always at the portal, whatever door they came through.**
+
+**Member+ staff are admitted to the portal, and it owes them no way back.** The portal's only gate is a session. Staff submit Requests too (user story 7), and on this surface they are a Requester like anybody else — they see only what they submitted, per DD-013. Nothing in the portal chrome links to the staff application, because a staff member arrived from it and can return the way they came; a "back to the app" affordance would be a staff-only affordance on a surface whose whole definition is that it has none.
+
+**The dead-link page asks for the address instead of pointing at sign-in.** A stale link strands a Business User who has no account and no password, and the sign-in screen is not their surface — the one thing they need is another link. So the page carries the email step itself, on the same neutral answer as the entry screen, and falls back to the old point-at-sign-in card only when the magic-link toggle is off or the instance cannot send mail. There is one dead-link page rather than a portal copy beside a staff copy: the redemption failure cannot tell which door the request came from, and the answer is the same either way.
+
+**The entry screen is its own address, `/portal/enter`.** Not the portal home in a signed-out costume: the emailed link, the dead-link page, and sign-out all need somewhere to name. It wears the same centered Light card as the `/auth` screens, because it is the same pre-session moment.
+
 ## INT-002 — Request types mapped to target types; forms reuse the fields catalog
 
 - **Status** — Accepted
@@ -162,12 +174,12 @@ The decision above named the table and left two questions to whoever built it. M
 
 ## Index of decisions
 
-| #       | Decision                                                                     | Status                                                         |
-| ------- | ---------------------------------------------------------------------------- | -------------------------------------------------------------- |
-| INT-001 | Intake model: JSM-style structured forms + portal; email notifications only  | Accepted; lifecycle revised by INT-007                         |
-| INT-002 | Request types mapped to target types; forms reuse the fields catalog         | Accepted; three-state target added by M19/4 addendum           |
-| INT-003 | Requester updates: email notifications only; no status-poke button           | Accepted                                                       |
-| INT-004 | Deflection links panel in v1; conditional form logic stays deferred          | Accepted; delete behavior and URL rule added by M19/6 addendum |
-| INT-005 | No auto-classification: the form is the classification                       | Accepted                                                       |
-| INT-006 | Triage: one Inbox, pickup assignment, four actions, lossless re-convert      | Accepted; revised by INT-007                                   |
-| INT-007 | Disposition-at-pickup: triage decides the outcome; no parked in-review state | Accepted                                                       |
+| #       | Decision                                                                     | Status                                                                                          |
+| ------- | ---------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| INT-001 | Intake model: JSM-style structured forms + portal; email notifications only  | Accepted; lifecycle revised by INT-007; landing and dead-link mechanics added by M20/2 addendum |
+| INT-002 | Request types mapped to target types; forms reuse the fields catalog         | Accepted; three-state target added by M19/4 addendum                                            |
+| INT-003 | Requester updates: email notifications only; no status-poke button           | Accepted                                                                                        |
+| INT-004 | Deflection links panel in v1; conditional form logic stays deferred          | Accepted; delete behavior and URL rule added by M19/6 addendum                                  |
+| INT-005 | No auto-classification: the form is the classification                       | Accepted                                                                                        |
+| INT-006 | Triage: one Inbox, pickup assignment, four actions, lossless re-convert      | Accepted; revised by INT-007                                                                    |
+| INT-007 | Disposition-at-pickup: triage decides the outcome; no parked in-review state | Accepted                                                                                        |

@@ -176,6 +176,7 @@
   --height-record-banner: 36px; /* per DES-009, DES-043 */
   --height-section-header: 38px; /* settings-card header strip (ST1/ST4 mocks) */
   --width-settings-card: 45rem; /* settings-card max width (ST1/ST4 mocks) */
+  --width-portal-col: 55rem; /* portal centered column (I5–I7 mocks) */
 
   /* ------------------------------------------------------------------ *
    * Focus ring — the default keyboard-focus treatment (M4 spec, #40).  *

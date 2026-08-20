@@ -1734,10 +1734,14 @@ describe("the /contracts/:number record page", () => {
     expect(await screen.findByText(/This contract type attaches no fields/)).toBeInTheDocument();
   });
 
-  it("bounces a Business User home", async () => {
+  it("bounces a Business User to the portal", async () => {
+    // The refusal still bounces to "/"; the root guard forwards a
+    // Business User from there to the portal (INT-001, #376).
     stubApi({ signedIn: BUSINESS });
     renderAt("/contracts/42");
-    expect(await screen.findByRole("heading", { level: 1, name: "Home" })).toBeInTheDocument();
+    expect(
+      await screen.findByRole("heading", { name: "What do you need from Legal?" }),
+    ).toBeInTheDocument();
   });
 
   it("sends an unauthenticated visitor to login", async () => {

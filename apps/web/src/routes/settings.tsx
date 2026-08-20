@@ -53,6 +53,12 @@ import { PageSubBar } from "../components/shell/page-subbar";
 export async function settingsLoader() {
   const user = await currentUser();
   if (!user) return redirect((await needsSetup()) ? "/auth/setup" : "/auth/login");
+  // INT-001 (M20/2 addendum): a signed-in Business User is always at
+  // the portal, whatever door they came through. Settings is a staff
+  // destination, so it refuses the way the rest do — by bouncing to
+  // "/", where the root guard forwards them. The parent redirect wins
+  // over every pane loader, so this floor covers the whole tree.
+  if (user.role === "business_user") return redirect("/");
   return { user };
 }
 

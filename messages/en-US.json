@@ -704,6 +704,9 @@
   "auth.linkExpired.body": {
     "defaultMessage": "The link has expired or was already used. Request a new one from the sign-in page."
   },
+  "auth.linkExpired.retry": {
+    "defaultMessage": "The link has expired or was already used. Enter your email to get a fresh one."
+  },
   "auth.linkExpired.title": {
     "defaultMessage": "Sign-in link expired"
   },
@@ -751,6 +754,9 @@
   },
   "auth.magic.title": {
     "defaultMessage": "Get a sign-in link"
+  },
+  "auth.magic.useDifferentEmail": {
+    "defaultMessage": "Use a different email"
   },
   "auth.magicSent.body": {
     "defaultMessage": "If {email} is eligible, a sign-in link is on its way. It expires in 5 minutes and works once."
@@ -2392,6 +2398,30 @@
   },
   "notifications.unnamedRecord": {
     "defaultMessage": "a record"
+  },
+  "portal.brand": {
+    "defaultMessage": "OpenLaw"
+  },
+  "portal.entry.closed": {
+    "defaultMessage": "Sign-in links are switched off. Use your organization's sign-in to reach the portal."
+  },
+  "portal.entry.lead": {
+    "defaultMessage": "Enter your work email to get a single-use link into the portal. No account and no password."
+  },
+  "portal.entry.title": {
+    "defaultMessage": "Legal request portal"
+  },
+  "portal.home.lead": {
+    "defaultMessage": "Pick a request type — the form collects what Legal needs to get started."
+  },
+  "portal.home.noTypes": {
+    "defaultMessage": "No request types are available yet. Ask your legal team to open one."
+  },
+  "portal.home.title": {
+    "defaultMessage": "What do you need from Legal?"
+  },
+  "portal.name": {
+    "defaultMessage": "Legal request portal"
   },
   "renewal.action.amendment": {
     "defaultMessage": "File the amendment"

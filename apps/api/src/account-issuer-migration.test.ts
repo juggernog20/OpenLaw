@@ -34,7 +34,7 @@
  */
 
 import { PostgreSqlContainer, type StartedPostgreSqlContainer } from "@testcontainers/postgresql";
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -57,6 +57,14 @@ const MIGRATIONS = fileURLToPath(new URL("../../../packages/db/migrations", impo
 
 /** The last migration before the one under test. */
 const BEFORE = "0059_intake_links";
+
+/**
+ * Every test here makes a new database and migrates it through 0059
+ * before it starts. That does not fit the 5s default when the suite runs
+ * with the rest of the file set, so the tests time out under CI load and
+ * pass on their own. The work is real, so the timeout is what moves.
+ */
+vi.setConfig({ testTimeout: 60_000 });
 
 let container: StartedPostgreSqlContainer;
 let entries: JournalEntry[];
