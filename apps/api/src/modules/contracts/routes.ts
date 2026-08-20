@@ -908,6 +908,7 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
     status: { expr: sql`${contractStatuses.displayOrder}`, joined: true },
     owner: { expr: sql`lower(${users.displayName})`, joined: true },
     counterparty: { expr: sql`lower(${counterparties.name})`, joined: true },
+    entity: { expr: sql`lower(${entities.legalName})`, joined: true },
     risk: { expr: severityRank(contracts.risk), joined: false },
     priority: { expr: severityRank(contracts.priority), joined: false },
     effectiveDate: { expr: sql`${contracts.effectiveDate}`, joined: false },
@@ -989,6 +990,7 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
             inner join ${contractTypes} on ${eq(contracts.contractTypeId, contractTypes.id)}
             inner join ${contractStatuses} on ${eq(contracts.statusId, contractStatuses.id)}
             left join ${users} on ${eq(contracts.managerId, users.id)}
+            left join ${entities} on ${eq(contracts.entityId, entities.id)}
             left join ${contractCounterparties} on ${and(
               eq(contractCounterparties.contractId, contracts.id),
               eq(contractCounterparties.isPrimary, true),

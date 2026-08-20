@@ -31,20 +31,64 @@
  * sequence — so it is focusable, which is what makes that scroll
  * reachable from the keyboard. Where it sits and when its row wraps is
  * the record's business, not the strip's; DES-034 has both.
+ *
+ * **One item of the six is pressable, and it is the one the contract is
+ * on** (DES-053). Given `move`, the current stage's pill becomes the
+ * menu trigger that changes the status: the act starts where the reader
+ * is already looking, and the other five stages stay what they always
+ * were. The menu offers **statuses**, not stages — a status is what
+ * commits and two of them may share one stage (CTR-001) — so the
+ * trigger is labelled with a stage and the list under it is not.
+ *
+ * Without `move` the strip is exactly the reading it has always been.
+ * That is what a read-only viewer and an archived record get: no
+ * trigger, no chevron, nothing disabled to work out (CTR-021).
  */
 
-import { useIntl } from "react-intl";
-import { Check, ChevronRight } from "lucide-react";
-import { CONTRACT_STAGES, STAGE_PILL, stageLabel, type ContractStage } from "../lib/contracts";
+import { FormattedMessage, useIntl } from "react-intl";
+import { Check, ChevronDown, ChevronRight } from "lucide-react";
+import {
+  CONTRACT_STAGES,
+  STAGE_PILL,
+  stageLabel,
+  type ContractStage,
+  type ContractStatusOption,
+} from "../lib/contracts";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuLabel,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuTrigger,
+} from "./ui/dropdown-menu";
 import { cn } from "../lib/utils";
+
+/** What the strip needs to become the move control. Absent for anyone
+ * who may not move this contract. */
+export interface StageMove {
+  /** Every status the record may hold, in the order the seam answers
+   * them — including the saved one when it has since been archived. */
+  statuses: readonly ContractStatusOption[];
+  /** The status the record holds now, which is the row that reads as
+   * checked. It is not the stage: the stage is derived from it. */
+  statusId: string;
+  /** A status commit is in flight. The trigger stands down until it
+   * lands, so a second pick cannot arrive behind the first and raise a
+   * soft gate about a status nobody is moving to any more. */
+  busy: boolean;
+  onPick: (statusId: string) => void;
+}
 
 export function StagePipeline({
   stage,
+  move,
   className,
 }: Readonly<{
   /** The contract's derived stage, as the seam answers it. The marker
    * follows this and nothing else — never the status label. */
   stage: ContractStage;
+  move?: StageMove;
   className?: string;
 }>) {
   const intl = useIntl();
@@ -98,7 +142,9 @@ export function StagePipeline({
             {index > 0 && (
               <ChevronRight size={12} aria-hidden="true" className="shrink-0 text-border-default" />
             )}
-            {current ? (
+            {current && move ? (
+              <MoveMenu stage={step} move={move} />
+            ) : current ? (
               // The same pill the sub-bar's status wears, in the same
               // stage family (DES-005) — so the two agree on sight.
               <span
@@ -138,5 +184,83 @@ export function StagePipeline({
         );
       })}
     </ol>
+  );
+}
+
+/**
+ * The current stage's pill, as the trigger that moves the contract
+ * (DES-053).
+ *
+ * The pill keeps its stage family so the strip still reads as one
+ * sequence; a border and a chevron are what say it can be pressed, and
+ * neither is carried by colour (DES-011). Its accessible name leads
+ * with the visible stage word, so speech input can still ask for it by
+ * what it says (WCAG 2.5.3).
+ *
+ * The rows are a radio group, because the record holds exactly one
+ * status: the checked row is where the contract is, and picking it
+ * again is not a move, so it commits nothing. Each row names its stage
+ * on the right — the two statuses that share a stage would otherwise
+ * read as an unexplained pair — and nothing here is ordered, grouped,
+ * or greyed by how far it is from the current row. Every status is one
+ * press away, backwards included (CTR-001).
+ */
+function MoveMenu({ stage, move }: Readonly<{ stage: ContractStage; move: StageMove }>) {
+  const intl = useIntl();
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <button
+          type="button"
+          disabled={move.busy}
+          aria-label={intl.formatMessage(
+            {
+              id: "contracts.stage.move",
+              defaultMessage: "{stage} — move contract",
+            },
+            { stage: stageLabel(intl, stage) },
+          )}
+          className={cn(
+            // A pressable row of a strip set in 11px text still owes a
+            // reader a target they can hit: 24px is DES-011's floor,
+            // and the pill's own text does not reach it.
+            "flex min-h-6 items-center gap-1 rounded-pill border border-border-default px-2",
+            "text-xs font-medium transition-[filter] duration-150",
+            "hover:brightness-95 active:brightness-90",
+            "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-link",
+            "disabled:pointer-events-none disabled:opacity-50",
+            STAGE_PILL[stage],
+          )}
+        >
+          {stageLabel(intl, stage)}
+          {/* 12px, the interior size DES-034 records for this strip. */}
+          <ChevronDown size={12} aria-hidden="true" className="shrink-0" />
+        </button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="start" className="max-w-80">
+        <DropdownMenuLabel className="text-xs text-muted">
+          <FormattedMessage id="contracts.stage.moveTo" defaultMessage="Move to" />
+        </DropdownMenuLabel>
+        <DropdownMenuRadioGroup
+          value={move.statusId}
+          // Radix answers a pick on the checked row too. The record
+          // already holds that status, so the move is nothing — and
+          // sending it would write an activity entry saying a contract
+          // moved to where it already was.
+          onValueChange={(statusId) => {
+            if (statusId !== move.statusId) move.onPick(statusId);
+          }}
+        >
+          {move.statuses.map((option) => (
+            <DropdownMenuRadioItem key={option.id} value={option.id} className="gap-3">
+              <span className="truncate">{option.displayName}</span>
+              <span className="ms-auto shrink-0 text-xs text-muted">
+                {stageLabel(intl, option.stage)}
+              </span>
+            </DropdownMenuRadioItem>
+          ))}
+        </DropdownMenuRadioGroup>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }

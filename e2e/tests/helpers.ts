@@ -368,3 +368,16 @@ export async function sweepOrSay(label: string, sweep: () => Promise<void>): Pro
     console.log(`${label} cleanup failed after the journey did: ${String(swept)}`);
   });
 }
+
+/**
+ * A status name, as a pattern that matches it and nothing else.
+ *
+ * A move-menu row's accessible name is the status's own name followed
+ * by its stage, so a row is found by what its name starts with. A
+ * status name is written by the install, though, and a name carrying
+ * `(`, `+`, or `?` would otherwise be read as a pattern and match the
+ * wrong row — or none.
+ */
+export function startsWithName(name: string): RegExp {
+  return new RegExp(`^${name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}`);
+}

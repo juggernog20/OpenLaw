@@ -312,42 +312,6 @@ export function formatDeadline(value: Date | string, options?: FormatOptions): s
   );
 }
 
-/**
- * Deadline-surface rule: how far off a date is, in the largest unit that
- * still reads — "in 3 days", "in 8 weeks", "in 5 months", "next year".
- *
- * It takes a **day count** rather than a date, because the count is the
- * seam's (CTR-009's deadline union answers `daysAway` beside every
- * entry, DES-040 clause 4's reason). A surface that recomputed it from
- * the date would be a second copy of the rule that orders the list, and
- * the first thing to disagree would be the row the list calls next.
- *
- * The unit steps up as the distance grows, so a date most of a year out
- * does not read as "in 291 days": days inside a week, weeks inside two
- * months, months inside a year, years beyond. `numeric: "auto"` is what
- * turns the small offsets into "today", "tomorrow", and "yesterday".
- * Negative counts read backwards — "8 weeks ago" — and a surface that
- * would rather flatten the past into one word says so in its own copy.
- */
-export function formatDayDistance(days: number, options?: FormatOptions): string {
-  const relative = relativeFormatter(resolveLocale(options));
-  const distance = Math.abs(days);
-  if (distance < 7) return relative.format(days, "day");
-  if (distance < 60) return relative.format(Math.round(days / 7), "week");
-  // The average lengths, not 30 and 365: rounding "in 12 months" down to
-  // eleven on a leap year is the kind of error nobody can explain.
-  //
-  // The step to years is decided on the **rounded** month count rather
-  // than on the day count, so no distance can round its way to "in 24
-  // months" — a number a reader has to divide before it means anything.
-  // Twelve rather than eighteen, so the year unit can carry the value
-  // one: at eighteen, "next year" was unreachable and a date eighteen
-  // months out rounded straight to "in 2 years".
-  const months = Math.round(days / 30.436875);
-  if (Math.abs(months) < 12) return relative.format(months, "month");
-  return relative.format(Math.round(days / 365.25), "year");
-}
-
 /** Count rule: full digits with locale grouping — never "1.2K". */
 export function formatCount(value: number, options?: FormatOptions): string {
   return numberFormatter(resolveLocale(options), {}).format(value);

@@ -28,7 +28,7 @@ const MEMBER = { ...ADMIN, id: "u2", email: "casey@example.com", role: "legal_te
 const SEEDS = [
   ["s1", "draft", "Draft", "draft"],
   ["s2", "internal_review", "Internal review", "review"],
-  ["s3", "redlining", "Redlining with counterparty", "review"],
+  ["s3", "redlining", "With counterparty", "review"],
   ["s4", "awaiting_approval", "Awaiting approval", "approval"],
   ["s5", "out_for_signature", "Out for signature", "signature"],
   ["s6", "active", "Active", "active"],
@@ -162,7 +162,7 @@ describe("the seeded list (CTR-001)", () => {
     ).toEqual([
       "Draft",
       "Internal review",
-      "Redlining with counterparty",
+      "With counterparty",
       "Awaiting approval",
       "Out for signature",
       "Active",
