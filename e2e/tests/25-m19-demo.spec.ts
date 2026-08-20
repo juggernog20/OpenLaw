@@ -31,7 +31,7 @@
  * Member's settings rail carries no Intake section, its three URLs
  * bounce, and the API's 403 stands behind the bounce.
  *
- * The seed sweep at the top proves the M19 migrations (0056–0058) landed
+ * The seed sweep at the top proves the M19 migrations (0057–0059) landed
  * on the running stack — the `docker compose up` acceptance, asserted
  * from inside the demo.
  *
@@ -198,7 +198,7 @@ test.describe.serial("M19 demo path", () => {
     await ensureDemoTypesAbsent(page.request);
 
     // The compose-up acceptance, from inside the running stack: the M19
-    // seeds (migrations 0056–0058) answer over the API, each carrying
+    // seeds (migrations 0057–0059) answer over the API, each carrying
     // one of the three target states INT-002's addendum records. Subset
     // checks — the accumulated instance holds more than the seeds.
     const seeded = await listRequestTypes(page.request);

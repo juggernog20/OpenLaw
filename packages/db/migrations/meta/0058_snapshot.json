@@ -1,6 +1,6 @@
 {
-  "id": "5af3280f-2caf-4409-8940-b437a4608981",
-  "prevId": "a96d430b-cb3d-430f-ac6b-b797db461e65",
+  "id": "a96d430b-cb3d-430f-ac6b-b797db461e65",
+  "prevId": "8ef0712f-5f57-4608-829b-f1744b00d89a",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -3925,89 +3925,6 @@
           "value": "(\"fields\".\"field_type\" in ('single_select', 'multi_select') and jsonb_typeof(\"fields\".\"options\") = 'array') or (\"fields\".\"field_type\" not in ('single_select', 'multi_select') and \"fields\".\"options\" is null)"
         }
       },
-      "isRLSEnabled": false
-    },
-    "public.intake_links": {
-      "name": "intake_links",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "text",
-          "primaryKey": true,
-          "notNull": true
-        },
-        "label": {
-          "name": "label",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "url": {
-          "name": "url",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "request_type_id": {
-          "name": "request_type_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "display_order": {
-          "name": "display_order",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        },
-        "updated_at": {
-          "name": "updated_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        }
-      },
-      "indexes": {
-        "intake_links_request_type_id_idx": {
-          "name": "intake_links_request_type_id_idx",
-          "columns": [
-            {
-              "expression": "request_type_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        }
-      },
-      "foreignKeys": {
-        "intake_links_request_type_id_request_types_id_fk": {
-          "name": "intake_links_request_type_id_request_types_id_fk",
-          "tableFrom": "intake_links",
-          "tableTo": "request_types",
-          "columnsFrom": ["request_type_id"],
-          "columnsTo": ["id"],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
       "isRLSEnabled": false
     },
     "public.list_views": {

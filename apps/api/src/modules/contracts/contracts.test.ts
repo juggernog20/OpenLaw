@@ -1048,7 +1048,7 @@ describe("the CTR-001 status change", () => {
     const back = await patchContract(memberCookies, contract.number, { statusId: redlining.id });
     expect(back.statusCode, back.body).toBe(200);
     expect(back.json().contract).toMatchObject({
-      statusName: "Redlining with counterparty",
+      statusName: "With counterparty",
       stage: "review",
     });
   });

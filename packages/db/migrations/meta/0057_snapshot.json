@@ -1,6 +1,6 @@
 {
-  "id": "a96d430b-cb3d-430f-ac6b-b797db461e65",
-  "prevId": "8ef0712f-5f57-4608-829b-f1744b00d89a",
+  "id": "8ef0712f-5f57-4608-829b-f1744b00d89a",
+  "prevId": "dce0e93b-50f5-4b3e-af66-ebb12b58f795",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -4642,91 +4642,6 @@
           "value": "\"org_settings\".\"auth_mode\" in ('built_in', 'oidc')"
         }
       },
-      "isRLSEnabled": false
-    },
-    "public.request_type_fields": {
-      "name": "request_type_fields",
-      "schema": "",
-      "columns": {
-        "request_type_id": {
-          "name": "request_type_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "field_id": {
-          "name": "field_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "display_order": {
-          "name": "display_order",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "is_required": {
-          "name": "is_required",
-          "type": "boolean",
-          "primaryKey": false,
-          "notNull": true,
-          "default": false
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        }
-      },
-      "indexes": {
-        "request_type_fields_field_id_idx": {
-          "name": "request_type_fields_field_id_idx",
-          "columns": [
-            {
-              "expression": "field_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        }
-      },
-      "foreignKeys": {
-        "request_type_fields_request_type_id_request_types_id_fk": {
-          "name": "request_type_fields_request_type_id_request_types_id_fk",
-          "tableFrom": "request_type_fields",
-          "tableTo": "request_types",
-          "columnsFrom": ["request_type_id"],
-          "columnsTo": ["id"],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        },
-        "request_type_fields_field_id_fields_id_fk": {
-          "name": "request_type_fields_field_id_fields_id_fk",
-          "tableFrom": "request_type_fields",
-          "tableTo": "fields",
-          "columnsFrom": ["field_id"],
-          "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {
-        "request_type_fields_request_type_id_field_id_pk": {
-          "name": "request_type_fields_request_type_id_field_id_pk",
-          "columns": ["request_type_id", "field_id"]
-        }
-      },
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
       "isRLSEnabled": false
     },
     "public.request_types": {

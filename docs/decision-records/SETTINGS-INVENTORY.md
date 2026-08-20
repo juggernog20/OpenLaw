@@ -168,6 +168,19 @@ The tick is on this row alone, and that is a gap rather than a convention: every
 milestone has landed is equally shipped and says only its number. Marking the rest belongs to a sweep
 of the whole table — the M19 Intake pass owns the next one, and it can mark them all at once.
 
+## Amendment (2026-08-19) — the Integrations cards collapse
+
+**DES-054** answers the M15 amendment's delta 1 halfway. The E-signature card's header is now a
+disclosure: closed on arrival whether or not a connector is stored, with a Connected / Turned off /
+Not connected chip beside the name. That is ST7's summary row — the name
+and the state on one strip — reached without ST7's Configure button and without the second screen
+the M15 amendment declined.
+
+What is still owed is the **redraw**, and it is unchanged: ST7 draws a Configure button that does
+not exist, and it has never drawn the credential form the card opens into. The M31 Integrations
+pass still owns it, and it now lays out two collapsed cards rather than one summary row and one
+form — which is what made the frame too short to redraw truthfully in M15.
+
 ## Amendment (2026-08-20, M19 — the form definition, #355) — ST14's Urgency row
 
 ST14's Form fields card draws Urgency with the pre-DES-018 wording, `Low · normal · high · urgent`.

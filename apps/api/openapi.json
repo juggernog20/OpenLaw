@@ -9062,6 +9062,7 @@
                 "status",
                 "owner",
                 "counterparty",
+                "entity",
                 "risk",
                 "priority",
                 "effectiveDate",

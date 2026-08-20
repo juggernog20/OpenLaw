@@ -84,6 +84,7 @@ import {
   onboardActivatedMember,
   reportAxeViolations,
   signInAs,
+  startsWithName,
   sweepOrSay,
   type OnboardedMember,
 } from "./helpers.js";
@@ -602,15 +603,45 @@ async function expectStageMarker(page: Page, stage: StageName): Promise<void> {
 }
 
 /**
- * The record's own Status control — the renameable label, beside the
- * fixed stage the pipeline marks (CTR-001: one datum at two zooms).
+ * The record's own move control (DES-053) — the current stage's pill in
+ * the strip, which is the one item of the six that can be pressed.
  */
-function statusSelect(page: Page): Locator {
-  return page.getByLabel("Status", { exact: true });
+function moveControl(page: Page): Locator {
+  return page.getByRole("button", { name: /move contract$/ });
+}
+
+/** Opens the move menu and picks one status by the label it wears. */
+async function pickFrom(page: Page, status: StatusOption): Promise<void> {
+  await moveControl(page).click();
+  await page
+    .getByRole("menuitemradio")
+    .filter({ hasText: startsWithName(status.displayName) })
+    .first()
+    .click();
 }
 
 /**
- * Moves the contract to one status through the record's own select, and
+ * Which status the record holds, read from the menu's checked row. The
+ * sub-bar pill says it too, but a status label and a stage name are
+ * often the same word, so the pill can only be told from the strip's own
+ * current-stage pill structurally.
+ */
+async function expectStatus(page: Page, status: StatusOption): Promise<void> {
+  await moveControl(page).click();
+  await expect(
+    page
+      .getByRole("menuitemradio")
+      .filter({ hasText: startsWithName(status.displayName) })
+      .first(),
+  ).toBeChecked();
+  // Back to where the leg found the page: a menu left open would sit
+  // over whatever the next step reads.
+  await page.keyboard.press("Escape");
+  await expect(page.getByRole("menu")).toBeHidden();
+}
+
+/**
+ * Moves the contract to one status through the record's own strip, and
  * answers what the seam said about it.
  */
 async function pickStatus(page: Page, number: number, status: StatusOption) {
@@ -619,7 +650,7 @@ async function pickStatus(page: Page, number: number, status: StatusOption) {
       response.url().endsWith(`/api/v1/contracts/${number}`) &&
       response.request().method() === "PATCH",
   );
-  await statusSelect(page).selectOption(status.id);
+  await pickFrom(page, status);
   const settled = await answered;
   expect(settled.status(), await settled.text()).toBe(200);
 }
@@ -837,7 +868,7 @@ test.describe("M15 demo path", () => {
 
       await memberPage.goto(`/contracts/${number}`);
       await pickStatus(memberPage, number, active);
-      await expect(statusSelect(memberPage)).toHaveValue(active.id);
+      await expectStatus(memberPage, active);
       await expectStageMarker(memberPage, "Active");
       const ended = await readContract(memberPage.request, number);
       expect(ended.stage).toBe("active");
@@ -916,6 +947,11 @@ test.describe("M15 demo path", () => {
           .getByRole("navigation", { name: "Settings sections" })
           .getByRole("link", { name: "Integrations" }),
       ).toBeVisible();
+      // The card is a disclosure (DES-054) and starts closed, so the
+      // form is one click behind its header. The state is not stored,
+      // but a rerun in the same tab may already have opened it.
+      const docusign = page.getByRole("button", { name: "DocuSign", exact: true });
+      if ((await docusign.getAttribute("aria-expanded")) === "false") await docusign.click();
       await page.getByLabel("Environment").selectOption("demo");
       await page.getByLabel("Integration key").fill(integrationKey);
       await page.getByLabel("User ID").fill(apiUserId);

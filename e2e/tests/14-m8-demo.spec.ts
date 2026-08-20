@@ -594,9 +594,14 @@ test.describe.serial("M8 demo path", () => {
         contributorPage.getByRole("heading", { level: 1, name: theirsTitle }),
       ).toBeVisible();
       await expect(contributorPage.getByLabel("Title")).toBeDisabled();
-      await expect(contributorPage.getByLabel("Status")).toBeDisabled();
-      await expect(contributorPage.getByRole("button", { name: "Archive" })).toHaveCount(0);
-      await expect(contributorPage.getByRole("button", { name: "Restore" })).toHaveCount(0);
+      // The status has no control at all for this viewer (DES-053):
+      // absent, rather than a trigger they may press and be refused.
+      await expect(contributorPage.getByRole("button", { name: /move contract$/ })).toHaveCount(0);
+      // The record menu keeps the row that changes nothing and drops
+      // every row that would (DES-055 clause 2).
+      await contributorPage.getByRole("button", { name: "Contract actions" }).click();
+      await expect(contributorPage.getByRole("menuitem")).toHaveText(["Copy link"]);
+      await contributorPage.keyboard.press("Escape");
 
       // The client is convenience; the API is the gate. The read they
       // hold answers; the one they do not is 404, exactly as a contract

@@ -261,7 +261,7 @@ _Avoid_: approval task, sign-off item, approval step, reviewer
 >
 > **Domain expert:** "The other side is a **Counterparty**. The **Entity** is which of _ours_ signs — our UK subsidiary or our Delaware parent. Two different fields, two different tables, and calling a counterparty an entity will send you to the wrong one."
 >
-> **Dev:** "Once it's live, the pill says 'Redlining with counterparty'. Do I branch on that?"
+> **Dev:** "Once it's live, the pill says 'With counterparty'. Do I branch on that?"
 >
 > **Domain expert:** "No. That's a **Status** — a label the team can rename tomorrow. Branch on its **Stage**, which is `review`."
 

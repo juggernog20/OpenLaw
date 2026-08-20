@@ -24,7 +24,7 @@
  * before the journey starts and after it ends.
  */
 
-import { test, expect, type Page } from "@playwright/test";
+import { test, expect, type Locator, type Page } from "@playwright/test";
 import type { APIRequestContext } from "@playwright/test";
 import { z } from "zod";
 import {
@@ -33,6 +33,7 @@ import {
   ensureMemberInert,
   onboardActivatedMember,
   signInAs,
+  startsWithName,
   sweepOrSay,
   type OnboardedMember,
 } from "./helpers.js";
@@ -255,6 +256,22 @@ async function createContract(page: Page, title: string, typeName: string): Prom
   return contract.number;
 }
 
+/** The strip's move control (DES-053): the current stage's pill, which
+ * is the one item of the six that can be pressed. */
+function moveControl(page: Page): Locator {
+  return page.getByRole("button", { name: /move contract$/ });
+}
+
+/** Opens the move menu and picks one status by the label it wears. */
+async function pickFrom(page: Page, status: StatusOption): Promise<void> {
+  await moveControl(page).click();
+  await page
+    .getByRole("menuitemradio")
+    .filter({ hasText: startsWithName(status.displayName) })
+    .first()
+    .click();
+}
+
 /** Sets the contract's status. */
 async function pickStatus(page: Page, number: number, status: StatusOption): Promise<void> {
   const answered = page.waitForResponse(
@@ -262,7 +279,7 @@ async function pickStatus(page: Page, number: number, status: StatusOption): Pro
       response.url().endsWith(`/api/v1/contracts/${number}`) &&
       response.request().method() === "PATCH",
   );
-  await page.getByLabel("Status", { exact: true }).selectOption(status.id);
+  await pickFrom(page, status);
   const settled = await answered;
   expect(settled.status(), await settled.text()).toBe(200);
 }

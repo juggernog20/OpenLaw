@@ -344,6 +344,12 @@ export function ContractsPage() {
     </Button>
   ) : undefined;
 
+  /** Whether the page holds a row the restore column could act on. The
+   * filter being on is not the same thing: an organisation with nothing
+   * archived turns it on and the answer comes back unchanged, so the
+   * column would be a blank heading over a column of blank cells. */
+  const hasArchivedRow = rows.some((row) => row.archivedAt !== null);
+
   /** Both table controls are absent while the list has no rows to
    * arrange (DES-046 clause 7). */
   const tableControls =
@@ -458,11 +464,11 @@ export function ContractsPage() {
             rowKey={(row) => row.id}
             onLayoutChange={(next) => void commit(next)}
             focusRowKey={appended?.from}
-            // The actions column exists only where an action does, and
-            // restore is a mutation — so a read-only viewer is offered no
-            // way to ask for one.
+            // The actions column exists only where an action does: a row
+            // to restore, and a viewer who may ask for one — restore is a
+            // mutation, so a read-only viewer is offered no way in.
             actionsColumn={
-              filters.includeArchived && canEdit
+              hasArchivedRow && canEdit
                 ? {
                     label: intl.formatMessage({
                       id: "contracts.column.actions",

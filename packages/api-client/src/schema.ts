@@ -6724,6 +6724,7 @@ export interface operations {
           | "status"
           | "owner"
           | "counterparty"
+          | "entity"
           | "risk"
           | "priority"
           | "effectiveDate"

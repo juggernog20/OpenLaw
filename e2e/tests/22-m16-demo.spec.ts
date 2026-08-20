@@ -81,6 +81,7 @@ import {
   onboardActivatedMember,
   reportAxeViolations,
   signInAs,
+  startsWithName,
   sweepOrSay,
   type OnboardedMember,
 } from "./helpers.js";
@@ -444,15 +445,32 @@ async function openSection(page: Page, number: number, name: string, path: strin
   await expect(page).toHaveURL(new RegExp(`/contracts/${number}${path}$`));
 }
 
-/** The record's own Status control — the renameable label, beside the
- * fixed stage the pipeline marks (CTR-001: one datum at two zooms). */
+/** The strip's move control (DES-053): the current stage's pill, which
+ * is the one item of the six that can be pressed. */
+function moveControl(page: Page): Locator {
+  return page.getByRole("button", { name: /move contract$/ });
+}
+
+/** Opens the move menu and picks one status by the label it wears. */
+async function pickFrom(page: Page, status: StatusOption): Promise<void> {
+  await moveControl(page).click();
+  await page
+    .getByRole("menuitemradio")
+    .filter({ hasText: startsWithName(status.displayName) })
+    .first()
+    .click();
+}
+
+/** Moves the contract to one status — the renameable label, picked
+ * from the stage the pipeline marks (CTR-001: one datum at two
+ * zooms). */
 async function pickStatus(page: Page, number: number, status: StatusOption): Promise<void> {
   const answered = page.waitForResponse(
     (response) =>
       response.url().endsWith(`/api/v1/contracts/${number}`) &&
       response.request().method() === "PATCH",
   );
-  await page.getByLabel("Status", { exact: true }).selectOption(status.id);
+  await pickFrom(page, status);
   const settled = await answered;
   expect(settled.status(), await settled.text()).toBe(200);
 }
@@ -801,7 +819,6 @@ test.describe("M16 demo path", () => {
       );
       await expect(noticeRow).toContainText(shortDate(termed.noticeDeadline!));
       await expect(noticeRow).toContainText("Derived");
-      await expect(noticeRow).toContainText("Next deadline");
       await expect(deadlineRow(memberPage, "Current term expires")).toHaveCount(1);
       // The surface is this milestone's own, so it is scanned and
       // asserted rather than reported (#48, DES-011).
@@ -870,14 +887,15 @@ test.describe("M16 demo path", () => {
       await expect(addDialog).toBeHidden();
 
       // The screen half: three dates in one list, the team's own row
-      // told from the term's by the Source chip, and the next deadline
-      // named in words rather than only in colour.
+      // told from the term's by the Source chip. Which date is next is
+      // said by the order alone — the DES-042 amendment took the Due
+      // column and its "Next deadline" words out, because a distance
+      // and the date beside it are the same fact said twice.
       const keyRow = deadlineRow(memberPage, KEY_DATE_LABEL);
       await expect(keyRow).toHaveCount(1);
       await expect(keyRow).toContainText(KEY_DATE_NOTE);
       await expect(keyRow).toContainText("Key date");
-      await expect(keyRow).toContainText("Next deadline");
-      await expect(keyDatesCard(memberPage).getByText("Next deadline")).toHaveCount(1);
+      await expect(keyDatesCard(memberPage).getByText("Next deadline")).toHaveCount(0);
       await expect(keyDatesCard(memberPage).getByRole("img", { name: "3 dates" })).toBeVisible();
 
       // The seam half: one union, ordered nearest-first, and exactly one
@@ -945,7 +963,12 @@ test.describe("M16 demo path", () => {
       // will: a second read, after the walk has been elsewhere, finds
       // the record exactly where the person left it.
       await openSection(memberPage, number, "Key dates", "/key-dates");
-      await expect(deadlineRow(memberPage, "Current term expires")).toContainText("Past");
+      // The row still carries the expiry the term lapsed on. The word
+      // "Past" went with the Due column in the DES-042 amendment — the
+      // date says it, and saying it twice is what the amendment removed.
+      await expect(deadlineRow(memberPage, "Current term expires")).toContainText(
+        shortDate(lapsedExpiry),
+      );
       const stillPending = await readContract(memberPage.request, number);
       expect(stillPending.expiryDate).toBe(lapsedExpiry);
       expect(stillPending.renewalPendingConfirmation).toBe(true);

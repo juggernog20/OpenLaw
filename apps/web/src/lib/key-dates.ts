@@ -47,26 +47,6 @@ export interface KeyDateInput {
 export type DeadlinesOutcome =
   { ok: true; deadlines: ContractDeadline[] } | { ok: false; detail?: string };
 
-/**
- * The Due pill's family (DES-005's paired status-pill families).
- *
- * Two readings, because the surface only makes two distinctions a colour
- * should carry. The **next deadline** is `warning`: it is the one date on
- * the record that is about to want something, which is what the C6 mock
- * paints its nearest row. Everything else — dates further out, and dates
- * that have gone by — is `neutral`, because a date in six months is not
- * a problem and a date that has passed un-actioned is not this surface's
- * to judge (CTR-006's engine is notify-only, and nothing here asserts
- * that a lapse happened).
- *
- * Colour is never the sole carrier: the next row says "Next deadline"
- * in words beneath its pill (DES-011).
- */
-export const DEADLINE_PILL = {
-  next: "bg-status-warning-bg text-status-warning-fg",
-  other: "bg-status-neutral-bg text-status-neutral-fg",
-} as const;
-
 /** A row the section may edit and remove — one the record itself holds,
  * as opposed to the two the term derives. Written as a type guard so a
  * caller that has narrowed a row keeps the non-null id. */

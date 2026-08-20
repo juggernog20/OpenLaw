@@ -10,3 +10,10 @@
 # Test fixture: the change-password round-trip's new password, an
 # xkcd-style phrase like the harness admin password. Not a secret.
 fb3c9439823e9d0e824e596d393fb7e96d1e130b:apps/api/src/modules/auth/profile.test.ts:generic-api-key:171
+
+# Pencil's own per-file `fileToken`, in the M-stage design mock. Every
+# .pen file in designs/ carries one — it identifies the file to the
+# editor and grants nothing outside it. The line cannot carry a
+# gitleaks:allow marker, because a .pen file is encrypted and is only
+# ever written by the editor.
+1978bbae1658790dd0ba67effc60a2782c083be4:designs/stage-component-design.pen:generic-api-key:16851

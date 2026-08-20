@@ -19,11 +19,17 @@
  * deadline is not editable anywhere, because it is a subtraction rather
  * than a field.
  *
- * **The order, the day counts, and the next deadline are the seam's.**
- * Nothing here sorts, counts, or decides what is next: those are one
- * answer the API gives, for DES-040 clause 4's reason — a second copy on
- * this page would drift the first time a date moved. The card draws what
- * it was handed.
+ * **The order is the seam's, and the order is the answer.** Nothing here
+ * sorts: the union arrives with what is ahead nearest-first and what has
+ * gone by after it, for DES-040 clause 4's reason — a second copy on this
+ * page would drift the first time a date moved. The card draws what it
+ * was handed, in the order it was handed.
+ *
+ * **There is no Due column** (DES-042 amended). It held a distance and
+ * the word "Past", and both are the Date cell restated: a reader who can
+ * see the date can see how far off it is, and the sorted list puts the
+ * nearest one on top. The seam still answers `daysAway`, which is what
+ * the head's "3 upcoming · 1 past" tally counts.
  *
  * **Adding and editing are dialogs; removing is one click.** A key date
  * is a date, a label, and a note that commit together — the compound
@@ -48,14 +54,13 @@ import { MoreHorizontal, Pencil, Plus, Trash2 } from "lucide-react";
 import { MAX_KEY_DATE_LABEL_LENGTH, MAX_KEY_DATE_NOTE_LENGTH } from "@openlaw/shared";
 import {
   addContractKeyDate,
-  DEADLINE_PILL,
   isKeyDate,
   removeContractKeyDate,
   updateContractKeyDate,
   type ContractDeadline,
   type KeyDateInput,
 } from "../../lib/key-dates";
-import { formatDayDistance, formatShortDate } from "../../lib/format";
+import { formatShortDate } from "../../lib/format";
 import { TEXTAREA_CLASS } from "../../lib/form-controls";
 import { StatusNote, type FieldStatus } from "../status-note";
 import { Button } from "../ui/button";
@@ -256,9 +261,6 @@ export function KeyDatesCard({
                 <th scope="col" className="w-32 px-4 py-2 text-start font-medium">
                   <FormattedMessage id="keyDates.column.source" defaultMessage="Source" />
                 </th>
-                <th scope="col" className="w-40 px-4 py-2 text-start font-medium">
-                  <FormattedMessage id="keyDates.column.due" defaultMessage="Due" />
-                </th>
                 {!frozen && (
                   <th scope="col" className="w-16 px-4 py-2 text-end font-medium">
                     <span className="sr-only">
@@ -360,30 +362,6 @@ function DeadlineRow({
         >
           <FormattedMessage {...SOURCE_LABEL[row.source]} />
         </span>
-      </td>
-      <td className="px-4 py-2.5">
-        <div className="flex min-w-0 flex-col items-start gap-1">
-          <span
-            className={`inline-flex rounded-pill px-2 py-0.5 text-xs font-medium ${row.isNext ? DEADLINE_PILL.next : DEADLINE_PILL.other}`}
-          >
-            {row.daysAway < 0 ? (
-              // The C6 mock's own word for a date behind us. How far
-              // behind is the Date cell's answer; this column exists to
-              // say what is coming.
-              <FormattedMessage id="keyDates.past" defaultMessage="Past" />
-            ) : (
-              formatDayDistance(row.daysAway)
-            )}
-          </span>
-          {/* CTR-009's "next deadline", said in words under the pill
-              that colours it — because colour is never the sole carrier
-              of a meaning (DES-011). */}
-          {row.isNext && (
-            <span className="text-xs text-muted">
-              <FormattedMessage id="keyDates.next" defaultMessage="Next deadline" />
-            </span>
-          )}
-        </div>
       </td>
       {!frozen && (
         <td className="px-4 py-2.5 text-end">
