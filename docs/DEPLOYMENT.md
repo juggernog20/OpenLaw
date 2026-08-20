@@ -280,7 +280,7 @@ If the app container will not start, read its log. The migration stops in two ca
 
 - **`Two accounts share one 1.7 identity: …`** — two accounts would become the same identity, which happens if one identity provider was registered twice under different IDs and the same person signed in through both. Decide which row is the real one and delete the other.
 
-**Nothing is half-applied either way.** The migration runs in one transaction, so a refusal leaves the database exactly as your previous version left it. Start the old image again and it runs as before. Fix what the message names, then upgrade again.
+**Nothing of this migration is half-applied either way.** It opens a transaction of its own, so a refusal applies none of it — the `issuer` column is not there at all. If your upgrade skipped several releases, migrations from those releases stay applied; they only add things, and the old image runs on them unchanged. So: start the old image again and it runs as before. Fix what the message names, then upgrade again — the migration re-runs from the top and completes.
 
 This is deliberately a full stop rather than a best effort. An account left without a correct issuer is not a cosmetic problem: it is a person who cannot sign in and cannot reset their password, and it would be discovered by them rather than by you.
 

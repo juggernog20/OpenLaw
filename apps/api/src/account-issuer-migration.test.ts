@@ -99,7 +99,7 @@ async function migrateThrough(db: Db, tag: string): Promise<void> {
     id serial primary key, hash text not null, created_at bigint)`);
   for (const entry of entries) {
     // One statement per round trip rather than one joined string: a
-    // multi-statement query runs in an implicit transaction, and 0052's
+    // multi-statement query runs in an implicit transaction, and 0054's
     // `CREATE INDEX CONCURRENTLY` cannot.
     const statements = readFileSync(join(MIGRATIONS, `${entry.tag}.sql`), "utf8")
       .split("--> statement-breakpoint")
@@ -232,6 +232,42 @@ describe("the 0060 refusals", () => {
              where table_name = 'accounts' and column_name = 'issuer'`,
       );
       expect(columns.rows).toEqual([]);
+    } finally {
+      await db.$client.end();
+    }
+  });
+
+  it("rolls back whole even when the same upgrade crosses 0054's COMMIT", async () => {
+    // An install more than one release behind upgrades straight to this
+    // one, so the batch drizzle applies includes 0054. That migration
+    // opens with a literal `COMMIT;` — its CONCURRENTLY statements
+    // cannot run inside the single transaction drizzle wraps a batch in
+    // — and from there every later statement runs in autocommit. 0060
+    // opens a transaction of its own so a refusal still applies
+    // nothing. Without that, the ALTER would commit before the refusal
+    // fired: the column would sit half-filled, and re-running the
+    // upgrade after the fix would die on the duplicate column.
+    const db = await freshDb("issuer_crossing");
+    try {
+      await migrateThrough(db, "0053_reminder_offsets");
+      await db.execute(sql`insert into users (id, display_name, email, email_verified, role)
+        values ('u-nadia', 'Nadia Counsel', 'nadia@acme.example', true, 'legal_team_member')`);
+      await db.execute(sql`insert into accounts (id, user_id, account_id, provider_id)
+        values ('a-2', 'u-nadia', 'idp-nadia', 'ghost-idp')`);
+
+      expect(await refusal(db)).toContain("ghost-idp");
+      const columns = await db.execute<{ column_name: string }>(
+        sql`select column_name from information_schema.columns
+             where table_name = 'accounts' and column_name = 'issuer'`,
+      );
+      expect(columns.rows).toEqual([]);
+
+      // The documented remedy, end to end: re-register the provider the
+      // accounts point at, run the upgrade again, and it completes.
+      await db.execute(sql`insert into sso_providers (id, issuer, domain, provider_id, user_id)
+        values ('p-ghost', 'https://idp.ghost.example', 'ghost.example', 'ghost-idp', 'u-nadia')`);
+      await runMigrations(db);
+      expect(await issuers(db)).toEqual({ "idp-nadia": "https://idp.ghost.example" });
     } finally {
       await db.$client.end();
     }

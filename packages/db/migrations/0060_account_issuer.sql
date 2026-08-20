@@ -18,6 +18,23 @@
 -- untouched — for a lock this table does not feel. `accounts` holds one
 -- row per person plus one per IdP link; the scan and the exclusive lock
 -- are milliseconds on any install this product is deployed to.
+--
+-- The transaction is opened here rather than taken on trust. Drizzle
+-- does wrap a batch of migrations in one, but 0054 opens with a literal
+-- `COMMIT;` so its CONCURRENTLY statements can run — and an install
+-- upgrading from a release before 0054 crosses it on the way to this
+-- file, arriving with no transaction open at all. In autocommit the
+-- ALTER above the refusal would already be committed when the refusal
+-- fired: the column would sit half-filled, and re-running the upgrade
+-- after the fix would die on the duplicate column. The COMMIT closes
+-- whichever transaction is open (drizzle's own, empty at this point, or
+-- none — a warning, not an error), and the BEGIN makes this migration
+-- one transaction on every path. Migrations that ran earlier in the
+-- same batch stay applied either way; each records its journal row as
+-- it goes, so the journal stays truthful about them.
+COMMIT;--> statement-breakpoint
+BEGIN;--> statement-breakpoint
+
 ALTER TABLE "accounts" ADD COLUMN "issuer" text;--> statement-breakpoint
 
 -- A password row. The synthetic issuer better-auth builds for a method
@@ -81,4 +98,10 @@ BEGIN
 END $$;--> statement-breakpoint
 
 ALTER TABLE "accounts" ALTER COLUMN "issuer" SET NOT NULL;--> statement-breakpoint
-CREATE UNIQUE INDEX "accounts_issuer_account_unique" ON "accounts" USING btree ("issuer","account_id");
+CREATE UNIQUE INDEX "accounts_issuer_account_unique" ON "accounts" USING btree ("issuer","account_id");--> statement-breakpoint
+
+-- Closes the transaction the BEGIN above opened. Drizzle's own commit
+-- lands after its journal insert; on the crossed-0054 path that pair is
+-- autocommit and a warning, which is already how every batch containing
+-- 0054 ends today.
+COMMIT;
