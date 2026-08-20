@@ -128,7 +128,7 @@ The decision above says what a portal form collects. This records what happens w
 
 **The Requester is the session, never a body field** (DD-013). There is no `requesterId` on the wire and no route to create a Request on somebody else's behalf.
 
-**Creation is narrated as `request.created` inside the insert's transaction** (DD-017), so no Request can exist without the entry that says who asked. The payload carries the number, the summary, the request type's display name, the urgency, and the **slugs** the form answered — never the values. The log is append-only, so a requester's own words could never leave it again.
+**Creation is narrated as `request.created` inside the insert's transaction** (DD-017), so no Request can exist without the entry that says who asked. The payload carries the number, the request type's display name, the urgency, and the **slugs** the form answered — no free text at all, not the summary and not the values. The log is append-only, so a requester's own words could never leave it again; R-### is the Request's name, and the number never changes.
 
 **`requests.converted_matter_id` lands without its foreign key.** SCHEMA.md records it as a reference to `matters.id`, and `matters` arrives in M22. The column is here because INT-006's conversion is one of two shapes and a table that could only record one of them would be a table that lies about the model; the constraint arrives with the table it points at. A check constraint already holds the pair to at most one non-null, so "a Request becomes one record" is the table's rule rather than the conversion route's.
 
