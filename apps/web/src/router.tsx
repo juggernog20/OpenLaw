@@ -5,9 +5,13 @@
  * (and forwards empty instances to first-run setup); the login/setup
  * loaders bounce visitors to wherever their state belongs, so no screen
  * can be reached in a state it cannot serve.
+ *
+ * A parameterised route wraps its screen in `KeyedByParam` — see the
+ * comment there for why the screen must remount when its record does.
  */
 
-import type { RouteObject } from "react-router";
+import { Fragment, type ReactNode } from "react";
+import { useParams, type RouteObject } from "react-router";
 import { AuthLayout } from "./routes/auth-layout";
 import { ContractRecordPage, contractRecordLoader } from "./routes/contract-record";
 import { ContractsPage, contractsLoader } from "./routes/contracts";
@@ -88,6 +92,26 @@ import { TwoFactorPage } from "./routes/two-factor";
 import { TwoFactorEnrollPage, enrollLoader } from "./routes/two-factor-enroll";
 import { WelcomePage, welcomeLoader } from "./routes/welcome";
 
+/**
+ * Remounts a parameterised route's screen when the record it names
+ * changes (#372).
+ *
+ * React Router keeps a route mounted while only its params move, so a
+ * screen that seeds `useState` from loader data goes on showing — and
+ * writing to — the record it was first opened with, at a URL that names
+ * a different one. Keying the subtree by the parameter makes the change
+ * a remount, which reseeds every piece of state at once, including any
+ * a later change adds.
+ *
+ * Key by the parameter that names the record, never by one that names a
+ * view of it: `/contracts/:contractNumber/:tab?` keys on the number, so
+ * moving between that record's tabs still keeps its loaded state.
+ */
+function KeyedByParam({ name, children }: { name: string; children: ReactNode }) {
+  const params = useParams();
+  return <Fragment key={params[name]}>{children}</Fragment>;
+}
+
 export const routes: RouteObject[] = [
   {
     path: "/",
@@ -114,7 +138,11 @@ export const routes: RouteObject[] = [
     // the Overview, so an existing link to a contract still opens one.
     path: "/contracts/:contractNumber/:tab?",
     loader: contractRecordLoader,
-    element: <ContractRecordPage />,
+    element: (
+      <KeyedByParam name="contractNumber">
+        <ContractRecordPage />
+      </KeyedByParam>
+    ),
     errorElement: <RouteErrorPage />,
     hydrateFallbackElement: <></>,
   },
@@ -132,7 +160,11 @@ export const routes: RouteObject[] = [
     // per-field edits, archive, and restore. Member+ only (ENT-004).
     path: "/entities/:entityId",
     loader: entityRecordLoader,
-    element: <EntityRecordPage />,
+    element: (
+      <KeyedByParam name="entityId">
+        <EntityRecordPage />
+      </KeyedByParam>
+    ),
     errorElement: <RouteErrorPage />,
     hydrateFallbackElement: <></>,
   },
@@ -195,7 +227,11 @@ export const routes: RouteObject[] = [
         // #85: each type row opens its own editor screen (ST15).
         path: "matters/types/:typeId",
         loader: settingsMatterTypeEditorLoader,
-        element: <SettingsMatterTypeEditorPage />,
+        element: (
+          <KeyedByParam name="typeId">
+            <SettingsMatterTypeEditorPage />
+          </KeyedByParam>
+        ),
       },
       { path: "contracts", loader: settingsContractsIndexLoader, element: <></> },
       {
@@ -207,7 +243,11 @@ export const routes: RouteObject[] = [
         // #84: each type row opens its own editor screen (ST16).
         path: "contracts/types/:typeId",
         loader: settingsContractTypeEditorLoader,
-        element: <SettingsContractTypeEditorPage />,
+        element: (
+          <KeyedByParam name="typeId">
+            <SettingsContractTypeEditorPage />
+          </KeyedByParam>
+        ),
       },
       {
         path: "contracts/statuses",
@@ -236,7 +276,11 @@ export const routes: RouteObject[] = [
         // #354: each request type opens its own editor screen (ST14).
         path: "intake/request-types/:typeId",
         loader: settingsRequestTypeEditorLoader,
-        element: <SettingsRequestTypeEditorPage />,
+        element: (
+          <KeyedByParam name="typeId">
+            <SettingsRequestTypeEditorPage />
+          </KeyedByParam>
+        ),
       },
       {
         // #356: the INT-004 deflection links (ST13). "links" rather

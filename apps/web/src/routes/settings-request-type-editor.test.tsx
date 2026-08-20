@@ -473,3 +473,61 @@ describe("the target (INT-002)", () => {
     expect(screen.getByText("Counterparty name")).toBeInTheDocument();
   });
 });
+
+describe("moving between two request types on the same route (#372)", () => {
+  /** "Legal question": the no-target state, and no attachments. */
+  const QUESTION: StubType = {
+    id: "r3",
+    slug: "legal_question",
+    displayName: "Legal question",
+    description: "A question answered in the thread.",
+    displayOrder: 3,
+    isSystemDefault: true,
+    archivedAt: null,
+    inUseCount: 0,
+    targetModule: null,
+    targetTypeId: null,
+    formFieldCount: 0,
+  };
+
+  /** Serves both request types; the second targets nothing and has an
+   * empty form, so neither the target nor the fields can be mistaken. */
+  function twoTypes(calls: EditorCalls) {
+    const first = editorApi(calls);
+    return (call: StubCall): Response | undefined => {
+      const path = call.url.pathname;
+      if (path === "/api/v1/request-types/r3" && call.method === "GET") {
+        return json(200, { requestType: QUESTION });
+      }
+      if (path === "/api/v1/request-types/r3/fields" && call.method === "GET") {
+        return json(200, { attachedFields: [] });
+      }
+      return first(call);
+    };
+  }
+
+  it("reseeds the target and the form when :typeId changes", async () => {
+    stubApi({ signedIn: ADMIN, extra: twoTypes(newCalls()) });
+    const { router } = renderAt("/settings/intake/request-types/r2");
+    expect(await screen.findByLabelText("Display name")).toHaveValue("Contract review");
+    expect(targetSelect()).toHaveValue("contract");
+
+    await router.navigate("/settings/intake/request-types/r3");
+
+    await waitFor(() =>
+      expect(screen.getByLabelText("Display name")).toHaveValue("Legal question"),
+    );
+    // The target lives on the page, not on the shared screen — it is the
+    // piece keying the screen alone would have left behind.
+    expect(targetSelect()).toHaveValue("");
+    expect(screen.queryByText("Counterparty name")).not.toBeInTheDocument();
+
+    // No target means global fields only, so the menu proves the scope
+    // rule ran against the type in the URL.
+    const user = userEvent.setup();
+    await user.click(screen.getByRole("button", { name: "Attach field" }));
+    const menu = await screen.findByRole("menu");
+    expect(within(menu).getAllByRole("menuitem")).toHaveLength(1);
+    expect(within(menu).getByRole("menuitem", { name: /Department/ })).toBeInTheDocument();
+  });
+});

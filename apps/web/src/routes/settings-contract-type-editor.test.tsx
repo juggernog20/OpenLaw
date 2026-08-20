@@ -375,3 +375,77 @@ describe("the way in from the Types pane", () => {
     expect(await screen.findByLabelText("Slug")).toHaveValue("nda");
   });
 });
+
+describe("moving between two types on the same route (#372)", () => {
+  /** A second type, so the route can change :typeId without unmounting. */
+  const MSA = {
+    id: "t2",
+    slug: "msa",
+    displayName: "MSA",
+    description: "Master services agreements.",
+    displayOrder: 2,
+    isSystemDefault: false,
+    archivedAt: null,
+    inUseCount: 0,
+  };
+
+  const OUR_POSITION = {
+    fieldId: "f3",
+    slug: "our_position",
+    displayName: "Our position",
+    fieldType: "single_select",
+    moduleScope: "contract",
+    displayOrder: 1,
+    isRequired: false,
+  };
+
+  /** Serves both types' reads; each has its own name and its own field. */
+  function twoTypes(calls: EditorCalls) {
+    return (call: StubCall): Response | undefined => {
+      const path = call.url.pathname;
+      if (path === "/api/v1/contract-types/t2" && call.method === "GET") {
+        return json(200, { contractType: MSA });
+      }
+      if (path === "/api/v1/contract-types/t2/fields" && call.method === "GET") {
+        return json(200, { attachedFields: [OUR_POSITION] });
+      }
+      const perField = /^\/api\/v1\/contract-types\/t2\/fields\/([^/]+)$/.exec(path);
+      if (perField && call.method === "DELETE") {
+        calls.detaches.push(`t2:${perField[1]!}`);
+        return new Response(null, { status: 204 });
+      }
+      return editorApi(calls)(call);
+    };
+  }
+
+  it("shows the second type's identity and fields, not the first's", async () => {
+    stubApi({ signedIn: ADMIN, extra: twoTypes(newCalls()) });
+    const { router } = renderAt("/settings/contracts/types/t1");
+    expect(await screen.findByRole("heading", { name: "NDA" })).toBeInTheDocument();
+
+    await router.navigate("/settings/contracts/types/t2");
+
+    expect(await screen.findByRole("heading", { name: "MSA" })).toBeInTheDocument();
+    expect(screen.getByLabelText("Slug")).toHaveValue("msa");
+    expect(screen.getByText("Our position")).toBeInTheDocument();
+    expect(screen.queryByText("Governing law")).not.toBeInTheDocument();
+  });
+
+  it("addresses the type in the URL when a field is detached after Back", async () => {
+    const calls = newCalls();
+    stubApi({ signedIn: ADMIN, extra: twoTypes(calls) });
+    const { router } = renderAt("/settings/contracts/types/t1");
+    expect(await screen.findByRole("heading", { name: "NDA" })).toBeInTheDocument();
+    await router.navigate("/settings/contracts/types/t2");
+    expect(await screen.findByRole("heading", { name: "MSA" })).toBeInTheDocument();
+
+    // Back to the first type — the route does not remount on its own.
+    await router.navigate(-1);
+    expect(await screen.findByRole("heading", { name: "NDA" })).toBeInTheDocument();
+
+    const user = userEvent.setup();
+    await user.click(await screen.findByRole("button", { name: "Detach Governing law" }));
+
+    await waitFor(() => expect(calls.detaches).toEqual(["f1"]));
+  });
+});

@@ -8526,3 +8526,49 @@ describe("dropping a folder tree on the contract record (M13/5, DOC-011, DES-033
     expect(api.uploaded).toEqual([]);
   });
 });
+
+describe("moving between two records on the same route (#372)", () => {
+  it("reseeds every draft from the record in the URL", async () => {
+    // The remount lives in the router now — `KeyedByParam` keys this
+    // screen by `:contractNumber` — so this test guards that key the
+    // way the page's own key used to guard itself.
+    const first = recordApi(contractRow());
+    const second = contractRow({
+      id: "c2",
+      number: 43,
+      title: "Orion cloud subscription",
+      description: "Twelve-month cloud subscription.",
+      priority: "high",
+    });
+    stubApi({
+      signedIn: MEMBER,
+      extra: (call) => {
+        if (call.url.pathname === "/api/v1/contracts/43" && call.method === "GET") {
+          return json(200, {
+            contract: second,
+            fields: [],
+            customFieldRefs: { users: [], entities: [] },
+            team: [person("u1", "creator")],
+            counterparties: [],
+            renewals: [],
+          });
+        }
+        return first.handler(call);
+      },
+    });
+    const { router } = renderAt("/contracts/42");
+    expect(
+      await screen.findByRole("heading", { level: 1, name: "Acme master services agreement" }),
+    ).toBeInTheDocument();
+
+    await router.navigate("/contracts/43");
+
+    expect(
+      await screen.findByRole("heading", { level: 1, name: "Orion cloud subscription" }),
+    ).toBeInTheDocument();
+    // Every seeded draft moves with the record, not just the heading.
+    expect(screen.getByLabelText("Title")).toHaveValue("Orion cloud subscription");
+    expect(screen.getByLabelText("Description")).toHaveValue("Twelve-month cloud subscription.");
+    expect(screen.getByLabelText("Priority")).toHaveValue("high");
+  });
+});
