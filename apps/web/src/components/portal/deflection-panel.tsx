@@ -28,6 +28,7 @@
  *    gave a link no icon, so every row wears the one `link` glyph.
  */
 
+import { useId } from "react";
 import { FormattedMessage } from "react-intl";
 import { Info, Link as LinkIcon } from "lucide-react";
 
@@ -40,16 +41,21 @@ export interface DeflectionLink {
 }
 
 export function DeflectionPanel({ links }: Readonly<{ links: readonly DeflectionLink[] }>) {
+  // Generated rather than written: the portal home draws one panel and
+  // each request type's form draws another, and a hand-picked id would
+  // be one edit away from naming both.
+  const headingId = useId();
+
   // An instance whose Administrator has configured no links draws no
   // panel: an empty "Before you submit…" heading deflects nobody.
   if (links.length === 0) return null;
 
   return (
     <section
-      aria-labelledby="deflection-heading"
+      aria-labelledby={headingId}
       className="flex flex-col gap-2.5 rounded-card bg-status-info-bg p-4 text-status-info-fg"
     >
-      <h2 id="deflection-heading" className="flex items-center gap-1.5 text-base font-semibold">
+      <h2 id={headingId} className="flex items-center gap-1.5 text-base font-semibold">
         <Info aria-hidden="true" className="size-4 shrink-0" />
         <FormattedMessage id="portal.deflection.heading" defaultMessage="Before you submit" />
       </h2>
@@ -69,6 +75,14 @@ export function DeflectionPanel({ links }: Readonly<{ links: readonly Deflection
             >
               <LinkIcon aria-hidden="true" className="size-4 shrink-0" />
               {link.label}
+              {/* The new tab, said out loud: a sighted requester sees
+                  the switch happen and a screen-reader user does not. */}{" "}
+              <span className="sr-only">
+                <FormattedMessage
+                  id="portal.deflection.newTab"
+                  defaultMessage="(opens in a new tab)"
+                />
+              </span>
             </a>
           </li>
         ))}

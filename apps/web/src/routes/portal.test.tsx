@@ -328,6 +328,10 @@ describe("the deflection panel", () => {
     },
   ];
 
+  /** A deflection link leaves OpenLaw, so it opens in a new tab and
+   * says so — which puts the announcement in its accessible name. */
+  const named = (label: string) => `${label} (opens in a new tab)`;
+
   it("lists the home panel's links in panel order", async () => {
     stubApi({
       signedIn: REQUESTER,
@@ -340,7 +344,7 @@ describe("the deflection panel", () => {
       within(panel)
         .getAllByRole("link")
         .map((link) => link.textContent),
-    ).toEqual(LINKS.map((link) => link.label));
+    ).toEqual(LINKS.map((link) => named(link.label)));
   });
 
   it("points each link at the address exactly as it was stored", async () => {
@@ -354,10 +358,10 @@ describe("the deflection panel", () => {
 
     const panel = await screen.findByRole("region", { name: "Before you submit" });
     for (const link of LINKS) {
-      expect(within(panel).getByRole("link", { name: link.label })).toHaveAttribute(
-        "href",
-        link.url,
-      );
+      const anchor = within(panel).getByRole("link", { name: named(link.label) });
+      expect(anchor).toHaveAttribute("href", link.url);
+      expect(anchor).toHaveAttribute("target", "_blank");
+      expect(anchor).toHaveAttribute("rel", "noreferrer");
     }
   });
 

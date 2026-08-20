@@ -2405,6 +2405,9 @@
   "portal.deflection.heading": {
     "defaultMessage": "Before you submit"
   },
+  "portal.deflection.newTab": {
+    "defaultMessage": "(opens in a new tab)"
+  },
   "portal.entry.closed": {
     "defaultMessage": "Sign-in links are switched off. Use your organization's sign-in to reach the portal."
   },
