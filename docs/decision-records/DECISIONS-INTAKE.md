@@ -110,6 +110,28 @@ Changing a request type's target is refused when the new target's scope rule wou
 
 **Not to be confused with the archived _target type_.** That case is settled above: the picker offers live types only, the editor flags an archived target, and conversion reads it as no type. This addendum is about an archived **catalog field**, on the other side of the attachment.
 
+### Addendum (2026-08-21, M20/4, [#378](https://github.com/juggernog20/OpenLaw/issues/378)) — submission, and where the form's rules are stated
+
+The decision above says what a portal form collects. This records what happens when a requester presses Submit, decided while building the first surface that does.
+
+**The `requests` module owns submission; the `portal` module owns the form read.** `GET /portal/request-types/{slug}` answers one type, its attached catalog fields in display order, and the deflection links placed on that form — the requester-facing read of the Administrator's configuration, which is what the `portal` module already is. `POST /requests` writes the row, and it is the Request's own module because M21's Inbox reads the same record from the staff side. One module owns the Request whichever surface asks for it.
+
+**The basics are drawn by the portal and enforced in code.** Summary, Description, Attachments, and Urgency have no rows in `request_type_fields` and never will, so the form renders them and the submission route requires the three that carry a value. The attached fields are the only half read from configuration, and both surfaces read it through the one `selectAttachedFields` helper the contract record already uses — a rule stated twice is a rule that drifts.
+
+**One refusal names every gap, basics and attached fields together.** A person filling a form in should not have to press Submit twice to learn two halves of the same answer. The portal shows that refusal in two places: as a sentence, and again on each unanswered box, because a sentence cannot point at a control.
+
+**An archived request type is refused at the API, not only hidden in the picker.** The type row is locked for update before the insert, so an archive committing between the check and the write cannot let a Request be born on a form that takes no submissions. The form read refuses the same type with a 404, and the portal sends that visitor back to the picker rather than to an error page: a stale bookmark is not a fault a requester can act on.
+
+**An out-of-scope attached field renders, collects, and still enforces its required flag** — the M19/7 addendum above said M20 would meet that state, and this is it meeting it. Nothing about it is special-cased on either side.
+
+**Values are accepted for exactly the attached fields.** A slug the type does not attach is refused rather than dropped: a form that sent it is out of step with the type, and a value stored under it would sit on the Request where nothing could show it or clear it. An empty answer leaves no key at all, so "nothing recorded" has one shape here as it does on a contract.
+
+**The Requester is the session, never a body field** (DD-013). There is no `requesterId` on the wire and no route to create a Request on somebody else's behalf.
+
+**Creation is narrated as `request.created` inside the insert's transaction** (DD-017), so no Request can exist without the entry that says who asked. The payload carries the number, the request type's display name, the urgency, and the **slugs** the form answered — no free text at all, not the summary and not the values. The log is append-only, so a requester's own words could never leave it again; R-### is the Request's name, and the number never changes.
+
+**`requests.converted_matter_id` lands without its foreign key.** SCHEMA.md records it as a reference to `matters.id`, and `matters` arrives in M22. The column is here because INT-006's conversion is one of two shapes and a table that could only record one of them would be a table that lies about the model; the constraint arrives with the table it points at. A check constraint already holds the pair to at most one non-null, so "a Request becomes one record" is the table's rule rather than the conversion route's.
+
 ## INT-003 — Requester updates: email notifications only; no status-poke button
 
 - **Status** — Accepted
@@ -199,7 +221,7 @@ M19/6 built the configuration; M20/3 built the panel a requester sees. Three thi
 | #       | Decision                                                                     | Status                                                                                                                                          |
 | ------- | ---------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
 | INT-001 | Intake model: JSM-style structured forms + portal; email notifications only  | Accepted; lifecycle revised by INT-007; landing and dead-link mechanics added by M20/2 addendum; requester-facing reads added by M20/3 addendum |
-| INT-002 | Request types mapped to target types; forms reuse the fields catalog         | Accepted; three-state target added by M19/4 addendum                                                                                            |
+| INT-002 | Request types mapped to target types; forms reuse the fields catalog         | Accepted; three-state target added by M19/4 addendum; out-of-scope attachment recorded by M19/7 addendum; submission added by M20/4 addendum    |
 | INT-003 | Requester updates: email notifications only; no status-poke button           | Accepted                                                                                                                                        |
 | INT-004 | Deflection links panel in v1; conditional form logic stays deferred          | Accepted; delete behavior and URL rule added by M19/6 addendum; portal rendering added by M20/3 addendum                                        |
 | INT-005 | No auto-classification: the form is the classification                       | Accepted                                                                                                                                        |
