@@ -245,6 +245,16 @@ export function stubApi(state: ApiState) {
     if (call.url.pathname === "/api/v1/notifications" && call.method === "GET") {
       return json(200, { notifications: [], nextCursor: null });
     }
+    // What the portal home offers (M20/3, INT-001). Empty by default,
+    // which is what a route test that is not about the portal needs:
+    // the two reads run on every portal render, and only the portal's
+    // own suite supplies rows, through `extra`.
+    if (call.url.pathname === "/api/v1/portal/request-types" && call.method === "GET") {
+      return json(200, { requestTypes: [] });
+    }
+    if (call.url.pathname === "/api/v1/portal/intake-links" && call.method === "GET") {
+      return json(200, { intakeLinks: [] });
+    }
     if (call.url.pathname === "/api/v1/onboarding" && call.method === "GET") {
       return json(200, state.onboarding ?? { completed: true, emailConfigured: true });
     }
