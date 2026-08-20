@@ -824,6 +824,57 @@ Three key sources were on the table: a required environment variable, a key deri
 - The three schema comments deferring encryption are gone, because it happened.
 - TECH-021 stays in this document, marked superseded. Its statement of the exposure is still the clearest one we have.
 
+## TECH-023: Shared machinery grows named per-mount hooks — a third mount is configuration, not a copy
+
+- **Status:** Accepted
+- **Date:** 2026-08-20
+
+### Context
+
+Two factories carry every taxonomy in the product. `taxonomyRoutes` serves contract types, matter types, and entity types — add, rename, describe, reorder, archive with the SET-003 guard, restore, delete, and the DD-017 activity for each. `typeFieldRoutes` serves the per-type attachment of catalog fields on contract types and matter types. This is the #85 doctrine: one machinery, every type table, so a change to archive semantics is written once and lands everywhere.
+
+M19 mounted a **third** taxonomy — request types — and it is the first mount that carries columns of its own: a target (INT-002), and a form definition whose attachable scopes depend on that target. M19's spec forecast **two** new factory parameters and said that needing more than two would be a signal worth recording.
+
+It needed five. This decision records the real count and says when the count stops being acceptable.
+
+### Decision
+
+**The five extension points, named.**
+
+1. **`protectedSlug`** on `taxonomyRoutes` — optional, and previously a hardcoded `other`. It names the system-protected fallback row that archive and hard delete refuse. Request types omit it: no record needs a non-null request type once conversion is done, so there is no fallback row and no row is locked.
+2. **`extras`** (`TaxonomyExtras`) on `taxonomyRoutes` — the mount's own columns, in four parts that travel together: `rowSchema` (extra keys on the row, so they reach the list, the single-row response, and the OpenAPI document), `projectRow` (how they are read off the selected row), `patchSchema` (extra keys the **strict** PATCH body accepts), and `applyPatch` (a validator that runs inside the PATCH transaction under the row's `for update` lock, refuses with an RFC 9457 problem, and answers both the columns to write and what the `updated` activity should narrate).
+3. **`loadContext`** on `TaxonomyExtras` — one batched read over exactly the rows about to be projected, for a column that cannot be read off the row. Request types count the fields on their form; reading that per row would be an N+1 behind one list.
+4. **`scopeRule`** on `typeFieldRoutes` — one parameter in place of the former `attachableScopes` plus `scopeRefusal` pair, and now either a constant or **a function of the locked type row**. Contract types and matter types pass a constant, unchanged. Request types pass a function, because which catalog fields may attach follows the target.
+5. **A generic row type on both factories** — the mount declares what its row is, and its own hooks read it without a cast at the call site.
+
+**The rule an extension point has to pass.** It is admissible when all three hold:
+
+- **It is named for what a mount carries, never for which mount it is.** `extras`, `scopeRule`, `protectedSlug` describe a shape. A branch on the mount's own path or noun is the tripwire, not a hook.
+- **It is inert when omitted.** The three existing taxonomy mounts and the two existing attachment mounts pass nothing new and behave exactly as they did. A parameter that changes an existing mount's behaviour to make room for a new one is a rewrite wearing a config key.
+- **It cannot loosen a guarantee the machinery makes.** The PATCH body stays strict — a key no mount declared is still refused rather than stripped, and a mount may not declare a machinery-owned column. A mount that tried is rejected when it is built, not when a request arrives.
+
+**When the count stops being acceptable.** The next mount that needs a hook failing any of the three, or a hook whose only caller is one mount **and** whose body reads that mount's table, is the point at which the machinery is split rather than extended.
+
+### Rationale
+
+- **The forecast was wrong by more than double, and the honest number is the useful one.** Anyone reading "two parameters" would conclude the machinery absorbs a new mount almost free. It does not: a mount that carries columns of its own needs a way to project them, a way to accept them, a way to validate them under the lock, and a way to narrate them — that is one hook with four parts, and it is the bulk of the growth.
+- **The doctrine held where it matters: nothing was copied.** Request types are a config object, not a fourth module with its own list, guard, reorder, and audit code. Every taxonomy behaviour the M19 API suite asserts is behaviour the machinery already had, which is why the request-types assertions transfer almost verbatim from the matter-types suite.
+- **A hook shaped like the thing it extends stays readable.** `scopeRule` as a function of the locked row is the same idea as the constant it replaced, widened; a reader of the mount's config sees the rule without reading the factory. The alternative — one general "run this before the write" escape hatch — would have been a single parameter and would have made every mount's behaviour unreadable from its own configuration.
+- **`protectedSlug` becoming optional is a correction, not a concession.** The lock has to follow the decision that a row is a fallback. Hardcoding `other` meant a mount inherited a protected row because of a name an Administrator happened to type.
+
+### Alternatives considered
+
+- **Copy the taxonomy module for request types.** Rejected: it is the thing #85 exists to prevent, and it would have put a fourth copy of the SET-003 archive guard and the DD-017 narration in the tree on the milestone right before the portal starts writing records against these tables.
+- **One general `beforeWrite(ctx)` escape hatch.** Rejected: one parameter instead of five, at the cost of every mount's behaviour becoming invisible from its config and every guarantee — strict bodies above all — becoming a convention.
+- **Leave `attachableScopes` and `scopeRefusal` as two parameters and add a third for the function form.** Rejected: the refusal line and the scopes are one rule, and a mount that could set the scopes without the refusal would produce a 400 with nothing to read.
+
+### Consequences
+
+- M22 (the matter record, and the `matter` field scope) and M27 (entities) widen what the scope rule admits and need **no new hook** — the matter arm is written and live, and empty only because no matter-scoped field can exist yet.
+- The three existing taxonomy mounts and both existing attachment mounts kept their configuration; the only change to them is that `protectedSlug` is now spelled where it was assumed.
+- The five hooks are covered by the behaviour they produce at each mount, not by tests of the hooks themselves — no test asserts that a factory was configured a certain way.
+- `applyPatch` has the most reach of the five: it runs under the row lock and can refuse. A second mount wanting it is fine; a third that needs it to do something other than validate-and-narrate is the split signal above.
+
 ## Index of decisions
 
 | #        | Decision                                                                      | Status                 |
@@ -850,3 +901,4 @@ Three key sources were on the table: a required environment variable, a key deri
 | TECH-020 | Problem `type` URIs — a refusal names itself only when a client acts on it    | Accepted               |
 | TECH-021 | Secrets at rest — plaintext for v1, with one owner and one trigger            | Superseded by TECH-022 |
 | TECH-022 | Credentials at rest — sealed columns, one required key, outside the database  | Accepted               |
+| TECH-023 | Shared machinery grows named per-mount hooks — a third mount is configuration | Accepted               |

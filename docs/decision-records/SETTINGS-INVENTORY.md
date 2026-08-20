@@ -10,26 +10,26 @@ ActivityBar, Pill, Avatar) live in this file as local copies per the designs con
 
 ## Frames
 
-| Frame | Node ID  | Screen                                   | Ships in |
-| ----- | -------- | ---------------------------------------- | -------- |
-| ST1   | `t5FyJK` | Personal · Profile                       | M5       |
-| ST2   | `vVsIu`  | Personal · Appearance                    | M5       |
-| ST3   | `QQ3PT`  | Personal · Notification preferences      | M18 ✓    |
-| ST4   | `b3rJp`  | Organization · General                   | M5       |
-| ST5   | `vij2O`  | Organization · Users                     | M5       |
-| ST6   | `TRZzk`  | Matters settings · Types                 | M6       |
-| ST7   | `cW3R8`  | Organization · Integrations              | M15/M31  |
-| ST8   | `Kq7bz`  | Archive type modal (SET-003 guard)       | M6       |
-| ST10  | `Ptq2X`  | Contracts settings · Statuses            | M6       |
-| ST11  | `MaQ3Y`  | Contracts settings · Fields              | M6       |
-| ST12  | `kb2yb`  | Intake settings · Request types          | M19      |
-| ST13  | `V1LdY`  | Intake settings · Deflection links       | M19      |
-| ST14  | `rcP97`  | Intake settings · Request type editor    | M19      |
-| ST15  | `AuiXQ`  | Matters settings · Type editor           | M6       |
-| ST16  | `gQmoP`  | Contracts settings · Type editor         | M6       |
-| ST17  | `svBem`  | Organization · Security (Authentication) | M5       |
-| ST18  | `vpr5X`  | Organization · Security · OIDC           | M5       |
-| ST19  | `BWmsJ`  | Contracts settings · Types               | M6       |
+| Frame | Node ID  | Screen                                   | Ships in  |
+| ----- | -------- | ---------------------------------------- | --------- |
+| ST1   | `t5FyJK` | Personal · Profile                       | M5 ✓      |
+| ST2   | `vVsIu`  | Personal · Appearance                    | M5 ✓      |
+| ST3   | `QQ3PT`  | Personal · Notification preferences      | M18 ✓     |
+| ST4   | `b3rJp`  | Organization · General                   | M5 ✓      |
+| ST5   | `vij2O`  | Organization · Users                     | M5 ✓      |
+| ST6   | `TRZzk`  | Matters settings · Types                 | M6 ✓      |
+| ST7   | `cW3R8`  | Organization · Integrations              | M15 ✓/M31 |
+| ST8   | `Kq7bz`  | Archive type modal (SET-003 guard)       | M6 ✓      |
+| ST10  | `Ptq2X`  | Contracts settings · Statuses            | M6 ✓      |
+| ST11  | `MaQ3Y`  | Contracts settings · Fields              | M6 ✓      |
+| ST12  | `kb2yb`  | Intake settings · Request types          | M19 ✓     |
+| ST13  | `V1LdY`  | Intake settings · Deflection links       | M19 ✓     |
+| ST14  | `rcP97`  | Intake settings · Request type editor    | M19 ✓     |
+| ST15  | `AuiXQ`  | Matters settings · Type editor           | M6 ✓      |
+| ST16  | `gQmoP`  | Contracts settings · Type editor         | M6 ✓      |
+| ST17  | `svBem`  | Organization · Security (Authentication) | M5 ✓      |
+| ST18  | `vpr5X`  | Organization · Security · OIDC           | M5 ✓      |
+| ST19  | `BWmsJ`  | Contracts settings · Types               | M6 ✓      |
 
 ## What the mocks already got right
 
@@ -188,3 +188,69 @@ type caption say "locked" without dimming anything, so the shipped rows carry fu
 
 The ST12 **Form fields** column ships as drawn, counting the catalog fields on the form and never the
 four basics, which are on every form and would say the same number on every row.
+
+## Amendment (2026-08-20, M19 close, #357) — the Intake panes shipped, and every shipped row is ticked
+
+M19 built the three Intake frames, so this pass reconciles them with what shipped and closes the
+✓-marking gap the M18 close left open.
+
+### The tick sweep
+
+**A ✓ beside the milestone means the frame's screen is live in the product.** Every row whose
+milestone has landed now carries one — M5, M6, M15, M18, and M19 — which ends the state where ST3
+alone was ticked and every other shipped frame said only its number. ST7 reads `M15 ✓/M31` because
+half of it shipped: the Integrations pane is live, and the AI analysis card the frame also draws
+belongs to M31. A row with no tick is a frame waiting on a milestone that has not landed.
+
+### The target strings match the shipped model
+
+The three-state target (INT-002's #354 addendum — no target, a module, or a module and a type) was
+checked against both frames, **and neither diverges**:
+
+- **ST12** draws the three states as the three seeded rows: `Contract · NDA`, `Contract`, and
+  `No target`. That is exactly what the Target column renders, string for string.
+- **ST14** draws the module-only state — target `Contract`, with the help line "Converting a request
+  of this type creates a contract; the reviewer picks the contract type at conversion." That is the
+  shipped help text for that state, word for word.
+
+Nothing is redrawn and no divergence stands. The frames were drawn before the third state was
+written down and turned out to describe it already, which is why the addendum could say the state
+"earns its place" rather than inventing it.
+
+### Deviations recorded rather than redrawn
+
+1. **ST14 draws no Slug row.** ST15 and ST16 both draw one — an immutable slug field with its own
+   help line — and the shipped request-type editor renders it too, because all three screens are one
+   shared component (DES-022) with the mount's own vocabulary: "Slug is immutable — it keys the
+   portal form, reporting, and the API." This is an omission in the frame rather than a contradiction
+   of a decision, so it follows the M6 sweep's precedent for omissions (amendment 2 above) and is
+   recorded here instead of drawn.
+2. **ST12's field counts and ST13's rows are illustrative, not seeds.** ST12 draws `4 fields`,
+   `5 fields`, and `2 fields` beside the three request types, and ST13 draws three deflection links.
+   A fresh install has neither: the migration seeds the **three request types alone**, each with an
+   empty form, and seeds **no deflection links** — INT-004 has no sensible default URL. So a
+   first-run Administrator sees `0 fields` on every row and an empty links pane. The frames draw a
+   configured install, which is what a mock is for; this note exists so nobody reads a mock row as a
+   seed row.
+3. **The two shipped anatomy changes are already recorded in decisions**, and the frames are not
+   redrawn for them: the header strip and the two-line row a pane with columns draws (DES-020's M19/4
+   amendment), and the absence of a column-header strip on a single-chip pane like ST13 (DES-052's
+   M19/6 amendment).
+
+The rail shipped as ST12/ST13/ST14 draw it: **Intake** joins the Organization group between Contracts
+and Entities with the `inbox` glyph, and the `settings.tsx` comment explaining why the entry was
+omitted is gone with the omission.
+
+### The Organization · Notifications pane still has no frame
+
+The M18 close and DES-052 both handed the next pass over this file to the M19 Intake sweep, so this
+pass has to answer it: **no frame is added for the reminder-lead-times pane here either.** The reason
+has moved, though, and the new one is worth stating plainly. In M18 the surface was unsettled; it is
+settled now — DES-052 has two mounts and an amendment, and the pane is fully specified by them. What
+is left is a drawing task with **no decision behind it**, and adding a frame is how the ST7 and ST3
+precedents say _not_ to spend a close: a frame is drawn when it would settle something, and this one
+would only restate DES-052.
+
+It goes to the **M22 settings pass**, which this file already owes a visit for ST6's Advisory row
+(amendment 4 above). A pass that is redrawing one frame can draw a second at little extra cost;
+a close that is marking a table cannot.

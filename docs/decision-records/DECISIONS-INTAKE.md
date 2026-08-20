@@ -74,6 +74,18 @@ The decision above knew two target states: a specific matter or contract type, o
 
 **The basics are fixed and are not columns.** Every portal form collects Summary, Description, Attachments, and Urgency. Summary, Description, and Urgency are required; Attachments are optional. The editor draws the four as locked rows so an Administrator can read the contract without being invited to change it, and nothing in the schema records them — a fixed set is a fact about the form, not a configuration of it. Urgency carries the DES-018 severity ramp (`low`, `medium`, `high`, `critical`), as this decision already recorded.
 
+### Addendum (2026-08-20, M19/7, [#357](https://github.com/juggernog20/OpenLaw/issues/357)) — one attached field can outlive the scope that admitted it, and M20 will meet it
+
+Changing a request type's target is refused when the new target's scope rule would exclude fields already on the form; the refusal names them and the Administrator detaches first (SET-003's house style — guards refuse and explain). **The refusal reads live attached fields only, and an archived catalog field is therefore invisible to it.** That leaves one reachable state, recorded here rather than closed, because M20 is where it will next be seen.
+
+**The sequence.** Attach a contract-scoped field to a contract-targeting request type. Archive that field in the catalog — allowed; a field is archived, never deleted (MTR-014 value retention). Re-point the request type to Matter — allowed, because the only attachment that would have stranded is now archived and the check does not see it. Restore the field. The attachment is live again, so it renders on the editor and counts in the ST12 Form fields column, under a target whose scope no longer admits it.
+
+**Why this is the right end of the trade.** The alternative is a refusal an Administrator cannot act on. While the field is archived the editor does not draw its row — the form definition lists live fields — so a target change refused on its account would name a row that is not on the screen and offer no way to detach it. That is a dead end; the state above is not. It is visible the moment it happens, it is repairable by a plain detach, and nothing about it is silent: the field is on the form, drawn like every other, and its scope caption says what it is.
+
+**What it costs, and who pays.** Nothing is corrupted — the attachment row is well formed, the required flag still applies, and the portal (M20) renders the field and collects its value like any other. The cost arrives at conversion (M21): a contract-scoped value collected under a matter-targeting form has no field to land in on the created matter, so it is a collected value with nowhere to go. **M20 and M21 should treat "attached but out of scope for the current target" as a state that exists**, not as one the API prevents. Widening the strand check to include archived attachments is the obvious fix and is deliberately not taken here — it would trade a visible, repairable state for an invisible, unrepairable refusal, and the honest place to solve it is wherever the portal or the Inbox decides what an out-of-scope collected value means.
+
+**Not to be confused with the archived _target type_.** That case is settled above: the picker offers live types only, the editor flags an archived target, and conversion reads it as no type. This addendum is about an archived **catalog field**, on the other side of the attachment.
+
 ## INT-003 — Requester updates: email notifications only; no status-poke button
 
 - **Status** — Accepted
