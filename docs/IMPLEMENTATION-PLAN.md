@@ -36,7 +36,7 @@ document is the map, not the territory.
 
 ## Where we are
 
-**Arc 3 done, through milestone 18** — background jobs and notifications. Arc 1 is done: the monorepo and CI, the
+**Arc 4 started, through milestone 19** — request types and forms. Arc 1 is done: the monorepo and CI, the
 authentication chain, the Compose stack a deployer actually runs, the themed app shell, and the
 `/settings` destination with its Personal and Organization rails. Arc 2 is done too: the
 configurable types and statuses, the Entities registry, the contract record, the conversation on a
@@ -58,8 +58,12 @@ the team actually used — M17 adds the task checklist, the relations panel with
 and typed directional links, and end of life as a signal that leaves the record writable — and M18
 finally makes the system speak: the Notifier seam, the bell with its 9+ badge, immediate email for a
 direct ask, and one morning briefing for the dates coming up, on a scheduled round that serves each
-reader at their own eight o'clock. Next is Arc 4, the front door: request types and forms (M19), the
-requester portal (M20), and the Inbox that turns a request into a record (M21).
+reader at their own eight o'clock. Arc 4, the front door, has begun: M19 configures it — the Intake
+section on the settings rail, request types on the same machinery every other type table already
+uses, the three-state target that decides at the door what a request will become, the form definition
+that reuses the M6 field catalog rather than building a second one, and the deflection links panel
+that answers a question before it becomes a request. Nothing in M19 is visible to a requester; next
+are the portal that renders it (M20) and the Inbox that turns a request into a record (M21).
 
 ---
 
@@ -345,13 +349,28 @@ makes OpenLaw a CLM rather than a database with a form on it.
 The front door. Everything here has a target to convert into, which is why it comes fourth rather than
 first.
 
-- [ ] **M19 — Request types and forms**
+- [x] **M19 — Request types and forms**
       _Demo:_ An Administrator builds an "NDA" request form targeting the NDA contract type, attaches two
       catalog fields, and adds a deflection link above it.
-  - `request_types` with an optional target matter type or contract type
+  - `request_types` on the third mount of the shared taxonomy machinery — no new module, and no
+    system-protected row, because no record needs a non-null request type once conversion is done
+  - The target has **three** states, not two: no target, a module, or a module and a type inside it —
+    one check constraint holds the three columns together, and one grouped select carries both halves
   - Form definition reusing the M6 field catalog — no separate form builder, so nothing is re-keyed later
-  - The "Before you submit…" deflection links panel, global or per request type
-  - _Decisions:_ INT-002, INT-004, INT-005
+  - Which fields may attach follows the target — CTR-016's scope rule applied one level out — and a
+    target change that would strand attached fields is refused and names them
+  - The four basics (Summary, Description, Attachments, Urgency) are fixed, not configured, and are
+    drawn as locked rows rather than stored as columns
+  - The "Before you submit…" deflection links panel, global or per request type — removed outright,
+    never archived, and cascaded away with the request type it was placed on
+  - The `#85` doctrine held — nothing was copied — but the extension surface is **five** hooks, not
+    the two forecast: `protectedSlug`, the `extras` hook, `loadContext`, a `scopeRule` that may be a
+    function of the locked row, and a generic row type on both factories. Recorded in TECH-023 with
+    the rule an extension point has to pass and the point at which the machinery is split instead
+  - One edge left open for M20: a catalog field archived, its type re-pointed, then the field
+    restored, leaves an attachment live under a target whose scope no longer admits it — visible,
+    repairable by a plain detach, and recorded in INT-002 rather than refused
+  - _Decisions:_ INT-002, INT-004, INT-005, DES-020, DES-022, DES-052, TECH-023 · _Issues:_ #351–#357
 
 - [ ] **M20 — The portal**
       _Demo:_ A business user requests a magic link, lands in the portal, submits an NDA request with an
