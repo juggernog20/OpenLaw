@@ -18,7 +18,7 @@
 import { useState, type ReactNode, type SubmitEvent as FormSubmitEvent } from "react";
 import { defineMessages, FormattedMessage, useIntl, type MessageDescriptor } from "react-intl";
 import { api } from "../lib/api";
-import { networkError } from "../lib/messages";
+import { networkError, problemDetail } from "../lib/messages";
 import { PageTitle } from "./page-title";
 import { Alert } from "./ui/alert";
 import { Button } from "./ui/button";
@@ -61,7 +61,7 @@ export function MagicLinkRequest({
         return;
       }
       setError(
-        (problem as { detail?: string } | undefined)?.detail ??
+        problemDetail(problem) ??
           intl.formatMessage({
             id: "auth.login.error.magicLink",
             defaultMessage: "The link could not be sent. Try again.",
@@ -84,7 +84,9 @@ export function MagicLinkRequest({
           </CardTitle>
         </CardHeader>
         <CardContent className="flex flex-col gap-4">
-          <p className="text-md text-muted">
+          {/* The submit button that had focus is gone with the form, so
+              the answer has to announce itself (DES-011). */}
+          <p role="status" className="text-md text-muted">
             <FormattedMessage
               id="auth.magicSent.body"
               defaultMessage="If {email} is eligible, a sign-in link is on its way. It expires in 5 minutes and works once."

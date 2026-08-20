@@ -138,6 +138,13 @@ describe("the portal chrome", () => {
     expect(screen.getByRole("link", { name: "Skip to content" })).toHaveAttribute("href", "#main");
   });
 
+  it("says so when there is nothing to pick", async () => {
+    stubApi({ signedIn: REQUESTER });
+    renderAt("/portal");
+    expect(await screen.findByRole("heading", { name: PORTAL_HOME })).toBeInTheDocument();
+    expect(screen.getByText(/No request types are available yet/)).toBeInTheDocument();
+  });
+
   it("draws no staff navigation and no staff-only affordances", async () => {
     // Asserted for a Member+ session on purpose: this role has every
     // staff destination, so anything staff-shaped leaking into the

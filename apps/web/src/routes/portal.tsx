@@ -19,6 +19,7 @@ import { authClient } from "../lib/auth-client";
 import { currentUser } from "../lib/session";
 import { PageTitle } from "../components/page-title";
 import { PortalShell } from "../components/portal/portal-shell";
+import { Card, CardContent } from "../components/ui/card";
 
 export async function portalHomeLoader() {
   const user = await currentUser();
@@ -55,12 +56,18 @@ export function PortalHomePage() {
           />
         </p>
       </div>
-      <p className="text-md text-muted">
-        <FormattedMessage
-          id="portal.home.placeholder"
-          defaultMessage="Request types and your requests arrive with their own builds."
-        />
-      </p>
+      {/* The picker's empty state, standing alone until the picker
+          itself lands. It is not a placeholder: an instance whose
+          Administrator has archived every request type says exactly
+          this, and so does one that has configured none yet. */}
+      <Card>
+        <CardContent className="text-md text-muted">
+          <FormattedMessage
+            id="portal.home.noTypes"
+            defaultMessage="No request types are available yet. Ask your legal team to open one."
+          />
+        </CardContent>
+      </Card>
     </PortalShell>
   );
 }

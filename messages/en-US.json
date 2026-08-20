@@ -2414,8 +2414,8 @@
   "portal.home.lead": {
     "defaultMessage": "Pick a request type — the form collects what Legal needs to get started."
   },
-  "portal.home.placeholder": {
-    "defaultMessage": "Request types and your requests arrive with their own builds."
+  "portal.home.noTypes": {
+    "defaultMessage": "No request types are available yet. Ask your legal team to open one."
   },
   "portal.home.title": {
     "defaultMessage": "What do you need from Legal?"
