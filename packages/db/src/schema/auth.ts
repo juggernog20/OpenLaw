@@ -113,6 +113,12 @@ export const accounts = pgTable(
       .references(() => users.id, { onDelete: "cascade" }),
     accountId: text("account_id").notNull(),
     providerId: text("provider_id").notNull(),
+    // What identifies the account from better-auth 1.7 on, paired with
+    // `account_id`. A password row carries the synthetic `local:credential`;
+    // an OIDC row carries the IdP's own issuer, which is what the `iss`
+    // claim of a verified id_token says and what `sso_providers.issuer`
+    // holds. Migration 0060 backfilled both.
+    issuer: text("issuer").notNull(),
     password: text("password"),
     accessToken: text("access_token"),
     refreshToken: text("refresh_token"),
@@ -123,10 +129,16 @@ export const accounts = pgTable(
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },
-  // A provider subject identifies exactly one account: one credential row
-  // per user, and no second user can ever claim someone else's OIDC subject.
+  // Two keys, and they are not the same statement. (provider_id,
+  // account_id) is one credential row per user and one row per subject
+  // under a given provider registration. (issuer, account_id) is the key
+  // better-auth looks an account up by from 1.7 on, and it is the
+  // stricter one: two provider registrations can name the same IdP, and
+  // then one person's subject reaches this table twice under two
+  // provider ids that the first index is content to keep apart.
   (table) => [
     uniqueIndex("accounts_provider_account_unique").on(table.providerId, table.accountId),
+    uniqueIndex("accounts_issuer_account_unique").on(table.issuer, table.accountId),
     index("accounts_user_id_idx").on(table.userId),
   ],
 );

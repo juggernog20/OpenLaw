@@ -671,6 +671,9 @@
   "auth.enroll.error.copy": {
     "defaultMessage": "Could not copy the codes. Copy them manually."
   },
+  "auth.enroll.error.method": {
+    "defaultMessage": "Two-factor authentication is not configured correctly on this install. Contact an Administrator."
+  },
   "auth.enroll.error.password": {
     "defaultMessage": "Check your password."
   },

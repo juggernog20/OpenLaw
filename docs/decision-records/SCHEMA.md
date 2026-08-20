@@ -83,6 +83,7 @@ One row per authentication method per user: a **credential row** (holding the Ar
 | `id`                                                  | UUID        | PK                                                                                 |
 | `user_id`                                             | UUID FK     | → `users.id`, not null, cascade delete                                             |
 | `provider_id`                                         | text        | `credential`, or the `sso_providers.provider_id` slug for OIDC rows                |
+| `issuer`                                              | text        | who asserts the subject: `local:credential`, or the IdP's own issuer on OIDC rows  |
 | `account_id`                                          | text        | provider-side subject (OIDC `sub`); equals the user id on credential rows          |
 | `password`                                            | text        | nullable; Argon2id hash per **TECH-008** — credential rows only, NULL on OIDC rows |
 | `access_token`, `refresh_token`, `id_token`           | text        | nullable; OIDC token columns, demanded by better-auth's model                      |
@@ -90,7 +91,9 @@ One row per authentication method per user: a **credential row** (holding the Ar
 | `scope`                                               | text        | nullable; granted OIDC scopes                                                      |
 | `created_at`, `updated_at`                            | timestamptz |                                                                                    |
 
-Unique on (`provider_id`, `account_id`): one credential row per user, and no second user can ever claim someone else's OIDC subject. No `archived_at`: offboarding archives the _user_; account rows die with the user via cascade.
+Unique on (`provider_id`, `account_id`): one credential row per user, and one row per subject under a given provider registration. Unique on (`issuer`, `account_id`) as well — the pair better-auth itself looks an account up by from 1.7 on, and the stricter of the two: two provider registrations may name the same IdP, and then one person's subject reaches this table twice under two `provider_id`s that the first index is content to keep apart. No `archived_at`: offboarding archives the _user_; account rows die with the user via cascade.
+
+`issuer` arrived with better-auth 1.7 (#340), which identifies an account by who asserted the subject rather than by which provider row we filed it under. A password account carries the synthetic `local:credential`; an OIDC account carries the issuer its IdP publishes, which is what a verified `id_token`'s `iss` claim says and what `sso_providers.issuer` already held. Migration `0060_account_issuer` backfilled both and refuses an upgrade it cannot resolve, because a row with the wrong issuer is a person who cannot sign in.
 
 ---
 

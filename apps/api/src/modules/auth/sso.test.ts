@@ -69,6 +69,16 @@ beforeAll(async () => {
       name: idpIdentity.name ?? "",
     };
   });
+  // The id_token has to assert the same subject as userinfo, because a
+  // real IdP does and because better-auth 1.7 now checks: the account's
+  // identity is the verified `sub` claim, and a userinfo body that
+  // disagrees with the signed token is refused as
+  // `id_token_userinfo_subject_mismatch`. Left to itself the mock signs
+  // its own default subject, which 1.6 never looked at.
+  idp.service.on("beforeTokenSigning", (token) => {
+    token.payload.sub = idpIdentity.sub;
+    token.payload.email = idpIdentity.email;
+  });
 }, 120_000);
 
 afterAll(async () => {

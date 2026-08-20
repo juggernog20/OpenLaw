@@ -555,6 +555,24 @@ export function createAuth(
 
 export type Auth = ReturnType<typeof createAuth>;
 
+/**
+ * The issuer better-auth 1.7 gives a password account.
+ *
+ * From 1.7 an account is identified by (`issuer`, `account_id`) rather
+ * than by its provider id. A method with no issuer of its own gets a
+ * synthetic one, `local:<provider id>`, and the library builds this exact
+ * string wherever it looks a credential row up — `findCredentialAccount`
+ * and `updatePassword` both filter on it.
+ *
+ * It is written here rather than imported because `@better-auth/core`,
+ * which exports the builder, is a transitive dependency we would then
+ * have to keep in lockstep for one constant — and because migration
+ * 0060 has to spell the same value in SQL, where nothing can be
+ * imported at all. The two are pinned together by the setup and
+ * migration suites: get it wrong and no password sign-in works.
+ */
+export const CREDENTIAL_ISSUER = "local:credential";
+
 export interface ProvisionedUser {
   email: string;
   displayName: string;
@@ -579,14 +597,28 @@ export async function provisionUser(auth: Auth, user: ProvisionedUser): Promise<
   // one to hijack and no public sign-up to squat through. Leaving it
   // false would make a later magic-link redemption strip this password
   // credential as "unproven" (see onPasswordReset above).
-  const created = await ctx.internalAdapter.createUser({
-    email: user.email.toLowerCase(),
-    name: user.displayName,
-    emailVerified: true,
-  });
+  const created = await ctx.internalAdapter.createUser(
+    {
+      email: user.email.toLowerCase(),
+      name: user.displayName,
+      emailVerified: true,
+    },
+    // The provisioning origin 1.7 asks for. It only feeds the optional
+    // `user.validateUserInfo` gate, which this install does not
+    // configure; the value still has to be truthful, and the one caller
+    // in production is first-run setup asserting an address with a
+    // password of its own.
+    { method: "email-password" },
+  );
   await ctx.internalAdapter.linkAccount({
     userId: created.id,
     providerId: "credential",
+    // 1.7 keys an account on (issuer, accountId) rather than on the
+    // provider id. Local methods carry a synthetic issuer, and
+    // better-auth's own credential lookups — `findCredentialAccount`
+    // and `updatePassword` — filter on exactly this value, so a row
+    // without it can never sign in or change its password.
+    issuer: CREDENTIAL_ISSUER,
     accountId: created.id,
     password: passwordHash,
   });
