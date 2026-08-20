@@ -75,11 +75,22 @@ export async function requireAuth(request: FastifyRequest): Promise<void> {
   };
 }
 
+/**
+ * **The one sentence a role refusal is worded in.**
+ *
+ * It is exported because a guard is not the only place a role can refuse:
+ * a route mounted for several kinds of record answers the role question
+ * per record type, behind its own seam, and that refusal must read
+ * exactly as this one. A second copy is a second sentence somebody can
+ * reword, and the reword is what tells a caller the two paths differ.
+ */
+export const NO_PERMISSION = "You do not have permission to perform this action.";
+
 export function requireRole(...roles: UserRole[]) {
   return async (request: FastifyRequest): Promise<void> => {
     await requireAuth(request);
     if (!roles.includes(request.user.role)) {
-      throw httpError(403, "You do not have permission to perform this action.");
+      throw httpError(403, NO_PERMISSION);
     }
   };
 }
