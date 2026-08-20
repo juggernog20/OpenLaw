@@ -526,14 +526,10 @@ function focusTitle() {
  * Every piece of state below seeds from the loaded contract, so moving
  * from one record to another must start a fresh component — otherwise
  * the new record would render the previous one's saved row and drafts.
- * The key on the reference does that.
+ * The router does that: `KeyedByParam` keys this screen by
+ * `:contractNumber`, so a change of record is a remount (#372).
  */
 export function ContractRecordPage() {
-  const { contractNumber } = useParams();
-  return <ContractRecord key={contractNumber} />;
-}
-
-function ContractRecord() {
   // Which section is on screen (DES-032). The loader has already sent
   // an unknown segment to the Overview, so anything that survives to
   // here is one of the five tab segments or "overview".
