@@ -70,6 +70,17 @@ export function requestStatusLabel(intl: IntlShape, status: RequestStatus): stri
   );
 }
 
+/** The whole staff request detail read (#414): the envelope, the
+ * fields that name the collected values, the rows those values point
+ * at, and the paper. Aliased to the generated client schema so a change
+ * to what the staff read answers surfaces here as a compile error. */
+type StaffDetailResponse =
+  paths["/api/v1/requests/{number}"]["get"]["responses"]["200"]["content"]["application/json"];
+export type StaffRequest = StaffDetailResponse["request"];
+export type StaffRequestField = StaffDetailResponse["fields"][number];
+export type StaffRequestFieldRefs = StaffDetailResponse["customFieldRefs"];
+export type StaffRequestAttachment = StaffDetailResponse["attachments"][number];
+
 /** One row of the Inbox, aliased to the generated client schema so a
  * change to what the staff read answers surfaces here as a compile
  * error. */
@@ -133,6 +144,17 @@ export function requestReference(intl: IntlShape, number: number): string {
  */
 export function requestAttachmentHref(number: number, attachmentId: string): string {
   return `/api/v1/portal/requests/${number}/attachments/${encodeURIComponent(attachmentId)}`;
+}
+
+/**
+ * Where one attachment's bytes are fetched from on the staff side.
+ *
+ * The staff mount's own address, for the reason the read has one: same
+ * rows, two projections, two gates (the M20/5 rule). An anchor pointed
+ * here downloads for a Member+ and answers 403 to anybody below.
+ */
+export function staffRequestAttachmentHref(number: number, attachmentId: string): string {
+  return `/api/v1/requests/${number}/attachments/${encodeURIComponent(attachmentId)}`;
 }
 
 /**

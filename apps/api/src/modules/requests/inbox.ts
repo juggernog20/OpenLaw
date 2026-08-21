@@ -72,6 +72,7 @@ import {
 import { requireRole, type AuthenticatedUser } from "../../auth/guards.js";
 import { contractTeamScope } from "../../lib/contract-access.js";
 import { problemResponse } from "../../lib/problem.js";
+import { StaffRequestTypeSchema, targetModuleOf } from "./projection.js";
 
 /** INT-006: Member+ triages, and there are no routing rules to narrow
  * that further. A Contributor and a Business User are refused rather
@@ -89,25 +90,6 @@ const PAGE_SIZE = 50;
 
 /** A cursor is a Request id, and nothing longer is worth reading. */
 const CursorSchema = z.string().min(1).max(64);
-
-/**
- * The front door a Request came through, with the routing the
- * Administrator bound to it (INT-002's three-state target).
- *
- * The target rides on the row because triage reads it before opening
- * anything: "Contract · NDA" says the conversion is one confirmation,
- * "Contract" says one choice is still owed, and no target says this ask
- * may not become a record at all. A module with no type name is the
- * module-only state — either it was never given a type, or the type it
- * named was hard-deleted and the FK demoted the row rather than
- * stranding it.
- */
-const InboxRequestTypeSchema = z.object({
-  id: z.string(),
-  displayName: z.string(),
-  targetModule: z.enum(["matter", "contract"]).nullable(),
-  targetTypeName: z.string().nullable(),
-});
 
 /** Who asked. A name and an id: the Inbox states the person, and the
  * staff detail is where anything more about them belongs. */
@@ -133,7 +115,11 @@ const InboxRowSchema = z.object({
   summary: z.string(),
   /** DES-018's severity ramp, as the requester claimed it. */
   urgency: z.enum(SEVERITY_LEVELS),
-  requestType: InboxRequestTypeSchema,
+  /** The target rides on the row because triage reads it before
+   * opening anything. A module with no type name is the module-only
+   * state — either it was never given a type, or the type it named was
+   * hard-deleted and the FK demoted the row rather than stranding it. */
+  requestType: StaffRequestTypeSchema,
   requester: InboxRequesterSchema,
   createdAt: z.string(),
   /** The record a conversion made, when this viewer reaches it, and
@@ -304,19 +290,6 @@ function furtherDownThan(cursor: string): SQL {
       and ${requests.number} > ${number}
     )
   )`;
-}
-
-/**
- * The target module as the wire carries it.
- *
- * The column is plain text and the table's check constraint is what
- * closes it to two values, so the union is restated on the way out
- * rather than asserted: an install carrying anything else reads as no
- * target, which is the state the model already has.
- */
-function targetModuleOf(stored: string | null): "matter" | "contract" | null {
-  if (stored === "matter" || stored === "contract") return stored;
-  return null;
 }
 
 /** The joined row, reshaped into the answer's nested shape. */
