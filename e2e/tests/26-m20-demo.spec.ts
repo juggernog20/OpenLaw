@@ -96,6 +96,10 @@ const RequestTypeRows = z.object({
 
 const MyRequests = z.object({ requests: z.array(z.object({ number: z.number().int() })) });
 
+const AttachedFields = z.object({
+  attachedFields: z.array(z.object({ slug: z.string(), isRequired: z.boolean() })),
+});
+
 const MyRequest = z.object({ request: z.object({ id: z.string(), number: z.number().int() }) });
 
 /** An RFC 9457 problem, loosely — enough of it to compare two refusals. */
@@ -130,19 +134,51 @@ async function governingLawFieldId(request: APIRequestContext): Promise<string> 
 }
 
 /**
- * Takes the run's field back off the seeded form, whether or not it is
- * still there — a crashed earlier run may have left it attached, and 404
- * is the answer that says it did not. The catalog definition and the
- * values already collected under its slug stay (MTR-014); only the join
- * row goes.
+ * Whether the run's field is on the seeded form right now, and with what
+ * required flag. `null` means it is not attached at all.
+ *
+ * The demo mutates a **seeded** row rather than one of its own, so it
+ * reads the state it is about to change and puts that state back — not
+ * the state it happens to want. A seed that ever ships this field
+ * attached, or an install whose Administrator attached it on purpose,
+ * must survive a test run untouched (TECH-018).
  */
-async function ensureFieldDetached(
+async function attachmentState(
+  request: APIRequestContext,
+  typeId: string,
+): Promise<boolean | null> {
+  const read = await request.get(`/api/v1/request-types/${typeId}/fields`);
+  expect(read.status(), await read.text()).toBe(200);
+  const row = AttachedFields.parse(await read.json()).attachedFields.find(
+    (field) => field.slug === FIELD_SLUG,
+  );
+  return row ? row.isRequired : null;
+}
+
+/**
+ * Puts the form back the way the run found it: attached with the flag it
+ * had, or off the form when it was never on it. The catalog definition
+ * and the values already collected under its slug stay either way
+ * (MTR-014); only the join row moves.
+ */
+async function restoreAttachment(
   request: APIRequestContext,
   typeId: string,
   fieldId: string,
+  was: boolean | null,
 ): Promise<void> {
-  const detached = await request.delete(`/api/v1/request-types/${typeId}/fields/${fieldId}`);
-  expect([204, 404], await detached.text()).toContain(detached.status());
+  if (was === null) {
+    const detached = await request.delete(`/api/v1/request-types/${typeId}/fields/${fieldId}`);
+    // 404 is an answer too: a run that failed before it attached has
+    // nothing to take off.
+    expect([204, 404], await detached.text()).toContain(detached.status());
+    return;
+  }
+  if ((await attachmentState(request, typeId)) === was) return;
+  const restored = await request.patch(`/api/v1/request-types/${typeId}/fields/${fieldId}`, {
+    data: { isRequired: was },
+  });
+  expect(restored.status(), await restored.text()).toBe(200);
 }
 
 /**
@@ -198,7 +234,11 @@ test.describe.serial("M20 demo path", () => {
     expect(MyRequests.parse(await staffList.json()).requests).toEqual([]);
 
     // Replace-the-list semantics (#22): read what is there, prune the
-    // domains earlier runs left behind, and add this run's.
+    // domains earlier runs left behind, and add this run's. The run's
+    // own entry is left standing rather than restored on the way out —
+    // it is `04-magic-link`'s pattern and its filter, so the next run's
+    // prune is what removes this one's and the list cannot grow without
+    // bound.
     const read = await page.request.get("/api/v1/auth/allowed-domains");
     expect(read.status(), await read.text()).toBe(200);
     const { domains: existing } = DomainsEnvelope.parse(await read.json());
@@ -212,11 +252,16 @@ test.describe.serial("M20 demo path", () => {
     const typeId = await ndaRequestTypeId(page.request);
     const fieldId = await governingLawFieldId(page.request);
 
+    // Read before writing: the form this demo configures is a seeded row
+    // that an install may have configured for itself, so what the sweep
+    // puts back is what was there and not what this run wanted.
+    const attachedBefore = await attachmentState(page.request, typeId);
+
     const context = await browser.newContext();
     /** Leaves the shared instance as the run found it (TECH-018). */
     const leaveInert = async () => {
       await context.close();
-      await ensureFieldDetached(page.request, typeId, fieldId);
+      await restoreAttachment(page.request, typeId, fieldId, attachedBefore);
       await ensureMemberInert(page.request, REQUESTER);
     };
 
@@ -225,12 +270,22 @@ test.describe.serial("M20 demo path", () => {
       //
       // The seeded NDA form collects the four basics and nothing else
       // until an Administrator puts a catalog field on it. Required
-      // here means required **on this form**.
-      await ensureFieldDetached(page.request, typeId, fieldId);
-      const attached = await page.request.post(`/api/v1/request-types/${typeId}/fields`, {
-        data: { fieldId, isRequired: true },
-      });
-      expect(attached.status(), await attached.text()).toBe(201);
+      // here means required **on this form**. Attached if it was not
+      // there, and flagged if it was, so a run on an install that had
+      // already attached it starts from the same screen.
+      if (attachedBefore === null) {
+        const attached = await page.request.post(`/api/v1/request-types/${typeId}/fields`, {
+          data: { fieldId, isRequired: true },
+        });
+        expect(attached.status(), await attached.text()).toBe(201);
+      } else if (!attachedBefore) {
+        const flagged = await page.request.patch(
+          `/api/v1/request-types/${typeId}/fields/${fieldId}`,
+          { data: { isRequired: true } },
+        );
+        expect(flagged.status(), await flagged.text()).toBe(200);
+      }
+      expect(await attachmentState(page.request, typeId)).toBe(true);
 
       // ---- The requester arrives ----
 
@@ -285,9 +340,10 @@ test.describe.serial("M20 demo path", () => {
       await portal.getByLabel("Description").fill(DESCRIPTION);
       await portal.getByLabel("Urgency").selectOption("high");
       await portal.getByLabel(FIELD_NAME).fill(FIELD_ANSWER);
-      // The dropzone's input is out of the tab order and out of sight, and
-      // it is still the control a file goes into.
-      await portal.locator("#request-attachments").setInputFiles({
+      // The dropzone's input is out of the tab order and out of sight,
+      // and its label still points at it — so the file goes in by the
+      // name on the screen rather than by an id only the markup knows.
+      await portal.getByLabel("Attachments").setInputFiles({
         name: ATTACHMENT,
         mimeType: "text/plain",
         buffer: Buffer.from("Clause 7.2 — governing law, marked up.\n"),
