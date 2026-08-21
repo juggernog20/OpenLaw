@@ -62,8 +62,13 @@ reader at their own eight o'clock. Arc 4, the front door, has begun: M19 configu
 section on the settings rail, request types on the same machinery every other type table already
 uses, the three-state target that decides at the door what a request will become, the form definition
 that reuses the M6 field catalog rather than building a second one, and the deflection links panel
-that answers a question before it becomes a request. Nothing in M19 is visible to a requester; next
-are the portal that renders it (M20) and the Inbox that turns a request into a record (M21).
+that answers a question before it becomes a request. Nothing in M19 was visible to a requester, and
+M20 is the milestone that opens the door: the lightweight portal a business user magic-links into, the
+form that renders M19's configuration, the Request with its R-### and its paper, the conversation
+Legal answers on, and a bell and a notification pane of the portal's own. Every one of those reads is
+its own mount rather than a loosened staff gate, and the thread and the bell are the comments and
+notification machinery given one more arm rather than a second system. The requester can now ask;
+next is the Inbox that turns a request into a record (M21).
 
 ---
 
@@ -369,17 +374,47 @@ first.
     the rule an extension point has to pass and the point at which the machinery is split instead
   - One edge left open for M20: a catalog field archived, its type re-pointed, then the field
     restored, leaves an attachment live under a target whose scope no longer admits it — visible,
-    repairable by a plain detach, and recorded in INT-002 rather than refused
+    repairable by a plain detach, and recorded in INT-002 rather than refused. _Met in M20: the
+    portal form renders, collects, and enforces such a field like any other, and both seams pin it
+    (the INT-002 M20/4 addendum)._
   - _Decisions:_ INT-002, INT-004, INT-005, DES-020, DES-022, DES-052, TECH-023 · _Issues:_ #351–#357
 
-- [ ] **M20 — The portal**
+- [x] **M20 — The portal**
       _Demo:_ A business user requests a magic link, lands in the portal, submits an NDA request with an
       attachment, and sees it in their list with a live thread.
-  - The lightweight portal shell: magic-link auth, no accounts, no passwords
-  - Submission forms, my-requests, and the per-request conversation thread
-  - R-### numbering; requester-supplied urgency; request attachments
-  - The portal bell and portal notification settings
-  - _Decisions:_ INT-001, INT-003, NOT-001, DD-010
+  - The lightweight portal shell: magic-link auth, no accounts, no passwords, and a chrome with no
+    staff nav, no search, and two destinations of its own
+  - **Landing is by role, not by callback URL** — the magic link still redeems to `/`, and the root
+    loader forwards a Business User to the portal, so SSO, password sign-in, and a bookmark all land
+    the same way and `apps/api` learned nothing about the portal
+  - Every requester-facing read is **its own mount**, never a loosened gate on the Administrator's:
+    `/portal/...` answers a narrower projection of the same rows, and the M19 settings routes still
+    refuse a Business User with 403
+  - Submission forms, my-requests, and the per-request conversation thread, with the requester in the
+    `where` clause of every read (DD-013) — a foreign R-### and a missing one are the same 404
+  - `requests` and `request_attachments`; R-### as a `GENERATED ALWAYS` identity column;
+    requester-supplied urgency on the DES-018 ramp; one set of upload rules shared with documents,
+    and a Request bounded at twenty attachments
+  - The thread is the comments machinery with **one new arm**, not a second system — the M20/1
+    prefactor's acceptance criterion, measured: adding `request` took one vocabulary entry and one
+    map member, with no route, tier filter, or unread-count edit
+  - Group 5 fires: the receipt, the reply, and the requester email — four Notifier methods, of which
+    two have callers today and two wait for M21's disposition routes
+  - The portal bell and portal notification settings, both a **second mount** of the staff ones. The
+    notification scope now takes which surface is asking rather than which role, because a Member+ who
+    raises a Request of their own holds both kinds of row at once
+  - Three things left open for M21, each written down where M21 will look rather than carried
+    silently. **A request type with a _required_ `user` or `entity` catalog field is unanswerable** —
+    the portal draws those pickers empty on purpose, so every submission of that type is refused
+    forever, and nothing in the M19 editor stops an Administrator attaching one; three candidate
+    fixes are recorded in INT-002 and raised as #400, and none is chosen. **The requester-facing
+    status vocabulary is unchosen** — the status-change email translates `new` to "open" and
+    `converted` to "in progress" while the portal pill says "New" and "Converted"; no requester has
+    seen it because the event has no caller yet, and M21 gives it one (INT-003). **A mention on a
+    Request thread notifies nobody** — `commentMentioned` is a contract's event, and what is meant to
+    tell the staff side about a Request is group 4, which the Inbox brings (CMT-010)
+  - _Decisions:_ INT-001, INT-002, INT-003, INT-004, CMT-010, NOT-001, NOT-002, NOT-005, DES-049,
+    DES-050 · _Issues:_ #375–#384
 
 - [ ] **M21 — The Inbox and triage**
       _Demo:_ A submitted request appears in the Inbox, converts into a contract with the collected values

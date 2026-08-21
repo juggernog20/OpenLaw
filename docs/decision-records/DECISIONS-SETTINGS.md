@@ -87,6 +87,16 @@ _2026-08-10 — the M5 pre-build grill closed the gaps between SET-001..004 and 
 - **Rationale** — At 2–10 people the Admin is a message away; a grants model is a fifth permission concept bolted onto DD-013's clean scheme.
 - **Consequences** — FUTURE-FEATURES entry (settings delegation). Permission check is a single role gate, not per-surface.
 
+### Addendum (2026-08-21, M20/10, [#384](https://github.com/juggernog20/OpenLaw/issues/384)) — the tree has a Business User floor, and it is the whole tree
+
+The decision above answers two of DD-013's four roles: an Administrator gets Organization, a Member gets Personal. It says nothing about the other two, because when it was written nobody outside the staff application had a session. The portal gave a fourth role one (INT-001).
+
+**A Business User is refused the whole `/settings` tree, Personal included.** Everybody signed in owns a profile, so the tree's own gate — a session — admitted them, and a Business User who typed `/settings/profile` reached the staff shell. That is a staff destination on a surface whose definition is that it has none. The floor sits on the tree's parent loader rather than on each pane, and a parent redirect wins over every pane loader, so one line covers the section and every pane under it now and later. It refuses the way the rest of the staff application refuses a role floor — by bouncing to `/`, where the root guard forwards a Business User to the portal (the INT-001 M20/2 addendum).
+
+**One of the three Personal panes has a portal answer, and two do not.** Notifications does: group 5 is theirs on `/portal/settings`, and the other four groups are about records they cannot open (the INT-001 M20/9 addendum). Profile and Appearance do not — a Business User cannot change their own display name, their avatar, or their theme, and the portal honours whatever is stored without offering a way to store anything. Both gaps are left standing rather than closed here. The portal's chrome is deliberately two destinations (M20/9), and a third would need a decision of its own about what somebody with no account and no password may edit about themselves — which is a question about identity, not about settings.
+
+Built in M20/2 (#376) and recorded at the M20 close, where the sweep found it stated only in the loader.
+
 ## SET-003 — Apply semantics: immediate on save; guarded archive with reassignment
 
 - **Status** — Accepted
@@ -145,12 +155,12 @@ _2026-08-10 — the M5 pre-build grill closed the gaps between SET-001..004 and 
 
 ## Index of decisions
 
-| #       | Decision                                                              | Status   |
-| ------- | --------------------------------------------------------------------- | -------- |
-| SET-001 | IA: one /settings destination with Personal + Organization rails      | Accepted |
-| SET-002 | Permissions: Admin-only Organization settings; no delegation in v1    | Accepted |
-| SET-003 | Apply semantics: immediate on save; guarded archive with reassignment | Accepted |
-| SET-004 | First-run onboarding wizard + seeded defaults                         | Accepted |
-| SET-005 | User management: Users pane, role edits, guarded archive, revocation  | Accepted |
-| SET-006 | Personal profile scope; email change deferred                         | Accepted |
-| SET-007 | E-signature lives in Organization → Integrations, not in Contracts    | Accepted |
+| #       | Decision                                                              | Status                                                                             |
+| ------- | --------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| SET-001 | IA: one /settings destination with Personal + Organization rails      | Accepted                                                                           |
+| SET-002 | Permissions: Admin-only Organization settings; no delegation in v1    | Accepted; the Business User floor over the whole tree added by the M20/10 addendum |
+| SET-003 | Apply semantics: immediate on save; guarded archive with reassignment | Accepted                                                                           |
+| SET-004 | First-run onboarding wizard + seeded defaults                         | Accepted                                                                           |
+| SET-005 | User management: Users pane, role edits, guarded archive, revocation  | Accepted                                                                           |
+| SET-006 | Personal profile scope; email change deferred                         | Accepted                                                                           |
+| SET-007 | E-signature lives in Organization → Integrations, not in Contracts    | Accepted                                                                           |

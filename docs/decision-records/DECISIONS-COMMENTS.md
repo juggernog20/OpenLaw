@@ -160,17 +160,31 @@ CMT-010 made room for a second arm and predicted the shape of the change. M20/7 
 
 **Re-parenting at conversion (CMT-001) is untouched.** Nothing in this arm reads or writes the link a conversion leaves behind; M21 owns that move.
 
+### Addendum (2026-08-21, M20/10, [#384](https://github.com/juggernog20/OpenLaw/issues/384)) — three things the arm settled that were written only in the code
+
+The M20 close read the `request` arm back against this record. Three rules were live and unrecorded. All three follow from the M20/7 addendum above; none of them is stated by it.
+
+**A Business User can read the Member+ roster through the mention-candidates route.** `GET /comments/mention-candidates` takes the arm's audience read over people rather than over rows (CMT-007), so on a Request it answers the Requester plus every live Member+ — name, avatar, and the tiers each hears. `requireCommentReader` now admits all four roles (the M20/7 addendum widened it), so the address is reachable from a portal session on the caller's own Request.
+
+That is a wider answer than the portal's own screens give. The thread names a staff member once they have replied; this names every live Member+ whether they have touched the Request or not. The close records it as it stands rather than narrowing it, and states the reasons both ways so the next reader can weigh them. **For leaving it:** the candidate set is CMT-007's promise that a name offered is a name the tier reaches, and a per-role narrowing would make one route mean two things; who is on Legal is not a secret an in-house team keeps from the person raising the request; and the portal composer draws no @-typeahead at all, so nothing in the product surfaces the list today — the API answers it and nothing asks. **For narrowing it:** the answer names people who have had no contact with this Request, and it grows with the staff directory rather than with the conversation. **The thing that would change the answer** is a portal composer that draws the list — an offered name is an invitation, and the set worth offering there may be smaller than the set that hears a tier. The milestone that draws it owns that call.
+
+**It is not the `user` catalog field's rule and must not be read as relaxing it.** That picker stays empty because a value on a Request points work at somebody (the INT-002 M20/10 addendum); this list only says who could be spoken to.
+
+**A mention on a Request thread notifies nobody, and the blank is deliberate.** `notifyPosted` raises `requestReplied` and nothing else. `commentMentioned` is group 1 and a contract's — it carries a CTR-003 number and fans out over a roster — and a Request has neither. So a Member+ named in a Request thread is reached by the reply event if they are its audience, and by nothing at all if they are not. **What is meant to tell the staff side about a Request is group 4**, which the Inbox brings in M21; the milestone that builds it should decide whether being named on a Request deserves an event of its own.
+
+**A Requester may edit and soft-delete their own comment through the API.** CMT-008's author-only rule is not role-gated, and the `request` arm put a Business User's session on the same routes. The INT-001 M20/7 addendum says "the portal draws no corrections… a requester who wants to take something back replies again" — that is true of the **surface** and not of the seam, and this records the difference. It is the right way round: the rule is about who wrote the words, not about which screen they were typed on, and a per-entity-type carve-out would be CMT-008 meaning two things. A redact stays an Administrator's alone (CMT-005) and is unchanged.
+
 ## Index of decisions
 
-| #       | Decision                                                                       | Status                                                  |
-| ------- | ------------------------------------------------------------------------------ | ------------------------------------------------------- |
-| CMT-001 | One comment system; anchored doc comments; thread follows the work             | Accepted (extended by CMT-010)                          |
-| CMT-002 | Thread shape: flat chronological, mentions, no nesting                         | Accepted                                                |
-| CMT-003 | Tier rendering: badge + strong Legal-Only treatment; segmented composer        | Accepted                                                |
-| CMT-004 | Home: activity-bar panel; badge = your unread, tier-filtered                   | Accepted (confirmed by CMT-009)                         |
-| CMT-005 | Post-publish: edit with marker, soft delete, tier immutable                    | Accepted (amended by CMT-006, extended by CMT-008)      |
-| CMT-006 | Prior comment text lives in `comment_revisions`, not the activity log          | Accepted (extended by CMT-008)                          |
-| CMT-007 | Mentions: a list beside plain text; reachable candidates; narrowest promotion  | Accepted                                                |
-| CMT-008 | The three corrections: owners, two tombstones, and what a redact takes         | Accepted                                                |
-| CMT-009 | The unread count: a watermark per reader per record, and what it excludes      | Accepted (amended by CMT-010)                           |
-| CMT-010 | Audience resolution takes one arm per entity type; downstream takes the answer | Accepted; the `request` arm added by the M20/7 addendum |
+| #       | Decision                                                                       | Status                                                                                                                                                           |
+| ------- | ------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| CMT-001 | One comment system; anchored doc comments; thread follows the work             | Accepted (extended by CMT-010)                                                                                                                                   |
+| CMT-002 | Thread shape: flat chronological, mentions, no nesting                         | Accepted                                                                                                                                                         |
+| CMT-003 | Tier rendering: badge + strong Legal-Only treatment; segmented composer        | Accepted                                                                                                                                                         |
+| CMT-004 | Home: activity-bar panel; badge = your unread, tier-filtered                   | Accepted (confirmed by CMT-009)                                                                                                                                  |
+| CMT-005 | Post-publish: edit with marker, soft delete, tier immutable                    | Accepted (amended by CMT-006, extended by CMT-008)                                                                                                               |
+| CMT-006 | Prior comment text lives in `comment_revisions`, not the activity log          | Accepted (extended by CMT-008)                                                                                                                                   |
+| CMT-007 | Mentions: a list beside plain text; reachable candidates; narrowest promotion  | Accepted                                                                                                                                                         |
+| CMT-008 | The three corrections: owners, two tombstones, and what a redact takes         | Accepted                                                                                                                                                         |
+| CMT-009 | The unread count: a watermark per reader per record, and what it excludes      | Accepted (amended by CMT-010)                                                                                                                                    |
+| CMT-010 | Audience resolution takes one arm per entity type; downstream takes the answer | Accepted; the `request` arm added by the M20/7 addendum; its mention candidates, its silent mentions, and its author corrections recorded by the M20/10 addendum |

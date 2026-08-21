@@ -20,8 +20,8 @@
  * (DOC-004). A promotion that needs those facts reads them off the blob.
  *
  * `file_ref` is the storage seam's `<driver>:<key>` reference (DOC-012).
- * The key is minted from the two ids and never from the filename, so no
- * name a person chose can shape a storage key.
+ * The key is minted from the attachment's own id and never from the
+ * filename, so no name a person chose can shape a storage key.
  */
 
 import { index, pgTable, text, timestamp } from "drizzle-orm/pg-core";
