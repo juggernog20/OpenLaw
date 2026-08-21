@@ -32,6 +32,12 @@
  * matter-scoped and global under Matter, global only with no target.
  * So the target lives here rather than inside the select — changing it
  * changes what the menu offers, on the pick, with no reload.
+ *
+ * **One row type takes no required box.** A `user` or `entity` field
+ * may sit on a request form but may never be required on one: the
+ * portal offers a requester no rows for either, so a required one could
+ * never be answered (#400). The card draws that box locked and says
+ * why, and the API refuses the write behind it.
  */
 
 import { useState } from "react";
@@ -47,6 +53,7 @@ import { StatusNote, type FieldStatus } from "../components/status-note";
 import { Label } from "../components/ui/label";
 import {
   TypeEditorScreen,
+  type EditorRequiredRule,
   type EditorTypeRow,
   type TypeEditorApi,
   type TypeEditorBasics,
@@ -116,6 +123,11 @@ const MESSAGES = defineMessages({
   fieldColumn: { id: "settings.requestTypeEditor.fieldColumn", defaultMessage: "Field" },
   requiredColumn: { id: "settings.requestTypeEditor.requiredColumn", defaultMessage: "Required" },
   requiredFor: { id: "settings.requestTypeEditor.requiredFor", defaultMessage: "{name} required" },
+  requiredLocked: {
+    id: "settings.requestTypeEditor.requiredLocked",
+    defaultMessage:
+      "{name} can be on the form, but it can't be required. A requester picks no person and no entity in the portal.",
+  },
   detach: { id: "settings.requestTypeEditor.detach", defaultMessage: "Detach {name}" },
   detached: { id: "settings.requestTypeEditor.detached", defaultMessage: "{name} detached." },
   attach: { id: "settings.requestTypeEditor.attach", defaultMessage: "Attach field" },
@@ -144,9 +156,26 @@ const MESSAGES = defineMessages({
   help: {
     id: "settings.requestTypeEditor.help",
     defaultMessage:
-      "Drag to reorder. Which fields you can attach follows the target; detaching a field keeps its catalog definition.",
+      "Drag to reorder. Which fields you can attach follows the target; detaching a field keeps its catalog definition. A user or entity field can be on the form but can't be required — the portal offers a requester no rows to pick.",
   },
 });
+
+/**
+ * The one field rule that is the portal's (INT-002's M20/11 addendum,
+ * #400): a `user` or `entity` field may sit on a request form and may
+ * never be required on one. The portal draws both controls empty on
+ * purpose — a requester reads neither the staff directory nor the
+ * Entity registry (DD-013, DD-016) — so a required one is a question
+ * nobody who can reach the form is able to answer.
+ *
+ * The box is locked here so the rule reads as a rule, rather than as a
+ * save that fails. The API refuses the same write, which is the real
+ * guard.
+ */
+const REQUIRED_RULE: EditorRequiredRule = {
+  fieldTypes: ["user", "entity"],
+  reason: MESSAGES.requiredLocked,
+};
 
 /**
  * The four basics (INT-002): what every request form collects, whatever
@@ -498,6 +527,7 @@ export function SettingsRequestTypeEditorPage() {
         api: EDITOR_API,
         messages: MESSAGES,
         basics: BASICS_SLOT,
+        requiredRule: REQUIRED_RULE,
       }}
     />
   );

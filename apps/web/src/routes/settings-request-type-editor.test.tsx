@@ -11,11 +11,11 @@
  * locked rows, and below them the catalog fields, offered by the rule
  * the target sets.
  *
- * Five things are asserted rather than assumed: the picker offers live
+ * Six things are asserted rather than assumed: the picker offers live
  * types only, an archived target still reads as itself and is flagged,
  * the basics are locked and never in the Attach menu, the menu follows
- * the target as it is picked, and the API's own strand refusal reaches
- * the screen.
+ * the target as it is picked, the API's own strand refusal reaches the
+ * screen, and a `user` or `entity` row takes no required box (#400).
  */
 
 import { describe, expect, it } from "vitest";
@@ -138,6 +138,28 @@ const ATTACHED = [
   },
 ];
 
+/**
+ * The same form, plus a `user` field already attached to it — the row
+ * whose required box the mount never offers (#400).
+ *
+ * It is deliberately not in `CATALOG`: the Attach menu's own
+ * assertions count what the target allows, and a fifth catalog row
+ * would move those numbers for a reason that has nothing to do with
+ * them.
+ */
+const ATTACHED_WITH_REFERENCE = [
+  ...ATTACHED,
+  {
+    fieldId: "f-owner",
+    slug: "business_owner",
+    displayName: "Business owner",
+    fieldType: "user",
+    moduleScope: "global",
+    displayOrder: 2,
+    isRequired: false,
+  },
+];
+
 /** Serves the editor's five reads and captures its writes. `refuse`
  * stands in for the API's own refusal — the validator under the row
  * lock, which the client never second-guesses. */
@@ -145,6 +167,7 @@ function editorApi(
   calls: EditorCalls,
   row: StubType = review(),
   refuse?: { status: number; detail: string },
+  attached: typeof ATTACHED = ATTACHED,
 ) {
   let current = row;
   return (call: StubCall): Response | undefined => {
@@ -159,7 +182,7 @@ function editorApi(
       return json(200, { contractTypes: CONTRACT_TYPES });
     }
     if (path === `/api/v1/request-types/${row.id}/fields` && call.method === "GET") {
-      return json(200, { attachedFields: ATTACHED });
+      return json(200, { attachedFields: attached });
     }
     if (path === "/api/v1/fields" && call.method === "GET") {
       return json(200, { fields: CATALOG });
@@ -343,6 +366,46 @@ describe("the form definition (ST14's right card)", () => {
     await waitFor(() => expect(calls.detached).toEqual(["f-cp"]));
     await waitFor(() => expect(screen.queryByText("Counterparty name")).not.toBeInTheDocument());
     expect(screen.getByRole("checkbox", { name: "Summary required" })).toBeInTheDocument();
+  });
+
+  /**
+   * INT-002's M20/11 addendum (#400). The portal offers a requester no
+   * rows for a `user` or an `entity`, so a required one is a question
+   * nobody can answer. The editor locks the box rather than letting the
+   * rule arrive as a save that fails.
+   */
+  it("locks the required box on a user field, and says why", async () => {
+    openEditor(editorApi(newCalls(), review(), undefined, ATTACHED_WITH_REFERENCE));
+    await screen.findByText("Form fields");
+
+    const box = screen.getByRole("checkbox", { name: "Business owner required" });
+    expect(box).toBeDisabled();
+    expect(box).toHaveAttribute("data-state", "unchecked");
+    const reason = screen.getByText(
+      "Business owner can be on the form, but it can't be required. " +
+        "A requester picks no person and no entity in the portal.",
+    );
+    // The reason is the box's own description, so a reader that lands
+    // on the box hears why it is shut rather than meeting a bare
+    // disabled control.
+    expect(box).toHaveAttribute("aria-describedby", reason.id);
+    expect(reason.id).not.toBe("");
+    // Said on the screen as well, for everybody who is not using a
+    // reader — a disabled box alone explains nothing.
+    expect(
+      screen.getByText(/A user or entity field can be on the form but can't be required/),
+    ).toBeInTheDocument();
+  });
+
+  it("leaves the row itself a row: it still detaches and still reorders", async () => {
+    openEditor(editorApi(newCalls(), review(), undefined, ATTACHED_WITH_REFERENCE));
+    await screen.findByText("Form fields");
+    expect(screen.getByRole("button", { name: "Detach Business owner" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /Reorder Business owner, position 2 of 2/ }),
+    ).toBeInTheDocument();
+    // Only this row's box is locked; an ordinary field keeps its own.
+    expect(screen.getByRole("checkbox", { name: "Counterparty name required" })).toBeEnabled();
   });
 });
 

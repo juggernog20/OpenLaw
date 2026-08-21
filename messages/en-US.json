@@ -3945,7 +3945,7 @@
     "defaultMessage": "{type} · global"
   },
   "settings.requestTypeEditor.help": {
-    "defaultMessage": "Drag to reorder. Which fields you can attach follows the target; detaching a field keeps its catalog definition."
+    "defaultMessage": "Drag to reorder. Which fields you can attach follows the target; detaching a field keeps its catalog definition. A user or entity field can be on the form but can't be required — the portal offers a requester no rows to pick."
   },
   "settings.requestTypeEditor.moved": {
     "defaultMessage": "{name} moved to position {position} of {total}."
@@ -3958,6 +3958,9 @@
   },
   "settings.requestTypeEditor.requiredFor": {
     "defaultMessage": "{name} required"
+  },
+  "settings.requestTypeEditor.requiredLocked": {
+    "defaultMessage": "{name} can be on the form, but it can't be required. A requester picks no person and no entity in the portal."
   },
   "settings.requestTypeEditor.slug": {
     "defaultMessage": "Slug"
