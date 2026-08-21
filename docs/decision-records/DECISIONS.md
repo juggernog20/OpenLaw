@@ -882,6 +882,8 @@ Clause 5 is the one place this deliberately costs the reader a click. The altern
 
 **Shared views with an Administrator default.** The structurally richer option, and the one to graduate to if a deployment ever asks. It was declined here because every clause it adds is a permission question, and DD-013's four roles would each need an answer about a preference.
 
+> **Priced, not decided (2026-08-21, #389).** This alternative is now costed against the code as built, in `SHARED-LIST-VIEWS-SKETCH.md`. Two findings change what this record implies. The graduation is **not** one column plus one widened read-scope: the true schema delta is a scope column, two rewritten unique indexes, a new partial unique index, a new check constraint, a changed foreign-key rule, a nullable author column, and a second ceiling — and the module's 404-not-403 convention cannot survive sharing. But the **minimal** version — one Administrator-pinned workspace default per surface, in its own small table — touches `list_views` not at all. It still amends clause 1, which refuses that default by name; what it leaves standing is the rest of the clause, including "no `is_shared` column". So the minimal version is a narrow amendment to one refusal, not a supersession of the record. The trigger for building it is the first time a second person asks for the same view — the same layout on the same surface, from somebody who is not its author. This paragraph prices the alternative; it does not adopt it, and DD-019 stands as accepted.
+
 **Filter chips with no persistence** (MTR-003's third option). Does not answer the ask at all: chips are a narrowing, not a remembered way of reading.
 
 ### Consequences
