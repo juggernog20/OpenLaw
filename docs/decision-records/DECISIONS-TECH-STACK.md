@@ -200,12 +200,14 @@ Prisma (codegen layer; Postgres-specific surfaces fight the abstraction); Kysely
 
 **A migration file inherits whatever transaction state the file before it left behind. If it needs to be all-or-nothing, it must open its own transaction rather than assume one.**
 
-drizzle-kit runs the pending files in order, and normally each one runs inside a transaction the runner opened — so a statement that fails rolls the file back. Two things end that, and one of them is already in this repo:
+The runner is drizzle-orm's `migrate()`, called on container start (TECH-005) — drizzle-kit only generates the files. It runs the pending files in order inside **one transaction around the whole batch**, not one per file: normally a statement that fails rolls back everything the batch had applied — statements and journal rows together — and the upgrade stops with the previous release's schema intact, which is the safe failure.
 
-- A file ending in a bare `COMMIT;`. `packages/db/migrations/0060_account_issuer.sql` does, deliberately, for exactly this reason.
-- `CREATE INDEX CONCURRENTLY`, which Postgres refuses inside a transaction block.
+One thing ends that transaction mid-batch: a bare `COMMIT;` inside a migration file. This repo has two, both deliberate:
 
-Either leaves the session in **autocommit**, and **the next file in the batch arrives that way**. In autocommit every statement commits as it runs, so a file with an `ALTER TABLE` followed by a guard that raises leaves the `ALTER` applied and nothing else done — and the re-run after the fix dies on the duplicate column instead of resuming.
+- `packages/db/migrations/0054_reminder_dedup_entity_type.sql` opens with one, because its `CREATE INDEX CONCURRENTLY` statements cannot run inside a transaction block at all — Postgres refuses the statement rather than the transaction, so the file has to end the transaction first.
+- `packages/db/migrations/0060_account_issuer.sql` ends with the one that closes its own `BEGIN` (below).
+
+After either file, the session is in **autocommit**, and **every later file in that batch arrives that way**. In autocommit every statement commits as it runs, so a file with an `ALTER TABLE` followed by a guard that raises leaves the `ALTER` applied and nothing else done — and the re-run after the fix dies on the duplicate column instead of resuming.
 
 The fix is two lines at the head of any migration that must be atomic:
 
@@ -214,7 +216,7 @@ COMMIT;--> statement-breakpoint
 BEGIN;--> statement-breakpoint
 ```
 
-The `COMMIT` closes whatever is open — the runner's transaction, empty at that point, or nothing at all, which Postgres answers with a warning rather than an error. The `BEGIN` then makes the file one transaction on **every** upgrade path, whether it was reached from a fresh database or from an install crossing `0060` on the way. Migrations that already ran in the same batch stay applied either way, because each records its journal row as it goes.
+The `COMMIT` closes whatever is open — the batch transaction, carrying every earlier pending file's statements and journal rows, all of them complete files that are safe to make durable early — or nothing at all, which Postgres answers with a warning rather than an error. The `BEGIN` then makes the file one transaction on **every** upgrade path, whether the batch reached it inside the runner's transaction or in autocommit after crossing `0054` or `0060` on the way.
 
 This is worth the two lines whenever a file has more than one statement that must not land alone: a backfill beside its column, a guard that can refuse, or a constraint added after the data is fixed up to satisfy it. A lone `ALTER TABLE ADD COLUMN` is atomic by itself and needs nothing.
 
