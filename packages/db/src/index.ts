@@ -200,6 +200,17 @@ export function createDb(databaseUrl: string): Db {
   pool.on("error", (error) => {
     console.error(`postgres: idle client error (${error.message})`);
   });
+  // A server NOTICE is Postgres talking to the operator — migration
+  // 0064 raises one naming every approver group it renamed, and that
+  // promise ("it lands in the container-start log") is only true if
+  // somebody is listening: pg drops notices that have no listener.
+  // Attached at pool creation, before any client connects, because a
+  // client that connected first would never get the listener.
+  pool.on("connect", (client) => {
+    client.on("notice", (notice) => {
+      console.warn(`postgres: ${notice.message ?? "notice with no message"}`);
+    });
+  });
   return drizzle(pool, { schema });
 }
 

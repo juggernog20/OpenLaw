@@ -30,7 +30,7 @@
  */
 
 import { PostgreSqlContainer, type StartedPostgreSqlContainer } from "@testcontainers/postgresql";
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { runMigrations, sql, type Db, type JournalEntry } from "@openlaw/db";
 import {
   freshDb as freshDatabase,
@@ -83,6 +83,12 @@ async function names(db: Db): Promise<Record<string, string>> {
 describe("the 0064 de-duplication", () => {
   it("keeps the oldest group's name and suffixes the rest", async () => {
     const db = await installBefore("groups_duplicate");
+    // The migration's NOTICE is the operator's only record of the
+    // renames (CTR-012's #391 addendum promises it lands in the
+    // container-start log). pg drops notices nothing listens for, so
+    // this asserts the whole chain — RAISE, the pool's notice listener,
+    // the process log — not just the RAISE.
+    const log = vi.spyOn(console, "warn").mockImplementation(() => {});
     try {
       await group(db, "g-1", "Commercial sign-off", "2026-01-01T09:00:00Z");
       await group(db, "g-2", "Commercial sign-off", "2026-02-01T09:00:00Z");
@@ -95,7 +101,14 @@ describe("the 0064 de-duplication", () => {
         "g-2": "Commercial sign-off (2)",
         "g-3": "Commercial sign-off (3)",
       });
+      const notice = log.mock.calls
+        .map((call) => call.join(" "))
+        .find((line) => line.includes("Renamed"));
+      expect(notice, "the rename NOTICE in the process log").toContain(
+        "Renamed 2 approver group(s)",
+      );
     } finally {
+      log.mockRestore();
       await db.$client.end();
     }
   });
