@@ -158,6 +158,11 @@ async function expectMatchingRefusal(payload: {
   customFields?: Record<string, string>;
 }) {
   const overHttp = await createOverHttp(payload);
+  // The route has to have refused before there is anything to compare.
+  // A 201 here would leave a committed contract and then read `detail`
+  // off an envelope that has none, so the comparison below would agree
+  // with itself about `undefined`.
+  expect(overHttp.statusCode, overHttp.body).toBeGreaterThanOrEqual(400);
   const problem = overHttp.json() as Problem;
   const thrown = await refusalOf(createInCallerTransaction(payload));
   expect(overHttp.statusCode, overHttp.body).toBe(thrown.statusCode);

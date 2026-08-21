@@ -342,8 +342,13 @@ export async function applyCustomFields(
       throw httpError(400, "That field is not on this contract's type.");
     }
     const value = coerceCustomFieldValue(field, raw);
-    if (value !== null && (field.fieldType === "user" || field.fieldType === "entity")) {
-      await lockedReference(tx, field, value as string);
+    // The string test is the coercion's own guarantee restated for the
+    // compiler rather than a second rule: `user` and `entity` reduce to
+    // a row id, so nothing but a string or a clear reaches this branch.
+    // Stating it beats asserting it — an unchecked cast here would be
+    // the one place a widened field type could pass a number to a lock.
+    if (typeof value === "string" && (field.fieldType === "user" || field.fieldType === "entity")) {
+      await lockedReference(tx, field, value);
     }
     const before = stored[slug];
     if (value === null) {
