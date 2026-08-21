@@ -162,8 +162,12 @@ export function PortalRequestPage() {
       <StatusBanner status={request.status} declinedReason={request.declinedReason} />
       {/* I7 puts the conversation between the banner and the card, which
           is where a requester looks first: what has been said since they
-          asked matters more than what they typed when they did. */}
-      <RequestThread requestId={request.id} viewerId={user.id} thread={thread} />
+          asked matters more than what they typed when they did. Keyed by
+          the Request, because the card seeds its state from the loader's
+          read: a navigation from one Request to another re-renders this
+          route in place, and without the key the card would keep the
+          previous Request's conversation. */}
+      <RequestThread key={request.id} requestId={request.id} viewerId={user.id} thread={thread} />
       <section
         aria-labelledby="portal-request-submitted-heading"
         className="w-full overflow-hidden rounded-card border border-border-default bg-raised"

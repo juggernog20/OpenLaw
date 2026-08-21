@@ -33,7 +33,7 @@
  */
 
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { activityLog, and, eq, users } from "@openlaw/db";
+import { activityLog, and, eq, requests, users } from "@openlaw/db";
 import { provisionUser } from "../../auth/instance.js";
 import {
   signInCookies,
@@ -255,6 +255,33 @@ describe("the request arm's audience", () => {
   it("answers a Member+ on a Request they did not raise", async () => {
     const thread = await read(memberCookies, otherRequestId);
     expect(thread.statusCode, thread.body).toBe(200);
+  });
+
+  it("answers a Member+ who raised the Request themselves as staff", async () => {
+    // Staff standing wins over requester standing (the CMT-010 M20/7
+    // addendum): being the Requester too does not take a room away from
+    // somebody who was already in every one of them. This suite refuses
+    // a Business User requester this same tier above.
+    const id = await submit(memberCookies, "Raised by staff");
+    const posted = await post(memberCookies, "Note to self, privileged.", "legal_only", id);
+    expect(posted.statusCode, posted.body).toBe(201);
+
+    const thread = await read(memberCookies, id);
+    expect(bodies(thread)).toEqual(["Note to self, privileged."]);
+  });
+
+  it("answers 404 on an archived Request, exactly as its detail read does", async () => {
+    // Archiving is the one thing that closes the thread — no status
+    // does (INT-007, DD-018) — by the house rule that NULL means live.
+    const id = await submit(requesterCookies, "Archived away");
+    await harness.db.update(requests).set({ archivedAt: new Date() }).where(eq(requests.id, id));
+
+    const thread = await read(requesterCookies, id);
+    expect(thread.statusCode, thread.body).toBe(404);
+    const staffThread = await read(memberCookies, id);
+    expect(staffThread.statusCode, staffThread.body).toBe(404);
+    const posted = await post(requesterCookies, "Anyone there?", "full_thread", id);
+    expect(posted.statusCode, posted.body).toBe(404);
   });
 });
 
