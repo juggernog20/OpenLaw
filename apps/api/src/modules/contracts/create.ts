@@ -12,7 +12,7 @@
  * caller is routing one.
  *
  * **It takes the transaction rather than opening one.** The create
- * route is the first caller and opens its own; the INT-002 conversion
+ * route is the first caller and opens its own; the INT-006 conversion
  * of a Request is the second, and its transaction is wider than this
  * write — it dispositions the Request, promotes the paper, and
  * re-parents the thread beside it, and every one of those has to roll

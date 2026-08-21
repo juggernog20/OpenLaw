@@ -8,7 +8,7 @@
  * this suite asserts is the half the route cannot: the same write, run
  * inside a transaction some **other** caller opened and owns.
  *
- * That is what INT-002's conversion needs. Converting a Request is one
+ * That is what INT-006's conversion needs. Converting a Request is one
  * transaction that dispositions the Request, creates the contract,
  * promotes the paper, and re-parents the thread; the contract write has
  * to be a step inside it rather than a transaction of its own, or a

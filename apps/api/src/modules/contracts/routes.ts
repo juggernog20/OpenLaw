@@ -9,7 +9,7 @@
  *
  * The create **write** is not here: it lives in `create.ts` as one
  * callable that takes the transaction rather than opening one, because
- * the INT-002 conversion of a Request has to run it as a step inside a
+ * the INT-006 conversion of a Request has to run it as a step inside a
  * wider act. This route is its first caller, and it keeps the two
  * things a caller decides — who may create (CTR-021) and what the
  * answer looks like on the wire.
