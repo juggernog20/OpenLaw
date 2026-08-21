@@ -37,6 +37,7 @@ import {
   and,
   asc,
   contractEnvelopes,
+  contractEnvelopeSigners,
   contracts,
   desc,
   eq,
@@ -433,6 +434,36 @@ describe("sending the primary document for signature", () => {
       // the database's own answer is on the cause.
     ).rejects.toMatchObject({
       cause: { code: "23505", constraint: "contract_envelopes_live_idx" },
+    });
+  });
+
+  /**
+   * The route already refuses a repeated address (CTR-013's #391
+   * addendum), so this asks the other half of the question: what stops
+   * a writer that forgot to. The position was protected and the person
+   * was not until this index landed.
+   */
+  it("holds the one-address-one-signer rule in the database", async () => {
+    const [live] = await harness.db
+      .select()
+      .from(contractEnvelopes)
+      .where(eq(contractEnvelopes.contractId, contract.id));
+    expect(live, "the live envelope").toBeDefined();
+    await expect(
+      harness.db.insert(contractEnvelopeSigners).values({
+        envelopeId: live!.id,
+        name: "Sarah C.",
+        // The same address in another case. Addresses are stored
+        // verbatim and compared case-insensitively, which is what the
+        // index reads and what the erasure path matches on.
+        email: SIGNERS[0].email.toUpperCase(),
+        // A free position, so the row can only be refused by the
+        // address: the order index would have caught a repeated one and
+        // said nothing about the person.
+        signingOrder: SIGNERS.length + 1,
+      }),
+    ).rejects.toMatchObject({
+      cause: { code: "23505", constraint: "contract_envelope_signers_email_idx" },
     });
   });
 });

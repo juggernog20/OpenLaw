@@ -9372,7 +9372,7 @@
       },
       "post": {
         "operationId": "createApproverGroup",
-        "summary": "Create an approver-group template with its name, an optional description, and an optional starting member list; members must be live Member+ users",
+        "summary": "Create an approver-group template with its name, an optional description, and an optional starting member list; members must be live Member+ users. The name must be one no live group already carries, compared case-insensitively — 409 if it is",
         "tags": ["approver-groups"],
         "requestBody": {
           "required": true,
@@ -9500,7 +9500,7 @@
     "/api/v1/approver-groups/{id}": {
       "patch": {
         "operationId": "updateApproverGroup",
-        "summary": "Rename an approver group (DES-017 in-place rename) and/or change its description; the two changes write their own activity entries",
+        "summary": "Rename an approver group (DES-017 in-place rename) and/or change its description; the two changes write their own activity entries. A new name must be one no other live group carries, compared case-insensitively — 409 if it is",
         "tags": ["approver-groups"],
         "requestBody": {
           "required": true,
@@ -9876,7 +9876,7 @@
     "/api/v1/approver-groups/{id}/restore": {
       "post": {
         "operationId": "restoreApproverGroup",
-        "summary": "Restore an archived approver group (SET-003's recovery story); its members ride along unchanged",
+        "summary": "Restore an archived approver group (SET-003's recovery story); its members ride along unchanged. Archiving frees the name, so a restore is refused 409 when a live group has taken it since",
         "tags": ["approver-groups"],
         "parameters": [
           {

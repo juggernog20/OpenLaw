@@ -228,6 +228,10 @@ describe("the three named refusals are reachable through the seam (CTR-015)", ()
       payload: { relatedContractNumber: b.number, relationType: "renews" },
     });
     expect(second.statusCode).toBe(409);
+    // The three types below are written out rather than imported from
+    // `@openlaw/shared`: this suite reads them off real responses, so
+    // the literals are what make TECH-020's "changing a type is a
+    // breaking change" visible (TECH-020's #391 addendum).
     expect(second.json().type).toBe("urn:openlaw:problem:contract-relation-exists");
   });
 

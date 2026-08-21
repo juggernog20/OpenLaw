@@ -202,12 +202,14 @@ Prisma (codegen layer; Postgres-specific surfaces fight the abstraction); Kysely
 
 The runner is drizzle-orm's `migrate()`, called on container start (TECH-005) — drizzle-kit only generates the files. It runs the pending files in order inside **one transaction around the whole batch**, not one per file: normally a statement that fails rolls back everything the batch had applied — statements and journal rows together — and the upgrade stops with the previous release's schema intact, which is the safe failure.
 
-One thing ends that transaction mid-batch: a bare `COMMIT;` inside a migration file. This repo has two, both deliberate:
+One thing ends that transaction mid-batch: a bare `COMMIT;` inside a migration file. The first two were one-offs, both deliberate:
 
 - `packages/db/migrations/0054_reminder_dedup_entity_type.sql` opens with one, because its `CREATE INDEX CONCURRENTLY` statements cannot run inside a transaction block at all — Postgres refuses the statement rather than the transaction, so the file has to end the transaction first.
 - `packages/db/migrations/0060_account_issuer.sql` ends with the one that closes its own `BEGIN` (below).
 
-After either file, the session is in **autocommit**, and **every later file in that batch arrives that way**. In autocommit every statement commits as it runs, so a file with an `ALTER TABLE` followed by a guard that raises leaves the `ALTER` applied and nothing else done — and the re-run after the fix dies on the duplicate column instead of resuming.
+Every file on the two-line pattern below adds another — `0063`–`0065` were the first to follow it ([#391](https://github.com/juggernog20/OpenLaw/issues/391)), and each ends with the `COMMIT` that closes its own `BEGIN`.
+
+After any of these files, the session is in **autocommit**, and **every later file in that batch arrives that way**. In autocommit every statement commits as it runs, so a file with an `ALTER TABLE` followed by a guard that raises leaves the `ALTER` applied and nothing else done — and the re-run after the fix dies on the duplicate column instead of resuming.
 
 The fix is two lines at the head of any migration that must be atomic:
 
@@ -216,7 +218,7 @@ COMMIT;--> statement-breakpoint
 BEGIN;--> statement-breakpoint
 ```
 
-The `COMMIT` closes whatever is open — the batch transaction, carrying every earlier pending file's statements and journal rows, all of them complete files that are safe to make durable early — or nothing at all, which Postgres answers with a warning rather than an error. The `BEGIN` then makes the file one transaction on **every** upgrade path, whether the batch reached it inside the runner's transaction or in autocommit after crossing `0054` or `0060` on the way.
+The `COMMIT` closes whatever is open — the batch transaction, carrying every earlier pending file's statements and journal rows, all of them complete files that are safe to make durable early — or nothing at all, which Postgres answers with a warning rather than an error. The `BEGIN` then makes the file one transaction on **every** upgrade path, whether the batch reached it inside the runner's transaction or in autocommit after crossing `0054` or any self-transactioned file on the way.
 
 This is worth the two lines whenever a file has more than one statement that must not land alone: a backfill beside its column, a guard that can refuse, or a constraint added after the data is fixed up to satisfy it. A lone `ALTER TABLE ADD COLUMN` is atomic by itself and needs nothing.
 
@@ -502,6 +504,16 @@ Recorded as working defaults without a grill (all convention, no open design con
 
 Repo scaffold order: monorepo shell → Fastify + OpenAPI → auth (brings `packages/db` and its first tables) → Compose. _Revised 2026-08-08: there is no up-front "drizzle schema from SCHEMA.md" phase — the schema grows incrementally; tables land in the same change as the feature that reads and writes them, each with its own drizzle-kit migration, with SCHEMA.md as the naming/relationship reference._ The build phasing itself (which module first — CLM per PRODUCT.md) is unchanged.
 
+### Addendum (2026-08-21, [#391](https://github.com/juggernog20/OpenLaw/issues/391)) — one version, checked rather than generated
+
+The product's version is written down ten times: in the root `package.json`, in each of the eight workspace members', and once more as `OPENLAW_VERSION` in `packages/shared/src/index.ts` — the constant `GET /api/v1/meta` answers and the OpenAPI document carries. Nothing kept them in step, so a release bump that missed one would ship an install reporting a version it is not. The API review offered the fork: generate the constant, or check it.
+
+**It is checked.** `pnpm lint:versions` reads the root `package.json` as the source of truth and fails when any of the other nine places disagrees, naming each one. It runs inside `pnpm check`, which is what CI runs — a real gate, on the `lint:migrations` and `lint:contrast` precedent, not a comment asking somebody to remember.
+
+Generating it was declined for two concrete reasons rather than on taste. `@openlaw/shared` is bundled into the browser, so the value has to be a literal in the source rather than a file read at runtime; and that package's tsconfig sets `rootDir: "src"`, so importing its own `package.json` would move the whole build's output layout. What is left of "generate" is a generated file that is **committed** — and a committed generated file needs a CI check that it is current anyway (the `openapi-current` job is exactly that shape). That is the check below plus a build step, so the build step is the part that was dropped.
+
+The script reads the workspace members from `pnpm-workspace.yaml` rather than listing them, so a package added later is checked without anybody remembering to.
+
 ## TECH-015: TypeScript 7 native compiler + TS 6 API shim for typescript-eslint
 
 - **Status:** Accepted — **temporary by design; see sunset trigger below**
@@ -784,6 +796,18 @@ CTR-012's soft gate (#235) is the first refusal a client has to **act on**. `PAT
 - The web helper layer gains `problemType` beside `problemDetail` (`apps/web/src/lib/messages.ts`).
 - Each acted-on type is declared once, in `packages/shared` (TECH-016's home for definitions both ends of the wire must agree on), and imported by the rule that throws it and the client that branches on it — `SOFT_GATE_PROBLEM_TYPE` in `packages/shared/src/index.ts` is the first. A mirrored copy per side was rejected in review: two copies that drifted would not fail loudly — the client would simply stop recognizing the refusal.
 - The OpenAPI document does not enumerate the types; they are documented in the route summary that can raise them.
+
+### Addendum (2026-08-21, [#391](https://github.com/juggernog20/OpenLaw/issues/391)) — where a test writes a problem type out, and where it imports one
+
+The consequence above rejects a mirrored copy of a type **in production code**, because two copies that drifted would not fail loudly. Tests were left unsaid, and the suites had drifted into doing both without a rule. This is the rule.
+
+**A test that authors the value imports it. A test that reads the value off the wire writes it out.**
+
+The web route tests stub the seam: the test writes the problem payload the record then branches on. There the literal is a second copy of a shared constant with nothing checking it against the first, and a renamed URN leaves a fixture asserting a string the product no longer uses. Those import from `@openlaw/shared` — four sites, in the contract record's soft-gate, relations, renewal, and envelope suites.
+
+The API integration suites and the E2E spec assert a type on a response the server produced. There the literal is the tripwire that makes decision point 4 above real: **changing a `type` is a breaking change**, and a change nothing goes red for is not being treated as one. Six sites keep their literals for that reason, and each now says so in place — `20-m14-demo.spec.ts` argued it first, and this addendum makes its local reasoning the general rule.
+
+Nothing is left green asserting a URN that no longer exists: after a rename the wire suites fail and the stub suites pass, which is the correct answer from each.
 
 ## TECH-021: Secrets at rest — plaintext for v1, with one owner and one trigger
 

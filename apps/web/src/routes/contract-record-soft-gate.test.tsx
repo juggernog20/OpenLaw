@@ -22,6 +22,7 @@
 import { describe, expect, it } from "vitest";
 import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { SOFT_GATE_PROBLEM_TYPE } from "@openlaw/shared";
 import { json, problem, renderAt, stubApi, type StubCall } from "../testing/helpers";
 
 const MEMBER = {
@@ -67,8 +68,10 @@ const OPTIONS = {
   approverGroups: [],
 };
 
-/** The problem type the gate's refusal carries. */
-const GATE_TYPE = "urn:openlaw:problem:approval-soft-gate";
+/** The problem type the gate's refusal carries, imported rather than
+ * written out: this suite stubs the seam, so the stub has to speak the
+ * contract the record branches on (TECH-020's #391 addendum). */
+const GATE_TYPE = SOFT_GATE_PROBLEM_TYPE;
 
 function contractRow(overrides: Record<string, unknown> = {}) {
   return {

@@ -599,6 +599,95 @@ describe("archive and restore", () => {
   });
 });
 
+/**
+ * CTR-012's #391 addendum: the name is the only identity the picker
+ * shows, so two live groups may not share one. The index is partial on
+ * the live rows, which is what makes archiving free the name again.
+ */
+describe("the name is unique among live groups", () => {
+  const clash = async (payload: Record<string, unknown>) =>
+    harness.app.inject({
+      method: "POST",
+      url: "/api/v1/approver-groups",
+      cookies: adminCookies,
+      payload,
+    });
+
+  it("refuses a second live group with the same name", async () => {
+    await createGroup({ name: "Unique probe" });
+    const res = await clash({ name: "Unique probe" });
+    expect(res.statusCode, res.body).toBe(409);
+    // The whole envelope, because the refusal comes from the index
+    // rather than from a hand-written throw: a raw unique violation
+    // would arrive as a 500 with none of this on it.
+    expect(res.headers["content-type"]).toContain("application/problem+json");
+    expect(res.json()).toMatchObject({
+      status: 409,
+      // No problem type: a name clash is a refusal the Administrator
+      // reads, not one a client branches on (TECH-020).
+      type: "about:blank",
+      detail: "An approver group is already called that.",
+    });
+  });
+
+  it("compares case-insensitively, as the picker's own sort does", async () => {
+    await createGroup({ name: "Finance sign-off" });
+    const res = await clash({ name: "FINANCE SIGN-OFF" });
+    expect(res.statusCode, res.body).toBe(409);
+  });
+
+  it("refuses a rename onto a live group's name", async () => {
+    await createGroup({ name: "Legal sign-off" });
+    const other = await createGroup({ name: "Some other set" });
+    const res = await harness.app.inject({
+      method: "PATCH",
+      url: `/api/v1/approver-groups/${other.id}`,
+      cookies: adminCookies,
+      payload: { name: "legal sign-off" },
+    });
+    expect(res.statusCode, res.body).toBe(409);
+  });
+
+  it("takes a rename that only changes the name's case", async () => {
+    // The row clashes with itself under `lower(name)`, and a unique
+    // index does not mind: the same row is not two rows.
+    const group = await createGroup({ name: "Board sign-off" });
+    const res = await harness.app.inject({
+      method: "PATCH",
+      url: `/api/v1/approver-groups/${group.id}`,
+      cookies: adminCookies,
+      payload: { name: "BOARD SIGN-OFF" },
+    });
+    expect(res.statusCode, res.body).toBe(200);
+    expect(res.json().approverGroup.name).toBe("BOARD SIGN-OFF");
+  });
+
+  it("frees the name on archive, and refuses the restore that would take it back", async () => {
+    const first = await createGroup({ name: "Rotating sign-off" });
+    const archive = await harness.app.inject({
+      method: "POST",
+      url: `/api/v1/approver-groups/${first.id}/archive`,
+      cookies: adminCookies,
+    });
+    expect(archive.statusCode, archive.body).toBe(200);
+
+    // Free, because an archived group is out of the picker and every
+    // request it produced already holds its own member snapshot.
+    const second = await clash({ name: "Rotating sign-off" });
+    expect(second.statusCode, second.body).toBe(201);
+
+    // And the restore is the one clash the partial index can still
+    // raise. It reads as its own sentence: the fix is on the live group.
+    const restore = await harness.app.inject({
+      method: "POST",
+      url: `/api/v1/approver-groups/${first.id}/restore`,
+      cookies: adminCookies,
+    });
+    expect(restore.statusCode, restore.body).toBe(409);
+    expect(restore.json().detail).toContain("Rename that one first");
+  });
+});
+
 describe("GET /approver-groups", () => {
   it("lists live groups in name order with their member counts", async () => {
     // Three names this suite owns, created out of order. Asserting their

@@ -242,6 +242,10 @@ describe("the soft gate refuses", () => {
     const res = await moveTo(contract.number, "signature");
     expect(res.statusCode, res.body).toBe(409);
     const problem = res.json();
+    // Written out rather than imported from `@openlaw/shared`: this
+    // suite reads the type off a real response, so the literal is what
+    // makes TECH-020's "changing a type is a breaking change" visible
+    // (TECH-020's #391 addendum).
     expect(problem.type).toBe("urn:openlaw:problem:approval-soft-gate");
     expect(problem.detail).toContain(FIRST.displayName);
     expect(problem.detail).toContain(SECOND.displayName);

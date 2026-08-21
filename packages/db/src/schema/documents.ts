@@ -229,8 +229,10 @@ export const documents = pgTable(
   },
   (table) => [
     // The one read the record page makes: this contract's documents,
-    // newest first.
-    index("documents_contract_idx").on(table.contractId, table.createdAt),
+    // newest first. `id` last, because the listing's keyset walks
+    // `(created_at, id)` and the tie-break belongs in the index that
+    // answers the order (CTR-024, #391).
+    index("documents_contract_idx").on(table.contractId, table.createdAt, table.id),
     // The executed pin's own column — the referencing side of the
     // foreign key into `document_versions` (M11/5). No read filters on
     // it, so it carried no index until now: what needs one is DOC-010's
@@ -244,7 +246,10 @@ export const documents = pgTable(
     // folder's count and the re-file a delete runs, and it is what keeps
     // opening one folder on a heavy record off a scan of the record's
     // whole paper.
-    index("documents_folder_idx").on(table.folderId, table.createdAt),
+    // The same keyset as the record listing above, so the same
+    // tie-break: one folder's page is the record's page under one more
+    // filter, and it walks `(created_at, id)` too.
+    index("documents_folder_idx").on(table.folderId, table.createdAt, table.id),
   ],
 );
 
