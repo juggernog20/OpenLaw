@@ -4,8 +4,9 @@
  * The application shell (#41): after sign-in the chrome renders — the
  * header with the product mark, search, and user menu; the top nav
  * driven by the destination registry, filtered to the signed-in role
- * (Home for everyone; Contracts for Member+ and Contributors per M9;
- * Entities is Member+ per ENT-004); and the page
+ * (the M21 Inbox first, Member+ only per INT-006; Home for everyone;
+ * Contracts for Member+ and Contributors per M9; Entities is Member+
+ * per ENT-004); and the page
  * sub-bar carrying the page title. Visuals come from the Light frames
  * in designs/final-themes.pen; geometry is asserted in the e2e suite
  * where real layout exists.
@@ -42,17 +43,23 @@ describe("app shell chrome", () => {
   });
 
   it("renders the nav from the destination registry, filtered to the signed-in role", async () => {
-    // Member+ gets every registered destination (Home, the M8 contract
-    // record, then the M7 Entities registry), with the current one
-    // marked.
+    // Member+ gets every registered destination — the M21 Inbox in the
+    // slot the registry reserved for intake (INT-006), then Home, the
+    // M8 contract record, and the M7 Entities registry — with the
+    // current one marked.
     stubApi({ signedIn: MEMBER });
     renderAt("/");
 
     const nav = await screen.findByRole("navigation");
     const links = within(nav).getAllByRole("link");
-    expect(links.map((link) => link.textContent)).toEqual(["Home", "Contracts", "Entities"]);
-    expect(links[0]).toHaveAttribute("aria-current", "page");
-    expect(links[1]).not.toHaveAttribute("aria-current");
+    expect(links.map((link) => link.textContent)).toEqual([
+      "Inbox",
+      "Home",
+      "Contracts",
+      "Entities",
+    ]);
+    expect(links[1]).toHaveAttribute("aria-current", "page");
+    expect(links[0]).not.toHaveAttribute("aria-current");
   });
 
   it("draws a Contributor the Contracts destination and nothing else (M9/1)", async () => {

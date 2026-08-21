@@ -2210,6 +2210,75 @@
   "home.title": {
     "defaultMessage": "Home"
   },
+  "inbox.assign": {
+    "defaultMessage": "Assign"
+  },
+  "inbox.assignRow": {
+    "defaultMessage": "Assign {reference}"
+  },
+  "inbox.awaiting": {
+    "defaultMessage": "{count} awaiting triage"
+  },
+  "inbox.awaitingShown": {
+    "defaultMessage": "{count} awaiting triage shown"
+  },
+  "inbox.column.actions": {
+    "defaultMessage": "Actions"
+  },
+  "inbox.column.age": {
+    "defaultMessage": "Age"
+  },
+  "inbox.column.outcome": {
+    "defaultMessage": "Outcome"
+  },
+  "inbox.column.reference": {
+    "defaultMessage": "Ref"
+  },
+  "inbox.column.requester": {
+    "defaultMessage": "Requester"
+  },
+  "inbox.column.summary": {
+    "defaultMessage": "Summary"
+  },
+  "inbox.column.type": {
+    "defaultMessage": "Type"
+  },
+  "inbox.column.urgency": {
+    "defaultMessage": "Urgency"
+  },
+  "inbox.empty.body": {
+    "defaultMessage": "Every Request has been decided. New ones land here as they arrive, hottest and oldest first."
+  },
+  "inbox.empty.title": {
+    "defaultMessage": "Nothing is waiting"
+  },
+  "inbox.listError": {
+    "defaultMessage": "The Inbox could not be read. Try again."
+  },
+  "inbox.more": {
+    "defaultMessage": "Show more"
+  },
+  "inbox.moreError": {
+    "defaultMessage": "The next requests could not be read. Try again."
+  },
+  "inbox.ordering": {
+    "defaultMessage": "Ordered by urgency, then age"
+  },
+  "inbox.showTriaged": {
+    "defaultMessage": "Show triaged"
+  },
+  "inbox.target.module": {
+    "defaultMessage": "{module, select, matter {Matter} contract {Contract} other {No target}}"
+  },
+  "inbox.target.moduleAndType": {
+    "defaultMessage": "{module, select, matter {Matter · {name}} contract {Contract · {name}} other {{name}}}"
+  },
+  "inbox.target.none": {
+    "defaultMessage": "No target"
+  },
+  "inbox.title": {
+    "defaultMessage": "Inbox"
+  },
   "keyDates.actionsFor": {
     "defaultMessage": "Actions for {label}"
   },
@@ -2332,6 +2401,9 @@
   },
   "nav.home": {
     "defaultMessage": "Home"
+  },
+  "nav.inbox": {
+    "defaultMessage": "Inbox"
   },
   "notifications.approval.requested": {
     "defaultMessage": "{hasActor, select, yes {{actor} asked you to approve {contract}} other {You were asked to approve {contract}}}"
