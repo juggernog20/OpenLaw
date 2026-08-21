@@ -2531,7 +2531,7 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** The signed-in person's notifications, newest first (NOT-001). There is no way to ask for anybody else's: a notification is addressed to one person and the address is the whole scope. An item about a record the reader can no longer reach — a contract walled off after the item was written (DD-014) — is silently omitted: no row, no gap, and no number that says something was left out. Paged from a server-fixed page size: pass the previous page's `nextCursor` to read further back. A cursor naming nothing in this person's bell answers an empty page rather than an error */
+    /** The signed-in person's staff notifications, newest first (NOT-001). There is no way to ask for anybody else's: a notification is addressed to one person and the address is the whole scope. This is the **staff** notification centre, so it answers items about contracts and never a Requester's group-5 items — those are the portal bell's, at `/portal/notifications`. An item about a record the reader can no longer reach — a contract walled off after the item was written (DD-014) — is silently omitted: no row, no gap, and no number that says something was left out. Paged from a server-fixed page size: pass the previous page's `nextCursor` to read further back. A cursor naming nothing in this person's bell answers an empty page rather than an error */
     get: operations["listNotifications"];
     put?: never;
     post?: never;
@@ -2548,7 +2548,7 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** How many unread notifications the signed-in person has (NOT-005) — the number behind the top-nav badge. It is the whole count, not the capped one: NOT-005's '9+' is how the badge draws it, and the cap belongs to the surface. It is computed over exactly the items the list would answer with, through the same confidentiality predicate, so an item about a since-walled-off record leaves the count as silently as it leaves the list */
+    /** How many unread staff notifications the signed-in person has (NOT-005) — the number behind the top-nav badge. It is the whole count, not the capped one: NOT-005's '9+' is how the badge draws it, and the cap belongs to the surface. It is computed over exactly the items the list would answer with, through the same confidentiality predicate, so an item about a since-walled-off record leaves the count as silently as it leaves the list */
     get: operations["unreadNotificationCount"];
     put?: never;
     post?: never;
@@ -2567,7 +2567,7 @@ export interface paths {
     };
     get?: never;
     put?: never;
-    /** Mark the named items read — what opening the notification centre does with the page it just drew (NOT-005). There is no per-item read ceremony, so being shown an item is the only thing that reads it. One page's worth of ids at a time, because the centre draws a page at a time. Ids that are not this person's, are already read, or are about a record they can no longer reach match nothing and are not refused — a refusal would answer whether an id exists. Answers the unread count that remains: normally what the page did not cover, plus whatever landed while it was being read */
+    /** Mark the named items read — what opening the notification centre does with the page it just drew (NOT-005). There is no per-item read ceremony, so being shown an item is the only thing that reads it. One page's worth of ids at a time, because the centre draws a page at a time. Ids that are not this person's, are already read, are about a record they can no longer reach, or belong to their portal bell match nothing and are not refused — a refusal would answer whether an id exists. Answers the unread count that remains: normally what the page did not cover, plus whatever landed while it was being read */
     post: operations["markNotificationsRead"];
     delete?: never;
     options?: never;
@@ -2584,7 +2584,7 @@ export interface paths {
     };
     get?: never;
     put?: never;
-    /** Mark every unread item read — the affordance that zeroes the badge after a holiday (NOT-005). It covers exactly what the badge counts, so an item about a record the reader can no longer reach is left alone: it is already outside the count, and clearing it would be a write on a record they cannot see. Answers the unread count that remains, which is zero unless something landed while the request was in flight */
+    /** Mark every unread staff item read — the affordance that zeroes the badge after a holiday (NOT-005). It covers exactly what the badge counts, so an item about a record the reader can no longer reach is left alone: it is already outside the count, and clearing it would be a write on a record they cannot see. A group-5 item on the same person's portal bell is left alone too, for the stronger reason that it is not on this surface at all. Answers the unread count that remains, which is zero unless something landed while the request was in flight */
     post: operations["markAllNotificationsRead"];
     delete?: never;
     options?: never;
@@ -2599,15 +2599,83 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** What the signed-in person gets on each of NOT-002's five event groups, per channel. It is the **effective** answer — their own saved rows over the group's defaults — because the table holds overrides rather than a grid, and a person who has never opened the pane has no rows at all. Every group is answered, including the one whose first events wait for the Inbox (M21): an opinion can be held about a group before anything in it has fired. There is no user parameter — a preference is one person's, and the signed-in person is the whole scope */
+    /** What the signed-in person gets on each of NOT-002's five event groups, per channel. It is the **effective** answer — their own saved rows over the group's defaults — because the table holds overrides rather than a grid, and a person who has never opened the pane has no rows at all. Every group is answered, including the one whose first events wait for the Inbox (M21): an opinion can be held about a group before anything in it has fired. Which of the five a surface draws is the surface's business — the staff pane draws four and the portal pane draws `requester_events` alone. There is no user parameter — a preference is one person's, and the signed-in person is the whole scope */
     get: operations["getMyNotificationPreferences"];
     put?: never;
     post?: never;
     delete?: never;
     options?: never;
     head?: never;
-    /** Save one channel's answer for one event group, for the signed-in person (NOT-001). One pair per request, because a toggle is what the pane saves and it saves the moment it is flipped (SET-003 immediate apply). The write lands in `notification_preferences` as an override, so the very next event honours it with no other wiring — and turning email off leaves the group's bell items flowing, which is the point of the two channels being separate rows. Recorded in the activity log like every settings mutation. Answers the whole grid back, so the pane can never drift from what the fan-out will honour */
+    /** Save one channel's answer for one event group, for the signed-in person (NOT-001). One pair per request, because a toggle is what the pane saves and it saves the moment it is flipped (SET-003 immediate apply). The write lands in `notification_preferences` as an override, so the very next event honours it with no other wiring — and turning email off leaves the group's bell items flowing, which is the point of the two channels being separate rows. A save back to the group's own default **removes** the override rather than storing one that agrees with it: the table holds disagreements, and the effective answer is identical either way. Recorded in the activity log like every settings mutation. Answers the whole grid back, so the pane can never drift from what the fan-out will honour */
     patch: operations["updateMyNotificationPreferences"];
+    trace?: never;
+  };
+  "/api/v1/portal/notifications": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** The signed-in person's portal notifications, newest first (NOT-001, INT-001) — NOT-002's group 5, about their own Requests. The gate is a session and nothing else, the portal's own rule: Member+ staff submit Requests too, and on this surface they are a Requester like anybody else. There is no way to ask for anybody else's, and no way to reach a contract item from here — that is the staff notification centre, at `/notifications`. An item about a Request the reader is no longer the Requester of, or one that has since been archived, is silently omitted: no row, no gap, and no number that says something was left out. Paged from a server-fixed page size: pass the previous page's `nextCursor` to read further back. A cursor naming nothing in this person's bell answers an empty page rather than an error */
+    get: operations["listPortalNotifications"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/portal/notifications/unread-count": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** How many unread portal notifications the signed-in person has (NOT-005) — the number behind the portal bell's badge. It is the whole count, not the capped one: '9+' is how the badge draws it, and the cap belongs to the surface. It is computed over exactly the items the list would answer with, through the same predicate, so an item about an archived Request leaves the count as silently as it leaves the list */
+    get: operations["unreadPortalNotificationCount"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/portal/notifications/read": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Mark the named portal items read — what opening the portal bell does with the page it just drew (NOT-005). There is no per-item read ceremony, so being shown an item is the only thing that reads it. One page's worth of ids at a time, because the panel draws a page at a time. Ids that are not this person's, are already read, are about a Request they can no longer reach, or belong to their staff notification centre match nothing and are not refused — a refusal would answer whether an id exists. Answers the unread count that remains */
+    post: operations["markPortalNotificationsRead"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/portal/notifications/read-all": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Mark every unread portal item read — the affordance that zeroes the portal badge (NOT-005). It covers exactly what the badge counts, so an item about an archived Request is left alone, and so is a staff item on the same person's notification centre: it is not on this surface at all. Answers the unread count that remains, which is zero unless something landed while the request was in flight */
+    post: operations["markAllPortalNotificationsRead"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
     trace?: never;
   };
 }
@@ -13706,6 +13774,150 @@ export interface operations {
               inApp: boolean;
               email: boolean;
             }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  listPortalNotifications: {
+    parameters: {
+      query?: {
+        cursor?: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            notifications: {
+              id: string;
+              eventType: string;
+              entityType: string;
+              entityId: string;
+              payload: {
+                [key: string]: unknown;
+              };
+              readAt: string | null;
+              /** Format: date-time */
+              createdAt: string;
+            }[];
+            nextCursor: string | null;
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  unreadPortalNotificationCount: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            unread: number;
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  markPortalNotificationsRead: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          ids: string[];
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            unread: number;
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  markAllPortalNotificationsRead: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            unread: number;
           };
         };
       };

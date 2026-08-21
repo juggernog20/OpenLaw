@@ -14,7 +14,7 @@
 import { Scale } from "lucide-react";
 import { FormattedMessage } from "react-intl";
 import { NavDrawer } from "./nav-drawer";
-import { NotificationBell } from "./notification-bell";
+import { NotificationBell } from "../notification-bell";
 import { SearchInput } from "./search-input";
 import { UserMenu, type ShellUser } from "./user-menu";
 
@@ -53,7 +53,7 @@ export function AppHeader({
       {/* 16px between the trailing controls, as the AppHeader frame
           spaces its own cluster. */}
       <div className="flex shrink-0 items-center gap-4">
-        <NotificationBell />
+        <NotificationBell surface="staff" />
         <UserMenu user={user} onSignOut={onSignOut} />
       </div>
     </header>

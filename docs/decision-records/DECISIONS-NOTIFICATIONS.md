@@ -149,6 +149,20 @@ _None — queue cleared 2026-08-05 (NOT-001 through NOT-005)._
 
   **One shape changed behind the seam and nothing above it noticed.** The fan-out now takes the record as a typed entity reference rather than a contract id, and dispatches the wall step per entity type — the arm shape the comments module already uses (CMT-010). The email register's messages likewise carry a record that names itself as a contract or as a Request. Both are what let one engine serve two surfaces without either route learning which one it is on.
 
+- **Addendum (2026-08-21, M20/9, [#383](https://github.com/juggernog20/OpenLaw/issues/383))** — **The read rule arrived with its surface, and it is a surface rather than a role.** M20/8 left group 5's rows outside `notificationScope` on purpose. They are now inside a **second** scope: `notificationScope(db, user, surface)` answers contracts for `"staff"` and the reader's own live Requests for `"portal"`, and the two sets are disjoint by entity type. So the staff notification centre still cannot show a group-5 row and a staff mark-all-read still cannot touch one — not because it is filtered out afterwards, but because it was never in that query.
+
+  **A person can hold both kinds of row at once, which is why the role could not decide it.** A Member+ who submits a Request of their own is a Requester on the portal and a staff reader in the application. They have two bells with two badges, and neither reads the other. Had the split been by role, that person would have had to be one thing or the other, and DD-013 says they are both.
+
+  **The portal bell is a second mount of the same four routes**, at `/portal/notifications`, not a parameter on the staff four. That is the INT-001 M20/3 rule applied one module over — the requester-facing read is its own address rather than a loosened gate — and it means the read model, the keyset, the page size, and the "no user parameter" property are written once and shared. The address is what says which surface is asking.
+
+  **A Request has no wall, so the portal predicate re-asks the two facts that can still change**: the Request is still live and this person is still its Requester. An archived Request's items leave the list and the badge together, silently, exactly as a walled-off contract's do on the staff side — no row, no gap, no number that says something was left out. The rows stay in the table.
+
+  **The preferences pair stays mounted once and serves both panes.** A preference is one person's whichever bell they are looking at; the API answers all five groups and the surface decides which of them to draw. The staff pane draws four, and the portal pane draws `requester_events` alone.
+
+  **A save back to a group's own default removes the override rather than storing one that agrees with it.** This supersedes the shipped M18/5 behaviour, which upserted on every save. The table is named for what it holds: a row that agrees with the default is not an override of anything, and leaving one there silently pins that person against a default they never asked to be held apart from. The **effective** answer is identical either way — both readers start from the catalogue default and lay stored rows over it — so nothing above the seam can tell the two states apart, and the difference shows only on the day a default moves.
+
+  **Narration is unchanged and still happens on every write.** `user.notification_preference_changed` records the group, the channel, and the new value whether the write stored a row or removed one: the M18/5 clause is about the act being recorded, not about what the table ended up holding, and re-affirming an opinion is still a real act.
+
 ## NOT-003 — Timing: direct events immediate; date reminders in a daily digest
 
 - **Status** — Accepted; **amended by NOT-008** (the daily briefing subsumes the date-only digest)
@@ -216,6 +230,12 @@ _None — queue cleared 2026-08-05 (NOT-001 through NOT-005)._
   **An id that is not this person's is not refused.** It matches nothing and the answer is the caller's own badge. A 404 would answer the question "does this id exist", which is the one thing a bell addressed to one person must not do.
 
   **The page is the unit.** The mark-read write is bounded to one page's worth of ids, because a page is what the centre draws and what "the visible items" means on a list that arrives a page at a time. A second draw of the same page sends nothing: an already-read item keeps the stamp from its first sighting, and the surface filters the read ones out before it asks.
+
+- **Addendum (2026-08-21, M20/9, [#383](https://github.com/juggernog20/OpenLaw/issues/383))** — **"Identical semantics on the portal bell" turned out to mean one component, not a second one.** The badge, the 9+ cap, read-on-open, mark-all-read, the paging foot, the focus landing, and both failure states are the staff bell's own code rendered against the portal's chrome. What the portal passes is which of the two surfaces it is: that selects the four routes to ask, the empty panel's sentence, and the trigger's foreground pair — the dark chrome strip and the raised portal strip need different ones. Nothing else differs, because NOT-005 settled one read model and not two.
+
+  **Two bells means two badges, and marking one read leaves the other alone.** That is a property of the API's scope (the NOT-001 M20/9 addendum) rather than of this surface, which counts nothing itself and draws only what it is answered.
+
+  **A group-5 item addresses the Request itself and names no section.** Point 9 of DES-049 makes a contract's prompt open the section it is about, because a contract record has routed tabs; a Request's detail is one page, so `/portal/requests/{number}` is the whole address.
 
 ## NOT-006 — The morning digest's anatomy and its delivery rules
 

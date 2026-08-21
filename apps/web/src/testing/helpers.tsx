@@ -245,6 +245,19 @@ export function stubApi(state: ApiState) {
     if (call.url.pathname === "/api/v1/notifications" && call.method === "GET") {
       return json(200, { notifications: [], nextCursor: null });
     }
+    // The portal's own bell, which every portal render reads on mount
+    // and on every navigation (NOT-001, M20/9). Zero and empty by
+    // default, exactly as the staff bell's two reads above; only the
+    // portal bell's own suite supplies rows, through `extra`.
+    if (
+      call.url.pathname === "/api/v1/portal/notifications/unread-count" &&
+      call.method === "GET"
+    ) {
+      return json(200, { unread: 0 });
+    }
+    if (call.url.pathname === "/api/v1/portal/notifications" && call.method === "GET") {
+      return json(200, { notifications: [], nextCursor: null });
+    }
     // What the portal home offers (M20/3, INT-001). Empty by default,
     // which is what a route test that is not about the portal needs:
     // the two reads run on every portal render, and only the portal's

@@ -11,14 +11,21 @@
  * is backed by, and the mail the harness caught. No test asserts that the
  * seam was called or how the fan-out is wired.
  *
- * **The rows are read from the table rather than from `GET
- * /notifications`, and that is the one deliberate exception to the rule
- * above.** That endpoint is the **staff** notification centre, whose
- * predicate answers about contracts alone; group 5's surface is the
- * **portal** bell (NOT-001), which is its own slice of M20. So this suite
- * reads the rows the way the send job does — and every claim it makes
- * about email is made against the captured mailer, which is the seam a
- * requester actually experiences.
+ * **The fan-out cases read the rows from the table rather than from
+ * either bell, and that is the one deliberate exception to the rule
+ * above.** Reading them directly is what lets a case tell "nothing was
+ * written" from "a row was written and something omitted it", which
+ * every claim that an event told nobody has to be able to do. Every
+ * claim about email is made against the captured mailer, which is the
+ * seam a requester actually experiences.
+ *
+ * **The last block is the surface those rows were written for** (#383,
+ * M20/9). The portal bell reads them over HTTP at
+ * `/portal/notifications`, and what it pins is the split NOT-001 asks
+ * for: the portal bell answers a person's own Requests, the staff
+ * notification centre answers contracts, and neither one can read — or
+ * mark read — the other's rows. A Member+ who submits a Request of their
+ * own is the case that proves the split is by surface and not by role.
  *
  * What it pins is the four events and the three rules that shape them:
  *
@@ -38,7 +45,7 @@
  */
 
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { desc, eq, notifications, users, type Notification } from "@openlaw/db";
+import { desc, eq, notifications, requests, users, type Notification } from "@openlaw/db";
 import { provisionUser } from "../../auth/instance.js";
 import type { NotifyingTransaction } from "../../lib/notifications/notifier.js";
 import {
@@ -419,5 +426,164 @@ describe("the two events the Inbox will fire (INT-006, INT-007)", () => {
     expect((await rowsAbout(STAFF, request)).map((row) => row.eventType)).toEqual([
       "request.created",
     ]);
+  });
+});
+
+// ---------------------------------------------------------------------
+// The surface those rows are for (#383, M20/9)
+// ---------------------------------------------------------------------
+
+/** One item, as either bell answers it. */
+interface BellItem {
+  id: string;
+  eventType: string;
+  entityType: string;
+  entityId: string;
+  payload: Record<string, unknown>;
+  readAt: string | null;
+}
+
+/** One bell's list, read the way its surface reads it. */
+async function bellItems(
+  fixture: { email: string },
+  surface: "staff" | "portal",
+): Promise<BellItem[]> {
+  const res = await harness.app.inject({
+    method: "GET",
+    url: surface === "portal" ? "/api/v1/portal/notifications" : "/api/v1/notifications",
+    cookies: as(fixture),
+  });
+  expect(res.statusCode, res.body).toBe(200);
+  return (res.json() as { notifications: BellItem[] }).notifications;
+}
+
+/** One bell's badge. */
+async function badge(fixture: { email: string }, surface: "staff" | "portal"): Promise<number> {
+  const res = await harness.app.inject({
+    method: "GET",
+    url:
+      surface === "portal"
+        ? "/api/v1/portal/notifications/unread-count"
+        : "/api/v1/notifications/unread-count",
+    cookies: as(fixture),
+  });
+  expect(res.statusCode, res.body).toBe(200);
+  return (res.json() as { unread: number }).unread;
+}
+
+/** Zeroes one bell, the way its "Mark all read" control does. */
+async function markAllRead(
+  fixture: { email: string },
+  surface: "staff" | "portal",
+): Promise<number> {
+  const res = await harness.app.inject({
+    method: "POST",
+    url:
+      surface === "portal"
+        ? "/api/v1/portal/notifications/read-all"
+        : "/api/v1/notifications/read-all",
+    cookies: as(fixture),
+  });
+  expect(res.statusCode, res.body).toBe(200);
+  return (res.json() as { unread: number }).unread;
+}
+
+describe("the portal bell (NOT-001, NOT-005, M20/9)", () => {
+  it("answers the requester their own group-5 items, with the Request's number to address it by", async () => {
+    const request = await submit(REQUESTER, "Review the Tyrell maintenance schedule");
+
+    const items = await bellItems(REQUESTER, "portal");
+    const receipt = items.find(
+      (item) => item.entityId === request.id && item.eventType === "request.created",
+    );
+    expect(receipt, JSON.stringify(items)).toBeDefined();
+    expect(receipt!.entityType).toBe("request");
+    // The portal detail is addressed by R-###, so the payload carries
+    // the number rather than making the surface look it up.
+    expect(receipt!.payload.requestNumber).toBe(request.number);
+    expect(receipt!.payload.requestSummary).toBe(request.summary);
+    expect(await badge(REQUESTER, "portal")).toBeGreaterThan(0);
+  });
+
+  it("answers only the session user's items, and names nobody else's", async () => {
+    const mine = await submit(QUIET, "Review the Soylent supply agreement");
+    // Another requester's bell is another bell. There is no parameter
+    // that could ask for it and no id that leaks out of it.
+    const theirs = await bellItems(REQUESTER, "portal");
+    expect(theirs.some((item) => item.entityId === mine.id)).toBe(false);
+  });
+
+  it("keeps group 5 out of the staff notification centre, even for the person who submitted it", async () => {
+    // A Member+ who submits a Request of their own is a Requester on the
+    // portal, not a staff reader of the portal's group.
+    const request = await submit(STAFF, "Our own vendor paper, again");
+
+    const staffCentre = await bellItems(STAFF, "staff");
+    expect(staffCentre.some((item) => item.entityId === request.id)).toBe(false);
+    expect(staffCentre.every((item) => item.entityType === "contract")).toBe(true);
+
+    const portal = await bellItems(STAFF, "portal");
+    expect(portal.some((item) => item.entityId === request.id)).toBe(true);
+    expect(portal.every((item) => item.entityType === "request")).toBe(true);
+  });
+
+  it("leaves the portal's rows unread when the staff centre is marked all read", async () => {
+    const request = await submit(STAFF, "One more of our own");
+    const before = await badge(STAFF, "portal");
+    expect(before).toBeGreaterThan(0);
+
+    // The staff write covers exactly what the staff badge counts, and a
+    // group-5 row is not on that surface at all.
+    expect(await markAllRead(STAFF, "staff")).toBe(0);
+
+    expect(await badge(STAFF, "portal")).toBe(before);
+    const portal = await bellItems(STAFF, "portal");
+    expect(portal.find((item) => item.entityId === request.id)?.readAt).toBeNull();
+  });
+
+  it("marks the page it drew read, and answers the badge that remains", async () => {
+    const request = await submit(QUIET, "Review the Weyland charter");
+    const items = await bellItems(QUIET, "portal");
+    const unread = items.filter((item) => item.readAt === null).map((item) => item.id);
+    expect(unread.length).toBeGreaterThan(0);
+
+    const res = await harness.app.inject({
+      method: "POST",
+      url: "/api/v1/portal/notifications/read",
+      cookies: as(QUIET),
+      payload: { ids: unread },
+    });
+    expect(res.statusCode, res.body).toBe(200);
+    expect(res.json()).toEqual({ unread: 0 });
+
+    const after = await bellItems(QUIET, "portal");
+    expect(after.find((item) => item.entityId === request.id)?.readAt).not.toBeNull();
+  });
+
+  it("drops an archived Request's items from the list and the badge alike", async () => {
+    const request = await submit(REQUESTER, "Review the Initech lease");
+    expect(
+      (await bellItems(REQUESTER, "portal")).some((item) => item.entityId === request.id),
+    ).toBe(true);
+    const before = await badge(REQUESTER, "portal");
+
+    // M21 owns the archive route; the column is what the predicate reads,
+    // so the fact is set here rather than waited for. A frozen record is
+    // not something to prompt anybody about.
+    await harness.db
+      .update(requests)
+      .set({ archivedAt: new Date() })
+      .where(eq(requests.id, request.id));
+
+    const after = await bellItems(REQUESTER, "portal");
+    expect(after.some((item) => item.entityId === request.id)).toBe(false);
+    expect(await badge(REQUESTER, "portal")).toBeLessThan(before);
+    // The row is still in the table: nothing was destroyed to hide it.
+    expect((await rowsAbout(REQUESTER, request)).length).toBeGreaterThan(0);
+  });
+
+  it("refuses a caller who is not signed in", async () => {
+    const res = await harness.app.inject({ method: "GET", url: "/api/v1/portal/notifications" });
+    expect(res.statusCode).toBe(401);
   });
 });
