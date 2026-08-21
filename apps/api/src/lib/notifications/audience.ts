@@ -315,7 +315,11 @@ export async function requestReachedBy(
 ): Promise<Set<string>> {
   if (userIds.length === 0) return new Set();
   const side = narrowing.side ?? "requester";
-  if (side === "requester" && narrowing.tier !== undefined && !REQUESTER_TIERS.includes(narrowing.tier)) {
+  if (
+    side === "requester" &&
+    narrowing.tier !== undefined &&
+    !REQUESTER_TIERS.includes(narrowing.tier)
+  ) {
     return new Set();
   }
   const rows = await db

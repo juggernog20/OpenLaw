@@ -1202,10 +1202,7 @@ export function createNotifier(deps: NotifierDeps): Notifier {
       return dateReminder(tx, "date.expiry_approaching", event, {});
     },
 
-    async requestSubmitted(
-      tx: NotifyingTransaction,
-      event: RequestSubmittedEvent,
-    ): Promise<void> {
+    async requestSubmitted(tx: NotifyingTransaction, event: RequestSubmittedEvent): Promise<void> {
       await fanOutToInbox(tx, event);
     },
 

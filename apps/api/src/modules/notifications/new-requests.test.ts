@@ -146,9 +146,9 @@ beforeAll(async () => {
     cookies: as(ADMIN),
   });
   expect(types.statusCode, types.body).toBe(200);
-  const found = (types.json().requestTypes as { slug: string; id: string; displayName: string }[]).find(
-    (row) => row.slug === "contract_review",
-  );
+  const found = (
+    types.json().requestTypes as { slug: string; id: string; displayName: string }[]
+  ).find((row) => row.slug === "contract_review");
   expect(found, "the contract_review seed type").toBeDefined();
   contractReviewTypeId = found!.id;
   contractReviewName = found!.displayName;
@@ -234,7 +234,10 @@ describe("a Request arriving in the Inbox (INT-006, NOT-002 group 4)", () => {
     // they are there the moment the 201 lands — nothing to wait for.
     for (const member of [TRIAGER, SUBSCRIBER, ADMIN]) {
       const rows = await rowsAbout(member, request);
-      expect(rows.map((row) => row.eventType), member.email).toEqual(["request.submitted"]);
+      expect(
+        rows.map((row) => row.eventType),
+        member.email,
+      ).toEqual(["request.submitted"]);
       expect(rows[0]!.readAt).toBeNull();
       expect(rows[0]!.payload.requestNumber).toBe(request.number);
       expect(rows[0]!.payload.requestSummary).toBe(request.summary);
@@ -297,8 +300,9 @@ describe("group 4's email (NOT-002)", () => {
     expect(rows[0]!.eventType).toBe("request.submitted");
     expect(rows[0]!.emailOwed).toBe(true);
 
-    await settles(`the arrival email to ${SUBSCRIBER.email}`, () =>
-      mailAbout(SUBSCRIBER, request).length > 0,
+    await settles(
+      `the arrival email to ${SUBSCRIBER.email}`,
+      () => mailAbout(SUBSCRIBER, request).length > 0,
     );
     const message = mailAbout(SUBSCRIBER, request)[0]!;
     expect(message.subject).toContain("New request");
