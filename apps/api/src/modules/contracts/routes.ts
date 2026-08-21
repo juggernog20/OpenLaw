@@ -7,6 +7,13 @@
  * pickers need (the contract-types and contract-statuses settings
  * surfaces stay Administrator-only per SET-002).
  *
+ * The create **write** is not here: it lives in `create.ts` as one
+ * callable that takes the transaction rather than opening one, because
+ * the INT-002 conversion of a Request has to run it as a step inside a
+ * wider act. This route is its first caller, and it keeps the two
+ * things a caller decides — who may create (CTR-021) and what the
+ * answer looks like on the wire.
+ *
  * The people are CTR-004's. The Owner is a field — one nullable FK,
  * `manager_id`, labelled "Owner" on every surface — so it commits
  * through the same per-field PATCH as the rest and rides
@@ -175,7 +182,6 @@ import {
   NO_CONTRACT,
   reachesLockedContract,
 } from "../../lib/contract-access.js";
-import { linkContracts, setContractParent } from "../../lib/contract-relations.js";
 import {
   daysRemaining,
   noticeDeadline,
@@ -184,8 +190,8 @@ import {
 } from "../../lib/contract-term.js";
 import {
   AttachedCustomFieldSchema,
+  applyCustomFields,
   assertRequiredCustomFields,
-  coerceCustomFieldValue,
   CustomFieldsInput,
   CustomFieldsSchema,
   selectAttachedFields,
@@ -207,6 +213,7 @@ import {
 } from "@openlaw/shared";
 import { httpError, problemResponse, problemTypeResponse } from "../../lib/problem.js";
 import { assertApprovalGate, type UnresolvedApproval } from "../../lib/soft-gate.js";
+import { createContract, CONTRACT_RENEWAL_VEHICLES } from "./create.js";
 
 /** Every mutation, and every picker read behind one, is Member+. */
 const requireMember = requireRole("administrator", "legal_team_member");
@@ -222,9 +229,6 @@ const requireMember = requireRole("administrator", "legal_team_member");
  * surface.
  */
 const requireContractReader = requireRole("administrator", "legal_team_member", "contributor");
-
-/** The protected CTR-001 seed every contract is born on. */
-const DRAFT_STATUS_SLUG = "draft";
 
 /**
  * How many contracts one read answers (CTR-024).
@@ -348,52 +352,16 @@ const NoticePeriodSchema = z.int().min(0).max(36_500);
  * primary document's chain, which is the M11 write path and needs
  * nothing from this one.
  *
- * `child` and `successor` are separate values rather than a relation
- * type, because they are two shapes and not two spellings: a child sits
- * *under* its predecessor in the CTR-015 hierarchy, and a successor
- * stands beside it holding a `renews` link. Naming the link type here
- * would make the caller responsible for a choice the vehicle already
- * makes.
+ * The vehicle vocabulary itself belongs to the write, so the wire takes
+ * exactly what the write accepts and neither can be widened without the
+ * other.
  */
 const RenewalOfSchema = z.strictObject({
   /** The predecessor's CTR-003 number — the reference a person speaks,
    * exactly as every other contract route takes it. */
   number: z.int().positive(),
-  vehicle: z.enum(["child", "successor"]),
+  vehicle: z.enum(CONTRACT_RENEWAL_VEHICLES),
 });
-
-/**
- * CTR-007's prefill: the business facts a routed renewal is born with.
- *
- * **This list is the decision.** The deal is the same deal — our side of
- * it, what it is worth, and the shape of its term — so re-keying those
- * onto the successor is work with no judgement in it. Everything else is
- * a fact about the *record* rather than the deal: the status says where
- * this paper has got to, the team says who is working it, the Owner says
- * who is accountable for it, priority and risk are assessments nobody
- * has made yet, and the Confidential flag is an audience decision. None
- * of them is inherited (CTR-015), so none of them is here.
- *
- * The term is copied as its **shape**, dates and all. A successor whose
- * dates have not been agreed yet is edited on the record; a successor
- * that simply continues the same commitment is right already. Copying
- * the type without the periods would leave an auto-renewing record that
- * does not know how far it rolls, which is a worse starting point than
- * either.
- */
-function businessFactsOf(predecessor: Contract) {
-  return {
-    entityId: predecessor.entityId,
-    valueAmount: predecessor.valueAmount,
-    valueCurrency: predecessor.valueCurrency,
-    valueCadence: predecessor.valueCadence,
-    termType: predecessor.termType,
-    effectiveDate: predecessor.effectiveDate,
-    expiryDate: predecessor.expiryDate,
-    renewalPeriodMonths: predecessor.renewalPeriodMonths,
-    noticePeriodDays: predecessor.noticePeriodDays,
-  };
-}
 
 /** A person as every contract surface renders them: name and face, plus
  * the SET-005 archived flag the shared identity component greys on. */
@@ -770,20 +738,6 @@ function sameValue(
     left.currency === right.currency &&
     left.cadence === right.cadence
   );
-}
-
-/** One custom-field value equals another when it reads the same. The
- * multi-select is the only shape that is not a primitive, and it is
- * stored in the catalog's own option order, so comparing position by
- * position is comparing the set. */
-function sameCustomFieldValue(
-  left: CustomFieldValue | undefined,
-  right: CustomFieldValue,
-): boolean {
-  if (Array.isArray(left) && Array.isArray(right)) {
-    return left.length === right.length && left.every((item, index) => item === right[index]);
-  }
-  return left === right;
 }
 
 function toRow(context: ContractContext) {
@@ -1478,76 +1432,6 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
     };
   }
 
-  /**
-   * Applies a partial custom-field map onto the stored one and answers
-   * the result, plus the DD-017 changed entries the write should log.
-   *
-   * Three rules hold here. A key the map does not carry is untouched —
-   * that is what makes one PATCH one field (DES-017). A `null` clears
-   * the key rather than storing one, so "nothing recorded" has one
-   * shape. And a slug the type does not attach is refused, because
-   * writing under it would put a value on a record no surface could
-   * ever show or clear.
-   */
-  async function applyCustomFields(
-    tx: Transaction,
-    attached: readonly AttachedCustomField[],
-    stored: Readonly<Record<string, CustomFieldValue>>,
-    incoming: Readonly<Record<string, CustomFieldValue | null>>,
-  ) {
-    const next: Record<string, CustomFieldValue> = { ...stored };
-    const changed: Record<string, { from: unknown; to: unknown }> = {};
-    for (const [slug, raw] of Object.entries(incoming)) {
-      const field = attached.find((candidate) => candidate.slug === slug);
-      if (!field) {
-        throw httpError(400, "That field is not on this contract's type.");
-      }
-      const value = coerceCustomFieldValue(field, raw);
-      if (value !== null && (field.fieldType === "user" || field.fieldType === "entity")) {
-        await lockedReference(tx, field, value as string);
-      }
-      const before = stored[slug];
-      if (value === null) {
-        if (before === undefined) continue;
-        delete next[slug];
-      } else {
-        if (sameCustomFieldValue(before, value)) continue;
-        next[slug] = value;
-      }
-      // Namespaced by slug: a custom field named "Title" and the
-      // record's own title are two different things, and the audit map
-      // must not let them collide. The M9 viewer resolves the slug to
-      // the field's display name from the catalog.
-      changed[`field.${slug}`] = { from: before ?? null, to: value };
-    }
-    return { values: next, changed };
-  }
-
-  /**
-   * The two field types that name a row: `user` and `entity` store an
-   * id, so the write checks the id is a live one. Archived is refused
-   * for the same reason the Owner and the signing entity refuse it —
-   * nothing new gets pointed at someone who has left. A row archived
-   * after the fact stays on the record untouched.
-   */
-  async function lockedReference(tx: Transaction, field: AttachedCustomField, id: string) {
-    if (field.fieldType === "user") {
-      // Anyone live: a custom person field is not the Owner, so it is
-      // not held to the Member+ floor the Owner is (CTR-004).
-      await lockedUser(tx, id, USER_ROLES, `${field.displayName}: pick a live person.`);
-      return;
-    }
-    const [signatory] = await tx
-      .select({ id: entities.id, archivedAt: entities.archivedAt })
-      .from(entities)
-      .where(eq(entities.id, id))
-      .limit(1)
-      .for("update");
-    if (!signatory || signatory.archivedAt) {
-      throw httpError(400, `${field.displayName}: pick a live entity.`);
-    }
-  }
-
   app.get(
     "/contracts",
     {
@@ -1887,151 +1771,26 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
         // at the moment the renewal was routed. Reach is asked here as
         // it is everywhere else: a predecessor this viewer cannot reach
         // answers exactly as one that was never made, and an archived
-        // one routes nothing until it is restored.
-        const predecessor = renewalOf
-          ? await editableContract(tx, renewalOf.number, request.user)
+        // one routes nothing until it is restored. It is asked *here*
+        // rather than inside the write because reach is the route's
+        // question — the write takes the row already locked.
+        const renewal = renewalOf
+          ? {
+              vehicle: renewalOf.vehicle,
+              predecessor: (await editableContract(tx, renewalOf.number, request.user)).row,
+            }
           : null;
-        // Lock the type row so a concurrent archive can't slip between
-        // the check and the insert.
-        const [contractType] = await tx
-          .select({
-            id: contractTypes.id,
-            displayName: contractTypes.displayName,
-            archivedAt: contractTypes.archivedAt,
-          })
-          .from(contractTypes)
-          .where(eq(contractTypes.id, contractTypeId))
-          .limit(1)
-          .for("update");
-        if (!contractType || contractType.archivedAt) {
-          throw httpError(400, "The contract type must be a live contract type.");
-        }
-
-        // The draft seed is system-protected — no archive, no delete —
-        // so it is always there to be born on. The live filter states
-        // that invariant rather than assuming it: a contract must never
-        // start on a status the pickers refuse to show.
-        const [draft] = await tx
-          .select({
-            id: contractStatuses.id,
-            displayName: contractStatuses.displayName,
-            stage: contractStatuses.stage,
-          })
-          .from(contractStatuses)
-          .where(
-            and(eq(contractStatuses.slug, DRAFT_STATUS_SLUG), isNull(contractStatuses.archivedAt)),
-          )
-          .limit(1);
-        if (!draft) throw httpError(500, "The draft contract status is missing.");
-
-        // CTR-016's fields, and MTR-014's rule about them: the type
-        // says which fields it attaches and which of those it requires,
-        // and a record cannot be born missing data its type demands.
-        // This is the first of the rule's two enforcement points; the
-        // other is a re-type.
-        const attached = await attachedFieldsOf(tx, contractType.id);
-        const { values: customFields } = await applyCustomFields(
-          tx,
-          attached,
-          {},
-          request.body.customFields ?? {},
-        );
-        assertRequiredCustomFields(attached, customFields);
-
-        // CTR-007's prefill, and the whole of it: the business facts
-        // of the deal, copied so routing a renewal is not re-keying
-        // a contract. The type and the title are the body's, below,
-        // because those are the two the create dialog draws and the
-        // person may have edited either before pressing.
-        //
-        // What is deliberately absent is the point of the list. The
-        // status is the draft seed for every contract born here, the
-        // Owner is unassigned, the team is the creator's row alone,
-        // and the Confidential flag is the body's — CTR-015's
-        // no-inheritance stance, applied at birth. Priority and risk
-        // are absent for the same reason: they are assessments of a
-        // record, and a new record has not been assessed.
-        const copied = predecessor ? businessFactsOf(predecessor.row) : null;
-        // Our entity is copied live or not at all, the counterparties'
-        // rule (below) applied to our own side: the field write refuses
-        // an archived signatory, so nothing new gets signed by an
-        // entity that has left the registry — and a copy that carried
-        // one onto a *new* record would be the way around that rule.
-        // The predecessor keeps what signed it either way (CTR-011).
-        //
-        // The row is locked for the same reason the field write locks
-        // it: an unlocked read lets a concurrent archive commit between
-        // the check and the insert, and the record is then born holding
-        // what this check exists to keep off it.
-        if (copied?.entityId) {
-          const [signatory] = await tx
-            .select({ archivedAt: entities.archivedAt })
-            .from(entities)
-            .where(eq(entities.id, copied.entityId))
-            .limit(1)
-            .for("update");
-          if (!signatory || signatory.archivedAt !== null) copied.entityId = null;
-        }
-
-        const isConfidential = request.body.isConfidential ?? false;
-        const [row] = await tx
-          .insert(contracts)
-          .values({
-            title: title.trim(),
-            contractTypeId: contractType.id,
-            statusId: draft.id,
-            customFields,
-            isConfidential,
-            ...(copied ?? {}),
-          })
-          .returning();
-        // Provenance, written once and never again (CTR-004): who made
-        // this record survives every later owner change. It is part of
-        // creation, so `contract.created` records it — no separate team
-        // row for something nobody chose.
-        await tx.insert(contractTeam).values({
-          contractId: row!.id,
-          userId: request.user.id,
-          role: CREATOR_TEAM_ROLE,
-        });
-        await recordActivity(tx, {
-          entityType: "contract",
-          entityId: row!.id,
+        const born = await createContract(tx, {
           actorId: request.user.id,
-          action: "contract.created",
-          visibility: RECORD_ACTIVITY_TIER,
-          payload: {
-            number: row!.number,
-            title: row!.title,
-            contractType: contractType.displayName,
-            status: draft.displayName,
-            // Which of the type's fields were answered at birth. The
-            // slugs, not the values: the M9 viewer narrates what was
-            // filled, and the values are on the record to be read.
-            customFields: Object.keys(customFields).sort((a, b) => a.localeCompare(b)),
-          },
+          title,
+          contractTypeId,
+          customFields: request.body.customFields,
+          isConfidential: request.body.isConfidential,
+          renewal,
         });
-        // A record born walled off gets its own entry beside the
-        // creation one. DD-014 wants every set of the flag accountable
-        // by actor and timestamp, and an Administrator reading the audit
-        // log should find it under the verb they filtered on rather than
-        // inside a `contract.created` payload they had to know to open.
-        if (isConfidential) {
-          await recordActivity(tx, {
-            entityType: "contract",
-            entityId: row!.id,
-            actorId: request.user.id,
-            action: "contract.confidentiality_set",
-            visibility: RECORD_ACTIVITY_TIER,
-            payload: { number: row!.number, title: row!.title },
-          });
-        }
-        if (!predecessor || !renewalOf) {
+        if (!renewal) {
           return {
-            row: row!,
-            contractTypeName: contractType.displayName,
-            statusName: draft.displayName,
-            stage: draft.stage,
+            ...born,
             // A new contract is unassigned, which of ours signs is not
             // known yet, and nobody is recorded on the other side; all
             // three are set on the record afterwards.
@@ -2041,103 +1800,12 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
           };
         }
 
-        // The other side of the deal, copied party for party with the
-        // primary still primary (CTR-011). The rows are copied rather
-        // than the names re-typed, so a renewal of a tripartite
-        // agreement is born with all three and nobody has to find them
-        // again — and the counterparty records themselves are shared,
-        // because they are the same companies.
-        //
-        // **Live parties only.** A party that signed the predecessor is
-        // a fact of that contract and stays on it however the register
-        // changed afterwards; a party nobody may add by hand today must
-        // not arrive on a *new* record through a copy, or routing would
-        // be the way around the rule the add route states (MTR-014's
-        // principle). The primary is carried across and re-seated when
-        // the party holding it is the one that left, so the invariant
-        // "a contract with parties has a primary" holds at birth.
-        const parties = await tx
-          .select({
-            counterpartyId: contractCounterparties.counterpartyId,
-            isPrimary: contractCounterparties.isPrimary,
-          })
-          .from(contractCounterparties)
-          .innerJoin(
-            counterparties,
-            and(
-              eq(contractCounterparties.counterpartyId, counterparties.id),
-              isNull(counterparties.archivedAt),
-            ),
-          )
-          .where(eq(contractCounterparties.contractId, predecessor.row.id))
-          .orderBy(desc(contractCounterparties.isPrimary), asc(sql`lower(${counterparties.name})`));
-        if (parties.length > 0) {
-          const keepsPrimary = parties.some((party) => party.isPrimary);
-          await tx.insert(contractCounterparties).values(
-            parties.map((party, index) => ({
-              contractId: row!.id,
-              counterpartyId: party.counterpartyId,
-              isPrimary: keepsPrimary ? party.isPrimary : index === 0,
-            })),
-          );
-        }
-
-        // The link, through CTR-015's own write path so its two guards
-        // are asked here exactly as they will be asked by M17's manual
-        // linking. Neither can refuse this particular call — a record
-        // born a moment ago has no descendants to loop through and no
-        // links to duplicate — and it goes through the guarded path all
-        // the same, because the rule belongs to the write and not to the
-        // caller that happens to be safe.
-        //
-        // The entry hangs off the record that changed, which is the new
-        // one: nothing was written on the predecessor, and a feed entry
-        // on a record nobody touched would be the log asserting an edit
-        // that never happened. Both ends are named by number and title,
-        // so the sentence survives a rename of either.
-        if (renewalOf.vehicle === "child") {
-          await setContractParent(tx, { childId: row!.id, parentId: predecessor.row.id });
-          await recordActivity(tx, {
-            entityType: "contract",
-            entityId: row!.id,
-            actorId: request.user.id,
-            action: "contract.parent_set",
-            visibility: RECORD_ACTIVITY_TIER,
-            payload: {
-              number: row!.number,
-              title: row!.title,
-              parentNumber: predecessor.row.number,
-              parentTitle: predecessor.row.title,
-            },
-          });
-        } else {
-          await linkContracts(tx, {
-            fromId: row!.id,
-            toId: predecessor.row.id,
-            relationType: "renews",
-          });
-          await recordActivity(tx, {
-            entityType: "contract",
-            entityId: row!.id,
-            actorId: request.user.id,
-            action: "contract.relation_added",
-            visibility: RECORD_ACTIVITY_TIER,
-            payload: {
-              number: row!.number,
-              title: row!.title,
-              relationType: "renews",
-              relatedNumber: predecessor.row.number,
-              relatedTitle: predecessor.row.title,
-            },
-          });
-        }
-
         // The copied facts read back off the row that now holds them,
         // rather than off the predecessor's context: the entity and the
         // primary party the answer names have to be the ones this record
         // was born with, and one joined read is what guarantees it.
-        const [born] = await selectContracts(tx).where(eq(contracts.id, row!.id)).limit(1);
-        return born!;
+        const [read] = await selectContracts(tx).where(eq(contracts.id, born.row.id)).limit(1);
+        return read!;
       });
       return reply.status(201).send({ contract: toRow(created) });
     },

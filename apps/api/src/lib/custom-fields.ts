@@ -32,18 +32,27 @@
  * - **An ordinary edit of some other field.** A record can hold a gap
  *   — a field made required after the record was created has one — and
  *   editing its title must not be refused because of it.
+ *
+ * The write itself has one entry point too, `applyCustomFields`. Both
+ * the create and the per-field PATCH go through it, so the refusals a
+ * caller sees — a slug the type does not attach, a value the field type
+ * will not take, an archived person or Entity — cannot depend on which
+ * route it arrived at.
  */
 
 import { z } from "zod";
 import {
   and,
   asc,
+  entities,
   eq,
   fields,
   FIELD_TYPES,
   isNull,
+  users,
   type CustomFieldValue,
   type Executor,
+  type Transaction,
 } from "@openlaw/db";
 import { httpError } from "./problem.js";
 import type { TypeFieldsTable } from "./type-field-routes.js";
@@ -250,4 +259,105 @@ export function coerceCustomFieldValue(
       return id === "" ? null : id;
     }
   }
+}
+
+/** One custom-field value equals another when it reads the same. The
+ * multi-select is the only shape that is not a primitive, and it is
+ * stored in the catalog's own option order, so comparing position by
+ * position is comparing the set. */
+function sameCustomFieldValue(
+  left: CustomFieldValue | undefined,
+  right: CustomFieldValue,
+): boolean {
+  if (Array.isArray(left) && Array.isArray(right)) {
+    return left.length === right.length && left.every((item, index) => item === right[index]);
+  }
+  return left === right;
+}
+
+/**
+ * The two field types that name a row: `user` and `entity` store an
+ * id, so the write checks the id is a live one. Archived is refused
+ * for the same reason the Owner and the signing entity refuse it —
+ * nothing new gets pointed at someone who has left. A row archived
+ * after the fact stays on the record untouched.
+ *
+ * Anyone live satisfies a `user` field: a custom person field is not
+ * the Owner, so it is not held to the Member+ floor the Owner is
+ * (CTR-004). The lock stops a concurrent archive slipping between the
+ * check and the write.
+ */
+async function lockedReference(tx: Transaction, field: AttachedCustomField, id: string) {
+  if (field.fieldType === "user") {
+    const [person] = await tx
+      .select({ archivedAt: users.archivedAt })
+      .from(users)
+      .where(eq(users.id, id))
+      .limit(1)
+      .for("update");
+    if (!person || person.archivedAt) {
+      throw httpError(400, `${field.displayName}: pick a live person.`);
+    }
+    return;
+  }
+  const [signatory] = await tx
+    .select({ archivedAt: entities.archivedAt })
+    .from(entities)
+    .where(eq(entities.id, id))
+    .limit(1)
+    .for("update");
+  if (!signatory || signatory.archivedAt) {
+    throw httpError(400, `${field.displayName}: pick a live entity.`);
+  }
+}
+
+/**
+ * Applies a partial custom-field map onto the stored one and answers
+ * the result, plus the DD-017 changed entries the write should log.
+ *
+ * Three rules hold here. A key the map does not carry is untouched —
+ * that is what makes one PATCH one field (DES-017). A `null` clears
+ * the key rather than storing one, so "nothing recorded" has one
+ * shape. And a slug the type does not attach is refused, because
+ * writing under it would put a value on a record no surface could
+ * ever show or clear.
+ *
+ * Creation passes `{}` as the stored map, which is the same rule read
+ * at birth: every incoming slug is a change, and none of them can be a
+ * clear. That is why the create and the per-field PATCH share this
+ * rather than each stating it — the refusals a caller sees must not
+ * depend on which of the two it went through.
+ */
+export async function applyCustomFields(
+  tx: Transaction,
+  attached: readonly AttachedCustomField[],
+  stored: Readonly<Record<string, CustomFieldValue>>,
+  incoming: Readonly<Record<string, CustomFieldValue | null>>,
+) {
+  const next: Record<string, CustomFieldValue> = { ...stored };
+  const changed: Record<string, { from: unknown; to: unknown }> = {};
+  for (const [slug, raw] of Object.entries(incoming)) {
+    const field = attached.find((candidate) => candidate.slug === slug);
+    if (!field) {
+      throw httpError(400, "That field is not on this contract's type.");
+    }
+    const value = coerceCustomFieldValue(field, raw);
+    if (value !== null && (field.fieldType === "user" || field.fieldType === "entity")) {
+      await lockedReference(tx, field, value as string);
+    }
+    const before = stored[slug];
+    if (value === null) {
+      if (before === undefined) continue;
+      delete next[slug];
+    } else {
+      if (sameCustomFieldValue(before, value)) continue;
+      next[slug] = value;
+    }
+    // Namespaced by slug: a custom field named "Title" and the
+    // record's own title are two different things, and the audit map
+    // must not let them collide. The M9 viewer resolves the slug to
+    // the field's display name from the catalog.
+    changed[`field.${slug}`] = { from: before ?? null, to: value };
+  }
+  return { values: next, changed };
 }
