@@ -20,6 +20,7 @@
 
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import {
+  contracts,
   contractTeam,
   contractTypes,
   eq,
@@ -316,6 +317,28 @@ describe("paging the queue (the house keyset pattern)", () => {
     // oldest first, then the thirty `low` ones.
     expect(read).toEqual([...planted.slice(0, 30), ...planted.slice(30)]);
   });
+
+  it("refuses a cursor that names nothing with an empty page, not an error", async () => {
+    await clearRequests();
+    await plant({ summary: "Still open", urgency: "medium", createdAt: ago(2) });
+
+    // The boundary is read out of the table; a cursor naming no Request
+    // resolves every comparison to NULL and the answer is a page of
+    // nothing — the house rule the contract list already pins.
+    const nowhere = await readInbox(memberCookies, {
+      cursor: "00000000-0000-7000-8000-000000000000",
+    });
+    expect(nowhere.statusCode, nowhere.body).toBe(200);
+    expect(nowhere.requests).toEqual([]);
+    expect(nowhere.nextCursor).toBeNull();
+  });
+
+  it("refuses a cursor outside its own bound before it reaches the database", async () => {
+    for (const shape of ["", "x".repeat(65)]) {
+      const bad = await readInbox(memberCookies, { cursor: shape });
+      expect(bad.statusCode, bad.body).toBe(400);
+    }
+  });
 });
 
 describe("what one row carries (INT-007, I1)", () => {
@@ -443,5 +466,31 @@ describe("the trail from ask to work (DD-014, CTR-018)", () => {
 
     const read = await readInbox(memberCookies, { includeTriaged: "true" });
     expect(read.requests[0]?.convertedContract).toEqual({ number: contract.number });
+  });
+
+  it("draws no link once the record is archived, and still shows the row", async () => {
+    await clearRequests();
+    const contract = await createContract("Northwind Labs NDA, retired", false);
+    await plant({
+      summary: "NDA that ran its course",
+      urgency: "high",
+      createdAt: ago(3),
+      status: "converted",
+      convertedContractId: contract.id,
+    });
+    // An archived contract is no trail: the link would open on a record
+    // the Contracts destination hides.
+    await harness.db
+      .update(contracts)
+      .set({ archivedAt: NOW })
+      .where(eq(contracts.id, contract.id));
+
+    const read = await readInbox(memberCookies, { includeTriaged: "true" });
+    expect(read.requests).toHaveLength(1);
+    expect(read.requests[0]).toMatchObject({
+      summary: "NDA that ran its course",
+      status: "converted",
+      convertedContract: null,
+    });
   });
 });
