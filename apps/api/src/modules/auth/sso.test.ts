@@ -9,6 +9,7 @@
 
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { OAuth2Server } from "oauth2-mock-server";
+import { symmetricDecrypt } from "better-auth/crypto";
 import {
   accounts,
   activityLog,
@@ -25,6 +26,7 @@ import {
   signInCookies,
   startHarness,
   TEST_ADMIN,
+  TEST_AUTH_CONFIG,
   type TestHarness,
 } from "../../testing/harness.js";
 
@@ -327,6 +329,105 @@ describe("runtime BYO-OIDC (POST /api/v1/auth/sso-providers + sso sign-in)", () 
     const who = await me(cookies!);
     expect(who.statusCode, who.body).toBe(200);
     expect(who.json().user).toMatchObject({ email: staffer.email, role: "contributor" });
+  });
+
+  it("stores the IdP's access and refresh tokens encrypted, and the id_token as it came", async () => {
+    const email = "tokens@acme.example";
+    // What the IdP actually handed over. The token endpoint's own
+    // response is the only place the plaintext ever exists, so capture
+    // it there rather than guessing at the shape afterwards.
+    let issued: Record<string, unknown> = {};
+    idp.service.once("beforeResponse", (tokenResponse: { body: Record<string, unknown> | "" }) => {
+      issued = tokenResponse.body === "" ? {} : tokenResponse.body;
+    });
+
+    const redeemed = await ssoRoundTrip(
+      { sub: "idp-tokens", email, name: "Tess Tokens" },
+      { email, requestSignUp: true },
+    );
+    expect(sessionCookies(redeemed), "callback set no session cookie").not.toBeNull();
+
+    const accessToken = issued.access_token as string;
+    // The code grant returns one, as a real IdP does for the
+    // `offline_access` the sso plugin asks for — which is exactly why
+    // this column is worth sealing.
+    const refreshToken = issued.refresh_token as string;
+    const idToken = issued.id_token as string;
+    expect(accessToken, "the IdP should have issued an access token").toBeTruthy();
+    expect(refreshToken, "the IdP should have issued a refresh token").toBeTruthy();
+
+    // Read past the ORM on purpose: these columns are plain `text`, and
+    // better-auth — not our schema — is what seals them, so only raw
+    // SQL shows what Postgres actually holds (#387).
+    const stored = await harness.db.execute<{
+      access_token: string | null;
+      refresh_token: string | null;
+      id_token: string | null;
+    }>(
+      sql`SELECT access_token, refresh_token, id_token FROM accounts WHERE account_id = 'idp-tokens'`,
+    );
+    const row = stored.rows[0];
+    expect(row, "the SSO sign-in should have created an account row").toBeDefined();
+
+    // Neither token reaches a `pg_dump` readable.
+    expect(row!.access_token).not.toBe(accessToken);
+    expect(row!.refresh_token).not.toBe(refreshToken);
+    expect(row!.access_token).not.toContain(accessToken);
+    expect(row!.refresh_token).not.toContain(refreshToken);
+
+    // And what is stored is the real ciphertext under `AUTH_SECRET` —
+    // not a blank or truncated column that passes the check above by
+    // accident, and not something the app can no longer open.
+    const key = TEST_AUTH_CONFIG.secret;
+    await expect(symmetricDecrypt({ key, data: row!.access_token! })).resolves.toBe(accessToken);
+    await expect(symmetricDecrypt({ key, data: row!.refresh_token! })).resolves.toBe(refreshToken);
+
+    // The accepted exception: better-auth passes the id_token to the
+    // adapter raw whatever the flag says. It is expired identity
+    // evidence, and its claims already sit plaintext in `users`.
+    expect(row!.id_token).toBe(idToken);
+  });
+
+  it("reseals a pre-flag plaintext token at the next sign-in, with no backfill pass", async () => {
+    // The row this test acts on is made by this test: a suite that ran
+    // its cases in another order must still describe the same install.
+    const email = "legacy@acme.example";
+    const first = await ssoRoundTrip(
+      { sub: "idp-legacy", email, name: "Lee Legacy" },
+      { email, requestSignUp: true },
+    );
+    expect(
+      sessionCookies(first),
+      "the fixture sign-in should have linked an account",
+    ).not.toBeNull();
+
+    // Now act out an install upgraded into #387: the row was written
+    // before the flag went on, so its tokens sit in Postgres readable.
+    // There is deliberately no boot pass for them — better-auth reads a
+    // value that does not look encrypted straight through, and the next
+    // sign-in through the IdP writes the row back sealed.
+    const legacy = await harness.db.execute(
+      sql`UPDATE accounts
+          SET access_token = 'legacy-plaintext-access',
+              refresh_token = 'legacy-plaintext-refresh'
+          WHERE account_id = 'idp-legacy'`,
+    );
+    expect(legacy.rowCount, "the pre-flag row should exist to be downgraded").toBe(1);
+
+    const redeemed = await ssoRoundTrip({ sub: "idp-legacy", email }, { email });
+    expect(sessionCookies(redeemed), "a pre-flag row must still sign in").not.toBeNull();
+
+    const stored = await harness.db.execute<{
+      access_token: string | null;
+      refresh_token: string | null;
+    }>(sql`SELECT access_token, refresh_token FROM accounts WHERE account_id = 'idp-legacy'`);
+    const row = stored.rows[0];
+    expect(row!.access_token).not.toBe("legacy-plaintext-access");
+    expect(row!.refresh_token).not.toBe("legacy-plaintext-refresh");
+    // Both columns are sealed again, not merely different.
+    const key = TEST_AUTH_CONFIG.secret;
+    await expect(symmetricDecrypt({ key, data: row!.access_token! })).resolves.toBeTruthy();
+    await expect(symmetricDecrypt({ key, data: row!.refresh_token! })).resolves.toBeTruthy();
   });
 
   it("rejects registration by staff below Administrator with a 403 problem", async () => {
