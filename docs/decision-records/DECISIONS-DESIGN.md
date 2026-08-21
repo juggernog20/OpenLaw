@@ -3716,6 +3716,60 @@ Clause 3 is the honest version of "no Status column". INT-007 removed the column
 
 No new tokens. The Inbox is the first surface to draw `status-severe-*` in a pill rather than on a timeline.
 
+## DES-057: The staff request detail — a record page for something that is not a record (extends DES-032, DES-016, DES-034)
+
+- **Status:** Accepted
+- **Date:** 2026-08-22
+
+### Context
+
+`designs/intake.pen` I2 is the screen a Legal Team Member opens out of the Inbox. It draws record-page chrome — a sub-bar with a back chevron and a status pill, a meta hero, a two-column body, and an activity bar — over something that is not a record. A Request is an envelope (INT-001): nothing on this page is editable, there is no Owner, no team, no confidentiality flag, and no sections to route between.
+
+I2 also predates INT-007. Its Triage card holds a Status and an Urgency that the sub-bar and the hero already say, and its Outcome card says what the Request _would_ convert to while it is still `new`. The three disposition buttons it draws are the whole triage surface INT-007 asks for, and they land with their own tickets (M21/7–9).
+
+### Decision
+
+**1. The page wears the record chrome, minus the parts a record has and a Request does not.** `AppShell` flush, a sub-bar section, and `RecordApplets` around the body — the contract record's own frame. It carries **no section strip** (DES-032), because a Request has one screen's worth of content and a tab strip with one tab is not a strip; **no stage pipeline** (DES-034), because `new → converted | resolved | declined` is a disposition rather than a pipeline and nothing on this page moves it; and **no overflow menu** (DES-055), because there is nothing to rename and nothing to archive.
+
+**2. The sub-bar is the trail, the reference, the ask, and the status.** "Inbox › R-45 · _summary_ · New", in the record sub-bar's own row and at its own sizes. The status pill is the DES-005 pair for the Request's arm, the one the Inbox's Outcome column and the portal's own pill already wear.
+
+**3. The hero is a card, and it scrolls.** I2 draws it as a second fixed band under the sub-bar. What it says — who asked, the front door, the routing, the urgency, the age — is a fact about the Request rather than a control that must stay in reach, and a second chrome slab pushes the sticky bars past DES-011's 25% bound on a short window. So it is the first card in the body: a `bg-raised` strip of label-over-value pairs, the label at `text-xs` semibold `text-muted` and the value at `text-base`, exactly as I2 draws them.
+
+**4. The body is two columns that collapse against the record box, not the page.** `minmax(0,1fr)` and a 20rem side column, switched by an `@4xl` container query over the box `RecordApplets` establishes — so opening the thread reflows the columns instead of squeezing them. The main column carries Description, Form responses, and Attachments; the side column carries Requester and, once there is one, Outcome. Every one of them is the house section card: `rounded-card border-border-default bg-raised` with an `h-section-header` `bg-section-header` strip.
+
+**5. The Outcome card draws only when there is an outcome.** I2 draws it on a `new` Request, saying what the Request would convert to — that is the routing, which the hero already states as "Converts to". Here the card says what actually happened: the status pill, the C-### link when the server gave one (DD-014), and, on a decline, the recorded reason itself. So the promise and the fact are never two cards saying the same thing.
+
+**6. I2's Triage card is not drawn.** Status is in the sub-bar and Urgency is in the hero. The card's remaining content under INT-007 would be nothing: there is no assignment and no parked state.
+
+**7. The activity bar carries the thread alone.** The chat applet (DES-023), keyed by the Request's entity pair. A Member+ is in every room on a Request, so the panel draws all three tiers and the composer offers all three segments — no surface change, because the applet is entity-generic. I2's history slot is not built: the activity read is a contract's read today, and what would narrate on a Request is its disposition.
+
+### Recorded normalization points
+
+1. **The sub-bar draws no Convert / Resolve / Decline.** They are INT-007's disposition surface and they land with M21/7–9. A control that opens nothing is worse than no control.
+2. **An attachment row carries no size and no uploader.** I2 writes "412 KB · Tom Iwu" under each filename. A Request's attachment stores neither — INT-002 calls them lightweight — and every file on a Request was put there by its Requester, whom the hero and the side card already name. The filename is the link that downloads it, the portal detail's rule.
+3. **The Requester card carries the name and the email.** I2 writes "Operations · 3 previous requests" under them. A user has no department on this model, and a count of somebody's other asks is a claim about their history that nothing has decided to make.
+4. **The Description card names its source.** I2's header carries "From the portal form" beside the title, and it is kept: on a page where every other card holds something a person typed into a box, saying which box is worth one line.
+5. **An empty Form responses card and an empty Attachments card each say so.** I2 draws both full. A Request whose type attaches no fields, and one that carried no paper, are both ordinary; a card that vanished would leave the reader wondering whether it failed to load.
+
+### Rationale
+
+Clause 1 is the shape of the whole decision: the record chrome is the right frame because the reader arrives from a list and needs the trail, the reference, and the conversation — and the parts of that chrome that exist for _editing_ a record have nothing to act on here. Copying the frame whole would have shipped a tab strip with one tab and a pipeline that moves nothing.
+
+Clause 5 is the INT-007 correction. I2 drew the conversion target twice because, before disposition-at-pickup, "what this will become" was the page's standing claim. It is now the routing (which the hero states) and the outcome (which only exists once somebody decided), and they are different sentences.
+
+### Alternatives considered
+
+- **A portal-shaped page** — the `PortalShell` column with a banner, as the requester's detail draws. Rejected: the staff reader arrives from a queue and goes back to it, and the thread is an applet on this side (DD-016 gives them three rooms, which the portal's card cannot draw).
+- **The hero in the chrome, as I2 draws it.** Rejected under clause 3: DES-011's sticky bound, for a strip that is content.
+- **Keeping I2's Triage card with Status and Urgency.** Rejected: two statements of the same fact within one screen of each other, which DES-028 point 7 already rejected on the contract record.
+- **Adding a history applet now.** Rejected: the activity read has no `request` arm, and an applet that opens on a refusal is worse than an absent one.
+
+### Consequences
+
+`apps/web/src/routes/inbox-request.tsx` is the screen and `/inbox/{number}` its address — the one the Inbox row and its Assign button have linked to since #413. No new tokens and no new components: the page is composed from `AppShell`, `RecordApplets`, `Avatar`, the section-card anatomy, and the DES-005 status and DES-018 severity pills the Inbox already uses.
+
+The disposition tickets (M21/7–9) add the sub-bar's three actions and their dialogs; this decision is what they extend.
+
 ## Index of decisions
 
 | #       | Decision                                                                                                                                                             | Status                                    |
@@ -3776,3 +3830,4 @@ No new tokens. The Inbox is the first surface to draw `status-severe-*` in a pil
 | DES-054 | The collapsible settings card — the header is the disclosure (extends DES-020, DES-011)                                                                              | Accepted                                  |
 | DES-055 | The record's overflow menu — the acts that belong to the whole contract (extends DES-034, DES-017, DES-053)                                                          | Accepted                                  |
 | DES-056 | The Inbox — a fixed queue, not a curated list (extends DES-018, DES-031, DES-046)                                                                                    | Accepted                                  |
+| DES-057 | The staff request detail — a record page for something that is not a record (extends DES-032, DES-016, DES-034)                                                      | Accepted                                  |

@@ -2264,6 +2264,42 @@
   "inbox.ordering": {
     "defaultMessage": "Ordered by urgency, then age"
   },
+  "inbox.request.attachments": {
+    "defaultMessage": "Attachments"
+  },
+  "inbox.request.booleanValue": {
+    "defaultMessage": "{value, select, true {Yes} other {No}}"
+  },
+  "inbox.request.description": {
+    "defaultMessage": "Description"
+  },
+  "inbox.request.documentTitle": {
+    "defaultMessage": "{reference} · {summary}"
+  },
+  "inbox.request.fromForm": {
+    "defaultMessage": "From the portal form"
+  },
+  "inbox.request.noAttachments": {
+    "defaultMessage": "No files travelled with this request."
+  },
+  "inbox.request.noResponses": {
+    "defaultMessage": "This form collected nothing beyond the basics."
+  },
+  "inbox.request.outcome": {
+    "defaultMessage": "Outcome"
+  },
+  "inbox.request.requester": {
+    "defaultMessage": "Requester"
+  },
+  "inbox.request.responses": {
+    "defaultMessage": "Form responses"
+  },
+  "inbox.request.submitted": {
+    "defaultMessage": "Submitted"
+  },
+  "inbox.request.target": {
+    "defaultMessage": "Converts to"
+  },
   "inbox.showTriaged": {
     "defaultMessage": "Show triaged"
   },
