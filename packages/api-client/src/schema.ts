@@ -1074,7 +1074,7 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** The session user's own Requests, newest first (DD-013). There is no way to ask for anybody else's, and a converted Request stays on the list (INT-001) */
+    /** The session user's own Requests, newest first (DD-013). There is no way to ask for anybody else's, and a converted Request stays on the list (INT-001). The whole list is answered: it is one person's own asks, and a cap would hide a Request from the only person who can see it */
     get: operations["listMyRequests"];
     put?: never;
     post?: never;
