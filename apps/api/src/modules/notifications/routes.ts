@@ -533,9 +533,9 @@ export const notificationsRoutes: FastifyPluginAsyncZod = async (app) => {
           "their own saved rows over the group's defaults — because the " +
           "table holds overrides rather than a grid, and a person who " +
           "has never opened the pane has no rows at all. Every group is " +
-          "answered, including the one whose first events wait for the " +
-          "Inbox (M21): an opinion can be held about a group before " +
-          "anything in it has fired. Which of the five a surface draws " +
+          "answered, whether or not anything in it has ever fired: an " +
+          "opinion can be held about a group before its first event " +
+          "exists. Which of the five a surface draws " +
           "is the surface's business — the staff pane draws four and " +
           "the portal pane draws `requester_events` alone. There is no " +
           "user parameter — a preference is one person's, and the " +

@@ -15,9 +15,11 @@
  * system on two surfaces, and an item names the record it is about
  * whichever panel drew it: a `contract` row names a contract and
  * addresses a record section, a `request` row names a Request and
- * addresses its portal detail. The arm decides the sentence and the
- * entity type decides the address, so neither surface has to tell this
- * module which one it is.
+ * addresses the detail its reader works on. The arm decides the sentence
+ * and the address, so neither surface has to tell this module which one
+ * it is — which is what lets a Member+ hold two rows about one Request,
+ * the Inbox's arrival and their own receipt, and have each point where
+ * its reader can act.
  *
  * **Three properties are the same as `activity.ts`'s, for the same
  * reasons.** Every payload read is defensive, because a row outlives the
@@ -27,10 +29,11 @@
  * nothing here throws — a bell that cannot render one item must still
  * render the rest.
  *
- * **The catalog is narrated in full, not event by event.** All sixteen
+ * **The catalog is narrated in full, not event by event.** All seventeen
  * of NOT-002's slugs have an arm here, including the two of group 5 that
  * wait for M21's disposition routes: that is what makes the slices
- * behind #318–#321 and #382 an emission rather than a surface change.
+ * behind #318–#321, #382, and #415 an emission rather than a surface
+ * change.
  * Every arm reads only the two keys the fan-out already writes — the
  * record's number and its name — plus the actor's name where the event
  * has one, so no arm is a guess about a payload nobody has written yet.
@@ -41,8 +44,9 @@
  * the reader find the thing they were told about is one click short of
  * the promise, and the sections are addresses precisely so a prompt can
  * name one. A Request is the exception that proves it: its detail is one
- * page with no tabs to name, so every group-5 item opens
- * `/portal/requests/{number}`.
+ * page with no tabs to name, so a group-5 item opens
+ * `/portal/requests/{number}` and group 4's arrival opens the staff
+ * detail at `/inbox/{number}`.
  */
 
 import {
@@ -114,8 +118,8 @@ function wholeNumber(payload: Payload, key: string): number | null {
   return typeof value === "number" && Number.isInteger(value) && value > 0 ? value : null;
 }
 
-/** One arm of the catalog: a glyph, a sentence, and the record section
- * the sentence is about. */
+/** One arm of the catalog: a glyph, a sentence, and where the sentence
+ * points. */
 interface Arm {
   icon: LucideIcon;
   message: MessageDescriptor;
@@ -125,6 +129,16 @@ interface Arm {
    * bare URL lands on (DES-032).
    */
   section?: "documents" | "approvals" | "key-dates" | "tasks";
+  /**
+   * This event is the Inbox's own (NOT-002 group 4), so its Request
+   * addresses the staff detail rather than the portal one.
+   *
+   * It is a fact about the event and not about the reader: one act
+   * writes an arrival for staff and a receipt for the Requester, and the
+   * two rows have to point at two different pages even when one person
+   * holds both.
+   */
+  inbox?: true;
 }
 
 /**
@@ -255,10 +269,25 @@ const ARMS: Readonly<Record<string, Arm>> = {
       defaultMessage: "{contract} is expiring",
     }),
   },
+  // Group 4 — the Inbox's own arrival (INT-006, M21/4). The one Request
+  // arm that lands on the **staff** bell, and the one that addresses the
+  // staff detail rather than the portal: the reader is a triager, and
+  // the Request is work rather than news about their own ask.
+  "request.submitted": {
+    icon: Inbox,
+    inbox: true,
+    message: defineMessage({
+      id: "notifications.request.submitted",
+      defaultMessage:
+        "{hasActor, select, yes {{actor} submitted a new request: {request}} " +
+        "other {A new request arrived: {request}}}",
+    }),
+  },
   // Group 5 — the portal audience's own events (INT-001, M20/8). These
   // land on the portal bell and nowhere else, because the staff centre's
-  // scope answers about contracts alone. They name no section: a Request
-  // has one page and it is the whole of what a requester can open.
+  // scope answers group 4 alone of the Request rows. They name no
+  // section: a Request has one page and it is the whole of what a
+  // requester can open.
   "request.created": {
     icon: Inbox,
     message: defineMessage({
@@ -366,15 +395,19 @@ function recordName(intl: IntlShape, item: BellItem): string {
  * reference, INT-002's R-###) and the row's `entity_id` is the internal
  * one. An item carrying no number cannot be addressed and says so.
  *
- * **A Request has one address and no sections.** A contract's prompt
- * names the section it is about (DES-049 point 9) because a contract
- * record has routed tabs; a Request's whole page is the answer, so the
- * portal detail is where every group-5 item lands.
+ * **A Request has one address per surface and no sections.** A
+ * contract's prompt names the section it is about (DES-049 point 9)
+ * because a contract record has routed tabs; a Request's whole page is
+ * the answer, so a group-5 item lands on the portal detail and group 4's
+ * arrival on the staff one. Which of the two is the arm's to say: the
+ * event knows who it was written for, and the reader's role does not
+ * come into it.
  */
 function hrefFor(item: BellItem, arm: Arm | undefined): string | null {
   if (item.entityType === "request") {
     const number = wholeNumber(item.payload, "requestNumber");
-    return number === null ? null : `/portal/requests/${number}`;
+    if (number === null) return null;
+    return arm?.inbox ? `/inbox/${number}` : `/portal/requests/${number}`;
   }
   if (item.entityType !== "contract") return null;
   const number = wholeNumber(item.payload, "contractNumber");
