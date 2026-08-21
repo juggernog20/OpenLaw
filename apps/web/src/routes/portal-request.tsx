@@ -94,9 +94,15 @@ export async function portalRequestLoader({ params }: LoaderFunctionArgs) {
   // it. A read that fails answers `null` rather than taking the page
   // down with it: the values the requester submitted are still theirs to
   // see, and the card says the conversation could not be read.
-  const thread = await api.GET("/api/v1/comments", {
-    params: { query: { entityType: "request", entityId: res.data.request.id } },
-  });
+  // Caught as well as checked: a non-2xx answers `data: undefined`, and
+  // a request that never arrives rejects. Both are the same fact to this
+  // page — there is no conversation to draw — and neither is a reason to
+  // take the rest of it away.
+  const thread = await api
+    .GET("/api/v1/comments", {
+      params: { query: { entityType: "request", entityId: res.data.request.id } },
+    })
+    .catch(() => ({ data: undefined }));
   return { user, ...res.data, thread: thread.data ?? null };
 }
 

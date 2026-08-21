@@ -56,6 +56,7 @@ import {
   eq,
   inArray,
   isNull,
+  or,
   requests,
   sql,
   users,
@@ -334,11 +335,27 @@ const requestArm: CommentEntityArm = {
         role: users.role,
       })
       .from(users)
-      // Archived people are out: they have left, and addressing a
-      // question to them reaches nobody (SET-005).
-      .where(and(isNull(users.archivedAt), only ? inArray(users.id, [...only]) : undefined))
+      .where(
+        and(
+          // Archived people are out: they have left, and addressing a
+          // question to them reaches nobody (SET-005).
+          isNull(users.archivedAt),
+          // The audience as a `where` clause, so the read is the two
+          // people-shaped facts rather than the directory. The portal is
+          // open to every Business User, so an instance can hold far
+          // more people than any one Request reaches, and the rows this
+          // leaves out are rows the answer below would discard anyway.
+          or(inArray(users.role, [...MEMBER_PLUS]), eq(users.id, record.requesterId)),
+          only ? inArray(users.id, [...only]) : undefined,
+        ),
+      )
       // Alphabetical, as every people picker in the product is ordered.
       .orderBy(asc(sql`lower(${users.displayName})`), asc(users.id));
+    // Which tiers each of them hears — `resolve`'s rule said over people
+    // instead of over one viewer, and the same rule the clause above
+    // narrowed by. So the empty arm never fires; it is here because
+    // "hears nothing means not offered" is the rule, and a rule stated
+    // once is one the next role inherits.
     return rows.flatMap((row) => {
       const tiers = MEMBER_PLUS.includes(row.role)
         ? ALL_TIERS

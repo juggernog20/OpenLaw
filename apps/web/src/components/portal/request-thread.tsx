@@ -43,7 +43,7 @@
  *    there is nobody else an author could be.
  */
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { FormattedMessage, defineMessage, useIntl } from "react-intl";
 import { api } from "../../lib/api";
 import type { Comment } from "../../lib/comments";
@@ -79,6 +79,9 @@ export function RequestThread({
   const [cursor, setCursor] = useState<string | null>(thread?.nextCursor ?? null);
   const [olderFailed, setOlderFailed] = useState(false);
   const [loadingOlder, setLoadingOlder] = useState(false);
+  /** The message that should take focus once it is on screen, or `null`
+   * when nothing is waiting for it. */
+  const [landed, setLanded] = useState<string | null>(null);
 
   /**
    * One page further back, prepended in place (CTR-024).
@@ -103,6 +106,12 @@ export function RequestThread({
     }
     setComments((current) => [...data.comments, ...current]);
     setCursor(data.nextCursor);
+    // Where focus goes now. Reaching the start of the thread unmounts
+    // the control that was just pressed, and focus would fall to the
+    // document — so the oldest message that arrived catches it, which is
+    // also the first thing the reader asked to see. DES-010 asks for
+    // focus to be placed by hand wherever no overlay owns it.
+    setLanded(data.comments[0]?.id ?? null);
   }
 
   return (
@@ -154,7 +163,12 @@ export function RequestThread({
         {comments.length > 0 && (
           <ul className="flex flex-col gap-4">
             {comments.map((comment) => (
-              <Message key={comment.id} comment={comment} viewerId={viewerId} />
+              <Message
+                key={comment.id}
+                comment={comment}
+                viewerId={viewerId}
+                landed={comment.id === landed}
+              />
             ))}
           </ul>
         )}
@@ -183,15 +197,36 @@ const TOMBSTONE = {
 } as const;
 
 /** One message: who said it, when, and what they said. */
-function Message({ comment, viewerId }: Readonly<{ comment: Comment; viewerId: string }>) {
+function Message({
+  comment,
+  viewerId,
+  landed,
+}: Readonly<{
+  comment: Comment;
+  viewerId: string;
+  /** Whether this is the message focus is waiting on — the oldest one a
+   * "Show earlier replies" press just brought in. */
+  landed: boolean;
+}>) {
   const intl = useIntl();
   const mine = comment.author.id === viewerId;
   /** Redacted wins where both happened: the Administrator's act is the
    * later fact, and it is the one that took the text away for good. */
   const removed = comment.redactedAt ? "redacted" : comment.deletedAt ? "deleted" : null;
+  const row = useRef<HTMLLIElement>(null);
+  useEffect(() => {
+    if (landed) row.current?.focus();
+  }, [landed]);
 
   return (
-    <li className="flex gap-2.5">
+    <li
+      ref={row}
+      // Not in the tab order — a reader tabs through the card's
+      // controls, not its messages — but focusable by hand, so the
+      // paging control has somewhere to hand focus once it is gone.
+      tabIndex={-1}
+      className="flex gap-2.5 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-link"
+    >
       <Avatar name={comment.author.displayName} image={comment.author.image} className="size-6" />
       <div className="flex min-w-0 flex-1 flex-col gap-1">
         <div className="flex flex-wrap items-center gap-2">

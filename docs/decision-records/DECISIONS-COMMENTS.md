@@ -154,6 +154,8 @@ CMT-010 made room for a second arm and predicted the shape of the change. M20/7 
 
 **No status is consulted anywhere in the arm.** The thread is live from submission (INT-007) and stays live after conversion (DD-018): a Request that is `new`, `converted`, `resolved`, or `declined` answers the same way. An archived Request does not, by the house rule that NULL means live.
 
+**A converted Request answers because nothing has moved its rows yet.** CMT-001 has a conversion re-parent the comments onto the record the Request became, after which the portal reads _that_ record's thread filtered to Full Thread and `request` is a comment target for never-converted Requests alone. M21 owns that move and has not made it, so today the rows are still the Request's and this arm answers for them. What M21 changes is which record a row hangs off — not this rule, which consults no status either way.
+
 **The arm's `notifyPosted` raises nothing, and the blank is the decision.** A comment on a Request is NOT-002's group 5, and group 5 is a slot until #382 gives the Notifier its four methods. The seam has one method per event and no generic `notify()`, so there is no method here to call yet. The contract arm's two events are not borrowed: `commentMentioned` and `commentPosted` carry a contract's CTR-003 number and its title and fan out over its roster, and a Request has none of those things.
 
 **Re-parenting at conversion (CMT-001) is untouched.** Nothing in this arm reads or writes the link a conversion leaves behind; M21 owns that move.

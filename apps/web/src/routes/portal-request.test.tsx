@@ -615,8 +615,12 @@ describe("the conversation", () => {
 
     await user.click(await screen.findByRole("button", { name: "Show earlier replies" }));
 
-    expect(await screen.findByText("The very first reply.")).toBeInTheDocument();
-    expect(screen.getByText("The newest reply.")).toBeInTheDocument();
+    const older = await screen.findByText("The very first reply.");
+    const newer = screen.getByText("The newest reply.");
+    // Above what was already there, not below it: the thread reads
+    // oldest to newest, so what came before belongs on the head of it
+    // (CTR-024).
+    expect(older.compareDocumentPosition(newer)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
     // The thread reaches its own beginning, so the control goes.
     expect(screen.queryByRole("button", { name: "Show earlier replies" })).not.toBeInTheDocument();
   });
