@@ -14,7 +14,7 @@
  * adapter — the contract (CTR-016) and matter (MTR-011) editors are
  * configuration, not copies.
  *
- * Three parts are per mount (#354, #355, ST14).
+ * Four parts are per mount (#354, #355, #400, ST14).
  *
  * **The right card is optional.** A mount with no attachment surface
  * omits `attachments` and the screen is the left card alone.
@@ -30,6 +30,13 @@
  * They are stated, not configured: no catalog row is behind them,
  * nothing detaches them, and their required flags are facts, so the
  * card draws them disabled and never offers them in the Attach menu.
+ *
+ * **A mount may lock the required box on some attached rows.**
+ * `requiredRule` names the field types whose box this mount never
+ * offers — a request form may collect a `user` or an `entity` but may
+ * never require one, because the portal shows a requester no rows to
+ * pick from (#400). The row still attaches, reorders, and detaches; it
+ * is only the flag that is refused, and the API refuses it too.
  */
 
 import { useRef, useState, type DragEvent, type ReactNode } from "react";
@@ -109,6 +116,30 @@ export interface EditorBasicRow {
    * severity ramp for Urgency. */
   caption: MessageDescriptor;
   isRequired: boolean;
+}
+
+/**
+ * Attachments whose required box this mount never offers (INT-002's
+ * `user` and `entity` rule, #400).
+ *
+ * It is the client half of a refusal the API already makes, and it is
+ * per mount for the same reason the API's is: a `user` field is
+ * ordinary on a contract type, where staff pick from a list that has
+ * rows, and unanswerable on a request form, where the portal shows a
+ * requester none. A mount that omits this may require every field it
+ * attaches.
+ *
+ * The row still attaches, reorders, and detaches. Only the box is
+ * locked, and the reason is said twice — once beside the box for a
+ * reader, once in the card's help line for everybody else — because a
+ * disabled control with no reason is a screen that refuses without
+ * explaining (SET-003).
+ */
+export interface EditorRequiredRule {
+  /** The field types whose required box is drawn locked. */
+  fieldTypes: readonly EditorFieldType[];
+  /** Why this row's box is locked. Takes `{name}`. */
+  reason: MessageDescriptor;
 }
 
 /** The identity half of the API seam — the one call every mount makes. */
@@ -207,6 +238,12 @@ export interface TypeEditorAttachments {
    * nothing to state.
    */
   basics?: TypeEditorBasics;
+  /**
+   * Which attached rows may never be marked required here (#400). The
+   * two type editors pass none: every field they attach is one staff
+   * can answer.
+   */
+  requiredRule?: EditorRequiredRule;
 }
 
 /** The Fields pane's vocabulary, reused verbatim across modules (one
@@ -238,6 +275,7 @@ function AttachedFieldsCard({
   api,
   messages,
   basics,
+  requiredRule,
 }: Readonly<TypeEditorAttachments & { typeId: string }>) {
   const intl = useIntl();
 
@@ -266,6 +304,11 @@ function AttachedFieldsCard({
   // A const binding, so the guard below narrows inside JSX — a property
   // access would not.
   const locked = basics;
+  const lockedRequired = requiredRule;
+
+  /** Whether this mount locks this row's required box (#400). */
+  const isRequiredLocked = (row: AttachedFieldRow) =>
+    lockedRequired?.fieldTypes.includes(row.fieldType) === true;
 
   function noteRow(fieldId: string, status: FieldStatus, detail?: string) {
     setRowStatus((current) => ({ ...current, [fieldId]: status }));
@@ -493,12 +536,29 @@ function AttachedFieldsCard({
               <span className="flex w-24 items-center px-3">
                 <Checkbox
                   checked={row.isRequired}
-                  disabled={rowStatus[row.fieldId] === "saving"}
+                  disabled={isRequiredLocked(row) || rowStatus[row.fieldId] === "saving"}
                   aria-label={intl.formatMessage(messages.requiredFor, {
                     name: row.displayName,
                   })}
+                  // The reason is the box's description, not a sentence
+                  // that happens to sit beside it — a reader that lands
+                  // on the box hears why it is shut.
+                  aria-describedby={
+                    isRequiredLocked(row) ? `required-locked-${row.fieldId}` : undefined
+                  }
                   onCheckedChange={(checked) => void toggleRequired(row, checked === true)}
                 />
+                {/* A disabled box says "not yours to set" and nothing
+                    more, so the reason rides beside it. The help line
+                    under the card says the same thing on the screen. */}
+                {lockedRequired && isRequiredLocked(row) && (
+                  <span id={`required-locked-${row.fieldId}`} className="sr-only">
+                    <FormattedMessage
+                      {...lockedRequired.reason}
+                      values={{ name: row.displayName }}
+                    />
+                  </span>
+                )}
               </span>
               <span className="flex items-center gap-1">
                 <StatusNote

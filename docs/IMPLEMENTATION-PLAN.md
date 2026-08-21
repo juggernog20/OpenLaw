@@ -404,17 +404,22 @@ first.
     notification scope now takes which surface is asking rather than which role, because a Member+ who
     raises a Request of their own holds both kinds of row at once
   - Three things left open for M21, each written down where M21 will look rather than carried
-    silently. **A request type with a _required_ `user` or `entity` catalog field is unanswerable** —
+    silently. One of the three is now settled, and it is marked below rather than removed.
+    **A request type with a _required_ `user` or `entity` catalog field is unanswerable** —
     the portal draws those pickers empty on purpose, so every submission of that type is refused
     forever, and nothing in the M19 editor stops an Administrator attaching one; three candidate
-    fixes are recorded in INT-002 and raised as #400, and none is chosen. **The requester-facing
+    fixes are recorded in INT-002 and raised as #400, and none is chosen. _Settled by #400: the
+    second candidate was taken. Such a field may be on a request form and may never be required
+    on one — both write doors refuse the flag by name, the editor draws the box locked and says
+    why, and one migration clears the rows an install could already hold (the INT-002 M20/11
+    addendum)._ **The requester-facing
     status vocabulary is unchosen** — the status-change email translates `new` to "open" and
     `converted` to "in progress" while the portal pill says "New" and "Converted"; no requester has
     seen it because the event has no caller yet, and M21 gives it one (INT-003). **A mention on a
     Request thread notifies nobody** — `commentMentioned` is a contract's event, and what is meant to
     tell the staff side about a Request is group 4, which the Inbox brings (CMT-010)
   - _Decisions:_ INT-001, INT-002, INT-003, INT-004, CMT-010, NOT-001, NOT-002, NOT-005, DES-049,
-    DES-050 · _Issues:_ #375–#384
+    DES-050 · _Issues:_ #375–#384, #400
 
 - [ ] **M21 — The Inbox and triage**
       _Demo:_ A submitted request appears in the Inbox, converts into a contract with the collected values

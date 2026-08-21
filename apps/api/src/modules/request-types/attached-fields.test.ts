@@ -8,7 +8,9 @@
  * field is accepted on one request type and refused on another, and the
  * refusal speaks the arm's own line as an RFC 9457 problem. **A target
  * change that would strand attached fields is refused and names them**,
- * and detaching them first lets the same change through.
+ * and detaching them first lets the same change through. **A `user` or
+ * `entity` field may be on the form and may never be required on one**
+ * (#400), on both doors, and only on this mount.
  *
  * The suite is modeled on `contract-types/attached-fields.test.ts` —
  * the assertions transfer almost verbatim, which is the point of
@@ -17,7 +19,7 @@
  */
 
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { activityLog, asc, eq, fields, inArray, users } from "@openlaw/db";
+import { activityLog, and, asc, eq, fields, inArray, requestTypeFields, users } from "@openlaw/db";
 import { provisionUser } from "../../auth/instance.js";
 import {
   signInCookies as harnessSignInCookies,
@@ -153,16 +155,25 @@ const fieldIdBySlug = async (slug: string): Promise<string> => {
 const createField = async (
   displayName: string,
   moduleScope: "contract" | "global",
+  fieldType = "text",
 ): Promise<string> => {
   const res = await harness.app.inject({
     method: "POST",
     url: "/api/v1/fields",
     cookies: adminCookies,
-    payload: { displayName, moduleScope, fieldType: "text", fieldTag: "business" },
+    payload: { displayName, moduleScope, fieldType, fieldTag: "business" },
   });
   expect(res.statusCode, res.body).toBe(201);
   return res.json().field.id;
 };
+
+const setRequired = async (typeId: string, fieldId: string, isRequired: boolean) =>
+  harness.app.inject({
+    method: "PATCH",
+    url: `/api/v1/request-types/${typeId}/fields/${fieldId}`,
+    cookies: adminCookies,
+    payload: { isRequired },
+  });
 
 /** A `matter`-scoped field, which no route can create until M22 opens
  * the scope — planted the way that milestone's migration would. */
@@ -488,6 +499,111 @@ describe("the per-attachment required flag", () => {
       payload: { isRequired: true },
     });
     expect(res.statusCode).toBe(404);
+  });
+});
+
+/**
+ * INT-002's M20/11 addendum (#400). The portal draws a `user` and an
+ * `entity` control as an empty picker on purpose (DD-013, DD-016), so a
+ * required one is a question nobody who can reach the form can answer.
+ * The field still attaches; only the flag is refused, and it is refused
+ * where an Administrator reads it rather than where a requester meets
+ * it. The rule is this mount's alone — a contract type takes the same
+ * field required, because staff pick from a list that has rows.
+ */
+describe("a user or entity field can be on a request form but never required", () => {
+  it("refuses the flag by name, and leaves the attachment optional", async () => {
+    const type = await addType("Required reference probe");
+    const owner = await createField("Reference probe owner", "global", "user");
+    expect((await attach(type.id, { fieldId: owner })).statusCode).toBe(201);
+
+    const res = await setRequired(type.id, owner, true);
+    expect(res.statusCode, res.body).toBe(400);
+    expect(res.json().detail).toContain("Reference probe owner");
+    expect(res.json().detail).toContain("cannot be required");
+    expect((await listAttached(type.id))[0]!.isRequired).toBe(false);
+  });
+
+  it("refuses an entity field the same way", async () => {
+    const type = await addType("Required entity probe");
+    const signer = await createField("Entity probe signer", "global", "entity");
+    expect((await attach(type.id, { fieldId: signer })).statusCode).toBe(201);
+
+    const res = await setRequired(type.id, signer, true);
+    expect(res.statusCode, res.body).toBe(400);
+    expect(res.json().detail).toContain("Entity probe signer");
+  });
+
+  it("refuses an attach that arrives with the flag already set", async () => {
+    const type = await addType("Required attach probe");
+    const owner = await createField("Attach probe owner", "global", "user");
+
+    const res = await attach(type.id, { fieldId: owner, isRequired: true });
+    expect(res.statusCode, res.body).toBe(400);
+    // Refused whole: nothing is attached half-way.
+    expect(await listAttached(type.id)).toEqual([]);
+
+    // The same field attaches with no flag, which is the point of the
+    // rule — the form may collect it, it may just not demand it.
+    expect((await attach(type.id, { fieldId: owner })).statusCode).toBe(201);
+    expect((await listAttached(type.id))[0]!.isRequired).toBe(false);
+  });
+
+  it("clears a row that is already required, and refuses to set it again", async () => {
+    // The state a pre-#400 install can hold: the migration clears these
+    // rows, and this plants one to prove the repair path stays open.
+    const type = await addType("Required legacy probe");
+    const owner = await createField("Legacy probe owner", "global", "user");
+    expect((await attach(type.id, { fieldId: owner })).statusCode).toBe(201);
+    await harness.db
+      .update(requestTypeFields)
+      .set({ isRequired: true })
+      .where(and(eq(requestTypeFields.typeId, type.id), eq(requestTypeFields.fieldId, owner)));
+    expect((await listAttached(type.id))[0]!.isRequired).toBe(true);
+
+    // Asking for the state again is refused, even though the row
+    // already holds it — a no-op that answered 200 would report a
+    // refused state as an accepted one.
+    expect((await setRequired(type.id, owner, true)).statusCode).toBe(400);
+
+    // Clearing it is always allowed. That is the repair.
+    const cleared = await setRequired(type.id, owner, false);
+    expect(cleared.statusCode, cleared.body).toBe(200);
+    expect(cleared.json().attachedField.isRequired).toBe(false);
+    expect((await listAttached(type.id))[0]!.isRequired).toBe(false);
+  });
+
+  it("leaves the other mounts alone: a contract type takes the same field required", async () => {
+    const owner = await createField("Contract probe owner", "contract", "user");
+    const nda = "019ff1f5-301d-7795-a5af-e4339c76d4ce";
+    const attached = await harness.app.inject({
+      method: "POST",
+      url: `/api/v1/contract-types/${nda}/fields`,
+      cookies: adminCookies,
+      payload: { fieldId: owner },
+    });
+    expect(attached.statusCode, attached.body).toBe(201);
+
+    const res = await harness.app.inject({
+      method: "PATCH",
+      url: `/api/v1/contract-types/${nda}/fields/${owner}`,
+      cookies: adminCookies,
+      payload: { isRequired: true },
+    });
+    expect(res.statusCode, res.body).toBe(200);
+    expect(res.json().attachedField.isRequired).toBe(true);
+
+    // Left as it was found: the seeded NDA type is shared by this file's
+    // other assertions.
+    expect(
+      (
+        await harness.app.inject({
+          method: "DELETE",
+          url: `/api/v1/contract-types/${nda}/fields/${owner}`,
+          cookies: adminCookies,
+        })
+      ).statusCode,
+    ).toBe(204);
   });
 });
 

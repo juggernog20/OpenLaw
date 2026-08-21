@@ -23,6 +23,14 @@
  * the attach route resolves against the row it has already locked. Such
  * a mount names its own row type, so the rule reads the mount's own
  * columns rather than the shared taxonomy shape.
+ *
+ * **The rule on the required flag is per mount too**
+ * (`TypeFieldRequiredRule`). The flag is written here, but what a
+ * required field costs belongs to the surface that collects the value:
+ * a `user` or `entity` field is ordinary on a contract type and
+ * unanswerable on a request form (#400), so the request-type mount
+ * states the refusal and the other two state nothing. A blanket rule on
+ * this route would refuse staff a picker that has rows.
  */
 
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
@@ -42,6 +50,7 @@ import {
   type Executor,
   type Field,
   type FieldModuleScope,
+  type FieldType,
   type Transaction,
 } from "@openlaw/db";
 import { requireRole } from "../auth/guards.js";
@@ -64,6 +73,32 @@ export interface TypeFieldScopeRule {
   scopes: readonly [FieldModuleScope, ...FieldModuleScope[]];
   /** The refusal line when a field's scope is outside them. */
   refusal: string;
+}
+
+/**
+ * Which attachments a mount may never mark required, and what to say
+ * when one is (INT-002, #400).
+ *
+ * **It is per mount, like the scope rule, and for the same reason.**
+ * The flag is written through one shared route, but what a required
+ * field costs is the collecting module's own business: staff pick a
+ * user or an entity on a contract from a list that has rows, so that
+ * mount states no rule at all. The portal draws those two controls
+ * empty on purpose (DD-013, DD-016), so a required one there is a form
+ * nobody can submit — and the request-type mount refuses it here rather
+ * than letting a requester meet it.
+ *
+ * A mount that omits the rule may require any field it may attach.
+ */
+export interface TypeFieldRequiredRule {
+  /** The field types this mount refuses to mark required. */
+  fieldTypes: readonly [FieldType, ...FieldType[]];
+  /** The refusal, which names the field an Administrator just picked
+   * (SET-003: a guard refuses and explains, it does not act quietly). */
+  refusal: (displayName: string) => string;
+  /** The OpenAPI fragment stating the rule on both routes that write
+   * the flag. A mount with no rule states nothing. */
+  summary: string;
 }
 
 /**
@@ -103,6 +138,13 @@ export interface TypeFieldRoutesConfig<TRow extends TaxonomyRow = TaxonomyRow> {
    * the OpenAPI document could state, so the mount says what its rule
    * reads instead. */
   scopeSummary: string;
+  /**
+   * What this mount may never mark required (INT-002's `user` and
+   * `entity` rule, #400). Omitted by a mount whose collecting surface
+   * can answer every field type it attaches — the two staff-side type
+   * editors omit it.
+   */
+  requiredRule?: TypeFieldRequiredRule;
   /** DD-017 action prefix, e.g. `contract_type_field`. */
   actionPrefix: TypeFieldActionPrefix;
   /** The milestone that will hard-enforce `isRequired`, for a module
@@ -120,7 +162,18 @@ export interface TypeFieldRoutesConfig<TRow extends TaxonomyRow = TaxonomyRow> {
 export function typeFieldRoutes<TRow extends TaxonomyRow = TaxonomyRow>(
   config: TypeFieldRoutesConfig<TRow>,
 ): FastifyPluginAsyncZod {
-  const { typesTable, joinTable, path, noun, scopeRule } = config;
+  const { typesTable, joinTable, path, noun, scopeRule, requiredRule } = config;
+
+  /**
+   * The refusal for marking this field required on this mount, or
+   * `undefined` when the mount allows it. Read on both doors: the
+   * attach that arrives with the flag already set, and the PATCH that
+   * sets it afterwards.
+   */
+  function requiredRefusal(field: Field): string | undefined {
+    if (!requiredRule?.fieldTypes.includes(field.fieldType)) return undefined;
+    return requiredRule.refusal(field.displayName);
+  }
 
   /**
    * The rule for one type: the mount's constant, or the mount's
@@ -233,7 +286,8 @@ export function typeFieldRoutes<TRow extends TaxonomyRow = TaxonomyRow>(
           summary:
             `Attach a catalog field to a ${noun}: ${config.scopeSummary}, ` +
             "appended to the per-type order, optional from the start " +
-            "unless isRequired says otherwise",
+            "unless isRequired says otherwise" +
+            (requiredRule ? `; ${requiredRule.summary}` : ""),
           tags: [config.tag],
           params: z.object({ id: z.string() }),
           body: z.object({ fieldId: z.string(), isRequired: z.boolean().optional() }),
@@ -259,6 +313,12 @@ export function typeFieldRoutes<TRow extends TaxonomyRow = TaxonomyRow>(
           }
           if (field.archivedAt) {
             throw httpError(409, `${field.displayName} is archived — restore it first.`);
+          }
+          // The second door on the required flag: an attach may carry
+          // it, so the rule is read here as well as on the PATCH.
+          if (isRequired) {
+            const refusal = requiredRefusal(field);
+            if (refusal) throw httpError(400, refusal);
           }
 
           // The order appends after every existing attachment, including
@@ -300,6 +360,7 @@ export function typeFieldRoutes<TRow extends TaxonomyRow = TaxonomyRow>(
           summary:
             "Set an attachment's required flag: per attachment, so a " +
             "field can be required for one type and optional elsewhere; " +
+            (requiredRule ? `${requiredRule.summary}; ` : "") +
             (config.requiredMilestone
               ? `hard enforcement arrives with the record milestone (${config.requiredMilestone})`
               : "hard-enforced when a record is created on this type and " +
@@ -319,6 +380,14 @@ export function typeFieldRoutes<TRow extends TaxonomyRow = TaxonomyRow>(
           });
           const target = attachments.find(({ join }) => join.fieldId === request.params.fieldId);
           if (!target) throw httpError(404, "This field is not attached to this type.");
+          // The rule cuts one way, and it is read before the no-op
+          // check: asking for a state this mount forbids is refused
+          // even by a row that already holds it, and clearing the flag
+          // is always allowed — that is the repair.
+          if (isRequired) {
+            const refusal = requiredRefusal(target.field);
+            if (refusal) throw httpError(400, refusal);
+          }
           // Setting the current value changes nothing — answer with the
           // row and write no misleading audit entry.
           if (target.join.isRequired === isRequired) return toRow(target.join, target.field);
