@@ -69,6 +69,13 @@ interface SecretColumn {
  * A fifth credential column joins this list in the same change that
  * adds it — TECH-022's successor to TECH-021's "one more future pass
  * comment" failure mode.
+ *
+ * The OIDC token columns on `accounts` are the one encrypted pair that
+ * does **not** belong here (#387). better-auth seals them itself under
+ * `AUTH_SECRET`, and the recovery contract this pass implements — an
+ * unopenable value reads as unset and waits to be re-pasted in
+ * Settings — has no meaning for a per-user token nobody can re-paste.
+ * See TECH-022's #387 addendum.
  */
 const SEALED_COLUMNS: SecretColumn[] = [
   { table: signingConnectors, id: signingConnectors.id, column: signingConnectors.privateKey },

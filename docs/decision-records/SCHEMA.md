@@ -78,20 +78,23 @@ Source: **TECH-008**
 
 One row per authentication method per user: a **credential row** (holding the Argon2id password hash) and/or **OIDC-subject rows** (one per IdP the user has signed in through). Invited staff have no credential row until first-use activation sets a password — an unactivated invite has nothing to brute-force.
 
-| Column                                                | Type        | Notes                                                                              |
-| ----------------------------------------------------- | ----------- | ---------------------------------------------------------------------------------- |
-| `id`                                                  | UUID        | PK                                                                                 |
-| `user_id`                                             | UUID FK     | → `users.id`, not null, cascade delete                                             |
-| `provider_id`                                         | text        | `credential`, or the `sso_providers.provider_id` slug for OIDC rows                |
-| `issuer`                                              | text        | who asserts the subject: `local:credential`, or the IdP's own issuer on OIDC rows  |
-| `account_id`                                          | text        | provider-side subject (OIDC `sub`); equals the user id on credential rows          |
-| `password`                                            | text        | nullable; Argon2id hash per **TECH-008** — credential rows only, NULL on OIDC rows |
-| `access_token`, `refresh_token`, `id_token`           | text        | nullable; OIDC token columns, demanded by better-auth's model                      |
-| `access_token_expires_at`, `refresh_token_expires_at` | timestamptz | nullable; companions to the token columns                                          |
-| `scope`                                               | text        | nullable; granted OIDC scopes                                                      |
-| `created_at`, `updated_at`                            | timestamptz |                                                                                    |
+| Column                                                | Type        | Notes                                                                                                                           |
+| ----------------------------------------------------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| `id`                                                  | UUID        | PK                                                                                                                              |
+| `user_id`                                             | UUID FK     | → `users.id`, not null, cascade delete                                                                                          |
+| `provider_id`                                         | text        | `credential`, or the `sso_providers.provider_id` slug for OIDC rows                                                             |
+| `issuer`                                              | text        | who asserts the subject: `local:credential`, or the IdP's own issuer on OIDC rows                                               |
+| `account_id`                                          | text        | provider-side subject (OIDC `sub`); equals the user id on credential rows                                                       |
+| `password`                                            | text        | nullable; Argon2id hash per **TECH-008** — credential rows only, NULL on OIDC rows                                              |
+| `access_token`, `refresh_token`                       | text        | nullable; OIDC token columns, **encrypted at rest by better-auth** under `AUTH_SECRET` (**TECH-022**)                           |
+| `id_token`                                            | text        | nullable; stored plaintext — better-auth writes it raw, and it is expired identity evidence whose claims already sit on `users` |
+| `access_token_expires_at`, `refresh_token_expires_at` | timestamptz | nullable; companions to the token columns                                                                                       |
+| `scope`                                               | text        | nullable; granted OIDC scopes                                                                                                   |
+| `created_at`, `updated_at`                            | timestamptz |                                                                                                                                 |
 
 Unique on (`provider_id`, `account_id`): one credential row per user, and one row per subject under a given provider registration. Unique on (`issuer`, `account_id`) as well — the pair better-auth itself looks an account up by from 1.7 on, and the stricter of the two: two provider registrations may name the same IdP, and then one person's subject reaches this table twice under two `provider_id`s that the first index is content to keep apart. No `archived_at`: offboarding archives the _user_; account rows die with the user via cascade.
+
+The two token columns are sealed by **better-auth**, not by `encryptedText`, so they are absent from `SEALED_COLUMNS` and there is no boot pass for them. better-auth owns every read and write of them, encrypts them under `AUTH_SECRET` when `account.encryptOAuthTokens` is set, and reads a pre-flag plaintext value straight through — so the next sign-in through the IdP rewrites the row sealed, with nothing to migrate. **TECH-022** records why the key differs from the one the four admin-pasted credentials use.
 
 `issuer` arrived with better-auth 1.7 (#340), which identifies an account by who asserted the subject rather than by which provider row we filed it under. A password account carries the synthetic `local:credential`; an OIDC account carries the issuer its IdP publishes, which is what a verified `id_token`'s `iss` claim says and what `sso_providers.issuer` already held. Migration `0060_account_issuer` backfilled both and refuses an upgrade it cannot resolve, because a row with the wrong issuer is a person who cannot sign in.
 

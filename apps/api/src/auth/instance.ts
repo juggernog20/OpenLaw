@@ -240,6 +240,24 @@ export function createAuth(
       return origins;
     },
     account: {
+      // The OIDC tokens better-auth stores are encrypted before they
+      // reach `accounts` (#387). The SSO flow keeps a refresh token —
+      // the sso plugin asks for `offline_access` — so a `pg_dump` would
+      // otherwise carry live tokens for the org's IdP. better-auth owns
+      // these columns and both writes and reads them itself, so the key
+      // is `AUTH_SECRET`, not TECH-022's `OPENLAW_SECRET_KEY`; the two
+      // regimes are recorded in TECH-022.
+      //
+      // Two limits, both accepted and both verified in the installed
+      // 1.7 dist rather than assumed:
+      //   - `id_token` stays plaintext. better-auth passes it to the
+      //     adapter raw on every write path. It is expired identity
+      //     evidence, and its claims already sit in `users`.
+      //   - A token written before this flag went on stays plaintext
+      //     until the next sign-in rewrites it. better-auth reads such
+      //     a value through, so nothing breaks meanwhile — see the
+      //     `accounts` comment in packages/db/src/schema/auth.ts.
+      encryptOAuthTokens: true,
       accountLinking: {
         // An SSO identity may link to a pre-existing user row that never
         // proved its inbox: in SSO-mode installs invited staff sign in

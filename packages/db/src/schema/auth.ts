@@ -120,11 +120,28 @@ export const accounts = pgTable(
     // holds. Migration 0060 backfilled both.
     issuer: text("issuer").notNull(),
     password: text("password"),
+    // Encrypted at rest by better-auth, not by us (#387). The library
+    // owns every read and write of these two columns, so it seals them
+    // itself under `AUTH_SECRET` when `account.encryptOAuthTokens` is
+    // set — which the auth instance does. They are deliberately NOT in
+    // `SEALED_COLUMNS`: TECH-022's recovery contract is "an unopenable
+    // value reads as unset, re-paste it in Settings", and a per-user
+    // token is not re-pastable, so a boot under the wrong key would
+    // silently blank every SSO user instead of asking for help.
+    //
+    // The type stays plain `text`: a row written before the flag went
+    // on is read back as it stands (better-auth only decrypts a value
+    // that looks encrypted), and the next sign-in through the IdP
+    // rewrites it sealed. So no backfill pass exists for these two.
     accessToken: text("access_token"),
     refreshToken: text("refresh_token"),
     accessTokenExpiresAt: timestamp("access_token_expires_at", { withTimezone: true }),
     refreshTokenExpiresAt: timestamp("refresh_token_expires_at", { withTimezone: true }),
     scope: text("scope"),
+    // Plaintext, and accepted as such: better-auth passes the id_token
+    // to the adapter raw on every write path, flag or no flag. It is
+    // expired identity evidence by the time it is stored, and the
+    // claims it carries already sit in `users`.
     idToken: text("id_token"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
