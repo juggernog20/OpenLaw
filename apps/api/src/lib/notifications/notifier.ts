@@ -40,6 +40,12 @@
  * applied here, once, for every event: a bell that told you what you had
  * just done would be noise in the one place that must only ever be news.
  *
+ * **There is exactly one deliberate exception, and it is a receipt.**
+ * `requestCreated` is addressed to the person who submitted the Request,
+ * on purpose (INT-001): a receipt addressed to nobody is not a receipt.
+ * It is written as one flag on one method rather than as a rule each
+ * caller could reach for, so the exception stays countable.
+ *
  * **An act with no actor excludes nobody.** A webhook delivery, a
  * reconciliation round, and the executed-copy fetch are the integration
  * speaking, not a person (CTR-013) — the same fact the activity feed
@@ -58,11 +64,20 @@ import {
   type ContractStage,
   type Db,
   type EnvelopeStatus,
+  type NotificationEntityType,
   type NotificationEventType,
+  type RequestStatus,
   type Transaction,
 } from "@openlaw/db";
 import { boundedQueueAsk, type JobQueue } from "../../pipeline/jobs.js";
-import { contractRecordAudience, CONTRACT_ENTITY, reachedBy } from "./audience.js";
+import {
+  contractRecordAudience,
+  CONTRACT_ENTITY,
+  reachedBy,
+  requestAudience,
+  requestReachedBy,
+  REQUEST_ENTITY,
+} from "./audience.js";
 import { emailTimingOf, EVENT_GROUP } from "./catalog.js";
 import { channelChoices } from "./preferences.js";
 
@@ -288,6 +303,63 @@ export interface KeyDateReminderEvent extends DateReminderEvent {
   label: string;
 }
 
+/**
+ * What every event on a Request carries (NOT-002 group 5).
+ *
+ * The Request names itself by its id alone, for group 2's reason: the
+ * audience read behind the seam already holds the row, so R-### and the
+ * summary come from there rather than from four call sites that would
+ * each have to read them.
+ *
+ * **The audience is never on the wire either.** Every group-5 event is
+ * addressed to the Requester and to nobody else (DD-013), and who that
+ * is is a column on the Request. A caller that could name the audience
+ * could name somebody else's.
+ *
+ * `actorId` is nullable, as group 2's is, and null means the same thing:
+ * nobody did this, so nobody is excluded. No caller passes null today —
+ * every group-5 event so far is somebody's act — and the shape is here
+ * because M21's conversion routes may yet be run by a job.
+ */
+export interface RequestEvent {
+  requestId: string;
+  /** Who caused it, or null where nobody did. */
+  actorId: string | null;
+  actorName: string | null;
+}
+
+/** What a Request's move tells the person who asked (INT-007). */
+export interface RequestStatusChangedEvent extends RequestEvent {
+  /** The lifecycle either side of the move. A fixed enum, because code
+   * branches on it (INT-001 as revised by INT-007) — unlike a contract's
+   * status, which is a label an Administrator chose. */
+  from: RequestStatus;
+  to: RequestStatus;
+}
+
+/** What one reply on a Request's thread tells the person who asked
+ * (INT-007, DD-016). */
+export interface RequestRepliedEvent extends RequestEvent {
+  commentId: string;
+  /** The comment's DD-016 tier, carried so the fan-out can hold it: a
+   * Requester is in Full Thread and nowhere else, so a Legal Only or
+   * Working Team comment reaches them not at all. */
+  visibility: CommentVisibility;
+}
+
+/** What a turned-down Request tells the person who asked (INT-006). */
+export interface RequestDeclinedEvent extends RequestEvent {
+  /** Why. INT-006 makes "no" arrive with a why, so the reason travels
+   * with the event rather than being a line *about* a reason.
+   *
+   * It is the one piece of somebody's prose this seam carries into an
+   * email, and it is carried on purpose: a decline reason is written to
+   * be read by the requester, it is not a room anybody can be moved out
+   * of, and there is no redact for it to outrun (CMT-006 is why a
+   * comment's words stay on the thread). */
+  reason: string;
+}
+
 export interface Notifier {
   /**
    * Runs one mutation and everything it has to tell people about, in
@@ -433,6 +505,62 @@ export interface Notifier {
    * email in the morning digest (NOT-003).
    */
   expiryApproaching(tx: NotifyingTransaction, event: DateReminderEvent): Promise<number>;
+
+  /**
+   * A Request has been submitted (INT-001) — group 5, portal bell on and
+   * email immediate (NOT-002).
+   *
+   * **This is the receipt, and it is the one event in the catalog whose
+   * audience is the actor.** The exclusion rule is deliberately not
+   * applied: the person told is the person who just pressed Submit,
+   * because proof that an ask arrived is the whole content of the
+   * message. Every other group-5 event excludes its actor like every
+   * other event in the system.
+   *
+   * Raised by `POST /requests` inside the insert's own transaction, so a
+   * submission that rolls back leaves no receipt for a Request nobody
+   * has.
+   */
+  requestCreated(tx: NotifyingTransaction, event: RequestEvent): Promise<void>;
+
+  /**
+   * A Request has moved to another status (INT-007) — group 5, portal
+   * bell on and email immediate (NOT-002).
+   *
+   * INT-003's promise in one method: a Requester never has to poll,
+   * which is why the status-poke button was declined. Nothing fires it
+   * in M20 — the Inbox's disposition routes are M21's — and the decline
+   * has {@link requestDeclined} of its own, because a "no" that arrived
+   * without its reason would be the one status move that says less than
+   * the record does.
+   */
+  requestStatusChanged(tx: NotifyingTransaction, event: RequestStatusChangedEvent): Promise<void>;
+
+  /**
+   * Somebody has replied on a Request's thread (INT-007) — group 5,
+   * portal bell on and email immediate (NOT-002).
+   *
+   * The audience is the Requester, so a staff reply reaches them and the
+   * staff poster hears nothing — and a Requester's own reply reaches
+   * nobody at all, because they are the actor. Both fall out of the
+   * exclusion rule rather than being decided at the call site.
+   *
+   * It carries the comment's tier, so only a Full Thread reply reaches
+   * the portal: a Legal Only or Working Team comment is staff talking
+   * among themselves, and the wall behind the seam is what says so.
+   */
+  requestReplied(tx: NotifyingTransaction, event: RequestRepliedEvent): Promise<void>;
+
+  /**
+   * A Request has been turned down, with a reason (INT-006) — group 5,
+   * portal bell on and email immediate (NOT-002).
+   *
+   * Raised **instead of** {@link requestStatusChanged} on the move to
+   * `declined`, never beside it: they are one act, and two messages
+   * about it would be the same news at two volumes. Nothing fires it in
+   * M20; M21's decline route is its one caller.
+   */
+  requestDeclined(tx: NotifyingTransaction, event: RequestDeclinedEvent): Promise<void>;
 }
 
 /**
@@ -464,28 +592,21 @@ interface PendingNotification {
   payload: Record<string, unknown>;
 }
 
-/**
- * The whole fan-out, for one event on one contract: audience, wall,
- * preferences, rows, wake-ups.
- *
- * Every event goes through this, which is what makes the five steps a
- * property of the seam rather than of each call site. An event added
- * later supplies its people and its payload and inherits all of it.
- */
-async function fanOut(
-  tx: NotifyingTransaction,
-  eventType: NotificationEventType,
-  contractId: string,
-  /** Who caused it, or null where nobody did — an integration's own act
-   * (CTR-013). Null excludes nobody, because there is no one person for
-   * the exclusion to be about. */
-  actorId: string | null,
-  people: readonly PendingNotification[],
-  /** How far this particular event may go, beyond the record's own wall.
+/** The record one event is about, named the way the `notifications` row
+ * names it. Which arm answers the wall question is read from `type`,
+ * so an entity added later is an arm rather than a branch at a route. */
+type NotificationEntity =
+  { type: typeof CONTRACT_ENTITY; id: string } | { type: typeof REQUEST_ENTITY; id: string };
+
+/** Everything one event may ask of the fan-out beyond its people. */
+interface FanOutOptions {
+  /**
+   * How far this particular event may go, beyond the record's own wall.
    * The tier is the room something was said in (DD-016); the document
    * flag is the file it was said about (DOC-008). Both narrow; neither
-   * widens. */
-  narrowing: { tier?: CommentVisibility; confidentialDocument?: boolean } = {},
+   * widens.
+   */
+  narrowing?: { tier?: CommentVisibility; confidentialDocument?: boolean };
   /**
    * The dedup identity of a date reminder (NOT-003/004), on the events
    * that have one and absent on every other.
@@ -497,19 +618,54 @@ async function fanOut(
    * no-op, and a date that has **moved** has a different identity and so
    * is not a conflict at all.
    */
-  reminder?: { date: string; offsetDays: number },
+  reminder?: { date: string; offsetDays: number };
+  /**
+   * NOT-002's one exception: address this event to the person who
+   * caused it.
+   *
+   * The receipt, and nothing else (INT-001). It is a named option rather
+   * than a `null` actor because those are different facts — an actorless
+   * event excludes nobody because there is nobody to exclude, and this
+   * one excludes nobody on purpose while still naming who acted.
+   */
+  tellTheActor?: boolean;
+}
+
+/**
+ * The whole fan-out, for one event on one record: audience, wall,
+ * preferences, rows, wake-ups.
+ *
+ * Every event goes through this, which is what makes the five steps a
+ * property of the seam rather than of each call site. An event added
+ * later supplies its people and its payload and inherits all of it.
+ */
+async function fanOut(
+  tx: NotifyingTransaction,
+  eventType: NotificationEventType,
+  entity: NotificationEntity,
+  /** Who caused it, or null where nobody did — an integration's own act
+   * (CTR-013). Null excludes nobody, because there is no one person for
+   * the exclusion to be about. */
+  actorId: string | null,
+  people: readonly PendingNotification[],
+  options: FanOutOptions = {},
 ): Promise<number> {
+  const { narrowing = {}, reminder } = options;
   // 1. The audience, minus the person who caused it. Deduplicated: one
   // event tells one person once, however many rows named them.
   const byUser = new Map<string, PendingNotification>();
   for (const person of people) {
-    if (actorId !== null && person.userId === actorId) continue;
+    if (actorId !== null && person.userId === actorId && !options.tellTheActor) continue;
     if (!byUser.has(person.userId)) byUser.set(person.userId, person);
   }
   if (byUser.size === 0) return 0;
 
-  // 2. The wall (DD-014). Applied here so no event can skip it.
-  const reachable = await reachedBy(tx, contractId, [...byUser.keys()], narrowing);
+  // 2. The wall (DD-014, and the Request's own two facts). Applied here
+  // so no event can skip it, whichever record it is about.
+  const reachable =
+    entity.type === CONTRACT_ENTITY
+      ? await reachedBy(tx, entity.id, [...byUser.keys()], narrowing)
+      : await requestReachedBy(tx, entity.id, [...byUser.keys()], narrowing);
 
   // 3. The preferences, over the group's defaults (NOT-001/002).
   const recipients = [...byUser.keys()].filter((id) => reachable.has(id));
@@ -532,8 +688,8 @@ async function fanOut(
       {
         userId,
         eventType,
-        entityType: CONTRACT_ENTITY,
-        entityId: contractId,
+        entityType: entity.type satisfies NotificationEntityType,
+        entityId: entity.id,
         payload: byUser.get(userId)!.payload,
         // The refinement: decided here, at write time, so that "owed
         // and unsent" is a state the rows can be asked about. A group
@@ -621,7 +777,7 @@ async function fanOutToRecord(
   await fanOut(
     tx,
     eventType,
-    event.contractId,
+    { type: CONTRACT_ENTITY, id: event.contractId },
     event.actorId,
     recipients.map((userId) => ({
       userId,
@@ -633,7 +789,54 @@ async function fanOutToRecord(
         actorName: event.actorName,
       },
     })),
-    options.narrowing ?? {},
+    { ...(options.narrowing ? { narrowing: options.narrowing } : {}) },
+  );
+}
+
+/**
+ * The whole of NOT-002's group 5, for one event on one Request.
+ *
+ * Group 2's shape, said for the portal audience, and for its reasons:
+ * every group-5 event resolves the same audience out of the same row,
+ * and what they differ by is a slug and a payload key. The Request's
+ * number and summary are **added** to the payload rather than taken from
+ * it, because every group-5 item and email names the Request the same
+ * way.
+ *
+ * **The audience is one person and the seam is what says who.** It is
+ * the Requester (DD-013), read here from the row rather than named by a
+ * caller — a caller that could name the audience could name somebody
+ * else's Requester.
+ */
+async function fanOutToRequest(
+  tx: NotifyingTransaction,
+  eventType: NotificationEventType,
+  event: RequestEvent,
+  payload: Record<string, unknown>,
+  options: Pick<FanOutOptions, "narrowing" | "tellTheActor"> = {},
+): Promise<void> {
+  const audience = await requestAudience(tx, event.requestId);
+  // A Request that is not there is about nobody — the contract read's
+  // answer above, for its reason.
+  if (!audience) return;
+  await fanOut(
+    tx,
+    eventType,
+    { type: REQUEST_ENTITY, id: event.requestId },
+    event.actorId,
+    [
+      {
+        userId: audience.requesterId,
+        payload: {
+          ...payload,
+          requestNumber: audience.requestNumber,
+          requestSummary: audience.summary,
+          actorId: event.actorId,
+          actorName: event.actorName,
+        },
+      },
+    ],
+    options,
   );
 }
 
@@ -663,7 +866,7 @@ function dateReminder(
   return fanOut(
     tx,
     eventType,
-    event.contractId,
+    { type: CONTRACT_ENTITY, id: event.contractId },
     null,
     event.userIds.map((userId) => ({
       userId,
@@ -683,8 +886,7 @@ function dateReminder(
         offsetDays: event.offsetDays,
       },
     })),
-    {},
-    { date: event.reminderDate, offsetDays: event.offsetDays },
+    { reminder: { date: event.reminderDate, offsetDays: event.offsetDays } },
   );
 }
 
@@ -738,7 +940,7 @@ export function createNotifier(deps: NotifierDeps): Notifier {
       await fanOut(
         tx,
         "approval.requested",
-        event.contractId,
+        { type: CONTRACT_ENTITY, id: event.contractId },
         event.actorId,
         event.approvals.map((approval) => ({
           userId: approval.approverId,
@@ -756,33 +958,45 @@ export function createNotifier(deps: NotifierDeps): Notifier {
     },
 
     async ownerAssigned(tx: NotifyingTransaction, event: OwnerAssignedEvent): Promise<void> {
-      await fanOut(tx, "contract.owner_assigned", event.contractId, event.actorId, [
-        {
-          userId: event.ownerId,
-          payload: {
-            contractNumber: event.contractNumber,
-            contractTitle: event.contractTitle,
-            actorId: event.actorId,
-            actorName: event.actorName,
+      await fanOut(
+        tx,
+        "contract.owner_assigned",
+        { type: CONTRACT_ENTITY, id: event.contractId },
+        event.actorId,
+        [
+          {
+            userId: event.ownerId,
+            payload: {
+              contractNumber: event.contractNumber,
+              contractTitle: event.contractTitle,
+              actorId: event.actorId,
+              actorName: event.actorName,
+            },
           },
-        },
-      ]);
+        ],
+      );
     },
 
     async taskAssigned(tx: NotifyingTransaction, event: TaskAssignedEvent): Promise<void> {
-      await fanOut(tx, "contract.task_assigned", event.contractId, event.actorId, [
-        {
-          userId: event.assigneeId,
-          payload: {
-            contractNumber: event.contractNumber,
-            contractTitle: event.contractTitle,
-            actorId: event.actorId,
-            actorName: event.actorName,
-            taskId: event.taskId,
-            taskTitle: event.taskTitle,
+      await fanOut(
+        tx,
+        "contract.task_assigned",
+        { type: CONTRACT_ENTITY, id: event.contractId },
+        event.actorId,
+        [
+          {
+            userId: event.assigneeId,
+            payload: {
+              contractNumber: event.contractNumber,
+              contractTitle: event.contractTitle,
+              actorId: event.actorId,
+              actorName: event.actorName,
+              taskId: event.taskId,
+              taskTitle: event.taskTitle,
+            },
           },
-        },
-      ]);
+        ],
+      );
     },
 
     async commentMentioned(tx: NotifyingTransaction, event: CommentMentionedEvent): Promise<void> {
@@ -797,7 +1011,7 @@ export function createNotifier(deps: NotifierDeps): Notifier {
       await fanOut(
         tx,
         "comment.mentioned",
-        event.contractId,
+        { type: CONTRACT_ENTITY, id: event.contractId },
         event.actorId,
         named.map((row) => ({
           userId: row.userId,
@@ -813,7 +1027,7 @@ export function createNotifier(deps: NotifierDeps): Notifier {
             commentId: event.commentId,
           },
         })),
-        { tier: event.visibility },
+        { narrowing: { tier: event.visibility } },
       );
     },
 
@@ -890,6 +1104,42 @@ export function createNotifier(deps: NotifierDeps): Notifier {
 
     expiryApproaching(tx: NotifyingTransaction, event: DateReminderEvent): Promise<number> {
       return dateReminder(tx, "date.expiry_approaching", event, {});
+    },
+
+    async requestCreated(tx: NotifyingTransaction, event: RequestEvent): Promise<void> {
+      // The exception, in one word. Everything else about this event is
+      // every other event's: the audience is read behind the seam, the
+      // Request's own two facts still gate it, and the person's
+      // preferences still decide the channels.
+      await fanOutToRequest(tx, "request.created", event, {}, { tellTheActor: true });
+    },
+
+    async requestStatusChanged(
+      tx: NotifyingTransaction,
+      event: RequestStatusChangedEvent,
+    ): Promise<void> {
+      await fanOutToRequest(tx, "request.status_changed", event, {
+        from: event.from,
+        to: event.to,
+      });
+    },
+
+    async requestReplied(tx: NotifyingTransaction, event: RequestRepliedEvent): Promise<void> {
+      await fanOutToRequest(
+        tx,
+        "request.replied",
+        event,
+        // The words are not here, for the contract thread's reason: the
+        // portal is where DD-016 is enforced and where a redact can
+        // still reach the text (CMT-006). The item is a prompt to go and
+        // read the conversation.
+        { commentId: event.commentId },
+        { narrowing: { tier: event.visibility } },
+      );
+    },
+
+    async requestDeclined(tx: NotifyingTransaction, event: RequestDeclinedEvent): Promise<void> {
+      await fanOutToRequest(tx, "request.declined", event, { reason: event.reason });
     },
   };
 }

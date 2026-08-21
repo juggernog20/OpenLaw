@@ -472,6 +472,50 @@ describe("who reaches the detail", () => {
 });
 
 /**
+ * The deep link a group 5 email carries (#382, NOT-001, INT-003).
+ *
+ * Every requester message links to `/portal/requests/{number}`, and a
+ * requester reads it in an inbox rather than in the app — so the address
+ * has to answer whether or not a session is still live. It round-trips:
+ * signed out it lands on the portal entry screen, where the one thing
+ * they need is another link (the INT-001 M20/2 addendum); signed in it
+ * lands on the Request itself.
+ *
+ * The link is **not** carried through redemption, and that is M20/2's
+ * decision rather than a gap: the magic-link callback stays `/` and
+ * landing is decided by role, so a redeemed link puts a Business User in
+ * the portal and their own list is the way back to the Request. What this
+ * suite pins is that the address in the email is never a dead end.
+ */
+describe("the portal deep link", () => {
+  it("lands a signed-out visitor on the portal entry screen", async () => {
+    stubApi({ signedIn: null });
+    const { router } = renderAt("/portal/requests/45");
+
+    expect(
+      await screen.findByRole("heading", { name: "Legal request portal" }),
+    ).toBeInTheDocument();
+    expect(router.state.location.pathname).toBe("/portal/enter");
+    // The entry screen carries the email step itself, so a stale session
+    // costs one address rather than a dead end.
+    expect(screen.getByRole("button", { name: "Send link" })).toBeInTheDocument();
+  });
+
+  it("lands a signed-in visitor on the Request the link names", async () => {
+    stubApi({ signedIn: REQUESTER, extra: detailRead(detail()) });
+    const { router } = renderAt("/portal/requests/45");
+
+    expect(
+      await screen.findByRole("heading", {
+        level: 1,
+        name: "Orion Cloud MSA renewal — redline review",
+      }),
+    ).toBeInTheDocument();
+    expect(router.state.location.pathname).toBe("/portal/requests/45");
+  });
+});
+
+/**
  * The conversation (#381), from I7's Conversation card.
  *
  * Who can read the thread, which tiers each viewer hears, and what a

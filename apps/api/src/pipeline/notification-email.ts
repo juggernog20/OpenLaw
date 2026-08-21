@@ -32,7 +32,9 @@
  * between then and now. An email carries the record's title out of the
  * building, so it asks the same predicate the bell's own reads ask, live
  * — and a recipient the record no longer reaches has the send recorded
- * as skipped rather than sent.
+ * as skipped rather than sent. There is **one arm per entity type**, and
+ * a row about an entity with no arm is refused: an entity with no rule
+ * yet must not be the one thing that leaves the building unchecked.
  */
 
 import {
@@ -45,8 +47,13 @@ import {
   type Db,
   type NotificationEventType,
 } from "@openlaw/db";
-import { CONTRACT_ENTITY, reachedBy } from "../lib/notifications/audience.js";
-import { renderNotificationMail } from "../lib/notifications/email.js";
+import {
+  CONTRACT_ENTITY,
+  reachedBy,
+  requestReachedBy,
+  REQUEST_ENTITY,
+} from "../lib/notifications/audience.js";
+import { renderNotificationMail, type MailRecord } from "../lib/notifications/email.js";
 import type { MailerResolver } from "../lib/mailer.js";
 import { reasonOf } from "./derivations.js";
 import type { PipelineLogger } from "./logger.js";
@@ -121,6 +128,14 @@ const TERMINAL_LINES: Record<Terminal, { level: "error" | "warn"; message: strin
  * build is recognised as unknown rather than cast into the union. */
 const KNOWN_EVENTS: ReadonlySet<string> = new Set(NOTIFICATION_EVENT_TYPES);
 
+/** One payload number as a record's address, or null where it is not
+ * one. Both entity arms read their number through it, so "a record with
+ * no address sends no email" is one rule rather than two. */
+function addressOf(value: unknown): number | null {
+  const number = Number(value);
+  return Number.isSafeInteger(number) && number > 0 ? number : null;
+}
+
 /** Marks the email settled, whichever way it went. Guarded on "still
  * owed and still unanswered", so a send that landed between the failure
  * and this write is not undone. */
@@ -183,26 +198,37 @@ async function sendNotificationEmail(
   // stays where it is; there is simply no inbox to write to.
   if (row.recipientArchivedAt) return "archived";
 
-  // The wall, live, and only where there is a wall to apply. M18 writes
-  // `contract` alone, and the reach predicate is a contract predicate —
-  // so a row about anything else is refused rather than waved through:
-  // an entity with no rule yet must not be the one thing that leaves
-  // the building unchecked.
-  if (row.entityType !== CONTRACT_ENTITY) return "unreachable";
-  // The predicate is the bell's own, so the email and the list cannot
-  // disagree about who may be told what.
-  const reachable = await reachedBy(deps.db, row.entityId, [row.userId]);
-  if (!reachable.has(row.userId)) return "unreachable";
-
-  // The payload is a snapshot taken by whichever build wrote the row,
-  // so every field is read defensively — the activity narrator's rule.
-  // A record with no number has no address, and a link to
-  // `/contracts/NaN` is worse than no email at all.
+  // The wall, live, and one arm per entity type. A row about an entity
+  // with no rule here is refused rather than waved through: it must not
+  // be the one thing that leaves the building unchecked.
+  //
+  // The predicates are the ones the writes use, so the email and the
+  // bell cannot disagree about who may be told what. A contract's is
+  // DD-014; a Request's is that this person is still its Requester
+  // (DD-013) — the only fact about reach that can change after the row
+  // was written.
   const payload = row.payload;
-  const contractNumber = Number(payload.contractNumber);
-  const contractTitle = typeof payload.contractTitle === "string" ? payload.contractTitle : "";
-  if (!Number.isSafeInteger(contractNumber) || contractNumber <= 0 || contractTitle === "") {
-    return "unaddressable";
+  let record: MailRecord;
+  if (row.entityType === CONTRACT_ENTITY) {
+    const reachable = await reachedBy(deps.db, row.entityId, [row.userId]);
+    if (!reachable.has(row.userId)) return "unreachable";
+    // The payload is a snapshot taken by whichever build wrote the row,
+    // so every field is read defensively — the activity narrator's rule.
+    // A record with no number has no address, and a link to
+    // `/contracts/NaN` is worse than no email at all.
+    const number = addressOf(payload.contractNumber);
+    const title = typeof payload.contractTitle === "string" ? payload.contractTitle : "";
+    if (number === null || title === "") return "unaddressable";
+    record = { entityType: "contract", number, title };
+  } else if (row.entityType === REQUEST_ENTITY) {
+    const reachable = await requestReachedBy(deps.db, row.entityId, [row.userId]);
+    if (!reachable.has(row.userId)) return "unreachable";
+    const number = addressOf(payload.requestNumber);
+    const summary = typeof payload.requestSummary === "string" ? payload.requestSummary : "";
+    if (number === null || summary === "") return "unaddressable";
+    record = { entityType: "request", number, summary };
+  } else {
+    return "unreachable";
   }
   // A slug this build has never heard of — a row written by a version
   // that has since been replaced. Recognised rather than cast, so the
@@ -215,8 +241,7 @@ async function sendNotificationEmail(
   const message = renderNotificationMail(
     {
       eventType: row.eventType as NotificationEventType,
-      contractNumber,
-      contractTitle,
+      record,
       actorName: typeof payload.actorName === "string" ? payload.actorName : null,
       recipientName: row.recipientName,
       // The rest of the snapshot, for the arms that name something
