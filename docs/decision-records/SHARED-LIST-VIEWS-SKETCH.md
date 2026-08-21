@@ -84,8 +84,10 @@ the column stays and quietly gains meanings it does not carry.
 
 **5. The cascade is wrong for a shared row.** The FK is `on delete cascade`, justified in the schema comment
 as "a deleted user's saved columns are nobody's". A shared view's saved columns are ten people's. Today
-nothing fires this: the Users module archives (`archived_at`) and ships no hard delete, so the author-left
-story is "an archived author's private views become unreachable, and that harms nobody". Under sharing the
+nothing fires this against a view: the Users module archives (`archived_at`) rather than deletes, and the one
+hard user delete anywhere — revoking a never-activated invite (SET-005) — removes somebody who could never have
+signed in to save one. So the author-left story is "an archived author's private views become unreachable, and
+that harms nobody". Under sharing the
 story has to change — an archived author's shared view must stay alive and must become editable by somebody.
 The clean shape is that a shared row is owned by the role and not by the person: `user_id` goes null on shared
 rows, and a nullable `created_by` records who made it. That is a nullable-column migration plus the index
