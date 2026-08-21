@@ -254,9 +254,12 @@ export function createAuth(
       //     adapter raw on every write path. It is expired identity
       //     evidence, and its claims already sit in `users`.
       //   - A token written before this flag went on stays plaintext
-      //     until the next sign-in rewrites it. better-auth reads such
-      //     a value through, so nothing breaks meanwhile — see the
-      //     `accounts` comment in packages/db/src/schema/auth.ts.
+      //     until a later sign-in rewrites it. better-auth reads such
+      //     a value through, so nothing breaks meanwhile. The rewrite
+      //     is certain for the access token; the refresh token is only
+      //     replaced when the IdP re-issues one, because better-auth
+      //     keeps the stored value when the token response has none —
+      //     see the `accounts` comment in packages/db/src/schema/auth.ts.
       encryptOAuthTokens: true,
       accountLinking: {
         // An SSO identity may link to a pre-existing user row that never

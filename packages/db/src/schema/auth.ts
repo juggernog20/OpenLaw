@@ -131,8 +131,14 @@ export const accounts = pgTable(
     //
     // The type stays plain `text`: a row written before the flag went
     // on is read back as it stands (better-auth only decrypts a value
-    // that looks encrypted), and the next sign-in through the IdP
+    // that looks encrypted), and a later sign-in through the IdP
     // rewrites it sealed. So no backfill pass exists for these two.
+    // One residue is accepted: the sign-in rewrite is certain for the
+    // access token, but better-auth keeps the stored refresh token
+    // when the IdP's token response carries no new one. So on an IdP
+    // that re-issues refresh tokens only at first consent, a pre-flag
+    // plaintext refresh token outlives the upgrade — still gated on
+    // the sealed client secret, as TECH-022's #387 addendum records.
     accessToken: text("access_token"),
     refreshToken: text("refresh_token"),
     accessTokenExpiresAt: timestamp("access_token_expires_at", { withTimezone: true }),
