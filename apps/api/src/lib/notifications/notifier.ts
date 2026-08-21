@@ -67,18 +67,20 @@ import {
   type NotificationEntityType,
   type NotificationEventType,
   type RequestStatus,
+  type SeverityLevel,
   type Transaction,
 } from "@openlaw/db";
 import { boundedQueueAsk, type JobQueue } from "../../pipeline/jobs.js";
 import {
   contractRecordAudience,
   CONTRACT_ENTITY,
+  inboxAudience,
   reachedBy,
   requestAudience,
   requestReachedBy,
   REQUEST_ENTITY,
 } from "./audience.js";
-import { emailTimingOf, EVENT_GROUP } from "./catalog.js";
+import { emailTimingOf, EVENT_GROUP, isInboxEvent } from "./catalog.js";
 import { channelChoices } from "./preferences.js";
 
 /** Where the seam's own lines go when a wake-up could not be sent. The
@@ -347,6 +349,30 @@ export interface RequestRepliedEvent extends RequestEvent {
   visibility: CommentVisibility;
 }
 
+/**
+ * What a Request's arrival tells the people who triage (INT-006).
+ *
+ * NOT-002's group 4, and the one event on a Request whose audience is
+ * not the Requester. The Request still names itself by its id alone —
+ * R-### and the summary come from the audience read, as every other
+ * Request event's do — and what the route adds is the two facts a
+ * triager weighs before opening anything: what kind of ask it is, and
+ * how hot the person who asked says it is.
+ *
+ * Those two are passed rather than read behind the seam because the
+ * submission route has just written them, which is group 1's rule: a
+ * caller that already holds a fact is not asked to be read for it a
+ * second time.
+ */
+export interface RequestSubmittedEvent extends RequestEvent {
+  /** The request type's display name (INT-002) — what the form was
+   * called, not its slug. */
+  requestType: string;
+  /** What the Requester claimed (INT-002). It maps 1:1 to priority at
+   * conversion and it is never risk, which stays legal's. */
+  urgency: SeverityLevel;
+}
+
 /** What a turned-down Request tells the person who asked (INT-006). */
 export interface RequestDeclinedEvent extends RequestEvent {
   /** Why. INT-006 makes "no" arrive with a why, so the reason travels
@@ -507,6 +533,27 @@ export interface Notifier {
   expiryApproaching(tx: NotifyingTransaction, event: DateReminderEvent): Promise<number>;
 
   /**
+   * A Request has reached the Inbox (INT-006) — group 4, bell on and
+   * email opt-in (NOT-002).
+   *
+   * **The audience is every live Member+**, read behind the seam like
+   * every other audience: Member+ triages, and INT-006 declined the
+   * routing rules, the rotation, and the claim mechanism that would each
+   * have narrowed it. So there is no list on the wire and no way for a
+   * caller to address somebody who does not triage.
+   *
+   * The actor is excluded like everywhere else, which is what makes a
+   * Member+ who submits a Request of their own hear about it once — as
+   * the Requester, on the portal — rather than twice.
+   *
+   * Raised by `POST /requests` beside {@link requestCreated}, in the
+   * insert's own transaction. Two events for one act, because the staff
+   * side and the requester side are two sentences to two audiences with
+   * two defaults.
+   */
+  requestSubmitted(tx: NotifyingTransaction, event: RequestSubmittedEvent): Promise<void>;
+
+  /**
    * A Request has been submitted (INT-001) — group 5, portal bell on and
    * email immediate (NOT-002).
    *
@@ -665,7 +712,14 @@ async function fanOut(
   const reachable =
     entity.type === CONTRACT_ENTITY
       ? await reachedBy(tx, entity.id, [...byUser.keys()], narrowing)
-      : await requestReachedBy(tx, entity.id, [...byUser.keys()], narrowing);
+      : await requestReachedBy(tx, entity.id, [...byUser.keys()], {
+          ...narrowing,
+          // Which standing this event addressed (M21/4). It is read from
+          // the catalog rather than passed by the method, so an event
+          // added to group 4 later inherits the Inbox's rule and cannot
+          // be the one that forgets to ask for it.
+          side: isInboxEvent(eventType) ? "inbox" : "requester",
+        });
 
   // 3. The preferences, over the group's defaults (NOT-001/002).
   const recipients = [...byUser.keys()].filter((id) => reachable.has(id));
@@ -837,6 +891,48 @@ async function fanOutToRequest(
       },
     ],
     options,
+  );
+}
+
+/**
+ * The whole of NOT-002's group 4, for one Request arriving.
+ *
+ * Group 5's shape, said for the other side of the same record, and the
+ * one place the two differ is the audience: this reads every live
+ * Member+ (INT-006) where {@link fanOutToRequest} reads the one
+ * Requester (DD-013). Both read it behind the seam, and for the same
+ * reason — a caller that could name the audience could name the wrong
+ * people.
+ *
+ * The Request's number and summary are added to the payload by the same
+ * read that resolves nothing about them, so every item and email about a
+ * Request names it the same way whichever bell drew it.
+ */
+async function fanOutToInbox(
+  tx: NotifyingTransaction,
+  event: RequestSubmittedEvent,
+): Promise<void> {
+  const audience = await requestAudience(tx, event.requestId);
+  // A Request that is not there is about nobody — the contract read's
+  // answer, for its reason.
+  if (!audience) return;
+  const triagers = await inboxAudience(tx);
+  await fanOut(
+    tx,
+    "request.submitted",
+    { type: REQUEST_ENTITY, id: event.requestId },
+    event.actorId,
+    triagers.map((userId) => ({
+      userId,
+      payload: {
+        requestType: event.requestType,
+        urgency: event.urgency,
+        requestNumber: audience.requestNumber,
+        requestSummary: audience.summary,
+        actorId: event.actorId,
+        actorName: event.actorName,
+      },
+    })),
   );
 }
 
@@ -1104,6 +1200,13 @@ export function createNotifier(deps: NotifierDeps): Notifier {
 
     expiryApproaching(tx: NotifyingTransaction, event: DateReminderEvent): Promise<number> {
       return dateReminder(tx, "date.expiry_approaching", event, {});
+    },
+
+    async requestSubmitted(
+      tx: NotifyingTransaction,
+      event: RequestSubmittedEvent,
+    ): Promise<void> {
+      await fanOutToInbox(tx, event);
     },
 
     async requestCreated(tx: NotifyingTransaction, event: RequestEvent): Promise<void> {

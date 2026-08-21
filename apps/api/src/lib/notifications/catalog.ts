@@ -12,11 +12,12 @@
  * an event added without this table would be a second copy of the
  * decision.
  *
- * **Group 4 is a slot.** `new_requests` waits for the Inbox (M21), so it
- * names no event yet. The group value ships anyway, because
- * `notification_preferences` keys on it and a person may express an
- * opinion about a group before anything in it has fired. Group 5 was a
- * slot on the same terms until M20/8 named its four events.
+ * **Group 4 was a slot until M21/4**, and what it took to fire was one
+ * line in each of the two tables below: the event's group, and the
+ * group's email timing. That is the whole bill for a group that shipped
+ * ahead of its events, and it is why the Inbox added a call rather than
+ * a mechanism. Group 5 was a slot on the same terms until M20/8 named
+ * its four events.
  *
  * **Defaults follow interruptiveness** (NOT-002). Things done *to* you
  * interrupt; ambient activity does not; and every one of them is the
@@ -78,9 +79,19 @@ export const EVENT_GROUP_POLICY: Record<NotificationEventGroup, EventGroupPolicy
   /** Group 3 — dates: the bell per date, and one briefing a day
    * (NOT-003). */
   dates_approaching: { inApp: true, email: true, emailTiming: "digest" },
-  /** Group 4 — Inbox arrivals: the queue is already the surface, so the
-   * mail is opt-in. Nothing fires it until M21. */
-  new_requests: { inApp: true, email: false, emailTiming: "none" },
+  /**
+   * Group 4 — Inbox arrivals: the queue is already the surface, so the
+   * mail is opt-in.
+   *
+   * `immediate` is the **timing**, not the default, exactly as group
+   * 2's is: `email: false` is what keeps it opt-in, and the timing only
+   * says what happens once a Member+ has said yes. It shipped as `none`
+   * while nothing fired the group, because a `true` row would have
+   * claimed a debt the system could not pay; M21/4 gives the group its
+   * first event, so the timing is real with it (NOT-002's M21/4
+   * addendum, taking M18/5's shape).
+   */
+  new_requests: { inApp: true, email: false, emailTiming: "immediate" },
   /**
    * Group 5 — the portal audience's own events (INT-001/003).
    *
@@ -119,6 +130,11 @@ export const EVENT_GROUP: Record<NotificationEventType, NotificationEventGroup> 
   "date.key_date_approaching": "dates_approaching",
   "date.notice_deadline_approaching": "dates_approaching",
   "date.expiry_approaching": "dates_approaching",
+  // Group 4 — new requests. One act, two audiences: this is the staff
+  // side of a submission (INT-006), and `request.created` below is the
+  // Requester's own receipt for the same moment. They are two events
+  // because they have two audiences, two defaults, and two bells.
+  "request.submitted": "new_requests",
   // Group 5 — the portal audience's own events. The decline is here
   // rather than beside the status change it also is, because INT-006
   // makes "no" arrive with a why and a reason is a different message.
@@ -151,6 +167,37 @@ export function defaultChoice(group: NotificationEventGroup): ChannelChoice {
 /** How email leaves for one event, or `none` when it does not. */
 export function emailTimingOf(eventType: NotificationEventType): EmailTiming {
   return EVENT_GROUP_POLICY[EVENT_GROUP[eventType]].emailTiming;
+}
+
+/**
+ * Every event slug in one group.
+ *
+ * Derived from {@link EVENT_GROUP} rather than listed a second time, so
+ * an event added there is in this answer at once. The bell's two scope
+ * predicates ask it: NOT-001 has one table and two surfaces, and which
+ * surface a row belongs to is a fact about the group's audience — group
+ * 4 is the Inbox's own staff group, group 5 is the portal's.
+ */
+export function eventTypesIn(group: NotificationEventGroup): NotificationEventType[] {
+  return Object.keys(EVENT_GROUP).filter(
+    (eventType) => EVENT_GROUP[eventType as NotificationEventType] === group,
+  ) as NotificationEventType[];
+}
+
+/**
+ * Whether an event is the Inbox's own — the staff side of a Request
+ * (INT-006) rather than the Requester's (DD-013).
+ *
+ * Asked of a raw slug, because both callers read one off a row: the
+ * fan-out's wall step and the send job's re-check of it. A slug this
+ * build does not know answers `false`, which is the narrower of the two
+ * rules and therefore the safe way to be wrong.
+ */
+export function isInboxEvent(eventType: string): boolean {
+  return (
+    Object.hasOwn(EVENT_GROUP, eventType) &&
+    EVENT_GROUP[eventType as NotificationEventType] === "new_requests"
+  );
 }
 
 /** Both channels, as `notification_preferences` names them. */
