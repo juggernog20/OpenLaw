@@ -75,7 +75,6 @@ export function RequestThread({
   viewerId: string;
   thread: LoadedThread | null;
 }>) {
-  const intl = useIntl();
   const [comments, setComments] = useState<Comment[]>(thread?.comments ?? []);
   const [cursor, setCursor] = useState<string | null>(thread?.nextCursor ?? null);
   const [olderFailed, setOlderFailed] = useState(false);
