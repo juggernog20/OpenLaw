@@ -581,7 +581,7 @@ Source: **CTR-012**
 
 Admin-managed reusable approver templates (Settings → Contracts → Approver Groups). Applying a group snapshots its members into `contract_approvals` at apply time; later group edits don't touch existing requests.
 
-`approver_groups`: `id`, `name` (not null), `description` (nullable), `created_at`, `updated_at`, `archived_at`.
+`approver_groups`: `id`, `name` (not null), `description` (nullable), `created_at`, `updated_at`, `archived_at`. A **partial unique** index on `lower(name)` `where archived_at is null` — the name is the only identity the apply picker shows, so two live groups may not share one, and archiving frees the name (CTR-012's #391 addendum).
 `approver_group_members`: compound PK (`group_id`, `user_id`), `created_at`.
 
 ---
@@ -714,6 +714,8 @@ The people one envelope was sent to. Their own table because the record renders 
 | `created_at`    | timestamptz |                                                                               |
 
 Every signer is asked in parallel in v1 (CTR-013); `signing_order` records the order they were entered so the row draws them back as they were typed.
+
+Indexes: `(envelope_id)`; unique `(envelope_id, signing_order)` — one row per position; and unique `(envelope_id, lower(email))` — one address, one signer, the database backstop for the rule the send route already refuses on (CTR-013's #391 addendum).
 
 ---
 
@@ -1051,7 +1053,7 @@ Prior versions (CMT-006, amending CMT-005): `comment_revisions` (`id`, `comment_
 
 Unread tracking (CMT-004, confirmed by CMT-009): `comment_last_read` (`user_id` FK → `users.id` with no delete action, `entity_type`, `entity_id`, `read_at`, compound PK on the first three). One watermark per reader per record — where that person had read to, not a receipt per comment. The badge counts comments on the record that pass the viewer's tier predicate, are not the viewer's own, are neither soft-deleted nor redacted, and were created after `read_at`. Hidden-tier counts never leak, because the count is taken over the same filtered set the thread is read at. **No row means everything visible is unread**, not zero: a reader who has never opened the panel has read none of it. Opening the panel writes the row, and only when the thread was actually delivered.
 
-The polymorphic `entity_type / entity_id` pair is unavoidable here unless we shard comments per host table. Reconsider in the tech-stack grill if the chosen ORM has a strong opinion. Indexed on (`entity_type`, `entity_id`, `created_at`).
+The polymorphic `entity_type / entity_id` pair is unavoidable here unless we shard comments per host table. Reconsider in the tech-stack grill if the chosen ORM has a strong opinion. Indexed on (`entity_type`, `entity_id`, `created_at`, `id`) — the thread's keyset walks `(created_at, id)`, so the tie-break sits in the index that answers the order (CTR-024's #391 addendum).
 
 ---
 
@@ -1078,7 +1080,7 @@ Append-only at the application layer. **Corrections are appended as new entries,
 
 An earlier version of this section said no path issues either statement. It was true when written and the erasure route falsified it; the rule it was protecting is the sentence above.
 
-Indexed on (`entity_type`, `entity_id`, `created_at`) for the per-entity feed; on (`actor_id`, `created_at`) for actor-based audit queries; on (`action`, `created_at`) for security-event filtering.
+Indexed on (`entity_type`, `entity_id`, `created_at`, `id`) for the per-entity feed — that feed is paged and its keyset walks `(created_at, id)` (CTR-024's #391 addendum); on (`actor_id`, `created_at`) for actor-based audit queries; on (`action`, `created_at`) for security-event filtering. The two filter indexes need no tie-break, because neither answers a cursor.
 
 ---
 

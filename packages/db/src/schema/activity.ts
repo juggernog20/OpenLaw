@@ -57,7 +57,18 @@ export const activityLog = pgTable(
   (table) => [
     // The three SCHEMA.md query shapes: per-entity feed, actor-based
     // audit queries, security-event filtering by action.
-    index("activity_log_entity_idx").on(table.entityType, table.entityId, table.createdAt),
+    //
+    // The per-entity feed carries `id` as its fourth column, because
+    // that feed is paged and its keyset walks `(created_at, id)`
+    // (CTR-024) — the same pair `activity_log_created_at_idx` below
+    // already indexes for the audit log. The other two answer filters
+    // rather than a cursor, so neither needs the tie-break (#391).
+    index("activity_log_entity_idx").on(
+      table.entityType,
+      table.entityId,
+      table.createdAt,
+      table.id,
+    ),
     index("activity_log_actor_idx").on(table.actorId, table.createdAt),
     index("activity_log_action_idx").on(table.action, table.createdAt),
     // The fourth shape, added with the surface that reads it (M9/7):

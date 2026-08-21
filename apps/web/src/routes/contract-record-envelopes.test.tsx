@@ -23,7 +23,7 @@
 import { describe, expect, it } from "vitest";
 import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { MAX_ENVELOPE_SIGNERS } from "@openlaw/shared";
+import { ENVELOPE_LIVE_PROBLEM_TYPE, MAX_ENVELOPE_SIGNERS } from "@openlaw/shared";
 import { json, problem, renderAt, stubApi, type StubCall } from "../testing/helpers";
 
 const MEMBER = {
@@ -572,7 +572,7 @@ describe("sending for signature", () => {
     api.refuseNext(
       409,
       "This contract already has an envelope out for signature. Void it before sending another.",
-      "urn:openlaw:problem:envelope-live",
+      ENVELOPE_LIVE_PROBLEM_TYPE,
     );
     stubApi({ signedIn: MEMBER, extra: api.handler });
     renderAt("/contracts/42/approvals");

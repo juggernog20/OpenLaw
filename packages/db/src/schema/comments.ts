@@ -88,7 +88,16 @@ export const comments = pgTable(
   (table) => [
     // The one read every thread makes: this record's comments, oldest
     // first (SCHEMA.md's documented index for this table).
-    index("comments_entity_idx").on(table.entityType, table.entityId, table.createdAt),
+    //
+    // `id` is the fourth column because the thread's keyset walks
+    // `(created_at, id)`, not `created_at` alone (CTR-024). Without it
+    // the index answers the scope and the order and then leaves Postgres
+    // to sort the same-instant ties itself — cheap inside one thread,
+    // and still the wrong shape for the read it exists for. The audit
+    // log's `activity_log_created_at_idx` and the bell's
+    // `notifications_user_idx` already carry theirs; this is the same
+    // index in the same house pattern (#391).
+    index("comments_entity_idx").on(table.entityType, table.entityId, table.createdAt, table.id),
     check(
       "comments_entity_type_check",
       sql`${table.entityType} in ('matter', 'contract', 'document', 'request')`,

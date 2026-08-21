@@ -5,6 +5,15 @@
  * Built to dist/ so runtime consumers load plain JS (no type stripping).
  */
 
+/**
+ * The product's version, as `GET /api/v1/meta` and the OpenAPI document
+ * answer it. A literal rather than a value read from a `package.json`,
+ * because this package is bundled into the browser.
+ *
+ * The root `package.json` is the source of truth and this line quotes
+ * it. `pnpm lint:versions` fails the build when the two disagree, so a
+ * release bump that misses one of them cannot ship (#391).
+ */
 export const OPENLAW_VERSION = "0.0.1";
 
 /**

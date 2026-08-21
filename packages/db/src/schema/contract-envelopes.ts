@@ -240,6 +240,23 @@ export const contractEnvelopeSigners = pgTable(
     /** One row per position, so two writers cannot both take position 2
      * and leave the row undrawable in a stable order. */
     uniqueIndex("contract_envelope_signers_order_idx").on(table.envelopeId, table.signingOrder),
+    /**
+     * One address, one signer — the database backstop for the rule the
+     * send route already refuses on (CTR-013's #391 addendum). Naming
+     * somebody twice asks the provider to invite one inbox twice, and
+     * the row that comes back is then two rows nothing can tell apart:
+     * the address is a signer's whole identity here, since the erasure
+     * path finds a signer by it and nothing else.
+     *
+     * Case-insensitive, because that is how the send compares addresses
+     * and how the erasure matches them, and because `users_email_unique`
+     * reads an address the same way. The column itself stays verbatim —
+     * what the record has to show a week later is what the sender typed.
+     */
+    uniqueIndex("contract_envelope_signers_email_idx").on(
+      table.envelopeId,
+      sql`lower(${table.email})`,
+    ),
     check("contract_envelope_signers_order_check", sql`signing_order >= 1`),
   ],
 );

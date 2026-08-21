@@ -32,6 +32,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { RENEWAL_EXPIRY_MOVED_PROBLEM_TYPE } from "@openlaw/shared";
 import { json, problem, renderAt, stubApi, type StubCall } from "../testing/helpers";
 
 /** Frozen mid-day so no plausible display timezone moves the calendar
@@ -388,7 +389,7 @@ describe("the Renew dialog (CTR-007's first vehicle)", () => {
         return problem(
           409,
           "This contract's expiry has already moved.",
-          "urn:openlaw:problem:renewal-expiry-moved",
+          RENEWAL_EXPIRY_MOVED_PROBLEM_TYPE,
         );
       }
       return undefined;

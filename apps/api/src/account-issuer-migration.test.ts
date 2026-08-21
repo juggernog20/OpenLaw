@@ -35,12 +35,7 @@
 
 import { PostgreSqlContainer, type StartedPostgreSqlContainer } from "@testcontainers/postgresql";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { readFileSync } from "node:fs";
-import { join } from "node:path";
-import { fileURLToPath } from "node:url";
 import {
-  createDb,
-  readMigrationJournal,
   readSecretKeys,
   runMigrations,
   SECRET_KEY_VARIABLE,
@@ -52,8 +47,12 @@ import {
 import { createAuth, CREDENTIAL_ISSUER } from "./auth/instance.js";
 import { createUnconfiguredMailer } from "./lib/mailer.js";
 import { TEST_AUTH_CONFIG, TEST_SECRET_KEY } from "./testing/harness.js";
-
-const MIGRATIONS = fileURLToPath(new URL("../../../packages/db/migrations", import.meta.url));
+import {
+  freshDb as freshDatabase,
+  migrateThrough as migrateThroughTag,
+  migrationEntries,
+  refusal,
+} from "./testing/migration-rehearsal.js";
 
 /** The last migration before the one under test. */
 const BEFORE = "0059_intake_links";
@@ -63,7 +62,7 @@ let entries: JournalEntry[];
 
 beforeAll(async () => {
   container = await new PostgreSqlContainer("postgres:16-alpine").start();
-  entries = readMigrationJournal(MIGRATIONS);
+  entries = migrationEntries();
   // The sealed-column key, as the API installs it at boot (TECH-022):
   // `sso_providers.oidc_config` is encrypted, so a suite that writes one
   // has to be holding a key.
@@ -82,36 +81,11 @@ const unconfiguredMailer = async () => ({
 });
 const silent = { warn: () => {} };
 
-/** A database of its own per scenario — each one writes bookkeeping. */
-async function freshDb(name: string): Promise<Db> {
-  const admin = createDb(container.getConnectionUri());
-  await admin.execute(sql.raw(`create database "${name}"`));
-  await admin.$client.end();
-  const url = new URL(container.getConnectionUri());
-  url.pathname = `/${name}`;
-  return createDb(url.toString());
-}
-
-/** Applies migrations up to and including `tag`, the way a past release did. */
-async function migrateThrough(db: Db, tag: string): Promise<void> {
-  await db.execute(sql`create schema if not exists drizzle`);
-  await db.execute(sql`create table if not exists drizzle.__drizzle_migrations (
-    id serial primary key, hash text not null, created_at bigint)`);
-  for (const entry of entries) {
-    // One statement per round trip rather than one joined string: a
-    // multi-statement query runs in an implicit transaction, and 0054's
-    // `CREATE INDEX CONCURRENTLY` cannot.
-    const statements = readFileSync(join(MIGRATIONS, `${entry.tag}.sql`), "utf8")
-      .split("--> statement-breakpoint")
-      .map((statement) => statement.trim())
-      .filter((statement) => statement.length > 0);
-    for (const statement of statements) await db.execute(sql.raw(statement));
-    await db.execute(
-      sql`insert into drizzle.__drizzle_migrations (hash, created_at) values (${entry.hash}, ${entry.when})`,
-    );
-    if (entry.tag === tag) return;
-  }
-}
+/** The three rehearsal moves, bound to this suite's container and
+ * journal. They are shared with the other migration suite; see
+ * `testing/migration-rehearsal.ts`. */
+const freshDb = (name: string) => freshDatabase(container, name);
+const migrateThrough = (db: Db, tag: string) => migrateThroughTag(db, tag, entries);
 
 /** An install on 1.6: migrated to 0059, with rows and no issuer column. */
 async function installOn16(name: string): Promise<Db> {
@@ -121,23 +95,6 @@ async function installOn16(name: string): Promise<Db> {
     values ('u-blair', 'Blair Wentworth', 'blair@example.com', true, 'administrator'),
            ('u-nadia', 'Nadia Counsel', 'nadia@acme.example', true, 'legal_team_member')`);
   return db;
-}
-
-/**
- * What the database said when the migration refused.
- *
- * Drizzle's own message is the SQL it sent, which quotes the `RAISE`
- * text verbatim — asserting on that would pass whether or not the
- * statement ever ran. The substituted message is on the cause, and it is
- * the only place the offending rows are actually named.
- */
-async function refusal(db: Db): Promise<string> {
-  try {
-    await runMigrations(db);
-  } catch (error) {
-    return String((error as { cause?: unknown }).cause ?? error);
-  }
-  throw new Error("the migration was expected to refuse this install, and did not");
 }
 
 /** Every account row's issuer, keyed by account id. */
