@@ -30,6 +30,12 @@
  * number to notice — the same silent omission the record's own feed
  * makes. The row stays in the table; the reads simply stop answering
  * with it.
+ *
+ * **The row direction is asked per surface** (M20/9). NOT-001 has one
+ * system and two bells, so {@link notificationScope} takes which one is
+ * asking: the staff centre answers rows about contracts, the portal bell
+ * answers rows about the reader's own Requests, and neither can answer
+ * the other's.
  */
 
 import {
@@ -288,12 +294,41 @@ export async function requestReachedBy(
 const REQUESTER_TIERS: readonly CommentVisibility[] = ["full_thread"];
 
 /**
- * The notification rows this viewer may still be shown — the predicate
- * both the list and the count compose.
+ * Which bell is asking (NOT-001).
  *
- * A row about a contract passes only while the viewer reaches that
- * contract, and reach is `contractTeamScope`: the same answer the
+ * One notification system, two rendering surfaces: the staff
+ * notification centre in the full application, and the portal bell a
+ * Requester reads. **The surface is what decides which rows come back**,
+ * not the reader's role — a Member+ who submitted a Request of their own
+ * is a Requester on the portal and a staff reader in the application,
+ * and the same person holds both kinds of row at once.
+ */
+export const NOTIFICATION_SURFACES = ["staff", "portal"] as const;
+export type NotificationSurface = (typeof NOTIFICATION_SURFACES)[number];
+
+/**
+ * The notification rows this viewer may still be shown on this surface —
+ * the predicate the list, the count, and both writes compose.
+ *
+ * **Two surfaces, two disjoint sets of rows, and the split is by entity
+ * type.** The staff centre answers `contract` rows and the portal bell
+ * answers `request` rows; neither can ever answer the other's. That is
+ * what makes a staff mark-all-read unable to touch a Requester's group-5
+ * items, and the portal bell unable to draw a word about a contract.
+ *
+ * **A row about a contract passes only while the viewer reaches that
+ * contract**, and reach is `contractTeamScope`: the same answer the
  * record, its paper, its comments, and its feed are read through.
+ *
+ * **A row about a Request passes only while the viewer is still its
+ * Requester and the Request is still live.** A Request has no wall
+ * (DD-014's flag is a contract's; INT-002 gives a Request no
+ * equivalent), so what is re-asked here is the pair of facts that can
+ * still change after the row was written — the same pair
+ * {@link requestReachedBy} re-asks at send time, said over rows instead
+ * of over people. An archived Request is not there, by the house rule
+ * that NULL means live: a frozen record is not something to prompt
+ * anybody about.
  *
  * **A row about anything else does not pass at all**, and that is the
  * safe direction rather than an omission. When matters (M22) start
@@ -303,18 +338,20 @@ const REQUESTER_TIERS: readonly CommentVisibility[] = ["full_thread"];
  * up as a leak nobody does. The send job refuses an entity it has no
  * rule for on exactly the same reasoning.
  *
- * **Group 5's `request` rows are outside this predicate on purpose**,
- * not by omission. M20/8 writes them; the surface that reads them is the
- * **portal** bell (NOT-001), which is its own slice of M20. This is the
- * staff notification centre, and a Member+ who submitted a Request of
- * their own is a Requester on the portal rather than a staff reader of
- * the portal's group here.
- *
  * It filters at query time, which is the whole property: an omitted row
  * never leaves the database, so no page, cursor, or badge can announce
  * that something was left out.
  */
-export function notificationScope(db: Executor, user: AuthenticatedUser): SQL | undefined {
+export function notificationScope(
+  db: Executor,
+  user: AuthenticatedUser,
+  surface: NotificationSurface,
+): SQL | undefined {
+  return surface === "portal" ? portalScope(db, user) : staffScope(db, user);
+}
+
+/** The staff notification centre's rows: contracts this person reaches. */
+function staffScope(db: Executor, user: AuthenticatedUser): SQL | undefined {
   const scope = contractTeamScope(db, user);
   return and(
     eq(notifications.entityType, CONTRACT_ENTITY),
@@ -328,5 +365,23 @@ export function notificationScope(db: Executor, user: AuthenticatedUser): SQL | 
           notifications.entityId,
           db.select({ id: contracts.id }).from(contracts).where(scope),
         ),
+  );
+}
+
+/** The portal bell's rows: this person's own live Requests. */
+function portalScope(db: Executor, user: AuthenticatedUser): SQL | undefined {
+  return and(
+    eq(notifications.entityType, REQUEST_ENTITY),
+    // No Administrator shortcut here, and there is nothing to shortcut:
+    // reaching every contract is a staff role's power (DD-014), while
+    // being somebody's Requester is a fact about one row (DD-013). An
+    // Administrator's portal bell is their own Requests and no more.
+    inArray(
+      notifications.entityId,
+      db
+        .select({ id: requests.id })
+        .from(requests)
+        .where(and(eq(requests.requesterId, user.id), isNull(requests.archivedAt))),
+    ),
   );
 }

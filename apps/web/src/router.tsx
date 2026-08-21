@@ -25,6 +25,7 @@ import { PortalHomePage, portalHomeLoader } from "./routes/portal";
 import { PortalRequestFormPage, portalRequestFormLoader } from "./routes/portal-request-form";
 import { PortalRequestPage, portalRequestLoader } from "./routes/portal-request";
 import { PortalEntryPage, portalEntryLoader } from "./routes/portal-entry";
+import { PortalSettingsPage, portalSettingsLoader } from "./routes/portal-settings";
 import { SetPasswordPage } from "./routes/set-password";
 import { SettingsLayout, settingsIndexLoader, settingsLoader } from "./routes/settings";
 import { SettingsAppearancePage } from "./routes/settings-appearance";
@@ -348,6 +349,10 @@ export const routes: RouteObject[] = [
       // signed-out costume, so the emailed link, the dead-link page, and
       // the sign-out redirect all name one place.
       { path: "enter", loader: portalEntryLoader, element: <PortalEntryPage /> },
+      // The lightweight settings surface NOT-001 promised a business
+      // user (M20/9): NOT-002's group 5 and nothing else, reached from
+      // the gear in the portal header.
+      { path: "settings", loader: portalSettingsLoader, element: <PortalSettingsPage /> },
       // One request type's form, addressed by the slug the picker
       // links on (INT-002). A slug that names nothing, or names an
       // archived type, lands back on the home — see the loader.

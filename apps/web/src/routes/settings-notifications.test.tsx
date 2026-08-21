@@ -100,7 +100,11 @@ describe("Personal · Notifications (#320)", () => {
     await screen.findByRole("heading", { name: "Notification preferences" });
     // Group 5 stays in the model and in the API's answer; a business
     // user tunes it in the portal, so it means nothing on a staff pane.
-    expect(screen.queryByText(/requester/i)).not.toBeInTheDocument();
+    // Named by its visible label — M20/9 gave the row real copy, and a
+    // regex on the model's name would go on passing if the pane drew it.
+    expect(screen.queryByText("Request updates")).not.toBeInTheDocument();
+    // Four groups, two channels, and not a switch more.
+    expect(screen.getAllByRole("switch")).toHaveLength(8);
   });
 
   it("saves a flip immediately and leaves the other channel alone", async () => {

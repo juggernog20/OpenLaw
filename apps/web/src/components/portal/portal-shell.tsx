@@ -6,12 +6,20 @@
  * of the surface, and the signed-in identity with sign-out, over a
  * centered column.
  *
- * What is absent is the point. There is no top nav, no search, no
- * activity bar, and no settings entry: a Business User sees only their
- * own Requests (DD-013), so every staff destination would open on
- * nothing. Member+ staff are welcome here — they submit Requests too —
- * and they reach the full application the way they always did, so the
- * portal owes them no door back.
+ * What is absent is still the point. There is no top nav, no search, and
+ * no activity bar: a Business User sees only their own Requests
+ * (DD-013), so every staff destination would open on nothing. Member+
+ * staff are welcome here — they submit Requests too — and they reach the
+ * full application the way they always did, so the portal owes them no
+ * door back.
+ *
+ * **The trailing cluster carries the two things a requester's session
+ * owns** (M20/9). The bell is NOT-001's second surface, the same
+ * anatomy DES-049 settled for the staff centre, backed by the portal's
+ * own four routes; the gear beside it is the lightweight settings
+ * surface NOT-001 promised, which is the group-5 toggles and nothing
+ * else. They are the only two portal destinations there are, which is
+ * why they are two glyphs rather than a nav.
  *
  * The shell owns the scroll and gives it to `main` alone, as the staff
  * shell does (DES-030): the header keeps its height through a long
@@ -19,9 +27,12 @@
  */
 
 import { useLayoutEffect, type ReactNode } from "react";
-import { FormattedMessage } from "react-intl";
+import { Settings } from "lucide-react";
+import { Link } from "react-router";
+import { FormattedMessage, useIntl } from "react-intl";
 import { applyPreferredTheme, type Theme } from "../../lib/theme";
 import { Avatar } from "../avatar";
+import { NotificationBell } from "../notification-bell";
 import { SkipLink } from "../skip-link";
 import { Button } from "../ui/button";
 
@@ -40,6 +51,7 @@ export function PortalShell({
   onSignOut,
   children,
 }: Readonly<{ user: PortalUser; onSignOut: () => void; children: ReactNode }>) {
+  const intl = useIntl();
   // The server value wins over the pre-paint mirror, the same way the
   // staff shell reconciles it (#44). A magic-link session is often a
   // first visit on this browser, where there is no mirror to reconcile.
@@ -61,6 +73,19 @@ export function PortalShell({
           </span>
         </div>
         <div className="flex shrink-0 items-center gap-3">
+          <NotificationBell surface="portal" />
+          {/* The same 24×24 target the bell takes (DES-011), so the two
+              glyphs sit on one line without either being the odd one. */}
+          <Link
+            to="/portal/settings"
+            aria-label={intl.formatMessage({
+              id: "portal.settings.link",
+              defaultMessage: "Notification settings",
+            })}
+            className="flex size-6 items-center justify-center rounded-button text-muted hover:text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-link"
+          >
+            <Settings size={20} aria-hidden="true" />
+          </Link>
           <Avatar name={user.displayName} image={user.image} className="size-6" />
           {/* The address yields its width first: below md the identity
               is the avatar and the way out (DES-012). */}

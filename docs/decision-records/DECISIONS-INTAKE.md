@@ -111,6 +111,18 @@ INT-001 says a requester sees their requests, their status, and a thread on each
 
 **Two recorded I7 deviations.** I7's composer carries an "Attach a file" link; a comment carries no file — the thread is plain text and attachments are deliberately out of the comment model (M9/2) — and the paper travels with the ask instead (INT-002), so the composer draws the box and the Send button alone. And I7 draws the messages as one unbounded run; the read is paged from the newest end (CTR-024), so a thread past one page carries a control that walks back into the older conversation. Without it a long thread would silently lose its own beginning.
 
+### Addendum (2026-08-21, M20/9, [#383](https://github.com/juggernog20/OpenLaw/issues/383)) — the portal chrome gains its two destinations
+
+NOT-001 promised a business user a bell **and** a lightweight settings surface in the portal. M20/2 built the chrome without either and recorded that the portal has "no settings entry", because at that point every destination it could have offered was a staff one. Both now exist, and they are the only two the portal has.
+
+**The header's trailing cluster carries a bell and a gear, and that is the whole of the portal's navigation.** Two glyphs rather than a nav, because two destinations do not make a nav. The M20/2 sentence stands with one correction: the portal still has no _staff_ destination and never will, and it now has two of its own.
+
+**The bell is the staff bell** (the NOT-005 M20/9 addendum) — the same component, the same read model, rendered against the portal's own strip. The gear opens `/portal/settings`, which is NOT-002's group 5 and nothing else: the other four groups are about contracts, records, dates, and the Inbox, none of which a Business User can open (DD-013). Calling the page "Notification settings" rather than "Settings" is the honest name for what it holds.
+
+**Neither has a frame.** `intake.pen` draws I5–I7 and none of them carries a bell, a gear, or a preferences pane. The bell's anatomy is DES-049's, the grid's is DES-050's, and the card around the grid is the portal's own section chrome — the strip the Request detail already draws "What you submitted" with. All three are already ratified against frames elsewhere.
+
+**The settings card is the portal column's width**, not the 720px settings card. This is the portal's chrome, and a narrower card floating in a wider column would be the one block on the surface that did not line up with the ones above it.
+
 ## INT-002 — Request types mapped to target types; forms reuse the fields catalog
 
 - **Status** — Accepted

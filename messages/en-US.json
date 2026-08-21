@@ -2381,6 +2381,9 @@
   "notifications.empty": {
     "defaultMessage": "Nothing to catch up on. News about your records shows up here."
   },
+  "notifications.emptyPortal": {
+    "defaultMessage": "Nothing to catch up on. News about your requests shows up here."
+  },
   "notifications.envelope.ended": {
     "defaultMessage": "Signing ended on {contract}"
   },
@@ -2395,6 +2398,21 @@
   },
   "notifications.olderError": {
     "defaultMessage": "The older notifications could not be read. Try again."
+  },
+  "notifications.request.created": {
+    "defaultMessage": "Legal has received your request {request}"
+  },
+  "notifications.request.declined": {
+    "defaultMessage": "Legal declined your request {request}"
+  },
+  "notifications.request.replied": {
+    "defaultMessage": "{hasActor, select, yes {{actor} replied on your request {request}} other {Legal replied on your request {request}}}"
+  },
+  "notifications.request.statusChanged": {
+    "defaultMessage": "The status of your request {request} changed"
+  },
+  "notifications.requestNumber": {
+    "defaultMessage": "R-{number}"
   },
   "notifications.unknown": {
     "defaultMessage": "{contract} — {event}"
@@ -2581,6 +2599,15 @@
   },
   "portal.request.threadYou": {
     "defaultMessage": "You"
+  },
+  "portal.settings.heading": {
+    "defaultMessage": "How we tell you about your requests"
+  },
+  "portal.settings.link": {
+    "defaultMessage": "Notification settings"
+  },
+  "portal.settings.title": {
+    "defaultMessage": "Notification settings"
   },
   "renewal.action.amendment": {
     "defaultMessage": "File the amendment"
@@ -3715,6 +3742,12 @@
   },
   "settings.notifications.group.dates.detail": {
     "defaultMessage": "Key dates, notice deadlines, and expiries — emailed as one daily digest."
+  },
+  "settings.notifications.group.requesterEvents": {
+    "defaultMessage": "Request updates"
+  },
+  "settings.notifications.group.requesterEvents.detail": {
+    "defaultMessage": "Receipts, replies, status changes, and decisions on the requests you submit."
   },
   "settings.notifications.group.requests": {
     "defaultMessage": "New requests"

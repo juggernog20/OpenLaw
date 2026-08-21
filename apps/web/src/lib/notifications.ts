@@ -11,6 +11,14 @@
  * a second table: a lookup table of arms, an ICU message per arm, and a
  * fallback for a slug this build has never heard of.
  *
+ * **One narrator, two bells** (M20/9). NOT-001 has one notification
+ * system on two surfaces, and an item names the record it is about
+ * whichever panel drew it: a `contract` row names a contract and
+ * addresses a record section, a `request` row names a Request and
+ * addresses its portal detail. The arm decides the sentence and the
+ * entity type decides the address, so neither surface has to tell this
+ * module which one it is.
+ *
  * **Three properties are the same as `activity.ts`'s, for the same
  * reasons.** Every payload read is defensive, because a row outlives the
  * build that wrote it and `event_type` deliberately carries no CHECK
@@ -19,28 +27,32 @@
  * nothing here throws — a bell that cannot render one item must still
  * render the rest.
  *
- * **The catalog is narrated in full, not event by event.** NOT-002's
- * twelve slugs all have an arm here, though M18/1 fires one of them:
- * that is what makes the slices behind #318–#321 an emission rather
- * than a surface change. Every arm reads only the two keys the fan-out
- * already writes — the contract's number and its title — plus the
- * actor's name where the event has one, so no arm is a guess about a
- * payload nobody has written yet.
+ * **The catalog is narrated in full, not event by event.** All sixteen
+ * of NOT-002's slugs have an arm here, including the two of group 5 that
+ * wait for M21's disposition routes: that is what makes the slices
+ * behind #318–#321 and #382 an emission rather than a surface change.
+ * Every arm reads only the two keys the fan-out already writes — the
+ * record's number and its name — plus the actor's name where the event
+ * has one, so no arm is a guess about a payload nobody has written yet.
  *
  * **The address is a section, not a record.** An approval request opens
  * the Approvals section (DES-032's routed tabs); a task opens Tasks;
  * paper opens Documents. Landing on the record's overview and making
  * the reader find the thing they were told about is one click short of
  * the promise, and the sections are addresses precisely so a prompt can
- * name one.
+ * name one. A Request is the exception that proves it: its detail is one
+ * page with no tabs to name, so every group-5 item opens
+ * `/portal/requests/{number}`.
  */
 
 import {
   Activity,
   AtSign,
   CalendarClock,
+  CircleX,
   FilePlus2,
   GitCommitHorizontal,
+  Inbox,
   MessageSquare,
   PenLine,
   SquareCheck,
@@ -52,6 +64,11 @@ import {
 import { defineMessage, type IntlShape, type MessageDescriptor } from "react-intl";
 import type { paths } from "@openlaw/api-client";
 
+/**
+ * The staff list's own response, which the portal list's matches
+ * exactly: the two mounts are one implementation over two scopes
+ * (M20/9), so an item is an item whichever bell answered it.
+ */
 type BellResponse =
   paths["/api/v1/notifications"]["get"]["responses"]["200"]["content"]["application/json"];
 
@@ -67,11 +84,12 @@ export interface NarratedNotification {
   /**
    * Where the item goes, or null when this build cannot address it.
    *
-   * Null is reachable only for a row about an entity kind this surface
-   * has no route for. The read API answers `contract` rows alone today
-   * (its scope predicate fails closed on anything else), so it does not
-   * happen — and a row that cannot be addressed is drawn as a sentence
-   * rather than as a link to nowhere.
+   * Null is reachable only for a row about an entity kind this build has
+   * no route for, or one whose payload carries no number to address it
+   * by. The two bells answer `contract` and `request` rows and nothing
+   * else — each scope predicate fails closed on anything it has no rule
+   * for — so it does not happen, and a row that cannot be addressed is
+   * drawn as a sentence rather than as a link to nowhere.
    */
   href: string | null;
 }
@@ -237,6 +255,44 @@ const ARMS: Readonly<Record<string, Arm>> = {
       defaultMessage: "{contract} is expiring",
     }),
   },
+  // Group 5 — the portal audience's own events (INT-001, M20/8). These
+  // land on the portal bell and nowhere else, because the staff centre's
+  // scope answers about contracts alone. They name no section: a Request
+  // has one page and it is the whole of what a requester can open.
+  "request.created": {
+    icon: Inbox,
+    message: defineMessage({
+      id: "notifications.request.created",
+      defaultMessage: "Legal has received your request {request}",
+    }),
+  },
+  "request.status_changed": {
+    icon: GitCommitHorizontal,
+    message: defineMessage({
+      id: "notifications.request.statusChanged",
+      defaultMessage: "The status of your request {request} changed",
+    }),
+  },
+  // The one arm here with an actor: a reply is somebody's act, and the
+  // requester's own replies never reach them (M20/8).
+  "request.replied": {
+    icon: MessageSquare,
+    message: defineMessage({
+      id: "notifications.request.replied",
+      defaultMessage:
+        "{hasActor, select, yes {{actor} replied on your request {request}} " +
+        "other {Legal replied on your request {request}}}",
+    }),
+  },
+  // The reason itself stays on the Request (INT-006). The item says "no"
+  // arrived and points at where the why is written.
+  "request.declined": {
+    icon: CircleX,
+    message: defineMessage({
+      id: "notifications.request.declined",
+      defaultMessage: "Legal declined your request {request}",
+    }),
+  },
 };
 
 /** What an item whose slug this build does not know reads as. It names
@@ -251,6 +307,12 @@ const UNKNOWN = defineMessage({
 const NUMBERED = defineMessage({
   id: "notifications.contractNumber",
   defaultMessage: "contract {number}",
+});
+
+/** The same for a Request, whose human reference is R-### (INT-002). */
+const NUMBERED_REQUEST = defineMessage({
+  id: "notifications.requestNumber",
+  defaultMessage: "R-{number}",
 });
 
 /** What a record with neither a title nor a number is called. */
@@ -271,9 +333,23 @@ function armFor(eventType: string): Arm | undefined {
   return Object.hasOwn(ARMS, eventType) ? ARMS[eventType] : undefined;
 }
 
-/** How the sentence names the record: its snapshotted title, else its
- * number, else neither. */
+/**
+ * How the sentence names the record: its snapshotted title or summary,
+ * else its number, else neither.
+ *
+ * Two entity kinds, two pairs of payload keys, and the fallback chain is
+ * the same for both — which is the point of asking it here rather than
+ * in each arm.
+ */
 function recordName(intl: IntlShape, item: BellItem): string {
+  if (item.entityType === "request") {
+    const summary = text(item.payload, "requestSummary");
+    if (summary) return summary;
+    const number = wholeNumber(item.payload, "requestNumber");
+    return number === null
+      ? intl.formatMessage(UNNAMED)
+      : intl.formatMessage(NUMBERED_REQUEST, { number: String(number) });
+  }
   const title = text(item.payload, "contractTitle");
   if (title) return title;
   const number = wholeNumber(item.payload, "contractNumber");
@@ -285,12 +361,21 @@ function recordName(intl: IntlShape, item: BellItem): string {
 /**
  * Where an item goes.
  *
- * The address is built from the payload's contract number rather than
- * from `entityId`, because the record's own URL is its number
- * (DD-011's human reference) and the row's `entity_id` is the internal
+ * The address is built from the payload's number rather than from
+ * `entityId`, because a record's own URL is its number (DD-011's human
+ * reference, INT-002's R-###) and the row's `entity_id` is the internal
  * one. An item carrying no number cannot be addressed and says so.
+ *
+ * **A Request has one address and no sections.** A contract's prompt
+ * names the section it is about (DES-049 point 9) because a contract
+ * record has routed tabs; a Request's whole page is the answer, so the
+ * portal detail is where every group-5 item lands.
  */
 function hrefFor(item: BellItem, arm: Arm | undefined): string | null {
+  if (item.entityType === "request") {
+    const number = wholeNumber(item.payload, "requestNumber");
+    return number === null ? null : `/portal/requests/${number}`;
+  }
   if (item.entityType !== "contract") return null;
   const number = wholeNumber(item.payload, "contractNumber");
   if (number === null) return null;
@@ -303,12 +388,12 @@ function hrefFor(item: BellItem, arm: Arm | undefined): string | null {
  */
 export function narrateNotification(intl: IntlShape, item: BellItem): NarratedNotification {
   const arm = armFor(item.eventType);
-  const contract = recordName(intl, item);
+  const record = recordName(intl, item);
   const href = hrefFor(item, arm);
   if (!arm) {
     return {
       icon: Activity,
-      sentence: intl.formatMessage(UNKNOWN, { contract, event: item.eventType }),
+      sentence: intl.formatMessage(UNKNOWN, { contract: record, event: item.eventType }),
       href,
     };
   }
@@ -316,10 +401,16 @@ export function narrateNotification(intl: IntlShape, item: BellItem): NarratedNo
   return {
     icon: arm.icon,
     sentence: intl.formatMessage(arm.message, {
-      contract,
+      // The one name, offered under both spellings. A contract's arms
+      // call it `{contract}` and a Request's call it `{request}`,
+      // because a translator reading one sentence should see the noun
+      // that sentence is about — and ICU takes what it is given and
+      // ignores what it does not use, which is the same property
+      // `hasActor` below relies on.
+      contract: record,
+      request: record,
       actor: actor ?? "",
-      // ICU takes what it is given and ignores what it does not use, so
-      // every arm gets this whether or not its sentence selects on it.
+      // Every arm gets this whether or not its sentence selects on it.
       hasActor: actor ? "yes" : "no",
     }),
     href,

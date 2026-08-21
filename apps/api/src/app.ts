@@ -69,7 +69,7 @@ import { intakeLinksRoutes } from "./modules/intake-links/routes.js";
 import { portalRoutes } from "./modules/portal/routes.js";
 import { requestsRoutes } from "./modules/requests/routes.js";
 import { listViewsRoutes } from "./modules/list-views/routes.js";
-import { notificationsRoutes } from "./modules/notifications/routes.js";
+import { notificationsRoutes, portalNotificationsRoutes } from "./modules/notifications/routes.js";
 import { morningRoundTriggerRoutes } from "./modules/notifications/round-trigger.js";
 import { onboardingRoutes } from "./modules/onboarding/routes.js";
 import { orgRoutes } from "./modules/org/routes.js";
@@ -425,6 +425,10 @@ export async function buildApp(deps: AppDeps, opts: FastifyServerOptions = {}) {
   await app.register(fieldsRoutes, { prefix: "/api/v1" });
   await app.register(listViewsRoutes, { prefix: "/api/v1" });
   await app.register(notificationsRoutes, { prefix: "/api/v1" });
+  // The portal's own bell (NOT-001, M20/9). Its own mount rather than a
+  // parameter on the staff one, so the address says which of the two
+  // surfaces is asking and neither route ever means two things.
+  await app.register(portalNotificationsRoutes, { prefix: "/api/v1" });
   // The dev/E2E overlay's only route (TECH-018). Registered rather than
   // guarded inside, so an install that never set the variable answers
   // the ordinary 404 for an unknown path and admits nothing.

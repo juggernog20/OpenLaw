@@ -5,40 +5,26 @@
  * of settings.pen and DES-050: one row per event group, one switch per
  * channel, saved the moment it is flipped (SET-003 immediate apply).
  *
- * **A row is a group, not an event.** NOT-002 keys a preference on the
- * group — "activity on my records", never one verb — so the frame's four
- * sub-rows under group 2 are one row here (DES-050 normalization 1).
- *
- * **The defaults are the state.** The table behind this pane holds
- * overrides, so somebody who has never opened it has no rows at all;
- * the API answers what they effectively get, and the switches draw that.
- * A save writes the one pair that moved, and the very next event honours
- * it.
+ * **The pane is the card; the grid is shared** (M20/9). What this file
+ * owns is the settings-surface chrome — the page title, the settings
+ * card, and the one status note in its header strip — and which of
+ * NOT-002's five groups a staff reader is shown. The table itself is
+ * `components/notification-preferences.tsx`, because the portal draws
+ * the same table over a different row.
  */
 
-import { useRef, useState } from "react";
 import { redirect, useLoaderData } from "react-router";
-import { FormattedMessage, defineMessage, useIntl, type MessageDescriptor } from "react-intl";
-import type { paths } from "@openlaw/api-client";
+import { FormattedMessage, useIntl } from "react-intl";
 import { api } from "../lib/api";
-import { problemDetail } from "../lib/messages";
 import { currentUser, needsSetup } from "../lib/session";
 import { PageTitle } from "../components/page-title";
+import {
+  NotificationSwitchGrid,
+  useNotificationPreferences,
+  type EventGroup,
+} from "../components/notification-preferences";
 import { SettingsCard } from "../components/settings-card";
-import { StatusNote, type FieldStatus } from "../components/status-note";
-import { Switch } from "../components/ui/switch";
-
-/**
- * One group's answer, taken from the generated contract rather than
- * restated here.
- *
- * A hand-written copy would widen `eventGroup` to `string` and then need
- * a cast at every read — which is exactly how a pane goes on compiling
- * after the API stops answering what it draws. Derived, a group added or
- * renamed upstream is a type error in this file.
- */
-type GroupPreference =
-  paths["/api/v1/me/notification-preferences"]["get"]["responses"]["200"]["content"]["application/json"]["groups"][number];
+import { StatusNote } from "../components/status-note";
 
 export async function settingsNotificationsLoader() {
   const user = await currentUser();
@@ -55,163 +41,26 @@ export async function settingsNotificationsLoader() {
  *
  * Four of the five. `requester_events` is the portal audience's own
  * group (NOT-001) — a business user tunes it in the portal's own
- * settings, and it has no meaning on a staff surface. It stays in the
- * model, and the API answers it, so M20 renders it where it belongs.
+ * settings surface, and it has no meaning on a staff surface. It stays
+ * in the model, and the API answers it, so the portal renders it where
+ * it belongs.
  *
  * `new_requests` is drawn as the frame draws it, and nothing fires it
  * until the Inbox lands (M21): an opinion can be held about a group
  * before anything in it has happened, which is why the group value
  * shipped with the engine.
  */
-const STAFF_GROUPS = [
+const STAFF_GROUPS: readonly EventGroup[] = [
   "assigned_to_you",
   "activity_on_your_records",
   "dates_approaching",
   "new_requests",
-] as const;
-
-type StaffGroup = (typeof STAFF_GROUPS)[number];
-
-/** What each group is called and what it covers — the frame's own copy,
- * with group 2's four sub-rows folded into the one sentence its single
- * row now carries. */
-const GROUP_COPY: Record<StaffGroup, { label: MessageDescriptor; detail: MessageDescriptor }> = {
-  assigned_to_you: {
-    label: defineMessage({
-      id: "settings.notifications.group.assigned",
-      defaultMessage: "Assigned to you",
-    }),
-    detail: defineMessage({
-      id: "settings.notifications.group.assigned.detail",
-      defaultMessage: "Assignments, tasks, mentions, and approval requests addressed to you.",
-    }),
-  },
-  activity_on_your_records: {
-    label: defineMessage({
-      id: "settings.notifications.group.activity",
-      defaultMessage: "Activity on your records",
-    }),
-    detail: defineMessage({
-      id: "settings.notifications.group.activity.detail",
-      defaultMessage:
-        "Status changes, comments, documents, and signatures on records where you're the Owner, on the team, or a watcher.",
-    }),
-  },
-  dates_approaching: {
-    label: defineMessage({
-      id: "settings.notifications.group.dates",
-      defaultMessage: "Dates approaching",
-    }),
-    detail: defineMessage({
-      id: "settings.notifications.group.dates.detail",
-      defaultMessage: "Key dates, notice deadlines, and expiries — emailed as one daily digest.",
-    }),
-  },
-  new_requests: {
-    label: defineMessage({
-      id: "settings.notifications.group.requests",
-      defaultMessage: "New requests",
-    }),
-    detail: defineMessage({
-      id: "settings.notifications.group.requests.detail",
-      defaultMessage: "New intake requests arriving in the Inbox.",
-    }),
-  },
-};
-
-/** The two channels, in the frame's column order. */
-const CHANNELS = [
-  {
-    id: "in_app",
-    key: "inApp",
-    label: defineMessage({ id: "settings.notifications.channel.inApp", defaultMessage: "In-app" }),
-  },
-  {
-    id: "email",
-    key: "email",
-    label: defineMessage({ id: "settings.notifications.channel.email", defaultMessage: "Email" }),
-  },
-] as const;
+];
 
 export function SettingsNotificationsPage() {
   const intl = useIntl();
   const loaded = useLoaderData<typeof settingsNotificationsLoader>();
-  const [groups, setGroups] = useState<GroupPreference[]>(loaded.groups);
-  const [status, setStatus] = useState<FieldStatus>("idle");
-  const [detail, setDetail] = useState<string | null>(null);
-
-  const choiceOf = (group: StaffGroup): GroupPreference =>
-    groups.find((row) => row.eventGroup === group) ?? {
-      eventGroup: group,
-      inApp: true,
-      email: false,
-    };
-
-  /** Moves one pair, and nothing else on the grid. */
-  const setPair = (group: StaffGroup, key: "inApp" | "email", value: boolean) =>
-    setGroups((rows) =>
-      rows.map((row) => (row.eventGroup === group ? { ...row, [key]: value } : row)),
-    );
-
-  /**
-   * The writes still in flight, as one chain.
-   *
-   * Each save answers the **whole** grid, so two of them racing would let
-   * the slower reply land last and undo the faster one's pair. Sending
-   * them in the order they were pressed makes the last reply the last
-   * press, which is the only ordering a person watching switches move
-   * would accept.
-   */
-  const pending = useRef<Promise<void>>(Promise.resolve());
-
-  /** How many presses are in the chain, counting the one in flight.
-   * `1` inside {@link send} means "nothing is queued behind me". */
-  const queued = useRef(0);
-
-  async function send(
-    group: StaffGroup,
-    channel: (typeof CHANNELS)[number],
-    enabled: boolean,
-  ): Promise<void> {
-    setStatus("saving");
-    setDetail(null);
-    try {
-      const { data, error } = await api.PATCH("/api/v1/me/notification-preferences", {
-        body: { eventGroup: group, channel: channel.id, enabled },
-      });
-      if (!data) {
-        // Only this pair goes back, and only to the value this press
-        // moved it from. A whole-grid snapshot would also undo whatever
-        // was pressed while this request was in the air.
-        setPair(group, channel.key, !enabled);
-        setStatus("error");
-        setDetail(problemDetail(error) ?? null);
-        return;
-      }
-      // The write answers the whole grid, so the pane takes the server's
-      // state rather than trusting the row it just moved — but only from
-      // the last reply in the chain. An earlier one predates the presses
-      // still queued behind it, and its snapshot would draw them undone
-      // for as long as the next request is in the air.
-      if (queued.current === 1) setGroups(data.groups);
-      setStatus("saved");
-    } catch {
-      setPair(group, channel.key, !enabled);
-      setStatus("error");
-    }
-  }
-
-  function commit(group: StaffGroup, channel: (typeof CHANNELS)[number], enabled: boolean): void {
-    // The switch moves at once (SET-003 immediate apply); the write
-    // queues behind whatever is already in flight.
-    setPair(group, channel.key, enabled);
-    queued.current += 1;
-    pending.current = pending.current
-      .then(() => send(group, channel, enabled))
-      .finally(() => {
-        queued.current -= 1;
-      });
-  }
+  const state = useNotificationPreferences(loaded.groups);
 
   return (
     <>
@@ -228,81 +77,10 @@ export function SettingsNotificationsPage() {
             defaultMessage="Notification preferences"
           />
         }
-        actions={<StatusNote status={status} detail={detail} />}
+        actions={<StatusNote status={state.status} detail={state.detail} />}
         flush
       >
-        {/* The card's own container, so the grid reflows on the width it
-            actually has rather than on the viewport (DES-012). */}
-        <div className="@container/prefs">
-          {/* The column heads, which only mean anything once the toggles
-              sit in columns. Below that width each switch carries its own
-              visible label instead. */}
-          <div
-            aria-hidden="true"
-            className="hidden h-8.5 items-center border-b border-border-default @lg/prefs:flex"
-          >
-            <span className="flex-1 px-4 text-xs font-semibold text-muted">
-              <FormattedMessage
-                id="settings.notifications.column.group"
-                defaultMessage="Event group"
-              />
-            </span>
-            {CHANNELS.map((channel) => (
-              <span key={channel.id} className="w-22.5 text-xs font-semibold text-muted">
-                <FormattedMessage {...channel.label} />
-              </span>
-            ))}
-          </div>
-
-          {STAFF_GROUPS.map((group) => {
-            const choice = choiceOf(group);
-            const labelId = `notification-group-${group}`;
-            const detailId = `${labelId}-detail`;
-            return (
-              <div
-                key={group}
-                className="flex flex-col gap-3 border-b border-border-muted px-4 py-3 last:border-b-0 @lg/prefs:flex-row @lg/prefs:items-center @lg/prefs:gap-0 @lg/prefs:pe-0 @lg/prefs:py-2.5"
-              >
-                <div className="flex flex-1 flex-col gap-0.5 @lg/prefs:pe-4">
-                  <span id={labelId} className="text-base font-medium text-primary">
-                    <FormattedMessage {...GROUP_COPY[group].label} />
-                  </span>
-                  <span id={detailId} className="text-sm text-muted">
-                    <FormattedMessage {...GROUP_COPY[group].detail} />
-                  </span>
-                </div>
-                <div className="flex gap-6 @lg/prefs:gap-0">
-                  {CHANNELS.map((channel) => (
-                    <span key={channel.id} className="flex items-center gap-2 @lg/prefs:w-22.5">
-                      {/* Visible while the columns are stacked, and the
-                          switch's own name once the heads carry it — in
-                          both states it is what names the control. */}
-                      <span
-                        id={`${labelId}-${channel.id}`}
-                        className="text-xs text-muted @lg/prefs:sr-only"
-                      >
-                        <FormattedMessage {...channel.label} />
-                      </span>
-                      <Switch
-                        checked={choice[channel.key]}
-                        onCheckedChange={(next) => commit(group, channel, next)}
-                        aria-labelledby={`${labelId} ${labelId}-${channel.id}`}
-                        aria-describedby={detailId}
-                      />
-                    </span>
-                  ))}
-                </div>
-              </div>
-            );
-          })}
-
-          <p className="border-t border-border-default px-4 py-3 text-sm text-muted">
-            <FormattedMessage
-              id="settings.notifications.caption"
-              defaultMessage="Email off keeps the bell items coming. In-app off turns the group off entirely, email included."
-            />
-          </p>
-        </div>
+        <NotificationSwitchGrid order={STAFF_GROUPS} state={state} />
       </SettingsCard>
     </>
   );
