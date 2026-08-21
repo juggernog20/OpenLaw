@@ -214,9 +214,13 @@ async function settles(what: string, ready: () => boolean): Promise<void> {
 }
 
 /** The messages this person has been sent about this Request, by its
- * R-### reference — which every group-5 subject line carries. */
+ * R-### reference — which every group-5 subject line carries as
+ * `R-### · summary`. The separator is part of the match, because `R-1`
+ * is a prefix of `R-10` and this suite mints numbers past nine. */
 const mailAbout = (fixture: { email: string }, request: RequestRow) =>
-  harness.mailer.messagesTo(fixture.email).filter((m) => m.subject.includes(`R-${request.number}`));
+  harness.mailer
+    .messagesTo(fixture.email)
+    .filter((m) => m.subject.includes(`R-${request.number} ·`));
 
 /** The one message an event has just sent about a Request, once the
  * queue has delivered it. */
