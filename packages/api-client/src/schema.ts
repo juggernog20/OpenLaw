@@ -903,7 +903,7 @@ export interface paths {
     /** One request type's attached fields in per-type order — the type editor's Attached fields card */
     get: operations["listRequestTypeFields"];
     put?: never;
-    /** Attach a catalog field to a request type: the scopes this type's target allows (INT-002), appended to the per-type order, optional from the start unless isRequired says otherwise */
+    /** Attach a catalog field to a request type: the scopes this type's target allows (INT-002), appended to the per-type order, optional from the start unless isRequired says otherwise; a user or entity field can be on a request form but can never be required there, because the portal offers a requester no rows to pick (INT-002) */
     post: operations["attachRequestTypeField"];
     delete?: never;
     options?: never;
@@ -925,7 +925,7 @@ export interface paths {
     delete: operations["detachRequestTypeField"];
     options?: never;
     head?: never;
-    /** Set an attachment's required flag: per attachment, so a field can be required for one type and optional elsewhere; hard enforcement arrives with the record milestone (M20) */
+    /** Set an attachment's required flag: per attachment, so a field can be required for one type and optional elsewhere; a user or entity field can be on a request form but can never be required there, because the portal offers a requester no rows to pick (INT-002); hard enforcement arrives with the record milestone (M20) */
     patch: operations["setRequestTypeFieldRequired"];
     trace?: never;
   };

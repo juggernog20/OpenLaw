@@ -6880,7 +6880,7 @@
       },
       "post": {
         "operationId": "attachRequestTypeField",
-        "summary": "Attach a catalog field to a request type: the scopes this type's target allows (INT-002), appended to the per-type order, optional from the start unless isRequired says otherwise",
+        "summary": "Attach a catalog field to a request type: the scopes this type's target allows (INT-002), appended to the per-type order, optional from the start unless isRequired says otherwise; a user or entity field can be on a request form but can never be required there, because the portal offers a requester no rows to pick (INT-002)",
         "tags": ["request-types"],
         "requestBody": {
           "required": true,
@@ -6992,7 +6992,7 @@
     "/api/v1/request-types/{id}/fields/{fieldId}": {
       "patch": {
         "operationId": "setRequestTypeFieldRequired",
-        "summary": "Set an attachment's required flag: per attachment, so a field can be required for one type and optional elsewhere; hard enforcement arrives with the record milestone (M20)",
+        "summary": "Set an attachment's required flag: per attachment, so a field can be required for one type and optional elsewhere; a user or entity field can be on a request form but can never be required there, because the portal offers a requester no rows to pick (INT-002); hard enforcement arrives with the record milestone (M20)",
         "tags": ["request-types"],
         "requestBody": {
           "required": true,

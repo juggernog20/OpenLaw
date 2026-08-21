@@ -207,7 +207,7 @@ One thing ends that transaction mid-batch: a bare `COMMIT;` inside a migration f
 - `packages/db/migrations/0054_reminder_dedup_entity_type.sql` opens with one, because its `CREATE INDEX CONCURRENTLY` statements cannot run inside a transaction block at all — Postgres refuses the statement rather than the transaction, so the file has to end the transaction first.
 - `packages/db/migrations/0060_account_issuer.sql` ends with the one that closes its own `BEGIN` (below).
 
-Every file on the two-line pattern below adds another — `0063`–`0065` were the first to follow it ([#391](https://github.com/juggernog20/OpenLaw/issues/391)), and each ends with the `COMMIT` that closes its own `BEGIN`.
+Every file on the two-line pattern below adds another — `0064`–`0066` were the first to follow it ([#391](https://github.com/juggernog20/OpenLaw/issues/391)), and each ends with the `COMMIT` that closes its own `BEGIN`.
 
 After any of these files, the session is in **autocommit**, and **every later file in that batch arrives that way**. In autocommit every statement commits as it runs, so a file with an `ALTER TABLE` followed by a guard that raises leaves the `ALTER` applied and nothing else done — and the re-run after the fix dies on the duplicate column instead of resuming.
 

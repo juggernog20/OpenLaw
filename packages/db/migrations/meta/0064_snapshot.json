@@ -1,6 +1,6 @@
 {
-  "id": "e0ce94e3-4772-4298-959d-c5c33d043185",
-  "prevId": "68bda902-9e84-4566-9ff7-31ccd6ec5293",
+  "id": "68bda902-9e84-4566-9ff7-31ccd6ec5293",
+  "prevId": "f63b4836-8ee0-445a-b7d0-c7c59e9903a4",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -298,24 +298,7 @@
           "default": "now()"
         }
       },
-      "indexes": {
-        "approver_groups_name_idx": {
-          "name": "approver_groups_name_idx",
-          "columns": [
-            {
-              "expression": "lower(\"name\")",
-              "asc": true,
-              "isExpression": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": true,
-          "where": "\"approver_groups\".\"archived_at\" is null",
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        }
-      },
+      "indexes": {},
       "foreignKeys": {},
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},

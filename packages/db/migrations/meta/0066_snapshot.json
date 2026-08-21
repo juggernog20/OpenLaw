@@ -1,6 +1,6 @@
 {
-  "id": "e0ce94e3-4772-4298-959d-c5c33d043185",
-  "prevId": "68bda902-9e84-4566-9ff7-31ccd6ec5293",
+  "id": "494bf1e0-0ce1-40fd-9c66-4fbfa7e7aa1c",
+  "prevId": "e0ce94e3-4772-4298-959d-c5c33d043185",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -1649,6 +1649,27 @@
               "expression": "signing_order",
               "isExpression": false,
               "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "contract_envelope_signers_email_idx": {
+          "name": "contract_envelope_signers_email_idx",
+          "columns": [
+            {
+              "expression": "envelope_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "lower(\"email\")",
+              "asc": true,
+              "isExpression": true,
               "nulls": "last"
             }
           ],

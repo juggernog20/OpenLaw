@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 /**
- * Migration 0064, the approver-group name de-duplication (#391),
+ * Migration 0065, the approver-group name de-duplication (#391),
  * against a real database.
  *
  * CTR-012's #391 addendum makes the name unique among live groups. The
@@ -22,7 +22,7 @@
  * the rehearsal `testing/migration-rehearsal.ts` exists for, and which
  * `account-issuer-migration.test.ts` is the prior art for.
  *
- * 0065's envelope-signer index has no suite here on purpose. Its guard
+ * 0066's envelope-signer index has no suite here on purpose. Its guard
  * only refuses, and no install can reach it: the send route has refused
  * a repeated address since the day the table shipped, in the same
  * commit. The constraint itself is asserted at the HTTP seam, in
@@ -39,7 +39,7 @@ import {
 } from "./testing/migration-rehearsal.js";
 
 /** The last migration before the one under test. */
-const BEFORE = "0063_keyset_id_tiebreak";
+const BEFORE = "0064_keyset_id_tiebreak";
 
 let container: StartedPostgreSqlContainer;
 let entries: JournalEntry[];
@@ -53,7 +53,7 @@ afterAll(async () => {
   await container?.stop();
 });
 
-/** An install from before the index: migrated to 0063, groups free to clash. */
+/** An install from before the index: migrated to 0064, groups free to clash. */
 async function installBefore(name: string): Promise<Db> {
   const db = await freshDatabase(container, name);
   await migrateThroughTag(db, BEFORE, entries);
@@ -80,7 +80,7 @@ async function names(db: Db): Promise<Record<string, string>> {
   return Object.fromEntries(rows.rows.map((row) => [row.id, row.name]));
 }
 
-describe("the 0064 de-duplication", () => {
+describe("the 0065 de-duplication", () => {
   it("keeps the oldest group's name and suffixes the rest", async () => {
     const db = await installBefore("groups_duplicate");
     // The migration's NOTICE is the operator's only record of the

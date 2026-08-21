@@ -14,7 +14,7 @@
 -- clash cannot happen, and if one somehow has, the raw index build
 -- would fail with nothing said about which rows collided. This is the
 -- one place that knows how to say it. A refusal is the right answer
--- here where it was the wrong one for a duplicate group name in 0064 —
+-- here where it was the wrong one for a duplicate group name in 0065 —
 -- there the migration knew what an Administrator would have done, and
 -- here it does not. Deleting one of two signer rows would make the
 -- record say the sender asked one person when they asked two, and an

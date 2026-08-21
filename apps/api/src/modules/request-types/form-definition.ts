@@ -21,7 +21,7 @@
 
 import { and, asc, count, eq, fields, inArray, isNull, requestTypeFields } from "@openlaw/db";
 import type { Executor, FieldModuleScope, RequestType } from "@openlaw/db";
-import type { TypeFieldScopeRule } from "../../lib/type-field-routes.js";
+import type { TypeFieldRequiredRule, TypeFieldScopeRule } from "../../lib/type-field-routes.js";
 
 /** The two modules a request type may convert into (INT-002). Said
  * once, here, because the taxonomy routes turn it into the wire enum
@@ -64,6 +64,41 @@ export function formFieldScopeRule(targetModule: TargetModule | null): TypeField
 /** The rule for one row, as the attachment mount reads it. */
 export const requestTypeScopeRule = (type: RequestType): TypeFieldScopeRule =>
   formFieldScopeRule(type.targetModule as TargetModule | null);
+
+/**
+ * The two field types a request form may collect but may never require
+ * (INT-002's M20/11 addendum, [#400]).
+ *
+ * The portal draws a `user` and an `entity` control as an empty picker
+ * on purpose: a requester reads neither the staff directory nor the
+ * Entity registry, and a picker that offered either would be a leak
+ * (DD-013, DD-016). Optional, that control collects nothing and the
+ * form submits. Required, it is a question nobody who can reach the
+ * form is able to answer, so every submission of that type is refused
+ * forever and the requester has no move that clears the refusal.
+ *
+ * So the flag is refused where an Administrator can read the refusal
+ * rather than where a requester meets it. The field still attaches —
+ * an optional one is useful and harmless — and the rule is only on
+ * making it required. It is the request-type mount's rule alone:
+ * staff pick a user or an entity from a list that has rows, so nothing
+ * here touches a contract type or a matter type.
+ *
+ * **The rule can relax without moving.** If Entities ever become
+ * visible to their own people, `entity` leaves this list and `user`
+ * stays.
+ */
+export const requestFormRequiredRule: TypeFieldRequiredRule = {
+  fieldTypes: ["user", "entity"],
+  refusal: (displayName) =>
+    `${displayName} can be on the form, but it cannot be required. ` +
+    "A requester picks no person and no entity in the portal, so a " +
+    "required one is a question nobody can answer.",
+  summary:
+    "a user or entity field can be on a request form but can never be " +
+    "required there, because the portal offers a requester no rows to " +
+    "pick (INT-002)",
+};
 
 /**
  * The attached fields a move to `scopes` would leave with nowhere to
