@@ -159,9 +159,11 @@ _None — queue cleared 2026-08-05 (NOT-001 through NOT-005)._
 
   **The preferences pair stays mounted once and serves both panes.** A preference is one person's whichever bell they are looking at; the API answers all five groups and the surface decides which of them to draw. The staff pane draws four, and the portal pane draws `requester_events` alone.
 
-  **A save back to a group's own default removes the override rather than storing one that agrees with it.** This supersedes the shipped M18/5 behaviour, which upserted on every save. The table is named for what it holds: a row that agrees with the default is not an override of anything, and leaving one there silently pins that person against a default they never asked to be held apart from. The **effective** answer is identical either way — both readers start from the catalogue default and lay stored rows over it — so nothing above the seam can tell the two states apart, and the difference shows only on the day a default moves.
+  **A save back to a group's own default removes the override rather than storing one that agrees with it.** This supersedes the shipped M18/5 behaviour, which upserted on every save. The table is named for what it holds: a row that agrees with the default is not an override of anything, and leaving one there silently pins that person against a default they never asked to be held apart from. The **effective** answer is identical either way — both readers start from the catalogue default and lay stored rows over it — so nothing above the seam can tell the two states apart, and the difference shows only on the day a default moves. **The change is at the shared write path, so it reaches the staff pane too**, not only the portal one — the pair is mounted once and serves both, and a rule that held on one pane and not the other would be two rules.
 
   **Narration is unchanged and still happens on every write.** `user.notification_preference_changed` records the group, the channel, and the new value whether the write stored a row or removed one: the M18/5 clause is about the act being recorded, not about what the table ended up holding, and re-affirming an opinion is still a real act.
+
+- **Addendum (2026-08-21, M20/10, [#384](https://github.com/juggernog20/OpenLaw/issues/384))** — **The portal scope carries no Administrator override, and the absence is the decision.** The staff scope has one three lines above it: an Administrator reaches every contract, because reaching every record is what the role is (DD-014). The portal predicate has no equivalent and gains nothing from one. Being somebody's Requester is not a power, it is a fact about one row (DD-013), and an Administrator who has raised no Request has no portal rows to be shown. So an Administrator's portal bell is their own Requests and no more, which is the same answer every other role gets. Recorded at the M20 close because it was stated only in the predicate, and because "the Administrator sees everything" is the assumption a later reader would carry in.
 
 ## NOT-003 — Timing: direct events immediate; date reminders in a daily digest
 
@@ -390,13 +392,13 @@ Sequencing this after M28 would make the briefing complete on arrival. Building 
 
 ## Index of decisions
 
-| #       | Decision                                                           | Status                                                  |
-| ------- | ------------------------------------------------------------------ | ------------------------------------------------------- |
-| NOT-001 | One system, two surfaces: bell + email for staff and portal users  | Accepted                                                |
-| NOT-002 | Event catalog: five groups, defaults by interruptiveness           | Accepted; group 5's four events added by M20/8 addendum |
-| NOT-003 | Timing: direct events immediate; date reminders in a daily digest  | Accepted                                                |
-| NOT-004 | Reminder lead times: admin-configurable offsets, seeded 7/1/0      | Accepted                                                |
-| NOT-005 | Badge: unread count, 9+ cap, read-on-open                          | Accepted                                                |
-| NOT-006 | The morning digest's anatomy and its delivery rules                | Accepted                                                |
-| NOT-007 | Email delivery is at-least-once; duplicate accepted over drop      | Accepted                                                |
-| NOT-008 | The daily briefing: cross-module morning email replaces the digest | Accepted                                                |
+| #       | Decision                                                           | Status                                                                                                                                                       |
+| ------- | ------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| NOT-001 | One system, two surfaces: bell + email for staff and portal users  | Accepted; the portal surface built and its read rule added by the M20/8 and M20/9 addenda; the absent Administrator override recorded by the M20/10 addendum |
+| NOT-002 | Event catalog: five groups, defaults by interruptiveness           | Accepted; group 5's four events added by M20/8 addendum                                                                                                      |
+| NOT-003 | Timing: direct events immediate; date reminders in a daily digest  | Accepted                                                                                                                                                     |
+| NOT-004 | Reminder lead times: admin-configurable offsets, seeded 7/1/0      | Accepted                                                                                                                                                     |
+| NOT-005 | Badge: unread count, 9+ cap, read-on-open                          | Accepted                                                                                                                                                     |
+| NOT-006 | The morning digest's anatomy and its delivery rules                | Accepted                                                                                                                                                     |
+| NOT-007 | Email delivery is at-least-once; duplicate accepted over drop      | Accepted                                                                                                                                                     |
+| NOT-008 | The daily briefing: cross-module morning email replaces the digest | Accepted                                                                                                                                                     |
