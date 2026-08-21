@@ -47,16 +47,35 @@
  *    service-level agreement and nothing in the product decides that
  *    number, so the panel is not drawn. The deflection panel above it
  *    is, because its links are the Administrator's own rows (INT-004).
- * 6. The Attachments basic is inert until uploads land (ticket 6 of
- *    M20). It is drawn rather than hidden: the row is part of the form
- *    INT-002 fixes, and a form that grew a field between two visits
- *    would read as a form that changed.
+ * 6. I6's dropzone carries no list of what was picked and no way to
+ *    take one back. The files a requester chose are listed under it,
+ *    each with a control that removes it, because a mis-picked file
+ *    that cannot be unpicked is a form that has to be started again.
+ *
+ * ### The paper (#380)
+ *
+ * **The files are picked before Submit and uploaded after it.** An
+ * attachment is a row against a Request, so there is no Request to
+ * attach to until the submission has been accepted — the form holds the
+ * chosen files, posts the Request, and then puts the paper on it one
+ * call at a time.
+ *
+ * **The confirmation appears the moment the Request exists**, not when
+ * the last file lands. The ask has arrived and that is true whatever
+ * the paper does next; a requester whose browser closed mid-upload must
+ * already have been told, and must already have the number to quote.
+ *
+ * **A file that does not land is named, not swallowed** — with the
+ * seam's own reason beside it, because "over the 100 MB upload limit" is
+ * something a requester can act on and "did not attach" is not. There is
+ * no retry here because there is no upload control on the request detail
+ * yet; the honest answer is the fact and the reference to quote.
  */
 
 import { useEffect, useRef, useState } from "react";
 import { Link, redirect, useLoaderData, useNavigate, type LoaderFunctionArgs } from "react-router";
 import { defineMessage, FormattedMessage, useIntl } from "react-intl";
-import { ChevronLeft, CircleCheck, Mail, Paperclip } from "lucide-react";
+import { ChevronLeft, CircleCheck, FileText, Mail, TriangleAlert, Upload, X } from "lucide-react";
 import type { paths } from "@openlaw/api-client";
 import { api } from "../lib/api";
 import { authClient } from "../lib/auth-client";
@@ -69,7 +88,7 @@ import {
 } from "../lib/custom-fields";
 import { CONTROL_CLASS, TEXTAREA_CLASS } from "../lib/form-controls";
 import { problemDetail } from "../lib/messages";
-import { requestReference } from "../lib/requests";
+import { attachToRequest, MAX_REQUEST_ATTACHMENTS, requestReference } from "../lib/requests";
 import { currentUser } from "../lib/session";
 import { CustomFieldControl } from "../components/custom-field-control";
 import { PageTitle } from "../components/page-title";
@@ -114,9 +133,17 @@ const TITLE = defineMessage({
  * above it. */
 const URGENCY_HINT_ID = "request-urgency-help";
 
-/** The three basics that carry a value. Attachments are the fourth and
- * hold none until uploads land. */
+/** The three basics that carry a value. Attachments are the fourth. */
 type BasicKey = "summary" | "description" | "urgency";
+
+/** What the confirmation knows: the Request that exists, whether its
+ * paper is still going up, and the files that did not make it with the
+ * seam's own reason for each. */
+interface Submitted {
+  number: number;
+  uploading: boolean;
+  unattached: readonly { filename: string; detail?: string }[];
+}
 
 export function PortalRequestFormPage() {
   const { user, requestType, fields, intakeLinks } =
@@ -130,14 +157,19 @@ export function PortalRequestFormPage() {
    * the same default a contract's priority is born with. */
   const [urgency, setUrgency] = useState<(typeof SEVERITY_LEVELS)[number]>("medium");
   const [drafts, setDrafts] = useState<Record<string, CustomFieldDraft>>({});
+  /** The paper, chosen but not yet sent: an attachment is a row against
+   * a Request, and there is no Request until Submit is pressed. */
+  const [files, setFiles] = useState<readonly File[]>([]);
   const [busy, setBusy] = useState(false);
   /** The refusal, as a sentence and as a set of boxes. Both come from
    * the same press, so they can never disagree. */
   const [error, setError] = useState<string | null>(null);
   const [unanswered, setUnanswered] = useState<ReadonlySet<string>>(new Set());
-  /** Set once, by a 201. It replaces the form, because the Request now
-   * exists and the boxes are no longer a thing to press. */
-  const [submitted, setSubmitted] = useState<{ number: number } | null>(null);
+  /** Set by the 201, before the paper follows. It replaces the form,
+   * because the Request now exists and the boxes are no longer a thing
+   * to press — a requester whose browser closed while the files were
+   * still going up must have been told the ask landed. */
+  const [submitted, setSubmitted] = useState<Submitted | null>(null);
 
   async function signOut() {
     await authClient.signOut();
@@ -228,8 +260,8 @@ export function PortalRequestFormPage() {
         },
       })
       .catch(() => ({ data: null, error: undefined }));
-    setBusy(false);
     if (!data) {
+      setBusy(false);
       setError(
         problemDetail(problem) ??
           intl.formatMessage({
@@ -239,7 +271,29 @@ export function PortalRequestFormPage() {
       );
       return;
     }
-    setSubmitted({ number: data.request.number });
+
+    // The Request exists from here on, so the confirmation is shown at
+    // once rather than held back behind the uploads: the ask landed,
+    // and that is true whatever the paper does next. The files follow
+    // one at a time — the seam takes one per call — and each that does
+    // not land is named on the confirmation as it settles, with the
+    // seam's own reason beside it.
+    const number = data.request.number;
+    setBusy(false);
+    setSubmitted({ number, uploading: files.length > 0, unattached: [] });
+    for (const file of files) {
+      const outcome = await attachToRequest(number, file);
+      if (outcome.ok) continue;
+      setSubmitted((current) =>
+        current === null
+          ? current
+          : {
+              ...current,
+              unattached: [...current.unattached, { filename: file.name, detail: outcome.detail }],
+            },
+      );
+    }
+    setSubmitted((current) => (current === null ? current : { ...current, uploading: false }));
   }
 
   return (
@@ -261,7 +315,7 @@ export function PortalRequestFormPage() {
       <div className="@container/form flex flex-col gap-6 @2xl/form:flex-row">
         <div className="min-w-0 flex-1">
           {submitted ? (
-            <Confirmation number={submitted.number} />
+            <Confirmation {...submitted} />
           ) : (
             <form
               noValidate
@@ -318,21 +372,10 @@ export function PortalRequestFormPage() {
                     }}
                   />
                 </Field>
-                {/* The third basic, inert until uploads land (M20/6).
-                    Drawn rather than hidden: the row is part of the form
-                    INT-002 fixes. */}
-                <div className="flex flex-col gap-1.5">
-                  <span className="text-sm font-medium text-primary">
-                    <FormattedMessage {...BASIC_LABELS.attachments} />
-                  </span>
-                  <p className="flex items-center gap-1.5 rounded-button border border-border-default bg-control px-2 py-3 text-sm text-muted">
-                    <Paperclip aria-hidden="true" className="size-4 shrink-0" />
-                    <FormattedMessage
-                      id="portal.form.attachmentsPending"
-                      defaultMessage="You'll be able to attach files here."
-                    />
-                  </p>
-                </div>
+                {/* The third basic. Optional on every form (INT-002):
+                    a submission with no paper is a complete one. */}
+                <AttachmentsField files={files} onFiles={setFiles} />
+
                 <Field
                   htmlFor="request-urgency"
                   label={intl.formatMessage(BASIC_LABELS.urgency)}
@@ -476,6 +519,139 @@ function Field({
   );
 }
 
+/**
+ * The Attachments basic: I6's dropzone, the files it has been given, and
+ * a way to take one back.
+ *
+ * The input itself is out of the tab order and out of sight. A keyboard
+ * reaches the button beside it, and a second stop on an invisible input
+ * is a trap rather than an affordance — the documents composer's rule,
+ * applied to the one picker the portal draws. The label still points at
+ * the input, so clicking the word opens the picker.
+ *
+ * Nothing here is marked required and nothing here can refuse: the
+ * fourth basic is optional (INT-002), and any file type is accepted
+ * because the seam stores whatever a requester is asking Legal about.
+ */
+function AttachmentsField({
+  files,
+  onFiles,
+}: Readonly<{ files: readonly File[]; onFiles: (files: readonly File[]) => void }>) {
+  const intl = useIntl();
+  const picker = useRef<HTMLInputElement>(null);
+  const [over, setOver] = useState(false);
+  /** Set when a pick or a drop carried more than there was room for. */
+  const [overflowed, setOverflowed] = useState(false);
+
+  function add(chosen: readonly File[]) {
+    if (chosen.length === 0) return;
+    // The seam refuses a file past the bound, so the picker says so
+    // first: a requester who queued thirty files should not learn it
+    // ten refusals into a submission. What fits is kept.
+    const room = MAX_REQUEST_ATTACHMENTS - files.length;
+    setOverflowed(chosen.length > room);
+    if (room > 0) onFiles([...files, ...chosen.slice(0, room)]);
+  }
+
+  return (
+    <div className="flex flex-col gap-1.5">
+      <Label htmlFor="request-attachments">
+        <FormattedMessage {...BASIC_LABELS.attachments} />
+      </Label>
+      <div
+        className={`flex flex-col items-center justify-center gap-2 rounded-button border bg-control px-3 py-4 transition-colors duration-150 ${
+          over ? "border-link" : "border-border-default"
+        }`}
+        onDragOver={(event) => {
+          event.preventDefault();
+          setOver(true);
+        }}
+        onDragLeave={() => setOver(false)}
+        onDrop={(event) => {
+          event.preventDefault();
+          setOver(false);
+          add([...event.dataTransfer.files]);
+        }}
+      >
+        <input
+          ref={picker}
+          id="request-attachments"
+          type="file"
+          multiple
+          className="sr-only"
+          tabIndex={-1}
+          onChange={(event) => {
+            add([...(event.target.files ?? [])]);
+            // Cleared so picking the same file twice in a row still
+            // fires a change — the browser answers nothing otherwise,
+            // and a requester who removed a file by mistake could not
+            // put it back.
+            event.target.value = "";
+          }}
+        />
+        <Upload aria-hidden="true" className="size-4 shrink-0 text-muted" />
+        <p className="text-center text-sm text-muted">
+          <FormattedMessage
+            id="portal.form.attachmentsHint"
+            defaultMessage="Drop files here — the redline, the prior agreement, the term sheet. Up to {max} files."
+            values={{ max: MAX_REQUEST_ATTACHMENTS }}
+          />
+        </p>
+        <Button type="button" variant="secondary" size="sm" onClick={() => picker.current?.click()}>
+          <FormattedMessage id="portal.form.attachmentsBrowse" defaultMessage="Choose files" />
+        </Button>
+      </div>
+      {overflowed && (
+        <p role="alert" className="text-xs text-status-danger-fg">
+          <FormattedMessage
+            id="portal.form.attachmentsTooMany"
+            defaultMessage="A request carries at most {max} files."
+            values={{ max: MAX_REQUEST_ATTACHMENTS }}
+          />
+        </p>
+      )}
+      {files.length > 0 && (
+        <ul className="flex flex-col gap-1">
+          {files.map((file, index) => (
+            <li
+              // Two files may carry one name — a requester can pick the
+              // same paper from two folders — so the position in the
+              // list is what identifies a row here.
+              key={`${String(index)}-${file.name}`}
+              className="flex items-center gap-1.5 text-sm"
+            >
+              <FileText aria-hidden="true" className="size-4 shrink-0 text-muted" />
+              <span className="min-w-0 flex-1 truncate">{file.name}</span>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                title={intl.formatMessage(REMOVE_ATTACHMENT, { filename: file.name })}
+                onClick={() => {
+                  setOverflowed(false);
+                  onFiles(files.filter((_ignored, at) => at !== index));
+                }}
+              >
+                <X aria-hidden="true" className="size-4 shrink-0" />
+                <span className="sr-only">
+                  <FormattedMessage {...REMOVE_ATTACHMENT} values={{ filename: file.name }} />
+                </span>
+              </Button>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
+
+/** Said once: the row's accessible name and its tooltip are the same
+ * sentence, and two spellings would be two controls. */
+const REMOVE_ATTACHMENT = defineMessage({
+  id: "portal.form.attachmentRemove",
+  defaultMessage: "Remove {filename}",
+});
+
 /** One attached catalog field, drawn with the control its type asks
  * for. The `user` and `entity` types offer no rows here: a requester
  * reads neither the staff directory nor the Entity registry, so those
@@ -514,9 +690,17 @@ function AttachedField({
   );
 }
 
-/** What a submission earns: the R-### number, which is the handle a
- * requester refers to the ask by (INT-002). */
-function Confirmation({ number }: Readonly<{ number: number }>) {
+/**
+ * What a submission earns: the R-### number, which is the handle a
+ * requester refers to the ask by (INT-002).
+ *
+ * A file that did not attach is named here rather than swallowed. The
+ * Request landed and that is the first thing this says; the paper that
+ * did not follow it is the second, because a requester who thinks Legal
+ * is holding a document it never received is worse off than one who is
+ * told.
+ */
+function Confirmation({ number, uploading, unattached }: Readonly<Submitted>) {
   const intl = useIntl();
   const heading = useRef<HTMLHeadingElement>(null);
   // The form it replaced held the focus, and a region that appears
@@ -549,6 +733,53 @@ function Confirmation({ number }: Readonly<{ number: number }>) {
           values={{ reference: requestReference(intl, number) }}
         />
       </p>
+      {uploading && (
+        <p className="text-sm text-muted">
+          <FormattedMessage
+            id="portal.form.attachmentsUploading"
+            defaultMessage="Attaching your files…"
+          />
+        </p>
+      )}
+      {unattached.length > 0 && (
+        <div
+          role="alert"
+          className="flex items-start gap-2 rounded-card bg-status-warning-bg px-3 py-2.5 text-sm text-status-warning-fg"
+        >
+          <TriangleAlert aria-hidden="true" className="mt-px size-4 shrink-0" />
+          <div className="flex min-w-0 flex-col gap-1">
+            <p className="font-medium">
+              <FormattedMessage
+                id="portal.form.attachmentsFailed"
+                defaultMessage={
+                  "{count, plural, one {This file did not attach.} " +
+                  "other {These files did not attach.}} " +
+                  "Quote {reference} and send {count, plural, one {it} other {them}} " +
+                  "to Legal another way."
+                }
+                values={{ count: unattached.length, reference: requestReference(intl, number) }}
+              />
+            </p>
+            <ul className="flex flex-col gap-0.5">
+              {unattached.map((file, index) => (
+                // Two files may carry one name, as the picker records,
+                // so the position in the list identifies a row here.
+                <li key={`${String(index)}-${file.filename}`} className="break-words">
+                  {file.detail === undefined ? (
+                    file.filename
+                  ) : (
+                    <FormattedMessage
+                      id="portal.form.attachmentFailedReason"
+                      defaultMessage="{filename} — {reason}"
+                      values={{ filename: file.filename, reason: file.detail }}
+                    />
+                  )}
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      )}
       <Link
         to="/portal"
         className="w-fit text-base font-medium text-link underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-link"

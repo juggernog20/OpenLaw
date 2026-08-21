@@ -3,11 +3,23 @@
 /**
  * What the API accepts as an uploaded file, and how it hands one back.
  *
- * Two facts live here because two layers need them and neither owns the
- * other: the size ceiling, which the multipart parser enforces and the
- * error handler explains, and the `Content-Disposition` header, which
- * only the download route writes but which no route should get wrong.
+ * The facts here are the ones no single upload route owns: the size
+ * ceiling, which the multipart parser enforces and the error handler
+ * explains; the filename bound; the parser's own rejections turned into
+ * copy a person can act on; and the `Content-Disposition` header, which
+ * only the download routes write but which none of them should get
+ * wrong.
+ *
+ * **Two routes take uploads and both read these rules from here.** A
+ * document version is one (M11/2, DOC-001) and a Request's attachment is
+ * the other (M20/6, INT-002). What differs between them is what is
+ * stored beside the bytes, not what the API accepts — so a person told
+ * a 300-character name is too long on a contract must be told the same
+ * thing on the portal.
  */
+
+import type { StorageAdapter } from "./storage/adapter.js";
+import { httpError, type HttpError } from "./problem.js";
 
 /** Bytes in one mebibyte — the unit `MAX_UPLOAD_MB` is stated in. */
 export const MEGABYTE = 1024 * 1024;
@@ -39,6 +51,111 @@ export function maxUploadBytes(value: string | undefined): number {
     megabytes > 0 &&
     megabytes * MEGABYTE <= Number.MAX_SAFE_INTEGER;
   return (usable ? megabytes : DEFAULT_MAX_UPLOAD_MB) * MEGABYTE;
+}
+
+/** The longest filename the common filesystems carry. */
+export const MAX_FILENAME_LENGTH = 255;
+
+/**
+ * The refusal an upload over the ceiling earns, with the ceiling named.
+ *
+ * Named rather than left as a mystery timeout: an uploader who is over
+ * the limit can act on a number and cannot act on a stall.
+ */
+export function refuseOversize(ceiling: number): HttpError {
+  const limitMb = Math.round(ceiling / MEGABYTE);
+  return httpError(
+    413,
+    limitMb >= 1
+      ? `That file is over the ${limitMb} MB upload limit.`
+      : `That file is over the ${ceiling} byte upload limit.`,
+  );
+}
+
+/**
+ * The multipart parser's own rejections, turned into copy a person can
+ * act on. Anything else is passed through as it came.
+ */
+export function asUploadRefusal(error: unknown, ceiling: number): unknown {
+  switch (errorCode(error)) {
+    case "FST_REQ_FILE_TOO_LARGE":
+      return refuseOversize(ceiling);
+    case "FST_FILES_LIMIT":
+      return httpError(413, "Upload one file at a time.");
+    case "FST_FIELDS_LIMIT":
+    case "FST_PARTS_LIMIT":
+      return httpError(413, "That upload carries more form fields than this endpoint accepts.");
+    case "FST_INVALID_MULTIPART_CONTENT_TYPE":
+      return httpError(415, "Send the file as multipart/form-data.");
+    case "FST_MP_PREMATURE_CLOSE":
+      return httpError(400, "The upload ended before the file was complete. Try again.");
+    default:
+      return error;
+  }
+}
+
+/**
+ * The name an uploaded part arrived under, checked and trimmed.
+ *
+ * A part with no `filename` at all is still a file part when it declares
+ * `application/octet-stream`, so the name is treated as absent rather
+ * than assumed present. A name over the bound is refused rather than
+ * shortened: cutting the end off a filename takes its extension with it,
+ * which is the part a later download reads.
+ */
+export function uploadFilename(raw: string | undefined): string {
+  const filename = (raw ?? "").trim();
+  if (filename.length === 0) throw httpError(400, "The uploaded file has no name.");
+  if (filename.length > MAX_FILENAME_LENGTH) {
+    throw httpError(
+      400,
+      `Rename the file to ${MAX_FILENAME_LENGTH} characters or fewer before uploading it.`,
+    );
+  }
+  return filename;
+}
+
+/** Somewhere to say that a blob could not be cleaned up — the pipeline's
+ * own logger shape, so a route's Fastify log fits without an adapter. */
+export interface CleanupLogger {
+  warn(fields: Record<string, unknown>, message: string): void;
+}
+
+/**
+ * Runs the write that follows a stored upload, and takes the blob away
+ * if it does not commit (DOC-012).
+ *
+ * The bytes reach the driver before the rows exist, so every refusal
+ * after that point leaves a blob nothing points at. A failed cleanup is
+ * logged and swallowed: the caller is owed the reason their upload was
+ * refused, and a cleanup that itself failed is an operational fact
+ * rather than an answer to them. The key is never written again — a
+ * retry mints its own.
+ */
+export async function withStoredBlob<T>(
+  storage: Pick<StorageAdapter, "delete">,
+  log: CleanupLogger,
+  fileRef: string,
+  write: () => Promise<T>,
+): Promise<T> {
+  try {
+    return await write();
+  } catch (error) {
+    await storage.delete(fileRef).catch((cleanup: unknown) => {
+      log.warn(
+        { err: cleanup, fileRef },
+        "could not remove the blob of an upload that did not commit",
+      );
+    });
+    throw error;
+  }
+}
+
+/** The error code a Fastify plugin puts on its own rejections. */
+function errorCode(error: unknown): string | undefined {
+  return typeof error === "object" && error !== null && "code" in error
+    ? String((error as { code: unknown }).code)
+    : undefined;
 }
 
 /**

@@ -2420,11 +2420,29 @@
   "portal.entry.title": {
     "defaultMessage": "Legal request portal"
   },
+  "portal.form.attachmentFailedReason": {
+    "defaultMessage": "{filename} — {reason}"
+  },
+  "portal.form.attachmentRemove": {
+    "defaultMessage": "Remove {filename}"
+  },
   "portal.form.attachments": {
     "defaultMessage": "Attachments"
   },
-  "portal.form.attachmentsPending": {
-    "defaultMessage": "You'll be able to attach files here."
+  "portal.form.attachmentsBrowse": {
+    "defaultMessage": "Choose files"
+  },
+  "portal.form.attachmentsFailed": {
+    "defaultMessage": "{count, plural, one {This file did not attach.} other {These files did not attach.}} Quote {reference} and send {count, plural, one {it} other {them}} to Legal another way."
+  },
+  "portal.form.attachmentsHint": {
+    "defaultMessage": "Drop files here — the redline, the prior agreement, the term sheet. Up to {max} files."
+  },
+  "portal.form.attachmentsTooMany": {
+    "defaultMessage": "A request carries at most {max} files."
+  },
+  "portal.form.attachmentsUploading": {
+    "defaultMessage": "Attaching your files…"
   },
   "portal.form.back": {
     "defaultMessage": "All request types"

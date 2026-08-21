@@ -13,7 +13,12 @@
 
 import { describe, expect, it } from "vitest";
 import { screen, within } from "@testing-library/react";
-import type { MyRequestField, MyRequestFieldRefs, RequestStatus } from "../lib/requests";
+import type {
+  MyRequestAttachment,
+  MyRequestField,
+  MyRequestFieldRefs,
+  RequestStatus,
+} from "../lib/requests";
 import { json, problem, renderAt, stubApi, type StubCall } from "../testing/helpers";
 
 const REQUESTER = {
@@ -57,6 +62,7 @@ function detail(
     customFields?: Record<string, unknown>;
     fields?: MyRequestField[];
     customFieldRefs?: MyRequestFieldRefs;
+    attachments?: MyRequestAttachment[];
   } = {},
 ) {
   return {
@@ -77,6 +83,9 @@ function detail(
     },
     fields: overrides.fields ?? [field({ slug: "counterparty", displayName: "Counterparty" })],
     customFieldRefs: overrides.customFieldRefs ?? { users: [], entities: [] },
+    // No paper by default: attachments are optional (INT-002), and the
+    // suites that are not about them need none.
+    attachments: overrides.attachments ?? [],
   };
 }
 
@@ -278,6 +287,59 @@ describe("what the requester submitted", () => {
     expect(within(card).getByText("Dana Okafor")).toBeInTheDocument();
     expect(within(card).getByText("Acme Holdings LLC")).toBeInTheDocument();
     expect(within(card).queryByText("u4")).not.toBeInTheDocument();
+  });
+
+  it("lists the paper, each name the link that downloads it", async () => {
+    stubApi({
+      signedIn: REQUESTER,
+      extra: detailRead(
+        detail({
+          attachments: [
+            {
+              id: "att1",
+              filename: "orion-msa-redline-v3.docx",
+              createdAt: "2026-08-06T09:14:00.000Z",
+            },
+            {
+              id: "att2",
+              filename: "orion-pricing-schedule.pdf",
+              createdAt: "2026-08-06T09:15:00.000Z",
+            },
+          ],
+        }),
+      ),
+    });
+    renderAt("/portal/requests/45");
+
+    const card = await screen.findByRole("region", { name: "What you submitted" });
+    const labels = within(card)
+      .getAllByRole("term")
+      .map((term) => term.textContent);
+    // The basics in INT-002's order, with the paper between the
+    // Description and the Urgency.
+    expect(labels).toEqual(["Description", "Attachments", "Urgency", "Counterparty"]);
+
+    // Same-origin and behind the session: the bytes come through the
+    // API, and there is no presigned URL anywhere on this page.
+    expect(within(card).getByRole("link", { name: "orion-msa-redline-v3.docx" })).toHaveAttribute(
+      "href",
+      "/api/v1/portal/requests/45/attachments/att1",
+    );
+    expect(within(card).getByRole("link", { name: "orion-pricing-schedule.pdf" })).toHaveAttribute(
+      "href",
+      "/api/v1/portal/requests/45/attachments/att2",
+    );
+  });
+
+  it("draws no Attachments row when the ask carried no paper", async () => {
+    // Attachments are optional (INT-002), so the row follows the card's
+    // own rule: it says what was submitted, and a row of dashes says
+    // what was not.
+    stubApi({ signedIn: REQUESTER, extra: detailRead(detail({ attachments: [] })) });
+    renderAt("/portal/requests/45");
+
+    const card = await screen.findByRole("region", { name: "What you submitted" });
+    expect(within(card).queryByText("Attachments")).not.toBeInTheDocument();
   });
 
   it("draws no conversation yet", async () => {

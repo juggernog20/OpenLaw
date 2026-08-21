@@ -48,8 +48,25 @@
  *    (INT-002). One refusal names all of them, because a person who
  *    has to fill something in needs to know which something.
  *
- * Attachments, the fourth basic, are ticket 6's; nothing here reads or
- * writes `request_attachments`.
+ * ## The paper that travels with the ask (#380)
+ *
+ * Attachments are the fourth basic, and they are optional: a submission
+ * with none is complete. `POST /requests/{number}/attachments` takes one
+ * file per call through the storage seam documents already upload
+ * through, and writes a `request_attachments` row. **Nothing enters
+ * `documents`** — a Request is not a document owner (DOC-008), and
+ * promotion into the record a Request becomes is conversion's job (M21).
+ *
+ * **The upload is a write on the Request, so it sits at `/requests` like
+ * the submission it belongs to.** The reads split by audience — the
+ * requester's own download is on the portal mount beside the detail that
+ * lists it — because a read's projection is what differs between a
+ * requester and M21's Inbox. A write of the record does not differ; it
+ * is the same act whoever makes it.
+ *
+ * A Request the caller did not submit answers 404 on both, exactly as
+ * the detail read does: to a requester another person's Request does not
+ * exist, and neither does its paper.
  *
  * ## The requester's reads (#379)
  *
@@ -81,15 +98,20 @@
  */
 
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
+import type { FastifyRequest } from "fastify";
 import { z } from "zod";
+import { uuidv7 } from "uuidv7";
 import {
   and,
+  asc,
+  count,
   desc,
   entities,
   eq,
   inArray,
   isNull,
   REQUEST_STATUSES,
+  requestAttachments,
   requestTypeFields,
   requestTypes,
   requests,
@@ -100,6 +122,13 @@ import {
   type Transaction,
 } from "@openlaw/db";
 import { requireAuth } from "../../auth/guards.js";
+import {
+  asUploadRefusal,
+  attachmentDisposition,
+  refuseOversize,
+  uploadFilename,
+  withStoredBlob,
+} from "../../lib/uploads.js";
 import { recordActivity, RECORD_ACTIVITY_TIER } from "../../lib/activity.js";
 import {
   AttachedCustomFieldSchema,
@@ -162,6 +191,18 @@ const MyRequestRowSchema = z.object({
 const RequestCustomFieldRefsSchema = z.object({
   users: z.array(z.object({ id: z.string(), displayName: z.string() })),
   entities: z.array(z.object({ id: z.string(), legalName: z.string() })),
+});
+
+/** One attachment, as both the upload and the detail answer it.
+ *
+ * The stored reference is not on the wire: it names a driver and a key,
+ * which is where the bytes live rather than anything a requester can
+ * do. The id addresses the download and the filename is what a person
+ * recognises. */
+const RequestAttachmentSchema = z.object({
+  id: z.string(),
+  filename: z.string(),
+  createdAt: z.string(),
 });
 
 /** The Request detail's envelope: the I7 head block, the "What you
@@ -376,11 +417,11 @@ export const requestsRoutes: FastifyPluginAsyncZod = async (app) => {
         summary:
           "One of the session user's own Requests by its R-### number " +
           "(DD-013): the envelope, the values the form collected with " +
-          "the fields that name them, and the decline reason when it " +
-          "was declined (INT-006). Another requester's Request answers " +
-          "404",
+          "the fields that name them, the files that travelled with " +
+          "the ask, and the decline reason when it was declined " +
+          "(INT-006). Another requester's Request answers 404",
         tags: ["requests"],
-        params: z.object({ number: z.coerce.number().int().positive() }),
+        params: NumberParams,
         response: {
           200: z.object({
             request: MyRequestSchema,
@@ -394,6 +435,11 @@ export const requestsRoutes: FastifyPluginAsyncZod = async (app) => {
              * that question for every record surface. */
             fields: z.array(AttachedCustomFieldSchema),
             customFieldRefs: RequestCustomFieldRefsSchema,
+            /** The paper, oldest first — the order it was attached in,
+             * which is the order the requester picked the files in.
+             * Empty is an answer: a Request with no attachments is a
+             * complete one (INT-002). */
+            attachments: z.array(RequestAttachmentSchema),
           }),
           default: problemResponse,
         },
@@ -430,7 +476,10 @@ export const requestsRoutes: FastifyPluginAsyncZod = async (app) => {
         .limit(1);
       if (!row) throw httpError(404, NO_REQUEST);
 
-      const attached = await selectAttachedFields(app.db, requestTypeFields, row.typeId);
+      const [attached, attachments] = await Promise.all([
+        selectAttachedFields(app.db, requestTypeFields, row.typeId),
+        selectAttachments(app.db, row.id),
+      ]);
       return {
         request: {
           ...toRow(row),
@@ -441,10 +490,294 @@ export const requestsRoutes: FastifyPluginAsyncZod = async (app) => {
         },
         fields: attached,
         customFieldRefs: await resolveRefs(app.db, attached, row.customFields),
+        attachments,
       };
     },
   );
+
+  app.post(
+    "/requests/:number/attachments",
+    {
+      preHandler: requireAuth,
+      schema: {
+        operationId: "attachToRequest",
+        summary:
+          "Attach one file to the caller's own Request (INT-002). The " +
+          "bytes ride the storage seam documents upload through and the " +
+          "row is a `request_attachments` row — nothing enters " +
+          "`documents`, because a Request is not a document owner " +
+          "(DOC-008) and promotion is conversion's (M21). One file per " +
+          "call, sent as multipart/form-data under `file`. A Request " +
+          "the caller did not submit answers 404, and a file past the " +
+          `${MAX_REQUEST_ATTACHMENTS}-attachment bound is refused`,
+        tags: ["requests"],
+        consumes: ["multipart/form-data"],
+        params: NumberParams,
+        body: AttachmentUploadForm,
+        response: {
+          201: z.object({ attachment: RequestAttachmentSchema }),
+          default: problemResponse,
+        },
+      },
+    },
+    async (request, reply) => {
+      // Asked before a single byte is read: storing a file for somebody
+      // who may not put one there is the thing this order avoids. It is
+      // asked again below, under the row lock the insert runs in.
+      await reachedRequest(app.db, request.user.id, request.params.number);
+
+      // Minted here, because the storage key is built from it and the
+      // blob is written before the row exists (DOC-012). The key is
+      // made of ids and never of the filename, so no name a person
+      // chose can shape where the bytes live.
+      const attachmentId = uuidv7();
+      const file = await receiveAttachment(request, attachmentStorageKey(attachmentId));
+
+      // The blob is written before the row (DOC-012), so a transaction
+      // that refuses leaves it behind. The shared wrapper takes it away
+      // and rethrows the refusal untouched — what the caller is owed is
+      // the reason, not the cleanup.
+      const created = await withStoredBlob(app.storage, request.log, file.fileRef, () =>
+        app.db.transaction(async (tx) => {
+          // The Request is held for the write, and reach is asked again
+          // on the same snapshot. Locked for the count's sake as much
+          // as reach's: without it two uploads racing on the last free
+          // slot both read the same count and both insert.
+          const held = await reachedRequest(tx, request.user.id, request.params.number, {
+            lock: true,
+          });
+          const [existing] = await tx
+            .select({ attachments: count() })
+            .from(requestAttachments)
+            .where(eq(requestAttachments.requestId, held.id));
+          if ((existing?.attachments ?? 0) >= MAX_REQUEST_ATTACHMENTS) {
+            throw httpError(
+              409,
+              `A request carries at most ${MAX_REQUEST_ATTACHMENTS} attachments.`,
+            );
+          }
+          const [row] = await tx
+            .insert(requestAttachments)
+            .values({
+              id: attachmentId,
+              requestId: held.id,
+              fileRef: file.fileRef,
+              filename: file.filename,
+              uploadedBy: request.user.id,
+            })
+            .returning();
+          return row!;
+        }),
+      );
+
+      reply.code(201);
+      return { attachment: toAttachment(created) };
+    },
+  );
+
+  app.get(
+    "/portal/requests/:number/attachments/:attachmentId",
+    {
+      preHandler: requireAuth,
+      schema: {
+        operationId: "downloadMyRequestAttachment",
+        summary:
+          "Stream one attachment on the caller's own Request back, as a " +
+          "download (DD-013). The bytes come through the API behind the " +
+          "session; there are no presigned URLs. The type is always " +
+          "`application/octet-stream`: a Request's attachment stores no " +
+          "declared type, and a download never echoes one a client sent. " +
+          "Another requester's Request — and an attachment on another " +
+          "Request — answers 404",
+        tags: ["requests"],
+        produces: ["application/octet-stream"],
+        params: NumberParams.extend({ attachmentId: z.string() }),
+        response: { 200: DownloadSchema, default: problemResponse },
+      },
+    },
+    async (request, reply) => {
+      const held = await reachedRequest(app.db, request.user.id, request.params.number);
+      const [row] = await app.db
+        .select({ fileRef: requestAttachments.fileRef, filename: requestAttachments.filename })
+        .from(requestAttachments)
+        .where(
+          and(
+            eq(requestAttachments.id, request.params.attachmentId),
+            // Part of the lookup rather than a check after it: an
+            // attachment id from another Request is a miss, not a row
+            // that was read and then refused.
+            eq(requestAttachments.requestId, held.id),
+          ),
+        )
+        .limit(1);
+      if (!row) throw httpError(404, NO_ATTACHMENT);
+
+      const body = await app.storage.get(row.fileRef);
+      return (
+        reply
+          // Never a type a client declared: the table stores none, on
+          // purpose, and an email attachment's download already answers
+          // the widest thing that is always true (DOC-004).
+          .header("content-type", "application/octet-stream")
+          .header("content-disposition", attachmentDisposition(row.filename))
+          .header("x-content-type-options", "nosniff")
+          // A stored blob never changes (DOC-012), but who may read it
+          // does, so this is private to the browser that asked.
+          .header("cache-control", "private, max-age=0, must-revalidate")
+          .send(body)
+      );
+    },
+  );
+
+  /**
+   * One Request the caller submitted, or the one refusal (DD-013).
+   *
+   * The scoping is part of the lookup, as it is on the detail read, so
+   * there is no branch where the row was read and then refused. `lock`
+   * holds the row for a write: an upload counts what is already attached
+   * and then inserts, and two uploads racing on the last free slot must
+   * not both read the same count.
+   */
+  async function reachedRequest(
+    db: Executor,
+    userId: string,
+    number: number,
+    options: { lock?: boolean } = {},
+  ): Promise<{ id: string }> {
+    const query = db
+      .select({ id: requests.id })
+      .from(requests)
+      .where(
+        and(
+          eq(requests.number, number),
+          eq(requests.requesterId, userId),
+          isNull(requests.archivedAt),
+        ),
+      )
+      .limit(1);
+    const [row] = await (options.lock ? query.for("update") : query);
+    if (!row) throw httpError(404, NO_REQUEST);
+    return row;
+  }
+
+  /**
+   * Takes one file off a multipart upload and stores its bytes through
+   * the adapter.
+   *
+   * Streamed straight through: never buffered whole in memory and never
+   * staged on disk. Nothing is derived from the bytes on the way past —
+   * an attachment stores no size, no checksum, and no declared type
+   * (INT-002's "lightweight"), and a conversion that needs any of them
+   * reads them off the blob.
+   */
+  async function receiveAttachment(
+    request: FastifyRequest,
+    key: string,
+  ): Promise<{ filename: string; fileRef: string }> {
+    const part = await request.file().catch((error: unknown) => {
+      throw asUploadRefusal(error, app.maxUploadBytes);
+    });
+    if (!part) throw httpError(400, "Attach a file to upload.");
+    const filename = uploadFilename(part.filename);
+
+    let fileRef: string;
+    try {
+      // The parser's own stream, straight to the driver: nothing here
+      // reads the bytes on the way past, so there is nothing to wrap
+      // them in.
+      fileRef = await app.storage.put(key, part.file);
+    } catch (error) {
+      throw asUploadRefusal(error, app.maxUploadBytes);
+    }
+    // The ceiling, enforced. The parser stops the stream at the limit
+    // and marks it truncated rather than throwing at whoever is reading
+    // it, so what reached the driver is the first N bytes of a longer
+    // file — a silent corruption if it were kept. This is the one case
+    // where the writer knows the blob is worthless, so it is removed
+    // here rather than left as an orphan.
+    if (part.file.truncated) {
+      await app.storage.delete(fileRef).catch((error: unknown) => {
+        request.log.warn({ err: error, fileRef }, "could not remove a truncated upload");
+      });
+      throw refuseOversize(app.maxUploadBytes);
+    }
+    return { filename, fileRef };
+  }
 };
+
+/**
+ * How many files one ask may carry.
+ *
+ * A bound rather than none, because the portal is open to every Business
+ * User and an unbounded upload address is unbounded disk. It is generous
+ * for what INT-002 calls lightweight — a redline, the prior agreement, a
+ * term sheet, and room to spare — and a Request that needs more paper
+ * than this is a matter or a contract, which is what conversion makes it
+ * (M21).
+ */
+const MAX_REQUEST_ATTACHMENTS = 20;
+
+/** Where one attachment's blob lives (DOC-012): minted from its id,
+ * never from a filename, so no name a person chose can shape a storage
+ * key. */
+function attachmentStorageKey(attachmentId: string): string {
+  return `request-attachments/${attachmentId}`;
+}
+
+/** The R-### a Request is addressed by, on every route that takes one. */
+const NumberParams = z.object({ number: z.coerce.number().int().positive() });
+
+/** A stored blob, as the download route needs it described. */
+const DownloadSchema = z.any().meta({ type: "string", format: "binary" });
+
+/**
+ * What an attachment upload carries, described for the OpenAPI document
+ * only.
+ *
+ * The parser hands the request over as a stream rather than as a parsed
+ * body, so there is nothing for a validator to run against here and the
+ * schema accepts anything. The file part is checked as it arrives, which
+ * is the only way to refuse an oversized file without first storing it.
+ */
+const AttachmentUploadForm = z.any().meta({
+  type: "object",
+  properties: {
+    file: {
+      type: "string",
+      format: "binary",
+      description:
+        "The file itself. Any type is accepted; a Request's attachment " +
+        "stores no declared type and its download never echoes one.",
+    },
+  },
+  required: ["file"],
+});
+
+/** Every attachment on one Request, oldest first. */
+async function selectAttachments(db: Executor, requestId: string) {
+  const rows = await db
+    .select({
+      id: requestAttachments.id,
+      filename: requestAttachments.filename,
+      createdAt: requestAttachments.createdAt,
+    })
+    .from(requestAttachments)
+    .where(eq(requestAttachments.requestId, requestId))
+    .orderBy(asc(requestAttachments.createdAt), asc(requestAttachments.id));
+  return rows.map(toAttachment);
+}
+
+/** The stored row, as the wire answers it. */
+function toAttachment(row: { id: string; filename: string; createdAt: Date }) {
+  return { id: row.id, filename: row.filename, createdAt: row.createdAt.toISOString() };
+}
+
+/**
+ * One refusal for both misses on an attachment. An id nobody has and an
+ * id on another Request read the same, for the reason {@link NO_REQUEST}
+ * reads the same for two numbers.
+ */
+const NO_ATTACHMENT = "No attachment exists with this reference.";
 
 /**
  * One refusal for both misses. A number nobody has and a number
