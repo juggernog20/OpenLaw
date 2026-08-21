@@ -16,11 +16,17 @@ export type {
   ActivityAction,
   ActivityPayloadMap,
   ChangedFields,
-  EmptyActivityPayload,
-  FieldChangePayload,
   TaxonomyActionPrefix,
   TypeFieldActionPrefix,
 } from "./activity.js";
+// `EmptyActivityPayload` and `FieldChangePayload` are deliberately not
+// re-exported. They are how `ActivityPayloadMap` is written — the shapes
+// a slug's entry resolves to — and a consumer reaches them by indexing
+// the map (`ActivityPayloadMap["user.theme_changed"]`), which is the
+// read that stays right when a slug's payload changes shape. Exporting
+// them by name invites a narrator to annotate against the shape instead
+// of against the slug, and that annotation keeps compiling after the two
+// have parted company.
 
 /**
  * The RFC 9457 problem type CTR-012's soft gate refuses with (TECH-020).
@@ -83,13 +89,19 @@ export type ContractStage = (typeof CONTRACT_STAGES)[number];
 export const MAX_APPROVAL_NOTE_LENGTH = 1000;
 
 /**
- * The two refusals a send branches on (CTR-013, TECH-020's pattern).
+ * The two refusals a send may answer with (CTR-013, TECH-020's pattern).
  *
- * They are here for `SOFT_GATE_PROBLEM_TYPE`'s reason: both ends of the
- * wire have to say the same string. The API throws them, and the record
- * uses them to decide whether the send control belongs on the card at
- * all — so a drifted copy would not fail loudly, it would simply draw a
- * control the seam then refuses.
+ * They are staged here for `SOFT_GATE_PROBLEM_TYPE`'s reason: both ends
+ * of the wire have to say the same string, so the string is declared
+ * once rather than copied to whichever side branches on it next. **Today
+ * only the API side reads them** — it throws them and names them in the
+ * route's OpenAPI examples. No web surface branches on either one yet;
+ * the send control is drawn from the record's own state.
+ *
+ * The moment a surface wants to draw the send control from what the seam
+ * would refuse, it imports these rather than typing the strings again. A
+ * drifted copy would not fail loudly — it would simply draw a control
+ * the seam then refuses.
  *
  * A client must never tell these apart by reading `detail`. That is
  * copy, and copy is rewritten.
@@ -108,12 +120,14 @@ export const ENVELOPE_LIVE_PROBLEM_TYPE = "urn:openlaw:problem:envelope-live";
  * refusals name themselves for `SOFT_GATE_PROBLEM_TYPE`'s reason —
  * both ends of the wire have to say the same string.
  *
- * A client reads them to know that the term *type* and the value
+ * A client that reads them knows the term *type* and the value
  * disagree, which is a different repair from every other 400 the same
  * PATCH can give: either the type changes or the value is dropped, and
- * only the client knows which of the two the person meant. The record
- * uses the same rule to decide which of the term controls it draws at
- * all, so it meets these refusals only when the record moved under it.
+ * only the client knows which of the two the person meant. **No client
+ * reads them today** — the record draws its term controls from the saved
+ * type, so it meets these refusals only when the record moved under it,
+ * and it renders that as the generic error. They are staged for the
+ * surface that wants to tell the two repairs apart.
  *
  * A client must never tell these apart by reading `detail`. That is
  * copy, and copy is rewritten.
@@ -291,8 +305,17 @@ export const MAX_LIST_VIEWS_PER_SURFACE = 25;
  *   are attached per type, so a sort over one of them orders a column
  *   most rows do not have.
  *
- * Shared because the web app's column catalogue marks a column sortable
- * by naming its key here, and the seam refuses a key it does not know.
+ * **Staged here rather than shared today.** The seam is the only reader:
+ * `GET /contracts` builds its `sort` enum from this list and refuses a
+ * key it does not know. The web app's column catalogue does mark a
+ * column sortable by naming a sort key — but it writes those keys as
+ * bare string literals against a `sortKey?: string` field, so nothing
+ * ties the two lists together and a key dropped from here would not
+ * break the build. It lives in `packages/shared` because that is where
+ * the wire vocabulary belongs and because typing the catalogue's
+ * `sortKey` as `ContractSortKey` is the one-line change that would make
+ * the tie real. Until somebody makes it, this is one list with one
+ * reader.
  */
 export const CONTRACT_SORT_KEYS = [
   "number",
