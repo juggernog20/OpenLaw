@@ -69,6 +69,16 @@ export default tseslint.config(
   // `@openlaw/api/auth`. A `import type` is erased before the bundler
   // sees it, so it costs nothing at runtime. `allowTypeImports` is what
   // says that out loud: drop the `type` keyword and the rule fires.
+  //
+  // How the two patterns divide the work: a type-only import of
+  // `@openlaw/api/auth` is let through because one matching pattern
+  // allows type imports, and that clearance holds against every
+  // pattern. A *value* import of it is reported by both — the boundary
+  // message and the type-only one. The first group carries no
+  // `!@openlaw/api/auth` exclusion because it would be dead: the
+  // gitignore semantics these groups use cannot re-include a path
+  // under an excluded parent, and `@openlaw/**` excludes
+  // `@openlaw/api` whole.
   {
     files: ["apps/web/**/*.{ts,tsx}"],
     rules: {
@@ -77,12 +87,7 @@ export default tseslint.config(
         {
           patterns: [
             {
-              group: [
-                "@openlaw/**",
-                "!@openlaw/api-client",
-                "!@openlaw/shared",
-                "!@openlaw/api/auth",
-              ],
+              group: ["@openlaw/**", "!@openlaw/api-client", "!@openlaw/shared"],
               message:
                 "The web app reaches the server through @openlaw/api-client and @openlaw/shared only. Server packages must never enter the browser bundle.",
             },
