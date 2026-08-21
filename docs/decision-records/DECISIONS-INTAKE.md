@@ -204,6 +204,22 @@ The decision above calls request attachments lightweight uploads, promoted into 
 - **Alternatives considered** — Throttled poke (recommended, declined).
 - **Consequences** — Notifications feature DD (still unopened) covers delivery mechanics. Nothing schema-side.
 
+### Addendum (2026-08-21, M20/8, [#382](https://github.com/juggernog20/OpenLaw/issues/382)) — what actually reaches a requester, and when
+
+The decision above promised notifications instead of a poke button and left the mechanics to the notifications record. NOT-002's M20/8 addendum has them. These are the intake-side facts.
+
+**The four events are the four this decision named**, and they are one Notifier method each: the Request was created, its status moved, somebody replied on its thread, and it was declined with a reason. **Two of them fire in M20** — submission raises the receipt, and a Full Thread reply raises the thread reply — and the other two exist with no caller until M21's disposition routes.
+
+**The receipt is the deliberate exception to "never tell somebody about their own act".** Its audience is the requester who just pressed Submit, because that is what a receipt is (INT-001). No other requester event has that shape.
+
+**Legal's internal rooms stay internal.** A reply raises something at the requester only at Full Thread; a Legal Only or Working Team comment raises nothing at all (DD-016). The requester's own reply raises nothing either, so a thread nobody has answered leaves their bell exactly as it was.
+
+**A decline carries its reason into the email, and the status change does not carry the decline.** INT-006 makes "no" arrive with a why, so the two are different messages and only one of them is sent for a declined Request. This is the one place the platform puts somebody's prose in an email — the reason was written to be read by this person, and unlike a comment it is not something a redact could ever have to reach.
+
+**Every message links to the Request in the portal**, and the link works whether or not the reader still has a session: signed out it lands on the entry screen that sends a fresh link (the INT-001 M20/2 addendum), signed in it lands on the Request. The link is not carried through redemption — landing is by role (M20/2) — so a redeemed link puts the requester in the portal with their own list one click from the Request.
+
+**Group 5 defaults are bell on and email immediate**, and an unexpressed preference takes the default. It is the one group whose email is on by default, and INT-003 is why: a requester does not live in the app, so email is the channel that keeps the promise this decision made when it declined the poke button.
+
 ## INT-004 — Deflection links panel in v1; conditional form logic stays deferred
 
 - **Status** — Accepted
@@ -284,7 +300,7 @@ M19/6 built the configuration; M20/3 built the panel a requester sees. Three thi
 | ------- | ---------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | INT-001 | Intake model: JSM-style structured forms + portal; email notifications only  | Accepted; lifecycle revised by INT-007; landing and dead-link mechanics added by M20/2 addendum; requester-facing reads added by M20/3 addendum; my-requests and the request detail added by M20/5 addendum; the request thread added by M20/7 addendum |
 | INT-002 | Request types mapped to target types; forms reuse the fields catalog         | Accepted; three-state target added by M19/4 addendum; out-of-scope attachment recorded by M19/7 addendum; submission added by M20/4 addendum; request attachments added by M20/6 addendum                                                               |
-| INT-003 | Requester updates: email notifications only; no status-poke button           | Accepted                                                                                                                                                                                                                                                |
+| INT-003 | Requester updates: email notifications only; no status-poke button           | Accepted; what fires and what it says added by M20/8 addendum                                                                                                                                                                                           |
 | INT-004 | Deflection links panel in v1; conditional form logic stays deferred          | Accepted; delete behavior and URL rule added by M19/6 addendum; portal rendering added by M20/3 addendum                                                                                                                                                |
 | INT-005 | No auto-classification: the form is the classification                       | Accepted                                                                                                                                                                                                                                                |
 | INT-006 | Triage: one Inbox, pickup assignment, four actions, lossless re-convert      | Accepted; revised by INT-007                                                                                                                                                                                                                            |

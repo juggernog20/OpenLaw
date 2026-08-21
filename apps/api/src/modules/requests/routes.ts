@@ -244,7 +244,11 @@ export const requestsRoutes: FastifyPluginAsyncZod = async (app) => {
     },
     async (request, reply) => {
       const body = request.body;
-      const created = await app.db.transaction(async (tx) => {
+      // The seam's transaction rather than the database's: the receipt
+      // is written inside the same commit as the Request it is about
+      // (NOT-001), so a submission that rolls back leaves no receipt for
+      // an ask nobody made — and the email leaves only after it commits.
+      const created = await app.notifier.notifying(async (tx) => {
         // Locked for the reason the contract create locks its type: an
         // unlocked read lets a concurrent archive commit between the
         // check and the insert, and the Request is then born on a form
@@ -333,6 +337,17 @@ export const requestsRoutes: FastifyPluginAsyncZod = async (app) => {
             urgency: row!.urgency,
             customFields: Object.keys(customFields).sort((a, b) => a.localeCompare(b)),
           },
+        });
+        // The receipt (INT-001, NOT-002 group 5), and the one event in
+        // the catalog addressed to the person who caused it: proof that
+        // an ask arrived is the whole content of the message, and a
+        // receipt addressed to nobody is not a receipt. The exception
+        // lives behind the seam — this route names what happened and
+        // nothing else.
+        await app.notifier.requestCreated(tx, {
+          requestId: row!.id,
+          actorId: request.user.id,
+          actorName: request.user.displayName,
         });
         return row!;
       });

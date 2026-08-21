@@ -12,11 +12,11 @@
  * an event added without this table would be a second copy of the
  * decision.
  *
- * **Groups 4 and 5 are slots.** `new_requests` waits for the Inbox
- * (M21) and `requester_events` for the portal (M20), so neither names
- * an event yet. The group value ships anyway, because
+ * **Group 4 is a slot.** `new_requests` waits for the Inbox (M21), so it
+ * names no event yet. The group value ships anyway, because
  * `notification_preferences` keys on it and a person may express an
- * opinion about a group before anything in it has fired.
+ * opinion about a group before anything in it has fired. Group 5 was a
+ * slot on the same terms until M20/8 named its four events.
  *
  * **Defaults follow interruptiveness** (NOT-002). Things done *to* you
  * interrupt; ambient activity does not; and every one of them is the
@@ -81,8 +81,15 @@ export const EVENT_GROUP_POLICY: Record<NotificationEventGroup, EventGroupPolicy
   /** Group 4 — Inbox arrivals: the queue is already the surface, so the
    * mail is opt-in. Nothing fires it until M21. */
   new_requests: { inApp: true, email: false, emailTiming: "none" },
-  /** Group 5 — the portal audience's own events. Nothing fires it until
-   * M20. */
+  /**
+   * Group 5 — the portal audience's own events (INT-001/003).
+   *
+   * The one group whose email is on by default and interrupts. A
+   * Requester does not live in the app: the portal is a place they come
+   * back to, and NOT-001 made email the reach-out channel precisely so
+   * that they never have to poll (INT-003 declined the status-poke
+   * button on that promise).
+   */
   requester_events: { inApp: true, email: true, emailTiming: "immediate" },
 };
 
@@ -112,6 +119,13 @@ export const EVENT_GROUP: Record<NotificationEventType, NotificationEventGroup> 
   "date.key_date_approaching": "dates_approaching",
   "date.notice_deadline_approaching": "dates_approaching",
   "date.expiry_approaching": "dates_approaching",
+  // Group 5 — the portal audience's own events. The decline is here
+  // rather than beside the status change it also is, because INT-006
+  // makes "no" arrive with a why and a reason is a different message.
+  "request.created": "requester_events",
+  "request.status_changed": "requester_events",
+  "request.replied": "requester_events",
+  "request.declined": "requester_events",
 };
 
 /** What one person gets on one event group, once their own rows have

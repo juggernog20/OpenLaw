@@ -42,7 +42,7 @@
  *   through the Notifier seam (NOT-002). It is here rather than at the
  *   route because the events differ by type: a contract comment is group
  *   1 and 2 on the record's roster, and a request comment is group 5 at
- *   its Requester — a slot until #382 gives the seam its methods.
+ *   its Requester.
  *
  * A record a viewer cannot reach and a record that is not there answer
  * the same way — `null`, and {@link NO_RECORD} above it. A refusal that
@@ -367,20 +367,35 @@ const requestArm: CommentEntityArm = {
     });
   },
 
-  async notifyPosted() {
-    // Nothing yet, and the blank is the decision rather than an omission.
+  async notifyPosted(tx, notifier, posted) {
+    // A reply on a Request is NOT-002's group 5 — `requester_events`,
+    // the portal audience's own group — so it is one event and one
+    // method: the Requester gets a bell row on the portal and an
+    // immediate email (INT-003, which declined the status-poke button on
+    // exactly this promise).
     //
-    // A comment on a Request is NOT-002's group 5 — `requester_events`,
-    // the portal audience's own group — and group 5 is a slot until
-    // #382 gives the Notifier its four methods. The seam has one method
-    // per event and no generic `notify()`, so there is no method here to
-    // call: raising the reply at the Requester is #382's work, and it
-    // lands as a call from this arm.
+    // It is raised for **every** comment, at every tier and from every
+    // author, and the seam decides who hears it. A staff Full Thread
+    // reply reaches the Requester and not the poster, a Requester's own
+    // reply reaches nobody because they are the actor, and a Legal Only
+    // or Working Team comment reaches nobody because the Requester is
+    // in one room (DD-016). None of those three is decided here: the
+    // audience, the actor exclusion, and the tier are the seam's, so
+    // this arm cannot be the place one of them is forgotten.
     //
-    // The contract arm's two events are not borrowed. `commentMentioned`
-    // and `commentPosted` are a contract's — they carry its CTR-003
-    // number and its title, and they fan out over its roster — and a
-    // Request has none of those things.
+    // There is no mention event beside it. `commentMentioned` and
+    // `commentPosted` are a contract's — they carry its CTR-003 number
+    // and its title, and they fan out over its roster — and a Request
+    // has none of those things. A Member+ named on a Request thread is
+    // named on the staff side, and what tells the staff side about a
+    // Request is group 4 (INT-006), which the Inbox brings.
+    await notifier.requestReplied(tx, {
+      requestId: posted.audience.entityId,
+      actorId: posted.actorId,
+      actorName: posted.actorName,
+      commentId: posted.commentId,
+      visibility: posted.visibility,
+    });
   },
 };
 

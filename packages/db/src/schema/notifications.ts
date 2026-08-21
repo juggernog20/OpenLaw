@@ -12,8 +12,8 @@
  * `entity_type` / `entity_id` is the polymorphic pair SCHEMA.md
  * documents as the exception to separate-tables-with-view, so there is
  * no foreign key on the entity. The CHECK admits the documented
- * vocabulary; the API writes `contract` alone until the other records
- * arrive.
+ * vocabulary; the API writes `contract` (M18) and `request` (M20/8), and
+ * the other two arrive with their modules.
  *
  * `event_type` carries **no** CHECK, and that is deliberate rather than
  * an oversight. It is `activity_log.action`'s reasoning one table over:
@@ -51,9 +51,10 @@ import { uuidPk } from "./helpers.js";
  * follow interruptiveness and code branches on which group an event is
  * in, so a renameable label could not carry it.
  *
- * Groups 4 and 5 are **slots**. Their first events belong to the Inbox
- * (M21) and the portal (M20); the group ships now so that those
- * milestones add events rather than machinery.
+ * Group 4 is a **slot**. Its first events belong to the Inbox (M21); the
+ * group shipped ahead of them so that milestone adds events rather than
+ * machinery. Group 5 was the same until M20/8, which named its four
+ * events below — the machinery it added was none.
  */
 export const NOTIFICATION_EVENT_GROUPS = [
   /** Things done *to* you: an assignment, an approval request, a mention. */
@@ -64,8 +65,7 @@ export const NOTIFICATION_EVENT_GROUPS = [
   "dates_approaching",
   /** Inbox arrivals (INT-006) — the slot; M21 fires it. */
   "new_requests",
-  /** The portal audience's own events (INT-001/003/006) — the slot;
-   * M20 fires it. */
+  /** The portal audience's own events (INT-001/003/006). */
   "requester_events",
 ] as const;
 export type NotificationEventGroup = (typeof NOTIFICATION_EVENT_GROUPS)[number];
@@ -80,11 +80,11 @@ export type NotificationChannel = (typeof NOTIFICATION_CHANNELS)[number];
 /**
  * Every event the catalog names, grouped as NOT-002 groups them.
  *
- * The whole catalog for the three groups this milestone serves is here,
- * not only the one event M18/1 fires, because the enumeration is what
- * makes a later slice an event rather than a machinery change. Which of
- * them a build actually writes is a fact about the call sites, not
- * about this list.
+ * The whole catalog for the groups a milestone serves is here, not only
+ * the events that milestone fires, because the enumeration is what makes
+ * a later slice an event rather than a machinery change. Which of them a
+ * build actually writes is a fact about the call sites, not about this
+ * list — M20/8 names all four of group 5's and fires two.
  */
 export const NOTIFICATION_EVENT_TYPES = [
   // Group 1 — assigned to you.
@@ -106,11 +106,22 @@ export const NOTIFICATION_EVENT_TYPES = [
   "date.key_date_approaching",
   "date.notice_deadline_approaching",
   "date.expiry_approaching",
+  // Group 5 — the portal audience's own events (INT-001/003/006).
+  /** A Request was submitted — the Requester's receipt (INT-001). */
+  "request.created",
+  /** A Request moved to another status (INT-007). M21 fires it. */
+  "request.status_changed",
+  /** Somebody replied on a Request's thread (INT-007, DD-016). */
+  "request.replied",
+  /** A Request was turned down, with the reason (INT-006). M21 fires
+   * it, in place of the status change the decline also is. */
+  "request.declined",
 ] as const;
 export type NotificationEventType = (typeof NOTIFICATION_EVENT_TYPES)[number];
 
-/** What a notification can hang off. Only `contract` is written in M18;
- * the vocabulary is the `comments` and `activity_log` precedent. */
+/** What a notification can hang off. `contract` from M18 and `request`
+ * from M20/8; the vocabulary is the `comments` and `activity_log`
+ * precedent. */
 export const NOTIFICATION_ENTITY_TYPES = ["matter", "contract", "document", "request"] as const;
 export type NotificationEntityType = (typeof NOTIFICATION_ENTITY_TYPES)[number];
 

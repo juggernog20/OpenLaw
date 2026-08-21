@@ -15,6 +15,12 @@
  * that describes a contract without saying where it is fails that on the
  * one channel where the reader is not already in the app.
  *
+ * **There is one register and two surfaces** (NOT-001). A staff message
+ * links to the record in the application; a requester's message links to
+ * the Request in the portal. Which of the two a message is, is read from
+ * the record it carries and from nothing else — the arms are split so
+ * that one file still holds how an OpenLaw email is laid out.
+ *
  * **The copy is authored here in English, not in the message catalog.**
  * That is the API's own convention (DES-013 puts the catalog in the web
  * app, and every refusal sentence in this API is written at its call
@@ -27,16 +33,28 @@
  * copies of the wording in the same file.
  */
 
-import type { NotificationEventType } from "@openlaw/db";
+import type { NotificationEventType, RequestStatus } from "@openlaw/db";
 import type { MailMessage } from "../mailer.js";
 import { civilInstant } from "../contract-term.js";
+
+/**
+ * The record a notification is about, and how it names and addresses
+ * itself.
+ *
+ * Two arms, because the two audiences read on two surfaces (NOT-001): a
+ * contract's number addresses the staff application, a Request's
+ * addresses the portal. Every message names its record and links to it,
+ * and this is the one place that knows which is which.
+ */
+export type MailRecord =
+  | { entityType: "contract"; number: number; title: string }
+  | { entityType: "request"; number: number; summary: string };
 
 /** One notification, as the template layer needs it described. */
 export interface NotificationMail {
   eventType: NotificationEventType;
   /** The record the item is about — its number is its address. */
-  contractNumber: number;
-  contractTitle: string;
+  record: MailRecord;
   /** Who caused it, by display name. NULL where nobody did: an
    * integration or a scheduled round speaking (CTR-013's no-actor
    * narration, said in mail). */
@@ -74,6 +92,25 @@ function recordLink(baseUrl: string, contractNumber: number): string {
   return `${origin(baseUrl)}/contracts/${contractNumber}`;
 }
 
+/**
+ * The deep link a group-5 message points at: the Request in the portal.
+ *
+ * The portal's own address, not the staff application's, because the
+ * reader is a Requester (NOT-001). A visit with no session lands on the
+ * portal entry screen, where the one thing they need is another link
+ * (the INT-001 M20/2 addendum), and a visit with one lands on the
+ * Request — so the link in an old email is never a dead end.
+ */
+function portalRequestLink(baseUrl: string, requestNumber: number): string {
+  return `${origin(baseUrl)}/portal/requests/${requestNumber}`;
+}
+
+/** R-###, INT-002's reference — what a requester quotes and what the
+ * subject line names the Request by. */
+function requestReference(requestNumber: number): string {
+  return `R-${requestNumber}`;
+}
+
 /** One payload key as a non-empty string, or null. The bell narrator's
  * own defensive read, said on this side of the wire. */
 function detail(notification: NotificationMail, key: string): string | null {
@@ -105,17 +142,38 @@ export function renderNotificationMail(
   to: string,
   baseUrl: string,
 ): MailMessage | null {
-  const link = recordLink(baseUrl, notification.contractNumber);
+  const { record } = notification;
+  return record.entityType === "contract"
+    ? contractMail(notification, record, to, baseUrl)
+    : requestMail(notification, record, to, baseUrl);
+}
+
+/**
+ * The staff messages: groups 1 and 2, every one of them about a
+ * contract.
+ *
+ * A slug from another group answers `null` here, which is the same
+ * answer a slug with no copy gets — the record and the event have to
+ * agree, and a group-5 slug on a contract row is a row no build wrote.
+ */
+function contractMail(
+  notification: NotificationMail,
+  record: Extract<MailRecord, { entityType: "contract" }>,
+  to: string,
+  baseUrl: string,
+): MailMessage | null {
+  const link = recordLink(baseUrl, record.number);
   const who = notification.actorName ?? "Somebody";
+  const contractTitle = record.title;
   switch (notification.eventType) {
     case "approval.requested":
       return {
         to,
-        subject: `Approval requested: ${notification.contractTitle}`,
+        subject: `Approval requested: ${contractTitle}`,
         text: [
           `Hello ${notification.recipientName},`,
           "",
-          `${who} has asked you to approve ${notification.contractTitle}.`,
+          `${who} has asked you to approve ${contractTitle}.`,
           "",
           link,
           "",
@@ -125,11 +183,11 @@ export function renderNotificationMail(
     case "contract.owner_assigned":
       return {
         to,
-        subject: `You are now the owner of ${notification.contractTitle}`,
+        subject: `You are now the owner of ${contractTitle}`,
         text: [
           `Hello ${notification.recipientName},`,
           "",
-          `${who} has made you the owner of ${notification.contractTitle}.`,
+          `${who} has made you the owner of ${contractTitle}.`,
           "",
           link,
           "",
@@ -144,14 +202,14 @@ export function renderNotificationMail(
       return {
         to,
         subject: task
-          ? `Task assigned: ${task} (${notification.contractTitle})`
-          : `Task assigned on ${notification.contractTitle}`,
+          ? `Task assigned: ${task} (${contractTitle})`
+          : `Task assigned on ${contractTitle}`,
         text: [
           `Hello ${notification.recipientName},`,
           "",
           task
-            ? `${who} has given you a task on ${notification.contractTitle}: ${task}.`
-            : `${who} has given you a task on ${notification.contractTitle}.`,
+            ? `${who} has given you a task on ${contractTitle}: ${task}.`
+            : `${who} has given you a task on ${contractTitle}.`,
           "",
           link,
           "",
@@ -162,11 +220,11 @@ export function renderNotificationMail(
     case "comment.mentioned":
       return {
         to,
-        subject: `You were mentioned on ${notification.contractTitle}`,
+        subject: `You were mentioned on ${contractTitle}`,
         text: [
           `Hello ${notification.recipientName},`,
           "",
-          `${who} mentioned you in a comment on ${notification.contractTitle}.`,
+          `${who} mentioned you in a comment on ${contractTitle}.`,
           "",
           link,
           "",
@@ -191,13 +249,13 @@ export function renderNotificationMail(
       const status = detail(notification, "to");
       return {
         to,
-        subject: `${notification.contractTitle} moved${status ? ` to ${status}` : ""}`,
+        subject: `${contractTitle} moved${status ? ` to ${status}` : ""}`,
         text: [
           `Hello ${notification.recipientName},`,
           "",
           status
-            ? `${who} moved ${notification.contractTitle} to ${status}.`
-            : `${who} moved ${notification.contractTitle} to another status.`,
+            ? `${who} moved ${contractTitle} to ${status}.`
+            : `${who} moved ${contractTitle} to another status.`,
           "",
           link,
           "",
@@ -208,11 +266,11 @@ export function renderNotificationMail(
     case "comment.posted":
       return {
         to,
-        subject: `New comment on ${notification.contractTitle}`,
+        subject: `New comment on ${contractTitle}`,
         text: [
           `Hello ${notification.recipientName},`,
           "",
-          `${who} commented on ${notification.contractTitle}.`,
+          `${who} commented on ${contractTitle}.`,
           "",
           link,
           "",
@@ -227,14 +285,14 @@ export function renderNotificationMail(
       return {
         to,
         subject: document
-          ? `New document: ${document} (${notification.contractTitle})`
-          : `New document on ${notification.contractTitle}`,
+          ? `New document: ${document} (${contractTitle})`
+          : `New document on ${contractTitle}`,
         text: [
           `Hello ${notification.recipientName},`,
           "",
           document
-            ? `${who} added ${document} to ${notification.contractTitle}.`
-            : `${who} added a document to ${notification.contractTitle}.`,
+            ? `${who} added ${document} to ${contractTitle}.`
+            : `${who} added a document to ${contractTitle}.`,
           "",
           link,
           "",
@@ -252,14 +310,14 @@ export function renderNotificationMail(
       return {
         to,
         subject: document
-          ? `New version of ${document} (${notification.contractTitle})`
-          : `New document version on ${notification.contractTitle}`,
+          ? `New version of ${document} (${contractTitle})`
+          : `New document version on ${contractTitle}`,
         text: [
           `Hello ${notification.recipientName},`,
           "",
           document
-            ? `${who} added ${round} of ${document} on ${notification.contractTitle}.`
-            : `${who} added ${round} of a document on ${notification.contractTitle}.`,
+            ? `${who} added ${round} of ${document} on ${contractTitle}.`
+            : `${who} added ${round} of a document on ${contractTitle}.`,
           "",
           link,
           "",
@@ -282,11 +340,11 @@ export function renderNotificationMail(
               : "has ended";
       return {
         to,
-        subject: `Signature ${status === "signed" ? "complete" : "update"}: ${notification.contractTitle}`,
+        subject: `Signature ${status === "signed" ? "complete" : "update"}: ${contractTitle}`,
         text: [
           `Hello ${notification.recipientName},`,
           "",
-          `The signature envelope on ${notification.contractTitle} ${ending}.`,
+          `The signature envelope on ${contractTitle} ${ending}.`,
           "",
           link,
           "",
@@ -304,6 +362,144 @@ export function renderNotificationMail(
     default:
       return null;
   }
+}
+
+/**
+ * The requester's messages: NOT-002's group 5, every one of them about a
+ * Request in the portal (INT-001, INT-003).
+ *
+ * **These are the one group whose email is on by default**, because a
+ * Requester does not live in the app. INT-003 declined the status-poke
+ * button on the promise that notifications would reach them instead, so
+ * the copy is written for somebody who may not have opened the portal
+ * since they submitted: every message names the Request by its R-###
+ * reference and by the summary they wrote, and every one of them links
+ * to it.
+ *
+ * **The register is DES-051's**, like every other message here: warm,
+ * direct, short sentences, and no urging.
+ */
+function requestMail(
+  notification: NotificationMail,
+  record: Extract<MailRecord, { entityType: "request" }>,
+  to: string,
+  baseUrl: string,
+): MailMessage | null {
+  const link = portalRequestLink(baseUrl, record.number);
+  const reference = requestReference(record.number);
+  const who = notification.actorName ?? "Somebody";
+  const hello = `Hello ${notification.recipientName},`;
+  // Reference then summary, the way the portal's own detail page titles
+  // itself: the reference is what a requester quotes, and the summary is
+  // what they recognise.
+  const named = `${reference} · ${record.summary}`;
+  switch (notification.eventType) {
+    case "request.created":
+      return {
+        to,
+        // The one message in the catalog addressed to the person who
+        // caused the event (INT-001). It is a receipt, so it says the
+        // thing arrived and gives them the reference to quote.
+        subject: `We have your request: ${named}`,
+        text: [
+          hello,
+          "",
+          `Your request ${named} has reached Legal.`,
+          "",
+          link,
+          "",
+          "You can follow it and reply to Legal here. We will let you know when anything changes.",
+        ].join("\n"),
+      };
+    case "request.status_changed": {
+      const moved = statusWord(detail(notification, "to"));
+      return {
+        to,
+        subject: moved ? `Your request is ${moved}: ${named}` : `An update on ${named}`,
+        text: [
+          hello,
+          "",
+          moved
+            ? `Your request ${named} is now ${moved}.`
+            : `Your request ${named} has moved to another status.`,
+          "",
+          link,
+          "",
+          "The request page has the detail, and your conversation with Legal is on it.",
+        ].join("\n"),
+      };
+    }
+    case "request.replied":
+      return {
+        to,
+        subject: `Legal replied on ${named}`,
+        text: [
+          hello,
+          "",
+          `${who} replied on your request ${named}.`,
+          "",
+          link,
+          "",
+          // The words stay on the thread, for the contract thread's
+          // reason: DD-016 is enforced there, and a redact (CMT-006)
+          // cannot reach an email that has already left.
+          "The reply is on the request, and you can answer it there.",
+        ].join("\n"),
+      };
+    case "request.declined": {
+      // The reason itself, because INT-006 makes "no" arrive with a why
+      // and a line *about* a reason is not the reason. A row written
+      // without one still says the honest thing.
+      const reason = detail(notification, "reason");
+      return {
+        to,
+        subject: `Your request was declined: ${named}`,
+        text: [
+          hello,
+          "",
+          `Legal has declined your request ${named}.`,
+          ...(reason ? ["", reason] : []),
+          "",
+          link,
+          "",
+          "The reason is on the request, and you can reply to Legal there.",
+        ].join("\n"),
+      };
+    }
+    default:
+      return null;
+  }
+}
+
+/**
+ * What each lifecycle arm is called in a sentence (INT-007).
+ *
+ * Keyed by the status union, so an arm added to the lifecycle stops
+ * compiling here until somebody has decided what it is called. The words
+ * are written out rather than derived from the slug: `converted` is a
+ * fact about Legal's machinery, and "in progress" is what it means to
+ * the person who asked.
+ */
+const REQUEST_STATUS_WORDS: Record<RequestStatus, string> = {
+  new: "open",
+  converted: "in progress",
+  resolved: "resolved",
+  declined: "declined",
+};
+
+/**
+ * One payload status as the word a sentence uses, or null.
+ *
+ * The payload is a snapshot taken by whichever build wrote the row, so
+ * a slug this build has no word for — a status an older build had —
+ * answers null, and the arm says the honest general thing instead of
+ * splicing `undefined` into a subject line.
+ */
+function statusWord(status: string | null): string | null {
+  if (status === null) return null;
+  return Object.hasOwn(REQUEST_STATUS_WORDS, status)
+    ? REQUEST_STATUS_WORDS[status as RequestStatus]
+    : null;
 }
 
 // -------------------------------------------------------------------
