@@ -20,7 +20,9 @@ import { readdir } from "node:fs/promises";
 import { join } from "node:path";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { count, documents, eq, requestAttachments, requests, users } from "@openlaw/db";
+import { buildApp } from "../../app.js";
 import { provisionUser } from "../../auth/instance.js";
+import { testDeps } from "../../testing/deps.js";
 import {
   signInCookies as harnessSignInCookies,
   startHarness,
@@ -257,6 +259,21 @@ describe("attaching paper to a Request", () => {
     expect(notMultipart.statusCode, notMultipart.body).toBe(415);
   });
 
+  it("refuses a filename over the bound with the sentence the documents seam uses", async () => {
+    // One set of upload rules (the INT-002 M20/6 addendum): a person
+    // told a 300-character name is too long on a contract is told the
+    // same thing on the portal.
+    const number = await submitted();
+    const before = await storedBlobCount();
+    const res = await attach(number, { filename: `${"a".repeat(300)}.pdf` });
+    expect(res.statusCode, res.body).toBe(400);
+    expect(res.json().detail).toBe(
+      "Rename the file to 255 characters or fewer before uploading it.",
+    );
+    // Refused before the bytes were stored: nothing to clean up.
+    expect(await storedBlobCount()).toBe(before);
+  });
+
   it("refuses a caller with no session", async () => {
     const number = await submitted();
     const { payload, headers } = filePart("redline.pdf", Buffer.from("the redline"));
@@ -360,5 +377,58 @@ describe("who reaches a Request's paper", () => {
   it("refuses paper on a Request nobody has", async () => {
     const res = await attach(999_999);
     expect(res.statusCode, res.body).toBe(404);
+  });
+});
+
+describe("the upload ceiling", () => {
+  /** A second app over the same database and storage, with a ceiling
+   * small enough to trip with a few kilobytes — the documents suite's
+   * pattern. The auth config is the harness's, so the cookies already
+   * signed in verify here too. */
+  let small: Awaited<ReturnType<typeof buildApp>>;
+  const LIMIT = 4 * 1024;
+
+  beforeAll(async () => {
+    small = await buildApp({
+      ...testDeps({ db: harness.db, jobs: harness.pipeline }),
+      storage: harness.storage,
+      maxUploadBytes: LIMIT,
+    });
+    await small.ready();
+  });
+
+  afterAll(async () => {
+    await small.close();
+  });
+
+  it("refuses an oversized file with the limit named, and leaves no row and no blob", async () => {
+    // The parser stops the stream at the ceiling and marks it truncated
+    // rather than throwing, so what reached the driver is the head of a
+    // longer file. The route must remove that blob itself — this is the
+    // one refusal where the writer knows the blob is worthless.
+    const number = await submitted();
+    const before = await storedBlobCount();
+    const { payload, headers } = filePart(
+      "orion-msa-full-history.pdf",
+      Buffer.alloc(LIMIT * 4, 0x61),
+    );
+    const res = await small.inject({
+      method: "POST",
+      url: `/api/v1/requests/${number}/attachments`,
+      cookies: requesterCookies,
+      headers,
+      payload,
+    });
+
+    expect(res.statusCode, res.body).toBe(413);
+    expect(res.headers["content-type"]).toContain("application/problem+json");
+    // A clear message, not a mystery timeout — the documents seam's
+    // sentence, because there is one set of upload rules.
+    expect(res.json().detail).toContain("upload limit");
+
+    // Nothing landed: no row on the Request, and the truncated blob was
+    // taken away rather than left as an orphan (DOC-012).
+    expect(await listed(number)).toEqual([]);
+    expect(await storedBlobCount()).toBe(before);
   });
 });
