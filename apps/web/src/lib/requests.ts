@@ -70,6 +70,46 @@ export function requestStatusLabel(intl: IntlShape, status: RequestStatus): stri
   );
 }
 
+/** One row of the Inbox, aliased to the generated client schema so a
+ * change to what the staff read answers surfaces here as a compile
+ * error. */
+type InboxResponse =
+  paths["/api/v1/requests"]["get"]["responses"]["200"]["content"]["application/json"];
+export type InboxRow = InboxResponse["requests"][number];
+/** The front door a Request came through, with the routing bound to it. */
+export type InboxRequestType = InboxRow["requestType"];
+
+/**
+ * The routing a request type carries, in words (INT-002's three-state
+ * target): "Contract · NDA" names the type conversion will confirm,
+ * "Contract" is the module alone with the type still owed at
+ * conversion, and "No target" is an ask that may become no record at
+ * all. Triage reads it before opening anything, because it says how
+ * much of the routing is already decided (DD-018).
+ */
+export function requestTargetLabel(intl: IntlShape, target: InboxRequestType): string {
+  if (target.targetModule === null) {
+    return intl.formatMessage({ id: "inbox.target.none", defaultMessage: "No target" });
+  }
+  if (target.targetTypeName === null) {
+    return intl.formatMessage(
+      {
+        id: "inbox.target.module",
+        defaultMessage: "{module, select, matter {Matter} contract {Contract} other {No target}}",
+      },
+      { module: target.targetModule },
+    );
+  }
+  return intl.formatMessage(
+    {
+      id: "inbox.target.moduleAndType",
+      defaultMessage:
+        "{module, select, matter {Matter · {name}} contract {Contract · {name}} other {{name}}}",
+    },
+    { module: target.targetModule, name: target.targetTypeName },
+  );
+}
+
 /**
  * INT-002's global reference, as spoken and as linked: R-42.
  *

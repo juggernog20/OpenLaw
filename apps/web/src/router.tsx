@@ -19,6 +19,7 @@ import { EntitiesPage, entitiesLoader } from "./routes/entities";
 import { EntityRecordPage, entityRecordLoader } from "./routes/entity-record";
 import { RouteErrorPage } from "./routes/error-page";
 import { HomePage, homeLoader } from "./routes/home";
+import { InboxPage, inboxLoader } from "./routes/inbox";
 import { LinkExpiredPage, linkExpiredLoader } from "./routes/link-expired";
 import { LoginPage, loginLoader } from "./routes/login";
 import { PortalHomePage, portalHomeLoader } from "./routes/portal";
@@ -125,6 +126,16 @@ export const routes: RouteObject[] = [
     errorElement: <RouteErrorPage />,
     // Guards run before first paint; a blank canvas beats a flash of the
     // wrong screen.
+    hydrateFallbackElement: <></>,
+  },
+  {
+    // The Inbox (INT-006, INT-007): nav slot one, and the queue of
+    // Requests whose fate is undecided. Its loader admits Member+ only
+    // and bounces everyone else home — triage stays legal's.
+    path: "/inbox",
+    loader: inboxLoader,
+    element: <InboxPage />,
+    errorElement: <RouteErrorPage />,
     hydrateFallbackElement: <></>,
   },
   {

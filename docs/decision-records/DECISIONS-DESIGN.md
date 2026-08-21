@@ -3663,6 +3663,59 @@ Three ICU messages arrive — `contracts.record.actions`, `.copyLink`, `.rename`
 
 Anything that drove the record by pressing an "Archive" button now opens the menu first. The M8 e2e spec's Contributor check asserts the menu's rows rather than the absence of a button, which is the stronger assertion — it proves what the reader _is_ offered, not only what they are not.
 
+## DES-056: The Inbox — a fixed queue, not a curated list (extends DES-018, DES-031, DES-046)
+
+- **Status:** Accepted
+- **Date:** 2026-08-22
+
+### Context
+
+The Inbox is the first destination a Legal Team Member opens, and the first list in the product that is not a module registry. `designs/intake.pen` I1 draws it as a wide table under a filter row: Type and Urgency chips, a "Show triaged" control, and the Filter and Columns buttons the Contracts destination now carries for real (DES-046).
+
+Two of those things are the same shape and only one of them is this screen's. The Contracts list is a **curated destination list** — DD-019 gives a reader columns, filters, a sort, and a saved view over it. The Inbox is a **fixed queue**: INT-006 fixes its order and INT-007 fixes its contents, and both are product decisions rather than reader preferences. A reader who could sort the Inbox by requester could take away the one thing the queue promises.
+
+### Decision
+
+**1. The Inbox draws I1's seven columns and no column machinery.** Ref, Summary, Type, Requester, Urgency, Age, and the row's Assign button. There is no Columns menu, no Filter menu, and no saved views: DES-046's managed table is for a destination list, and this is a queue. The chips I1 draws for Type and Urgency are not built for the same reason — a filter over a fixed queue is a curation control, and the ones worth having are the ones the queue's own order already gives.
+
+**2. Show triaged is the one control, and it is the house switch.** A `Switch` with its `Label`, right-aligned in a row above the table, where the Entities registry's Show archived and the Contracts list's Show ended already sit. I1 puts the words among its filter chips; the chips are not built, and an isolated left-aligned control in an otherwise empty row would be a third position for a control this system has already placed twice.
+
+**3. Turning it on grows an Outcome column, at the end of the row.** The default queue is all `new` — INT-007 took the Status column out for exactly that reason — so a column that said "New" on every row would be the column INT-007 removed. Under the toggle there is something to say, and the column says it: the DES-005 status pill for the Request's arm, plus the C-### link when the Request converted into a record this reader can reach. A row whose link the server withheld draws the pill alone (DD-014).
+
+**4. Urgency is the DES-018 ramp, by value.** Low is neutral, medium is warning, high is severe, critical is danger — the ramp a contract's priority and risk already wear, now shared by a Request's urgency through one `SEVERITY_PILL` map rather than a per-callsite choice, which is what DES-018 asks for.
+
+**5. The foot states the order.** "Ordered by urgency, then age" sits under the table, beside the Show more button. The order is a product decision (INT-006), and a reader who has to infer it from a column of pills is a reader who will mistake it for a default.
+
+**6. The sub-bar counts what is waiting, not what is loaded.** "N awaiting triage" counts the `new` rows on screen — so the number stays true when the toggle draws triaged rows beside them — and becomes "N awaiting triage shown" while a next page exists, the Contracts list's rule: there is no total to state over a keyset-paged list, and a bare count over a longer one is a number the page cannot stand behind.
+
+**7. Zero is the good news, and the empty state says so.** "Nothing is waiting", with the Lucide `inbox` glyph and one line under it. The house empty state's anatomy (the Entities registry's) minus its action: there is no "create a Request" for staff, because a Request is something a Business User asks for.
+
+### Recorded normalization points
+
+1. **The nav badge is not built.** I1 draws a count badge on the Inbox nav item. Nothing in the destination registry has a badge today and nothing counts the queue outside the list's own read, so a badge would be a second count with its own staleness. The arrival signal M21 does ship is NOT-002's group 4 on the existing bell (#415).
+2. **Age is the house relative stamp.** I1 writes "1h ago" and "2d ago"; the build uses `formatRelativeOrShort`, which says "1 hour ago" and "2 days ago" in the reader's own locale. One relative-time formatter across the product beats a compact form that only exists in one mock.
+3. **Urgency labels are DES-018's ramp, not I1's words.** I1 predates DES-018 and writes Urgent / High / Normal / Low. The ramp is Low / Medium / High / Critical, and the pill families follow it.
+4. **The Type cell carries two lines.** I1 draws the request type's name alone. The row also states the target the Administrator bound to that type — "Contract · NDA", "Contract", or "No target" — as a muted second line, because DD-018 makes triage confirm a routing rather than choose one, and how much of the routing is already decided is what a triager weighs before opening anything.
+
+### Rationale
+
+Clause 1 is the clause that matters. The managed table exists and it would have been cheap to point it at this list. Doing so would have made the Inbox's order a preference, and the whole value of the queue is that its order is not one — the hottest and oldest ask surfaces first for everybody, or it surfaces first for nobody.
+
+Clause 3 is the honest version of "no Status column". INT-007 removed the column because it could only say one thing; it did not say the outcome should be unreadable once there is one to read.
+
+### Alternatives considered
+
+- **The managed table with sorting disabled.** Rejected: a table that draws sort affordances and refuses them is worse than one that never offers them.
+- **Two lists — a queue and a triaged archive.** Rejected: INT-007 asks for a toggle, and two lists would need two orderings and two empty states to say the same two things.
+- **A Status column always on.** Rejected by INT-007, and clause 3 is why the removal costs nothing.
+- **Keeping I1's compact ages.** Rejected as normalization point 2 — a second relative-time format for one screen.
+
+### Consequences
+
+`apps/web/src/routes/inbox.tsx` is the screen and `/inbox` its address; the staff Request detail lands under it at `/inbox/{number}` (M21/3). `SEVERITY_PILL` joins `severityLabel` in `apps/web/src/lib/contracts.ts`, because every ordinal scale in the product shares both. The destination registry gains the Inbox at index 0 — the slot its comment has reserved for intake since M4 — and the shell suites now expect four destinations for Member+.
+
+No new tokens. The Inbox is the first surface to draw `status-severe-*` in a pill rather than on a timeline.
+
 ## Index of decisions
 
 | #       | Decision                                                                                                                                                             | Status                                    |
@@ -3722,3 +3775,4 @@ Anything that drove the record by pressing an "Archive" button now opens the men
 | DES-053 | The status moves from the strip — the current stage is the trigger (extends DES-034, DES-017, DES-032)                                                               | Accepted                                  |
 | DES-054 | The collapsible settings card — the header is the disclosure (extends DES-020, DES-011)                                                                              | Accepted                                  |
 | DES-055 | The record's overflow menu — the acts that belong to the whole contract (extends DES-034, DES-017, DES-053)                                                          | Accepted                                  |
+| DES-056 | The Inbox — a fixed queue, not a curated list (extends DES-018, DES-031, DES-046)                                                                                    | Accepted                                  |

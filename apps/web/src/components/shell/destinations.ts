@@ -4,13 +4,13 @@
  * Destination registry (M4 spec, #40): the top nav renders from this
  * list and nothing else. A destination is registered by the milestone
  * that ships its surface — no placeholder destinations, per the
- * no-stubbed-demos doctrine. Intake takes slot one when it lands
- * (INT-006). A destination may carry a role floor: the nav draws only
- * what the signed-in role can enter (absent, not disabled — the same
- * convention as the settings rail, SET-002).
+ * no-stubbed-demos doctrine. Intake took the slot one this registry
+ * reserved for it, in M21 (INT-006). A destination may carry a role
+ * floor: the nav draws only what the signed-in role can enter (absent,
+ * not disabled — the same convention as the settings rail, SET-002).
  */
 
-import { House, Landmark, Signature, type LucideIcon } from "lucide-react";
+import { House, Inbox, Landmark, Signature, type LucideIcon } from "lucide-react";
 import { defineMessage, type MessageDescriptor } from "react-intl";
 import { CONTRACT_READER_ROLES, MEMBER_PLUS_ROLES, type Role } from "../../lib/roles";
 
@@ -24,6 +24,18 @@ export interface Destination {
 }
 
 export const destinations: Destination[] = [
+  {
+    // Slot one, which this registry has reserved for intake since M4
+    // (INT-006): the Inbox is one click from anywhere in the app,
+    // because triage is what a legal team opens the product to do.
+    // Member+ only — triage stays legal's, so a Contributor and a
+    // Business User get no entry at all.
+    id: "inbox",
+    path: "/inbox",
+    icon: Inbox,
+    label: defineMessage({ id: "nav.inbox", defaultMessage: "Inbox" }),
+    roles: MEMBER_PLUS_ROLES,
+  },
   {
     id: "home",
     path: "/",

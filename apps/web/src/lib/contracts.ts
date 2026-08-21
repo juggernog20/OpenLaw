@@ -154,6 +154,23 @@ export const STAGE_PILL: Record<ContractStage, string> = {
   ended: "bg-status-onhold-bg text-status-onhold-fg",
 };
 
+/**
+ * DES-018's one severity ramp, as a pill.
+ *
+ * The ramp is fixed by decision — low is neutral grey, medium is
+ * warning yellow, high is severe orange, critical is danger red — and
+ * pills consume it by value rather than choosing per callsite, so every
+ * ordinal column in the product reads the same. It lives beside
+ * `severityLabel` because every ordinal scale in the product shares
+ * both: a contract's priority and risk, and a Request's urgency.
+ */
+export const SEVERITY_PILL: Record<SeverityLevel, string> = {
+  low: "bg-status-neutral-bg text-status-neutral-fg",
+  medium: "bg-status-warning-bg text-status-warning-fg",
+  high: "bg-status-severe-bg text-status-severe-fg",
+  critical: "bg-status-danger-bg text-status-danger-fg",
+};
+
 /** CTR-003's reference, as spoken and as linked: C-42. */
 export function contractReference(intl: IntlShape, number: number): string {
   return intl.formatMessage(
