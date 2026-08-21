@@ -28,7 +28,7 @@ beforeAll(async () => {
   // No Settings surface exists yet (it ships with its module); configure
   // the seeded row directly, the same way tests time-travel tokens.
   await harness.db.update(orgSettings).set({ allowedEmailDomains: ALLOWED_DOMAINS });
-}, 120_000);
+});
 
 afterAll(async () => {
   await harness.stop();

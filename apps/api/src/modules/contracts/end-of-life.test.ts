@@ -82,7 +82,7 @@ beforeAll(async () => {
   activeStatusId = data.contractStatuses.find((row) => row.slug === "active")!.id;
   expiredStatusId = data.contractStatuses.find((row) => row.slug === "expired")!.id;
   terminatedStatusId = data.contractStatuses.find((row) => row.slug === "terminated")!.id;
-}, 120_000);
+});
 
 afterAll(async () => {
   await harness.stop();
@@ -261,38 +261,34 @@ describe("ended_at stamping (CTR-019)", () => {
 });
 
 describe("the default list excludes ended contracts (CTR-019)", () => {
-  it(
-    "excludes ended contracts from the default list and includeEnded restores them — scope filters before the limit",
-    { timeout: 120_000 },
-    async () => {
-      // The route's page size (CTR-024). A live contract first, then a
-      // whole page of newer ended ones standing between it and the top.
-      const PAGE_SIZE = 50;
-      const live = await newContract("EOL list live");
-      const endedNumbers: number[] = [];
-      for (let made = 0; made < PAGE_SIZE; made += 1) {
-        const ending = await newContract(`EOL list ending ${made}`);
-        await patch(ending.number, { statusId: expiredStatusId });
-        endedNumbers.push(ending.number);
-      }
+  it("excludes ended contracts from the default list and includeEnded restores them — scope filters before the limit", async () => {
+    // The route's page size (CTR-024). A live contract first, then a
+    // whole page of newer ended ones standing between it and the top.
+    const PAGE_SIZE = 50;
+    const live = await newContract("EOL list live");
+    const endedNumbers: number[] = [];
+    for (let made = 0; made < PAGE_SIZE; made += 1) {
+      const ending = await newContract(`EOL list ending ${made}`);
+      await patch(ending.number, { statusId: expiredStatusId });
+      endedNumbers.push(ending.number);
+    }
 
-      // Page one of the default list holds the live contract even though
-      // a full page of newer ended contracts outranks it — the scope
-      // filtered before the limit. Filtering after it would have filled
-      // the page with the ended contracts and dropped every one of them,
-      // leaving the live contract off the page it belongs on.
-      const defaultNumbers = (await listContracts()).map((row) => row.number);
-      expect(defaultNumbers).toContain(live.number);
-      for (const number of endedNumbers) expect(defaultNumbers).not.toContain(number);
+    // Page one of the default list holds the live contract even though
+    // a full page of newer ended contracts outranks it — the scope
+    // filtered before the limit. Filtering after it would have filled
+    // the page with the ended contracts and dropped every one of them,
+    // leaving the live contract off the page it belongs on.
+    const defaultNumbers = (await listContracts()).map((row) => row.number);
+    expect(defaultNumbers).toContain(live.number);
+    for (const number of endedNumbers) expect(defaultNumbers).not.toContain(number);
 
-      // With includeEnded, the ended ones come back — all fifty on page
-      // one, since they are the newest — and the live contract still
-      // stands in the walk behind them.
-      const restored = await everyNumber({ includeEnded: "true" });
-      for (const number of endedNumbers) expect(restored).toContain(number);
-      expect(restored).toContain(live.number);
-    },
-  );
+    // With includeEnded, the ended ones come back — all fifty on page
+    // one, since they are the newest — and the live contract still
+    // stands in the walk behind them.
+    const restored = await everyNumber({ includeEnded: "true" });
+    for (const number of endedNumbers) expect(restored).toContain(number);
+    expect(restored).toContain(live.number);
+  });
 
   it("reopening brings the contract back to the default list", async () => {
     const contract = await newContract("EOL list reopen");

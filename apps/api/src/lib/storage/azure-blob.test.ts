@@ -26,7 +26,11 @@ import { AZURE_BLOB_DRIVER, createAzureBlobStorage } from "./azure-blob.js";
  */
 const AZURITE_IMAGE = "mcr.microsoft.com/azure-storage/azurite:3.36.0";
 
-/** Pulling and booting a container is slower than making a directory. */
+/**
+ * Pulling and booting a container is slower than making a directory, and
+ * on a cold image cache slower than the package's own `hookTimeout` in
+ * `vitest.config.ts`.
+ */
 const START_TIMEOUT_MS = 180_000;
 
 interface StartedStore {
@@ -151,7 +155,7 @@ describe("Azure Blob driver", () => {
     for await (const chunk of read) chunks.push(Buffer.from(chunk));
 
     expect(Buffer.concat(chunks).equals(large)).toBe(true);
-  }, 60_000);
+  });
 
   it("leaves no committed blob behind when a multi-block upload's source stream fails", async () => {
     // The shared contract suite already cuts off a small upload. This
@@ -180,5 +184,5 @@ describe("Azure Blob driver", () => {
       if (blob.name === key) listed.push(blob);
     }
     expect(listed).toEqual([]);
-  }, 60_000);
+  });
 });

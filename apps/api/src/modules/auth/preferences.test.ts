@@ -26,7 +26,7 @@ beforeAll(async () => {
     payload: ADMIN,
   });
   expect(res.statusCode, res.body).toBe(201);
-}, 120_000);
+});
 
 afterAll(async () => {
   await harness.stop();

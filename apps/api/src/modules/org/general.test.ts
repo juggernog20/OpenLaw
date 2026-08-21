@@ -36,7 +36,7 @@ beforeAll(async () => {
 
   const member = await provisionUser(harness.app.auth, MEMBER);
   await harness.db.update(users).set({ role: "legal_team_member" }).where(eq(users.id, member.id));
-}, 120_000);
+});
 
 afterAll(async () => {
   await harness.stop();

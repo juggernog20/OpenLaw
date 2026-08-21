@@ -129,7 +129,7 @@ beforeAll(async () => {
   for (const stage of ["draft", "review", "approval", "signature", "active", "ended"]) {
     expect(statusesByStage.get(stage), `a seeded ${stage} status`).toBeDefined();
   }
-}, 120_000);
+});
 
 afterAll(async () => {
   await harness.stop();

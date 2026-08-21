@@ -29,7 +29,7 @@ let db: Db;
 beforeAll(async () => {
   harness = await startHarness();
   db = harness.db;
-}, 120_000);
+});
 
 afterAll(async () => {
   await harness.stop();

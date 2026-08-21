@@ -125,7 +125,7 @@ beforeAll(async () => {
   const owner = await provisionUser(harness.app.auth, OWNER);
   await harness.db.update(users).set({ role: "legal_team_member" }).where(eq(users.id, owner.id));
   cookies.set(OWNER.email, await signInCookies(harness.app, OWNER.email, OWNER.password));
-}, 120_000);
+});
 
 afterAll(async () => {
   await harness.stop();
@@ -245,5 +245,5 @@ describe("the on-demand morning round", () => {
     expect(second.reminders).toBe(0);
     expect(second.digests).toBe(0);
     expect(harness.mailer.messagesTo(OWNER.email).slice(before)).toHaveLength(1);
-  }, 60_000);
+  });
 });

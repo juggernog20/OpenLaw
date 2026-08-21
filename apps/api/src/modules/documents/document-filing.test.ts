@@ -141,7 +141,7 @@ beforeAll(async () => {
   outsiderCookies = await signInCookies(harness.app, OUTSIDER.email, OUTSIDER.password);
   contributorCookies = await signInCookies(harness.app, CONTRIBUTOR.email, CONTRIBUTOR.password);
   strangerCookies = await signInCookies(harness.app, STRANGER.email, STRANGER.password);
-}, 120_000);
+});
 
 afterAll(async () => {
   await harness.stop();

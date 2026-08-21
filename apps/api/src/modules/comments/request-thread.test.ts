@@ -136,7 +136,7 @@ beforeAll(async () => {
 
   requestId = await submit(requesterCookies, "MSA renewal with Orion Cloud");
   otherRequestId = await submit(otherCookies, "NDA for the Helix pilot");
-}, 120_000);
+});
 
 afterAll(async () => {
   await harness.stop();

@@ -137,7 +137,7 @@ beforeAll(async () => {
     }),
   });
   await m11.ready();
-}, 120_000);
+});
 
 afterAll(async () => {
   await m11.close();
@@ -373,7 +373,7 @@ describe("paper uploaded before the derivation tables existed", () => {
     expect(text.state).toBe("ready");
     expect(text.source).toBe("native_layer");
     expect(text.text).toBe(fakeExtractedText(bytes));
-  }, 60_000);
+  });
 
   it("gets a preview and its text where its family calls for one", async () => {
     // A Word draft cannot be drawn by a browser, so the sweep has to ask
@@ -397,7 +397,7 @@ describe("paper uploaded before the derivation tables existed", () => {
     expect(text.state).toBe("ready");
     expect(text.source).toBe("rendition");
     expect(text.text).toBe(fakeConversionText("docx", bytes));
-  }, 60_000);
+  });
 });
 
 describe("a request that never reached the queue", () => {
@@ -426,7 +426,7 @@ describe("a request that never reached the queue", () => {
     expect(text.state).toBe("ready");
     expect(text.source).toBe("ocr");
     expect(text.text).toBe(fakeOcrText(scan));
-  }, 60_000);
+  });
 });
 
 describe("asking twice", () => {
@@ -441,7 +441,7 @@ describe("asking twice", () => {
     expect(again.scanned).toBeGreaterThan(0);
     expect(again.textExtraction).toBe(0);
     expect(again.displayConversion).toBe(0);
-  }, 60_000);
+  });
 
   it("reads every version exactly once, however small its pages", async () => {
     // The default page holds an entire test install, so this is the one
@@ -460,7 +460,7 @@ describe("asking twice", () => {
     expect(paged.textExtraction).toBe(0);
     expect(paged.displayConversion).toBe(0);
     expect(paged.stopped).toBe(false);
-  }, 60_000);
+  });
 
   it("leaves a version alone whose derivation gave up", async () => {
     // A file that says it is a PDF and is not. The job runs, decides no
@@ -487,7 +487,7 @@ describe("asking twice", () => {
     // And the failure still stands: the sweep did not reopen it.
     const after = await readText(document.id, version.id);
     expect((after.json().text as TextRow).state).toBe("failed");
-  }, 60_000);
+  });
 
   it("asks for nothing for a family that will never have a derivation", async () => {
     // An image renders as it is and yields no text in v1 (DOC-005 is
@@ -515,7 +515,7 @@ describe("asking twice", () => {
     // polling for an answer that is never coming.
     const text = await readText(document.id, version.id);
     expect((text.json().text as TextRow).state).toBe("unsupported");
-  }, 60_000);
+  });
 });
 
 describe("when the queue cannot be reached", () => {
@@ -562,7 +562,7 @@ describe("when the queue cannot be reached", () => {
     for (const { documentId, versionId } of versions) {
       expect((await settledText(documentId, versionId)).state).toBe("ready");
     }
-  }, 60_000);
+  });
 });
 
 describe("when the worker is shut down", () => {

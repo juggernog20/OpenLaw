@@ -123,6 +123,9 @@ beforeAll(async () => {
   businessCookies = await signInCookies(harness.app, BUSINESS.email, BUSINESS.password);
 
   await anAfternoonOfWork();
+  // Longer than the package's own `hookTimeout` in `vitest.config.ts`:
+  // this hook provisions five people and then plays a whole afternoon of
+  // their work through the API, on top of the container it starts.
 }, 180_000);
 
 afterAll(async () => {

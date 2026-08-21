@@ -92,7 +92,7 @@ beforeAll(async () => {
   memberId = member.id;
   adminCookies = await signInCookies(harness.app, ADMIN.email, ADMIN.password);
   memberCookies = await signInCookies(harness.app, MEMBER.email, MEMBER.password);
-}, 120_000);
+});
 
 afterAll(async () => {
   await harness.stop();
@@ -266,7 +266,7 @@ describe("a batch of files on one contract (M13/4, DOC-011)", () => {
       expect(version.kind).toBe("executed");
       expect(version.note).toBeNull();
     }
-  }, 60_000);
+  });
 
   it("leaves exactly one primary when a batch lands on a record with no paper", async () => {
     const contract = await newContract("Batch · the first instrument");
@@ -281,7 +281,7 @@ describe("a batch of files on one contract (M13/4, DOC-011)", () => {
     // is.
     const paper = await paperOf(contract.number);
     expect(paper.filter((row) => row.isPrimary)).toHaveLength(1);
-  }, 60_000);
+  });
 
   it("leaves exactly one primary when the batch's files race each other", async () => {
     const contract = await newContract("Batch · the race");
@@ -298,7 +298,7 @@ describe("a batch of files on one contract (M13/4, DOC-011)", () => {
     const paper = await paperOf(contract.number);
     expect(paper).toHaveLength(4);
     expect(paper.filter((row) => row.isPrimary)).toHaveLength(1);
-  }, 60_000);
+  });
 
   it("gives every file of a batch its extracted text, exactly as a single upload does", async () => {
     const contract = await newContract("Batch · the queue drains");
@@ -321,7 +321,7 @@ describe("a batch of files on one contract (M13/4, DOC-011)", () => {
       expect(text.source).toBe("native_layer");
       expect(text.text).toBe(fakeExtractedText(bytes.get(document.title)!));
     }
-  }, 120_000);
+  });
 
   it("takes no file of a batch on an archived contract", async () => {
     const contract = await newContract("Batch · frozen");
@@ -338,7 +338,7 @@ describe("a batch of files on one contract (M13/4, DOC-011)", () => {
     // times over.
     expect(res.statusCode, res.body).toBe(409);
     expect(await paperOf(contract.number)).toEqual([]);
-  }, 60_000);
+  });
 });
 
 describe("the per-file ceiling inside a batch", () => {
@@ -359,7 +359,7 @@ describe("the per-file ceiling inside a batch", () => {
       maxUploadBytes: LIMIT,
     });
     await small.ready();
-  }, 60_000);
+  });
 
   afterAll(async () => {
     await small.close();
@@ -403,7 +403,7 @@ describe("the per-file ceiling inside a batch", () => {
     // version each, and the designation taken exactly once.
     for (const document of paper) expect(document.versions).toHaveLength(1);
     expect(paper.filter((row) => row.isPrimary)).toHaveLength(1);
-  }, 60_000);
+  });
 
   it("leaves exactly one primary when a refused file races the rest of the batch", async () => {
     const contract = await newContract("Batch · the race with a casualty");
@@ -427,5 +427,5 @@ describe("the per-file ceiling inside a batch", () => {
     // both take the designation.
     expect(paper.map((row) => row.title).toSorted()).toEqual(["a.pdf", "b.pdf"]);
     expect(paper.filter((row) => row.isPrimary)).toHaveLength(1);
-  }, 60_000);
+  });
 });

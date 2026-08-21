@@ -56,7 +56,7 @@ beforeAll(async () => {
     payload: { newPassword: STAFF.password, token },
   });
   expect(reset.statusCode, reset.body).toBe(200);
-}, 120_000);
+});
 
 afterAll(async () => {
   await harness.stop();

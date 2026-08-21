@@ -142,7 +142,7 @@ beforeAll(async () => {
     });
     expect(attached.statusCode, attached.body).toBe(201);
   }
-}, 120_000);
+});
 
 afterAll(async () => {
   await harness.stop();

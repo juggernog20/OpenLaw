@@ -8,7 +8,7 @@ let h: TestHarness;
 
 beforeAll(async () => {
   h = await startHarness();
-}, 120_000);
+});
 
 afterAll(async () => {
   await h.stop();

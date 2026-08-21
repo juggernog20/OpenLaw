@@ -80,7 +80,7 @@ beforeAll(async () => {
   app = await buildApp(testDeps({ db: harness.db }));
   await app.register(probeAttachedFieldsRoutes, { prefix: "/api/v1" });
   await app.ready();
-}, 120_000);
+});
 
 afterAll(async () => {
   await app.close();
