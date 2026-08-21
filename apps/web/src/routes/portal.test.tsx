@@ -18,6 +18,7 @@
 import { describe, expect, it } from "vitest";
 import { screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import type { MyRequestRow } from "../lib/requests";
 import { json, problem, renderAt, stubApi, type StubCall } from "../testing/helpers";
 
 const REQUESTER = {
@@ -52,14 +53,25 @@ interface HomeLink {
   displayOrder: number;
 }
 
-/** The two reads the home makes, answered from a fixture. */
-function portalHome(state: { requestTypes?: HomeType[]; intakeLinks?: HomeLink[] }) {
+/** One row of my-requests (M20/5), taken from the generated client so
+ * the fixture cannot drift from what the API answers. */
+type HomeRequest = MyRequestRow;
+
+/** The three reads the home makes, answered from a fixture. */
+function portalHome(state: {
+  requestTypes?: HomeType[];
+  intakeLinks?: HomeLink[];
+  requests?: HomeRequest[];
+}) {
   return (call: StubCall) => {
     if (call.url.pathname === "/api/v1/portal/request-types" && call.method === "GET") {
       return json(200, { requestTypes: state.requestTypes ?? [] });
     }
     if (call.url.pathname === "/api/v1/portal/intake-links" && call.method === "GET") {
       return json(200, { intakeLinks: state.intakeLinks ?? [] });
+    }
+    if (call.url.pathname === "/api/v1/portal/requests" && call.method === "GET") {
+      return json(200, { requests: state.requests ?? [] });
     }
     return undefined;
   };
@@ -292,6 +304,7 @@ describe("the request type picker", () => {
   it.each([
     ["the request types", "/api/v1/portal/request-types"],
     ["the deflection links", "/api/v1/portal/intake-links"],
+    ["the caller's own Requests", "/api/v1/portal/requests"],
   ])("lands on the error boundary when %s cannot be read", async (_name, path) => {
     // A half-drawn home is worse than none: a picker with no panel
     // reads as an instance that configured no deflection, and a panel
@@ -384,5 +397,148 @@ describe("the deflection panel", () => {
 
     expect(await screen.findByRole("region", { name: "Before you submit" })).toBeInTheDocument();
     expect(screen.getByText(/No request types are available yet/)).toBeInTheDocument();
+  });
+});
+
+describe("my-requests", () => {
+  /** Five hours ago, so the age renders as a relative phrase rather
+   * than as a date that would change meaning with the calendar. */
+  const FIVE_HOURS_AGO = new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString();
+
+  const MINE: HomeRequest[] = [
+    {
+      id: "rq1",
+      number: 45,
+      status: "new",
+      summary: "Orion Cloud MSA renewal — redline review",
+      requestType: { id: "rt2", slug: "contract_review", displayName: "Contract review" },
+      createdAt: FIVE_HOURS_AGO,
+    },
+    {
+      id: "rq2",
+      number: 38,
+      status: "converted",
+      summary: "Marketing agency SOW — Q3 campaign",
+      requestType: { id: "rt2", slug: "contract_review", displayName: "Contract review" },
+      createdAt: "2026-07-28T09:00:00.000Z",
+    },
+    {
+      id: "rq3",
+      number: 31,
+      status: "resolved",
+      summary: "Office sublease question",
+      requestType: { id: "rt3", slug: "legal_question", displayName: "Legal question" },
+      createdAt: "2026-07-12T09:00:00.000Z",
+    },
+    {
+      id: "rq4",
+      number: 22,
+      status: "declined",
+      summary: "Personal apartment lease",
+      requestType: { id: "rt3", slug: "legal_question", displayName: "Legal question" },
+      createdAt: "2026-06-30T09:00:00.000Z",
+    },
+  ];
+
+  function homeWith(requests: HomeRequest[]) {
+    return portalHome({ requestTypes: SEED_TYPES, requests });
+  }
+
+  it("draws the number, the summary, the type, the status, and the age", async () => {
+    stubApi({ signedIn: REQUESTER, extra: homeWith([MINE[0]!]) });
+    renderAt("/portal");
+
+    const block = await screen.findByRole("region", { name: "Your requests" });
+    const row = within(block).getByRole("link");
+    expect(within(row).getByText("R-45")).toBeInTheDocument();
+    expect(within(row).getByText("Orion Cloud MSA renewal — redline review")).toBeInTheDocument();
+    expect(within(row).getByText("Contract review")).toBeInTheDocument();
+    expect(within(row).getByText("New")).toBeInTheDocument();
+    expect(within(row).getByText("5 hours ago")).toBeInTheDocument();
+  });
+
+  it("renders all four statuses legibly", async () => {
+    stubApi({ signedIn: REQUESTER, extra: homeWith(MINE) });
+    renderAt("/portal");
+
+    const block = await screen.findByRole("region", { name: "Your requests" });
+    for (const label of ["New", "Converted", "Resolved", "Declined"]) {
+      expect(within(block).getByText(label)).toBeInTheDocument();
+    }
+  });
+
+  it("opens each row on that Request's detail, by its R-### number", async () => {
+    stubApi({ signedIn: REQUESTER, extra: homeWith(MINE) });
+    renderAt("/portal");
+
+    const block = await screen.findByRole("region", { name: "Your requests" });
+    expect(
+      within(block)
+        .getAllByRole("link")
+        .map((link) => link.getAttribute("href")),
+    ).toEqual([
+      "/portal/requests/45",
+      "/portal/requests/38",
+      "/portal/requests/31",
+      "/portal/requests/22",
+    ]);
+  });
+
+  it("keeps a converted Request on the list and openable", async () => {
+    // INT-001, DD-018: conversion links the Request to what it became.
+    // It does not take the requester's window away.
+    stubApi({ signedIn: REQUESTER, extra: homeWith([MINE[1]!]) });
+    renderAt("/portal");
+
+    const block = await screen.findByRole("region", { name: "Your requests" });
+    const row = within(block).getByRole("link");
+    expect(within(row).getByText("Converted")).toBeInTheDocument();
+    expect(row).toHaveAttribute("href", "/portal/requests/38");
+  });
+
+  it("counts what it draws", async () => {
+    stubApi({ signedIn: REQUESTER, extra: homeWith(MINE) });
+    renderAt("/portal");
+
+    const block = await screen.findByRole("region", { name: "Your requests" });
+    expect(within(block).getByText("4 requests")).toBeInTheDocument();
+  });
+
+  it("points a first visitor at the type picker", async () => {
+    stubApi({ signedIn: REQUESTER, extra: homeWith([]) });
+    renderAt("/portal");
+
+    const block = await screen.findByRole("region", { name: "Your requests" });
+    expect(
+      within(block).getByText(/You have not asked Legal for anything yet/),
+    ).toBeInTheDocument();
+    const pointer = within(block).getByRole("link", { name: /Pick a request type/ });
+    expect(pointer).toHaveAttribute("href", "#portal-request-types");
+    // And the thing it points at is on the page.
+    expect(screen.getByRole("list", { name: "Request types" })).toHaveAttribute(
+      "id",
+      "portal-request-types",
+    );
+  });
+
+  it("drops the pointer when there is no picker to point at", async () => {
+    // An instance whose Administrator has archived every request type:
+    // the empty list still states the fact, and points nowhere.
+    stubApi({ signedIn: REQUESTER, extra: portalHome({ requestTypes: [], requests: [] }) });
+    renderAt("/portal");
+
+    const block = await screen.findByRole("region", { name: "Your requests" });
+    expect(
+      within(block).getByText(/You have not asked Legal for anything yet/),
+    ).toBeInTheDocument();
+    expect(within(block).queryByRole("link")).not.toBeInTheDocument();
+  });
+
+  it("draws the same block for Member+ staff, who are Requesters here", async () => {
+    stubApi({ signedIn: MEMBER, extra: homeWith([MINE[0]!]) });
+    renderAt("/portal");
+
+    const block = await screen.findByRole("region", { name: "Your requests" });
+    expect(within(block).getByText("R-45")).toBeInTheDocument();
   });
 });

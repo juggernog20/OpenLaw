@@ -2492,8 +2492,47 @@
   "portal.home.title": {
     "defaultMessage": "What do you need from Legal?"
   },
+  "portal.myRequests.count": {
+    "defaultMessage": "{count, plural, one {# request} other {# requests}}"
+  },
+  "portal.myRequests.empty": {
+    "defaultMessage": "You have not asked Legal for anything yet."
+  },
+  "portal.myRequests.emptyPointer": {
+    "defaultMessage": "Pick a request type to make your first request."
+  },
+  "portal.myRequests.heading": {
+    "defaultMessage": "Your requests"
+  },
   "portal.name": {
     "defaultMessage": "Legal request portal"
+  },
+  "portal.request.back": {
+    "defaultMessage": "Your requests"
+  },
+  "portal.request.bannerConverted": {
+    "defaultMessage": "Legal is working on this. Follow it here."
+  },
+  "portal.request.bannerDeclined": {
+    "defaultMessage": "Legal declined this request."
+  },
+  "portal.request.bannerNew": {
+    "defaultMessage": "Legal has received your request. You'll get an email when the status changes."
+  },
+  "portal.request.bannerResolved": {
+    "defaultMessage": "Legal has answered this request."
+  },
+  "portal.request.booleanValue": {
+    "defaultMessage": "{value, select, true {Yes} other {No}}"
+  },
+  "portal.request.documentTitle": {
+    "defaultMessage": "{reference} · {summary}"
+  },
+  "portal.request.meta": {
+    "defaultMessage": "{reference} · {requestType} · Submitted {submitted}"
+  },
+  "portal.request.submittedHeading": {
+    "defaultMessage": "What you submitted"
   },
   "renewal.action.amendment": {
     "defaultMessage": "File the amendment"
@@ -2602,6 +2641,9 @@
   },
   "requests.reference": {
     "defaultMessage": "R-{number, number, ::group-off}"
+  },
+  "requests.statusLabel": {
+    "defaultMessage": "{status, select, new {New} converted {Converted} resolved {Resolved} declined {Declined} other {Unknown}}"
   },
   "role.administrator": {
     "defaultMessage": "Administrator"

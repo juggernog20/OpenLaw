@@ -23,6 +23,7 @@ import { LinkExpiredPage, linkExpiredLoader } from "./routes/link-expired";
 import { LoginPage, loginLoader } from "./routes/login";
 import { PortalHomePage, portalHomeLoader } from "./routes/portal";
 import { PortalRequestFormPage, portalRequestFormLoader } from "./routes/portal-request-form";
+import { PortalRequestPage, portalRequestLoader } from "./routes/portal-request";
 import { PortalEntryPage, portalEntryLoader } from "./routes/portal-entry";
 import { SetPasswordPage } from "./routes/set-password";
 import { SettingsLayout, settingsIndexLoader, settingsLoader } from "./routes/settings";
@@ -356,6 +357,19 @@ export const routes: RouteObject[] = [
         element: (
           <KeyedByParam name="slug">
             <PortalRequestFormPage />
+          </KeyedByParam>
+        ),
+      },
+      // One of the caller's own Requests, addressed by its R-###
+      // number — the reference a requester quotes and the one the row
+      // links on. A number that is not theirs lands back on the home,
+      // where their own list is (DD-013).
+      {
+        path: "requests/:number",
+        loader: portalRequestLoader,
+        element: (
+          <KeyedByParam name="number">
+            <PortalRequestPage />
           </KeyedByParam>
         ),
       },
