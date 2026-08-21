@@ -61,12 +61,44 @@ The stack serves plain HTTP on one port and ships no proxy (TECH-017): TLS and t
 
 Everything else — HTTP/2, compression, request logging — is your choice.
 
+### Your proxy owns the security response headers
+
+The app sets only the headers that are about the bytes one route returns: `nosniff` on every file download, and a locked-down `Content-Security-Policy` on the routes that render an uploaded file inline. Those protect you from other people's uploads and the app is the only thing that knows which responses those are.
+
+**The origin-wide headers are yours**, because they are claims about the public origin — which you configured and the app knows only as a `BASE_URL` string. Add them at the proxy:
+
+| Header                      | Suggested value                       | Why                                                                                                            |
+| --------------------------- | ------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| `Strict-Transport-Security` | `max-age=31536000; includeSubDomains` | The app has no TLS and cannot honestly assert this. Add it once you are sure the whole hostname is HTTPS-only. |
+| `X-Frame-Options`           | `DENY`                                | Nothing in OpenLaw is meant to be framed by another site.                                                      |
+| `Referrer-Policy`           | `strict-origin-when-cross-origin`     | Record URLs carry contract numbers; they should not leave in a `Referer` to somewhere else.                    |
+| `X-Content-Type-Options`    | `nosniff`                             | The app already sets this on downloads. Setting it origin-wide is harmless and covers the rest.                |
+
+OpenLaw ships no `helmet`-style header middleware on purpose. It runs as one upstream behind your ingress, and a second weaker copy of these headers behind yours is two sources of truth that disagree the moment you tune one (TECH-017's 2026-08-21 addendum).
+
+### Rate limiting is yours too, except sign-in
+
+Sign-in has its own limiter inside the app, because it protects a credential rather than a resource and the counter has to be the one the auth layer keeps. `AUTH_RATE_LIMIT=off` turns it off; that switch belongs to the test overlay and the app warns loudly at boot when it is set. **Never set it on a real deployment.**
+
+Everything else is unlimited by the app and should be limited by you. What to bound, in the order it matters:
+
+1. **The portal's open write addresses** — magic-link request, Request submission, attachment upload, and reply. These are reachable by every Business User on an allowed domain, and nothing in the app caps how many Requests one account may raise or how many bytes they may put on disk in total. This is the gap worth closing first if your portal is exposed.
+2. **The sign-in and password-reset paths**, as a second layer in front of the app's own.
+3. **Everything under `/api`**, as a broad ceiling — generous enough that a person clicking through the app never meets it.
+
+The right numbers depend on your instance: how many people use it, and how much disk you are willing to give the portal. There is no default worth shipping, which is why the app ships none. A per-IP bucket at your proxy — nginx's `limit_req_zone`, Caddy's `rate_limit` — is the usual shape.
+
 ### Example: Caddy
 
-Caddy meets the contract with nothing but a site address (automatic HTTPS, no buffering that breaks SSE, headers passed through by default):
+Caddy meets the contract with nothing but a site address (automatic HTTPS, no buffering that breaks SSE, headers passed through by default). The `header` block adds the origin-wide security headers from the section above, and Caddy sets HSTS itself whenever it manages the certificate:
 
 ```caddy
 legal.example.com {
+    header {
+        X-Frame-Options DENY
+        Referrer-Policy strict-origin-when-cross-origin
+        X-Content-Type-Options nosniff
+    }
     reverse_proxy localhost:3000
 }
 ```
@@ -80,6 +112,14 @@ server {
     listen 443 ssl;
     server_name legal.example.com;
     # ... ssl_certificate / ssl_certificate_key ...
+
+    # The origin-wide security headers (see above). `always` so they
+    # ride error responses too. Add HSTS once the whole hostname is
+    # HTTPS-only — it is hard to take back.
+    add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
+    add_header X-Frame-Options "DENY" always;
+    add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+    add_header X-Content-Type-Options "nosniff" always;
 
     location / {
         proxy_pass http://localhost:3000;

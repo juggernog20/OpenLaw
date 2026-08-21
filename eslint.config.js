@@ -45,4 +45,56 @@ export default tseslint.config(
       "react-hooks/rules-of-hooks": "error",
     },
   },
+  // The web app's package boundary, as a rule rather than as a habit
+  // (#390).
+  //
+  // The SPA reaches the server through exactly two packages: the
+  // generated typed client (`@openlaw/api-client`) and the wire
+  // vocabulary both ends must agree on (`@openlaw/shared`). It must
+  // never import `@openlaw/api` or `@openlaw/db` for values. Server
+  // code pulled into the bundle is not a style problem: `@openlaw/db`
+  // reaches a connection string, and `@openlaw/api` reaches the auth
+  // instance and every credential the sealed columns hold (TECH-022).
+  // A bundler that resolved either would ship them to a browser.
+  //
+  // Nothing enforced this before. `@openlaw/api` is not even in
+  // `apps/web/package.json`, so the one import below resolves through
+  // the workspace rather than through a declared dependency — which is
+  // to say the boundary was held by everybody remembering it.
+  //
+  // **The one blessed exception is type-only.** better-auth infers the
+  // client's user fields from the server instance's type
+  // (`inferAdditionalFields<Auth>`), which is the vendor's own pattern
+  // and the reason `apps/web/src/lib/auth-client.ts` imports
+  // `@openlaw/api/auth`. A `import type` is erased before the bundler
+  // sees it, so it costs nothing at runtime. `allowTypeImports` is what
+  // says that out loud: drop the `type` keyword and the rule fires.
+  {
+    files: ["apps/web/**/*.{ts,tsx}"],
+    rules: {
+      "@typescript-eslint/no-restricted-imports": [
+        "error",
+        {
+          patterns: [
+            {
+              group: [
+                "@openlaw/**",
+                "!@openlaw/api-client",
+                "!@openlaw/shared",
+                "!@openlaw/api/auth",
+              ],
+              message:
+                "The web app reaches the server through @openlaw/api-client and @openlaw/shared only. Server packages must never enter the browser bundle.",
+            },
+            {
+              group: ["@openlaw/api/auth"],
+              allowTypeImports: true,
+              message:
+                "@openlaw/api/auth is type-only here — better-auth's inferAdditionalFields pattern. Use `import type`; a value import would pull the server's auth instance into the bundle.",
+            },
+          ],
+        },
+      ],
+    },
+  },
 );

@@ -96,6 +96,13 @@ export function daysBetween(from: string, to: string): number {
  * the only honest answer for a term that ends on a month's last day:
  * rolling it into a shorter month has to land on that month's last day
  * rather than spill into the next one.
+ *
+ * **This is the copy that matters.** `apps/web/src/lib/contracts.ts` has
+ * the same arithmetic privately, for the DES-041 timeline's backward
+ * walk over marks it draws. Every date the product asks anybody to
+ * confirm is computed here and stored, so the two are allowed to be two
+ * (DES-041's 2026-08-21 addendum). A third caller anywhere is the
+ * trigger to hoist all of them into one home.
  */
 export function shiftMonths(date: string, months: number): string {
   // A civil date is fixed-width `YYYY-MM-DD`, so its three parts are

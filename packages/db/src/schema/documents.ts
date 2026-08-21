@@ -85,10 +85,33 @@ export type DocumentVersionKind = (typeof DOCUMENT_VERSION_KINDS)[number];
  * contract — and the other three FK columns land with their own modules
  * (M22, M27, M28). `contract_id` is therefore `NOT NULL` here: with one
  * owner declared, that is the exactly-one-owner rule stated exactly, and
- * it costs nothing to hold. The migration that adds a second owner
- * column relaxes it and moves the rule into the application check
- * DOC-008 describes, which is the only place a one-of-four rule can
- * live.
+ * it costs nothing to hold.
+ *
+ * **The migration that adds a second owner column must carry the rule
+ * down with it, not hand it to the application.** Dropping `NOT NULL`
+ * and relying on the application check DOC-008 describes would leave the
+ * table able to hold a two-owner row and an orphan row alike, and a row
+ * like that is unreachable by every access path in the product — the
+ * gate is the owner. Postgres states the rule directly, with
+ * `num_nonnulls`.
+ *
+ * **The constraint names the owner columns that exist when it is
+ * written.** It cannot be written in its final four-column form up
+ * front: a CHECK naming `entity_id` before M27 adds that column does not
+ * parse. So the migration that adds the second owner column carries
+ * `CHECK (num_nonnulls(matter_id, contract_id) = 1)` beside its
+ * `DROP NOT NULL` — never one without the other, because the gap between
+ * them is where an ownerless row can be written. Each later owner module
+ * then drops and re-adds it one column wider, in the migration that adds
+ * its own column, until it reaches:
+ *
+ * ```sql
+ * CHECK (num_nonnulls(matter_id, contract_id, entity_id, knowledge_item_id) = 1)
+ * ```
+ *
+ * The application check stays, because it is what turns a violation into
+ * a message somebody can act on rather than a 500. The constraint is the
+ * floor under it. See DOC-008's 2026-08-21 consequence.
  *
  * No cascade on the contract: a contract is archived, never deleted, and
  * its paper outlives an accident. Hard deletion (DOC-010) is its own

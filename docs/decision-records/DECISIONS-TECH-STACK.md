@@ -148,6 +148,20 @@ Postgres + SQLite eval tier: doubles the test matrix, forbids or shims the featu
 
 The Compose file ships a Postgres container (external/managed Postgres equally supported via `DATABASE_URL`).
 
+### Addendum (2026-08-21, [#390](https://github.com/juggernog20/OpenLaw/issues/390)) — a primary key is a UUIDv7 **value** in a `text` column, and stays one
+
+The decision above says "UUID v7 primary keys confirmed" and stops there. What shipped is a UUIDv7 value stored in a `text` column: `uuidPk()` in `packages/db/src/schema/helpers.ts` is `text("id").primaryKey()` with a `uuidv7()` default, and every table in `packages/db/src/schema` takes it. That is the decision, not a shortcut somebody took on the first table and nobody revisited.
+
+**What the value is, is unchanged.** The keys are UUIDv7: canonical 36-character form, time-ordered, so the sort property TECH-004 bought is the value's and the column type never had it to give. Nothing about ordering, generation, or the `created_at`-free keyset cursor (CTR-024) depends on the storage type.
+
+**What the native `uuid` type would buy.** Sixteen bytes per key instead of thirty-six, a narrower index, and a parse the database does rather than trusts. Real, and at this product's scale unobservable: DD-002 sizes the install at a 2–10 person legal team, so the widest table holds tens of thousands of rows on a machine that is not index-bound.
+
+**Why the conversion is declined.** It is an unattended rewrite of every `id` column the schema declares — 31 tables take `uuidPk()` today — and of every foreign key that points at one, across all 46 tables. It runs on somebody else's data, from `compose up` (TECH-005), with no operator watching. The upgrade story is the promise this product is built on, and a whole-schema type change is the single migration most able to break it. The trade is a measurable risk to every existing install against a benefit nobody on one can measure.
+
+**When to reopen.** A deployment that is demonstrably index-bound on key width, or a Postgres feature the schema wants that requires the native type. Neither exists. Until one does, `text` is the answer, and a new table takes `uuidPk()` like every other.
+
+This closes the API-and-domain-core review's close call CC-1.
+
 ## TECH-005: Deployment — Docker Compose as the blessed path
 
 - **Status:** Accepted
@@ -181,6 +195,30 @@ Release artifact = images + compose.yml + .env.example. Upgrade story = pull new
 ### Alternatives considered
 
 Prisma (codegen layer; Postgres-specific surfaces fight the abstraction); Kysely/raw SQL (hand-rolled conventions, higher onboarding cost).
+
+### Addendum (2026-08-21, [#390](https://github.com/juggernog20/OpenLaw/issues/390)) — a migration does not always start inside a transaction
+
+**A migration file inherits whatever transaction state the file before it left behind. If it needs to be all-or-nothing, it must open its own transaction rather than assume one.**
+
+drizzle-kit runs the pending files in order, and normally each one runs inside a transaction the runner opened — so a statement that fails rolls the file back. Two things end that, and one of them is already in this repo:
+
+- A file ending in a bare `COMMIT;`. `packages/db/migrations/0060_account_issuer.sql` does, deliberately, for exactly this reason.
+- `CREATE INDEX CONCURRENTLY`, which Postgres refuses inside a transaction block.
+
+Either leaves the session in **autocommit**, and **the next file in the batch arrives that way**. In autocommit every statement commits as it runs, so a file with an `ALTER TABLE` followed by a guard that raises leaves the `ALTER` applied and nothing else done — and the re-run after the fix dies on the duplicate column instead of resuming.
+
+The fix is two lines at the head of any migration that must be atomic:
+
+```sql
+COMMIT;--> statement-breakpoint
+BEGIN;--> statement-breakpoint
+```
+
+The `COMMIT` closes whatever is open — the runner's transaction, empty at that point, or nothing at all, which Postgres answers with a warning rather than an error. The `BEGIN` then makes the file one transaction on **every** upgrade path, whether it was reached from a fresh database or from an install crossing `0060` on the way. Migrations that already ran in the same batch stay applied either way, because each records its journal row as it goes.
+
+This is worth the two lines whenever a file has more than one statement that must not land alone: a backfill beside its column, a guard that can refuse, or a constraint added after the data is fixed up to satisfy it. A lone `ALTER TABLE ADD COLUMN` is atomic by itself and needs nothing.
+
+`0060_account_issuer.sql` is the worked example and carries the argument in its own comments. The `database` agent skill repeats this rule where a migration author will be standing.
 
 ## TECH-007: Background jobs — pg-boss on Postgres
 
@@ -511,7 +549,7 @@ TECH-003 makes the OpenAPI document a first-class artifact. Fastify needs a sche
 
 ### Decision
 
-**Zod (v4)** via `fastify-type-provider-zod`: every route declares request/response schemas in Zod; the same definitions drive validation, inference, and the OpenAPI 3.1 document (`@fastify/swagger`). Schemas shared with the SPA (form validation, shared types) live in `packages/shared`.
+**Zod (v4)** via `fastify-type-provider-zod`: every route declares request/response schemas in Zod; the same definitions drive validation, inference, and the OpenAPI 3.1 document (`@fastify/swagger`). Schemas shared with the SPA (form validation, shared types) **will** live in `packages/shared`. _(2026-08-21, [#390](https://github.com/juggernog20/OpenLaw/issues/390): that clause is a destination, not a description. No Zod schema lives in `packages/shared` today. What the package holds is the wire vocabulary both ends must agree on — problem-type strings, bound constants, action slugs, sort keys — and the web app validates its forms in the field controls rather than against a schema. The sentence is written in the future tense because the first shared schema arrives with web form validation, and until then a reader would otherwise go looking for schemas that are not there.)_
 
 ### Alternatives considered
 
@@ -559,6 +597,25 @@ Working defaults: `compose.yml`/`compose.dev.yml` at repo root next to `.env.exa
 - `apps/api` takes `@fastify/static` and the SPA-fallback route; the Vite dev proxy (with its Origin rewrite) remains a dev-only affordance.
 - The M3 demo reaches `http://<vm-ip>:3000` directly — TLS is the deployer's proxy's job.
 - Every future service addition is a reviewable compose diff riding its feature's PR.
+
+### Addendum (2026-08-21, [#390](https://github.com/juggernog20/OpenLaw/issues/390)) — security response headers, and where rate limiting lives
+
+The BYO-proxy decision left one thing unsaid, and it has been unsaid through fifteen milestones: **who sets the security response headers.** This records the posture so nobody has to infer it from the absence of `helmet` in `package.json`.
+
+**1. The app sets the headers that are about its own responses, and only those.** Two are set today and both are per route rather than global, because both are about the bytes that route returns:
+
+- `x-content-type-options: nosniff` on every document, rendition, and request-attachment download. A browser that sniffs an uploaded file into something executable is the attack; the route knows it is streaming somebody else's upload, so the route says so.
+- `content-security-policy: default-src 'none'; sandbox` on the inline-render routes. An uploaded HTML or SVG rendered in a frame is the attack, and this is the narrowest policy that stops it.
+
+Those stay in the routes. A global header cannot know which responses are somebody else's bytes.
+
+**2. The deployer's reverse proxy owns the origin-wide headers.** `Strict-Transport-Security`, `X-Frame-Options` / `frame-ancestors`, `Referrer-Policy`, and a page-level CSP for the SPA are the proxy's, added to the contract in `docs/DEPLOYMENT.md`. HSTS is the clearest case: it is a claim about TLS, the app has no TLS, and an app that asserts HSTS on a plain-HTTP port is asserting something it cannot know. The others follow the same rule — they are properties of the public origin, which is the thing the deployer configured and the app was told about only as a `BASE_URL` string.
+
+**3. `@fastify/helmet` is declined, and this is the reason.** Helmet's value is a sensible default for an app that is its own origin. This app is not: it is one upstream behind an ingress the deployer already runs, and every org in TECH-008's audience has one. Adding helmet would put a second, weaker copy of the same headers behind the proxy's, and the two would disagree the moment a deployer tuned theirs — with the app's copy winning or losing depending on the proxy's merge behavior, which is not something we can pin from here. A page-level CSP tight enough to be worth having also needs to know the origin's assets, and Vite's hashed bundle means it would be generated or permissive; permissive is the version that ships and then reads as protection.
+
+**4. Rate limiting is the proxy's too, with one exception that is already ours.** Sign-in has an in-app limiter (better-auth's, TECH-018's `AUTH_RATE_LIMIT=off` overlay switch) because it protects a credential rather than a resource, and the counter has to be the one the auth layer itself keeps. Everything else — the portal's open write addresses above all (INT-002's M20 addenda, parked in `FUTURE-FEATURES.md`) — is a bytes-and-requests bound whose right numbers depend on the instance, and whose right enforcement point is in front of the app. `docs/DEPLOYMENT.md`'s proxy contract now says so, rather than covering TLS and `Origin` and going quiet on limits.
+
+**When to reopen.** A deployment topology with no proxy in front of it — which TECH-017 does not bless and the docs do not describe — or a managed offering, which DD-009 and TECH-005 both put outside v1.
 
 ## TECH-018: Deployment fidelity — hybrid dev loop, hard E2E gate on built images, `e2e/` workspace
 

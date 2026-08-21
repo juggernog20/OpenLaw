@@ -323,6 +323,16 @@ const MAX_DRAWN_ROLLS = 60;
  * last day — `2026-03-31` back one month is February's 28th, not
  * March's 3rd. Month arithmetic is done in UTC so no timezone can move
  * the calendar date it answers.
+ *
+ * **This is the second copy, and the copy is deliberate** (DES-041's
+ * 2026-08-21 addendum). `shiftMonths` in `apps/api/src/lib/contract-term.ts`
+ * is the same arithmetic, and it is the one that matters: it computes
+ * the roll date the record actually takes, which the API stores and this
+ * file reads rather than derives. This copy only walks *backwards* from
+ * that stored date to place marks on the timeline's gutter, so a drift
+ * between the two costs a bar boundary, never a date anybody confirms.
+ * Do not use it to compute a confirmable date. A third caller anywhere
+ * is the trigger to hoist all of them into one home.
  */
 function shiftMonths(civil: string, months: number): string {
   // A stored civil date is fixed-width `YYYY-MM-DD`, so its three parts

@@ -12,7 +12,14 @@
  * documents as the exception to separate-tables-with-view, so there is
  * no foreign key on the entity. The CHECK admits the full documented
  * vocabulary — the same set the `activity_log` precedent carries — while
- * the API accepts `contract` alone until the other records arrive.
+ * the API accepts only the types that have an audience arm (CMT-010):
+ * `contract` since M9, and `request` since M20. `matter` and `document`
+ * arrive with their own modules.
+ *
+ * **Because there is no foreign key, no cascade can reach these rows.**
+ * Nothing in the product deletes a record a thread hangs off today, and
+ * the first path that does owes an answer to what happens to the thread
+ * — sweep, tombstone, or reattach (CMT-010's 2026-08-21 addendum).
  *
  * Columns land with the feature that reads them (TECH-014). The
  * `anchor` jsonb column CMT-001 needs for document annotations waits for
@@ -24,7 +31,10 @@ import { check, index, pgTable, primaryKey, text, timestamp } from "drizzle-orm/
 import { users } from "./auth.js";
 import { uuidPk } from "./helpers.js";
 
-/** What a comment can hang off. Only `contract` is reachable in M9. */
+/** What a comment can hang off. The API's reachable set is narrower and
+ * is its own list (`COMMENT_ENTITY_TYPES` in
+ * `apps/api/src/modules/comments/audience.ts`): `contract` and
+ * `request`. */
 export const COMMENT_ENTITY_TYPES = ["matter", "contract", "document", "request"] as const;
 export type CommentEntityType = (typeof COMMENT_ENTITY_TYPES)[number];
 
