@@ -13,13 +13,22 @@
 
 import { describe, expect, it } from "vitest";
 import { screen, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import type { Comment } from "../lib/comments";
 import type {
   MyRequestAttachment,
   MyRequestField,
   MyRequestFieldRefs,
   RequestStatus,
 } from "../lib/requests";
-import { json, problem, renderAt, stubApi, type StubCall } from "../testing/helpers";
+import {
+  json,
+  problem,
+  renderAt,
+  stubApi,
+  type StubAnswer,
+  type StubCall,
+} from "../testing/helpers";
 
 const REQUESTER = {
   id: "u9",
@@ -89,14 +98,71 @@ function detail(
   };
 }
 
-/** Answers the one read the detail makes. */
-function detailRead(body: unknown, status = 200) {
-  return (call: StubCall) =>
-    call.url.pathname === "/api/v1/portal/requests/45" && call.method === "GET"
-      ? status === 200
+/** One comment as the API answers it, with an ordinary Full Thread row
+ * already filled in — a suite asserts the one fact it is about. */
+function comment(overrides: Partial<Comment> & { id: string; body: string }): Comment {
+  return {
+    entityType: "request",
+    entityId: "rq1",
+    author: { id: "u2", displayName: "Sarah Chen", image: null, archived: false },
+    visibility: "full_thread",
+    mentions: [],
+    createdAt: "2026-08-07T09:14:00.000Z",
+    editedAt: null,
+    deletedAt: null,
+    redactedAt: null,
+    ...overrides,
+  };
+}
+
+/** What the thread read answers: a page of comments, or a failure. */
+type ThreadAnswer = { comments: Comment[]; nextCursor?: string | null } | "failed";
+
+/**
+ * Answers the two reads the detail loader makes: the Request itself,
+ * and the thread that hangs off it (#381).
+ *
+ * One helper, because the page makes both reads on every load — a suite
+ * that is not about the conversation still has to answer it. The thread
+ * defaults to empty, which is what a Request nobody has replied to yet
+ * has.
+ */
+function detailRead(body: unknown, status = 200, thread: ThreadAnswer = { comments: [] }) {
+  return (call: StubCall) => {
+    if (call.url.pathname === "/api/v1/portal/requests/45" && call.method === "GET") {
+      return status === 200
         ? json(200, body)
-        : problem(status, "No request exists with this reference.")
+        : problem(status, "No request exists with this reference.");
+    }
+    if (call.url.pathname === "/api/v1/comments" && call.method === "GET") {
+      if (thread === "failed") return problem(500, "The thread could not be read.");
+      // A cursor means the reader asked for the page before this one.
+      // The suite that walks back answers it with its own handler; this
+      // one answers the newest page.
+      return json(200, { comments: thread.comments, nextCursor: thread.nextCursor ?? null });
+    }
+    return undefined;
+  };
+}
+
+/** Answers the one write the composer makes. */
+function replyPost(answer: (body: unknown) => Response) {
+  return (call: StubCall) =>
+    call.url.pathname === "/api/v1/comments" && call.method === "POST"
+      ? answer(call.body)
       : undefined;
+}
+
+/** The first handler with an answer wins, so a suite can layer its own
+ * write over the two reads every load makes. */
+function stubs(...handlers: ((call: StubCall) => StubAnswer)[]) {
+  return (call: StubCall) => {
+    for (const handler of handlers) {
+      const answer = handler(call);
+      if (answer) return answer;
+    }
+    return undefined;
+  };
 }
 
 describe("the request envelope", () => {
@@ -342,14 +408,18 @@ describe("what the requester submitted", () => {
     expect(within(card).queryByText("Attachments")).not.toBeInTheDocument();
   });
 
-  it("draws no conversation yet", async () => {
-    // The thread is #381. A page that drew an empty one would be
-    // claiming there is a conversation.
+  it("draws the conversation above it, where I7 puts it", async () => {
+    // #379 drew no conversation, because an empty card would have
+    // claimed there was one. #381 gives the card a composer, so it is
+    // now the way to start the conversation rather than a claim about
+    // it, and the card draws on a Request nobody has replied to yet.
     stubApi({ signedIn: REQUESTER, extra: detailRead(detail()) });
     renderAt("/portal/requests/45");
 
-    await screen.findByRole("region", { name: "What you submitted" });
-    expect(screen.queryByRole("region", { name: "Conversation" })).not.toBeInTheDocument();
+    const thread = await screen.findByRole("region", { name: "Conversation" });
+    const submitted = screen.getByRole("region", { name: "What you submitted" });
+    expect(thread.compareDocumentPosition(submitted)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
+    expect(within(thread).getByRole("textbox", { name: "Reply to Legal" })).toBeInTheDocument();
   });
 });
 
@@ -398,5 +468,178 @@ describe("who reaches the detail", () => {
 
     expect(await screen.findByRole("region", { name: "What you submitted" })).toBeInTheDocument();
     expect(screen.queryByRole("navigation")).not.toBeInTheDocument();
+  });
+});
+
+/**
+ * The conversation (#381), from I7's Conversation card.
+ *
+ * Who can read the thread, which tiers each viewer hears, and what a
+ * post at the wrong tier is answered are covered at the API's HTTP seam
+ * and are not re-asserted here. What this suite covers is what a
+ * requester at `/portal/requests/45` can see and do: the rows the card
+ * draws, the composer that has no tier to choose, and what happens when
+ * a reply is refused.
+ */
+describe("the conversation", () => {
+  it("draws each reply with its author, its pill, and what was said", async () => {
+    stubApi({
+      signedIn: REQUESTER,
+      extra: detailRead(detail(), 200, {
+        comments: [
+          comment({
+            id: "c1",
+            body: "Adding context — the 22nd is a hard date.",
+            author: { id: REQUESTER.id, displayName: "Tom Iwu", image: null, archived: false },
+          }),
+          comment({ id: "c2", body: "Thanks Tom — reviewing the redline now." }),
+        ],
+      }),
+    });
+    renderAt("/portal/requests/45");
+
+    const card = await screen.findByRole("region", { name: "Conversation" });
+    expect(within(card).getByText("Adding context — the 22nd is a hard date.")).toBeInTheDocument();
+    expect(within(card).getByText("Thanks Tom — reviewing the redline now.")).toBeInTheDocument();
+    // I7's author pill: the reader's own reply is "You", and on a
+    // Request the only other author is staff.
+    expect(within(card).getByText("You")).toBeInTheDocument();
+    expect(within(card).getByText("Sarah Chen")).toBeInTheDocument();
+    expect(within(card).getByText("Legal")).toBeInTheDocument();
+  });
+
+  it("offers the reply box no tier to choose", async () => {
+    stubApi({ signedIn: REQUESTER, extra: detailRead(detail()) });
+    renderAt("/portal/requests/45");
+
+    const card = await screen.findByRole("region", { name: "Conversation" });
+    expect(within(card).getByRole("textbox", { name: "Reply to Legal" })).toBeInTheDocument();
+    // The tier picker is a staff affordance. A Requester is in one room,
+    // so there is nothing here to pick between (DD-016).
+    expect(within(card).queryByRole("radio")).not.toBeInTheDocument();
+    expect(within(card).queryByText("Full thread")).not.toBeInTheDocument();
+    expect(within(card).queryByText("Legal only")).not.toBeInTheDocument();
+    expect(within(card).queryByText("Working team")).not.toBeInTheDocument();
+  });
+
+  it("posts a reply at Full Thread and puts it on the end of the thread", async () => {
+    const user = userEvent.setup();
+    let sent: unknown;
+    stubApi({
+      signedIn: REQUESTER,
+      extra: stubs(
+        replyPost((body) => {
+          sent = body;
+          return json(201, {
+            comment: comment({
+              id: "c9",
+              body: "Any update on this?",
+              author: { id: REQUESTER.id, displayName: "Tom Iwu", image: null, archived: false },
+            }),
+          });
+        }),
+        detailRead(detail()),
+      ),
+    });
+    renderAt("/portal/requests/45");
+
+    const box = await screen.findByRole("textbox", { name: "Reply to Legal" });
+    await user.type(box, "Any update on this?");
+    await user.click(screen.getByRole("button", { name: "Send" }));
+
+    expect(await screen.findByText("Any update on this?")).toBeInTheDocument();
+    // Full Thread, and keyed by the Request's own id rather than its
+    // R-### number (CMT-010).
+    expect(sent).toEqual({
+      entityType: "request",
+      entityId: "rq1",
+      body: "Any update on this?",
+      visibility: "full_thread",
+    });
+    // The box is empty again, because the words landed.
+    expect(box).toHaveValue("");
+  });
+
+  it("keeps the words in the box and states the reason when the reply is refused", async () => {
+    const user = userEvent.setup();
+    stubApi({
+      signedIn: REQUESTER,
+      extra: stubs(
+        replyPost(() => problem(403, "You cannot post a comment at that visibility tier.")),
+        detailRead(detail()),
+      ),
+    });
+    renderAt("/portal/requests/45");
+
+    const box = await screen.findByRole("textbox", { name: "Reply to Legal" });
+    await user.type(box, "Any update on this?");
+    await user.click(screen.getByRole("button", { name: "Send" }));
+
+    expect(
+      await screen.findByText("You cannot post a comment at that visibility tier."),
+    ).toBeInTheDocument();
+    // Nothing a person wrote is thrown away by a refusal.
+    expect(box).toHaveValue("Any update on this?");
+  });
+
+  it("says the conversation could not be read, and still shows what was submitted", async () => {
+    stubApi({ signedIn: REQUESTER, extra: detailRead(detail(), 200, "failed") });
+    renderAt("/portal/requests/45");
+
+    expect(
+      await screen.findByText("The conversation could not be read. Reload the page to try again."),
+    ).toBeInTheDocument();
+    // A thread that could not be fetched does not take the page with
+    // it: the values the requester submitted are still theirs to see.
+    expect(screen.getByRole("region", { name: "What you submitted" })).toBeInTheDocument();
+  });
+
+  it("walks back into the older thread when there is more of it", async () => {
+    const user = userEvent.setup();
+    stubApi({
+      signedIn: REQUESTER,
+      extra: (call: StubCall) => {
+        if (call.url.pathname === "/api/v1/comments" && call.url.searchParams.get("cursor")) {
+          return json(200, {
+            comments: [comment({ id: "c0", body: "The very first reply." })],
+            nextCursor: null,
+          });
+        }
+        return detailRead(detail(), 200, {
+          comments: [comment({ id: "c5", body: "The newest reply." })],
+          nextCursor: "c5",
+        })(call);
+      },
+    });
+    renderAt("/portal/requests/45");
+
+    await user.click(await screen.findByRole("button", { name: "Show earlier replies" }));
+
+    const older = await screen.findByText("The very first reply.");
+    const newer = screen.getByText("The newest reply.");
+    // Above what was already there, not below it: the thread reads
+    // oldest to newest, so what came before belongs on the head of it
+    // (CTR-024).
+    expect(older.compareDocumentPosition(newer)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
+    // The thread reaches its own beginning, so the control goes.
+    expect(screen.queryByRole("button", { name: "Show earlier replies" })).not.toBeInTheDocument();
+  });
+
+  it("draws a removed reply as the tombstone it is", async () => {
+    stubApi({
+      signedIn: REQUESTER,
+      extra: detailRead(detail(), 200, {
+        comments: [
+          comment({ id: "c1", body: "", deletedAt: "2026-08-07T10:00:00.000Z" }),
+          comment({ id: "c2", body: "Reposting: we are on it." }),
+        ],
+      }),
+    });
+    renderAt("/portal/requests/45");
+
+    // The row keeps its seat so the conversation around it still reads
+    // (CMT-008).
+    expect(await screen.findByText("Comment deleted by its author.")).toBeInTheDocument();
+    expect(screen.getByText("Reposting: we are on it.")).toBeInTheDocument();
   });
 });

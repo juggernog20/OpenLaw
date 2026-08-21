@@ -2549,8 +2549,38 @@
   "portal.request.meta": {
     "defaultMessage": "{reference} · {requestType} · Submitted {submitted}"
   },
+  "portal.request.replyError": {
+    "defaultMessage": "The reply could not be sent. Try again."
+  },
+  "portal.request.replyLabel": {
+    "defaultMessage": "Reply to Legal"
+  },
+  "portal.request.replyPlaceholder": {
+    "defaultMessage": "Reply to Legal…"
+  },
+  "portal.request.replySend": {
+    "defaultMessage": "Send"
+  },
   "portal.request.submittedHeading": {
     "defaultMessage": "What you submitted"
+  },
+  "portal.request.threadFailed": {
+    "defaultMessage": "The conversation could not be read. Reload the page to try again."
+  },
+  "portal.request.threadHeading": {
+    "defaultMessage": "Conversation"
+  },
+  "portal.request.threadLegal": {
+    "defaultMessage": "Legal"
+  },
+  "portal.request.threadOlder": {
+    "defaultMessage": "Show earlier replies"
+  },
+  "portal.request.threadOlderFailed": {
+    "defaultMessage": "The earlier replies could not be read. Try again."
+  },
+  "portal.request.threadYou": {
+    "defaultMessage": "You"
   },
   "renewal.action.amendment": {
     "defaultMessage": "File the amendment"

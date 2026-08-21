@@ -30,26 +30,42 @@
  * - `readerRoles` — the roles that reach any thread of this type at all.
  *   It is the route guard's list, and it is per-arm because the roles are
  *   not the same: a contract thread is staff-only (CTR-021), and a
- *   request thread has to admit the Business User who raised it (DD-013).
+ *   request thread admits the Business User who raised it (DD-013).
  * - `resolve` — the audience rule: this viewer's standing on this record,
  *   or `null` where there is nothing here for them.
  * - `mentionCandidates` — who a comment on this record can address
  *   (CMT-007), each with the tiers they hear. It is per-arm because the
  *   addressees come from the audience rule: a contract's roster is its
- *   team and the staff roles, and a request's will be its Requester and
+ *   team and the staff roles, and a request's is its Requester and
  *   Member+ staff.
  * - `notifyPosted` — what a new comment on this type of record raises
  *   through the Notifier seam (NOT-002). It is here rather than at the
  *   route because the events differ by type: a contract comment is group
- *   1 and 2 on the record's roster, and a request comment will be group 5
- *   at its Requester.
+ *   1 and 2 on the record's roster, and a request comment is group 5 at
+ *   its Requester — a slot until #382 gives the seam its methods.
  *
  * A record a viewer cannot reach and a record that is not there answer
  * the same way — `null`, and {@link NO_RECORD} above it. A refusal that
  * told them apart would say the record is there.
  */
 
-import { contracts, eq, type CommentVisibility, type Executor, type UserRole } from "@openlaw/db";
+import {
+  and,
+  asc,
+  contracts,
+  eq,
+  inArray,
+  isNull,
+  or,
+  requests,
+  sql,
+  users,
+  COMMENT_VISIBILITIES,
+  USER_ROLES,
+  type CommentVisibility,
+  type Executor,
+  type UserRole,
+} from "@openlaw/db";
 import { NO_PERMISSION, type AuthenticatedUser } from "../../auth/guards.js";
 import {
   contractAudience,
@@ -68,7 +84,7 @@ import { httpError } from "../../lib/problem.js";
  * and one arm together, and the route schemas are built from it, so a
  * type with no arm cannot be asked for.
  */
-export const COMMENT_ENTITY_TYPES = ["contract"] as const;
+export const COMMENT_ENTITY_TYPES = ["contract", "request"] as const;
 
 export type CommentEntityType = (typeof COMMENT_ENTITY_TYPES)[number];
 
@@ -234,11 +250,146 @@ const contractArm: CommentEntityArm = {
   },
 };
 
+/** Member+ (CONTEXT.md), and every tier they hear. On a Request that is
+ * the whole of the staff rule: there is no team table to consult and no
+ * wall to apply (DD-014 is a contract's, and INT-002 gives a Request
+ * neither), so a Member+ is in every room on every Request. */
+const MEMBER_PLUS: readonly UserRole[] = ["administrator", "legal_team_member"];
+
+/** Every tier, for the people who hear every tier. */
+const ALL_TIERS: readonly CommentVisibility[] = COMMENT_VISIBILITIES;
+
+/** The Requester's one room (DD-016). A Business User is in Full Thread
+ * and nowhere else, so their composer has nothing to choose between —
+ * which is why the portal draws no tier picker at all. */
+const REQUESTER_TIERS: readonly CommentVisibility[] = ["full_thread"];
+
+/**
+ * The request arm — the portal's live conversation (CMT-001, INT-007).
+ *
+ * The audience is two people-shaped facts and nothing else: the
+ * Requester, and Member+ staff. There is no team table on a Request and
+ * no confidentiality wall — DD-014 is a contract's flag, and INT-002
+ * gives a Request no equivalent — so this arm reads one row and answers
+ * from the reader's role.
+ *
+ * **The thread is live from submission.** INT-007 keeps the clarifying
+ * back-and-forth open while a Request is `new`, and nothing here is
+ * keyed to a status: a converted, resolved, or declined Request still
+ * answers, exactly as its detail read does (DD-018). An archived Request
+ * does not, by the house rule that NULL means live.
+ *
+ * **No Contributor arm.** A Contributor reaches this thread only as the
+ * person who raised the Request, and then as a Requester rather than as
+ * staff — the role is a fact about the contract surfaces (CTR-021), and
+ * a Request has no team for it to mean anything on.
+ *
+ * Re-parenting at conversion (CMT-001) is M21's. Nothing here reads or
+ * writes the link a conversion leaves behind.
+ */
+const requestArm: CommentEntityArm = {
+  /**
+   * Every role, because every role can raise a Request: the portal's
+   * gate is a session and nothing else (the INT-001 M20/2 addendum), so
+   * a Contributor and a Member+ submit through the same door a Business
+   * User does. The role opens no thread on its own — `resolve` is what
+   * narrows it to the one Request they raised, or to staff standing.
+   */
+  readerRoles: USER_ROLES,
+
+  async resolve(db, user, entityId) {
+    const [record] = await db
+      .select({ id: requests.id, requesterId: requests.requesterId })
+      .from(requests)
+      .where(and(eq(requests.id, entityId), isNull(requests.archivedAt)))
+      .limit(1);
+    if (!record) return null;
+    // Staff first, so a Member+ who raised the Request themselves is
+    // answered as staff: they are in every room on every Request, and
+    // being the Requester too does not take a room away from them.
+    if (MEMBER_PLUS.includes(user.role)) return { entityId: record.id, tiers: ALL_TIERS };
+    if (record.requesterId === user.id) return { entityId: record.id, tiers: REQUESTER_TIERS };
+    return null;
+  },
+
+  async mentionCandidates(db, audience, only) {
+    // The audience rule read over people instead of over rows, exactly
+    // as the contract arm's is: somebody belongs here when this Request
+    // reaches them and they hear at least one tier on it. So it is the
+    // Requester plus every live Member+, and nobody else — a Contributor
+    // who did not raise it is not offered, because a name no tier
+    // reaches is the trap the promotion confirmation exists to avoid
+    // (CMT-007).
+    const [record] = await db
+      .select({ requesterId: requests.requesterId })
+      .from(requests)
+      .where(eq(requests.id, audience.entityId))
+      .limit(1);
+    if (!record) return [];
+
+    const rows = await db
+      .select({
+        id: users.id,
+        displayName: users.displayName,
+        image: users.image,
+        role: users.role,
+      })
+      .from(users)
+      .where(
+        and(
+          // Archived people are out: they have left, and addressing a
+          // question to them reaches nobody (SET-005).
+          isNull(users.archivedAt),
+          // The audience as a `where` clause, so the read is the two
+          // people-shaped facts rather than the directory. The portal is
+          // open to every Business User, so an instance can hold far
+          // more people than any one Request reaches, and the rows this
+          // leaves out are rows the answer below would discard anyway.
+          or(inArray(users.role, [...MEMBER_PLUS]), eq(users.id, record.requesterId)),
+          only ? inArray(users.id, [...only]) : undefined,
+        ),
+      )
+      // Alphabetical, as every people picker in the product is ordered.
+      .orderBy(asc(sql`lower(${users.displayName})`), asc(users.id));
+    // Which tiers each of them hears — `resolve`'s rule said over people
+    // instead of over one viewer, and the same rule the clause above
+    // narrowed by. So the empty arm never fires; it is here because
+    // "hears nothing means not offered" is the rule, and a rule stated
+    // once is one the next role inherits.
+    return rows.flatMap((row) => {
+      const tiers = MEMBER_PLUS.includes(row.role)
+        ? ALL_TIERS
+        : row.id === record.requesterId
+          ? REQUESTER_TIERS
+          : [];
+      if (tiers.length === 0) return [];
+      return [{ id: row.id, displayName: row.displayName, image: row.image, tiers }];
+    });
+  },
+
+  async notifyPosted() {
+    // Nothing yet, and the blank is the decision rather than an omission.
+    //
+    // A comment on a Request is NOT-002's group 5 — `requester_events`,
+    // the portal audience's own group — and group 5 is a slot until
+    // #382 gives the Notifier its four methods. The seam has one method
+    // per event and no generic `notify()`, so there is no method here to
+    // call: raising the reply at the Requester is #382's work, and it
+    // lands as a call from this arm.
+    //
+    // The contract arm's two events are not borrowed. `commentMentioned`
+    // and `commentPosted` are a contract's — they carry its CTR-003
+    // number and its title, and they fan out over its roster — and a
+    // Request has none of those things.
+  },
+};
+
 /** Every arm, by the type it answers for. The mapped type is exhaustive,
  * so a name added to {@link COMMENT_ENTITY_TYPES} with no arm fails the
  * build rather than 500ing at the first request for it. */
 const ARMS: { readonly [T in CommentEntityType]: CommentEntityArm } = {
   contract: contractArm,
+  request: requestArm,
 };
 
 /**

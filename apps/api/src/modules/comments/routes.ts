@@ -9,8 +9,8 @@
  * contracts, documents, and requests (CMT-001). Matters (M22) and
  * documents (M11) mount these same routes; the entity vocabulary the
  * table admits is the full four, and the API accepts the types that have
- * an arm in `audience.ts` — `contract` alone until the other records
- * exist.
+ * an arm in `audience.ts` — `contract` and `request` today, and matters
+ * and documents when those records exist.
  *
  * The thread is flat and chronological (CMT-002). There is no nesting
  * and no `parent_comment_id`: a conversation between a handful of people
@@ -62,9 +62,11 @@
  * (DD-017) and a hard redact has to be able to remove what was said
  * (CMT-006).
  *
- * An archived record still takes comments. Archiving is a soft delete
- * for mistakes and imports (CONTEXT.md) and it freezes the record's
- * fields; the conversation about why it was archived is not one of them.
+ * Whether an archived record still takes comments is the arm's to say.
+ * An archived contract does: archiving is a soft delete for mistakes and
+ * imports (CONTEXT.md) that freezes the record's fields, and the
+ * conversation about why it was archived is not one of them. An archived
+ * Request answers 404 instead, exactly as its detail read does.
  *
  * **The unread count is the thread's own filter, counted** (M9/5,
  * CMT-009). It runs over the same tiers the thread is read at, so a
