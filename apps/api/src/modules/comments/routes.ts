@@ -9,8 +9,8 @@
  * contracts, documents, and requests (CMT-001). Matters (M22) and
  * documents (M11) mount these same routes; the entity vocabulary the
  * table admits is the full four, and the API accepts the types that have
- * an arm in `audience.ts` — `contract` alone until the other records
- * exist.
+ * an arm in `audience.ts` — `contract` and `request` today, and matters
+ * and documents when those records exist.
  *
  * The thread is flat and chronological (CMT-002). There is no nesting
  * and no `parent_comment_id`: a conversation between a handful of people

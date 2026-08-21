@@ -138,17 +138,37 @@ _None — queue cleared 2026-08-05 (CMT-001 through CMT-005)._
 - **Alternatives considered** — **A branch per entity type at each call site**: rejected, it is one rule in five hands and every new record type edits all five. **One audience rule with optional contract fields**: rejected, the contract's tables would still be in the shared shape and a request arm would carry NULLs that mean nothing. **Leaving the notification at the route**: rejected — the events differ by type (a contract comment is NOT-002 group 1 and 2 on the record's roster; a request comment is group 5 at its Requester), so the route would branch on entity type after all.
 - **Consequences** — `apps/api/src/modules/comments/audience.ts` holds the seam and the arms; the routes hold no entity-shaped rule. The accepted entity vocabulary is drawn from the arm list, so a type with no arm cannot be asked for and a name added with no arm fails the build. The `comments` table's CHECK stays the wider four, so the correction routes narrow the stored column to a known arm before they ask the seam. The `request` arm is M20's; this record only makes room for it. No behaviour changed for contract threads.
 
+### Addendum (2026-08-21, M20/7, [#381](https://github.com/juggernog20/OpenLaw/issues/381)) — the `request` arm, and what it took to add one
+
+CMT-010 made room for a second arm and predicted the shape of the change. M20/7 built it. These are the choices it settled, and the one measurement the prefactor was for.
+
+**Adding the arm was one entry in the entity-type list and one member of the arms map.** No route, no tier filter, and no unread machinery was edited — the prefactor's acceptance criterion held. The `comments` table's CHECK and the `activity_log`'s both already admitted `request`, so no migration went with it either.
+
+**The audience is the Requester plus Member+ staff, and it reads one row.** There is no team table on a Request and no confidentiality wall: DD-014 is a contract's flag, and INT-002 gives a Request no equivalent. So the arm reads the `requests` row and answers from the reader's role — Member+ hears all three tiers, the Requester hears Full Thread, and everybody else is `null`.
+
+**Staff standing wins over requester standing.** A Member+ who raised the Request themselves is answered as staff and hears every tier. Being the Requester too does not take a room away from somebody who was already in it.
+
+**Every role reaches the arm's guard, because every role can raise a Request.** The portal's gate is a session and nothing else (the INT-001 M20/2 addendum), so a Contributor and a Member+ submit through the same door a Business User does. This widened `COMMENT_READER_ROLES` to the full four. It widened no existing arm: the contract arm's own `readerRoles` refuses a Business User per request, which is the property the union was built to have, and a test asserts it.
+
+**A Contributor who did not raise the Request is answered 404, not 403.** A Contributor's grant is a `contract_team` row (CTR-021) and a Request has no team for one to sit on, so on this record they are neither staff nor the Requester. They read exactly as another requester does, because to both of them the Request does not exist (DD-013).
+
+**No status is consulted anywhere in the arm.** The thread is live from submission (INT-007) and stays live after conversion (DD-018): a Request that is `new`, `converted`, `resolved`, or `declined` answers the same way. An archived Request does not, by the house rule that NULL means live.
+
+**The arm's `notifyPosted` raises nothing, and the blank is the decision.** A comment on a Request is NOT-002's group 5, and group 5 is a slot until #382 gives the Notifier its four methods. The seam has one method per event and no generic `notify()`, so there is no method here to call yet. The contract arm's two events are not borrowed: `commentMentioned` and `commentPosted` carry a contract's CTR-003 number and its title and fan out over its roster, and a Request has none of those things.
+
+**Re-parenting at conversion (CMT-001) is untouched.** Nothing in this arm reads or writes the link a conversion leaves behind; M21 owns that move.
+
 ## Index of decisions
 
-| #       | Decision                                                                       | Status                                             |
-| ------- | ------------------------------------------------------------------------------ | -------------------------------------------------- |
-| CMT-001 | One comment system; anchored doc comments; thread follows the work             | Accepted (extended by CMT-010)                     |
-| CMT-002 | Thread shape: flat chronological, mentions, no nesting                         | Accepted                                           |
-| CMT-003 | Tier rendering: badge + strong Legal-Only treatment; segmented composer        | Accepted                                           |
-| CMT-004 | Home: activity-bar panel; badge = your unread, tier-filtered                   | Accepted (confirmed by CMT-009)                    |
-| CMT-005 | Post-publish: edit with marker, soft delete, tier immutable                    | Accepted (amended by CMT-006, extended by CMT-008) |
-| CMT-006 | Prior comment text lives in `comment_revisions`, not the activity log          | Accepted (extended by CMT-008)                     |
-| CMT-007 | Mentions: a list beside plain text; reachable candidates; narrowest promotion  | Accepted                                           |
-| CMT-008 | The three corrections: owners, two tombstones, and what a redact takes         | Accepted                                           |
-| CMT-009 | The unread count: a watermark per reader per record, and what it excludes      | Accepted (amended by CMT-010)                      |
-| CMT-010 | Audience resolution takes one arm per entity type; downstream takes the answer | Accepted                                           |
+| #       | Decision                                                                       | Status                                                  |
+| ------- | ------------------------------------------------------------------------------ | ------------------------------------------------------- |
+| CMT-001 | One comment system; anchored doc comments; thread follows the work             | Accepted (extended by CMT-010)                          |
+| CMT-002 | Thread shape: flat chronological, mentions, no nesting                         | Accepted                                                |
+| CMT-003 | Tier rendering: badge + strong Legal-Only treatment; segmented composer        | Accepted                                                |
+| CMT-004 | Home: activity-bar panel; badge = your unread, tier-filtered                   | Accepted (confirmed by CMT-009)                         |
+| CMT-005 | Post-publish: edit with marker, soft delete, tier immutable                    | Accepted (amended by CMT-006, extended by CMT-008)      |
+| CMT-006 | Prior comment text lives in `comment_revisions`, not the activity log          | Accepted (extended by CMT-008)                          |
+| CMT-007 | Mentions: a list beside plain text; reachable candidates; narrowest promotion  | Accepted                                                |
+| CMT-008 | The three corrections: owners, two tombstones, and what a redact takes         | Accepted                                                |
+| CMT-009 | The unread count: a watermark per reader per record, and what it excludes      | Accepted (amended by CMT-010)                           |
+| CMT-010 | Audience resolution takes one arm per entity type; downstream takes the answer | Accepted; the `request` arm added by the M20/7 addendum |

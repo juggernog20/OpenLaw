@@ -5,15 +5,18 @@
  * intake.pen: what a Requester sees when they open one of their own
  * asks.
  *
- * Three blocks, in I7's order: the envelope — the summary, the status,
+ * Four blocks, in I7's order: the envelope — the summary, the status,
  * and the "R-45 · Contract review · Submitted Aug 6" line — a banner
- * that says what the status means for the requester, and the "What you
- * submitted" card carrying the values the form collected.
+ * that says what the status means for the requester, the Conversation
+ * card, and the "What you submitted" card carrying the values the form
+ * collected.
  *
- * **The thread slots in between the banner and the card**, which is
- * where I7 draws it. It is ticket #381's, and nothing here reserves
- * space for it: a page that drew an empty conversation would be
- * claiming there is a conversation.
+ * **The thread sits between the banner and the card** (#381), which is
+ * where I7 draws it. It is the same thread the staff applet draws, read
+ * through the same routes: the `request` audience arm puts a Requester
+ * in one room (DD-016), so the read carries Full Thread comments alone
+ * and the composer posts Full Thread and offers no other. What it draws
+ * and why is in `components/portal/request-thread.tsx`.
  *
  * **A converted Request opens like any other** (INT-001, DD-018), and
  * the page does not name what it became: a Business User cannot open a
@@ -30,8 +33,8 @@
  * 1. I7 draws the Description as the thread's opening message. Nothing
  *    writes a comment row at submission — the Description is a column
  *    on the Request — so it is drawn as what it is: the first of the
- *    values in "What you submitted". The thread (#381) draws comment
- *    rows and nothing else.
+ *    values in "What you submitted". The thread draws comment rows and
+ *    nothing else.
  * 2. I7 draws the Attachments row's filenames as one static line. They
  *    render as a list, and each name is the link that downloads the file
  *    it names: the paper is what a requester came back for, and a name
@@ -70,6 +73,7 @@ import {
 import { currentUser } from "../lib/session";
 import { PageTitle } from "../components/page-title";
 import { PortalShell } from "../components/portal/portal-shell";
+import { RequestThread } from "../components/portal/request-thread";
 
 export async function portalRequestLoader({ params }: LoaderFunctionArgs) {
   const user = await currentUser();
@@ -85,11 +89,19 @@ export async function portalRequestLoader({ params }: LoaderFunctionArgs) {
   // the rule the form's loader already applies to a stale form link.
   if (res.response.status === 404) return redirect("/portal");
   if (!res.data) throw new Error("The request could not be read.");
-  return { user, ...res.data };
+  // The thread is keyed by the Request's own id (CMT-010), which only
+  // the detail read answers — so it is asked second rather than beside
+  // it. A read that fails answers `null` rather than taking the page
+  // down with it: the values the requester submitted are still theirs to
+  // see, and the card says the conversation could not be read.
+  const thread = await api.GET("/api/v1/comments", {
+    params: { query: { entityType: "request", entityId: res.data.request.id } },
+  });
+  return { user, ...res.data, thread: thread.data ?? null };
 }
 
 export function PortalRequestPage() {
-  const { user, request, fields, customFieldRefs, attachments } =
+  const { user, request, fields, customFieldRefs, attachments, thread } =
     useLoaderData<typeof portalRequestLoader>();
   const intl = useIntl();
   const navigate = useNavigate();
@@ -142,6 +154,10 @@ export function PortalRequestPage() {
         </p>
       </div>
       <StatusBanner status={request.status} declinedReason={request.declinedReason} />
+      {/* I7 puts the conversation between the banner and the card, which
+          is where a requester looks first: what has been said since they
+          asked matters more than what they typed when they did. */}
+      <RequestThread requestId={request.id} viewerId={user.id} thread={thread} />
       <section
         aria-labelledby="portal-request-submitted-heading"
         className="w-full overflow-hidden rounded-card border border-border-default bg-raised"
