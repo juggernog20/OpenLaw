@@ -100,7 +100,7 @@ beforeAll(async () => {
   expect(res.statusCode, res.body).toBe(200);
   const types = res.json().contractTypes as { id: string; slug: string }[];
   ndaTypeId = types.find((row) => row.slug === "nda")!.id;
-}, 120_000);
+});
 
 afterAll(async () => {
   await harness.stop();

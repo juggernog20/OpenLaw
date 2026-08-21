@@ -14,7 +14,7 @@ This is **not** a migration file. SQL DDL lives in `db/migrations/` (when that e
 
 These apply unless a specific table overrides them.
 
-- **Primary keys:** `id`, UUID v7 (sortable, time-ordered). Final pick deferred to the tech-stack grill; UUID v7 is the working assumption.
+- **Primary keys:** `id`, UUID v7 (sortable, time-ordered). Confirmed by **TECH-004**. **Stored as `text`, not as the native Postgres `uuid` type** — the value is a canonical UUIDv7 and carries the time-ordering; only the column type differs. That is deliberate and is argued in TECH-004's 2026-08-21 addendum. `uuidPk()` in `packages/db/src/schema/helpers.ts` is the one place it is declared. **The table sections below write `UUID` in their type column. Read that as the logical type — the physical column is `text` everywhere**, for `id`, for every `<entity>_id` foreign key, and for the polymorphic `entity_id` pairs alike. The sections were written before the type was settled and are not rewritten row by row, because the rule is one rule and it has no exceptions.
 - **Timestamps:** `created_at`, `updated_at` (`timestamptz`) on every mutable table.
 - **Soft delete:** `archived_at` (`timestamptz`, nullable) is the default delete affordance. Hard delete is reserved for explicit Admin actions (e.g., compliance redaction).
 - **Audit:** every mutation on a tracked table is recorded in `activity_log` per **DD-017**. The application layer is responsible for emission; the database does not auto-trigger.
@@ -78,20 +78,23 @@ Source: **TECH-008**
 
 One row per authentication method per user: a **credential row** (holding the Argon2id password hash) and/or **OIDC-subject rows** (one per IdP the user has signed in through). Invited staff have no credential row until first-use activation sets a password — an unactivated invite has nothing to brute-force.
 
-| Column                                                | Type        | Notes                                                                              |
-| ----------------------------------------------------- | ----------- | ---------------------------------------------------------------------------------- |
-| `id`                                                  | UUID        | PK                                                                                 |
-| `user_id`                                             | UUID FK     | → `users.id`, not null, cascade delete                                             |
-| `provider_id`                                         | text        | `credential`, or the `sso_providers.provider_id` slug for OIDC rows                |
-| `issuer`                                              | text        | who asserts the subject: `local:credential`, or the IdP's own issuer on OIDC rows  |
-| `account_id`                                          | text        | provider-side subject (OIDC `sub`); equals the user id on credential rows          |
-| `password`                                            | text        | nullable; Argon2id hash per **TECH-008** — credential rows only, NULL on OIDC rows |
-| `access_token`, `refresh_token`, `id_token`           | text        | nullable; OIDC token columns, demanded by better-auth's model                      |
-| `access_token_expires_at`, `refresh_token_expires_at` | timestamptz | nullable; companions to the token columns                                          |
-| `scope`                                               | text        | nullable; granted OIDC scopes                                                      |
-| `created_at`, `updated_at`                            | timestamptz |                                                                                    |
+| Column                                                | Type        | Notes                                                                                                                           |
+| ----------------------------------------------------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| `id`                                                  | UUID        | PK                                                                                                                              |
+| `user_id`                                             | UUID FK     | → `users.id`, not null, cascade delete                                                                                          |
+| `provider_id`                                         | text        | `credential`, or the `sso_providers.provider_id` slug for OIDC rows                                                             |
+| `issuer`                                              | text        | who asserts the subject: `local:credential`, or the IdP's own issuer on OIDC rows                                               |
+| `account_id`                                          | text        | provider-side subject (OIDC `sub`); equals the user id on credential rows                                                       |
+| `password`                                            | text        | nullable; Argon2id hash per **TECH-008** — credential rows only, NULL on OIDC rows                                              |
+| `access_token`, `refresh_token`                       | text        | nullable; OIDC token columns, **encrypted at rest by better-auth** under `AUTH_SECRET` (**TECH-022**)                           |
+| `id_token`                                            | text        | nullable; stored plaintext — better-auth writes it raw, and it is expired identity evidence whose claims already sit on `users` |
+| `access_token_expires_at`, `refresh_token_expires_at` | timestamptz | nullable; companions to the token columns                                                                                       |
+| `scope`                                               | text        | nullable; granted OIDC scopes                                                                                                   |
+| `created_at`, `updated_at`                            | timestamptz |                                                                                                                                 |
 
 Unique on (`provider_id`, `account_id`): one credential row per user, and one row per subject under a given provider registration. Unique on (`issuer`, `account_id`) as well — the pair better-auth itself looks an account up by from 1.7 on, and the stricter of the two: two provider registrations may name the same IdP, and then one person's subject reaches this table twice under two `provider_id`s that the first index is content to keep apart. No `archived_at`: offboarding archives the _user_; account rows die with the user via cascade.
+
+The two token columns are sealed by **better-auth**, not by `encryptedText`, so they are absent from `SEALED_COLUMNS` and there is no boot pass for them. better-auth owns every read and write of them, encrypts them under `AUTH_SECRET` when `account.encryptOAuthTokens` is set, and reads a pre-flag plaintext value straight through — so a later sign-in through the IdP rewrites the row sealed, with nothing to migrate. The rewrite is certain for `access_token`; `refresh_token` is only replaced when the IdP re-issues one, because better-auth keeps the stored value when the token response carries no new one. **TECH-022** records why the key differs from the one the four admin-pasted credentials use, and its #387 addendum records this residue.
 
 `issuer` arrived with better-auth 1.7 (#340), which identifies an account by who asserted the subject rather than by which provider row we filed it under. A password account carries the synthetic `local:credential`; an OIDC account carries the issuer its IdP publishes, which is what a verified `id_token`'s `iss` claim says and what `sso_providers.issuer` already held. Migration `0060_account_issuer` backfilled both and refuses an upgrade it cannot resolve, because a row with the wrong issuer is a person who cannot sign in.
 
@@ -578,7 +581,7 @@ Source: **CTR-012**
 
 Admin-managed reusable approver templates (Settings → Contracts → Approver Groups). Applying a group snapshots its members into `contract_approvals` at apply time; later group edits don't touch existing requests.
 
-`approver_groups`: `id`, `name` (not null), `description` (nullable), `created_at`, `updated_at`, `archived_at`.
+`approver_groups`: `id`, `name` (not null), `description` (nullable), `created_at`, `updated_at`, `archived_at`. A **partial unique** index on `lower(name)` `where archived_at is null` — the name is the only identity the apply picker shows, so two live groups may not share one, and archiving frees the name (CTR-012's #391 addendum).
 `approver_group_members`: compound PK (`group_id`, `user_id`), `created_at`.
 
 ---
@@ -711,6 +714,8 @@ The people one envelope was sent to. Their own table because the record renders 
 | `created_at`    | timestamptz |                                                                               |
 
 Every signer is asked in parallel in v1 (CTR-013); `signing_order` records the order they were entered so the row draws them back as they were typed.
+
+Indexes: `(envelope_id)`; unique `(envelope_id, signing_order)` — one row per position; and unique `(envelope_id, lower(email))` — one address, one signer, the database backstop for the rule the send route already refuses on (CTR-013's #391 addendum).
 
 ---
 
@@ -1044,11 +1049,11 @@ Audience-tiered comments — one system across record threads, document annotati
 
 Mentions (CMT-007): `comment_mentions` (`comment_id` FK → `comments.id` ON DELETE CASCADE, `user_id` FK → `users.id` with no delete action, so a person cannot be deleted out from under a mention — they are archived, never deleted, per SET-005), compound PK on both. Who a comment addresses is a queryable list, never a substring of the body — tier promotion reads it at post time, and the M18 notification fan-out reads it afterwards. The body stays plain text; a mention is written into it as `@` and the person's display name.
 
-Prior versions (CMT-006, amending CMT-005): `comment_revisions` (`id`, `comment_id` FK → `comments.id` ON DELETE CASCADE, `body` not null, `replaced_at`), indexed on (`comment_id`, `replaced_at`). One row per body an edit or a soft delete replaced. The prior text cannot live in the audit log: DD-017 forbids `UPDATE` and `DELETE` on `activity_log`, so text that enters a payload can never leave, and a hard redact would remove the comment while leaving what it said in the log. This table is ordinary application data, so a redact purges it along with `comments.body` and `comment_mentions` (CMT-008) — the text and who it named are both gone rather than only hidden. Every `comment.*` activity payload carries ids and metadata only.
+Prior versions (CMT-006, amending CMT-005): `comment_revisions` (`id`, `comment_id` FK → `comments.id` ON DELETE CASCADE, `body` not null, `replaced_at`), indexed on (`comment_id`, `replaced_at`). One row per body an edit or a soft delete replaced. The prior text cannot live in the audit log: DD-017 forbids `UPDATE` and `DELETE` on `activity_log` (the one named exception is the signer erasure below, which reaches nothing a comment ever wrote), so text that enters a payload can never leave, and a hard redact would remove the comment while leaving what it said in the log. This table is ordinary application data, so a redact purges it along with `comments.body` and `comment_mentions` (CMT-008) — the text and who it named are both gone rather than only hidden. Every `comment.*` activity payload carries ids and metadata only.
 
 Unread tracking (CMT-004, confirmed by CMT-009): `comment_last_read` (`user_id` FK → `users.id` with no delete action, `entity_type`, `entity_id`, `read_at`, compound PK on the first three). One watermark per reader per record — where that person had read to, not a receipt per comment. The badge counts comments on the record that pass the viewer's tier predicate, are not the viewer's own, are neither soft-deleted nor redacted, and were created after `read_at`. Hidden-tier counts never leak, because the count is taken over the same filtered set the thread is read at. **No row means everything visible is unread**, not zero: a reader who has never opened the panel has read none of it. Opening the panel writes the row, and only when the thread was actually delivered.
 
-The polymorphic `entity_type / entity_id` pair is unavoidable here unless we shard comments per host table. Reconsider in the tech-stack grill if the chosen ORM has a strong opinion. Indexed on (`entity_type`, `entity_id`, `created_at`).
+The polymorphic `entity_type / entity_id` pair is unavoidable here unless we shard comments per host table. Reconsider in the tech-stack grill if the chosen ORM has a strong opinion. Indexed on (`entity_type`, `entity_id`, `created_at`, `id`) — the thread's keyset walks `(created_at, id)`, so the tie-break sits in the index that answers the order (CTR-024's #391 addendum).
 
 ---
 
@@ -1069,9 +1074,39 @@ Source-of-truth for both the per-entity activity feed and the system-wide audit 
 | `payload`     | jsonb       | action-specific data (old/new values for edits, etc.)                                                                   |
 | `created_at`  | timestamptz |                                                                                                                         |
 
-Append-only at the application layer. **No application-code path issues `UPDATE` or `DELETE`** on this table. Corrections are appended as new entries.
+Append-only at the application layer. **Corrections are appended as new entries, never written over** — that is DD-017's rule and it has no exception.
 
-Indexed on (`entity_type`, `entity_id`, `created_at`) for the per-entity feed; on (`actor_id`, `created_at`) for actor-based audit queries; on (`action`, `created_at`) for security-event filtering.
+**One application-code path issues an `UPDATE`, and it is a named exception rather than a crack in the rule.** `apps/api/src/lib/signer-erasure.ts` rewrites the name and the address of one external signer to `[erased]` inside `envelope.sent` payloads, for CTR-013's 2026-08-16 addendum ([#280](https://github.com/juggernog20/OpenLaw/issues/280)). It is a lawful-erasure route, not a correction: no fact recorded there was wrong, and there is no way to honour an erasure request by appending. The exception is confined to that one module, one action slug, and two keys inside the payload; the signer array keeps its length and its order, so the entry still says how many people were asked and in what position. The erasure is itself appended like anything else. Every other row and every other key stays untouchable, and **no application-code path issues a `DELETE`** on this table at all.
+
+An earlier version of this section said no path issues either statement. It was true when written and the erasure route falsified it; the rule it was protecting is the sentence above.
+
+Indexed on (`entity_type`, `entity_id`, `created_at`, `id`) for the per-entity feed — that feed is paged and its keyset walks `(created_at, id)` (CTR-024's #391 addendum); on (`actor_id`, `created_at`) for actor-based audit queries; on (`action`, `created_at`) for security-event filtering. The two filter indexes need no tie-break, because neither answers a cursor.
+
+---
+
+### `list_views`
+
+Source: **DD-019**
+
+One person's saved way of reading one list. **Private to that person** — there is no `is_shared`, no `organization_id`, and no author-versus-owner split, because DD-019 clause 1 declined shared views: every clause they add is a permission question, and a 2–10 person team (DD-002) answers "send me your columns" with a sentence.
+
+| Column                     | Type        | Notes                                                                                                                                                                                                                   |
+| -------------------------- | ----------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `id`                       | text        | PK, uuidv7                                                                                                                                                                                                              |
+| `user_id`                  | text        | FK → `users.id` **ON DELETE CASCADE**. A view is a preference, not a record: a deleted user's saved columns are nobody's                                                                                                |
+| `surface`                  | text        | Which list this view is for — `contracts` today. **No CHECK against an enum**: a new destination adopting DES-046's table must not need a migration to be allowed to save a view                                        |
+| `name`                     | text        | What the reader called it; shown in the views menu. CHECK: non-empty, trimmed, at most 60 characters                                                                                                                    |
+| `config`                   | jsonb       | The whole list state — columns shown, their order, their widths, the filters in force, the sort (DD-019 clause 2). Read and written whole; **no query reaches into it**. The API's schema is the authority on the shape |
+| `is_default`               | boolean     | not null, default false. The one view this person's list opens on. All-false means the list opens on the built-in layout, which is code rather than a seeded row (DD-019 clause 7)                                      |
+| `created_at`, `updated_at` | timestamptz |                                                                                                                                                                                                                         |
+
+**The surface is a string, so one table serves every destination.** Matters (M22), documents (M26), and entities (M27) each add theirs by rendering the same managed table (DES-046), not by adding a table here. Nothing joins to a view, which is what makes this the cheap kind of polymorphism rather than the kind DD-008 avoids. A `surface` value is a slug the build writes, never user text — CHECK: `^[a-z][a-z0-9_]*$`.
+
+**A config may name a column the build no longer has.** DD-019 clause 7 makes that a read-past rather than an error: the surface resolves the config against the column catalogue it actually ships, drops what it cannot draw, and renders the rest. So nothing here constrains the config's contents, and no migration ever has to rewrite one.
+
+Unique on (`user_id`, `surface`, `lower(name)`) — two views of one list may not share a name for one person, compared without case, the same reading the menu's sort takes and the same rule folder siblings follow (DES-033). Names are per person, so two people may both have a "My contracts". Unique on (`user_id`, `surface`) **partial where `is_default`** — at most one default per person per surface, as a database rule rather than a thing the writer is trusted to remember; partial because the non-default rows are the many.
+
+How many views one person may hold on one surface is bounded in the API (`MAX_LIST_VIEWS_PER_SURFACE`), not here — which is why the list route answers whole rather than paging (CTR-024's 2026-08-21 addendum).
 
 ---
 
@@ -1080,7 +1115,7 @@ Indexed on (`entity_type`, `entity_id`, `created_at`) for the per-entity feed; o
 Tracked here so they're not forgotten when the relevant grill begins.
 
 - **Database engine** — Postgres assumed; formalized in the tech-stack grill.
-- **ID type** — UUID v7 vs ULID vs sortable BIGINT; formalized in the tech-stack grill.
+- ~~**ID type** — UUID v7 vs ULID vs sortable BIGINT; formalized in the tech-stack grill.~~ Resolved per **TECH-004**: UUID v7, held in a `text` column (see Conventions).
 - **ORM and migration framework** — formalized in the tech-stack grill (will affect comment polymorphism strategy and FK naming).
 - **Comments table polymorphism strategy** — single table with `entity_type / entity_id` pair (current proposal), per-host-type sharded tables, or polymorphic via association — depends on ORM ergonomics.
 - **Full-text search column placement** — per-table generated `tsvector` columns vs separate index store (Meilisearch / Typesense) — depends on Documents module decisions and tech-stack picks.

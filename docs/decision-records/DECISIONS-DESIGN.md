@@ -2704,6 +2704,16 @@ Thirteen ICU messages, all new. No new tokens: the bars and marks are fills from
 
 Grill rows **I.H1**, **I.H2**, **I.H3**, **I.X1**, **I.X2**, **I.X3**, **I.B1**, **I.B2**, **I.B6**, **I.B7**, and **I.B8** are discharged. **I.B3**, **I.B4**, and **I.B5** stay open, waiting on the confirmed roll — the same wait **G.R5** is in.
 
+### Addendum (2026-08-21, [#390](https://github.com/juggernog20/OpenLaw/issues/390)) — the second `shiftMonths` is deliberate, and two is the ceiling
+
+`termPeriods()` needs whole-month arithmetic to walk the roll boundaries backwards from the saved expiry, so `apps/web/src/lib/contracts.ts` carries a private `shiftMonths`. The API carries one too, exported from `apps/api/src/lib/contract-term.ts`. They are the same fourteen lines with the same month-end clamp, and the API-and-domain-core review asked whether that is drift waiting to happen. **It is not, and this clause is why.**
+
+**The two answer different questions, and only one of them is a promise.** The API's `shiftMonths` computes the roll date the record will actually take — the value CTR-006 writes and CTR-007 confirms. That number is the seam's, it is stored, and the web app reads it rather than deriving it. **No confirmable date on this card is computed in the browser.** The timeline's copy walks _backwards_ from a date the API already gave, to place marks on a gutter. If the two implementations ever disagreed by a day, the record would still renew on the API's date; the timeline would draw one bar boundary a day out, on a card whose own clause 10 already accepts a one-day tension about where "today" sits.
+
+**Hoisting it to `packages/shared` was rejected.** The shared package holds the wire vocabulary — strings and bounds both ends must say identically (TECH-016, TECH-020). Calendar arithmetic is not vocabulary, and moving it there would make a fourteen-line pure function a published contract with a version and a consumer list, to save a duplication that costs nothing when it drifts. It would also invite the mistake this clause exists to prevent: a surface computing a confirmable date locally because the helper was conveniently to hand.
+
+**Two is the ceiling.** A third surface needing month arithmetic is the trigger to reopen this and hoist all three into one home. Until then, each copy stays where its caller is, and each carries a comment saying the other exists.
+
 ## DES-042: The Key dates section — one union, one Source chip, and the order as the answer (extends DES-035, DES-032, DES-040)
 
 - **Status:** Accepted

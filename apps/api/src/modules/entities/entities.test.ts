@@ -66,7 +66,7 @@ beforeAll(async () => {
   }
   adminCookies = await signInCookies(harness.app, ADMIN.email, ADMIN.password);
   memberCookies = await signInCookies(harness.app, MEMBER.email, MEMBER.password);
-}, 120_000);
+});
 
 afterAll(async () => {
   await harness.stop();

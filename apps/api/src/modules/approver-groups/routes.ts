@@ -64,6 +64,39 @@ const ApproverGroupListEnvelope = z.object({ approverGroups: z.array(ApproverGro
 
 const NameSchema = z.string().trim().min(1).max(100);
 const DescriptionSchema = z.string().trim().max(500);
+
+const NAME_TAKEN = "An approver group is already called that.";
+const RESTORE_NAME_TAKEN =
+  "A live approver group is already called that. Rename that one first, then restore this one.";
+
+/**
+ * Postgres's unique-violation code. `approver_groups_name_idx` is the
+ * authority on a duplicate name rather than a read-then-write check:
+ * two creates racing would both find the name free and both insert it
+ * (the same reasoning the saved-view list follows).
+ */
+const UNIQUE_VIOLATION = "23505";
+/** The index whose violation means a duplicate name and nothing else. */
+const NAME_INDEX = "approver_groups_name_idx";
+
+/**
+ * A duplicate name arrives as a unique violation from the index, and
+ * reads as a refusal the Administrator can act on rather than a 500.
+ *
+ * The index is named as well as the code, because these writes touch a
+ * second table: a create carries its starting members, and a member
+ * row repeated inside one transaction violates
+ * `approver_group_members_pkey` with the same code. Turning that into
+ * "an approver group is already called that" would answer a question
+ * nobody asked.
+ */
+function asNameConflict(error: unknown, detail: string): never {
+  const cause = (error as { cause?: { code?: string; constraint?: string } } | null)?.cause;
+  if (cause?.code === UNIQUE_VIOLATION && cause.constraint === NAME_INDEX) {
+    throw httpError(409, detail);
+  }
+  throw error;
+}
 /** A member set, as the pane sends it; duplicates are collapsed. */
 const MemberIdsSchema = z.array(z.string()).max(100);
 
@@ -185,7 +218,9 @@ export const approverGroupsRoutes: FastifyPluginAsyncZod = async (app) => {
         summary:
           "Create an approver-group template with its name, an optional " +
           "description, and an optional starting member list; members " +
-          "must be live Member+ users",
+          "must be live Member+ users. The name must be one no live " +
+          "group already carries, compared case-insensitively — 409 if " +
+          "it is",
         tags: ["approver-groups"],
         body: z.object({
           name: NameSchema,
@@ -200,7 +235,7 @@ export const approverGroupsRoutes: FastifyPluginAsyncZod = async (app) => {
       const description = request.body.description?.trim() || null;
       const memberIds = [...new Set(request.body.memberIds ?? [])];
 
-      const row = await app.db.transaction(async (tx) => {
+      const insert = app.db.transaction(async (tx) => {
         const members = await eligibleMembers(tx, memberIds);
         const [created] = await tx.insert(approverGroups).values({ name, description }).returning();
         if (members.length > 0) {
@@ -224,6 +259,7 @@ export const approverGroupsRoutes: FastifyPluginAsyncZod = async (app) => {
         });
         return created!;
       });
+      const row = await insert.catch((error: unknown) => asNameConflict(error, NAME_TAKEN));
       return reply.status(201).send({ approverGroup: await rowJson(row) });
     },
   );
@@ -237,7 +273,8 @@ export const approverGroupsRoutes: FastifyPluginAsyncZod = async (app) => {
         summary:
           "Rename an approver group (DES-017 in-place rename) and/or " +
           "change its description; the two changes write their own " +
-          "activity entries",
+          "activity entries. A new name must be one no other live group " +
+          "carries, compared case-insensitively — 409 if it is",
         tags: ["approver-groups"],
         params: z.object({ id: z.string() }),
         // Strict: the member list has its own route, so a body carrying
@@ -261,7 +298,7 @@ export const approverGroupsRoutes: FastifyPluginAsyncZod = async (app) => {
           ? undefined
           : (request.body.description?.trim() ?? "") || null;
 
-      const row = await app.db.transaction(async (tx) => {
+      const update = app.db.transaction(async (tx) => {
         const target = await lockedGroup(tx, request.params.id);
         const nameChanged = name !== undefined && name !== target.name;
         const descriptionChanged = description !== undefined && description !== target.description;
@@ -306,6 +343,7 @@ export const approverGroupsRoutes: FastifyPluginAsyncZod = async (app) => {
         }
         return updated!;
       });
+      const row = await update.catch((error: unknown) => asNameConflict(error, NAME_TAKEN));
       return { approverGroup: await rowJson(row) };
     },
   );
@@ -449,14 +487,15 @@ export const approverGroupsRoutes: FastifyPluginAsyncZod = async (app) => {
         operationId: "restoreApproverGroup",
         summary:
           "Restore an archived approver group (SET-003's recovery story); " +
-          "its members ride along unchanged",
+          "its members ride along unchanged. Archiving frees the name, so " +
+          "a restore is refused 409 when a live group has taken it since",
         tags: ["approver-groups"],
         params: z.object({ id: z.string() }),
         response: { 200: ApproverGroupEnvelope, default: problemResponse },
       },
     },
     async (request) => {
-      const row = await app.db.transaction(async (tx) => {
+      const restore = app.db.transaction(async (tx) => {
         const target = await lockedGroup(tx, request.params.id);
         if (!target.archivedAt) throw httpError(409, "This approver group is not archived.");
         const [updated] = await tx
@@ -473,6 +512,13 @@ export const approverGroupsRoutes: FastifyPluginAsyncZod = async (app) => {
         });
         return updated!;
       });
+      // The name index is partial on the live rows, so the clash a
+      // restore can hit is with a group created while this one was
+      // archived. It reads as its own sentence: nothing is wrong with
+      // the archived group, and the fix is on the other one.
+      const row = await restore.catch((error: unknown) =>
+        asNameConflict(error, RESTORE_NAME_TAKEN),
+      );
       return { approverGroup: await rowJson(row) };
     },
   );

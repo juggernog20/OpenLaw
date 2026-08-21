@@ -89,7 +89,7 @@ beforeAll(async () => {
   memberId = member.id;
   adminCookies = await signInCookies(harness.app, ADMIN.email, ADMIN.password);
   memberCookies = await signInCookies(harness.app, MEMBER.email, MEMBER.password);
-}, 120_000);
+});
 
 afterAll(async () => {
   await harness.stop();
@@ -319,7 +319,7 @@ describe("dropping a folder tree onto a contract (DOC-011)", () => {
     for (const [name, folderPath] of dropped) {
       expect(await filedAt(contract.number, name), name).toBe(folderPath);
     }
-  }, 60_000);
+  });
 
   it("lands a dropped file as a new document at version 1, never as a version of one already there", async () => {
     const contract = await newContract("Drop · never appends");
@@ -339,7 +339,7 @@ describe("dropping a folder tree onto a contract (DOC-011)", () => {
     for (const document of paper) {
       expect(document.versions.map((version) => version.versionNumber)).toEqual([1]);
     }
-  }, 60_000);
+  });
 
   it("files a drop onto a folder row into that folder, and a tree dropped there beneath it", async () => {
     const contract = await newContract("Drop · onto a folder row");
@@ -375,7 +375,7 @@ describe("dropping a folder tree onto a contract (DOC-011)", () => {
     ]);
     expect(await filedAt(contract.number, "signed.pdf")).toBe("Executed");
     expect(await filedAt(contract.number, "2019_notice.pdf")).toBe("Executed/2019/Notices");
-  }, 60_000);
+  });
 
   it("files a file carrying no destination at the record root, exactly as before", async () => {
     const contract = await newContract("Drop · plain files still land flat");
@@ -383,7 +383,7 @@ describe("dropping a folder tree onto a contract (DOC-011)", () => {
 
     expect(await foldersOf(contract.number)).toEqual([]);
     expect(await filedAt(contract.number, "loose.pdf")).toBeNull();
-  }, 60_000);
+  });
 
   it("counts a dropped file in its folder's own count", async () => {
     const contract = await newContract("Drop · the counts move");
@@ -401,7 +401,7 @@ describe("dropping a folder tree onto a contract (DOC-011)", () => {
     // parent's.
     expect(byPath.get("Legacy")!.documentCount).toBe(0);
     expect(byPath.get("Legacy/Executed")!.documentCount).toBe(2);
-  }, 60_000);
+  });
 });
 
 describe("two drops racing on one path (DOC-011)", () => {
@@ -431,7 +431,7 @@ describe("two drops racing on one path (DOC-011)", () => {
       paper.every((row) => row.folderId === executed.id),
       "all six filed together",
     ).toBe(true);
-  }, 60_000);
+  });
 
   it("converges when racing drops differ only in the case of a segment", async () => {
     const contract = await newContract("Drop · the race, mixed case");
@@ -458,7 +458,7 @@ describe("two drops racing on one path (DOC-011)", () => {
     expect(["Executed", "executed", "EXECUTED"]).toContain(leaf.name);
     expect(pathOf(folders, leaf)).toBe(`${root.name}/${leaf.name}`);
     expect(leaf.documentCount).toBe(3);
-  }, 60_000);
+  });
 
   it("converges when an empty directory and an upload race on one path", async () => {
     const contract = await newContract("Drop · the empty directory races");
@@ -470,7 +470,7 @@ describe("two drops racing on one path (DOC-011)", () => {
     for (const res of answers) expect(res.statusCode, res.body).toBe(201);
 
     expect(await treeOf(contract.number)).toEqual(["Legacy", "Legacy/Signature packets"]);
-  }, 60_000);
+  });
 });
 
 describe("an empty directory of a dropped tree (DOC-011)", () => {
@@ -489,7 +489,7 @@ describe("an empty directory of a dropped tree (DOC-011)", () => {
     for (const folder of await foldersOf(contract.number)) {
       expect(folder.documentCount, folder.name).toBe(0);
     }
-  }, 60_000);
+  });
 
   it("uses the folders a sibling upload already made rather than refusing them", async () => {
     const contract = await newContract("Drop · the directory beside a file");
@@ -503,7 +503,7 @@ describe("an empty directory of a dropped tree (DOC-011)", () => {
     // there by the time the empty ones are asked for.
     expect((await dropFolder(contract.number, "Legacy/Executed")).statusCode).toBe(201);
     expect(await treeOf(contract.number)).toEqual(["Legacy", "Legacy/Executed"]);
-  }, 60_000);
+  });
 
   it("is recreated beneath the folder the tree was dropped on", async () => {
     const contract = await newContract("Drop · the directory under a row");
@@ -523,7 +523,7 @@ describe("an empty directory of a dropped tree (DOC-011)", () => {
       "Executed/2019",
       "Executed/2019/Notices",
     ]);
-  }, 60_000);
+  });
 
   it("refuses a create that names both a name and a path, and one that names neither", async () => {
     const contract = await newContract("Drop · one act or the other");
@@ -542,7 +542,7 @@ describe("an empty directory of a dropped tree (DOC-011)", () => {
     });
     expect(neither.statusCode, neither.body).toBe(400);
     expect(await foldersOf(contract.number)).toEqual([]);
-  }, 60_000);
+  });
 });
 
 describe("a path a drop cannot use", () => {
@@ -564,7 +564,7 @@ describe("a path a drop cannot use", () => {
       "good.pdf",
     ]);
     expect(await treeOf(contract.number)).toEqual(["Legacy", "Legacy/Executed", "Legacy/Redlines"]);
-  }, 60_000);
+  });
 
   it("refuses a path that starts or ends with the separator", async () => {
     const contract = await newContract("Drop · separator misuse");
@@ -576,7 +576,7 @@ describe("a path a drop cannot use", () => {
     );
     expect(await foldersOf(contract.number)).toEqual([]);
     expect(await paperOf(contract.number)).toEqual([]);
-  }, 60_000);
+  });
 
   it("refuses a segment that breaks a folder name's own rules", async () => {
     const contract = await newContract("Drop · a segment that is not a name");
@@ -597,7 +597,7 @@ describe("a path a drop cannot use", () => {
       (await dropFile(contract.number, "c.pdf", { folderPath: "Legacy/../Executed" })).statusCode,
     ).toBe(400);
     expect(await foldersOf(contract.number)).toEqual([]);
-  }, 60_000);
+  });
 
   it("refuses a path deeper than the tree's ceiling, before anything is created", async () => {
     const contract = await newContract("Drop · too deep");
@@ -609,7 +609,7 @@ describe("a path a drop cannot use", () => {
     // it leaves a tree nobody dropped.
     expect(await foldersOf(contract.number)).toEqual([]);
     expect(await paperOf(contract.number)).toEqual([]);
-  }, 60_000);
+  });
 
   it("refuses a chain that would pass the ceiling only because of where it was dropped", async () => {
     const contract = await newContract("Drop · deep enough already");
@@ -640,7 +640,7 @@ describe("a path a drop cannot use", () => {
     expect(over.statusCode, over.body).toBe(409);
     expect((await paperOf(contract.number)).map((row) => row.title)).toEqual(["fits.pdf"]);
     expect((await foldersOf(contract.number)).some((folder) => folder.name === "M9")).toBe(false);
-  }, 60_000);
+  });
 
   it("leaves no stored blob behind when the destination is refused under the lock", async () => {
     const contract = await newContract("Drop · nothing left at the key");
@@ -658,7 +658,7 @@ describe("a path a drop cannot use", () => {
     });
     expect(refused.statusCode, refused.body).toBe(404);
     expect(await storedBlobs()).toEqual(before);
-  }, 60_000);
+  });
 
   it("answers a folder on another record exactly as one that was never created", async () => {
     const mine = await newContract("Drop · my record");
@@ -683,7 +683,7 @@ describe("a path a drop cannot use", () => {
     expect(neverCreated.statusCode, neverCreated.body).toBe(404);
     expect(crossRecord.json().detail).toBe(neverCreated.json().detail);
     expect(await paperOf(mine.number)).toEqual([]);
-  }, 60_000);
+  });
 });
 
 describe("what a drop narrates (DD-017)", () => {
@@ -704,7 +704,7 @@ describe("what a drop narrates (DD-017)", () => {
     // landed after that folder is renamed or dissolved.
     expect(created!.payload.folderName).toBe("Executed");
     expect(created!.payload.title).toBe("MSA.pdf");
-  }, 60_000);
+  });
 
   it("leaves the destination null on a file that landed at the record root", async () => {
     const contract = await newContract("Drop · a file with nowhere to be filed");
@@ -714,7 +714,7 @@ describe("what a drop narrates (DD-017)", () => {
       (entry) => entry.action === "document.created",
     );
     expect(created!.payload.folderName).toBeNull();
-  }, 60_000);
+  });
 
   it("narrates an empty directory of a drop not at all", async () => {
     const contract = await newContract("Drop · a directory nobody made by hand");
@@ -723,7 +723,7 @@ describe("what a drop narrates (DD-017)", () => {
     expect(
       (await feedOf(contract.id)).filter((entry) => entry.action.startsWith("folder.")),
     ).toEqual([]);
-  }, 60_000);
+  });
 });
 
 describe("who may drop a tree onto a record", () => {
@@ -741,5 +741,5 @@ describe("who may drop a tree onto a record", () => {
     );
     expect((await dropFolder(contract.number, "Legacy")).statusCode).toBe(409);
     expect(await foldersOf(contract.number)).toEqual([]);
-  }, 60_000);
+  });
 });

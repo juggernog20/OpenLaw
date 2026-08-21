@@ -21,7 +21,7 @@ beforeAll(async () => {
   });
   expect(setup.statusCode, setup.body).toBe(201);
   await harness.db.update(orgSettings).set({ allowedEmailDomains: ["example.com"] });
-}, 120_000);
+});
 
 afterAll(async () => {
   await harness.stop();

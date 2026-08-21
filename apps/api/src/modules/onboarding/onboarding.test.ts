@@ -54,7 +54,7 @@ beforeAll(async () => {
   });
   expect(reset.statusCode, reset.body).toBe(200);
   staffCookies = await signInCookies(harness.app, STAFF.email, STAFF.password);
-}, 120_000);
+});
 
 afterAll(async () => {
   await harness.stop();

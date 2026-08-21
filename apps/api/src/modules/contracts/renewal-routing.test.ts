@@ -163,7 +163,7 @@ beforeAll(async () => {
   corporationTypeId = (entityTypes.json().entityTypes as { id: string; slug: string }[]).find(
     (row) => row.slug === "corporation",
   )!.id;
-}, 120_000);
+});
 
 afterAll(async () => {
   await harness.stop();

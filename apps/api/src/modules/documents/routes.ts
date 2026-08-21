@@ -2140,6 +2140,29 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
         // than a dangling one.
         await tx.delete(documents).where(eq(documents.id, documentId));
 
+        // **What this delete deliberately does not reach: comment
+        // threads** (CMT-010's 2026-08-21 addendum, [#390]).
+        //
+        // `comments` is keyed by an `entity_type`/`entity_id` pair with
+        // no foreign key, so no cascade could reach it and none is
+        // written here. That is correct today for one reason and one
+        // only: **there is no such thing as a document comment yet.**
+        // The table's CHECK admits `document`, but the API's arm list
+        // (`COMMENT_ENTITY_TYPES` in `modules/comments/audience.ts`) is
+        // `contract` and `request`, and a type with no arm cannot be
+        // asked for. No row can exist with `entity_type = 'document'`,
+        // so this delete cannot orphan one.
+        //
+        // When CMT-001's anchored document comments land — the `anchor`
+        // column and a `document` arm — this line starts destroying the
+        // only record of a thread's subject while leaving the thread
+        // behind. **Decide the semantics then, in the same change that
+        // adds the arm:** sweep the thread with the document, tombstone
+        // it, or reattach it to the owning contract. Do not let a
+        // `document` arm reach the arm list without answering this.
+        // DOC-010 is lawful erasure, so "leave the rows and let a
+        // reader see nothing" is not one of the three answers.
+
         // The blobs, inside the transaction and before the commit
         // (DOC-012). Order is the whole argument, and the trade is
         // between two bad failures rather than between a bad one and

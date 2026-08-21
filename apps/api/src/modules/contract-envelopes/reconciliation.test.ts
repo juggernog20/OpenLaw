@@ -156,7 +156,7 @@ beforeAll(async () => {
     payload: CONNECTOR,
   });
   expect(connector.statusCode, connector.body).toBe(200);
-}, 120_000);
+});
 
 afterAll(async () => {
   await harness.stop();
@@ -418,7 +418,7 @@ describe("an envelope signed while the webhook never fires", () => {
     provider().complete(out.providerId);
     summary = (await sweep()).summary;
     settled = await settledFetch(contract.number, envelope.id);
-  }, 60_000);
+  });
 
   it("converges the record to signed", async () => {
     expect(summary.converged).toBe(1);
@@ -476,7 +476,7 @@ describe("an envelope declined while the webhook never fires", () => {
     // record: the paper did not come back.
     expect((await primaryOf(out.contract.number)).versions).toHaveLength(1);
     expect(await stageOf(out.contract.id)).toBe("signature");
-  }, 60_000);
+  });
 });
 
 describe("an envelope voided in the provider's own console", () => {
@@ -500,7 +500,7 @@ describe("an envelope voided in the provider's own console", () => {
     // integration reported it.
     expect(entries[0]!.actorId).toBeNull();
     expect((await primaryOf(out.contract.number)).versions).toHaveLength(1);
-  }, 60_000);
+  });
 });
 
 describe("an envelope the webhook already moved", () => {
@@ -520,7 +520,7 @@ describe("an envelope the webhook already moved", () => {
     expect(await entriesFor(out.contract.id, "envelope.signed")).toHaveLength(1);
     expect(await entriesFor(out.contract.id, "document.executed_set")).toHaveLength(1);
     expect((await primaryOf(out.contract.number)).versions).toHaveLength(2);
-  }, 60_000);
+  });
 });
 
 describe("two rounds racing on one envelope", () => {
@@ -545,7 +545,7 @@ describe("two rounds racing on one envelope", () => {
     expect(await entriesFor(out.contract.id, "envelope.signed")).toHaveLength(1);
     expect(await entriesFor(out.contract.id, "document.version_added")).toHaveLength(1);
     expect((await primaryOf(out.contract.number)).versions).toHaveLength(2);
-  }, 60_000);
+  });
 });
 
 describe("a delivery that arrived before the send committed", () => {
@@ -589,7 +589,7 @@ describe("a delivery that arrived before the send committed", () => {
     expect(settled.executedFetch).toBe("ready");
     expect(await entriesFor(out.contract.id, "envelope.signed")).toHaveLength(1);
     expect((await primaryOf(out.contract.number)).versions).toHaveLength(2);
-  }, 60_000);
+  });
 });
 
 describe("a provider outage during a round", () => {
@@ -628,7 +628,7 @@ describe("a provider outage during a round", () => {
     expect(summary.converged).toBe(1);
     const settled = await settledFetch(out.contract.number, out.envelope.id);
     expect(settled.executedFetch).toBe("ready");
-  }, 90_000);
+  });
 });
 
 /**
@@ -679,7 +679,7 @@ describe("the scheduled shape", () => {
     } finally {
       await second.stop();
     }
-  }, 90_000);
+  });
 
   it("converges an envelope when a tick runs the round", async () => {
     // The cron is five minutes, which no suite may wait for. What is
@@ -716,7 +716,7 @@ describe("the scheduled shape", () => {
       30_000,
     );
     await settledFetch(out.contract.number, out.envelope.id);
-  }, 90_000);
+  });
 });
 
 describe("a provider that is down for every envelope", () => {
@@ -735,7 +735,7 @@ describe("a provider that is down for every envelope", () => {
     } finally {
       provider().online();
     }
-  }, 120_000);
+  });
 });
 
 /** Waits for something to become true, or gives up loudly. */

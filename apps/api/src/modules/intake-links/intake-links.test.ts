@@ -61,7 +61,7 @@ beforeAll(async () => {
   );
   contractReviewId = bySlug.get("contract_review")!;
   ndaRequestId = bySlug.get("nda_request")!;
-}, 120_000);
+});
 
 afterAll(async () => {
   await harness.stop();

@@ -142,7 +142,7 @@ beforeAll(async () => {
     userIds.set(fixture.email, user.id);
     cookies.set(fixture.email, await signInCookies(harness.app, fixture.email, fixture.password));
   }
-}, 120_000);
+});
 
 afterAll(async () => {
   await harness.stop();
@@ -709,9 +709,5 @@ describe("an unconfigured relay", () => {
     } finally {
       harness.smtpEnv = previous;
     }
-    // The settle above is bounded at SETTLE_TIMEOUT_MS, which is 20s.
-    // Vitest's own default is 5s, so without a timeout here the case
-    // could only pass while the queue happened to be quick, and a slow
-    // one would report a timeout rather than the assertion that failed.
-  }, 60_000);
+  });
 });

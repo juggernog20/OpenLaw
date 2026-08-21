@@ -16,28 +16,53 @@
  * (SCHEMA.md specifies the table the same way).
  */
 
-import { index, pgTable, primaryKey, text, timestamp } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
+import { index, pgTable, primaryKey, text, timestamp, uniqueIndex } from "drizzle-orm/pg-core";
 import { users } from "./auth.js";
 import { uuidPk } from "./helpers.js";
 
-export const approverGroups = pgTable("approver_groups", {
-  id: uuidPk(),
-  /** What the Administrator called it; renameable, and the only identity
-   * the apply picker shows. */
-  name: text("name").notNull(),
-  /** NULL = the group carries no description. */
-  description: text("description"),
-  /** SET-003 soft delete: NULL = live; a timestamp = archived, out of
-   * the apply picker and the default list, nothing lost. */
-  archivedAt: timestamp("archived_at", { withTimezone: true }),
-  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
-  // Application code owns every write here, so $onUpdate keeps the
-  // audit trail honest for writers that forget to set it (org.ts note).
-  updatedAt: timestamp("updated_at", { withTimezone: true })
-    .notNull()
-    .defaultNow()
-    .$onUpdate(() => new Date()),
-});
+export const approverGroups = pgTable(
+  "approver_groups",
+  {
+    id: uuidPk(),
+    /** What the Administrator called it; renameable, and the only identity
+     * the apply picker shows. */
+    name: text("name").notNull(),
+    /** NULL = the group carries no description. */
+    description: text("description"),
+    /** SET-003 soft delete: NULL = live; a timestamp = archived, out of
+     * the apply picker and the default list, nothing lost. */
+    archivedAt: timestamp("archived_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    // Application code owns every write here, so $onUpdate keeps the
+    // audit trail honest for writers that forget to set it (org.ts note).
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow()
+      .$onUpdate(() => new Date()),
+  },
+  (table) => [
+    /**
+     * Two live groups may not share a name, and the comparison is
+     * case-insensitive — the same rule folder siblings and saved views
+     * already follow (DES-033), and the same reading the picker's own
+     * sort takes. The name is the only identity this table has: there
+     * is no slug and no display order, so two "Commercial sign-off"
+     * rows are two indistinguishable entries in the apply picker and an
+     * Administrator has no way to tell which one they are editing
+     * (CTR-012's #391 addendum).
+     *
+     * Partial on the live rows, because archiving frees the name.
+     * An archived group is out of the picker and out of the default
+     * list, and applying one already snapshotted its members into the
+     * requests that used it — so nothing an archived row's name could
+     * collide with is still being read.
+     */
+    uniqueIndex("approver_groups_name_idx")
+      .on(sql`lower(${table.name})`)
+      .where(sql`${table.archivedAt} is null`),
+  ],
+);
 
 export type ApproverGroup = typeof approverGroups.$inferSelect;
 

@@ -35,7 +35,10 @@ export interface StorageContractHarness {
 }
 
 export interface StorageContractOptions {
-  /** Bound for `start`; a container-backed driver needs more than a directory does. */
+  /**
+   * Bound for `start`, for a driver that needs more than the package's
+   * own `hookTimeout`. Unset means the bound in `vitest.config.ts`.
+   */
   startTimeoutMs?: number;
 }
 
@@ -103,7 +106,7 @@ export function describeStorageAdapterContract(
     beforeAll(async () => {
       harness = await start();
       adapter = harness.adapter;
-    }, options.startTimeoutMs ?? 120_000);
+    }, options.startTimeoutMs);
 
     afterAll(async () => {
       // Optional on the harness too, not only on `stop`: if `start`

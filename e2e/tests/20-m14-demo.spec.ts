@@ -40,7 +40,12 @@
  * makes `urn:openlaw:problem:approval-soft-gate` a wire contract, and
  * both ends already import it from `@openlaw/shared`. A spec that
  * imported the same constant would agree with itself whatever the
- * string became; written out, it is the third party that notices.
+ * string became; written out, it is the third party that notices —
+ * which is the whole point when TECH-020 calls changing a type a
+ * breaking change. This is the general rule now, not a local licence:
+ * a test that **reads** the type off the wire writes it out, and a
+ * test that **authors** the value imports it (TECH-020's #391
+ * addendum).
  *
  * **The cast, and why it is three people.** The Administrator asks, and
  * neither approver is the Administrator: with one approver the person

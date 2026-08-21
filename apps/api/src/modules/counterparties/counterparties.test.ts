@@ -106,7 +106,7 @@ beforeAll(async () => {
     .update(counterparties)
     .set({ archivedAt: new Date() })
     .where(eq(counterparties.name, ARCHIVED));
-}, 120_000);
+});
 
 afterAll(async () => {
   await harness.stop();

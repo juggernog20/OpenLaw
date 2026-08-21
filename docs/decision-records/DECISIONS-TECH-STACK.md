@@ -148,6 +148,20 @@ Postgres + SQLite eval tier: doubles the test matrix, forbids or shims the featu
 
 The Compose file ships a Postgres container (external/managed Postgres equally supported via `DATABASE_URL`).
 
+### Addendum (2026-08-21, [#390](https://github.com/juggernog20/OpenLaw/issues/390)) — a primary key is a UUIDv7 **value** in a `text` column, and stays one
+
+The decision above says "UUID v7 primary keys confirmed" and stops there. What shipped is a UUIDv7 value stored in a `text` column: `uuidPk()` in `packages/db/src/schema/helpers.ts` is `text("id").primaryKey()` with a `uuidv7()` default, and every table in `packages/db/src/schema` takes it. That is the decision, not a shortcut somebody took on the first table and nobody revisited.
+
+**What the value is, is unchanged.** The keys are UUIDv7: canonical 36-character form, time-ordered, so the sort property TECH-004 bought is the value's and the column type never had it to give. Nothing about ordering, generation, or the `created_at`-free keyset cursor (CTR-024) depends on the storage type.
+
+**What the native `uuid` type would buy.** Sixteen bytes per key instead of thirty-six, a narrower index, and a parse the database does rather than trusts. Real, and at this product's scale unobservable: DD-002 sizes the install at a 2–10 person legal team, so the widest table holds tens of thousands of rows on a machine that is not index-bound.
+
+**Why the conversion is declined.** It is an unattended rewrite of every `id` column the schema declares — 31 tables take `uuidPk()` today — and of every foreign key that points at one, across all 46 tables. It runs on somebody else's data, from `compose up` (TECH-005), with no operator watching. The upgrade story is the promise this product is built on, and a whole-schema type change is the single migration most able to break it. The trade is a measurable risk to every existing install against a benefit nobody on one can measure.
+
+**When to reopen.** A deployment that is demonstrably index-bound on key width, or a Postgres feature the schema wants that requires the native type. Neither exists. Until one does, `text` is the answer, and a new table takes `uuidPk()` like every other.
+
+This closes the API-and-domain-core review's close call CC-1.
+
 ## TECH-005: Deployment — Docker Compose as the blessed path
 
 - **Status:** Accepted
@@ -181,6 +195,34 @@ Release artifact = images + compose.yml + .env.example. Upgrade story = pull new
 ### Alternatives considered
 
 Prisma (codegen layer; Postgres-specific surfaces fight the abstraction); Kysely/raw SQL (hand-rolled conventions, higher onboarding cost).
+
+### Addendum (2026-08-21, [#390](https://github.com/juggernog20/OpenLaw/issues/390)) — a migration does not always start inside a transaction
+
+**A migration file inherits whatever transaction state the file before it left behind. If it needs to be all-or-nothing, it must open its own transaction rather than assume one.**
+
+The runner is drizzle-orm's `migrate()`, called on container start (TECH-005) — drizzle-kit only generates the files. It runs the pending files in order inside **one transaction around the whole batch**, not one per file: normally a statement that fails rolls back everything the batch had applied — statements and journal rows together — and the upgrade stops with the previous release's schema intact, which is the safe failure.
+
+One thing ends that transaction mid-batch: a bare `COMMIT;` inside a migration file. The first two were one-offs, both deliberate:
+
+- `packages/db/migrations/0054_reminder_dedup_entity_type.sql` opens with one, because its `CREATE INDEX CONCURRENTLY` statements cannot run inside a transaction block at all — Postgres refuses the statement rather than the transaction, so the file has to end the transaction first.
+- `packages/db/migrations/0060_account_issuer.sql` ends with the one that closes its own `BEGIN` (below).
+
+Every file on the two-line pattern below adds another — `0064`–`0066` were the first to follow it ([#391](https://github.com/juggernog20/OpenLaw/issues/391)), and each ends with the `COMMIT` that closes its own `BEGIN`.
+
+After any of these files, the session is in **autocommit**, and **every later file in that batch arrives that way**. In autocommit every statement commits as it runs, so a file with an `ALTER TABLE` followed by a guard that raises leaves the `ALTER` applied and nothing else done — and the re-run after the fix dies on the duplicate column instead of resuming.
+
+The fix is two lines at the head of any migration that must be atomic:
+
+```sql
+COMMIT;--> statement-breakpoint
+BEGIN;--> statement-breakpoint
+```
+
+The `COMMIT` closes whatever is open — the batch transaction, carrying every earlier pending file's statements and journal rows, all of them complete files that are safe to make durable early — or nothing at all, which Postgres answers with a warning rather than an error. The `BEGIN` then makes the file one transaction on **every** upgrade path, whether the batch reached it inside the runner's transaction or in autocommit after crossing `0054` or any self-transactioned file on the way.
+
+This is worth the two lines whenever a file has more than one statement that must not land alone: a backfill beside its column, a guard that can refuse, or a constraint added after the data is fixed up to satisfy it. A lone `ALTER TABLE ADD COLUMN` is atomic by itself and needs nothing.
+
+`0060_account_issuer.sql` is the worked example and carries the argument in its own comments. The `database` agent skill repeats this rule where a migration author will be standing.
 
 ## TECH-007: Background jobs — pg-boss on Postgres
 
@@ -462,6 +504,16 @@ Recorded as working defaults without a grill (all convention, no open design con
 
 Repo scaffold order: monorepo shell → Fastify + OpenAPI → auth (brings `packages/db` and its first tables) → Compose. _Revised 2026-08-08: there is no up-front "drizzle schema from SCHEMA.md" phase — the schema grows incrementally; tables land in the same change as the feature that reads and writes them, each with its own drizzle-kit migration, with SCHEMA.md as the naming/relationship reference._ The build phasing itself (which module first — CLM per PRODUCT.md) is unchanged.
 
+### Addendum (2026-08-21, [#391](https://github.com/juggernog20/OpenLaw/issues/391)) — one version, checked rather than generated
+
+The product's version is written down ten times: in the root `package.json`, in each of the eight workspace members', and once more as `OPENLAW_VERSION` in `packages/shared/src/index.ts` — the constant `GET /api/v1/meta` answers and the OpenAPI document carries. Nothing kept them in step, so a release bump that missed one would ship an install reporting a version it is not. The API review offered the fork: generate the constant, or check it.
+
+**It is checked.** `pnpm lint:versions` reads the root `package.json` as the source of truth and fails when any of the other nine places disagrees, naming each one. It runs inside `pnpm check`, which is what CI runs — a real gate, on the `lint:migrations` and `lint:contrast` precedent, not a comment asking somebody to remember.
+
+Generating it was declined for two concrete reasons rather than on taste. `@openlaw/shared` is bundled into the browser, so the value has to be a literal in the source rather than a file read at runtime; and that package's tsconfig sets `rootDir: "src"`, so importing its own `package.json` would move the whole build's output layout. What is left of "generate" is a generated file that is **committed** — and a committed generated file needs a CI check that it is current anyway (the `openapi-current` job is exactly that shape). That is the check below plus a build step, so the build step is the part that was dropped.
+
+The script reads the workspace members from `pnpm-workspace.yaml` rather than listing them, so a package added later is checked without anybody remembering to.
+
 ## TECH-015: TypeScript 7 native compiler + TS 6 API shim for typescript-eslint
 
 - **Status:** Accepted — **temporary by design; see sunset trigger below**
@@ -511,7 +563,7 @@ TECH-003 makes the OpenAPI document a first-class artifact. Fastify needs a sche
 
 ### Decision
 
-**Zod (v4)** via `fastify-type-provider-zod`: every route declares request/response schemas in Zod; the same definitions drive validation, inference, and the OpenAPI 3.1 document (`@fastify/swagger`). Schemas shared with the SPA (form validation, shared types) live in `packages/shared`.
+**Zod (v4)** via `fastify-type-provider-zod`: every route declares request/response schemas in Zod; the same definitions drive validation, inference, and the OpenAPI 3.1 document (`@fastify/swagger`). Schemas shared with the SPA (form validation, shared types) **will** live in `packages/shared`. _(2026-08-21, [#390](https://github.com/juggernog20/OpenLaw/issues/390): that clause is a destination, not a description. No Zod schema lives in `packages/shared` today. What the package holds is the wire vocabulary both ends must agree on — problem-type strings, bound constants, action slugs, sort keys — and the web app validates its forms in the field controls rather than against a schema. The sentence is written in the future tense because the first shared schema arrives with web form validation, and until then a reader would otherwise go looking for schemas that are not there.)_
 
 ### Alternatives considered
 
@@ -559,6 +611,25 @@ Working defaults: `compose.yml`/`compose.dev.yml` at repo root next to `.env.exa
 - `apps/api` takes `@fastify/static` and the SPA-fallback route; the Vite dev proxy (with its Origin rewrite) remains a dev-only affordance.
 - The M3 demo reaches `http://<vm-ip>:3000` directly — TLS is the deployer's proxy's job.
 - Every future service addition is a reviewable compose diff riding its feature's PR.
+
+### Addendum (2026-08-21, [#390](https://github.com/juggernog20/OpenLaw/issues/390)) — security response headers, and where rate limiting lives
+
+The BYO-proxy decision left one thing unsaid, and it has been unsaid through fifteen milestones: **who sets the security response headers.** This records the posture so nobody has to infer it from the absence of `helmet` in `package.json`.
+
+**1. The app sets the headers that are about its own responses, and only those.** Two are set today and both are per route rather than global, because both are about the bytes that route returns:
+
+- `x-content-type-options: nosniff` on every document, rendition, and request-attachment download. A browser that sniffs an uploaded file into something executable is the attack; the route knows it is streaming somebody else's upload, so the route says so.
+- `content-security-policy: default-src 'none'; sandbox` on the inline-render routes. An uploaded HTML or SVG rendered in a frame is the attack, and this is the narrowest policy that stops it.
+
+Those stay in the routes. A global header cannot know which responses are somebody else's bytes.
+
+**2. The deployer's reverse proxy owns the origin-wide headers.** `Strict-Transport-Security`, `X-Frame-Options` / `frame-ancestors`, `Referrer-Policy`, and a page-level CSP for the SPA are the proxy's, added to the contract in `docs/DEPLOYMENT.md`. HSTS is the clearest case: it is a claim about TLS, the app has no TLS, and an app that asserts HSTS on a plain-HTTP port is asserting something it cannot know. The others follow the same rule — they are properties of the public origin, which is the thing the deployer configured and the app was told about only as a `BASE_URL` string.
+
+**3. `@fastify/helmet` is declined, and this is the reason.** Helmet's value is a sensible default for an app that is its own origin. This app is not: it is one upstream behind an ingress the deployer already runs, and every org in TECH-008's audience has one. Adding helmet would put a second, weaker copy of the same headers behind the proxy's, and the two would disagree the moment a deployer tuned theirs — with the app's copy winning or losing depending on the proxy's merge behavior, which is not something we can pin from here. A page-level CSP tight enough to be worth having also needs to know the origin's assets, and Vite's hashed bundle means it would be generated or permissive; permissive is the version that ships and then reads as protection.
+
+**4. Rate limiting is the proxy's too, with one exception that is already ours.** Sign-in has an in-app limiter (better-auth's, TECH-018's `AUTH_RATE_LIMIT=off` overlay switch) because it protects a credential rather than a resource, and the counter has to be the one the auth layer itself keeps. Everything else — the portal's open write addresses above all (INT-002's M20 addenda, parked in `FUTURE-FEATURES.md`) — is a bytes-and-requests bound whose right numbers depend on the instance, and whose right enforcement point is in front of the app. `docs/DEPLOYMENT.md`'s proxy contract now says so, rather than covering TLS and `Origin` and going quiet on limits.
+
+**When to reopen.** A deployment topology with no proxy in front of it — which TECH-017 does not bless and the docs do not describe — or a managed offering, which DD-009 and TECH-005 both put outside v1.
 
 ## TECH-018: Deployment fidelity — hybrid dev loop, hard E2E gate on built images, `e2e/` workspace
 
@@ -726,6 +797,18 @@ CTR-012's soft gate (#235) is the first refusal a client has to **act on**. `PAT
 - Each acted-on type is declared once, in `packages/shared` (TECH-016's home for definitions both ends of the wire must agree on), and imported by the rule that throws it and the client that branches on it — `SOFT_GATE_PROBLEM_TYPE` in `packages/shared/src/index.ts` is the first. A mirrored copy per side was rejected in review: two copies that drifted would not fail loudly — the client would simply stop recognizing the refusal.
 - The OpenAPI document does not enumerate the types; they are documented in the route summary that can raise them.
 
+### Addendum (2026-08-21, [#391](https://github.com/juggernog20/OpenLaw/issues/391)) — where a test writes a problem type out, and where it imports one
+
+The consequence above rejects a mirrored copy of a type **in production code**, because two copies that drifted would not fail loudly. Tests were left unsaid, and the suites had drifted into doing both without a rule. This is the rule.
+
+**A test that authors the value imports it. A test that reads the value off the wire writes it out.**
+
+The web route tests stub the seam: the test writes the problem payload the record then branches on. There the literal is a second copy of a shared constant with nothing checking it against the first, and a renamed URN leaves a fixture asserting a string the product no longer uses. Those import from `@openlaw/shared` — four sites, in the contract record's soft-gate, relations, renewal, and envelope suites.
+
+The API integration suites and the E2E spec assert a type on a response the server produced. There the literal is the tripwire that makes decision point 4 above real: **changing a `type` is a breaking change**, and a change nothing goes red for is not being treated as one. Six sites keep their literals for that reason, and each now says so in place — `20-m14-demo.spec.ts` argued it first, and this addendum makes its local reasoning the general rule.
+
+Nothing is left green asserting a URN that no longer exists: after a rename the wire suites fail and the stub suites pass, which is the correct answer from each.
+
 ## TECH-021: Secrets at rest — plaintext for v1, with one owner and one trigger
 
 - **Status:** Superseded by TECH-022
@@ -823,6 +906,14 @@ Three key sources were on the table: a required environment variable, a key deri
 - A fifth credential column joins `SEALED_COLUMNS` in `packages/db/src/rewrap.ts` in the change that adds it — the list is what the boot pass walks, so an omission is a column that never gets resealed.
 - The three schema comments deferring encryption are gone, because it happened.
 - TECH-021 stays in this document, marked superseded. Its statement of the exposure is still the clearest one we have.
+
+### Addendum (2026-08-21, [#387](https://github.com/juggernog20/OpenLaw/issues/387)) — two regimes, two keys
+
+**This install encrypts credentials at rest under two keys, on purpose.** Columns an Administrator pastes into Settings are sealed by our schema under `OPENLAW_SECRET_KEY` — the four above. Columns better-auth owns end to end are encrypted by better-auth under `AUTH_SECRET`: the TOTP seed and backup codes it already sealed, and now `accounts.access_token` and `accounts.refresh_token`, which the `account.encryptOAuthTokens` flag turns on. `docs/DEPLOYMENT.md`'s `AUTH_SECRET` line already told this truth for the 2FA material; it holds for the OAuth tokens too.
+
+The split follows the **recovery contract**, not the sensitivity. Consequence 6 above says an unopenable sealed value reads as "not set" and is left alone, because the recovery is "open Settings and paste it again". A per-user OIDC token cannot be re-pasted by anyone. Putting these two columns in `SEALED_COLUMNS` would therefore trade a real exposure for a worse failure: a boot under the wrong key would read every SSO user's tokens as unset and never say so. better-auth's own mechanism has no such pass — it seals on write, reads a pre-flag plaintext value straight through, and lets a later sign-in rewrite the row — so there is nothing to boot-migrate and nothing to blank. One residue rides along: the sign-in rewrite is certain for the access token, but better-auth keeps the stored refresh token when a token response carries no new one, so on an IdP that re-issues refresh tokens only at first consent, a pre-flag plaintext refresh token outlives the upgrade. Accepted — the sso plugin asks for `offline_access` on every exchange, so conformant IdPs do re-issue, and redeeming the token is still gated on the sealed client secret. `accounts.id_token` stays plaintext because better-auth writes it raw whatever the flag says; that is accepted, being expired identity evidence whose claims already sit plaintext on `users`.
+
+**A fifth admin-pasted credential still joins `SEALED_COLUMNS`.** This addendum widens nothing about the rule above; it names the one category that sits outside it, so the next reader does not file a better-auth column in the wrong regime.
 
 ## TECH-023: Shared machinery grows named per-mount hooks — a third mount is configuration, not a copy
 

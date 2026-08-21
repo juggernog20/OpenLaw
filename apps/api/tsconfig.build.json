@@ -1,4 +1,9 @@
 {
   "extends": "./tsconfig.json",
+  // `rootDir` keeps the emitted layout at `dist/<module>` rather than
+  // `dist/src/<module>`, so the build compiles `src` alone and the
+  // include is narrowed back to it.
+  "compilerOptions": { "rootDir": "src" },
+  "include": ["src"],
   "exclude": ["src/**/*.test.ts", "src/testing"]
 }

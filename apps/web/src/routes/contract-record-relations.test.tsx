@@ -28,6 +28,7 @@
 import { describe, expect, it } from "vitest";
 import { screen, within, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { CONTRACT_RELATION_EXISTS_PROBLEM_TYPE } from "@openlaw/shared";
 import { json, renderAt, stubApi, type StubCall } from "../testing/helpers";
 
 const MEMBER = {
@@ -522,7 +523,7 @@ describe("the card's link management actions (M17/4)", () => {
       }
       if (call.url.pathname === "/api/v1/contracts/42/relations" && call.method === "POST") {
         return json(409, {
-          type: "urn:openlaw:problem:contract-relation-exists",
+          type: CONTRACT_RELATION_EXISTS_PROBLEM_TYPE,
           detail: "These two contracts are already linked that way.",
         });
       }

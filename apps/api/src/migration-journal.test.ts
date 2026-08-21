@@ -50,7 +50,7 @@ let container: StartedPostgreSqlContainer;
 
 beforeAll(async () => {
   container = await new PostgreSqlContainer("postgres:16-alpine").start();
-}, 120_000);
+});
 
 afterAll(async () => {
   await container?.stop();
@@ -206,7 +206,7 @@ describe("an install that upgraded before the correction", () => {
     await db.execute(
       sql`update drizzle.__drizzle_migrations set created_at = ${BAD_STAMP} where hash = ${contractTasks?.hash}`,
     );
-  }, 120_000);
+  });
 
   afterAll(async () => {
     await db?.$client.end();
@@ -247,7 +247,7 @@ describe("an install that upgraded before the correction", () => {
       sql`select to_regclass('public.notifications') is not null as exists`,
     );
     expect(present.rows[0]?.exists).toBe(true);
-  }, 120_000);
+  });
 
   it("is a no-op on the second pass", async () => {
     const outcome = await guardMigrationJournal(db, MIGRATIONS);
@@ -268,7 +268,7 @@ describe("a stranding the guard does not recognise", () => {
     await db.execute(
       sql`update drizzle.__drizzle_migrations set created_at = ${9_000_000_000_000} where hash = ${keyDates?.hash}`,
     );
-  }, 120_000);
+  });
 
   afterAll(async () => {
     await db?.$client.end();
@@ -306,5 +306,8 @@ describe("a database nobody has migrated", () => {
     } finally {
       await db.$client.end();
     }
+    // Longer than the package's own `testTimeout` in `vitest.config.ts`:
+    // this case applies every committed migration to a bare database, and
+    // that set only grows.
   }, 180_000);
 });

@@ -1232,7 +1232,7 @@ export interface paths {
     /** The CTR-012 approver-group templates in name order, each carrying its member list; archived groups only with includeArchived=true */
     get: operations["listApproverGroups"];
     put?: never;
-    /** Create an approver-group template with its name, an optional description, and an optional starting member list; members must be live Member+ users */
+    /** Create an approver-group template with its name, an optional description, and an optional starting member list; members must be live Member+ users. The name must be one no live group already carries, compared case-insensitively — 409 if it is */
     post: operations["createApproverGroup"];
     delete?: never;
     options?: never;
@@ -1253,7 +1253,7 @@ export interface paths {
     delete?: never;
     options?: never;
     head?: never;
-    /** Rename an approver group (DES-017 in-place rename) and/or change its description; the two changes write their own activity entries */
+    /** Rename an approver group (DES-017 in-place rename) and/or change its description; the two changes write their own activity entries. A new name must be one no other live group carries, compared case-insensitively — 409 if it is */
     patch: operations["updateApproverGroup"];
     trace?: never;
   };
@@ -1300,7 +1300,7 @@ export interface paths {
     };
     get?: never;
     put?: never;
-    /** Restore an archived approver group (SET-003's recovery story); its members ride along unchanged */
+    /** Restore an archived approver group (SET-003's recovery story); its members ride along unchanged. Archiving frees the name, so a restore is refused 409 when a live group has taken it since */
     post: operations["restoreApproverGroup"];
     delete?: never;
     options?: never;

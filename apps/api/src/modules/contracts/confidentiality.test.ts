@@ -168,7 +168,7 @@ beforeAll(async () => {
   teammateCookies = await signInCookies(harness.app, TEAMMATE.email, TEAMMATE.password);
   contributorCookies = await signInCookies(harness.app, CONTRIBUTOR.email, CONTRIBUTOR.password);
   strangerCookies = await signInCookies(harness.app, STRANGER.email, STRANGER.password);
-}, 120_000);
+});
 
 afterAll(async () => {
   await harness.stop();
@@ -1317,7 +1317,7 @@ describe("the bound and the gate, in that order (CTR-024)", () => {
         walled.push(contract.id);
       }
     }
-  }, 120_000);
+  });
 
   it("gives the outsider full pages, not pages shortened by what is hidden", async () => {
     const { lengths, ids } = await walk(outsiderCookies);

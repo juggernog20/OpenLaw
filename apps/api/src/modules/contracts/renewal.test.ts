@@ -131,7 +131,7 @@ beforeAll(async () => {
   expect(res.statusCode, res.body).toBe(200);
   const types = res.json().contractTypes as { id: string; slug: string }[];
   ndaTypeId = types.find((row) => row.slug === "nda")!.id;
-}, 120_000);
+});
 
 afterAll(async () => {
   await harness.stop();
@@ -406,7 +406,7 @@ describe("confirming the roll (CTR-007's first vehicle)", () => {
     // One advance, and one entry. The loser rolled nothing.
     expect((await read(contract.number)).expiryDate).toBe(contract.proposedRenewalExpiry);
     expect(await rollsOn(contract.id)).toHaveLength(1);
-  }, 60_000);
+  });
 
   it("refuses a confirm against an expiry the record no longer holds", async () => {
     const contract = await lapsed("Roll stale");

@@ -85,10 +85,33 @@ export type DocumentVersionKind = (typeof DOCUMENT_VERSION_KINDS)[number];
  * contract — and the other three FK columns land with their own modules
  * (M22, M27, M28). `contract_id` is therefore `NOT NULL` here: with one
  * owner declared, that is the exactly-one-owner rule stated exactly, and
- * it costs nothing to hold. The migration that adds a second owner
- * column relaxes it and moves the rule into the application check
- * DOC-008 describes, which is the only place a one-of-four rule can
- * live.
+ * it costs nothing to hold.
+ *
+ * **The migration that adds a second owner column must carry the rule
+ * down with it, not hand it to the application.** Dropping `NOT NULL`
+ * and relying on the application check DOC-008 describes would leave the
+ * table able to hold a two-owner row and an orphan row alike, and a row
+ * like that is unreachable by every access path in the product — the
+ * gate is the owner. Postgres states the rule directly, with
+ * `num_nonnulls`.
+ *
+ * **The constraint names the owner columns that exist when it is
+ * written.** It cannot be written in its final four-column form up
+ * front: a CHECK naming `entity_id` before M27 adds that column does not
+ * parse. So the migration that adds the second owner column carries
+ * `CHECK (num_nonnulls(matter_id, contract_id) = 1)` beside its
+ * `DROP NOT NULL` — never one without the other, because the gap between
+ * them is where an ownerless row can be written. Each later owner module
+ * then drops and re-adds it one column wider, in the migration that adds
+ * its own column, until it reaches:
+ *
+ * ```sql
+ * CHECK (num_nonnulls(matter_id, contract_id, entity_id, knowledge_item_id) = 1)
+ * ```
+ *
+ * The application check stays, because it is what turns a violation into
+ * a message somebody can act on rather than a 500. The constraint is the
+ * floor under it. See DOC-008's 2026-08-21 consequence.
  *
  * No cascade on the contract: a contract is archived, never deleted, and
  * its paper outlives an accident. Hard deletion (DOC-010) is its own
@@ -206,8 +229,10 @@ export const documents = pgTable(
   },
   (table) => [
     // The one read the record page makes: this contract's documents,
-    // newest first.
-    index("documents_contract_idx").on(table.contractId, table.createdAt),
+    // newest first. `id` last, because the listing's keyset walks
+    // `(created_at, id)` and the tie-break belongs in the index that
+    // answers the order (CTR-024, #391).
+    index("documents_contract_idx").on(table.contractId, table.createdAt, table.id),
     // The executed pin's own column — the referencing side of the
     // foreign key into `document_versions` (M11/5). No read filters on
     // it, so it carried no index until now: what needs one is DOC-010's
@@ -221,7 +246,10 @@ export const documents = pgTable(
     // folder's count and the re-file a delete runs, and it is what keeps
     // opening one folder on a heavy record off a scan of the record's
     // whole paper.
-    index("documents_folder_idx").on(table.folderId, table.createdAt),
+    // The same keyset as the record listing above, so the same
+    // tie-break: one folder's page is the record's page under one more
+    // filter, and it walks `(created_at, id)` too.
+    index("documents_folder_idx").on(table.folderId, table.createdAt, table.id),
   ],
 );
 

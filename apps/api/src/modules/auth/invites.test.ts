@@ -29,7 +29,7 @@ beforeAll(async () => {
   });
   expect(setup.statusCode, setup.body).toBe(201);
   adminCookies = await signInCookies(harness.app, TEST_ADMIN.email, TEST_ADMIN.password);
-}, 120_000);
+});
 
 afterAll(async () => {
   await harness.stop();

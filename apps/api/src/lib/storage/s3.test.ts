@@ -31,7 +31,11 @@ import { S3_DRIVER, createS3Storage } from "./s3.js";
  */
 const MINIO_IMAGE = "minio/minio:RELEASE.2025-09-07T16-13-09Z";
 
-/** Pulling and booting a container is slower than making a directory. */
+/**
+ * Pulling and booting a container is slower than making a directory, and
+ * on a cold image cache slower than the package's own `hookTimeout` in
+ * `vitest.config.ts`.
+ */
 const START_TIMEOUT_MS = 180_000;
 
 interface StartedStore {
@@ -148,7 +152,7 @@ describe("S3-compatible driver", () => {
       new ListMultipartUploadsCommand({ Bucket: store.bucket }),
     );
     expect(inProgress.Uploads ?? []).toEqual([]);
-  }, 60_000);
+  });
 
   it("lets exactly one of two writers of the same key win", async () => {
     const key = randomUUID();
@@ -180,5 +184,5 @@ describe("S3-compatible driver", () => {
     for await (const chunk of read) chunks.push(Buffer.from(chunk));
 
     expect(Buffer.concat(chunks).equals(large)).toBe(true);
-  }, 60_000);
+  });
 });

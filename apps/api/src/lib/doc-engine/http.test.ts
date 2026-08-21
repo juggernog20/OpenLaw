@@ -45,11 +45,12 @@ const SIDECAR_PORT = 8080;
 /** The tag the built image is kept under, so a rerun reuses it. */
 const IMAGE_TAG = "openlaw-doc-engine:test";
 
-/** Building an 800 MB image on a cold cache is minutes, not seconds. */
+/**
+ * Building an 800 MB image on a cold cache is minutes, not seconds —
+ * past even the generous `hookTimeout` in `vitest.config.ts`, so this
+ * one suite says so for itself.
+ */
 const START_TIMEOUT_MS = 900_000;
-
-/** A conversion or an OCR pass is seconds; a cold LibreOffice is more. */
-const TEST_TIMEOUT_MS = 120_000;
 
 const repoRoot = fileURLToPath(new URL("../../../../../", import.meta.url));
 
@@ -126,12 +127,10 @@ afterAll(async () => {
 
 describeDocEngineContract("doc-engine sidecar", startSidecar, {
   startTimeoutMs: START_TIMEOUT_MS,
-  testTimeoutMs: TEST_TIMEOUT_MS,
 });
 
 describeDocEngineFidelity("doc-engine sidecar", startSidecar, {
   startTimeoutMs: START_TIMEOUT_MS,
-  testTimeoutMs: TEST_TIMEOUT_MS,
 });
 
 describe("doc-engine sidecar", () => {
@@ -141,30 +140,22 @@ describe("doc-engine sidecar", () => {
     harness = await startSidecar();
   }, START_TIMEOUT_MS);
 
-  it(
-    "answers a scan's text without ever asking the caller to keep the OCR'd PDF",
-    async () => {
-      // DOC-005 stated as an interface property: the operation answers
-      // text and nothing else, so there is no second file for a caller
-      // to store by mistake and no way for a machine's re-rendering to
-      // become what a reader sees.
-      const text = await harness.engine.ocrPdf(Readable.from([DOC_ENGINE_FIXTURES.scanPdf]));
-      expect(text).toMatch(/[\p{L}\p{N}]/u);
-    },
-    TEST_TIMEOUT_MS,
-  );
+  it("answers a scan's text without ever asking the caller to keep the OCR'd PDF", async () => {
+    // DOC-005 stated as an interface property: the operation answers
+    // text and nothing else, so there is no second file for a caller
+    // to store by mistake and no way for a machine's re-rendering to
+    // become what a reader sees.
+    const text = await harness.engine.ocrPdf(Readable.from([DOC_ENGINE_FIXTURES.scanPdf]));
+    expect(text).toMatch(/[\p{L}\p{N}]/u);
+  });
 
-  it(
-    "refuses a source format the interface does not offer without sending the bytes",
-    async () => {
-      // The client refuses locally, so a spreadsheet costs no upload and
-      // no round trip to a service that would only refuse it too.
-      await expect(
-        harness.engine.convertToPdf(Readable.from([DOC_ENGINE_FIXTURES.plainDocx]), "xlsx"),
-      ).rejects.toBeInstanceOf(UnsupportedFormatError);
-    },
-    TEST_TIMEOUT_MS,
-  );
+  it("refuses a source format the interface does not offer without sending the bytes", async () => {
+    // The client refuses locally, so a spreadsheet costs no upload and
+    // no round trip to a service that would only refuse it too.
+    await expect(
+      harness.engine.convertToPdf(Readable.from([DOC_ENGINE_FIXTURES.plainDocx]), "xlsx"),
+    ).rejects.toBeInstanceOf(UnsupportedFormatError);
+  });
 });
 
 describe("doc-engine HTTP client", () => {
@@ -345,39 +336,35 @@ describe("a sidecar with a small body ceiling", () => {
     await container?.stop();
   });
 
-  it(
-    "refuses an upload over it as terminal, not as an engine it could not reach",
-    async () => {
-      // The refusal has to arrive as a refusal. A sidecar that cut the
-      // connection the moment the ceiling was crossed would leave the
-      // client reading a broken socket — unavailable, which is
-      // transient — and the derivation would spend its whole retry
-      // budget re-sending a file that will never fit. So the upload is
-      // read to its end and the 413 is answered, which is terminal.
-      const engine = createHttpDocEngine({ baseUrl });
-      const chunk = Buffer.alloc(64 * 1024);
-      // Paced, and half again over the ceiling, so the client still has
-      // bytes to write when the sidecar decides. An upload that fits in
-      // the socket buffers is over before the answer comes back and
-      // would not tell these two failures apart.
-      const oversize = Readable.from(
-        (async function* () {
-          for (let sent = 0; sent < CEILING_BYTES * 1.5; sent += chunk.byteLength) {
-            await delay(2);
-            yield chunk;
-          }
-        })(),
-      );
+  it("refuses an upload over it as terminal, not as an engine it could not reach", async () => {
+    // The refusal has to arrive as a refusal. A sidecar that cut the
+    // connection the moment the ceiling was crossed would leave the
+    // client reading a broken socket — unavailable, which is
+    // transient — and the derivation would spend its whole retry
+    // budget re-sending a file that will never fit. So the upload is
+    // read to its end and the 413 is answered, which is terminal.
+    const engine = createHttpDocEngine({ baseUrl });
+    const chunk = Buffer.alloc(64 * 1024);
+    // Paced, and half again over the ceiling, so the client still has
+    // bytes to write when the sidecar decides. An upload that fits in
+    // the socket buffers is over before the answer comes back and
+    // would not tell these two failures apart.
+    const oversize = Readable.from(
+      (async function* () {
+        for (let sent = 0; sent < CEILING_BYTES * 1.5; sent += chunk.byteLength) {
+          await delay(2);
+          yield chunk;
+        }
+      })(),
+    );
 
-      const error = await engine.extractPdfText(oversize).then(
-        () => undefined,
-        (raised: unknown) => raised,
-      );
-      expect(error).toBeInstanceOf(SourceUnreadableError);
-      // The ceiling's own sentence, so this cannot pass because poppler
-      // refused a megabyte of zeros for some other reason.
-      expect((error as Error).message).toContain(String(CEILING_BYTES));
-    },
-    TEST_TIMEOUT_MS,
-  );
+    const error = await engine.extractPdfText(oversize).then(
+      () => undefined,
+      (raised: unknown) => raised,
+    );
+    expect(error).toBeInstanceOf(SourceUnreadableError);
+    // The ceiling's own sentence, so this cannot pass because poppler
+    // refused a megabyte of zeros for some other reason.
+    expect((error as Error).message).toContain(String(CEILING_BYTES));
+  });
 });
