@@ -1002,7 +1002,7 @@ Source: **INT-002**
 
 `request_type_fields`: (`request_type_id`, `field_id`, `display_order`, `is_required`, `created_at`), compound PK on the first two. Attachable fields: scope matching the target module, or `global`.
 
-`request_attachments`: (`id`, `request_id`, `file_ref`, `filename`, `uploaded_by`, `created_at`) — lightweight; promoted into `documents` on conversion (requests are not document owners per DOC-008).
+`request_attachments`: (`id`, `request_id`, `file_ref`, `filename`, `uploaded_by`, `created_at`) — lightweight; promoted into `documents` on conversion (requests are not document owners per DOC-008). `request_id` is `on delete cascade`: an attachment is part of its Request and has no meaning without one. The cascade takes the row and **not the blob** — no database cascade reaches a storage driver — so whichever milestone builds a Request hard delete owes the same read-then-delete pass `documents` makes (DOC-010, DOC-012). No declared media type and no byte count are stored, so the download answers `application/octet-stream` (the INT-002 M20/6 addendum).
 
 ---
 

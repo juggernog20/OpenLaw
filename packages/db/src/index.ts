@@ -40,6 +40,7 @@ import * as matterTypeFieldsSchema from "./schema/matter-type-fields.js";
 import * as matterTypesSchema from "./schema/matter-types.js";
 import * as notificationsSchema from "./schema/notifications.js";
 import * as orgSchema from "./schema/org.js";
+import * as requestAttachmentsSchema from "./schema/request-attachments.js";
 import * as requestTypeFieldsSchema from "./schema/request-type-fields.js";
 import * as requestTypesSchema from "./schema/request-types.js";
 import * as requestsSchema from "./schema/requests.js";
@@ -75,6 +76,7 @@ export * from "./schema/matter-type-fields.js";
 export * from "./schema/matter-types.js";
 export * from "./schema/notifications.js";
 export * from "./schema/org.js";
+export * from "./schema/request-attachments.js";
 export * from "./schema/request-type-fields.js";
 export * from "./schema/request-types.js";
 export * from "./schema/requests.js";
@@ -112,6 +114,7 @@ export const schema = {
   ...matterTypesSchema,
   ...notificationsSchema,
   ...orgSchema,
+  ...requestAttachmentsSchema,
   ...requestTypeFieldsSchema,
   ...requestTypesSchema,
   ...requestsSchema,

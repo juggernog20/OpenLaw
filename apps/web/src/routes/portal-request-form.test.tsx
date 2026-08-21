@@ -61,6 +61,9 @@ const PAPER_SIDE: FormField = {
 /** What the form posted, captured as the stub answers it. */
 interface Submissions {
   bodies: unknown[];
+  /** One entry per attachment upload: the address it went to and the
+   * name of the file it carried (#380). */
+  uploads: { path: string; filename: string }[];
 }
 
 /** The form read, answered from a fixture, plus whatever the test's own
@@ -70,10 +73,22 @@ function portalForm(
     fields?: FormField[];
     intakeLinks?: { id: string; label: string; url: string; displayOrder: number }[];
     submit?: (call: StubCall) => Response;
+    /** How the attachment upload answers, by the file's name. Anything
+     * not named here lands. */
+    attach?: (filename: string) => Response;
   },
   submissions: Submissions,
 ) {
   return (call: StubCall) => {
+    if (
+      /^\/api\/v1\/requests\/\d+\/attachments$/.test(call.url.pathname) &&
+      call.method === "POST"
+    ) {
+      const file = call.body instanceof FormData ? call.body.get("file") : null;
+      const filename = file instanceof File ? file.name : "";
+      submissions.uploads.push({ path: call.url.pathname, filename });
+      return state.attach?.(filename) ?? json(201, { attachment: { id: "att1", filename } });
+    }
     if (
       call.url.pathname === "/api/v1/portal/request-types/contract_review" &&
       call.method === "GET"
@@ -101,7 +116,7 @@ function portalForm(
 }
 
 function openForm(state: Parameters<typeof portalForm>[0] = {}): Submissions {
-  const submissions: Submissions = { bodies: [] };
+  const submissions: Submissions = { bodies: [], uploads: [] };
   stubApi({ signedIn: REQUESTER, extra: portalForm(state, submissions) });
   renderAt("/portal/new/contract_review");
   return submissions;
@@ -297,6 +312,105 @@ describe("submitting the form", () => {
       "summary",
       "urgency",
     ]);
+  });
+});
+
+describe("the Attachments basic", () => {
+  /** One picked file, named so a test can find it again. */
+  function file(name: string) {
+    return new File(["the redline"], name, { type: "application/pdf" });
+  }
+
+  it("lists the files a requester picks, and lets one be taken back", async () => {
+    const user = userEvent.setup();
+    openForm({ fields: [] });
+    const picker = await screen.findByLabelText("Attachments");
+    await user.upload(picker, [file("redline.pdf"), file("term-sheet.pdf")]);
+
+    expect(screen.getByText("redline.pdf")).toBeInTheDocument();
+    expect(screen.getByText("term-sheet.pdf")).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Remove redline.pdf" }));
+    expect(screen.queryByText("redline.pdf")).not.toBeInTheDocument();
+    expect(screen.getByText("term-sheet.pdf")).toBeInTheDocument();
+  });
+
+  it("sends each picked file to the Request the submission created", async () => {
+    const user = userEvent.setup();
+    const submissions = openForm({ fields: [] });
+    await user.upload(await screen.findByLabelText("Attachments"), [
+      file("redline.pdf"),
+      file("term-sheet.pdf"),
+    ]);
+    await user.type(screen.getByLabelText(/^Summary/), "MSA renewal");
+    await user.type(screen.getByLabelText(/^Description/), "They sent a redline.");
+    await user.click(screen.getByRole("button", { name: "Submit request" }));
+
+    await screen.findByRole("heading", { name: /R-42 is with Legal/ });
+    // Addressed by the R-### the submission answered with, one call per
+    // file, in the order they were picked.
+    expect(submissions.uploads).toEqual([
+      { path: "/api/v1/requests/42/attachments", filename: "redline.pdf" },
+      { path: "/api/v1/requests/42/attachments", filename: "term-sheet.pdf" },
+    ]);
+  });
+
+  it("submits with no attachments at all, and uploads nothing", async () => {
+    const user = userEvent.setup();
+    const submissions = openForm({ fields: [] });
+    await user.type(await screen.findByLabelText(/^Summary/), "A question");
+    await user.type(screen.getByLabelText(/^Description/), "About the standard NDA.");
+    await user.click(screen.getByRole("button", { name: "Submit request" }));
+
+    // Attachments are optional (INT-002): none is not a refusal.
+    expect(await screen.findByRole("heading", { name: /R-42 is with Legal/ })).toBeInTheDocument();
+    expect(submissions.uploads).toEqual([]);
+  });
+
+  it("names a file that did not attach, without taking the Request back", async () => {
+    const user = userEvent.setup();
+    openForm({
+      fields: [],
+      attach: (filename) =>
+        filename === "term-sheet.pdf"
+          ? problem(413, "That file is over the 100 MB upload limit.")
+          : json(201, { attachment: { id: "att1", filename } }),
+    });
+    await user.upload(await screen.findByLabelText("Attachments"), [
+      file("redline.pdf"),
+      file("term-sheet.pdf"),
+    ]);
+    await user.type(screen.getByLabelText(/^Summary/), "MSA renewal");
+    await user.type(screen.getByLabelText(/^Description/), "They sent a redline.");
+    await user.click(screen.getByRole("button", { name: "Submit request" }));
+
+    // The Request landed, and that is the first thing the page says.
+    expect(await screen.findByRole("heading", { name: /R-42 is with Legal/ })).toBeInTheDocument();
+    // The paper that did not follow it is named, with the seam's own
+    // reason beside it — a requester can act on a limit and cannot act
+    // on "did not attach".
+    const alert = await screen.findByRole("alert");
+    expect(alert).toHaveTextContent(/This file did not attach\./);
+    expect(alert).toHaveTextContent(
+      /term-sheet\.pdf — That file is over the 100 MB upload limit\./,
+    );
+    // The one that did land is not named: the card says what went
+    // wrong, and nothing went wrong with that file.
+    expect(within(alert).queryByText(/redline\.pdf/)).not.toBeInTheDocument();
+  });
+
+  it("stops a requester queueing more files than a Request carries", async () => {
+    const user = userEvent.setup();
+    openForm({ fields: [] });
+    const picker = await screen.findByLabelText("Attachments");
+    await user.upload(
+      picker,
+      Array.from({ length: 21 }, (_ignored, index) => file(`paper-${String(index)}.pdf`)),
+    );
+
+    // The seam refuses the twenty-first, so the picker says so first.
+    expect(await screen.findByText("A request carries at most 20 files.")).toBeInTheDocument();
+    expect(screen.getAllByRole("button", { name: /^Remove / })).toHaveLength(20);
   });
 });
 

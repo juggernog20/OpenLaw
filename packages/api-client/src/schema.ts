@@ -1091,8 +1091,42 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** One of the session user's own Requests by its R-### number (DD-013): the envelope, the values the form collected with the fields that name them, and the decline reason when it was declined (INT-006). Another requester's Request answers 404 */
+    /** One of the session user's own Requests by its R-### number (DD-013): the envelope, the values the form collected with the fields that name them, the files that travelled with the ask, and the decline reason when it was declined (INT-006). Another requester's Request answers 404 */
     get: operations["readMyRequest"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/requests/{number}/attachments": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Attach one file to the caller's own Request (INT-002). The bytes ride the storage seam documents upload through and the row is a `request_attachments` row — nothing enters `documents`, because a Request is not a document owner (DOC-008) and promotion is conversion's (M21). One file per call, sent as multipart/form-data under `file`. A Request the caller did not submit answers 404, and a file past the 20-attachment bound is refused */
+    post: operations["attachToRequest"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/portal/requests/{number}/attachments/{attachmentId}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Stream one attachment on the caller's own Request back, as a download (DD-013). The bytes come through the API behind the session; there are no presigned URLs. The type is always `application/octet-stream`: a Request's attachment stores no declared type, and a download never echoes one a client sent. Another requester's Request — and an attachment on another Request — answers 404 */
+    get: operations["downloadMyRequestAttachment"];
     put?: never;
     post?: never;
     delete?: never;
@@ -6535,7 +6569,91 @@ export interface operations {
                 legalName: string;
               }[];
             };
+            attachments: {
+              id: string;
+              filename: string;
+              createdAt: string;
+            }[];
           };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  attachToRequest: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        number: number;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "multipart/form-data": {
+          /**
+           * Format: binary
+           * @description The file itself. Any type is accepted; a Request's attachment stores no declared type and its download never echoes one.
+           */
+          file: string;
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            attachment: {
+              id: string;
+              filename: string;
+              createdAt: string;
+            };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  downloadMyRequestAttachment: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        number: number;
+        attachmentId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/octet-stream": string;
         };
       };
       /** @description Problem details (RFC 9457) */

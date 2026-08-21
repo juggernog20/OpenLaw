@@ -180,7 +180,15 @@ import {
   renderFamilyOf,
   RENDITION_CONTENT_TYPE,
 } from "../../lib/render-family.js";
-import { attachmentDisposition, inlineDisposition, MEGABYTE } from "../../lib/uploads.js";
+import {
+  asUploadRefusal as asSharedUploadRefusal,
+  attachmentDisposition,
+  inlineDisposition,
+  MAX_FILENAME_LENGTH,
+  refuseOversize as refuseSharedOversize,
+  uploadFilename,
+  withStoredBlob,
+} from "../../lib/uploads.js";
 // A folder named by a filing, or by a folder-filtered read (M13/3).
 // Both the check and its refusal are imported rather than restated: a
 // folder on another contract answers exactly as one that was never
@@ -271,9 +279,6 @@ const AttachmentParams = z.object({
   versionId: RecordIdSchema,
   attachmentIndex: z.coerce.number().int().nonnegative().max(MAX_ATTACHMENT_INDEX),
 });
-
-/** The longest filename the common filesystems carry. */
-const MAX_FILENAME_LENGTH = 255;
 
 /** What changed in this round, in one line — capped where the record's
  * other short free text is. */
@@ -779,13 +784,6 @@ function fieldValue(fields: Record<string, unknown>, name: string): string | und
   if (!entry || typeof entry !== "object") return undefined;
   const part = entry as { type?: unknown; value?: unknown };
   return part.type === "field" && typeof part.value === "string" ? part.value : undefined;
-}
-
-/** The error code a Fastify plugin puts on its own rejections. */
-function errorCode(error: unknown): string | undefined {
-  return typeof error === "object" && error !== null && "code" in error
-    ? String((error as { code: unknown }).code)
-    : undefined;
 }
 
 export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
@@ -2919,22 +2917,9 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
     }
     const note = trimmedNote || null;
 
-    // A part with no `filename` at all is still a file part when it
-    // declares `application/octet-stream`, so the name has to be
-    // treated as absent rather than assumed present — an unnamed
-    // upload is refused, not crashed on.
-    const filename = (part.filename ?? "").trim();
-    if (filename.length === 0) throw httpError(400, "The uploaded file has no name.");
-    // Refused rather than shortened, for the note's reason and one of
-    // its own: cutting the end off a filename takes its extension with
-    // it, which is the part a later download and M12's rendering both
-    // read.
-    if (filename.length > MAX_FILENAME_LENGTH) {
-      throw httpError(
-        400,
-        `Rename the file to ${MAX_FILENAME_LENGTH} characters or fewer before uploading it.`,
-      );
-    }
+    // Checked where every upload route checks it, so the two paths
+    // cannot come to differ about what a usable filename is.
+    const filename = uploadFilename(part.filename);
     // Client-supplied and unverified, so it is stored as a hint and
     // never acted on. An upload that declares nothing is stored as
     // the type that means "bytes".
@@ -3002,35 +2987,22 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
 
   /**
    * Runs the write that follows a stored upload, and takes the blob away
-   * if it does not commit (DOC-012).
+   * if it does not commit (DOC-012) — the shared rule, named here for
+   * the file this module holds.
    *
-   * The bytes reach the driver before the rows exist, so every refusal
-   * after that point leaves a blob nothing points at. Most of them are
-   * rare — reach revoked between two reads, the record archived under
-   * the uploader. **A folder destination is not**: a dropped path can be
-   * too deep, or name a folder on another record, and a batch refused a
-   * file at a time would leave one orphan per refused file.
-   *
-   * A failed delete is logged and swallowed: the caller is owed the
-   * reason their upload was refused, and a cleanup that itself failed is
-   * an operational fact rather than an answer to them.
+   * Every refusal after the bytes reach the driver leaves a blob nothing
+   * points at. Most of them are rare — reach revoked between two reads,
+   * the record archived under the uploader. **A folder destination is
+   * not**: a dropped path can be too deep, or name a folder on another
+   * record, and a batch refused a file at a time would leave one orphan
+   * per refused file.
    */
   async function withStoredFile<T>(
     request: FastifyRequest,
     file: StoredUpload,
     write: () => Promise<T>,
   ): Promise<T> {
-    try {
-      return await write();
-    } catch (error) {
-      await app.storage.delete(file.fileRef).catch((cleanup: unknown) => {
-        request.log.warn(
-          { err: cleanup, fileRef: file.fileRef },
-          "could not remove the blob of an upload that did not commit",
-        );
-      });
-      throw error;
-    }
+    return await withStoredBlob(app.storage, request.log, file.fileRef, write);
   }
 
   /**
@@ -3211,37 +3183,15 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
   }
 
   /**
-   * The parser's own rejections, turned into copy a person can act on.
-   *
-   * The size ceiling is the one that matters: story 24 asks for a clear
-   * message rather than a mystery timeout, so the limit is named in the
-   * refusal. Anything else is passed through as it came.
+   * The parser's own rejections and the size refusal, both read from the
+   * shared upload rules so this route and the portal's attachment upload
+   * answer an oversize file with one sentence.
    */
   function refuseOversize() {
-    const limitMb = Math.round(app.maxUploadBytes / MEGABYTE);
-    return httpError(
-      413,
-      limitMb >= 1
-        ? `That file is over the ${limitMb} MB upload limit.`
-        : `That file is over the ${app.maxUploadBytes} byte upload limit.`,
-    );
+    return refuseSharedOversize(app.maxUploadBytes);
   }
 
   function asUploadRefusal(error: unknown): unknown {
-    switch (errorCode(error)) {
-      case "FST_REQ_FILE_TOO_LARGE":
-        return refuseOversize();
-      case "FST_FILES_LIMIT":
-        return httpError(413, "Upload one file at a time.");
-      case "FST_FIELDS_LIMIT":
-      case "FST_PARTS_LIMIT":
-        return httpError(413, "That upload carries more form fields than this endpoint accepts.");
-      case "FST_INVALID_MULTIPART_CONTENT_TYPE":
-        return httpError(415, "Send the file as multipart/form-data.");
-      case "FST_MP_PREMATURE_CLOSE":
-        return httpError(400, "The upload ended before the file was complete. Try again.");
-      default:
-        return error;
-    }
+    return asSharedUploadRefusal(error, app.maxUploadBytes);
   }
 };

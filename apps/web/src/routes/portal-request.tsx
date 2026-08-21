@@ -32,12 +32,13 @@
  *    on the Request — so it is drawn as what it is: the first of the
  *    values in "What you submitted". The thread (#381) draws comment
  *    rows and nothing else.
- * 2. I7's "What you submitted" card carries an Attachments row. Uploads
- *    land with ticket #380; until they do the row is left out rather
- *    than drawn empty, because "no attachments" would be a claim about
- *    the Request that this build cannot make. (The submission form
- *    draws its inert Attachments box for the opposite reason: there it
- *    is a promise about a control, not a statement about a record.)
+ * 2. I7 draws the Attachments row's filenames as one static line. They
+ *    render as a list, and each name is the link that downloads the file
+ *    it names: the paper is what a requester came back for, and a name
+ *    they cannot open is a label rather than a document. The row is
+ *    absent when the Request carries no paper, which is the rule every
+ *    other row on this card follows — the card says what was submitted,
+ *    and attachments are optional (INT-002).
  * 3. I7 makes the card collapsible, with a chevron in its header. It
  *    renders open and fixed: the card is the whole of what the page has
  *    to say until the thread lands, and a control whose only state is
@@ -50,7 +51,7 @@
 
 import { Link, redirect, useLoaderData, useNavigate, type LoaderFunctionArgs } from "react-router";
 import { defineMessage, FormattedMessage, useIntl, type IntlShape } from "react-intl";
-import { ChevronLeft, CircleCheck, CircleX, Info, PackageCheck } from "lucide-react";
+import { ChevronLeft, CircleCheck, CircleX, FileText, Info, PackageCheck } from "lucide-react";
 import { api } from "../lib/api";
 import { authClient } from "../lib/auth-client";
 import { severityLabel } from "../lib/contracts";
@@ -58,8 +59,10 @@ import { isAnswered, type CustomFieldValue } from "../lib/custom-fields";
 import { formatFullDate, formatShortDate } from "../lib/format";
 import {
   REQUEST_STATUS_PILL,
+  requestAttachmentHref,
   requestReference,
   requestStatusLabel,
+  type MyRequestAttachment,
   type MyRequestField,
   type MyRequestFieldRefs,
   type RequestStatus,
@@ -86,7 +89,8 @@ export async function portalRequestLoader({ params }: LoaderFunctionArgs) {
 }
 
 export function PortalRequestPage() {
-  const { user, request, fields, customFieldRefs } = useLoaderData<typeof portalRequestLoader>();
+  const { user, request, fields, customFieldRefs, attachments } =
+    useLoaderData<typeof portalRequestLoader>();
   const intl = useIntl();
   const navigate = useNavigate();
   const reference = requestReference(intl, request.number);
@@ -162,6 +166,11 @@ export function PortalRequestPage() {
               <span className="whitespace-pre-line">{request.description}</span>
             </ValueRow>
           )}
+          {attachments.length > 0 && (
+            <ValueRow label={intl.formatMessage(BASIC_LABELS.attachments)}>
+              <AttachmentList number={request.number} attachments={attachments} />
+            </ValueRow>
+          )}
           <ValueRow label={intl.formatMessage(BASIC_LABELS.urgency)}>
             {severityLabel(intl, request.urgency)}
           </ValueRow>
@@ -185,8 +194,42 @@ export function PortalRequestPage() {
  * them — two spellings would be two fields. */
 const BASIC_LABELS = {
   description: defineMessage({ id: "portal.form.description", defaultMessage: "Description" }),
+  attachments: defineMessage({ id: "portal.form.attachments", defaultMessage: "Attachments" }),
   urgency: defineMessage({ id: "portal.form.urgency", defaultMessage: "Urgency" }),
 } as const;
+
+/**
+ * The paper that travelled with the ask, each name the link that
+ * downloads it.
+ *
+ * A plain anchor rather than a fetch: the address is same-origin and
+ * behind the session, so the browser's own download is the whole
+ * mechanism. `download` asks it to save under the name the file arrived
+ * with, which is the name the response's own disposition already
+ * carries — the attribute only spares a requester a tab that opens and
+ * closes again.
+ */
+function AttachmentList({
+  number,
+  attachments,
+}: Readonly<{ number: number; attachments: readonly MyRequestAttachment[] }>) {
+  return (
+    <ul className="flex flex-col gap-1">
+      {attachments.map((attachment) => (
+        <li key={attachment.id} className="flex items-center gap-1.5">
+          <FileText aria-hidden="true" className="size-4 shrink-0 text-muted" />
+          <a
+            download
+            href={requestAttachmentHref(number, attachment.id)}
+            className="min-w-0 break-all text-link underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-link"
+          >
+            {attachment.filename}
+          </a>
+        </li>
+      ))}
+    </ul>
+  );
+}
 
 /** One row of the card: the label and the value it names. A definition
  * list, because that is what a label-and-value pair is. */
