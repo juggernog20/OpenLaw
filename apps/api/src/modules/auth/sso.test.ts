@@ -81,7 +81,7 @@ beforeAll(async () => {
     token.payload.sub = idpIdentity.sub;
     token.payload.email = idpIdentity.email;
   });
-}, 120_000);
+});
 
 afterAll(async () => {
   await idp.stop();

@@ -83,7 +83,7 @@ let db: Db;
 beforeAll(async () => {
   harness = await startHarness();
   db = harness.db;
-}, 120_000);
+});
 
 afterAll(async () => {
   // Whatever a rotation test left installed must not leak into another

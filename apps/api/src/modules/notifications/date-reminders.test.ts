@@ -151,7 +151,7 @@ beforeAll(async () => {
     userIds.set(fixture.email, user.id);
     cookies.set(fixture.email, await signInCookies(harness.app, fixture.email, fixture.password));
   }
-}, 120_000);
+});
 
 afterAll(async () => {
   await harness.stop();
@@ -378,7 +378,7 @@ describe("a notice deadline at a seeded offset", () => {
       noticePeriodDays: 7,
     });
     summary = (await round(at(TODAY, 8))).summary;
-  }, 60_000);
+  });
 
   it("rings the Owner's bell once, for the deadline and not the expiry", async () => {
     const items = await bellFor(OWNER, contract);
@@ -426,7 +426,7 @@ describe("a second round on the same tick", () => {
       expiryDate: plusDays(TODAY, 1),
     });
     await round(at(TODAY, 8));
-  }, 60_000);
+  });
 
   it("writes nothing new and sends nothing more", async () => {
     const before = await bellFor(OWNER, contract);
@@ -442,7 +442,7 @@ describe("a second round on the same tick", () => {
 
     expect(await bellFor(OWNER, contract)).toHaveLength(1);
     expect(digestsTo(OWNER)).toHaveLength(briefings);
-  }, 60_000);
+  });
 });
 
 describe("a date that moves, and a contract that ends", () => {
@@ -459,7 +459,7 @@ describe("a date that moves, and a contract that ends", () => {
     // A dead deal (CTR-019), reached the way a person reaches it.
     await moveTo(ending.number, "ended");
     await round(at(TODAY, 8));
-  }, 90_000);
+  });
 
   it("fires again at the new value, and leaves the old reminder standing", async () => {
     const first = await bellFor(OWNER, moving);
@@ -477,7 +477,7 @@ describe("a date that moves, and a contract that ends", () => {
     // The reminder that already went is history, not a mistake: it said
     // what was true when it fired.
     expect(items.every((row) => row.eventType === "date.key_date_approaching")).toBe(true);
-  }, 60_000);
+  });
 
   it("says nothing at all about an ended contract", async () => {
     expect((await rowsFor(OWNER)).filter((row) => row.entityId === ending.id)).toEqual([]);
@@ -530,7 +530,7 @@ describe("the timezone gate", () => {
       expiryDate: plusDays(TODAY, 7),
     });
     await addToTeam(contract.number, idOf(EAST));
-  }, 60_000);
+  });
 
   it("serves the person whose morning has arrived, and nobody else", async () => {
     const before = digestsTo(OWNER).length;
@@ -546,7 +546,7 @@ describe("the timezone gate", () => {
     // Not "an empty bell": no row exists for the Owner yet at all.
     expect((await rowsFor(OWNER)).filter((row) => row.entityId === contract.id)).toEqual([]);
     expect(digestsTo(OWNER)).toHaveLength(before);
-  }, 60_000);
+  });
 
   it("serves them when their own morning arrives, on the same date", async () => {
     const before = digestsTo(OWNER).length;
@@ -560,7 +560,7 @@ describe("the timezone gate", () => {
     // The person already served this morning is not served twice: their
     // local date has not changed.
     expect(digestsTo(EAST)).toHaveLength(1);
-  }, 60_000);
+  });
 });
 
 describe("the offset list", () => {
@@ -571,7 +571,7 @@ describe("the offset list", () => {
   beforeAll(async () => {
     near = await newContract("Northwind services agreement", { expiryDate: plusDays(TODAY, 3) });
     far = await newContract("Vantage facilities agreement", { expiryDate: plusDays(TODAY, 7) });
-  }, 60_000);
+  });
 
   afterAll(async () => {
     // Every block after this one reads the seeded list.
@@ -599,7 +599,7 @@ describe("the offset list", () => {
     expect((await bellFor(OWNER, near)).map((row) => row.payload.offsetDays)).toEqual([3]);
     // And nothing more about the far one: seven no longer is.
     expect(await bellFor(OWNER, far)).toHaveLength(1);
-  }, 90_000);
+  });
 
   it("carries a reminder that missed its briefing into the next one", async () => {
     // The reminder above was written after this person's one briefing
@@ -617,7 +617,7 @@ describe("the offset list", () => {
     // Counted against today rather than against the offset it fired at:
     // the date is two days away by the time the briefing goes.
     expect(sent[sent.length - 1]!.text).toContain("In 2 days");
-  }, 90_000);
+  });
 });
 
 describe("a confidential record's dates", () => {
@@ -628,7 +628,7 @@ describe("a confidential record's dates", () => {
     contract = await newContract("Ridgeline retainer", { expiryDate: TODAY });
     await wallOff(contract.id);
     await round(at(TODAY, 8));
-  }, 60_000);
+  });
 
   it("reaches the record's own audience", async () => {
     const items = await bellFor(OWNER, contract);
@@ -653,7 +653,7 @@ describe("an immediate email whose wake-up was lost", () => {
 
   beforeAll(async () => {
     contract = await newContract("Fairhaven consultancy agreement");
-  }, 60_000);
+  });
 
   it("is re-asked from the row and delivered", async () => {
     // A real group-1 event, over HTTP: the record is handed to somebody.
@@ -710,7 +710,7 @@ describe("an immediate email whose wake-up was lost", () => {
       .from(notifications)
       .where(eq(notifications.id, row!.id));
     expect(settled!.emailedAt).not.toBeNull();
-  }, 90_000);
+  });
 });
 
 /**
@@ -758,7 +758,7 @@ describe("the scheduled shape", () => {
     } finally {
       await second.stop();
     }
-  }, 90_000);
+  });
 
   it("runs a round when a tick reaches the handler", async () => {
     // The cron is hourly, which no suite may wait for. What is asserted
@@ -774,5 +774,5 @@ describe("the scheduled shape", () => {
     await settles("the scheduled round", () =>
       harness.jobLog.some((line) => line.message === "the scheduled morning round finished"),
     );
-  }, 90_000);
+  });
 });

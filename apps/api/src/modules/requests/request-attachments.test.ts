@@ -89,7 +89,7 @@ beforeAll(async () => {
   contractReviewId = (types.json().requestTypes as { slug: string; id: string }[]).find(
     (row) => row.slug === "contract_review",
   )!.id;
-}, 120_000);
+});
 
 afterAll(async () => {
   await harness.stop();

@@ -73,10 +73,13 @@ export interface DocEngineContractHarness {
 }
 
 export interface DocEngineContractOptions {
-  /** Bound for `start`; a container-backed engine needs more than a fake does. */
+  /**
+   * Bound for `start`, for an engine that needs more than the package's
+   * own `hookTimeout` — building an image rather than pulling one.
+   * Unset means the bound in `vitest.config.ts`, which is what a
+   * container-backed engine and a fake both want.
+   */
   startTimeoutMs?: number;
-  /** Bound for one case. LibreOffice and Tesseract are slower than a memcpy. */
-  testTimeoutMs?: number;
 }
 
 /** A readable over fixed bytes, as an upload handler would hand over. */
@@ -126,8 +129,6 @@ export function describeDocEngineContract(
   start: () => Promise<DocEngineContractHarness>,
   options: DocEngineContractOptions = {},
 ): void {
-  const timeout = options.testTimeoutMs ?? 60_000;
-
   describe(`doc engine contract: ${engineName}`, () => {
     let harness: DocEngineContractHarness;
     let engine: DocEngine;
@@ -135,7 +136,7 @@ export function describeDocEngineContract(
     beforeAll(async () => {
       harness = await start();
       engine = harness.engine;
-    }, options.startTimeoutMs ?? 120_000);
+    }, options.startTimeoutMs);
 
     afterAll(async () => {
       // Optional on the harness too, not only on `stop`: if `start`
@@ -146,27 +147,19 @@ export function describeDocEngineContract(
     });
 
     describe("convertToPdf", () => {
-      it(
-        "answers a PDF for a Word document",
-        async () => {
-          const pdf = await collect(
-            await engine.convertToPdf(bytes(DOC_ENGINE_FIXTURES.plainDocx), "docx"),
-          );
-          expect(pdf.subarray(0, 5).toString()).toBe("%PDF-");
-        },
-        timeout,
-      );
+      it("answers a PDF for a Word document", async () => {
+        const pdf = await collect(
+          await engine.convertToPdf(bytes(DOC_ENGINE_FIXTURES.plainDocx), "docx"),
+        );
+        expect(pdf.subarray(0, 5).toString()).toBe("%PDF-");
+      });
 
-      it(
-        "answers a PDF for a PowerPoint deck",
-        async () => {
-          const pdf = await collect(
-            await engine.convertToPdf(bytes(DOC_ENGINE_FIXTURES.deckPptx), "pptx"),
-          );
-          expect(pdf.subarray(0, 5).toString()).toBe("%PDF-");
-        },
-        timeout,
-      );
+      it("answers a PDF for a PowerPoint deck", async () => {
+        const pdf = await collect(
+          await engine.convertToPdf(bytes(DOC_ENGINE_FIXTURES.deckPptx), "pptx"),
+        );
+        expect(pdf.subarray(0, 5).toString()).toBe("%PDF-");
+      });
 
       it.each(CONVERTIBLE_FORMATS)(
         "accepts %s, which the interface declares convertible",
@@ -181,7 +174,6 @@ export function describeDocEngineContract(
           );
           expect(pdf.subarray(0, 5).toString()).toBe("%PDF-");
         },
-        timeout,
       );
 
       it.each(UNCONVERTIBLE_FORMATS)("refuses the format %j, naming it", async (format) => {
@@ -196,165 +188,113 @@ export function describeDocEngineContract(
         expect((error as Error).message).toContain(JSON.stringify(format));
       });
 
-      it(
-        "refuses a package that was cut off before it was whole",
-        async () => {
-          const truncated = DOC_ENGINE_FIXTURES.plainDocx.subarray(0, 200);
-          await expect(engine.convertToPdf(bytes(truncated), "docx")).rejects.toBeInstanceOf(
-            SourceUnreadableError,
-          );
-        },
-        timeout,
-      );
+      it("refuses a package that was cut off before it was whole", async () => {
+        const truncated = DOC_ENGINE_FIXTURES.plainDocx.subarray(0, 200);
+        await expect(engine.convertToPdf(bytes(truncated), "docx")).rejects.toBeInstanceOf(
+          SourceUnreadableError,
+        );
+      });
 
-      it(
-        "refuses a source with no bytes",
-        async () => {
-          await expect(engine.convertToPdf(bytes(""), "docx")).rejects.toBeInstanceOf(
-            SourceUnreadableError,
-          );
-        },
-        timeout,
-      );
+      it("refuses a source with no bytes", async () => {
+        await expect(engine.convertToPdf(bytes(""), "docx")).rejects.toBeInstanceOf(
+          SourceUnreadableError,
+        );
+      });
 
-      it(
-        "fails when the source stream fails part way through",
-        async () => {
-          // Bytes first, then the failure: a stream that dies before it
-          // yields anything would not prove the engine notices.
-          const failing = Readable.from(
-            (async function* () {
-              yield DOC_ENGINE_FIXTURES.plainDocx.subarray(0, 100);
-              throw new Error("the upload was cut off");
-            })(),
-          );
-          await expect(engine.convertToPdf(failing, "docx")).rejects.toThrow();
-        },
-        timeout,
-      );
+      it("fails when the source stream fails part way through", async () => {
+        // Bytes first, then the failure: a stream that dies before it
+        // yields anything would not prove the engine notices.
+        const failing = Readable.from(
+          (async function* () {
+            yield DOC_ENGINE_FIXTURES.plainDocx.subarray(0, 100);
+            throw new Error("the upload was cut off");
+          })(),
+        );
+        await expect(engine.convertToPdf(failing, "docx")).rejects.toThrow();
+      });
 
-      it(
-        "converts the same source again, whatever ran in between",
-        async () => {
-          // The engine is stateless: nothing one call does is visible to
-          // the next, and no call leaves a profile or a lock behind that
-          // the one after it trips over.
-          // Each answer is drained, not merely awaited: an engine that
-          // answers over HTTP holds the connection until its body is
-          // read, and a suite that walked away from one would be
-          // measuring the connection pool rather than the engine.
-          const first = await collect(
-            await engine.convertToPdf(bytes(DOC_ENGINE_FIXTURES.plainDocx), "docx"),
-          );
-          await collect(await engine.convertToPdf(bytes(DOC_ENGINE_FIXTURES.deckPptx), "pptx"));
-          const again = await collect(
-            await engine.convertToPdf(bytes(DOC_ENGINE_FIXTURES.plainDocx), "docx"),
-          );
-          expect(first.subarray(0, 5).toString()).toBe("%PDF-");
-          expect(again.subarray(0, 5).toString()).toBe("%PDF-");
-        },
-        timeout,
-      );
+      it("converts the same source again, whatever ran in between", async () => {
+        // The engine is stateless: nothing one call does is visible to
+        // the next, and no call leaves a profile or a lock behind that
+        // the one after it trips over.
+        // Each answer is drained, not merely awaited: an engine that
+        // answers over HTTP holds the connection until its body is
+        // read, and a suite that walked away from one would be
+        // measuring the connection pool rather than the engine.
+        const first = await collect(
+          await engine.convertToPdf(bytes(DOC_ENGINE_FIXTURES.plainDocx), "docx"),
+        );
+        await collect(await engine.convertToPdf(bytes(DOC_ENGINE_FIXTURES.deckPptx), "pptx"));
+        const again = await collect(
+          await engine.convertToPdf(bytes(DOC_ENGINE_FIXTURES.plainDocx), "docx"),
+        );
+        expect(first.subarray(0, 5).toString()).toBe("%PDF-");
+        expect(again.subarray(0, 5).toString()).toBe("%PDF-");
+      });
 
-      it(
-        "converts two sources at once",
-        async () => {
-          // Two conversions in flight together must not fight over a
-          // shared working directory or user profile — the pipeline runs
-          // more than one job.
-          const [word, deck] = await Promise.all([
-            engine.convertToPdf(bytes(DOC_ENGINE_FIXTURES.plainDocx), "docx"),
-            engine.convertToPdf(bytes(DOC_ENGINE_FIXTURES.deckPptx), "pptx"),
-          ]);
-          expect((await collect(word)).subarray(0, 5).toString()).toBe("%PDF-");
-          expect((await collect(deck)).subarray(0, 5).toString()).toBe("%PDF-");
-        },
-        timeout,
-      );
+      it("converts two sources at once", async () => {
+        // Two conversions in flight together must not fight over a
+        // shared working directory or user profile — the pipeline runs
+        // more than one job.
+        const [word, deck] = await Promise.all([
+          engine.convertToPdf(bytes(DOC_ENGINE_FIXTURES.plainDocx), "docx"),
+          engine.convertToPdf(bytes(DOC_ENGINE_FIXTURES.deckPptx), "pptx"),
+        ]);
+        expect((await collect(word)).subarray(0, 5).toString()).toBe("%PDF-");
+        expect((await collect(deck)).subarray(0, 5).toString()).toBe("%PDF-");
+      });
     });
 
     describe("ocrPdf", () => {
-      it(
-        "answers text for a scanned PDF",
-        async () => {
-          const text = await engine.ocrPdf(bytes(DOC_ENGINE_FIXTURES.scanPdf));
-          expect(hasWords(text)).toBe(true);
-        },
-        timeout,
-      );
+      it("answers text for a scanned PDF", async () => {
+        const text = await engine.ocrPdf(bytes(DOC_ENGINE_FIXTURES.scanPdf));
+        expect(hasWords(text)).toBe(true);
+      });
 
-      it(
-        "refuses bytes that are not a PDF",
-        async () => {
-          await expect(engine.ocrPdf(bytes(DOC_ENGINE_FIXTURES.plainDocx))).rejects.toBeInstanceOf(
-            SourceUnreadableError,
-          );
-        },
-        timeout,
-      );
+      it("refuses bytes that are not a PDF", async () => {
+        await expect(engine.ocrPdf(bytes(DOC_ENGINE_FIXTURES.plainDocx))).rejects.toBeInstanceOf(
+          SourceUnreadableError,
+        );
+      });
 
-      it(
-        "refuses a source with no bytes",
-        async () => {
-          await expect(engine.ocrPdf(bytes(""))).rejects.toBeInstanceOf(SourceUnreadableError);
-        },
-        timeout,
-      );
+      it("refuses a source with no bytes", async () => {
+        await expect(engine.ocrPdf(bytes(""))).rejects.toBeInstanceOf(SourceUnreadableError);
+      });
     });
 
     describe("extractPdfText", () => {
-      it(
-        "answers the text of a PDF that carries a text layer",
-        async () => {
-          const text = await engine.extractPdfText(bytes(DOC_ENGINE_FIXTURES.nativeTextPdf));
-          expect(hasWords(text)).toBe(true);
-        },
-        timeout,
-      );
+      it("answers the text of a PDF that carries a text layer", async () => {
+        const text = await engine.extractPdfText(bytes(DOC_ENGINE_FIXTURES.nativeTextPdf));
+        expect(hasWords(text)).toBe(true);
+      });
 
-      it(
-        "answers the same text for the same PDF twice",
-        async () => {
-          const first = await engine.extractPdfText(bytes(DOC_ENGINE_FIXTURES.nativeTextPdf));
-          const second = await engine.extractPdfText(bytes(DOC_ENGINE_FIXTURES.nativeTextPdf));
-          expect(second).toBe(first);
-        },
-        timeout,
-      );
+      it("answers the same text for the same PDF twice", async () => {
+        const first = await engine.extractPdfText(bytes(DOC_ENGINE_FIXTURES.nativeTextPdf));
+        const second = await engine.extractPdfText(bytes(DOC_ENGINE_FIXTURES.nativeTextPdf));
+        expect(second).toBe(first);
+      });
 
-      it(
-        "reads back the text of a document this engine converted",
-        async () => {
-          // The pipeline's one real round trip: a Word document becomes
-          // a PDF rendition, and the rendition is what the text comes
-          // out of. Whatever an engine writes, the same engine reads.
-          const rendition = await collect(
-            await engine.convertToPdf(bytes(DOC_ENGINE_FIXTURES.plainDocx), "docx"),
-          );
-          expect(hasWords(await engine.extractPdfText(bytes(rendition)))).toBe(true);
-        },
-        timeout,
-      );
+      it("reads back the text of a document this engine converted", async () => {
+        // The pipeline's one real round trip: a Word document becomes
+        // a PDF rendition, and the rendition is what the text comes
+        // out of. Whatever an engine writes, the same engine reads.
+        const rendition = await collect(
+          await engine.convertToPdf(bytes(DOC_ENGINE_FIXTURES.plainDocx), "docx"),
+        );
+        expect(hasWords(await engine.extractPdfText(bytes(rendition)))).toBe(true);
+      });
 
-      it(
-        "refuses bytes that are not a PDF",
-        async () => {
-          await expect(
-            engine.extractPdfText(bytes(DOC_ENGINE_FIXTURES.plainDocx)),
-          ).rejects.toBeInstanceOf(SourceUnreadableError);
-        },
-        timeout,
-      );
+      it("refuses bytes that are not a PDF", async () => {
+        await expect(
+          engine.extractPdfText(bytes(DOC_ENGINE_FIXTURES.plainDocx)),
+        ).rejects.toBeInstanceOf(SourceUnreadableError);
+      });
 
-      it(
-        "refuses a source with no bytes",
-        async () => {
-          await expect(engine.extractPdfText(bytes(""))).rejects.toBeInstanceOf(
-            SourceUnreadableError,
-          );
-        },
-        timeout,
-      );
+      it("refuses a source with no bytes", async () => {
+        await expect(engine.extractPdfText(bytes(""))).rejects.toBeInstanceOf(
+          SourceUnreadableError,
+        );
+      });
     });
   });
 }
@@ -372,8 +312,6 @@ export function describeDocEngineFidelity(
   start: () => Promise<DocEngineContractHarness>,
   options: DocEngineContractOptions = {},
 ): void {
-  const timeout = options.testTimeoutMs ?? 120_000;
-
   describe(`doc engine fidelity: ${engineName}`, () => {
     let harness: DocEngineContractHarness;
     let engine: DocEngine;
@@ -381,7 +319,7 @@ export function describeDocEngineFidelity(
     beforeAll(async () => {
       harness = await start();
       engine = harness.engine;
-    }, options.startTimeoutMs ?? 120_000);
+    }, options.startTimeoutMs);
 
     afterAll(async () => {
       await harness?.stop?.();
@@ -393,74 +331,50 @@ export function describeDocEngineFidelity(
       return flat(await engine.extractPdfText(bytes(rendition)));
     }
 
-    it(
-      "renders a Word document's words into the PDF it converts",
-      async () => {
-        const text = await textOfConversion(DOC_ENGINE_FIXTURES.plainDocx, "docx");
-        expect(text).toContain("Mutual Non-Disclosure Agreement");
-        expect(text).toContain("Confidential Information");
-      },
-      timeout,
-    );
+    it("renders a Word document's words into the PDF it converts", async () => {
+      const text = await textOfConversion(DOC_ENGINE_FIXTURES.plainDocx, "docx");
+      expect(text).toContain("Mutual Non-Disclosure Agreement");
+      expect(text).toContain("Confidential Information");
+    });
 
-    it(
-      "renders a PowerPoint slide's words into the PDF it converts",
-      async () => {
-        const text = await textOfConversion(DOC_ENGINE_FIXTURES.deckPptx, "pptx");
-        expect(text).toContain("Board approval of the acquisition");
-        expect(text).toContain("regulatory clearance");
-      },
-      timeout,
-    );
+    it("renders a PowerPoint slide's words into the PDF it converts", async () => {
+      const text = await textOfConversion(DOC_ENGINE_FIXTURES.deckPptx, "pptx");
+      expect(text).toContain("Board approval of the acquisition");
+      expect(text).toContain("regulatory clearance");
+    });
 
-    it(
-      "renders a Word document's tracked changes and its comment",
-      async () => {
-        // The fidelity case TECH-010 flags as the risk to validate
-        // early, and the promise DOC-004 makes to a reader: the
-        // counterparty's deletion, their insertion, and the comment they
-        // left are all in the conversion. A conversion that quietly
-        // dropped any of them would look correct and hide the
-        // negotiation.
-        const text = await textOfConversion(DOC_ENGINE_FIXTURES.trackedChangesDocx, "docx");
-        expect(text).toContain("England and Wales");
-        expect(text).toContain("Dubai International Financial Centre");
-        expect(text).toContain("DIFC Courts have exclusive jurisdiction");
-      },
-      timeout,
-    );
+    it("renders a Word document's tracked changes and its comment", async () => {
+      // The fidelity case TECH-010 flags as the risk to validate
+      // early, and the promise DOC-004 makes to a reader: the
+      // counterparty's deletion, their insertion, and the comment they
+      // left are all in the conversion. A conversion that quietly
+      // dropped any of them would look correct and hide the
+      // negotiation.
+      const text = await textOfConversion(DOC_ENGINE_FIXTURES.trackedChangesDocx, "docx");
+      expect(text).toContain("England and Wales");
+      expect(text).toContain("Dubai International Financial Centre");
+      expect(text).toContain("DIFC Courts have exclusive jurisdiction");
+    });
 
-    it(
-      "reads a native text layer without OCR",
-      async () => {
-        const text = flat(await engine.extractPdfText(bytes(DOC_ENGINE_FIXTURES.nativeTextPdf)));
-        expect(text).toContain("DEED OF ASSIGNMENT");
-        expect(text).toContain("The assignor transfers the whole of the rights.");
-      },
-      timeout,
-    );
+    it("reads a native text layer without OCR", async () => {
+      const text = flat(await engine.extractPdfText(bytes(DOC_ENGINE_FIXTURES.nativeTextPdf)));
+      expect(text).toContain("DEED OF ASSIGNMENT");
+      expect(text).toContain("The assignor transfers the whole of the rights.");
+    });
 
-    it(
-      "finds no words in an image-only PDF, which is the signal to OCR it",
-      async () => {
-        // DOC-005's branch, stated as behaviour: extraction answers a
-        // scan with nothing, and that nothing is what sends the pipeline
-        // to OCR rather than a guess about the file's MIME type.
-        const text = await engine.extractPdfText(bytes(DOC_ENGINE_FIXTURES.scanPdf));
-        expect(hasWords(text)).toBe(false);
-      },
-      timeout,
-    );
+    it("finds no words in an image-only PDF, which is the signal to OCR it", async () => {
+      // DOC-005's branch, stated as behaviour: extraction answers a
+      // scan with nothing, and that nothing is what sends the pipeline
+      // to OCR rather than a guess about the file's MIME type.
+      const text = await engine.extractPdfText(bytes(DOC_ENGINE_FIXTURES.scanPdf));
+      expect(hasWords(text)).toBe(false);
+    });
 
-    it(
-      "reads a scanned page with OCR",
-      async () => {
-        const text = flat(await engine.ocrPdf(bytes(DOC_ENGINE_FIXTURES.scanPdf)));
-        expect(text).toContain("DEED OF ASSIGNMENT");
-        expect(text).toContain("This deed is dated the first of March.");
-        expect(text).toContain("The assignor transfers the whole of the rights.");
-      },
-      timeout,
-    );
+    it("reads a scanned page with OCR", async () => {
+      const text = flat(await engine.ocrPdf(bytes(DOC_ENGINE_FIXTURES.scanPdf)));
+      expect(text).toContain("DEED OF ASSIGNMENT");
+      expect(text).toContain("This deed is dated the first of March.");
+      expect(text).toContain("The assignor transfers the whole of the rights.");
+    });
   });
 }

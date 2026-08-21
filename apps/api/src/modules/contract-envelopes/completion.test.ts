@@ -181,7 +181,7 @@ beforeAll(async () => {
     payload: CONNECTOR,
   });
   expect(connector.statusCode, connector.body).toBe(200);
-}, 120_000);
+});
 
 afterAll(async () => {
   await harness.stop();
@@ -465,7 +465,7 @@ describe("a signed envelope files its executed copy", () => {
     mark = await activityMark();
     providerEnvelopeId = await signIt(envelope);
     settled = await settledFetch(contract.number, envelope.id);
-  }, 60_000);
+  });
 
   it("appends it to the primary chain as the next executed round", async () => {
     expect(settled.executedFetch).toBe("ready");
@@ -545,7 +545,7 @@ describe("a signed envelope files its executed copy", () => {
     const after = await primaryOf(contract.number);
     expect(after.versions).toHaveLength(before.versions.length);
     expect((await envelopeRow(contract.number, envelope.id)).executedFetch).toBe("ready");
-  }, 30_000);
+  });
 });
 
 describe("a signed envelope on a record that is not at the signature stage", () => {
@@ -563,7 +563,7 @@ describe("a signed envelope on a record that is not at the signature stage", () 
     mark = await activityMark();
     await signIt(envelope);
     await settledFetch(contract.number, envelope.id);
-  }, 60_000);
+  });
 
   it("still files and pins the executed copy", async () => {
     const primary = await primaryOf(contract.number);
@@ -617,7 +617,7 @@ describe("the soft gate", () => {
       (entry) => entry.action === "contract.stage_gate_overridden",
     );
     expect(overrides).toEqual([]);
-  }, 60_000);
+  });
 });
 
 describe("a fetch that cannot succeed", () => {
@@ -635,13 +635,13 @@ describe("a fetch that cannot succeed", () => {
     const providerEnvelopeId = await providerIdOf(envelope.id);
     const delivered = await deliver({ providerEnvelopeId, status: "signed" });
     expect(delivered.statusCode, delivered.body).toBe(204);
-  }, 60_000);
+  });
 
   it("records a terminal failure on the envelope's fetch state", async () => {
     const settled = await settledFetch(contract.number, envelope.id);
     expect(settled.executedFetch).toBe("failed");
     expect(settled.executedCopy).toBeNull();
-  }, 30_000);
+  });
 
   it("leaves the chain and the status untouched", async () => {
     const primary = await primaryOf(contract.number);
@@ -689,7 +689,7 @@ describe("a job that was lost between the commit and the queue send", () => {
     expect(settled.executedFetch).toBe("ready");
     const primary = await primaryOf(contract.number);
     expect(primary.versions[1]!.isExecuted).toBe(true);
-  }, 60_000);
+  });
 
   it("asks for nothing when nothing is owed", async () => {
     const summary = await runExecutedCopySweep(
@@ -699,7 +699,7 @@ describe("a job that was lost between the commit and the queue send", () => {
     expect(summary.scanned).toBe(0);
     expect(summary.requested).toBe(0);
     expect(summary.stopped).toBe(false);
-  }, 30_000);
+  });
 });
 
 describe("an executed copy larger than this install accepts", () => {
@@ -741,7 +741,7 @@ describe("an executed copy larger than this install accepts", () => {
       // because the failure is terminal, not because it gave up.
       { envelopeId: envelope.id, retryCount: 0, retryLimit: 3 },
     );
-  }, 60_000);
+  });
 
   it("records a terminal failure rather than retrying the same bytes", async () => {
     const row = await envelopeRow(contract.number, envelope.id);
@@ -763,7 +763,7 @@ describe("an executed copy larger than this install accepts", () => {
     );
     expect(summary.scanned).toBe(0);
     expect(summary.requested).toBe(0);
-  }, 30_000);
+  });
 });
 
 /** Somewhere for the sweep's own lines to go. The suite asserts what

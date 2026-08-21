@@ -154,7 +154,7 @@ beforeAll(async () => {
     .update(users)
     .set({ archivedAt: new Date() })
     .where(eq(users.id, idOf(DEPARTED)));
-}, 120_000);
+});
 
 afterAll(async () => {
   await harness.stop();

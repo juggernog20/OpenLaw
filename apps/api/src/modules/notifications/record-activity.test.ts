@@ -201,7 +201,7 @@ beforeAll(async () => {
     payload: CONNECTOR,
   });
   expect(connector.statusCode, connector.body).toBe(200);
-}, 120_000);
+});
 
 afterAll(async () => {
   await harness.stop();

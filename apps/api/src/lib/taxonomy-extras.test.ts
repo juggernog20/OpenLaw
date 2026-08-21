@@ -190,7 +190,7 @@ beforeAll(async () => {
   await app.register(rogueTypesRoutes, { prefix: "/api/v1" });
   await app.register(narratorTypesRoutes, { prefix: "/api/v1" });
   await app.ready();
-}, 120_000);
+});
 
 afterAll(async () => {
   await app.close();

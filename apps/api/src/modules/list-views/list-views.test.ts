@@ -102,7 +102,7 @@ beforeAll(async () => {
   const business = await provisionUser(harness.app.auth, BUSINESS);
   await harness.db.update(users).set({ role: "business_user" }).where(eq(users.id, business.id));
   businessCookies = await signInCookies(harness.app, BUSINESS.email, BUSINESS.password);
-}, 120_000);
+});
 
 afterAll(async () => {
   await harness.stop();

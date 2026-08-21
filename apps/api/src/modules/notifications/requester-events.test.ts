@@ -138,7 +138,7 @@ beforeAll(async () => {
   );
   expect(found, "the contract_review seed type").toBeDefined();
   contractReviewTypeId = found!.id;
-}, 120_000);
+});
 
 afterAll(async () => {
   await harness.stop();

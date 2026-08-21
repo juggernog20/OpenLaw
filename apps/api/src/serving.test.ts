@@ -91,12 +91,9 @@ describe("readiness", () => {
   describe("with the database reachable", () => {
     let harness: TestHarness;
 
-    // Every harness suite races to start its own Postgres container; this
-    // file starts last and can be starved past vitest's default 10s hook
-    // timeout when the full suite runs.
     beforeAll(async () => {
       harness = await startHarness();
-    }, 60_000);
+    });
 
     afterAll(async () => {
       await harness.stop();

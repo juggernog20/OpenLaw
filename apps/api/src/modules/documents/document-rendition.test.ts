@@ -152,7 +152,7 @@ beforeAll(async () => {
   memberCookies = await signInCookies(harness.app, MEMBER.email, MEMBER.password);
   contributorCookies = await signInCookies(harness.app, CONTRIBUTOR.email, CONTRIBUTOR.password);
   outsiderCookies = await signInCookies(harness.app, OUTSIDER.email, OUTSIDER.password);
-}, 120_000);
+});
 
 afterAll(async () => {
   await harness.stop();
@@ -408,7 +408,7 @@ describe("previewing a Word draft in the app", () => {
     expect(downloaded.statusCode, downloaded.body).toBe(200);
     expect(downloaded.rawPayload.equals(bytes)).toBe(true);
     expect(downloaded.headers["content-disposition"]).toContain("attachment");
-  }, 60_000);
+  });
 
   it("reads the converted rendition's text, and says that is where it came from", async () => {
     // One extraction path, over PDF (DOC-005). A Word document's words
@@ -426,7 +426,7 @@ describe("previewing a Word draft in the app", () => {
     expect(text.state).toBe("ready");
     expect(text.source).toBe("rendition");
     expect(text.text).toBe(fakeConversionText("docx", bytes));
-  }, 60_000);
+  });
 
   it("says its text is coming, from the moment it is uploaded", async () => {
     const { document, version } = await contractWithFile("Rendition · word pending", {
@@ -445,7 +445,7 @@ describe("previewing a Word draft in the app", () => {
     expect((first.json().text as TextRow).state).not.toBe("unsupported");
 
     expect((await settledText(document.id, version.id)).state).toBe("ready");
-  }, 60_000);
+  });
 });
 
 describe("previewing a PowerPoint deck in the app", () => {
@@ -466,7 +466,7 @@ describe("previewing a PowerPoint deck in the app", () => {
     const text = await settledText(document.id, version.id);
     expect(text.source).toBe("rendition");
     expect(text.text).toBe(fakeConversionText("pptx", bytes));
-  }, 60_000);
+  });
 });
 
 describe("a file that needs no conversion", () => {
@@ -485,7 +485,7 @@ describe("a file that needs no conversion", () => {
     const previewed = await preview(memberCookies, document.id, version.id);
     expect(previewed.statusCode, previewed.body).toBe(200);
     expect(previewed.headers["content-type"]).toBe("application/pdf");
-  }, 60_000);
+  });
 
   it("says the same of a spreadsheet, which never previews at all", async () => {
     const { document, version } = await contractWithFile("Rendition · sheet", {
@@ -498,7 +498,7 @@ describe("a file that needs no conversion", () => {
     expect((res.json().rendition as RenditionRow).state).toBe("unsupported");
     const previewed = await preview(memberCookies, document.id, version.id);
     expect(previewed.statusCode).toBe(415);
-  }, 60_000);
+  });
 });
 
 describe("when a conversion fails terminally", () => {
@@ -544,7 +544,7 @@ describe("when a conversion fails terminally", () => {
         .filter((line) => line.message === "display conversion failed")
         .some((line) => line.fields.versionId === version.id && line.fields.terminal === true),
     ).toBe(true);
-  }, 60_000);
+  });
 });
 
 describe("when the queue cannot be reached", () => {
@@ -598,7 +598,7 @@ describe("when the queue cannot be reached", () => {
     } finally {
       await detached.close();
     }
-  }, 60_000);
+  });
 });
 
 describe("hard delete takes the rendition too", () => {
@@ -635,7 +635,7 @@ describe("hard delete takes the rendition too", () => {
       .where(eq(documentVersionRenditions.versionId, version.id));
     expect(remaining).toEqual([]);
     expect(await isStored(before!.fileRef!)).toBe(false);
-  }, 60_000);
+  });
 });
 
 describe("the rendition read is behind both gates", () => {
@@ -653,7 +653,7 @@ describe("the rendition read is behind both gates", () => {
     // And reading means reading: the preview opens for them too.
     const previewed = await preview(contributorCookies, document.id, version.id);
     expect(previewed.statusCode, previewed.body).toBe(200);
-  }, 60_000);
+  });
 
   it("answers a contract the reader cannot reach as one that does not exist", async () => {
     const { contract, document, version } = await contractWithFile("Rendition · walled contract", {
@@ -673,7 +673,7 @@ describe("the rendition read is behind both gates", () => {
     // from. Rendering opens no side door past the contract gate.
     const previewed = await preview(outsiderCookies, document.id, version.id);
     expect(previewed.statusCode).toBe(404);
-  }, 60_000);
+  });
 
   it("answers a confidential document as one that was never uploaded", async () => {
     // DD-014's silent omission, on the new surface. The outsider reaches
@@ -691,7 +691,7 @@ describe("the rendition read is behind both gates", () => {
     expect(refused.statusCode).toBe(404);
     expect(control.statusCode).toBe(404);
     expect(withoutInstance(refused.json())).toEqual(withoutInstance(control.json()));
-  }, 60_000);
+  });
 
   it("refuses a Business User the whole surface, as every document read does", async () => {
     const { document, version } = await contractWithFile("Rendition · business user", {
@@ -709,7 +709,7 @@ describe("the rendition read is behind both gates", () => {
     const cookies = await signInCookies(harness.app, businessUser.email, businessUser.password);
 
     expect((await readRendition(cookies, document.id, version.id)).statusCode).toBe(403);
-  }, 60_000);
+  });
 
   it("refuses a stranger, before anything is said about a conversion", async () => {
     const { document, version } = await contractWithFile("Rendition · signed out", {
@@ -723,7 +723,7 @@ describe("the rendition read is behind both gates", () => {
       url: `/api/v1/documents/${document.id}/versions/${version.id}/rendition`,
     });
     expect(res.statusCode).toBe(401);
-  }, 60_000);
+  });
 
   it("answers a version of another document as one that does not exist", async () => {
     // A version's id says nothing about which document it belongs to, so
@@ -744,5 +744,5 @@ describe("the rendition read is behind both gates", () => {
     const control = await readRendition(memberCookies, first.document.id, NEVER_CREATED);
     expect(refused.statusCode).toBe(404);
     expect(withoutInstance(refused.json())).toEqual(withoutInstance(control.json()));
-  }, 60_000);
+  });
 });

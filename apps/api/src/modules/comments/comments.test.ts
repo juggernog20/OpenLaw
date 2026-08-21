@@ -146,7 +146,7 @@ beforeAll(async () => {
   contributorCookies = await signInCookies(harness.app, CONTRIBUTOR.email, CONTRIBUTOR.password);
   outsiderCookies = await signInCookies(harness.app, OUTSIDER.email, OUTSIDER.password);
   businessCookies = await signInCookies(harness.app, BUSINESS.email, BUSINESS.password);
-}, 120_000);
+});
 
 afterAll(async () => {
   await harness.stop();
@@ -1554,7 +1554,7 @@ describe("the bounded comment thread (CTR-024)", () => {
     for (let said = 0; said < 55; said += 1) {
       posted.push(await comment(memberCookies, contract.id, `Point ${said}.`, "working_team"));
     }
-  }, 120_000);
+  });
 
   it("opens on the newest end, in the order the conversation was had", async () => {
     const first = await readPage(memberCookies, contract.id);

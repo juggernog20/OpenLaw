@@ -142,7 +142,7 @@ beforeAll(async () => {
   memberCookies = await signInCookies(harness.app, MEMBER.email, MEMBER.password);
   contributorCookies = await signInCookies(harness.app, CONTRIBUTOR.email, CONTRIBUTOR.password);
   outsiderCookies = await signInCookies(harness.app, OUTSIDER.email, OUTSIDER.password);
-}, 120_000);
+});
 
 afterAll(async () => {
   await harness.stop();
@@ -354,7 +354,7 @@ describe("extracting a version's text", () => {
     expect(text.source).toBe("native_layer");
     expect(text.text).toBe(fakeExtractedText(bytes));
     expect(text.updatedAt).not.toBeNull();
-  }, 60_000);
+  });
 
   it("reads an image-only scan with OCR, because extraction found nothing", async () => {
     // DOC-005's whole branch, and the milestone's demo sentence: upload
@@ -370,7 +370,7 @@ describe("extracting a version's text", () => {
     expect(text.state).toBe("ready");
     expect(text.source).toBe("ocr");
     expect(text.text).toBe(fakeOcrText(scan));
-  }, 60_000);
+  });
 
   it("keeps the original scan as what renders, and stores no OCR'd PDF", async () => {
     const scan = fakeImageOnlyPdf("the signed page, as it was scanned");
@@ -390,7 +390,7 @@ describe("extracting a version's text", () => {
     const downloaded = await download(memberCookies, document.id, version.id);
     expect(downloaded.statusCode, downloaded.body).toBe(200);
     expect(downloaded.rawPayload.equals(scan)).toBe(true);
-  }, 60_000);
+  });
 
   it("extracts every round in the chain, not only the current one", async () => {
     const first = nativeTextPdf("round one, our draft");
@@ -416,7 +416,7 @@ describe("extracting a version's text", () => {
     expect(textOne.text).toBe(fakeExtractedText(first));
     expect(textTwo.source).toBe("ocr");
     expect(textTwo.text).toBe(fakeOcrText(second));
-  }, 60_000);
+  });
 
   it("says plainly that a file with no text will never have any", async () => {
     // An image renders and yields no text in v1 (DOC-005 is image-only
@@ -485,7 +485,7 @@ describe("when a derivation fails", () => {
         (line) => line.fields.versionId === version.id && line.fields.terminal === true,
       ),
     ).toBe(true);
-  }, 60_000);
+  });
 });
 
 describe("when the queue cannot be reached", () => {
@@ -534,7 +534,7 @@ describe("when the queue cannot be reached", () => {
     } finally {
       await detached.close();
     }
-  }, 60_000);
+  });
 });
 
 describe("hard delete takes what the machine derived", () => {
@@ -562,7 +562,7 @@ describe("hard delete takes what the machine derived", () => {
       .from(documentVersionText)
       .where(eq(documentVersionText.versionId, version.id));
     expect(remaining).toEqual([]);
-  }, 60_000);
+  });
 });
 
 describe("the text read is behind both gates", () => {
@@ -578,7 +578,7 @@ describe("the text read is behind both gates", () => {
     const res = await readText(contributorCookies, document.id, version.id);
     expect(res.statusCode, res.body).toBe(200);
     expect((res.json().text as TextRow).text).toBe(fakeExtractedText(bytes));
-  }, 60_000);
+  });
 
   it("answers a contract the reader cannot reach as one that does not exist", async () => {
     const { contract, document, version } = await contractWithFile("Text · walled contract", {
@@ -593,7 +593,7 @@ describe("the text read is behind both gates", () => {
     expect(refused.statusCode).toBe(404);
     expect(control.statusCode).toBe(404);
     expect(withoutInstance(refused.json())).toEqual(withoutInstance(control.json()));
-  }, 60_000);
+  });
 
   it("answers a confidential document as one that was never uploaded", async () => {
     // DD-014's silent omission, on the new surface. The outsider reaches
@@ -611,7 +611,7 @@ describe("the text read is behind both gates", () => {
     expect(refused.statusCode).toBe(404);
     expect(control.statusCode).toBe(404);
     expect(withoutInstance(refused.json())).toEqual(withoutInstance(control.json()));
-  }, 60_000);
+  });
 
   it("refuses a Business User the whole surface, as every document read does", async () => {
     const { document, version } = await contractWithFile("Text · business user", {
@@ -630,7 +630,7 @@ describe("the text read is behind both gates", () => {
 
     const res = await readText(cookies, document.id, version.id);
     expect(res.statusCode).toBe(403);
-  }, 60_000);
+  });
 
   it("refuses a stranger, before anything is said about text", async () => {
     const { document, version } = await contractWithFile("Text · signed out", {
@@ -665,5 +665,5 @@ describe("the text read is behind both gates", () => {
     const control = await readText(memberCookies, first.document.id, NEVER_CREATED);
     expect(refused.statusCode).toBe(404);
     expect(withoutInstance(refused.json())).toEqual(withoutInstance(control.json()));
-  }, 60_000);
+  });
 });

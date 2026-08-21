@@ -159,7 +159,7 @@ beforeAll(async () => {
     cookies.set(fixture.email, await signInCookies(harness.app, fixture.email, fixture.password));
   }
   await configureConnector();
-}, 120_000);
+});
 
 afterAll(async () => {
   await harness.stop();

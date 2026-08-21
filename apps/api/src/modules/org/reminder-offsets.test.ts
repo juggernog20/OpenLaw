@@ -58,7 +58,7 @@ beforeAll(async () => {
 
   adminCookies = await harnessSignInCookies(harness.app, ADMIN.email, ADMIN.password);
   memberCookies = await harnessSignInCookies(harness.app, MEMBER.email, MEMBER.password);
-}, 120_000);
+});
 
 afterAll(async () => {
   await harness.stop();
@@ -334,7 +334,7 @@ describe("a saved list is the list the next round fires on", () => {
   beforeAll(async () => {
     near = await newContract("Kestrel supply agreement", 45);
     far = await newContract("Halden distribution agreement", 90);
-  }, 60_000);
+  });
 
   afterAll(async () => {
     // Every later run of this file starts from the seed.
@@ -364,7 +364,7 @@ describe("a saved list is the list the next round fires on", () => {
     // And nothing further about the far record: ninety is no longer a
     // lead time, and the row it already has stands as history.
     expect(await firedFor(far)).toEqual([90]);
-  }, 90_000);
+  });
 
   it("stops reminding once the lead time is removed", async () => {
     // Back to a list that names neither record's expiry.
@@ -377,5 +377,5 @@ describe("a saved list is the list the next round fires on", () => {
     expect(summary.reminders).toBe(0);
     expect(await firedFor(near)).toHaveLength(nearBefore);
     expect(await firedFor(far)).toHaveLength(farBefore);
-  }, 90_000);
+  });
 });

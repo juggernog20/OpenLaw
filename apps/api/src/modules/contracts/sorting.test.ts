@@ -106,6 +106,9 @@ beforeAll(async () => {
         : Promise.resolve(),
     ),
   );
+  // Longer than the package's own `hookTimeout` in `vitest.config.ts`:
+  // this hook creates a whole fixture set over HTTP, one contract at a
+  // time, on top of the container it starts.
 }, 180_000);
 
 afterAll(async () => {
