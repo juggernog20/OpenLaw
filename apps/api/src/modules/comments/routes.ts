@@ -8,8 +8,9 @@
  * own address, because the thread is one machinery across matters,
  * contracts, documents, and requests (CMT-001). Matters (M22) and
  * documents (M11) mount these same routes; the entity vocabulary the
- * table admits is the full four, and the API accepts `contract` alone
- * until the other records exist.
+ * table admits is the full four, and the API accepts the types that have
+ * an arm in `audience.ts` — `contract` and `request` today, and matters
+ * and documents when those records exist.
  *
  * The thread is flat and chronological (CMT-002). There is no nesting
  * and no `parent_comment_id`: a conversation between a handful of people
@@ -28,12 +29,18 @@
  * total in the envelope either — the client counts the rows it was given,
  * which is the only number that cannot leak.
  *
- * `contractAudience` is the one gate. It answers which contract this
- * viewer reaches (CTR-021) and which DD-016 tiers they are in the room
- * for, and `null` for anything else. Both the read and the write take
- * it, so a Contributor is refused the Legal Only tier by the same fact
- * that hides Legal Only comments from them — the client's own composer
- * offering two segments is a convenience, never the enforcement.
+ * **The audience is the one gate, and it is resolved in `audience.ts`.**
+ * It answers which record this viewer reaches and which DD-016 tiers they
+ * are in the room for, and `null` for anything else. Which rule produced
+ * that answer is the arm's business, not this file's: nothing below reads
+ * a `contract_team` row, a Confidential flag, or a contract id. Every
+ * filter, count, and write keys on the `entityType` and `entityId` the
+ * audience came back with.
+ *
+ * Both the read and the write take it, so a Contributor is refused the
+ * Legal Only tier by the same fact that hides Legal Only comments from
+ * them — the client's own composer offering two segments is a
+ * convenience, never the enforcement.
  *
  * **The tier is immutable after posting** (CMT-005). The edit route
  * takes a body and nothing else, and the body schema is strict, so no
@@ -55,9 +62,11 @@
  * (DD-017) and a hard redact has to be able to remove what was said
  * (CMT-006).
  *
- * An archived record still takes comments. Archiving is a soft delete
- * for mistakes and imports (CONTEXT.md) and it freezes the record's
- * fields; the conversation about why it was archived is not one of them.
+ * Whether an archived record still takes comments is the arm's to say.
+ * An archived contract does: archiving is a soft delete for mistakes and
+ * imports (CONTEXT.md) that freezes the record's fields, and the
+ * conversation about why it was archived is not one of them. An archived
+ * Request answers 404 instead, exactly as its detail read does.
  *
  * **The unread count is the thread's own filter, counted** (M9/5,
  * CMT-009). It runs over the same tiers the thread is read at, so a
@@ -84,7 +93,6 @@ import {
   commentMentions,
   commentRevisions,
   comments,
-  contracts,
   COMMENT_VISIBILITIES,
   count,
   desc,
@@ -102,33 +110,43 @@ import {
 } from "@openlaw/db";
 import { requireRole, type AuthenticatedUser } from "../../auth/guards.js";
 import { recordActivity } from "../../lib/activity.js";
-import {
-  contractAudience,
-  contractMentionCandidates,
-  type ContractAudience,
-} from "../../lib/contract-access.js";
 import { httpError, problemResponse } from "../../lib/problem.js";
+import {
+  commentAudience,
+  commentEntityType,
+  mentionCandidates,
+  notifyCommentPosted,
+  reachedThread,
+  COMMENT_ENTITY_TYPES,
+  COMMENT_READER_ROLES,
+  type CommentAudience,
+  type CommentEntityType,
+} from "./audience.js";
 
 /**
- * The contract read floor (CTR-021), which is the comment floor too: a
- * Contributor takes part in the conversation on a contract they are on.
- * The role alone opens no thread — `contractAudience` narrows it to the
- * records they hold a `contract_team` row on. Business Users are refused
- * on every contract surface in M9.
+ * The floor for reading any thread: every role that reaches a thread of
+ * some entity type (CTR-021 for a contract, and whatever each later arm
+ * admits).
+ *
+ * The union is deliberate, and it is not the whole gate. A role that
+ * reaches one kind of record's thread does not thereby reach another's,
+ * so the arm's own `readerRoles` refuses per request inside
+ * `reachedThread` — in the same words this guard uses. The guard is what
+ * keeps a role that reaches no thread at all from ever meeting a handler.
  */
-const requireCommentReader = requireRole("administrator", "legal_team_member", "contributor");
+const requireCommentReader = requireRole(...COMMENT_READER_ROLES);
 
 /** The hard redact is an Administrator's alone (CMT-005). The role gate
  * refuses everyone else before the route reads a row. */
 const requireAdministrator = requireRole("administrator");
 
 /**
- * What a comment can hang off, as the API accepts it. The table's CHECK
- * admits `matter | contract | document | request`, matching the
- * `activity_log` precedent; only contracts are reachable until the other
- * records land.
+ * What a comment can hang off, as the API accepts it — the entity types
+ * that have an arm in `audience.ts`, drawn from that list so the schema
+ * and the arms cannot drift. The table's CHECK admits the wider `matter |
+ * contract | document | request`, matching the `activity_log` precedent.
  */
-const CommentEntityType = z.enum(["contract"]);
+const CommentEntityTypeSchema = z.enum(COMMENT_ENTITY_TYPES);
 
 /**
  * The record's id. Bounded rather than shaped: every id in this API is
@@ -164,7 +182,7 @@ const MentionSchema = z.object({
 
 const CommentSchema = z.object({
   id: z.string(),
-  entityType: CommentEntityType,
+  entityType: CommentEntityTypeSchema,
   entityId: z.string(),
   author: AuthorSchema,
   /** What the comment says now. **Empty once the text is gone** — a soft
@@ -206,7 +224,7 @@ const MentionsSchema = z.array(z.string().min(1).max(64)).max(20);
  * id rather than by a contract's CTR-003 number, because the panel that
  * reads it is entity-generic. */
 const EntityRefQuery = z.object({
-  entityType: CommentEntityType,
+  entityType: CommentEntityTypeSchema,
   entityId: RecordIdSchema,
 });
 
@@ -251,10 +269,6 @@ function olderThan(commentId: string, scope: SQL | undefined): SQL {
     where ${and(eq(comments.id, commentId), scope)}
   )`;
 }
-
-/** A record a viewer cannot reach reads exactly as one that does not
- * exist. A refusal would tell them it is there. */
-const NO_RECORD = "No record exists with this reference.";
 
 /** And a comment a viewer is not in the room for reads the same way. A
  * 403 on a Legal Only comment would say a Legal Only comment is there,
@@ -325,8 +339,8 @@ export const commentsRoutes: FastifyPluginAsyncZod = async (app) => {
     return {
       id: row.id,
       // Narrowed for the response schema: the column admits four types,
-      // and only contracts can have reached this far.
-      entityType: row.entityType as "contract",
+      // and only a type with an arm can have reached this far.
+      entityType: row.entityType as CommentEntityType,
       entityId: row.entityId,
       author: {
         id: row.author.id,
@@ -376,11 +390,10 @@ export const commentsRoutes: FastifyPluginAsyncZod = async (app) => {
       },
     },
     async (request) => {
-      const audience = await contractAudience(app.db, request.user, request.query.entityId);
-      if (!audience) throw httpError(404, NO_RECORD);
+      const audience = await reachedThread(app.db, request.user, request.query);
       const scope = and(
-        eq(comments.entityType, request.query.entityType),
-        eq(comments.entityId, audience.contractId),
+        eq(comments.entityType, audience.entityType),
+        eq(comments.entityId, audience.entityId),
         // The tier filter is in the WHERE clause, so the limit below
         // cuts rows this viewer is already in the room for. A read that
         // limited first and filtered after would answer pages that
@@ -455,9 +468,8 @@ export const commentsRoutes: FastifyPluginAsyncZod = async (app) => {
       },
     },
     async (request) => {
-      const audience = await contractAudience(app.db, request.user, request.query.entityId);
-      if (!audience) throw httpError(404, NO_RECORD);
-      const candidates = await contractMentionCandidates(app.db, audience.contractId);
+      const audience = await reachedThread(app.db, request.user, request.query);
+      const candidates = await mentionCandidates(app.db, audience);
       return { candidates: candidates.map((row) => ({ ...row, tiers: [...row.tiers] })) };
     },
   );
@@ -485,8 +497,7 @@ export const commentsRoutes: FastifyPluginAsyncZod = async (app) => {
   async function unreadCount(
     db: Executor,
     user: AuthenticatedUser,
-    entityType: "contract",
-    audience: ContractAudience,
+    audience: CommentAudience,
   ): Promise<number> {
     // The viewer's own place in this record's conversation, as a scalar:
     // the primary key names exactly one row, or none at all.
@@ -496,8 +507,8 @@ export const commentsRoutes: FastifyPluginAsyncZod = async (app) => {
       .where(
         and(
           eq(commentLastRead.userId, user.id),
-          eq(commentLastRead.entityType, entityType),
-          eq(commentLastRead.entityId, audience.contractId),
+          eq(commentLastRead.entityType, audience.entityType),
+          eq(commentLastRead.entityId, audience.entityId),
         ),
       );
     const [row] = await db
@@ -505,8 +516,8 @@ export const commentsRoutes: FastifyPluginAsyncZod = async (app) => {
       .from(comments)
       .where(
         and(
-          eq(comments.entityType, entityType),
-          eq(comments.entityId, audience.contractId),
+          eq(comments.entityType, audience.entityType),
+          eq(comments.entityId, audience.entityId),
           inArray(comments.visibility, [...audience.tiers]),
           ne(comments.authorId, user.id),
           isNull(comments.deletedAt),
@@ -538,9 +549,8 @@ export const commentsRoutes: FastifyPluginAsyncZod = async (app) => {
       },
     },
     async (request) => {
-      const audience = await contractAudience(app.db, request.user, request.query.entityId);
-      if (!audience) throw httpError(404, NO_RECORD);
-      const unread = await unreadCount(app.db, request.user, request.query.entityType, audience);
+      const audience = await reachedThread(app.db, request.user, request.query);
+      const unread = await unreadCount(app.db, request.user, audience);
       return { unread };
     },
   );
@@ -560,25 +570,27 @@ export const commentsRoutes: FastifyPluginAsyncZod = async (app) => {
           "answers 404",
         tags: ["comments"],
         body: z.strictObject({
-          entityType: CommentEntityType,
+          entityType: CommentEntityTypeSchema,
           entityId: RecordIdSchema,
         }),
         response: { 200: UnreadEnvelope, default: problemResponse },
       },
     },
     async (request) => {
-      const { entityType, entityId } = request.body;
       return await app.db.transaction(async (tx) => {
         // Asked on the same snapshot the write and the count land on, as
-        // every other write in this module does: a team row dropped
-        // between the check and the write must not leave a watermark on
-        // a record the reader no longer reaches. A refusal thrown here
-        // rolls the transaction back and keeps its status.
-        const audience = await contractAudience(tx, request.user, entityId);
-        if (!audience) throw httpError(404, NO_RECORD);
+        // every other write in this module does: a grant dropped between
+        // the check and the write must not leave a watermark on a record
+        // the reader no longer reaches. A refusal thrown here rolls the
+        // transaction back and keeps its status.
+        const audience = await reachedThread(tx, request.user, request.body);
         await tx
           .insert(commentLastRead)
-          .values({ userId: request.user.id, entityType, entityId: audience.contractId })
+          .values({
+            userId: request.user.id,
+            entityType: audience.entityType,
+            entityId: audience.entityId,
+          })
           .onConflictDoUpdate({
             target: [commentLastRead.userId, commentLastRead.entityType, commentLastRead.entityId],
             // The watermark only ever moves forward. Two panels open in
@@ -588,7 +600,7 @@ export const commentsRoutes: FastifyPluginAsyncZod = async (app) => {
           });
         // Counted after the write, on the same snapshot: the badge takes
         // the server's number rather than assuming the write cleared it.
-        const unread = await unreadCount(tx, request.user, entityType, audience);
+        const unread = await unreadCount(tx, request.user, audience);
         return { unread };
       });
     },
@@ -613,7 +625,7 @@ export const commentsRoutes: FastifyPluginAsyncZod = async (app) => {
           "all in the same transaction",
         tags: ["comments"],
         body: z.strictObject({
-          entityType: CommentEntityType,
+          entityType: CommentEntityTypeSchema,
           entityId: RecordIdSchema,
           body: CommentBodySchema,
           visibility: VisibilitySchema,
@@ -628,7 +640,7 @@ export const commentsRoutes: FastifyPluginAsyncZod = async (app) => {
       },
     },
     async (request, reply) => {
-      const { entityType, entityId, body, visibility } = request.body;
+      const { body, visibility } = request.body;
       // One person named twice is one person to reach, and the row's
       // compound key says so too.
       const named = [...new Set(request.body.mentions ?? [])];
@@ -638,26 +650,25 @@ export const commentsRoutes: FastifyPluginAsyncZod = async (app) => {
       // 1), and the bell row for it belongs inside the same commit as
       // the `comment_mentions` row it is read from.
       const comment = await app.notifier.notifying(async (tx) => {
-        // Read on the same snapshot the rows are written on: a team row
+        // Read on the same snapshot the rows are written on: a grant
         // dropped between the check and the insert must not authorize a
         // post onto a record the author no longer reaches. A refusal
         // thrown here rolls the transaction back and keeps its status.
-        const audience = await contractAudience(tx, request.user, entityId);
-        if (!audience) throw httpError(404, NO_RECORD);
+        const audience = await reachedThread(tx, request.user, request.body);
         // The composer offers a Contributor two segments; this is the
         // refusal that holds when the request does not come from it.
         if (!audience.tiers.includes(visibility)) {
           throw httpError(403, "You cannot post a comment at that visibility tier.");
         }
 
-        // Checked on that same snapshot: a team row dropped before the
+        // Checked on that same snapshot: a grant dropped before the
         // insert must not leave a mention nobody can hear.
         if (named.length > 0) {
-          const candidates = await contractMentionCandidates(tx, audience.contractId, named);
+          const candidates = await mentionCandidates(tx, audience, named);
           const byId = new Map(candidates.map((candidate) => [candidate.id, candidate]));
           // Somebody no tier on this record reaches is not addressable
-          // here at all. Mentioning a person does not put them on the
-          // team; adding them to the team is what grants them the record.
+          // here at all. Mentioning a person does not grant them the
+          // record; whatever the arm's audience rule asks for does.
           if (named.some((id) => !byId.has(id))) {
             throw httpError(400, "That is not a person you can mention on this record.");
           }
@@ -679,8 +690,8 @@ export const commentsRoutes: FastifyPluginAsyncZod = async (app) => {
         const [created] = await tx
           .insert(comments)
           .values({
-            entityType,
-            entityId: audience.contractId,
+            entityType: audience.entityType,
+            entityId: audience.entityId,
             authorId: request.user.id,
             body,
             visibility,
@@ -696,51 +707,21 @@ export const commentsRoutes: FastifyPluginAsyncZod = async (app) => {
         // log is append-only, and text in a payload could never be
         // redacted out of it.
         await recordActivity(tx, {
-          entityType,
-          entityId: audience.contractId,
+          entityType: audience.entityType,
+          entityId: audience.entityId,
           actorId: request.user.id,
           action: "comment.posted",
           visibility,
           payload: { commentId: created!.id },
         });
-        // Being named in a comment is done *to* you, so it is NOT-002's
-        // group 1: the bell rings and the email leaves at once. The
-        // route says which comment it was and at which tier; the seam
-        // reads who it addressed out of `comment_mentions` and holds
-        // both the wall and the tier.
-        if (named.length > 0) {
-          // The record's own address (CTR-003) and its title, for the
-          // item and the email to name it by. Read here rather than
-          // carried on the audience answer: this module is entity-generic
-          // (CMT-001), and only the notification needs a contract's
-          // columns.
-          const [record] = await tx
-            .select({ number: contracts.number, title: contracts.title })
-            .from(contracts)
-            .where(eq(contracts.id, audience.contractId))
-            .limit(1);
-          if (record) {
-            await app.notifier.commentMentioned(tx, {
-              contractId: audience.contractId,
-              contractNumber: record.number,
-              contractTitle: record.title,
-              actorId: request.user.id,
-              actorName: request.user.displayName,
-              commentId: created!.id,
-              visibility,
-            });
-          }
-        }
-        // And the comment itself is ambient movement on the record, so
-        // it is NOT-002's group 2 as well: the Owner and the team get a
-        // bell item, and no email is owed under the default. It carries
-        // the tier, so a Legal Only comment never reaches a Contributor
-        // — the same narrowing the mention takes, on the same predicate.
-        //
-        // The people this comment named are left out: they have just
-        // been told, louder. One comment tells one person once.
-        await app.notifier.commentPosted(tx, {
-          contractId: audience.contractId,
+        // What a new comment raises is the arm's to say (NOT-002), for
+        // the reason the audience is: a contract comment rings the
+        // record's roster, and another kind of record has another kind of
+        // audience to tell. Raised here, inside the commit that wrote the
+        // comment and its `comment_mentions` rows, so the seam behind it
+        // reads the addressees from the table rather than from a body.
+        await notifyCommentPosted(tx, app.notifier, {
+          audience,
           actorId: request.user.id,
           actorName: request.user.displayName,
           commentId: created!.id,
@@ -768,7 +749,7 @@ export const commentsRoutes: FastifyPluginAsyncZod = async (app) => {
   /** The comment as a correction route needs it before it writes. */
   interface HeldComment {
     id: string;
-    entityType: "contract";
+    entityType: CommentEntityType;
     entityId: string;
     authorId: string;
     body: string;
@@ -810,16 +791,24 @@ export const commentsRoutes: FastifyPluginAsyncZod = async (app) => {
       .where(eq(comments.id, commentId))
       .limit(1)
       .for("update");
-    // Only contracts are reachable, so a comment on anything else is a
-    // comment this API cannot answer for.
-    if (!row || row.entityType !== "contract") throw httpError(404, NO_COMMENT);
+    // The column admits types this API has no arm for, so a comment on
+    // one of those is a comment this API cannot answer for. It is the
+    // only place the raw column meets the seam: everywhere else the
+    // entity type arrives already narrowed by a route schema.
+    const entityType = row ? commentEntityType(row.entityType) : null;
+    if (!row || !entityType) throw httpError(404, NO_COMMENT);
     // Asked on the same snapshot the write lands on, and on the same
-    // connection: a team row dropped between the check and the update
-    // must not authorize the correction, and a second pool connection
-    // taken while this one holds a lock is a way to run the pool dry.
-    const audience = await contractAudience(tx, user, row.entityId);
+    // connection: a grant dropped between the check and the update must
+    // not authorize the correction, and a second pool connection taken
+    // while this one holds a lock is a way to run the pool dry.
+    //
+    // The refusal is the comment's, not the record's: a comment the
+    // viewer is not in the room for reads as a comment that is not
+    // there. So this takes the audience that answers `null` rather than
+    // the one that throws the record's own words.
+    const audience = await commentAudience(tx, user, { entityType, entityId: row.entityId });
     if (!audience || !audience.tiers.includes(row.visibility)) throw httpError(404, NO_COMMENT);
-    return { ...row, entityType: "contract" };
+    return { ...row, entityType };
   }
 
   /** The comment as it now stands, through the thread's own projection,

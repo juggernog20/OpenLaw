@@ -267,3 +267,53 @@ would only restate DES-052.
 It goes to the **M22 settings pass**, which this file already owes a visit for ST6's Advisory row
 (amendment 4 above). A pass that is redrawing one frame can draw a second at little extra cost;
 a close that is marking a table cannot.
+
+## Amendment (2026-08-21, M20 close, #384) — the portal's notification pane, and what it means for ST3
+
+M20 shipped a **second** notification-preferences surface. It is not in this file's frame table and it
+does not belong there, but ST3 is now one of two panes over one component, so this file has to say
+where the line falls.
+
+### The portal pane is not a settings screen
+
+`/portal/settings` is the portal's own "Notification settings" page (the INT-001 M20/9 addendum). It
+is not under `/settings`, it is not on the settings rail, and no Business User can reach the rail at
+all — SET-002's M20/10 addendum puts a Business User floor over the whole tree, Personal included. So
+there is no ST-numbered frame for it and none is owed here: this file inventories
+`designs/settings.pen`, and the portal is drawn in `designs/intake.pen`.
+
+**It shipped without a frame of its own.** The portal frames I5, I6, and I7 draw the home, the form,
+and the request detail; none of them draws a preferences page, because M20/2 recorded that the portal
+had no settings destination at the time they were read. M20/9 gave it one. Adding a frame now would
+restate DES-050 and settle nothing, which is the ST7/ST3 precedent the M19 close set for exactly this
+choice. It goes to the **M22 settings pass** with the two frames this file already owes.
+
+### What ST3 now shares, and what it does not
+
+The switch grid behind ST3 was extracted so both panes draw from one component. What differs between
+them is which groups they are handed, and nothing else:
+
+- **ST3 (staff) draws four groups** — assigned to you, activity on your records, dates approaching,
+  new requests — and **not** group 5, whose audience is the portal's and whose reader a staff member
+  is not.
+- **The portal pane draws `requester_events` alone**, labelled "Request updates". The other four are
+  about contracts, records, dates, and the Inbox, none of which a Business User can open (DD-013).
+
+A Member+ who raises a Request of their own sees both panes and both bells, with neither reading the
+other (the NOT-001 M20/9 addendum). That is why the split is by surface and not by role.
+
+### One shipped behaviour behind ST3 changed
+
+**Saving a channel back to its group's default now removes the override row instead of writing one
+that agrees with it.** A switch is on or off either way and the effective answer is identical, so
+nothing in the frame is redrawn. It is recorded here because the
+pane's behaviour moved: the change is at the shared write path, so it reached ST3 as well as the
+portal pane. The decision is the NOT-001 M20/9 addendum, which marks the shipped M18/5 behaviour it
+supersedes.
+
+### The bell is the same bell
+
+The portal's header carries the M18 bell rendered against the portal's own strip, taking a surface
+prop and nothing else (the NOT-005 M20/9 addendum). DES-049 and DES-050 carry their own M20/9 addenda
+for the two chrome facts that follow — the trigger's foreground pair per surface, and the portal
+header's two-glyph trailing cluster. No settings frame draws either, so nothing here is redrawn.

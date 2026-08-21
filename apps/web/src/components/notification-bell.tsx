@@ -6,12 +6,28 @@
  * the glyph and its overhanging count badge in the header's trailing
  * cluster. The panel behind it is unmocked; DES-049 is its anatomy.
  *
+ * **One component, two bells** (M20/9). NOT-001 puts one notification
+ * system on two rendering surfaces — the staff notification centre in
+ * the application header, and the portal bell in the portal's own
+ * chrome — and DES-049 says in its own words that the portal renders
+ * the same anatomy. So `surface` is the whole of the difference: which
+ * four routes are asked, what the empty panel says, and how the trigger
+ * is coloured for the chrome it sits in. Everything else — the badge and
+ * its cap, read-on-open, paging, the focus landing, both failure states
+ * — is written once, because it is one decision and not two.
+ *
+ * **The two bells never see each other's items.** The scope is the API's
+ * (`NotificationSurface`), not this component's: the staff mount answers
+ * rows about contracts and the portal mount answers rows about the
+ * reader's own Requests. A person who is both a Member+ and a Requester
+ * has two bells with two badges, and marking one read leaves the other
+ * exactly as it was.
+ *
  * **The bell is an ephemeral prompt, and the activity feed is the
  * durable history** (NOT-005). So there is no per-item read ceremony
  * here and no per-record notifications surface anywhere — NOT-001
  * removed the contract-details chip. Being shown an item is the only
- * thing that reads it, and this global bell is the only place it is
- * shown.
+ * thing that reads it, and the bell is the only place it is shown.
  *
  * **The badge is the server's number, always.** It is read on mount,
  * again on every navigation, and again on a slow poll — the three
@@ -35,12 +51,12 @@
 import { useCallback, useEffect, useRef, useState, type Ref } from "react";
 import { Bell } from "lucide-react";
 import { Link, useLocation } from "react-router";
-import { defineMessage, FormattedMessage, useIntl } from "react-intl";
-import { api } from "../../lib/api";
-import { formatLongDateTime, formatRelativeOrShort } from "../../lib/format";
-import { narrateNotification, type BellItem } from "../../lib/notifications";
-import { Button } from "../ui/button";
-import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
+import { defineMessage, FormattedMessage, useIntl, type MessageDescriptor } from "react-intl";
+import { api } from "../lib/api";
+import { formatLongDateTime, formatRelativeOrShort } from "../lib/format";
+import { narrateNotification, type BellItem } from "../lib/notifications";
+import { Button } from "./ui/button";
+import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
 
 /**
  * How often the badge re-reads itself while the app sits open, in
@@ -67,7 +83,44 @@ const CENTRE_LABEL = defineMessage({
  * rows, and that is the size they draw one at. */
 const ROW_GLYPH_SIZE = 16;
 
-export function NotificationBell() {
+/** Which bell this is (NOT-001): the staff notification centre, or the
+ * portal's own. */
+export type BellSurface = "staff" | "portal";
+
+/**
+ * What the panel says when there is nothing in it.
+ *
+ * Each surface names the news it carries. The staff line says "news",
+ * not "anything that needs you" (DES-049 point 12): NOT-002's ambient
+ * group is there too, and a comment posted on your record is news that
+ * needs nothing from you. The portal line names the one thing a
+ * requester's bell is ever about.
+ */
+const EMPTY_COPY: Record<BellSurface, MessageDescriptor> = {
+  staff: defineMessage({
+    id: "notifications.empty",
+    defaultMessage: "Nothing to catch up on. News about your records shows up here.",
+  }),
+  portal: defineMessage({
+    id: "notifications.emptyPortal",
+    defaultMessage: "Nothing to catch up on. News about your requests shows up here.",
+  }),
+};
+
+/**
+ * How the trigger is coloured for the chrome it sits in.
+ *
+ * The staff header is the dark chrome strip and takes its own nav
+ * tokens; the portal header is a `bg-raised` strip and takes the
+ * ordinary foreground pair. The geometry — a 20px glyph in a 24×24
+ * target, DES-011's floor — is the same on both.
+ */
+const TRIGGER_TONE: Record<BellSurface, string> = {
+  staff: "text-(--chrome-nav-muted) hover:text-on-inverted",
+  portal: "text-muted hover:text-primary",
+};
+
+export function NotificationBell({ surface }: Readonly<{ surface: BellSurface }>) {
   const intl = useIntl();
   const location = useLocation();
   const [open, setOpen] = useState(false);
@@ -96,14 +149,16 @@ export function NotificationBell() {
   const landed = useRef<number | null>(null);
 
   const readCount = useCallback(async () => {
-    const { data } = await api
-      .GET("/api/v1/notifications/unread-count")
-      .catch(() => ({ data: undefined }));
+    const { data } = await (
+      surface === "portal"
+        ? api.GET("/api/v1/portal/notifications/unread-count")
+        : api.GET("/api/v1/notifications/unread-count")
+    ).catch(() => ({ data: undefined }));
     // A failed count leaves the badge where it was. It is a number about
     // somewhere else, and the last one that answered is a better guess
     // than zero.
     if (data) setUnread(data.unread);
-  }, []);
+  }, [surface]);
 
   // Mount, then every navigation. `pathname` rather than the whole
   // location, so a query-string edit on the same page is not a reason to
@@ -126,22 +181,27 @@ export function NotificationBell() {
    * server, but a page redrawn after a reopen would otherwise be a
    * request that could only ever change nothing.
    */
-  const markPageRead = useCallback(async (page: readonly BellItem[]) => {
-    const ids = page.filter((item) => item.readAt === null).map((item) => item.id);
-    if (ids.length === 0) return;
-    const { data } = await api
-      .POST("/api/v1/notifications/read", { body: { ids } })
-      .catch(() => ({ data: undefined }));
-    if (!data) return;
-    setUnread(data.unread);
-    // The rows follow the write, so a second draw of the same page sends
-    // nothing and the panel agrees with the badge.
-    const marked = new Set(ids);
-    const readAt = new Date().toISOString();
-    setItems((current) =>
-      (current ?? []).map((item) => (marked.has(item.id) ? { ...item, readAt } : item)),
-    );
-  }, []);
+  const markPageRead = useCallback(
+    async (page: readonly BellItem[]) => {
+      const ids = page.filter((item) => item.readAt === null).map((item) => item.id);
+      if (ids.length === 0) return;
+      const { data } = await (
+        surface === "portal"
+          ? api.POST("/api/v1/portal/notifications/read", { body: { ids } })
+          : api.POST("/api/v1/notifications/read", { body: { ids } })
+      ).catch(() => ({ data: undefined }));
+      if (!data) return;
+      setUnread(data.unread);
+      // The rows follow the write, so a second draw of the same page
+      // sends nothing and the panel agrees with the badge.
+      const marked = new Set(ids);
+      const readAt = new Date().toISOString();
+      setItems((current) =>
+        (current ?? []).map((item) => (marked.has(item.id) ? { ...item, readAt } : item)),
+      );
+    },
+    [surface],
+  );
 
   const loadPage = useCallback(
     async (from: string | null) => {
@@ -156,9 +216,12 @@ export function NotificationBell() {
         setLandingIndex(null);
         landed.current = null;
       }
-      const { data } = await api
-        .GET("/api/v1/notifications", { params: { query: from ? { cursor: from } : {} } })
-        .catch(() => ({ data: undefined }));
+      const query = { query: from ? { cursor: from } : {} };
+      const { data } = await (
+        surface === "portal"
+          ? api.GET("/api/v1/portal/notifications", { params: query })
+          : api.GET("/api/v1/notifications", { params: query })
+      ).catch(() => ({ data: undefined }));
       if (mine !== generation.current) return;
       setBusy(false);
       if (!data) {
@@ -173,7 +236,7 @@ export function NotificationBell() {
       // than before, so a page that never arrived is never marked.
       await markPageRead(data.notifications);
     },
-    [markPageRead],
+    [markPageRead, surface],
   );
 
   // Opening is what draws the centre, so opening is what reads it. Every
@@ -201,16 +264,18 @@ export function NotificationBell() {
   }, [cursor, items, loadPage]);
 
   const markAllRead = useCallback(async () => {
-    const { data } = await api
-      .POST("/api/v1/notifications/read-all")
-      .catch(() => ({ data: undefined }));
+    const { data } = await (
+      surface === "portal"
+        ? api.POST("/api/v1/portal/notifications/read-all")
+        : api.POST("/api/v1/notifications/read-all")
+    ).catch(() => ({ data: undefined }));
     if (!data) return;
     setUnread(data.unread);
     const readAt = new Date().toISOString();
     setItems((current) =>
       (current ?? []).map((item) => ({ ...item, readAt: item.readAt ?? readAt })),
     );
-  }, []);
+  }, [surface]);
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -227,8 +292,9 @@ export function NotificationBell() {
         )}
         // 24×24 around a 20px glyph is DES-011's minimum hit target;
         // the focus ring is the base layer's, as it is on the avatar
-        // trigger beside it.
-        className="relative flex size-6 items-center justify-center rounded-button text-(--chrome-nav-muted) hover:text-on-inverted"
+        // trigger beside it. Only the foreground pair moves with the
+        // surface, because only the chrome under it does.
+        className={`relative flex size-6 items-center justify-center rounded-button ${TRIGGER_TONE[surface]}`}
       >
         <Bell size={20} aria-hidden="true" />
         {/* Overhangs the glyph's trailing top corner, as the AppHeader
@@ -292,10 +358,7 @@ export function NotificationBell() {
           )}
           {items !== null && items.length === 0 && (
             <p className="px-4 py-3 text-sm text-muted">
-              <FormattedMessage
-                id="notifications.empty"
-                defaultMessage="Nothing to catch up on. News about your records shows up here."
-              />
+              <FormattedMessage {...EMPTY_COPY[surface]} />
             </p>
           )}
           {items !== null && items.length > 0 && (
@@ -385,10 +448,11 @@ function NotificationRow({
   return (
     <li className="border-b border-border-muted last:border-b-0">
       {href === null ? (
-        // Unreachable while `contract` is the only entity the API
-        // answers for, and the honest drawing if a later record type
-        // ever reaches this panel before its route does: a prompt that
-        // says what happened beats a link to nowhere.
+        // Unreachable while `contract` and `request` are the only
+        // entities the two mounts answer for, and the honest drawing if
+        // a later record type ever reaches this panel before its route
+        // does: a prompt that says what happened beats a link to
+        // nowhere.
         <div className="flex gap-2.5 px-4 py-2.5">{face}</div>
       ) : (
         <Link

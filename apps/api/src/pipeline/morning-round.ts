@@ -631,10 +631,11 @@ async function sendBriefing(
   const unreadable = new Set<string>();
   for (const entityId of new Set(owed.map((row) => row.entityId))) {
     const rows = owed.filter((row) => row.entityId === entityId);
-    // Failing closed on an entity with no reach rule, as the immediate
-    // send job does: M18 writes `contract` alone, and a row about
-    // something with no rule yet must not be the one thing that leaves
-    // unchecked.
+    // Failing closed on an entity this briefing has no reach rule for,
+    // as the immediate send job does. Group 3's records are contracts
+    // and nothing else — the rows read above all carry a reminder
+    // identity, which no other group writes — and a row about something
+    // with no rule here must not be the one thing that leaves unchecked.
     if (rows[0]!.entityType !== CONTRACT_ENTITY) {
       unreadable.add(entityId);
       continue;

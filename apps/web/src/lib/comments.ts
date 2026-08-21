@@ -7,8 +7,8 @@
  *
  * Nothing here names contracts. The thread is one machinery across
  * matters, contracts, documents, and requests (CMT-001), keyed by an
- * entity reference; only the entity vocabulary the API accepts narrows
- * it to contracts today.
+ * entity reference; the entity vocabulary the API accepts is what says
+ * which records have one — `contract` and `request` today.
  */
 
 import { defineMessage, type IntlShape, type MessageDescriptor } from "react-intl";
@@ -46,9 +46,9 @@ export const COMMENT_TIERS = ["legal_only", "working_team", "full_thread"] as co
 const CONTRIBUTOR_TIERS: readonly CommentTier[] = ["working_team", "full_thread"];
 
 /** A Business User is in one room and gets no chooser at all: everything
- * they say is Full Thread by definition (DD-016). No surface offers this
- * yet — the portal thread is M19–M21 — but the rule is the role's, not
- * the surface's, so it is answered here rather than assumed away. */
+ * they say is Full Thread by definition (DD-016). The portal's request
+ * thread (#381) is where that lands — it draws no tier picker, because a
+ * chooser with one option is not a choice. */
 const REQUESTER_TIERS: readonly CommentTier[] = ["full_thread"];
 
 /**
@@ -104,8 +104,9 @@ export function composerTiers(role: Role): readonly CommentTier[] {
 
 /**
  * What a record page's composer opens on (DD-016): the working group,
- * so the common case needs no decision. The request thread opens on
- * Full Thread instead, and that composer lands with the portal.
+ * so the common case needs no decision. The portal's request thread
+ * posts Full Thread and offers nothing else, so it reads no default
+ * from here.
  *
  * It is the record's convention and not a tier anybody may post at: a
  * caller seeds from it only when `composerTiers` puts the poster in that

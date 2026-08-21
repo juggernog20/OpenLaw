@@ -293,6 +293,9 @@
   "activity.reminderOffset": {
     "defaultMessage": "{days, plural, =0 {day of} one {# day} other {# days}}"
   },
+  "activity.request.created": {
+    "defaultMessage": "{actor} submitted this request"
+  },
   "activity.signer.erased": {
     "defaultMessage": "{actor} erased an external signer's name and address from {entriesRedacted, plural, =0 {no entries} one {# entry} other {# entries}}"
   },
@@ -704,6 +707,9 @@
   "auth.linkExpired.body": {
     "defaultMessage": "The link has expired or was already used. Request a new one from the sign-in page."
   },
+  "auth.linkExpired.retry": {
+    "defaultMessage": "The link has expired or was already used. Enter your email to get a fresh one."
+  },
   "auth.linkExpired.title": {
     "defaultMessage": "Sign-in link expired"
   },
@@ -751,6 +757,9 @@
   },
   "auth.magic.title": {
     "defaultMessage": "Get a sign-in link"
+  },
+  "auth.magic.useDifferentEmail": {
+    "defaultMessage": "Use a different email"
   },
   "auth.magicSent.body": {
     "defaultMessage": "If {email} is eligible, a sign-in link is on its way. It expires in 5 minutes and works once."
@@ -2372,6 +2381,9 @@
   "notifications.empty": {
     "defaultMessage": "Nothing to catch up on. News about your records shows up here."
   },
+  "notifications.emptyPortal": {
+    "defaultMessage": "Nothing to catch up on. News about your requests shows up here."
+  },
   "notifications.envelope.ended": {
     "defaultMessage": "Signing ended on {contract}"
   },
@@ -2387,11 +2399,215 @@
   "notifications.olderError": {
     "defaultMessage": "The older notifications could not be read. Try again."
   },
+  "notifications.request.created": {
+    "defaultMessage": "Legal has received your request {request}"
+  },
+  "notifications.request.declined": {
+    "defaultMessage": "Legal declined your request {request}"
+  },
+  "notifications.request.replied": {
+    "defaultMessage": "{hasActor, select, yes {{actor} replied on your request {request}} other {Legal replied on your request {request}}}"
+  },
+  "notifications.request.statusChanged": {
+    "defaultMessage": "The status of your request {request} changed"
+  },
+  "notifications.requestNumber": {
+    "defaultMessage": "R-{number}"
+  },
   "notifications.unknown": {
     "defaultMessage": "{contract} — {event}"
   },
   "notifications.unnamedRecord": {
     "defaultMessage": "a record"
+  },
+  "portal.brand": {
+    "defaultMessage": "OpenLaw"
+  },
+  "portal.deflection.heading": {
+    "defaultMessage": "Before you submit"
+  },
+  "portal.deflection.newTab": {
+    "defaultMessage": "(opens in a new tab)"
+  },
+  "portal.entry.closed": {
+    "defaultMessage": "Sign-in links are switched off. Use your organization's sign-in to reach the portal."
+  },
+  "portal.entry.lead": {
+    "defaultMessage": "Enter your work email to get a single-use link into the portal. No account and no password."
+  },
+  "portal.entry.title": {
+    "defaultMessage": "Legal request portal"
+  },
+  "portal.form.attachmentFailedReason": {
+    "defaultMessage": "{filename} — {reason}"
+  },
+  "portal.form.attachmentRemove": {
+    "defaultMessage": "Remove {filename}"
+  },
+  "portal.form.attachments": {
+    "defaultMessage": "Attachments"
+  },
+  "portal.form.attachmentsBrowse": {
+    "defaultMessage": "Choose files"
+  },
+  "portal.form.attachmentsFailed": {
+    "defaultMessage": "{count, plural, one {This file did not attach.} other {These files did not attach.}} Quote {reference} and send {count, plural, one {it} other {them}} to Legal another way."
+  },
+  "portal.form.attachmentsHint": {
+    "defaultMessage": "Drop files here — the redline, the prior agreement, the term sheet. Up to {max} files."
+  },
+  "portal.form.attachmentsTooMany": {
+    "defaultMessage": "A request carries at most {max} files."
+  },
+  "portal.form.attachmentsUploading": {
+    "defaultMessage": "Attaching your files…"
+  },
+  "portal.form.back": {
+    "defaultMessage": "All request types"
+  },
+  "portal.form.confirmationBack": {
+    "defaultMessage": "Back to the portal"
+  },
+  "portal.form.confirmationBody": {
+    "defaultMessage": "Quote {reference} when you talk to Legal about it. You'll get updates by email and here in the portal."
+  },
+  "portal.form.confirmationHeading": {
+    "defaultMessage": "Request {reference} is with Legal"
+  },
+  "portal.form.description": {
+    "defaultMessage": "Description"
+  },
+  "portal.form.descriptionHint": {
+    "defaultMessage": "What is it, who is on the other side, and what do you need from Legal?"
+  },
+  "portal.form.fieldRequired": {
+    "defaultMessage": "{field} is required."
+  },
+  "portal.form.footerNote": {
+    "defaultMessage": "You'll get email updates and can track progress here."
+  },
+  "portal.form.missingRequired": {
+    "defaultMessage": "Fill {fields} first — {count, plural, one {the form requires it} other {the form requires them}}."
+  },
+  "portal.form.numberInvalid": {
+    "defaultMessage": "{fieldName}: enter this as a number."
+  },
+  "portal.form.pageTitle": {
+    "defaultMessage": "New request"
+  },
+  "portal.form.requiredMark": {
+    "defaultMessage": "(required)"
+  },
+  "portal.form.submit": {
+    "defaultMessage": "Submit request"
+  },
+  "portal.form.submitError": {
+    "defaultMessage": "The request could not be submitted."
+  },
+  "portal.form.summary": {
+    "defaultMessage": "Summary"
+  },
+  "portal.form.summaryHint": {
+    "defaultMessage": "One line — what do you need?"
+  },
+  "portal.form.urgency": {
+    "defaultMessage": "Urgency"
+  },
+  "portal.form.urgencyHint": {
+    "defaultMessage": "How soon Legal should look at it."
+  },
+  "portal.home.lead": {
+    "defaultMessage": "Pick a request type — the form collects what Legal needs to get started."
+  },
+  "portal.home.noTypes": {
+    "defaultMessage": "No request types are available yet. Ask your legal team to open one."
+  },
+  "portal.home.pickerLabel": {
+    "defaultMessage": "Request types"
+  },
+  "portal.home.title": {
+    "defaultMessage": "What do you need from Legal?"
+  },
+  "portal.myRequests.count": {
+    "defaultMessage": "{count, plural, one {# request} other {# requests}}"
+  },
+  "portal.myRequests.empty": {
+    "defaultMessage": "You have not asked Legal for anything yet."
+  },
+  "portal.myRequests.emptyPointer": {
+    "defaultMessage": "Pick a request type to make your first request."
+  },
+  "portal.myRequests.heading": {
+    "defaultMessage": "Your requests"
+  },
+  "portal.name": {
+    "defaultMessage": "Legal request portal"
+  },
+  "portal.request.back": {
+    "defaultMessage": "Your requests"
+  },
+  "portal.request.bannerConverted": {
+    "defaultMessage": "Legal is working on this. Follow it here."
+  },
+  "portal.request.bannerDeclined": {
+    "defaultMessage": "Legal declined this request."
+  },
+  "portal.request.bannerNew": {
+    "defaultMessage": "Legal has received your request. You'll get an email when the status changes."
+  },
+  "portal.request.bannerResolved": {
+    "defaultMessage": "Legal has answered this request."
+  },
+  "portal.request.booleanValue": {
+    "defaultMessage": "{value, select, true {Yes} other {No}}"
+  },
+  "portal.request.documentTitle": {
+    "defaultMessage": "{reference} · {summary}"
+  },
+  "portal.request.meta": {
+    "defaultMessage": "{reference} · {requestType} · Submitted {submitted}"
+  },
+  "portal.request.replyError": {
+    "defaultMessage": "The reply could not be sent. Try again."
+  },
+  "portal.request.replyLabel": {
+    "defaultMessage": "Reply to Legal"
+  },
+  "portal.request.replyPlaceholder": {
+    "defaultMessage": "Reply to Legal…"
+  },
+  "portal.request.replySend": {
+    "defaultMessage": "Send"
+  },
+  "portal.request.submittedHeading": {
+    "defaultMessage": "What you submitted"
+  },
+  "portal.request.threadFailed": {
+    "defaultMessage": "The conversation could not be read. Reload the page to try again."
+  },
+  "portal.request.threadHeading": {
+    "defaultMessage": "Conversation"
+  },
+  "portal.request.threadLegal": {
+    "defaultMessage": "Legal"
+  },
+  "portal.request.threadOlder": {
+    "defaultMessage": "Show earlier replies"
+  },
+  "portal.request.threadOlderFailed": {
+    "defaultMessage": "The earlier replies could not be read. Try again."
+  },
+  "portal.request.threadYou": {
+    "defaultMessage": "You"
+  },
+  "portal.settings.heading": {
+    "defaultMessage": "How we tell you about your requests"
+  },
+  "portal.settings.link": {
+    "defaultMessage": "Notification settings"
+  },
+  "portal.settings.title": {
+    "defaultMessage": "Notification settings"
   },
   "renewal.action.amendment": {
     "defaultMessage": "File the amendment"
@@ -2497,6 +2713,12 @@
   },
   "renewal.vehicle.successorBlurb": {
     "defaultMessage": "Standalone record linked as the renewal."
+  },
+  "requests.reference": {
+    "defaultMessage": "R-{number, number, ::group-off}"
+  },
+  "requests.statusLabel": {
+    "defaultMessage": "{status, select, new {New} converted {Converted} resolved {Resolved} declined {Declined} other {Unknown}}"
   },
   "role.administrator": {
     "defaultMessage": "Administrator"
@@ -3520,6 +3742,12 @@
   },
   "settings.notifications.group.dates.detail": {
     "defaultMessage": "Key dates, notice deadlines, and expiries — emailed as one daily digest."
+  },
+  "settings.notifications.group.requesterEvents": {
+    "defaultMessage": "Request updates"
+  },
+  "settings.notifications.group.requesterEvents.detail": {
+    "defaultMessage": "Receipts, replies, status changes, and decisions on the requests you submit."
   },
   "settings.notifications.group.requests": {
     "defaultMessage": "New requests"

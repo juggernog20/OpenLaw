@@ -21,7 +21,16 @@
  */
 
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { activityLog, and, desc, eq, notifications, users, type Notification } from "@openlaw/db";
+import {
+  activityLog,
+  and,
+  desc,
+  eq,
+  notificationPreferences,
+  notifications,
+  users,
+  type Notification,
+} from "@openlaw/db";
 import { provisionUser } from "../../auth/instance.js";
 import {
   signInCookies,
@@ -347,6 +356,42 @@ describe("the grid the pane draws", () => {
       expect(groupIn(after, group)).toEqual(groupIn(before, group));
     }
     await toggle(BYSTANDER, "activity_on_your_records", "email", false);
+  });
+
+  it("stores a disagreement with the default and removes it when the toggle goes back", async () => {
+    // The one claim in this suite that cannot be made from outside the
+    // seam: "no row" and "a row that agrees with the default" answer
+    // identically today and differ only on the day a default moves
+    // (M20/9). So the table itself is what is read.
+    const rowsFor = () =>
+      harness.db
+        .select({ enabled: notificationPreferences.enabled })
+        .from(notificationPreferences)
+        .where(
+          and(
+            eq(notificationPreferences.userId, idOf(BYSTANDER)),
+            eq(notificationPreferences.eventGroup, "dates_approaching"),
+            eq(notificationPreferences.channel, "email"),
+          ),
+        );
+
+    expect(await rowsFor()).toEqual([]);
+
+    // Group 3 emails by default, so switching it off is a real override.
+    await toggle(BYSTANDER, "dates_approaching", "email", false);
+    expect(await rowsFor()).toEqual([{ enabled: false }]);
+
+    // And switching it back on is not a second opinion — it is the
+    // withdrawal of the first. The table holds overrides, so a row that
+    // agrees with the default is not one.
+    await toggle(BYSTANDER, "dates_approaching", "email", true);
+    expect(await rowsFor()).toEqual([]);
+    // The effective answer is the same either way, which is why the pane
+    // never has to know which of the two states it is looking at.
+    expect(groupIn(await preferences(BYSTANDER), "dates_approaching")).toMatchObject({
+      inApp: true,
+      email: true,
+    });
   });
 
   it("is one person's, and no route names another", async () => {

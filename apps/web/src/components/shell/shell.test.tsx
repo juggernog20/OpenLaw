@@ -73,15 +73,18 @@ describe("app shell chrome", () => {
     expect(links.map((link) => link.textContent)).toEqual(["Home", "Contracts"]);
   });
 
-  it("draws a Business User no Member+ destination at all (ENT-004)", async () => {
+  it("never draws the shell for a Business User at all (INT-001)", async () => {
+    // ENT-004's floor used to read here as a nav carrying Home alone.
+    // The portal took the whole question over (#376): a Business User's
+    // surface is the portal, so the staff shell is somewhere they never
+    // arrive — which is a stronger answer than an emptied nav.
     stubApi({
       signedIn: { id: "u9", email: "bao@example.com", displayName: "Bao B", role: "business_user" },
     });
     renderAt("/");
 
-    const nav = await screen.findByRole("navigation");
-    const links = within(nav).getAllByRole("link");
-    expect(links.map((link) => link.textContent)).toEqual(["Home"]);
+    await screen.findByRole("heading", { name: "What do you need from Legal?" });
+    expect(screen.queryByRole("navigation")).not.toBeInTheDocument();
   });
 
   it("renders the page sub-bar with the page title as the page's h1", async () => {

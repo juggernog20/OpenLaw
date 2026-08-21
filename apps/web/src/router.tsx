@@ -19,8 +19,13 @@ import { EntitiesPage, entitiesLoader } from "./routes/entities";
 import { EntityRecordPage, entityRecordLoader } from "./routes/entity-record";
 import { RouteErrorPage } from "./routes/error-page";
 import { HomePage, homeLoader } from "./routes/home";
-import { LinkExpiredPage } from "./routes/link-expired";
+import { LinkExpiredPage, linkExpiredLoader } from "./routes/link-expired";
 import { LoginPage, loginLoader } from "./routes/login";
+import { PortalHomePage, portalHomeLoader } from "./routes/portal";
+import { PortalRequestFormPage, portalRequestFormLoader } from "./routes/portal-request-form";
+import { PortalRequestPage, portalRequestLoader } from "./routes/portal-request";
+import { PortalEntryPage, portalEntryLoader } from "./routes/portal-entry";
+import { PortalSettingsPage, portalSettingsLoader } from "./routes/portal-settings";
 import { SetPasswordPage } from "./routes/set-password";
 import { SettingsLayout, settingsIndexLoader, settingsLoader } from "./routes/settings";
 import { SettingsAppearancePage } from "./routes/settings-appearance";
@@ -326,7 +331,53 @@ export const routes: RouteObject[] = [
       { path: "two-factor/enroll", loader: enrollLoader, element: <TwoFactorEnrollPage /> },
       { path: "set-password", element: <SetPasswordPage /> },
       { path: "setup", loader: setupLoader, element: <SetupPage /> },
-      { path: "link-expired", element: <LinkExpiredPage /> },
+      { path: "link-expired", loader: linkExpiredLoader, element: <LinkExpiredPage /> },
+    ],
+  },
+  {
+    // The Portal (INT-001, #376): its own route tree in the same SPA,
+    // wearing its own chrome and sharing the session model. It is
+    // deliberately not a child of the staff shell — no nav, no activity
+    // bar, and no role floor beyond holding a session, because Member+
+    // staff submit Requests here too.
+    path: "/portal",
+    errorElement: <RouteErrorPage />,
+    hydrateFallbackElement: <></>,
+    children: [
+      { index: true, loader: portalHomeLoader, element: <PortalHomePage /> },
+      // The front door. Its own address rather than the portal home in a
+      // signed-out costume, so the emailed link, the dead-link page, and
+      // the sign-out redirect all name one place.
+      { path: "enter", loader: portalEntryLoader, element: <PortalEntryPage /> },
+      // The lightweight settings surface NOT-001 promised a business
+      // user (M20/9): NOT-002's group 5 and nothing else, reached from
+      // the gear in the portal header.
+      { path: "settings", loader: portalSettingsLoader, element: <PortalSettingsPage /> },
+      // One request type's form, addressed by the slug the picker
+      // links on (INT-002). A slug that names nothing, or names an
+      // archived type, lands back on the home — see the loader.
+      {
+        path: "new/:slug",
+        loader: portalRequestFormLoader,
+        element: (
+          <KeyedByParam name="slug">
+            <PortalRequestFormPage />
+          </KeyedByParam>
+        ),
+      },
+      // One of the caller's own Requests, addressed by its R-###
+      // number — the reference a requester quotes and the one the row
+      // links on. A number that is not theirs lands back on the home,
+      // where their own list is (DD-013).
+      {
+        path: "requests/:number",
+        loader: portalRequestLoader,
+        element: (
+          <KeyedByParam name="number">
+            <PortalRequestPage />
+          </KeyedByParam>
+        ),
+      },
     ],
   },
 ];

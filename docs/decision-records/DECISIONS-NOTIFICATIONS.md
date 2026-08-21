@@ -133,6 +133,38 @@ _None — queue cleared 2026-08-05 (NOT-001 through NOT-005)._
 
   That is coherent because of what each message carries. **No mention email carries the comment's words** (M18/3), and the bell item carries none either — both say who named you and where to go. The read side re-applies only the wall, so the row that person still holds and the mail they receive agree with each other; a tier re-check on one and not the other is what would produce a disagreement. A tier that gated continuously would also mean a bell item vanishing because a thread was re-tiered, which is a fact about the conversation and not about the reader's reach.
 
+- **Addendum (2026-08-21, M20/8, [#382](https://github.com/juggernog20/OpenLaw/issues/382))** — **Group 5 fires, and it added no machinery.** `requester_events` stops being a slot: the Notifier gains four methods — `requestCreated`, `requestStatusChanged`, `requestReplied`, `requestDeclined` — and the five steps behind the seam are the ones M18/1 built. The catalog is complete; **two of the four have a caller in M20** (submission and the thread), and the status change and the decline wait for M21's disposition routes. That is the point of enumerating a catalog rather than growing it event by event: M21 adds a call, not a mechanism.
+
+  **The receipt is the one deliberate exception to the actor-exclusion rule, and it is countable.** `requestCreated` is addressed to the person who pressed Submit, because proof that an ask arrived is the whole content of the message and a receipt addressed to nobody is not a receipt (INT-001). It is one named flag on one method behind the seam — never a rule a call site can reach for — so the exception stays one exception. Every other group-5 event excludes its actor like everything else in the system, which is exactly what makes a staff reply reach the Requester and not the poster, and a requester's own reply reach nobody at all.
+
+  **The audience of every group-5 event is the Requester, and the seam is what says so.** It is read from the Request's own row behind the seam, the way group 2 reads a contract's roster and for the same reason: a caller that could name the audience could name somebody else's Requester (DD-013). Staff are not in it. What tells the staff side that a Request wants attention is group 4, the Inbox's own group (INT-006) — a different queue with different defaults.
+
+  **A Request has no wall, so the wall step asks the two facts that can still change.** DD-014's flag is a contract's and INT-002 gives a Request no equivalent, so what is re-asked at send time is that this person is still the Request's Requester and has not left (SET-005). **DD-016 is the narrowing that does the work here**: a Requester is in Full Thread and nowhere else, so a Legal Only or Working Team comment raises nothing at them — applied behind the seam, on the M18/3 reasoning, so the arm that posts a comment cannot be the place it is forgotten.
+
+  **A decline is raised instead of the status change it also is, never beside it.** INT-006 makes "no" arrive with a why, so the decline carries the reason and the status change does not; two messages about one act would be the same news at two volumes. The reason is **the one piece of somebody's prose this system puts in an email**, and it is there on purpose: a decline reason is written to be read by the requester, it is not a room anybody can be moved out of, and there is no redact for it to outrun — which is precisely why a comment's words still stay on the thread (CMT-006).
+
+  **The email arms land in the one register**, deep-linking to `/portal/requests/{number}` rather than to the staff application. The link round-trips whether or not a session is live: signed out it lands on the portal entry screen, which carries the email step itself (the INT-001 M20/2 addendum), and signed in it lands on the Request. The deep link is **not** carried through redemption — M20/2 decided landing is by role and the callback stays `/` — so a redeemed link puts a Business User in the portal and their own list is the way back.
+
+  **The `notifications` row's read side is untouched, and group 5's rows are deliberately outside it.** `notificationScope` still answers about contracts alone, because it is the **staff** notification centre's predicate; the surface that reads group 5 is the portal bell (NOT-001), which is its own slice of M20. A Member+ who submits a Request of their own is a Requester on the portal, not a staff reader of the portal's group. This is the same failing-closed posture M18 recorded for entities with no reach rule yet — the row is written first and the read rule arrives with the surface.
+
+  **One shape changed behind the seam and nothing above it noticed.** The fan-out now takes the record as a typed entity reference rather than a contract id, and dispatches the wall step per entity type — the arm shape the comments module already uses (CMT-010). The email register's messages likewise carry a record that names itself as a contract or as a Request. Both are what let one engine serve two surfaces without either route learning which one it is on.
+
+- **Addendum (2026-08-21, M20/9, [#383](https://github.com/juggernog20/OpenLaw/issues/383))** — **The read rule arrived with its surface, and it is a surface rather than a role.** M20/8 left group 5's rows outside `notificationScope` on purpose. They are now inside a **second** scope: `notificationScope(db, user, surface)` answers contracts for `"staff"` and the reader's own live Requests for `"portal"`, and the two sets are disjoint by entity type. So the staff notification centre still cannot show a group-5 row and a staff mark-all-read still cannot touch one — not because it is filtered out afterwards, but because it was never in that query.
+
+  **A person can hold both kinds of row at once, which is why the role could not decide it.** A Member+ who submits a Request of their own is a Requester on the portal and a staff reader in the application. They have two bells with two badges, and neither reads the other. Had the split been by role, that person would have had to be one thing or the other, and DD-013 says they are both.
+
+  **The portal bell is a second mount of the same four routes**, at `/portal/notifications`, not a parameter on the staff four. That is the INT-001 M20/3 rule applied one module over — the requester-facing read is its own address rather than a loosened gate — and it means the read model, the keyset, the page size, and the "no user parameter" property are written once and shared. The address is what says which surface is asking.
+
+  **A Request has no wall, so the portal predicate re-asks the two facts that can still change**: the Request is still live and this person is still its Requester. An archived Request's items leave the list and the badge together, silently, exactly as a walled-off contract's do on the staff side — no row, no gap, no number that says something was left out. The rows stay in the table.
+
+  **The preferences pair stays mounted once and serves both panes.** A preference is one person's whichever bell they are looking at; the API answers all five groups and the surface decides which of them to draw. The staff pane draws four, and the portal pane draws `requester_events` alone.
+
+  **A save back to a group's own default removes the override rather than storing one that agrees with it.** This supersedes the shipped M18/5 behaviour, which upserted on every save. The table is named for what it holds: a row that agrees with the default is not an override of anything, and leaving one there silently pins that person against a default they never asked to be held apart from. The **effective** answer is identical either way — both readers start from the catalogue default and lay stored rows over it — so nothing above the seam can tell the two states apart, and the difference shows only on the day a default moves. **The change is at the shared write path, so it reaches the staff pane too**, not only the portal one — the pair is mounted once and serves both, and a rule that held on one pane and not the other would be two rules.
+
+  **Narration is unchanged and still happens on every write.** `user.notification_preference_changed` records the group, the channel, and the new value whether the write stored a row or removed one: the M18/5 clause is about the act being recorded, not about what the table ended up holding, and re-affirming an opinion is still a real act.
+
+- **Addendum (2026-08-21, M20/10, [#384](https://github.com/juggernog20/OpenLaw/issues/384))** — **The portal scope carries no Administrator override, and the absence is the decision.** The staff scope has one three lines above it: an Administrator reaches every contract, because reaching every record is what the role is (DD-014). The portal predicate has no equivalent and gains nothing from one. Being somebody's Requester is not a power, it is a fact about one row (DD-013), and an Administrator who has raised no Request has no portal rows to be shown. So an Administrator's portal bell is their own Requests and no more, which is the same answer every other role gets. Recorded at the M20 close because it was stated only in the predicate, and because "the Administrator sees everything" is the assumption a later reader would carry in.
+
 ## NOT-003 — Timing: direct events immediate; date reminders in a daily digest
 
 - **Status** — Accepted; **amended by NOT-008** (the daily briefing subsumes the date-only digest)
@@ -200,6 +232,12 @@ _None — queue cleared 2026-08-05 (NOT-001 through NOT-005)._
   **An id that is not this person's is not refused.** It matches nothing and the answer is the caller's own badge. A 404 would answer the question "does this id exist", which is the one thing a bell addressed to one person must not do.
 
   **The page is the unit.** The mark-read write is bounded to one page's worth of ids, because a page is what the centre draws and what "the visible items" means on a list that arrives a page at a time. A second draw of the same page sends nothing: an already-read item keeps the stamp from its first sighting, and the surface filters the read ones out before it asks.
+
+- **Addendum (2026-08-21, M20/9, [#383](https://github.com/juggernog20/OpenLaw/issues/383))** — **"Identical semantics on the portal bell" turned out to mean one component, not a second one.** The badge, the 9+ cap, read-on-open, mark-all-read, the paging foot, the focus landing, and both failure states are the staff bell's own code rendered against the portal's chrome. What the portal passes is which of the two surfaces it is: that selects the four routes to ask, the empty panel's sentence, and the trigger's foreground pair — the dark chrome strip and the raised portal strip need different ones. Nothing else differs, because NOT-005 settled one read model and not two.
+
+  **Two bells means two badges, and marking one read leaves the other alone.** That is a property of the API's scope (the NOT-001 M20/9 addendum) rather than of this surface, which counts nothing itself and draws only what it is answered.
+
+  **A group-5 item addresses the Request itself and names no section.** Point 9 of DES-049 makes a contract's prompt open the section it is about, because a contract record has routed tabs; a Request's detail is one page, so `/portal/requests/{number}` is the whole address.
 
 ## NOT-006 — The morning digest's anatomy and its delivery rules
 
@@ -354,13 +392,13 @@ Sequencing this after M28 would make the briefing complete on arrival. Building 
 
 ## Index of decisions
 
-| #       | Decision                                                           | Status   |
-| ------- | ------------------------------------------------------------------ | -------- |
-| NOT-001 | One system, two surfaces: bell + email for staff and portal users  | Accepted |
-| NOT-002 | Event catalog: five groups, defaults by interruptiveness           | Accepted |
-| NOT-003 | Timing: direct events immediate; date reminders in a daily digest  | Accepted |
-| NOT-004 | Reminder lead times: admin-configurable offsets, seeded 7/1/0      | Accepted |
-| NOT-005 | Badge: unread count, 9+ cap, read-on-open                          | Accepted |
-| NOT-006 | The morning digest's anatomy and its delivery rules                | Accepted |
-| NOT-007 | Email delivery is at-least-once; duplicate accepted over drop      | Accepted |
-| NOT-008 | The daily briefing: cross-module morning email replaces the digest | Accepted |
+| #       | Decision                                                           | Status                                                                                                                                                       |
+| ------- | ------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| NOT-001 | One system, two surfaces: bell + email for staff and portal users  | Accepted; the portal surface built and its read rule added by the M20/8 and M20/9 addenda; the absent Administrator override recorded by the M20/10 addendum |
+| NOT-002 | Event catalog: five groups, defaults by interruptiveness           | Accepted; group 5's four events added by M20/8 addendum                                                                                                      |
+| NOT-003 | Timing: direct events immediate; date reminders in a daily digest  | Accepted                                                                                                                                                     |
+| NOT-004 | Reminder lead times: admin-configurable offsets, seeded 7/1/0      | Accepted                                                                                                                                                     |
+| NOT-005 | Badge: unread count, 9+ cap, read-on-open                          | Accepted                                                                                                                                                     |
+| NOT-006 | The morning digest's anatomy and its delivery rules                | Accepted                                                                                                                                                     |
+| NOT-007 | Email delivery is at-least-once; duplicate accepted over drop      | Accepted                                                                                                                                                     |
+| NOT-008 | The daily briefing: cross-module morning email replaces the digest | Accepted                                                                                                                                                     |

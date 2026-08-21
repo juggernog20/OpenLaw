@@ -66,6 +66,7 @@ import {
   GitCommitHorizontal,
   Globe,
   Image as ImageIcon,
+  Inbox,
   KeyRound,
   Link2,
   ListOrdered,
@@ -1687,6 +1688,19 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
       // An Administrator's hard redact, in the tombstone's own words
       // (DES-025): "removed", against the author's "deleted".
       defaultMessage: "{actor} removed a comment from the record",
+    }),
+  },
+
+  // ---- The Request record (INT-001) ----
+  // The second record family, and the portal's own: a Request is born
+  // at the front door and carries its feed into the Inbox (M21). It
+  // reads "submitted" rather than "created", because that is the act a
+  // requester performed — they filled a form in and pressed a button.
+  "request.created": {
+    icon: Inbox,
+    message: defineMessage({
+      id: "activity.request.created",
+      defaultMessage: "{actor} submitted this request",
     }),
   },
 

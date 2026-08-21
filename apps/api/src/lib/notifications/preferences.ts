@@ -8,8 +8,10 @@
  * pair takes the group's default, and the defaults live in
  * {@link EVENT_GROUP_POLICY} rather than being seeded — so a default
  * that changes reaches everybody who never expressed an opinion, and
- * nobody who did. That is why nothing here backfills a row and why a
- * save writes exactly the one pair the person touched.
+ * nobody who did. That is why nothing here backfills a row, why a save
+ * writes exactly the one pair the person touched, and why a save back to
+ * the group's own default **removes** the row rather than writing one
+ * that agrees with it (M20/9).
  *
  * **It is here rather than in the Notifier because two callers read it.**
  * The fan-out asks "what does this group do for these people"; the
@@ -116,12 +118,24 @@ export async function myChannelChoices(db: Executor, userId: string): Promise<Gr
 /**
  * Records one person's answer for one group on one channel.
  *
- * An upsert on the natural key, because the row **is** the opinion:
- * saying the same thing twice is still the same opinion, and there is
- * no version of it to conflict with. Nothing is ever deleted back to
- * "no opinion" — a person who turns email back on has expressed a
- * second opinion, not withdrawn the first, and the difference matters
- * the day a default moves.
+ * **A row is an override, so only a disagreement is stored** (M20/9).
+ * Saving a value that differs from the group's default writes the
+ * override; saving the value that already **is** the default removes it,
+ * back to having no row at all. That is what makes the table honest
+ * about its own name: a row that agrees with the default is not an
+ * override of anything, and leaving one there would silently pin that
+ * person against a default they never asked to be held apart from.
+ *
+ * The write is an upsert on the natural key rather than an insert,
+ * because the row **is** the opinion: saying the same thing twice is
+ * still the same opinion, and there is no version of it to conflict
+ * with.
+ *
+ * **The effective answer is the same either way**, which is why this can
+ * be settled here rather than at each surface: {@link myChannelChoices}
+ * and {@link channelChoices} both start from the default and lay stored
+ * rows over it, so "no row" and "a row that matches" read identically
+ * today and differ only on the day a default moves.
  */
 export async function saveChannelChoice(
   db: Executor,
@@ -130,6 +144,20 @@ export async function saveChannelChoice(
   channel: NotificationChannel,
   enabled: boolean,
 ): Promise<void> {
+  const isDefault = defaultChoice(eventGroup)[channel === "in_app" ? "inApp" : "email"] === enabled;
+  const naturalKey = and(
+    eq(notificationPreferences.userId, userId),
+    eq(notificationPreferences.eventGroup, eventGroup),
+    eq(notificationPreferences.channel, channel),
+  );
+  if (isDefault) {
+    // Back to no opinion. A delete that matches nothing is the ordinary
+    // case — most people never had a row for this pair — and it is not
+    // an error: the person asked for the default and the default is what
+    // they now have.
+    await db.delete(notificationPreferences).where(naturalKey);
+    return;
+  }
   await db
     .insert(notificationPreferences)
     .values({ userId, eventGroup, channel, enabled })

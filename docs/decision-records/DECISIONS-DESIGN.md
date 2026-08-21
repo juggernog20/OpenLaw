@@ -3231,7 +3231,21 @@ Point 8 is NOT-005 restated where it is easy to forget: the read model has exact
 
 ### Consequences
 
-No new tokens and no new primitive: the badge is `badge-alert-*`, the panel is `bg-raised` / `border-border-default`, the row is DES-026's `bg-control` / `border-muted` / `text-primary` / `text-muted`, and `ui/popover.tsx` is DES-048's, reused as it stands. The surface is `apps/web/src/components/shell/notification-bell.tsx`, mounted in `AppHeader`; the sentence and the address for each catalog slug are `apps/web/src/lib/notifications.ts`, which is `lib/activity.ts`'s narration layer applied to a second table and takes the same three properties — defensive payload reads, own-key-only lookup, and an explicit fallback arm. The portal bell (M20) renders the same anatomy against the portal's own chrome; if it needs a second popover panel or a second counter badge, points 2 and 4 are already the answer.
+No new tokens and no new primitive: the badge is `badge-alert-*`, the panel is `bg-raised` / `border-border-default`, the row is DES-026's `bg-control` / `border-muted` / `text-primary` / `text-muted`, and `ui/popover.tsx` is DES-048's, reused as it stands. The surface is `apps/web/src/components/notification-bell.tsx` _(moved out of `components/shell/` by the M20/9 addendum below, when it stopped being the staff shell's alone)_, mounted in `AppHeader`; the sentence and the address for each catalog slug are `apps/web/src/lib/notifications.ts`, which is `lib/activity.ts`'s narration layer applied to a second table and takes the same three properties — defensive payload reads, own-key-only lookup, and an explicit fallback arm. The portal bell (M20) renders the same anatomy against the portal's own chrome; if it needs a second popover panel or a second counter badge, points 2 and 4 are already the answer.
+
+### Addendum (2026-08-21, M20/9, [#383](https://github.com/juggernog20/OpenLaw/issues/383)) — the portal bell is this component, not a second one
+
+The Consequences above said the portal bell renders the same anatomy. It turned out to render the same **code**, and the component moved from `components/shell/` to `components/` to say so — it is no longer the staff shell's.
+
+**One prop is the whole difference, and it is the surface.** `surface="staff" | "portal"` selects which four API routes are asked, what the empty panel says, and the trigger's foreground pair. Everything the twelve points above settle — the 24×24 target, the 20px glyph, the capped badge with the uncapped name, the 320px panel, the 44px head, DES-026's row and foot, DES-031's focus landing, both failure states — is one implementation, because it is one decision.
+
+**Only the trigger's colour moves with the chrome.** The staff header is the dark chrome strip and takes `--chrome-nav-muted` / `text-on-inverted`; the portal header is a `bg-raised` strip and takes `text-muted` / `text-primary`. The geometry is identical, so the two bells are the same control in two rooms rather than two controls.
+
+**Point 12's empty line is written twice, once per surface.** "News about your records" is the staff sentence and "News about your requests" is the portal's: the panel names the news it carries, and a requester has no records.
+
+**Point 9 has one exception, and it is a Request.** A contract's prompt opens the section it is about because a contract record has routed tabs; a Request's detail is one page with nothing to name, so every group-5 item lands on `/portal/requests/{number}`.
+
+**The trigger sits in a two-glyph cluster on the portal**, before the gear that opens the portal's notification settings (the INT-001 M20/9 addendum). No frame draws it: `intake.pen`'s I5–I7 carry no bell, and the anatomy above is the decision.
 
 ## DES-050: The notification preferences pane — one row per event group, two switch columns (extends DES-017, DES-012, DES-011)
 
@@ -3293,6 +3307,18 @@ Point 8 is the accessibility floor doing real work. A grid of unlabelled switche
 ### Consequences
 
 No new tokens and no new primitive: the card is `SettingsCard`, the control is `ui/switch.tsx` as DES-004 landed it, the micro-state is `StatusNote`. The surface is `apps/web/src/routes/settings-notifications.tsx`, behind `/settings/notifications`, and the rail entry it needs is the one the M5 close recorded as _omitted rather than disabled_ — SETTINGS-INVENTORY amendment 5, now closed. The portal's own preferences surface (M20) renders group 5 on this anatomy; if it needs a second grid of switches, points 2, 4, and 8 are already the answer.
+
+### Addendum (2026-08-21, M20/9, [#383](https://github.com/juggernog20/OpenLaw/issues/383)) — the portal pane is this grid, and the card around it is the portal's
+
+Point 3 said the staff pane draws the staff groups and that the portal would render group 5 on this anatomy. It renders it on this **grid**, which moved to `apps/web/src/components/notification-preferences.tsx` so that two panes could share one table.
+
+**The pane passes which groups it draws, and nothing else.** The staff route passes four in NOT-002's order, the portal route passes `requester_events` alone, and the column heads, the row, the two switches, the naming in point 8, the stacking in point 7, and the caption in normalization 3 are the same code on both. So is the save chain — the ordered write queue and the snap-back of point 6.
+
+**The card is the surface's, not the grid's.** The staff pane keeps `SettingsCard` at 720px with the status note in the header strip; the portal pane uses the portal's own section chrome at the portal column's width, with the status note in the same place. A 720px card floating in an 880px column would be the one block on that surface that did not line up.
+
+**Point 5 holds harder than before.** `notification_preferences` now **removes** a row saved back to the group's own default (the NOT-001 M20/9 addendum), so "no opinion" and "an opinion that matches the default" are the same stored state as well as the same drawn one. A switch is on or off; there was never a third value for the pane to draw, and now there is not one in the table either.
+
+**Group 5's row is named "Request updates".** Not "Your requests": on the portal everything is theirs, and the row has to name what the two switches turn on rather than repeat whose they are. Its sentence names the four events INT-003 promised — receipts, replies, status changes, and decisions.
 
 ## DES-051: The email copy register (closes DES-015's deferral)
 

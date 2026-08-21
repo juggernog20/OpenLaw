@@ -46,6 +46,14 @@ export interface CustomFieldControlProps {
    * carries it, so the description is announced with the control rather
    * than left as text beside it. */
   describedBy?: string;
+  /** The attachment's required flag (MTR-014, INT-002), announced on
+   * the control itself. A surface that draws the asterisk in the label
+   * has told a sighted reader; this tells everybody else. */
+  required?: boolean;
+  /** This control is the one a refusal named. Surfaces that mark the
+   * offending boxes set it; the ones that only print a sentence do
+   * not. */
+  invalid?: boolean;
   onDraft: (draft: CustomFieldDraft) => void;
   /** Focus leaving the control (or the checkbox group). */
   onBlur?: (event: React.FocusEvent<HTMLElement>) => void;
@@ -60,6 +68,8 @@ export function CustomFieldControl({
   people = [],
   entities = [],
   describedBy,
+  required = false,
+  invalid = false,
   onDraft,
   onBlur,
   onKeyDown,
@@ -68,7 +78,13 @@ export function CustomFieldControl({
   const text = typeof draft === "string" ? draft : "";
   const chosen = Array.isArray(draft) ? draft : [];
   /** What every one of the nine controls carries, whatever it is. */
-  const shared = { id, disabled, "aria-describedby": describedBy };
+  const shared = {
+    id,
+    disabled,
+    "aria-describedby": describedBy,
+    "aria-required": required || undefined,
+    "aria-invalid": invalid || undefined,
+  };
 
   switch (field.fieldType) {
     case "long_text":
@@ -144,6 +160,11 @@ export function CustomFieldControl({
         <div
           id={id}
           aria-describedby={describedBy}
+          // No `aria-required` or `aria-invalid` here: neither is
+          // allowed on `group`. The group's demand is carried by the
+          // label the surface draws the asterisk into, and a refusal
+          // is carried by the checkboxes below — `checkbox` is a role
+          // `aria-invalid` is allowed on.
           role="group"
           aria-labelledby={`${id}-label`}
           className="flex flex-wrap gap-x-4 gap-y-2"
@@ -155,6 +176,7 @@ export function CustomFieldControl({
               <Checkbox
                 checked={chosen.includes(option)}
                 disabled={disabled}
+                aria-invalid={invalid || undefined}
                 onCheckedChange={(next) =>
                   onDraft(
                     next === true

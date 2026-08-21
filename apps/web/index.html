@@ -7,11 +7,16 @@
     <!-- Pre-paint theme boot (#44): the local mirror of the signed-in
          user's stored theme (written by src/lib/theme.ts) applies before
          first paint, so a Warm/Dark user never sees a Light flash. The
-         /auth screens are always Light, so the mirror is skipped there.
+         /auth screens are always Light, so the mirror is skipped there —
+         and so is the portal's own pre-session door (#376), which wears
+         the same Light card. The portal proper keeps the mirror.
          Runs synchronously in <head> on purpose. -->
     <script>
       (function () {
-        if (location.pathname.startsWith("/auth")) return;
+        // Trailing slash stripped first: "/portal/enter/" is the same
+        // screen to the router, so it must be the same screen here.
+        var path = location.pathname.replace(/\/+$/, "");
+        if (path.startsWith("/auth") || path === "/portal/enter") return;
         try {
           var theme = localStorage.getItem("openlaw.theme");
           if (theme === "warm" || theme === "dark") {
