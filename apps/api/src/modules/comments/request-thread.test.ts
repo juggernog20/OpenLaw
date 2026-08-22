@@ -92,7 +92,6 @@ let otherCookies: Record<string, string>;
 let memberCookies: Record<string, string>;
 let contributorCookies: Record<string, string>;
 const userIds = new Map<string, string>();
-/** The Request this suite talks on, and one belonging to somebody else. */
 let requestId: string;
 let otherRequestId: string;
 let contractReviewTypeId: string;

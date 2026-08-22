@@ -118,11 +118,9 @@ function requestApi(
   };
 }
 
-/** Opens the Convert dialog from the sub-bar and answers it. */
 const openConvert = (user: ReturnType<typeof userEvent.setup>) =>
   openDisposition(user, "Convert to contract");
 
-/** Renders the detail with one Request seam behind it. */
 function open(api: ReturnType<typeof requestApi>) {
   stubApi({ signedIn: MEMBER, extra: api.handler });
   return renderAt("/inbox/45");

@@ -74,7 +74,6 @@ afterAll(async () => {
   await harness.stop();
 });
 
-/** Submits one Request as the Business User, and answers the row. */
 async function submit(summary: string): Promise<{ id: string; number: number }> {
   const res = await harness.app.inject({
     method: "POST",
@@ -91,7 +90,6 @@ async function submit(summary: string): Promise<{ id: string; number: number }> 
   return res.json().request as { id: string; number: number };
 }
 
-/** Presses Resolve on one Request, with or without a closing reply. */
 function resolve(number: number, reply?: string, cookies = memberCookies) {
   return harness.app.inject({
     method: "POST",
@@ -108,7 +106,6 @@ const entriesOn = (id: string) => cast.entriesOn(id);
 const bellRowsOn = (userId: string, requestId: string) => cast.bellRowsOn(userId, requestId);
 const mailAbout = (email: string, number: number) => cast.mailAbout(email, number);
 
-/** Every comment on one Request's thread, oldest first. */
 async function commentsOn(id: string) {
   return harness.db
     .select()

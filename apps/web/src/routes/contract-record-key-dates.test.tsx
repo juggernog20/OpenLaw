@@ -93,7 +93,6 @@ function contractRow(overrides: Record<string, unknown> = {}) {
   };
 }
 
-/** One row of the union, as the API answers it. */
 function deadline(overrides: Record<string, unknown> = {}) {
   return {
     source: "key_date",
@@ -209,7 +208,6 @@ function recordApi(
   };
 }
 
-/** The section, once the loader has answered. */
 const section = async () => within(await screen.findByRole("region", { name: "Key dates" }));
 
 describe("the record's Key dates section (CTR-009)", () => {
