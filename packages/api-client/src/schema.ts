@@ -2151,7 +2151,7 @@ export interface paths {
     /** One record's comment thread, flat and oldest first (CMT-002), filtered at query time to the DD-016 tiers the viewer is in the room for. A tier they are not in is omitted entirely — no placeholder, no gap, and no count. A record they cannot reach answers 404, exactly as one that does not exist. Paged from a server-fixed page size, newest end first (CTR-024): the page reads oldest-first inside itself, and `nextCursor` walks back into the older thread */
     get: operations["listComments"];
     put?: never;
-    /** Post a comment on a record at one of the DD-016 tiers. The seam refuses a tier the poster is not in the room for, so a Contributor cannot post Legal Only whatever the client sends, and it refuses a comment whose mentions outrun its tier (CMT-007), so the composer's confirmation explains the promotion rather than enforcing it. The tier is immutable afterwards (CMT-005) — there is no route that changes it. Writes one comment_mentions row per person named, and appends a comment.posted activity entry at the comment's own tier, all in the same transaction */
+    /** Post a comment on a record at one of the DD-016 tiers. The seam refuses a tier the poster is not in the room for, so a Contributor cannot post Legal Only whatever the client sends, and it refuses a comment whose mentions outrun its tier (CMT-007), so the composer's confirmation explains the promotion rather than enforcing it. The tier is immutable afterwards (CMT-005) — there is no route that changes it. Writes one comment_mentions row per person named, and appends a comment.posted activity entry at the comment's own tier, all in the same transaction. Accepts the existing JSON body or multipart/form-data carrying the same fields and up to five `file` parts. Stored blobs are removed if any later part or transactional write is refused */
     post: operations["postComment"];
     delete?: never;
     options?: never;
@@ -2210,6 +2210,23 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/v1/comments/{commentId}/attachments/{attachmentId}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Download one live comment attachment through the same audience arm and tier that exposed its comment. The entity reference is the address the reader used for the thread, so a Requester can continue through a converted Request while the stored comment hangs from its Contract. A hidden tier, another attachment, and either tombstone all answer 404 */
+    get: operations["downloadCommentAttachment"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/v1/comments/{commentId}": {
     parameters: {
       query?: never;
@@ -2237,7 +2254,7 @@ export interface paths {
     };
     get?: never;
     put?: never;
-    /** Remove what a comment said, for good. An Administrator alone may (CMT-005), on anybody's comment including their own. It clears the body, every comment_revisions row, and the list of who the text named — so text posted into the wrong record is gone rather than only hidden. This is the reason prior versions live outside the append-only log (CMT-006). The row stays as a tombstone, because the thread around it still has to read. Appends comment.redacted at the comment's own tier */
+    /** Remove what a comment said, for good. An Administrator alone may (CMT-005), on anybody's comment including their own. It clears the body, every comment_revisions row, the list of who the text named, and every attachment row and stored blob — so paper or text posted into the wrong record is gone rather than only hidden. This is the reason prior versions live outside the append-only log (CMT-006). The row stays as a tombstone, because the thread around it still has to read. Appends comment.redacted at the comment's own tier */
     post: operations["redactComment"];
     delete?: never;
     options?: never;
@@ -12231,6 +12248,10 @@ export interface operations {
                 id: string;
                 displayName: string;
               }[];
+              attachments?: {
+                id: string;
+                filename: string;
+              }[];
               /** Format: date-time */
               createdAt: string;
               editedAt: string | null;
@@ -12269,6 +12290,19 @@ export interface operations {
           /** @enum {string} */
           visibility: "legal_only" | "working_team" | "full_thread";
           mentions?: string[];
+          /** @description Up to five file parts, all named `file`. */
+          file?: string[];
+        };
+        "multipart/form-data": {
+          /** @enum {string} */
+          entityType: "contract" | "request";
+          entityId: string;
+          body: string;
+          /** @enum {string} */
+          visibility: "legal_only" | "working_team" | "full_thread";
+          mentions?: string[];
+          /** @description Up to five file parts, all named `file`. */
+          file?: string[];
         };
       };
     };
@@ -12297,6 +12331,10 @@ export interface operations {
               mentions: {
                 id: string;
                 displayName: string;
+              }[];
+              attachments?: {
+                id: string;
+                filename: string;
               }[];
               /** Format: date-time */
               createdAt: string;
@@ -12430,6 +12468,41 @@ export interface operations {
       };
     };
   };
+  downloadCommentAttachment: {
+    parameters: {
+      query: {
+        entityType: "contract" | "request";
+        entityId: string;
+      };
+      header?: never;
+      path: {
+        commentId: string;
+        attachmentId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/octet-stream": string;
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
   deleteComment: {
     parameters: {
       query?: never;
@@ -12465,6 +12538,10 @@ export interface operations {
               mentions: {
                 id: string;
                 displayName: string;
+              }[];
+              attachments?: {
+                id: string;
+                filename: string;
               }[];
               /** Format: date-time */
               createdAt: string;
@@ -12528,6 +12605,10 @@ export interface operations {
                 id: string;
                 displayName: string;
               }[];
+              attachments?: {
+                id: string;
+                filename: string;
+              }[];
               /** Format: date-time */
               createdAt: string;
               editedAt: string | null;
@@ -12583,6 +12664,10 @@ export interface operations {
               mentions: {
                 id: string;
                 displayName: string;
+              }[];
+              attachments?: {
+                id: string;
+                filename: string;
               }[];
               /** Format: date-time */
               createdAt: string;

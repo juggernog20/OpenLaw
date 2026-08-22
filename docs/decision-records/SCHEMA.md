@@ -1033,7 +1033,7 @@ The "Before you submit…" deflection panel, Admin-managed via Intake Settings �
 
 ### `comments`
 
-Source: **DD-016**, **CMT-001–009**
+Source: **DD-016**, **CMT-001–011**
 
 Audience-tiered comments — one system across record threads, document annotations, and the portal request thread. Flat chronological (no `parent_comment_id` by design, CMT-002). On request conversion, comment rows **re-parent** to the converted matter/contract with tiers preserved (CMT-001); `request` remains a target only for never-converted requests. The portal renders the record thread filtered to `full_thread`.
 
@@ -1058,6 +1058,25 @@ Prior versions (CMT-006, amending CMT-005): `comment_revisions` (`id`, `comment_
 Unread tracking (CMT-004, confirmed by CMT-009): `comment_last_read` (`user_id` FK → `users.id` with no delete action, `entity_type`, `entity_id`, `read_at`, compound PK on the first three). One watermark per reader per record — where that person had read to, not a receipt per comment. The badge counts comments on the record that pass the viewer's tier predicate, are not the viewer's own, are neither soft-deleted nor redacted, and were created after `read_at`. Hidden-tier counts never leak, because the count is taken over the same filtered set the thread is read at. **No row means everything visible is unread**, not zero: a reader who has never opened the panel has read none of it. Opening the panel writes the row, and only when the thread was actually delivered.
 
 The polymorphic `entity_type / entity_id` pair is unavoidable here unless we shard comments per host table. Reconsider in the tech-stack grill if the chosen ORM has a strong opinion. Indexed on (`entity_type`, `entity_id`, `created_at`, `id`) — the thread's keyset walks `(created_at, id)`, so the tie-break sits in the index that answers the order (CTR-024's #391 addendum).
+
+#### `comment_attachments`
+
+Source: **CMT-011**, **DOC-008**, **DOC-012**
+
+The lightweight paper carried by a comment. It is not a Document and has no version chain, folder, confidentiality flag, media type, or byte count. Its comment supplies the visibility tier; a soft-deleted comment suppresses its paper from reads, while an Administrator's redact deletes the stored blobs and these rows with the text.
+
+| Column              | Type        | Notes                                                                                                                      |
+| ------------------- | ----------- | -------------------------------------------------------------------------------------------------------------------------- |
+| `id`                | UUID        | PK, uuidv7                                                                                                                 |
+| `comment_id`        | UUID        | FK → `comments.id`, not null, `ON DELETE CASCADE`                                                                          |
+| `file_ref`          | text        | not null; storage seam `<driver>:<key>` reference; key minted from the comment id and attachment id, never the filename    |
+| `filename`          | text        | not null; the name the file arrived under and the name its download offers back                                            |
+| `uploaded_by`       | UUID        | FK → `users.id`, not null, no cascade                                                                                      |
+| `filed_document_id` | UUID        | nullable FK → `documents.id`, `ON DELETE SET NULL`; ticket 3 writes the Document this attachment was filed as              |
+| `filed_version_id`  | UUID        | nullable FK → `document_versions.id`, `ON DELETE SET NULL`; ticket 3 writes the exact Document Version the filing produced |
+| `created_at`        | timestamptz | not null                                                                                                                   |
+
+Indexed on (`comment_id`, `created_at`, `id`) for the one read: a comment's attachments in arrival order. The table landed in M21A/2, migration 0068.
 
 ---
 

@@ -12,7 +12,7 @@
  */
 
 import { describe, expect, it } from "vitest";
-import { screen, within } from "@testing-library/react";
+import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { Comment } from "../lib/comments";
 import type {
@@ -723,6 +723,70 @@ describe("the conversation", () => {
     ).toBeInTheDocument();
     // Nothing a person wrote is thrown away by a refusal.
     expect(box).toHaveValue("Any update on this?");
+  });
+
+  it("shows comment paper and sends up to five removable chosen files", async () => {
+    const user = userEvent.setup();
+    let sent: FormData | null = null;
+    stubApi({
+      signedIn: REQUESTER,
+      extra: stubs(
+        replyPost((body) => {
+          sent = body as FormData;
+          return json(201, {
+            comment: comment({
+              id: "c-new",
+              body: String(sent.get("body")),
+              attachments: (sent.getAll("file") as File[]).map((file, index) => ({
+                id: `a-new-${index}`,
+                filename: file.name,
+              })),
+            }),
+          });
+        }),
+        detailRead(detail(), 200, {
+          comments: [
+            comment({
+              id: "c-paper",
+              body: "Please review the attached draft.",
+              attachments: [{ id: "a-paper", filename: "draft for requester.pdf" }],
+            }),
+          ],
+        }),
+      ),
+    });
+    renderAt("/portal/requests/45");
+
+    const existing = await screen.findByRole("link", { name: "draft for requester.pdf" });
+    expect(existing).toHaveAttribute(
+      "href",
+      "/api/v1/comments/c-paper/attachments/a-paper?entityType=request&entityId=rq1",
+    );
+
+    const input = screen.getByLabelText("Choose files for this comment");
+    const files = Array.from(
+      { length: 6 },
+      (_, index) => new File([`round ${index}`], `round-${index + 1}.pdf`),
+    );
+    await user.upload(input, files);
+    const chosen = screen.getByRole("list", { name: "Files attached to this comment" });
+    expect(within(chosen).getAllByRole("listitem")).toHaveLength(5);
+    expect(screen.getByText("Up to 5 files.")).toBeInTheDocument();
+
+    await user.click(within(chosen).getByRole("button", { name: "Remove round-2.pdf" }));
+    expect(within(chosen).getAllByRole("listitem")).toHaveLength(4);
+    await user.type(screen.getByRole("textbox", { name: "Reply to Legal" }), "Four rounds.");
+    await user.click(screen.getByRole("button", { name: "Send" }));
+    await waitFor(() => expect(sent).not.toBeNull());
+    expect(sent!.get("entityType")).toBe("request");
+    expect(sent!.get("entityId")).toBe("rq1");
+    expect(sent!.get("visibility")).toBe("full_thread");
+    expect((sent!.getAll("file") as File[]).map((file) => file.name)).toEqual([
+      "round-1.pdf",
+      "round-3.pdf",
+      "round-4.pdf",
+      "round-5.pdf",
+    ]);
   });
 
   it("says the conversation could not be read, and still shows what was submitted", async () => {

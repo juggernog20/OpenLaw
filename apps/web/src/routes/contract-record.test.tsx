@@ -43,6 +43,7 @@ import {
   type StubCall,
 } from "../testing/helpers";
 import type { CustomFieldValue, CustomFieldValues } from "../lib/custom-fields";
+import type { Comment } from "../lib/comments";
 
 const ADMIN = {
   id: "u1",
@@ -2193,14 +2194,14 @@ describe("the contract record's comment applet (M9/2)", () => {
   function comment(
     id: string,
     body: string,
-    visibility: string,
+    visibility: Comment["visibility"],
     author = AUTHOR,
     createdAt = "2026-08-12T09:00:00.000Z",
     mentions: { id: string; displayName: string }[] = [],
     /** M9/4's three states: edited, and removed by either hand. A plain
      * comment is none of them. */
     marks: { editedAt?: string; deletedAt?: string; redactedAt?: string } = {},
-  ) {
+  ): Comment {
     return {
       id,
       entityType: "contract",
@@ -2311,22 +2312,43 @@ describe("the contract record's comment applet (M9/2)", () => {
       }
       if (call.method === "POST") {
         posts.push(call.body);
-        const body = call.body as {
+        const form = call.body instanceof FormData ? call.body : null;
+        const body = (
+          form
+            ? {
+                body: String(form.get("body")),
+                visibility: String(form.get("visibility")),
+                mentions: form.has("mentions")
+                  ? (JSON.parse(String(form.get("mentions"))) as string[])
+                  : [],
+              }
+            : call.body
+        ) as {
           body: string;
           visibility: string;
           mentions?: string[];
         };
-        const posted = comment(
-          `c-new-${thread.length}`,
-          body.body,
-          body.visibility,
-          AUTHOR,
-          "2026-08-12T12:00:00.000Z",
-          (body.mentions ?? []).map((id) => ({
-            id,
-            displayName: candidates.find((person) => person.id === id)!.displayName,
-          })),
-        );
+        const posted = {
+          ...comment(
+            `c-new-${thread.length}`,
+            body.body,
+            body.visibility as Comment["visibility"],
+            AUTHOR,
+            "2026-08-12T12:00:00.000Z",
+            (body.mentions ?? []).map((id) => ({
+              id,
+              displayName: candidates.find((person) => person.id === id)!.displayName,
+            })),
+          ),
+          ...(form
+            ? {
+                attachments: (form.getAll("file") as File[]).map((file, index) => ({
+                  id: `a-new-${index}`,
+                  filename: file.name,
+                })),
+              }
+            : {}),
+        };
         thread = [...thread, posted];
         return json(201, { comment: posted });
       }
@@ -2482,6 +2504,47 @@ describe("the contract record's comment applet (M9/2)", () => {
     expect(within(rows[1]!).getByText("Legal only")).toBeInTheDocument();
     // The box empties, so the next comment starts clean.
     expect(within(panel).getByLabelText("New comment")).toHaveValue("");
+  });
+
+  it("shows attachment rows and posts removable chosen files from the applet", async () => {
+    const user = userEvent.setup();
+    const comments = commentsApi([
+      {
+        ...comment("c-paper", "Counterparty markup.", "working_team"),
+        attachments: [{ id: "a-paper", filename: "counterparty markup.pdf" }],
+      },
+    ]);
+    stubApi({ signedIn: MEMBER, extra: pageApi(comments) });
+    renderAt("/contracts/42");
+    await openChat(user);
+
+    expect(await screen.findByRole("link", { name: "counterparty markup.pdf" })).toHaveAttribute(
+      "href",
+      "/api/v1/comments/c-paper/attachments/a-paper?entityType=contract&entityId=c1",
+    );
+    const panel = screen.getByRole("complementary", { name: "Comments" });
+    const input = within(panel).getByLabelText("Choose files for this comment");
+    await user.upload(input, [
+      new File(["one"], "round-one.pdf"),
+      new File(["two"], "round-two.pdf"),
+    ]);
+    const chosen = within(panel).getByRole("list", {
+      name: "Files attached to this comment",
+    });
+    await user.click(within(chosen).getByRole("button", { name: "Remove round-one.pdf" }));
+    await user.type(within(panel).getByLabelText("New comment"), "Our response.");
+    await user.click(within(panel).getByRole("button", { name: "Comment" }));
+
+    await waitFor(() => expect(comments.posts).toHaveLength(1));
+    const form = comments.posts[0] as FormData;
+    expect(form).toBeInstanceOf(FormData);
+    expect(form.get("entityType")).toBe("contract");
+    expect(form.get("entityId")).toBe("c1");
+    expect((form.getAll("file") as File[]).map((file) => file.name)).toEqual(["round-two.pdf"]);
+    expect(await within(panel).findByRole("link", { name: "round-two.pdf" })).toBeInTheDocument();
+    expect(
+      within(panel).queryByRole("list", { name: "Files attached to this comment" }),
+    ).toBeNull();
   });
 
   it("gives a Contributor two segments and no trace of a Legal Only comment", async () => {

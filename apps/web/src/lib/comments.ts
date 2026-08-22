@@ -13,6 +13,7 @@
 
 import { defineMessage, type IntlShape, type MessageDescriptor } from "react-intl";
 import type { paths } from "@openlaw/api-client";
+import { api } from "./api";
 import { isMemberPlus, type Role } from "./roles";
 
 type ThreadResponse =
@@ -36,6 +37,51 @@ export type CommentTier = Comment["visibility"];
 
 /** The record a thread hangs off — the reference the panel is keyed by. */
 export type CommentEntityType = Comment["entityType"];
+
+/** The fields both JSON and multipart comment posts carry. */
+export interface CommentPost {
+  entityType: CommentEntityType;
+  entityId: string;
+  body: string;
+  visibility: CommentTier;
+  mentions?: readonly string[];
+}
+
+/** Posts one comment, choosing multipart only when paper is present. */
+export async function sendComment(input: CommentPost, files: readonly File[] = []) {
+  if (files.length === 0) {
+    const { mentions, ...body } = input;
+    return api.POST("/api/v1/comments", {
+      body: {
+        ...body,
+        ...(mentions ? { mentions: [...mentions] } : {}),
+      },
+    });
+  }
+
+  const form = new FormData();
+  form.append("entityType", input.entityType);
+  form.append("entityId", input.entityId);
+  form.append("body", input.body);
+  form.append("visibility", input.visibility);
+  if (input.mentions && input.mentions.length > 0) {
+    form.append("mentions", JSON.stringify(input.mentions));
+  }
+  for (const file of files) form.append("file", file, file.name);
+
+  let response: Response;
+  try {
+    response = await fetch("/api/v1/comments", { method: "POST", body: form });
+  } catch {
+    // A dropped connection: the composer says so in its own words.
+    return { data: undefined, error: undefined };
+  }
+  // A refusal from in front of the API (a proxy's 413, say) carries no
+  // problem JSON. It is still a refusal, not a dropped connection.
+  const payload = await response.json().catch(() => undefined);
+  if (response.ok && payload) return { data: payload as { comment: Comment }, error: undefined };
+  return { data: undefined, error: payload };
+}
 
 /** The three tiers, narrowest first — the order the composer draws them
  * in, so widening the audience is a move to the right. */
