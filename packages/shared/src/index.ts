@@ -123,9 +123,12 @@ export const ENVELOPE_LIVE_PROBLEM_TYPE = "urn:openlaw:problem:envelope-live";
 
 /**
  * A comment attachment has already been filed onto the record
- * (CMT-011). The refusal carries the Document and Version ids as problem
- * extensions so a stale dialog can point at the one filing that won
- * instead of inviting a duplicate round (TECH-020).
+ * (CMT-011). When the caller reaches the Document it became, the
+ * refusal carries the Document and Version ids as problem extensions so
+ * a stale dialog can point at the one filing that won instead of
+ * inviting a duplicate round (TECH-020). Outside that Document's
+ * audience (DD-014) the extensions are empty: a refusal never hands out
+ * a reference the read would withhold.
  */
 export const COMMENT_ATTACHMENT_ALREADY_FILED_PROBLEM_TYPE =
   "urn:openlaw:problem:comment-attachment-already-filed";

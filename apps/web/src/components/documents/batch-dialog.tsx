@@ -515,7 +515,12 @@ export function BatchDialog({
                 value={kind}
                 className={CONTROL_CLASS}
                 aria-describedby="batch-kind-help"
-                onChange={(event) => setKind(event.target.value as HandSetDocumentVersionKind)}
+                onChange={(event) => {
+                  const picked = DOCUMENT_VERSION_KINDS.find(
+                    (option) => option === event.target.value,
+                  );
+                  if (picked) setKind(picked);
+                }}
               >
                 {DOCUMENT_VERSION_KINDS.map((option) => (
                   <option key={option} value={option}>

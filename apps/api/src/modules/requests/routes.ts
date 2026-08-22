@@ -102,6 +102,7 @@
 
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
 import type { FastifyRequest } from "fastify";
+import type { AuthenticatedUser } from "../../auth/guards.js";
 import { z } from "zod";
 import { uuidv7 } from "uuidv7";
 import {
@@ -561,7 +562,8 @@ export const requestsRoutes: FastifyPluginAsyncZod = async (app) => {
       // Asked before a single byte is read: storing a file for somebody
       // who may not put one there is the thing this order avoids. It is
       // asked again below, under the row lock the insert runs in.
-      await reachedRequest(app.db, request.user.id, request.params.number);
+      const seen = await reachedRequest(app.db, request.user.id, request.params.number);
+      await refuseDispositioned(app.db, request.user, seen);
 
       // Minted here, because the storage key is built from it and the
       // blob is written before the row exists (DOC-012). The key is
@@ -584,41 +586,7 @@ export const requestsRoutes: FastifyPluginAsyncZod = async (app) => {
           const held = await reachedRequest(tx, request.user.id, request.params.number, {
             lock: true,
           });
-          if (held.status !== "new") {
-            // The record a conversion made, under the caller's own
-            // contract reach (DD-014) and never an archived one. The
-            // route is the Requester's, and a Business User reaches no
-            // Contract at all, so for them this is `null` — the same
-            // answer the portal read and the staff disposition refusal
-            // give. A refusal must not hand out a reference the read
-            // would withhold.
-            const [convertedContract] =
-              held.convertedContractId === null
-                ? []
-                : await tx
-                    .select({ number: contracts.number })
-                    .from(contracts)
-                    .where(
-                      and(
-                        eq(contracts.id, held.convertedContractId),
-                        contractTeamScope(tx, request.user),
-                        isNull(contracts.archivedAt),
-                      ),
-                    )
-                    .limit(1);
-            throw httpError(
-              409,
-              "This Request has already been dispositioned. Attach new paper to a reply in its thread.",
-              {
-                type: REQUEST_DISPOSITIONED_PROBLEM_TYPE,
-                extensions: {
-                  request: { number: held.number },
-                  outcome: held.status,
-                  convertedContract: convertedContract ?? null,
-                },
-              },
-            );
-          }
+          await refuseDispositioned(tx, request.user, held);
           const [existing] = await tx
             .select({ attachments: count() })
             .from(requestAttachments)
@@ -718,6 +686,54 @@ export const requestsRoutes: FastifyPluginAsyncZod = async (app) => {
     const [row] = await (options.lock ? query.for("update") : query);
     if (!row) throw httpError(404, NO_REQUEST);
     return row;
+  }
+
+  /**
+   * The refusal a dispositioned Request answers an upload with (INT-002,
+   * CMT-011). Asked twice: once on a plain read before any byte is
+   * stored, so a Requester who keeps posting to a closed Request does
+   * not write and delete a blob per attempt, and once more under the
+   * row lock, for the disposition that lands between the two.
+   *
+   * The record a conversion made is named under the caller's own
+   * contract reach (DD-014) and never an archived one. The route is the
+   * Requester's, and a Business User reaches no Contract at all, so for
+   * them this is `null` — the same answer the portal read and the staff
+   * disposition refusal give. A refusal must not hand out a reference
+   * the read would withhold.
+   */
+  async function refuseDispositioned(
+    db: Executor,
+    user: AuthenticatedUser,
+    held: Awaited<ReturnType<typeof reachedRequest>>,
+  ): Promise<void> {
+    if (held.status === "new") return;
+    const [convertedContract] =
+      held.convertedContractId === null
+        ? []
+        : await db
+            .select({ number: contracts.number })
+            .from(contracts)
+            .where(
+              and(
+                eq(contracts.id, held.convertedContractId),
+                contractTeamScope(db, user),
+                isNull(contracts.archivedAt),
+              ),
+            )
+            .limit(1);
+    throw httpError(
+      409,
+      "This Request has already been dispositioned. Attach new paper to a reply in its thread.",
+      {
+        type: REQUEST_DISPOSITIONED_PROBLEM_TYPE,
+        extensions: {
+          request: { number: held.number },
+          outcome: held.status,
+          convertedContract: convertedContract ?? null,
+        },
+      },
+    );
   }
 
   /**
