@@ -35,7 +35,6 @@ let idp: OAuth2Server;
 let issuerUrl: string;
 let adminCookies: Record<string, string>;
 
-/** The identity the mock IdP asserts on its next userinfo response. */
 let idpIdentity: { sub: string; email: string; name?: string };
 
 const ALLOWED_DOMAINS = ["acme.example"];
@@ -88,7 +87,6 @@ afterAll(async () => {
   await harness.stop();
 });
 
-/** Registers PROVIDER through the typed admin route. */
 async function registerProvider(
   cookies: Record<string, string>,
   overrides: Record<string, unknown> = {},
@@ -101,7 +99,6 @@ async function registerProvider(
   });
 }
 
-/** The session cookies set by a response, or null if none were. */
 function sessionCookies(res: {
   cookies: { name: string; value: string }[];
 }): Record<string, string> | null {

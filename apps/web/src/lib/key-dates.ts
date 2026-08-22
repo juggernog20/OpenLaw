@@ -75,7 +75,6 @@ export async function readContractKeyDates(contractNumber: number): Promise<Dead
     : { ok: false, detail: problemDetail(error) };
 }
 
-/** Puts a named date on the record (CTR-009). */
 export async function addContractKeyDate(
   contractNumber: number,
   input: KeyDateInput,

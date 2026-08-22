@@ -219,6 +219,56 @@ a long way since, it is worth another pass.
 | `e2e/tests/10-settings.spec.ts` | 2026-08-22 | f12c1c5 | 0 | 0 | 0 | |
 | `apps/api/src/modules/requests/request-detail.ts` | 2026-08-22 | f12c1c5 | 0 | 0 | 0 | |
 | `apps/api/src/modules/notifications/request-mentions.test.ts` | 2026-08-22 | f12c1c5 | 0 | 0 | 0 | |
+| `apps/api/src/modules/request-types/routes.ts` | 2026-08-22 | 3db24ef | 0 | 3 | 0 | |
+| `packages/db/src/schema/signing-connectors.ts` | 2026-08-22 | 3db24ef | 0 | 0 | 0 | |
+| `apps/api/src/lib/activity-emitter.ts` | 2026-08-22 | 3db24ef | 0 | 0 | 0 | |
+| `.github/workflows/ci.yml` | 2026-08-22 | 3db24ef | 0 | 0 | 0 | Protected workflow comments retained. |
+| `apps/web/src/lib/approvals.ts` | 2026-08-22 | 3db24ef | 0 | 2 | 0 | |
+| `apps/api/src/modules/requests/request-detail.test.ts` | 2026-08-22 | 3db24ef | 0 | 0 | 0 | |
+| `apps/web/src/components/contracts/term-timeline-card.tsx` | 2026-08-22 | 3db24ef | 0 | 0 | 0 | |
+| `apps/web/src/components/activity/activity-applet.tsx` | 2026-08-22 | 3db24ef | 0 | 2 | 0 | |
+| `apps/api/src/lib/notifications/preferences.ts` | 2026-08-22 | 3db24ef | 0 | 0 | 0 | |
+| `apps/api/src/modules/auth/sso.test.ts` | 2026-08-22 | 3db24ef | 0 | 3 | 0 | |
+| `apps/api/src/lib/notifications/local-day.ts` | 2026-08-22 | 3db24ef | 0 | 0 | 0 | |
+| `packages/db/src/schema/list-views.ts` | 2026-08-22 | 3db24ef | 0 | 0 | 0 | |
+| `packages/db/src/schema/document-rendition.ts` | 2026-08-22 | 3db24ef | 0 | 0 | 0 | |
+| `apps/web/src/routes/inbox-request-convert.test.tsx` | 2026-08-22 | 3db24ef | 0 | 2 | 0 | |
+| `apps/api/scripts/build-doc-engine-fixtures.ts` | 2026-08-22 | 3db24ef | 0 | 0 | 0 | |
+| `apps/api/src/modules/fields/routes.ts` | 2026-08-22 | 3db24ef | 0 | 0 | 0 | |
+| `apps/api/src/modules/comments/request-thread.test.ts` | 2026-08-22 | 3db24ef | 0 | 1 | 0 | |
+| `apps/web/src/components/shell/record-applets.tsx` | 2026-08-22 | 3db24ef | 0 | 0 | 0 | |
+| `packages/db/src/schema/fields.ts` | 2026-08-22 | 3db24ef | 0 | 0 | 0 | |
+| `packages/db/src/schema/contract-key-dates.ts` | 2026-08-22 | 3db24ef | 0 | 0 | 0 | |
+| `apps/web/src/routes/settings-request-type-editor.test.tsx` | 2026-08-22 | 3db24ef | 0 | 0 | 0 | |
+| `apps/api/src/modules/contract-key-dates/key-dates.test.ts` | 2026-08-22 | 3db24ef | 0 | 4 | 0 | |
+| `apps/web/src/components/contracts/create-contract-dialog.tsx` | 2026-08-22 | 3db24ef | 0 | 0 | 0 | |
+| `apps/api/src/modules/portal/routes.ts` | 2026-08-22 | 3db24ef | 0 | 2 | 0 | |
+| `apps/web/src/routes/contract-record-envelopes.test.tsx` | 2026-08-22 | 3db24ef | 0 | 0 | 0 | |
+| `apps/web/src/routes/contract-record-key-dates.test.tsx` | 2026-08-22 | 3db24ef | 0 | 2 | 0 | |
+| `apps/api/src/modules/requests/request-attachments.test.ts` | 2026-08-22 | 3db24ef | 0 | 0 | 0 | |
+| `e2e/tests/12-m6-demo.spec.ts` | 2026-08-22 | 3db24ef | 0 | 0 | 0 | |
+| `apps/web/src/components/counterparty-picker.tsx` | 2026-08-22 | 3db24ef | 0 | 1 | 0 | |
+| `eslint.config.js` | 2026-08-22 | 3db24ef | 0 | 0 | 0 | Protected linter directives retained. |
+| `apps/api/src/modules/contract-approvals/group-apply.test.ts` | 2026-08-22 | 3db24ef | 0 | 0 | 0 | |
+| `apps/api/src/modules/contract-relations/link-management.test.ts` | 2026-08-22 | 3db24ef | 0 | 0 | 0 | |
+| `apps/web/src/routes/contract-record-routing.test.tsx` | 2026-08-22 | 3db24ef | 0 | 0 | 0 | |
+| `apps/web/src/routes/inbox.tsx` | 2026-08-22 | 3db24ef | 0 | 0 | 0 | |
+| `apps/api/src/modules/contract-approvals/approvals.test.ts` | 2026-08-22 | 3db24ef | 0 | 0 | 0 | |
+| `apps/api/src/modules/contracts/end-of-life.test.ts` | 2026-08-22 | 3db24ef | 0 | 0 | 0 | |
+| `apps/api/src/testing/fixtures/email.ts` | 2026-08-22 | 3db24ef | 0 | 0 | 0 | |
+| `apps/api/src/modules/requests/resolve.ts` | 2026-08-22 | 3db24ef | 0 | 0 | 0 | |
+| `apps/api/src/modules/contract-statuses/routes.ts` | 2026-08-22 | 3db24ef | 0 | 0 | 0 | |
+| `apps/web/src/components/contracts/team-applet.tsx` | 2026-08-22 | 3db24ef | 0 | 0 | 0 | |
+| `apps/api/src/modules/contract-relations/relations.test.ts` | 2026-08-22 | 3db24ef | 0 | 2 | 0 | |
+| `apps/api/src/lib/email/parse.test.ts` | 2026-08-22 | 3db24ef | 0 | 0 | 0 | |
+| `apps/api/src/migration-journal.test.ts` | 2026-08-22 | 3db24ef | 0 | 0 | 0 | |
+| `apps/api/src/pipeline/derivations.ts` | 2026-08-22 | 3db24ef | 0 | 0 | 0 | |
+| `packages/db/src/schema/contract-relations.ts` | 2026-08-22 | 3db24ef | 0 | 0 | 0 | |
+| `apps/api/src/modules/requests/resolve.test.ts` | 2026-08-22 | 3db24ef | 0 | 3 | 0 | |
+| `apps/api/src/modules/contracts/sorting.test.ts` | 2026-08-22 | 3db24ef | 0 | 2 | 0 | |
+| `apps/web/src/routes/contract-record-soft-gate.test.tsx` | 2026-08-22 | 3db24ef | 0 | 0 | 0 | |
+| `apps/web/src/lib/key-dates.ts` | 2026-08-22 | 3db24ef | 0 | 1 | 0 | |
+| `packages/db/src/schema/org.ts` | 2026-08-22 | 3db24ef | 0 | 0 | 0 | |
 
 ## Skipped
 

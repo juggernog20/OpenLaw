@@ -110,9 +110,7 @@ function ActivityFeed({
   confidential = false,
 }: Readonly<ActivityAppletOptions>) {
   const intl = useIntl();
-  /** null until the first page answers. */
   const [entries, setEntries] = useState<ActivityEntry[] | null>(null);
-  /** Where the next page starts, or null at the end of the feed. */
   const [cursor, setCursor] = useState<string | null>(null);
   const [loadFailed, setLoadFailed] = useState(false);
   const [busy, setBusy] = useState(false);

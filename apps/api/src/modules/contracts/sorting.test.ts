@@ -48,7 +48,6 @@ let harness: TestHarness;
 let memberCookies: Record<string, string>;
 let ndaTypeId = "";
 
-/** Every contract this file made, in creation order. */
 const made: { id: string; number: number; title: string }[] = [];
 
 interface ListAnswer {
@@ -115,7 +114,6 @@ afterAll(async () => {
   await harness.stop();
 });
 
-/** One page of the list, under one sort. */
 async function page(
   query: Record<string, string>,
   cursor: string | null = null,

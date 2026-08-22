@@ -36,7 +36,6 @@ import { cn } from "../lib/utils";
  * takes, so nothing has to translate between them. */
 export type CounterpartyPick = { counterpartyId: string } | { name: string };
 
-/** One search answer, as the shared read gives it. */
 interface CounterpartyOption {
   id: string;
   name: string;
