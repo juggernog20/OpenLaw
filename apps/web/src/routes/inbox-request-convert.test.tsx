@@ -25,13 +25,14 @@ import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { REQUEST_DISPOSITIONED_PROBLEM_TYPE } from "@openlaw/shared";
 import { json, problem, renderAt, stubApi, type StubCall } from "../testing/helpers";
-
-const MEMBER = {
-  id: "u2",
-  email: "member@example.com",
-  displayName: "Nadia Counsel",
-  role: "legal_team_member",
-};
+import {
+  dispositionApi,
+  MEMBER,
+  openDisposition,
+  staffDetail,
+  staffRequest,
+  subbar,
+} from "../testing/disposition";
 
 /** One attached catalog field, in the shape both the request form and a
  * contract type answer it in. */
@@ -65,103 +66,61 @@ const CONTRACT_TYPES = [
   { id: "ct-msa", slug: "msa", displayName: "MSA", fields: [COUNTERPARTY, GOVERNING_LAW] },
 ];
 
-/** The Request the screen opens on, in whichever state a test needs. */
-function request(overrides: Record<string, unknown> = {}): Record<string, unknown> {
-  return {
-    id: "r1",
-    number: 45,
-    status: "new",
+/** The Request the screen opens on: a Request whose form collected two
+ * values, one of which the NDA type has no field for. */
+const request = (overrides: Record<string, unknown> = {}) =>
+  staffRequest({
     summary: "Northwind Labs mutual NDA",
     description: "Small vendor, standard terms.",
-    urgency: "high",
     customFields: { counterparty: "Northwind Labs", deal_desk_region: "EMEA" },
-    declinedReason: null,
-    createdAt: "2026-08-20T09:14:00.000Z",
-    requestType: {
-      id: "rt-nda",
-      displayName: "NDA request",
-      targetModule: "contract",
-      targetTypeId: "ct-nda",
-      targetTypeName: "NDA",
-    },
-    requester: { id: "u7", displayName: "Tom Iwu", email: "tom.iwu@acme.com", image: null },
-    convertedContract: null,
     ...overrides,
-  };
-}
+  });
 
 /** The whole detail read, around one Request. The form collected both
  * values, so both are labelled here. */
-const detail = (row: Record<string, unknown>) => ({
-  request: row,
-  fields: [COUNTERPARTY, DEAL_DESK],
-  customFieldRefs: { users: [], entities: [] },
-  attachments: [],
-});
+const detail = (row: Record<string, unknown>) => staffDetail(row, [COUNTERPARTY, DEAL_DESK]);
 
 /**
- * The Request seam behind the screen, stateful the way the API is: the
- * conversion answers the envelope it wrote and the next read answers it
- * too, so the page's re-read shows the record rather than the state it
- * opened on.
+ * The Request seam behind the screen, with Convert's own outcome on it
+ * and the live contract taxonomy the dialog draws from. Everything
+ * else — the detail read, the thread, the counters — is the shared
+ * scaffold's.
  */
 function requestApi(
   initial = request(),
   answer: (call: StubCall) => Response | undefined = () => undefined,
 ) {
-  let row = initial;
-  const conversions: unknown[] = [];
-  let reads = 0;
-  const handler = (call: StubCall): Response | undefined => {
-    if (call.url.pathname === "/api/v1/requests/45/convert" && call.method === "POST") {
-      conversions.push(call.body);
-      const refusal = answer(call);
-      if (refusal) return refusal;
-      row = { ...row, status: "converted", convertedContract: { number: 51 } };
-      return json(200, { request: row });
-    }
-    if (/^\/api\/v1\/requests\/\d+$/.test(call.url.pathname) && call.method === "GET") {
-      reads += 1;
-      return json(200, detail(row));
-    }
-    if (call.url.pathname === "/api/v1/contracts/options" && call.method === "GET") {
-      return json(200, {
-        contractTypes: CONTRACT_TYPES,
-        contractStatuses: [],
-        users: [],
-        approverGroups: [],
-      });
-    }
-    // The thread the page mounts beside the Request. It is not this
-    // suite's subject, so it answers empty.
-    if (call.url.pathname === "/api/v1/comments" && call.method === "GET") {
-      return json(200, { comments: [], nextCursor: null });
-    }
-    if (call.url.pathname === "/api/v1/comments/unread" && call.method === "GET") {
-      return json(200, { unread: 0 });
-    }
-    return undefined;
-  };
+  const api = dispositionApi({
+    segment: "convert",
+    initial,
+    answer,
+    detail,
+    applied: (row) => ({ ...row, status: "converted", convertedContract: { number: 51 } }),
+    // The taxonomy read is on the page's loader for every suite, and
+    // the shared scaffold lets `stubApi`'s empty default answer it.
+    // Convert is the one that needs rows in it.
+    extra: (call) =>
+      call.url.pathname === "/api/v1/contracts/options" && call.method === "GET"
+        ? json(200, {
+            contractTypes: CONTRACT_TYPES,
+            contractStatuses: [],
+            users: [],
+            approverGroups: [],
+          })
+        : undefined,
+  });
   return {
-    handler,
-    conversions,
+    handler: api.handler,
+    conversions: api.sent,
     get reads() {
-      return reads;
+      return api.reads;
     },
   };
 }
 
-/** The sub-bar, which is where the disposition lives. */
-async function subbar() {
-  const heading = await screen.findByRole("heading", { level: 1 });
-  return heading.closest("section")!;
-}
-
 /** Opens the Convert dialog from the sub-bar and answers it. */
-async function openConvert(user: ReturnType<typeof userEvent.setup>) {
-  await user.click(within(await subbar()).getByRole("button", { name: "Convert to contract" }));
-  return screen.findByRole("dialog");
-}
+const openConvert = (user: ReturnType<typeof userEvent.setup>) =>
+  openDisposition(user, "Convert to contract");
 
 /** Renders the detail with one Request seam behind it. */
 function open(api: ReturnType<typeof requestApi>) {
