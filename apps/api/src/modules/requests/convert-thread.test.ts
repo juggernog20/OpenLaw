@@ -415,9 +415,9 @@ describe("the rows move with the work (CMT-001)", () => {
   it("says nothing about a conversation that was never had", async () => {
     const request = await submit("Nothing was said on this one");
     await convert(request);
-    expect(
-      (await entriesOn("request", request.id)).map((row) => row.action),
-    ).not.toContain("request.thread_moved");
+    expect((await entriesOn("request", request.id)).map((row) => row.action)).not.toContain(
+      "request.thread_moved",
+    );
   });
 
   it("leaves a never-converted Request a comment target", async () => {
@@ -661,14 +661,18 @@ describe("the reply promise follows the thread (NOT-002 group 5)", () => {
       method: "POST",
       url: "/api/v1/contracts",
       cookies: as(MEMBER),
-      payload: { title: "An ordinary contract nobody asked for", contractTypeId: plainContractTypeId },
+      payload: {
+        title: "An ordinary contract nobody asked for",
+        contractTypeId: plainContractTypeId,
+      },
     });
     expect(created.statusCode, created.body).toBe(201);
     const contractId = created.json().contract.id as string;
     const commentId = await say(MEMBER, { entityType: "contract", entityId: contractId }, "Hello.");
     expect(
-      (await harness.db.select().from(notifications).where(eq(notifications.entityType, "request")))
-        .filter((row) => row.payload.commentId === commentId),
+      (
+        await harness.db.select().from(notifications).where(eq(notifications.entityType, "request"))
+      ).filter((row) => row.payload.commentId === commentId),
     ).toEqual([]);
   });
 });

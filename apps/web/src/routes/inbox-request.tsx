@@ -82,6 +82,14 @@
  *    #419), but the activity read still has only a `contract` arm — an
  *    applet that opened on a refusal is worse than an absent one, so the
  *    slot waits for the read.
+ *
+ * **On a converted Request the applet is the record's thread** (CMT-001,
+ * #422). The conversation moved onto the contract at the conversion and
+ * the `request` audience arm follows the back-link, so this screen keeps
+ * mounting the applet on the Request's own id and is answered the
+ * record's rows — which is what "legal answers in exactly one place"
+ * means from the triager's chair. A reply typed here and a reply typed
+ * on the contract land in the same thread.
  */
 
 import { useState } from "react";
