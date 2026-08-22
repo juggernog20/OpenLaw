@@ -330,7 +330,17 @@ const requestArm: CommentEntityArm = {
       })
       .from(requests)
       .where(and(eq(requests.id, entityId), isNull(requests.archivedAt)))
-      .limit(1);
+      .limit(1)
+      // Held in share mode, so a write on this thread serializes with a
+      // conversion (#422). The conversion holds this row FOR UPDATE
+      // while it moves the rows. Without a lock here, a post could
+      // resolve the Request's pair just before the move commits and
+      // insert just after it, stranding a comment on a pair no address
+      // answers any more. Under this lock the post either commits first
+      // and the move carries its row, or waits and is answered the
+      // record's pair. A plain read takes the lock for one statement
+      // and gives it straight back.
+      .for("share");
     if (!record) return null;
     const staff = MEMBER_PLUS.includes(user.role);
     const requester = record.requesterId === user.id;

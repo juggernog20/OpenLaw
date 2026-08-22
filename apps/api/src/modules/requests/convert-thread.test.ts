@@ -38,6 +38,7 @@ import {
   users,
   type CommentVisibility,
 } from "@openlaw/db";
+import type { AuthenticatedUser } from "../../auth/guards.js";
 import { provisionUser } from "../../auth/instance.js";
 import {
   signInCookies as harnessSignInCookies,
@@ -45,6 +46,8 @@ import {
   TEST_ADMIN as ADMIN,
   type TestHarness,
 } from "../../testing/harness.js";
+import { commentAudience } from "../comments/audience.js";
+import { postComment } from "../comments/post.js";
 
 const REQUESTER = {
   email: "tom.iwu@acme.com",
@@ -419,6 +422,71 @@ describe("the rows move with the work (CMT-001)", () => {
     expect((await entriesOn("request", request.id)).map((row) => row.action)).not.toContain(
       "request.thread_moved",
     );
+  });
+
+  it("carries a comment that raced the conversion rather than stranding it", async () => {
+    // The one interleaving HTTP cannot choreograph, so this case plays
+    // the post route's own steps by hand: resolve the audience, hold the
+    // transaction open while the conversion arrives, then insert. The
+    // `request` arm's resolve holds the Request's row in share mode, and
+    // the conversion takes it FOR UPDATE. So the conversion waits at the
+    // door until this post commits, and the move carries the fresh row.
+    // Without that lock the resolve would answer the Request's pair, the
+    // conversion would move the thread underneath it, and the insert
+    // would strand a comment on a pair no address answers again.
+    const request = await submit("Posted while the triager converts");
+    const memberUser: AuthenticatedUser = {
+      id: idOf(MEMBER),
+      email: MEMBER.email,
+      displayName: MEMBER.displayName,
+      role: "legal_team_member",
+      theme: "light",
+      timezone: null,
+    };
+
+    const pressConvert = () =>
+      harness.app.inject({
+        method: "POST",
+        url: `/api/v1/requests/${request.number}/convert`,
+        cookies: as(MEMBER),
+        payload: { title: "Raced NDA" },
+      });
+
+    let raced!: string;
+    let converting!: ReturnType<typeof pressConvert>;
+    await harness.notifier.notifying(async (tx) => {
+      const audience = await commentAudience(tx, memberUser, requestRef(request));
+      expect(audience?.entityType).toBe("request");
+      // The conversion arrives while this transaction holds the thread.
+      // It blocks on the Request's row until the commit below, which the
+      // pause gives it time to demonstrate.
+      converting = pressConvert();
+      await new Promise((wait) => setTimeout(wait, 200));
+      raced = await postComment(tx, harness.notifier, {
+        audience: audience!,
+        author: memberUser,
+        body: "Landed mid-conversion.",
+        visibility: "full_thread",
+      });
+    });
+
+    const res = await converting;
+    expect(res.statusCode, res.body).toBe(200);
+    const contractNumber = res.json().request.convertedContract.number as number;
+    const record = await harness.app.inject({
+      method: "GET",
+      url: `/api/v1/contracts/${contractNumber}`,
+      cookies: as(MEMBER),
+    });
+    expect(record.statusCode, record.body).toBe(200);
+    const contractId = record.json().contract.id as string;
+
+    // Nothing stranded: the racing comment is on the record beside the
+    // work, and the Request's pair holds nothing.
+    expect(await rowsOn("request", request.id)).toEqual([]);
+    expect(await rowsOn("contract", contractId)).toEqual([
+      { id: raced, body: "Landed mid-conversion.", visibility: "full_thread" },
+    ]);
   });
 
   it("leaves a never-converted Request a comment target", async () => {

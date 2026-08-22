@@ -84,7 +84,12 @@ export interface ThreadMove {
  *
  * Runs under the Request's row lock, which the disposition already holds
  * — the conversation this moves is the conversation the Request held
- * when it was held.
+ * when it was held. The other half of that sentence is the `request`
+ * audience arm's: every thread write resolves through it, and its
+ * resolve holds the same row in share mode. A comment racing this
+ * conversion therefore lands before the move and is carried by it, or
+ * waits and is answered the record's pair — never a row left on a pair
+ * nothing reads again.
  *
  * **A Request with nothing said on it narrates nothing.** An empty
  * thread is an ordinary state of a complete Request (INT-002), and a
