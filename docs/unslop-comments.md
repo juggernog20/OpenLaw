@@ -169,6 +169,57 @@ a long way since, it is worth another pass.
 | `apps/api/src/modules/requests/convert.test.ts`                   | 2026-08-22 | 2efa1e0 | 0      | 0       | 0     |                                                      |
 | `apps/web/src/components/documents/email-preview.tsx`             | 2026-08-22 | 2efa1e0 | 0      | 0       | 0     |                                                      |
 
+| `apps/api/src/index.ts` | 2026-08-22 | f12c1c5 | 0 | 0 | 0 | |
+| `apps/web/src/components/stage-pipeline.tsx` | 2026-08-22 | f12c1c5 | 0 | 0 | 0 | |
+| `apps/web/src/testing/helpers.tsx` | 2026-08-22 | f12c1c5 | 0 | 0 | 0 | |
+| `apps/api/src/lib/activity.ts` | 2026-08-22 | f12c1c5 | 0 | 0 | 0 | |
+| `apps/api/src/modules/notifications/preferences.test.ts` | 2026-08-22 | f12c1c5 | 0 | 5 | 0 | |
+| `apps/web/src/router.tsx` | 2026-08-22 | f12c1c5 | 0 | 0 | 0 | |
+| `apps/api/src/lib/storage/s3.ts` | 2026-08-22 | f12c1c5 | 0 | 0 | 0 | |
+| `apps/api/src/modules/contract-envelopes/void.test.ts` | 2026-08-22 | f12c1c5 | 0 | 0 | 0 | |
+| `apps/api/src/modules/documents/document-batch.test.ts` | 2026-08-22 | f12c1c5 | 0 | 0 | 0 | |
+| `apps/web/src/routes/settings-reminders.tsx` | 2026-08-22 | f12c1c5 | 0 | 0 | 0 | |
+| `apps/web/src/lib/activity.test.ts` | 2026-08-22 | f12c1c5 | 21 | 0 | 0 | |
+| `apps/api/src/lib/signing/resolver.ts` | 2026-08-22 | f12c1c5 | 0 | 0 | 0 | |
+| `apps/api/src/modules/contracts/renewal.test.ts` | 2026-08-22 | f12c1c5 | 0 | 0 | 0 | |
+| `apps/api/src/modules/audit-log/audit-log.test.ts` | 2026-08-22 | f12c1c5 | 0 | 0 | 0 | |
+| `apps/api/src/lib/storage/adapter.ts` | 2026-08-22 | f12c1c5 | 0 | 0 | 0 | |
+| `apps/api/src/lib/signing/fake.ts` | 2026-08-22 | f12c1c5 | 1 | 0 | 0 | |
+| `packages/db/src/rewrap.ts` | 2026-08-22 | f12c1c5 | 0 | 0 | 0 | |
+| `packages/db/src/schema/requests.ts` | 2026-08-22 | f12c1c5 | 0 | 0 | 0 | |
+| `apps/web/src/components/list-editor.tsx` | 2026-08-22 | f12c1c5 | 0 | 0 | 0 | |
+| `apps/api/src/modules/intake-links/routes.ts` | 2026-08-22 | f12c1c5 | 0 | 0 | 0 | |
+| `apps/api/src/modules/signing-webhook/webhook.test.ts` | 2026-08-22 | f12c1c5 | 0 | 0 | 0 | |
+| `apps/web/src/components/contracts/link-dialog.tsx` | 2026-08-22 | f12c1c5 | 0 | 6 | 0 | |
+| `apps/web/src/routes/settings.tsx` | 2026-08-22 | f12c1c5 | 0 | 0 | 0 | |
+| `services/doc-engine/src/server.ts` | 2026-08-22 | f12c1c5 | 0 | 0 | 0 | |
+| `apps/api/src/modules/request-types/form-definition.ts` | 2026-08-22 | f12c1c5 | 0 | 0 | 0 | |
+| `apps/api/src/lib/document-versions.ts` | 2026-08-22 | f12c1c5 | 0 | 0 | 0 | |
+| `apps/api/src/testing/deps.ts` | 2026-08-22 | f12c1c5 | 0 | 0 | 0 | |
+| `apps/web/src/routes/contract-record-renewal.test.tsx` | 2026-08-22 | f12c1c5 | 0 | 0 | 0 | |
+| `packages/db/src/schema/document-folders.ts` | 2026-08-22 | f12c1c5 | 0 | 0 | 0 | |
+| `apps/api/src/modules/contract-tasks/routes.ts` | 2026-08-22 | f12c1c5 | 0 | 12 | 0 | |
+| `apps/api/src/lib/storage/local.ts` | 2026-08-22 | f12c1c5 | 0 | 0 | 0 | |
+| `apps/api/src/lib/notifications/offsets.ts` | 2026-08-22 | f12c1c5 | 0 | 0 | 0 | |
+| `apps/api/src/modules/approver-groups/routes.ts` | 2026-08-22 | f12c1c5 | 0 | 0 | 0 | |
+| `packages/db/src/schema/contract-approvals.ts` | 2026-08-22 | f12c1c5 | 0 | 0 | 0 | |
+| `apps/api/src/modules/activity/activity.test.ts` | 2026-08-22 | f12c1c5 | 0 | 0 | 0 | |
+| `apps/api/src/modules/documents/document-preview.test.ts` | 2026-08-22 | f12c1c5 | 0 | 0 | 0 | |
+| `apps/api/src/lib/taxonomy-extras.test.ts` | 2026-08-22 | f12c1c5 | 0 | 0 | 0 | |
+| `apps/web/src/components/contracts/confirm-renewal-dialog.tsx` | 2026-08-22 | f12c1c5 | 0 | 0 | 0 | |
+| `apps/api/src/account-issuer-migration.test.ts` | 2026-08-22 | f12c1c5 | 0 | 0 | 0 | |
+| `apps/web/src/lib/envelopes.ts` | 2026-08-22 | f12c1c5 | 0 | 0 | 0 | |
+| `packages/db/src/schema/document-text.ts` | 2026-08-22 | f12c1c5 | 0 | 0 | 0 | |
+| `apps/api/src/modules/requests/requests.test.ts` | 2026-08-22 | f12c1c5 | 0 | 0 | 0 | |
+| `apps/web/src/components/notification-bell.test.tsx` | 2026-08-22 | f12c1c5 | 0 | 0 | 0 | |
+| `apps/web/src/routes/settings-audit-log.test.tsx` | 2026-08-22 | f12c1c5 | 0 | 0 | 0 | |
+| `apps/api/src/modules/notifications/new-requests.test.ts` | 2026-08-22 | f12c1c5 | 0 | 0 | 0 | |
+| `apps/api/src/lib/soft-gate.ts` | 2026-08-22 | f12c1c5 | 0 | 0 | 0 | |
+| `apps/api/src/lib/problem.ts` | 2026-08-22 | f12c1c5 | 0 | 0 | 0 | |
+| `e2e/tests/10-settings.spec.ts` | 2026-08-22 | f12c1c5 | 0 | 0 | 0 | |
+| `apps/api/src/modules/requests/request-detail.ts` | 2026-08-22 | f12c1c5 | 0 | 0 | 0 | |
+| `apps/api/src/modules/notifications/request-mentions.test.ts` | 2026-08-22 | f12c1c5 | 0 | 0 | 0 | |
+
 ## Skipped
 
 Files this sweep will never offer, and why.

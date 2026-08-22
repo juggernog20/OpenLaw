@@ -148,9 +148,7 @@ function refusalMessage(type: string | undefined, mode: "link" | "parent") {
   }
 }
 
-// ---------------------------------------------------------------------------
 // Nudge dialog (CTR-018)
-// ---------------------------------------------------------------------------
 
 function ConfidentialityNudge({
   thisNumber,
@@ -203,9 +201,7 @@ function ConfidentialityNudge({
   );
 }
 
-// ---------------------------------------------------------------------------
 // Picker
-// ---------------------------------------------------------------------------
 
 function CandidatePicker({
   contractNumber,
@@ -435,9 +431,7 @@ function CandidatePicker({
   );
 }
 
-// ---------------------------------------------------------------------------
 // Dialog
-// ---------------------------------------------------------------------------
 
 export function LinkDialog({
   contractNumber,
