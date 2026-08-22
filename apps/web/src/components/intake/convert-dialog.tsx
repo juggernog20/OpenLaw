@@ -558,7 +558,9 @@ export function ConvertDialog({
             {/* The target type's hard-required fields, grown into the
                 dialog the moment there is a target (CTR-016/MTR-014). A
                 record cannot be born missing what its type demands, and
-                this is where somebody can answer it. */}
+                this is where somebody can answer it. An archived carry
+                draws the same box (#437): the seam refuses the dead id,
+                so a live replacement is work Convert needs too. */}
             {repairs.map((field) => (
               <div key={field.slug} className="flex flex-col gap-1.5">
                 <Label id={`convert-${field.slug}-label`} htmlFor={`convert-${field.slug}`}>
