@@ -336,6 +336,21 @@ export const requestsRoutes: FastifyPluginAsyncZod = async (app) => {
           actorId: request.user.id,
           actorName: request.user.displayName,
         });
+        // The arrival (INT-006, NOT-002 group 4), which is the same act
+        // told to the other side: every live Member+ hears that
+        // something is waiting, bell on and email opt-in. Two events
+        // rather than one, because the staff side and the requester side
+        // are two sentences to two audiences with two defaults — and the
+        // audience, the actor exclusion, the preferences, and the
+        // after-commit wake-up are all the seam's, so this route still
+        // names what happened and nothing else.
+        await app.notifier.requestSubmitted(tx, {
+          requestId: row!.id,
+          actorId: request.user.id,
+          actorName: request.user.displayName,
+          requestType: requestType.displayName,
+          urgency: row!.urgency,
+        });
         return row!;
       });
 

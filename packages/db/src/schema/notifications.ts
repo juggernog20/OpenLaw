@@ -51,10 +51,10 @@ import { uuidPk } from "./helpers.js";
  * follow interruptiveness and code branches on which group an event is
  * in, so a renameable label could not carry it.
  *
- * Group 4 is a **slot**. Its first events belong to the Inbox (M21); the
- * group shipped ahead of them so that milestone adds events rather than
- * machinery. Group 5 was the same until M20/8, which named its four
- * events below — the machinery it added was none.
+ * Group 4 was a **slot** until M21/4. It shipped ahead of its first
+ * event so that the Inbox would add an event rather than machinery, and
+ * `request.submitted` below is what it added. Group 5 was the same until
+ * M20/8, which named its four events.
  */
 export const NOTIFICATION_EVENT_GROUPS = [
   /** Things done *to* you: an assignment, an approval request, a mention. */
@@ -63,7 +63,7 @@ export const NOTIFICATION_EVENT_GROUPS = [
   "activity_on_your_records",
   /** Tracked dates arriving, at the NOT-004 offsets. */
   "dates_approaching",
-  /** Inbox arrivals (INT-006) — the slot; M21 fires it. */
+  /** Inbox arrivals (INT-006) — `request.submitted`, from M21/4. */
   "new_requests",
   /** The portal audience's own events (INT-001/003/006). */
   "requester_events",
@@ -106,6 +106,14 @@ export const NOTIFICATION_EVENT_TYPES = [
   "date.key_date_approaching",
   "date.notice_deadline_approaching",
   "date.expiry_approaching",
+  // Group 4 — new requests (INT-006).
+  /**
+   * A Request reached the Inbox — the staff side of a submission
+   * (INT-006). Its twin one line down is the same act told to the
+   * Requester, and the two are separate slugs because they are separate
+   * sentences to separate audiences on separate bells.
+   */
+  "request.submitted",
   // Group 5 — the portal audience's own events (INT-001/003/006).
   /** A Request was submitted — the Requester's receipt (INT-001). */
   "request.created",

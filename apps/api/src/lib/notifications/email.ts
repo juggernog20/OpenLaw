@@ -18,8 +18,11 @@
  * **There is one register and two surfaces** (NOT-001). A staff message
  * links to the record in the application; a requester's message links to
  * the Request in the portal. Which of the two a message is, is read from
- * the record it carries and from nothing else — the arms are split so
- * that one file still holds how an OpenLaw email is laid out.
+ * the record it carries and — for a Request, which is read from both
+ * sides — from the event's group: group 4 is the Inbox's own arrival and
+ * addresses the staff detail (INT-006), group 5 is the Requester's and
+ * addresses the portal (DD-013). The arms are split so that one file
+ * still holds how an OpenLaw email is laid out.
  *
  * **The copy is authored here in English, not in the message catalog.**
  * That is the API's own convention (DES-013 puts the catalog in the web
@@ -33,9 +36,10 @@
  * copies of the wording in the same file.
  */
 
-import type { NotificationEventType, RequestStatus } from "@openlaw/db";
+import type { NotificationEventType, RequestStatus, SeverityLevel } from "@openlaw/db";
 import type { MailMessage } from "../mailer.js";
 import { civilInstant } from "../contract-term.js";
+import { isInboxEvent } from "./catalog.js";
 
 /**
  * The record a notification is about, and how it names and addresses
@@ -105,6 +109,17 @@ function portalRequestLink(baseUrl: string, requestNumber: number): string {
   return `${origin(baseUrl)}/portal/requests/${requestNumber}`;
 }
 
+/**
+ * The deep link a group-4 message points at: the Request in the Inbox.
+ *
+ * The staff application's own address (#414), not the portal's, because
+ * the reader is a triager. One act writes two messages about one
+ * Request, and each of them points at the surface its reader works on.
+ */
+function inboxRequestLink(baseUrl: string, requestNumber: number): string {
+  return `${origin(baseUrl)}/inbox/${requestNumber}`;
+}
+
 /** R-###, INT-002's reference — what a requester quotes and what the
  * subject line names the Request by. */
 function requestReference(requestNumber: number): string {
@@ -143,9 +158,79 @@ export function renderNotificationMail(
   baseUrl: string,
 ): MailMessage | null {
   const { record } = notification;
-  return record.entityType === "contract"
-    ? contractMail(notification, record, to, baseUrl)
+  if (record.entityType === "contract") return contractMail(notification, record, to, baseUrl);
+  // A Request is read from two sides, so the group is what says which
+  // message this is. The record alone cannot: both audiences hold rows
+  // about the same Request, and one of them is staff.
+  return isInboxEvent(notification.eventType)
+    ? inboxMail(notification, record, to, baseUrl)
     : requestMail(notification, record, to, baseUrl);
+}
+
+/**
+ * The Inbox's message: NOT-002's group 4, and the staff side of a
+ * submission (INT-006).
+ *
+ * **Opt-in, so the copy can be short.** Nobody receives one without
+ * having asked for it, and the queue is already the surface — this is
+ * for the Member+ who wants the arrival to reach them wherever they are.
+ * It names the two facts a triager weighs before opening anything, the
+ * request type and the urgency, and then gets out of the way.
+ *
+ * **The register is DES-051's**, like every other message here.
+ */
+function inboxMail(
+  notification: NotificationMail,
+  record: Extract<MailRecord, { entityType: "request" }>,
+  to: string,
+  baseUrl: string,
+): MailMessage | null {
+  if (notification.eventType !== "request.submitted") return null;
+  const named = `${requestReference(record.number)} · ${record.summary}`;
+  const who = notification.actorName ?? "Somebody";
+  const requestType = detail(notification, "requestType");
+  const urgency = urgencyWord(detail(notification, "urgency"));
+  return {
+    to,
+    subject: `New request: ${named}`,
+    text: [
+      `Hello ${notification.recipientName},`,
+      "",
+      `${who} submitted a new request: ${named}.`,
+      // Both lines are conditional for the payload's own reason: the row
+      // is a snapshot taken by whichever build wrote it, and a label
+      // reading "Type: undefined" is worse than no label.
+      ...(requestType || urgency ? [""] : []),
+      ...(requestType ? [`Type: ${requestType}`] : []),
+      ...(urgency ? [`Urgency: ${urgency}`] : []),
+      "",
+      inboxRequestLink(baseUrl, record.number),
+      "",
+      "The Inbox has everything they sent, and the request is yours to triage from there.",
+    ].join("\n"),
+  };
+}
+
+/**
+ * What each urgency level is called in a message (INT-002).
+ *
+ * Keyed by the severity union, so a level added to the scale stops
+ * compiling here until somebody has decided what it is called. Written
+ * out rather than capitalised from the slug, because the words are copy
+ * and a slug is a key.
+ */
+const URGENCY_WORDS: Record<SeverityLevel, string> = {
+  low: "Low",
+  medium: "Medium",
+  high: "High",
+  critical: "Critical",
+};
+
+/** One payload urgency as the word a line uses, or null — the status
+ * word's own defensive read, one field over. */
+function urgencyWord(urgency: string | null): string | null {
+  if (urgency === null) return null;
+  return Object.hasOwn(URGENCY_WORDS, urgency) ? URGENCY_WORDS[urgency as SeverityLevel] : null;
 }
 
 /**

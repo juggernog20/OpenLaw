@@ -23,9 +23,11 @@
  * M20/9). The portal bell reads them over HTTP at
  * `/portal/notifications`, and what it pins is the split NOT-001 asks
  * for: the portal bell answers a person's own Requests, the staff
- * notification centre answers contracts, and neither one can read — or
- * mark read — the other's rows. A Member+ who submits a Request of their
- * own is the case that proves the split is by surface and not by role.
+ * notification centre answers contracts and the Inbox's own arrivals,
+ * and neither one can read — or mark read — the other's rows. A Member+
+ * who submits a Request of their own is the case that proves the split
+ * is by audience and not by role or by table: from M21/4 they hold a
+ * row of each kind about one Request, and each stays on its own bell.
  *
  * What it pins is the four events and the three rules that shape them:
  *
@@ -42,6 +44,10 @@
  * itself, because there is no route to press. That is what "the catalog is
  * complete before the Inbox lands" has to mean: the copy exists, the rows
  * are written, and M21 adds a call rather than a mechanism.
+ *
+ * **Group 4 is not this suite's**, and its arrival now rides beside every
+ * submission here. `new-requests.test.ts` pins it; what this file does is
+ * say which rows it is talking about wherever the two groups meet.
  */
 
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
@@ -203,6 +209,20 @@ const rowsAbout = async (
     (row) => row.entityType === "request" && row.entityId === request.id,
   );
 
+/**
+ * The **group-5** rows one person holds about one Request.
+ *
+ * A Member+ holds group-4 rows about the same Requests from M21/4 — the
+ * Inbox's own arrivals, which are their staff work and not their asks —
+ * so a claim about who the requester's events reached has to say which
+ * group it is talking about. Group 4 is `new-requests.test.ts`'s.
+ */
+const requesterRowsAbout = async (
+  fixture: { email: string },
+  request: RequestRow,
+): Promise<Notification[]> =>
+  (await rowsAbout(fixture, request)).filter((row) => row.eventType !== "request.submitted");
+
 /** How long the email is given before the suite calls the queue stuck.
  * The mailer is a capture, so this is slack for pg-boss, not for SMTP. */
 const SETTLE_TIMEOUT_MS = 20_000;
@@ -272,9 +292,13 @@ describe("submitting a Request (INT-001)", () => {
     expect(message.text).toContain(REQUESTER.displayName);
   });
 
-  it("tells nobody else, including the staff who will triage it", async () => {
+  it("sends the receipt to nobody but the requester", async () => {
     const request = await submit(REQUESTER, "Review the Contoso NDA");
-    expect(await rowsAbout(STAFF, request)).toEqual([]);
+    // Staff hear that something arrived — that is group 4, the Inbox's
+    // own group, and it is a different sentence with different defaults
+    // (INT-006). What they never get is the requester's receipt, and
+    // group 4's email is opt-in, so nothing leaves for them here.
+    expect(await requesterRowsAbout(STAFF, request)).toEqual([]);
     expect(mailAbout(STAFF, request)).toEqual([]);
   });
 
@@ -307,7 +331,7 @@ describe("a reply on the thread (INT-007)", () => {
 
     // The actor exclusion, from the other end: the person who wrote it
     // hears nothing about having written it.
-    expect(await rowsAbout(STAFF, request)).toEqual([]);
+    expect(await requesterRowsAbout(STAFF, request)).toEqual([]);
     expect(mailAbout(STAFF, request)).toEqual([]);
   });
 
@@ -330,9 +354,13 @@ describe("a reply on the thread (INT-007)", () => {
     await reply(REQUESTER, request, "Adding the counterparty's redline.");
 
     expect(await rowsAbout(REQUESTER, request)).toHaveLength(before);
-    // And it does not reach staff either: what tells the staff side that
-    // a Request wants attention is group 4, the Inbox's own group.
-    expect(await rowsAbout(STAFF, request)).toEqual([]);
+    // And it does not reach staff either. What tells the staff side that
+    // a Request wants attention is group 4, the Inbox's own group, and
+    // the arrival already fired at submission — a reply adds nothing to
+    // it.
+    expect((await rowsAbout(STAFF, request)).map((row) => row.eventType)).toEqual([
+      "request.submitted",
+    ]);
   });
 });
 
@@ -520,7 +548,9 @@ describe("the portal bell (NOT-001, NOT-005, M20/9)", () => {
 
     const staffCentre = await bellItems(STAFF, "staff");
     expect(staffCentre.some((item) => item.entityId === request.id)).toBe(false);
-    expect(staffCentre.every((item) => item.entityType === "contract")).toBe(true);
+    // The staff centre draws contracts and the Inbox's arrivals; a
+    // group-5 item is not on that surface at all, whoever holds it.
+    expect(staffCentre.every((item) => item.eventType !== "request.created")).toBe(true);
 
     const portal = await bellItems(STAFF, "portal");
     expect(portal.some((item) => item.entityId === request.id)).toBe(true);

@@ -45,10 +45,11 @@ export async function settingsNotificationsLoader() {
  * in the model, and the API answers it, so the portal renders it where
  * it belongs.
  *
- * `new_requests` is drawn as the frame draws it, and nothing fires it
- * until the Inbox lands (M21): an opinion can be held about a group
- * before anything in it has happened, which is why the group value
- * shipped with the engine.
+ * `new_requests` is drawn as the frame draws it, and from M21/4 the
+ * switches control something that fires: a Request arriving in the Inbox
+ * reaches every live Member+ (INT-006). The group value shipped ahead of
+ * that event because an opinion can be held about a group before
+ * anything in it has happened.
  */
 const STAFF_GROUPS: readonly EventGroup[] = [
   "assigned_to_you",

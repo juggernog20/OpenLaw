@@ -53,6 +53,7 @@ import {
   requestReachedBy,
   REQUEST_ENTITY,
 } from "../lib/notifications/audience.js";
+import { isInboxEvent } from "../lib/notifications/catalog.js";
 import { renderNotificationMail, type MailRecord } from "../lib/notifications/email.js";
 import type { MailerResolver } from "../lib/mailer.js";
 import { reasonOf } from "./derivations.js";
@@ -204,9 +205,10 @@ async function sendNotificationEmail(
   //
   // The predicates are the ones the writes use, so the email and the
   // bell cannot disagree about who may be told what. A contract's is
-  // DD-014; a Request's is that this person is still its Requester
-  // (DD-013) — the only fact about reach that can change after the row
-  // was written.
+  // DD-014; a Request's is that this person still stands where the event
+  // addressed them — its Requester for group 5 (DD-013), a triager for
+  // group 4 (INT-006) — which is the only fact about reach that can
+  // change after the row was written.
   const payload = row.payload;
   let record: MailRecord;
   if (row.entityType === CONTRACT_ENTITY) {
@@ -221,7 +223,9 @@ async function sendNotificationEmail(
     if (number === null || title === "") return "unaddressable";
     record = { entityType: "contract", number, title };
   } else if (row.entityType === REQUEST_ENTITY) {
-    const reachable = await requestReachedBy(deps.db, row.entityId, [row.userId]);
+    const reachable = await requestReachedBy(deps.db, row.entityId, [row.userId], {
+      side: isInboxEvent(row.eventType) ? "inbox" : "requester",
+    });
     if (!reachable.has(row.userId)) return "unreachable";
     const number = addressOf(payload.requestNumber);
     const summary = typeof payload.requestSummary === "string" ? payload.requestSummary : "";

@@ -2519,6 +2519,9 @@
   "notifications.request.statusChanged": {
     "defaultMessage": "The status of your request {request} changed"
   },
+  "notifications.request.submitted": {
+    "defaultMessage": "{hasActor, select, yes {{actor} submitted a new request: {request}} other {A new request arrived: {request}}}"
+  },
   "notifications.requestNumber": {
     "defaultMessage": "R-{number}"
   },
