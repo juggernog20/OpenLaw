@@ -408,6 +408,10 @@ describe("promotion writes one ordinary document per attachment (INT-002, DOC-00
     // The name says PDF and the bytes do not, so the name loses. What is
     // stored is the widest thing that is always true.
     expect(claimed!.versions[0]!.mimeType).toBe("application/octet-stream");
+    // Untyped is not a dead end. The render table falls through to the
+    // name, so the file still routes to its family and the pipeline is
+    // still owed what that family is owed.
+    expect(claimed!.versions[0]!.renderFamily).toBe("pdf");
   });
 
   it("narrates one document.created per file, naming where it landed", async () => {
@@ -498,6 +502,13 @@ describe("the two edges of a promotion", () => {
       payload: { title: "Northwind Labs — mutual NDA" },
     });
     expect(res.statusCode, res.body).toBe(500);
+    // The house refusal shape (TECH-020), even for the failure nobody
+    // planned: a problem document, named `about:blank` because this is
+    // not a refusal a client branches on, and with the storage driver's
+    // own words scrubbed out of it.
+    expect(res.headers["content-type"]).toContain("application/problem+json");
+    expect(res.json()).toMatchObject({ type: "about:blank", title: "Internal server error" });
+    expect(res.json().detail).toBeUndefined();
 
     expect(await contractCount()).toBe(contractsBefore);
     expect(await storedVersionBlobs()).toBe(blobsBefore);

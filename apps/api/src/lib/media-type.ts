@@ -143,8 +143,9 @@ const SIGNATURES: readonly Signature[] = [
     says: "image/avif",
   },
   { parts: [{ at: 0, bytes: ascii("{\\rtf1") }], says: "application/rtf" },
-  // The three zip local-header signatures: a file with entries, an empty
-  // archive, and a spanned one.
+  // The three heads a zip can start with: a local file header, which is
+  // an archive with entries in it; an end-of-central-directory record,
+  // which is an empty archive; and the spanning marker.
   { parts: [{ at: 0, bytes: [0x50, 0x4b, 0x03, 0x04] }], says: { container: "zip" } },
   { parts: [{ at: 0, bytes: [0x50, 0x4b, 0x05, 0x06] }], says: { container: "zip" } },
   { parts: [{ at: 0, bytes: [0x50, 0x4b, 0x07, 0x08] }], says: { container: "zip" } },
