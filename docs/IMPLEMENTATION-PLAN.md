@@ -36,7 +36,7 @@ document is the map, not the territory.
 
 ## Where we are
 
-**Arc 4 started, through milestone 19** — request types and forms. Arc 1 is done: the monorepo and CI, the
+**Arc 4 is done, through milestone 21** — the front door, end to end. Arc 1 is done: the monorepo and CI, the
 authentication chain, the Compose stack a deployer actually runs, the themed app shell, and the
 `/settings` destination with its Personal and Organization rails. Arc 2 is done too: the
 configurable types and statuses, the Entities registry, the contract record, the conversation on a
@@ -67,8 +67,18 @@ M20 is the milestone that opens the door: the lightweight portal a business user
 form that renders M19's configuration, the Request with its R-### and its paper, the conversation
 Legal answers on, and a bell and a notification pane of the portal's own. Every one of those reads is
 its own mount rather than a loosened staff gate, and the thread and the bell are the comments and
-notification machinery given one more arm rather than a second system. The requester can now ask;
-next is the Inbox that turns a request into a record (M21).
+notification machinery given one more arm rather than a second system. M21 closes the arc by
+receiving what M20 lets people send: the Inbox in nav slot one, listing exactly the Requests whose
+fate is undecided; the staff detail that reads a whole Request on one screen; and disposition at
+pickup — Convert, Resolve, or Decline, atomic on `new` under the Request's own row lock, with no
+parked intermediate state and no claim step. Convert is the one the milestone is for. It runs the
+ordinary contract-create write inside the disposition transaction, so the record is born ordinary,
+with the summary as its title, the urgency as its priority, the collected values in their real
+fields, the paper promoted into documents, and the thread re-parented onto the record with its tiers
+intact. Nothing is re-keyed and nothing is dropped in silence. The Requester's window survives all
+of it: the same address, the same conversation, and one vocabulary — Open, In progress, Resolved,
+Declined — on the pill, the banner, and the email alike. A Business User can now ask and Legal can
+now answer; next is the second workspace, and the matter arm of the door M21 hung (M22).
 
 ---
 
@@ -421,13 +431,57 @@ first.
   - _Decisions:_ INT-001, INT-002, INT-003, INT-004, CMT-010, NOT-001, NOT-002, NOT-005, DES-049,
     DES-050 · _Issues:_ #375–#384, #400
 
-- [ ] **M21 — The Inbox and triage**
-      _Demo:_ A submitted request appears in the Inbox, converts into a contract with the collected values
-      carried straight through, and the requester sees the update in their thread.
-  - The Inbox as nav slot one: exactly the requests whose fate is undecided, ordered by urgency then age
-  - Disposition-at-pickup — Convert, Resolve, or Decline, with no parked intermediate state
-  - Re-target as the lossless exception path; attachments promoted into `documents` at conversion
-  - _Decisions:_ INT-006, INT-007, DD-018
+- [x] **M21 — The Inbox and triage**
+      _Demo:_ A submitted Request appears in the Inbox, converts into a contract with the collected values
+      carried straight through, and the Requester sees the update in their thread.
+  - The Inbox as nav slot one: exactly the Requests whose fate is undecided, ordered by urgency then age,
+    Member+ only and absent rather than disabled below that floor. The triaged toggle is the Inbox's one
+    control — the Inbox is fixed, so DD-019's list machinery is not built on it
+  - The staff request detail: the envelope, the submitted values labelled by the boxes that collected them,
+    the paper downloadable before the decision, and the thread at every tier on the same activity bar a
+    contract wears — a record page for something that is not a record
+  - Disposition-at-pickup — Convert, Resolve, or Decline, with no parked intermediate state. All three
+    transition only from `new`, under the Request's own row lock, so two triagers racing one Request
+    produce one outcome; the loser is answered the recorded one as an RFC 9457 problem carrying the
+    record it became
+  - **Convert is one transaction, and the record is born inside it**: the contract comes out of the
+    ordinary create write — the prefactor that made it a door conversion can call was the milestone's
+    first task — so it is an ordinary contract. C-###, the draft-stage seed, no Owner, no team beyond
+    the triager's provenance row, no Confidential flag. The summary is the title, the urgency is the
+    priority 1:1, risk is never requester-set, and every collected value whose slug the target type
+    attaches lands in that field
+  - Nothing is dropped silently: a value the target type has no field for is named in the dialog as not
+    carrying and stays on the Request, and a required field the form never collected is prompted before
+    commit. Re-target is the lossless exception path — a matter-targeting or no-target Request can still
+    become a contract, and the Request survives either way
+  - Attachments promoted into `documents` at conversion, one document at version 1 each, copied rather
+    than moved — the Requester's own download goes on answering
+  - The thread re-parents onto the record with its tiers and its unread watermarks, and from then on the
+    Request's own thread address answers the record's conversation. The Requester's window never moves:
+    the portal draws the record's thread filtered to Full Thread, their replies land on the record, and
+    the reply promise follows — a Full Thread comment on the contract still reaches the Requester
+  - Group 4 fires at last, and the two bells split by audience rather than by role; a mention on a
+    Request thread became group 1's business
+  - **One Requester-facing vocabulary, chosen and applied**: Open, In progress, Resolved, Declined, on
+    the portal pill, the banner, and the email alike. The enum is untouched and staff surfaces keep its
+    own words — `converted` is a fact about Legal's machinery, and "In progress" is what it means to the
+    person who asked
+  - Both things M20 left "where M21 will look" are closed — the requester-facing status vocabulary and
+    the Request-thread mention — and so is INT-002's older M19/7 residue, the collected value with no
+    field to land in, which the Convert dialog now names before the press
+  - Four things are left open, each written down where the milestone that meets it will look.
+    **The matter arm of conversion is M22's** — the door is built and offers only what this build can
+    create, with no stubbed Matter option, so M22 adds an arm to the same guarded path rather than a
+    second conversion. **A carried `user` or `entity` value whose row is archived between submission and
+    triage dead-ends the dialog** — conversion refuses it by name and all-or-nothing holds, but the
+    dialog draws no box to fix it, because the field is answered rather than missing; the API takes an
+    override and the screen does not offer one, and which of the three repairs to build is a design
+    decision (#437). **A Requester may still attach paper to an already-converted Request**, and that
+    paper never promotes — M20/6 behaviour that conversion did not change (#438). **The converted-contract
+    left join is written twice**, in the Inbox read and the staff detail read, both pinned by tests;
+    M22's matter arm is the third reader, and the third is what should fold it into `projection.ts`
+  - _Decisions:_ INT-002, INT-003, INT-006, INT-007, CMT-001, CMT-010, NOT-002, DD-018, DES-056, DES-057,
+    DES-058, DES-059 · _Issues:_ #412–#423
 
 ---
 
@@ -443,7 +497,13 @@ than racing them — which is the whole reason it sits here and not next to Arc 
   - One Matter Manager plus the matter team; priority and risk
   - The field catalog at `matter` scope; hard-required fields enforced at creation
   - `opened_at` / `closed_at` maintained on category transitions
-  - _Decisions:_ MTR-001, MTR-002, MTR-003, MTR-009, MTR-011, MTR-012, MTR-016
+  - **The matter arm of the conversion door M21 built.** The door is one guarded path with a per-module
+    arm; M21 shipped the contract arm and deliberately offered no stubbed Matter option, so "create a
+    matter by converting a request" is this milestone's second demo sentence rather than a new surface.
+    The contract→matter Re-target direction and the matter-target confirmation come with it. The arm is
+    the third reader of the converted-record left join, which is the point at which it should move into
+    `apps/api/src/modules/requests/projection.ts` instead of being written a third time
+  - _Decisions:_ MTR-001, MTR-002, MTR-003, MTR-009, MTR-011, MTR-012, MTR-016, INT-002, INT-007, CMT-001
 
 - [ ] **M23 — Matter work surfaces**
       _Demo:_ Open a matter, link an existing contract to it, add a sub-matter, invite external counsel as a

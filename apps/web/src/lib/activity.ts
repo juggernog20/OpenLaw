@@ -48,6 +48,7 @@ import {
   Activity,
   Archive,
   ArchiveRestore,
+  ArrowRightLeft,
   Bell,
   Building2,
   CalendarClock,
@@ -56,9 +57,11 @@ import {
   Check,
   CircleCheck,
   CircleDot,
+  CircleX,
   Clock,
   Download,
   Eraser as EraserIcon,
+  FilePen,
   FilePlus2,
   FolderInput,
   FolderPlus,
@@ -74,6 +77,7 @@ import {
   Lock,
   LogOut,
   MessageSquare,
+  MessagesSquare,
   Network,
   Palette,
   PenLine,
@@ -641,6 +645,54 @@ function relatedRecord(intl: IntlShape, payload: Payload, prefix: "parent" | "re
       );
 }
 
+/**
+ * A record named by its own reference alone, for the two entries that
+ * link an ask to the work it became (INT-006, M21/9).
+ *
+ * The reference is the whole of the name here, because both payloads
+ * carry a number and no title on purpose: R-42 and C-51 never change,
+ * and an append-only log that quoted a title would go on quoting it
+ * after a rename. A payload written without the number still has to
+ * read as a sentence, so it collapses to a wording about the record
+ * rather than to `activity.someone`, which is a person's fallback.
+ */
+function crossReference(
+  intl: IntlShape,
+  payload: Payload,
+  key: string,
+  reference: { id: string; defaultMessage: string },
+  missing: { id: string; defaultMessage: string },
+): string {
+  const number = payload[key];
+  if (typeof number !== "number" || !Number.isInteger(number)) {
+    return intl.formatMessage(missing);
+  }
+  return intl.formatMessage(reference, { number });
+}
+
+/**
+ * The record a conversion's two entries name, in the one wording both
+ * use.
+ *
+ * `request.converted` and `request.thread_moved` say different sentences
+ * about the same move, and the C-### inside each of them is the same
+ * phrase. Hoisted so one edit cannot leave the two arms reading
+ * differently. The `defineMessage` wrappers stay inside, because a
+ * descriptor handed to a helper is invisible to `formatjs extract`.
+ */
+function convertedContract(intl: IntlShape, payload: Payload): string {
+  return crossReference(
+    intl,
+    payload,
+    "contractNumber",
+    defineMessage({ id: "contracts.reference", defaultMessage: "C-{number}" }),
+    defineMessage({
+      id: "activity.contract.unnamedRecord",
+      defaultMessage: "another contract",
+    }),
+  );
+}
+
 function named(intl: IntlShape, payload: Payload, key: string): string {
   return (
     text(payload, key) ?? intl.formatMessage({ id: "activity.someone", defaultMessage: "someone" })
@@ -1002,6 +1054,32 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
     message: defineMessage({
       id: "activity.contract.created",
       defaultMessage: "{actor} created this contract",
+    }),
+  },
+  // The other half of the conversion's narration (DD-017, #420). It sits
+  // beside contract.created rather than replacing it: a contract born by
+  // conversion is an ordinary contract, and where it came from is a
+  // second sentence about the same birth.
+  "contract.created_from_request": {
+    icon: ArrowRightLeft,
+    message: defineMessage({
+      id: "activity.contract.createdFromRequest",
+      defaultMessage: "{actor} created this contract from {request}",
+    }),
+    values: (intl, payload) => ({
+      request: crossReference(
+        intl,
+        payload,
+        "requestNumber",
+        defineMessage({
+          id: "requests.reference",
+          defaultMessage: "R-{number, number, ::group-off}",
+        }),
+        // Wrapped in defineMessage so `formatjs extract` sees the id —
+        // a descriptor handed to a helper is invisible to it otherwise,
+        // and this fallback appears nowhere else in the catalog.
+        defineMessage({ id: "activity.request.unnamedRecord", defaultMessage: "a request" }),
+      ),
     }),
   },
   "contract.updated": {
@@ -1702,6 +1780,56 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
       id: "activity.request.created",
       defaultMessage: "{actor} submitted this request",
     }),
+  },
+  // INT-007's first disposition (#418). The entry says the act and names
+  // the person, because who dispositioned a Request is audit data. The
+  // reason is not in the payload and is not narrated: it lives on the
+  // Request, where a correction can still reach it, and the log is
+  // append-only.
+  "request.declined": {
+    icon: CircleX,
+    message: defineMessage({
+      id: "activity.request.declined",
+      defaultMessage: "{actor} declined this request",
+    }),
+  },
+  // INT-007's second disposition (#419). The ask was answered in the
+  // thread and closed. The closing reply, where there was one, is a
+  // comment on the same feed and narrates as itself — this entry is the
+  // closure, so a resolution with a reply and one without read the same
+  // here.
+  "request.resolved": {
+    icon: CircleCheck,
+    message: defineMessage({
+      id: "activity.request.resolved",
+      defaultMessage: "{actor} resolved this request",
+    }),
+  },
+  // INT-007's third disposition (#420), and the one the Inbox exists to
+  // reach. The entry names the record the ask became, because the trail
+  // from ask to work is the point of the conversion — and it names it by
+  // C-###, which never changes, rather than by a title that can.
+  "request.converted": {
+    icon: FilePen,
+    message: defineMessage({
+      id: "activity.request.converted",
+      defaultMessage: "{actor} converted this request into {contract}",
+    }),
+    values: (intl, payload) => ({ contract: convertedContract(intl, payload) }),
+  },
+
+  // CMT-001's promise, kept at the conversion (#422). The conversation
+  // left with the work, so the ask's own feed says where it went — by
+  // C-###, which never changes. There is no count in the sentence: how
+  // much was said is a fact at every tier, and this entry is one a
+  // Contributor reads (DD-016).
+  "request.thread_moved": {
+    icon: MessagesSquare,
+    message: defineMessage({
+      id: "activity.request.threadMoved",
+      defaultMessage: "{actor} moved this conversation onto {contract}",
+    }),
+    values: (intl, payload) => ({ contract: convertedContract(intl, payload) }),
   },
 
   // ---- User administration and the profile (audit log only) ----

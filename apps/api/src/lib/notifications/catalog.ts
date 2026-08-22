@@ -12,21 +12,23 @@
  * an event added without this table would be a second copy of the
  * decision.
  *
- * **Group 4 is a slot.** `new_requests` waits for the Inbox (M21), so it
- * names no event yet. The group value ships anyway, because
- * `notification_preferences` keys on it and a person may express an
- * opinion about a group before anything in it has fired. Group 5 was a
- * slot on the same terms until M20/8 named its four events.
+ * **Group 4 was a slot until M21/4**, and what it took to fire was one
+ * line in each of the two tables below: the event's group, and the
+ * group's email timing. That is the whole bill for a group that shipped
+ * ahead of its events, and it is why the Inbox added a call rather than
+ * a mechanism. Group 5 was a slot on the same terms until M20/8 named
+ * its four events.
  *
  * **Defaults follow interruptiveness** (NOT-002). Things done *to* you
  * interrupt; ambient activity does not; and every one of them is the
  * person's to change, so nothing here is enforcement.
  */
 
-import type {
-  NotificationChannel,
-  NotificationEventGroup,
-  NotificationEventType,
+import {
+  NOTIFICATION_EVENT_TYPES,
+  type NotificationChannel,
+  type NotificationEventGroup,
+  type NotificationEventType,
 } from "@openlaw/db";
 
 /**
@@ -78,9 +80,19 @@ export const EVENT_GROUP_POLICY: Record<NotificationEventGroup, EventGroupPolicy
   /** Group 3 — dates: the bell per date, and one briefing a day
    * (NOT-003). */
   dates_approaching: { inApp: true, email: true, emailTiming: "digest" },
-  /** Group 4 — Inbox arrivals: the queue is already the surface, so the
-   * mail is opt-in. Nothing fires it until M21. */
-  new_requests: { inApp: true, email: false, emailTiming: "none" },
+  /**
+   * Group 4 — Inbox arrivals: the queue is already the surface, so the
+   * mail is opt-in.
+   *
+   * `immediate` is the **timing**, not the default, exactly as group
+   * 2's is: `email: false` is what keeps it opt-in, and the timing only
+   * says what happens once a Member+ has said yes. It shipped as `none`
+   * while nothing fired the group, because a `true` row would have
+   * claimed a debt the system could not pay; M21/4 gives the group its
+   * first event, so the timing is real with it (NOT-002's M21/4
+   * addendum, taking M18/5's shape).
+   */
+  new_requests: { inApp: true, email: false, emailTiming: "immediate" },
   /**
    * Group 5 — the portal audience's own events (INT-001/003).
    *
@@ -119,6 +131,11 @@ export const EVENT_GROUP: Record<NotificationEventType, NotificationEventGroup> 
   "date.key_date_approaching": "dates_approaching",
   "date.notice_deadline_approaching": "dates_approaching",
   "date.expiry_approaching": "dates_approaching",
+  // Group 4 — new requests. One act, two audiences: this is the staff
+  // side of a submission (INT-006), and `request.created` below is the
+  // Requester's own receipt for the same moment. They are two events
+  // because they have two audiences, two defaults, and two bells.
+  "request.submitted": "new_requests",
   // Group 5 — the portal audience's own events. The decline is here
   // rather than beside the status change it also is, because INT-006
   // makes "no" arrive with a why and a reason is a different message.
@@ -152,6 +169,106 @@ export function defaultChoice(group: NotificationEventGroup): ChannelChoice {
 export function emailTimingOf(eventType: NotificationEventType): EmailTiming {
   return EVENT_GROUP_POLICY[EVENT_GROUP[eventType]].emailTiming;
 }
+
+/**
+ * Every event slug in one group.
+ *
+ * Derived from {@link EVENT_GROUP} rather than listed a second time, so
+ * an event added there is in this answer at once. The bell's two scope
+ * predicates ask it: NOT-001 has one table and two surfaces, and which
+ * surface a row belongs to is a fact about the group's audience — group
+ * 4 is the Inbox's own staff group, group 5 is the portal's.
+ */
+export function eventTypesIn(group: NotificationEventGroup): NotificationEventType[] {
+  // The schema's own list rather than `Object.keys`, which answers
+  // `string[]` and would need a cast back into the union. The map above
+  // is total over it, so this reads every slug and invents none.
+  return NOTIFICATION_EVENT_TYPES.filter((eventType) => EVENT_GROUP[eventType] === group);
+}
+
+/**
+ * Which side of a Request an event is addressed to (M21/4, M21/5).
+ *
+ * `requester` is DD-013's one person, and every group-5 event is theirs.
+ * `inbox` is INT-006's Member+ — group 4's arrival, and from M21/5 a
+ * group-1 mention on a Request thread, because being named on a Request
+ * is being named as staff.
+ */
+export type RequestSide = "requester" | "inbox";
+
+/**
+ * Which side each group speaks to when its event is about a Request, and
+ * `null` for a group that raises no Request event at all.
+ *
+ * **The group decides, not the slug.** `comment.mentioned` is one slug on
+ * two records, so a per-slug table would have to say two things about it;
+ * the group says one thing about every event in it, which is why the side
+ * is read here rather than passed by each method.
+ *
+ * **`null` is a third answer, not a missing one.** Groups 2 and 3 are a
+ * contract's: a Request has no team table for a roster to come from and
+ * no tracked dates (CTR-009), and its thread raises group 5 and group 1
+ * instead. Naming them here as neither side is what keeps them off both
+ * bells — the milestone that does raise one of them on a Request owes
+ * this line a real answer first.
+ *
+ * Total over the group union, so a group added to the schema stops
+ * compiling until somebody has chosen one of the three.
+ */
+const REQUEST_SIDE_BY_GROUP: Record<NotificationEventGroup, RequestSide | null> = {
+  /** Group 1 — done *to* you. On a Request that is a mention, and a
+   * Request's mention candidates are its Requester and Member+ staff
+   * (CMT-010); the Requester's own news is group 5's, so what is left
+   * here is the staff side. */
+  assigned_to_you: "inbox",
+  /** Group 2 — ambient movement on a record's roster. Neither side. */
+  activity_on_your_records: null,
+  /** Group 3 — dates approaching. Neither side. */
+  dates_approaching: null,
+  /** Group 4 — the Inbox's own arrival (INT-006). */
+  new_requests: "inbox",
+  /** Group 5 — the portal audience's own events (DD-013). */
+  requester_events: "requester",
+};
+
+/**
+ * Which side of a Request one event speaks to — the **reach** question,
+ * which every row that exists has to have an answer to.
+ *
+ * Asked of a raw slug, because every caller reads one off a row: the
+ * fan-out's wall step, the send job's re-check of it, and the template
+ * layer choosing which of the two messages this is. A slug this build
+ * does not know, and a group named as neither side, both answer
+ * `requester` — the narrower of the two standings, and therefore the safe
+ * way to be wrong about a row nothing should have written.
+ */
+export function requestSideOf(eventType: string): RequestSide {
+  return (Object.hasOwn(REQUEST_SIDE, eventType) ? REQUEST_SIDE[eventType] : null) ?? "requester";
+}
+
+/**
+ * Every slug on one side of a Request — the **bell** question, which only
+ * a decided group answers.
+ *
+ * A group named as neither side is on no bell rather than on the narrower
+ * one: an item nobody has placed is better missing than shown to the
+ * wrong reader, because a missing item gets noticed and a leaked one does
+ * not. So the two answers do not cover the catalog between them, and that
+ * gap is the decision.
+ */
+export function requestEventTypesOn(side: RequestSide): NotificationEventType[] {
+  return NOTIFICATION_EVENT_TYPES.filter((eventType) => REQUEST_SIDE[eventType] === side);
+}
+
+/** Each slug's side, resolved once through its group — every caller asks
+ * per row. Own-key reads only, because the slug comes off a row and
+ * `event_type` deliberately carries no CHECK (NOT-002). */
+const REQUEST_SIDE: Readonly<Record<string, RequestSide | null>> = Object.fromEntries(
+  NOTIFICATION_EVENT_TYPES.map((eventType) => [
+    eventType,
+    REQUEST_SIDE_BY_GROUP[EVENT_GROUP[eventType]],
+  ]),
+);
 
 /** Both channels, as `notification_preferences` names them. */
 export const CHANNELS: readonly NotificationChannel[] = ["in_app", "email"];

@@ -176,7 +176,7 @@ describe("the request envelope", () => {
         name: "Orion Cloud MSA renewal — redline review",
       }),
     ).toBeInTheDocument();
-    expect(screen.getByText("New")).toBeInTheDocument();
+    expect(screen.getByText("Open")).toBeInTheDocument();
     expect(screen.getByText("R-45 · Contract review · Submitted Aug 6")).toBeInTheDocument();
   });
 
@@ -190,10 +190,25 @@ describe("the request envelope", () => {
     );
   });
 
+  // The INT-003 M21/6 addendum: the pill says the words the email says,
+  // so a requester's inbox and their screen never disagree about the
+  // same Request. The enum's own words are the staff detail's.
+  it.each([
+    ["new", "Open"],
+    ["converted", "In progress"],
+    ["resolved", "Resolved"],
+    ["declined", "Declined"],
+  ] as const)("says %s in the requester's own vocabulary", async (status, word) => {
+    stubApi({ signedIn: REQUESTER, extra: detailRead(detail({ status })) });
+    renderAt("/portal/requests/45");
+
+    expect(await screen.findByText(word)).toBeInTheDocument();
+  });
+
   it.each([
     ["new", "Legal has received your request"],
     ["converted", "Legal is working on this"],
-    ["resolved", "Legal has answered this request"],
+    ["resolved", "Legal has answered this request and closed it"],
     ["declined", "Legal declined this request"],
   ] as const)("says what %s means for the requester", async (status, copy) => {
     stubApi({ signedIn: REQUESTER, extra: detailRead(detail({ status })) });
@@ -210,7 +225,7 @@ describe("the request envelope", () => {
     renderAt("/portal/requests/45");
 
     expect(await screen.findByRole("heading", { level: 1 })).toBeInTheDocument();
-    expect(screen.getByText("Converted")).toBeInTheDocument();
+    expect(screen.getByText("In progress")).toBeInTheDocument();
     expect(screen.queryByRole("link", { name: /contract/i })).not.toBeInTheDocument();
   });
 
@@ -569,9 +584,21 @@ describe("the conversation", () => {
   it("posts a reply at Full Thread and puts it on the end of the thread", async () => {
     const user = userEvent.setup();
     let sent: unknown;
+    // What the loader asked the thread for. The stub answers the same
+    // rows for every comments query, so without this the test passes on
+    // a loader that dropped `entityId` or sent the contract's id — and
+    // the whole claim of this test is that a converted Request's thread
+    // is still read by the Request's own pair.
+    const threadQueries: URLSearchParams[] = [];
     stubApi({
       signedIn: REQUESTER,
       extra: stubs(
+        (call) => {
+          if (call.url.pathname === "/api/v1/comments" && call.method === "GET") {
+            threadQueries.push(call.url.searchParams);
+          }
+          return undefined;
+        },
         replyPost((body) => {
           sent = body;
           return json(201, {
@@ -602,6 +629,78 @@ describe("the conversation", () => {
     });
     // The box is empty again, because the words landed.
     expect(box).toHaveValue("");
+  });
+
+  it("keeps the window on a converted Request, thread and composer alike", async () => {
+    // CMT-001's promise from the requester's side (#422): the
+    // conversation moved onto the record and the reply still lands. The
+    // page asks for the Request's own thread and the API answers the
+    // record's rows, so what proves it here is that the composer still
+    // sends the Request's id — the redirect is the seam's and nothing on
+    // this page branches on the status.
+    const user = userEvent.setup();
+    let sent: unknown;
+    // What the loader asked the thread for. The stub answers the same
+    // rows for every comments query, so without this the test passes on
+    // a loader that dropped `entityId` or sent the contract's id — and
+    // the whole claim of this test is that a converted Request's thread
+    // is still read by the Request's own pair.
+    const threadQueries: URLSearchParams[] = [];
+    stubApi({
+      signedIn: REQUESTER,
+      extra: stubs(
+        (call) => {
+          if (call.url.pathname === "/api/v1/comments" && call.method === "GET") {
+            threadQueries.push(call.url.searchParams);
+          }
+          return undefined;
+        },
+        replyPost((body) => {
+          sent = body;
+          return json(201, {
+            comment: comment({
+              id: "c9",
+              entityType: "contract",
+              entityId: "ct7",
+              body: "Thanks — anything else you need?",
+              author: { id: REQUESTER.id, displayName: "Tom Iwu", image: null, archived: false },
+            }),
+          });
+        }),
+        detailRead(detail({ status: "converted" }), 200, {
+          // Answered from the record now, which is why the rows name a
+          // contract. The page renders them exactly as it always did.
+          comments: [
+            comment({
+              id: "c1",
+              entityType: "contract",
+              entityId: "ct7",
+              body: "We have opened the file and started the redline.",
+            }),
+          ],
+        }),
+      ),
+    });
+    renderAt("/portal/requests/45");
+
+    const card = await screen.findByRole("region", { name: "Conversation" });
+    expect(
+      within(card).getByText("We have opened the file and started the redline."),
+    ).toBeInTheDocument();
+    expect(threadQueries[0]?.get("entityType")).toBe("request");
+    expect(threadQueries[0]?.get("entityId")).toBe("rq1");
+
+    const box = within(card).getByRole("textbox", { name: "Reply to Legal" });
+    await user.type(box, "Thanks — anything else you need?");
+    await user.click(within(card).getByRole("button", { name: "Send" }));
+
+    expect(await screen.findByText("Thanks — anything else you need?")).toBeInTheDocument();
+    expect(sent).toEqual({
+      entityType: "request",
+      entityId: "rq1",
+      body: "Thanks — anything else you need?",
+      visibility: "full_thread",
+    });
   });
 
   it("keeps the words in the box and states the reason when the reply is refused", async () => {

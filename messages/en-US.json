@@ -8,6 +8,9 @@
   "action.clear": {
     "defaultMessage": "Clear"
   },
+  "action.close": {
+    "defaultMessage": "Close"
+  },
   "action.continue": {
     "defaultMessage": "Continue"
   },
@@ -97,6 +100,9 @@
   },
   "activity.contract.created": {
     "defaultMessage": "{actor} created this contract"
+  },
+  "activity.contract.createdFromRequest": {
+    "defaultMessage": "{actor} created this contract from {request}"
   },
   "activity.contract.parentRemoved": {
     "defaultMessage": "{actor} took this contract out from under {parent}"
@@ -293,8 +299,23 @@
   "activity.reminderOffset": {
     "defaultMessage": "{days, plural, =0 {day of} one {# day} other {# days}}"
   },
+  "activity.request.converted": {
+    "defaultMessage": "{actor} converted this request into {contract}"
+  },
   "activity.request.created": {
     "defaultMessage": "{actor} submitted this request"
+  },
+  "activity.request.declined": {
+    "defaultMessage": "{actor} declined this request"
+  },
+  "activity.request.resolved": {
+    "defaultMessage": "{actor} resolved this request"
+  },
+  "activity.request.threadMoved": {
+    "defaultMessage": "{actor} moved this conversation onto {contract}"
+  },
+  "activity.request.unnamedRecord": {
+    "defaultMessage": "a request"
   },
   "activity.signer.erased": {
     "defaultMessage": "{actor} erased an external signer's name and address from {entriesRedacted, plural, =0 {no entries} one {# entry} other {# entries}}"
@@ -1583,6 +1604,69 @@
   "contracts.valueWithCadence": {
     "defaultMessage": "{cadence, select, monthly {{amount} /month} annually {{amount} /year} other {{amount}}}"
   },
+  "convert.action": {
+    "defaultMessage": "Convert to contract"
+  },
+  "convert.alreadyConvertedRecord": {
+    "defaultMessage": "It became {contract}."
+  },
+  "convert.carries": {
+    "defaultMessage": "Carries into the contract"
+  },
+  "convert.carryNote": {
+    "defaultMessage": "Form responses carry into the contract — nothing is re-keyed."
+  },
+  "convert.failed": {
+    "defaultMessage": "The request could not be converted. Try again."
+  },
+  "convert.from": {
+    "defaultMessage": "{requestType} · submitted by {requester}"
+  },
+  "convert.gapNote": {
+    "defaultMessage": "Required on this contract type. The form did not collect it."
+  },
+  "convert.needTitle": {
+    "defaultMessage": "Name the contract."
+  },
+  "convert.needType": {
+    "defaultMessage": "Pick a contract type."
+  },
+  "convert.priority": {
+    "defaultMessage": "Priority"
+  },
+  "convert.priorityNote": {
+    "defaultMessage": "Taken from the urgency the requester gave. Risk stays yours to set on the record."
+  },
+  "convert.retarget": {
+    "defaultMessage": "This request type does not target a contract. Converting it to one is a re-target, and the request itself is kept."
+  },
+  "convert.staysBehind": {
+    "defaultMessage": "Does not carry into the contract"
+  },
+  "convert.staysBehindNote": {
+    "defaultMessage": "This contract type has no field for these. Nothing is deleted, and they stay on the request where you can still read them."
+  },
+  "convert.submit": {
+    "defaultMessage": "Convert"
+  },
+  "convert.title": {
+    "defaultMessage": "Convert {reference} to a contract"
+  },
+  "convert.titleField": {
+    "defaultMessage": "Title"
+  },
+  "convert.titleNote": {
+    "defaultMessage": "Taken from the request's summary. Edit it before you convert."
+  },
+  "convert.typeConfirmed": {
+    "defaultMessage": "Set by the request type. Triage confirms the routing rather than choosing it."
+  },
+  "convert.typeDeferred": {
+    "defaultMessage": "This request type left the contract type to conversion."
+  },
+  "convert.typeField": {
+    "defaultMessage": "Contract type"
+  },
   "counterparty.picker.create": {
     "defaultMessage": "Create \"{name}\""
   },
@@ -1619,8 +1703,38 @@
   "datePicker.year": {
     "defaultMessage": "Year"
   },
+  "decline.action": {
+    "defaultMessage": "Decline"
+  },
+  "decline.explains": {
+    "defaultMessage": "Declining closes the request without converting it. The reason is required and is shared with the requester."
+  },
+  "decline.failed": {
+    "defaultMessage": "The request could not be declined. Try again."
+  },
+  "decline.needReason": {
+    "defaultMessage": "Write why. The requester is sent this."
+  },
+  "decline.notifyNote": {
+    "defaultMessage": "The requester is emailed this and sees it on their request."
+  },
+  "decline.reason": {
+    "defaultMessage": "Reason"
+  },
+  "decline.submit": {
+    "defaultMessage": "Decline request"
+  },
+  "decline.title": {
+    "defaultMessage": "Decline {reference}"
+  },
   "dialog.close": {
     "defaultMessage": "Close"
+  },
+  "disposition.alreadyDecided": {
+    "defaultMessage": "{outcome, select, converted {Somebody else already converted this request.} resolved {Somebody else already resolved this request.} declined {Somebody else already declined this request.} other {Somebody else already decided this request.}}"
+  },
+  "disposition.alreadyDecidedRead": {
+    "defaultMessage": "Close this to read what they recorded."
   },
   "docPanel.close": {
     "defaultMessage": "Close the document"
@@ -2210,6 +2324,117 @@
   "home.title": {
     "defaultMessage": "Home"
   },
+  "inbox.assign": {
+    "defaultMessage": "Assign"
+  },
+  "inbox.assignRow": {
+    "defaultMessage": "Assign {reference}"
+  },
+  "inbox.awaiting": {
+    "defaultMessage": "{count} awaiting triage"
+  },
+  "inbox.awaitingShown": {
+    "defaultMessage": "{count} awaiting triage shown"
+  },
+  "inbox.column.actions": {
+    "defaultMessage": "Actions"
+  },
+  "inbox.column.age": {
+    "defaultMessage": "Age"
+  },
+  "inbox.column.outcome": {
+    "defaultMessage": "Outcome"
+  },
+  "inbox.column.reference": {
+    "defaultMessage": "Ref"
+  },
+  "inbox.column.requester": {
+    "defaultMessage": "Requester"
+  },
+  "inbox.column.summary": {
+    "defaultMessage": "Summary"
+  },
+  "inbox.column.type": {
+    "defaultMessage": "Type"
+  },
+  "inbox.column.urgency": {
+    "defaultMessage": "Urgency"
+  },
+  "inbox.empty.body": {
+    "defaultMessage": "Every Request has been decided. New ones land here as they arrive, hottest and oldest first."
+  },
+  "inbox.empty.title": {
+    "defaultMessage": "Nothing is waiting"
+  },
+  "inbox.listError": {
+    "defaultMessage": "The Inbox could not be read. Try again."
+  },
+  "inbox.more": {
+    "defaultMessage": "Show more"
+  },
+  "inbox.moreError": {
+    "defaultMessage": "The next requests could not be read. Try again."
+  },
+  "inbox.ordering": {
+    "defaultMessage": "Ordered by urgency, then age"
+  },
+  "inbox.request.attachments": {
+    "defaultMessage": "Attachments"
+  },
+  "inbox.request.booleanValue": {
+    "defaultMessage": "{value, select, true {Yes} other {No}}"
+  },
+  "inbox.request.description": {
+    "defaultMessage": "Description"
+  },
+  "inbox.request.documentTitle": {
+    "defaultMessage": "{reference} · {summary}"
+  },
+  "inbox.request.fromForm": {
+    "defaultMessage": "From the portal form"
+  },
+  "inbox.request.noAttachments": {
+    "defaultMessage": "No files travelled with this request."
+  },
+  "inbox.request.noResponses": {
+    "defaultMessage": "This form collected nothing beyond the basics."
+  },
+  "inbox.request.outcome": {
+    "defaultMessage": "Outcome"
+  },
+  "inbox.request.overview": {
+    "defaultMessage": "Overview"
+  },
+  "inbox.request.requester": {
+    "defaultMessage": "Requester"
+  },
+  "inbox.request.responses": {
+    "defaultMessage": "Form responses"
+  },
+  "inbox.request.submitted": {
+    "defaultMessage": "Submitted"
+  },
+  "inbox.request.target": {
+    "defaultMessage": "Converts to"
+  },
+  "inbox.showTriaged": {
+    "defaultMessage": "Show triaged"
+  },
+  "inbox.target.module": {
+    "defaultMessage": "{module, select, matter {Matter} contract {Contract} other {No target}}"
+  },
+  "inbox.target.moduleAndType": {
+    "defaultMessage": "{module, select, matter {Matter · {name}} contract {Contract · {name}} other {{name}}}"
+  },
+  "inbox.target.none": {
+    "defaultMessage": "No target"
+  },
+  "inbox.title": {
+    "defaultMessage": "Inbox"
+  },
+  "intake.field.requiredMark": {
+    "defaultMessage": "(required)"
+  },
   "keyDates.actionsFor": {
     "defaultMessage": "Actions for {label}"
   },
@@ -2333,6 +2558,9 @@
   "nav.home": {
     "defaultMessage": "Home"
   },
+  "nav.inbox": {
+    "defaultMessage": "Inbox"
+  },
   "notifications.approval.requested": {
     "defaultMessage": "{hasActor, select, yes {{actor} asked you to approve {contract}} other {You were asked to approve {contract}}}"
   },
@@ -2410,6 +2638,9 @@
   },
   "notifications.request.statusChanged": {
     "defaultMessage": "The status of your request {request} changed"
+  },
+  "notifications.request.submitted": {
+    "defaultMessage": "{hasActor, select, yes {{actor} submitted a new request: {request}} other {A new request arrived: {request}}}"
   },
   "notifications.requestNumber": {
     "defaultMessage": "R-{number}"
@@ -2556,7 +2787,7 @@
     "defaultMessage": "Legal has received your request. You'll get an email when the status changes."
   },
   "portal.request.bannerResolved": {
-    "defaultMessage": "Legal has answered this request."
+    "defaultMessage": "Legal has answered this request and closed it."
   },
   "portal.request.booleanValue": {
     "defaultMessage": "{value, select, true {Yes} other {No}}"
@@ -2717,8 +2948,32 @@
   "requests.reference": {
     "defaultMessage": "R-{number, number, ::group-off}"
   },
+  "requests.requesterStatusLabel": {
+    "defaultMessage": "{status, select, new {Open} converted {In progress} resolved {Resolved} declined {Declined} other {Unknown}}"
+  },
   "requests.statusLabel": {
     "defaultMessage": "{status, select, new {New} converted {Converted} resolved {Resolved} declined {Declined} other {Unknown}}"
+  },
+  "resolve.action": {
+    "defaultMessage": "Resolve"
+  },
+  "resolve.explains": {
+    "defaultMessage": "Resolving closes the request as answered. Add a closing reply if the answer is not already on the thread."
+  },
+  "resolve.failed": {
+    "defaultMessage": "The request could not be resolved. Try again."
+  },
+  "resolve.notifyNote": {
+    "defaultMessage": "This goes on the request's thread, and to the requester by email."
+  },
+  "resolve.reply": {
+    "defaultMessage": "Closing reply (optional)"
+  },
+  "resolve.submit": {
+    "defaultMessage": "Resolve request"
+  },
+  "resolve.title": {
+    "defaultMessage": "Resolve {reference}"
   },
   "role.administrator": {
     "defaultMessage": "Administrator"

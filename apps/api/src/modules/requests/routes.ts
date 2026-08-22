@@ -103,12 +103,10 @@ import { z } from "zod";
 import { uuidv7 } from "uuidv7";
 import {
   and,
-  asc,
   count,
   desc,
   entities,
   eq,
-  inArray,
   isNull,
   REQUEST_STATUSES,
   requestAttachments,
@@ -124,7 +122,6 @@ import {
 import { requireAuth } from "../../auth/guards.js";
 import {
   asUploadRefusal,
-  attachmentDisposition,
   refuseOversize,
   uploadFilename,
   withStoredBlob,
@@ -141,6 +138,18 @@ import {
   type AttachedCustomField,
 } from "../../lib/custom-fields.js";
 import { httpError, problemResponse } from "../../lib/problem.js";
+import {
+  attachmentOn,
+  DownloadSchema,
+  NO_ATTACHMENT,
+  NO_REQUEST,
+  RequestAttachmentSchema,
+  RequestCustomFieldRefsSchema,
+  resolveRefs,
+  selectAttachments,
+  sendAttachment,
+  toAttachment,
+} from "./projection.js";
 
 /** The Request as its creator is answered. Narrow on purpose: the
  * confirmation needs the number to quote and the status to state, and
@@ -180,28 +189,6 @@ const MyRequestRowSchema = z.object({
   summary: z.string(),
   requestType: RequestTypeRefSchema,
   /** The age the list states, computed by the reader. */
-  createdAt: z.string(),
-});
-
-/** The people and Entities a stored value names, resolved so the detail
- * can render a name where the row holds an id. The portal's own narrow
- * shape — a name and nothing else — because a requester reads neither
- * the staff directory nor the Entity registry, and one name they
- * themselves recorded is the whole of what this answers. */
-const RequestCustomFieldRefsSchema = z.object({
-  users: z.array(z.object({ id: z.string(), displayName: z.string() })),
-  entities: z.array(z.object({ id: z.string(), legalName: z.string() })),
-});
-
-/** One attachment, as both the upload and the detail answer it.
- *
- * The stored reference is not on the wire: it names a driver and a key,
- * which is where the bytes live rather than anything a requester can
- * do. The id addresses the download and the filename is what a person
- * recognises. */
-const RequestAttachmentSchema = z.object({
-  id: z.string(),
-  filename: z.string(),
   createdAt: z.string(),
 });
 
@@ -348,6 +335,21 @@ export const requestsRoutes: FastifyPluginAsyncZod = async (app) => {
           requestId: row!.id,
           actorId: request.user.id,
           actorName: request.user.displayName,
+        });
+        // The arrival (INT-006, NOT-002 group 4), which is the same act
+        // told to the other side: every live Member+ hears that
+        // something is waiting, bell on and email opt-in. Two events
+        // rather than one, because the staff side and the requester side
+        // are two sentences to two audiences with two defaults — and the
+        // audience, the actor exclusion, the preferences, and the
+        // after-commit wake-up are all the seam's, so this route still
+        // names what happened and nothing else.
+        await app.notifier.requestSubmitted(tx, {
+          requestId: row!.id,
+          actorId: request.user.id,
+          actorName: request.user.displayName,
+          requestType: requestType.displayName,
+          urgency: row!.urgency,
         });
         return row!;
       });
@@ -612,35 +614,11 @@ export const requestsRoutes: FastifyPluginAsyncZod = async (app) => {
     },
     async (request, reply) => {
       const held = await reachedRequest(app.db, request.user.id, request.params.number);
-      const [row] = await app.db
-        .select({ fileRef: requestAttachments.fileRef, filename: requestAttachments.filename })
-        .from(requestAttachments)
-        .where(
-          and(
-            eq(requestAttachments.id, request.params.attachmentId),
-            // Part of the lookup rather than a check after it: an
-            // attachment id from another Request is a miss, not a row
-            // that was read and then refused.
-            eq(requestAttachments.requestId, held.id),
-          ),
-        )
-        .limit(1);
+      const row = await attachmentOn(app.db, held.id, request.params.attachmentId);
       if (!row) throw httpError(404, NO_ATTACHMENT);
-
-      const body = await app.storage.get(row.fileRef);
-      return (
-        reply
-          // Never a type a client declared: the table stores none, on
-          // purpose, and an email attachment's download already answers
-          // the widest thing that is always true (DOC-004).
-          .header("content-type", "application/octet-stream")
-          .header("content-disposition", attachmentDisposition(row.filename))
-          .header("x-content-type-options", "nosniff")
-          // A stored blob never changes (DOC-012), but who may read it
-          // does, so this is private to the browser that asked.
-          .header("cache-control", "private, max-age=0, must-revalidate")
-          .send(body)
-      );
+      // One answer for both mounts, so the staff download and this one
+      // cannot drift into two readings of the same bytes.
+      return sendAttachment(reply, await app.storage.get(row.fileRef), row.filename);
     },
   );
 
@@ -742,9 +720,6 @@ function attachmentStorageKey(attachmentId: string): string {
 /** The R-### a Request is addressed by, on every route that takes one. */
 const NumberParams = z.object({ number: z.coerce.number().int().positive() });
 
-/** A stored blob, as the download route needs it described. */
-const DownloadSchema = z.any().meta({ type: "string", format: "binary" });
-
 /**
  * What an attachment upload carries, described for the OpenAPI document
  * only.
@@ -768,40 +743,6 @@ const AttachmentUploadForm = z.any().meta({
   required: ["file"],
 });
 
-/** Every attachment on one Request, oldest first. */
-async function selectAttachments(db: Executor, requestId: string) {
-  const rows = await db
-    .select({
-      id: requestAttachments.id,
-      filename: requestAttachments.filename,
-      createdAt: requestAttachments.createdAt,
-    })
-    .from(requestAttachments)
-    .where(eq(requestAttachments.requestId, requestId))
-    .orderBy(asc(requestAttachments.createdAt), asc(requestAttachments.id));
-  return rows.map(toAttachment);
-}
-
-/** The stored row, as the wire answers it. */
-function toAttachment(row: { id: string; filename: string; createdAt: Date }) {
-  return { id: row.id, filename: row.filename, createdAt: row.createdAt.toISOString() };
-}
-
-/**
- * One refusal for both misses on an attachment. An id nobody has and an
- * id on another Request read the same, for the reason {@link NO_REQUEST}
- * reads the same for two numbers.
- */
-const NO_ATTACHMENT = "No attachment exists with this reference.";
-
-/**
- * One refusal for both misses. A number nobody has and a number
- * somebody else has read the same, because to a requester another
- * person's Request does not exist — a message that told the two apart
- * would confirm the row is there (DD-013).
- */
-const NO_REQUEST = "No request exists with this reference.";
-
 /** The joined row, reshaped into the answer's nested request type. */
 function toRow<T extends RequestRowColumns>(row: T) {
   return {
@@ -823,47 +764,6 @@ interface RequestRowColumns {
   typeId: string;
   typeSlug: string;
   typeDisplayName: string;
-}
-
-/**
- * The rows the stored values name, resolved so the detail renders a
- * name where the jsonb holds an id — the contract record's rule, in the
- * portal's narrower shape.
- *
- * Archived rows are resolved on purpose, as they are on a contract: the
- * pickers stop offering a person who has left, and a Request that
- * already names one must go on naming them.
- */
-async function resolveRefs(
-  db: Executor,
-  attached: readonly AttachedCustomField[],
-  values: Readonly<Record<string, CustomFieldValue>>,
-) {
-  const idsOfType = (fieldType: "user" | "entity") => [
-    ...new Set(
-      attached
-        .filter((field) => field.fieldType === fieldType)
-        .map((field) => values[field.slug])
-        .filter((value): value is string => typeof value === "string" && value !== ""),
-    ),
-  ];
-  const userIds = idsOfType("user");
-  const entityIds = idsOfType("entity");
-  const [people, named] = await Promise.all([
-    userIds.length === 0
-      ? []
-      : db
-          .select({ id: users.id, displayName: users.displayName })
-          .from(users)
-          .where(inArray(users.id, userIds)),
-    entityIds.length === 0
-      ? []
-      : db
-          .select({ id: entities.id, legalName: entities.legalName })
-          .from(entities)
-          .where(inArray(entities.id, entityIds)),
-  ]);
-  return { users: people, entities: named };
 }
 
 /**

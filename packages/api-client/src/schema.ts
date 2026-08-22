@@ -1057,7 +1057,8 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    get?: never;
+    /** The Inbox (INT-006, INT-007): the Requests whose fate is undecided, ordered by urgency rank — critical first — then age, oldest first, and paged by cursor. The answer is exactly the `new` Requests; includeTriaged=true widens it to the converted, resolved, and declined ones with their outcomes. A converted row carries the contract it became only when the caller reaches that contract, and carries null otherwise (DD-014). Member+ only: a Contributor and a Business User are refused */
+    get: operations["listInbox"];
     put?: never;
     /** Submit a Request through a request type's portal form (INT-001). The Requester is the session; the type must be live; Summary, Description, and Urgency are required, as is every attached field the type marks required; values are accepted for exactly the fields the type attaches, and a user or entity field's value must name a live row */
     post: operations["submitRequest"];
@@ -1129,6 +1130,91 @@ export interface paths {
     get: operations["downloadMyRequestAttachment"];
     put?: never;
     post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/requests/{number}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** One Request as triage reads it (INT-006), by its R-### number: the envelope, the values the form collected with the fields that name them, the `user` and `entity` rows those values point at, and the paper that travelled with the ask. Every status opens — the Inbox is the undecided queue, the detail is the Request. A converted Request carries the contract it became only when the caller reaches that contract (DD-014). Member+ only: a Contributor and a Business User are refused */
+    get: operations["readRequest"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/requests/{number}/attachments/{attachmentId}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Stream one attachment on a Request back, as a download (INT-006). The staff mount's own address, with the portal download's answer: the bytes come through the API behind the session, there are no presigned URLs, and the type is always `application/octet-stream` — a Request's attachment stores no declared type, and a download never echoes one a client sent. An attachment id belonging to another Request answers 404. Member+ only */
+    get: operations["downloadRequestAttachment"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/requests/{number}/decline": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Turn a Request down, with a reason (INT-006). The first of INT-007's three dispositions: it transitions the Request from `new` to `declined` under the Request's own row lock, so two triagers racing one Request produce one decline. The loser is answered 409 with the recorded outcome rather than a second decline. The reason is required and refused by name without one, because a decline is the whole of the answer the requester gets: it is stored on the Request, carried into the decline email, and rendered on the portal banner as written. Raises `requestDeclined` — instead of the status change it also is, never beside it — so the requester gets one bell item and one immediate email. Appends one request.declined entry naming the actor (DD-017, INT-007: who dispositioned is audit data); the reason is not in the payload, because the log is append-only and the reason lives on the record. Answers the Request as the staff detail reads it. Member+ only */
+    post: operations["declineRequest"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/requests/{number}/resolve": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Close a Request that has been answered (INT-006). The second of INT-007's three dispositions: it transitions the Request from `new` to `resolved` under the Request's own row lock, so two triagers racing one Request produce one resolution. The loser is answered 409 with the recorded outcome rather than a second resolution. `reply` is optional — the answer is often already on the thread, and INT-006 asks for a closing reply rather than requiring one. Given, it is posted as an ordinary Full Thread comment: it lands on the conversation, narrates as comment.posted, and notifies the Requester as any staff reply does. Raises `requestStatusChanged` beside it, because an answer and a closure are two pieces of news and the requester may have both. Appends one request.resolved entry naming the actor (DD-017, INT-007: who dispositioned is audit data); what was said is on the thread, not in the payload. Answers the Request as the staff detail reads it. Member+ only */
+    post: operations["resolveRequest"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/requests/{number}/convert": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Turn a Request into the contract its request type targets (INT-002, DD-018). The third of INT-007's three dispositions: it transitions the Request from `new` to `converted` under the Request's own row lock, so two triagers racing one Request produce one contract. The loser is answered 409 with the recorded outcome and the record it became. Triage confirms the routing rather than choosing it: where the request type names a live contract type, that type is the target and a body naming a different one is refused. `contractTypeId` is required — and only accepted — where the request type names no live contract type: a module-only target, a target type the taxonomy has archived (read as no type), a Matter target, or no target at all. The last two are Re-target, DD-018's lossless exception. The contract is born ordinary — the C-### sequence, the draft-stage seed, no Owner, no team, no Confidential flag — with the title the body carries, which the dialog seeds from the summary and leaves editable; the requester's urgency as its priority 1:1 (MTR-012; risk is never requester-set); and every collected value whose slug the target type attaches landed in that field. A collected value the target type does not attach does not carry and is not deleted: the Request keeps its custom fields whole. Empty hard-required fields refuse the conversion by name (CTR-016/MTR-014), so `customFields` is where the triager answers them. Appends request.converted on the ask and contract.created_from_request on the record (DD-017), and raises `requestStatusChanged`. Every attachment on the Request is promoted into one document at version 1 at the record root, each narrated document.created and each owed the derivations an upload is owed (INT-002, DOC-008). The promotion copies: the Request keeps its attachments and its downloads go on answering. The thread moves rather than copying (CMT-001): every comment re-parents onto the record with its DD-016 tier intact and each reader's unread watermark travels with it, narrated request.thread_moved, and from then on the Request's thread address answers the record's conversation — the portal filtered to Full Thread. Answers the Request as the staff detail reads it. Member+ only */
+    post: operations["convertRequest"];
     delete?: never;
     options?: never;
     head?: never;
@@ -2599,7 +2685,7 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** What the signed-in person gets on each of NOT-002's five event groups, per channel. It is the **effective** answer — their own saved rows over the group's defaults — because the table holds overrides rather than a grid, and a person who has never opened the pane has no rows at all. Every group is answered, including the one whose first events wait for the Inbox (M21): an opinion can be held about a group before anything in it has fired. Which of the five a surface draws is the surface's business — the staff pane draws four and the portal pane draws `requester_events` alone. There is no user parameter — a preference is one person's, and the signed-in person is the whole scope */
+    /** What the signed-in person gets on each of NOT-002's five event groups, per channel. It is the **effective** answer — their own saved rows over the group's defaults — because the table holds overrides rather than a grid, and a person who has never opened the pane has no rows at all. Every group is answered, whether or not anything in it has ever fired: an opinion can be held about a group before its first event exists. Which of the five a surface draws is the surface's business — the staff pane draws four and the portal pane draws `requester_events` alone. There is no user parameter — a preference is one person's, and the signed-in person is the whole scope */
     get: operations["getMyNotificationPreferences"];
     put?: never;
     post?: never;
@@ -6468,6 +6554,64 @@ export interface operations {
       };
     };
   };
+  listInbox: {
+    parameters: {
+      query?: {
+        includeTriaged?: "true" | "false";
+        cursor?: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            requests: {
+              id: string;
+              number: number;
+              /** @enum {string} */
+              status: "new" | "converted" | "resolved" | "declined";
+              summary: string;
+              /** @enum {string} */
+              urgency: "low" | "medium" | "high" | "critical";
+              requestType: {
+                id: string;
+                displayName: string;
+                targetModule: ("matter" | "contract") | null;
+                targetTypeId: string | null;
+                targetTypeName: string | null;
+              };
+              requester: {
+                id: string;
+                displayName: string;
+              };
+              createdAt: string;
+              convertedContract: {
+                number: number;
+              } | null;
+            }[];
+            nextCursor: string | null;
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
   submitRequest: {
     parameters: {
       query?: never;
@@ -6722,6 +6866,443 @@ export interface operations {
         };
         content: {
           "application/octet-stream": string;
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  readRequest: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        number: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            request: {
+              id: string;
+              number: number;
+              /** @enum {string} */
+              status: "new" | "converted" | "resolved" | "declined";
+              summary: string;
+              description: string | null;
+              /** @enum {string} */
+              urgency: "low" | "medium" | "high" | "critical";
+              customFields: {
+                [key: string]: string | number | boolean | string[];
+              };
+              declinedReason: string | null;
+              createdAt: string;
+              requestType: {
+                id: string;
+                displayName: string;
+                targetModule: ("matter" | "contract") | null;
+                targetTypeId: string | null;
+                targetTypeName: string | null;
+              };
+              requester: {
+                id: string;
+                displayName: string;
+                email: string;
+                image: string | null;
+              };
+              convertedContract: {
+                number: number;
+              } | null;
+            };
+            fields: {
+              fieldId: string;
+              slug: string;
+              displayName: string;
+              description: string | null;
+              /** @enum {string} */
+              fieldType:
+                | "text"
+                | "long_text"
+                | "number"
+                | "date"
+                | "boolean"
+                | "single_select"
+                | "multi_select"
+                | "user"
+                | "entity";
+              options: string[] | null;
+              displayOrder: number;
+              isRequired: boolean;
+            }[];
+            customFieldRefs: {
+              users: {
+                id: string;
+                displayName: string;
+              }[];
+              entities: {
+                id: string;
+                legalName: string;
+              }[];
+            };
+            attachments: {
+              id: string;
+              filename: string;
+              createdAt: string;
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  downloadRequestAttachment: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        number: number;
+        attachmentId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/octet-stream": string;
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  declineRequest: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        number: number;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          reason: string;
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            request: {
+              id: string;
+              number: number;
+              /** @enum {string} */
+              status: "new" | "converted" | "resolved" | "declined";
+              summary: string;
+              description: string | null;
+              /** @enum {string} */
+              urgency: "low" | "medium" | "high" | "critical";
+              customFields: {
+                [key: string]: string | number | boolean | string[];
+              };
+              declinedReason: string | null;
+              createdAt: string;
+              requestType: {
+                id: string;
+                displayName: string;
+                targetModule: ("matter" | "contract") | null;
+                targetTypeId: string | null;
+                targetTypeName: string | null;
+              };
+              requester: {
+                id: string;
+                displayName: string;
+                email: string;
+                image: string | null;
+              };
+              convertedContract: {
+                number: number;
+              } | null;
+            };
+          };
+        };
+      };
+      /** @description The named type says somebody has already dispositioned this Request (INT-007) — there is no claim step, so two triagers can open one Request and only the first press writes. The refusal carries `outcome`: the recorded decision, which the loser's client states instead of asking again; and, where that decision was a conversion this caller may reach, `convertedContract`: the record it became. There is no unnamed 409 on this route — an archived Request answers 404 and a missing reason answers 400. */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": {
+            /**
+             * @description Which refusal this is. A client branches on this, never on `detail` — `detail` is copy, and copy is rewritten. `about:blank` is a refusal at this status that names no type; print it rather than branching on it.
+             * @enum {string}
+             */
+            type: "urn:openlaw:problem:request-dispositioned" | "about:blank";
+            title: string;
+            status: number;
+            detail?: string;
+            instance?: string;
+            errors?: {
+              path: string;
+              message: string;
+            }[];
+            /**
+             * @description What was recorded, on the named refusal alone. A client branches on this, never on `detail` — `detail` is copy, and copy is rewritten.
+             * @enum {string}
+             */
+            outcome?: "converted" | "resolved" | "declined";
+            /** @description The contract the winning conversion made, by its C-### number — null on every other outcome, and null on a record this caller cannot reach (DD-014). The matter arm lands with M22. */
+            convertedContract?: {
+              number: number;
+            } | null;
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  resolveRequest: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        number: number;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          reply?: string;
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            request: {
+              id: string;
+              number: number;
+              /** @enum {string} */
+              status: "new" | "converted" | "resolved" | "declined";
+              summary: string;
+              description: string | null;
+              /** @enum {string} */
+              urgency: "low" | "medium" | "high" | "critical";
+              customFields: {
+                [key: string]: string | number | boolean | string[];
+              };
+              declinedReason: string | null;
+              createdAt: string;
+              requestType: {
+                id: string;
+                displayName: string;
+                targetModule: ("matter" | "contract") | null;
+                targetTypeId: string | null;
+                targetTypeName: string | null;
+              };
+              requester: {
+                id: string;
+                displayName: string;
+                email: string;
+                image: string | null;
+              };
+              convertedContract: {
+                number: number;
+              } | null;
+            };
+          };
+        };
+      };
+      /** @description The named type says somebody has already dispositioned this Request (INT-007) — there is no claim step, so two triagers can open one Request and only the first press writes. The refusal carries `outcome`: the recorded decision, which the loser's client states instead of asking again; and, where that decision was a conversion this caller may reach, `convertedContract`: the record it became. There is no unnamed 409 on this route — an archived Request answers 404. */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": {
+            /**
+             * @description Which refusal this is. A client branches on this, never on `detail` — `detail` is copy, and copy is rewritten. `about:blank` is a refusal at this status that names no type; print it rather than branching on it.
+             * @enum {string}
+             */
+            type: "urn:openlaw:problem:request-dispositioned" | "about:blank";
+            title: string;
+            status: number;
+            detail?: string;
+            instance?: string;
+            errors?: {
+              path: string;
+              message: string;
+            }[];
+            /**
+             * @description What was recorded, on the named refusal alone. A client branches on this, never on `detail` — `detail` is copy, and copy is rewritten.
+             * @enum {string}
+             */
+            outcome?: "converted" | "resolved" | "declined";
+            /** @description The contract the winning conversion made, by its C-### number — null on every other outcome, and null on a record this caller cannot reach (DD-014). The matter arm lands with M22. */
+            convertedContract?: {
+              number: number;
+            } | null;
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  convertRequest: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        number: number;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          title: string;
+          contractTypeId?: string;
+          customFields?: {
+            [key: string]: (string | number | boolean | string[]) | null;
+          };
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            request: {
+              id: string;
+              number: number;
+              /** @enum {string} */
+              status: "new" | "converted" | "resolved" | "declined";
+              summary: string;
+              description: string | null;
+              /** @enum {string} */
+              urgency: "low" | "medium" | "high" | "critical";
+              customFields: {
+                [key: string]: string | number | boolean | string[];
+              };
+              declinedReason: string | null;
+              createdAt: string;
+              requestType: {
+                id: string;
+                displayName: string;
+                targetModule: ("matter" | "contract") | null;
+                targetTypeId: string | null;
+                targetTypeName: string | null;
+              };
+              requester: {
+                id: string;
+                displayName: string;
+                email: string;
+                image: string | null;
+              };
+              convertedContract: {
+                number: number;
+              } | null;
+            };
+          };
+        };
+      };
+      /** @description The named type says somebody has already dispositioned this Request (INT-007) — there is no claim step, so two triagers can open one Request and only the first press writes. The refusal carries `outcome`: the recorded decision, which the loser's client states instead of asking again; and, where that decision was a conversion this caller may reach, `convertedContract`: the record it became. There is no unnamed 409 on this route — an archived Request answers 404, and a missing title, a contradicted target, or an unfilled hard-required field answers 400. */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": {
+            /**
+             * @description Which refusal this is. A client branches on this, never on `detail` — `detail` is copy, and copy is rewritten. `about:blank` is a refusal at this status that names no type; print it rather than branching on it.
+             * @enum {string}
+             */
+            type: "urn:openlaw:problem:request-dispositioned" | "about:blank";
+            title: string;
+            status: number;
+            detail?: string;
+            instance?: string;
+            errors?: {
+              path: string;
+              message: string;
+            }[];
+            /**
+             * @description What was recorded, on the named refusal alone. A client branches on this, never on `detail` — `detail` is copy, and copy is rewritten.
+             * @enum {string}
+             */
+            outcome?: "converted" | "resolved" | "declined";
+            /** @description The contract the winning conversion made, by its C-### number — null on every other outcome, and null on a record this caller cannot reach (DD-014). The matter arm lands with M22. */
+            convertedContract?: {
+              number: number;
+            } | null;
+          };
         };
       };
       /** @description Problem details (RFC 9457) */

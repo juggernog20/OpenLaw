@@ -274,6 +274,23 @@ export function stubApi(state: ApiState) {
     if (call.url.pathname === "/api/v1/portal/requests" && call.method === "GET") {
       return json(200, { requests: [] });
     }
+    // What the staff request detail's Convert dialog draws (#420): the
+    // live contract types with the fields each attaches, and the Entity
+    // registry. Both reads run on every render of `/inbox/{number}`, so
+    // they default to empty here for the portal reads' reason — a suite
+    // that is not about conversion should not have to answer them, and
+    // the one that is supplies rows through `extra`.
+    if (call.url.pathname === "/api/v1/contracts/options" && call.method === "GET") {
+      return json(200, {
+        contractTypes: [],
+        contractStatuses: [],
+        users: [],
+        approverGroups: [],
+      });
+    }
+    if (call.url.pathname === "/api/v1/entities" && call.method === "GET") {
+      return json(200, { entities: [] });
+    }
     if (call.url.pathname === "/api/v1/onboarding" && call.method === "GET") {
       return json(200, state.onboarding ?? { completed: true, emailConfigured: true });
     }

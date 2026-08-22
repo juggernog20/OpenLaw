@@ -453,16 +453,18 @@ describe("my-requests", () => {
     expect(within(row).getByText("R-45")).toBeInTheDocument();
     expect(within(row).getByText("Orion Cloud MSA renewal — redline review")).toBeInTheDocument();
     expect(within(row).getByText("Contract review")).toBeInTheDocument();
-    expect(within(row).getByText("New")).toBeInTheDocument();
+    expect(within(row).getByText("Open")).toBeInTheDocument();
     expect(within(row).getByText("5 hours ago")).toBeInTheDocument();
   });
 
-  it("renders all four statuses legibly", async () => {
+  it("renders all four statuses in the requester's own vocabulary", async () => {
+    // The INT-003 M21/6 addendum: the list pill says what the email
+    // says, so one person is never told two names for one status.
     stubApi({ signedIn: REQUESTER, extra: homeWith(MINE) });
     renderAt("/portal");
 
     const block = await screen.findByRole("region", { name: "Your requests" });
-    for (const label of ["New", "Converted", "Resolved", "Declined"]) {
+    for (const label of ["Open", "In progress", "Resolved", "Declined"]) {
       expect(within(block).getByText(label)).toBeInTheDocument();
     }
   });
@@ -492,7 +494,7 @@ describe("my-requests", () => {
 
     const block = await screen.findByRole("region", { name: "Your requests" });
     const row = within(block).getByRole("link");
-    expect(within(row).getByText("Converted")).toBeInTheDocument();
+    expect(within(row).getByText("In progress")).toBeInTheDocument();
     expect(row).toHaveAttribute("href", "/portal/requests/38");
   });
 

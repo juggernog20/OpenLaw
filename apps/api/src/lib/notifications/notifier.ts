@@ -67,18 +67,21 @@ import {
   type NotificationEntityType,
   type NotificationEventType,
   type RequestStatus,
+  type SeverityLevel,
   type Transaction,
 } from "@openlaw/db";
 import { boundedQueueAsk, type JobQueue } from "../../pipeline/jobs.js";
 import {
   contractRecordAudience,
   CONTRACT_ENTITY,
+  inboxAudience,
   reachedBy,
   requestAudience,
+  requestConvertedInto,
   requestReachedBy,
   REQUEST_ENTITY,
 } from "./audience.js";
-import { emailTimingOf, EVENT_GROUP } from "./catalog.js";
+import { emailTimingOf, EVENT_GROUP, requestSideOf } from "./catalog.js";
 import { channelChoices } from "./preferences.js";
 
 /** Where the seam's own lines go when a wake-up could not be sent. The
@@ -163,11 +166,8 @@ export interface TaskAssignedEvent {
   assigneeId: string;
 }
 
-/** What one comment tells the people it addresses (CMT-007). */
-export interface CommentMentionedEvent {
-  contractId: string;
-  contractNumber: number;
-  contractTitle: string;
+/** What every mention carries, whichever record it happened on. */
+interface MentionedOnAnyRecord {
   actorId: string;
   actorName: string;
   /**
@@ -180,6 +180,39 @@ export interface CommentMentionedEvent {
   /** The comment's DD-016 tier, carried so the fan-out can hold it. */
   visibility: CommentVisibility;
 }
+
+/** A mention on a contract thread — the record names itself through the
+ * caller, as every group-1 event on a contract does: the route has just
+ * read the row it is writing to. */
+export interface ContractMentionedEvent extends MentionedOnAnyRecord {
+  entityType: typeof CONTRACT_ENTITY;
+  contractId: string;
+  contractNumber: number;
+  contractTitle: string;
+}
+
+/**
+ * A mention on a Request thread (M21/5).
+ *
+ * The Request names itself **behind** the seam rather than through the
+ * caller, which is where every Request event's number and summary come
+ * from (M20/8): the audience read holds the row already, so asking the
+ * comments module for two columns would be the same query twice. That
+ * read is also what makes the M18/4 rule enforceable here rather than at
+ * a call site — it is the only thing that knows who the Requester is.
+ */
+export interface RequestMentionedEvent extends MentionedOnAnyRecord {
+  entityType: typeof REQUEST_ENTITY;
+  requestId: string;
+}
+
+/**
+ * What one comment tells the people it addresses (CMT-007) — one arm per
+ * record type, because a mention is done *to* you whatever record it
+ * happens on (NOT-002's M18/1 addendum) and the two records name
+ * themselves and reach people differently.
+ */
+export type CommentMentionedEvent = ContractMentionedEvent | RequestMentionedEvent;
 
 /**
  * What every ambient event on a record carries (NOT-002 group 2).
@@ -347,6 +380,29 @@ export interface RequestRepliedEvent extends RequestEvent {
   visibility: CommentVisibility;
 }
 
+/**
+ * What a Request's arrival tells the people who triage (INT-006).
+ *
+ * NOT-002's group 4, and the one event on a Request whose audience is
+ * not the Requester. The Request still names itself by its id alone —
+ * R-### and the summary come from the audience read, as every other
+ * Request event's do — and what the route adds is the two facts a
+ * triager weighs before opening anything: what kind of ask it is, and
+ * how hot the person who asked says it is.
+ *
+ * Those two are passed rather than read behind the seam because the
+ * submission route has just written them, which is group 1's rule: a
+ * caller that already holds a fact is not made to read it again.
+ */
+export interface RequestSubmittedEvent extends RequestEvent {
+  /** The request type's display name (INT-002) — what the form was
+   * called, not its slug. */
+  requestType: string;
+  /** What the Requester claimed (INT-002). It maps 1:1 to priority at
+   * conversion and it is never risk, which stays legal's. */
+  urgency: SeverityLevel;
+}
+
 /** What a turned-down Request tells the person who asked (INT-006). */
 export interface RequestDeclinedEvent extends RequestEvent {
   /** Why. INT-006 makes "no" arrive with a why, so the reason travels
@@ -414,12 +470,16 @@ export interface Notifier {
    * A mention is done *to* you: somebody has asked you a question by
    * name, which is the same kind of act as being handed a record. So it
    * interrupts, rather than riding the ambient default an ordinary
-   * comment takes (NOT-002's M18/1 addendum).
+   * comment takes (NOT-002's M18/1 addendum) — and it interrupts
+   * whatever record it happened on, which is why the event has one arm
+   * per record type from M21/5 rather than being a contract's alone.
    *
    * The audience is read from `comment_mentions` **here**, inside the
    * transaction that wrote it — a body is never parsed — and it is
    * narrowed by the comment's own tier, so a Legal Only mention reaches
-   * nobody the tier excludes.
+   * nobody the tier excludes. On a Request it is narrowed once more, by
+   * the M18/4 rule: the Requester is told by the reply event in the one
+   * room they hear, so the mention leaves them out of it.
    */
   commentMentioned(tx: NotifyingTransaction, event: CommentMentionedEvent): Promise<void>;
 
@@ -442,6 +502,15 @@ export interface Notifier {
    * produces a Contributor's bell item. The people the comment named
    * are left out here: they have already been told by
    * {@link commentMentioned}, which interrupts.
+   *
+   * **On a record a Request converted into it raises the reply too**
+   * (CMT-001, M21/11): a Full Thread comment reaches the person who
+   * asked, on their portal bell and by email, as {@link requestReplied}
+   * — because the thread moved onto the work and the promise moved with
+   * it. The seam finds them through the conversion's back-link, so no
+   * caller learns that a Request is behind the record, and the Requester
+   * is dropped from the group-2 event at that tier so one comment tells
+   * one person once.
    */
   commentPosted(tx: NotifyingTransaction, event: CommentPostedEvent): Promise<void>;
 
@@ -507,6 +576,27 @@ export interface Notifier {
   expiryApproaching(tx: NotifyingTransaction, event: DateReminderEvent): Promise<number>;
 
   /**
+   * A Request has reached the Inbox (INT-006) — group 4, bell on and
+   * email opt-in (NOT-002).
+   *
+   * **The audience is every live Member+**, read behind the seam like
+   * every other audience: Member+ triages, and INT-006 declined the
+   * routing rules, the rotation, and the claim mechanism that would each
+   * have narrowed it. So there is no list on the wire and no way for a
+   * caller to address somebody who does not triage.
+   *
+   * The actor is excluded like everywhere else, which is what makes a
+   * Member+ who submits a Request of their own hear about it once — as
+   * the Requester, on the portal — rather than twice.
+   *
+   * Raised by `POST /requests` beside {@link requestCreated}, in the
+   * insert's own transaction. Two events for one act, because the staff
+   * side and the requester side are two sentences to two audiences with
+   * two defaults.
+   */
+  requestSubmitted(tx: NotifyingTransaction, event: RequestSubmittedEvent): Promise<void>;
+
+  /**
    * A Request has been submitted (INT-001) — group 5, portal bell on and
    * email immediate (NOT-002).
    *
@@ -548,6 +638,11 @@ export interface Notifier {
    * It carries the comment's tier, so only a Full Thread reply reaches
    * the portal: a Legal Only or Working Team comment is staff talking
    * among themselves, and the wall behind the seam is what says so.
+   *
+   * Raised by the `request` arm of the thread while the Request is still
+   * a comment target, and by {@link commentPosted} once a conversion has
+   * moved the thread onto a record — the same event, at the same person,
+   * from whichever record the conversation is now on.
    */
   requestReplied(tx: NotifyingTransaction, event: RequestRepliedEvent): Promise<void>;
 
@@ -665,7 +760,14 @@ async function fanOut(
   const reachable =
     entity.type === CONTRACT_ENTITY
       ? await reachedBy(tx, entity.id, [...byUser.keys()], narrowing)
-      : await requestReachedBy(tx, entity.id, [...byUser.keys()], narrowing);
+      : await requestReachedBy(tx, entity.id, [...byUser.keys()], {
+          ...narrowing,
+          // Which standing this event addressed (M21/4, M21/5). It is
+          // read from the catalog rather than passed by the method, so
+          // an event added to a group later inherits that group's side
+          // and cannot be the one that forgets to ask for it.
+          side: requestSideOf(eventType),
+        });
 
   // 3. The preferences, over the group's defaults (NOT-001/002).
   const recipients = [...byUser.keys()].filter((id) => reachable.has(id));
@@ -841,6 +943,186 @@ async function fanOutToRequest(
 }
 
 /**
+ * The whole of NOT-002's group 4, for one Request arriving.
+ *
+ * Group 5's shape, said for the other side of the same record, and the
+ * one place the two differ is the audience: this reads every live
+ * Member+ (INT-006) where {@link fanOutToRequest} reads the one
+ * Requester (DD-013). Both read it behind the seam, and for the same
+ * reason — a caller that could name the audience could name the wrong
+ * people.
+ *
+ * The Request's number and summary come from that same read, and are
+ * **added** to the payload rather than taken from it, so every item and
+ * every email about a Request names it the same way whichever bell drew
+ * it.
+ */
+async function fanOutToInbox(
+  tx: NotifyingTransaction,
+  event: RequestSubmittedEvent,
+): Promise<void> {
+  const audience = await requestAudience(tx, event.requestId);
+  // A Request that is not there is about nobody — the contract read's
+  // answer, for its reason.
+  if (!audience) return;
+  const triagers = await inboxAudience(tx);
+  await fanOut(
+    tx,
+    "request.submitted",
+    { type: REQUEST_ENTITY, id: event.requestId },
+    event.actorId,
+    triagers.map((userId) => ({
+      userId,
+      payload: {
+        requestType: event.requestType,
+        urgency: event.urgency,
+        requestNumber: audience.requestNumber,
+        requestSummary: audience.summary,
+        actorId: event.actorId,
+        actorName: event.actorName,
+      },
+    })),
+  );
+}
+
+/**
+ * The whole of NOT-002's group 1, for one mention on one Request (M21/5).
+ *
+ * Group 4's shape, said for the people one comment named rather than for
+ * the whole queue, and for its reason: the Request names itself out of
+ * the audience read, so every item and every email about a Request names
+ * it the same way whichever bell drew it.
+ *
+ * **The audience is the staff side, and the seam is what says so.** The
+ * side rides the event's group (`assigned_to_you` is the Inbox's), so the
+ * wall step re-asks that each person named is still Member+ — which is
+ * what keeps a Business User Requester out of a group-1 row without any
+ * call site having to remember them.
+ *
+ * **The Requester is dropped at Full Thread** (NOT-002's M18/4 rule).
+ * `requestReplied` already reaches them in that room, and one comment
+ * tells one person once. It is the tier's rule rather than the person's,
+ * because the reason is the tier's: no reply event reaches Legal Only or
+ * Working Team, so a Member+ who raised the Request themselves is told by
+ * the mention there and by nothing else. Only that one person can stand
+ * on both sides — the Requester's own rooms are Full Thread and no other
+ * (DD-016), so a Business User can only ever be named in the room this
+ * drops them from.
+ */
+async function mentionedOnRequest(
+  tx: NotifyingTransaction,
+  event: RequestMentionedEvent,
+  named: readonly { userId: string }[],
+  who: { actorId: string; actorName: string },
+): Promise<void> {
+  const audience = await requestAudience(tx, event.requestId);
+  // A Request that is not there is about nobody — the contract read's
+  // answer, for its reason.
+  if (!audience) return;
+  const told =
+    event.visibility === "full_thread"
+      ? named.filter((row) => row.userId !== audience.requesterId)
+      : named;
+  await fanOut(
+    tx,
+    "comment.mentioned",
+    { type: REQUEST_ENTITY, id: event.requestId },
+    event.actorId,
+    told.map((row) => ({
+      userId: row.userId,
+      payload: {
+        requestNumber: audience.requestNumber,
+        requestSummary: audience.summary,
+        ...who,
+        commentId: event.commentId,
+      },
+    })),
+    { narrowing: { tier: event.visibility } },
+  );
+}
+
+/**
+ * One comment on one record, and everything it tells anybody (M21/11).
+ *
+ * **Two events, because the record can have two audiences.** The record's
+ * own people hear NOT-002's group 2, which is what a comment on a
+ * contract has always raised. And where a Request converted into this
+ * record, the person who asked hears group 5 — the reply promise,
+ * following the thread onto the work exactly as CMT-001 said the thread
+ * would follow it.
+ *
+ * **The back-link is read here rather than at any call site.** No comment
+ * route and no audience arm knows a Request is behind this contract: the
+ * seam finds it, so a reply typed on the contract's applet, on the staff
+ * request detail, and on the portal all reach the same person the same
+ * way. That is the M20/8 shape — a caller names what happened, and who
+ * hears it is the seam's.
+ *
+ * **The tier decides both**, and neither decides it here. The reply is
+ * raised at every tier and the fan-out's own wall drops it below Full
+ * Thread, because the Requester is in one room (DD-016). And the actor
+ * exclusion is the fan-out's too, so a Requester replying on their own
+ * converted Request tells nobody in group 5 and tells the record's people
+ * in group 2, which is what a reply from them is.
+ *
+ * **One comment tells one person once** (NOT-002's M18/4 rule, applied
+ * where the M21/5 addendum applied it to the mention). At Full Thread the
+ * Requester is dropped from the record's group-2 event, because the reply
+ * is about to reach them and louder. Below Full Thread no reply can reach
+ * them, so a Requester who is also on the record's team keeps the group-2
+ * item that is their only news of it. The rule is the tier's, not the
+ * person's.
+ *
+ * **And a comment that names the Requester by name drops the reply
+ * instead.** On a record the mention is the loudest of the three events
+ * and the other two step aside, which is the order the contract thread
+ * has always had. Only a Member+ who raised the Request can be in that
+ * position — a contract offers no Business User as a mention candidate
+ * (CMT-007) — and the arithmetic is the same either way: one comment,
+ * one row.
+ */
+async function commentOnRecord(tx: NotifyingTransaction, event: CommentPostedEvent): Promise<void> {
+  const origin = await requestConvertedInto(tx, event.contractId);
+  const named = new Set(event.mentioned ?? []);
+  await fanOutToRecord(
+    tx,
+    "comment.posted",
+    event,
+    // The words are not here, for the mention's reason: the thread
+    // is where DD-016 is enforced and where a redact can still reach
+    // the text (CMT-006). The item is a prompt to go and read it.
+    { commentId: event.commentId },
+    {
+      except: [
+        // The people this comment named: they have just been told,
+        // louder, by the mention.
+        ...named,
+        ...(origin !== null && event.visibility === "full_thread" ? [origin.requesterId] : []),
+      ],
+      narrowing: { tier: event.visibility },
+    },
+  );
+  if (origin === null) return;
+  // And a Requester the comment named by name has been told louder still
+  // — on this record, by the mention. Only one person can ever be in
+  // this branch: a Member+ who raised the Request and can reach the
+  // record it became, because nobody else is offered as a mention
+  // candidate on a contract (CMT-007) and the composer refuses a name it
+  // was not offered. The mention wins here rather than the reply,
+  // because on a record the interrupting event is the one that carries
+  // the news and the ambient ones step aside — the same order the
+  // record's own group-2 event takes one call above.
+  if (named.has(origin.requesterId)) return;
+  await fanOutToRequest(
+    tx,
+    "request.replied",
+    { requestId: origin.requestId, actorId: event.actorId, actorName: event.actorName },
+    { commentId: event.commentId },
+    { narrowing: { tier: event.visibility } },
+  );
+}
+
+/**
  * The whole of NOT-002's group 3, for one date on one record.
  *
  * The three date events differ by a slug and by whether the date has a
@@ -1003,11 +1285,21 @@ export function createNotifier(deps: NotifierDeps): Notifier {
       // Read from the table, in the transaction that wrote it. Who a
       // comment addresses is a list somebody chose from a typeahead
       // (CMT-007), and the body is never parsed for it — that is the
-      // whole reason `comment_mentions` exists.
+      // whole reason `comment_mentions` exists. It is read once, above
+      // the arms, because it is the same question on both records.
       const named = await tx
         .select({ userId: commentMentions.userId })
         .from(commentMentions)
         .where(eq(commentMentions.commentId, event.commentId));
+      // The comment's own words are never in a payload, and never will
+      // be. A mention is a prompt to go and read the thread, where the
+      // tier is enforced and a redact can still reach the text (CMT-006)
+      // — a payload could not be redacted out of.
+      const who = { actorId: event.actorId, actorName: event.actorName };
+      if (event.entityType === REQUEST_ENTITY) {
+        await mentionedOnRequest(tx, event, named, who);
+        return;
+      }
       await fanOut(
         tx,
         "comment.mentioned",
@@ -1015,15 +1307,10 @@ export function createNotifier(deps: NotifierDeps): Notifier {
         event.actorId,
         named.map((row) => ({
           userId: row.userId,
-          // The comment's own words are not here, and never will be. A
-          // mention is a prompt to go and read the thread, where the
-          // tier is enforced and a redact can still reach the text
-          // (CMT-006) — a payload could not be redacted out of.
           payload: {
             contractNumber: event.contractNumber,
             contractTitle: event.contractTitle,
-            actorId: event.actorId,
-            actorName: event.actorName,
+            ...who,
             commentId: event.commentId,
           },
         })),
@@ -1041,19 +1328,7 @@ export function createNotifier(deps: NotifierDeps): Notifier {
     },
 
     async commentPosted(tx: NotifyingTransaction, event: CommentPostedEvent): Promise<void> {
-      await fanOutToRecord(
-        tx,
-        "comment.posted",
-        event,
-        // The words are not here, for the mention's reason: the thread
-        // is where DD-016 is enforced and where a redact can still reach
-        // the text (CMT-006). The item is a prompt to go and read it.
-        { commentId: event.commentId },
-        {
-          ...(event.mentioned && event.mentioned.length > 0 ? { except: event.mentioned } : {}),
-          narrowing: { tier: event.visibility },
-        },
-      );
+      await commentOnRecord(tx, event);
     },
 
     async documentAdded(tx: NotifyingTransaction, event: DocumentEvent): Promise<void> {
@@ -1104,6 +1379,10 @@ export function createNotifier(deps: NotifierDeps): Notifier {
 
     expiryApproaching(tx: NotifyingTransaction, event: DateReminderEvent): Promise<number> {
       return dateReminder(tx, "date.expiry_approaching", event, {});
+    },
+
+    async requestSubmitted(tx: NotifyingTransaction, event: RequestSubmittedEvent): Promise<void> {
+      await fanOutToInbox(tx, event);
     },
 
     async requestCreated(tx: NotifyingTransaction, event: RequestEvent): Promise<void> {

@@ -14,6 +14,15 @@
  * still `new` takes the clarifying back-and-forth, so the card draws
  * whatever the status is and consults none of them.
  *
+ * **And it stays live after a conversion, on the record** (CMT-001,
+ * #422). A conversion moves the comment rows onto the contract the
+ * Request became, and the `request` audience arm follows that
+ * back-link. So this card goes on asking for the thread by the
+ * Request's own id, and the answer it gets is the record's
+ * conversation. There is no branch here and no second address: which
+ * record the rows hang off is the seam's answer, and a card that had to
+ * know would be a second place for CMT-001 to be forgotten.
+ *
  * **Everything here is Full Thread, and that is the API's doing rather
  * than this component's.** The `request` arm puts a Requester in one
  * room (DD-016), so the read already carries Full Thread comments alone

@@ -33,35 +33,70 @@
  *
  * **The row direction is asked per surface** (M20/9). NOT-001 has one
  * system and two bells, so {@link notificationScope} takes which one is
- * asking: the staff centre answers rows about contracts, the portal bell
- * answers rows about the reader's own Requests, and neither can answer
- * the other's.
+ * asking: the staff centre answers rows about contracts and about the
+ * Inbox, the portal bell answers rows about the reader's own Requests,
+ * and neither can answer the other's.
+ *
+ * **A Request is read from two sides, and the event says which** (M21/4).
+ * Group 5 is the Requester's own (DD-013); group 4 is the Inbox's, and
+ * its audience is every live Member+ (INT-006). So both the person
+ * direction and the row direction take the side as an argument rather
+ * than assuming the Requester — the same shape as the surface argument,
+ * one question down.
  */
 
 import {
   and,
+  asc,
   contracts,
   contractTeam,
   eq,
   inArray,
   isNull,
   notifications,
+  or,
   requests,
   users,
   type CommentVisibility,
   type Executor,
   type SQL,
+  type UserRole,
 } from "@openlaw/db";
 import type { AuthenticatedUser } from "../../auth/user.js";
 import { contractMentionCandidates, contractTeamScope } from "../contract-access.js";
+import { requestEventTypesOn, type RequestSide } from "./catalog.js";
 
 /** The one entity type M18 writes. Named so the fan-out, the reads, and
  * the send job agree on it in one place. */
 export const CONTRACT_ENTITY = "contract" as const;
 
-/** The second one, written from M20/8 by NOT-002's group 5. Named here
- * beside the first for the same reason. */
+/** The second one, written from M20/8 by NOT-002's group 5 and from
+ * M21/4 by group 4. Named here beside the first for the same reason. */
 export const REQUEST_ENTITY = "request" as const;
+
+/**
+ * Member+ (CONTEXT.md) — who triages, and therefore the whole audience
+ * of NOT-002's group 4 (INT-006).
+ *
+ * There are no routing rules to narrow it and no team table on a
+ * Request to consult, so "every live Member+" is the audience rule in
+ * full. The comments module's `request` arm reads the same two roles for
+ * the same reason: on a Request, staff standing is a fact about the role
+ * and nothing else.
+ */
+const MEMBER_PLUS: readonly UserRole[] = ["administrator", "legal_team_member"];
+
+/**
+ * Which side of a Request an event is addressed to.
+ *
+ * Re-exported from the catalog, which is where the answer is decided: the
+ * side follows the event's group (M21/5), so a caller that reads a slug
+ * off a row asks `requestSideOf` and passes the answer down here. It is
+ * an argument rather than a branch inside each caller because it is the
+ * same question the surface argument asks about rows: who is this
+ * sentence for.
+ */
+export type { RequestSide };
 
 /**
  * Of the people an event named, the ones the record reaches — and, where
@@ -244,37 +279,106 @@ export async function requestAudience(
   };
 }
 
+/** The ask a record was born from, as the reply promise needs it
+ * described (CMT-001, M21/11). */
+export interface ConvertedFrom {
+  requestId: string;
+  /** Who asked — the one person the reply is for, and the one person the
+   * record's own group-2 event must therefore leave out at Full Thread
+   * so that one comment tells one person once. */
+  requesterId: string;
+}
+
 /**
- * Of the people a group-5 event named, the ones the Request still
+ * The Request a conversion turned into this contract, or `null` where no
+ * Request did (CMT-001, INT-002).
+ *
+ * **The back-link is read behind the seam, and this is what makes the
+ * reply promise survive the thread's move.** A staff Full Thread comment
+ * on a converted record is a reply to the person who asked, whatever
+ * screen it was typed on — the contract's applet, the staff request
+ * detail, or the portal — so the fan-out finds them from the record
+ * rather than being told about them by a call site. No comment route
+ * knows a Request exists, which is the property that keeps this from
+ * being one rule in three hands.
+ *
+ * **An archived Request is not there**, by the house rule that NULL means
+ * live and for {@link requestAudience}'s reason: a frozen record is not
+ * something to send anybody a message about.
+ *
+ * At most one row can answer — a Request becomes one record, and the
+ * table holds that as a check constraint — but a contract could in
+ * principle be named by two rows if the column were ever written twice,
+ * so the read is bounded and ordered rather than trusting the planner.
+ */
+export async function requestConvertedInto(
+  db: Executor,
+  contractId: string,
+): Promise<ConvertedFrom | null> {
+  const [record] = await db
+    .select({ id: requests.id, requesterId: requests.requesterId })
+    .from(requests)
+    .where(and(eq(requests.convertedContractId, contractId), isNull(requests.archivedAt)))
+    .orderBy(asc(requests.number))
+    .limit(1);
+  if (!record) return null;
+  return { requestId: record.id, requesterId: record.requesterId };
+}
+
+/**
+ * Of the people an event on a Request named, the ones the Request still
  * reaches — the wall step of the five, said for a Request.
  *
  * **A Request has no wall.** DD-014's flag is a contract's and INT-002
  * gives a Request no equivalent (the CMT-010 M20/7 arm says the same
- * thing about the thread). So what continues to be asked here is the
- * three facts that can still change after a row is written: the Request
- * is still live, this person is still its Requester, and they have not
- * left (SET-005). Telling somebody who has been archived reaches nobody,
- * and a bell row whose Request has gone — or been frozen — is a sentence
- * about nothing.
+ * thing about the thread). So what continues to be asked here are the
+ * facts that can still change after a row is written: the Request is
+ * still live, this person still stands where the event addressed them,
+ * and they have not left (SET-005). Telling somebody who has been
+ * archived reaches nobody, and a bell row whose Request has gone — or
+ * been frozen — is a sentence about nothing.
+ *
+ * **`side` is which of the two standings the event asked for** (M21/4).
+ * A group-5 event is addressed to the Requester, so the fact re-asked is
+ * that this person is still it. Group 4's arrival is addressed to the
+ * Inbox, so the fact re-asked is that this person is still Member+ — a
+ * triager demoted between the write and the send is a person the Inbox
+ * no longer reaches, and the row stops being sent exactly as a walled-off
+ * contract's does. The default is the Requester, which is the narrower
+ * of the two and therefore the safe way for a caller to say nothing.
  *
  * **`tier` is how a group-5 event holds DD-016.** A Requester is in Full
  * Thread and nowhere else, so an event about something said in another
  * room reaches them not at all. It is applied here rather than at the
  * call site for the reason the contract wall is: the composer's refusal
- * is the first gate, and this is the one no later caller can forget.
+ * is the first gate, and this is the one no later caller can forget. It
+ * narrows nothing on the Inbox side, because a Member+ is in every room
+ * on every Request — the comments module's `request` arm says the same.
  */
 export async function requestReachedBy(
   db: Executor,
   requestId: string,
   userIds: readonly string[],
-  narrowing: { tier?: CommentVisibility } = {},
+  narrowing: { tier?: CommentVisibility; side?: RequestSide } = {},
 ): Promise<Set<string>> {
   if (userIds.length === 0) return new Set();
-  if (narrowing.tier !== undefined && !REQUESTER_TIERS.includes(narrowing.tier)) return new Set();
+  const side = narrowing.side ?? "requester";
+  if (
+    side === "requester" &&
+    narrowing.tier !== undefined &&
+    !REQUESTER_TIERS.includes(narrowing.tier)
+  ) {
+    return new Set();
+  }
   const rows = await db
     .select({ id: users.id })
     .from(requests)
-    .innerJoin(users, eq(users.id, requests.requesterId))
+    .innerJoin(
+      users,
+      // The standing itself, as the join condition: the Requester is one
+      // named row, and a triager is anybody holding a Member+ role.
+      side === "inbox" ? inArray(users.role, [...MEMBER_PLUS]) : eq(users.id, requests.requesterId),
+    )
     .where(
       and(
         eq(requests.id, requestId),
@@ -284,6 +388,28 @@ export async function requestReachedBy(
       ),
     );
   return new Set(rows.map((row) => row.id));
+}
+
+/**
+ * Who NOT-002's group 4 is about: every live Member+ (INT-006).
+ *
+ * The audience read behind the seam, in group 2's and group 5's shape
+ * and for their reason — a caller that could name the audience could
+ * name somebody who does not triage. There is nothing about the Request
+ * in the answer, because there is nothing about the Request in the
+ * rule: Member+ triages, and INT-006 declined routing rules, rotation,
+ * and any claim mechanism that would have narrowed it.
+ *
+ * Archived people are out (SET-005), so the answer is already the live
+ * set; the wall step re-asks the same fact at send time, where the
+ * standing can have changed since.
+ */
+export async function inboxAudience(db: Executor): Promise<string[]> {
+  const rows = await db
+    .select({ id: users.id })
+    .from(users)
+    .where(and(inArray(users.role, [...MEMBER_PLUS]), isNull(users.archivedAt)));
+  return rows.map((row) => row.id);
 }
 
 /** The Requester's one room (DD-016), as the fan-out has to know it. The
@@ -310,21 +436,25 @@ export type NotificationSurface = (typeof NOTIFICATION_SURFACES)[number];
  * The notification rows this viewer may still be shown on this surface —
  * the predicate the list, the count, and both writes compose.
  *
- * **Two surfaces, two disjoint sets of rows, and the split is by entity
- * type.** The staff centre answers `contract` rows and the portal bell
- * answers `request` rows; neither can ever answer the other's. That is
- * what makes a staff mark-all-read unable to touch a Requester's group-5
- * items, and the portal bell unable to draw a word about a contract.
+ * **Two surfaces, two disjoint sets of rows, and the split is by
+ * audience.** The staff centre answers `contract` rows and the Inbox's
+ * own group-4 arrivals; the portal bell answers a person's own group-5
+ * items. Neither can ever answer the other's — including for the one
+ * person who holds both kinds of row about one Request, a Member+ who
+ * submitted it. That is what makes a staff mark-all-read unable to touch
+ * a Requester's items, and the portal bell unable to draw a word about a
+ * contract.
  *
  * **A row about a contract passes only while the viewer reaches that
  * contract**, and reach is `contractTeamScope`: the same answer the
  * record, its paper, its comments, and its feed are read through.
  *
- * **A row about a Request passes only while the viewer is still its
- * Requester and the Request is still live.** A Request has no wall
- * (DD-014's flag is a contract's; INT-002 gives a Request no
- * equivalent), so what is re-asked here is the pair of facts that can
- * still change after the row was written — the same pair
+ * **A row about a Request passes only while the viewer still stands
+ * where the event addressed them and the Request is still live** — its
+ * Requester on the portal (DD-013), a triager in the Inbox (INT-006). A
+ * Request has no wall (DD-014's flag is a contract's; INT-002 gives a
+ * Request no equivalent), so what is re-asked here are the facts that
+ * can still change after the row was written — the same facts
  * {@link requestReachedBy} re-asks at send time, said over rows instead
  * of over people. An archived Request is not there, by the house rule
  * that NULL means live: a frozen record is not something to prompt
@@ -350,21 +480,52 @@ export function notificationScope(
   return surface === "portal" ? portalScope(db, user) : staffScope(db, user);
 }
 
-/** The staff notification centre's rows: contracts this person reaches. */
+/**
+ * The staff notification centre's rows: contracts this person reaches,
+ * and — for a Member+ — the Inbox's own arrivals.
+ *
+ * **Two arms, because the surface has two kinds of news** (M21/4). A
+ * contract row passes while `contractTeamScope` says the reader reaches
+ * the record; a Request row passes while the reader triages (INT-006)
+ * and the Request is still live. The second arm is narrowed to the
+ * staff side's slugs (M21/5) and not merely to the entity type, which
+ * is what keeps a Member+'s own group-5 receipt on the portal bell
+ * where it belongs: the same person holds both kinds of row about the
+ * same Request, and the split between the two bells is by audience
+ * rather than by table.
+ */
 function staffScope(db: Executor, user: AuthenticatedUser): SQL | undefined {
   const scope = contractTeamScope(db, user);
+  return or(
+    and(
+      eq(notifications.entityType, CONTRACT_ENTITY),
+      // An Administrator reaches every contract, so the subquery would be
+      // the whole table and the clause only cost. `contractTeamScope`
+      // answering `undefined` is that fact, read here rather than
+      // restated as a role check of this module's own.
+      scope === undefined
+        ? undefined
+        : inArray(
+            notifications.entityId,
+            db.select({ id: contracts.id }).from(contracts).where(scope),
+          ),
+    ),
+    MEMBER_PLUS.includes(user.role) ? inboxRows(db) : undefined,
+  );
+}
+
+/** The staff side's Request rows: group 4's arrivals and group 1's
+ * mentions, about Requests that are still there. A frozen record is not
+ * something to prompt anybody about, which is the portal arm's rule said
+ * on the staff side. */
+function inboxRows(db: Executor): SQL | undefined {
   return and(
-    eq(notifications.entityType, CONTRACT_ENTITY),
-    // An Administrator reaches every contract, so the subquery would be
-    // the whole table and the clause only cost. `contractTeamScope`
-    // answering `undefined` is that fact, read here rather than
-    // restated as a role check of this module's own.
-    scope === undefined
-      ? undefined
-      : inArray(
-          notifications.entityId,
-          db.select({ id: contracts.id }).from(contracts).where(scope),
-        ),
+    eq(notifications.entityType, REQUEST_ENTITY),
+    inArray(notifications.eventType, requestEventTypesOn("inbox")),
+    inArray(
+      notifications.entityId,
+      db.select({ id: requests.id }).from(requests).where(isNull(requests.archivedAt)),
+    ),
   );
 }
 
@@ -372,6 +533,13 @@ function staffScope(db: Executor, user: AuthenticatedUser): SQL | undefined {
 function portalScope(db: Executor, user: AuthenticatedUser): SQL | undefined {
   return and(
     eq(notifications.entityType, REQUEST_ENTITY),
+    // The group, not only the entity type, for the staff arm's reason:
+    // a Member+ reading their own Requests here must not be shown the
+    // Inbox's arrivals, which are their staff work rather than their
+    // own asks. Two named groups rather than "everything but group 4",
+    // so a group added later is invisible until somebody has decided
+    // which bell it belongs on.
+    inArray(notifications.eventType, requestEventTypesOn("requester")),
     // No Administrator shortcut here, and there is nothing to shortcut:
     // reaching every contract is a staff role's power (DD-014), while
     // being somebody's Requester is a fact about one row (DD-013). An

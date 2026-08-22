@@ -175,20 +175,20 @@ type ContractStatusPayloads = {
 };
 
 /**
- * The Request record (INT-001, INT-002). One verb for now: a Request is
- * born on the portal and everything that happens to it afterwards —
- * conversion, resolution, decline — is the Inbox's (M21), so those
- * verbs land with the routes that write them.
+ * The Request record (INT-001, INT-002, INT-007). A Request is born on
+ * the portal, and triage decides its outcome. All three of INT-007's
+ * dispositions narrate here (M21/7, M21/8, M21/9).
  *
  * The payload carries the Request's `number` and **no free text at
- * all** — not the summary, and not the collected values, only the
- * slugs that were answered. A `contract.*` payload carries its title so
- * an entry goes on naming the record after a rename; a Request needs
- * no such thing, because R-42 *is* its name and the number never
- * changes. And the difference matters here: every one of those strings
- * is the requester's own words, DD-017 forbids `UPDATE` and `DELETE` on
- * the log, and text that enters a payload can never leave it — which is
- * the same reason CMT-008 keeps comment bodies out of `comment.*`.
+ * all** — not the summary, not the collected values, and not the
+ * decline reason. Only the slugs that were answered. A `contract.*`
+ * payload carries its title so an entry goes on naming the record after
+ * a rename; a Request needs no such thing, because R-42 *is* its name
+ * and the number never changes. And the difference matters here: DD-017
+ * forbids `UPDATE` and `DELETE` on the log, and text that enters a
+ * payload can never leave it — which is the same reason CMT-008 keeps
+ * comment bodies out of `comment.*`. The reason a decline was given for
+ * lives on the Request itself, where a correction can still reach it.
  */
 type RequestPayloads = {
   "request.created": {
@@ -198,6 +198,49 @@ type RequestPayloads = {
     /** The slugs the form answered, never the values. */
     customFields: string[];
   };
+  /** INT-007's first disposition. Who declined is the actor on the row,
+   * which is the audit datum INT-007 asks for; the entry says the act
+   * and names the Request, and the reason stays on the record. */
+  "request.declined": { number: number };
+  /** INT-007's second disposition (M21/8): the ask was answered in the
+   * thread and closed. The same shape the decline's entry has, for the
+   * same reason — who resolved is the actor on the row, and the answer
+   * itself is a comment on the thread rather than text in a payload. A
+   * resolution with no closing reply looks identical here, because what
+   * this entry records is the closure and not the answer. */
+  "request.resolved": { number: number };
+  /**
+   * INT-007's third disposition (M21/9): the ask became a record.
+   *
+   * `contractNumber` is the whole of what the entry adds, and it is a
+   * number rather than a title for the reason a Request's own payload
+   * carries no title — C-42 *is* the contract's name and the sequence
+   * never reissues it, so the sentence survives a rename and no free
+   * text enters an append-only log. The matter arm lands with M22, and
+   * it will be a second key beside this one rather than a widening of
+   * it: a Request becomes one record, and the table already holds that
+   * as a check constraint.
+   */
+  "request.converted": { number: number; contractNumber: number };
+  /**
+   * The conversation left with the work (CMT-001, DD-017, M21/11).
+   *
+   * A conversion re-parents the Request's comment rows onto the record,
+   * tiers intact, so legal answers in exactly one place from then on.
+   * The entry is what a reader of the Request meets when they wonder
+   * where the thread went, and `contractNumber` is where it went.
+   *
+   * **It carries no count.** How many comments moved is how many
+   * comments there were, at every tier, and this entry rides the
+   * record tier a Contributor reads — a number here would say how much
+   * Legal Only talk a Request held (DD-016). The entry states the move
+   * and nothing about its size.
+   *
+   * A Request whose thread is empty writes no entry at all: nothing
+   * moved, and a sentence about it would report on something that did
+   * not happen.
+   */
+  "request.thread_moved": { number: number; contractNumber: number };
 };
 
 /**
@@ -423,6 +466,18 @@ type ContractPayloads = {
     status: string;
     customFields: string[];
   };
+  /**
+   * The conversion, narrated on the record it made (INT-006, DD-017,
+   * M21/9). It sits beside `contract.created` rather than inside it,
+   * because a contract born by conversion is an ordinary contract —
+   * the M16 successor rule's sibling — and the fact that a Request is
+   * where it came from is a second sentence about the same birth.
+   *
+   * `requestNumber` is R-###, which is the Request's name and never
+   * changes, so the trail from work back to ask reads correctly however
+   * either record is later edited.
+   */
+  "contract.created_from_request": { number: number; title: string; requestNumber: number };
   "contract.updated": { number: number; title: string; changed: ChangedFields };
   "contract.status_changed": {
     number: number;

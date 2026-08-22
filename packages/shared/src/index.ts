@@ -225,6 +225,17 @@ export const MAX_KEY_DATE_NOTE_LENGTH = 2000;
 export const MAX_TASK_TITLE_LENGTH = 200;
 
 /**
+ * How long a contract's title may be (CTR-003).
+ *
+ * Shared for `MAX_TASK_TITLE_LENGTH`'s reason: the create callable
+ * deliberately validates no title — that is the caller's job — and it
+ * now has two callers, the create route and INT-006's conversion. The
+ * boxes that collect one restate the bound as `maxLength`, so a title
+ * a dialog accepts is a title the seam takes.
+ */
+export const MAX_CONTRACT_TITLE_LENGTH = 200;
+
+/**
  * How many people one envelope may be sent to (CTR-013).
  *
  * A bound rather than a preference, and a generous one: naming a
@@ -346,3 +357,65 @@ export type ContractSortKey = (typeof CONTRACT_SORT_KEYS)[number];
 /** Which way a sorted column runs. */
 export const SORT_DIRECTIONS = ["asc", "desc"] as const;
 export type SortDirection = (typeof SORT_DIRECTIONS)[number];
+
+/**
+ * The refusal a disposition branches on (INT-007, TECH-020).
+ *
+ * INT-007 has no claim step, so two triagers open the same Request and
+ * both press. The server transitions a Request only from `new`, under
+ * its own row lock, and the loser is answered **the outcome that was
+ * recorded** rather than a second decline, resolution, or conversion.
+ *
+ * It names itself for `SOFT_GATE_PROBLEM_TYPE`'s reason: both ends of
+ * the wire have to say the same string. The dialog reads it to tell a
+ * lost race — where the answer is "somebody already decided, here is
+ * what they decided" — from every other 409 a disposition can give,
+ * where the answer is "fix what you sent".
+ *
+ * The refusal carries the outcome as an RFC 9457 extension member,
+ * `outcome`, holding one of {@link REQUEST_OUTCOMES}. A client must
+ * never read the outcome out of `detail`. That is copy, and copy is
+ * rewritten.
+ */
+export const REQUEST_DISPOSITIONED_PROBLEM_TYPE = "urn:openlaw:problem:request-dispositioned";
+
+/**
+ * The three states a dispositioned Request can be in (INT-007) — the
+ * lifecycle minus `new`.
+ *
+ * It is the vocabulary of the `outcome` extension member above, and it
+ * is here rather than in one end because both ends read it: the seam
+ * puts one of these on the refusal, and the dialog switches on it to
+ * say what happened. `new` is not among them, because a Request still
+ * at `new` is not a refusal at all.
+ */
+export const REQUEST_OUTCOMES = ["converted", "resolved", "declined"] as const;
+export type RequestOutcome = (typeof REQUEST_OUTCOMES)[number];
+
+/**
+ * The seam's ceiling on a decline reason (INT-006, required).
+ *
+ * Longer than an approval note, because this is the whole of the answer
+ * the requester gets: it is what the decline email carries and what the
+ * portal banner renders verbatim. Shorter than a conversation, because
+ * the conversation is the thread (CMT-004) and a decline that needs
+ * paragraphs should be a Full Thread reply first.
+ *
+ * Shared for `MAX_APPROVAL_NOTE_LENGTH`'s reason: the box refuses a
+ * longer reason and the route refuses it again, and two literals for
+ * one wire contract would let the box keep accepting text the seam has
+ * stopped taking.
+ */
+export const MAX_DECLINE_REASON_LENGTH = 2000;
+
+/**
+ * The seam's ceiling on a comment body (CMT-004), and on the closing
+ * reply a resolution posts through the same call (INT-007).
+ *
+ * Where every other free-text field in the product is capped. Shared for
+ * `MAX_DECLINE_REASON_LENGTH`'s reason: a box that goes on taking text
+ * the route has stopped taking sends somebody back to edit words they
+ * already wrote, and the only way the box and the route stay agreed is
+ * one number.
+ */
+export const MAX_COMMENT_BODY_LENGTH = 10_000;

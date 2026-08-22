@@ -24,9 +24,23 @@
  * dead end dressed as a fact. What the banner says is that Legal is
  * working on it and that this page is still their window.
  *
+ * **The thread on a converted Request is the record's thread** (CMT-001,
+ * #422), and nothing here had to learn that. The conversation moved onto
+ * the contract at the conversion and the `request` audience arm follows
+ * the back-link, so this page goes on asking for the Request's own
+ * thread and goes on being answered — filtered to Full Thread, because
+ * that is the one room a Requester is in. Which record the rows now hang
+ * off is the API's business; what this page owes the Requester is that
+ * their window never went dark.
+ *
  * **A declined Request carries its reason** (INT-006): "no" always
  * arrives with a why, so the banner is the reason rather than a line
  * about it.
+ *
+ * **The pill speaks the requester's words** (the INT-003 M21/6
+ * addendum): Open, In progress, Resolved, Declined, which is what their
+ * email says about the same Request. The staff detail says the enum's
+ * words, and neither reader is ever told two names for one status.
  *
  * ### Recorded normalization points (I7 deviations accepted)
  *
@@ -64,7 +78,7 @@ import {
   REQUEST_STATUS_PILL,
   requestAttachmentHref,
   requestReference,
-  requestStatusLabel,
+  requesterStatusLabel,
   type MyRequestAttachment,
   type MyRequestField,
   type MyRequestFieldRefs,
@@ -142,7 +156,7 @@ export function PortalRequestPage() {
           <span
             className={`inline-flex shrink-0 rounded-pill px-2 py-0.5 text-xs font-medium ${REQUEST_STATUS_PILL[request.status]}`}
           >
-            {requestStatusLabel(intl, request.status)}
+            {requesterStatusLabel(intl, request.status)}
           </span>
         </div>
         {/* I7's meta line: the reference, the front door, and the day it
@@ -276,6 +290,11 @@ function ValueRow({ label, children }: Readonly<{ label: string; children: React
  * writes the statuses and I7 draws only a new Request. Each says the
  * one thing a requester needs from that arm — and `declined` says the
  * reason itself, because INT-006 makes "no" arrive with a why.
+ *
+ * `resolved` says the Request was answered *and closed* (the INT-003
+ * M21/6 addendum). An answered Request is also a closed one, and a
+ * Requester who is not told it is closed goes on waiting for a second
+ * reply.
  */
 function StatusBanner({
   status,
@@ -318,7 +337,7 @@ const BANNER_COPY = {
   }),
   resolved: defineMessage({
     id: "portal.request.bannerResolved",
-    defaultMessage: "Legal has answered this request.",
+    defaultMessage: "Legal has answered this request and closed it.",
   }),
   declined: defineMessage({
     id: "portal.request.bannerDeclined",
