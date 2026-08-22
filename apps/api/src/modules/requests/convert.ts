@@ -62,11 +62,21 @@
  * this outcome — the record the winner made — because "somebody
  * converted this" without the C-### is news the loser cannot act on.
  *
- * **What is not here, and lands next.** The paper is not promoted into
- * `documents` (#421) and the thread is not re-parented onto the record
- * (#422). Both hang inside this transaction, beside the create, and
- * both are additive: an attachment stays readable on the Request and
- * the thread stays on the Request's own entity pair until they land.
+ * **The paper follows** (#421). Every attachment on the Request becomes
+ * one document at version 1 on the record, filed at the record root,
+ * inside this same transaction. It is a copy: the attachment rows and
+ * their blobs stay where they are, so the requester's portal detail goes
+ * on listing and downloading the paper they submitted. The rules of the
+ * promotion itself are `promote-paper.ts`'s; what this route owns is
+ * that it happens here, between the create and the status write, so a
+ * conversion that refuses anywhere leaves neither a contract nor a
+ * document nor a blob nobody points at.
+ *
+ * **What is not here, and lands next.** The thread is not re-parented
+ * onto the record (#422). It hangs inside this transaction beside the
+ * create, and it is additive: the thread stays on the Request's own
+ * entity pair, which is where the portal already reads it, until it
+ * lands.
  */
 
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
@@ -91,6 +101,7 @@ import {
   NumberParams,
   REQUIRE_TRIAGER,
 } from "./disposition.js";
+import { withPromotedPaper } from "./promote-paper.js";
 import { liveTargetContractType, StaffRequestSchema } from "./projection.js";
 
 export const requestConvertRoutes: FastifyPluginAsyncZod = async (app) => {
@@ -128,6 +139,11 @@ export const requestConvertRoutes: FastifyPluginAsyncZod = async (app) => {
           "`customFields` is where the triager answers them. Appends " +
           "request.converted on the ask and contract.created_from_request " +
           "on the record (DD-017), and raises `requestStatusChanged`. " +
+          "Every attachment on the Request is promoted into one document " +
+          "at version 1 at the record root, each narrated document.created " +
+          "and each owed the derivations an upload is owed (INT-002, " +
+          "DOC-008). The promotion copies: the Request keeps its " +
+          "attachments and its downloads go on answering. " +
           "Answers the Request as the staff detail reads it. Member+ only",
         tags: ["requests"],
         params: NumberParams,
@@ -169,100 +185,130 @@ export const requestConvertRoutes: FastifyPluginAsyncZod = async (app) => {
       const chosenTypeId = request.body.contractTypeId;
       const answers = request.body.customFields;
 
-      return dispositionOf(app, request.user, request.params.number, async (tx, held) => {
-        // Read inside the transaction, after the lock: the urgency and
-        // the collected values this conversion carries have to be the
-        // ones the row held when it was held. The target type rides
-        // along through the live join, so an archived one arrives as
-        // NULL — "conversion reads an archived target type as no type",
-        // said by the join rather than by a branch after it. The summary
-        // is not read: it seeded the dialog's title box, and what the
-        // record is born with is whatever is in that box at the press.
-        const [row] = await tx
-          .select({
-            urgency: requests.urgency,
-            customFields: requests.customFields,
-            targetContractTypeId: contractTypes.id,
-          })
-          .from(requests)
-          .innerJoin(requestTypes, eq(requests.requestTypeId, requestTypes.id))
-          .leftJoin(contractTypes, liveTargetContractType())
-          .where(eq(requests.id, held.id))
-          .limit(1);
-        // Unreachable: the lock read the same row a moment ago and the
-        // request type FK is NOT NULL. Loud rather than silent.
-        if (!row) throw httpError(500, "The request could not be read for conversion.");
+      // The promotion's wrapper sits **outside** the transaction and the
+      // disposition alike, because what it owns happens on either side
+      // of the commit: the blobs it copied are taken away when the act
+      // refuses, and the rounds it appended are asked for their
+      // derivations once the act has committed (DOC-012, DOC-004).
+      return withPromotedPaper(
+        {
+          storage: app.storage,
+          notifier: app.notifier,
+          jobs: app.jobs,
+          log: request.log,
+        },
+        (promote) =>
+          dispositionOf(app, request.user, request.params.number, async (tx, held) => {
+            // Read inside the transaction, after the lock: the urgency and
+            // the collected values this conversion carries have to be the
+            // ones the row held when it was held. The target type rides
+            // along through the live join, so an archived one arrives as
+            // NULL — "conversion reads an archived target type as no type",
+            // said by the join rather than by a branch after it. The summary
+            // is not read: it seeded the dialog's title box, and what the
+            // record is born with is whatever is in that box at the press.
+            const [row] = await tx
+              .select({
+                urgency: requests.urgency,
+                customFields: requests.customFields,
+                targetContractTypeId: contractTypes.id,
+              })
+              .from(requests)
+              .innerJoin(requestTypes, eq(requests.requestTypeId, requestTypes.id))
+              .leftJoin(contractTypes, liveTargetContractType())
+              .where(eq(requests.id, held.id))
+              .limit(1);
+            // Unreachable: the lock read the same row a moment ago and the
+            // request type FK is NOT NULL. Loud rather than silent.
+            if (!row) throw httpError(500, "The request could not be read for conversion.");
 
-        const contractTypeId = confirmedTarget(row.targetContractTypeId, chosenTypeId);
+            const contractTypeId = confirmedTarget(row.targetContractTypeId, chosenTypeId);
 
-        // INT-002's carry-through, landed by the server. Every collected
-        // value whose slug the target type also attaches, and nothing
-        // else — a value with no field to land in stays where it is,
-        // readable on the Request, which is the whole of the M19/7
-        // addendum's answer. The triager's own answers go on top, so a
-        // hard-required gap they filled wins over an absent carry and an
-        // edit they made in the dialog wins over the collected value.
-        const attached = await selectAttachedFields(tx, contractTypeFields, contractTypeId);
-        const carried: Record<string, CustomFieldValue | null> = {};
-        for (const field of attached) {
-          const value = row.customFields[field.slug];
-          if (value !== undefined) carried[field.slug] = value;
-        }
+            // INT-002's carry-through, landed by the server. Every collected
+            // value whose slug the target type also attaches, and nothing
+            // else — a value with no field to land in stays where it is,
+            // readable on the Request, which is the whole of the M19/7
+            // addendum's answer. The triager's own answers go on top, so a
+            // hard-required gap they filled wins over an absent carry and an
+            // edit they made in the dialog wins over the collected value.
+            const attached = await selectAttachedFields(tx, contractTypeFields, contractTypeId);
+            const carried: Record<string, CustomFieldValue | null> = {};
+            for (const field of attached) {
+              const value = row.customFields[field.slug];
+              if (value !== undefined) carried[field.slug] = value;
+            }
 
-        const born = await createContract(tx, {
-          actorId: request.user.id,
-          title,
-          contractTypeId,
-          customFields: { ...carried, ...(answers ?? {}) },
-          // MTR-012's 1:1 map, and the only assessment a newborn record
-          // is given: urgency is what the requester claimed, priority is
-          // what legal now holds, and they start equal and diverge
-          // afterwards. Risk is not set at all.
-          priority: row.urgency,
-        });
+            const born = await createContract(tx, {
+              actorId: request.user.id,
+              title,
+              contractTypeId,
+              customFields: { ...carried, ...(answers ?? {}) },
+              // MTR-012's 1:1 map, and the only assessment a newborn record
+              // is given: urgency is what the requester claimed, priority is
+              // what legal now holds, and they start equal and diverge
+              // afterwards. Risk is not set at all.
+              priority: row.urgency,
+            });
 
-        await tx
-          .update(requests)
-          .set({ status: "converted", convertedContractId: born.row.id })
-          .where(eq(requests.id, held.id));
+            // INT-002's paper, promoted a file at a time onto the record
+            // (#421). Copies rather than moves: the attachment rows and
+            // their blobs stay, so the requester's portal detail goes on
+            // listing and downloading what they submitted. A Request
+            // that carried nothing promotes nothing, and says nothing
+            // about having promoted nothing.
+            await promote(tx, {
+              requestId: held.id,
+              target: {
+                contractId: born.row.id,
+                primaryDocumentId: born.row.primaryDocumentId,
+              },
+              actorId: request.user.id,
+              actorName: request.user.displayName,
+            });
 
-        // DD-017 on both records, in the transaction that made them one
-        // act. The ask says what it became and the record says where it
-        // came from, each by the other's permanent reference, so the
-        // trail reads correctly however either is later renamed.
-        await recordActivity(tx, {
-          entityType: "request",
-          entityId: held.id,
-          actorId: request.user.id,
-          action: "request.converted",
-          visibility: RECORD_ACTIVITY_TIER,
-          payload: { number: held.number, contractNumber: born.row.number },
-        });
-        await recordActivity(tx, {
-          entityType: "contract",
-          entityId: born.row.id,
-          actorId: request.user.id,
-          action: "contract.created_from_request",
-          visibility: RECORD_ACTIVITY_TIER,
-          payload: {
-            number: born.row.number,
-            title: born.row.title,
-            requestNumber: held.number,
-          },
-        });
+            await tx
+              .update(requests)
+              .set({ status: "converted", convertedContractId: born.row.id })
+              .where(eq(requests.id, held.id));
 
-        // Resolve's shape rather than Decline's: the closure is the
-        // whole news, and the requester's word for it is "In progress".
-        // The audience, the actor exclusion, the preferences, and the
-        // after-commit wake-up are all the seam's.
-        await app.notifier.requestStatusChanged(tx, {
-          requestId: held.id,
-          actorId: request.user.id,
-          actorName: request.user.displayName,
-          from: "new",
-          to: "converted",
-        });
-      });
+            // DD-017 on both records, in the transaction that made them one
+            // act. The ask says what it became and the record says where it
+            // came from, each by the other's permanent reference, so the
+            // trail reads correctly however either is later renamed.
+            await recordActivity(tx, {
+              entityType: "request",
+              entityId: held.id,
+              actorId: request.user.id,
+              action: "request.converted",
+              visibility: RECORD_ACTIVITY_TIER,
+              payload: { number: held.number, contractNumber: born.row.number },
+            });
+            await recordActivity(tx, {
+              entityType: "contract",
+              entityId: born.row.id,
+              actorId: request.user.id,
+              action: "contract.created_from_request",
+              visibility: RECORD_ACTIVITY_TIER,
+              payload: {
+                number: born.row.number,
+                title: born.row.title,
+                requestNumber: held.number,
+              },
+            });
+
+            // Resolve's shape rather than Decline's: the closure is the
+            // whole news, and the requester's word for it is "In progress".
+            // The audience, the actor exclusion, the preferences, and the
+            // after-commit wake-up are all the seam's.
+            await app.notifier.requestStatusChanged(tx, {
+              requestId: held.id,
+              actorId: request.user.id,
+              actorName: request.user.displayName,
+              from: "new",
+              to: "converted",
+            });
+          }),
+      );
     },
   );
 };
