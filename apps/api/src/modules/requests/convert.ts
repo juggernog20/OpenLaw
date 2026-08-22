@@ -165,8 +165,13 @@ export const requestConvertRoutes: FastifyPluginAsyncZod = async (app) => {
            * spaces is the same refusal an empty one is. */
           title: z.string().max(MAX_CONTRACT_TITLE_LENGTH),
           /** The one choice a triager makes, and only where the request
-           * type honestly deferred it or points nowhere. */
-          contractTypeId: z.string().optional(),
+           * type honestly deferred it or points nowhere.
+           *
+           * Absent or a real id, never the empty string: a blank choice
+           * is no choice, and letting one through would have the route
+           * refuse it as a *different* type from the bound one, telling
+           * the caller they classified when they picked nothing. */
+          contractTypeId: z.string().min(1).optional(),
           /** The gaps the form did not collect, keyed by field slug. The
            * carried values are the server's to land and need not be
            * here; a slug the target type does not attach is refused. */
@@ -355,10 +360,14 @@ export const requestConvertRoutes: FastifyPluginAsyncZod = async (app) => {
  * echoing what it was shown has agreed rather than classified. A body
  * that names a different one is refused, because that is the act DD-018
  * takes away from triage.
+ *
+ * The empty string never reaches here: the schema requires at least one
+ * character, so a blank choice is refused as a malformed body rather
+ * than read as a type that differs from the bound one.
  */
 function confirmedTarget(bound: string | null, chosen: string | undefined): string {
   if (bound === null) {
-    if (chosen === undefined || chosen === "") {
+    if (chosen === undefined) {
       throw httpError(
         400,
         "Pick a contract type — this request type does not name a live one to confirm.",

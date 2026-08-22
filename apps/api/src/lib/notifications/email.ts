@@ -268,8 +268,21 @@ const URGENCY_WORDS: Record<SeverityLevel, string> = {
 /** One payload urgency as the word a line uses, or null — the status
  * word's own defensive read, one field over. */
 function urgencyWord(urgency: string | null): string | null {
-  if (urgency === null) return null;
-  return Object.hasOwn(URGENCY_WORDS, urgency) ? URGENCY_WORDS[urgency as SeverityLevel] : null;
+  return wordFor(URGENCY_WORDS, urgency);
+}
+
+/**
+ * One payload slug read against a table of copy this build holds, or
+ * null.
+ *
+ * A guard rather than a cast: the slug is arbitrary payload text, and a
+ * cast would tell the compiler it is a key of the table when nothing has
+ * checked that. `Object.hasOwn` is the check, and it also keeps
+ * `constructor` and `toString` from reading a word off the prototype.
+ */
+function wordFor(words: Readonly<Record<string, string>>, slug: string | null): string | null {
+  if (slug === null || !Object.hasOwn(words, slug)) return null;
+  return words[slug] ?? null;
 }
 
 /**
@@ -620,10 +633,7 @@ const REQUEST_STATUS_WORDS: Record<RequestStatus, string> = {
  * splicing `undefined` into a subject line.
  */
 function statusWord(status: string | null): string | null {
-  if (status === null) return null;
-  return Object.hasOwn(REQUEST_STATUS_WORDS, status)
-    ? REQUEST_STATUS_WORDS[status as RequestStatus]
-    : null;
+  return wordFor(REQUEST_STATUS_WORDS, status);
 }
 
 // -------------------------------------------------------------------

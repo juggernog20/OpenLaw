@@ -435,8 +435,12 @@ describe("the two events the Inbox will fire (INT-006, INT-007)", () => {
 
     const message = await oneMailAbout(REQUESTER, request, "Your request is in progress");
     expect(message.text).toContain("is now in progress");
-    // Any casing: a subject line that capitalised the enum's word would
-    // be the same two names for one status.
+    // Any casing, and the subject as well as the body: `oneMailAbout`
+    // matches a subject that *contains* the phrase, so "Your request is
+    // in progress (Converted)" would pass on the body check alone. A
+    // subject that capitalised the enum's word would be the same two
+    // names for one status.
+    expect(message.subject).not.toMatch(/\bconverted\b/i);
     expect(message.text).not.toMatch(/\bconverted\b/i);
   });
 

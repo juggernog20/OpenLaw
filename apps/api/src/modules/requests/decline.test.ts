@@ -412,9 +412,10 @@ describe("the disposition scaffold (INT-007)", () => {
   });
 
   it("names the recorded outcome whatever that outcome was", async () => {
-    // Resolve and Convert are M21/8's and M21/9's; their statuses are
-    // written straight against the table so the scaffold's answer can be
-    // pinned before the routes that reach them exist.
+    // The terminal statuses are written straight against the table
+    // rather than through their own routes: this pins the scaffold's
+    // refusal alone, without another disposition's side effects — a
+    // contract, a comment, an event, an email — standing behind it.
     for (const outcome of ["resolved", "converted"] as const satisfies readonly RequestStatus[]) {
       const request = await submit(`Already ${outcome}`);
       await harness.db.update(requests).set({ status: outcome }).where(eq(requests.id, request.id));

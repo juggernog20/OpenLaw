@@ -177,17 +177,18 @@ beforeAll(async () => {
     const fieldId = created.json().field.id as string;
     fieldSlugs.set(field.displayName, created.json().field.slug as string);
 
-    for (const [attach, typeId, isRequired] of [
-      [field.onRequestForm, requestTypeIds.get("nda_request")!, false],
-      [field.onNda, contractTypeIds.get("nda")!, false],
-      [field.onMsa, contractTypeIds.get("msa")!, field.required],
+    // The registry rides in the tuple rather than being inferred from the
+    // id: a second request type in this loop would otherwise be attached
+    // through `contract-types` and answered 404 by the wrong registry.
+    for (const [attach, registry, typeId, isRequired] of [
+      [field.onRequestForm, "request-types", requestTypeIds.get("nda_request")!, false],
+      [field.onNda, "contract-types", contractTypeIds.get("nda")!, false],
+      [field.onMsa, "contract-types", contractTypeIds.get("msa")!, field.required],
     ] as const) {
       if (!attach) continue;
-      const path =
-        typeId === requestTypeIds.get("nda_request") ? "request-types" : "contract-types";
       const attached = await harness.app.inject({
         method: "POST",
-        url: `/api/v1/${path}/${typeId}/fields`,
+        url: `/api/v1/${registry}/${typeId}/fields`,
         cookies: adminCookies,
         payload: { fieldId, isRequired },
       });
@@ -392,6 +393,20 @@ describe("the target is confirmed, never classified (DD-018, INT-002)", () => {
     expect(res.statusCode, res.body).toBe(200);
   });
 
+  it("refuses an empty contractTypeId as a malformed body, not as a contradicted target", async () => {
+    // A blank choice is no choice. The schema requires one character, so
+    // the caller is told their body is wrong rather than accused of
+    // naming a different type from the bound one — a refusal that would
+    // have named an act they did not perform.
+    const request = await submit("The box was left empty");
+    const before = await contractCount();
+    const res = await convert(request.number, { title: "Nothing picked", contractTypeId: "" });
+    expect(res.statusCode, res.body).toBe(400);
+    expect(res.body).not.toContain("Triage confirms the routing");
+    expect((await stored(request.id)).status).toBe("new");
+    expect(await contractCount()).toBe(before);
+  });
+
   it("refuses a body that names a different type from the one bound", async () => {
     // The act DD-018 takes away from triage: the Administrator decided
     // "NDA request" makes NDAs, and a triager does not re-decide it.
@@ -413,9 +428,14 @@ describe("the target is confirmed, never classified (DD-018, INT-002)", () => {
     const request = await submit("Which kind is still open", {
       typeId: requestTypeIds.get("contract_review"),
     });
+    const before = await contractCount();
     const without = await convert(request.number, { title: "Orion redline" });
     expect(without.statusCode, without.body).toBe(400);
     expect((await stored(request.id)).status).toBe("new");
+    // The refusal writes nothing. Without this the second press below
+    // would supply a contract for a test that never checked the first
+    // press had not already made one.
+    expect(await contractCount()).toBe(before);
 
     const withType = await convert(request.number, {
       title: "Orion redline",
@@ -444,8 +464,10 @@ describe("the target is confirmed, never classified (DD-018, INT-002)", () => {
     expect(detail.json().request.requestType.targetTypeId).toBeNull();
     expect(detail.json().request.requestType.targetTypeName).toBeNull();
 
+    const before = await contractCount();
     const without = await convert(request.number, { title: "Still needs a live type" });
     expect(without.statusCode, without.body).toBe(400);
+    expect(await contractCount()).toBe(before);
 
     const withLive = await convert(request.number, {
       title: "On a live type",
