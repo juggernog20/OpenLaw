@@ -175,7 +175,6 @@ const STATUS_LABEL = {
   rejected: defineMessage({ id: "approvals.status.rejected", defaultMessage: "Rejected" }),
 } as const satisfies Record<ApprovalStatus, { id: string; defaultMessage: string }>;
 
-/** The envelope's status, as the row's pill says it (DES-036). */
 const ENVELOPE_STATUS_LABEL = {
   sent: defineMessage({ id: "signing.status.sent", defaultMessage: "Out for signature" }),
   signed: defineMessage({ id: "signing.status.signed", defaultMessage: "Signed" }),

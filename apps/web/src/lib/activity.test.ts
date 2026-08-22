@@ -75,7 +75,7 @@ const ENVELOPE_ENDING = {
  * sample here.
  */
 const SAMPLE_PAYLOADS: { [A in ActivityAction]: ActivityPayloadMap[A] } = {
-  // ---- The profile and user administration ----
+  // Profile and user administration
   "user.theme_changed": { field: "theme", old: "light", new: "dark" },
   "user.timezone_changed": { field: "timezone", old: "UTC", new: "Asia/Dubai" },
   "user.notification_preference_changed": {
@@ -101,10 +101,10 @@ const SAMPLE_PAYLOADS: { [A in ActivityAction]: ActivityPayloadMap[A] } = {
   "user.unarchived": { email: "sam@example.com", role: "contributor" },
   "user.sessions_revoked": { email: "sam@example.com", sessions: 2 },
 
-  // ---- The organization's own settings ----
+  // Organization settings
   "org_settings.updated": { field: "defaultTimezone", old: "UTC", new: "Asia/Dubai" },
 
-  // ---- The settings taxonomies ----
+  // Settings taxonomies
   "contract_type.created": TAXONOMY_NAMED,
   "contract_type.renamed": TAXONOMY_RENAME,
   "contract_type.updated": TAXONOMY_UPDATE,
@@ -134,7 +134,7 @@ const SAMPLE_PAYLOADS: { [A in ActivityAction]: ActivityPayloadMap[A] } = {
   "request_type.restored": TAXONOMY_NAMED,
   "request_type.deleted": TAXONOMY_NAMED,
 
-  // ---- Fields attached to a type ----
+  // Fields attached to a type
   "contract_type_field.attached": TYPE_FIELD_ATTACH,
   "contract_type_field.detached": { typeSlug: "nda", fieldSlug: "governing-law" },
   "contract_type_field.reordered": { typeSlug: "nda", order: ["governing-law", "term"] },
@@ -160,7 +160,7 @@ const SAMPLE_PAYLOADS: { [A in ActivityAction]: ActivityPayloadMap[A] } = {
     isRequired: true,
   },
 
-  // ---- The contract statuses ----
+  // Contract statuses
   "contract_status.created": { slug: "in-review", displayName: "In review", stage: "review" },
   "contract_status.renamed": { slug: "in-review", from: "Review", to: "In review" },
   "contract_status.reordered": { order: ["draft", "in-review"] },
@@ -173,7 +173,7 @@ const SAMPLE_PAYLOADS: { [A in ActivityAction]: ActivityPayloadMap[A] } = {
   "contract_status.restored": { slug: "in-review", displayName: "In review" },
   "contract_status.deleted": { slug: "in-review", displayName: "In review", stage: "review" },
 
-  // ---- The deflection links (INT-004) ----
+  // Deflection links (INT-004)
   "intake_link.created": {
     label: "NDA FAQ",
     url: "https://wiki.example.com/nda-faq",
@@ -190,7 +190,7 @@ const SAMPLE_PAYLOADS: { [A in ActivityAction]: ActivityPayloadMap[A] } = {
     placement: "Contract review",
   },
 
-  // ---- The field catalog ----
+  // Field catalog
   "field.created": {
     slug: "governing-law",
     displayName: "Governing law",
@@ -212,7 +212,7 @@ const SAMPLE_PAYLOADS: { [A in ActivityAction]: ActivityPayloadMap[A] } = {
   },
   "field.restored": { slug: "governing-law", displayName: "Governing law" },
 
-  // ---- The approver-group templates ----
+  // Approver-group templates
   "approver_group.created": {
     displayName: "Commercial sign-off",
     description: "Deals over 50k",
@@ -241,7 +241,7 @@ const SAMPLE_PAYLOADS: { [A in ActivityAction]: ActivityPayloadMap[A] } = {
     memberName: "Sarah Chen",
   },
 
-  // ---- The sign-off on one contract ----
+  // Sign-off on one contract
   "approval.requested": {
     ...APPROVER,
     source: "group",
@@ -252,7 +252,7 @@ const SAMPLE_PAYLOADS: { [A in ActivityAction]: ActivityPayloadMap[A] } = {
   "approval.rejected": { ...APPROVER, hasNote: false },
   "approval.cancelled": APPROVER,
 
-  // ---- The record's key dates (CTR-009) ----
+  // Record key dates (CTR-009)
   "key_date.added": {
     keyDateId: "kd-1",
     label: "Price review window opens",
@@ -269,7 +269,7 @@ const SAMPLE_PAYLOADS: { [A in ActivityAction]: ActivityPayloadMap[A] } = {
     date: "2027-04-01",
   },
 
-  // ---- The record's tasks (CTR-017) ----
+  // Record tasks (CTR-017)
   "task.added": { taskId: "t-1", title: "Draft the NDA" },
   "task.edited": {
     taskId: "t-1",
@@ -280,7 +280,7 @@ const SAMPLE_PAYLOADS: { [A in ActivityAction]: ActivityPayloadMap[A] } = {
   "task.reopened": { taskId: "t-1", title: "Draft the NDA" },
   "task.removed": { taskId: "t-1", title: "Draft the NDA" },
 
-  // ---- The Entities registry ----
+  // Entity registry
   "entity.created": { legalName: "Helix Labs GmbH", entityType: "GmbH", status: "active" },
   "entity.updated": {
     legalName: "Helix Labs GmbH",
@@ -291,7 +291,7 @@ const SAMPLE_PAYLOADS: { [A in ActivityAction]: ActivityPayloadMap[A] } = {
   "entity.archived": { legalName: "Helix Labs GmbH" },
   "entity.restored": { legalName: "Helix Labs GmbH" },
 
-  // ---- The contract record ----
+  // Contract record
   "contract.created_from_request": {
     number: 41,
     title: "Helix supply agreement",
@@ -398,13 +398,13 @@ const SAMPLE_PAYLOADS: { [A in ActivityAction]: ActivityPayloadMap[A] } = {
   "contract.archived": { number: 41, title: "Helix supply agreement" },
   "contract.restored": { number: 41, title: "Helix supply agreement" },
 
-  // ---- The conversation on a record ----
+  // Record conversation
   "comment.posted": { commentId: "cmt_1" },
   "comment.edited": { commentId: "cmt_1" },
   "comment.deleted": { commentId: "cmt_1" },
   "comment.redacted": { commentId: "cmt_1" },
 
-  // ---- The Request record ----
+  // Request record
   "request.created": {
     number: 42,
     requestType: "Contract review",
@@ -416,7 +416,7 @@ const SAMPLE_PAYLOADS: { [A in ActivityAction]: ActivityPayloadMap[A] } = {
   "request.converted": { number: 42, contractNumber: 51 },
   "request.thread_moved": { number: 42, contractNumber: 51 },
 
-  // ---- The record's paper ----
+  // Record documents
   "document.created": {
     documentId: "doc_1",
     versionId: "ver_1",
@@ -478,13 +478,13 @@ const SAMPLE_PAYLOADS: { [A in ActivityAction]: ActivityPayloadMap[A] } = {
     previousFolderName: "Drafts",
   },
 
-  // ---- How the paper is filed ----
+  // Document filing
   "folder.created": { folderId: "fld_1", name: "Exhibits", parentName: "Drafts" },
   "folder.renamed": { folderId: "fld_1", name: "Exhibits", previousName: "Annexes" },
   "folder.moved": { folderId: "fld_1", name: "Exhibits", parentName: null },
   "folder.deleted": { folderId: "fld_1", name: "Exhibits" },
 
-  // ---- The identity provider ----
+  // Identity provider
   "sso_provider.registered": {
     providerId: "acme-okta",
     issuer: "https://acme.okta.com",
@@ -497,7 +497,7 @@ const SAMPLE_PAYLOADS: { [A in ActivityAction]: ActivityPayloadMap[A] } = {
     new: "[secret]",
   },
 
-  // ---- The e-signature connector ----
+  // E-signature connector
   "signing_connector.configured": {
     provider: "docusign",
     environment: "demo",
@@ -518,7 +518,7 @@ const SAMPLE_PAYLOADS: { [A in ActivityAction]: ActivityPayloadMap[A] } = {
     integrationKey: "ik_1",
   },
 
-  // ---- One round of signature ----
+  // Signature round
   "envelope.sent": {
     envelopeId: "env_1",
     provider: "docusign",
@@ -537,7 +537,7 @@ const SAMPLE_PAYLOADS: { [A in ActivityAction]: ActivityPayloadMap[A] } = {
   },
   "envelope.voided": { ...ENVELOPE_ENDING, status: "voided", reason: "Superseded" },
 
-  // ---- Data leaving the system ----
+  // Data export
   "export.performed": {
     surface: "audit_log",
     format: "csv",

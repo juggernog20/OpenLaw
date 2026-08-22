@@ -129,14 +129,11 @@ function recordApi(
   return { handler };
 }
 
-/** The Related contracts card, once the loader has answered. */
 const section = async () =>
   within(await screen.findByRole("region", { name: "Related contracts" }));
 
 describe("the record's Related contracts card (CTR-015)", () => {
   it("hides the card when the relations endpoint fails", async () => {
-    // Override the relations endpoint to return a server error. The
-    // loader's catch converts this to null, and the card is absent.
     const base = recordApi();
     const handler = (call: StubCall) => {
       if (call.url.pathname === "/api/v1/contracts/42/relations" && call.method === "GET") {
@@ -147,9 +144,7 @@ describe("the record's Related contracts card (CTR-015)", () => {
     stubApi({ signedIn: MEMBER, extra: handler });
     renderAt("/contracts/42");
 
-    // The record still renders.
     await screen.findByRole("heading", { name: "Acme master services agreement" });
-    // The Related contracts card is absent.
     expect(screen.queryByRole("region", { name: "Related contracts" })).not.toBeInTheDocument();
   });
 
@@ -186,7 +181,6 @@ describe("the record's Related contracts card (CTR-015)", () => {
     renderAt("/contracts/42");
 
     const card = await section();
-    // The Parent subsection shows the two ancestors in root-first order.
     const links = card.getAllByRole("link");
     expect(links[0]).toHaveTextContent("C-10");
     expect(links[0]).toHaveTextContent("Framework agreement");
@@ -214,7 +208,6 @@ describe("the record's Related contracts card (CTR-015)", () => {
 
     const card = await section();
     expect(card.getByText("Restricted contract")).toBeInTheDocument();
-    // The restricted entry is not a link.
     const links = card.getAllByRole("link");
     const restrictedLink = links.find((a) => a.textContent?.includes("Restricted"));
     expect(restrictedLink).toBeUndefined();
@@ -286,13 +279,10 @@ describe("the record's Related contracts card (CTR-015)", () => {
     renderAt("/contracts/42");
 
     const card = await section();
-    // The Renews heading and its entry.
     expect(card.getByText("Renews")).toBeInTheDocument();
     expect(card.getByRole("link", { name: /C-5/ })).toHaveTextContent("Old MSA");
-    // The Amended by heading (incoming amends) and its entry.
     expect(card.getByText("Amended by")).toBeInTheDocument();
     expect(card.getByRole("link", { name: /C-99/ })).toHaveTextContent("Amendment 1");
-    // The Related heading and its entry.
     expect(card.getByText("Related")).toBeInTheDocument();
     expect(card.getByRole("link", { name: /C-77/ })).toHaveTextContent("Side letter");
   });
@@ -346,12 +336,9 @@ describe("the breadcrumb's parent chain (CTR-015)", () => {
     stubApi({ signedIn: MEMBER, extra: recordApi().handler });
     renderAt("/contracts/42");
 
-    // Wait for the page to render.
     await screen.findByRole("heading", { name: "Acme master services agreement" });
-    // The breadcrumb has "Contracts" as a link but no parent references.
     const breadcrumbLinks = screen.getAllByRole("link", { name: "Contracts" });
     expect(breadcrumbLinks.length).toBeGreaterThanOrEqual(1);
-    // No parent references like C-10 or C-20 in the breadcrumb.
     expect(screen.queryByRole("link", { name: /C-10/ })).not.toBeInTheDocument();
   });
 
@@ -373,7 +360,6 @@ describe("the breadcrumb's parent chain (CTR-015)", () => {
     renderAt("/contracts/42");
 
     await screen.findByRole("heading", { name: "Acme master services agreement" });
-    // The parent link appears in the breadcrumb.
     const parentLink = screen.getByRole("link", { name: "C-10" });
     expect(parentLink).toBeInTheDocument();
     expect(parentLink).toHaveAttribute("href", "/contracts/10");
@@ -459,7 +445,6 @@ describe("the card's link management actions (M17/4)", () => {
     renderAt("/contracts/42");
 
     const card = await section();
-    // One Remove link button for the reachable entry.
     const removeButtons = card.getAllByRole("button", { name: "Remove link" });
     expect(removeButtons).toHaveLength(1);
   });
@@ -488,7 +473,6 @@ describe("the card's link management actions (M17/4)", () => {
   it("opens the link dialog when Add link is clicked", async () => {
     const base = recordApi();
     const handler = (call: StubCall) => {
-      // Stub the candidates endpoint.
       if (call.url.pathname === "/api/v1/contracts/42/link-candidates" && call.method === "GET") {
         return json(200, { candidates: [] });
       }
@@ -501,7 +485,6 @@ describe("the card's link management actions (M17/4)", () => {
     const user = userEvent.setup();
     await user.click(card.getByRole("button", { name: "Add link" }));
 
-    // The dialog opens with the Link contract title.
     await screen.findByRole("heading", { name: "Link contract" });
   });
 
@@ -537,13 +520,11 @@ describe("the card's link management actions (M17/4)", () => {
     await user.click(card.getByRole("button", { name: "Add link" }));
     await screen.findByRole("heading", { name: "Link contract" });
 
-    // Pick a candidate and submit.
     const input = screen.getByRole("combobox", { name: "Search by number or title…" });
     await user.type(input, "Side");
     await user.click(await screen.findByRole("option", { name: /C-5/ }));
     await user.click(screen.getByRole("button", { name: "Link contract" }));
 
-    // The refusal appears as an inline alert.
     await screen.findByRole("alert");
     expect(
       screen.getByText("These two contracts are already linked that way."),
@@ -584,7 +565,6 @@ describe("the card's link management actions (M17/4)", () => {
     const user = userEvent.setup();
     await user.click(card.getByRole("button", { name: "Remove link" }));
 
-    // The card redraws from the write's answer.
     await waitFor(() => {
       expect(screen.getByText("No related contracts.")).toBeInTheDocument();
     });
@@ -730,8 +710,6 @@ describe("the breadcrumb and the card read one relations state (#312)", () => {
 // ---------------------------------------------------------------------------
 
 describe("the link picker's combobox (#311, DES-024)", () => {
-  /** Two candidates the picker can offer, so the arrow keys have
-   * somewhere to walk to. */
   const CANDIDATES = [
     {
       number: 5,
@@ -807,7 +785,6 @@ describe("the link picker's combobox (#311, DES-024)", () => {
     const { user, input } = await openDialog();
     const { first, second } = await searched(user, input);
 
-    // The first row is active as soon as the list has anything on it.
     expect(input).toHaveAttribute("aria-activedescendant", first.id);
     expect(first).toHaveAttribute("aria-selected", "true");
 
@@ -816,7 +793,6 @@ describe("the link picker's combobox (#311, DES-024)", () => {
     expect(second).toHaveAttribute("aria-selected", "true");
     expect(first).toHaveAttribute("aria-selected", "false");
 
-    // Enter commits the active row rather than submitting the form.
     await user.keyboard("{Enter}");
     expect(screen.getByText("Side agreement")).toBeInTheDocument();
     // The dialog is still open, waiting for the actual submit: picking
@@ -843,7 +819,6 @@ describe("the link picker's combobox (#311, DES-024)", () => {
     expect(input).toHaveAttribute("aria-expanded", "false");
     expect(input).not.toHaveAttribute("aria-activedescendant");
     expect(list).not.toBeVisible();
-    // Gone from the accessibility tree too, not merely off the screen.
     expect(screen.queryByRole("listbox", { name: "Contract matches" })).not.toBeInTheDocument();
     // DES-010 gives Escape to the innermost dismissable thing, so the
     // dialog around the picker stays where it is.
@@ -881,7 +856,6 @@ describe("the link picker's combobox (#311, DES-024)", () => {
     await user.type(input, "Side");
     await user.click(await screen.findByRole("option", { name: /C-5/ }));
 
-    // The box is gone, so the focus has to land somewhere deliberate.
     const clear = screen.getByRole("button", { name: "Clear the picked contract" });
     expect(clear).toHaveFocus();
 
@@ -948,20 +922,15 @@ describe("the CTR-018 confidentiality nudge", () => {
     const user = userEvent.setup();
     await user.click(card.getByRole("button", { name: "Add link" }));
 
-    // Wait for the dialog.
     await screen.findByRole("heading", { name: "Link contract" });
 
-    // Type into the picker and select the candidate.
     const input = screen.getByRole("combobox", { name: "Search by number or title…" });
     await user.type(input, "Open");
 
-    // Wait for the candidate to appear and click it.
     await user.click(await screen.findByRole("option", { name: /C-99/ }));
 
-    // Submit the link.
     await user.click(screen.getByRole("button", { name: "Link contract" }));
 
-    // The nudge dialog appears.
     await screen.findByRole("heading", { name: "Flag as confidential?" });
     return user;
   }
@@ -978,7 +947,6 @@ describe("the CTR-018 confidentiality nudge", () => {
 
     await user.click(screen.getByRole("button", { name: "Flag as confidential" }));
 
-    // The nudge closes once the write answers.
     await waitFor(() => {
       expect(
         screen.queryByRole("heading", { name: "Flag as confidential?" }),
@@ -1021,7 +989,6 @@ describe("the CTR-018 confidentiality nudge", () => {
 
     await user.click(screen.getByRole("button", { name: "Flag as confidential" }));
 
-    // The nudge does not close as if the flag were set.
     await screen.findByRole("alert");
     expect(screen.getByRole("heading", { name: "Flag as confidential?" })).toBeInTheDocument();
     expect(screen.getByText("Could not flag C-99 as confidential.")).toBeInTheDocument();

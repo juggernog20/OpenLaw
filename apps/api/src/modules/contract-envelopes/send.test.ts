@@ -187,7 +187,6 @@ async function configureConnector(): Promise<void> {
  * configured one looks like. */
 const clearConnector = () => harness.db.delete(signingConnectors);
 
-/** The `nda` seed type, which every contract here is created as. */
 async function ndaTypeId(): Promise<string> {
   const res = await harness.app.inject({
     method: "GET",
@@ -284,7 +283,6 @@ const send = (
     },
   });
 
-/** The signing state of one record, requiring success. */
 async function signingState(jar: Record<string, string>, number: number) {
   const res = await listEnvelopes(jar, number);
   expect(res.statusCode, res.body).toBe(200);

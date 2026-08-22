@@ -61,10 +61,8 @@ const CONVERT_FILTERS: Readonly<Record<string, string>> = {
   pptx: IMPRESS_PDF_EXPORT,
 };
 
-/** The formats `convert` accepts, in the order they are documented. */
 export const CONVERTIBLE_FORMATS = Object.keys(CONVERT_FILTERS).sort((a, b) => a.localeCompare(b));
 
-/** Whether `format` is one this engine converts. */
 export function isConvertibleFormat(format: string): boolean {
   return Object.hasOwn(CONVERT_FILTERS, format);
 }
@@ -140,7 +138,6 @@ async function run(command: string, args: string[], options: OperationOptions): 
   });
 }
 
-/** The first non-empty line of a tool's stderr, trimmed for a problem body. */
 function firstLine(stderr: string): string {
   for (const line of stderr.split("\n")) {
     const trimmed = line.trim();
@@ -149,7 +146,6 @@ function firstLine(stderr: string): string {
   return "";
 }
 
-/** A temporary directory for one operation, removed however it ends. */
 async function inScratch<T>(work: (dir: string) => Promise<T>): Promise<T> {
   const dir = await mkdtemp(join(tmpdir(), "doc-engine-"));
   try {

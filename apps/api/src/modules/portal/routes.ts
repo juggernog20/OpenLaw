@@ -52,7 +52,6 @@ import { requireAuth } from "../../auth/guards.js";
 import { AttachedCustomFieldSchema, selectAttachedFields } from "../../lib/custom-fields.js";
 import { httpError, problemResponse } from "../../lib/problem.js";
 
-/** One request type as the portal picker reads it. */
 const PortalRequestTypeSchema = z.object({
   id: z.string(),
   /** Addresses the type's form; the picker links on it. */
@@ -63,7 +62,6 @@ const PortalRequestTypeSchema = z.object({
   displayOrder: z.number().int(),
 });
 
-/** One deflection link as the "Before you submit…" panel reads it. */
 const PortalIntakeLinkSchema = z.object({
   id: z.string(),
   label: z.string(),

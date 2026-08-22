@@ -33,7 +33,6 @@ import {
   type TestHarness,
 } from "../../testing/harness.js";
 
-/** A Legal Team Member: reads every open record, administers nothing. */
 const MEMBER = {
   email: "offsets-member@example.com",
   displayName: "Casey Counsel",
@@ -72,22 +71,18 @@ const getOffsets = (cookies: Record<string, string>) =>
 const putOffsets = (offsets: unknown, cookies = adminCookies) =>
   harness.app.inject({ method: "PUT", url: OFFSETS_URL, cookies, payload: { offsets } });
 
-/** Saves a list and requires it to have been accepted. */
 async function setOffsets(offsets: number[]): Promise<number[]> {
   const res = await putOffsets(offsets);
   expect(res.statusCode, res.body).toBe(200);
   return (res.json() as { offsets: number[] }).offsets;
 }
 
-/** The settings entries this pane writes, oldest first. */
 const settingsRows = (): Promise<ActivityLogEntry[]> =>
   harness.db
     .select()
     .from(activityLog)
     .where(eq(activityLog.action, "org_settings.updated"))
     .orderBy(asc(activityLog.createdAt), asc(activityLog.id));
-
-// -------------------------------------------------------------------
 
 describe("the SET-002 role gate", () => {
   it("refuses an unauthenticated request as 401, on read and write", async () => {
@@ -235,9 +230,6 @@ describe("the DD-017 audit trail", () => {
   });
 });
 
-// -------------------------------------------------------------------
-
-/** Somewhere for one round's own lines to go. */
 function recordingLog(): { lines: JobLogLine[]; log: PipelineLogger } {
   const lines: JobLogLine[] = [];
   return {
@@ -267,11 +259,9 @@ async function round(now: Date) {
   );
 }
 
-/** A civil date shifted by whole days. */
 const plusDays = (date: string, days: number): string =>
   new Date(Date.parse(`${date}T00:00:00Z`) + days * 86_400_000).toISOString().slice(0, 10);
 
-/** The instant one civil date reaches a given UTC hour. */
 const at = (date: string, hour: number): Date =>
   new Date(`${date}T${String(hour).padStart(2, "0")}:00:00Z`);
 

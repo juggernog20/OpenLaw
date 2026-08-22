@@ -33,17 +33,14 @@ import {
   type JournalEntry,
 } from "@openlaw/db";
 
-/** The committed migration files — the ones a release actually ships. */
 export const MIGRATIONS = fileURLToPath(
   new URL("../../../../packages/db/migrations", import.meta.url),
 );
 
-/** The journal, in the order the migrator walks it. */
 export function migrationEntries(): JournalEntry[] {
   return readMigrationJournal(MIGRATIONS);
 }
 
-/** A database of its own per scenario — each one writes bookkeeping. */
 export async function freshDb(container: StartedPostgreSqlContainer, name: string): Promise<Db> {
   const admin = createDb(container.getConnectionUri());
   await admin.execute(sql.raw(`create database "${name}"`));

@@ -173,7 +173,6 @@ describe("the SET-002 role gate", () => {
       expect(res.statusCode, res.body).toBe(403);
       expect(res.headers["content-type"]).toContain("application/problem+json");
     }
-    // None of the refused writes landed.
     expect(await typeBySlug("contract_review")).toEqual(review);
     expect((await listTypes(true)).some((row) => row.displayName === "Sneaky")).toBe(false);
   });
@@ -616,8 +615,6 @@ describe("the DD-017 audit trail", () => {
 });
 
 describe("PATCH /request-types/:id — the three-state target (INT-002)", () => {
-  /** PATCHes one type and answers the raw reply, so a refusal is read
-   * as the problem document it is. */
   const patch = (id: string, payload: Record<string, unknown>) =>
     harness.app.inject({
       method: "PATCH",
@@ -626,7 +623,6 @@ describe("PATCH /request-types/:id — the three-state target (INT-002)", () => 
       payload,
     });
 
-  /** A throwaway request type, so the seeds keep their targets. */
   async function addType(displayName: string): Promise<TypeRow> {
     const res = await harness.app.inject({
       method: "POST",

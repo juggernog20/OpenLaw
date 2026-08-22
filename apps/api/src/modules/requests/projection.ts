@@ -201,10 +201,8 @@ export const NO_REQUEST = "No request exists with this reference.";
  */
 export const NO_ATTACHMENT = "No attachment exists with this reference.";
 
-/** A stored blob, as a download route needs it described. */
 export const DownloadSchema = z.any().meta({ type: "string", format: "binary" });
 
-/** The stored row, as the wire answers it. */
 export function toAttachment(row: { id: string; filename: string; createdAt: Date }) {
   return { id: row.id, filename: row.filename, createdAt: row.createdAt.toISOString() };
 }

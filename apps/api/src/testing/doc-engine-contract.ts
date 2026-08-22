@@ -41,7 +41,6 @@ import {
   type DocEngine,
 } from "../lib/doc-engine/engine.js";
 
-/** Where the committed fixtures live. See scripts/build-doc-engine-fixtures.ts. */
 function fixture(name: string): Buffer {
   return readFileSync(fileURLToPath(new URL(`./fixtures/doc-engine/${name}`, import.meta.url)));
 }
@@ -82,12 +81,10 @@ export interface DocEngineContractOptions {
   startTimeoutMs?: number;
 }
 
-/** A readable over fixed bytes, as an upload handler would hand over. */
 function bytes(source: Buffer | string): Readable {
   return Readable.from([Buffer.from(source)]);
 }
 
-/** Everything a stream yields, as one buffer. */
 async function collect(stream: Readable): Promise<Buffer> {
   const chunks: Buffer[] = [];
   for await (const chunk of stream) chunks.push(Buffer.from(chunk));
@@ -105,7 +102,6 @@ function flat(text: string): string {
   return text.replaceAll(/\s+/g, " ").trim();
 }
 
-/** Whether the text holds any letter or digit at all. */
 function hasWords(text: string): boolean {
   return /[\p{L}\p{N}]/u.test(text);
 }

@@ -133,7 +133,6 @@ const SECOND_NOTICE_DAYS = 60;
  * minor units, currency, cadence). */
 const CONTRACT_VALUE = { amount: 4_800_000, currency: "USD", cadence: "annually" } as const;
 
-/** Only what the sweep reads. */
 const ContractRows = z.object({
   contracts: z.array(z.object({ number: z.number().int(), title: z.string() })),
 });

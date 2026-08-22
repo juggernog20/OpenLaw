@@ -37,13 +37,11 @@ import {
   type TestHarness,
 } from "../../testing/harness.js";
 
-/** The person who owns the record, asks for sign-off, and moves it. */
 const MEMBER = {
   email: "gate-member@example.com",
   displayName: "Nadia Counsel",
   password: "correct-horse-battery",
 } as const;
-/** The first approver. */
 const FIRST = {
   email: "gate-first@example.com",
   displayName: "Sarah Chen",
@@ -135,10 +133,8 @@ afterAll(async () => {
   await harness.stop();
 });
 
-/** The seeded status that maps to one stage. */
 const statusAt = (stage: string): StatusOption => statusesByStage.get(stage)!;
 
-/** A contract the Member made, so they hold its `creator` row. */
 async function newContract(title: string): Promise<ContractRow> {
   const res = await harness.app.inject({
     method: "POST",
@@ -150,7 +146,6 @@ async function newContract(title: string): Promise<ContractRow> {
   return res.json().contract as ContractRow;
 }
 
-/** One status commit, bare or with CTR-012's override flag. */
 const moveTo = (number: number, stage: string, override?: boolean) =>
   harness.app.inject({
     method: "PATCH",
@@ -162,14 +157,12 @@ const moveTo = (number: number, stage: string, override?: boolean) =>
         : { statusId: statusAt(stage).id, overrideSoftGate: override },
   });
 
-/** A status commit that must land, answering the row. */
 async function move(number: number, stage: string, override?: boolean): Promise<ContractRow> {
   const res = await moveTo(number, stage, override);
   expect(res.statusCode, res.body).toBe(200);
   return res.json().contract as ContractRow;
 }
 
-/** Asks the named people for sign-off, answering the roster. */
 async function ask(
   number: number,
   approverIds: string[],
@@ -184,7 +177,6 @@ async function ask(
   return res.json().approvals as { id: string; approver: { id: string } }[];
 }
 
-/** One approver's answer, which must land. */
 async function decide(
   fixture: { email: string },
   approvalId: string,
@@ -199,7 +191,6 @@ async function decide(
   expect(res.statusCode, res.body).toBe(200);
 }
 
-/** The override entries on one contract, oldest first. */
 const overridesOn = (contractId: string) =>
   harness.db
     .select()
@@ -226,7 +217,6 @@ const statusEntriesOn = (contractId: string) =>
     )
     .orderBy(asc(activityLog.createdAt), asc(activityLog.id));
 
-/** A contract sitting at the approval stage with two pending asks. */
 async function contractAwaitingSignOff(title: string) {
   const contract = await newContract(title);
   await move(contract.number, "review");
@@ -251,7 +241,6 @@ describe("the soft gate refuses", () => {
     expect(problem.detail).toContain(SECOND.displayName);
     expect(problem.detail).toContain("pending");
 
-    // Refused means nothing moved.
     const read = await harness.app.inject({
       method: "GET",
       url: `/api/v1/contracts/${contract.number}`,

@@ -101,7 +101,6 @@ let targetContractTypeId: string;
 const as = (fixture: { email: string }): Record<string, string> => cookies.get(fixture.email)!;
 const idOf = (fixture: { email: string }): string => userIds.get(fixture.email)!;
 
-/** One Request, as this suite refers to it afterwards. */
 interface RequestRow {
   id: string;
   number: number;
@@ -337,7 +336,6 @@ async function rowsAboutComment(fixture: { email: string }, commentId: string) {
 /** How long the email is given before the suite calls the queue stuck. */
 const SETTLE_TIMEOUT_MS = 20_000;
 
-/** Waits for a condition the pipeline is expected to bring about. */
 async function settles(what: string, ready: () => boolean): Promise<void> {
   const deadline = Date.now() + SETTLE_TIMEOUT_MS;
   while (Date.now() < deadline) {

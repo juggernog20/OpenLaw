@@ -162,7 +162,6 @@ afterAll(async () => {
   await harness.stop();
 });
 
-/** The `nda` seed type, which every contract here is created as. */
 async function ndaTypeId(): Promise<string> {
   const res = await harness.app.inject({
     method: "GET",
@@ -224,7 +223,6 @@ async function recordAtSignature(title: string): Promise<{ id: string; number: n
   return contract;
 }
 
-/** Moves a record onto the first live status at one stage. */
 async function moveTo(number: number, stage: ContractStage): Promise<void> {
   const [target] = await harness.db
     .select({ id: contractStatuses.id })
@@ -241,7 +239,6 @@ async function moveTo(number: number, stage: ContractStage): Promise<void> {
   expect(res.statusCode, res.body).toBe(200);
 }
 
-/** The signing state of one record, requiring success. */
 async function signingState(number: number) {
   const res = await harness.app.inject({
     method: "GET",
@@ -255,7 +252,6 @@ async function signingState(number: number) {
   };
 }
 
-/** Sends the record's current round and answers the envelope it wrote. */
 async function sendFrom(number: number): Promise<EnvelopeRow> {
   const state = await signingState(number);
   const versionId = state.primaryDocument!.versions[0]!.id;
@@ -282,14 +278,12 @@ async function recordWithEnvelopeOut(title: string): Promise<{
   return { contract, envelope, providerId: await providerIdOf(envelope.id) };
 }
 
-/** One envelope row, read back over HTTP. */
 async function envelopeRow(number: number, envelopeId: string): Promise<EnvelopeRow> {
   const row = (await signingState(number)).envelopes.find((entry) => entry.id === envelopeId);
   expect(row, "the envelope row").toBeDefined();
   return row!;
 }
 
-/** The record's paper, as the documents section draws it. */
 async function primaryOf(number: number): Promise<DocumentRow> {
   const res = await harness.app.inject({
     method: "GET",
@@ -304,13 +298,11 @@ async function primaryOf(number: number): Promise<DocumentRow> {
   return primary!;
 }
 
-/** The fake this app resolved. */
 function provider() {
   expect(harness.signing, "the harness's fake provider").not.toBeNull();
   return harness.signing!;
 }
 
-/** The provider's own id for one of our envelope rows. */
 async function providerIdOf(envelopeId: string): Promise<string> {
   const [row] = await harness.db
     .select({ providerEnvelopeId: contractEnvelopes.providerEnvelopeId })
@@ -335,7 +327,6 @@ function deliver(delivery: WebhookDelivery) {
   });
 }
 
-/** The contract's stage, as the record holds it. */
 async function stageOf(contractId: string): Promise<string> {
   const [row] = await harness.db
     .select({ stage: contractStatuses.stage })
@@ -370,7 +361,6 @@ function recordingLog(): { lines: JobLogLine[]; log: ReconciliationDeps["log"] }
   };
 }
 
-/** One round of the sweep, with its own log. */
 async function sweep(): Promise<{ summary: ReconciliationSummary; lines: JobLogLine[] }> {
   const { lines, log } = recordingLog();
   const summary = await runReconciliationSweep(
@@ -738,7 +728,6 @@ describe("a provider that is down for every envelope", () => {
   });
 });
 
-/** Waits for something to become true, or gives up loudly. */
 async function until(check: () => boolean | Promise<boolean>, timeoutMs = 10_000): Promise<void> {
   const deadline = Date.now() + timeoutMs;
   while (Date.now() < deadline) {

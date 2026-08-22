@@ -34,7 +34,6 @@ import {
   type TestHarness,
 } from "../../testing/harness.js";
 
-/** The person who makes every record and link. */
 const MEMBER = {
   email: "relations-member@example.com",
   displayName: "Nadia Counsel",
@@ -121,7 +120,6 @@ afterAll(async () => {
   await harness.stop();
 });
 
-/** One contract through the create seam — plain, walled, or routed. */
 async function create(payload: Record<string, unknown>): Promise<ContractRow> {
   const res = await harness.app.inject({
     method: "POST",

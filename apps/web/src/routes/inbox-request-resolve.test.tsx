@@ -66,7 +66,6 @@ function requestApi(
   };
 }
 
-/** Opens the Resolve dialog from the sub-bar and answers it. */
 const openResolve = (user: ReturnType<typeof userEvent.setup>) => openDisposition(user, "Resolve");
 
 describe("the disposition surface (INT-007, DES-058)", () => {

@@ -36,11 +36,9 @@ const START_TIMEOUT_MS = 180_000;
 interface StartedStore {
   azurite: StartedAzuriteContainer;
   container: string;
-  /** A client on the same store, for the assertions the adapter cannot make. */
   client: BlobServiceClient;
 }
 
-/** Boots Azurite and creates one empty container in it. */
 async function startStore(): Promise<StartedStore> {
   // The emulator trails the SDK's service API version by a few months
   // and refuses the newer header outright; skipping its version check
@@ -59,7 +57,6 @@ async function startStore(): Promise<StartedStore> {
   return { azurite, container, client };
 }
 
-/** The driver a deployment would build over a started store. */
 function adapterFor({ azurite, container }: StartedStore): StorageAdapter {
   return createAzureBlobStorage({
     container,
