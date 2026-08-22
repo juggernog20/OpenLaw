@@ -210,7 +210,6 @@ async function promotePaper(
 ): Promise<void> {
   const attachments = await tx
     .select({
-      id: requestAttachments.id,
       fileRef: requestAttachments.fileRef,
       filename: requestAttachments.filename,
     })
