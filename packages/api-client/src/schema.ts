@@ -12489,7 +12489,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "application/octet-stream": unknown;
+          "application/octet-stream": string;
         };
       };
       /** @description Problem details (RFC 9457) */

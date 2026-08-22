@@ -26073,7 +26073,10 @@
             "description": "Default Response",
             "content": {
               "application/octet-stream": {
-                "schema": {}
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
               }
             }
           },

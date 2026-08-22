@@ -408,6 +408,7 @@ describe("the attachment inherits the comment's audience", () => {
     expect(reached.statusCode, reached.body).toBe(200);
     expect(reached.rawPayload.toString()).toBe("shared");
     expect(String(reached.headers["content-disposition"])).toContain("shared%20markup.pdf");
+    expect(reached.headers["cache-control"]).toBe("private, max-age=0, must-revalidate");
   });
 
   it("lets the portal Requester read and download Full Thread paper", async () => {

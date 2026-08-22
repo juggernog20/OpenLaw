@@ -69,14 +69,18 @@ export async function sendComment(input: CommentPost, files: readonly File[] = [
   }
   for (const file of files) form.append("file", file, file.name);
 
+  let response: Response;
   try {
-    const response = await fetch("/api/v1/comments", { method: "POST", body: form });
-    const payload = (await response.json()) as unknown;
-    if (response.ok) return { data: payload as { comment: Comment }, error: undefined };
-    return { data: undefined, error: payload };
+    response = await fetch("/api/v1/comments", { method: "POST", body: form });
   } catch {
+    // A dropped connection: the composer says so in its own words.
     return { data: undefined, error: undefined };
   }
+  // A refusal from in front of the API (a proxy's 413, say) carries no
+  // problem JSON. It is still a refusal, not a dropped connection.
+  const payload = await response.json().catch(() => undefined);
+  if (response.ok && payload) return { data: payload as { comment: Comment }, error: undefined };
+  return { data: undefined, error: payload };
 }
 
 /** The three tiers, narrowest first — the order the composer draws them

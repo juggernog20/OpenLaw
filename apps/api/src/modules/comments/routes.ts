@@ -1038,7 +1038,10 @@ export const commentsRoutes: FastifyPluginAsyncZod = async (app) => {
         params: CommentParams.extend({ attachmentId: RecordIdSchema }),
         querystring: EntityRefQuery,
         produces: ["application/octet-stream"],
-        response: { 200: z.any(), default: problemResponse },
+        response: {
+          200: z.any().meta({ type: "string", format: "binary" }),
+          default: problemResponse,
+        },
       },
     },
     async (request, reply) => {
@@ -1077,6 +1080,9 @@ export const commentsRoutes: FastifyPluginAsyncZod = async (app) => {
       reply.header("content-type", "application/octet-stream");
       reply.header("content-disposition", attachmentDisposition(row.filename));
       reply.header("x-content-type-options", "nosniff");
+      // The blob never changes, but who reaches it does: a tier narrowed
+      // or a comment redacted must not leave a copy in a shared cache.
+      reply.header("cache-control", "private, max-age=0, must-revalidate");
       return reply.send(await app.storage.get(row.fileRef));
     },
   );
