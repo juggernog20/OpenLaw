@@ -105,10 +105,7 @@ export const StaffRequestTypeSchema = z.object({
  * are written where they are used.
  */
 export const liveTargetContractType = () =>
-  and(
-    eq(requestTypes.targetContractTypeId, contractTypes.id),
-    isNull(contractTypes.archivedAt),
-  );
+  and(eq(requestTypes.targetContractTypeId, contractTypes.id), isNull(contractTypes.archivedAt));
 
 /** The matter half of {@link liveTargetContractType}, under the same
  * rule. Nothing converts to a Matter until M22, and the taxonomy is

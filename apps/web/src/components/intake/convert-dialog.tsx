@@ -555,7 +555,7 @@ export function ConvertDialog({
                   {field.description ?? (
                     <FormattedMessage
                       id="convert.gapNote"
-                      defaultMessage="Required on this contract type — the form did not collect it."
+                      defaultMessage="Required on this contract type. The form did not collect it."
                     />
                   )}
                 </p>

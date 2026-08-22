@@ -670,4 +670,3 @@ function Outcome({ request }: Readonly<{ request: StaffRequest }>) {
     </div>
   );
 }
-

@@ -124,12 +124,16 @@ beforeAll(async () => {
   requesterCookies = await harnessSignInCookies(harness.app, REQUESTER.email, REQUESTER.password);
 
   requestTypeIds = new Map(
-    (await harness.db.select({ id: requestTypes.id, slug: requestTypes.slug }).from(requestTypes))
-      .map((row) => [row.slug, row.id] as const),
+    (
+      await harness.db.select({ id: requestTypes.id, slug: requestTypes.slug }).from(requestTypes)
+    ).map((row) => [row.slug, row.id] as const),
   );
   contractTypeIds = new Map(
-    (await harness.db.select({ id: contractTypes.id, slug: contractTypes.slug }).from(contractTypes))
-      .map((row) => [row.slug, row.id] as const),
+    (
+      await harness.db
+        .select({ id: contractTypes.id, slug: contractTypes.slug })
+        .from(contractTypes)
+    ).map((row) => [row.slug, row.id] as const),
   );
 
   // Three catalog fields, each with one job in this suite.
@@ -179,7 +183,8 @@ beforeAll(async () => {
       [field.onMsa, contractTypeIds.get("msa")!, field.required],
     ] as const) {
       if (!attach) continue;
-      const path = typeId === requestTypeIds.get("nda_request") ? "request-types" : "contract-types";
+      const path =
+        typeId === requestTypeIds.get("nda_request") ? "request-types" : "contract-types";
       const attached = await harness.app.inject({
         method: "POST",
         url: `/api/v1/${path}/${typeId}/fields`,

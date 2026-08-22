@@ -213,11 +213,7 @@ import {
 } from "@openlaw/shared";
 import { httpError, problemResponse, problemTypeResponse } from "../../lib/problem.js";
 import { assertApprovalGate, type UnresolvedApproval } from "../../lib/soft-gate.js";
-import {
-  createContract,
-  CONTRACT_RENEWAL_VEHICLES,
-  MAX_CONTRACT_TITLE_LENGTH,
-} from "./create.js";
+import { createContract, CONTRACT_RENEWAL_VEHICLES, MAX_CONTRACT_TITLE_LENGTH } from "./create.js";
 
 /** Every mutation, and every picker read behind one, is Member+. */
 const requireMember = requireRole("administrator", "legal_team_member");
