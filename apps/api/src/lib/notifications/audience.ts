@@ -47,6 +47,7 @@
 
 import {
   and,
+  asc,
   contracts,
   contractTeam,
   eq,
@@ -276,6 +277,52 @@ export async function requestAudience(
     summary: record.summary,
     requesterId: record.requesterId,
   };
+}
+
+/** The ask a record was born from, as the reply promise needs it
+ * described (CMT-001, M21/11). */
+export interface ConvertedFrom {
+  requestId: string;
+  /** Who asked — the one person the reply is for, and the one person the
+   * record's own group-2 event must therefore leave out at Full Thread
+   * so that one comment tells one person once. */
+  requesterId: string;
+}
+
+/**
+ * The Request a conversion turned into this contract, or `null` where no
+ * Request did (CMT-001, INT-002).
+ *
+ * **The back-link is read behind the seam, and this is what makes the
+ * reply promise survive the thread's move.** A staff Full Thread comment
+ * on a converted record is a reply to the person who asked, whatever
+ * screen it was typed on — the contract's applet, the staff request
+ * detail, or the portal — so the fan-out finds them from the record
+ * rather than being told about them by a call site. No comment route
+ * knows a Request exists, which is the property that keeps this from
+ * being one rule in three hands.
+ *
+ * **An archived Request is not there**, by the house rule that NULL means
+ * live and for {@link requestAudience}'s reason: a frozen record is not
+ * something to send anybody a message about.
+ *
+ * At most one row can answer — a Request becomes one record, and the
+ * table holds that as a check constraint — but a contract could in
+ * principle be named by two rows if the column were ever written twice,
+ * so the read is bounded and ordered rather than trusting the planner.
+ */
+export async function requestConvertedInto(
+  db: Executor,
+  contractId: string,
+): Promise<ConvertedFrom | null> {
+  const [record] = await db
+    .select({ id: requests.id, requesterId: requests.requesterId })
+    .from(requests)
+    .where(and(eq(requests.convertedContractId, contractId), isNull(requests.archivedAt)))
+    .orderBy(asc(requests.number))
+    .limit(1);
+  if (!record) return null;
+  return { requestId: record.id, requesterId: record.requesterId };
 }
 
 /**

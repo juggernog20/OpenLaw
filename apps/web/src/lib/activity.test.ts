@@ -414,6 +414,7 @@ const SAMPLE_PAYLOADS: { [A in ActivityAction]: ActivityPayloadMap[A] } = {
   "request.declined": { number: 42 },
   "request.resolved": { number: 42 },
   "request.converted": { number: 42, contractNumber: 51 },
+  "request.thread_moved": { number: 42, contractNumber: 51 },
 
   // ---- The record's paper ----
   "document.created": {

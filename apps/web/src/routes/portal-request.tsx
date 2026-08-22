@@ -24,6 +24,15 @@
  * dead end dressed as a fact. What the banner says is that Legal is
  * working on it and that this page is still their window.
  *
+ * **The thread on a converted Request is the record's thread** (CMT-001,
+ * #422), and nothing here had to learn that. The conversation moved onto
+ * the contract at the conversion and the `request` audience arm follows
+ * the back-link, so this page goes on asking for the Request's own
+ * thread and goes on being answered — filtered to Full Thread, because
+ * that is the one room a Requester is in. Which record the rows now hang
+ * off is the API's business; what this page owes the requester is that
+ * their window never went dark.
+ *
  * **A declined Request carries its reason** (INT-006): "no" always
  * arrives with a why, so the banner is the reason rather than a line
  * about it.

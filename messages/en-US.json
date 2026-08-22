@@ -311,6 +311,9 @@
   "activity.request.resolved": {
     "defaultMessage": "{actor} resolved this request"
   },
+  "activity.request.threadMoved": {
+    "defaultMessage": "{actor} moved this conversation onto {contract}"
+  },
   "activity.request.unnamedRecord": {
     "defaultMessage": "a request"
   },

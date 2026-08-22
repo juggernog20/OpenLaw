@@ -619,6 +619,64 @@ describe("the conversation", () => {
     expect(box).toHaveValue("");
   });
 
+  it("keeps the window on a converted Request, thread and composer alike", async () => {
+    // CMT-001's promise from the requester's side (#422): the
+    // conversation moved onto the record and the reply still lands. The
+    // page asks for the Request's own thread and the API answers the
+    // record's rows, so what proves it here is that the composer still
+    // sends the Request's id — the redirect is the seam's and nothing on
+    // this page branches on the status.
+    const user = userEvent.setup();
+    let sent: unknown;
+    stubApi({
+      signedIn: REQUESTER,
+      extra: stubs(
+        replyPost((body) => {
+          sent = body;
+          return json(201, {
+            comment: comment({
+              id: "c9",
+              entityType: "contract",
+              entityId: "ct7",
+              body: "Thanks — anything else you need?",
+              author: { id: REQUESTER.id, displayName: "Tom Iwu", image: null, archived: false },
+            }),
+          });
+        }),
+        detailRead(detail({ status: "converted" }), 200, {
+          // Answered from the record now, which is why the rows name a
+          // contract. The page renders them exactly as it always did.
+          comments: [
+            comment({
+              id: "c1",
+              entityType: "contract",
+              entityId: "ct7",
+              body: "We have opened the file and started the redline.",
+            }),
+          ],
+        }),
+      ),
+    });
+    renderAt("/portal/requests/45");
+
+    const card = await screen.findByRole("region", { name: "Conversation" });
+    expect(
+      within(card).getByText("We have opened the file and started the redline."),
+    ).toBeInTheDocument();
+
+    const box = within(card).getByRole("textbox", { name: "Reply to Legal" });
+    await user.type(box, "Thanks — anything else you need?");
+    await user.click(within(card).getByRole("button", { name: "Send" }));
+
+    expect(await screen.findByText("Thanks — anything else you need?")).toBeInTheDocument();
+    expect(sent).toEqual({
+      entityType: "request",
+      entityId: "rq1",
+      body: "Thanks — anything else you need?",
+      visibility: "full_thread",
+    });
+  });
+
   it("keeps the words in the box and states the reason when the reply is refused", async () => {
     const user = userEvent.setup();
     stubApi({

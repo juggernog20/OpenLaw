@@ -72,11 +72,16 @@
  * conversion that refuses anywhere leaves neither a contract nor a
  * document nor a blob nobody points at.
  *
- * **What is not here, and lands next.** The thread is not re-parented
- * onto the record (#422). It hangs inside this transaction beside the
- * create, and it is additive: the thread stays on the Request's own
- * entity pair, which is where the portal already reads it, until it
- * lands.
+ * **The thread follows too** (#422). Every comment on the Request
+ * re-parents onto the record with its DD-016 tier intact, inside this
+ * same transaction, and each reader's place in the conversation moves
+ * with it. It is a move rather than a copy — that is the whole of
+ * CMT-001's promise, that legal answers in exactly one place from then
+ * on — and what makes the Request stop being a comment target is the
+ * back-link this route writes on the line after. The rules of the move
+ * are `move-thread.ts`'s; what this route owns is that it happens here,
+ * beside the create and the promotion, so a conversion that refuses
+ * anywhere leaves the conversation exactly where the requester left it.
  */
 
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
@@ -101,6 +106,7 @@ import {
   NumberParams,
   REQUIRE_TRIAGER,
 } from "./disposition.js";
+import { moveThread } from "./move-thread.js";
 import { withPromotedPaper } from "./promote-paper.js";
 import { liveTargetContractType, StaffRequestSchema } from "./projection.js";
 
@@ -143,7 +149,12 @@ export const requestConvertRoutes: FastifyPluginAsyncZod = async (app) => {
           "at version 1 at the record root, each narrated document.created " +
           "and each owed the derivations an upload is owed (INT-002, " +
           "DOC-008). The promotion copies: the Request keeps its " +
-          "attachments and its downloads go on answering. " +
+          "attachments and its downloads go on answering. The thread " +
+          "moves rather than copying (CMT-001): every comment re-parents " +
+          "onto the record with its DD-016 tier intact and each reader's " +
+          "unread watermark travels with it, narrated request.thread_moved, " +
+          "and from then on the Request's thread address answers the " +
+          "record's conversation — the portal filtered to Full Thread. " +
           "Answers the Request as the staff detail reads it. Member+ only",
         tags: ["requests"],
         params: NumberParams,
@@ -264,6 +275,22 @@ export const requestConvertRoutes: FastifyPluginAsyncZod = async (app) => {
               },
               actorId: request.user.id,
               actorName: request.user.displayName,
+            });
+
+            // CMT-001's thread, moved onto the record beside the paper
+            // (#422). Tiers are preserved because the write does not
+            // touch them, and each reader's place in the conversation
+            // travels with the rows. The rules of the move are
+            // `move-thread.ts`'s; what this route owns is that it
+            // happens here, inside the transaction that made the record
+            // — a conversion that refuses anywhere leaves the
+            // conversation exactly where the requester left it.
+            await moveThread(tx, {
+              requestId: held.id,
+              requestNumber: held.number,
+              contractId: born.row.id,
+              contractNumber: born.row.number,
+              actorId: request.user.id,
             });
 
             await tx

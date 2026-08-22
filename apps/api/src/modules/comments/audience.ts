@@ -143,12 +143,16 @@ interface CommentEntityArm {
    *
    * The id comes back re-read from the arm's own table, so a caller that
    * writes with it cannot write against an id the client made up.
+   *
+   * **The answer names its own entity type, which is not always the one
+   * that was asked for** (CMT-001, M21/11). A converted Request's thread
+   * *is* the record's thread, so the `request` arm answers a `contract`
+   * pair for it. Everything downstream keys on the pair it got back, so
+   * the read, the write, the watermark, and the notification all land on
+   * the record — which is the whole of "legal answers in exactly one
+   * place from then on".
    */
-  resolve(
-    db: Executor,
-    user: AuthenticatedUser,
-    entityId: string,
-  ): Promise<Omit<CommentAudience, "entityType"> | null>;
+  resolve(db: Executor, user: AuthenticatedUser, entityId: string): Promise<CommentAudience | null>;
 
   /**
    * Everyone a comment on this record can address (CMT-007), each with
@@ -192,7 +196,7 @@ const contractArm: CommentEntityArm = {
   async resolve(db, user, entityId) {
     const audience = await contractAudience(db, user, entityId);
     if (!audience) return null;
-    return { entityId: audience.contractId, tiers: audience.tiers };
+    return { entityType: "contract", entityId: audience.contractId, tiers: audience.tiers };
   },
 
   async mentionCandidates(db, audience, only) {
@@ -285,8 +289,25 @@ const REQUESTER_TIERS: readonly CommentVisibility[] = ["full_thread"];
  * staff — the role is a fact about the contract surfaces (CTR-021), and
  * a Request has no team for it to mean anything on.
  *
- * Re-parenting at conversion (CMT-001) is M21's. Nothing here reads or
- * writes the link a conversion leaves behind.
+ * **The thread follows the work** (CMT-001, M21/11). A conversion moves
+ * the comment rows onto the record and leaves a back-link, so from that
+ * moment this arm answers **the record's pair**, not the Request's. That
+ * one line is what keeps the conversation from forking: the portal, the
+ * staff request detail, and the contract's own applet are three windows
+ * onto one thread, and a reply typed into any of them lands in the same
+ * place. `request` stays a comment target for a Request that never
+ * converted, which is every Request that is still `new`, resolved, or
+ * declined.
+ *
+ * **Who is in the room after the move is the record's question, with one
+ * addition.** Staff take the contract arm's own answer, so DD-014's wall
+ * and CTR-021's reach govern the moved thread exactly as they govern the
+ * record — the thread cannot outlive the reach of the thing it is about.
+ * The Requester keeps Full Thread by being the Requester, which is a
+ * standing the contract's own rule has no way to express: a Business
+ * User reaches no contract (CTR-021), and CMT-001 nevertheless promises
+ * them their window. Full Thread *means* "the requester hears this"
+ * (DD-016), so the tier is the grant and no wall narrows it further.
  */
 const requestArm: CommentEntityArm = {
   /**
@@ -300,20 +321,72 @@ const requestArm: CommentEntityArm = {
 
   async resolve(db, user, entityId) {
     const [record] = await db
-      .select({ id: requests.id, requesterId: requests.requesterId })
+      .select({
+        id: requests.id,
+        requesterId: requests.requesterId,
+        // The back-link a conversion leaves (INT-002). NULL is the
+        // whole of "this Request is still a comment target".
+        convertedContractId: requests.convertedContractId,
+      })
       .from(requests)
       .where(and(eq(requests.id, entityId), isNull(requests.archivedAt)))
-      .limit(1);
+      .limit(1)
+      // Held in share mode, so a write on this thread serializes with a
+      // conversion (#422). The conversion holds this row FOR UPDATE
+      // while it moves the rows. Without a lock here, a post could
+      // resolve the Request's pair just before the move commits and
+      // insert just after it, stranding a comment on a pair no address
+      // answers any more. Under this lock the post either commits first
+      // and the move carries its row, or waits and is answered the
+      // record's pair. A plain read takes the lock for one statement
+      // and gives it straight back.
+      .for("share");
     if (!record) return null;
+    const staff = MEMBER_PLUS.includes(user.role);
+    const requester = record.requesterId === user.id;
+    if (!staff && !requester) return null;
+
+    if (record.convertedContractId !== null) {
+      // The thread moved with the work (CMT-001), so the standing is
+      // asked about the record it moved onto. Staff take the contract
+      // arm's own answer — the wall and the reach rule are the record's,
+      // and a thread that outran them would be the leak DD-014 exists to
+      // close. The `entityId` it answers with is re-read from
+      // `contracts`, which is that arm's promise and this one's too.
+      const onRecord = staff
+        ? await contractArm.resolve(db, user, record.convertedContractId)
+        : null;
+      if (onRecord) return onRecord;
+      // And being the Requester never takes a room away (the M20/7
+      // rule): a Member+ who raised the Request and cannot reach the
+      // record it became still hears the room Full Thread names. The id
+      // is the Request's own column rather than anything a client sent.
+      return requester
+        ? {
+            entityType: "contract",
+            entityId: record.convertedContractId,
+            tiers: REQUESTER_TIERS,
+          }
+        : null;
+    }
+
     // Staff first, so a Member+ who raised the Request themselves is
     // answered as staff: they are in every room on every Request, and
     // being the Requester too does not take a room away from them.
-    if (MEMBER_PLUS.includes(user.role)) return { entityId: record.id, tiers: ALL_TIERS };
-    if (record.requesterId === user.id) return { entityId: record.id, tiers: REQUESTER_TIERS };
-    return null;
+    return {
+      entityType: "request",
+      entityId: record.id,
+      tiers: staff ? ALL_TIERS : REQUESTER_TIERS,
+    };
   },
 
   async mentionCandidates(db, audience, only) {
+    // Never asked about a converted Request: `resolve` answers a
+    // `contract` pair for one, and the dispatch below keys on the pair
+    // that came back — so the addressees of a moved thread are the
+    // record's, which is CMT-007's promise said about the record the
+    // comment will actually land on.
+    //
     // The audience rule read over people instead of over rows, exactly
     // as the contract arm's is: somebody belongs here when this Request
     // reaches them and they hear at least one tier on it. So it is the
@@ -369,6 +442,13 @@ const requestArm: CommentEntityArm = {
   },
 
   async notifyPosted(tx, notifier, posted) {
+    // Also never reached for a converted Request, for `mentionCandidates`
+    // above's reason. A comment on a moved thread raises what a comment
+    // on the record raises, and the reply the Requester is promised is
+    // raised behind the Notifier seam off the same back-link (NOT-002's
+    // M21/11 addendum) — so this arm answers for a Request that is still
+    // a comment target and nothing else.
+    //
     // Being named is done *to* you whatever record it happens on
     // (NOT-002's M18/1 addendum, which M21/5 finally applies to a
     // Request). So the mention is group 1 here exactly as it is on a
@@ -474,6 +554,14 @@ export function commentEntityType(value: string): CommentEntityType | null {
  * The role gate is asked first and answered as `null` too, so one call
  * carries the whole question. Callers that owe a distinguishable refusal
  * take {@link reachedThread} instead.
+ *
+ * **The reference that arrives and the pair that comes back need not
+ * name the same record** (CMT-001, M21/11). A converted Request is asked
+ * for by its own id and answers the contract's pair, because that is
+ * where its thread is. The role gate is still the arm the caller asked
+ * for — a Business User reaches a converted Request's thread through the
+ * `request` arm, which admits them, and never through the `contract`
+ * arm, which does not.
  */
 export async function commentAudience(
   db: Executor,
@@ -482,9 +570,7 @@ export async function commentAudience(
 ): Promise<CommentAudience | null> {
   const arm = ARMS[ref.entityType];
   if (!arm.readerRoles.includes(user.role)) return null;
-  const resolved = await arm.resolve(db, user, ref.entityId);
-  if (!resolved) return null;
-  return { entityType: ref.entityType, ...resolved };
+  return await arm.resolve(db, user, ref.entityId);
 }
 
 /**
