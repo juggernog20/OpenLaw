@@ -390,8 +390,9 @@ test.describe.serial("M20 demo path", () => {
       const row = myRequests.getByRole("link", { name: new RegExp(SUMMARY) });
       await expect(row).toContainText(reference);
       await expect(row).toContainText(TYPE_NAME);
-      // The requester's own word for `new` (the INT-003 M21/6 addendum),
-      // which is the word their receipt email uses too.
+      // The requester's own word for `new` (the INT-003 M21/6 addendum).
+      // The receipt email names no status; the status-change emails
+      // speak this same vocabulary.
       await expect(row).toContainText("Open");
 
       // ---- The detail says what was submitted ----
