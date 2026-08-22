@@ -257,9 +257,8 @@ const StaffRequesterSchema = z.object({
  * The envelope, as I2's sub-bar, hero, and cards draw it.
  *
  * The staff detail answers it on the way in and every disposition route
- * answers it on the way out (INT-007), so a screen that has just
- * declined a Request paints the outcome from the write's own reply
- * rather than from a second read that might race it.
+ * answers it on the way out (INT-007), so the read that opens the screen
+ * and the write that changes it say one sentence about one Request.
  */
 export const StaffRequestSchema = z.object({
   id: z.string(),

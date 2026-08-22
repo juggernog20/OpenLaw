@@ -417,10 +417,7 @@ describe("the disposition scaffold (INT-007)", () => {
     // pinned before the routes that reach them exist.
     for (const outcome of ["resolved", "converted"] as const satisfies readonly RequestStatus[]) {
       const request = await submit(`Already ${outcome}`);
-      await harness.db
-        .update(requests)
-        .set({ status: outcome })
-        .where(eq(requests.id, request.id));
+      await harness.db.update(requests).set({ status: outcome }).where(eq(requests.id, request.id));
 
       const res = await decline(request.number, "Too late.");
       expect(res.statusCode, res.body).toBe(409);

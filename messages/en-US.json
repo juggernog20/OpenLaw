@@ -8,6 +8,9 @@
   "action.clear": {
     "defaultMessage": "Clear"
   },
+  "action.close": {
+    "defaultMessage": "Close"
+  },
   "action.continue": {
     "defaultMessage": "Continue"
   },
@@ -295,6 +298,9 @@
   },
   "activity.request.created": {
     "defaultMessage": "{actor} submitted this request"
+  },
+  "activity.request.declined": {
+    "defaultMessage": "{actor} declined this request"
   },
   "activity.signer.erased": {
     "defaultMessage": "{actor} erased an external signer's name and address from {entriesRedacted, plural, =0 {no entries} one {# entry} other {# entries}}"
@@ -1619,6 +1625,36 @@
   "datePicker.year": {
     "defaultMessage": "Year"
   },
+  "decline.action": {
+    "defaultMessage": "Decline"
+  },
+  "decline.alreadyDecided": {
+    "defaultMessage": "{outcome, select, converted {Somebody else already converted this request.} resolved {Somebody else already resolved this request.} declined {Somebody else already declined this request.} other {Somebody else already decided this request.}}"
+  },
+  "decline.alreadyDecidedRead": {
+    "defaultMessage": "Close this to read what they recorded."
+  },
+  "decline.explains": {
+    "defaultMessage": "Declining closes the request without converting it. The reason is required and is shared with the requester."
+  },
+  "decline.failed": {
+    "defaultMessage": "The request could not be declined. Try again."
+  },
+  "decline.needReason": {
+    "defaultMessage": "Write why. The requester is sent this."
+  },
+  "decline.notifyNote": {
+    "defaultMessage": "The requester is emailed this and sees it on their request."
+  },
+  "decline.reason": {
+    "defaultMessage": "Reason"
+  },
+  "decline.submit": {
+    "defaultMessage": "Decline request"
+  },
+  "decline.title": {
+    "defaultMessage": "Decline {reference}"
+  },
   "dialog.close": {
     "defaultMessage": "Close"
   },
@@ -2314,6 +2350,9 @@
   },
   "inbox.title": {
     "defaultMessage": "Inbox"
+  },
+  "intake.field.requiredMark": {
+    "defaultMessage": "(required)"
   },
   "keyDates.actionsFor": {
     "defaultMessage": "Actions for {label}"

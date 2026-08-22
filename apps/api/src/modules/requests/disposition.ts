@@ -38,20 +38,14 @@
  * should have to say.
  *
  * **The envelope is read back inside the transaction.** A disposition
- * answers the same `StaffRequestSchema` the staff detail answers, so the
- * screen that pressed the button paints the outcome from the write's own
- * reply. Reading it in the transaction is what makes the reply describe
- * what this act wrote rather than what a concurrent one left behind.
+ * answers the same `StaffRequestSchema` the staff detail answers — the
+ * house shape for a write, and the shape Convert needs, because the
+ * record a conversion made is part of what it did. Reading it inside the
+ * transaction is what makes the reply describe what this act wrote
+ * rather than what a concurrent one left behind.
  */
 
-import {
-  and,
-  eq,
-  isNull,
-  requests,
-  type RequestStatus,
-  type Transaction,
-} from "@openlaw/db";
+import { and, eq, isNull, requests, type RequestStatus, type Transaction } from "@openlaw/db";
 import { REQUEST_DISPOSITIONED_PROBLEM_TYPE, type RequestOutcome } from "@openlaw/shared";
 import type { AuthenticatedUser } from "../../auth/guards.js";
 import type { Notifier, NotifyingTransaction } from "../../lib/notifications/notifier.js";
