@@ -361,8 +361,7 @@ export interface RequestRepliedEvent extends RequestEvent {
  *
  * Those two are passed rather than read behind the seam because the
  * submission route has just written them, which is group 1's rule: a
- * caller that already holds a fact is not asked to be read for it a
- * second time.
+ * caller that already holds a fact is not made to read it again.
  */
 export interface RequestSubmittedEvent extends RequestEvent {
   /** The request type's display name (INT-002) — what the form was
@@ -904,9 +903,10 @@ async function fanOutToRequest(
  * reason — a caller that could name the audience could name the wrong
  * people.
  *
- * The Request's number and summary are added to the payload by the same
- * read that resolves nothing about them, so every item and email about a
- * Request names it the same way whichever bell drew it.
+ * The Request's number and summary come from that same read, and are
+ * **added** to the payload rather than taken from it, so every item and
+ * every email about a Request names it the same way whichever bell drew
+ * it.
  */
 async function fanOutToInbox(
   tx: NotifyingTransaction,
