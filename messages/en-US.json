@@ -2886,7 +2886,7 @@
     "defaultMessage": "The request could not be resolved. Try again."
   },
   "resolve.notifyNote": {
-    "defaultMessage": "This is posted on the request's thread and emailed to the requester."
+    "defaultMessage": "This goes on the request's thread, and to the requester by email."
   },
   "resolve.reply": {
     "defaultMessage": "Closing reply (optional)"

@@ -169,9 +169,7 @@ describe("the closing reply (INT-006)", () => {
     // Which of the two disposition boxes this is: a reply goes on the
     // conversation, where the requester can answer it.
     expect(
-      within(dialog).getByText(
-        "This is posted on the request's thread and emailed to the requester.",
-      ),
+      within(dialog).getByText("This goes on the request's thread, and to the requester by email."),
     ).toBeInTheDocument();
   });
 

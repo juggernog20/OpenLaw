@@ -20,10 +20,10 @@
  * do.
  *
  * **What the box writes is a comment, and the note says so.** The reply
- * lands on the thread the requester is already reading, and they are
- * mailed it as a reply. That is different from the decline reason, which
- * is stored on the Request itself, and somebody about to type into this
- * box wants to know which of the two they are doing.
+ * lands on the thread the requester is already reading, and the seam
+ * mails it to them as a reply. The decline reason goes somewhere else —
+ * onto the Request itself — and somebody about to type into one of the
+ * two boxes needs to know which they are doing.
  *
  * **Cancelling leaves the Request untouched**, and **a lost race ends
  * the dialog in a statement** — both the scaffold's, unchanged from
@@ -182,7 +182,7 @@ export function ResolveDialog({
                 <MessageSquare size={16} aria-hidden="true" className="mt-px shrink-0" />
                 <FormattedMessage
                   id="resolve.notifyNote"
-                  defaultMessage="This is posted on the request's thread and emailed to the requester."
+                  defaultMessage="This goes on the request's thread, and to the requester by email."
                 />
               </p>
             </div>

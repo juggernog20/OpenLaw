@@ -153,8 +153,9 @@ export function InboxRequestPage() {
    * dialog, because a Request has one fate and two open dialogs would be
    * two answers to it. */
   const [disposing, setDisposing] = useState<"decline" | "resolve" | null>(null);
-  /** Whether a disposition is out. The dialog holds its button inert
-   * while it is, so one press is one decline. */
+  /** Whether a disposition is out. Every dialog holds its own submit
+   * inert while it is, and the sub-bar's actions with it, so one press
+   * is one disposition. */
   const [busy, setBusy] = useState(false);
 
   /** The conversation about this Request (CMT-004, CMT-010), keyed by
@@ -236,8 +237,8 @@ export function InboxRequestPage() {
               surface: acting on a Request means choosing its outcome
               then and there. Drawn only while the Request is `new` —
               a decided one has nothing left to decide, and the Outcome
-              card states what was decided. Resolve and Convert land
-              with M21/8 and M21/9. */}
+              card states what was decided. Convert lands with M21/9,
+              and is absent until it does. */}
           {request.status === "new" && (
             <div className="flex shrink-0 items-center gap-2">
               <Button
