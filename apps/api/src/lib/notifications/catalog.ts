@@ -24,10 +24,11 @@
  * person's to change, so nothing here is enforcement.
  */
 
-import type {
-  NotificationChannel,
-  NotificationEventGroup,
-  NotificationEventType,
+import {
+  NOTIFICATION_EVENT_TYPES,
+  type NotificationChannel,
+  type NotificationEventGroup,
+  type NotificationEventType,
 } from "@openlaw/db";
 
 /**
@@ -179,9 +180,10 @@ export function emailTimingOf(eventType: NotificationEventType): EmailTiming {
  * 4 is the Inbox's own staff group, group 5 is the portal's.
  */
 export function eventTypesIn(group: NotificationEventGroup): NotificationEventType[] {
-  return Object.keys(EVENT_GROUP).filter(
-    (eventType) => EVENT_GROUP[eventType as NotificationEventType] === group,
-  ) as NotificationEventType[];
+  // The schema's own list rather than `Object.keys`, which answers
+  // `string[]` and would need a cast back into the union. The map above
+  // is total over it, so this reads every slug and invents none.
+  return NOTIFICATION_EVENT_TYPES.filter((eventType) => EVENT_GROUP[eventType] === group);
 }
 
 /**
@@ -194,11 +196,12 @@ export function eventTypesIn(group: NotificationEventGroup): NotificationEventTy
  * rules and therefore the safe way to be wrong.
  */
 export function isInboxEvent(eventType: string): boolean {
-  return (
-    Object.hasOwn(EVENT_GROUP, eventType) &&
-    EVENT_GROUP[eventType as NotificationEventType] === "new_requests"
-  );
+  return INBOX_EVENTS.has(eventType);
 }
+
+/** Group 4's slugs, as a set of plain strings — built once, because both
+ * callers ask per row. */
+const INBOX_EVENTS: ReadonlySet<string> = new Set<string>(eventTypesIn("new_requests"));
 
 /** Both channels, as `notification_preferences` names them. */
 export const CHANNELS: readonly NotificationChannel[] = ["in_app", "email"];
