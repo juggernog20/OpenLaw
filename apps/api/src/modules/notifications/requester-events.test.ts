@@ -416,7 +416,7 @@ describe("the two events the Inbox will fire (INT-006, INT-007)", () => {
     expect(message.text).toContain(portalLink(request));
   });
 
-  it("speaks the four words the portal pill speaks (the INT-003 M21/6 addendum)", async () => {
+  it("says a converted Request is in progress, the word the pill uses (INT-003)", async () => {
     // `converted` is the one arm where the machinery and the requester
     // part company: a record now exists, and what that means to the
     // person who asked is that Legal is working on it. The pill on their
@@ -435,7 +435,9 @@ describe("the two events the Inbox will fire (INT-006, INT-007)", () => {
 
     const message = await oneMailAbout(REQUESTER, request, "Your request is in progress");
     expect(message.text).toContain("is now in progress");
-    expect(message.text).not.toContain("converted");
+    // Any casing: a subject line that capitalised the enum's word would
+    // be the same two names for one status.
+    expect(message.text).not.toMatch(/\bconverted\b/i);
   });
 
   it("tells the requester why their Request was declined", async () => {
