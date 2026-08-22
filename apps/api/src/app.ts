@@ -67,6 +67,7 @@ import { requestTypesRoutes } from "./modules/request-types/routes.js";
 import { fieldsRoutes } from "./modules/fields/routes.js";
 import { intakeLinksRoutes } from "./modules/intake-links/routes.js";
 import { portalRoutes } from "./modules/portal/routes.js";
+import { requestConvertRoutes } from "./modules/requests/convert.js";
 import { requestDeclineRoutes } from "./modules/requests/decline.js";
 import { requestDetailRoutes } from "./modules/requests/request-detail.js";
 import { requestInboxRoutes } from "./modules/requests/inbox.js";
@@ -423,6 +424,7 @@ export async function buildApp(deps: AppDeps, opts: FastifyServerOptions = {}) {
   await app.register(requestDetailRoutes, { prefix: "/api/v1" });
   await app.register(requestDeclineRoutes, { prefix: "/api/v1" });
   await app.register(requestResolveRoutes, { prefix: "/api/v1" });
+  await app.register(requestConvertRoutes, { prefix: "/api/v1" });
   await app.register(contractStatusesRoutes, { prefix: "/api/v1" });
   await app.register(approverGroupsRoutes, { prefix: "/api/v1" });
   await app.register(contractsRoutes, { prefix: "/api/v1" });

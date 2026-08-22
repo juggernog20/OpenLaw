@@ -35,6 +35,7 @@ import {
   type RequestOutcome,
 } from "@openlaw/shared";
 import { api } from "./api";
+import type { CustomFieldValue } from "./custom-fields";
 import { problemDetail, problemType } from "./messages";
 
 /** One row of my-requests, aliased to the generated client schema so a
@@ -205,7 +206,14 @@ export function requestAttachmentHref(number: number, attachmentId: string): str
  */
 export type DispositionOutcome =
   | { ok: true; request: StaffRequest }
-  | { ok: false; alreadyDecided: RequestOutcome }
+  | {
+      ok: false;
+      alreadyDecided: RequestOutcome;
+      /** The record the winning conversion made, where this viewer
+       * reaches it (DD-014). `null` on every other outcome, so a dialog
+       * that names it draws the link only when there is one. */
+      convertedContract: { number: number } | null;
+    }
   | { ok: false; alreadyDecided?: undefined; detail?: string };
 
 /**
@@ -231,10 +239,7 @@ export async function declineRequest(number: number, reason: string): Promise<Di
     })
     .catch(() => ({ data: undefined, error: undefined }));
   if (data) return { ok: true, request: data.request };
-  const recorded = recordedOutcome(error);
-  return recorded
-    ? { ok: false, alreadyDecided: recorded }
-    : { ok: false, detail: problemDetail(error) };
+  return refusal(error);
 }
 
 /**
@@ -266,27 +271,93 @@ export async function resolveRequest(number: number, reply?: string): Promise<Di
     })
     .catch(() => ({ data: undefined, error: undefined }));
   if (data) return { ok: true, request: data.request };
-  const recorded = recordedOutcome(error);
-  return recorded
-    ? { ok: false, alreadyDecided: recorded }
-    : { ok: false, detail: problemDetail(error) };
+  return refusal(error);
 }
 
 /**
- * The outcome a lost disposition race carries, or null when the refusal
- * was any other refusal (INT-007, TECH-020).
+ * Turns a Request into the contract its request type targets (INT-002,
+ * DD-018, INT-007).
  *
- * Both halves are checked: the problem type says this is the race, and
- * the extension member says what was recorded. A refusal that named the
- * type but carried an outcome this build has never heard of reads as an
- * ordinary refusal, because a client cannot state a decision it cannot
- * name.
+ * **The dialog sends what it drew and nothing more.** The title, the
+ * contract type where the request type deferred it, and the answers to
+ * the hard-required fields the form did not collect. The collected
+ * values are not sent back: carry-through is the seam's rule (INT-002),
+ * and a client that re-keyed them could drop one.
+ *
+ * `contractTypeId` is omitted where the request type already names a
+ * live one — triage confirms the routing rather than choosing it
+ * (DD-018), and the seam refuses a body that names a different type.
+ *
+ * Nothing about the Request is written before this call, for the reason
+ * a decline writes nothing before its own: INT-007 has no claim step.
  */
+export async function convertRequest(
+  number: number,
+  input: {
+    title: string;
+    contractTypeId?: string;
+    customFields?: Record<string, CustomFieldValue>;
+  },
+): Promise<DispositionOutcome> {
+  // Settled, never rejected — `declineRequest`'s rule.
+  const { data, error } = await api
+    .POST("/api/v1/requests/{number}/convert", {
+      params: { path: { number } },
+      body: {
+        title: input.title,
+        ...(input.contractTypeId === undefined ? {} : { contractTypeId: input.contractTypeId }),
+        ...(input.customFields === undefined ? {} : { customFields: input.customFields }),
+      },
+    })
+    .catch(() => ({ data: undefined, error: undefined }));
+  if (data) return { ok: true, request: data.request };
+  return refusal(error);
+}
+
+/**
+ * One refusal, read the same way by all three dispositions (INT-007,
+ * TECH-020).
+ *
+ * The lost race is its own arm and every other refusal is a sentence to
+ * print. Both halves of the race are checked: the problem type says
+ * this is the race, and the extension members say what was recorded and
+ * what it produced. A refusal that named the type but carried an
+ * outcome this build has never heard of reads as an ordinary refusal,
+ * because a client cannot state a decision it cannot name.
+ */
+function refusal(problem: unknown): DispositionOutcome {
+  if (problemType(problem) === REQUEST_DISPOSITIONED_PROBLEM_TYPE) {
+    const recorded = recordedOutcome(problem);
+    if (recorded) {
+      return { ok: false, alreadyDecided: recorded, convertedContract: recordedContract(problem) };
+    }
+  }
+  return { ok: false, detail: problemDetail(problem) };
+}
+
+/** The decision on the refusal's own extension member, never out of
+ * `detail` — that is copy, and copy is rewritten. */
 function recordedOutcome(problem: unknown): RequestOutcome | null {
-  if (problemType(problem) !== REQUEST_DISPOSITIONED_PROBLEM_TYPE) return null;
   if (!problem || typeof problem !== "object" || !("outcome" in problem)) return null;
   const { outcome } = problem as { outcome?: unknown };
   return REQUEST_OUTCOMES.find((candidate) => candidate === outcome) ?? null;
+}
+
+/**
+ * The record a winning conversion made, off the second extension member
+ * (#420).
+ *
+ * `null` covers three cases the client treats alike: the outcome made
+ * no record, the seam withheld one this viewer cannot reach (DD-014),
+ * and an older build that sent no member at all. In each of them the
+ * dialog says what was decided without offering a link.
+ */
+function recordedContract(problem: unknown): { number: number } | null {
+  if (!problem || typeof problem !== "object" || !("convertedContract" in problem)) return null;
+  const { convertedContract } = problem as { convertedContract?: unknown };
+  if (!convertedContract || typeof convertedContract !== "object") return null;
+  const { number } = convertedContract as { number?: unknown };
+  return typeof number === "number" && Number.isInteger(number) ? { number } : null;
 }
 
 /**

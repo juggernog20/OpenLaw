@@ -101,6 +101,9 @@
   "activity.contract.created": {
     "defaultMessage": "{actor} created this contract"
   },
+  "activity.contract.createdFromRequest": {
+    "defaultMessage": "{actor} created this contract from {request}"
+  },
   "activity.contract.parentRemoved": {
     "defaultMessage": "{actor} took this contract out from under {parent}"
   },
@@ -296,6 +299,9 @@
   "activity.reminderOffset": {
     "defaultMessage": "{days, plural, =0 {day of} one {# day} other {# days}}"
   },
+  "activity.request.converted": {
+    "defaultMessage": "{actor} converted this request into {contract}"
+  },
   "activity.request.created": {
     "defaultMessage": "{actor} submitted this request"
   },
@@ -304,6 +310,9 @@
   },
   "activity.request.resolved": {
     "defaultMessage": "{actor} resolved this request"
+  },
+  "activity.request.unnamedRecord": {
+    "defaultMessage": "a request"
   },
   "activity.signer.erased": {
     "defaultMessage": "{actor} erased an external signer's name and address from {entriesRedacted, plural, =0 {no entries} one {# entry} other {# entries}}"
@@ -1591,6 +1600,69 @@
   },
   "contracts.valueWithCadence": {
     "defaultMessage": "{cadence, select, monthly {{amount} /month} annually {{amount} /year} other {{amount}}}"
+  },
+  "convert.action": {
+    "defaultMessage": "Convert to contract"
+  },
+  "convert.alreadyConvertedRecord": {
+    "defaultMessage": "It became {contract}."
+  },
+  "convert.carries": {
+    "defaultMessage": "Carries into the contract"
+  },
+  "convert.carryNote": {
+    "defaultMessage": "Form responses carry into the contract — nothing is re-keyed."
+  },
+  "convert.failed": {
+    "defaultMessage": "The request could not be converted. Try again."
+  },
+  "convert.from": {
+    "defaultMessage": "{requestType} · submitted by {requester}"
+  },
+  "convert.gapNote": {
+    "defaultMessage": "Required on this contract type. The form did not collect it."
+  },
+  "convert.needTitle": {
+    "defaultMessage": "Name the contract."
+  },
+  "convert.needType": {
+    "defaultMessage": "Pick a contract type."
+  },
+  "convert.priority": {
+    "defaultMessage": "Priority"
+  },
+  "convert.priorityNote": {
+    "defaultMessage": "Taken from the urgency the requester gave. Risk stays yours to set on the record."
+  },
+  "convert.retarget": {
+    "defaultMessage": "This request type does not target a contract. Converting it to one is a re-target, and the request itself is kept."
+  },
+  "convert.staysBehind": {
+    "defaultMessage": "Does not carry into the contract"
+  },
+  "convert.staysBehindNote": {
+    "defaultMessage": "This contract type has no field for these. Nothing is deleted, and they stay on the request where you can still read them."
+  },
+  "convert.submit": {
+    "defaultMessage": "Convert"
+  },
+  "convert.title": {
+    "defaultMessage": "Convert {reference} to a contract"
+  },
+  "convert.titleField": {
+    "defaultMessage": "Title"
+  },
+  "convert.titleNote": {
+    "defaultMessage": "Taken from the request's summary. Edit it before you convert."
+  },
+  "convert.typeConfirmed": {
+    "defaultMessage": "Set by the request type. Triage confirms the routing rather than choosing it."
+  },
+  "convert.typeDeferred": {
+    "defaultMessage": "This request type left the contract type to conversion."
+  },
+  "convert.typeField": {
+    "defaultMessage": "Contract type"
   },
   "counterparty.picker.create": {
     "defaultMessage": "Create \"{name}\""

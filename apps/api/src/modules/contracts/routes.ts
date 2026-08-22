@@ -202,6 +202,7 @@ import {
   CONTRACT_RELATION_EXISTS_PROBLEM_TYPE,
   CONTRACT_SELF_LINK_PROBLEM_TYPE,
   CONTRACT_SORT_KEYS,
+  MAX_CONTRACT_TITLE_LENGTH,
   RENEWAL_EXPIRY_MOVED_PROBLEM_TYPE,
   SORT_DIRECTIONS,
   SOFT_GATE_PROBLEM_TYPE,
@@ -649,7 +650,7 @@ const ApproverGroupOptionSchema = z.object({
   memberIds: z.array(z.string()),
 });
 
-const TitleSchema = z.string().trim().min(1).max(200);
+const TitleSchema = z.string().trim().min(1).max(MAX_CONTRACT_TITLE_LENGTH);
 /** CTR-011's inline creation writes exactly this and nothing else. */
 const CounterpartyNameSchema = z.string().trim().min(1).max(200);
 const DescriptionSchema = z.string().trim().max(10_000);

@@ -72,7 +72,12 @@ import {
 import { requireRole, type AuthenticatedUser } from "../../auth/guards.js";
 import { contractTeamScope } from "../../lib/contract-access.js";
 import { problemResponse } from "../../lib/problem.js";
-import { StaffRequestTypeSchema, targetModuleOf } from "./projection.js";
+import {
+  liveTargetContractType,
+  liveTargetMatterType,
+  StaffRequestTypeSchema,
+  toStaffRequestType,
+} from "./projection.js";
 
 /** INT-006: Member+ triages, and there are no routing rules to narrow
  * that further. A Contributor and a Business User are refused rather
@@ -210,7 +215,9 @@ export const requestInboxRoutes: FastifyPluginAsyncZod = async (app) => {
         typeId: requestTypes.id,
         typeDisplayName: requestTypes.displayName,
         targetModule: requestTypes.targetModule,
+        targetContractTypeId: contractTypes.id,
         targetContractTypeName: contractTypes.displayName,
+        targetMatterTypeId: matterTypes.id,
         targetMatterTypeName: matterTypes.displayName,
         requesterId: users.id,
         requesterDisplayName: users.displayName,
@@ -219,8 +226,8 @@ export const requestInboxRoutes: FastifyPluginAsyncZod = async (app) => {
       .from(requests)
       .innerJoin(requestTypes, eq(requests.requestTypeId, requestTypes.id))
       .innerJoin(users, eq(requests.requesterId, users.id))
-      .leftJoin(contractTypes, eq(requestTypes.targetContractTypeId, contractTypes.id))
-      .leftJoin(matterTypes, eq(requestTypes.targetMatterTypeId, matterTypes.id))
+      .leftJoin(contractTypes, liveTargetContractType())
+      .leftJoin(matterTypes, liveTargetMatterType())
       .leftJoin(
         contracts,
         and(
@@ -303,7 +310,9 @@ function toRow(row: {
   typeId: string;
   typeDisplayName: string;
   targetModule: string | null;
+  targetContractTypeId: string | null;
   targetContractTypeName: string | null;
+  targetMatterTypeId: string | null;
   targetMatterTypeName: string | null;
   requesterId: string;
   requesterDisplayName: string;
@@ -315,14 +324,7 @@ function toRow(row: {
     status: row.status,
     summary: row.summary,
     urgency: row.urgency,
-    requestType: {
-      id: row.typeId,
-      displayName: row.typeDisplayName,
-      targetModule: targetModuleOf(row.targetModule),
-      // Whichever taxonomy the module points at, and null for the
-      // module-only and no-target states alike.
-      targetTypeName: row.targetContractTypeName ?? row.targetMatterTypeName,
-    },
+    requestType: toStaffRequestType(row),
     requester: { id: row.requesterId, displayName: row.requesterDisplayName },
     createdAt: row.createdAt.toISOString(),
     convertedContract:

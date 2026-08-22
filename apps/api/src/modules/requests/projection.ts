@@ -78,8 +78,67 @@ export const StaffRequestTypeSchema = z.object({
   id: z.string(),
   displayName: z.string(),
   targetModule: z.enum(["matter", "contract"]).nullable(),
+  /** The live type inside that module, and `null` for the module-only
+   * state, the no-target state, and an archived target type alike
+   * (INT-002's addendum). The id rather than only the name, because the
+   * Convert dialog has to say whether the routing it is confirming is
+   * the one the Administrator bound. */
+  targetTypeId: z.string().nullable(),
   targetTypeName: z.string().nullable(),
 });
+
+/**
+ * The join that reads a request type's target **contract** type, and
+ * the rule that an archived one is no type at all.
+ *
+ * INT-002's addendum settles it for conversion: "conversion reads an
+ * archived target type as no type". The staff reads say the same thing,
+ * because the Inbox row and the detail hero both exist to state how
+ * much of the routing is already decided — and a type the taxonomy has
+ * retired decides nothing. So the rule lives on the join rather than in
+ * a branch after it: "Contract · NDA" becomes "Contract" everywhere at
+ * once, and the dialog and the conversion route cannot disagree about
+ * which type is being confirmed.
+ *
+ * Two exports rather than one predicate, because the two joins live in
+ * two queries — the Inbox list's and the detail's — and Drizzle joins
+ * are written where they are used.
+ */
+export const liveTargetContractType = () =>
+  and(eq(requestTypes.targetContractTypeId, contractTypes.id), isNull(contractTypes.archivedAt));
+
+/** The matter half of {@link liveTargetContractType}, under the same
+ * rule. Nothing converts to a Matter until M22, and the taxonomy is
+ * already administered, so the reads state the target the same way for
+ * both modules rather than holding one rule for a year. */
+export const liveTargetMatterType = () =>
+  and(eq(requestTypes.targetMatterTypeId, matterTypes.id), isNull(matterTypes.archivedAt));
+
+/**
+ * The front door and its routing, as both staff reads answer them.
+ *
+ * One mapper for the Inbox row and the detail, so the two cannot drift
+ * into two answers about one request type. Whichever taxonomy the
+ * module points at wins, and both are `null` for the module-only and
+ * no-target states.
+ */
+export function toStaffRequestType(row: {
+  typeId: string;
+  typeDisplayName: string;
+  targetModule: string | null;
+  targetContractTypeId: string | null;
+  targetContractTypeName: string | null;
+  targetMatterTypeId: string | null;
+  targetMatterTypeName: string | null;
+}) {
+  return {
+    id: row.typeId,
+    displayName: row.typeDisplayName,
+    targetModule: targetModuleOf(row.targetModule),
+    targetTypeId: row.targetContractTypeId ?? row.targetMatterTypeId,
+    targetTypeName: row.targetContractTypeName ?? row.targetMatterTypeName,
+  };
+}
 
 /**
  * The target module as the wire carries it.
@@ -314,7 +373,9 @@ export async function staffRequestRow(db: Executor, user: AuthenticatedUser, num
       typeId: requestTypes.id,
       typeDisplayName: requestTypes.displayName,
       targetModule: requestTypes.targetModule,
+      targetContractTypeId: contractTypes.id,
       targetContractTypeName: contractTypes.displayName,
+      targetMatterTypeId: matterTypes.id,
       targetMatterTypeName: matterTypes.displayName,
       requesterId: users.id,
       requesterDisplayName: users.displayName,
@@ -325,8 +386,8 @@ export async function staffRequestRow(db: Executor, user: AuthenticatedUser, num
     .from(requests)
     .innerJoin(requestTypes, eq(requests.requestTypeId, requestTypes.id))
     .innerJoin(users, eq(requests.requesterId, users.id))
-    .leftJoin(contractTypes, eq(requestTypes.targetContractTypeId, contractTypes.id))
-    .leftJoin(matterTypes, eq(requestTypes.targetMatterTypeId, matterTypes.id))
+    .leftJoin(contractTypes, liveTargetContractType())
+    .leftJoin(matterTypes, liveTargetMatterType())
     .leftJoin(
       contracts,
       and(
@@ -358,14 +419,7 @@ export function toStaffRequest(row: Awaited<ReturnType<typeof staffRequestRow>>)
     customFields: row.customFields,
     declinedReason: row.declinedReason,
     createdAt: row.createdAt.toISOString(),
-    requestType: {
-      id: row.typeId,
-      displayName: row.typeDisplayName,
-      targetModule: targetModuleOf(row.targetModule),
-      // Whichever taxonomy the module points at, and null for the
-      // module-only and no-target states alike.
-      targetTypeName: row.targetContractTypeName ?? row.targetMatterTypeName,
-    },
+    requestType: toStaffRequestType(row),
     requester: {
       id: row.requesterId,
       displayName: row.requesterDisplayName,

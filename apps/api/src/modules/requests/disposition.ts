@@ -28,14 +28,17 @@
  * (TECH-020). A client branches on the type and reads `outcome`; it
  * never parses the sentence, because the sentence is copy. So the second
  * triager is told what happened rather than being handed a second
- * decision, and one Request never becomes two records.
+ * decision, and one Request never becomes two records. A conversion
+ * carries `convertedContract` beside it, because "somebody converted
+ * this" without the C-### is news the loser cannot act on (M21/9).
  *
- * **The three outcomes are three routes over one scaffold.** Decline is
- * built here (M21/7); Resolve (M21/8) and Convert (M21/9) hang their own
- * work on {@link dispositionOf} rather than restating the lock, the
- * guard, the refusal, and the envelope read. What differs between them
- * is what they write and which event they raise, and that is all a route
- * should have to say.
+ * **The three outcomes are three routes over one scaffold.** Decline
+ * (M21/7), Resolve (M21/8), and Convert (M21/9) each hang their own work
+ * on {@link dispositionOf} rather than restating the lock, the guard,
+ * the refusal, and the envelope read. What differs between them is what
+ * they write and which event they raise, and that is all a route should
+ * have to say. Convert is the one that made the scaffold say more: it
+ * added the second extension member above, and nothing else.
  *
  * **The envelope is read back inside the transaction.** A disposition
  * answers the same `StaffRequestSchema` the staff detail answers — the
@@ -96,13 +99,23 @@ const REFUSALS: Record<RequestOutcome, string> = {
  * One helper rather than three copies: the three routes answer the same
  * refusal for the same reason, and a document that spelled it three ways
  * would invite a client to branch three ways.
+ *
+ * **Two extension members, because a lost race has two facts in it**
+ * (the INT-006 M21/2 addendum: "an RFC 9457 problem type carrying the
+ * outcome and, for a conversion, the record it became"). `outcome` says
+ * what was decided and `convertedContract` says what it produced, and
+ * the second is only ever set on a conversion. It is `null` on every
+ * other outcome and on a conversion into a record this caller may not
+ * reach — the same DD-014 rule the envelope's own link obeys, so a
+ * refusal never hands a client a reference the read would have withheld.
  */
 export function dispositionedResponse(unnamed: string) {
   return problemTypeResponse(
     "The named type says somebody has already dispositioned this Request (INT-007) — " +
       "there is no claim step, so two triagers can open one Request and only the first " +
       "press writes. The refusal carries `outcome`: the recorded decision, which the " +
-      "loser's client states instead of asking again. " +
+      "loser's client states instead of asking again; and, where that decision was a " +
+      "conversion this caller may reach, `convertedContract`: the record it became. " +
       unnamed,
     [REQUEST_DISPOSITIONED_PROBLEM_TYPE],
     {
@@ -115,6 +128,15 @@ export function dispositionedResponse(unnamed: string) {
         .describe(
           "What was recorded, on the named refusal alone. A client branches on this, " +
             "never on `detail` — `detail` is copy, and copy is rewritten.",
+        ),
+      convertedContract: z
+        .object({ number: z.number().int() })
+        .nullable()
+        .optional()
+        .describe(
+          "The contract the winning conversion made, by its C-### number — null on " +
+            "every other outcome, and null on a record this caller cannot reach " +
+            "(DD-014). The matter arm lands with M22.",
         ),
     },
   );
@@ -142,7 +164,7 @@ export async function dispositionOf(
   decide: (tx: NotifyingTransaction, held: HeldRequest) => Promise<void>,
 ) {
   return app.notifier.notifying(async (tx) => {
-    const held = await lockUndecided(tx, number);
+    const held = await lockUndecided(tx, user, number);
     await decide(tx, held);
     // Read back inside the transaction, so the reply states what this
     // act wrote. The join is the detail read's own, under this viewer's
@@ -167,7 +189,11 @@ export async function dispositionOf(
  * that NULL means live, and it answers the read's own 404 so a stale
  * bookmark says the same thing on the write as it does on the read.
  */
-async function lockUndecided(tx: Transaction, number: number): Promise<HeldRequest> {
+async function lockUndecided(
+  tx: Transaction,
+  user: AuthenticatedUser,
+  number: number,
+): Promise<HeldRequest> {
   const [row] = await tx
     .select({ id: requests.id, number: requests.number, status: requests.status })
     .from(requests)
@@ -177,9 +203,15 @@ async function lockUndecided(tx: Transaction, number: number): Promise<HeldReque
   if (!row) throw httpError(404, NO_REQUEST);
   const outcome = outcomeOf(row.status);
   if (outcome) {
+    // The record the winner made, read through the envelope's own join
+    // so the refusal and the read apply one reach rule (DD-014). Read
+    // only on the refusal path: the winning triager never pays for it,
+    // and the loser is about to be told something the plain `outcome`
+    // cannot say — which C-### to open.
+    const { convertedContract } = toStaffRequest(await staffRequestRow(tx, user, number));
     throw httpError(409, REFUSALS[outcome], {
       type: REQUEST_DISPOSITIONED_PROBLEM_TYPE,
-      extensions: { outcome },
+      extensions: { outcome, convertedContract },
     });
   }
   return { id: row.id, number: row.number };

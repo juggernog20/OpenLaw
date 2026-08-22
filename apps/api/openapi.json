@@ -8186,6 +8186,16 @@
                                   }
                                 ]
                               },
+                              "targetTypeId": {
+                                "anyOf": [
+                                  {
+                                    "type": "string"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
                               "targetTypeName": {
                                 "anyOf": [
                                   {
@@ -8197,7 +8207,13 @@
                                 ]
                               }
                             },
-                            "required": ["id", "displayName", "targetModule", "targetTypeName"],
+                            "required": [
+                              "id",
+                              "displayName",
+                              "targetModule",
+                              "targetTypeId",
+                              "targetTypeName"
+                            ],
                             "additionalProperties": false
                           },
                           "requester": {
@@ -8885,6 +8901,16 @@
                                 }
                               ]
                             },
+                            "targetTypeId": {
+                              "anyOf": [
+                                {
+                                  "type": "string"
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            },
                             "targetTypeName": {
                               "anyOf": [
                                 {
@@ -8896,7 +8922,13 @@
                               ]
                             }
                           },
-                          "required": ["id", "displayName", "targetModule", "targetTypeName"],
+                          "required": [
+                            "id",
+                            "displayName",
+                            "targetModule",
+                            "targetTypeId",
+                            "targetTypeName"
+                          ],
                           "additionalProperties": false
                         },
                         "requester": {
@@ -9295,6 +9327,16 @@
                                 }
                               ]
                             },
+                            "targetTypeId": {
+                              "anyOf": [
+                                {
+                                  "type": "string"
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            },
                             "targetTypeName": {
                               "anyOf": [
                                 {
@@ -9306,7 +9348,13 @@
                               ]
                             }
                           },
-                          "required": ["id", "displayName", "targetModule", "targetTypeName"],
+                          "required": [
+                            "id",
+                            "displayName",
+                            "targetModule",
+                            "targetTypeId",
+                            "targetTypeName"
+                          ],
                           "additionalProperties": false
                         },
                         "requester": {
@@ -9379,7 +9427,7 @@
             }
           },
           "409": {
-            "description": "The named type says somebody has already dispositioned this Request (INT-007) — there is no claim step, so two triagers can open one Request and only the first press writes. The refusal carries `outcome`: the recorded decision, which the loser's client states instead of asking again. There is no unnamed 409 on this route — an archived Request answers 404 and a missing reason answers 400.",
+            "description": "The named type says somebody has already dispositioned this Request (INT-007) — there is no claim step, so two triagers can open one Request and only the first press writes. The refusal carries `outcome`: the recorded decision, which the loser's client states instead of asking again; and, where that decision was a conversion this caller may reach, `convertedContract`: the record it became. There is no unnamed 409 on this route — an archived Request answers 404 and a missing reason answers 400.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -9424,11 +9472,31 @@
                       "description": "What was recorded, on the named refusal alone. A client branches on this, never on `detail` — `detail` is copy, and copy is rewritten.",
                       "type": "string",
                       "enum": ["converted", "resolved", "declined"]
+                    },
+                    "convertedContract": {
+                      "description": "The contract the winning conversion made, by its C-### number — null on every other outcome, and null on a record this caller cannot reach (DD-014). The matter arm lands with M22.",
+                      "anyOf": [
+                        {
+                          "type": "object",
+                          "properties": {
+                            "number": {
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
+                            }
+                          },
+                          "required": ["number"],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
                     }
                   },
                   "required": ["type", "title", "status"],
                   "additionalProperties": false,
-                  "description": "The named type says somebody has already dispositioned this Request (INT-007) — there is no claim step, so two triagers can open one Request and only the first press writes. The refusal carries `outcome`: the recorded decision, which the loser's client states instead of asking again. There is no unnamed 409 on this route — an archived Request answers 404 and a missing reason answers 400."
+                  "description": "The named type says somebody has already dispositioned this Request (INT-007) — there is no claim step, so two triagers can open one Request and only the first press writes. The refusal carries `outcome`: the recorded decision, which the loser's client states instead of asking again; and, where that decision was a conversion this caller may reach, `convertedContract`: the record it became. There is no unnamed 409 on this route — an archived Request answers 404 and a missing reason answers 400."
                 }
               }
             }
@@ -9579,6 +9647,16 @@
                                 }
                               ]
                             },
+                            "targetTypeId": {
+                              "anyOf": [
+                                {
+                                  "type": "string"
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            },
                             "targetTypeName": {
                               "anyOf": [
                                 {
@@ -9590,7 +9668,13 @@
                               ]
                             }
                           },
-                          "required": ["id", "displayName", "targetModule", "targetTypeName"],
+                          "required": [
+                            "id",
+                            "displayName",
+                            "targetModule",
+                            "targetTypeId",
+                            "targetTypeName"
+                          ],
                           "additionalProperties": false
                         },
                         "requester": {
@@ -9663,7 +9747,7 @@
             }
           },
           "409": {
-            "description": "The named type says somebody has already dispositioned this Request (INT-007) — there is no claim step, so two triagers can open one Request and only the first press writes. The refusal carries `outcome`: the recorded decision, which the loser's client states instead of asking again. There is no unnamed 409 on this route — an archived Request answers 404.",
+            "description": "The named type says somebody has already dispositioned this Request (INT-007) — there is no claim step, so two triagers can open one Request and only the first press writes. The refusal carries `outcome`: the recorded decision, which the loser's client states instead of asking again; and, where that decision was a conversion this caller may reach, `convertedContract`: the record it became. There is no unnamed 409 on this route — an archived Request answers 404.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -9708,11 +9792,386 @@
                       "description": "What was recorded, on the named refusal alone. A client branches on this, never on `detail` — `detail` is copy, and copy is rewritten.",
                       "type": "string",
                       "enum": ["converted", "resolved", "declined"]
+                    },
+                    "convertedContract": {
+                      "description": "The contract the winning conversion made, by its C-### number — null on every other outcome, and null on a record this caller cannot reach (DD-014). The matter arm lands with M22.",
+                      "anyOf": [
+                        {
+                          "type": "object",
+                          "properties": {
+                            "number": {
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
+                            }
+                          },
+                          "required": ["number"],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
                     }
                   },
                   "required": ["type", "title", "status"],
                   "additionalProperties": false,
-                  "description": "The named type says somebody has already dispositioned this Request (INT-007) — there is no claim step, so two triagers can open one Request and only the first press writes. The refusal carries `outcome`: the recorded decision, which the loser's client states instead of asking again. There is no unnamed 409 on this route — an archived Request answers 404."
+                  "description": "The named type says somebody has already dispositioned this Request (INT-007) — there is no claim step, so two triagers can open one Request and only the first press writes. The refusal carries `outcome`: the recorded decision, which the loser's client states instead of asking again; and, where that decision was a conversion this caller may reach, `convertedContract`: the record it became. There is no unnamed 409 on this route — an archived Request answers 404."
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/requests/{number}/convert": {
+      "post": {
+        "operationId": "convertRequest",
+        "summary": "Turn a Request into the contract its request type targets (INT-002, DD-018). The third of INT-007's three dispositions: it transitions the Request from `new` to `converted` under the Request's own row lock, so two triagers racing one Request produce one contract. The loser is answered 409 with the recorded outcome and the record it became. Triage confirms the routing rather than choosing it: where the request type names a live contract type, that type is the target and a body naming a different one is refused. `contractTypeId` is required — and only accepted — where the request type names no live contract type: a module-only target, a target type the taxonomy has archived (read as no type), a Matter target, or no target at all. The last two are Re-target, DD-018's lossless exception. The contract is born ordinary — the C-### sequence, the draft-stage seed, no Owner, no team, no Confidential flag — with the title the body carries, which the dialog seeds from the summary and leaves editable; the requester's urgency as its priority 1:1 (MTR-012; risk is never requester-set); and every collected value whose slug the target type attaches landed in that field. A collected value the target type does not attach does not carry and is not deleted: the Request keeps its custom fields whole. Empty hard-required fields refuse the conversion by name (CTR-016/MTR-014), so `customFields` is where the triager answers them. Appends request.converted on the ask and contract.created_from_request on the record (DD-017), and raises `requestStatusChanged`. Answers the Request as the staff detail reads it. Member+ only",
+        "tags": ["requests"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "title": {
+                    "type": "string",
+                    "maxLength": 200
+                  },
+                  "contractTypeId": {
+                    "type": "string"
+                  },
+                  "customFields": {
+                    "type": "object",
+                    "propertyNames": {
+                      "type": "string"
+                    },
+                    "additionalProperties": {
+                      "anyOf": [
+                        {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "number"
+                            },
+                            {
+                              "type": "boolean"
+                            },
+                            {
+                              "type": "array",
+                              "items": {
+                                "type": "string"
+                              }
+                            }
+                          ]
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  }
+                },
+                "required": ["title"],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
+            },
+            "in": "path",
+            "name": "number",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "request": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "number": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "status": {
+                          "type": "string",
+                          "enum": ["new", "converted", "resolved", "declined"]
+                        },
+                        "summary": {
+                          "type": "string"
+                        },
+                        "description": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "urgency": {
+                          "type": "string",
+                          "enum": ["low", "medium", "high", "critical"]
+                        },
+                        "customFields": {
+                          "type": "object",
+                          "propertyNames": {
+                            "type": "string"
+                          },
+                          "additionalProperties": {
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "number"
+                              },
+                              {
+                                "type": "boolean"
+                              },
+                              {
+                                "type": "array",
+                                "items": {
+                                  "type": "string"
+                                }
+                              }
+                            ]
+                          }
+                        },
+                        "declinedReason": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "createdAt": {
+                          "type": "string"
+                        },
+                        "requestType": {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string"
+                            },
+                            "displayName": {
+                              "type": "string"
+                            },
+                            "targetModule": {
+                              "anyOf": [
+                                {
+                                  "type": "string",
+                                  "enum": ["matter", "contract"]
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            },
+                            "targetTypeId": {
+                              "anyOf": [
+                                {
+                                  "type": "string"
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            },
+                            "targetTypeName": {
+                              "anyOf": [
+                                {
+                                  "type": "string"
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            }
+                          },
+                          "required": [
+                            "id",
+                            "displayName",
+                            "targetModule",
+                            "targetTypeId",
+                            "targetTypeName"
+                          ],
+                          "additionalProperties": false
+                        },
+                        "requester": {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string"
+                            },
+                            "displayName": {
+                              "type": "string"
+                            },
+                            "email": {
+                              "type": "string"
+                            },
+                            "image": {
+                              "anyOf": [
+                                {
+                                  "type": "string"
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            }
+                          },
+                          "required": ["id", "displayName", "email", "image"],
+                          "additionalProperties": false
+                        },
+                        "convertedContract": {
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "properties": {
+                                "number": {
+                                  "type": "integer",
+                                  "minimum": -9007199254740991,
+                                  "maximum": 9007199254740991
+                                }
+                              },
+                              "required": ["number"],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "number",
+                        "status",
+                        "summary",
+                        "description",
+                        "urgency",
+                        "customFields",
+                        "declinedReason",
+                        "createdAt",
+                        "requestType",
+                        "requester",
+                        "convertedContract"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": ["request"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "The named type says somebody has already dispositioned this Request (INT-007) — there is no claim step, so two triagers can open one Request and only the first press writes. The refusal carries `outcome`: the recorded decision, which the loser's client states instead of asking again; and, where that decision was a conversion this caller may reach, `convertedContract`: the record it became. There is no unnamed 409 on this route — an archived Request answers 404, and a missing title, a contradicted target, or an unfilled hard-required field answers 400.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string",
+                      "enum": ["urn:openlaw:problem:request-dispositioned", "about:blank"],
+                      "description": "Which refusal this is. A client branches on this, never on `detail` — `detail` is copy, and copy is rewritten. `about:blank` is a refusal at this status that names no type; print it rather than branching on it."
+                    },
+                    "title": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    "detail": {
+                      "type": "string"
+                    },
+                    "instance": {
+                      "type": "string"
+                    },
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": {
+                            "type": "string"
+                          },
+                          "message": {
+                            "type": "string"
+                          }
+                        },
+                        "required": ["path", "message"],
+                        "additionalProperties": false
+                      }
+                    },
+                    "outcome": {
+                      "description": "What was recorded, on the named refusal alone. A client branches on this, never on `detail` — `detail` is copy, and copy is rewritten.",
+                      "type": "string",
+                      "enum": ["converted", "resolved", "declined"]
+                    },
+                    "convertedContract": {
+                      "description": "The contract the winning conversion made, by its C-### number — null on every other outcome, and null on a record this caller cannot reach (DD-014). The matter arm lands with M22.",
+                      "anyOf": [
+                        {
+                          "type": "object",
+                          "properties": {
+                            "number": {
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
+                            }
+                          },
+                          "required": ["number"],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  },
+                  "required": ["type", "title", "status"],
+                  "additionalProperties": false,
+                  "description": "The named type says somebody has already dispositioned this Request (INT-007) — there is no claim step, so two triagers can open one Request and only the first press writes. The refusal carries `outcome`: the recorded decision, which the loser's client states instead of asking again; and, where that decision was a conversion this caller may reach, `convertedContract`: the record it became. There is no unnamed 409 on this route — an archived Request answers 404, and a missing title, a contradicted target, or an unfilled hard-required field answers 400."
                 }
               }
             }

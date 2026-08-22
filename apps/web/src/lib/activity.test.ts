@@ -292,6 +292,11 @@ const SAMPLE_PAYLOADS: { [A in ActivityAction]: ActivityPayloadMap[A] } = {
   "entity.restored": { legalName: "Helix Labs GmbH" },
 
   // ---- The contract record ----
+  "contract.created_from_request": {
+    number: 41,
+    title: "Helix supply agreement",
+    requestNumber: 42,
+  },
   "contract.created": {
     number: 41,
     title: "Helix supply agreement",
@@ -408,6 +413,7 @@ const SAMPLE_PAYLOADS: { [A in ActivityAction]: ActivityPayloadMap[A] } = {
   },
   "request.declined": { number: 42 },
   "request.resolved": { number: 42 },
+  "request.converted": { number: 42, contractNumber: 51 },
 
   // ---- The record's paper ----
   "document.created": {

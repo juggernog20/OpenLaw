@@ -1204,6 +1204,23 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/v1/requests/{number}/convert": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Turn a Request into the contract its request type targets (INT-002, DD-018). The third of INT-007's three dispositions: it transitions the Request from `new` to `converted` under the Request's own row lock, so two triagers racing one Request produce one contract. The loser is answered 409 with the recorded outcome and the record it became. Triage confirms the routing rather than choosing it: where the request type names a live contract type, that type is the target and a body naming a different one is refused. `contractTypeId` is required — and only accepted — where the request type names no live contract type: a module-only target, a target type the taxonomy has archived (read as no type), a Matter target, or no target at all. The last two are Re-target, DD-018's lossless exception. The contract is born ordinary — the C-### sequence, the draft-stage seed, no Owner, no team, no Confidential flag — with the title the body carries, which the dialog seeds from the summary and leaves editable; the requester's urgency as its priority 1:1 (MTR-012; risk is never requester-set); and every collected value whose slug the target type attaches landed in that field. A collected value the target type does not attach does not carry and is not deleted: the Request keeps its custom fields whole. Empty hard-required fields refuse the conversion by name (CTR-016/MTR-014), so `customFields` is where the triager answers them. Appends request.converted on the ask and contract.created_from_request on the record (DD-017), and raises `requestStatusChanged`. Answers the Request as the staff detail reads it. Member+ only */
+    post: operations["convertRequest"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/v1/contract-statuses": {
     parameters: {
       query?: never;
@@ -6568,6 +6585,7 @@ export interface operations {
                 id: string;
                 displayName: string;
                 targetModule: ("matter" | "contract") | null;
+                targetTypeId: string | null;
                 targetTypeName: string | null;
               };
               requester: {
@@ -6897,6 +6915,7 @@ export interface operations {
                 id: string;
                 displayName: string;
                 targetModule: ("matter" | "contract") | null;
+                targetTypeId: string | null;
                 targetTypeName: string | null;
               };
               requester: {
@@ -7032,6 +7051,7 @@ export interface operations {
                 id: string;
                 displayName: string;
                 targetModule: ("matter" | "contract") | null;
+                targetTypeId: string | null;
                 targetTypeName: string | null;
               };
               requester: {
@@ -7047,7 +7067,7 @@ export interface operations {
           };
         };
       };
-      /** @description The named type says somebody has already dispositioned this Request (INT-007) — there is no claim step, so two triagers can open one Request and only the first press writes. The refusal carries `outcome`: the recorded decision, which the loser's client states instead of asking again. There is no unnamed 409 on this route — an archived Request answers 404 and a missing reason answers 400. */
+      /** @description The named type says somebody has already dispositioned this Request (INT-007) — there is no claim step, so two triagers can open one Request and only the first press writes. The refusal carries `outcome`: the recorded decision, which the loser's client states instead of asking again; and, where that decision was a conversion this caller may reach, `convertedContract`: the record it became. There is no unnamed 409 on this route — an archived Request answers 404 and a missing reason answers 400. */
       409: {
         headers: {
           [name: string]: unknown;
@@ -7072,6 +7092,10 @@ export interface operations {
              * @enum {string}
              */
             outcome?: "converted" | "resolved" | "declined";
+            /** @description The contract the winning conversion made, by its C-### number — null on every other outcome, and null on a record this caller cannot reach (DD-014). The matter arm lands with M22. */
+            convertedContract?: {
+              number: number;
+            } | null;
           };
         };
       };
@@ -7128,6 +7152,7 @@ export interface operations {
                 id: string;
                 displayName: string;
                 targetModule: ("matter" | "contract") | null;
+                targetTypeId: string | null;
                 targetTypeName: string | null;
               };
               requester: {
@@ -7143,7 +7168,7 @@ export interface operations {
           };
         };
       };
-      /** @description The named type says somebody has already dispositioned this Request (INT-007) — there is no claim step, so two triagers can open one Request and only the first press writes. The refusal carries `outcome`: the recorded decision, which the loser's client states instead of asking again. There is no unnamed 409 on this route — an archived Request answers 404. */
+      /** @description The named type says somebody has already dispositioned this Request (INT-007) — there is no claim step, so two triagers can open one Request and only the first press writes. The refusal carries `outcome`: the recorded decision, which the loser's client states instead of asking again; and, where that decision was a conversion this caller may reach, `convertedContract`: the record it became. There is no unnamed 409 on this route — an archived Request answers 404. */
       409: {
         headers: {
           [name: string]: unknown;
@@ -7168,6 +7193,115 @@ export interface operations {
              * @enum {string}
              */
             outcome?: "converted" | "resolved" | "declined";
+            /** @description The contract the winning conversion made, by its C-### number — null on every other outcome, and null on a record this caller cannot reach (DD-014). The matter arm lands with M22. */
+            convertedContract?: {
+              number: number;
+            } | null;
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  convertRequest: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        number: number;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          title: string;
+          contractTypeId?: string;
+          customFields?: {
+            [key: string]: (string | number | boolean | string[]) | null;
+          };
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            request: {
+              id: string;
+              number: number;
+              /** @enum {string} */
+              status: "new" | "converted" | "resolved" | "declined";
+              summary: string;
+              description: string | null;
+              /** @enum {string} */
+              urgency: "low" | "medium" | "high" | "critical";
+              customFields: {
+                [key: string]: string | number | boolean | string[];
+              };
+              declinedReason: string | null;
+              createdAt: string;
+              requestType: {
+                id: string;
+                displayName: string;
+                targetModule: ("matter" | "contract") | null;
+                targetTypeId: string | null;
+                targetTypeName: string | null;
+              };
+              requester: {
+                id: string;
+                displayName: string;
+                email: string;
+                image: string | null;
+              };
+              convertedContract: {
+                number: number;
+              } | null;
+            };
+          };
+        };
+      };
+      /** @description The named type says somebody has already dispositioned this Request (INT-007) — there is no claim step, so two triagers can open one Request and only the first press writes. The refusal carries `outcome`: the recorded decision, which the loser's client states instead of asking again; and, where that decision was a conversion this caller may reach, `convertedContract`: the record it became. There is no unnamed 409 on this route — an archived Request answers 404, and a missing title, a contradicted target, or an unfilled hard-required field answers 400. */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": {
+            /**
+             * @description Which refusal this is. A client branches on this, never on `detail` — `detail` is copy, and copy is rewritten. `about:blank` is a refusal at this status that names no type; print it rather than branching on it.
+             * @enum {string}
+             */
+            type: "urn:openlaw:problem:request-dispositioned" | "about:blank";
+            title: string;
+            status: number;
+            detail?: string;
+            instance?: string;
+            errors?: {
+              path: string;
+              message: string;
+            }[];
+            /**
+             * @description What was recorded, on the named refusal alone. A client branches on this, never on `detail` — `detail` is copy, and copy is rewritten.
+             * @enum {string}
+             */
+            outcome?: "converted" | "resolved" | "declined";
+            /** @description The contract the winning conversion made, by its C-### number — null on every other outcome, and null on a record this caller cannot reach (DD-014). The matter arm lands with M22. */
+            convertedContract?: {
+              number: number;
+            } | null;
           };
         };
       };

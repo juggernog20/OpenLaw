@@ -34,11 +34,18 @@
  *
  * What a contract is **not** born with is as much the decision as what
  * it is. No Owner, no team beyond the creator's provenance row, no
- * status but the draft seed, no priority and no risk — those are
- * assessments of a record, and a new record has not been assessed — and
- * no Confidential flag unless the caller asks for one. CTR-015's
- * no-inheritance stance, applied at birth, and the same rule the M16
- * successor obeys.
+ * status but the draft seed, and no Confidential flag unless the caller
+ * asks for one. CTR-015's no-inheritance stance, applied at birth, and
+ * the same rule the M16 successor obeys.
+ *
+ * **Risk is never born and priority is born only where a caller holds
+ * one** (MTR-012, M21/9). Risk is legal's assessment of how bad it
+ * would be if this went wrong, and nobody has made it at the moment a
+ * record appears, so there is no way to supply it here. Priority is how
+ * fast, and INT-002 maps the requester's urgency onto it 1:1 at
+ * conversion — that is a fact somebody stated, carried rather than
+ * assessed. The create route holds no such fact and passes none, so an
+ * ordinary create still starts on the column's own `medium` default.
  */
 
 import {
@@ -59,6 +66,7 @@ import {
   type Contract,
   type ContractStage,
   type CustomFieldValue,
+  type SeverityLevel,
   type Transaction,
 } from "@openlaw/db";
 import { recordActivity, RECORD_ACTIVITY_TIER } from "../../lib/activity.js";
@@ -111,6 +119,17 @@ export interface CreateContractInput {
    * to be here — the rest are set on the record — and a slug the type
    * does not attach is refused. */
   customFields?: Readonly<Record<string, CustomFieldValue | null>> | undefined;
+  /**
+   * How fast, where the caller holds a stated one (MTR-012).
+   *
+   * The one caller that does is INT-002's conversion, which maps the
+   * requester's urgency onto it 1:1 — priority is what legal holds and
+   * urgency is what the requester claimed, and the claim is the honest
+   * starting point. Omitted is the ordinary create, which leaves the
+   * column's `medium` default. There is no `risk` beside it: risk is an
+   * assessment nobody has made at birth, and a requester never sets it.
+   */
+  priority?: SeverityLevel | undefined;
   /** DD-014's flag, from the first moment, so a sensitive record is
    * never visible to the wrong audience even briefly. Omitted means
    * open, which is the product's default. */
@@ -255,6 +274,10 @@ export async function createContract(
       statusId: draft.id,
       customFields,
       isConfidential,
+      // Only where the caller holds a stated one; otherwise the column's
+      // own `medium` default stands, which is what an unassessed record
+      // honestly is (MTR-012).
+      ...(input.priority ? { priority: input.priority } : {}),
       ...(copied ?? {}),
     })
     .returning();
