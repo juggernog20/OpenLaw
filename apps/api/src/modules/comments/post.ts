@@ -43,7 +43,6 @@ import { notifyCommentPosted, type CommentAudience } from "./audience.js";
  * same bound as `maxLength`. */
 export const CommentBodySchema = z.string().trim().min(1).max(MAX_COMMENT_BODY_LENGTH);
 
-/** One comment, as the act that writes it describes it. */
 export interface NewComment {
   /** The thread, and the standing that admitted this author to it. Both
    * the record's id and the tiers come from the arm that resolved it,

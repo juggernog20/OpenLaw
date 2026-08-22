@@ -24,7 +24,6 @@ import { Checkbox } from "./ui/checkbox";
 import { Input } from "./ui/input";
 import { Switch } from "./ui/switch";
 
-/** One row a `user` or `entity` control offers. */
 export interface FieldReference {
   id: string;
   label: string;
@@ -33,14 +32,11 @@ export interface FieldReference {
 }
 
 export interface CustomFieldControlProps {
-  /** The control's own id — the surface's label points `htmlFor` here. */
   id: string;
   field: AttachedField;
   draft: CustomFieldDraft;
   disabled?: boolean;
-  /** The rows a `user` field offers, live ones first. */
   people?: readonly FieldReference[];
-  /** The rows an `entity` field offers, live ones first. */
   entities?: readonly FieldReference[];
   /** The id of the field's help text, when it has any — every control
    * carries it, so the description is announced with the control rather
@@ -55,7 +51,6 @@ export interface CustomFieldControlProps {
    * not. */
   invalid?: boolean;
   onDraft: (draft: CustomFieldDraft) => void;
-  /** Focus leaving the control (or the checkbox group). */
   onBlur?: (event: React.FocusEvent<HTMLElement>) => void;
   onKeyDown?: (event: React.KeyboardEvent<HTMLElement>) => void;
 }
@@ -77,7 +72,6 @@ export function CustomFieldControl({
   const intl = useIntl();
   const text = typeof draft === "string" ? draft : "";
   const chosen = Array.isArray(draft) ? draft : [];
-  /** What every one of the nine controls carries, whatever it is. */
   const shared = {
     id,
     disabled,

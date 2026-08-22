@@ -22,7 +22,6 @@ import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { json, problem, renderAt, stubApi, type StubCall } from "../testing/helpers";
 
-/** A business user, whose only surface is the portal (DD-013). */
 const REQUESTER = {
   id: "u9",
   email: "priya.raman@acme.com",
@@ -40,7 +39,6 @@ interface Item {
   createdAt: string;
 }
 
-/** One group-5 item, as the portal mount answers it. */
 function item(index: number, over: Partial<Item> = {}): Item {
   return {
     id: `n${index}`,
@@ -70,7 +68,6 @@ function portalBellApi(state: {
   unread: number;
   items?: Item[];
   nextCursor?: string | null;
-  /** What the mark-read write answers. Defaults to zero. */
   afterRead?: number;
 }) {
   const calls: { method: string; path: string; body: unknown }[] = [];
@@ -100,7 +97,6 @@ function portalBellApi(state: {
   return calls;
 }
 
-/** The trigger, once the badge has settled on the count it was given. */
 const bell = (name: string) => screen.findByRole("button", { name: `Notifications, ${name}` });
 
 describe("the portal bell (NOT-001, NOT-005)", () => {
@@ -192,10 +188,6 @@ describe("the portal bell (NOT-001, NOT-005)", () => {
     expect(calls.some((call) => call.path.endsWith("/portal/notifications/read-all"))).toBe(true);
   });
 });
-
-// ---------------------------------------------------------------------
-// The settings surface beside it
-// ---------------------------------------------------------------------
 
 /** The grid the API answers, with NOT-002's defaults. All five groups,
  * because the model is the model — the pane draws one of them. */

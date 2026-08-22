@@ -269,6 +269,56 @@ a long way since, it is worth another pass.
 | `apps/web/src/routes/contract-record-soft-gate.test.tsx` | 2026-08-22 | 3db24ef | 0 | 0 | 0 | |
 | `apps/web/src/lib/key-dates.ts` | 2026-08-22 | 3db24ef | 0 | 1 | 0 | |
 | `packages/db/src/schema/org.ts` | 2026-08-22 | 3db24ef | 0 | 0 | 0 | |
+| `apps/api/src/modules/signing-connector/signing-connector.test.ts` | 2026-08-22 | a687234 | 0 | 3 | 0 | |
+| `apps/web/src/routes/contract-record-approvals.test.tsx` | 2026-08-22 | a687234 | 0 | 5 | 0 | |
+| `apps/api/src/modules/notifications/round-trigger.test.ts` | 2026-08-22 | a687234 | 0 | 0 | 0 | |
+| `apps/web/src/components/intake/decline-dialog.tsx` | 2026-08-22 | a687234 | 0 | 4 | 0 | |
+| `apps/web/src/components/intake/resolve-dialog.tsx` | 2026-08-22 | a687234 | 0 | 5 | 0 | |
+| `apps/api/src/modules/comments/post.ts` | 2026-08-22 | a687234 | 0 | 1 | 0 | |
+| `compose.dev.yml` | 2026-08-22 | a687234 | 0 | 0 | 0 | Comments preserve development-network constraints. |
+| `apps/web/src/routes/inbox-request.test.tsx` | 2026-08-22 | a687234 | 0 | 5 | 0 | |
+| `apps/api/src/modules/contract-approvals/soft-gate.test.ts` | 2026-08-22 | a687234 | 0 | 11 | 0 | |
+| `apps/api/src/modules/contracts/term.test.ts` | 2026-08-22 | a687234 | 0 | 8 | 0 | |
+| `apps/api/src/modules/requests/decline.test.ts` | 2026-08-22 | a687234 | 0 | 2 | 0 | |
+| `apps/api/src/modules/org/reminder-offsets.test.ts` | 2026-08-22 | a687234 | 0 | 8 | 0 | Removed decorative section rules. |
+| `apps/api/src/modules/request-types/attached-fields.test.ts` | 2026-08-22 | a687234 | 0 | 2 | 0 | |
+| `e2e/tests/11-m5-demo.spec.ts` | 2026-08-22 | a687234 | 0 | 0 | 0 | Comments preserve shared-instance cleanup constraints. |
+| `apps/web/src/testing/disposition.ts` | 2026-08-22 | a687234 | 0 | 8 | 0 | |
+| `apps/api/src/modules/contracts/custom-fields.test.ts` | 2026-08-22 | a687234 | 0 | 3 | 0 | |
+| `apps/api/src/modules/requests/inbox.test.ts` | 2026-08-22 | a687234 | 0 | 3 | 0 | |
+| `apps/api/src/approver-group-name-migration.test.ts` | 2026-08-22 | a687234 | 0 | 3 | 0 | |
+| `packages/db/src/schema/contract-tasks.ts` | 2026-08-22 | a687234 | 0 | 0 | 0 | Comments preserve task schema invariants. |
+| `packages/db/src/schema/request-types.ts` | 2026-08-22 | a687234 | 0 | 0 | 0 | Comments preserve target-column invariants. |
+| `apps/web/src/routes/settings-approver-groups.tsx` | 2026-08-22 | a687234 | 0 | 4 | 0 | |
+| `apps/web/src/components/contracts/related-contracts-card.tsx` | 2026-08-22 | a687234 | 0 | 5 | 0 | Removed decorative section rules. |
+| `styles/lint-contrast.mjs` | 2026-08-22 | a687234 | 0 | 0 | 0 | Comments map contrast checks to their surfaces. |
+| `apps/api/src/lib/signing/resolver.test.ts` | 2026-08-22 | a687234 | 0 | 1 | 0 | |
+| `.github/workflows/i18n.yml` | 2026-08-22 | a687234 | 0 | 0 | 0 | Protected workflow comments retained. |
+| `apps/web/src/lib/custom-fields.ts` | 2026-08-22 | a687234 | 0 | 1 | 0 | |
+| `apps/web/src/routes/portal.test.tsx` | 2026-08-22 | a687234 | 0 | 1 | 0 | |
+| `apps/web/src/routes/contract-record-term.test.tsx` | 2026-08-22 | a687234 | 0 | 0 | 0 | Comments preserve draft and timing behavior. |
+| `apps/web/src/routes/portal-notifications.test.tsx` | 2026-08-22 | a687234 | 0 | 5 | 0 | Removed decorative section rules. |
+| `apps/api/src/modules/org/routes.ts` | 2026-08-22 | a687234 | 0 | 0 | 0 | Comments preserve transaction and audit behavior. |
+| `packages/db/src/schema/approver-groups.ts` | 2026-08-22 | a687234 | 0 | 0 | 0 | Comments preserve membership and archive invariants. |
+| `apps/api/src/modules/request-types/request-types.test.ts` | 2026-08-22 | a687234 | 0 | 3 | 0 | |
+| `apps/web/src/routes/portal-request-form.test.tsx` | 2026-08-22 | a687234 | 0 | 4 | 0 | |
+| `apps/api/src/testing/signing-contract.ts` | 2026-08-22 | a687234 | 0 | 6 | 0 | |
+| `apps/api/src/lib/mailer.ts` | 2026-08-22 | a687234 | 0 | 1 | 0 | |
+| `services/doc-engine/src/index.ts` | 2026-08-22 | a687234 | 0 | 3 | 0 | |
+| `apps/web/src/routes/contract-record-timeline.test.tsx` | 2026-08-22 | a687234 | 0 | 3 | 0 | |
+| `apps/api/src/modules/contracts/create.test.ts` | 2026-08-22 | a687234 | 0 | 9 | 0 | |
+| `apps/api/src/lib/storage/azure-blob.test.ts` | 2026-08-22 | a687234 | 0 | 3 | 0 | |
+| `apps/api/src/testing/disposition.ts` | 2026-08-22 | a687234 | 0 | 6 | 0 | |
+| `apps/api/src/modules/contract-statuses/contract-statuses.test.ts` | 2026-08-22 | a687234 | 0 | 2 | 0 | |
+| `apps/web/src/components/shell/record-applets.test.tsx` | 2026-08-22 | a687234 | 0 | 0 | 0 | Comments preserve focus and responsive-layout behavior. |
+| `apps/web/src/routes/inbox-request-resolve.test.tsx` | 2026-08-22 | a687234 | 0 | 1 | 0 | |
+| `apps/api/src/modules/requests/decline.ts` | 2026-08-22 | a687234 | 0 | 0 | 0 | Comments preserve validation and audit rationale. |
+| `apps/web/vite-pdfjs-assets.ts` | 2026-08-22 | a687234 | 0 | 0 | 0 | Comments preserve asset-serving constraints. |
+| `apps/api/src/modules/notifications/round-trigger.ts` | 2026-08-22 | a687234 | 0 | 0 | 0 | Comments preserve the test-only route boundary. |
+| `apps/web/src/lib/renewals.ts` | 2026-08-22 | a687234 | 0 | 0 | 0 | Comments preserve generated-schema and error semantics. |
+| `apps/web/src/components/table/column-menu.tsx` | 2026-08-22 | a687234 | 0 | 0 | 0 | Comments preserve ordering and accessibility decisions. |
+| `apps/api/src/testing/migration-rehearsal.ts` | 2026-08-22 | a687234 | 0 | 3 | 0 | |
+| `apps/web/src/components/custom-field-control.tsx` | 2026-08-22 | a687234 | 0 | 6 | 0 | |
 
 ## Skipped
 

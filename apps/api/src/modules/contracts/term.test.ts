@@ -40,7 +40,6 @@ import {
   type TestHarness,
 } from "../../testing/harness.js";
 
-/** The person who records the term. */
 const MEMBER = {
   email: "term-member@example.com",
   displayName: "Nadia Counsel",
@@ -51,7 +50,6 @@ let harness: TestHarness;
 let memberCookies: Record<string, string>;
 let ndaTypeId = "";
 
-/** One contract as every term surface reads it back. */
 interface ContractRow {
   id: string;
   number: number;
@@ -110,15 +108,12 @@ const patch = (number: number, payload: Record<string, unknown>) =>
     payload,
   });
 
-/** A term commit that must land, answering the row it produced. */
 async function commit(number: number, payload: Record<string, unknown>): Promise<ContractRow> {
   const res = await patch(number, payload);
   expect(res.statusCode, res.body).toBe(200);
   return res.json().contract as ContractRow;
 }
 
-/** The record read's own copy of the row — the answer a reader gets, as
- * opposed to the one the writer got back. */
 async function read(number: number): Promise<ContractRow> {
   const res = await harness.app.inject({
     method: "GET",
@@ -129,7 +124,6 @@ async function read(number: number): Promise<ContractRow> {
   return res.json().contract as ContractRow;
 }
 
-/** Every field edit written on one contract, oldest first. */
 const editsOn = (contractId: string) =>
   harness.db
     .select()
@@ -137,7 +131,6 @@ const editsOn = (contractId: string) =>
     .where(and(eq(activityLog.entityId, contractId), eq(activityLog.action, "contract.updated")))
     .orderBy(asc(activityLog.createdAt), asc(activityLog.id));
 
-/** The `changed` map one entry carries, as the narrator reads it. */
 function changedIn(entry: { payload: unknown }): Record<string, { from: unknown; to: unknown }> {
   const payload = entry.payload as { changed?: Record<string, { from: unknown; to: unknown }> };
   expect(payload.changed).toBeDefined();
@@ -182,7 +175,6 @@ describe("the term on the contract record", () => {
     expect(after.expiryDate).toBe("2026-12-31");
     expect(after.renewalPeriodMonths).toBe(12);
     expect(after.noticePeriodDays).toBe(90);
-    // The record read says the same as the write's own answer.
     expect(await read(contract.number)).toMatchObject({
       termType: "auto_renew",
       effectiveDate: "2026-01-01",
@@ -277,7 +269,6 @@ describe("the term on the contract record", () => {
     const res = await patch(contract.number, { expiryDate: "2027-01-01" });
     expect(res.statusCode, res.body).toBe(400);
     expect(res.json().type).toBe(TERM_EXPIRY_ON_EVERGREEN_PROBLEM_TYPE);
-    // A refusal changes nothing, and writes nothing.
     expect((await read(contract.number)).expiryDate).toBeNull();
     expect(await editsOn(contract.id)).toHaveLength(1);
   });

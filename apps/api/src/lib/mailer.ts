@@ -82,7 +82,6 @@ export type MailerSource = (typeof MAILER_SOURCES)[number];
 
 export interface ResolvedMailer {
   source: MailerSource;
-  /** The effective from-address; null when nothing is configured. */
   from: string | null;
   mailer: Mailer;
 }

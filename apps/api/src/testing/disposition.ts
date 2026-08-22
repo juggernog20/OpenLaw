@@ -30,14 +30,12 @@ import {
   type TestHarness,
 } from "./harness.js";
 
-/** The Business User who submits every Request in these suites. */
 export const REQUESTER = {
   email: "tom.iwu@acme.com",
   displayName: "Tom Iwu",
   password: "correct-horse-battery", // NOSONAR — fixture for a throwaway container
 } as const;
 
-/** The triager who presses. */
 export const MEMBER = {
   email: "member@example.com",
   displayName: "Nadia Counsel",
@@ -62,7 +60,6 @@ export const CONTRIBUTOR = {
  * The mailer is a capture, so this is slack for pg-boss, not for SMTP. */
 export const SETTLE_TIMEOUT_MS = 20_000;
 
-/** Waits for a condition the pipeline is expected to bring about. */
 export async function settles(what: string, ready: () => boolean): Promise<void> {
   const deadline = Date.now() + SETTLE_TIMEOUT_MS;
   while (Date.now() < deadline) {
@@ -72,7 +69,6 @@ export async function settles(what: string, ready: () => boolean): Promise<void>
   throw new Error(`${what} did not settle within ${SETTLE_TIMEOUT_MS}ms`);
 }
 
-/** The cast and the reads one disposition suite works through. */
 export interface DispositionScaffold {
   adminCookies: Record<string, string>;
   memberCookies: Record<string, string>;
@@ -81,7 +77,6 @@ export interface DispositionScaffold {
   requesterCookies: Record<string, string>;
   requesterId: string;
   memberId: string;
-  /** The stored row, for the facts the wire does not state. */
   stored: (id: string) => Promise<typeof requests.$inferSelect>;
   /** Every entry on one record, oldest first. A Request unless a suite
    * asks for the contract a conversion made. */
@@ -89,7 +84,6 @@ export interface DispositionScaffold {
     entityId: string,
     entityType?: "request" | "contract",
   ) => Promise<(typeof activityLog.$inferSelect)[]>;
-  /** Every bell row one person holds about one Request. */
   bellRowsOn: (userId: string, requestId: string) => Promise<(typeof notifications.$inferSelect)[]>;
   /**
    * The messages one person has been sent about one Request, by its

@@ -71,7 +71,6 @@ const ROTATED_HMAC_SECRET = "connect-hmac-fixture-rotated"; // NOSONAR — inert
 
 const URL_BASE = "/api/v1/signing-connectors/docusign";
 
-/** A complete first save, the fake's own accepted integration key. */
 const CONNECTOR = {
   environment: "demo",
   integrationKey: FAKE_VALID_INTEGRATION_KEY,
@@ -89,7 +88,6 @@ const CONNECTOR_ACTIONS = [
   "signing_connector.removed",
 ] as const;
 
-/** The connector's own audit rows, oldest first. */
 function connectorAuditRows(db: Db) {
   return db
     .select()
@@ -98,7 +96,6 @@ function connectorAuditRows(db: Db) {
     .orderBy(asc(activityLog.createdAt));
 }
 
-/** Saves a connector as the Administrator and requires it to land. */
 async function save(payload: Record<string, unknown>) {
   return harness.app.inject({
     method: "PUT",

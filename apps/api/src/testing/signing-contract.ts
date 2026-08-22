@@ -30,7 +30,6 @@ import {
   type WebhookDelivery,
 } from "../lib/signing/provider.js";
 
-/** What an implementation hands the suite to be held to the contract. */
 export interface SigningContractHarness {
   /** The adapter this implementation is, as the interface names it.
    * Stated by the harness rather than assumed by the suite: the
@@ -57,18 +56,15 @@ export interface SigningContractHarness {
   stop?: () => Promise<void>;
 }
 
-/** The signers every send in this suite goes to. */
 const SIGNERS: EnvelopeSigner[] = [
   { name: "Dana Signer", email: "dana@counterparty.example" },
   { name: "Rowan Signer", email: "rowan@counterparty.example" },
 ];
 
-/** A tiny PDF, as the storage adapter would open one. */
 function document(): Readable {
   return Readable.from([Buffer.from("%PDF-1.7\n% openlaw signing contract suite\n%%EOF\n")]);
 }
 
-/** Sends one envelope and answers the provider's id for it. */
 async function send(provider: SigningProvider): Promise<string> {
   const sent = await provider.sendEnvelope({
     document: document(),
@@ -79,7 +75,6 @@ async function send(provider: SigningProvider): Promise<string> {
   return sent.providerEnvelopeId;
 }
 
-/** An id no implementation has ever minted. */
 const UNKNOWN_ENVELOPE_ID = "openlaw-contract-suite-unknown-envelope";
 
 /**
@@ -106,7 +101,6 @@ export function describeSigningContract(
       await harness?.stop?.();
     });
 
-    /** The harness, once `beforeAll` has built it. */
     function held(): SigningContractHarness {
       if (!harness) throw new Error("the signing contract harness did not start");
       return harness;

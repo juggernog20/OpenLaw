@@ -39,7 +39,6 @@ const BUSINESS = {
   role: "business_user",
 };
 
-/** One attached field, as the staff read answers it. */
 function field(overrides: Partial<Record<string, unknown>> = {}) {
   return {
     id: "f-counterparty",
@@ -57,7 +56,6 @@ function field(overrides: Partial<Record<string, unknown>> = {}) {
   };
 }
 
-/** The whole detail read, with the shape the screen destructures. */
 function detail(overrides: Partial<Record<string, unknown>> = {}) {
   const request = {
     id: "r1",
@@ -175,7 +173,6 @@ function commentsApi(initial: ReturnType<typeof comment>[] = []) {
   return { handler, posts, reads };
 }
 
-/** The page's own seam plus the thread's, in that order. */
 function pageApi(
   request: ReturnType<typeof detailApi>,
   comments: ReturnType<typeof commentsApi> = commentsApi(),
@@ -183,7 +180,6 @@ function pageApi(
   return (call: StubCall) => request.handler(call) ?? comments.handler(call);
 }
 
-/** Opens the chat panel from the activity bar and answers its icon. */
 async function openChat(user: ReturnType<typeof userEvent.setup>) {
   const bar = await screen.findByRole("toolbar", { name: "Applets" });
   const icon = within(bar).getByRole("button", { name: "Comments" });
@@ -244,7 +240,6 @@ describe("the envelope (I2)", () => {
     const subbar = heading.closest("section")!;
     expect(within(subbar).getByText("R-45")).toBeInTheDocument();
     expect(within(subbar).getByText("New")).toBeInTheDocument();
-    // The trail back to the queue the Request was picked up from.
     expect(within(subbar).getByRole("link", { name: "Inbox" })).toHaveAttribute("href", "/inbox");
 
     // The hero strip, which is where the envelope's five facts sit. It

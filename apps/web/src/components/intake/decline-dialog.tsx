@@ -52,11 +52,8 @@ const ERROR_ID = "decline-reason-error";
  * the sentence to print when neither.
  */
 export type DeclineResult =
-  /** It landed. The page repaints from the envelope the write answered. */
   | { ok: true }
-  /** Somebody else decided first, and this is what they decided. */
   | { ok: false; alreadyDecided: RequestOutcome }
-  /** Any other refusal, in the seam's own words where it gave any. */
   | { ok: false; alreadyDecided?: undefined; detail?: string };
 
 export function DeclineDialog({
@@ -65,7 +62,6 @@ export function DeclineDialog({
   onClose,
   onDecline,
 }: Readonly<{
-  /** The Request's R-### reference, which the title quotes. */
   reference: string;
   busy: boolean;
   onClose: () => void;
