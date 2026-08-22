@@ -83,17 +83,6 @@ import { httpError } from "../../lib/problem.js";
 const DRAFT_STATUS_SLUG = "draft";
 
 /**
- * How long a contract's title may be.
- *
- * It lives with the callable rather than with one route because
- * validating the title is deliberately the *caller's* job — this write
- * trims and stores whatever it is handed — and two callers now hand it
- * one: the create route and INT-006's conversion. One bound, so a title
- * the create dialog refuses is a title the Convert dialog refuses too.
- */
-export const MAX_CONTRACT_TITLE_LENGTH = 200;
-
-/**
  * CTR-007's two routed vehicles (M16/5).
  *
  * `child` and `successor` are separate values rather than a relation

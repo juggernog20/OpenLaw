@@ -452,7 +452,9 @@ describe("what happens after the press (INT-007)", () => {
     await user.click(within(dialog).getByRole("button", { name: "Cancel" }));
     await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
     expect(api.conversions).toEqual([]);
-    expect(within(await subbar()).getByRole("button", { name: "Convert to contract" }));
+    expect(
+      within(await subbar()).getByRole("button", { name: "Convert to contract" }),
+    ).toBeInTheDocument();
   });
 
   it("prints the seam's own sentence on an ordinary refusal", async () => {

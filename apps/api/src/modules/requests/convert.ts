@@ -79,11 +79,12 @@ import {
   requests,
   type CustomFieldValue,
 } from "@openlaw/db";
+import { MAX_CONTRACT_TITLE_LENGTH } from "@openlaw/shared";
 import { requireRole } from "../../auth/guards.js";
 import { recordActivity, RECORD_ACTIVITY_TIER } from "../../lib/activity.js";
 import { CustomFieldsInput, selectAttachedFields } from "../../lib/custom-fields.js";
 import { httpError, problemResponse } from "../../lib/problem.js";
-import { createContract, MAX_CONTRACT_TITLE_LENGTH } from "../contracts/create.js";
+import { createContract } from "../contracts/create.js";
 import {
   dispositionedResponse,
   dispositionOf,

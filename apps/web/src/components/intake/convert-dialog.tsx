@@ -49,7 +49,7 @@
 import { useState } from "react";
 import { FormattedMessage, useIntl } from "react-intl";
 import { ArrowRightLeft, FilePen, Info } from "lucide-react";
-import type { RequestOutcome } from "@openlaw/shared";
+import { MAX_CONTRACT_TITLE_LENGTH, type RequestOutcome } from "@openlaw/shared";
 import {
   contractReference,
   severityLabel,
@@ -381,6 +381,10 @@ export function ConvertDialog({
                 id="convert-title"
                 autoFocus
                 value={title}
+                // The seam is what enforces it; the box restates it so
+                // nobody types past a bound they will only meet on the
+                // press. The Decline dialog's rule, applied to a title.
+                maxLength={MAX_CONTRACT_TITLE_LENGTH}
                 {...(error?.onTitle
                   ? { "aria-invalid": true, "aria-describedby": TITLE_ERROR_ID }
                   : {})}

@@ -225,6 +225,17 @@ export const MAX_KEY_DATE_NOTE_LENGTH = 2000;
 export const MAX_TASK_TITLE_LENGTH = 200;
 
 /**
+ * How long a contract's title may be (CTR-003).
+ *
+ * Shared for `MAX_TASK_TITLE_LENGTH`'s reason: the create callable
+ * deliberately validates no title — that is the caller's job — and it
+ * now has two callers, the create route and INT-006's conversion. The
+ * boxes that collect one restate the bound as `maxLength`, so a title
+ * a dialog accepts is a title the seam takes.
+ */
+export const MAX_CONTRACT_TITLE_LENGTH = 200;
+
+/**
  * How many people one envelope may be sent to (CTR-013).
  *
  * A bound rather than a preference, and a generous one: naming a

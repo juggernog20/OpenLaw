@@ -202,6 +202,7 @@ import {
   CONTRACT_RELATION_EXISTS_PROBLEM_TYPE,
   CONTRACT_SELF_LINK_PROBLEM_TYPE,
   CONTRACT_SORT_KEYS,
+  MAX_CONTRACT_TITLE_LENGTH,
   RENEWAL_EXPIRY_MOVED_PROBLEM_TYPE,
   SORT_DIRECTIONS,
   SOFT_GATE_PROBLEM_TYPE,
@@ -213,7 +214,7 @@ import {
 } from "@openlaw/shared";
 import { httpError, problemResponse, problemTypeResponse } from "../../lib/problem.js";
 import { assertApprovalGate, type UnresolvedApproval } from "../../lib/soft-gate.js";
-import { createContract, CONTRACT_RENEWAL_VEHICLES, MAX_CONTRACT_TITLE_LENGTH } from "./create.js";
+import { createContract, CONTRACT_RENEWAL_VEHICLES } from "./create.js";
 
 /** Every mutation, and every picker read behind one, is Member+. */
 const requireMember = requireRole("administrator", "legal_team_member");
