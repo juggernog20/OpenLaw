@@ -296,7 +296,7 @@ const ARMS: Readonly<Record<string, Arm>> = {
   },
   // Group 5 — the portal audience's own events (INT-001, M20/8). These
   // land on the portal bell and nowhere else, because the staff centre's
-  // scope answers group 4 alone of the Request rows. They name no
+  // scope answers only the staff side's Request rows. They name no
   // section: a Request has one page and it is the whole of what a
   // requester can open.
   "request.created": {
@@ -409,10 +409,10 @@ function recordName(intl: IntlShape, item: BellItem): string {
  * **A Request has one address per surface and no sections.** A
  * contract's prompt names the section it is about (DES-049 point 9)
  * because a contract record has routed tabs; a Request's whole page is
- * the answer, so a group-5 item lands on the portal detail and group 4's
- * arrival on the staff one. Which of the two is the arm's to say: the
- * event knows who it was written for, and the reader's role does not
- * come into it.
+ * the answer, so a group-5 item lands on the portal detail and a staff
+ * side's row — the arrival, or a mention — on the staff one (M21/5).
+ * Which of the two is the arm's to say: the event knows who it was
+ * written for, and the reader's role does not come into it.
  */
 function hrefFor(item: BellItem, arm: Arm | undefined): string | null {
   if (item.entityType === "request") {

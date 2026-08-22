@@ -19,10 +19,11 @@
  * links to the record in the application; a requester's message links to
  * the Request in the portal. Which of the two a message is, is read from
  * the record it carries and — for a Request, which is read from both
- * sides — from the event's group: group 4 is the Inbox's own arrival and
- * addresses the staff detail (INT-006), group 5 is the Requester's and
- * addresses the portal (DD-013). The arms are split so that one file
- * still holds how an OpenLaw email is laid out.
+ * sides — from the side the event's group speaks to (M21/5): the staff
+ * side's messages, the arrival and the mention, address the staff detail
+ * (INT-006), and the Requester's address the portal (DD-013). The arms
+ * are split so that one file still holds how an OpenLaw email is laid
+ * out.
  *
  * **The copy is authored here in English, not in the message catalog.**
  * That is the API's own convention (DES-013 puts the catalog in the web
@@ -110,7 +111,7 @@ function portalRequestLink(baseUrl: string, requestNumber: number): string {
 }
 
 /**
- * The deep link a group-4 message points at: the Request in the Inbox.
+ * The deep link a staff-side message points at: the Request in the Inbox.
  *
  * The staff application's own address (#414), not the portal's, because
  * the reader is a triager. One act writes two messages about one

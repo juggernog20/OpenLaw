@@ -440,11 +440,12 @@ export function notificationScope(
  * **Two arms, because the surface has two kinds of news** (M21/4). A
  * contract row passes while `contractTeamScope` says the reader reaches
  * the record; a Request row passes while the reader triages (INT-006)
- * and the Request is still live. The second arm is narrowed to group 4's
- * slugs and not merely to the entity type, which is what keeps a
- * Member+'s own group-5 receipt on the portal bell where it belongs: the
- * same person holds both kinds of row about the same Request, and the
- * split between the two bells is by audience rather than by table.
+ * and the Request is still live. The second arm is narrowed to the
+ * staff side's slugs (M21/5) and not merely to the entity type, which
+ * is what keeps a Member+'s own group-5 receipt on the portal bell
+ * where it belongs: the same person holds both kinds of row about the
+ * same Request, and the split between the two bells is by audience
+ * rather than by table.
  */
 function staffScope(db: Executor, user: AuthenticatedUser): SQL | undefined {
   const scope = contractTeamScope(db, user);
