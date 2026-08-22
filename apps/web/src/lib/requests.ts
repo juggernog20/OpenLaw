@@ -11,6 +11,12 @@
  * background and foreground from one status family, keyed by the arm,
  * so a new arm is a compile error rather than an unstyled chip.
  *
+ * **The lifecycle has two labels and one set of tokens** (the INT-003
+ * M21/6 addendum). `requesterStatusLabel` is the requester's words and
+ * `requestStatusLabel` is the enum's, and each surface picks the one
+ * its reader speaks. The colours do not fork: an arm is the same status
+ * family whoever is reading it, so there is one `REQUEST_STATUS_PILL`.
+ *
  * The paper a Request carries lives here too (#380): where one
  * attachment is downloaded from, and the one call that puts one there.
  * The upload does not go through the generated client — `openapi-fetch`
@@ -58,12 +64,46 @@ export const REQUEST_STATUS_PILL: Record<RequestStatus, string> = {
   declined: "bg-status-danger-bg text-status-danger-fg",
 };
 
+/**
+ * The lifecycle in the enum's own words, for the surfaces staff read
+ * (the INT-003 M21/6 addendum): the Inbox's triaged toggle and the
+ * staff detail.
+ *
+ * A triager works the machinery, so the machinery's words are the ones
+ * that carry facts they act on — `converted` says a record now exists,
+ * which "In progress" does not.
+ */
 export function requestStatusLabel(intl: IntlShape, status: RequestStatus): string {
   return intl.formatMessage(
     {
       id: "requests.statusLabel",
       defaultMessage:
         "{status, select, new {New} converted {Converted} resolved {Resolved} " +
+        "declined {Declined} other {Unknown}}",
+    },
+    { status },
+  );
+}
+
+/**
+ * The same lifecycle in the requester's words (the INT-003 M21/6
+ * addendum): Open, In progress, Resolved, Declined.
+ *
+ * The requester's email has spoken these four words since M20/8. The
+ * pill on my-requests and on the detail now speaks them too, so one
+ * person is never told two names for one status — "Converted" in the
+ * browser and "in progress" in the inbox was the M20/10 open item.
+ *
+ * The enum is untouched: this is a translation at the last moment
+ * before a requester reads it, and `requestStatusLabel` is the same
+ * translation for a triager.
+ */
+export function requesterStatusLabel(intl: IntlShape, status: RequestStatus): string {
+  return intl.formatMessage(
+    {
+      id: "requests.requesterStatusLabel",
+      defaultMessage:
+        "{status, select, new {Open} converted {In progress} resolved {Resolved} " +
         "declined {Declined} other {Unknown}}",
     },
     { status },

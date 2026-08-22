@@ -28,6 +28,11 @@
  * arrives with a why, so the banner is the reason rather than a line
  * about it.
  *
+ * **The pill speaks the requester's words** (the INT-003 M21/6
+ * addendum): Open, In progress, Resolved, Declined, which is what their
+ * email says about the same Request. The staff detail says the enum's
+ * words, and neither reader is ever told two names for one status.
+ *
  * ### Recorded normalization points (I7 deviations accepted)
  *
  * 1. I7 draws the Description as the thread's opening message. Nothing
@@ -64,7 +69,7 @@ import {
   REQUEST_STATUS_PILL,
   requestAttachmentHref,
   requestReference,
-  requestStatusLabel,
+  requesterStatusLabel,
   type MyRequestAttachment,
   type MyRequestField,
   type MyRequestFieldRefs,
@@ -142,7 +147,7 @@ export function PortalRequestPage() {
           <span
             className={`inline-flex shrink-0 rounded-pill px-2 py-0.5 text-xs font-medium ${REQUEST_STATUS_PILL[request.status]}`}
           >
-            {requestStatusLabel(intl, request.status)}
+            {requesterStatusLabel(intl, request.status)}
           </span>
         </div>
         {/* I7's meta line: the reference, the front door, and the day it
@@ -276,6 +281,11 @@ function ValueRow({ label, children }: Readonly<{ label: string; children: React
  * writes the statuses and I7 draws only a new Request. Each says the
  * one thing a requester needs from that arm — and `declined` says the
  * reason itself, because INT-006 makes "no" arrive with a why.
+ *
+ * `resolved` says the request was answered *and closed* (the INT-003
+ * M21/6 addendum). An answered request is also a closed one, and a
+ * requester who is not told it is closed goes on waiting for a second
+ * reply.
  */
 function StatusBanner({
   status,
@@ -318,7 +328,7 @@ const BANNER_COPY = {
   }),
   resolved: defineMessage({
     id: "portal.request.bannerResolved",
-    defaultMessage: "Legal has answered this request.",
+    defaultMessage: "Legal has answered this request and closed it.",
   }),
   declined: defineMessage({
     id: "portal.request.bannerDeclined",

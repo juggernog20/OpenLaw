@@ -335,6 +335,24 @@ describe("the envelope (I2)", () => {
     expect(within(card).getByText("Procurement owns vendor paper under $10k.")).toBeInTheDocument();
   });
 
+  it("keeps the enum's own words, which the portal no longer speaks (INT-003)", async () => {
+    // The M21/6 addendum: one requester is never told two names for one
+    // status, and a triager reads the machinery's words. The portal pill
+    // on the same Request says "In progress"; this one says what the row
+    // holds, because a record now existing is the fact triage acts on.
+    stubApi({
+      signedIn: MEMBER,
+      extra: pageApi(
+        detailApi(detail({ request: { status: "converted", convertedContract: { number: 12 } } })),
+      ),
+    });
+    renderAt("/inbox/45");
+
+    const card = await screen.findByRole("region", { name: "Outcome" });
+    expect(within(card).getByText("Converted")).toBeInTheDocument();
+    expect(screen.queryByText("In progress")).not.toBeInTheDocument();
+  });
+
   it("draws no Outcome card while the Request is still undecided", async () => {
     stubApi({ signedIn: MEMBER, extra: pageApi(detailApi(detail())) });
     renderAt("/inbox/45");

@@ -2667,7 +2667,7 @@
     "defaultMessage": "Legal has received your request. You'll get an email when the status changes."
   },
   "portal.request.bannerResolved": {
-    "defaultMessage": "Legal has answered this request."
+    "defaultMessage": "Legal has answered this request and closed it."
   },
   "portal.request.booleanValue": {
     "defaultMessage": "{value, select, true {Yes} other {No}}"
@@ -2827,6 +2827,9 @@
   },
   "requests.reference": {
     "defaultMessage": "R-{number, number, ::group-off}"
+  },
+  "requests.requesterStatusLabel": {
+    "defaultMessage": "{status, select, new {Open} converted {In progress} resolved {Resolved} declined {Declined} other {Unknown}}"
   },
   "requests.statusLabel": {
     "defaultMessage": "{status, select, new {New} converted {Converted} resolved {Resolved} declined {Declined} other {Unknown}}"

@@ -42,7 +42,7 @@ import { FormattedMessage, useIntl } from "react-intl";
 import { Link } from "react-router";
 import { ChevronRight } from "lucide-react";
 import { formatRelativeOrShort } from "../../lib/format";
-import { REQUEST_STATUS_PILL, requestReference, requestStatusLabel } from "../../lib/requests";
+import { REQUEST_STATUS_PILL, requesterStatusLabel, requestReference } from "../../lib/requests";
 import type { MyRequestRow } from "../../lib/requests";
 
 /** The picker's own id, so the empty state can point a first visitor at
@@ -117,7 +117,7 @@ export function MyRequests({
                 <span
                   className={`inline-flex shrink-0 rounded-pill px-2 py-0.5 text-xs font-medium ${REQUEST_STATUS_PILL[row.status]}`}
                 >
-                  {requestStatusLabel(intl, row.status)}
+                  {requesterStatusLabel(intl, row.status)}
                 </span>
                 <time dateTime={row.createdAt} className="shrink-0 text-sm text-muted">
                   {formatRelativeOrShort(row.createdAt)}
