@@ -49,21 +49,16 @@ test.setTimeout(300_000);
  * leftovers can be swept before the journey starts. */
 const CONTRACT_PREFIX = "E2E M17 Highland facilities agreement";
 
-/** Every per-run person's address starts here. */
 const MEMBER_EMAIL_PREFIX = "e2e-m17-";
 
-/** The Legal Team Member the milestone is written for. */
 const MEMBER_NAME = "Jordan Fairweather";
 
-/** The task title for the checklist leg. */
 const TASK_TITLE = "Confirm governing law clause with external counsel";
 
-/** Only what the sweep reads. */
 const ContractRows = z.object({
   contracts: z.array(z.object({ number: z.number().int(), title: z.string() })),
 });
 
-/** One contract as the seam answers it. */
 const ContractSchema = z.object({
   id: z.string(),
   number: z.number().int(),
@@ -78,7 +73,6 @@ const ContractSchema = z.object({
 
 type Contract = z.infer<typeof ContractSchema>;
 
-/** The record's pickers. */
 const ContractOptions = z.object({
   contractTypes: z.array(
     z.object({
@@ -93,7 +87,6 @@ const ContractOptions = z.object({
 
 type StatusOption = z.infer<typeof ContractOptions>["contractStatuses"][number];
 
-/** The relations envelope. */
 const RelativeSchema = z.union([
   z.object({ restricted: z.literal(true) }),
   z.object({
@@ -117,7 +110,6 @@ const RelationsEnvelope = z.object({
   links: z.array(LinkSchema),
 });
 
-/** Tasks envelope. */
 const TasksEnvelope = z.object({
   tasks: z.array(
     z.object({
@@ -130,7 +122,6 @@ const TasksEnvelope = z.object({
   totalCount: z.number().int(),
 });
 
-/** Activity feed entries. */
 const ActivityEntries = z.object({
   entries: z.array(
     z.object({
@@ -178,21 +169,18 @@ async function ensureDemoMembersInert(request: APIRequestContext) {
   }
 }
 
-/** The record's pickers, as the seam answers them. */
 async function readOptions(request: APIRequestContext) {
   const options = await request.get("/api/v1/contracts/options");
   expect(options.status(), await options.text()).toBe(200);
   return ContractOptions.parse(await options.json());
 }
 
-/** A status at a given stage. */
 function statusAt(options: z.infer<typeof ContractOptions>, stage: string): StatusOption {
   const found = options.contractStatuses.find((status) => status.stage === stage);
   expect(found, `no live contract status sits at the ${stage} stage`).toBeDefined();
   return found!;
 }
 
-/** A seed contract type that demands no field. */
 function bareContractTypeName(options: z.infer<typeof ContractOptions>): string {
   const bare = options.contractTypes.find((type) =>
     type.fields.every((field) => !field.isRequired),
@@ -201,28 +189,24 @@ function bareContractTypeName(options: z.infer<typeof ContractOptions>): string 
   return bare!.displayName;
 }
 
-/** One contract as the seam answers it. */
 async function readContract(request: APIRequestContext, number: number): Promise<Contract> {
   const read = await request.get(`/api/v1/contracts/${number}`);
   expect(read.status(), await read.text()).toBe(200);
   return z.object({ contract: ContractSchema }).parse(await read.json()).contract;
 }
 
-/** One contract's relations. */
 async function readRelations(request: APIRequestContext, number: number) {
   const read = await request.get(`/api/v1/contracts/${number}/relations`);
   expect(read.status(), await read.text()).toBe(200);
   return RelationsEnvelope.parse(await read.json());
 }
 
-/** One contract's tasks. */
 async function readTasks(request: APIRequestContext, number: number) {
   const read = await request.get(`/api/v1/contracts/${number}/tasks`);
   expect(read.status(), await read.text()).toBe(200);
   return TasksEnvelope.parse(await read.json());
 }
 
-/** One contract's feed. */
 async function readFeed(
   request: APIRequestContext,
   contractId: string,
@@ -232,12 +216,10 @@ async function readFeed(
   return ActivityEntries.parse(await read.json()).entries;
 }
 
-/** One contract's entries of a given action. */
 function entriesOf(feed: readonly ActivityEntry[], action: string): readonly ActivityEntry[] {
   return feed.filter((entry) => entry.action === action);
 }
 
-/** Makes a contract through the create dialog and answers its number. */
 async function createContract(page: Page, title: string, typeName: string): Promise<number> {
   await page.goto("/contracts");
   await page.getByRole("button", { name: "Create contract" }).first().click();
@@ -262,7 +244,6 @@ function moveControl(page: Page): Locator {
   return page.getByRole("button", { name: /move contract$/ });
 }
 
-/** Opens the move menu and picks one status by the label it wears. */
 async function pickFrom(page: Page, status: StatusOption): Promise<void> {
   await moveControl(page).click();
   await page
@@ -272,7 +253,6 @@ async function pickFrom(page: Page, status: StatusOption): Promise<void> {
     .click();
 }
 
-/** Sets the contract's status. */
 async function pickStatus(page: Page, number: number, status: StatusOption): Promise<void> {
   const answered = page.waitForResponse(
     (response) =>
@@ -295,12 +275,10 @@ async function openSection(page: Page, number: number, name: string, path: strin
   await expect(page).toHaveURL(new RegExp(`/contracts/${number}${path}$`));
 }
 
-/** The Tasks section locator. */
 function tasksCard(page: Page) {
   return page.getByRole("region", { name: "Tasks" });
 }
 
-/** The Related contracts section locator. */
 function relationsCard(page: Page) {
   return page.getByRole("region", { name: "Related contracts" });
 }
@@ -371,15 +349,12 @@ test.describe("M17 demo path", () => {
       await memberPage.goto(`/contracts/${parentNumber}`);
       await openSection(memberPage, parentNumber, "Tasks", "/tasks");
 
-      // The section starts empty.
       await expect(tasksCard(memberPage)).toContainText("No tasks on this contract yet.");
 
-      // The seam half: no tasks on this contract.
       const emptyTasks = await readTasks(memberPage.request, parentNumber);
       expect(emptyTasks.totalCount).toBe(0);
       expect(emptyTasks.doneCount).toBe(0);
 
-      // Add a task through the dialog.
       await tasksCard(memberPage).getByRole("button", { name: "Add task" }).click();
       const taskDialog = memberPage.getByRole("dialog");
       await taskDialog.getByLabel("Title").fill(TASK_TITLE);
@@ -392,18 +367,15 @@ test.describe("M17 demo path", () => {
       expect((await taskAdded).status()).toBe(201);
       await expect(taskDialog).toBeHidden();
 
-      // The screen half: the task appears in the checklist.
       await expect(tasksCard(memberPage).getByText(TASK_TITLE)).toBeVisible();
       await expect(tasksCard(memberPage).getByText("0 of 1 done")).toBeVisible();
 
-      // The seam half: one task, not done.
       const withTask = await readTasks(memberPage.request, parentNumber);
       expect(withTask.totalCount).toBe(1);
       expect(withTask.doneCount).toBe(0);
       expect(withTask.tasks[0]!.title).toBe(TASK_TITLE);
       expect(withTask.tasks[0]!.isDone).toBe(false);
 
-      // Toggle the task to done through the checkbox.
       const toggleCheckbox = tasksCard(memberPage).getByRole("checkbox", {
         name: new RegExp(`Complete task: ${TASK_TITLE}`),
       });
@@ -416,15 +388,12 @@ test.describe("M17 demo path", () => {
       await toggleCheckbox.click();
       expect((await toggled).status()).toBe(200);
 
-      // The screen half: the task is now done.
       await expect(tasksCard(memberPage).getByText("1 of 1 done")).toBeVisible();
 
-      // The seam half: done.
       const completedTasks = await readTasks(memberPage.request, parentNumber);
       expect(completedTasks.doneCount).toBe(1);
       expect(completedTasks.tasks[0]!.isDone).toBe(true);
 
-      // The feed records the toggle with the actor.
       const parentContract = await readContract(memberPage.request, parentNumber);
       const taskFeed = await readFeed(memberPage.request, parentContract.id);
       const taskCompleted = entriesOf(taskFeed, "task.completed");
@@ -434,39 +403,28 @@ test.describe("M17 demo path", () => {
 
       // ---- Leg 2: link the amendment to the parent (CTR-015) ----
 
-      // Navigate to the child's record and open the relations section
-      // through the Overview tab (relations card sits on Overview).
       await memberPage.goto(`/contracts/${childNumber}`);
 
-      // The screen half: the relations panel starts empty.
       await expect(relationsCard(memberPage)).toContainText("No related contracts.");
 
-      // The seam half: no relations on the child.
       const emptyRelations = await readRelations(memberPage.request, childNumber);
       expect(emptyRelations.parentChain).toHaveLength(0);
       expect(emptyRelations.children).toHaveLength(0);
       expect(emptyRelations.links).toHaveLength(0);
 
-      // Add a typed link: this contract amends the parent.
       await relationsCard(memberPage).getByRole("button", { name: "Add link" }).click();
       const linkDialog = memberPage.getByRole("dialog");
       await expect(linkDialog).toBeVisible();
-      // Select the link type "Amends".
       await linkDialog.getByLabel("Link type").selectOption("amends");
       // Search for the parent by its per-run title, which names exactly
       // one live contract on the never-reset instance — a digit query
       // would title-match any leftover row whose stamp carries the same
       // digits, and the picker pages at twenty.
       await linkDialog.getByLabel("Search by number or title…").fill(parentTitle);
-      // The candidates are the combobox's options, each carrying the
-      // reference, the title, and the status; the title picks the
-      // parent out.
       const parentOption = linkDialog.getByRole("option").filter({ hasText: parentTitle });
       await expect(parentOption).toBeVisible();
       await parentOption.click();
 
-      // Submit the link. The confirm button carries the dialog's own
-      // name, "Link contract".
       const linked = memberPage.waitForResponse(
         (response) =>
           response.url().endsWith(`/api/v1/contracts/${childNumber}/relations`) &&
@@ -476,11 +434,9 @@ test.describe("M17 demo path", () => {
       expect((await linked).status()).toBe(201);
       await expect(linkDialog).toBeHidden();
 
-      // The screen half: the relations card now shows the link.
       await expect(relationsCard(memberPage)).toContainText("Amends");
       await expect(relationsCard(memberPage)).toContainText(`C-${parentNumber}`);
 
-      // The seam half: one link of type "amends" from child to parent.
       const childRelations = await readRelations(memberPage.request, childNumber);
       expect(childRelations.links).toHaveLength(1);
       expect(childRelations.links[0]!.relationType).toBe("amends");
@@ -491,7 +447,6 @@ test.describe("M17 demo path", () => {
         expect(linkedContract.number).toBe(parentNumber);
       }
 
-      // The parent sees the link from the other direction.
       const parentRelations = await readRelations(memberPage.request, parentNumber);
       expect(parentRelations.links).toHaveLength(1);
       expect(parentRelations.links[0]!.relationType).toBe("amends");
@@ -507,7 +462,6 @@ test.describe("M17 demo path", () => {
       expect(linkEntries[0]!.payload.relationType).toBe("amends");
       expect(linkEntries[0]!.payload.relatedNumber).toBe(parentNumber);
 
-      // The parent's feed does not carry a relation_added entry.
       const parentFeedAfterLink = await readFeed(memberPage.request, parentContract.id);
       expect(entriesOf(parentFeedAfterLink, "contract.relation_added")).toHaveLength(0);
 
@@ -515,15 +469,12 @@ test.describe("M17 demo path", () => {
 
       await memberPage.goto(`/contracts/${parentNumber}`);
 
-      // The record is currently active and not ended.
       const beforeEnd = await readContract(memberPage.request, parentNumber);
       expect(beforeEnd.stage).toBe("active");
       expect(beforeEnd.endedAt).toBeNull();
 
-      // End the contract by changing its status to an ended-stage status.
       await pickStatus(memberPage, parentNumber, ended);
 
-      // The seam half: the contract is now ended with a timestamp.
       const afterEnd = await readContract(memberPage.request, parentNumber);
       expect(afterEnd.stage).toBe("ended");
       expect(afterEnd.endedAt).not.toBeNull();
@@ -540,8 +491,6 @@ test.describe("M17 demo path", () => {
 
       // ---- Leg 4: the record is still writable (CTR-019) ----
 
-      // The screen half: the record page is still there and editable.
-      // Navigate to the record and confirm the heading is visible.
       await expect(memberPage.getByRole("heading", { level: 1, name: parentTitle })).toBeVisible();
 
       // Write to the description at the seam to prove the record accepts
@@ -552,7 +501,6 @@ test.describe("M17 demo path", () => {
       });
       expect(patched.status(), await patched.text()).toBe(200);
 
-      // The seam half: the description is stored.
       const afterWrite = await readContract(memberPage.request, parentNumber);
       expect(afterWrite.description).toBe(description);
       expect(afterWrite.stage).toBe("ended");

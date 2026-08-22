@@ -260,7 +260,6 @@
     line-height: var(--text-md--line-height);
   }
 
-  /* Letter-spacing tightening on h1 only, per DES-006. */
   h1 {
     letter-spacing: -0.2px;
   }

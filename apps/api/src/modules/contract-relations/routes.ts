@@ -101,7 +101,6 @@ const RelationsEnvelope = z.object({
   links: z.array(LinkSchema),
 });
 
-/** The columns a reachable relative carries in the response. */
 interface ReachableRow {
   id: string;
   number: number;
@@ -137,7 +136,6 @@ async function reachableRelatives(
   return new Map(rows.map((row) => [row.id, row]));
 }
 
-/** Turn an id into a reachable or restricted relative. */
 function toRelative(
   reachable: Map<string, ReachableRow>,
   id: string,
@@ -354,13 +352,9 @@ export const contractRelationsRoutes: FastifyPluginAsyncZod = async (app) => {
         .innerJoin(contractStatuses, eq(contracts.statusId, contractStatuses.id))
         .where(
           and(
-            // Not itself
             sql`${contracts.id} <> ${anchor.id}`,
-            // Not archived
             isNull(contracts.archivedAt),
-            // Only reachable contracts
             contractTeamScope(app.db, request.user),
-            // Search filter: number or title
             numberMatch !== null
               ? or(eq(contracts.number, numberMatch), ilike(contracts.title, titlePattern))
               : ilike(contracts.title, titlePattern),
