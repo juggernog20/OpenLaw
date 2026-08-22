@@ -675,6 +675,14 @@ type DocumentPayloads = {
     versionNumber: number;
     kind: string;
   };
+  "document.version_kind_changed": {
+    documentId: string;
+    versionId: string;
+    title: string;
+    versionNumber: number;
+    from: string;
+    to: string;
+  };
   "document.updated": { documentId: string; title: string; changed: ChangedFields };
   /** Both titles, because hard deletion takes the rows and the entry has
    * to keep saying which document the instrument moved from and to. */

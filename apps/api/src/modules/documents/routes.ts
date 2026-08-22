@@ -22,12 +22,9 @@
  * called that round, and the pin is what the team decided — the two are
  * never inferred from one another.
  *
- * **There is no route here that edits or deletes a version, and that
- * absence is the decision.** A correction appends a new version, which
- * is what makes the chain dependable as negotiation history — so the
- * suite asserts the absence rather than trusting it, by asking the route
- * table whether such a route exists. Metadata edits reach the
- * `documents` row and never a version row.
+ * **Only a version's kind is correctable.** One PATCH updates that one
+ * column. It cannot move the bytes, number, note, author, place in the
+ * chain, or executed pin. There is no per-version DELETE (CTR-014).
  *
  * **The next version number is assigned under the owning contract's row
  * lock.** Two people uploading a revision at the same moment serialize
@@ -143,6 +140,7 @@ import {
   documentVersions,
   documentVersionText,
   DOCUMENT_VERSION_KINDS,
+  HAND_SET_DOCUMENT_VERSION_KINDS,
   eq,
   inArray,
   isNotNull,
@@ -150,8 +148,8 @@ import {
   sql,
   TEXT_SOURCES,
   users,
-  type DocumentVersionKind,
   type Executor,
+  type HandSetDocumentVersionKind,
   type SQL,
   type Transaction,
 } from "@openlaw/db";
@@ -213,6 +211,7 @@ import {
   insertDocumentVersion,
   nextVersionNumber,
   requestDerivations,
+  updateDocumentVersionKind,
   versionStorageKey,
 } from "../../lib/document-versions.js";
 import { needsDisplayRendition } from "../../pipeline/display-conversion.js";
@@ -302,6 +301,7 @@ const MAX_MIME_TYPE_LENGTH = 255;
 const MIME_TYPE_PATTERN = /^[!#$%&'*+.^_`|~\w-]+\/[!#$%&'*+.^_`|~\w-]+(?:\s*;[ -~]*)?$/;
 
 const KindSchema = z.enum(DOCUMENT_VERSION_KINDS);
+const HandSetKindSchema = z.enum(HAND_SET_DOCUMENT_VERSION_KINDS);
 
 /** The uploader, as every person on a record is drawn (DES-018). */
 const PersonSchema = z.object({
@@ -629,6 +629,10 @@ const MetadataPatch = z.object({
   folderId: RecordIdSchema.nullable().optional(),
 });
 
+/** CTR-014's one correctable field. Strict so a caller cannot send a
+ * note or any other version fact and have it ignored in silence. */
+const VersionKindPatch = z.strictObject({ kind: HandSetKindSchema });
+
 /**
  * DOC-010's typed confirmation, as the seam takes it: the Administrator
  * sends back the title of the document they are destroying.
@@ -719,7 +723,7 @@ const UPLOAD_FIELDS = {
   },
   kind: {
     type: "string",
-    enum: [...DOCUMENT_VERSION_KINDS],
+    enum: [...HAND_SET_DOCUMENT_VERSION_KINDS],
     description:
       "What this version is in the negotiation (CTR-014). Defaults to " +
       "`draft_ours`. Must be sent before the file part.",
@@ -1422,11 +1426,12 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
           "The number is assigned under the owning contract's row lock, " +
           "so two revisions uploaded at the same moment take consecutive " +
           "numbers rather than colliding, and the chain runs 1..n with " +
-          "no gaps. The version carries one of the five CTR-014 kinds " +
+          "no gaps. The version carries one of the six hand-set CTR-014 kinds " +
           "and, when the uploader wrote one, a short note saying what " +
           "changed in this round. Nothing about the versions already in " +
-          "the chain is touched: they are immutable, and a correction is " +
-          "another version. Appends document.version_added on the owning " +
+          "the chain is touched: a file correction is another version, " +
+          "while the kind has its own one-column PATCH. Appends " +
+          "document.version_added on the owning " +
           "contract (DD-017). The kind and note fields must be sent " +
           "before the file part. An archived contract takes no new paper " +
           "until it is restored. A document on a contract the uploader " +
@@ -1501,6 +1506,78 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
 
       await askForDerivations(versionId, file);
       return reply.status(201).send({ document: updated });
+    },
+  );
+
+  app.patch(
+    "/documents/:documentId/versions/:versionId",
+    {
+      preHandler: requireMember,
+      schema: {
+        operationId: "updateDocumentVersionKind",
+        summary:
+          "Correct one version's kind (CTR-014). This is the only " +
+          "per-version update. It changes only the kind: the bytes, " +
+          "number, note, author, order, and executed pin stay where " +
+          "they are. The target must be one of the six hand-set kinds. " +
+          "A generated redline cannot be corrected or selected because " +
+          "its kind records how the file was made. Appends " +
+          "document.version_kind_changed on the owning contract with " +
+          "the kind before and after (DD-017). Member+ may correct a " +
+          "kind; a Contributor who reaches the record is refused 403",
+        tags: ["documents"],
+        params: VersionParams,
+        body: VersionKindPatch,
+        response: { 200: DocumentEnvelope, default: problemResponse },
+      },
+    },
+    async (request) => {
+      const { documentId, versionId } = request.params;
+      const { kind } = request.body;
+      return {
+        document: await app.db.transaction(async (tx) => {
+          const target = await reachedDocument(tx, request.user, documentId, true);
+          assertOpenDocument(target);
+
+          const [version] = await tx
+            .select({
+              id: documentVersions.id,
+              versionNumber: documentVersions.versionNumber,
+              kind: documentVersions.kind,
+            })
+            .from(documentVersions)
+            .where(
+              and(eq(documentVersions.id, versionId), eq(documentVersions.documentId, documentId)),
+            )
+            .limit(1);
+          if (!version) throw httpError(404, "That version is not part of this document.");
+          if (version.kind === "generated_redline") {
+            throw httpError(409, "A generated redline's kind records how it was made.");
+          }
+          if (version.kind === kind) {
+            throw httpError(409, "That version already has this kind.");
+          }
+
+          await updateDocumentVersionKind(tx, documentId, versionId, kind);
+          await recordActivity(tx, {
+            entityType: "contract",
+            entityId: target.contractId,
+            actorId: request.user.id,
+            action: "document.version_kind_changed",
+            visibility: RECORD_ACTIVITY_TIER,
+            payload: {
+              documentId,
+              versionId,
+              title: target.title,
+              versionNumber: version.versionNumber,
+              from: version.kind,
+              to: kind,
+            },
+          });
+
+          return documentWithChain(tx, documentId, target.primaryDocumentId);
+        }),
+      };
     },
   );
 
@@ -2869,7 +2946,7 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
   interface StoredUpload {
     filename: string;
     mimeType: string;
-    kind: DocumentVersionKind;
+    kind: HandSetDocumentVersionKind;
     note: string | null;
     /**
      * Where the file is to be filed (DOC-006, DOC-011), or null for the
@@ -2926,8 +3003,8 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
     // the contract's row lock: that is the only place it can be created
     // without two racing uploads making two of it.
     const destination = filed ? folderDestination(part.fields) : null;
-    const kind: DocumentVersionKind = rawKind
-      ? (KindSchema.safeParse(rawKind).data ?? refuseKind())
+    const kind: HandSetDocumentVersionKind = rawKind
+      ? (HandSetKindSchema.safeParse(rawKind).data ?? refuseKind())
       : "draft_ours";
     // Refused rather than shortened. A note is what the uploader wrote
     // about this round, and silently keeping the first 2000 characters

@@ -4003,6 +4003,41 @@ Placement under the body makes the tier relationship visible without another bad
 
 The list is labelled `Comment attachments`; the filename is the link's accessible name and the browser download uses that same filename. No attachment count is added to the thread header, because hidden-tier paper must contribute no number a narrower reader can compare.
 
+## DES-063: The version kind pill is a picker for Member+ (extends DES-017)
+
+- **Status:** Accepted
+- **Date:** 2026-08-22
+
+### Context
+
+CTR-014's M21A addendum owns the rule that a Member+ user can correct a Document Version's kind and no other part of the round. The Contract Documents card already draws that kind as a coloured pill in the C4 version row. This record decides how that pill becomes the write control without adding a dialog or another row action.
+
+### Decision
+
+**1. The pill itself becomes a native select for Member+.** It keeps the current kind's colour pair, type size, rounded shape, and place in C4's Kind column. Pressing it opens the browser's option list. A correction commits on selection, following DES-017's immediate per-field save. The section header shows Saving, Saved, or the seam's refusal through its existing micro-state.
+
+**2. The picker offers the six hand-set kinds in negotiation order.** Draft · ours, Draft · theirs, Redline · theirs, Redline · ours, Amendment, Executed. The order matches the upload composer. `generated_redline` is never an option because it records how the file was made rather than a person's judgement about the round.
+
+**3. A generated redline stays a read-only pill for every role.** Its label is `Generated redline` and it uses the neutral pair. Member+ cannot open a picker on it. This draws CTR-014's source refusal rather than offering a control that the seam will reject.
+
+**4. A Contributor sees the existing pill.** The Documents card draws no kind select for them, just as it draws no upload or row-action controls. An archived Contract also keeps the read-only pill because all record writes are frozen there, and so does a Document that is archived on its own (DOC-010), because the seam refuses every edit to it until it is restored.
+
+**5. Every picker names its round.** Its accessible name is `Kind of version {number} of {document title}`. The visible value alone stays short enough for C4's Kind column, while the control's name distinguishes several version rows that show the same kind.
+
+### Rationale
+
+The kind already has a compact, well-understood place on every version row. Turning that value into its own control keeps the correction on the fact it changes. A dialog or an overflow item would make a one-field correction take more steps and would separate the action from the value.
+
+### Alternatives considered
+
+- **A Change kind item in each row menu.** Rejected because the value is already visible and DES-017 commits one field where it is read.
+- **A dialog opened from the pill.** Rejected because the correction collects one fixed value and needs no confirmation.
+- **Offering Generated redline as a disabled option.** Rejected because it is not a hand-set choice. The option must be absent, not advertised as unavailable.
+
+### Consequences
+
+`apps/web/src/components/documents/documents-card.tsx` owns the picker and uses the existing hand-set kind catalogue. The current value colours the closed select. A successful PATCH replaces the document row with the seam's read-back, so current and superseded rounds use the same control and update path. No new component or token lands.
+
 ## Index of decisions
 
 | #       | Decision                                                                                                                                                             | Status                                                                                                     |
@@ -4069,3 +4104,4 @@ The list is labelled `Comment attachments`; the filename is the link's accessibl
 | DES-060 | The archived carried reference marker and repair box (extends DES-057, DES-059)                                                                                      | Accepted                                                                                                   |
 | DES-061 | Chosen comment files are removable chips (extends DES-023, DES-024)                                                                                                  | Accepted                                                                                                   |
 | DES-062 | Comment paper is a download row under the body (extends DES-023)                                                                                                     | Accepted                                                                                                   |
+| DES-063 | The version kind pill is a picker for Member+ (extends DES-017)                                                                                                      | Accepted                                                                                                   |
