@@ -385,7 +385,8 @@ export type SortDirection = (typeof SORT_DIRECTIONS)[number];
  * `outcome`, holding one of {@link REQUEST_OUTCOMES}. The Request
  * attachment route also carries `request`, the R-### whose portal
  * detail owns the thread that takes paper now, and `convertedContract`
- * where conversion made one (INT-002's #438 addendum). A client must
+ * where conversion made one the caller reaches under DD-014 (INT-002's
+ * #438 addendum). A client must
  * never read any of those facts out of `detail`. That is copy, and copy
  * is rewritten.
  */

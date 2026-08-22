@@ -2771,6 +2771,9 @@
   "portal.form.attachmentsHint": {
     "defaultMessage": "Drop files here — the redline, the prior agreement, the term sheet. Up to {max} files."
   },
+  "portal.form.attachmentsMovedToThread": {
+    "defaultMessage": "{count, plural, one {This file did not attach.} other {These files did not attach.}} <thread>Add {count, plural, one {it} other {them}} to a reply on {reference}</thread>."
+  },
   "portal.form.attachmentsTooMany": {
     "defaultMessage": "A request carries at most {max} files."
   },
@@ -2881,6 +2884,9 @@
   },
   "portal.request.meta": {
     "defaultMessage": "{reference} · {requestType} · Submitted {submitted}"
+  },
+  "portal.request.paperOnThread": {
+    "defaultMessage": "<composer>Attach new files to a reply</composer>."
   },
   "portal.request.replyError": {
     "defaultMessage": "The reply could not be sent. Try again."

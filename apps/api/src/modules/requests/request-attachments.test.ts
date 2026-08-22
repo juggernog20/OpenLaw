@@ -337,8 +337,9 @@ describe("attaching paper to a Request", () => {
     },
   );
 
-  it("refuses paper once the Request is converted and names both the thread and record", async () => {
-    const number = await submitted();
+  /** Converts a Request through the ordinary staff route and answers the
+   * C-### it became. */
+  async function convertedInto(number: number): Promise<{ number: number }> {
     const converted = await harness.app.inject({
       method: "POST",
       url: `/api/v1/requests/${number}/convert`,
@@ -346,7 +347,14 @@ describe("attaching paper to a Request", () => {
       payload: { title: "MSA renewal with Orion Cloud" },
     });
     expect(converted.statusCode, converted.body).toBe(200);
-    const convertedContract = converted.json().request.convertedContract as { number: number };
+    return converted.json().request.convertedContract as { number: number };
+  }
+
+  it("refuses paper once the Request is converted and names the thread, not a record a Business User cannot open", async () => {
+    // DD-014: a Business User reaches no Contract, so the refusal
+    // answers `null` where the portal read would show no link either.
+    const number = await submitted();
+    await convertedInto(number);
     const before = await storedBlobCount();
 
     const refused = await attach(number);
@@ -356,10 +364,26 @@ describe("attaching paper to a Request", () => {
       type: REQUEST_DISPOSITIONED_PROBLEM_TYPE,
       outcome: "converted",
       request: { number },
-      convertedContract,
+      convertedContract: null,
     });
     expect(await listed(number)).toEqual([]);
     expect(await storedBlobCount()).toBe(before);
+  });
+
+  it("names the record a conversion made when the Requester may reach it", async () => {
+    // An Administrator who submitted the Request reaches every Contract,
+    // so the same refusal carries the C-### for them.
+    const number = await submitted(adminCookies);
+    const convertedContract = await convertedInto(number);
+
+    const refused = await attach(number, { cookies: adminCookies });
+
+    expect(refused.statusCode, refused.body).toBe(409);
+    expect(refused.json()).toMatchObject({
+      outcome: "converted",
+      request: { number },
+      convertedContract,
+    });
   });
 });
 

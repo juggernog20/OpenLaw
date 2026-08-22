@@ -125,6 +125,7 @@ import {
 } from "@openlaw/db";
 import { REQUEST_DISPOSITIONED_PROBLEM_TYPE, REQUEST_OUTCOMES } from "@openlaw/shared";
 import { requireAuth } from "../../auth/guards.js";
+import { contractTeamScope } from "../../lib/contract-access.js";
 import {
   asUploadRefusal,
   refuseOversize,
@@ -544,7 +545,7 @@ export const requestsRoutes: FastifyPluginAsyncZod = async (app) => {
               "Request attachment (INT-002, CMT-011). The named refusal carries " +
               "`request`, the R-### whose portal detail owns that thread; `outcome`, " +
               "the disposition already recorded; and `convertedContract`, the record " +
-              "a conversion made when there is one.",
+              "a conversion made when the caller may reach it (DD-014), else `null`.",
             [REQUEST_DISPOSITIONED_PROBLEM_TYPE],
             {
               request: z.object({ number: z.number().int() }).optional(),
@@ -584,13 +585,26 @@ export const requestsRoutes: FastifyPluginAsyncZod = async (app) => {
             lock: true,
           });
           if (held.status !== "new") {
+            // The record a conversion made, under the caller's own
+            // contract reach (DD-014) and never an archived one. The
+            // route is the Requester's, and a Business User reaches no
+            // Contract at all, so for them this is `null` — the same
+            // answer the portal read and the staff disposition refusal
+            // give. A refusal must not hand out a reference the read
+            // would withhold.
             const [convertedContract] =
               held.convertedContractId === null
                 ? []
                 : await tx
                     .select({ number: contracts.number })
                     .from(contracts)
-                    .where(eq(contracts.id, held.convertedContractId))
+                    .where(
+                      and(
+                        eq(contracts.id, held.convertedContractId),
+                        contractTeamScope(tx, request.user),
+                        isNull(contracts.archivedAt),
+                      ),
+                    )
                     .limit(1);
             throw httpError(
               409,
