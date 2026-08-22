@@ -44,6 +44,7 @@ let harness: TestHarness;
 let adminCookies: Record<string, string>;
 let memberCookies: Record<string, string>;
 let memberId: string;
+let adminId: string;
 
 beforeAll(async () => {
   harness = await startHarness();
@@ -53,6 +54,11 @@ beforeAll(async () => {
     payload: ADMIN,
   });
   expect(res.statusCode, res.body).toBe(201);
+  const [administrator] = await harness.db
+    .select({ id: users.id })
+    .from(users)
+    .where(eq(users.email, ADMIN.email));
+  adminId = administrator!.id;
   const member = await provisionUser(harness.app.auth, MEMBER);
   await harness.db.update(users).set({ role: "legal_team_member" }).where(eq(users.id, member.id));
   memberId = member.id;
@@ -425,6 +431,40 @@ describe("the nine field types round-trip through their own shape", () => {
       customFields: { [stray.slug]: "nowhere" },
     });
     expect(strayWrite.statusCode, strayWrite.body).toBe(400);
+  });
+
+  it("takes reference locks in one order across concurrent creates", async () => {
+    const type = await newType("Concurrent references");
+    const approver = await defineField({ displayName: "Approver", fieldType: "user" });
+    const reviewer = await defineField({ displayName: "Reviewer", fieldType: "user" });
+    await attachField(type.id, approver.fieldId);
+    await attachField(type.id, reviewer.fieldId);
+
+    const [left, right] = await Promise.all([
+      createContract({
+        title: "References left to right",
+        contractTypeId: type.id,
+        customFields: { [approver.slug]: memberId, [reviewer.slug]: adminId },
+      }),
+      createContract({
+        title: "References right to left",
+        contractTypeId: type.id,
+        customFields: { [reviewer.slug]: memberId, [approver.slug]: adminId },
+      }),
+    ]);
+
+    expect(left.statusCode, left.body).toBe(201);
+    expect(right.statusCode, right.body).toBe(201);
+    expect(left.headers["content-type"]).toContain("application/json");
+    expect(right.headers["content-type"]).toContain("application/json");
+    expect(left.json().contract.customFields).toEqual({
+      [approver.slug]: memberId,
+      [reviewer.slug]: adminId,
+    });
+    expect(right.json().contract.customFields).toEqual({
+      [reviewer.slug]: memberId,
+      [approver.slug]: adminId,
+    });
   });
 });
 

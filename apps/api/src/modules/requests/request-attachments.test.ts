@@ -20,6 +20,7 @@ import { readdir } from "node:fs/promises";
 import { join } from "node:path";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { count, documents, eq, requestAttachments, requests, users } from "@openlaw/db";
+import { REQUEST_DISPOSITIONED_PROBLEM_TYPE } from "@openlaw/shared";
 import { buildApp } from "../../app.js";
 import { provisionUser } from "../../auth/instance.js";
 import { testDeps } from "../../testing/deps.js";
@@ -214,6 +215,27 @@ describe("attaching paper to a Request", () => {
       "prior-agreement.pdf",
       "term-sheet.pdf",
     ]);
+  });
+
+  it("refuses new paper after every disposition and points to the thread", async () => {
+    for (const status of ["converted", "resolved", "declined"] as const) {
+      const number = await submitted();
+      await harness.db.update(requests).set({ status }).where(eq(requests.number, number));
+      const before = await storedBlobCount();
+
+      const refused = await attach(number, { filename: `${status}-round.pdf` });
+
+      expect(refused.statusCode, refused.body).toBe(409);
+      expect(refused.headers["content-type"]).toContain("application/problem+json");
+      expect(refused.json()).toMatchObject({
+        type: REQUEST_DISPOSITIONED_PROBLEM_TYPE,
+        requestNumber: number,
+        outcome: status,
+      });
+      expect(refused.json().detail).toContain("thread");
+      expect(await storedBlobCount()).toBe(before);
+      expect(await listed(number)).toEqual([]);
+    }
   });
 
   it("writes a request_attachments row tied to the Request, and no documents row", async () => {

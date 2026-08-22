@@ -295,10 +295,7 @@ async function lockedReference(tx: Transaction, field: AttachedCustomField, id: 
       .where(eq(users.id, id))
       .limit(1)
       .for("update");
-    if (!person || person.archivedAt) {
-      throw httpError(400, `${field.displayName}: pick a live person.`);
-    }
-    return;
+    return !person || person.archivedAt ? `${field.displayName}: pick a live person.` : null;
   }
   const [signatory] = await tx
     .select({ archivedAt: entities.archivedAt })
@@ -306,9 +303,7 @@ async function lockedReference(tx: Transaction, field: AttachedCustomField, id: 
     .where(eq(entities.id, id))
     .limit(1)
     .for("update");
-  if (!signatory || signatory.archivedAt) {
-    throw httpError(400, `${field.displayName}: pick a live entity.`);
-  }
+  return !signatory || signatory.archivedAt ? `${field.displayName}: pick a live entity.` : null;
 }
 
 /**
@@ -336,20 +331,37 @@ export async function applyCustomFields(
 ) {
   const next: Record<string, CustomFieldValue> = { ...stored };
   const changed: Record<string, { from: unknown; to: unknown }> = {};
-  for (const [slug, raw] of Object.entries(incoming)) {
+  const prepared = Object.entries(incoming).map(([slug, raw]) => {
     const field = attached.find((candidate) => candidate.slug === slug);
     if (!field) {
       throw httpError(400, "That field is not on this contract's type.");
     }
     const value = coerceCustomFieldValue(field, raw);
-    // The string test is the coercion's own guarantee restated for the
-    // compiler rather than a second rule: `user` and `entity` reduce to
-    // a row id, so nothing but a string or a clear reaches this branch.
-    // Stating it beats asserting it — an unchecked cast here would be
-    // the one place a widened field type could pass a number to a lock.
-    if (typeof value === "string" && (field.fieldType === "user" || field.fieldType === "entity")) {
-      await lockedReference(tx, field, value);
+    return { slug, field, value };
+  });
+
+  // Validation above keeps caller-order refusal precedence. Locks are a
+  // separate pass in table-and-row order, so two writes naming the same rows can
+  // never take them in opposite orders (#425). Liveness refusals are
+  // held until every reference lock is acquired, then read below in the
+  // caller's order with the changed-entry map.
+  const referenceRefusals = new Map<string, string>();
+  const references = prepared.toSorted((left, right) => {
+    const leftKey = `${left.field.fieldType}\0${String(left.value)}\0${left.slug}`;
+    const rightKey = `${right.field.fieldType}\0${String(right.value)}\0${right.slug}`;
+    return leftKey.localeCompare(rightKey);
+  });
+  for (const { slug, field, value } of references) {
+    if (typeof value !== "string" || (field.fieldType !== "user" && field.fieldType !== "entity")) {
+      continue;
     }
+    const refusal = await lockedReference(tx, field, value);
+    if (refusal) referenceRefusals.set(slug, refusal);
+  }
+
+  for (const { slug, value } of prepared) {
+    const refusal = referenceRefusals.get(slug);
+    if (refusal) throw httpError(400, refusal);
     const before = stored[slug];
     if (value === null) {
       if (before === undefined) continue;

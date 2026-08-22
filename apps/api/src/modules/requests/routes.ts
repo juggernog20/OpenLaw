@@ -101,6 +101,7 @@ import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
 import type { FastifyRequest } from "fastify";
 import { z } from "zod";
 import { uuidv7 } from "uuidv7";
+import { REQUEST_DISPOSITIONED_PROBLEM_TYPE } from "@openlaw/shared";
 import {
   and,
   count,
@@ -137,7 +138,7 @@ import {
   selectAttachedFields,
   type AttachedCustomField,
 } from "../../lib/custom-fields.js";
-import { httpError, problemResponse } from "../../lib/problem.js";
+import { httpError, problemResponse, problemTypeResponse } from "../../lib/problem.js";
 import {
   attachmentOn,
   DownloadSchema,
@@ -533,6 +534,14 @@ export const requestsRoutes: FastifyPluginAsyncZod = async (app) => {
         body: AttachmentUploadForm,
         response: {
           201: z.object({ attachment: RequestAttachmentSchema }),
+          409: problemTypeResponse(
+            "The Request is dispositioned, so later paper belongs on its thread (#438).",
+            [REQUEST_DISPOSITIONED_PROBLEM_TYPE],
+            {
+              requestNumber: z.number().int().optional(),
+              outcome: z.enum(["converted", "resolved", "declined"]).optional(),
+            },
+          ),
           default: problemResponse,
         },
       },
@@ -563,6 +572,16 @@ export const requestsRoutes: FastifyPluginAsyncZod = async (app) => {
           const held = await reachedRequest(tx, request.user.id, request.params.number, {
             lock: true,
           });
+          if (held.status !== "new") {
+            throw httpError(
+              409,
+              `Request R-${held.number} is no longer open. Attach new paper to its thread instead.`,
+              {
+                type: REQUEST_DISPOSITIONED_PROBLEM_TYPE,
+                extensions: { requestNumber: held.number, outcome: held.status },
+              },
+            );
+          }
           const [existing] = await tx
             .select({ attachments: count() })
             .from(requestAttachments)
@@ -636,9 +655,9 @@ export const requestsRoutes: FastifyPluginAsyncZod = async (app) => {
     userId: string,
     number: number,
     options: { lock?: boolean } = {},
-  ): Promise<{ id: string }> {
+  ): Promise<{ id: string; number: number; status: (typeof REQUEST_STATUSES)[number] }> {
     const query = db
-      .select({ id: requests.id })
+      .select({ id: requests.id, number: requests.number, status: requests.status })
       .from(requests)
       .where(
         and(
