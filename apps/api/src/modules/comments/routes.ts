@@ -115,7 +115,10 @@ import {
   type SQL,
   type Transaction,
 } from "@openlaw/db";
-import { COMMENT_ATTACHMENT_ALREADY_FILED_PROBLEM_TYPE } from "@openlaw/shared";
+import {
+  COMMENT_ATTACHMENT_ALREADY_FILED_PROBLEM_TYPE,
+  MAX_COMMENT_ATTACHMENTS,
+} from "@openlaw/shared";
 import { requireRole, type AuthenticatedUser } from "../../auth/guards.js";
 import { recordActivity, RECORD_ACTIVITY_TIER } from "../../lib/activity.js";
 import { copyStoredBlob } from "../../lib/copy-stored-blob.js";
@@ -289,7 +292,7 @@ const CommentPostTransportSchema = z.any().meta({
     },
     file: {
       type: "array",
-      maxItems: 5,
+      maxItems: MAX_COMMENT_ATTACHMENTS,
       items: { type: "string", format: "binary" },
       description: "Up to five file parts, all named `file`.",
     },
@@ -297,9 +300,6 @@ const CommentPostTransportSchema = z.any().meta({
   required: ["entityType", "entityId", "body", "visibility"],
   additionalProperties: false,
 });
-
-/** One comment carries at most five files (CMT-011). */
-const MAX_COMMENT_ATTACHMENTS = 5;
 
 /** The reference the thread is keyed by — one record, named by type and
  * id rather than by a contract's CTR-003 number, because the panel that

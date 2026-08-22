@@ -264,6 +264,24 @@ describe("the prefill (INT-002, MTR-012)", () => {
     });
   });
 
+  it("does not submit until every archived carry has a live replacement", async () => {
+    const user = userEvent.setup();
+    const api = requestApi(
+      request({ customFields: { requesting_manager: "u7" } }),
+      () => undefined,
+      { users: [{ id: "u7", displayName: "Tom Iwu", archived: true }], entities: [] },
+    );
+    open(api);
+    const dialog = await openConvert(user);
+
+    await user.click(within(dialog).getByRole("button", { name: "Convert" }));
+
+    expect(await within(dialog).findByRole("alert")).toHaveTextContent(
+      "Pick a live value for Requesting manager.",
+    );
+    expect(api.conversions).toEqual([]);
+  });
+
   it("says nothing about carrying until a target type is picked", async () => {
     // With no target there is nothing to compare a collected value
     // against, so a list claiming every value stays behind would be

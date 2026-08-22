@@ -1,6 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-/** Copy an immutable stored blob while deriving the facts a Version row records. */
+/**
+ * Copy an immutable stored blob while deriving the facts a Version row
+ * records, as required by INT-002's M21/10 attachment-promotion addendum.
+ */
 
 import { createHash } from "node:crypto";
 import { Readable } from "node:stream";

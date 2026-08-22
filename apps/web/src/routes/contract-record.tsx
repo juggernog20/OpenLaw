@@ -243,6 +243,9 @@ import { Label } from "../components/ui/label";
 const RECORD_TABS = ["fields", "documents", "approvals", "key-dates", "tasks"] as const;
 type RecordTabName = "overview" | (typeof RECORD_TABS)[number];
 
+/** A corrupted paging seam must fail closed instead of holding the filing dialog forever. */
+const MAX_FILING_DOCUMENT_PAGES = 1000;
+
 export async function contractRecordLoader({ params }: LoaderFunctionArgs) {
   const user = await currentUser();
   if (!user) return redirect((await needsSetup()) ? "/auth/setup" : "/auth/login");
@@ -725,16 +728,21 @@ export function ContractRecordPage() {
    * folders. Walk every server page so an older chain stays pickable. */
   const loadFilingDocuments = useCallback(async () => {
     const rows: { id: string; title: string }[] = [];
+    const seenCursors = new Set<string>();
     let cursor: string | undefined;
-    do {
+    for (let page = 0; page < MAX_FILING_DOCUMENT_PAGES; page += 1) {
       const { data } = await api.GET("/api/v1/contracts/{number}/documents", {
         params: { path: { number: saved.number }, query: { cursor } },
       });
       if (!data) throw new Error("filing documents");
       rows.push(...data.documents.map(({ id, title }) => ({ id, title })));
-      cursor = data.nextCursor ?? undefined;
-    } while (cursor !== undefined);
-    return rows;
+      const nextCursor = data.nextCursor ?? undefined;
+      if (nextCursor === undefined) return rows;
+      if (seenCursors.has(nextCursor)) throw new Error("filing documents cursor");
+      seenCursors.add(nextCursor);
+      cursor = nextCursor;
+    }
+    throw new Error("filing documents page limit");
   }, [saved.number]);
 
   const filingContext = useMemo(
