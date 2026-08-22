@@ -122,6 +122,15 @@ export const SIGNING_NOT_CONFIGURED_PROBLEM_TYPE = "urn:openlaw:problem:signing-
 export const ENVELOPE_LIVE_PROBLEM_TYPE = "urn:openlaw:problem:envelope-live";
 
 /**
+ * A comment attachment has already been filed onto the record
+ * (CMT-011). The refusal carries the Document and Version ids as problem
+ * extensions so a stale dialog can point at the one filing that won
+ * instead of inviting a duplicate round (TECH-020).
+ */
+export const COMMENT_ATTACHMENT_ALREADY_FILED_PROBLEM_TYPE =
+  "urn:openlaw:problem:comment-attachment-already-filed";
+
+/**
  * The two refusals a term write branches on (CTR-006, TECH-020).
  *
  * CTR-006's term data cannot contradict its own type: an evergreen

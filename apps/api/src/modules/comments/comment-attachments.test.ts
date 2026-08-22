@@ -5,8 +5,13 @@
 import { readdir } from "node:fs/promises";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import {
+  activityLog,
   commentAttachments,
   comments,
+  documentVersionRenditions,
+  documents,
+  documentVersions,
+  documentVersionText,
   count,
   eq,
   requests,
@@ -207,6 +212,48 @@ function download(
       `/api/v1/comments/${commentId}/attachments/${attachmentId}` +
       `?entityType=${entityType}&entityId=${entityId}`,
     cookies,
+  });
+}
+
+function fileAttachment(
+  cookies: Record<string, string>,
+  entityType: "contract" | "request",
+  entityId: string,
+  commentId: string,
+  attachmentId: string,
+  payload:
+    | {
+        destination: "new_document";
+        kind:
+          | "draft_ours"
+          | "draft_theirs"
+          | "redline_theirs"
+          | "redline_ours"
+          | "executed"
+          | "amendment";
+        name: string;
+        isConfidential: boolean;
+      }
+    | {
+        destination: "new_version";
+        documentId: string;
+        kind:
+          | "draft_ours"
+          | "draft_theirs"
+          | "redline_theirs"
+          | "redline_ours"
+          | "executed"
+          | "amendment";
+        note?: string;
+      },
+) {
+  return harness.app.inject({
+    method: "POST",
+    url:
+      `/api/v1/comments/${commentId}/attachments/${attachmentId}/file` +
+      `?entityType=${entityType}&entityId=${entityId}`,
+    cookies,
+    payload,
   });
 }
 
@@ -537,5 +584,359 @@ describe("corrections", () => {
       .where(eq(commentAttachments.commentId, comment.id));
     expect(rows).toEqual([]);
     expect(await blobCount()).toBe(before - 1);
+  });
+});
+
+describe("filing comment attachments", () => {
+  it("files a new root Document, narrates the source, marks the thread, and survives redaction", async () => {
+    const contract = await contractWithContributor("Filed comment paper");
+    const posted = await postMultipart(
+      memberCookies,
+      "contract",
+      contract.id,
+      "This is the first draft.",
+      "legal_only",
+      [{ filename: "first-draft.pdf", content: "%PDF-paper" }],
+    );
+    expect(posted.statusCode, posted.body).toBe(201);
+    const source = posted.json().comment as {
+      id: string;
+      attachments: { id: string; filename: string }[];
+    };
+    const attachment = source.attachments[0]!;
+
+    // Legal Only is a dialog default, not an API mandate: the filer may
+    // deliberately clear it, and this write preserves that choice.
+    const filed = await fileAttachment(
+      memberCookies,
+      "contract",
+      contract.id,
+      source.id,
+      attachment.id,
+      {
+        destination: "new_document",
+        kind: "draft_theirs",
+        name: "Counterparty paper",
+        isConfidential: false,
+      },
+    );
+    expect(filed.statusCode, filed.body).toBe(201);
+    const marker = filed.json().comment.attachments[0].filed;
+    expect(marker).toMatchObject({
+      documentTitle: "Counterparty paper",
+      versionNumber: 1,
+    });
+
+    const [document] = await harness.db
+      .select()
+      .from(documents)
+      .where(eq(documents.id, marker.documentId));
+    const [version] = await harness.db
+      .select()
+      .from(documentVersions)
+      .where(eq(documentVersions.id, marker.versionId));
+    expect(document).toMatchObject({
+      title: "Counterparty paper",
+      contractId: contract.id,
+      isConfidential: false,
+      createdBy: memberId,
+      folderId: null,
+    });
+    expect(version).toMatchObject({
+      documentId: document!.id,
+      versionNumber: 1,
+      kind: "draft_theirs",
+      note: null,
+      originalFilename: "first-draft.pdf",
+      mimeType: "application/pdf",
+      createdBy: memberId,
+    });
+
+    const downloaded = await harness.app.inject({
+      method: "GET",
+      url: `/api/v1/documents/${document!.id}/versions/${version!.id}/download`,
+      cookies: memberCookies,
+    });
+    expect(downloaded.statusCode, downloaded.body).toBe(200);
+    expect(downloaded.rawPayload.toString()).toBe("%PDF-paper");
+
+    const [activity] = await harness.db
+      .select({ actorId: activityLog.actorId, payload: activityLog.payload })
+      .from(activityLog)
+      .where(eq(activityLog.action, "document.created"));
+    expect(activity).toMatchObject({ actorId: memberId });
+    expect(activity!.payload).toMatchObject({
+      documentId: document!.id,
+      versionId: version!.id,
+      sourceCommentId: source.id,
+    });
+
+    const textOwed = await harness.db
+      .select({ state: documentVersionText.state })
+      .from(documentVersionText)
+      .where(eq(documentVersionText.versionId, version!.id));
+    expect(textOwed).toHaveLength(1);
+    expect(["pending", "ready"]).toContain(textOwed[0]!.state);
+
+    const redacted = await harness.app.inject({
+      method: "POST",
+      url: `/api/v1/comments/${source.id}/redact`,
+      cookies: adminCookies,
+    });
+    expect(redacted.statusCode, redacted.body).toBe(200);
+    expect(
+      await harness.db.select().from(documents).where(eq(documents.id, document!.id)),
+    ).toHaveLength(1);
+    const stillDownloadable = await harness.app.inject({
+      method: "GET",
+      url: `/api/v1/documents/${document!.id}/versions/${version!.id}/download`,
+      cookies: memberCookies,
+    });
+    expect(stillDownloadable.rawPayload.toString()).toBe("%PDF-paper");
+  });
+
+  it("appends the next numbered Version with its kind and note through the derivation path", async () => {
+    const contract = await contractWithContributor("Filed revision");
+    const first = await postMultipart(
+      memberCookies,
+      "contract",
+      contract.id,
+      "Original.",
+      "working_team",
+      [{ filename: "original.pdf", content: "%PDF-first" }],
+    );
+    const firstComment = first.json().comment as {
+      id: string;
+      attachments: { id: string }[];
+    };
+    const created = await fileAttachment(
+      memberCookies,
+      "contract",
+      contract.id,
+      firstComment.id,
+      firstComment.attachments[0]!.id,
+      {
+        destination: "new_document",
+        kind: "draft_ours",
+        name: "Services agreement",
+        isConfidential: false,
+      },
+    );
+    const documentId = created.json().comment.attachments[0].filed.documentId as string;
+
+    const second = await postMultipart(
+      memberCookies,
+      "contract",
+      contract.id,
+      "Our counter.",
+      "working_team",
+      [{ filename: "counter.docx", content: "PK\u0003\u0004counter" }],
+    );
+    const secondComment = second.json().comment as {
+      id: string;
+      attachments: { id: string }[];
+    };
+    const appended = await fileAttachment(
+      memberCookies,
+      "contract",
+      contract.id,
+      secondComment.id,
+      secondComment.attachments[0]!.id,
+      {
+        destination: "new_version",
+        documentId,
+        kind: "redline_ours",
+        note: "Held the liability cap.",
+      },
+    );
+    expect(appended.statusCode, appended.body).toBe(201);
+    const marker = appended.json().comment.attachments[0].filed;
+    expect(marker).toMatchObject({
+      documentId,
+      documentTitle: "Services agreement",
+      versionNumber: 2,
+    });
+    const [version] = await harness.db
+      .select()
+      .from(documentVersions)
+      .where(eq(documentVersions.id, marker.versionId));
+    expect(version).toMatchObject({
+      documentId,
+      versionNumber: 2,
+      kind: "redline_ours",
+      note: "Held the liability cap.",
+      mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      createdBy: memberId,
+    });
+    expect(
+      await harness.db
+        .select({ state: documentVersionRenditions.state })
+        .from(documentVersionRenditions)
+        .where(eq(documentVersionRenditions.versionId, version!.id)),
+    ).toEqual([{ state: "pending" }]);
+
+    const [activity] = await harness.db
+      .select({ actorId: activityLog.actorId, payload: activityLog.payload })
+      .from(activityLog)
+      .where(eq(activityLog.action, "document.version_added"));
+    expect(activity).toMatchObject({ actorId: memberId });
+    expect(activity!.payload).toMatchObject({
+      documentId,
+      versionId: version!.id,
+      versionNumber: 2,
+      sourceCommentId: secondComment.id,
+    });
+  });
+
+  it("carries the filed marker on reads and refuses a second filing with its destination", async () => {
+    const contract = await contractWithContributor("One filing only");
+    const posted = await postMultipart(
+      memberCookies,
+      "contract",
+      contract.id,
+      "File once.",
+      "full_thread",
+      [{ filename: "once.pdf", content: "%PDF-once" }],
+    );
+    const comment = posted.json().comment as { id: string; attachments: { id: string }[] };
+    const first = await fileAttachment(
+      memberCookies,
+      "contract",
+      contract.id,
+      comment.id,
+      comment.attachments[0]!.id,
+      {
+        destination: "new_document",
+        kind: "draft_ours",
+        name: "The only chain",
+        isConfidential: false,
+      },
+    );
+    const destination = first.json().comment.attachments[0].filed;
+
+    const thread = await readThread(memberCookies, "contract", contract.id);
+    expect(thread.json().comments[0].attachments[0].filed).toEqual(destination);
+
+    const again = await fileAttachment(
+      memberCookies,
+      "contract",
+      contract.id,
+      comment.id,
+      comment.attachments[0]!.id,
+      {
+        destination: "new_version",
+        documentId: destination.documentId,
+        kind: "redline_ours",
+      },
+    );
+    expect(again.statusCode, again.body).toBe(409);
+    expect(again.json()).toMatchObject({
+      type: "urn:openlaw:problem:comment-attachment-already-filed",
+      filedDocumentId: destination.documentId,
+      filedVersionId: destination.versionId,
+    });
+    expect(again.json().detail).toContain("The only chain");
+    expect(again.json().detail).toContain("version 1");
+    expect(
+      await harness.db
+        .select()
+        .from(documentVersions)
+        .where(eq(documentVersions.documentId, destination.documentId)),
+    ).toHaveLength(1);
+
+    // DOC-010 may erase a whole chain. The composite filing FK clears
+    // both marker columns together, so the database's paired invariant
+    // cannot turn that lawful delete into a constraint failure.
+    const erased = await harness.app.inject({
+      method: "DELETE",
+      url: `/api/v1/documents/${destination.documentId}`,
+      cookies: adminCookies,
+      payload: { confirmTitle: "The only chain" },
+    });
+    expect(erased.statusCode, erased.body).toBe(200);
+    const afterErasure = await readThread(memberCookies, "contract", contract.id);
+    expect(afterErasure.json().comments[0].attachments[0]).not.toHaveProperty("filed");
+  });
+
+  it("refuses non-Member roles and a Member filing from a never-converted Request", async () => {
+    const contract = await contractWithContributor("Filing roles");
+    const onContract = await postMultipart(
+      memberCookies,
+      "contract",
+      contract.id,
+      "Members only.",
+      "full_thread",
+      [{ filename: "roles.pdf", content: "%PDF-roles" }],
+    );
+    const contractComment = onContract.json().comment as {
+      id: string;
+      attachments: { id: string }[];
+    };
+    const body = {
+      destination: "new_document" as const,
+      kind: "draft_ours" as const,
+      name: "Roles",
+      isConfidential: false,
+    };
+    const contributor = await fileAttachment(
+      contributorCookies,
+      "contract",
+      contract.id,
+      contractComment.id,
+      contractComment.attachments[0]!.id,
+      body,
+    );
+    expect(contributor.statusCode, contributor.body).toBe(403);
+
+    const archived = await harness.app.inject({
+      method: "POST",
+      url: `/api/v1/contracts/${contract.number}/archive`,
+      cookies: adminCookies,
+    });
+    expect(archived.statusCode, archived.body).toBe(200);
+    const frozen = await fileAttachment(
+      memberCookies,
+      "contract",
+      contract.id,
+      contractComment.id,
+      contractComment.attachments[0]!.id,
+      body,
+    );
+    expect(frozen.statusCode, frozen.body).toBe(409);
+    expect(frozen.json().detail).toContain("archived");
+
+    const requestId = await submittedRequest("A Request owns no Documents");
+    const onRequest = await postMultipart(
+      requesterCookies,
+      "request",
+      requestId,
+      "Portal paper.",
+      "full_thread",
+      [{ filename: "request.pdf", content: "%PDF-ask" }],
+    );
+    const requestComment = onRequest.json().comment as {
+      id: string;
+      attachments: { id: string }[];
+    };
+    const businessUser = await fileAttachment(
+      requesterCookies,
+      "request",
+      requestId,
+      requestComment.id,
+      requestComment.attachments[0]!.id,
+      body,
+    );
+    expect(businessUser.statusCode, businessUser.body).toBe(403);
+
+    const memberOnRequest = await fileAttachment(
+      memberCookies,
+      "request",
+      requestId,
+      requestComment.id,
+      requestComment.attachments[0]!.id,
+      body,
+    );
+    expect(memberOnRequest.statusCode, memberOnRequest.body).toBe(409);
+    expect(memberOnRequest.json().detail).toContain("does not own Documents");
   });
 });

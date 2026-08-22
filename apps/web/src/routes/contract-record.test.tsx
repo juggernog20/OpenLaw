@@ -2244,6 +2244,7 @@ describe("the contract record's comment applet (M9/2)", () => {
     /** What the badge starts at (M9/5). Zero is the common case, so
      * every suite that is not about the badge draws none. */
     initialUnread = 0,
+    filingFailure?: string,
   ) {
     let thread = initial;
     let unread = initialUnread;
@@ -2254,6 +2255,8 @@ describe("the contract record's comment applet (M9/2)", () => {
     const corrections: { method: string; id: string; body?: unknown }[] = [];
     /** Every record the panel said it had read (M9/5). */
     const marksRead: unknown[] = [];
+    /** CMT-011 filing bodies, in the order the attachment route saw them. */
+    const filings: unknown[] = [];
 
     /** Puts a corrected row back in the thread, in its own place. A
      * tombstone that moved would break the thread it is holding open. */
@@ -2275,6 +2278,39 @@ describe("the contract record's comment applet (M9/2)", () => {
         marksRead.push(call.body);
         unread = 0;
         return json(200, { unread });
+      }
+      const filing = /^\/api\/v1\/comments\/([^/]+)\/attachments\/([^/]+)\/file$/.exec(
+        call.url.pathname,
+      );
+      if (filing && call.method === "POST") {
+        const row = thread.find((comment) => comment.id === filing[1]);
+        const attachment = row?.attachments?.find((paper) => paper.id === filing[2]);
+        if (!row || !attachment) return problem(404, "No comment attachment exists with this id.");
+        if (attachment.filed) return problem(409, "This attachment was already filed.");
+        if (filingFailure) return problem(409, filingFailure);
+        const body = call.body as {
+          destination: "new_document" | "new_version";
+          name?: string;
+          documentId?: string;
+        };
+        filings.push(body);
+        const updated = {
+          ...row,
+          attachments: row.attachments?.map((paper) =>
+            paper.id === attachment.id
+              ? {
+                  ...paper,
+                  filed: {
+                    documentId: body.documentId ?? "doc-filed",
+                    documentTitle: body.name ?? "Orion MSA",
+                    versionId: "ver-filed",
+                    versionNumber: body.destination === "new_version" ? 2 : 1,
+                  },
+                }
+              : paper,
+          ),
+        };
+        return replace(updated);
       }
       // The three corrections, each addressed to one comment by id.
       const correction = /^\/api\/v1\/comments\/([^/]+)(\/redact)?$/.exec(call.url.pathname);
@@ -2354,7 +2390,7 @@ describe("the contract record's comment applet (M9/2)", () => {
       }
       return undefined;
     };
-    return { handler, posts, reads, corrections, marksRead };
+    return { handler, posts, reads, corrections, marksRead, filings };
   }
 
   /** The record page's own seam plus the thread's, in that order. */
@@ -2545,6 +2581,166 @@ describe("the contract record's comment applet (M9/2)", () => {
     expect(
       within(panel).queryByRole("list", { name: "Files attached to this comment" }),
     ).toBeNull();
+  });
+
+  it("files a Legal Only attachment as a new Document with Confidential proposed on", async () => {
+    const user = userEvent.setup();
+    const comments = commentsApi([
+      {
+        ...comment("c-file", "First paper.", "legal_only"),
+        attachments: [{ id: "a-file", filename: "first-draft.pdf" }],
+      },
+    ]);
+    stubApi({ signedIn: MEMBER, extra: pageApi(comments) });
+    renderAt("/contracts/42");
+    await openChat(user);
+
+    const panel = await screen.findByRole("complementary", { name: "Comments" });
+    await user.click(within(panel).getByRole("button", { name: "File" }));
+    const dialog = await screen.findByRole("dialog", { name: "File attachment" });
+    expect(within(dialog).getByLabelText("Document name")).toHaveValue("first-draft.pdf");
+    const confidential = within(dialog).getByRole("switch", {
+      name: "Confidential — restrict to the contract team",
+    });
+    expect(confidential).toBeChecked();
+    // The proposal is not a mandate: this filer clears it before filing.
+    await user.click(confidential);
+    await user.selectOptions(within(dialog).getByLabelText("Kind"), "draft_theirs");
+    await user.clear(within(dialog).getByLabelText("Document name"));
+    await user.type(within(dialog).getByLabelText("Document name"), "Counterparty paper");
+    await user.click(within(dialog).getByRole("button", { name: "File" }));
+
+    await waitFor(() => {
+      expect(comments.filings).toEqual([
+        {
+          destination: "new_document",
+          kind: "draft_theirs",
+          name: "Counterparty paper",
+          isConfidential: false,
+        },
+      ]);
+    });
+    expect(
+      await within(panel).findByRole("link", {
+        name: "Counterparty paper, version 1",
+      }),
+    ).toHaveAttribute("href", "/contracts/42/documents");
+    expect(within(panel).queryByRole("button", { name: "File" })).not.toBeInTheDocument();
+  });
+
+  it("files another attachment as a new Version and proposes Confidential off outside Legal Only", async () => {
+    const user = userEvent.setup();
+    const comments = commentsApi([
+      {
+        ...comment("c-version", "Our markup.", "working_team"),
+        attachments: [{ id: "a-version", filename: "our-counter.docx" }],
+      },
+    ]);
+    const existing = {
+      id: "doc-existing",
+      title: "Orion MSA",
+      description: null,
+      isPrimary: true,
+      versions: [],
+      archivedAt: null,
+      isConfidential: false,
+      folderId: null,
+      createdBy: { id: "u2", displayName: "Nadia Counsel", image: null, archived: false },
+      createdAt: "2026-08-11T09:00:00.000Z",
+      updatedAt: "2026-08-11T09:00:00.000Z",
+    };
+    const record = recordApi(contractRow());
+    stubApi({
+      signedIn: MEMBER,
+      extra: (call: StubCall) =>
+        comments.handler(call) ??
+        (call.url.pathname === "/api/v1/contracts/42/documents" && call.method === "GET"
+          ? json(200, { documents: [existing], nextCursor: null })
+          : record.handler(call)),
+    });
+    renderAt("/contracts/42");
+    await openChat(user);
+
+    const panel = await screen.findByRole("complementary", { name: "Comments" });
+    await user.click(within(panel).getByRole("button", { name: "File" }));
+    const dialog = await screen.findByRole("dialog", { name: "File attachment" });
+    expect(
+      within(dialog).getByRole("switch", {
+        name: "Confidential — restrict to the contract team",
+      }),
+    ).not.toBeChecked();
+    await user.selectOptions(within(dialog).getByLabelText("Destination"), "new_version");
+    expect(within(dialog).getByLabelText("Document")).toHaveValue("doc-existing");
+    await user.selectOptions(within(dialog).getByLabelText("Kind"), "redline_ours");
+    await user.type(within(dialog).getByLabelText("Note"), "Held the liability cap.");
+    await user.click(within(dialog).getByRole("button", { name: "File" }));
+
+    await waitFor(() => {
+      expect(comments.filings).toEqual([
+        {
+          destination: "new_version",
+          documentId: "doc-existing",
+          kind: "redline_ours",
+          note: "Held the liability cap.",
+        },
+      ]);
+    });
+    expect(await within(panel).findByRole("link", { name: "Orion MSA, version 2" })).toBeVisible();
+  });
+
+  it("keeps a filing refusal in the dialog", async () => {
+    const user = userEvent.setup();
+    const row = {
+      ...comment("c-refused", "Cannot file this.", "working_team"),
+      attachments: [{ id: "a-refused", filename: "refused.pdf" }],
+    };
+    const refused = commentsApi(
+      [row],
+      CANDIDATES,
+      0,
+      "This attachment was already filed to Orion MSA, version 2.",
+    );
+    stubApi({ signedIn: MEMBER, extra: pageApi(refused) });
+    renderAt("/contracts/42");
+    await openChat(user);
+    const memberPanel = await screen.findByRole("complementary", { name: "Comments" });
+    await user.click(within(memberPanel).getByRole("button", { name: "File" }));
+    const dialog = await screen.findByRole("dialog", { name: "File attachment" });
+    await user.click(within(dialog).getByRole("button", { name: "File" }));
+    expect(
+      await within(dialog).findByText("This attachment was already filed to Orion MSA, version 2."),
+    ).toBeVisible();
+  });
+
+  it("shows the filed marker but no File action to a Contributor", async () => {
+    const user = userEvent.setup();
+    const comments = commentsApi([
+      {
+        ...comment("c-filed", "The filed round.", "working_team"),
+        attachments: [
+          {
+            id: "a-filed",
+            filename: "round.pdf",
+            filed: {
+              documentId: "doc-round",
+              documentTitle: "Negotiation",
+              versionId: "ver-round",
+              versionNumber: 2,
+            },
+          },
+        ],
+      },
+    ]);
+    const record = recordApi(contractRow(), [person("u1", "creator"), person("u3", "contributor")]);
+    stubApi({
+      signedIn: CONTRIBUTOR,
+      extra: (call: StubCall) => comments.handler(call) ?? record.handler(call),
+    });
+    renderAt("/contracts/42");
+    await openChat(user);
+    const panel = await screen.findByRole("complementary", { name: "Comments" });
+    expect(within(panel).queryByRole("button", { name: "File" })).not.toBeInTheDocument();
+    expect(within(panel).getByRole("link", { name: "Negotiation, version 2" })).toBeVisible();
   });
 
   it("gives a Contributor two segments and no trace of a Legal Only comment", async () => {

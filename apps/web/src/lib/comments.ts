@@ -38,6 +38,28 @@ export type CommentTier = Comment["visibility"];
 /** The record a thread hangs off — the reference the panel is keyed by. */
 export type CommentEntityType = Comment["entityType"];
 
+/** The two filing destinations accepted by CMT-011's one attachment route. */
+export type CommentAttachmentFiling = NonNullable<
+  paths["/api/v1/comments/{commentId}/attachments/{attachmentId}/file"]["post"]["requestBody"]
+>["content"]["application/json"];
+
+/** Files one attachment and answers the server's marked thread row. */
+export function fileCommentAttachment(
+  entityType: CommentEntityType,
+  entityId: string,
+  commentId: string,
+  attachmentId: string,
+  body: CommentAttachmentFiling,
+) {
+  return api.POST("/api/v1/comments/{commentId}/attachments/{attachmentId}/file", {
+    params: {
+      path: { commentId, attachmentId },
+      query: { entityType, entityId },
+    },
+    body,
+  });
+}
+
 /** The fields both JSON and multipart comment posts carry. */
 export interface CommentPost {
   entityType: CommentEntityType;

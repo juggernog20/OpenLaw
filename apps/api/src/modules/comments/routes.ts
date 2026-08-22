@@ -96,11 +96,15 @@ import {
   commentMentions,
   commentRevisions,
   comments,
+  contracts,
   COMMENT_VISIBILITIES,
   count,
   desc,
+  documents,
+  documentVersions,
   eq,
   gt,
+  HAND_SET_DOCUMENT_VERSION_KINDS,
   inArray,
   isNull,
   ne,
@@ -111,14 +115,24 @@ import {
   type SQL,
   type Transaction,
 } from "@openlaw/db";
+import { COMMENT_ATTACHMENT_ALREADY_FILED_PROBLEM_TYPE } from "@openlaw/shared";
 import { requireRole, type AuthenticatedUser } from "../../auth/guards.js";
-import { recordActivity } from "../../lib/activity.js";
-import { httpError, problemResponse } from "../../lib/problem.js";
+import { recordActivity, RECORD_ACTIVITY_TIER } from "../../lib/activity.js";
+import { copyStoredBlob } from "../../lib/copy-stored-blob.js";
+import { documentAudienceScope } from "../../lib/contract-access.js";
+import {
+  insertDocumentVersion,
+  nextVersionNumber,
+  requestDerivations,
+  versionStorageKey,
+} from "../../lib/document-versions.js";
+import { httpError, problemResponse, problemTypeResponse } from "../../lib/problem.js";
 import {
   asUploadRefusal,
   attachmentDisposition,
   refuseOversize,
   uploadFilename,
+  withStoredBlob,
   withStoredBlobs,
 } from "../../lib/uploads.js";
 import {
@@ -149,6 +163,9 @@ const requireCommentReader = requireRole(...COMMENT_READER_ROLES);
 /** The hard redact is an Administrator's alone (CMT-005). The role gate
  * refuses everyone else before the route reads a row. */
 const requireAdministrator = requireRole("administrator");
+
+/** Filing changes the record's paper, so it belongs to Member+ alone. */
+const requireMember = requireRole("administrator", "legal_team_member");
 
 /**
  * What a comment can hang off, as the API accepts it — the entity types
@@ -191,6 +208,15 @@ const MentionSchema = z.object({
 const CommentAttachmentSchema = z.object({
   id: z.string(),
   filename: z.string(),
+  /** The one destination this file became, or NULL until it is filed. */
+  filed: z
+    .object({
+      documentId: z.string(),
+      documentTitle: z.string(),
+      versionId: z.string(),
+      versionNumber: z.int().positive(),
+    })
+    .optional(),
 });
 
 const CommentSchema = z.object({
@@ -282,6 +308,24 @@ const EntityRefQuery = z.object({
   entityType: CommentEntityTypeSchema,
   entityId: RecordIdSchema,
 });
+
+const HandSetKindSchema = z.enum(HAND_SET_DOCUMENT_VERSION_KINDS);
+
+/** One act with two destinations (CMT-011), discriminated before any write. */
+const FilingBody = z.discriminatedUnion("destination", [
+  z.strictObject({
+    destination: z.literal("new_document"),
+    kind: HandSetKindSchema,
+    name: z.string().trim().min(1).max(200),
+    isConfidential: z.boolean(),
+  }),
+  z.strictObject({
+    destination: z.literal("new_version"),
+    documentId: RecordIdSchema,
+    kind: HandSetKindSchema,
+    note: z.string().trim().max(2000).optional(),
+  }),
+]);
 
 /**
  * How many comments one read answers (CTR-024).
@@ -404,13 +448,35 @@ export const commentsRoutes: FastifyPluginAsyncZod = async (app) => {
         commentId: commentAttachments.commentId,
         id: commentAttachments.id,
         filename: commentAttachments.filename,
+        filedDocumentId: commentAttachments.filedDocumentId,
+        filedDocumentTitle: documents.title,
+        filedVersionId: commentAttachments.filedVersionId,
+        filedVersionNumber: documentVersions.versionNumber,
       })
       .from(commentAttachments)
+      .leftJoin(documents, eq(commentAttachments.filedDocumentId, documents.id))
+      .leftJoin(documentVersions, eq(commentAttachments.filedVersionId, documentVersions.id))
       .where(inArray(commentAttachments.commentId, [...commentIds]))
       .orderBy(asc(commentAttachments.createdAt), asc(commentAttachments.id));
     for (const row of rows) {
       const list = byComment.get(row.commentId);
-      const attachment = { id: row.id, filename: row.filename };
+      const filed =
+        row.filedDocumentId !== null &&
+        row.filedDocumentTitle !== null &&
+        row.filedVersionId !== null &&
+        row.filedVersionNumber !== null
+          ? {
+              documentId: row.filedDocumentId,
+              documentTitle: row.filedDocumentTitle,
+              versionId: row.filedVersionId,
+              versionNumber: row.filedVersionNumber,
+            }
+          : null;
+      const attachment = {
+        id: row.id,
+        filename: row.filename,
+        ...(filed ? { filed } : {}),
+      };
       if (list) list.push(attachment);
       else byComment.set(row.commentId, [attachment]);
     }
@@ -1020,6 +1086,346 @@ export const commentsRoutes: FastifyPluginAsyncZod = async (app) => {
     ]);
     return toComment(row!, mentions.get(commentId), attachments.get(commentId));
   }
+
+  const NO_ATTACHMENT = "No comment attachment exists with this id.";
+
+  /** The attachment and room facts needed before its bytes are copied. */
+  async function filableAttachment(
+    db: Executor,
+    user: AuthenticatedUser,
+    entity: z.infer<typeof EntityRefQuery>,
+    ids: { commentId: string; attachmentId: string },
+  ) {
+    const [row] = await db
+      .select({
+        id: commentAttachments.id,
+        fileRef: commentAttachments.fileRef,
+        filename: commentAttachments.filename,
+        filedDocumentId: commentAttachments.filedDocumentId,
+        filedVersionId: commentAttachments.filedVersionId,
+        commentEntityType: comments.entityType,
+        commentEntityId: comments.entityId,
+        visibility: comments.visibility,
+        deletedAt: comments.deletedAt,
+        redactedAt: comments.redactedAt,
+      })
+      .from(commentAttachments)
+      .innerJoin(comments, eq(commentAttachments.commentId, comments.id))
+      .where(
+        and(
+          eq(commentAttachments.id, ids.attachmentId),
+          eq(commentAttachments.commentId, ids.commentId),
+        ),
+      )
+      .limit(1);
+    if (!row || row.deletedAt !== null || row.redactedAt !== null) {
+      throw httpError(404, NO_ATTACHMENT);
+    }
+    const audience = await reachedThread(db, user, entity);
+    if (
+      audience.entityType !== row.commentEntityType ||
+      audience.entityId !== row.commentEntityId ||
+      !audience.tiers.includes(row.visibility)
+    ) {
+      throw httpError(404, NO_ATTACHMENT);
+    }
+    return row;
+  }
+
+  /** A stale filing dialog is told the exact destination that won. */
+  async function refuseFiled(
+    db: Executor,
+    attachment: { filedDocumentId: string | null; filedVersionId: string | null },
+  ): Promise<never> {
+    if (attachment.filedDocumentId === null || attachment.filedVersionId === null) {
+      throw new Error("A filed comment attachment must name both its Document and Version.");
+    }
+    const [destination] = await db
+      .select({ title: documents.title, versionNumber: documentVersions.versionNumber })
+      .from(documents)
+      .innerJoin(
+        documentVersions,
+        and(
+          eq(documentVersions.id, attachment.filedVersionId),
+          eq(documentVersions.documentId, documents.id),
+        ),
+      )
+      .where(eq(documents.id, attachment.filedDocumentId))
+      .limit(1);
+    throw httpError(
+      409,
+      destination
+        ? `This attachment was already filed to ${destination.title}, version ${destination.versionNumber}.`
+        : "This attachment was already filed onto the record.",
+      {
+        type: COMMENT_ATTACHMENT_ALREADY_FILED_PROBLEM_TYPE,
+        extensions: {
+          filedDocumentId: attachment.filedDocumentId,
+          filedVersionId: attachment.filedVersionId,
+        },
+      },
+    );
+  }
+
+  app.post(
+    "/comments/:commentId/attachments/:attachmentId/file",
+    {
+      preHandler: requireMember,
+      schema: {
+        operationId: "fileCommentAttachment",
+        summary:
+          "File one live comment attachment onto the record (CMT-011), either as a new root " +
+          "Document or as the next Version on a named chain. The comment's audience is the " +
+          "reach gate; a never-converted Request owns no Documents and is refused. The bytes " +
+          "are copied to a key minted from the destination ids, their media type is read from " +
+          "the blob, and the shared Version insert records every derivation an upload owes. " +
+          "The paper and the attachment marker commit together under the Contract row lock, " +
+          "so the same attachment cannot grow two rounds",
+        tags: ["comments"],
+        params: CommentParams.extend({ attachmentId: RecordIdSchema }),
+        querystring: EntityRefQuery,
+        body: FilingBody,
+        response: {
+          201: CommentEnvelope,
+          409: problemTypeResponse(
+            "The attachment was already filed, the thread does not own Documents, or the record is frozen.",
+            [COMMENT_ATTACHMENT_ALREADY_FILED_PROBLEM_TYPE],
+            { filedDocumentId: z.string().optional(), filedVersionId: z.string().optional() },
+          ),
+          default: problemResponse,
+        },
+      },
+    },
+    async (request, reply) => {
+      const source = await filableAttachment(app.db, request.user, request.query, request.params);
+      if (source.filedDocumentId !== null || source.filedVersionId !== null) {
+        await refuseFiled(app.db, source);
+      }
+      if (source.commentEntityType !== "contract") {
+        throw httpError(409, "This thread's record does not own Documents.");
+      }
+
+      const documentId =
+        request.body.destination === "new_document" ? uuidv7() : request.body.documentId;
+      const versionId = uuidv7();
+      const copied = await copyStoredBlob(app.storage, source.fileRef, {
+        key: versionStorageKey(documentId, versionId),
+        filename: source.filename,
+      });
+
+      const result = await withStoredBlob(app.storage, request.log, copied.fileRef, () =>
+        app.notifier.notifying(async (tx) => {
+          // Resolve the address first, then hold the comment. Once held,
+          // redaction and filing serialize: either the file lands and
+          // redaction later removes only its source, or the source is
+          // already gone and nothing lands.
+          const addressed = await reachedThread(tx, request.user, request.query);
+          // Resolve a Request address before taking the comment lock:
+          // conversion takes the Request row and then moves comments,
+          // so filing has to take locks in that same order.
+          const held = await heldComment(tx, request.user, request.params.commentId);
+          if (
+            held.deletedAt !== null ||
+            held.redactedAt !== null ||
+            addressed.entityType !== held.entityType ||
+            addressed.entityId !== held.entityId
+          ) {
+            throw httpError(404, NO_ATTACHMENT);
+          }
+
+          const [attachment] = await tx
+            .select({
+              id: commentAttachments.id,
+              filename: commentAttachments.filename,
+              filedDocumentId: commentAttachments.filedDocumentId,
+              filedVersionId: commentAttachments.filedVersionId,
+            })
+            .from(commentAttachments)
+            .where(
+              and(
+                eq(commentAttachments.id, request.params.attachmentId),
+                eq(commentAttachments.commentId, held.id),
+              ),
+            )
+            .limit(1)
+            .for("update");
+          if (!attachment) throw httpError(404, NO_ATTACHMENT);
+          if (attachment.filedDocumentId !== null || attachment.filedVersionId !== null) {
+            await refuseFiled(tx, attachment);
+          }
+          if (held.entityType !== "contract") {
+            throw httpError(409, "This thread's record does not own Documents.");
+          }
+
+          // Audience was just re-asked through the comment. Now hold the
+          // owning row: version numbering, primary designation, and both
+          // destination forms serialize behind this lock.
+          const [contract] = await tx
+            .select({
+              id: contracts.id,
+              primaryDocumentId: contracts.primaryDocumentId,
+              archivedAt: contracts.archivedAt,
+            })
+            .from(contracts)
+            .where(eq(contracts.id, held.entityId))
+            .limit(1)
+            .for("update");
+          if (!contract) throw httpError(404, NO_ATTACHMENT);
+          if (contract.archivedAt !== null) {
+            throw httpError(409, "This contract is archived. Restore it before filing paper.");
+          }
+
+          let title: string;
+          let versionNumber: number;
+          let isConfidential: boolean;
+          if (request.body.destination === "new_document") {
+            title = request.body.name;
+            versionNumber = 1;
+            isConfidential = request.body.isConfidential;
+            await tx.insert(documents).values({
+              id: documentId,
+              title,
+              contractId: contract.id,
+              isConfidential,
+              folderId: null,
+              createdBy: request.user.id,
+            });
+          } else {
+            const [target] = await tx
+              .select({
+                title: documents.title,
+                isConfidential: documents.isConfidential,
+                archivedAt: documents.archivedAt,
+              })
+              .from(documents)
+              .where(
+                and(
+                  eq(documents.id, documentId),
+                  eq(documents.contractId, contract.id),
+                  documentAudienceScope(tx, request.user),
+                ),
+              )
+              .limit(1);
+            if (!target) throw httpError(404, "No document exists with this id.");
+            if (target.archivedAt !== null) {
+              throw httpError(409, "This document is archived. Restore it before changing it.");
+            }
+            title = target.title;
+            isConfidential = target.isConfidential;
+            versionNumber = await nextVersionNumber(tx, documentId);
+          }
+
+          await insertDocumentVersion(tx, {
+            documentId,
+            versionId,
+            versionNumber,
+            fileRef: copied.fileRef,
+            kind: request.body.kind,
+            note:
+              request.body.destination === "new_version" && request.body.note
+                ? request.body.note
+                : null,
+            originalFilename: attachment.filename,
+            mimeType: copied.mimeType,
+            byteSize: copied.byteSize,
+            checksumSha256: copied.checksumSha256,
+            createdBy: request.user.id,
+          });
+
+          if (request.body.destination === "new_document") {
+            await recordActivity(tx, {
+              entityType: "contract",
+              entityId: contract.id,
+              actorId: request.user.id,
+              action: "document.created",
+              visibility: RECORD_ACTIVITY_TIER,
+              payload: {
+                documentId,
+                versionId,
+                title,
+                folderName: null,
+                sourceCommentId: held.id,
+              },
+            });
+            if (contract.primaryDocumentId === null) {
+              await tx
+                .update(contracts)
+                .set({ primaryDocumentId: documentId })
+                .where(eq(contracts.id, contract.id));
+              await recordActivity(tx, {
+                entityType: "contract",
+                entityId: contract.id,
+                actorId: request.user.id,
+                action: "document.primary_set",
+                visibility: RECORD_ACTIVITY_TIER,
+                payload: {
+                  documentId,
+                  title,
+                  fromDocumentId: null,
+                  from: null,
+                  to: title,
+                },
+              });
+            }
+            await app.notifier.documentAdded(tx, {
+              contractId: contract.id,
+              actorId: request.user.id,
+              actorName: request.user.displayName,
+              documentId,
+              documentTitle: title,
+              isConfidential,
+            });
+          } else {
+            await tx
+              .update(documents)
+              .set({ updatedAt: new Date() })
+              .where(eq(documents.id, documentId));
+            await recordActivity(tx, {
+              entityType: "contract",
+              entityId: contract.id,
+              actorId: request.user.id,
+              action: "document.version_added",
+              visibility: RECORD_ACTIVITY_TIER,
+              payload: {
+                documentId,
+                versionId,
+                title,
+                versionNumber,
+                kind: request.body.kind,
+                sourceCommentId: held.id,
+              },
+            });
+            await app.notifier.documentVersionAdded(tx, {
+              contractId: contract.id,
+              actorId: request.user.id,
+              actorName: request.user.displayName,
+              documentId,
+              documentTitle: title,
+              isConfidential,
+              versionId,
+              versionNumber,
+            });
+          }
+
+          await tx
+            .update(commentAttachments)
+            .set({ filedDocumentId: documentId, filedVersionId: versionId })
+            .where(eq(commentAttachments.id, attachment.id));
+          return {
+            comment: await readBack(tx, held.id),
+            derivation: {
+              versionId,
+              mimeType: copied.mimeType,
+              originalFilename: attachment.filename,
+            },
+          };
+        }),
+      );
+
+      await requestDerivations(app.jobs, request.log, result.derivation);
+      return reply.status(201).send({ comment: result.comment });
+    },
+  );
 
   app.get(
     "/comments/:commentId/attachments/:attachmentId",
