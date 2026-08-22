@@ -353,6 +353,7 @@ function Composer({
 
   return (
     <form
+      id="portal-request-composer"
       className="flex flex-col gap-2"
       onSubmit={(event) => {
         event.preventDefault();

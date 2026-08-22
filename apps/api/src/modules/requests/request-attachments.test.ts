@@ -20,6 +20,7 @@ import { readdir } from "node:fs/promises";
 import { join } from "node:path";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { count, documents, eq, requestAttachments, requests, users } from "@openlaw/db";
+import { REQUEST_DISPOSITIONED_PROBLEM_TYPE } from "@openlaw/shared";
 import { buildApp } from "../../app.js";
 import { provisionUser } from "../../auth/instance.js";
 import { testDeps } from "../../testing/deps.js";
@@ -54,8 +55,10 @@ let adminCookies: Record<string, string>;
 let requesterCookies: Record<string, string>;
 let otherCookies: Record<string, string>;
 let requesterId: string;
-/** The INT-002 seed this suite submits against. */
-let contractReviewId: string;
+/** The INT-002 seed this suite submits against. It names the NDA
+ * contract type, so the converted-status case can run the ordinary
+ * conversion path rather than manufacturing a linked row. */
+let requestTypeId: string;
 
 beforeAll(async () => {
   harness = await startHarness();
@@ -86,8 +89,8 @@ beforeAll(async () => {
     cookies: adminCookies,
   });
   expect(types.statusCode, types.body).toBe(200);
-  contractReviewId = (types.json().requestTypes as { slug: string; id: string }[]).find(
-    (row) => row.slug === "contract_review",
+  requestTypeId = (types.json().requestTypes as { slug: string; id: string }[]).find(
+    (row) => row.slug === "nda_request",
   )!.id;
 });
 
@@ -117,7 +120,7 @@ async function submitted(cookies = requesterCookies): Promise<number> {
     url: "/api/v1/requests",
     cookies,
     payload: {
-      requestTypeId: contractReviewId,
+      requestTypeId,
       summary: "MSA renewal with Orion Cloud",
       description: "They sent a redline on the liability cap.",
       urgency: "high",
@@ -310,6 +313,52 @@ describe("attaching paper to a Request", () => {
     expect(refused.json().detail).toContain("20");
     // The bytes reached the driver before the row was refused, so the
     // blob is taken away rather than left as an orphan (DOC-012).
+    expect(await storedBlobCount()).toBe(before);
+  });
+
+  it.each(["resolved", "declined"] as const)(
+    "refuses paper once the Request is %s and names its thread",
+    async (status) => {
+      const number = await submitted();
+      await harness.db.update(requests).set({ status }).where(eq(requests.number, number));
+      const before = await storedBlobCount();
+
+      const refused = await attach(number);
+
+      expect(refused.statusCode, refused.body).toBe(409);
+      expect(refused.json()).toMatchObject({
+        type: REQUEST_DISPOSITIONED_PROBLEM_TYPE,
+        outcome: status,
+        request: { number },
+        convertedContract: null,
+      });
+      expect(await listed(number)).toEqual([]);
+      expect(await storedBlobCount()).toBe(before);
+    },
+  );
+
+  it("refuses paper once the Request is converted and names both the thread and record", async () => {
+    const number = await submitted();
+    const converted = await harness.app.inject({
+      method: "POST",
+      url: `/api/v1/requests/${number}/convert`,
+      cookies: adminCookies,
+      payload: { title: "MSA renewal with Orion Cloud" },
+    });
+    expect(converted.statusCode, converted.body).toBe(200);
+    const convertedContract = converted.json().request.convertedContract as { number: number };
+    const before = await storedBlobCount();
+
+    const refused = await attach(number);
+
+    expect(refused.statusCode, refused.body).toBe(409);
+    expect(refused.json()).toMatchObject({
+      type: REQUEST_DISPOSITIONED_PROBLEM_TYPE,
+      outcome: "converted",
+      request: { number },
+      convertedContract,
+    });
+    expect(await listed(number)).toEqual([]);
     expect(await storedBlobCount()).toBe(before);
   });
 });

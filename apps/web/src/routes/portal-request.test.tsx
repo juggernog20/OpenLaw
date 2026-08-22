@@ -217,6 +217,29 @@ describe("the request envelope", () => {
     expect(await screen.findByText(new RegExp(copy))).toBeInTheDocument();
   });
 
+  it.each(["converted", "resolved", "declined"] as const)(
+    "sends %s paper to the conversation instead of a Request upload",
+    async (status) => {
+      stubApi({ signedIn: REQUESTER, extra: detailRead(detail({ status })) });
+      renderAt("/portal/requests/45");
+
+      const pointer = await screen.findByRole("link", { name: "Attach new files to a reply" });
+      expect(pointer).toHaveAttribute("href", "#portal-request-composer");
+      expect(screen.queryByRole("button", { name: "Choose files" })).not.toBeInTheDocument();
+      expect(screen.getByRole("button", { name: "Attach files" })).toBeInTheDocument();
+    },
+  );
+
+  it("does not point an undecided Request away from the form upload path", async () => {
+    stubApi({ signedIn: REQUESTER, extra: detailRead(detail({ status: "new" })) });
+    renderAt("/portal/requests/45");
+
+    await screen.findByRole("heading", { level: 1 });
+    expect(
+      screen.queryByRole("link", { name: "Attach new files to a reply" }),
+    ).not.toBeInTheDocument();
+  });
+
   it("keeps a converted Request open, and names no record it cannot open", async () => {
     // INT-001, DD-018: conversion never takes the requester's window
     // away — and a Business User cannot open a Contract or a Matter, so

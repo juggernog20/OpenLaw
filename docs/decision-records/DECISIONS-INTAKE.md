@@ -326,6 +326,12 @@ The M21/12 addendum above named the post-conversion attachment and guessed at it
 
 **Nothing already on a Request moves.** The cap, the requester's own download, and the promotion at conversion are all untouched, and paper submitted with the form still travels with the ask (the M20/6 addendum above), because there is no thread before there is a Request.
 
+### Build note (2026-08-23, M21A/5, [#448](https://github.com/juggernog20/OpenLaw/issues/448)) — the wall names its door
+
+The upload reuses `urn:openlaw:problem:request-dispositioned`, the existing shared type for a write that lost the `new` Request. Its 409 carries three extension members: `request: { number }`, the stable portal address of the thread; `outcome`, the recorded `converted | resolved | declined` arm; and `convertedContract`, the C-### a conversion made or `null` on the other two arms. The status guard runs inside the existing transaction after the Requester-scoped row has been locked and before the twenty-file count, so every disposition answers the thread refusal and two uploads still serialize at the cap. Because the bytes precede that transaction (DOC-012), the existing stored-blob wrapper removes the refused upload.
+
+DES-065 records the two portal readings. A dispositioned detail draws no Request attachment control and points at the comment composer it already has. If one of the submission form's sequential uploads races a disposition, the confirmation reads `request.number` from the typed refusal and links that file to the same composer. The form remains the only place Request attachments enter; the detail's paper control is always the comment control CMT-011 added.
+
 ## INT-003 — Requester updates: email notifications only; no status-poke button
 
 - **Status** — Accepted

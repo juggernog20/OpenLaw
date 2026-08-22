@@ -53,9 +53,12 @@
  * Attachments are the fourth basic, and they are optional: a submission
  * with none is complete. `POST /requests/{number}/attachments` takes one
  * file per call through the storage seam documents already upload
- * through, and writes a `request_attachments` row. **Nothing enters
- * `documents`** — a Request is not a document owner (DOC-008), and
- * promotion into the record a Request becomes is conversion's job (M21).
+ * through, and writes a `request_attachments` row while the Request is
+ * `new`. After a disposition it refuses with the stable Request thread
+ * named, because paper now arrives on a comment (CMT-011). **Nothing
+ * enters `documents`** — a Request is not a document owner (DOC-008),
+ * and promotion into the record a Request becomes is conversion's job
+ * (M21).
  *
  * **The upload is a write on the Request, so it sits at `/requests` like
  * the submission it belongs to.** The reads split by audience — the
@@ -104,6 +107,7 @@ import { uuidv7 } from "uuidv7";
 import {
   and,
   count,
+  contracts,
   desc,
   entities,
   eq,
@@ -119,6 +123,7 @@ import {
   type Executor,
   type Transaction,
 } from "@openlaw/db";
+import { REQUEST_DISPOSITIONED_PROBLEM_TYPE, REQUEST_OUTCOMES } from "@openlaw/shared";
 import { requireAuth } from "../../auth/guards.js";
 import {
   asUploadRefusal,
@@ -137,7 +142,7 @@ import {
   selectAttachedFields,
   type AttachedCustomField,
 } from "../../lib/custom-fields.js";
-import { httpError, problemResponse } from "../../lib/problem.js";
+import { httpError, problemResponse, problemTypeResponse } from "../../lib/problem.js";
 import {
   attachmentOn,
   DownloadSchema,
@@ -525,14 +530,28 @@ export const requestsRoutes: FastifyPluginAsyncZod = async (app) => {
           "`documents`, because a Request is not a document owner " +
           "(DOC-008) and promotion is conversion's (M21). One file per " +
           "call, sent as multipart/form-data under `file`. A Request " +
-          "the caller did not submit answers 404, and a file past the " +
-          `${MAX_REQUEST_ATTACHMENTS}-attachment bound is refused`,
+          "the caller did not submit answers 404; a dispositioned " +
+          "Request refuses 409 and names its thread; and a file past " +
+          `the ${MAX_REQUEST_ATTACHMENTS}-attachment bound is refused`,
         tags: ["requests"],
         consumes: ["multipart/form-data"],
         params: NumberParams,
         body: AttachmentUploadForm,
         response: {
           201: z.object({ attachment: RequestAttachmentSchema }),
+          409: problemTypeResponse(
+            "A Request that is no longer new takes paper on its thread, not as another " +
+              "Request attachment (INT-002, CMT-011). The named refusal carries " +
+              "`request`, the R-### whose portal detail owns that thread; `outcome`, " +
+              "the disposition already recorded; and `convertedContract`, the record " +
+              "a conversion made when there is one.",
+            [REQUEST_DISPOSITIONED_PROBLEM_TYPE],
+            {
+              request: z.object({ number: z.number().int() }).optional(),
+              outcome: z.enum(REQUEST_OUTCOMES).optional(),
+              convertedContract: z.object({ number: z.number().int() }).nullable().optional(),
+            },
+          ),
           default: problemResponse,
         },
       },
@@ -557,12 +576,35 @@ export const requestsRoutes: FastifyPluginAsyncZod = async (app) => {
       const created = await withStoredBlob(app.storage, request.log, file.fileRef, () =>
         app.db.transaction(async (tx) => {
           // The Request is held for the write, and reach is asked again
-          // on the same snapshot. Locked for the count's sake as much
-          // as reach's: without it two uploads racing on the last free
-          // slot both read the same count and both insert.
+          // on the same snapshot. Status, reach, and the count meet
+          // under this one lock: a disposition wins before the cap is
+          // read, and two uploads racing on the last free slot cannot
+          // both read the same count and insert.
           const held = await reachedRequest(tx, request.user.id, request.params.number, {
             lock: true,
           });
+          if (held.status !== "new") {
+            const [convertedContract] =
+              held.convertedContractId === null
+                ? []
+                : await tx
+                    .select({ number: contracts.number })
+                    .from(contracts)
+                    .where(eq(contracts.id, held.convertedContractId))
+                    .limit(1);
+            throw httpError(
+              409,
+              "This Request has already been dispositioned. Attach new paper to a reply in its thread.",
+              {
+                type: REQUEST_DISPOSITIONED_PROBLEM_TYPE,
+                extensions: {
+                  request: { number: held.number },
+                  outcome: held.status,
+                  convertedContract: convertedContract ?? null,
+                },
+              },
+            );
+          }
           const [existing] = await tx
             .select({ attachments: count() })
             .from(requestAttachments)
@@ -627,18 +669,29 @@ export const requestsRoutes: FastifyPluginAsyncZod = async (app) => {
    *
    * The scoping is part of the lookup, as it is on the detail read, so
    * there is no branch where the row was read and then refused. `lock`
-   * holds the row for a write: an upload counts what is already attached
-   * and then inserts, and two uploads racing on the last free slot must
-   * not both read the same count.
+   * holds the row for a write: an upload checks the status, counts what
+   * is already attached, and then inserts. One lock keeps a disposition
+   * from crossing the write and keeps two uploads racing on the last
+   * free slot from both reading the same count.
    */
   async function reachedRequest(
     db: Executor,
     userId: string,
     number: number,
     options: { lock?: boolean } = {},
-  ): Promise<{ id: string }> {
+  ): Promise<{
+    id: string;
+    number: number;
+    status: (typeof REQUEST_STATUSES)[number];
+    convertedContractId: string | null;
+  }> {
     const query = db
-      .select({ id: requests.id })
+      .select({
+        id: requests.id,
+        number: requests.number,
+        status: requests.status,
+        convertedContractId: requests.convertedContractId,
+      })
       .from(requests)
       .where(
         and(
