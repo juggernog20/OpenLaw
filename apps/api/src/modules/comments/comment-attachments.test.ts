@@ -939,4 +939,81 @@ describe("filing comment attachments", () => {
     expect(memberOnRequest.statusCode, memberOnRequest.body).toBe(409);
     expect(memberOnRequest.json().detail).toContain("does not own Documents");
   });
+
+  it("keeps Confidential filing and its marker inside the Document's audience", async () => {
+    const contract = await contractWithContributor("Confidential filing audience");
+    const posted = await postMultipart(
+      memberCookies,
+      "contract",
+      contract.id,
+      "Legal eyes only.",
+      "legal_only",
+      [{ filename: "secret.pdf", content: "%PDF-secret" }],
+    );
+    const comment = posted.json().comment as { id: string; attachments: { id: string }[] };
+    const attachmentId = comment.attachments[0]!.id;
+    const body = {
+      destination: "new_document" as const,
+      kind: "draft_ours" as const,
+      name: "Confidential paper",
+      isConfidential: true,
+    };
+
+    // The contract names nobody yet, so a Member is outside DD-014's
+    // audience for a Confidential Document and cannot file one.
+    const unnamed = await fileAttachment(
+      memberCookies,
+      "contract",
+      contract.id,
+      comment.id,
+      attachmentId,
+      body,
+    );
+    expect(unnamed.statusCode, unnamed.body).toBe(403);
+    expect(unnamed.json().detail).toContain("Confidential");
+
+    const filed = await fileAttachment(
+      adminCookies,
+      "contract",
+      contract.id,
+      comment.id,
+      attachmentId,
+      body,
+    );
+    expect(filed.statusCode, filed.body).toBe(201);
+    const marker = filed.json().comment.attachments[0].filed as { documentId: string };
+    expect(marker.documentId).toBeTruthy();
+
+    // The same Member hears the Legal Only comment but does not reach the
+    // Document, so the thread shows plain paper and a retry is refused
+    // without naming where it went.
+    const unnamedRead = await readThread(memberCookies, "contract", contract.id);
+    expect(unnamedRead.statusCode, unnamedRead.body).toBe(200);
+    expect(unnamedRead.json().comments[0].attachments[0]).not.toHaveProperty("filed");
+    const retry = await fileAttachment(
+      memberCookies,
+      "contract",
+      contract.id,
+      comment.id,
+      attachmentId,
+      body,
+    );
+    expect(retry.statusCode, retry.body).toBe(409);
+    expect(retry.json().detail).not.toContain("Confidential paper");
+    expect(retry.json()).not.toHaveProperty("filedDocumentId");
+
+    const named = await harness.app.inject({
+      method: "POST",
+      url: `/api/v1/contracts/${contract.number}/team`,
+      cookies: adminCookies,
+      payload: { userId: memberId, role: "member" },
+    });
+    expect(named.statusCode, named.body).toBe(201);
+    const namedRead = await readThread(memberCookies, "contract", contract.id);
+    expect(namedRead.json().comments[0].attachments[0].filed).toMatchObject({
+      documentId: marker.documentId,
+      documentTitle: "Confidential paper",
+      versionNumber: 1,
+    });
+  });
 });

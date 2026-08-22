@@ -119,7 +119,7 @@ import { COMMENT_ATTACHMENT_ALREADY_FILED_PROBLEM_TYPE } from "@openlaw/shared";
 import { requireRole, type AuthenticatedUser } from "../../auth/guards.js";
 import { recordActivity, RECORD_ACTIVITY_TIER } from "../../lib/activity.js";
 import { copyStoredBlob } from "../../lib/copy-stored-blob.js";
-import { documentAudienceScope } from "../../lib/contract-access.js";
+import { documentAudienceScope, documentConfidentialityWrite } from "../../lib/contract-access.js";
 import {
   insertDocumentVersion,
   nextVersionNumber,
@@ -436,9 +436,16 @@ export const commentsRoutes: FastifyPluginAsyncZod = async (app) => {
   }
 
   /** The paper carried by a page of comments, grouped without exposing
-   * storage references. */
+   * storage references.
+   *
+   * The filed marker obeys the Document's own audience (DD-014), not the
+   * comment's. A Business User hears a Full Thread comment but reaches no
+   * Document, and a Member off the team does not reach a Confidential
+   * one; for them the row reads as plain paper, because a Document this
+   * viewer may not see never leaves the database. */
   async function attachmentsOf(
     db: Executor,
+    user: AuthenticatedUser,
     commentIds: readonly string[],
   ): Promise<Map<string, Attachment[]>> {
     const byComment = new Map<string, Attachment[]>();
@@ -454,8 +461,17 @@ export const commentsRoutes: FastifyPluginAsyncZod = async (app) => {
         filedVersionNumber: documentVersions.versionNumber,
       })
       .from(commentAttachments)
-      .leftJoin(documents, eq(commentAttachments.filedDocumentId, documents.id))
-      .leftJoin(documentVersions, eq(commentAttachments.filedVersionId, documentVersions.id))
+      .leftJoin(
+        documents,
+        and(eq(commentAttachments.filedDocumentId, documents.id), documentAudienceScope(db, user)),
+      )
+      .leftJoin(
+        documentVersions,
+        and(
+          eq(commentAttachments.filedVersionId, documentVersions.id),
+          eq(documentVersions.documentId, documents.id),
+        ),
+      )
       .where(inArray(commentAttachments.commentId, [...commentIds]))
       .orderBy(asc(commentAttachments.createdAt), asc(commentAttachments.id));
     for (const row of rows) {
@@ -575,7 +591,7 @@ export const commentsRoutes: FastifyPluginAsyncZod = async (app) => {
       const ids = page.map((row) => row.id);
       const [mentions, attachments] = await Promise.all([
         mentionsOf(app.db, ids),
-        attachmentsOf(app.db, ids),
+        attachmentsOf(app.db, request.user, ids),
       ]);
       return {
         // Turned back into the order a conversation is read in
@@ -985,7 +1001,7 @@ export const commentsRoutes: FastifyPluginAsyncZod = async (app) => {
           const [posted] = await selectComments(tx).where(eq(comments.id, commentId));
           const [mentions, attachments] = await Promise.all([
             mentionsOf(tx, [commentId]),
-            attachmentsOf(tx, [commentId]),
+            attachmentsOf(tx, request.user, [commentId]),
           ]);
           return toComment(posted!, mentions.get(commentId), attachments.get(commentId));
         });
@@ -1078,11 +1094,11 @@ export const commentsRoutes: FastifyPluginAsyncZod = async (app) => {
 
   /** The comment as it now stands, through the thread's own projection,
    * so a corrected row is the row the next load will draw. */
-  async function readBack(tx: Transaction, commentId: string) {
+  async function readBack(tx: Transaction, user: AuthenticatedUser, commentId: string) {
     const [row] = await selectComments(tx).where(eq(comments.id, commentId));
     const [mentions, attachments] = await Promise.all([
       mentionsOf(tx, [commentId]),
-      attachmentsOf(tx, [commentId]),
+      attachmentsOf(tx, user, [commentId]),
     ]);
     return toComment(row!, mentions.get(commentId), attachments.get(commentId));
   }
@@ -1132,9 +1148,12 @@ export const commentsRoutes: FastifyPluginAsyncZod = async (app) => {
     return row;
   }
 
-  /** A stale filing dialog is told the exact destination that won. */
+  /** A stale filing dialog is told the exact destination that won, when
+   * the filer reaches it. Outside the Document's audience (DD-014) the
+   * refusal still stands, but it names nothing. */
   async function refuseFiled(
     db: Executor,
+    user: AuthenticatedUser,
     attachment: { filedDocumentId: string | null; filedVersionId: string | null },
   ): Promise<never> {
     if (attachment.filedDocumentId === null || attachment.filedVersionId === null) {
@@ -1150,7 +1169,7 @@ export const commentsRoutes: FastifyPluginAsyncZod = async (app) => {
           eq(documentVersions.documentId, documents.id),
         ),
       )
-      .where(eq(documents.id, attachment.filedDocumentId))
+      .where(and(eq(documents.id, attachment.filedDocumentId), documentAudienceScope(db, user)))
       .limit(1);
     throw httpError(
       409,
@@ -1159,10 +1178,12 @@ export const commentsRoutes: FastifyPluginAsyncZod = async (app) => {
         : "This attachment was already filed onto the record.",
       {
         type: COMMENT_ATTACHMENT_ALREADY_FILED_PROBLEM_TYPE,
-        extensions: {
-          filedDocumentId: attachment.filedDocumentId,
-          filedVersionId: attachment.filedVersionId,
-        },
+        extensions: destination
+          ? {
+              filedDocumentId: attachment.filedDocumentId,
+              filedVersionId: attachment.filedVersionId,
+            }
+          : {},
       },
     );
   }
@@ -1199,7 +1220,7 @@ export const commentsRoutes: FastifyPluginAsyncZod = async (app) => {
     async (request, reply) => {
       const source = await filableAttachment(app.db, request.user, request.query, request.params);
       if (source.filedDocumentId !== null || source.filedVersionId !== null) {
-        await refuseFiled(app.db, source);
+        await refuseFiled(app.db, request.user, source);
       }
       if (source.commentEntityType !== "contract") {
         throw httpError(409, "This thread's record does not own Documents.");
@@ -1251,7 +1272,7 @@ export const commentsRoutes: FastifyPluginAsyncZod = async (app) => {
             .for("update");
           if (!attachment) throw httpError(404, NO_ATTACHMENT);
           if (attachment.filedDocumentId !== null || attachment.filedVersionId !== null) {
-            await refuseFiled(tx, attachment);
+            await refuseFiled(tx, request.user, attachment);
           }
           if (held.entityType !== "contract") {
             throw httpError(409, "This thread's record does not own Documents.");
@@ -1263,6 +1284,7 @@ export const commentsRoutes: FastifyPluginAsyncZod = async (app) => {
           const [contract] = await tx
             .select({
               id: contracts.id,
+              managerId: contracts.managerId,
               primaryDocumentId: contracts.primaryDocumentId,
               archivedAt: contracts.archivedAt,
             })
@@ -1282,6 +1304,25 @@ export const commentsRoutes: FastifyPluginAsyncZod = async (app) => {
             title = request.body.name;
             versionNumber = 1;
             isConfidential = request.body.isConfidential;
+            // An upload lands open. Someone inside the named audience
+            // flags it afterwards. Filing sets the flag in the same act,
+            // so it asks the same question here: a Member off the team
+            // would otherwise file paper they cannot reach.
+            if (
+              isConfidential &&
+              (await documentConfidentialityWrite(tx, request.user, {
+                contractId: contract.id,
+                contractManagerId: contract.managerId,
+                createdBy: request.user.id,
+                isConfidential,
+              })) !== "allowed"
+            ) {
+              throw httpError(
+                403,
+                "Only an Administrator, the contract's Owner, or someone on its team can file " +
+                  "Confidential paper. Clear the flag, or ask to be named on the contract.",
+              );
+            }
             await tx.insert(documents).values({
               id: documentId,
               title,
@@ -1412,7 +1453,7 @@ export const commentsRoutes: FastifyPluginAsyncZod = async (app) => {
             .set({ filedDocumentId: documentId, filedVersionId: versionId })
             .where(eq(commentAttachments.id, attachment.id));
           return {
-            comment: await readBack(tx, held.id),
+            comment: await readBack(tx, request.user, held.id),
             derivation: {
               versionId,
               mimeType: copied.mimeType,
@@ -1529,7 +1570,7 @@ export const commentsRoutes: FastifyPluginAsyncZod = async (app) => {
         // Nothing changed, so nothing is written: an author who saves the
         // text they started with has not edited it, and the marker would
         // say they had.
-        if (request.body.body === held.body) return readBack(tx, held.id);
+        if (request.body.body === held.body) return readBack(tx, request.user, held.id);
 
         await tx.insert(commentRevisions).values({ commentId: held.id, body: held.body });
         await tx
@@ -1546,7 +1587,7 @@ export const commentsRoutes: FastifyPluginAsyncZod = async (app) => {
           // redact can still reach it (CMT-006).
           payload: { commentId: held.id },
         });
-        return readBack(tx, held.id);
+        return readBack(tx, request.user, held.id);
       });
       return { comment };
     },
@@ -1578,7 +1619,8 @@ export const commentsRoutes: FastifyPluginAsyncZod = async (app) => {
         }
         // Already gone, by either hand. Nothing to move and nothing to
         // say, so the second delete is the first one's answer.
-        if (held.deletedAt !== null || held.redactedAt !== null) return readBack(tx, held.id);
+        if (held.deletedAt !== null || held.redactedAt !== null)
+          return readBack(tx, request.user, held.id);
 
         await tx.insert(commentRevisions).values({ commentId: held.id, body: held.body });
         // The body moves rather than being hidden: what the row carries
@@ -1596,7 +1638,7 @@ export const commentsRoutes: FastifyPluginAsyncZod = async (app) => {
           visibility: held.visibility,
           payload: { commentId: held.id },
         });
-        return readBack(tx, held.id);
+        return readBack(tx, request.user, held.id);
       });
       return { comment };
     },
@@ -1626,7 +1668,7 @@ export const commentsRoutes: FastifyPluginAsyncZod = async (app) => {
     async (request) => {
       const comment = await app.db.transaction(async (tx) => {
         const held = await heldComment(tx, request.user, request.params.commentId);
-        if (held.redactedAt !== null) return readBack(tx, held.id);
+        if (held.redactedAt !== null) return readBack(tx, request.user, held.id);
 
         // Read the references before clearing the rows. Storage deletion
         // follows DOC-010's recorded ordering: inside the transaction and
@@ -1655,7 +1697,7 @@ export const commentsRoutes: FastifyPluginAsyncZod = async (app) => {
           visibility: held.visibility,
           payload: { commentId: held.id },
         });
-        return readBack(tx, held.id);
+        return readBack(tx, request.user, held.id);
       });
       return { comment };
     },
