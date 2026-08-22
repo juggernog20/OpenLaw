@@ -82,7 +82,6 @@ export interface HttpDocEngineOptions {
  */
 type StreamingRequestInit = RequestInit & { duplex: "half" };
 
-/** One call in flight, under the bound that abandons it. */
 class Attempt {
   private readonly controller = new AbortController();
   private readonly timer: NodeJS.Timeout;
@@ -102,7 +101,6 @@ class Attempt {
     return this.controller.signal;
   }
 
-  /** Stops the bound. Safe to call more than once. */
   settle(): void {
     clearTimeout(this.timer);
   }
@@ -123,7 +121,6 @@ class Attempt {
   }
 }
 
-/** The `detail` of a problem body, when the answer carries one. */
 async function detailOf(response: Response, fallback: string): Promise<string> {
   try {
     const body: unknown = await response.json();

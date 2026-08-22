@@ -118,6 +118,56 @@ a long way since, it is worth another pass.
 | `apps/api/src/modules/contract-envelopes/completion.test.ts`      | 2026-08-22 | 0df3333 | 0      | 8       | 0     |                                                      |
 | `packages/db/src/migration-journal.ts`                            | 2026-08-22 | 0df3333 | 0      | 0       | 0     |                                                      |
 | `apps/web/src/routes/portal-request.test.tsx`                     | 2026-08-22 | 0df3333 | 0      | 1       | 0     |                                                      |
+| `apps/worker/src/index.ts`                                        | 2026-08-22 | 2efa1e0 | 0      | 1       | 0     |                                                      |
+| `apps/api/src/pipeline/backfill.ts`                               | 2026-08-22 | 2efa1e0 | 0      | 0       | 0     |                                                      |
+| `e2e/tests/23-m17-demo.spec.ts`                                   | 2026-08-22 | 2efa1e0 | 0      | 47      | 0     |                                                      |
+| `packages/db/src/index.ts`                                        | 2026-08-22 | 2efa1e0 | 0      | 0       | 0     |                                                      |
+| `apps/api/src/pipeline/notification-email.ts`                     | 2026-08-22 | 2efa1e0 | 0      | 0       | 0     |                                                      |
+| `services/doc-engine/src/operations.ts`                           | 2026-08-22 | 2efa1e0 | 0      | 4       | 0     |                                                      |
+| `apps/web/src/routes/portal-request.tsx`                          | 2026-08-22 | 2efa1e0 | 0      | 0       | 0     |                                                      |
+| `apps/api/src/modules/signing-connector/routes.ts`                | 2026-08-22 | 2efa1e0 | 0      | 0       | 0     |                                                      |
+| `apps/api/src/lib/doc-engine/http.ts`                             | 2026-08-22 | 2efa1e0 | 0      | 3       | 0     |                                                      |
+| `apps/web/src/components/intake/convert-dialog.tsx`               | 2026-08-22 | 2efa1e0 | 0      | 0       | 0     |                                                      |
+| `apps/api/src/modules/documents/document-text.test.ts`            | 2026-08-22 | 2efa1e0 | 0      | 0       | 0     |                                                      |
+| `apps/api/src/lib/contract-term.ts`                               | 2026-08-22 | 2efa1e0 | 0      | 0       | 0     |                                                      |
+| `apps/api/src/modules/contracts/renewal-routing.test.ts`          | 2026-08-22 | 2efa1e0 | 0      | 0       | 0     |                                                      |
+| `apps/web/src/components/contracts/key-dates-card.tsx`            | 2026-08-22 | 2efa1e0 | 0      | 0       | 0     |                                                      |
+| `apps/api/src/modules/requests/move-thread.ts`                    | 2026-08-22 | 2efa1e0 | 0      | 0       | 0     |                                                      |
+| `apps/api/src/modules/documents/document-filing.test.ts`          | 2026-08-22 | 2efa1e0 | 0      | 0       | 0     |                                                      |
+| `apps/api/src/modules/documents/document-backfill.test.ts`        | 2026-08-22 | 2efa1e0 | 0      | 0       | 0     |                                                      |
+| `styles/globals.css`                                              | 2026-08-22 | 2efa1e0 | 0      | 1       | 0     |                                                      |
+| `apps/api/src/modules/contract-relations/routes.ts`               | 2026-08-22 | 2efa1e0 | 0      | 6       | 0     |                                                      |
+| `apps/web/src/routes/settings-request-type-editor.tsx`            | 2026-08-22 | 2efa1e0 | 0      | 0       | 0     |                                                      |
+| `e2e/tests/docusign.ts`                                           | 2026-08-22 | 2efa1e0 | 0      | 0       | 0     |                                                      |
+| `apps/api/src/modules/notifications/direct-events.test.ts`        | 2026-08-22 | 2efa1e0 | 0      | 0       | 0     |                                                      |
+| `apps/api/src/testing/doc-engine-contract.ts`                     | 2026-08-22 | 2efa1e0 | 0      | 4       | 0     |                                                      |
+| `apps/web/src/routes/settings-audit-log.tsx`                      | 2026-08-22 | 2efa1e0 | 0      | 0       | 0     |                                                      |
+| `apps/web/src/routes/settings-intake-links.tsx`                   | 2026-08-22 | 2efa1e0 | 0      | 0       | 0     |                                                      |
+| `apps/api/src/lib/uploads.ts`                                     | 2026-08-22 | 2efa1e0 | 0      | 0       | 0     |                                                      |
+| `apps/api/src/lib/storage/azure-blob.ts`                          | 2026-08-22 | 2efa1e0 | 0      | 1       | 0     |                                                      |
+| `apps/web/src/lib/folders.ts`                                     | 2026-08-22 | 2efa1e0 | 0      | 0       | 0     |                                                      |
+| `apps/web/src/routes/settings-e-signature.tsx`                    | 2026-08-22 | 2efa1e0 | 0      | 0       | 0     |                                                      |
+| `apps/api/src/modules/requests/convert-paper.test.ts`             | 2026-08-22 | 2efa1e0 | 0      | 0       | 0     |                                                      |
+| `apps/api/src/lib/doc-engine/engine.ts`                           | 2026-08-22 | 2efa1e0 | 0      | 0       | 0     |                                                      |
+| `apps/web/src/components/taxonomy-types-pane.tsx`                 | 2026-08-22 | 2efa1e0 | 0      | 0       | 0     |                                                      |
+| `apps/web/src/routes/contracts.test.tsx`                          | 2026-08-22 | 2efa1e0 | 0      | 0       | 0     |                                                      |
+| `.coderabbit.yaml`                                                | 2026-08-22 | 2efa1e0 | 0      | 0       | 0     | Protected review-bot directives retained.            |
+| `apps/web/src/components/portal/request-thread.tsx`               | 2026-08-22 | 2efa1e0 | 0      | 0       | 0     |                                                      |
+| `apps/api/src/lib/doc-engine/http.test.ts`                        | 2026-08-22 | 2efa1e0 | 0      | 1       | 0     |                                                      |
+| `apps/web/src/components/notification-preferences.tsx`            | 2026-08-22 | 2efa1e0 | 0      | 0       | 0     |                                                      |
+| `apps/web/src/routes/contracts-columns.test.tsx`                  | 2026-08-22 | 2efa1e0 | 0      | 0       | 0     |                                                      |
+| `apps/api/src/modules/documents/document-email.test.ts`           | 2026-08-22 | 2efa1e0 | 0      | 0       | 0     |                                                      |
+| `apps/api/src/modules/list-views/routes.ts`                       | 2026-08-22 | 2efa1e0 | 0      | 0       | 0     |                                                      |
+| `packages/db/src/schema/auth.ts`                                  | 2026-08-22 | 2efa1e0 | 0      | 0       | 0     |                                                      |
+| `apps/web/src/components/contracts/contracts-columns.tsx`         | 2026-08-22 | 2efa1e0 | 0      | 0       | 0     |                                                      |
+| `apps/api/src/lib/signing/config.ts`                              | 2026-08-22 | 2efa1e0 | 0      | 0       | 0     |                                                      |
+| `apps/web/src/routes/contract-record-relations.test.tsx`          | 2026-08-22 | 2efa1e0 | 0      | 31      | 0     |                                                      |
+| `apps/api/src/lib/doc-engine/fake.ts`                             | 2026-08-22 | 2efa1e0 | 0      | 8       | 0     |                                                      |
+| `apps/web/src/lib/comments.ts`                                    | 2026-08-22 | 2efa1e0 | 0      | 0       | 0     |                                                      |
+| `apps/api/src/lib/media-type.ts`                                  | 2026-08-22 | 2efa1e0 | 0      | 0       | 0     |                                                      |
+| `apps/api/src/lib/signer-erasure.ts`                              | 2026-08-22 | 2efa1e0 | 0      | 0       | 0     |                                                      |
+| `apps/api/src/modules/requests/convert.test.ts`                   | 2026-08-22 | 2efa1e0 | 0      | 0       | 0     |                                                      |
+| `apps/web/src/components/documents/email-preview.tsx`             | 2026-08-22 | 2efa1e0 | 0      | 0       | 0     |                                                      |
 
 ## Skipped
 

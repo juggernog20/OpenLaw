@@ -139,7 +139,6 @@ export function createAzureBlobStorage(options: AzureBlobStorageOptions): Storag
     credential,
   ).getContainerClient(options.container);
 
-  /** Whether a blob is already stored at `key`. */
   async function exists(key: string): Promise<boolean> {
     return container.getBlockBlobClient(key).exists();
   }
