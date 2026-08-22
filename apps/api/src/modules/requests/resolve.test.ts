@@ -413,9 +413,10 @@ describe("what a resolution tells the requester (INT-003, NOT-002 group 5)", () 
       "request.replied",
       "request.status_changed",
     ]);
-    expect(
-      rows.find((row) => row.eventType === "request.status_changed")!.payload,
-    ).toMatchObject({ from: "new", to: "resolved" });
+    expect(rows.find((row) => row.eventType === "request.status_changed")!.payload).toMatchObject({
+      from: "new",
+      to: "resolved",
+    });
     // A resolution is not a decline, and never borrows its event.
     expect(rows.some((row) => row.eventType === "request.declined")).toBe(false);
   });

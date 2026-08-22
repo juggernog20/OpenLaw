@@ -3795,7 +3795,7 @@ DES-057 built the staff request detail and left its sub-bar without INT-007's th
 
 ### Recorded normalization points
 
-1. **The sub-bar draws Decline alone, for now.** I4's own sub-bar draws all three. Resolve and Convert arrive with M21/8 and M21/9; DES-057's normalization point 1 is superseded by this clause rather than deleted.
+1. **The sub-bar draws Decline alone, for now.** I4's own sub-bar draws all three. Resolve and Convert arrive with M21/8 and M21/9; DES-057's normalization point 1 is superseded by this clause rather than deleted. _Amended by the M21/8 addendum below: the slot draws Decline and Resolve, and Convert alone waits for M21/9._
 2. **The dialog's Reason box has no character counter.** I4 draws none. The bound is the seam's (`MAX_DECLINE_REASON_LENGTH`), restated on the box as `maxLength`, and a counter on a box nobody fills to 2000 characters is chrome.
 
 ### Rationale
@@ -3816,6 +3816,24 @@ Clause 1 is the whole shape: the disposition is the page's one act, so it goes w
 The catalogue gains the dialog's own copy under a `decline.*` prefix — the sub-bar's verb, the title, the opening sentence, the box's label, the note, the button, the empty-box refusal, the generic failure, and the two lines a lost race prints — plus two ids that are not this dialog's alone: `action.close`, which joins `action.cancel` in the shared action family, and `intake.field.requiredMark`, which joins the two module-scoped required markers already in the catalogue.
 
 M21/8 and M21/9 add their buttons to the same slot and their dialogs beside this one; clause 5 is the arm all three share, because the refusal is the scaffold's rather than Decline's.
+
+### Addendum (2026-08-22, M21/8, [#419](https://github.com/juggernog20/OpenLaw/issues/419)) — the Resolve dialog, and the slot's second button
+
+DES-058 clause 3 built the Decline dialog from I4 and said M21/8 and M21/9 add their buttons to the same slot and their dialogs beside it. This is the first of the two.
+
+**The sub-bar's second button is I2's own.** Resolve is a plain secondary with the `Check` glyph, drawn after Decline, exactly as I2 draws it. Clause 2's chromatic order is unchanged and the CTA slot stays empty until Convert lands: Resolve is an honest ending, but it is not the outcome the Inbox exists to reach.
+
+**`designs/intake.pen` draws no Resolve dialog.** I4 is Decline's and I3 is Convert's; I2's Resolve button opens nothing in the mocks. So the dialog is I4's anatomy with Resolve's content — the house dialog, the reference in the title, one sentence saying what the act does, one box, a glyphed note under it naming where the words land, and Cancel beside the verb. That is a **new normalization point**, recorded here rather than left as an undocumented invention.
+
+**The box says optional in the label, and there is no refusal to write.** Decline's box carries the required marker and a refusal the dialog holds before the seam is asked; Resolve's carries `(optional)` inside the label, the way every other optional box in the product says it, and pressing the button with an empty box is a resolution with no closing reply. Clause 4's split still holds: the dialog checks nothing, so every refusal on this dialog is the seam's and prints as the seam's own sentence.
+
+**The note names a different destination, because the words go somewhere different.** Decline's `Mail` note says the requester is emailed the reason and sees it on their request, because the reason is stored on the Request. Resolve's `MessageSquare` note says the reply is posted on the thread and emailed, because it is a comment. Somebody about to type into one of the two boxes needs to know which they are doing.
+
+**Clause 5 is reused whole.** A lost race replaces the form with the same two lines and the same Close button, from the same catalogue ids — `decline.alreadyDecided` and `decline.alreadyDecidedRead` are the scaffold's copy rather than Decline's, as clause 5 said they would be, and Convert reads them too.
+
+**One dialog is open at a time.** The page holds which disposition is open rather than a flag per dialog. A Request has one fate, and two open dialogs would be two answers to it.
+
+The catalogue gains the dialog's copy under a `resolve.*` prefix: the sub-bar's verb, the title, the opening sentence, the box's label, the note, the button, and the generic failure. There is no `resolve.needReply`, because there is nothing to need.
 
 ## Index of decisions
 

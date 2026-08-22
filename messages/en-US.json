@@ -302,6 +302,9 @@
   "activity.request.declined": {
     "defaultMessage": "{actor} declined this request"
   },
+  "activity.request.resolved": {
+    "defaultMessage": "{actor} resolved this request"
+  },
   "activity.signer.erased": {
     "defaultMessage": "{actor} erased an external signer's name and address from {entriesRedacted, plural, =0 {no entries} one {# entry} other {# entries}}"
   },
@@ -2872,6 +2875,27 @@
   },
   "requests.statusLabel": {
     "defaultMessage": "{status, select, new {New} converted {Converted} resolved {Resolved} declined {Declined} other {Unknown}}"
+  },
+  "resolve.action": {
+    "defaultMessage": "Resolve"
+  },
+  "resolve.explains": {
+    "defaultMessage": "Resolving closes the request as answered. Add a closing reply if the answer is not already on the thread."
+  },
+  "resolve.failed": {
+    "defaultMessage": "The request could not be resolved. Try again."
+  },
+  "resolve.notifyNote": {
+    "defaultMessage": "This is posted on the request's thread and emailed to the requester."
+  },
+  "resolve.reply": {
+    "defaultMessage": "Closing reply (optional)"
+  },
+  "resolve.submit": {
+    "defaultMessage": "Resolve request"
+  },
+  "resolve.title": {
+    "defaultMessage": "Resolve {reference}"
   },
   "role.administrator": {
     "defaultMessage": "Administrator"

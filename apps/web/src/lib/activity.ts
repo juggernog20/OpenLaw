@@ -1716,6 +1716,18 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
       defaultMessage: "{actor} declined this request",
     }),
   },
+  // INT-007's second disposition (#419). The ask was answered in the
+  // thread and closed. The closing reply, where there was one, is a
+  // comment on the same feed and narrates as itself — this entry is the
+  // closure, so a resolution with a reply and one without read the same
+  // here.
+  "request.resolved": {
+    icon: CircleCheck,
+    message: defineMessage({
+      id: "activity.request.resolved",
+      defaultMessage: "{actor} resolved this request",
+    }),
+  },
 
   // ---- User administration and the profile (audit log only) ----
   // These name the person acted on by their email, because that is what

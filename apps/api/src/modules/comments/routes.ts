@@ -157,7 +157,6 @@ const CommentEntityTypeSchema = z.enum(COMMENT_ENTITY_TYPES);
  */
 const RecordIdSchema = z.string().min(1).max(64);
 
-
 const VisibilitySchema = z.enum(COMMENT_VISIBILITIES);
 
 /** The author as every comment row draws them — the same person shape

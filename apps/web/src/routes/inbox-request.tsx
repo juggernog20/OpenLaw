@@ -34,23 +34,24 @@
  * The loader is the client half of INT-006's floor: Member+ only,
  * everyone else bounced home. The API's 403 is the real refusal.
  *
- * **The sub-bar carries the disposition** (INT-007, DES-058). Decline is
- * built (#418); Resolve and Convert land with their own tickets (M21/8,
- * M21/9) and are absent rather than disabled until they do, because a
- * control that opens nothing is worse than no control. The three are
- * drawn only while the Request is `new`: a decided Request has nothing
- * left to decide, and the Outcome card says what was decided.
+ * **The sub-bar carries the disposition** (INT-007, DES-058). Decline
+ * (#418) and Resolve (#419) are built; Convert lands with M21/9 and is
+ * absent rather than disabled until it does, because a control that
+ * opens nothing is worse than no control. The actions are drawn only
+ * while the Request is `new`: a decided Request has nothing left to
+ * decide, and the Outcome card says what was decided.
  *
- * **Opening the Decline dialog writes nothing.** INT-007 has no claim
+ * **Opening a disposition dialog writes nothing.** INT-007 has no claim
  * step and no parked state, so the Inbox row's Assign button is an entry
  * to the choice rather than an act, and cancelling returns the Request to
- * the queue untouched.
+ * the queue untouched. One dialog is open at a time, because a Request
+ * has one fate.
  *
  * ### Recorded normalization points (I2 deviations accepted)
  *
- * 1. **The sub-bar draws Decline alone, for now.** I2 draws Convert to
- *    contract, Resolve, and Decline. The other two land with M21/8 and
- *    M21/9; a control that opens nothing is worse than no control.
+ * 1. **The sub-bar draws Decline and Resolve, for now.** I2 draws
+ *    Convert to contract beside them. It lands with M21/9; a control
+ *    that opens nothing is worse than no control.
  * 2. **The hero scrolls with the page** where I2 draws it as a second
  *    fixed band under the sub-bar. What it says is a fact about the
  *    Request rather than a control that must stay in reach, and a
@@ -74,10 +75,10 @@
  *    on this model, and a count of somebody's other asks is a claim
  *    about their history that nothing has decided to make.
  * 7. **The activity bar carries the thread alone.** I2 draws a history
- *    slot beside it. A decline now narrates on the Request (#418), but
- *    the activity read still has only a `contract` arm — an applet that
- *    opened on a refusal is worse than an absent one, so the slot waits
- *    for the read.
+ *    slot beside it. Dispositions now narrate on the Request (#418,
+ *    #419), but the activity read still has only a `contract` arm — an
+ *    applet that opened on a refusal is worse than an absent one, so the
+ *    slot waits for the read.
  */
 
 import { useState } from "react";
@@ -90,16 +91,19 @@ import {
   type LoaderFunctionArgs,
 } from "react-router";
 import { defineMessage, FormattedMessage, useIntl, type IntlShape } from "react-intl";
-import { Ban, ChevronRight, FileText } from "lucide-react";
+import { Ban, Check, ChevronRight, FileText } from "lucide-react";
 import { api } from "../lib/api";
 import { authClient } from "../lib/auth-client";
 import { useCommentApplet } from "../components/comments/comment-applet";
 import { DeclineDialog } from "../components/intake/decline-dialog";
+import { ResolveDialog } from "../components/intake/resolve-dialog";
 import { contractReference, SEVERITY_PILL, severityLabel } from "../lib/contracts";
 import { isAnswered, type CustomFieldValue } from "../lib/custom-fields";
 import { formatFullDate, formatLongDateTime, formatRelativeOrShort } from "../lib/format";
 import {
   declineRequest,
+  resolveRequest,
+  type DispositionOutcome,
   REQUEST_STATUS_PILL,
   requestReference,
   requestStatusLabel,
@@ -143,10 +147,12 @@ export function InboxRequestPage() {
   const navigate = useNavigate();
   const revalidator = useRevalidator();
   const reference = requestReference(intl, request.number);
-  /** Whether the Decline dialog is open. Opening it is not an act:
-   * INT-007 has no claim step, so nothing about the Request changes
-   * until the seam answers. */
-  const [declining, setDeclining] = useState(false);
+  /** Which disposition dialog is open, if any. Opening one is not an
+   * act: INT-007 has no claim step, so nothing about the Request changes
+   * until the seam answers. One piece of state rather than one flag per
+   * dialog, because a Request has one fate and two open dialogs would be
+   * two answers to it. */
+  const [disposing, setDisposing] = useState<"decline" | "resolve" | null>(null);
   /** Whether a disposition is out. The dialog holds its button inert
    * while it is, so one press is one decline. */
   const [busy, setBusy] = useState(false);
@@ -168,23 +174,30 @@ export function InboxRequestPage() {
   }
 
   /**
-   * Turns the Request down, and repaints the page from the record.
+   * Runs one disposition, and repaints the page from the record.
    *
    * The write answers the whole envelope, and the page still re-reads:
    * the Outcome card, the status pill, and the thread's own unread
    * watermark all hang off the loader, and one revalidation is what
-   * keeps them from disagreeing. The refusals go back to the dialog,
-   * which is where somebody can act on them.
+   * keeps them from disagreeing. A resolution's closing reply is a
+   * comment on that thread, so the re-read is what puts it there too.
+   * The refusals go back to the dialog, which is where somebody can act
+   * on them.
+   *
+   * One wrapper for every outcome, because what surrounds a disposition
+   * is the same for all three — the busy flag, the repaint, and the
+   * dialog closing on success. What differs is the call it is handed,
+   * which is the seam's own shape (INT-007).
    */
-  async function decline(reason: string) {
+  async function dispose(write: () => Promise<DispositionOutcome>): Promise<DispositionOutcome> {
     setBusy(true);
     try {
-      const result = await declineRequest(request.number, reason);
+      const result = await write();
       // A lost race repaints too, so the Request behind the dialog
       // already says what the other triager decided by the time it is
       // closed (INT-007).
       if (result.ok || result.alreadyDecided) void revalidator.revalidate();
-      if (result.ok) setDeclining(false);
+      if (result.ok) setDisposing(null);
       return result;
     } finally {
       setBusy(false);
@@ -231,22 +244,37 @@ export function InboxRequestPage() {
                 variant="secondary"
                 className="text-status-danger-fg"
                 disabled={busy}
-                onClick={() => setDeclining(true)}
+                onClick={() => setDisposing("decline")}
               >
                 <Ban size={16} aria-hidden="true" />
                 <FormattedMessage id="decline.action" defaultMessage="Decline" />
+              </Button>
+              {/* I2's second action, a plain secondary: Resolve is an
+                  honest ending but it is not the outcome the Inbox
+                  exists to reach, so the CTA stays free for Convert. */}
+              <Button variant="secondary" disabled={busy} onClick={() => setDisposing("resolve")}>
+                <Check size={16} aria-hidden="true" />
+                <FormattedMessage id="resolve.action" defaultMessage="Resolve" />
               </Button>
             </div>
           )}
         </section>
       }
     >
-      {declining && (
+      {disposing === "decline" && (
         <DeclineDialog
           reference={reference}
           busy={busy}
-          onClose={() => setDeclining(false)}
-          onDecline={decline}
+          onClose={() => setDisposing(null)}
+          onDecline={(reason) => dispose(() => declineRequest(request.number, reason))}
+        />
+      )}
+      {disposing === "resolve" && (
+        <ResolveDialog
+          reference={reference}
+          busy={busy}
+          onClose={() => setDisposing(null)}
+          onResolve={(reply) => dispose(() => resolveRequest(request.number, reply))}
         />
       )}
       {/* Reference then summary, composed as one message — the separator
