@@ -4065,6 +4065,31 @@ One discriminated dialog keeps the shared facts shared and reveals only the cont
 
 `apps/web/src/components/comments/comment-attachments.tsx` owns the row action, marker, and dialog. The Contract record supplies the visible Document choices and the exact-version opener; the generic comment applet receives no filing context on other record arms. The dialog reuses existing form controls, Confidential toggle, Document kind catalogue, and semantic tokens. No new token or component primitive lands.
 
+## DES-065: A dispositioned Request points paper at its composer (extends DES-062, DES-057)
+
+- **Status:** Accepted
+- **Date:** 2026-08-23
+
+### Context
+
+CMT-011 leaves two ways for paper to enter: with the submission form before the Request exists, or with a comment afterwards. INT-002's #438 addendum closes the Request attachment route after any disposition. The portal detail therefore has to say where a new file goes without introducing the second Request upload control CMT-011 rejected. The asynchronous uploads that follow a successful submission can also race a fast disposition, so the confirmation can meet the same refusal before the Request detail is open.
+
+### Decision
+
+**1. A dispositioned banner points to the existing composer.** On `converted`, `resolved`, and `declined`, the status banner ends with the link `Attach new files to a reply`. It targets the Full Thread composer in the Conversation card on the same page. The link is absent on `new`: the thread control already sits immediately below the banner, and repeating directions before a disposition would make the exceptional routing look like a standing warning.
+
+**2. There is no Request attachment control on the detail.** The submission form's `Choose files` remains the only Request attachment control, before the Request exists. The detail carries only the comment composer's `Attach files`, on every status. Hiding after a disposition therefore means the rejected third path is never drawn; the pointer distinguishes the comment control by naming a reply.
+
+**3. A submission upload that loses the race links to the same place.** The typed 409 carries the Request number. The confirmation keeps naming every file that did not attach and replaces its generic send-another-way sentence with `Add it to a reply on R-###`, linked directly to that Request's composer. The Request remains submitted and the confirmation remains a success surface.
+
+### Rationale
+
+The composer is the door CMT-011 built, so the banner should point at it rather than restating its controls or adding another picker. Keeping the instruction inside the status banner places the changed paper rule beside the disposition that caused it. The stable Request URL remains the portal address after conversion, which lets one link work for all three outcomes without exposing a Contract reference a Business User cannot open.
+
+### Consequences
+
+`apps/web/src/routes/portal-request.tsx` owns the banner link, and the shared portal composer exposes the in-page target. `apps/web/src/routes/portal-request-form.tsx` reads the named refusal's Request extension and links a raced file to the same target. The catalogue gains `portal.request.paperOnThread` and `portal.form.attachmentsMovedToThread`. No new control, token, or component primitive lands.
+
 ## Index of decisions
 
 | #       | Decision                                                                                                                                                             | Status                                                                                                     |
@@ -4133,3 +4158,4 @@ One discriminated dialog keeps the shared facts shared and reveals only the cont
 | DES-062 | Comment paper is a download row under the body (extends DES-023)                                                                                                     | Accepted                                                                                                   |
 | DES-063 | The version kind pill is a picker for Member+ (extends DES-017)                                                                                                      | Accepted                                                                                                   |
 | DES-064 | Comment paper files through one destination dialog (extends DES-062, DES-023)                                                                                        | Accepted                                                                                                   |
+| DES-065 | A dispositioned Request points paper at its composer (extends DES-062, DES-057)                                                                                      | Accepted                                                                                                   |

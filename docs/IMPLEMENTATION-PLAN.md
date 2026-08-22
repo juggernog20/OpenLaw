@@ -41,8 +41,7 @@ document is the map, not the territory.
 
 ## Where we are
 
-**Arc 4 runs the front door end to end, through milestone 21**, with one milestone still open behind it:
-M21A, which gives the thread the one thing it cannot carry yet, paper. Arc 1 is done: the monorepo and CI,
+**Arc 4 is complete: the front door and its paper run end to end through M21A.** Arc 1 is done: the monorepo and CI,
 the authentication chain, the Compose stack a deployer actually runs, the themed app shell, and the
 `/settings` destination with its Personal and Organization rails. Arc 2 is done too: the
 configurable types and statuses, the Entities registry, the contract record, the conversation on a
@@ -64,7 +63,7 @@ the team actually used — M17 adds the task checklist, the relations panel with
 and typed directional links, and end of life as a signal that leaves the record writable — and M18
 finally makes the system speak: the Notifier seam, the bell with its 9+ badge, immediate email for a
 direct ask, and one morning briefing for the dates coming up, on a scheduled round that serves each
-reader at their own eight o'clock. Arc 4, the front door, has begun: M19 configures it — the Intake
+reader at their own eight o'clock. Arc 4, the front door, is complete: M19 configures it — the Intake
 section on the settings rail, request types on the same machinery every other type table already
 uses, the three-state target that decides at the door what a request will become, the form definition
 that reuses the M6 field catalog rather than building a second one, and the deflection links panel
@@ -83,9 +82,12 @@ with the summary as its title, the urgency as its priority, the collected values
 fields, the paper promoted into documents, and the thread re-parented onto the record with its tiers
 intact. Nothing is re-keyed and nothing is dropped in silence. The Requester's window survives all
 of it: the same address, the same conversation, and one vocabulary — Open, In progress, Resolved,
-Declined — on the pill, the banner, and the email alike. A Business User can now ask and Legal can
-now answer. What neither can do yet is hand the other paper once the conversion has happened, which is
-M21A; then the second workspace, and the matter arm of the door M21 hung (M22).
+Declined — on the pill, the banner, and the email alike. M21A completes the hand-off after conversion:
+paper rides a comment at its tier, a Member+ files it as a new Document or the next Version, and the
+round's kind can be corrected without moving the bytes or the executed pin. A dispositioned Request
+takes no more attachments of its own; its stable portal thread is the door beside that wall. A Business
+User can now ask, Legal can answer with paper, and the next work is the second workspace and the matter
+arm of the door M21 hung (M22).
 
 ---
 
@@ -493,7 +495,7 @@ first.
   - _Decisions:_ INT-002, INT-003, INT-006, INT-007, CMT-001, CMT-010, NOT-002, DD-018, DES-056, DES-057,
     DES-058, DES-059 · _Issues:_ #412–#423
 
-- [ ] **M21A — Paper on the thread**
+- [x] **M21A — Paper on the thread**
       _Demo:_ Legal sends a draft out, the business gets the counterparty's markup back, posts it on the
       contract's thread, and a lawyer files it as the next version of the chain.
   - Attachments on comments, on every thread the audience seam already answers for — a contract, a Request,

@@ -382,9 +382,13 @@ export type SortDirection = (typeof SORT_DIRECTIONS)[number];
  * where the answer is "fix what you sent".
  *
  * The refusal carries the outcome as an RFC 9457 extension member,
- * `outcome`, holding one of {@link REQUEST_OUTCOMES}. A client must
- * never read the outcome out of `detail`. That is copy, and copy is
- * rewritten.
+ * `outcome`, holding one of {@link REQUEST_OUTCOMES}. The Request
+ * attachment route also carries `request`, the R-### whose portal
+ * detail owns the thread that takes paper now, and `convertedContract`
+ * where conversion made one the caller reaches under DD-014 (INT-002's
+ * #438 addendum). A client must
+ * never read any of those facts out of `detail`. That is copy, and copy
+ * is rewritten.
  */
 export const REQUEST_DISPOSITIONED_PROBLEM_TYPE = "urn:openlaw:problem:request-dispositioned";
 

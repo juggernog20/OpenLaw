@@ -312,6 +312,25 @@ function StatusBanner({
             <span className="font-normal">{declinedReason}</span>
           </>
         )}
+        {status !== "new" && (
+          <>
+            {" "}
+            <FormattedMessage
+              id="portal.request.paperOnThread"
+              defaultMessage="<composer>Attach new files to a reply</composer>."
+              values={{
+                composer: (chunks) => (
+                  <a
+                    href="#portal-request-composer"
+                    className="font-semibold underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-link"
+                  >
+                    {chunks}
+                  </a>
+                ),
+              }}
+            />
+          </>
+        )}
       </span>
     </p>
   );
