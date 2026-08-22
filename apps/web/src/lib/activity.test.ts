@@ -430,6 +430,14 @@ const SAMPLE_PAYLOADS: { [A in ActivityAction]: ActivityPayloadMap[A] } = {
     versionNumber: 2,
     kind: "negotiation",
   },
+  "document.version_kind_changed": {
+    documentId: "doc_1",
+    versionId: "ver_2",
+    title: "Supply agreement v1.pdf",
+    versionNumber: 2,
+    from: "draft_ours",
+    to: "draft_theirs",
+  },
   "document.updated": {
     documentId: "doc_1",
     title: "Supply agreement.pdf",
@@ -654,6 +662,19 @@ describe("the cross-reference fallbacks between an ask and its record", () => {
 });
 
 describe("the sentences a reader gets", () => {
+  it("narrates both kinds behind a version-kind correction", () => {
+    const narration = narrate(
+      "document.version_kind_changed",
+      SAMPLE_PAYLOADS["document.version_kind_changed"],
+    );
+    expect(narration.sentence).toBe(
+      "Nadia Counsel changed the kind of version 2 of Supply agreement v1.pdf",
+    );
+    expect(narration.changes).toEqual([
+      { label: "Kind", from: "Draft · ours", to: "Draft · theirs" },
+    ]);
+  });
+
   it("names the actor and the pair behind a status move", () => {
     const narration = narrate(
       "contract.status_changed",

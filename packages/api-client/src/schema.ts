@@ -1891,12 +1891,29 @@ export interface paths {
     };
     get?: never;
     put?: never;
-    /** Append the next version to an existing document (DOC-001). The number is assigned under the owning contract's row lock, so two revisions uploaded at the same moment take consecutive numbers rather than colliding, and the chain runs 1..n with no gaps. The version carries one of the five CTR-014 kinds and, when the uploader wrote one, a short note saying what changed in this round. Nothing about the versions already in the chain is touched: they are immutable, and a correction is another version. Appends document.version_added on the owning contract (DD-017). The kind and note fields must be sent before the file part. An archived contract takes no new paper until it is restored. A document on a contract the uploader cannot reach answers 404, exactly as one that does not exist */
+    /** Append the next version to an existing document (DOC-001). The number is assigned under the owning contract's row lock, so two revisions uploaded at the same moment take consecutive numbers rather than colliding, and the chain runs 1..n with no gaps. The version carries one of the six hand-set CTR-014 kinds and, when the uploader wrote one, a short note saying what changed in this round. Nothing about the versions already in the chain is touched: a file correction is another version, while the kind has its own one-column PATCH. Appends document.version_added on the owning contract (DD-017). The kind and note fields must be sent before the file part. An archived contract takes no new paper until it is restored. A document on a contract the uploader cannot reach answers 404, exactly as one that does not exist */
     post: operations["uploadDocumentVersion"];
     delete?: never;
     options?: never;
     head?: never;
     patch?: never;
+    trace?: never;
+  };
+  "/api/v1/documents/{documentId}/versions/{versionId}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    /** Correct one version's kind (CTR-014). This is the only per-version update. It changes only the kind: the bytes, number, note, author, order, and executed pin stay where they are. The target must be one of the six hand-set kinds. A generated redline cannot be corrected or selected because its kind records how the file was made. Appends document.version_kind_changed on the owning contract with the kind before and after (DD-017). Member+ may correct a kind; a Contributor who reaches the record is refused 403 */
+    patch: operations["updateDocumentVersionKind"];
     trace?: never;
   };
   "/api/v1/documents/{documentId}": {
@@ -10902,7 +10919,8 @@ export interface operations {
                   | "redline_theirs"
                   | "redline_ours"
                   | "executed"
-                  | "amendment";
+                  | "amendment"
+                  | "generated_redline";
                 note: string | null;
                 originalFilename: string;
                 mimeType: string;
@@ -11010,7 +11028,8 @@ export interface operations {
                   | "redline_theirs"
                   | "redline_ours"
                   | "executed"
-                  | "amendment";
+                  | "amendment"
+                  | "generated_redline";
                 note: string | null;
                 originalFilename: string;
                 mimeType: string;
@@ -11113,7 +11132,103 @@ export interface operations {
                   | "redline_theirs"
                   | "redline_ours"
                   | "executed"
-                  | "amendment";
+                  | "amendment"
+                  | "generated_redline";
+                note: string | null;
+                originalFilename: string;
+                mimeType: string;
+                /** @enum {string} */
+                renderFamily: "pdf" | "image" | "word" | "presentation" | "email" | "other";
+                byteSize: number;
+                checksumSha256: string;
+                uploadedBy: {
+                  id: string;
+                  displayName: string;
+                  image: string | null;
+                  archived: boolean;
+                };
+                /** Format: date-time */
+                createdAt: string;
+                isCurrent: boolean;
+                isExecuted: boolean;
+              }[];
+              archivedAt: string | null;
+              isConfidential: boolean;
+              folderId: string | null;
+              createdBy: {
+                id: string;
+                displayName: string;
+                image: string | null;
+                archived: boolean;
+              };
+              /** Format: date-time */
+              createdAt: string;
+              /** Format: date-time */
+              updatedAt: string;
+            };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  updateDocumentVersionKind: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        documentId: string;
+        versionId: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          /** @enum {string} */
+          kind:
+            | "draft_ours"
+            | "draft_theirs"
+            | "redline_theirs"
+            | "redline_ours"
+            | "executed"
+            | "amendment";
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            document: {
+              id: string;
+              title: string;
+              description: string | null;
+              isPrimary: boolean;
+              versions: {
+                id: string;
+                versionNumber: number;
+                /** @enum {string} */
+                kind:
+                  | "draft_ours"
+                  | "draft_theirs"
+                  | "redline_theirs"
+                  | "redline_ours"
+                  | "executed"
+                  | "amendment"
+                  | "generated_redline";
                 note: string | null;
                 originalFilename: string;
                 mimeType: string;
@@ -11199,7 +11314,8 @@ export interface operations {
                   | "redline_theirs"
                   | "redline_ours"
                   | "executed"
-                  | "amendment";
+                  | "amendment"
+                  | "generated_redline";
                 note: string | null;
                 originalFilename: string;
                 mimeType: string;
@@ -11289,7 +11405,8 @@ export interface operations {
                   | "redline_theirs"
                   | "redline_ours"
                   | "executed"
-                  | "amendment";
+                  | "amendment"
+                  | "generated_redline";
                 note: string | null;
                 originalFilename: string;
                 mimeType: string;
@@ -11369,7 +11486,8 @@ export interface operations {
                   | "redline_theirs"
                   | "redline_ours"
                   | "executed"
-                  | "amendment";
+                  | "amendment"
+                  | "generated_redline";
                 note: string | null;
                 originalFilename: string;
                 mimeType: string;
@@ -11456,7 +11574,8 @@ export interface operations {
                   | "redline_theirs"
                   | "redline_ours"
                   | "executed"
-                  | "amendment";
+                  | "amendment"
+                  | "generated_redline";
                 note: string | null;
                 originalFilename: string;
                 mimeType: string;
@@ -11536,7 +11655,8 @@ export interface operations {
                   | "redline_theirs"
                   | "redline_ours"
                   | "executed"
-                  | "amendment";
+                  | "amendment"
+                  | "generated_redline";
                 note: string | null;
                 originalFilename: string;
                 mimeType: string;
@@ -11616,7 +11736,8 @@ export interface operations {
                   | "redline_theirs"
                   | "redline_ours"
                   | "executed"
-                  | "amendment";
+                  | "amendment"
+                  | "generated_redline";
                 note: string | null;
                 originalFilename: string;
                 mimeType: string;
@@ -11696,7 +11817,8 @@ export interface operations {
                   | "redline_theirs"
                   | "redline_ours"
                   | "executed"
-                  | "amendment";
+                  | "amendment"
+                  | "generated_redline";
                 note: string | null;
                 originalFilename: string;
                 mimeType: string;

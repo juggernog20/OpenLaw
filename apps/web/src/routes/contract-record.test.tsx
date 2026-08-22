@@ -4605,6 +4605,22 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4, M11/5)",
         current = current.map((row) => (row === target ? next : row));
         return json(201, { document: next });
       }
+      // A version-kind correction changes one field on one round and
+      // answers the document with the chain in the same order.
+      const corrected = /^\/api\/v1\/documents\/([^/]+)\/versions\/([^/]+)$/.exec(pathname);
+      if (corrected && call.method === "PATCH") {
+        writes.push({ url: pathname, body: call.body });
+        const target = current.find((row) => row.id === corrected[1]);
+        if (!target) return problem(404, "No document exists with this reference.");
+        const next = {
+          ...target,
+          versions: (target.versions as Record<string, unknown>[]).map((row) =>
+            row.id === corrected[2] ? { ...row, kind: (call.body as { kind: string }).kind } : row,
+          ),
+        };
+        current = current.map((row) => (row === target ? next : row));
+        return json(200, { document: next });
+      }
       // Which document is the instrument (CTR-014). The seam answers
       // the record's whole paper, because two rows move: the one that
       // takes the designation and the one that loses it.
@@ -4775,10 +4791,57 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4, M11/5)",
     renderAt("/contracts/42/documents");
 
     const section = await documentsSection();
-    expect(within(section).getByText("Draft · theirs")).toBeVisible();
-    // And it is not read as either kind it used to have to borrow.
-    expect(within(section).queryByText("Redline · theirs")).not.toBeInTheDocument();
-    expect(within(section).queryByText("Draft · ours")).not.toBeInTheDocument();
+    expect(
+      within(section).getByRole("combobox", {
+        name: "Kind of version 1 of Orion_MSA_2026_their_paper.docx",
+      }),
+    ).toHaveValue("draft_theirs");
+  });
+
+  it("lets Member+ correct a version kind from the pill", async () => {
+    const api = documentsApi([CHAIN]);
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42/documents");
+    const user = userEvent.setup();
+
+    const section = await documentsSection();
+    const picker = within(section).getByRole("combobox", {
+      name: "Kind of version 3 of Orion Cloud — master services agreement",
+    });
+    expect(
+      within(picker)
+        .getAllByRole("option")
+        .map((option) => option.textContent),
+    ).toEqual([
+      "Draft · ours",
+      "Draft · theirs",
+      "Redline · theirs",
+      "Redline · ours",
+      "Amendment",
+      "Executed",
+    ]);
+
+    await user.selectOptions(picker, "executed");
+
+    await waitFor(() => expect(api.writes).toHaveLength(1));
+    expect(api.writes[0]).toEqual({
+      url: "/api/v1/documents/doc-3/versions/ver-c",
+      body: { kind: "executed" },
+    });
+    await waitFor(() => expect(picker).toHaveValue("executed"));
+  });
+
+  it("shows a generated redline but never offers a picker for it", async () => {
+    const generated = {
+      ...DRAFT,
+      versions: [version({ kind: "generated_redline" })],
+    };
+    stubApi({ signedIn: MEMBER, extra: documentsApi([generated]).handler });
+    renderAt("/contracts/42/documents");
+
+    const section = await documentsSection();
+    expect(within(section).getByText("Generated redline")).toBeVisible();
+    expect(within(section).queryByRole("combobox")).not.toBeInTheDocument();
   });
 
   it("says so plainly when the record has no paper on it", async () => {
@@ -5063,7 +5126,7 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4, M11/5)",
       url: "/api/v1/documents/doc-3/executed-version:POST",
       body: { versionId: "ver-b" },
     });
-    expect(await within(section).findByText("Executed")).toBeVisible();
+    expect(await within(section).findByText("Executed", { selector: "span" })).toBeVisible();
 
     // The same menu, and the item's own label carries the direction
     // now — "Unmark" once the round is pinned.
@@ -5083,7 +5146,9 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4, M11/5)",
     expect(api.writes[1]!.url).toBe("/api/v1/documents/doc-3/executed-version:DELETE");
     // Every round is still there: the pin is one column on the
     // document, and clearing it takes nothing else with it.
-    await waitFor(() => expect(within(section).queryByText("Executed")).not.toBeInTheDocument());
+    await waitFor(() =>
+      expect(within(section).queryByText("Executed", { selector: "span" })).not.toBeInTheDocument(),
+    );
     expect(within(section).getByRole("button", { name: "round_2.docx" })).toBeInTheDocument();
   });
 
@@ -5152,6 +5217,7 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4, M11/5)",
     // grid arrives in M23.
     expect(within(section).queryByRole("button", { name: "Upload" })).not.toBeInTheDocument();
     expect(within(section).queryByRole("button", { name: /^Actions for/ })).not.toBeInTheDocument();
+    expect(within(section).queryByRole("combobox")).not.toBeInTheDocument();
     expect(within(section).queryByRole("switch")).not.toBeInTheDocument();
   });
 
@@ -5248,6 +5314,7 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4, M11/5)",
     // other write on an archived document is refused until it is
     // restored, so a control for one would be a dead end — and the
     // erasure is the Administrator's, not theirs.
+    expect(within(section).queryByRole("combobox")).not.toBeInTheDocument();
     expect(await menuVerbs(user, section, "Orion_MSA_2026_draft.docx")).toEqual(["Restore"]);
     await user.keyboard("{Escape}");
   });
@@ -6496,7 +6563,7 @@ describe("the folder tree on the contract record (M13/2, DES-033)", () => {
     renderAt("/contracts/42/documents");
 
     const section = await documentsSection();
-    await within(section).findByText("Executed");
+    await within(section).findByRole("button", { name: "Expand Executed" });
     // Every folder opens (M13/3). "Empty" may be a folder whose
     // contents this viewer cannot see, so a chevron drawn only on the
     // folders that hold something would be the surface telling the two
@@ -6915,7 +6982,7 @@ describe("filing documents into folders (M13/3, DES-033)", () => {
     const user = userEvent.setup();
 
     const section = await documentsSection();
-    await within(section).findByText("Executed");
+    await within(section).findByRole("button", { name: "Expand Executed" });
     // Nothing is read for a folder nobody opened: a heavy record stays a
     // short table until somebody asks.
     expect(api.reads).not.toContain("f-1");

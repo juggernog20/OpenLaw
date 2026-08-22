@@ -189,11 +189,13 @@ import {
   setExecutedVersion,
   setPrimaryDocument,
   updateDocument,
+  updateDocumentVersionKind,
   uploadContractDocument,
   uploadDocumentVersion,
   type ContractDocument,
   type DocumentVersion,
   type DocumentVersionKind,
+  type HandSetDocumentVersionKind,
   type UploadDraft,
 } from "../../lib/documents";
 import {
@@ -251,6 +253,7 @@ const KIND_PILL: Record<DocumentVersionKind, string> = {
   redline_theirs: "bg-status-warning-bg text-status-warning-fg",
   executed: "bg-status-success-bg text-status-success-fg",
   amendment: "bg-status-neutral-bg text-status-neutral-fg",
+  generated_redline: "bg-status-neutral-bg text-status-neutral-fg",
 };
 
 /** The six CTR-014 kinds, named as the negotiation names them. The
@@ -264,7 +267,8 @@ function kindLabel(intl: IntlShape, kind: DocumentVersionKind): string {
       defaultMessage:
         "{kind, select, draft_ours {Draft · ours} draft_theirs {Draft · theirs} " +
         "redline_theirs {Redline · theirs} redline_ours {Redline · ours} " +
-        "executed {Executed} amendment {Amendment} other {Unknown}}",
+        "executed {Executed} amendment {Amendment} " +
+        "generated_redline {Generated redline} other {Unknown}}",
     },
     { kind },
   );
@@ -281,7 +285,7 @@ function kindLabel(intl: IntlShape, kind: DocumentVersionKind): string {
  * property of the document it was opened on.
  */
 type Composer = ({ document: ContractDocument } | { document: undefined }) & {
-  kind?: DocumentVersionKind;
+  kind?: HandSetDocumentVersionKind;
 };
 
 /** What the folder dialog is open for. Creating and renaming collect one
@@ -353,6 +357,11 @@ interface RowContext {
     trigger: HTMLElement | null,
   ) => void;
   onPin: (document: ContractDocument, version: DocumentVersion) => void;
+  onKindChange: (
+    document: ContractDocument,
+    version: DocumentVersion,
+    kind: HandSetDocumentVersionKind,
+  ) => void;
   onMakePrimary: (document: ContractDocument) => void;
   onAddVersion: (document: ContractDocument) => void;
   onEditDetails: (document: ContractDocument) => void;
@@ -1120,6 +1129,26 @@ export function DocumentsCard({
     setDetail(outcome.detail ?? null);
   }
 
+  /** Corrects one round's kind and leaves every other fact on it alone. */
+  async function changeKind(
+    document: ContractDocument,
+    version: DocumentVersion,
+    kind: HandSetDocumentVersionKind,
+  ) {
+    if (busy || version.kind === kind || version.kind === "generated_redline") return;
+    setBusy(true);
+    setStatus("saving");
+    setDetail(null);
+    const outcome = await updateDocumentVersionKind(document.id, version.id, kind);
+    setBusy(false);
+    if (outcome.ok) {
+      replace(outcome.document);
+      return;
+    }
+    setStatus("error");
+    setDetail(outcome.detail ?? null);
+  }
+
   function toggle(documentId: string) {
     setOpened((current) => {
       const next = new Set(current);
@@ -1320,6 +1349,7 @@ export function DocumentsCard({
     onToggle: toggle,
     onRead,
     onPin: (document, version) => void togglePin(document, version),
+    onKindChange: (document, version, kind) => void changeKind(document, version, kind),
     onMakePrimary: (document) => void makePrimary(document),
     onAddVersion: (document) => setComposer({ document }),
     onEditDetails: setEditing,
@@ -1842,7 +1872,7 @@ function DocumentRows({
                   </span>
                 </span>
               </td>
-              <KindCell version={chain.current} intl={rows.intl} />
+              <KindCell document={document} version={chain.current} rows={rows} />
               <VersionCell version={chain.current} intl={rows.intl} />
               <ModifiedCell version={chain.current} />
               <UploaderCell version={chain.current} intl={rows.intl} />
@@ -1909,7 +1939,7 @@ function DocumentRows({
                       </span>
                     </span>
                   </td>
-                  <KindCell version={version} intl={rows.intl} />
+                  <KindCell document={document} version={version} rows={rows} />
                   <VersionCell version={version} intl={rows.intl} />
                   <ModifiedCell version={version} />
                   <UploaderCell version={version} intl={rows.intl} />
@@ -3115,18 +3145,47 @@ function DeleteDialog({
   );
 }
 
-function KindCell({ version, intl }: Readonly<{ version: DocumentVersion; intl: IntlShape }>) {
+function KindCell({
+  document,
+  version,
+  rows,
+}: Readonly<{
+  document: ContractDocument;
+  version: DocumentVersion;
+  rows: RowContext;
+}>) {
+  const pill = `whitespace-nowrap rounded-pill px-2 py-0.5 text-xs font-medium ${KIND_PILL[version.kind]}`;
   return (
     <td className="px-4 py-2.5">
       {/* The pill sits in a flex line rather than a text line, so it
           centres on the row instead of on a baseline the cell has no
           text to share. */}
       <span className="flex items-center">
-        <span
-          className={`whitespace-nowrap rounded-pill px-2 py-0.5 text-xs font-medium ${KIND_PILL[version.kind]}`}
-        >
-          {kindLabel(intl, version.kind)}
-        </span>
+        {rows.frozen || document.archivedAt !== null || version.kind === "generated_redline" ? (
+          <span className={pill}>{kindLabel(rows.intl, version.kind)}</span>
+        ) : (
+          <select
+            aria-label={rows.intl.formatMessage(
+              {
+                id: "documents.versionKindLabel",
+                defaultMessage: "Kind of version {number} of {title}",
+              },
+              { number: version.versionNumber, title: document.title },
+            )}
+            className={`${pill} cursor-pointer border-0`}
+            value={version.kind}
+            disabled={rows.busy}
+            onChange={(event) =>
+              rows.onKindChange(document, version, event.target.value as HandSetDocumentVersionKind)
+            }
+          >
+            {DOCUMENT_VERSION_KINDS.map((kind) => (
+              <option key={kind} value={kind}>
+                {kindLabel(rows.intl, kind)}
+              </option>
+            ))}
+          </select>
+        )}
       </span>
     </td>
   );
@@ -3271,7 +3330,7 @@ function UploadDialog({
    * papered as an amendment sets it (M16/5); every other way in starts
    * on the draft the negotiation usually opens with. It is a seed and
    * not a lock — the person may pick another kind before uploading. */
-  seedKind: DocumentVersionKind | undefined;
+  seedKind: HandSetDocumentVersionKind | undefined;
   onClose: () => void;
   /** Hand several chosen files to the batch confirmation (M13/4,
    * M13/5). This is the drop's pointer-free twin: the picker is where a
@@ -3283,7 +3342,7 @@ function UploadDialog({
 }>) {
   const intl = useIntl();
   const [file, setFile] = useState<File | null>(null);
-  const [kind, setKind] = useState<DocumentVersionKind>(seedKind ?? "draft_ours");
+  const [kind, setKind] = useState<HandSetDocumentVersionKind>(seedKind ?? "draft_ours");
   const [note, setNote] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -3473,7 +3532,7 @@ function UploadDialog({
               id="document-kind"
               value={kind}
               className={CONTROL_CLASS}
-              onChange={(event) => setKind(event.target.value as DocumentVersionKind)}
+              onChange={(event) => setKind(event.target.value as HandSetDocumentVersionKind)}
             >
               {DOCUMENT_VERSION_KINDS.map((option) => (
                 <option key={option} value={option}>
