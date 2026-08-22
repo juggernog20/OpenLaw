@@ -35,7 +35,7 @@
 import { useState } from "react";
 import { FormattedMessage, useIntl } from "react-intl";
 import { Check, MessageSquare } from "lucide-react";
-import type { RequestOutcome } from "@openlaw/shared";
+import { MAX_COMMENT_BODY_LENGTH, type RequestOutcome } from "@openlaw/shared";
 import { TEXTAREA_CLASS } from "../../lib/form-controls";
 import { Button } from "../ui/button";
 import { Dialog, DialogContent, DialogTitle } from "../ui/dialog";
@@ -119,14 +119,14 @@ export function ResolveDialog({
                 No form, because there is nothing left to decide. */}
             <p className="text-sm text-muted">
               <FormattedMessage
-                id="decline.alreadyDecided"
+                id="disposition.alreadyDecided"
                 defaultMessage="{outcome, select, converted {Somebody else already converted this request.} resolved {Somebody else already resolved this request.} declined {Somebody else already declined this request.} other {Somebody else already decided this request.}}"
                 values={{ outcome: alreadyDecided }}
               />
             </p>
             <p className="text-sm text-muted">
               <FormattedMessage
-                id="decline.alreadyDecidedRead"
+                id="disposition.alreadyDecidedRead"
                 defaultMessage="Close this to read what they recorded."
               />
             </p>
@@ -169,6 +169,11 @@ export function ResolveDialog({
                 value={reply}
                 rows={4}
                 autoFocus
+                // The seam's own bound on a comment body, restated on the
+                // box (DES-058 normalization point 2's rule). Without it
+                // the dialog takes a reply the resolve route refuses,
+                // and the writer learns it only after pressing.
+                maxLength={MAX_COMMENT_BODY_LENGTH}
                 className={TEXTAREA_CLASS}
                 onChange={(event) => {
                   setReply(event.target.value);

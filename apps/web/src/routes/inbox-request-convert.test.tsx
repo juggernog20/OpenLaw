@@ -320,10 +320,14 @@ describe("the target is confirmed, never classified (DD-018)", () => {
     });
   });
 
-  it("asks for a live type when the bound one has been archived", async () => {
-    // The API reads an archived target type as no type (INT-002), so the
-    // screen sees a module with no type and asks — it never has to know
-    // the rule.
+  it("never learns why a bound type is absent: a null target type always asks", async () => {
+    // The screen cannot tell an archived target apart from a module-only
+    // one, and that is the point: the API reads an archived type as no
+    // type (INT-002), so both arrive here as the same two nulls. What
+    // this pins is that the dialog asks whatever the reason was. The
+    // archived rule itself is pinned where it lives, in the API suite's
+    // "reads an archived target type as no type, on the read and at the
+    // write".
     const user = userEvent.setup();
     open(
       requestApi(

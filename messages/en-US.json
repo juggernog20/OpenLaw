@@ -1706,12 +1706,6 @@
   "decline.action": {
     "defaultMessage": "Decline"
   },
-  "decline.alreadyDecided": {
-    "defaultMessage": "{outcome, select, converted {Somebody else already converted this request.} resolved {Somebody else already resolved this request.} declined {Somebody else already declined this request.} other {Somebody else already decided this request.}}"
-  },
-  "decline.alreadyDecidedRead": {
-    "defaultMessage": "Close this to read what they recorded."
-  },
   "decline.explains": {
     "defaultMessage": "Declining closes the request without converting it. The reason is required and is shared with the requester."
   },
@@ -1735,6 +1729,12 @@
   },
   "dialog.close": {
     "defaultMessage": "Close"
+  },
+  "disposition.alreadyDecided": {
+    "defaultMessage": "{outcome, select, converted {Somebody else already converted this request.} resolved {Somebody else already resolved this request.} declined {Somebody else already declined this request.} other {Somebody else already decided this request.}}"
+  },
+  "disposition.alreadyDecidedRead": {
+    "defaultMessage": "Close this to read what they recorded."
   },
   "docPanel.close": {
     "defaultMessage": "Close the document"
@@ -2401,6 +2401,9 @@
   },
   "inbox.request.outcome": {
     "defaultMessage": "Outcome"
+  },
+  "inbox.request.overview": {
+    "defaultMessage": "Overview"
   },
   "inbox.request.requester": {
     "defaultMessage": "Requester"

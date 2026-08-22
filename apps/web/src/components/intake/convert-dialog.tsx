@@ -293,7 +293,7 @@ export function ConvertDialog({
                 scaffold's own catalogue ids. */}
             <p className="text-sm text-muted">
               <FormattedMessage
-                id="decline.alreadyDecided"
+                id="disposition.alreadyDecided"
                 defaultMessage="{outcome, select, converted {Somebody else already converted this request.} resolved {Somebody else already resolved this request.} declined {Somebody else already declined this request.} other {Somebody else already decided this request.}}"
                 values={{ outcome: alreadyDecided.outcome }}
               />
@@ -314,7 +314,7 @@ export function ConvertDialog({
             )}
             <p className="text-sm text-muted">
               <FormattedMessage
-                id="decline.alreadyDecidedRead"
+                id="disposition.alreadyDecidedRead"
                 defaultMessage="Close this to read what they recorded."
               />
             </p>

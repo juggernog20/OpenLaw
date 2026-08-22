@@ -584,9 +584,21 @@ describe("the conversation", () => {
   it("posts a reply at Full Thread and puts it on the end of the thread", async () => {
     const user = userEvent.setup();
     let sent: unknown;
+    // What the loader asked the thread for. The stub answers the same
+    // rows for every comments query, so without this the test passes on
+    // a loader that dropped `entityId` or sent the contract's id — and
+    // the whole claim of this test is that a converted Request's thread
+    // is still read by the Request's own pair.
+    const threadQueries: URLSearchParams[] = [];
     stubApi({
       signedIn: REQUESTER,
       extra: stubs(
+        (call) => {
+          if (call.url.pathname === "/api/v1/comments" && call.method === "GET") {
+            threadQueries.push(call.url.searchParams);
+          }
+          return undefined;
+        },
         replyPost((body) => {
           sent = body;
           return json(201, {
@@ -628,9 +640,21 @@ describe("the conversation", () => {
     // this page branches on the status.
     const user = userEvent.setup();
     let sent: unknown;
+    // What the loader asked the thread for. The stub answers the same
+    // rows for every comments query, so without this the test passes on
+    // a loader that dropped `entityId` or sent the contract's id — and
+    // the whole claim of this test is that a converted Request's thread
+    // is still read by the Request's own pair.
+    const threadQueries: URLSearchParams[] = [];
     stubApi({
       signedIn: REQUESTER,
       extra: stubs(
+        (call) => {
+          if (call.url.pathname === "/api/v1/comments" && call.method === "GET") {
+            threadQueries.push(call.url.searchParams);
+          }
+          return undefined;
+        },
         replyPost((body) => {
           sent = body;
           return json(201, {
@@ -663,6 +687,8 @@ describe("the conversation", () => {
     expect(
       within(card).getByText("We have opened the file and started the redline."),
     ).toBeInTheDocument();
+    expect(threadQueries[0]?.get("entityType")).toBe("request");
+    expect(threadQueries[0]?.get("entityId")).toBe("rq1");
 
     const box = within(card).getByRole("textbox", { name: "Reply to Legal" });
     await user.type(box, "Thanks — anything else you need?");

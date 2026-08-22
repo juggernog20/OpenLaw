@@ -407,3 +407,15 @@ export type RequestOutcome = (typeof REQUEST_OUTCOMES)[number];
  * stopped taking.
  */
 export const MAX_DECLINE_REASON_LENGTH = 2000;
+
+/**
+ * The seam's ceiling on a comment body (CMT-004), and on the closing
+ * reply a resolution posts through the same call (INT-007).
+ *
+ * Where every other free-text field in the product is capped. Shared for
+ * `MAX_DECLINE_REASON_LENGTH`'s reason: a box that goes on taking text
+ * the route has stopped taking sends somebody back to edit words they
+ * already wrote, and the only way the box and the route stay agreed is
+ * one number.
+ */
+export const MAX_COMMENT_BODY_LENGTH = 10_000;

@@ -670,6 +670,29 @@ function crossReference(
   return intl.formatMessage(reference, { number });
 }
 
+/**
+ * The record a conversion's two entries name, in the one wording both
+ * use.
+ *
+ * `request.converted` and `request.thread_moved` say different sentences
+ * about the same move, and the C-### inside each of them is the same
+ * phrase. Hoisted so one edit cannot leave the two arms reading
+ * differently. The `defineMessage` wrappers stay inside, because a
+ * descriptor handed to a helper is invisible to `formatjs extract`.
+ */
+function convertedContract(intl: IntlShape, payload: Payload): string {
+  return crossReference(
+    intl,
+    payload,
+    "contractNumber",
+    defineMessage({ id: "contracts.reference", defaultMessage: "C-{number}" }),
+    defineMessage({
+      id: "activity.contract.unnamedRecord",
+      defaultMessage: "another contract",
+    }),
+  );
+}
+
 function named(intl: IntlShape, payload: Payload, key: string): string {
   return (
     text(payload, key) ?? intl.formatMessage({ id: "activity.someone", defaultMessage: "someone" })
@@ -1792,18 +1815,7 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
       id: "activity.request.converted",
       defaultMessage: "{actor} converted this request into {contract}",
     }),
-    values: (intl, payload) => ({
-      contract: crossReference(
-        intl,
-        payload,
-        "contractNumber",
-        defineMessage({ id: "contracts.reference", defaultMessage: "C-{number}" }),
-        defineMessage({
-          id: "activity.contract.unnamedRecord",
-          defaultMessage: "another contract",
-        }),
-      ),
-    }),
+    values: (intl, payload) => ({ contract: convertedContract(intl, payload) }),
   },
 
   // CMT-001's promise, kept at the conversion (#422). The conversation
@@ -1817,18 +1829,7 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
       id: "activity.request.threadMoved",
       defaultMessage: "{actor} moved this conversation onto {contract}",
     }),
-    values: (intl, payload) => ({
-      contract: crossReference(
-        intl,
-        payload,
-        "contractNumber",
-        defineMessage({ id: "contracts.reference", defaultMessage: "C-{number}" }),
-        defineMessage({
-          id: "activity.contract.unnamedRecord",
-          defaultMessage: "another contract",
-        }),
-      ),
-    }),
+    values: (intl, payload) => ({ contract: convertedContract(intl, payload) }),
   },
 
   // ---- User administration and the profile (audit log only) ----

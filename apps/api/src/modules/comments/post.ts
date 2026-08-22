@@ -27,6 +27,7 @@
 
 import { z } from "zod";
 import { comments, commentMentions, type CommentVisibility } from "@openlaw/db";
+import { MAX_COMMENT_BODY_LENGTH } from "@openlaw/shared";
 import type { AuthenticatedUser } from "../../auth/guards.js";
 import { recordActivity } from "../../lib/activity.js";
 import type { Notifier, NotifyingTransaction } from "../../lib/notifications/notifier.js";
@@ -37,8 +38,10 @@ import { notifyCommentPosted, type CommentAudience } from "./audience.js";
  *
  * Shared rather than restated, because a Request's closing reply is an
  * ordinary comment and two ceilings for one column would let one route
- * keep taking text another has stopped taking. */
-export const CommentBodySchema = z.string().trim().min(1).max(10_000);
+ * keep taking text another has stopped taking. The number itself lives
+ * in `@openlaw/shared`, so the boxes that collect a comment restate the
+ * same bound as `maxLength`. */
+export const CommentBodySchema = z.string().trim().min(1).max(MAX_COMMENT_BODY_LENGTH);
 
 /** One comment, as the act that writes it describes it. */
 export interface NewComment {
