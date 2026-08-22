@@ -100,9 +100,27 @@ export async function sendComment(input: CommentPost, files: readonly File[] = [
   }
   // A refusal from in front of the API (a proxy's 413, say) carries no
   // problem JSON. It is still a refusal, not a dropped connection.
-  const payload = await response.json().catch(() => undefined);
-  if (response.ok && payload) return { data: payload as { comment: Comment }, error: undefined };
+  const payload: unknown = await response.json().catch(() => undefined);
+  if (response.ok) {
+    // A 201 whose body is not the comment envelope is not a success the
+    // thread can draw, so it is checked rather than asserted. The same
+    // reason the document uploads read their answer before trusting it.
+    const comment = commentIn(payload);
+    return comment
+      ? { data: { comment }, error: undefined }
+      : { data: undefined, error: undefined };
+  }
   return { data: undefined, error: payload };
+}
+
+/** The envelope POST /comments answers, or nothing when the body is not it. */
+function commentIn(payload: unknown): Comment | undefined {
+  if (typeof payload !== "object" || payload === null || !("comment" in payload)) return undefined;
+  const { comment } = payload;
+  if (typeof comment !== "object" || comment === null) return undefined;
+  if (!("id" in comment) || typeof comment.id !== "string") return undefined;
+  if (!("body" in comment) || typeof comment.body !== "string") return undefined;
+  return comment as Comment;
 }
 
 /** The three tiers, narrowest first — the order the composer draws them

@@ -15,6 +15,10 @@ import { Dialog, DialogContent, DialogTitle } from "../ui/dialog";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
 
+/** The two places a filing can land (CMT-011), as the dialog offers them. */
+const FILING_DESTINATIONS = ["new_document", "new_version"] as const;
+type FilingDestination = (typeof FILING_DESTINATIONS)[number];
+
 export const MAX_COMMENT_ATTACHMENTS = 5;
 
 /** The record-owned part of filing, supplied only where Documents exist. */
@@ -26,7 +30,8 @@ export interface CommentFilingContext {
   canFile: boolean;
   /** Opens the exact round in place, or false to let the link navigate. */
   onOpen: (documentId: string, versionId: string, trigger: HTMLElement) => boolean;
-  onPaperFiled: () => Promise<void>;
+  /** Re-read the paper after a filing, given the Document it landed on. */
+  onPaperFiled: (documentId: string) => Promise<void>;
 }
 
 export function CommentFilePicker({
@@ -114,6 +119,18 @@ export function CommentFilePicker({
   );
 }
 
+function FiledDestination({
+  filed,
+}: Readonly<{ filed: NonNullable<NonNullable<Comment["attachments"]>[number]["filed"]> }>) {
+  return (
+    <FormattedMessage
+      id="comments.attachments.destination"
+      defaultMessage="{title}, version {number}"
+      values={{ title: filed.documentTitle, number: filed.versionNumber }}
+    />
+  );
+}
+
 export function CommentAttachmentRows({
   comment,
   entityType,
@@ -163,14 +180,14 @@ export function CommentAttachmentRows({
               </Button>
             )}
           </span>
-          {attachment.filed && filing && (
+          {attachment.filed && (
             <span className="ms-5 flex min-w-0 items-center gap-1 text-xs text-muted">
               <FileCheck2 size={16} className="shrink-0" aria-hidden="true" />
               <FormattedMessage
                 id="comments.attachments.filedTo"
                 defaultMessage="Filed to {destination}"
                 values={{
-                  destination: (
+                  destination: filing ? (
                     <a
                       className="truncate text-link underline-offset-2 hover:underline"
                       href={filing.recordHref}
@@ -183,15 +200,15 @@ export function CommentAttachmentRows({
                         if (opened) event.preventDefault();
                       }}
                     >
-                      <FormattedMessage
-                        id="comments.attachments.destination"
-                        defaultMessage="{title}, version {number}"
-                        values={{
-                          title: attachment.filed.documentTitle,
-                          number: attachment.filed.versionNumber,
-                        }}
-                      />
+                      <FiledDestination filed={attachment.filed} />
                     </a>
+                  ) : (
+                    // A thread drawn with no record behind it (a Request
+                    // arm) still says the paper went somewhere; only the
+                    // link needs a record to open.
+                    <span className="truncate">
+                      <FiledDestination filed={attachment.filed} />
+                    </span>
                   ),
                 }}
               />
@@ -232,7 +249,7 @@ function FilingDialog({
   onChanged: (comment: Comment) => void;
 }>) {
   const intl = useIntl();
-  const [destination, setDestination] = useState<"new_document" | "new_version">("new_document");
+  const [destination, setDestination] = useState<FilingDestination>("new_document");
   const [documents, setDocuments] = useState(filing.documents);
   const [name, setName] = useState(attachment.filename);
   const [documentId, setDocumentId] = useState(filing.documents[0]?.id ?? "");
@@ -292,7 +309,8 @@ function FilingDialog({
       return;
     }
     onChanged(outcome.data.comment);
-    await filing.onPaperFiled().catch(() => undefined);
+    const landed = outcome.data.comment.attachments?.find((row) => row.id === attachment.id);
+    await filing.onPaperFiled(landed?.filed?.documentId ?? "").catch(() => undefined);
     onClose();
   }
 
@@ -318,9 +336,11 @@ function FilingDialog({
               id="comment-filing-destination"
               className={CONTROL_CLASS}
               value={destination}
-              onChange={(event) =>
-                setDestination(event.target.value as "new_document" | "new_version")
-              }
+              onChange={(event) => {
+                // Narrowed, not asserted: the DOM hands back a string.
+                const picked = FILING_DESTINATIONS.find((option) => option === event.target.value);
+                if (picked) setDestination(picked);
+              }}
             >
               <option value="new_document">
                 {intl.formatMessage({
@@ -402,7 +422,12 @@ function FilingDialog({
               id="comment-filing-kind"
               className={CONTROL_CLASS}
               value={kind}
-              onChange={(event) => setKind(event.target.value as HandSetDocumentVersionKind)}
+              onChange={(event) => {
+                const picked = DOCUMENT_VERSION_KINDS.find(
+                  (option) => option === event.target.value,
+                );
+                if (picked) setKind(picked);
+              }}
             >
               {DOCUMENT_VERSION_KINDS.map((option) => (
                 <option key={option} value={option}>

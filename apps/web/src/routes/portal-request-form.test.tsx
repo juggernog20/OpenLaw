@@ -411,7 +411,9 @@ describe("the Attachments basic", () => {
           status: 409,
           detail: "Attach new paper to a reply in its thread.",
           outcome: "converted",
-          request: { number: 42 },
+          // Not the submission's own R-42, so a link built from the
+          // wrong number source fails here rather than passing by luck.
+          request: { number: 57 },
           convertedContract: { number: 91 },
         }),
     });
@@ -420,8 +422,8 @@ describe("the Attachments basic", () => {
     await user.type(screen.getByLabelText(/^Description/), "They sent a redline.");
     await user.click(screen.getByRole("button", { name: "Submit request" }));
 
-    const thread = await screen.findByRole("link", { name: "Add it to a reply on R-42" });
-    expect(thread).toHaveAttribute("href", "/portal/requests/42#portal-request-composer");
+    const thread = await screen.findByRole("link", { name: "Add it to a reply on R-57" });
+    expect(thread).toHaveAttribute("href", "/portal/requests/57#portal-request-composer");
   });
 
   it("stops a requester queueing more files than a Request carries", async () => {

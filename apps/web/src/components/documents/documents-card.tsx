@@ -3172,12 +3172,15 @@ function KindCell({
               },
               { number: version.versionNumber, title: document.title },
             )}
-            className={`${pill} cursor-pointer border-0`}
+            className={`${pill} min-h-6 cursor-pointer border-0`}
             value={version.kind}
             disabled={rows.busy}
-            onChange={(event) =>
-              rows.onKindChange(document, version, event.target.value as HandSetDocumentVersionKind)
-            }
+            onChange={(event) => {
+              // Narrowed against the list the options are drawn from,
+              // not asserted: the DOM hands back a string.
+              const picked = DOCUMENT_VERSION_KINDS.find((kind) => kind === event.target.value);
+              if (picked) rows.onKindChange(document, version, picked);
+            }}
           >
             {DOCUMENT_VERSION_KINDS.map((kind) => (
               <option key={kind} value={kind}>
@@ -3532,7 +3535,12 @@ function UploadDialog({
               id="document-kind"
               value={kind}
               className={CONTROL_CLASS}
-              onChange={(event) => setKind(event.target.value as HandSetDocumentVersionKind)}
+              onChange={(event) => {
+                const picked = DOCUMENT_VERSION_KINDS.find(
+                  (option) => option === event.target.value,
+                );
+                if (picked) setKind(picked);
+              }}
             >
               {DOCUMENT_VERSION_KINDS.map((option) => (
                 <option key={option} value={option}>

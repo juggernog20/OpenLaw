@@ -5,6 +5,7 @@
 import { readdir } from "node:fs/promises";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import {
+  and,
   activityLog,
   commentAttachments,
   comments,
@@ -663,7 +664,13 @@ describe("filing comment attachments", () => {
     const [activity] = await harness.db
       .select({ actorId: activityLog.actorId, payload: activityLog.payload })
       .from(activityLog)
-      .where(eq(activityLog.action, "document.created"));
+      .where(
+        and(
+          eq(activityLog.action, "document.created"),
+          eq(activityLog.entityType, "contract"),
+          eq(activityLog.entityId, contract.id),
+        ),
+      );
     expect(activity).toMatchObject({ actorId: memberId });
     expect(activity!.payload).toMatchObject({
       documentId: document!.id,
@@ -778,7 +785,13 @@ describe("filing comment attachments", () => {
     const [activity] = await harness.db
       .select({ actorId: activityLog.actorId, payload: activityLog.payload })
       .from(activityLog)
-      .where(eq(activityLog.action, "document.version_added"));
+      .where(
+        and(
+          eq(activityLog.action, "document.version_added"),
+          eq(activityLog.entityType, "contract"),
+          eq(activityLog.entityId, contract.id),
+        ),
+      );
     expect(activity).toMatchObject({ actorId: memberId });
     expect(activity!.payload).toMatchObject({
       documentId,
