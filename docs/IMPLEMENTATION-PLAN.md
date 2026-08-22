@@ -68,16 +68,16 @@ form that renders M19's configuration, the Request with its R-### and its paper,
 Legal answers on, and a bell and a notification pane of the portal's own. Every one of those reads is
 its own mount rather than a loosened staff gate, and the thread and the bell are the comments and
 notification machinery given one more arm rather than a second system. M21 closes the arc by
-receiving what M20 lets people send: the Inbox in nav slot one, listing exactly the requests whose
-fate is undecided; the staff detail that reads the whole ask on one screen; and disposition at
+receiving what M20 lets people send: the Inbox in nav slot one, listing exactly the Requests whose
+fate is undecided; the staff detail that reads a whole Request on one screen; and disposition at
 pickup — Convert, Resolve, or Decline, atomic on `new` under the Request's own row lock, with no
 parked intermediate state and no claim step. Convert is the one the milestone is for. It runs the
 ordinary contract-create write inside the disposition transaction, so the record is born ordinary,
 with the summary as its title, the urgency as its priority, the collected values in their real
 fields, the paper promoted into documents, and the thread re-parented onto the record with its tiers
-intact. Nothing is re-keyed and nothing is dropped in silence. The requester's window survives all
+intact. Nothing is re-keyed and nothing is dropped in silence. The Requester's window survives all
 of it: the same address, the same conversation, and one vocabulary — Open, In progress, Resolved,
-Declined — on the pill, the banner, and the email alike. A business user can now ask and Legal can
+Declined — on the pill, the banner, and the email alike. A Business User can now ask and Legal can
 now answer; next is the second workspace, and the matter arm of the door M21 hung (M22).
 
 ---
@@ -432,11 +432,11 @@ first.
     DES-050 · _Issues:_ #375–#384, #400
 
 - [x] **M21 — The Inbox and triage**
-      _Demo:_ A submitted request appears in the Inbox, converts into a contract with the collected values
-      carried straight through, and the requester sees the update in their thread.
-  - The Inbox as nav slot one: exactly the requests whose fate is undecided, ordered by urgency then age,
-    Member+ only and absent rather than disabled below that floor. The triaged toggle is the queue's one
-    control — the Inbox is a fixed queue, so DD-019's list machinery is not built on it
+      _Demo:_ A submitted Request appears in the Inbox, converts into a contract with the collected values
+      carried straight through, and the Requester sees the update in their thread.
+  - The Inbox as nav slot one: exactly the Requests whose fate is undecided, ordered by urgency then age,
+    Member+ only and absent rather than disabled below that floor. The triaged toggle is the Inbox's one
+    control — the Inbox is fixed, so DD-019's list machinery is not built on it
   - The staff request detail: the envelope, the submitted values labelled by the boxes that collected them,
     the paper downloadable before the decision, and the thread at every tier on the same activity bar a
     contract wears — a record page for something that is not a record
@@ -455,14 +455,14 @@ first.
     commit. Re-target is the lossless exception path — a matter-targeting or no-target Request can still
     become a contract, and the Request survives either way
   - Attachments promoted into `documents` at conversion, one document at version 1 each, copied rather
-    than moved — the requester's own download goes on answering
+    than moved — the Requester's own download goes on answering
   - The thread re-parents onto the record with its tiers and its unread watermarks, and from then on the
-    Request's own thread address answers the record's conversation. The requester's window never moves:
+    Request's own thread address answers the record's conversation. The Requester's window never moves:
     the portal draws the record's thread filtered to Full Thread, their replies land on the record, and
     the reply promise follows — a Full Thread comment on the contract still reaches the Requester
   - Group 4 fires at last, and the two bells split by audience rather than by role; a mention on a
     Request thread became group 1's business
-  - **One requester-facing vocabulary, chosen and applied**: Open, In progress, Resolved, Declined, on
+  - **One Requester-facing vocabulary, chosen and applied**: Open, In progress, Resolved, Declined, on
     the portal pill, the banner, and the email alike. The enum is untouched and staff surfaces keep its
     own words — `converted` is a fact about Legal's machinery, and "In progress" is what it means to the
     person who asked
@@ -476,7 +476,7 @@ first.
     triage dead-ends the dialog** — conversion refuses it by name and all-or-nothing holds, but the
     dialog draws no box to fix it, because the field is answered rather than missing; the API takes an
     override and the screen does not offer one, and which of the three repairs to build is a design
-    decision (#437). **A requester may still attach paper to an already-converted Request**, and that
+    decision (#437). **A Requester may still attach paper to an already-converted Request**, and that
     paper never promotes — M20/6 behaviour that conversion did not change (#438). **The converted-contract
     left join is written twice**, in the Inbox read and the staff detail read, both pinned by tests;
     M22's matter arm is the third reader, and the third is what should fold it into `projection.ts`
