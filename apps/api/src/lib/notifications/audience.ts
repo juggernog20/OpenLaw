@@ -63,7 +63,7 @@ import {
 } from "@openlaw/db";
 import type { AuthenticatedUser } from "../../auth/user.js";
 import { contractMentionCandidates, contractTeamScope } from "../contract-access.js";
-import { eventTypesIn } from "./catalog.js";
+import { requestEventTypesOn, type RequestSide } from "./catalog.js";
 
 /** The one entity type M18 writes. Named so the fan-out, the reads, and
  * the send job agree on it in one place. */
@@ -88,13 +88,14 @@ const MEMBER_PLUS: readonly UserRole[] = ["administrator", "legal_team_member"];
 /**
  * Which side of a Request an event is addressed to.
  *
- * `requester` is DD-013's one person, and every group-5 event is theirs.
- * `inbox` is INT-006's Member+, and group 4's arrival is theirs. It is
+ * Re-exported from the catalog, which is where the answer is decided: the
+ * side follows the event's group (M21/5), so a caller that reads a slug
+ * off a row asks `requestSideOf` and passes the answer down here. It is
  * an argument rather than a branch inside each caller because it is the
  * same question the surface argument asks about rows: who is this
  * sentence for.
  */
-export type RequestSide = "requester" | "inbox";
+export type { RequestSide };
 
 /**
  * Of the people an event named, the ones the record reaches — and, where
@@ -439,11 +440,12 @@ export function notificationScope(
  * **Two arms, because the surface has two kinds of news** (M21/4). A
  * contract row passes while `contractTeamScope` says the reader reaches
  * the record; a Request row passes while the reader triages (INT-006)
- * and the Request is still live. The second arm is narrowed to group 4's
- * slugs and not merely to the entity type, which is what keeps a
- * Member+'s own group-5 receipt on the portal bell where it belongs: the
- * same person holds both kinds of row about the same Request, and the
- * split between the two bells is by audience rather than by table.
+ * and the Request is still live. The second arm is narrowed to the
+ * staff side's slugs (M21/5) and not merely to the entity type, which
+ * is what keeps a Member+'s own group-5 receipt on the portal bell
+ * where it belongs: the same person holds both kinds of row about the
+ * same Request, and the split between the two bells is by audience
+ * rather than by table.
  */
 function staffScope(db: Executor, user: AuthenticatedUser): SQL | undefined {
   const scope = contractTeamScope(db, user);
@@ -465,13 +467,14 @@ function staffScope(db: Executor, user: AuthenticatedUser): SQL | undefined {
   );
 }
 
-/** The Inbox's rows: group 4's arrivals about Requests that are still
- * there. A frozen record is not something to prompt anybody about, which
- * is the portal arm's rule said on the staff side. */
+/** The staff side's Request rows: group 4's arrivals and group 1's
+ * mentions, about Requests that are still there. A frozen record is not
+ * something to prompt anybody about, which is the portal arm's rule said
+ * on the staff side. */
 function inboxRows(db: Executor): SQL | undefined {
   return and(
     eq(notifications.entityType, REQUEST_ENTITY),
-    inArray(notifications.eventType, eventTypesIn("new_requests")),
+    inArray(notifications.eventType, requestEventTypesOn("inbox")),
     inArray(
       notifications.entityId,
       db.select({ id: requests.id }).from(requests).where(isNull(requests.archivedAt)),
@@ -489,7 +492,7 @@ function portalScope(db: Executor, user: AuthenticatedUser): SQL | undefined {
     // own asks. Two named groups rather than "everything but group 4",
     // so a group added later is invisible until somebody has decided
     // which bell it belongs on.
-    inArray(notifications.eventType, eventTypesIn("requester_events")),
+    inArray(notifications.eventType, requestEventTypesOn("requester")),
     // No Administrator shortcut here, and there is nothing to shortcut:
     // reaching every contract is a staff role's power (DD-014), while
     // being somebody's Requester is a fact about one row (DD-013). An

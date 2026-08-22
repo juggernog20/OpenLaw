@@ -53,7 +53,7 @@ import {
   requestReachedBy,
   REQUEST_ENTITY,
 } from "../lib/notifications/audience.js";
-import { isInboxEvent } from "../lib/notifications/catalog.js";
+import { requestSideOf } from "../lib/notifications/catalog.js";
 import { renderNotificationMail, type MailRecord } from "../lib/notifications/email.js";
 import type { MailerResolver } from "../lib/mailer.js";
 import { reasonOf } from "./derivations.js";
@@ -224,7 +224,7 @@ async function sendNotificationEmail(
     record = { entityType: "contract", number, title };
   } else if (row.entityType === REQUEST_ENTITY) {
     const reachable = await requestReachedBy(deps.db, row.entityId, [row.userId], {
-      side: isInboxEvent(row.eventType) ? "inbox" : "requester",
+      side: requestSideOf(row.eventType),
     });
     if (!reachable.has(row.userId)) return "unreachable";
     const number = addressOf(payload.requestNumber);

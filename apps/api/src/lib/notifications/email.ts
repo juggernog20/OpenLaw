@@ -19,10 +19,11 @@
  * links to the record in the application; a requester's message links to
  * the Request in the portal. Which of the two a message is, is read from
  * the record it carries and — for a Request, which is read from both
- * sides — from the event's group: group 4 is the Inbox's own arrival and
- * addresses the staff detail (INT-006), group 5 is the Requester's and
- * addresses the portal (DD-013). The arms are split so that one file
- * still holds how an OpenLaw email is laid out.
+ * sides — from the side the event's group speaks to (M21/5): the staff
+ * side's messages, the arrival and the mention, address the staff detail
+ * (INT-006), and the Requester's address the portal (DD-013). The arms
+ * are split so that one file still holds how an OpenLaw email is laid
+ * out.
  *
  * **The copy is authored here in English, not in the message catalog.**
  * That is the API's own convention (DES-013 puts the catalog in the web
@@ -39,7 +40,7 @@
 import type { NotificationEventType, RequestStatus, SeverityLevel } from "@openlaw/db";
 import type { MailMessage } from "../mailer.js";
 import { civilInstant } from "../contract-term.js";
-import { isInboxEvent } from "./catalog.js";
+import { requestSideOf } from "./catalog.js";
 
 /**
  * The record a notification is about, and how it names and addresses
@@ -110,7 +111,7 @@ function portalRequestLink(baseUrl: string, requestNumber: number): string {
 }
 
 /**
- * The deep link a group-4 message points at: the Request in the Inbox.
+ * The deep link a staff-side message points at: the Request in the Inbox.
  *
  * The staff application's own address (#414), not the portal's, because
  * the reader is a triager. One act writes two messages about one
@@ -162,53 +163,91 @@ export function renderNotificationMail(
   // A Request is read from two sides, so the group is what says which
   // message this is. The record alone cannot: both audiences hold rows
   // about the same Request, and one of them is staff.
-  return isInboxEvent(notification.eventType)
-    ? inboxMail(notification, record, to, baseUrl)
+  return requestSideOf(notification.eventType) === "inbox"
+    ? staffRequestMail(notification, record, to, baseUrl)
     : requestMail(notification, record, to, baseUrl);
 }
 
 /**
- * The Inbox's message: NOT-002's group 4, and the staff side of a
- * submission (INT-006).
+ * The staff side's messages about a Request: NOT-002's group 4 arrival
+ * (INT-006) and, from M21/5, group 1's mention on a Request thread.
  *
- * **Opt-in, so the copy can be short.** Nobody receives one without
- * having asked for it, and the queue is already the surface — this is
- * for the Member+ who wants the arrival to reach them wherever they are.
- * It names the two facts a triager weighs before opening anything, the
- * request type and the urgency, and then gets out of the way.
+ * **Both address the staff detail** (#414), because both readers are
+ * triagers. The portal address is the Requester's, and a message that
+ * sent staff there would land them on somebody else's window.
+ *
+ * **Every message names the Request as `R-### · summary`**, the way the
+ * requester's own messages do: the reference is what gets quoted, the
+ * summary is what gets recognised.
  *
  * **The register is DES-051's**, like every other message here.
  */
-function inboxMail(
+function staffRequestMail(
   notification: NotificationMail,
   record: Extract<MailRecord, { entityType: "request" }>,
   to: string,
   baseUrl: string,
 ): MailMessage | null {
-  if (notification.eventType !== "request.submitted") return null;
   const named = `${requestReference(record.number)} · ${record.summary}`;
+  const link = inboxRequestLink(baseUrl, record.number);
+  const hello = `Hello ${notification.recipientName},`;
   const who = notification.actorName ?? "Somebody";
-  const requestType = detail(notification, "requestType");
-  const urgency = urgencyWord(detail(notification, "urgency"));
-  return {
-    to,
-    subject: `New request: ${named}`,
-    text: [
-      `Hello ${notification.recipientName},`,
-      "",
-      `${who} submitted a new request: ${named}.`,
-      // Both lines are conditional for the payload's own reason: the row
-      // is a snapshot taken by whichever build wrote it, and a label
-      // reading "Type: undefined" is worse than no label.
-      ...(requestType || urgency ? [""] : []),
-      ...(requestType ? [`Type: ${requestType}`] : []),
-      ...(urgency ? [`Urgency: ${urgency}`] : []),
-      "",
-      inboxRequestLink(baseUrl, record.number),
-      "",
-      "The Inbox has everything they sent, and the request is yours to triage from there.",
-    ].join("\n"),
-  };
+  switch (notification.eventType) {
+    case "request.submitted": {
+      // **Opt-in, so the copy can be short.** Nobody receives one
+      // without having asked for it, and the queue is already the
+      // surface — this is for the Member+ who wants the arrival to reach
+      // them wherever they are. It names the two facts a triager weighs
+      // before opening anything, the request type and the urgency, and
+      // then gets out of the way.
+      const requestType = detail(notification, "requestType");
+      const urgency = urgencyWord(detail(notification, "urgency"));
+      return {
+        to,
+        subject: `New request: ${named}`,
+        text: [
+          hello,
+          "",
+          `${who} submitted a new request: ${named}.`,
+          // Both lines are conditional for the payload's own reason: the
+          // row is a snapshot taken by whichever build wrote it, and a
+          // label reading "Type: undefined" is worse than no label.
+          ...(requestType || urgency ? [""] : []),
+          ...(requestType ? [`Type: ${requestType}`] : []),
+          ...(urgency ? [`Urgency: ${urgency}`] : []),
+          "",
+          link,
+          "",
+          "The Inbox has everything they sent, and the request is yours to triage from there.",
+        ].join("\n"),
+      };
+    }
+    case "comment.mentioned":
+      // On by default and interrupting, because being named is done *to*
+      // you whatever record it happened on (NOT-002's M18/1 addendum).
+      return {
+        to,
+        subject: `You were mentioned on ${named}`,
+        text: [
+          hello,
+          "",
+          `${who} mentioned you in a comment on the request ${named}.`,
+          "",
+          link,
+          "",
+          // The comment itself is deliberately not here, for the
+          // contract mention's reason: the tier (DD-016) is enforced on
+          // the thread, and a redact (CMT-006) cannot reach an email
+          // that has already left.
+          "The comment is on the request.",
+        ].join("\n"),
+      };
+    // A staff-side slug with no copy — a contract's group-1 or group-2
+    // event on a Request row, which no build writes. `null` settles it
+    // as skipped rather than improvising a message nobody wrote.
+    default:
+      return null;
+  }
 }
 
 /**

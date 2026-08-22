@@ -45,8 +45,9 @@
  * the promise, and the sections are addresses precisely so a prompt can
  * name one. A Request is the exception that proves it: its detail is one
  * page with no tabs to name, so a group-5 item opens
- * `/portal/requests/{number}` and group 4's arrival opens the staff
- * detail at `/inbox/{number}`.
+ * `/portal/requests/{number}` and the staff side's rows — group 4's
+ * arrival and a mention on a Request thread — open the staff detail at
+ * `/inbox/{number}`.
  */
 
 import {
@@ -130,15 +131,20 @@ interface Arm {
    */
   section?: "documents" | "approvals" | "key-dates" | "tasks";
   /**
-   * This event is the Inbox's own (NOT-002 group 4), so its Request
-   * addresses the staff detail rather than the portal one.
+   * A Request row for this event is the **staff side's**, so it addresses
+   * the staff detail rather than the portal one: group 4's arrival
+   * (INT-006) and group 1's mention on a Request thread (M21/5).
    *
    * It is a fact about the event and not about the reader: one act
    * writes an arrival for staff and a receipt for the Requester, and the
    * two rows have to point at two different pages even when one person
    * holds both.
+   *
+   * It is read only for a `request` row, so an arm that is a contract's
+   * as well — the mention is one slug on two records — carries it
+   * harmlessly.
    */
-  inbox?: true;
+  staffSide?: true;
 }
 
 /**
@@ -187,8 +193,13 @@ const ARMS: Readonly<Record<string, Arm>> = {
         "other {You were assigned a task on {contract}}}",
     }),
   },
+  // One slug, two records (M21/5). The sentence names whichever record
+  // the row is about, and `staffSide` sends a Request's mention to the
+  // staff detail: a mention on a Request is a mention of a triager, and
+  // the Requester is never mention-notified at all.
   "comment.mentioned": {
     icon: AtSign,
+    staffSide: true,
     message: defineMessage({
       id: "notifications.comment.mentioned",
       defaultMessage:
@@ -275,7 +286,7 @@ const ARMS: Readonly<Record<string, Arm>> = {
   // the Request is work rather than news about their own ask.
   "request.submitted": {
     icon: Inbox,
-    inbox: true,
+    staffSide: true,
     message: defineMessage({
       id: "notifications.request.submitted",
       defaultMessage:
@@ -285,7 +296,7 @@ const ARMS: Readonly<Record<string, Arm>> = {
   },
   // Group 5 — the portal audience's own events (INT-001, M20/8). These
   // land on the portal bell and nowhere else, because the staff centre's
-  // scope answers group 4 alone of the Request rows. They name no
+  // scope answers only the staff side's Request rows. They name no
   // section: a Request has one page and it is the whole of what a
   // requester can open.
   "request.created": {
@@ -398,16 +409,16 @@ function recordName(intl: IntlShape, item: BellItem): string {
  * **A Request has one address per surface and no sections.** A
  * contract's prompt names the section it is about (DES-049 point 9)
  * because a contract record has routed tabs; a Request's whole page is
- * the answer, so a group-5 item lands on the portal detail and group 4's
- * arrival on the staff one. Which of the two is the arm's to say: the
- * event knows who it was written for, and the reader's role does not
- * come into it.
+ * the answer, so a group-5 item lands on the portal detail and a staff
+ * side's row — the arrival, or a mention — on the staff one (M21/5).
+ * Which of the two is the arm's to say: the event knows who it was
+ * written for, and the reader's role does not come into it.
  */
 function hrefFor(item: BellItem, arm: Arm | undefined): string | null {
   if (item.entityType === "request") {
     const number = wholeNumber(item.payload, "requestNumber");
     if (number === null) return null;
-    return arm?.inbox ? `/inbox/${number}` : `/portal/requests/${number}`;
+    return arm?.staffSide ? `/inbox/${number}` : `/portal/requests/${number}`;
   }
   if (item.entityType !== "contract") return null;
   const number = wholeNumber(item.payload, "contractNumber");
