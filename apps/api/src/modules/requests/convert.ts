@@ -261,7 +261,6 @@ export const requestConvertRoutes: FastifyPluginAsyncZod = async (app) => {
               target: {
                 contractId: born.row.id,
                 primaryDocumentId: born.row.primaryDocumentId,
-                isConfidential: born.row.isConfidential,
               },
               actorId: request.user.id,
               actorName: request.user.displayName,

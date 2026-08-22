@@ -92,10 +92,6 @@ import type { JobQueue } from "../../pipeline/jobs.js";
 export interface PromotionTarget {
   contractId: string;
   primaryDocumentId: string | null;
-  /** DD-014's flag as it stands on the record, so the event this write
-   * raises asks the rule rather than assuming what a newborn record is
-   * set to. */
-  isConfidential: boolean;
 }
 
 /** One promotion, as the caller of {@link withPromotedPaper} describes
@@ -317,14 +313,17 @@ async function promotePaper(
     // triager who is converting and nobody else — and group 2 excludes
     // the actor, so this raises no rows today. It is raised anyway,
     // because the rule belongs to the event rather than to what a
-    // newborn record's team happens to hold.
+    // newborn record's team happens to hold. The flag is the
+    // *document's* own (DOC-008), not the record's: this write just
+    // made the row, and a document is born with the flag clear — the
+    // upload route says the same thing about the same insert.
     await deps.notifier.documentAdded(tx, {
       contractId: input.target.contractId,
       actorId: input.actorId,
       actorName: input.actorName,
       documentId,
       documentTitle: attachment.filename,
-      isConfidential: input.target.isConfidential,
+      isConfidential: false,
     });
 
     paper.versions.push({
