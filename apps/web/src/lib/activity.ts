@@ -1047,8 +1047,14 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
         intl,
         payload,
         "requestNumber",
-        { id: "requests.reference", defaultMessage: "R-{number, number, ::group-off}" },
-        { id: "activity.request.unnamedRecord", defaultMessage: "a request" },
+        defineMessage({
+          id: "requests.reference",
+          defaultMessage: "R-{number, number, ::group-off}",
+        }),
+        // Wrapped in defineMessage so `formatjs extract` sees the id —
+        // a descriptor handed to a helper is invisible to it otherwise,
+        // and this fallback appears nowhere else in the catalog.
+        defineMessage({ id: "activity.request.unnamedRecord", defaultMessage: "a request" }),
       ),
     }),
   },
@@ -1790,8 +1796,11 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
         intl,
         payload,
         "contractNumber",
-        { id: "contracts.reference", defaultMessage: "C-{number}" },
-        { id: "activity.contract.unnamedRecord", defaultMessage: "another contract" },
+        defineMessage({ id: "contracts.reference", defaultMessage: "C-{number}" }),
+        defineMessage({
+          id: "activity.contract.unnamedRecord",
+          defaultMessage: "another contract",
+        }),
       ),
     }),
   },
