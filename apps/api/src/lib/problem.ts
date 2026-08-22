@@ -44,24 +44,42 @@ export const UNNAMED_PROBLEM_TYPE = "about:blank";
  * tell *this* refusal apart from every other refusal the same route can
  * give — a client that told them apart by reading the sentence would
  * break the first time the sentence was reworded.
+ *
+ * `extensions` are RFC 9457 §3.2 extension members: the facts a named
+ * refusal carries beyond its identity, merged into the body beside
+ * `title` and `detail`. They exist for the refusal a client has to
+ * **act on** rather than print — the disposition race answers the
+ * outcome that was recorded, and a client that had to parse that out of
+ * a sentence would break the first time the sentence was reworded. Send
+ * them only with a named `type`, and never with a key the envelope
+ * already owns.
  */
 export class HttpError extends Error {
   readonly statusCode: number;
   readonly expose: boolean;
   readonly type: string;
+  readonly extensions?: Readonly<Record<string, unknown>>;
 
-  constructor(statusCode: number, message: string, options?: { expose?: boolean; type?: string }) {
+  constructor(statusCode: number, message: string, options?: HttpErrorOptions) {
     super(message);
     this.statusCode = statusCode;
     this.expose = options?.expose ?? false;
     this.type = options?.type ?? UNNAMED_PROBLEM_TYPE;
+    this.extensions = options?.extensions;
   }
+}
+
+export interface HttpErrorOptions {
+  expose?: boolean;
+  type?: string;
+  /** RFC 9457 §3.2 extension members, merged into the problem body. */
+  extensions?: Readonly<Record<string, unknown>>;
 }
 
 export function httpError(
   statusCode: number,
   message: string,
-  options?: { expose?: boolean; type?: string },
+  options?: HttpErrorOptions,
 ): HttpError {
   return new HttpError(statusCode, message, options);
 }
@@ -109,6 +127,15 @@ export const problemResponse = {
 export function problemTypeResponse(
   description: string,
   types: readonly [string, ...string[]],
+  /**
+   * The RFC 9457 §3.2 extension members one of these refusals carries,
+   * as a Zod shape. Optional on purpose: a refusal's `type` is enough
+   * for almost every client, and only the few that carry a fact the
+   * client acts on declare one. Every member is optional in the schema,
+   * because the same status code also answers the unnamed refusals in
+   * `types` and those carry none.
+   */
+  extensions?: z.ZodRawShape,
 ): {
   description: string;
   content: { "application/problem+json": { schema: z.ZodType } };
@@ -125,6 +152,7 @@ export function problemTypeResponse(
                 "`detail` is copy, and copy is rewritten. `about:blank` is a refusal at " +
                 "this status that names no type; print it rather than branching on it.",
             ),
+          ...(extensions ?? {}),
         }).describe(description),
       },
     },

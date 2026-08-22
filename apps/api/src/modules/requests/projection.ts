@@ -26,6 +26,12 @@
  *   them, exactly as a contract does. An id that resolves to nothing at
  *   all is left to the caller, which renders it raw (the INT-001 M20/10
  *   addendum).
+ *
+ * **The staff envelope lives here too, and for the same reason.** The
+ * staff detail reads it and every disposition route answers it back
+ * (INT-007) — the read that opened the screen and the write that
+ * changed it are one sentence about one Request, and two spellings of
+ * it would let a decline answer a shape the detail never draws.
  */
 
 import type { FastifyReply } from "fastify";
@@ -33,14 +39,26 @@ import { z } from "zod";
 import {
   and,
   asc,
+  contracts,
+  contractTypes,
   entities,
   eq,
   inArray,
+  isNull,
+  matterTypes,
+  REQUEST_STATUSES,
   requestAttachments,
+  requestTypes,
+  requests,
+  SEVERITY_LEVELS,
   users,
   type CustomFieldValue,
   type Executor,
 } from "@openlaw/db";
+import type { AuthenticatedUser } from "../../auth/guards.js";
+import { contractTeamScope } from "../../lib/contract-access.js";
+import { CustomFieldsSchema } from "../../lib/custom-fields.js";
+import { httpError } from "../../lib/problem.js";
 import { attachmentDisposition } from "../../lib/uploads.js";
 import type { AttachedCustomField } from "../../lib/custom-fields.js";
 
@@ -224,4 +242,138 @@ export async function resolveRefs(
           .where(inArray(entities.id, entityIds)),
   ]);
   return { users: people, entities: named };
+}
+
+/** Who asked, as the hero and the Requester card draw them: the name,
+ * the avatar, and the address a triager answers out of band on. */
+const StaffRequesterSchema = z.object({
+  id: z.string(),
+  displayName: z.string(),
+  email: z.string(),
+  image: z.string().nullable(),
+});
+
+/**
+ * The envelope, as I2's sub-bar, hero, and cards draw it.
+ *
+ * The staff detail answers it on the way in and every disposition route
+ * answers it on the way out (INT-007), so a screen that has just
+ * declined a Request paints the outcome from the write's own reply
+ * rather than from a second read that might race it.
+ */
+export const StaffRequestSchema = z.object({
+  id: z.string(),
+  /** INT-002's global reference; the screen renders it R-###. */
+  number: z.number().int(),
+  status: z.enum(REQUEST_STATUSES),
+  summary: z.string(),
+  description: z.string().nullable(),
+  /** DES-018's severity ramp, as the requester claimed it. */
+  urgency: z.enum(SEVERITY_LEVELS),
+  /** What the form collected, keyed by field slug (INT-002). */
+  customFields: CustomFieldsSchema,
+  /** INT-006: "no" always arrives with a why. NULL on every status but
+   * `declined`. */
+  declinedReason: z.string().nullable(),
+  createdAt: z.string(),
+  requestType: StaffRequestTypeSchema,
+  requester: StaffRequesterSchema,
+  /** The record a conversion made, when this viewer reaches it, and
+   * `null` in every other case — never converted, converted into a
+   * record they may not see, or converted into a Matter (M22). */
+  convertedContract: z.object({ number: z.number().int() }).nullable(),
+});
+
+/**
+ * One Request by its reference, with everything the envelope states
+ * joined onto it, or the one refusal.
+ *
+ * There is no per-row scope to defend — Member+ read every Request
+ * (INT-006) — so the only miss is a reference nobody has, or one that
+ * has been archived. The contract join is the one that carries a rule:
+ * it is taken under this viewer's own reach, so a record they may not
+ * see contributes no row and the left join answers NULL. That is the
+ * whole of the DD-014 omission — there is no branch after the read that
+ * decides whether to keep the number.
+ *
+ * It takes an `Executor` rather than the app's `db`, so a disposition
+ * reads the envelope back **inside its own transaction** and answers
+ * what it just wrote rather than what a concurrent write left behind.
+ */
+export async function staffRequestRow(db: Executor, user: AuthenticatedUser, number: number) {
+  const [row] = await db
+    .select({
+      id: requests.id,
+      number: requests.number,
+      status: requests.status,
+      summary: requests.summary,
+      description: requests.description,
+      urgency: requests.urgency,
+      customFields: requests.customFields,
+      declinedReason: requests.declinedReason,
+      createdAt: requests.createdAt,
+      typeId: requestTypes.id,
+      typeDisplayName: requestTypes.displayName,
+      targetModule: requestTypes.targetModule,
+      targetContractTypeName: contractTypes.displayName,
+      targetMatterTypeName: matterTypes.displayName,
+      requesterId: users.id,
+      requesterDisplayName: users.displayName,
+      requesterEmail: users.email,
+      requesterImage: users.image,
+      convertedContractNumber: contracts.number,
+    })
+    .from(requests)
+    .innerJoin(requestTypes, eq(requests.requestTypeId, requestTypes.id))
+    .innerJoin(users, eq(requests.requesterId, users.id))
+    .leftJoin(contractTypes, eq(requestTypes.targetContractTypeId, contractTypes.id))
+    .leftJoin(matterTypes, eq(requestTypes.targetMatterTypeId, matterTypes.id))
+    .leftJoin(
+      contracts,
+      and(
+        eq(requests.convertedContractId, contracts.id),
+        // A contract this viewer cannot reach joins to nothing, so the
+        // envelope carries no link and the Request still carries itself
+        // (DD-014, CTR-021).
+        contractTeamScope(db, user),
+        // An archived contract is no trail either: the link would open
+        // on a record the Contracts destination hides.
+        isNull(contracts.archivedAt),
+      ),
+    )
+    .where(and(eq(requests.number, number), isNull(requests.archivedAt)))
+    .limit(1);
+  if (!row) throw httpError(404, NO_REQUEST);
+  return row;
+}
+
+/** The joined row, as {@link StaffRequestSchema} puts it on the wire. */
+export function toStaffRequest(row: Awaited<ReturnType<typeof staffRequestRow>>) {
+  return {
+    id: row.id,
+    number: row.number,
+    status: row.status,
+    summary: row.summary,
+    description: row.description,
+    urgency: row.urgency,
+    customFields: row.customFields,
+    declinedReason: row.declinedReason,
+    createdAt: row.createdAt.toISOString(),
+    requestType: {
+      id: row.typeId,
+      displayName: row.typeDisplayName,
+      targetModule: targetModuleOf(row.targetModule),
+      // Whichever taxonomy the module points at, and null for the
+      // module-only and no-target states alike.
+      targetTypeName: row.targetContractTypeName ?? row.targetMatterTypeName,
+    },
+    requester: {
+      id: row.requesterId,
+      displayName: row.requesterDisplayName,
+      email: row.requesterEmail,
+      image: row.requesterImage,
+    },
+    convertedContract:
+      row.convertedContractNumber === null ? null : { number: row.convertedContractNumber },
+  };
 }

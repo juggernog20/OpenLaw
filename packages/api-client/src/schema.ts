@@ -1170,6 +1170,23 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/v1/requests/{number}/decline": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Turn a Request down, with a reason (INT-006). The first of INT-007's three dispositions: it transitions the Request from `new` to `declined` under the Request's own row lock, so two triagers racing one Request produce one decline. The loser is answered 409 with the recorded outcome rather than a second decline. The reason is required and refused by name without one, because a decline is the whole of the answer the requester gets: it is stored on the Request, carried into the decline email, and rendered on the portal banner as written. Raises `requestDeclined` — instead of the status change it also is, never beside it — so the requester gets one bell item and one immediate email. Appends one request.declined entry naming the actor (DD-017, INT-007: who dispositioned is audit data); the reason is not in the payload, because the log is append-only and the reason lives on the record. Answers the Request as the staff detail reads it. Member+ only */
+    post: operations["declineRequest"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/v1/contract-statuses": {
     parameters: {
       query?: never;
@@ -6943,6 +6960,102 @@ export interface operations {
         };
         content: {
           "application/octet-stream": string;
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  declineRequest: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        number: number;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          reason: string;
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            request: {
+              id: string;
+              number: number;
+              /** @enum {string} */
+              status: "new" | "converted" | "resolved" | "declined";
+              summary: string;
+              description: string | null;
+              /** @enum {string} */
+              urgency: "low" | "medium" | "high" | "critical";
+              customFields: {
+                [key: string]: string | number | boolean | string[];
+              };
+              declinedReason: string | null;
+              createdAt: string;
+              requestType: {
+                id: string;
+                displayName: string;
+                targetModule: ("matter" | "contract") | null;
+                targetTypeName: string | null;
+              };
+              requester: {
+                id: string;
+                displayName: string;
+                email: string;
+                image: string | null;
+              };
+              convertedContract: {
+                number: number;
+              } | null;
+            };
+          };
+        };
+      };
+      /** @description The named type says somebody has already dispositioned this Request (INT-007) — there is no claim step, so two triagers can open one Request and only the first press writes. The refusal carries `outcome`: the recorded decision, which the loser's client states instead of asking again. There is no unnamed 409 on this route — an archived Request answers 404 and a missing reason answers 400. */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": {
+            /**
+             * @description Which refusal this is. A client branches on this, never on `detail` — `detail` is copy, and copy is rewritten. `about:blank` is a refusal at this status that names no type; print it rather than branching on it.
+             * @enum {string}
+             */
+            type: "urn:openlaw:problem:request-dispositioned" | "about:blank";
+            title: string;
+            status: number;
+            detail?: string;
+            instance?: string;
+            errors?: {
+              path: string;
+              message: string;
+            }[];
+            /**
+             * @description What was recorded, on the named refusal alone. A client branches on this, never on `detail` — `detail` is copy, and copy is rewritten.
+             * @enum {string}
+             */
+            outcome?: "converted" | "resolved" | "declined";
+          };
         };
       };
       /** @description Problem details (RFC 9457) */
