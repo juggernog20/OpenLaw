@@ -207,7 +207,6 @@ export async function textIsReady(deps: DerivationDeps, versionId: string): Prom
   return (await textDerivationState(deps, versionId)) === "ready";
 }
 
-/** One version, as extraction needs it described. */
 interface VersionRow {
   fileRef: string;
   mimeType: string;
