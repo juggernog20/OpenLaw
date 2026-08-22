@@ -125,7 +125,6 @@ import {
 type FeedResponse =
   paths["/api/v1/activity"]["get"]["responses"]["200"]["content"]["application/json"];
 
-/** One activity entry as the record feed answers it. */
 export type ActivityEntry = FeedResponse["entries"][number];
 
 /**
@@ -142,11 +141,11 @@ export interface NarratableEntry {
   payload: Record<string, unknown>;
 }
 
-/** The record a feed hangs off — the reference the panel is keyed by. */
+/** The record reference that keys the panel. */
 export type ActivityEntityType =
   paths["/api/v1/activity"]["get"]["parameters"]["query"]["entityType"];
 
-/** One old→new pair an entry carries, both sides already rendered. */
+/** A rendered before-and-after pair. */
 export interface NarratedChange {
   /** What changed, named as the record names it. */
   label: string;
@@ -154,7 +153,7 @@ export interface NarratedChange {
   to: string;
 }
 
-/** One entry, ready to draw. */
+/** An entry ready to render. */
 export interface Narration {
   /** The glyph for the action's family. */
   icon: LucideIcon;
