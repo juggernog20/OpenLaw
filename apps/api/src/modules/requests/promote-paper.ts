@@ -64,9 +64,11 @@
  * **A conversion that does not commit leaves no blobs behind** (DOC-012,
  * the upload path's rule). The bytes reach the driver before the rows
  * exist and a transaction can still refuse afterwards, so
- * {@link withPromotedPaper} remembers every key it wrote and takes them
- * away when its caller's act does not commit. The keys are never
- * written again: a retry mints its own.
+ * {@link withPromotedPaper} remembers every key it **minted** — before
+ * the driver is asked for it, so a write that rejects over an object the
+ * store kept is still a key the cleanup can reach — and takes them away
+ * when its caller's act does not commit. The keys are never written
+ * again: a retry mints its own.
  */
 
 import { createHash } from "node:crypto";
@@ -82,7 +84,7 @@ import {
 } from "../../lib/document-versions.js";
 import { mediaTypeOfBlob, MEDIA_TYPE_HEAD_BYTES } from "../../lib/media-type.js";
 import type { Notifier, NotifyingTransaction } from "../../lib/notifications/notifier.js";
-import type { StorageAdapter } from "../../lib/storage/adapter.js";
+import { formatBlobRef, type StorageAdapter } from "../../lib/storage/adapter.js";
 import type { CleanupLogger } from "../../lib/uploads.js";
 import type { JobQueue } from "../../pipeline/jobs.js";
 
@@ -119,7 +121,9 @@ interface PromotedVersion {
  * after it — the cleanup on a refusal, the derivations on a commit —
  * have something to work from. */
 interface PromotedPaper {
-  /** Every blob written, in the order it was written. */
+  /** Every blob key minted, in the order it was minted — recorded
+   * before the driver is asked for it, so a rejected write still leaves
+   * a key the cleanup can reach. */
   blobs: string[];
   /** Every round appended. */
   versions: PromotedVersion[];
@@ -224,12 +228,19 @@ async function promotePaper(
     // them and the blob is written before the rows exist (DOC-012).
     const documentId = uuidv7();
     const versionId = uuidv7();
+    const key = versionStorageKey(documentId, versionId);
+    // Remembered **before** the driver is asked, never after it answers.
+    // A put that rejects is not always a put that wrote nothing: the S3
+    // driver's conditional-conflict arm refuses over an object the store
+    // kept, and any driver can lose its answer once the bytes have
+    // landed. A key nobody remembered is a key {@link withPromotedPaper}
+    // cannot take away, which is the one thing this module promises.
+    // Recording it first costs nothing, because deleting a key that was
+    // never written is a no-op the storage contract guarantees.
+    paper.blobs.push(formatBlobRef(deps.storage.driver, key));
     const copied = await copyBlob(deps.storage, attachment.fileRef, {
-      key: versionStorageKey(documentId, versionId),
+      key,
       filename: attachment.filename,
-      // Remembered the moment the driver answers, so a refusal on the
-      // next line has something to clean up.
-      wrote: (fileRef) => paper.blobs.push(fileRef),
     });
 
     await tx.insert(documents).values({
@@ -355,7 +366,7 @@ interface CopiedBlob {
 async function copyBlob(
   storage: StorageAdapter,
   from: string,
-  to: Readonly<{ key: string; filename: string; wrote: (fileRef: string) => void }>,
+  to: Readonly<{ key: string; filename: string }>,
 ): Promise<CopiedBlob> {
   const source = await storage.get(from);
   const digest = createHash("sha256");
@@ -376,7 +387,6 @@ async function copyBlob(
   }
   try {
     const fileRef = await storage.put(to.key, Readable.from(metered(source)));
-    to.wrote(fileRef);
     return {
       fileRef,
       mimeType: mediaTypeOfBlob(Buffer.concat(head), to.filename),

@@ -30,7 +30,7 @@
  * the back-link, so this page goes on asking for the Request's own
  * thread and goes on being answered — filtered to Full Thread, because
  * that is the one room a Requester is in. Which record the rows now hang
- * off is the API's business; what this page owes the requester is that
+ * off is the API's business; what this page owes the Requester is that
  * their window never went dark.
  *
  * **A declined Request carries its reason** (INT-006): "no" always
@@ -291,9 +291,9 @@ function ValueRow({ label, children }: Readonly<{ label: string; children: React
  * one thing a requester needs from that arm — and `declined` says the
  * reason itself, because INT-006 makes "no" arrive with a why.
  *
- * `resolved` says the request was answered *and closed* (the INT-003
- * M21/6 addendum). An answered request is also a closed one, and a
- * requester who is not told it is closed goes on waiting for a second
+ * `resolved` says the Request was answered *and closed* (the INT-003
+ * M21/6 addendum). An answered Request is also a closed one, and a
+ * Requester who is not told it is closed goes on waiting for a second
  * reply.
  */
 function StatusBanner({

@@ -597,6 +597,7 @@ test.describe.serial("M21 demo path", () => {
       // The three actions are gone: a decided Request has nothing left
       // to decide.
       await expect(page.getByRole("button", { name: "Convert to contract" })).toHaveCount(0);
+      await expect(page.getByRole("button", { name: "Resolve" })).toHaveCount(0);
       await expect(page.getByRole("button", { name: "Decline" })).toHaveCount(0);
 
       // ---- The record it became ----

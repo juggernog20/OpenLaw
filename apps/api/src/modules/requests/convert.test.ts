@@ -22,52 +22,24 @@
 
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import {
-  activityLog,
-  and,
   contracts,
   contractStatuses,
   contractTeam,
   contractTypes,
   eq,
-  notifications,
-  requests,
   requestTypes,
-  users,
 } from "@openlaw/db";
 import { REQUEST_DISPOSITIONED_PROBLEM_TYPE } from "@openlaw/shared";
-import { provisionUser } from "../../auth/instance.js";
 import {
-  signInCookies as harnessSignInCookies,
-  startHarness,
-  TEST_ADMIN as ADMIN,
-  type TestHarness,
-} from "../../testing/harness.js";
-
-const REQUESTER = {
-  email: "tom.iwu@acme.com",
-  displayName: "Tom Iwu",
-  password: "correct-horse-battery",
-} as const;
-
-const MEMBER = {
-  email: "member@example.com",
-  displayName: "Nadia Counsel",
-  password: "correct-horse-battery",
-} as const;
-
-const OTHER_MEMBER = {
-  email: "other.member@example.com",
-  displayName: "Priya Rao",
-  password: "correct-horse-battery",
-} as const;
-
-const CONTRIBUTOR = {
-  email: "contributor@example.com",
-  displayName: "Casey Contributor",
-  password: "correct-horse-battery",
-} as const;
+  dispositionScaffold,
+  settles,
+  REQUESTER,
+  type DispositionScaffold,
+} from "../../testing/disposition.js";
+import { startHarness, TEST_ADMIN as ADMIN, type TestHarness } from "../../testing/harness.js";
 
 let harness: TestHarness;
+let cast: DispositionScaffold;
 let adminCookies: Record<string, string>;
 let memberCookies: Record<string, string>;
 let otherMemberCookies: Record<string, string>;
@@ -97,31 +69,16 @@ beforeAll(async () => {
   });
   expect(setup.statusCode, setup.body).toBe(201);
 
-  for (const [fixture, role] of [
-    [REQUESTER, "business_user"],
-    [MEMBER, "legal_team_member"],
-    [OTHER_MEMBER, "legal_team_member"],
-    [CONTRIBUTOR, "contributor"],
-  ] as const) {
-    const user = await provisionUser(harness.app.auth, fixture);
-    await harness.db.update(users).set({ role }).where(eq(users.id, user.id));
-    if (fixture === REQUESTER) requesterId = user.id;
-    if (fixture === MEMBER) memberId = user.id;
-  }
-
-  adminCookies = await harnessSignInCookies(harness.app, ADMIN.email, ADMIN.password);
-  memberCookies = await harnessSignInCookies(harness.app, MEMBER.email, MEMBER.password);
-  otherMemberCookies = await harnessSignInCookies(
-    harness.app,
-    OTHER_MEMBER.email,
-    OTHER_MEMBER.password,
-  );
-  contributorCookies = await harnessSignInCookies(
-    harness.app,
-    CONTRIBUTOR.email,
-    CONTRIBUTOR.password,
-  );
-  requesterCookies = await harnessSignInCookies(harness.app, REQUESTER.email, REQUESTER.password);
+  cast = await dispositionScaffold(harness);
+  ({
+    adminCookies,
+    memberCookies,
+    otherMemberCookies,
+    contributorCookies,
+    requesterCookies,
+    requesterId,
+    memberId,
+  } = cast);
 
   requestTypeIds = new Map(
     (
@@ -177,17 +134,18 @@ beforeAll(async () => {
     const fieldId = created.json().field.id as string;
     fieldSlugs.set(field.displayName, created.json().field.slug as string);
 
-    for (const [attach, typeId, isRequired] of [
-      [field.onRequestForm, requestTypeIds.get("nda_request")!, false],
-      [field.onNda, contractTypeIds.get("nda")!, false],
-      [field.onMsa, contractTypeIds.get("msa")!, field.required],
+    // The registry rides in the tuple rather than being inferred from the
+    // id: a second request type in this loop would otherwise be attached
+    // through `contract-types` and answered 404 by the wrong registry.
+    for (const [attach, registry, typeId, isRequired] of [
+      [field.onRequestForm, "request-types", requestTypeIds.get("nda_request")!, false],
+      [field.onNda, "contract-types", contractTypeIds.get("nda")!, false],
+      [field.onMsa, "contract-types", contractTypeIds.get("msa")!, field.required],
     ] as const) {
       if (!attach) continue;
-      const path =
-        typeId === requestTypeIds.get("nda_request") ? "request-types" : "contract-types";
       const attached = await harness.app.inject({
         method: "POST",
-        url: `/api/v1/${path}/${typeId}/fields`,
+        url: `/api/v1/${registry}/${typeId}/fields`,
         cookies: adminCookies,
         payload: { fieldId, isRequired },
       });
@@ -278,10 +236,7 @@ function convert(number: number, body: Record<string, unknown>, cookies = member
 }
 
 /** The stored Request, for the facts the wire does not state. */
-async function stored(id: string) {
-  const [row] = await harness.db.select().from(requests).where(eq(requests.id, id)).limit(1);
-  return row!;
-}
+const stored = (id: string) => cast.stored(id);
 
 /** The stored contract a conversion made, by its C-### number. */
 async function contractNumbered(number: number) {
@@ -293,51 +248,21 @@ async function contractNumbered(number: number) {
   return row!;
 }
 
-/** Every entry on one record, oldest first. */
-async function entriesOn(entityType: "request" | "contract", entityId: string) {
-  return harness.db
-    .select()
-    .from(activityLog)
-    .where(and(eq(activityLog.entityType, entityType), eq(activityLog.entityId, entityId)))
-    .orderBy(activityLog.createdAt, activityLog.id);
-}
+/** Every entry on one record, oldest first. This suite reads a
+ * contract's as well as a Request's, so the entity type leads. */
+const entriesOn = (entityType: "request" | "contract", entityId: string) =>
+  cast.entriesOn(entityId, entityType);
 
-/** Every bell row one person holds about one Request. */
-async function bellRowsOn(userId: string, requestId: string) {
-  return harness.db
-    .select()
-    .from(notifications)
-    .where(
-      and(
-        eq(notifications.userId, userId),
-        eq(notifications.entityType, "request"),
-        eq(notifications.entityId, requestId),
-      ),
-    );
-}
+const bellRowsOn = (userId: string, requestId: string) => cast.bellRowsOn(userId, requestId);
 
 /** How many contracts exist right now — the all-or-nothing check. */
 async function contractCount(): Promise<number> {
   return (await harness.db.select({ id: contracts.id }).from(contracts)).length;
 }
 
-/** How long the email is given before the suite calls the queue stuck. */
-const SETTLE_TIMEOUT_MS = 20_000;
-
-/** Waits for a condition the pipeline is expected to bring about. */
-async function settles(what: string, ready: () => boolean): Promise<void> {
-  const deadline = Date.now() + SETTLE_TIMEOUT_MS;
-  while (Date.now() < deadline) {
-    if (ready()) return;
-    await new Promise((wait) => setTimeout(wait, 50));
-  }
-  throw new Error(`${what} did not settle within ${SETTLE_TIMEOUT_MS}ms`);
-}
-
-/** The messages one person has been sent about one Request, by its
- * R-### reference — which every group-5 subject line carries. */
-const mailAbout = (email: string, number: number) =>
-  harness.mailer.messagesTo(email).filter((m) => m.subject.includes(`R-${number} ·`));
+/** The messages one person has been sent about one Request — the
+ * scaffold's read, bound once the cast is installed. */
+const mailAbout = (email: string, number: number) => cast.mailAbout(email, number);
 
 describe("who may convert (INT-006, DD-013)", () => {
   it("answers an Administrator and a Legal Team Member", async () => {
@@ -392,6 +317,20 @@ describe("the target is confirmed, never classified (DD-018, INT-002)", () => {
     expect(res.statusCode, res.body).toBe(200);
   });
 
+  it("refuses an empty contractTypeId as a malformed body, not as a contradicted target", async () => {
+    // A blank choice is no choice. The schema requires one character, so
+    // the caller is told their body is wrong rather than accused of
+    // naming a different type from the bound one — a refusal that would
+    // have named an act they did not perform.
+    const request = await submit("The box was left empty");
+    const before = await contractCount();
+    const res = await convert(request.number, { title: "Nothing picked", contractTypeId: "" });
+    expect(res.statusCode, res.body).toBe(400);
+    expect(res.body).not.toContain("Triage confirms the routing");
+    expect((await stored(request.id)).status).toBe("new");
+    expect(await contractCount()).toBe(before);
+  });
+
   it("refuses a body that names a different type from the one bound", async () => {
     // The act DD-018 takes away from triage: the Administrator decided
     // "NDA request" makes NDAs, and a triager does not re-decide it.
@@ -413,9 +352,14 @@ describe("the target is confirmed, never classified (DD-018, INT-002)", () => {
     const request = await submit("Which kind is still open", {
       typeId: requestTypeIds.get("contract_review"),
     });
+    const before = await contractCount();
     const without = await convert(request.number, { title: "Orion redline" });
     expect(without.statusCode, without.body).toBe(400);
     expect((await stored(request.id)).status).toBe("new");
+    // The refusal writes nothing. Without this the second press below
+    // would supply a contract for a test that never checked the first
+    // press had not already made one.
+    expect(await contractCount()).toBe(before);
 
     const withType = await convert(request.number, {
       title: "Orion redline",
@@ -444,8 +388,10 @@ describe("the target is confirmed, never classified (DD-018, INT-002)", () => {
     expect(detail.json().request.requestType.targetTypeId).toBeNull();
     expect(detail.json().request.requestType.targetTypeName).toBeNull();
 
+    const before = await contractCount();
     const without = await convert(request.number, { title: "Still needs a live type" });
     expect(without.statusCode, without.body).toBe(400);
+    expect(await contractCount()).toBe(before);
 
     const withLive = await convert(request.number, {
       title: "On a live type",

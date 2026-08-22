@@ -615,6 +615,44 @@ describe("the counted branches of the connector and erasure sentences", () => {
   });
 });
 
+describe("the cross-reference fallbacks between an ask and its record", () => {
+  // `crossReference` collapses to a wording about the record when the
+  // payload carries no usable number. Every fixture above carries one,
+  // so without these the fallback arms never render — and a payload
+  // written by an older build, or by a bug, is exactly what produces
+  // them.
+  it("names another contract when a conversion entry carries no number", () => {
+    expect(narrate("request.converted", { number: 42 }).sentence).toBe(
+      "Nadia Counsel converted this request into another contract",
+    );
+    expect(narrate("request.thread_moved", { number: 42 }).sentence).toBe(
+      "Nadia Counsel moved this conversation onto another contract",
+    );
+  });
+
+  it("names another contract when the number is not a whole one", () => {
+    expect(narrate("request.converted", { number: 42, contractNumber: "51" }).sentence).toBe(
+      "Nadia Counsel converted this request into another contract",
+    );
+    expect(narrate("request.thread_moved", { number: 42, contractNumber: 51.5 }).sentence).toBe(
+      "Nadia Counsel moved this conversation onto another contract",
+    );
+  });
+
+  it("names a request when the record's own entry carries no number", () => {
+    expect(
+      narrate("contract.created_from_request", { number: 51, title: "Northwind NDA" }).sentence,
+    ).toBe("Nadia Counsel created this contract from a request");
+    expect(
+      narrate("contract.created_from_request", {
+        number: 51,
+        title: "Northwind NDA",
+        requestNumber: null,
+      }).sentence,
+    ).toBe("Nadia Counsel created this contract from a request");
+  });
+});
+
 describe("the sentences a reader gets", () => {
   it("names the actor and the pair behind a status move", () => {
     const narration = narrate(

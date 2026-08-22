@@ -248,6 +248,10 @@ describe("what is in the queue (INT-007)", () => {
     });
     for (const query of [{}, { includeTriaged: "true" }] as Record<string, string>[]) {
       const read = await readInbox(memberCookies, query);
+      // The status first: `readInbox` answers an empty list for every
+      // non-200, so without this the archived rule would go on passing
+      // if the route started refusing.
+      expect(read.statusCode, read.body).toBe(200);
       expect(read.requests).toEqual([]);
     }
   });

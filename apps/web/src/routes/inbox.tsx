@@ -43,7 +43,7 @@ import { FormattedMessage, useIntl } from "react-intl";
 import { Inbox, UserPlus } from "lucide-react";
 import { api } from "../lib/api";
 import { authClient } from "../lib/auth-client";
-import { contractReference, SEVERITY_PILL, severityLabel } from "../lib/contracts";
+import { contractPath, contractReference, SEVERITY_PILL, severityLabel } from "../lib/contracts";
 import { formatRelativeOrShort } from "../lib/format";
 import {
   requestReference,
@@ -333,7 +333,7 @@ function QueueTable({ rows, showOutcome }: Readonly<{ rows: InboxRow[]; showOutc
                       </span>
                       {row.convertedContract && (
                         <Link
-                          to={`/contracts/${row.convertedContract.number}`}
+                          to={contractPath(row.convertedContract.number)}
                           className="rounded-chip text-sm font-medium text-primary hover:text-link hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-link"
                         >
                           {contractReference(intl, row.convertedContract.number)}

@@ -21,50 +21,18 @@
  */
 
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import {
-  activityLog,
-  and,
-  comments,
-  eq,
-  notifications,
-  requests,
-  requestTypes,
-  users,
-} from "@openlaw/db";
+import { and, comments, eq, requestTypes } from "@openlaw/db";
 import { REQUEST_DISPOSITIONED_PROBLEM_TYPE } from "@openlaw/shared";
-import { provisionUser } from "../../auth/instance.js";
 import {
-  signInCookies as harnessSignInCookies,
-  startHarness,
-  TEST_ADMIN as ADMIN,
-  type TestHarness,
-} from "../../testing/harness.js";
-
-const REQUESTER = {
-  email: "tom.iwu@acme.com",
-  displayName: "Tom Iwu",
-  password: "correct-horse-battery",
-} as const;
-
-const MEMBER = {
-  email: "member@example.com",
-  displayName: "Nadia Counsel",
-  password: "correct-horse-battery",
-} as const;
-
-const OTHER_MEMBER = {
-  email: "other.member@example.com",
-  displayName: "Priya Rao",
-  password: "correct-horse-battery",
-} as const;
-
-const CONTRIBUTOR = {
-  email: "contributor@example.com",
-  displayName: "Casey Contributor",
-  password: "correct-horse-battery",
-} as const;
+  dispositionScaffold,
+  settles,
+  REQUESTER,
+  type DispositionScaffold,
+} from "../../testing/disposition.js";
+import { startHarness, TEST_ADMIN as ADMIN, type TestHarness } from "../../testing/harness.js";
 
 let harness: TestHarness;
+let cast: DispositionScaffold;
 let adminCookies: Record<string, string>;
 let memberCookies: Record<string, string>;
 let otherMemberCookies: Record<string, string>;
@@ -83,31 +51,16 @@ beforeAll(async () => {
   });
   expect(setup.statusCode, setup.body).toBe(201);
 
-  for (const [fixture, role] of [
-    [REQUESTER, "business_user"],
-    [MEMBER, "legal_team_member"],
-    [OTHER_MEMBER, "legal_team_member"],
-    [CONTRIBUTOR, "contributor"],
-  ] as const) {
-    const user = await provisionUser(harness.app.auth, fixture);
-    await harness.db.update(users).set({ role }).where(eq(users.id, user.id));
-    if (fixture === REQUESTER) requesterId = user.id;
-    if (fixture === MEMBER) memberId = user.id;
-  }
-
-  adminCookies = await harnessSignInCookies(harness.app, ADMIN.email, ADMIN.password);
-  memberCookies = await harnessSignInCookies(harness.app, MEMBER.email, MEMBER.password);
-  otherMemberCookies = await harnessSignInCookies(
-    harness.app,
-    OTHER_MEMBER.email,
-    OTHER_MEMBER.password,
-  );
-  contributorCookies = await harnessSignInCookies(
-    harness.app,
-    CONTRIBUTOR.email,
-    CONTRIBUTOR.password,
-  );
-  requesterCookies = await harnessSignInCookies(harness.app, REQUESTER.email, REQUESTER.password);
+  cast = await dispositionScaffold(harness);
+  ({
+    adminCookies,
+    memberCookies,
+    otherMemberCookies,
+    contributorCookies,
+    requesterCookies,
+    requesterId,
+    memberId,
+  } = cast);
 
   const [type] = await harness.db
     .select({ id: requestTypes.id })
@@ -148,20 +101,12 @@ function resolve(number: number, reply?: string, cookies = memberCookies) {
   });
 }
 
-/** The stored row, for the facts the wire does not state. */
-async function stored(id: string) {
-  const [row] = await harness.db.select().from(requests).where(eq(requests.id, id)).limit(1);
-  return row!;
-}
-
-/** Every entry on one Request, oldest first. */
-async function entriesOn(id: string) {
-  return harness.db
-    .select()
-    .from(activityLog)
-    .where(and(eq(activityLog.entityType, "request"), eq(activityLog.entityId, id)))
-    .orderBy(activityLog.createdAt, activityLog.id);
-}
+/** The shared reads, by their own names — the scaffold's, bound once
+ * the cast is installed. */
+const stored = (id: string) => cast.stored(id);
+const entriesOn = (id: string) => cast.entriesOn(id);
+const bellRowsOn = (userId: string, requestId: string) => cast.bellRowsOn(userId, requestId);
+const mailAbout = (email: string, number: number) => cast.mailAbout(email, number);
 
 /** Every comment on one Request's thread, oldest first. */
 async function commentsOn(id: string) {
@@ -171,41 +116,6 @@ async function commentsOn(id: string) {
     .where(and(eq(comments.entityType, "request"), eq(comments.entityId, id)))
     .orderBy(comments.createdAt, comments.id);
 }
-
-/** Every bell row one person holds about one Request. */
-async function bellRowsOn(userId: string, requestId: string) {
-  return harness.db
-    .select()
-    .from(notifications)
-    .where(
-      and(
-        eq(notifications.userId, userId),
-        eq(notifications.entityType, "request"),
-        eq(notifications.entityId, requestId),
-      ),
-    );
-}
-
-/** How long the email is given before the suite calls the queue stuck.
- * The mailer is a capture, so this is slack for pg-boss, not for SMTP. */
-const SETTLE_TIMEOUT_MS = 20_000;
-
-/** Waits for a condition the pipeline is expected to bring about. */
-async function settles(what: string, ready: () => boolean): Promise<void> {
-  const deadline = Date.now() + SETTLE_TIMEOUT_MS;
-  while (Date.now() < deadline) {
-    if (ready()) return;
-    await new Promise((resolve) => setTimeout(resolve, 50));
-  }
-  throw new Error(`${what} did not settle within ${SETTLE_TIMEOUT_MS}ms`);
-}
-
-/** The messages one person has been sent about one Request, by its
- * R-### reference — which every group-5 subject line carries as
- * `R-### · summary`. The separator is part of the match, because `R-1`
- * is a prefix of `R-10`. */
-const mailAbout = (email: string, number: number) =>
-  harness.mailer.messagesTo(email).filter((m) => m.subject.includes(`R-${number} ·`));
 
 describe("who may resolve (INT-006, DD-013)", () => {
   it("answers an Administrator and a Legal Team Member", async () => {

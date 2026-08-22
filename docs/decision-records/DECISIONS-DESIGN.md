@@ -3663,7 +3663,7 @@ Three ICU messages arrive — `contracts.record.actions`, `.copyLink`, `.rename`
 
 Anything that drove the record by pressing an "Archive" button now opens the menu first. The M8 e2e spec's Contributor check asserts the menu's rows rather than the absence of a button, which is the stronger assertion — it proves what the reader _is_ offered, not only what they are not.
 
-## DES-056: The Inbox — a fixed queue, not a curated list (extends DES-018, DES-031, DES-046)
+## DES-056: The Inbox — a fixed list, not a curated one (extends DES-018, DES-031, DES-046)
 
 - **Status:** Accepted
 - **Date:** 2026-08-22
@@ -3672,15 +3672,15 @@ Anything that drove the record by pressing an "Archive" button now opens the men
 
 The Inbox is the first destination a Legal Team Member opens, and the first list in the product that is not a module registry. `designs/intake.pen` I1 draws it as a wide table under a filter row: Type and Urgency chips, a "Show triaged" control, and the Filter and Columns buttons the Contracts destination now carries for real (DES-046).
 
-Two of those things are the same shape and only one of them is this screen's. The Contracts list is a **curated destination list** — DD-019 gives a reader columns, filters, a sort, and a saved view over it. The Inbox is a **fixed queue**: INT-006 fixes its order and INT-007 fixes its contents, and both are product decisions rather than reader preferences. A reader who could sort the Inbox by requester could take away the one thing the queue promises.
+Two of those things are the same shape and only one of them is this screen's. The Contracts list is a **curated destination list** — DD-019 gives a reader columns, filters, a sort, and a saved view over it. The Inbox is **fixed**: INT-006 fixes its order and INT-007 fixes its contents, and both are product decisions rather than reader preferences. A reader who could sort the Inbox by Requester could take away the one thing the Inbox promises.
 
 ### Decision
 
-**1. The Inbox draws I1's seven columns and no column machinery.** Ref, Summary, Type, Requester, Urgency, Age, and the row's Assign button. There is no Columns menu, no Filter menu, and no saved views: DES-046's managed table is for a destination list, and this is a queue. The chips I1 draws for Type and Urgency are not built for the same reason — a filter over a fixed queue is a curation control, and the ones worth having are the ones the queue's own order already gives.
+**1. The Inbox draws I1's seven columns and no column machinery.** Ref, Summary, Type, Requester, Urgency, Age, and the row's Assign button. There is no Columns menu, no Filter menu, and no saved views: DES-046's managed table is for a destination list, and this is the Inbox. The chips I1 draws for Type and Urgency are not built for the same reason — a filter over a fixed list is a curation control, and the ones worth having are the ones the Inbox's own order already gives.
 
 **2. Show triaged is the one control, and it is the house switch.** A `Switch` with its `Label`, right-aligned in a row above the table, where the Entities registry's Show archived and the Contracts list's Show ended already sit. I1 puts the words among its filter chips; the chips are not built, and an isolated left-aligned control in an otherwise empty row would be a third position for a control this system has already placed twice.
 
-**3. Turning it on grows an Outcome column, at the end of the row.** The default queue is all `new` — INT-007 took the Status column out for exactly that reason — so a column that said "New" on every row would be the column INT-007 removed. Under the toggle there is something to say, and the column says it: the DES-005 status pill for the Request's arm, plus the C-### link when the Request converted into a record this reader can reach. A row whose link the server withheld draws the pill alone (DD-014).
+**3. Turning it on grows an Outcome column, at the end of the row.** The default Inbox is all `new` — INT-007 took the Status column out for exactly that reason — so a column that said "New" on every row would be the column INT-007 removed. Under the toggle there is something to say, and the column says it: the DES-005 status pill for the Request's arm, plus the C-### link when the Request converted into a record this reader can reach. A row whose link the server withheld draws the pill alone (DD-014).
 
 **4. Urgency is the DES-018 ramp, by value.** Low is neutral, medium is warning, high is severe, critical is danger — the ramp a contract's priority and risk already wear, now shared by a Request's urgency through one `SEVERITY_PILL` map rather than a per-callsite choice, which is what DES-018 asks for.
 
@@ -3692,21 +3692,21 @@ Two of those things are the same shape and only one of them is this screen's. Th
 
 ### Recorded normalization points
 
-1. **The nav badge is not built.** I1 draws a count badge on the Inbox nav item. Nothing in the destination registry has a badge today and nothing counts the queue outside the list's own read, so a badge would be a second count with its own staleness. The arrival signal M21 does ship is NOT-002's group 4 on the existing bell (#415).
+1. **The nav badge is not built.** I1 draws a count badge on the Inbox nav item. Nothing in the destination registry has a badge today and nothing counts the Inbox outside the list's own read, so a badge would be a second count with its own staleness. The arrival signal M21 does ship is NOT-002's group 4 on the existing bell (#415).
 2. **Age is the house relative stamp.** I1 writes "1h ago" and "2d ago"; the build uses `formatRelativeOrShort`, which says "1 hour ago" and "2 days ago" in the reader's own locale. One relative-time formatter across the product beats a compact form that only exists in one mock.
 3. **Urgency labels are DES-018's ramp, not I1's words.** I1 predates DES-018 and writes Urgent / High / Normal / Low. The ramp is Low / Medium / High / Critical, and the pill families follow it.
 4. **The Type cell carries two lines.** I1 draws the request type's name alone. The row also states the target the Administrator bound to that type — "Contract · NDA", "Contract", or "No target" — as a muted second line, because DD-018 makes triage confirm a routing rather than choose one, and how much of the routing is already decided is what a triager weighs before opening anything.
 
 ### Rationale
 
-Clause 1 is the clause that matters. The managed table exists and it would have been cheap to point it at this list. Doing so would have made the Inbox's order a preference, and the whole value of the queue is that its order is not one — the hottest and oldest ask surfaces first for everybody, or it surfaces first for nobody.
+Clause 1 is the clause that matters. The managed table exists and it would have been cheap to point it at this list. Doing so would have made the Inbox's order a preference, and the whole value of the Inbox is that its order is not one — the hottest and oldest Request surfaces first for everybody, or it surfaces first for nobody.
 
 Clause 3 is the honest version of "no Status column". INT-007 removed the column because it could only say one thing; it did not say the outcome should be unreadable once there is one to read.
 
 ### Alternatives considered
 
 - **The managed table with sorting disabled.** Rejected: a table that draws sort affordances and refuses them is worse than one that never offers them.
-- **Two lists — a queue and a triaged archive.** Rejected: INT-007 asks for a toggle, and two lists would need two orderings and two empty states to say the same two things.
+- **Two lists — the Inbox and a triaged archive.** Rejected: INT-007 asks for a toggle, and two lists would need two orderings and two empty states to say the same two things.
 - **A Status column always on.** Rejected by INT-007, and clause 3 is why the removal costs nothing.
 - **Keeping I1's compact ages.** Rejected as normalization point 2 — a second relative-time format for one screen.
 
@@ -3759,7 +3759,7 @@ Clause 5 is the INT-007 correction. I2 drew the conversion target twice because,
 
 ### Alternatives considered
 
-- **A portal-shaped page** — the `PortalShell` column with a banner, as the requester's detail draws. Rejected: the staff reader arrives from a queue and goes back to it, and the thread is an applet on this side (DD-016 gives them three rooms, which the portal's card cannot draw).
+- **A portal-shaped page** — the `PortalShell` column with a banner, as the requester's detail draws. Rejected: the staff reader arrives from the Inbox and goes back to it, and the thread is an applet on this side (DD-016 gives them three rooms, which the portal's card cannot draw).
 - **The hero in the chrome, as I2 draws it.** Rejected under clause 3: DES-011's sticky bound, for a strip that is content.
 - **Keeping I2's Triage card with Status and Urgency.** Rejected: two statements of the same fact within one screen of each other, which DES-028 point 7 already rejected on the contract record.
 - **Adding a history applet now.** Rejected: the activity read has no `request` arm, and an applet that opens on a refusal is worse than an absent one.
@@ -3899,6 +3899,27 @@ The catalogue gains the dialog's copy under a `convert.*` prefix, plus the sub-b
 
 DES-058's normalization point 1 is closed by this record: the sub-bar now draws all three of I2's actions.
 
+### Addendum (2026-08-22, the M21 review, [#440](https://github.com/juggernog20/OpenLaw/pull/440)) — where M21's policy is written, and two names corrected
+
+Speaks for **DES-056 through DES-059** together, because the review that prompted it read them together.
+
+**These four records cite policy; they do not own any of it.** DES-056–059 quote Request states, Inbox membership, thread tiers, notification behaviour, race outcomes, and conversion semantics, because a design decision that did not say what it is designing for would be a shape with no argument. None of it is decided here. A reader who wants the rule rather than its drawing takes it from the owning record:
+
+| What                                                                                            | Where it is decided                                               |
+| ----------------------------------------------------------------------------------------------- | ----------------------------------------------------------------- |
+| The lifecycle `new → converted \| resolved \| declined`, and that a disposition is chosen once  | INT-007, and its M21/7 addendum                                   |
+| Inbox membership and its order, the triaged toggle, and the converted link's two absences       | INT-006, and its M21/2, M21/3 and M21/12 addenda                  |
+| The race and what the loser is answered                                                         | INT-007's M21/7 addendum                                          |
+| Conversion semantics — the confirmed target, the carry, the gaps, Re-target, the promoted paper | INT-002 and its M21/10 addendum, INT-007's M21/9 addendum, DD-018 |
+| Who is in which room on a Request thread, and what the move does                                | CMT-001 and its M21/11 addendum, CMT-010, DD-016                  |
+| What reaches a Requester, and in whose words                                                    | INT-003 and its M21/6 addendum, NOT-002                           |
+
+Checked against those records before this was written: every rule the four design records restate is already written in one of them, so nothing had to move. What was missing was the pointer, and this is it. **The rule going forward: a DES record names the owning record and stops.** Restating a rule in a second place is how two places come to say different things.
+
+**DES-056's title and body drop the word "queue".** `CONTEXT.md` fixes **Inbox** and lists `queue` among the words to avoid for it, and the record used it eleven times, starting in its own title. The decision is unchanged — a fixed list whose order is a product decision rather than a reader preference — and only the word is. The index is updated to match. The same pass capitalised `Requester` and `Request` where the glossary's terms were meant.
+
+**The already-decided copy is `disposition.*`, not `decline.*`.** DES-058 clause 5 and DES-059's consequences both name `decline.alreadyDecided` and `decline.alreadyDecidedRead` as the scaffold's copy that all three dialogs read. The ids now say so: they are `disposition.alreadyDecided` and `disposition.alreadyDecidedRead`. The clause text above is left as it was written, as a shipped decision is; this addendum is where the current ids are.
+
 ## Index of decisions
 
 | #       | Decision                                                                                                                                                             | Status                                                                                                     |
@@ -3958,7 +3979,7 @@ DES-058's normalization point 1 is closed by this record: the sub-bar now draws 
 | DES-053 | The status moves from the strip — the current stage is the trigger (extends DES-034, DES-017, DES-032)                                                               | Accepted                                                                                                   |
 | DES-054 | The collapsible settings card — the header is the disclosure (extends DES-020, DES-011)                                                                              | Accepted                                                                                                   |
 | DES-055 | The record's overflow menu — the acts that belong to the whole contract (extends DES-034, DES-017, DES-053)                                                          | Accepted                                                                                                   |
-| DES-056 | The Inbox — a fixed queue, not a curated list (extends DES-018, DES-031, DES-046)                                                                                    | Accepted                                                                                                   |
+| DES-056 | The Inbox — a fixed list, not a curated one (extends DES-018, DES-031, DES-046)                                                                                      | Accepted                                                                                                   |
 | DES-057 | The staff request detail — a record page for something that is not a record (extends DES-032, DES-016, DES-034)                                                      | Accepted; sub-bar actions added by DES-058; the Description card's absence recorded by the M21/12 addendum |
 | DES-058 | The disposition sub-bar and the Decline dialog (extends DES-057, DES-035, DES-005)                                                                                   | Accepted; the Resolve dialog added by the M21/8 addendum; the slot's third button closed by DES-059        |
 | DES-059 | The Convert dialog — a prefilled contract create (extends DES-058, DES-057, DES-044)                                                                                 | Accepted                                                                                                   |

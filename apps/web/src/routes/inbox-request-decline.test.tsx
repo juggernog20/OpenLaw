@@ -23,105 +23,45 @@ import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { REQUEST_DISPOSITIONED_PROBLEM_TYPE } from "@openlaw/shared";
 import { json, problem, renderAt, stubApi, type StubCall } from "../testing/helpers";
-
-const MEMBER = {
-  id: "u2",
-  email: "member@example.com",
-  displayName: "Nadia Counsel",
-  role: "legal_team_member",
-};
-
-/** The Request the screen opens on, in whichever state a test needs. */
-function request(overrides: Record<string, unknown> = {}): Record<string, unknown> {
-  return {
-    id: "r1",
-    number: 45,
-    status: "new",
-    summary: "Orion Cloud MSA renewal — redline review",
-    description: "They sent a redline of the liability cap.",
-    urgency: "high",
-    customFields: {},
-    declinedReason: null,
-    createdAt: "2026-08-20T09:14:00.000Z",
-    requestType: {
-      id: "rt-nda",
-      displayName: "NDA request",
-      targetModule: "contract",
-      targetTypeName: "NDA",
-    },
-    requester: { id: "u7", displayName: "Tom Iwu", email: "tom.iwu@acme.com", image: null },
-    convertedContract: null,
-    ...overrides,
-  };
-}
-
-/** The whole detail read, around one Request. */
-const detail = (row: Record<string, unknown>) => ({
-  request: row,
-  fields: [],
-  customFieldRefs: { users: [], entities: [] },
-  attachments: [],
-});
+import {
+  dispositionApi,
+  MEMBER,
+  openDisposition,
+  staffDetail as detail,
+  staffRequest as request,
+  subbar,
+} from "../testing/disposition";
 
 /**
- * The Request seam behind the screen, stateful the way the API is: the
- * decline answers the envelope it wrote and the next read answers it
- * too, so the page's re-read shows the decision rather than the state it
- * opened on.
+ * The Request seam behind the screen, with Decline's own outcome on it.
+ * Everything else — the detail read, the thread, the counters — is the
+ * shared scaffold's.
  */
 function requestApi(
   initial = request(),
   answer: (call: StubCall) => Response | undefined = () => undefined,
 ) {
-  let row = initial;
-  const declines: unknown[] = [];
-  let reads = 0;
-  const handler = (call: StubCall): Response | undefined => {
-    if (call.url.pathname === "/api/v1/requests/45/decline" && call.method === "POST") {
-      declines.push(call.body);
-      const refusal = answer(call);
-      if (refusal) return refusal;
-      row = {
-        ...row,
-        status: "declined",
-        declinedReason: (call.body as { reason: string }).reason,
-      };
-      return json(200, { request: row });
-    }
-    if (/^\/api\/v1\/requests\/\d+$/.test(call.url.pathname) && call.method === "GET") {
-      reads += 1;
-      return json(200, detail(row));
-    }
-    // The thread the page mounts beside the Request. It is not this
-    // suite's subject, so it answers empty.
-    if (call.url.pathname === "/api/v1/comments" && call.method === "GET") {
-      return json(200, { comments: [], nextCursor: null });
-    }
-    if (call.url.pathname === "/api/v1/comments/unread" && call.method === "GET") {
-      return json(200, { unread: 0 });
-    }
-    return undefined;
-  };
+  const api = dispositionApi({
+    segment: "decline",
+    initial,
+    answer,
+    applied: (row, body) => ({
+      ...row,
+      status: "declined",
+      declinedReason: (body as { reason: string }).reason,
+    }),
+  });
   return {
-    handler,
-    declines,
+    handler: api.handler,
+    declines: api.sent,
     get reads() {
-      return reads;
+      return api.reads;
     },
   };
 }
 
-/** The sub-bar, which is where the disposition lives. */
-async function subbar() {
-  const heading = await screen.findByRole("heading", { level: 1 });
-  return heading.closest("section")!;
-}
-
 /** Opens the Decline dialog from the sub-bar and answers it. */
-async function openDecline(user: ReturnType<typeof userEvent.setup>) {
-  await user.click(within(await subbar()).getByRole("button", { name: "Decline" }));
-  return screen.findByRole("dialog");
-}
+const openDecline = (user: ReturnType<typeof userEvent.setup>) => openDisposition(user, "Decline");
 
 describe("the disposition surface (INT-007, DES-058)", () => {
   it("offers Decline while the Request is undecided", async () => {

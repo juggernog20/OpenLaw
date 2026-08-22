@@ -247,19 +247,21 @@ describe("the envelope (I2)", () => {
     // The trail back to the queue the Request was picked up from.
     expect(within(subbar).getByRole("link", { name: "Inbox" })).toHaveAttribute("href", "/inbox");
 
-    // The hero strip, which is where the envelope's five facts sit.
-    const hero = screen.getByText("Submitted").closest("div")!.parentElement!;
+    // The hero strip, which is where the envelope's five facts sit. It
+    // is reached by its landmark like every other card in this suite:
+    // two structural hops would re-scope silently the next time a
+    // wrapper lands in the page.
+    const hero = await screen.findByRole("region", { name: "Overview" });
     expect(within(hero).getByText("Tom Iwu")).toBeInTheDocument();
     expect(within(hero).getByText("NDA request")).toBeInTheDocument();
     // DD-018: triage confirms the routing the Administrator bound.
     expect(within(hero).getByText("Contract · NDA")).toBeInTheDocument();
     expect(within(hero).getByText("High")).toBeInTheDocument();
-    // The age, which is what triage weighs. What it reads depends on
-    // how long ago that is, so the assertion is on the stamp the
-    // element carries rather than on today's wording (DES-014).
-    const submitted = hero.querySelector("time");
-    expect(submitted).toHaveAttribute("datetime", "2026-08-20T09:14:00.000Z");
-    expect(submitted?.textContent).toBeTruthy();
+    // The age, which is what triage weighs. The assertion is the stamp
+    // alone: what the element *reads* is relative to the wall clock at
+    // run time (DES-014), so pinning the words would be a test that
+    // fails on a date rather than on a defect.
+    expect(hero.querySelector("time")).toHaveAttribute("datetime", "2026-08-20T09:14:00.000Z");
   });
 
   it("names the requester's address, so triage can answer out of band", async () => {

@@ -111,6 +111,7 @@ import { CustomFieldValueText } from "../components/intake/custom-field-value";
 import { DeclineDialog } from "../components/intake/decline-dialog";
 import { ResolveDialog } from "../components/intake/resolve-dialog";
 import {
+  contractPath,
   contractReference,
   SEVERITY_PILL,
   severityLabel,
@@ -276,8 +277,7 @@ export function InboxRequestPage() {
               surface: acting on a Request means choosing its outcome
               then and there. Drawn only while the Request is `new` —
               a decided one has nothing left to decide, and the Outcome
-              card states what was decided. Convert lands with M21/9,
-              and is absent until it does. */}
+              card states what was decided. */}
           {request.status === "new" && (
             <div className="flex shrink-0 items-center gap-2">
               <Button
@@ -468,7 +468,14 @@ export function InboxRequestPage() {
 function Hero({ request }: Readonly<{ request: StaffRequest }>) {
   const intl = useIntl();
   return (
-    <div className="flex flex-wrap items-start gap-x-8 gap-y-4 rounded-card border border-border-default bg-raised px-4 py-3">
+    // A named landmark rather than a bare strip: it carries no heading
+    // of its own, so without a name it is the one block on this page a
+    // reader cannot reach or refer to by role. Every card here is a
+    // named region already (DES-011).
+    <section
+      aria-label={intl.formatMessage({ id: "inbox.request.overview", defaultMessage: "Overview" })}
+      className="flex flex-wrap items-start gap-x-8 gap-y-4 rounded-card border border-border-default bg-raised px-4 py-3"
+    >
       <HeroItem label={<FormattedMessage id="inbox.column.requester" defaultMessage="Requester" />}>
         <span className="flex items-center gap-1.5">
           <Avatar
@@ -504,7 +511,7 @@ function Hero({ request }: Readonly<{ request: StaffRequest }>) {
           {formatRelativeOrShort(request.createdAt, { locale: intl.locale })}
         </time>
       </HeroItem>
-    </div>
+    </section>
   );
 }
 
@@ -666,7 +673,7 @@ function Outcome({ request }: Readonly<{ request: StaffRequest }>) {
         </span>
         {request.convertedContract && (
           <Link
-            to={`/contracts/${request.convertedContract.number}`}
+            to={contractPath(request.convertedContract.number)}
             className="rounded-chip text-base font-medium text-link hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-link"
           >
             {contractReference(intl, request.convertedContract.number)}
