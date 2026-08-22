@@ -34,12 +34,14 @@
  * The loader is the client half of INT-006's floor: Member+ only,
  * everyone else bounced home. The API's 403 is the real refusal.
  *
- * **The sub-bar carries the disposition** (INT-007, DES-058). Decline
- * (#418) and Resolve (#419) are built; Convert lands with M21/9 and is
- * absent rather than disabled until it does, because a control that
- * opens nothing is worse than no control. The actions are drawn only
- * while the Request is `new`: a decided Request has nothing left to
- * decide, and the Outcome card says what was decided.
+ * **The sub-bar carries the disposition** (INT-007, DES-058): Decline
+ * (#418), Resolve (#419), and Convert (#420) — all three of INT-007's
+ * outcomes, with Convert on the CTA because it is the one the Inbox
+ * exists to reach. The actions are drawn only while the Request is
+ * `new`: a decided Request has nothing left to decide, and the Outcome
+ * card says what was decided. There is no Matter arm beside Convert —
+ * `matters` lands in M22, and the door offers what this build can
+ * create.
  *
  * **Opening a disposition dialog writes nothing.** INT-007 has no claim
  * step and no parked state, so the Inbox row's Assign button is an entry
@@ -49,9 +51,10 @@
  *
  * ### Recorded normalization points (I2 deviations accepted)
  *
- * 1. **The sub-bar draws Decline and Resolve, for now.** I2 draws
- *    Convert to contract beside them. It lands with M21/9; a control
- *    that opens nothing is worse than no control.
+ * 1. **The sub-bar draws all three of I2's actions.** Decline, Resolve,
+ *    and Convert to contract, in I2's own order and chromatic ranking
+ *    (DES-058 clause 2). What is not drawn is I3's "Convert to matter
+ *    instead" — there is nothing to convert into until M22.
  * 2. **The hero scrolls with the page** where I2 draws it as a second
  *    fixed band under the sub-bar. What it says is a fact about the
  *    Request rather than a control that must stay in reach, and a
@@ -90,17 +93,26 @@ import {
   useRevalidator,
   type LoaderFunctionArgs,
 } from "react-router";
-import { defineMessage, FormattedMessage, useIntl, type IntlShape } from "react-intl";
-import { Ban, Check, ChevronRight, FileText } from "lucide-react";
+import { FormattedMessage, useIntl } from "react-intl";
+import { Ban, Check, ChevronRight, FilePen, FileText } from "lucide-react";
 import { api } from "../lib/api";
 import { authClient } from "../lib/auth-client";
 import { useCommentApplet } from "../components/comments/comment-applet";
+import { ConvertDialog } from "../components/intake/convert-dialog";
+import { CustomFieldValueText } from "../components/intake/custom-field-value";
 import { DeclineDialog } from "../components/intake/decline-dialog";
 import { ResolveDialog } from "../components/intake/resolve-dialog";
-import { contractReference, SEVERITY_PILL, severityLabel } from "../lib/contracts";
-import { isAnswered, type CustomFieldValue } from "../lib/custom-fields";
-import { formatFullDate, formatLongDateTime, formatRelativeOrShort } from "../lib/format";
 import {
+  contractReference,
+  SEVERITY_PILL,
+  severityLabel,
+  type RegistryEntity,
+  type UserOption,
+} from "../lib/contracts";
+import { isAnswered } from "../lib/custom-fields";
+import { formatLongDateTime, formatRelativeOrShort } from "../lib/format";
+import {
+  convertRequest,
   declineRequest,
   resolveRequest,
   type DispositionOutcome,
@@ -134,14 +146,32 @@ export async function inboxRequestLoader({ params }: LoaderFunctionArgs) {
   // the error boundary: a stale bookmark is not a fault a triager can
   // act on, and the Inbox is where the Requests they can open are.
   if (!Number.isInteger(number) || number < 1) return redirect("/inbox");
-  const res = await api.GET("/api/v1/requests/{number}", { params: { path: { number } } });
+  // The detail, plus the three reads Convert needs to draw a prefilled
+  // contract create (#420): the live contract types with the fields each
+  // attaches (CTR-016), the people a required `user` gap field offers,
+  // and the M7 Entity registry a required `entity` one offers. They ride
+  // the loader rather than the dialog, so opening the dialog is instant
+  // and still writes nothing (INT-007).
+  const [res, options, registry] = await Promise.all([
+    api.GET("/api/v1/requests/{number}", { params: { path: { number } } }),
+    api.GET("/api/v1/contracts/options"),
+    api.GET("/api/v1/entities"),
+  ]);
   if (res.response.status === 404) return redirect("/inbox");
-  if (!res.data) throw new Error("The request could not be read.");
-  return { user, ...res.data };
+  if (!res.data || !options.data || !registry.data) {
+    throw new Error("The request could not be read.");
+  }
+  return {
+    user,
+    ...res.data,
+    contractTypes: options.data.contractTypes,
+    people: options.data.users,
+    entities: registry.data.entities,
+  };
 }
 
 export function InboxRequestPage() {
-  const { user, request, fields, customFieldRefs, attachments } =
+  const { user, request, fields, customFieldRefs, attachments, contractTypes, people, entities } =
     useLoaderData<typeof inboxRequestLoader>();
   const intl = useIntl();
   const navigate = useNavigate();
@@ -152,7 +182,7 @@ export function InboxRequestPage() {
    * until the seam answers. One piece of state rather than one flag per
    * dialog, because a Request has one fate and two open dialogs would be
    * two answers to it. */
-  const [disposing, setDisposing] = useState<"decline" | "resolve" | null>(null);
+  const [disposing, setDisposing] = useState<"convert" | "decline" | "resolve" | null>(null);
   /** Whether a disposition is out. Every dialog holds its own submit
    * inert while it is, and the sub-bar's actions with it, so one press
    * is one disposition. */
@@ -252,16 +282,46 @@ export function InboxRequestPage() {
               </Button>
               {/* I2's second action, a plain secondary: Resolve is an
                   honest ending but it is not the outcome the Inbox
-                  exists to reach, so the CTA stays free for Convert. */}
+                  exists to reach, so the CTA belongs to Convert. */}
               <Button variant="secondary" disabled={busy} onClick={() => setDisposing("resolve")}>
                 <Check size={16} aria-hidden="true" />
                 <FormattedMessage id="resolve.action" defaultMessage="Resolve" />
+              </Button>
+              {/* I2's third action and the page's call to action
+                  (DES-058 clause 2): converting is what the Inbox is
+                  for. There is no Matter arm beside it — `matters`
+                  lands in M22, and the door offers what this build can
+                  create. */}
+              <Button disabled={busy} onClick={() => setDisposing("convert")}>
+                <FilePen size={16} aria-hidden="true" />
+                <FormattedMessage id="convert.action" defaultMessage="Convert to contract" />
               </Button>
             </div>
           )}
         </section>
       }
     >
+      {disposing === "convert" && (
+        <ConvertDialog
+          reference={reference}
+          request={request}
+          fields={fields}
+          customFieldRefs={customFieldRefs}
+          contractTypes={contractTypes}
+          people={people.map((person: UserOption) => ({
+            id: person.id,
+            label: person.displayName,
+            archived: person.archived,
+          }))}
+          entities={entities.map((entity: RegistryEntity) => ({
+            id: entity.id,
+            label: entity.legalName,
+          }))}
+          busy={busy}
+          onClose={() => setDisposing(null)}
+          onConvert={(input) => dispose(() => convertRequest(request.number, input))}
+        />
+      )}
       {disposing === "decline" && (
         <DeclineDialog
           reference={reference}
@@ -500,7 +560,6 @@ function FormResponses({
   customFieldRefs: StaffRequestFieldRefs;
 }>) {
   const answered = fields.filter((field) => isAnswered(request.customFields[field.slug]));
-  const intl = useIntl();
   if (answered.length === 0) {
     return (
       <p className="px-4 py-3 text-base text-muted">
@@ -520,7 +579,11 @@ function FormResponses({
         >
           <dt className="text-sm text-muted">{field.displayName}</dt>
           <dd className="min-w-0 text-base break-words">
-            {renderValue(intl, field, request.customFields[field.slug]!, customFieldRefs)}
+            <CustomFieldValueText
+              field={field}
+              value={request.customFields[field.slug]!}
+              refs={customFieldRefs}
+            />
           </dd>
         </div>
       ))}
@@ -608,41 +671,3 @@ function Outcome({ request }: Readonly<{ request: StaffRequest }>) {
   );
 }
 
-/**
- * One collected value, drawn the way its field type reads.
- *
- * The two types that name a row are resolved by the API — a bare id is
- * not a value anybody can read — and an id that resolves to nothing
- * falls back to the id, because a Request that holds one must go on
- * showing that it holds something (the INT-001 M20/10 rule).
- */
-function renderValue(
-  intl: IntlShape,
-  field: StaffRequestField,
-  value: CustomFieldValue,
-  refs: StaffRequestFieldRefs,
-): React.ReactNode {
-  switch (field.fieldType) {
-    case "number":
-      return typeof value === "number" ? intl.formatNumber(value) : String(value);
-    case "date":
-      return typeof value === "string" ? formatFullDate(value) : String(value);
-    case "boolean":
-      return intl.formatMessage(BOOLEAN_VALUE, { value: String(value === true) });
-    case "multi_select":
-      return Array.isArray(value) ? intl.formatList(value, { type: "conjunction" }) : String(value);
-    case "user":
-      return refs.users.find((person) => person.id === value)?.displayName ?? String(value);
-    case "entity":
-      return refs.entities.find((row) => row.id === value)?.legalName ?? String(value);
-    case "long_text":
-      return <span className="whitespace-pre-line">{String(value)}</span>;
-    default:
-      return String(value);
-  }
-}
-
-const BOOLEAN_VALUE = defineMessage({
-  id: "inbox.request.booleanValue",
-  defaultMessage: "{value, select, true {Yes} other {No}}",
-});
