@@ -71,6 +71,7 @@ import {
   namedInDraft,
   narrowestTierFor,
   RECORD_DEFAULT_TIER,
+  sendComment,
   tierAudience,
   tierLabel,
   unreachableAt,
@@ -87,6 +88,7 @@ import { problemDetail } from "../../lib/messages";
 import type { Role } from "../../lib/roles";
 import { cn } from "../../lib/utils";
 import { Avatar } from "../avatar";
+import { CommentAttachmentRows, CommentFilePicker } from "./comment-attachments";
 import { ConfidentialMarker } from "../confidential-marker";
 import { Button } from "../ui/button";
 import { Dialog, DialogContent, DialogTitle } from "../ui/dialog";
@@ -421,6 +423,8 @@ function CommentThread({
                 comment={comment}
                 role={role}
                 viewerId={viewerId}
+                entityType={entityType}
+                entityId={entityId}
                 confidential={confidential}
                 onChanged={onChanged}
                 landed={comment.id === landed}
@@ -474,6 +478,8 @@ function CommentRow({
   comment,
   role,
   viewerId,
+  entityType,
+  entityId,
   confidential,
   onChanged,
   landed = false,
@@ -481,6 +487,8 @@ function CommentRow({
   comment: Comment;
   role: Role;
   viewerId: string;
+  entityType: CommentEntityType;
+  entityId: string;
   /** The record is confidential, so the row wears DES-009's micro
    * marker beside its timestamp — a copied snippet then carries its
    * restriction with it. */
@@ -657,6 +665,9 @@ function CommentRow({
         <p className="text-sm whitespace-pre-wrap text-primary">
           <MentionedBody body={comment.body} mentions={comment.mentions} />
         </p>
+      )}
+      {removed === null && (
+        <CommentAttachmentRows comment={comment} entityType={entityType} entityId={entityId} />
       )}
       {error && (
         <p role="alert" className="text-xs text-status-danger-fg">
@@ -987,6 +998,7 @@ function Composer({
     tiers.includes(RECORD_DEFAULT_TIER) ? RECORD_DEFAULT_TIER : tiers[0]!,
   );
   const [draft, setDraft] = useState("");
+  const [files, setFiles] = useState<File[]>([]);
   const [error, setError] = useState<string | null>(null);
   /** Everybody picked from the typeahead so far. The draft is what says
    * whether they are still named — see `namedInDraft`. */
@@ -1064,16 +1076,16 @@ function Composer({
     inFlight.current = true;
     setBusy(true);
     setError(null);
-    const { data, error: problem } = await api
-      .POST("/api/v1/comments", {
-        body: {
-          entityType,
-          entityId,
-          body,
-          visibility,
-          mentions: mentions.map((person) => person.id),
-        },
-      })
+    const { data, error: problem } = await sendComment(
+      {
+        entityType,
+        entityId,
+        body,
+        visibility,
+        mentions: mentions.map((person) => person.id),
+      },
+      files,
+    )
       .catch(() => ({ data: undefined, error: undefined }))
       .finally(() => {
         inFlight.current = false;
@@ -1091,6 +1103,7 @@ function Composer({
     }
     onPosted(data.comment);
     setDraft("");
+    setFiles([]);
     setPicked([]);
     setQuery(null);
   }
@@ -1301,6 +1314,7 @@ function Composer({
           ))}
         </ul>
       )}
+      <CommentFilePicker files={files} disabled={busy} onChange={setFiles} />
       {/* Said before the post, never after (CMT-003). */}
       <p className="text-xs text-muted">{tierAudience(intl, tier)}</p>
       {/* DES-009 Tier 3, as CTR-022 amended it. The tier line above says

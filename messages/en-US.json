@@ -878,6 +878,24 @@
   "comments.applet": {
     "defaultMessage": "Comments"
   },
+  "comments.attachments.add": {
+    "defaultMessage": "Attach files"
+  },
+  "comments.attachments.bound": {
+    "defaultMessage": "Up to {count} files."
+  },
+  "comments.attachments.choose": {
+    "defaultMessage": "Choose files for this comment"
+  },
+  "comments.attachments.chosen": {
+    "defaultMessage": "Files attached to this comment"
+  },
+  "comments.attachments.list": {
+    "defaultMessage": "Comment attachments"
+  },
+  "comments.attachments.remove": {
+    "defaultMessage": "Remove {filename}"
+  },
   "comments.audience.fullThread": {
     "defaultMessage": "Visible to everyone on this record, including the requester."
   },

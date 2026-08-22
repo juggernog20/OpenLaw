@@ -3957,6 +3957,52 @@ Reusing the gap control keeps one visual grammar for the work Convert still need
 
 `apps/web/src/components/intake/custom-field-value.tsx` owns the inline marker. `apps/web/src/components/intake/convert-dialog.tsx` derives the repair boxes from the staff detail's archived state and posts their selections in the existing `customFields` body. No new component and no new token lands. The catalogue gains `inbox.request.archivedReference`, `convert.archivedReferenceNote`, and `convert.archivedReferenceMissing`.
 
+## DES-061: Chosen comment files are removable chips (extends DES-023, DES-024)
+
+- **Status:** Accepted
+- **Date:** 2026-08-22
+
+### Context
+
+CMT-011 lets both comment composers carry up to five files. The control has to show what will travel before the comment is posted, state the bound, and let one mistaken choice be removed without clearing the draft or reopening the picker.
+
+### Decision
+
+The existing composer gains one secondary `Attach files` button with a Paperclip glyph and the persistent caption `Up to 5 files.` The native picker is multiple. Every chosen file appears below the control as a neutral rounded chip carrying its full arriving name and a 24px remove button; a long name truncates visually but remains the button's accessible name. Removing a chip removes that file only. At five files the picker is disabled. A refused post keeps the draft and every chip; a successful post clears both.
+
+The portal and staff surfaces use the same component. The portal does not gain an audience control: its comment and every chosen file remain Full Thread by the Request audience rule.
+
+### Rationale
+
+Chips make the pending upload set scannable in the same compact grammar as mentions while keeping the two lists semantically separate. A persistent bound prevents the sixth-file refusal from being the first time a person learns the limit.
+
+### Consequences
+
+The chip list is labelled `Files attached to this comment`; each remove control is `Remove {filename}`. Selection is pointer-free through the ordinary file input. No progress treatment appears: one post is one multipart request and the composer measures no per-file progress.
+
+## DES-062: Comment paper is a download row under the body (extends DES-023)
+
+- **Status:** Accepted
+- **Date:** 2026-08-22
+
+### Context
+
+A reader needs to see the paper as part of the comment whose tier governs it, without making a lightweight attachment look like a Document row or separating it from the words that introduced it.
+
+### Decision
+
+Every live comment with paper draws a compact list directly under its body. One attachment is one row: a 14px Paperclip glyph followed by the arriving filename as an underlined-on-hover download link. The row adds no size, kind, uploader, filed marker, or File action; the last two belong to M21A/3, and the lightweight row stores none of the first three. Rows retain arrival order.
+
+A soft-delete or redact tombstone draws no attachment rows. The portal uses the same row and derives its download through the Request thread address, so the visual does not change after conversion.
+
+### Rationale
+
+Placement under the body makes the tier relationship visible without another badge. Keeping the row smaller than a Document row preserves DOC-008's distinction: this is what arrived with a remark, not yet record paper.
+
+### Consequences
+
+The list is labelled `Comment attachments`; the filename is the link's accessible name and the browser download uses that same filename. No attachment count is added to the thread header, because hidden-tier paper must contribute no number a narrower reader can compare.
+
 ## Index of decisions
 
 | #       | Decision                                                                                                                                                             | Status                                                                                                     |
@@ -4021,3 +4067,5 @@ Reusing the gap control keeps one visual grammar for the work Convert still need
 | DES-058 | The disposition sub-bar and the Decline dialog (extends DES-057, DES-035, DES-005)                                                                                   | Accepted; the Resolve dialog added by the M21/8 addendum; the slot's third button closed by DES-059        |
 | DES-059 | The Convert dialog — a prefilled contract create (extends DES-058, DES-057, DES-044)                                                                                 | Accepted                                                                                                   |
 | DES-060 | The archived carried reference marker and repair box (extends DES-057, DES-059)                                                                                      | Accepted                                                                                                   |
+| DES-061 | Chosen comment files are removable chips (extends DES-023, DES-024)                                                                                                  | Accepted                                                                                                   |
+| DES-062 | Comment paper is a download row under the body (extends DES-023)                                                                                                     | Accepted                                                                                                   |

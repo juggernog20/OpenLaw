@@ -25450,6 +25450,22 @@
                               "additionalProperties": false
                             }
                           },
+                          "attachments": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "id": {
+                                  "type": "string"
+                                },
+                                "filename": {
+                                  "type": "string"
+                                }
+                              },
+                              "required": ["id", "filename"],
+                              "additionalProperties": false
+                            }
+                          },
                           "createdAt": {
                             "type": "string",
                             "format": "date-time",
@@ -25539,7 +25555,7 @@
       },
       "post": {
         "operationId": "postComment",
-        "summary": "Post a comment on a record at one of the DD-016 tiers. The seam refuses a tier the poster is not in the room for, so a Contributor cannot post Legal Only whatever the client sends, and it refuses a comment whose mentions outrun its tier (CMT-007), so the composer's confirmation explains the promotion rather than enforcing it. The tier is immutable afterwards (CMT-005) — there is no route that changes it. Writes one comment_mentions row per person named, and appends a comment.posted activity entry at the comment's own tier, all in the same transaction",
+        "summary": "Post a comment on a record at one of the DD-016 tiers. The seam refuses a tier the poster is not in the room for, so a Contributor cannot post Legal Only whatever the client sends, and it refuses a comment whose mentions outrun its tier (CMT-007), so the composer's confirmation explains the promotion rather than enforcing it. The tier is immutable afterwards (CMT-005) — there is no route that changes it. Writes one comment_mentions row per person named, and appends a comment.posted activity entry at the comment's own tier, all in the same transaction. Accepts the existing JSON body or multipart/form-data carrying the same fields and up to five `file` parts. Stored blobs are removed if any later part or transactional write is refused",
         "tags": ["comments"],
         "requestBody": {
           "required": true,
@@ -25567,13 +25583,67 @@
                     "enum": ["legal_only", "working_team", "full_thread"]
                   },
                   "mentions": {
-                    "maxItems": 20,
                     "type": "array",
+                    "maxItems": 20,
                     "items": {
                       "type": "string",
                       "minLength": 1,
                       "maxLength": 64
                     }
+                  },
+                  "file": {
+                    "type": "array",
+                    "maxItems": 5,
+                    "items": {
+                      "type": "string",
+                      "format": "binary"
+                    },
+                    "description": "Up to five file parts, all named `file`."
+                  }
+                },
+                "required": ["entityType", "entityId", "body", "visibility"],
+                "additionalProperties": false
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "entityType": {
+                    "type": "string",
+                    "enum": ["contract", "request"]
+                  },
+                  "entityId": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 64
+                  },
+                  "body": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 10000
+                  },
+                  "visibility": {
+                    "type": "string",
+                    "enum": ["legal_only", "working_team", "full_thread"]
+                  },
+                  "mentions": {
+                    "type": "array",
+                    "maxItems": 20,
+                    "items": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 64
+                    }
+                  },
+                  "file": {
+                    "type": "array",
+                    "maxItems": 5,
+                    "items": {
+                      "type": "string",
+                      "format": "binary"
+                    },
+                    "description": "Up to five file parts, all named `file`."
                   }
                 },
                 "required": ["entityType", "entityId", "body", "visibility"],
@@ -25649,6 +25719,22 @@
                               }
                             },
                             "required": ["id", "displayName"],
+                            "additionalProperties": false
+                          }
+                        },
+                        "attachments": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "string"
+                              },
+                              "filename": {
+                                "type": "string"
+                              }
+                            },
+                            "required": ["id", "filename"],
                             "additionalProperties": false
                           }
                         },
@@ -25936,6 +26022,74 @@
         }
       }
     },
+    "/api/v1/comments/{commentId}/attachments/{attachmentId}": {
+      "get": {
+        "operationId": "downloadCommentAttachment",
+        "summary": "Download one live comment attachment through the same audience arm and tier that exposed its comment. The entity reference is the address the reader used for the thread, so a Requester can continue through a converted Request while the stored comment hangs from its Contract. A hidden tier, another attachment, and either tombstone all answer 404",
+        "tags": ["comments"],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "enum": ["contract", "request"]
+            },
+            "in": "query",
+            "name": "entityType",
+            "required": true
+          },
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 64
+            },
+            "in": "query",
+            "name": "entityId",
+            "required": true
+          },
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 64
+            },
+            "in": "path",
+            "name": "commentId",
+            "required": true
+          },
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 64
+            },
+            "in": "path",
+            "name": "attachmentId",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/octet-stream": {
+                "schema": {}
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/comments/{commentId}": {
       "patch": {
         "operationId": "editComment",
@@ -26039,6 +26193,22 @@
                               }
                             },
                             "required": ["id", "displayName"],
+                            "additionalProperties": false
+                          }
+                        },
+                        "attachments": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "string"
+                              },
+                              "filename": {
+                                "type": "string"
+                              }
+                            },
+                            "required": ["id", "filename"],
                             "additionalProperties": false
                           }
                         },
@@ -26204,6 +26374,22 @@
                             "additionalProperties": false
                           }
                         },
+                        "attachments": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "string"
+                              },
+                              "filename": {
+                                "type": "string"
+                              }
+                            },
+                            "required": ["id", "filename"],
+                            "additionalProperties": false
+                          }
+                        },
                         "createdAt": {
                           "type": "string",
                           "format": "date-time",
@@ -26284,7 +26470,7 @@
     "/api/v1/comments/{commentId}/redact": {
       "post": {
         "operationId": "redactComment",
-        "summary": "Remove what a comment said, for good. An Administrator alone may (CMT-005), on anybody's comment including their own. It clears the body, every comment_revisions row, and the list of who the text named — so text posted into the wrong record is gone rather than only hidden. This is the reason prior versions live outside the append-only log (CMT-006). The row stays as a tombstone, because the thread around it still has to read. Appends comment.redacted at the comment's own tier",
+        "summary": "Remove what a comment said, for good. An Administrator alone may (CMT-005), on anybody's comment including their own. It clears the body, every comment_revisions row, the list of who the text named, and every attachment row and stored blob — so paper or text posted into the wrong record is gone rather than only hidden. This is the reason prior versions live outside the append-only log (CMT-006). The row stays as a tombstone, because the thread around it still has to read. Appends comment.redacted at the comment's own tier",
         "tags": ["comments"],
         "parameters": [
           {
@@ -26365,6 +26551,22 @@
                               }
                             },
                             "required": ["id", "displayName"],
+                            "additionalProperties": false
+                          }
+                        },
+                        "attachments": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "string"
+                              },
+                              "filename": {
+                                "type": "string"
+                              }
+                            },
+                            "required": ["id", "filename"],
                             "additionalProperties": false
                           }
                         },

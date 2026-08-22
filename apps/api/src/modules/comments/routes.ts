@@ -84,11 +84,14 @@
  * composer's confirmation explains the promotion, it does not enforce it.
  */
 
+import type { FastifyRequest } from "fastify";
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
 import { z } from "zod";
+import { uuidv7 } from "uuidv7";
 import {
   and,
   asc,
+  commentAttachments,
   commentLastRead,
   commentMentions,
   commentRevisions,
@@ -111,6 +114,13 @@ import {
 import { requireRole, type AuthenticatedUser } from "../../auth/guards.js";
 import { recordActivity } from "../../lib/activity.js";
 import { httpError, problemResponse } from "../../lib/problem.js";
+import {
+  asUploadRefusal,
+  attachmentDisposition,
+  refuseOversize,
+  uploadFilename,
+  withStoredBlobs,
+} from "../../lib/uploads.js";
 import {
   commentAudience,
   commentEntityType,
@@ -176,6 +186,13 @@ const MentionSchema = z.object({
   displayName: z.string(),
 });
 
+/** One attachment as it travels inside a live comment. The storage
+ * reference never leaves the API. */
+const CommentAttachmentSchema = z.object({
+  id: z.string(),
+  filename: z.string(),
+});
+
 const CommentSchema = z.object({
   id: z.string(),
   entityType: CommentEntityTypeSchema,
@@ -190,6 +207,9 @@ const CommentSchema = z.object({
    * comment that names nobody, and emptied by a redact along with the
    * text it named them in. */
   mentions: z.array(MentionSchema),
+  /** Omitted for a paperless comment, preserving the existing JSON
+   * shape. Also omitted from both tombstones. */
+  attachments: z.array(CommentAttachmentSchema).optional(),
   createdAt: z.iso.datetime({ offset: true }),
   /** NULL until the author changes the text; a time draws the "edited"
    * marker, so a reader can tell the text moved since they read it. */
@@ -215,6 +235,45 @@ const CommentSchema = z.object({
  * add a second, weaker gate in front of the real one.
  */
 const MentionsSchema = z.array(z.string().min(1).max(64)).max(20);
+
+/** The JSON body POST /comments has always taken. Multipart parses the
+ * same fields through this exact schema after streaming its file parts. */
+const CommentPostBodySchema = z.strictObject({
+  entityType: CommentEntityTypeSchema,
+  entityId: RecordIdSchema,
+  body: CommentBodySchema,
+  visibility: VisibilitySchema,
+  mentions: MentionsSchema.optional(),
+});
+
+/** OpenAPI description for the streamed route body. Runtime validation
+ * still goes through CommentPostBodySchema; metadata keeps the generated
+ * client's established field types while documenting the file parts. */
+const CommentPostTransportSchema = z.any().meta({
+  type: "object",
+  properties: {
+    entityType: { type: "string", enum: [...COMMENT_ENTITY_TYPES] },
+    entityId: { type: "string", minLength: 1, maxLength: 64 },
+    body: { type: "string", minLength: 1, maxLength: 10_000 },
+    visibility: { type: "string", enum: [...COMMENT_VISIBILITIES] },
+    mentions: {
+      type: "array",
+      maxItems: 20,
+      items: { type: "string", minLength: 1, maxLength: 64 },
+    },
+    file: {
+      type: "array",
+      maxItems: 5,
+      items: { type: "string", format: "binary" },
+      description: "Up to five file parts, all named `file`.",
+    },
+  },
+  required: ["entityType", "entityId", "body", "visibility"],
+  additionalProperties: false,
+});
+
+/** One comment carries at most five files (CMT-011). */
+const MAX_COMMENT_ATTACHMENTS = 5;
 
 /** The reference the thread is keyed by — one record, named by type and
  * id rather than by a contract's CTR-003 number, because the panel that
@@ -301,6 +360,7 @@ export const commentsRoutes: FastifyPluginAsyncZod = async (app) => {
   /** Derived from the response schema, so the projection and what the
    * route promises cannot drift apart. */
   type Mention = z.infer<typeof MentionSchema>;
+  type Attachment = z.infer<typeof CommentAttachmentSchema>;
 
   /**
    * Who each of these comments addresses, in one read. The list is a
@@ -331,7 +391,39 @@ export const commentsRoutes: FastifyPluginAsyncZod = async (app) => {
     return byComment;
   }
 
-  function toComment(row: ThreadRow, mentions: readonly Mention[] = []) {
+  /** The paper carried by a page of comments, grouped without exposing
+   * storage references. */
+  async function attachmentsOf(
+    db: Executor,
+    commentIds: readonly string[],
+  ): Promise<Map<string, Attachment[]>> {
+    const byComment = new Map<string, Attachment[]>();
+    if (commentIds.length === 0) return byComment;
+    const rows = await db
+      .select({
+        commentId: commentAttachments.commentId,
+        id: commentAttachments.id,
+        filename: commentAttachments.filename,
+      })
+      .from(commentAttachments)
+      .where(inArray(commentAttachments.commentId, [...commentIds]))
+      .orderBy(asc(commentAttachments.createdAt), asc(commentAttachments.id));
+    for (const row of rows) {
+      const list = byComment.get(row.commentId);
+      const attachment = { id: row.id, filename: row.filename };
+      if (list) list.push(attachment);
+      else byComment.set(row.commentId, [attachment]);
+    }
+    return byComment;
+  }
+
+  function toComment(
+    row: ThreadRow,
+    mentions: readonly Mention[] = [],
+    attachments: readonly Attachment[] = [],
+  ) {
+    const carriesPaper =
+      row.deletedAt === null && row.redactedAt === null && attachments.length > 0;
     return {
       id: row.id,
       // Narrowed for the response schema: the column admits four types,
@@ -347,6 +439,7 @@ export const commentsRoutes: FastifyPluginAsyncZod = async (app) => {
       body: row.body,
       visibility: row.visibility,
       mentions: [...mentions],
+      ...(carriesPaper ? { attachments: [...attachments] } : {}),
       createdAt: row.createdAt.toISOString(),
       editedAt: row.editedAt?.toISOString() ?? null,
       deletedAt: row.deletedAt?.toISOString() ?? null,
@@ -413,10 +506,11 @@ export const commentsRoutes: FastifyPluginAsyncZod = async (app) => {
         .orderBy(desc(comments.createdAt), desc(comments.id))
         .limit(PAGE_SIZE + 1);
       const page = rows.slice(0, PAGE_SIZE);
-      const mentions = await mentionsOf(
-        app.db,
-        page.map((row) => row.id),
-      );
+      const ids = page.map((row) => row.id);
+      const [mentions, attachments] = await Promise.all([
+        mentionsOf(app.db, ids),
+        attachmentsOf(app.db, ids),
+      ]);
       return {
         // Turned back into the order a conversation is read in
         // (CMT-002). The page is a window on the thread, not a feed:
@@ -425,7 +519,7 @@ export const commentsRoutes: FastifyPluginAsyncZod = async (app) => {
         comments: page
           .slice()
           .reverse()
-          .map((row) => toComment(row, mentions.get(row.id))),
+          .map((row) => toComment(row, mentions.get(row.id), attachments.get(row.id))),
         // The oldest row of this page is the boundary for the page
         // before it, and only when a further row was actually read.
         nextCursor: rows.length > PAGE_SIZE ? (page.at(-1)?.id ?? null) : null,
@@ -602,6 +696,126 @@ export const commentsRoutes: FastifyPluginAsyncZod = async (app) => {
     },
   );
 
+  type CommentPostBody = z.infer<typeof CommentPostBodySchema>;
+  type StoredCommentAttachment = {
+    id: string;
+    fileRef: string;
+    filename: string;
+  };
+
+  function requireJsonComment(body: unknown): CommentPostBody {
+    const parsed = CommentPostBodySchema.safeParse(body);
+    if (!parsed.success) {
+      const fields = [
+        ...new Set(
+          parsed.error.issues
+            .map((issue) => issue.path.find((part) => typeof part === "string"))
+            .filter((field): field is string => field !== undefined),
+        ),
+      ];
+      const fieldDetail = fields.length > 0 ? ` Invalid fields: ${fields.join(", ")}.` : "";
+      throw httpError(400, `That comment body is invalid.${fieldDetail}`);
+    }
+    return parsed.data;
+  }
+
+  /**
+   * Reads the comment fields and up to five file parts in one pass.
+   * Files stream directly into storage. Any parser, filename, or field
+   * refusal removes every blob the pass wrote before rethrowing.
+   */
+  async function receiveMultipartComment(
+    request: FastifyRequest,
+    commentId: string,
+  ): Promise<{ body: CommentPostBody; attachments: StoredCommentAttachment[] }> {
+    const fields: Record<string, string> = {};
+    const attachments: StoredCommentAttachment[] = [];
+    let tooManyFiles = false;
+    try {
+      const parts = request.parts({
+        limits: {
+          fileSize: app.maxUploadBytes,
+          // The route enforces five below while draining excess parts.
+          // Letting Busboy stop on the sixth would destroy the fifth
+          // stream while the storage adapter is still consuming it.
+          files: 64,
+          fields: 8,
+          fieldSize: 8192,
+          parts: 72,
+        },
+      });
+      for await (const part of parts) {
+        if (part.type === "field") {
+          if (part.valueTruncated) {
+            throw httpError(
+              413,
+              "That upload carries more form fields than this endpoint accepts.",
+            );
+          }
+          if (Object.hasOwn(fields, part.fieldname)) {
+            throw httpError(400, `The ${part.fieldname} field was sent more than once.`);
+          }
+          fields[part.fieldname] = String(part.value);
+          continue;
+        }
+        if (part.fieldname !== "file") {
+          throw httpError(400, "Attach comment files using the `file` field.");
+        }
+        if (attachments.length >= MAX_COMMENT_ATTACHMENTS) {
+          tooManyFiles = true;
+          // Keep the parser moving to its clean end. No excess byte is
+          // stored, and the whole post is refused after the pass.
+          for await (const chunk of part.file) {
+            void chunk;
+          }
+          continue;
+        }
+        const filename = uploadFilename(part.filename);
+        const id = uuidv7();
+        const fileRef = await app.storage
+          .put(`comment-attachments/${commentId}/${id}`, part.file)
+          .catch((error: unknown) => {
+            throw asUploadRefusal(error, app.maxUploadBytes, MAX_COMMENT_ATTACHMENTS);
+          });
+        if (part.file.truncated) {
+          await app.storage.delete(fileRef).catch((error: unknown) => {
+            request.log.warn({ err: error, fileRef }, "could not remove a truncated upload");
+          });
+          throw refuseOversize(app.maxUploadBytes);
+        }
+        attachments.push({ id, fileRef, filename });
+      }
+
+      if (tooManyFiles) {
+        throw httpError(413, `Upload at most ${MAX_COMMENT_ATTACHMENTS} files at a time.`);
+      }
+
+      let mentions: unknown = undefined;
+      if (fields.mentions !== undefined) {
+        try {
+          mentions = JSON.parse(fields.mentions);
+        } catch {
+          throw httpError(400, "The mentions field must be a JSON array of user ids.");
+        }
+      }
+      const parsed = CommentPostBodySchema.safeParse({ ...fields, mentions });
+      if (!parsed.success) throw httpError(400, "That comment form is invalid.");
+      return { body: parsed.data, attachments };
+    } catch (error) {
+      await Promise.all(
+        attachments.map((attachment) =>
+          app.storage.delete(attachment.fileRef).catch((cleanup: unknown) => {
+            request.log.warn(
+              { err: cleanup, fileRef: attachment.fileRef },
+              "could not remove the blob of a refused comment upload",
+            );
+          }),
+        ),
+      );
+      throw asUploadRefusal(error, app.maxUploadBytes, MAX_COMMENT_ATTACHMENTS);
+    }
+  }
+
   app.post(
     "/comments",
     {
@@ -618,17 +832,16 @@ export const commentsRoutes: FastifyPluginAsyncZod = async (app) => {
           "afterwards (CMT-005) — there is no route that changes it. " +
           "Writes one comment_mentions row per person named, and appends " +
           "a comment.posted activity entry at the comment's own tier, " +
-          "all in the same transaction",
+          "all in the same transaction. Accepts the existing JSON body " +
+          "or multipart/form-data carrying the same fields and up to five " +
+          "`file` parts. Stored blobs are removed if any later part or " +
+          "transactional write is refused",
         tags: ["comments"],
-        body: z.strictObject({
-          entityType: CommentEntityTypeSchema,
-          entityId: RecordIdSchema,
-          body: CommentBodySchema,
-          visibility: VisibilitySchema,
-          /** Who the comment addresses, by id. Repeats collapse: one
-           * person named twice is still one person to reach. */
-          mentions: MentionsSchema.optional(),
-        }),
+        consumes: ["application/json", "multipart/form-data"],
+        // Multipart is streamed and Fastify supplies an internal body
+        // placeholder before the handler runs. Both transports are
+        // parsed through CommentPostBodySchema in the handler instead.
+        body: CommentPostTransportSchema,
         response: {
           201: z.object({ comment: CommentSchema }),
           default: problemResponse,
@@ -636,70 +849,90 @@ export const commentsRoutes: FastifyPluginAsyncZod = async (app) => {
       },
     },
     async (request, reply) => {
-      const { body, visibility } = request.body;
+      const mintedCommentId = uuidv7();
+      const incoming = request.isMultipart()
+        ? await receiveMultipartComment(request, mintedCommentId)
+        : { body: requireJsonComment(request.body), attachments: [] };
+      const { body, visibility } = incoming.body;
       // One person named twice is one person to reach, and the row's
       // compound key says so too.
-      const named = [...new Set(request.body.mentions ?? [])];
+      const named = [...new Set(incoming.body.mentions ?? [])];
 
       // The seam's transaction rather than the database's: a comment
       // that names somebody is done *to* them (CMT-007, NOT-002 group
       // 1), and the bell row for it belongs inside the same commit as
       // the `comment_mentions` row it is read from.
-      const comment = await app.notifier.notifying(async (tx) => {
-        // Read on the same snapshot the rows are written on: a grant
-        // dropped between the check and the insert must not authorize a
-        // post onto a record the author no longer reaches. A refusal
-        // thrown here rolls the transaction back and keeps its status.
-        const audience = await reachedThread(tx, request.user, request.body);
-        // The composer offers a Contributor two segments; this is the
-        // refusal that holds when the request does not come from it.
-        if (!audience.tiers.includes(visibility)) {
-          throw httpError(403, "You cannot post a comment at that visibility tier.");
-        }
-
-        // Checked on that same snapshot: a grant dropped before the
-        // insert must not leave a mention nobody can hear.
-        if (named.length > 0) {
-          const candidates = await mentionCandidates(tx, audience, named);
-          const byId = new Map(candidates.map((candidate) => [candidate.id, candidate]));
-          // Somebody no tier on this record reaches is not addressable
-          // here at all. Mentioning a person does not grant them the
-          // record; whatever the arm's audience rule asks for does.
-          if (named.some((id) => !byId.has(id))) {
-            throw httpError(400, "That is not a person you can mention on this record.");
+      const write = () =>
+        app.notifier.notifying(async (tx) => {
+          // Read on the same snapshot the rows are written on: a grant
+          // dropped between the check and the insert must not authorize a
+          // post onto a record the author no longer reaches. A refusal
+          // thrown here rolls the transaction back and keeps its status.
+          const audience = await reachedThread(tx, request.user, incoming.body);
+          // The composer offers a Contributor two segments; this is the
+          // refusal that holds when the request does not come from it.
+          if (!audience.tiers.includes(visibility)) {
+            throw httpError(403, "You cannot post a comment at that visibility tier.");
           }
-          // The load-bearing refusal (CMT-007). The client's
-          // confirmation offers the promotion; this is what holds when
-          // the request did not come from it.
-          const unreachable = named
-            .map((id) => byId.get(id)!)
-            .filter((candidate) => !candidate.tiers.includes(visibility));
-          if (unreachable.length > 0) {
-            const names = unreachable.map((candidate) => candidate.displayName).join(", ");
-            throw httpError(
-              403,
-              `${names} cannot see a comment at that visibility tier. Widen the audience or take the mention out.`,
-            );
-          }
-        }
 
-        // The write itself, its `comment_mentions` rows, its activity
-        // entry, and whatever the arm raises are all one act, and
-        // `post.ts` is where that act lives — the Resolve disposition
-        // says its closing reply through the same call (INT-007).
-        const commentId = await postComment(tx, app.notifier, {
-          audience,
-          author: request.user,
-          body,
-          visibility,
-          mentions: named,
+          // Checked on that same snapshot: a grant dropped before the
+          // insert must not leave a mention nobody can hear.
+          if (named.length > 0) {
+            const candidates = await mentionCandidates(tx, audience, named);
+            const byId = new Map(candidates.map((candidate) => [candidate.id, candidate]));
+            // Somebody no tier on this record reaches is not addressable
+            // here at all. Mentioning a person does not grant them the
+            // record; whatever the arm's audience rule asks for does.
+            if (named.some((id) => !byId.has(id))) {
+              throw httpError(400, "That is not a person you can mention on this record.");
+            }
+            // The load-bearing refusal (CMT-007). The client's
+            // confirmation offers the promotion; this is what holds when
+            // the request did not come from it.
+            const unreachable = named
+              .map((id) => byId.get(id)!)
+              .filter((candidate) => !candidate.tiers.includes(visibility));
+            if (unreachable.length > 0) {
+              const names = unreachable.map((candidate) => candidate.displayName).join(", ");
+              throw httpError(
+                403,
+                `${names} cannot see a comment at that visibility tier. Widen the audience or take the mention out.`,
+              );
+            }
+          }
+
+          // The write itself, its `comment_mentions` rows, its activity
+          // entry, and whatever the arm raises are all one act, and
+          // `post.ts` is where that act lives — the Resolve disposition
+          // says its closing reply through the same call (INT-007).
+          const commentId = await postComment(tx, app.notifier, {
+            id: mintedCommentId,
+            audience,
+            author: request.user,
+            body,
+            visibility,
+            mentions: named,
+            attachments: incoming.attachments,
+          });
+          // Read back through the same projection the thread uses, so the
+          // row the poster gets is the row they will see on the next load.
+          const [posted] = await selectComments(tx).where(eq(comments.id, commentId));
+          const [mentions, attachments] = await Promise.all([
+            mentionsOf(tx, [commentId]),
+            attachmentsOf(tx, [commentId]),
+          ]);
+          return toComment(posted!, mentions.get(commentId), attachments.get(commentId));
         });
-        // Read back through the same projection the thread uses, so the
-        // row the poster gets is the row they will see on the next load.
-        const [posted] = await selectComments(tx).where(eq(comments.id, commentId));
-        const mentions = await mentionsOf(tx, [commentId]);
-        return toComment(posted!, mentions.get(commentId));
-      });
+
+      const comment =
+        incoming.attachments.length === 0
+          ? await write()
+          : await withStoredBlobs(
+              app.storage,
+              request.log,
+              incoming.attachments.map((attachment) => attachment.fileRef),
+              write,
+            );
 
       return reply.status(201).send({ comment });
     },
@@ -781,9 +1014,72 @@ export const commentsRoutes: FastifyPluginAsyncZod = async (app) => {
    * so a corrected row is the row the next load will draw. */
   async function readBack(tx: Transaction, commentId: string) {
     const [row] = await selectComments(tx).where(eq(comments.id, commentId));
-    const mentions = await mentionsOf(tx, [commentId]);
-    return toComment(row!, mentions.get(commentId));
+    const [mentions, attachments] = await Promise.all([
+      mentionsOf(tx, [commentId]),
+      attachmentsOf(tx, [commentId]),
+    ]);
+    return toComment(row!, mentions.get(commentId), attachments.get(commentId));
   }
+
+  app.get(
+    "/comments/:commentId/attachments/:attachmentId",
+    {
+      preHandler: requireCommentReader,
+      schema: {
+        operationId: "downloadCommentAttachment",
+        summary:
+          "Download one live comment attachment through the same audience " +
+          "arm and tier that exposed its comment. The entity reference is " +
+          "the address the reader used for the thread, so a Requester can " +
+          "continue through a converted Request while the stored comment " +
+          "hangs from its Contract. A hidden tier, another attachment, and " +
+          "either tombstone all answer 404",
+        tags: ["comments"],
+        params: CommentParams.extend({ attachmentId: RecordIdSchema }),
+        querystring: EntityRefQuery,
+        produces: ["application/octet-stream"],
+        response: { 200: z.any(), default: problemResponse },
+      },
+    },
+    async (request, reply) => {
+      const [row] = await app.db
+        .select({
+          id: commentAttachments.id,
+          fileRef: commentAttachments.fileRef,
+          filename: commentAttachments.filename,
+          commentEntityType: comments.entityType,
+          commentEntityId: comments.entityId,
+          visibility: comments.visibility,
+          deletedAt: comments.deletedAt,
+          redactedAt: comments.redactedAt,
+        })
+        .from(commentAttachments)
+        .innerJoin(comments, eq(commentAttachments.commentId, comments.id))
+        .where(
+          and(
+            eq(commentAttachments.id, request.params.attachmentId),
+            eq(commentAttachments.commentId, request.params.commentId),
+          ),
+        )
+        .limit(1);
+      if (!row || row.deletedAt !== null || row.redactedAt !== null) {
+        throw httpError(404, "No comment attachment exists with this id.");
+      }
+      const audience = await reachedThread(app.db, request.user, request.query);
+      if (
+        audience.entityType !== row.commentEntityType ||
+        audience.entityId !== row.commentEntityId ||
+        !audience.tiers.includes(row.visibility)
+      ) {
+        throw httpError(404, "No comment attachment exists with this id.");
+      }
+
+      reply.header("content-type", "application/octet-stream");
+      reply.header("content-disposition", attachmentDisposition(row.filename));
+      reply.header("x-content-type-options", "nosniff");
+      return reply.send(await app.storage.get(row.fileRef));
+    },
+  );
 
   app.patch(
     "/comments/:commentId",
@@ -903,8 +1199,9 @@ export const commentsRoutes: FastifyPluginAsyncZod = async (app) => {
         summary:
           "Remove what a comment said, for good. An Administrator alone " +
           "may (CMT-005), on anybody's comment including their own. It " +
-          "clears the body, every comment_revisions row, and the list of " +
-          "who the text named — so text posted into the wrong record is " +
+          "clears the body, every comment_revisions row, the list of " +
+          "who the text named, and every attachment row and stored blob — " +
+          "so paper or text posted into the wrong record is " +
           "gone rather than only hidden. This is the reason prior " +
           "versions live outside the append-only log (CMT-006). The row " +
           "stays as a tombstone, because the thread around it still has " +
@@ -919,10 +1216,21 @@ export const commentsRoutes: FastifyPluginAsyncZod = async (app) => {
         const held = await heldComment(tx, request.user, request.params.commentId);
         if (held.redactedAt !== null) return readBack(tx, held.id);
 
-        // The three places the text and its addressees live. All of them
+        // Read the references before clearing the rows. Storage deletion
+        // follows DOC-010's recorded ordering: inside the transaction and
+        // before commit, so a successful redact cannot strand bytes no
+        // row remains to name.
+        const paper = await tx
+          .select({ fileRef: commentAttachments.fileRef })
+          .from(commentAttachments)
+          .where(eq(commentAttachments.commentId, held.id));
+        for (const attachment of paper) await app.storage.delete(attachment.fileRef);
+
+        // The places the text, its addressees, and its paper live. All
         // are ordinary application data, which is the whole point.
         await tx.delete(commentRevisions).where(eq(commentRevisions.commentId, held.id));
         await tx.delete(commentMentions).where(eq(commentMentions.commentId, held.id));
+        await tx.delete(commentAttachments).where(eq(commentAttachments.commentId, held.id));
         await tx
           .update(comments)
           .set({ body: "", redactedAt: new Date() })
