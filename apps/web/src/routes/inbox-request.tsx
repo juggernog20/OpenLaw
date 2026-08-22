@@ -21,8 +21,8 @@
  * composer offers all three: Legal Only triage chatter and Full Thread
  * requester-facing replies live in one conversation (DD-016). Posting
  * one changes no status — the clarifying back-and-forth while a Request
- * is `new` is the point (INT-007), and nothing on this page writes to
- * the Request at all.
+ * is `new` is the point (INT-007), and the only thing on this page that
+ * writes to the Request is its disposition.
  *
  * **The values are labelled by the form that collected them** and
  * resolved the way the portal detail resolves them (the INT-001 M20/10
@@ -34,13 +34,23 @@
  * The loader is the client half of INT-006's floor: Member+ only,
  * everyone else bounced home. The API's 403 is the real refusal.
  *
+ * **The sub-bar carries the disposition** (INT-007, DES-058). Decline is
+ * built (#418); Resolve and Convert land with their own tickets (M21/8,
+ * M21/9) and are absent rather than disabled until they do, because a
+ * control that opens nothing is worse than no control. The three are
+ * drawn only while the Request is `new`: a decided Request has nothing
+ * left to decide, and the Outcome card says what was decided.
+ *
+ * **Opening the Decline dialog writes nothing.** INT-007 has no claim
+ * step and no parked state, so the Inbox row's Assign button is an entry
+ * to the choice rather than an act, and cancelling returns the Request to
+ * the queue untouched.
+ *
  * ### Recorded normalization points (I2 deviations accepted)
  *
- * 1. **The sub-bar draws no Convert / Resolve / Decline.** They are the
- *    disposition surface INT-007 asks for and they land with their own
- *    tickets (M21/7–9). A control that opens nothing is worse than no
- *    control, so the row carries the trail and the envelope until they
- *    arrive.
+ * 1. **The sub-bar draws Decline alone, for now.** I2 draws Convert to
+ *    contract, Resolve, and Decline. The other two land with M21/8 and
+ *    M21/9; a control that opens nothing is worse than no control.
  * 2. **The hero scrolls with the page** where I2 draws it as a second
  *    fixed band under the sub-bar. What it says is a fact about the
  *    Request rather than a control that must stay in reach, and a
@@ -64,21 +74,32 @@
  *    on this model, and a count of somebody's other asks is a claim
  *    about their history that nothing has decided to make.
  * 7. **The activity bar carries the thread alone.** I2 draws a history
- *    slot beside it; the activity read is a contract's read today, and
- *    what would narrate on a Request is the disposition, which lands
- *    with the routes that write it.
+ *    slot beside it. A decline now narrates on the Request (#418), but
+ *    the activity read still has only a `contract` arm — an applet that
+ *    opened on a refusal is worse than an absent one, so the slot waits
+ *    for the read.
  */
 
-import { redirect, Link, useLoaderData, useNavigate, type LoaderFunctionArgs } from "react-router";
+import { useState } from "react";
+import {
+  redirect,
+  Link,
+  useLoaderData,
+  useNavigate,
+  useRevalidator,
+  type LoaderFunctionArgs,
+} from "react-router";
 import { defineMessage, FormattedMessage, useIntl, type IntlShape } from "react-intl";
-import { ChevronRight, FileText } from "lucide-react";
+import { Ban, ChevronRight, FileText } from "lucide-react";
 import { api } from "../lib/api";
 import { authClient } from "../lib/auth-client";
 import { useCommentApplet } from "../components/comments/comment-applet";
+import { DeclineDialog } from "../components/intake/decline-dialog";
 import { contractReference, SEVERITY_PILL, severityLabel } from "../lib/contracts";
 import { isAnswered, type CustomFieldValue } from "../lib/custom-fields";
 import { formatFullDate, formatLongDateTime, formatRelativeOrShort } from "../lib/format";
 import {
+  declineRequest,
   REQUEST_STATUS_PILL,
   requestReference,
   requestStatusLabel,
@@ -92,6 +113,7 @@ import {
 import { isMemberPlus } from "../lib/roles";
 import { currentUser, needsSetup } from "../lib/session";
 import { AppShell } from "../components/shell/app-shell";
+import { Button } from "../components/ui/button";
 import { RecordApplets } from "../components/shell/record-applets";
 import { Avatar } from "../components/avatar";
 import { PageTitle } from "../components/page-title";
@@ -119,7 +141,15 @@ export function InboxRequestPage() {
     useLoaderData<typeof inboxRequestLoader>();
   const intl = useIntl();
   const navigate = useNavigate();
+  const revalidator = useRevalidator();
   const reference = requestReference(intl, request.number);
+  /** Whether the Decline dialog is open. Opening it is not an act:
+   * INT-007 has no claim step, so nothing about the Request changes
+   * until the seam answers. */
+  const [declining, setDeclining] = useState(false);
+  /** Whether a disposition is out. The dialog holds its button inert
+   * while it is, so one press is one decline. */
+  const [busy, setBusy] = useState(false);
 
   /** The conversation about this Request (CMT-004, CMT-010), keyed by
    * the entity reference the panel takes — it never learns it is a
@@ -135,6 +165,30 @@ export function InboxRequestPage() {
   async function signOut() {
     await authClient.signOut();
     void navigate("/auth/login", { replace: true });
+  }
+
+  /**
+   * Turns the Request down, and repaints the page from the record.
+   *
+   * The write answers the whole envelope, and the page still re-reads:
+   * the Outcome card, the status pill, and the thread's own unread
+   * watermark all hang off the loader, and one revalidation is what
+   * keeps them from disagreeing. The refusals go back to the dialog,
+   * which is where somebody can act on them.
+   */
+  async function decline(reason: string) {
+    setBusy(true);
+    try {
+      const result = await declineRequest(request.number, reason);
+      // A lost race repaints too, so the Request behind the dialog
+      // already says what the other triager decided by the time it is
+      // closed (INT-007).
+      if (result.ok || result.alreadyDecided) void revalidator.revalidate();
+      if (result.ok) setDeclining(false);
+      return result;
+    } finally {
+      setBusy(false);
+    }
   }
 
   return (
@@ -165,9 +219,36 @@ export function InboxRequestPage() {
               {requestStatusLabel(intl, request.status)}
             </span>
           </div>
+          {/* INT-007's disposition surface, and the whole triage
+              surface: acting on a Request means choosing its outcome
+              then and there. Drawn only while the Request is `new` —
+              a decided one has nothing left to decide, and the Outcome
+              card states what was decided. Resolve and Convert land
+              with M21/8 and M21/9. */}
+          {request.status === "new" && (
+            <div className="flex shrink-0 items-center gap-2">
+              <Button
+                variant="secondary"
+                className="text-status-danger-fg"
+                disabled={busy}
+                onClick={() => setDeclining(true)}
+              >
+                <Ban size={16} aria-hidden="true" />
+                <FormattedMessage id="decline.action" defaultMessage="Decline" />
+              </Button>
+            </div>
+          )}
         </section>
       }
     >
+      {declining && (
+        <DeclineDialog
+          reference={reference}
+          busy={busy}
+          onClose={() => setDeclining(false)}
+          onDecline={decline}
+        />
+      )}
       {/* Reference then summary, composed as one message — the separator
           is locale copy, not code (DES-013). */}
       <PageTitle

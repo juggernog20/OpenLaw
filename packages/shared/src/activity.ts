@@ -175,20 +175,21 @@ type ContractStatusPayloads = {
 };
 
 /**
- * The Request record (INT-001, INT-002). One verb for now: a Request is
- * born on the portal and everything that happens to it afterwards —
- * conversion, resolution, decline — is the Inbox's (M21), so those
- * verbs land with the routes that write them.
+ * The Request record (INT-001, INT-002, INT-007). Two verbs: a Request
+ * is born on the portal, and triage decides its outcome. The other two
+ * dispositions — resolution and conversion — land with the routes that
+ * write them (M21/8, M21/9).
  *
  * The payload carries the Request's `number` and **no free text at
- * all** — not the summary, and not the collected values, only the
- * slugs that were answered. A `contract.*` payload carries its title so
- * an entry goes on naming the record after a rename; a Request needs
- * no such thing, because R-42 *is* its name and the number never
- * changes. And the difference matters here: every one of those strings
- * is the requester's own words, DD-017 forbids `UPDATE` and `DELETE` on
- * the log, and text that enters a payload can never leave it — which is
- * the same reason CMT-008 keeps comment bodies out of `comment.*`.
+ * all** — not the summary, not the collected values, and not the
+ * decline reason. Only the slugs that were answered. A `contract.*`
+ * payload carries its title so an entry goes on naming the record after
+ * a rename; a Request needs no such thing, because R-42 *is* its name
+ * and the number never changes. And the difference matters here: DD-017
+ * forbids `UPDATE` and `DELETE` on the log, and text that enters a
+ * payload can never leave it — which is the same reason CMT-008 keeps
+ * comment bodies out of `comment.*`. The reason a decline was given for
+ * lives on the Request itself, where a correction can still reach it.
  */
 type RequestPayloads = {
   "request.created": {
@@ -198,6 +199,10 @@ type RequestPayloads = {
     /** The slugs the form answered, never the values. */
     customFields: string[];
   };
+  /** INT-007's first disposition. Who declined is the actor on the row,
+   * which is the audit datum INT-007 asks for; the entry says the act
+   * and names the Request, and the reason stays on the record. */
+  "request.declined": { number: number };
 };
 
 /**

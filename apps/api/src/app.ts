@@ -67,6 +67,7 @@ import { requestTypesRoutes } from "./modules/request-types/routes.js";
 import { fieldsRoutes } from "./modules/fields/routes.js";
 import { intakeLinksRoutes } from "./modules/intake-links/routes.js";
 import { portalRoutes } from "./modules/portal/routes.js";
+import { requestDeclineRoutes } from "./modules/requests/decline.js";
 import { requestDetailRoutes } from "./modules/requests/request-detail.js";
 import { requestInboxRoutes } from "./modules/requests/inbox.js";
 import { requestsRoutes } from "./modules/requests/routes.js";
@@ -382,7 +383,16 @@ export async function buildApp(deps: AppDeps, opts: FastifyServerOptions = {}) {
     return reply
       .status(status)
       .header("content-type", PROBLEM_CONTENT_TYPE)
-      .send(JSON.stringify(problem));
+      .send(
+        JSON.stringify({
+          // RFC 9457 §3.2 extension members, spread **first** so the
+          // envelope's own keys always win: a refusal that carries a
+          // fact the client acts on may never overwrite the fact that it
+          // is a refusal, whatever key it was given.
+          ...(error instanceof HttpError ? error.extensions : undefined),
+          ...problem,
+        }),
+      );
   });
 
   await app.register(authHandler);
@@ -410,6 +420,7 @@ export async function buildApp(deps: AppDeps, opts: FastifyServerOptions = {}) {
   await app.register(requestsRoutes, { prefix: "/api/v1" });
   await app.register(requestInboxRoutes, { prefix: "/api/v1" });
   await app.register(requestDetailRoutes, { prefix: "/api/v1" });
+  await app.register(requestDeclineRoutes, { prefix: "/api/v1" });
   await app.register(contractStatusesRoutes, { prefix: "/api/v1" });
   await app.register(approverGroupsRoutes, { prefix: "/api/v1" });
   await app.register(contractsRoutes, { prefix: "/api/v1" });

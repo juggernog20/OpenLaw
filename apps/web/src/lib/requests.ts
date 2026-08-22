@@ -29,7 +29,13 @@
 
 import type { IntlShape } from "react-intl";
 import type { paths } from "@openlaw/api-client";
-import { problemDetail } from "./messages";
+import {
+  REQUEST_DISPOSITIONED_PROBLEM_TYPE,
+  REQUEST_OUTCOMES,
+  type RequestOutcome,
+} from "@openlaw/shared";
+import { api } from "./api";
+import { problemDetail, problemType } from "./messages";
 
 /** One row of my-requests, aliased to the generated client schema so a
  * change to what the API answers surfaces here as a compile error. */
@@ -184,6 +190,68 @@ export function requestReference(intl: IntlShape, number: number): string {
  */
 export function requestAttachmentHref(number: number, attachmentId: string): string {
   return `/api/v1/portal/requests/${number}/attachments/${encodeURIComponent(attachmentId)}`;
+}
+
+/**
+ * What a disposition answers: the Request as it now stands, the outcome
+ * somebody else recorded first, or an ordinary refusal to print
+ * (INT-007).
+ *
+ * The lost race is its own arm rather than an error string, because it
+ * is the one refusal a triager acts on: the answer is "somebody already
+ * decided, here is what they decided", and every other refusal's answer
+ * is "fix what you sent". The outcome comes off the RFC 9457 extension
+ * member and never out of `detail`, which is copy.
+ */
+export type DispositionOutcome =
+  | { ok: true; request: StaffRequest }
+  | { ok: false; alreadyDecided: RequestOutcome }
+  | { ok: false; alreadyDecided?: undefined; detail?: string };
+
+/**
+ * Turns a Request down, with a reason (INT-006, INT-007).
+ *
+ * The reason is required by the seam and by the box that collects it —
+ * one rule, refused in both places — because a decline is the whole of
+ * the answer the requester gets. The seam stores it, mails it, and the
+ * portal banner renders it as written.
+ *
+ * Nothing about the Request is written before this call: INT-007 has no
+ * claim step, so the dialog opening is not an act and cancelling it
+ * leaves the Request in the queue untouched.
+ */
+export async function declineRequest(number: number, reason: string): Promise<DispositionOutcome> {
+  // Settled, never rejected: the dialog holds its button busy until this
+  // answers, so a request that never arrived has to come back as an
+  // ordinary refusal rather than as an escaping rejection.
+  const { data, error } = await api
+    .POST("/api/v1/requests/{number}/decline", {
+      params: { path: { number } },
+      body: { reason },
+    })
+    .catch(() => ({ data: undefined, error: undefined }));
+  if (data) return { ok: true, request: data.request };
+  const recorded = recordedOutcome(error);
+  return recorded
+    ? { ok: false, alreadyDecided: recorded }
+    : { ok: false, detail: problemDetail(error) };
+}
+
+/**
+ * The outcome a lost disposition race carries, or null when the refusal
+ * was any other refusal (INT-007, TECH-020).
+ *
+ * Both halves are checked: the problem type says this is the race, and
+ * the extension member says what was recorded. A refusal that named the
+ * type but carried an outcome this build has never heard of reads as an
+ * ordinary refusal, because a client cannot state a decision it cannot
+ * name.
+ */
+function recordedOutcome(problem: unknown): RequestOutcome | null {
+  if (problemType(problem) !== REQUEST_DISPOSITIONED_PROBLEM_TYPE) return null;
+  if (!problem || typeof problem !== "object" || !("outcome" in problem)) return null;
+  const { outcome } = problem as { outcome?: unknown };
+  return REQUEST_OUTCOMES.find((candidate) => candidate === outcome) ?? null;
 }
 
 /**

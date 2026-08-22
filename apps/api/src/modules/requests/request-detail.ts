@@ -59,45 +59,31 @@
  * (CMT-001), the `request` arm already puts Member+ in every room
  * (CMT-010), and the screen reads it through `/comments` exactly as the
  * contract record does.
+ *
+ * **The envelope itself lives in `projection.ts`** (#418). Every
+ * disposition route answers it back after it writes (INT-007), so the
+ * read that opens the screen and the write that changes it say one
+ * sentence about one Request.
  */
 
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
 import { z } from "zod";
-import {
-  and,
-  contracts,
-  contractTypes,
-  eq,
-  isNull,
-  matterTypes,
-  REQUEST_STATUSES,
-  requestTypeFields,
-  requestTypes,
-  requests,
-  SEVERITY_LEVELS,
-  users,
-  type Executor,
-} from "@openlaw/db";
-import { requireRole, type AuthenticatedUser } from "../../auth/guards.js";
-import { contractTeamScope } from "../../lib/contract-access.js";
-import {
-  AttachedCustomFieldSchema,
-  CustomFieldsSchema,
-  selectAttachedFields,
-} from "../../lib/custom-fields.js";
+import { requestTypeFields } from "@openlaw/db";
+import { requireRole } from "../../auth/guards.js";
+import { AttachedCustomFieldSchema, selectAttachedFields } from "../../lib/custom-fields.js";
 import { httpError, problemResponse } from "../../lib/problem.js";
 import {
   attachmentOn,
   DownloadSchema,
   NO_ATTACHMENT,
-  NO_REQUEST,
   RequestAttachmentSchema,
   RequestCustomFieldRefsSchema,
   resolveRefs,
   selectAttachments,
   sendAttachment,
-  StaffRequestTypeSchema,
-  targetModuleOf,
+  staffRequestRow,
+  StaffRequestSchema,
+  toStaffRequest,
 } from "./projection.js";
 
 /** INT-006: Member+ triages, and there are no routing rules to narrow
@@ -106,39 +92,6 @@ const requireMember = requireRole("administrator", "legal_team_member");
 
 /** The R-### a Request is addressed by, on both routes here. */
 const NumberParams = z.object({ number: z.coerce.number().int().positive() });
-
-/** Who asked, as the hero and the Requester card draw them: the name,
- * the avatar, and the address a triager answers out of band on. */
-const StaffRequesterSchema = z.object({
-  id: z.string(),
-  displayName: z.string(),
-  email: z.string(),
-  image: z.string().nullable(),
-});
-
-/** The envelope, as I2's sub-bar, hero, and cards draw it. */
-const StaffRequestSchema = z.object({
-  id: z.string(),
-  /** INT-002's global reference; the screen renders it R-###. */
-  number: z.number().int(),
-  status: z.enum(REQUEST_STATUSES),
-  summary: z.string(),
-  description: z.string().nullable(),
-  /** DES-018's severity ramp, as the requester claimed it. */
-  urgency: z.enum(SEVERITY_LEVELS),
-  /** What the form collected, keyed by field slug (INT-002). */
-  customFields: CustomFieldsSchema,
-  /** INT-006: "no" always arrives with a why. NULL on every status but
-   * `declined`. */
-  declinedReason: z.string().nullable(),
-  createdAt: z.string(),
-  requestType: StaffRequestTypeSchema,
-  requester: StaffRequesterSchema,
-  /** The record a conversion made, when this viewer reaches it, and
-   * `null` in every other case — never converted, converted into a
-   * record they may not see, or converted into a Matter (M22). */
-  convertedContract: z.object({ number: z.number().int() }).nullable(),
-});
 
 export const requestDetailRoutes: FastifyPluginAsyncZod = async (app) => {
   app.get(
@@ -176,39 +129,13 @@ export const requestDetailRoutes: FastifyPluginAsyncZod = async (app) => {
       },
     },
     async (request) => {
-      const row = await reachedRequest(app.db, request.user, request.params.number);
+      const row = await staffRequestRow(app.db, request.user, request.params.number);
       const [attached, attachments] = await Promise.all([
         selectAttachedFields(app.db, requestTypeFields, row.typeId),
         selectAttachments(app.db, row.id),
       ]);
       return {
-        request: {
-          id: row.id,
-          number: row.number,
-          status: row.status,
-          summary: row.summary,
-          description: row.description,
-          urgency: row.urgency,
-          customFields: row.customFields,
-          declinedReason: row.declinedReason,
-          createdAt: row.createdAt.toISOString(),
-          requestType: {
-            id: row.typeId,
-            displayName: row.typeDisplayName,
-            targetModule: targetModuleOf(row.targetModule),
-            // Whichever taxonomy the module points at, and null for the
-            // module-only and no-target states alike.
-            targetTypeName: row.targetContractTypeName ?? row.targetMatterTypeName,
-          },
-          requester: {
-            id: row.requesterId,
-            displayName: row.requesterDisplayName,
-            email: row.requesterEmail,
-            image: row.requesterImage,
-          },
-          convertedContract:
-            row.convertedContractNumber === null ? null : { number: row.convertedContractNumber },
-        },
+        request: toStaffRequest(row),
         fields: attached,
         customFieldRefs: await resolveRefs(app.db, attached, row.customFields),
         attachments,
@@ -238,69 +165,10 @@ export const requestDetailRoutes: FastifyPluginAsyncZod = async (app) => {
       },
     },
     async (request, reply) => {
-      const held = await reachedRequest(app.db, request.user, request.params.number);
+      const held = await staffRequestRow(app.db, request.user, request.params.number);
       const row = await attachmentOn(app.db, held.id, request.params.attachmentId);
       if (!row) throw httpError(404, NO_ATTACHMENT);
       return sendAttachment(reply, await app.storage.get(row.fileRef), row.filename);
     },
   );
-
-  /**
-   * One Request by its reference, with everything the envelope states
-   * joined onto it, or the one refusal.
-   *
-   * There is no per-row scope to defend — Member+ read every Request
-   * (INT-006) — so the only miss is a reference nobody has, or one that
-   * has been archived. The contract join is the one that carries a
-   * rule: it is taken under this viewer's own reach, so a record they
-   * may not see contributes no row and the left join answers NULL.
-   * That is the whole of the DD-014 omission — there is no branch after
-   * the read that decides whether to keep the number.
-   */
-  async function reachedRequest(db: Executor, user: AuthenticatedUser, number: number) {
-    const [row] = await db
-      .select({
-        id: requests.id,
-        number: requests.number,
-        status: requests.status,
-        summary: requests.summary,
-        description: requests.description,
-        urgency: requests.urgency,
-        customFields: requests.customFields,
-        declinedReason: requests.declinedReason,
-        createdAt: requests.createdAt,
-        typeId: requestTypes.id,
-        typeDisplayName: requestTypes.displayName,
-        targetModule: requestTypes.targetModule,
-        targetContractTypeName: contractTypes.displayName,
-        targetMatterTypeName: matterTypes.displayName,
-        requesterId: users.id,
-        requesterDisplayName: users.displayName,
-        requesterEmail: users.email,
-        requesterImage: users.image,
-        convertedContractNumber: contracts.number,
-      })
-      .from(requests)
-      .innerJoin(requestTypes, eq(requests.requestTypeId, requestTypes.id))
-      .innerJoin(users, eq(requests.requesterId, users.id))
-      .leftJoin(contractTypes, eq(requestTypes.targetContractTypeId, contractTypes.id))
-      .leftJoin(matterTypes, eq(requestTypes.targetMatterTypeId, matterTypes.id))
-      .leftJoin(
-        contracts,
-        and(
-          eq(requests.convertedContractId, contracts.id),
-          // A contract this viewer cannot reach joins to nothing, so the
-          // envelope carries no link and the Request still carries
-          // itself (DD-014, CTR-021).
-          contractTeamScope(db, user),
-          // An archived contract is no trail either: the link would open
-          // on a record the Contracts destination hides.
-          isNull(contracts.archivedAt),
-        ),
-      )
-      .where(and(eq(requests.number, number), isNull(requests.archivedAt)))
-      .limit(1);
-    if (!row) throw httpError(404, NO_REQUEST);
-    return row;
-  }
 };

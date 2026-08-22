@@ -56,6 +56,7 @@ import {
   Check,
   CircleCheck,
   CircleDot,
+  CircleX,
   Clock,
   Download,
   Eraser as EraserIcon,
@@ -1701,6 +1702,18 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
     message: defineMessage({
       id: "activity.request.created",
       defaultMessage: "{actor} submitted this request",
+    }),
+  },
+  // INT-007's first disposition (#418). The entry says the act and names
+  // the person, because who dispositioned a Request is audit data. The
+  // reason is not in the payload and is not narrated: it lives on the
+  // Request, where a correction can still reach it, and the log is
+  // append-only.
+  "request.declined": {
+    icon: CircleX,
+    message: defineMessage({
+      id: "activity.request.declined",
+      defaultMessage: "{actor} declined this request",
     }),
   },
 

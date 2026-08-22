@@ -406,6 +406,7 @@ const SAMPLE_PAYLOADS: { [A in ActivityAction]: ActivityPayloadMap[A] } = {
     urgency: "high",
     customFields: ["counterparty"],
   },
+  "request.declined": { number: 42 },
 
   // ---- The record's paper ----
   "document.created": {
