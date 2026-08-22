@@ -28,6 +28,11 @@ a migration to be transcribed up front [TECH-014].
 local setup. Deployment isn't a milestone because it's a standing constraint: if `docker compose up` stops
 producing a working install, that's a bug in the current milestone [TECH-005, PRODUCT.md].
 
+**A milestone learned late takes a letter.** M21A sits between M21 and M22 because the work it holds was
+found at the M21 close, after the numbers around it had already been quoted in decision records, in issue
+titles, and in code comments. Renumbering would rewrite text that is true. A letter keeps the running order
+readable and leaves every number where it is.
+
 **Settings are sliced, not stacked.** The `/settings` destination and its Personal rail are substrate;
 every Organization pane ships inside the milestone of the module it configures [SET-001].
 
@@ -36,8 +41,9 @@ document is the map, not the territory.
 
 ## Where we are
 
-**Arc 4 is done, through milestone 21** — the front door, end to end. Arc 1 is done: the monorepo and CI, the
-authentication chain, the Compose stack a deployer actually runs, the themed app shell, and the
+**Arc 4 runs the front door end to end, through milestone 21**, with one milestone still open behind it:
+M21A, which gives the thread the one thing it cannot carry yet, paper. Arc 1 is done: the monorepo and CI,
+the authentication chain, the Compose stack a deployer actually runs, the themed app shell, and the
 `/settings` destination with its Personal and Organization rails. Arc 2 is done too: the
 configurable types and statuses, the Entities registry, the contract record, the conversation on a
 record with the two read surfaces over the activity log, and the confidentiality gate that takes a
@@ -68,7 +74,7 @@ form that renders M19's configuration, the Request with its R-### and its paper,
 Legal answers on, and a bell and a notification pane of the portal's own. Every one of those reads is
 its own mount rather than a loosened staff gate, and the thread and the bell are the comments and
 notification machinery given one more arm rather than a second system. M21 closes the arc by
-receiving what M20 lets people send: the Inbox in nav slot one, listing exactly the Requests whose
+receiving what M20 lets people send: the Inbox one click behind Home, listing exactly the Requests whose
 fate is undecided; the staff detail that reads a whole Request on one screen; and disposition at
 pickup — Convert, Resolve, or Decline, atomic on `new` under the Request's own row lock, with no
 parked intermediate state and no claim step. Convert is the one the milestone is for. It runs the
@@ -78,7 +84,8 @@ fields, the paper promoted into documents, and the thread re-parented onto the r
 intact. Nothing is re-keyed and nothing is dropped in silence. The Requester's window survives all
 of it: the same address, the same conversation, and one vocabulary — Open, In progress, Resolved,
 Declined — on the pill, the banner, and the email alike. A Business User can now ask and Legal can
-now answer; next is the second workspace, and the matter arm of the door M21 hung (M22).
+now answer. What neither can do yet is hand the other paper once the conversion has happened, which is
+M21A; then the second workspace, and the matter arm of the door M21 hung (M22).
 
 ---
 
@@ -434,9 +441,9 @@ first.
 - [x] **M21 — The Inbox and triage**
       _Demo:_ A submitted Request appears in the Inbox, converts into a contract with the collected values
       carried straight through, and the Requester sees the update in their thread.
-  - The Inbox as nav slot one: exactly the Requests whose fate is undecided, ordered by urgency then age,
-    Member+ only and absent rather than disabled below that floor. The triaged toggle is the Inbox's one
-    control — the Inbox is fixed, so DD-019's list machinery is not built on it
+  - The Inbox in nav slot two, directly behind Home: exactly the Requests whose fate is undecided, ordered
+    by urgency then age, Member+ only and absent rather than disabled below that floor. The triaged toggle
+    is the Inbox's one control — the Inbox is fixed, so DD-019's list machinery is not built on it
   - The staff request detail: the envelope, the submitted values labelled by the boxes that collected them,
     the paper downloadable before the decision, and the thread at every tier on the same activity bar a
     contract wears — a record page for something that is not a record
@@ -475,13 +482,35 @@ first.
     second conversion. **A carried `user` or `entity` value whose row is archived between submission and
     triage dead-ends the dialog** — conversion refuses it by name and all-or-nothing holds, but the
     dialog draws no box to fix it, because the field is answered rather than missing; the API takes an
-    override and the screen does not offer one, and which of the three repairs to build is a design
-    decision (#437). **A Requester may still attach paper to an already-converted Request**, and that
-    paper never promotes — M20/6 behaviour that conversion did not change (#438). **The converted-contract
-    left join is written twice**, in the Inbox read and the staff detail read, both pinned by tests;
-    M22's matter arm is the third reader, and the third is what should fold it into `projection.ts`
+    override and the screen does not offer one. Which of the three repairs to build was a design decision
+    (#437), since taken: the value reads as dead on the staff detail and the dialog grows a box for it.
+    **A Requester may still attach paper to an already-converted Request**, and that paper never promotes —
+    M20/6 behaviour that conversion did not change (#438). The answer turned out not to be a better copy:
+    the upload is refused and the paper goes on the thread instead, which M21A builds. **The
+    converted-contract left join is written twice**, in the Inbox read and the staff detail read, both
+    pinned by tests; M22's matter arm is the third reader, and the third is what should fold it into
+    `projection.ts`
   - _Decisions:_ INT-002, INT-003, INT-006, INT-007, CMT-001, CMT-010, NOT-002, DD-018, DES-056, DES-057,
     DES-058, DES-059 · _Issues:_ #412–#423
+
+- [ ] **M21A — Paper on the thread**
+      _Demo:_ Legal sends a draft out, the business gets the counterparty's markup back, posts it on the
+      contract's thread, and a lawyer files it as the next version of the chain.
+  - Attachments on comments, on every thread the audience seam already answers for — a contract, a Request,
+    a document, and the matter arm when M22 adds it. One upload path, with the storage rules documents and
+    request attachments already share
+  - **A file takes its comment's tier by being part of the comment**, so a Legal Only note keeps its paper
+    legal only, and a redact takes the file with the words
+  - **A comment attachment is not a document**: a stored blob and the name it arrived under, exactly as a
+    request attachment is, because a comment owns no record (DOC-008)
+  - **Filing is the lawyer's act and it has two destinations** — a new document at the record root, or a new
+    version on a chain already there. The kind is named at the moment of filing, which is the first time
+    anybody in the room can say honestly what the round is. The comment then says where its file went
+  - A version's kind becomes correctable by Member+ and narrates the change; the bytes, the order, and the
+    round itself stay untouchable, and the executed pin is not moved by either direction of it
+  - The portal composer gains the upload, and the attachment route starts refusing a dispositioned Request —
+    the two ship together, so a requester never meets a wall before the door beside it exists (#438)
+  - _Decisions:_ CMT-011, CTR-014, INT-002, DD-014, DD-016, DD-018, DOC-008, DOC-012
 
 ---
 
