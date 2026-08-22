@@ -316,7 +316,7 @@ function changeLabel(intl: IntlShape, key: string, context: NarrationContext): s
         "termType {Term type} effectiveDate {Effective date} " +
         "expiryDate {Expiry date} renewalPeriodMonths {Renewal period (months)} " +
         "noticePeriodDays {Notice period (days)} " +
-        "date {Date} label {Event} note {Note} " +
+        "date {Date} label {Event} note {Note} kind {Kind} " +
         "primaryCounterparty {Primary counterparty} " +
         "primaryDocument {Primary document} " +
         "displayName {Name} display_name {Display name} name {Name} " +
@@ -388,6 +388,19 @@ function changeValue(
   // where the column says `evergreen`. Its ICU message carries an
   // `other` arm, so a kind this build no longer has still renders.
   if (key === "termType") return termTypeLabel(intl, value as TermType);
+  if (key === "kind") {
+    return intl.formatMessage(
+      {
+        id: "activity.document.versionKind",
+        defaultMessage:
+          "{kind, select, draft_ours {Draft · ours} draft_theirs {Draft · theirs} " +
+          "redline_theirs {Redline · theirs} redline_ours {Redline · ours} " +
+          "executed {Executed} amendment {Amendment} " +
+          "generated_redline {Generated redline} other {{kind}}}",
+      },
+      { kind: value as string },
+    );
+  }
   // INT-002's target module is a stored slug, so the feed says "Contract"
   // where the column says `contract`. Its `other` arm covers a module
   // this build no longer has.
@@ -1540,6 +1553,20 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
       title: named(intl, payload, "title"),
       version: versionNumber(payload),
     }),
+  },
+  "document.version_kind_changed": {
+    icon: FilePen,
+    message: defineMessage({
+      id: "activity.document.versionKindChanged",
+      defaultMessage:
+        "{version, select, unknown {{actor} changed the kind of a version of {title}} " +
+        "other {{actor} changed the kind of version {version} of {title}}}",
+    }),
+    values: (intl, payload) => ({
+      title: named(intl, payload, "title"),
+      version: versionNumber(payload),
+    }),
+    changes: (intl, payload, context) => directChange(intl, payload, "kind", context),
   },
   // The metadata edit (DOC-007). It says the document's details changed,
   // never that a file did: the stored versions are immutable, and a

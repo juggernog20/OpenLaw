@@ -162,6 +162,7 @@ export const DOCUMENT_VERSION_KINDS = [
   "amendment",
   "executed",
 ] as const satisfies readonly DocumentVersionKind[];
+export type HandSetDocumentVersionKind = (typeof DOCUMENT_VERSION_KINDS)[number];
 
 /**
  * One document's chain, split the way the section draws it: the version
@@ -303,7 +304,7 @@ function attachmentUrl(documentId: string, versionId: string, index: number): st
  * is in the negotiation, and what changed in this round. */
 export interface UploadDraft {
   file: File;
-  kind: DocumentVersionKind;
+  kind: HandSetDocumentVersionKind;
   /** Empty when the uploader wrote nothing — the seam stores NULL. */
   note: string;
 }
@@ -366,6 +367,22 @@ export function uploadDocumentVersion(
   draft: UploadDraft,
 ): Promise<UploadOutcome> {
   return send(`/api/v1/documents/${encodeURIComponent(documentId)}/versions`, draft);
+}
+
+/**
+ * Corrects the kind attached to one round (CTR-014). The seam changes
+ * no other version field and leaves the executed pin alone.
+ */
+export async function updateDocumentVersionKind(
+  documentId: string,
+  versionId: string,
+  kind: HandSetDocumentVersionKind,
+): Promise<UploadOutcome> {
+  const { data, error } = await api.PATCH("/api/v1/documents/{documentId}/versions/{versionId}", {
+    params: { path: { documentId, versionId } },
+    body: { kind },
+  });
+  return data ? { ok: true, document: data.document } : { ok: false, detail: problemDetail(error) };
 }
 
 /** The one multipart POST both uploads are. A destination rides with it

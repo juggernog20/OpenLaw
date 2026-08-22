@@ -2,8 +2,8 @@
 
 /**
  * The file layer's two tables (DOC-001, DOC-002): the logical
- * `documents` record, and the immutable `document_versions` chain under
- * it. They land together in M11/2, the first step that stores a file at
+ * `documents` record, and the file-immutable `document_versions` chain
+ * under it. They land together in M11/2, the first step that stores a file at
  * all, and they carry only the columns that step reads and writes
  * (TECH-014). SCHEMA.md is the naming reference for the rest.
  *
@@ -27,8 +27,9 @@
  *
  * What is deliberately not here yet, and the step that brings it: the
  * version chain's `source` plus the two comparison-provenance columns
- * (M32's generated redlines). Each arrives with the feature that reads
- * it.
+ * (M32's generated redlines). The fixed kind already includes
+ * `generated_redline` so reads and the M21A correction guard can name
+ * it. M32 brings the first writer and its provenance columns.
  */
 
 import { sql } from "drizzle-orm";
@@ -51,8 +52,8 @@ import { uuidPk } from "./helpers.js";
 
 /**
  * What a version is, in the negotiation's own words (CTR-014). The six
- * uploaded kinds land here; `generated_redline` waits for redline
- * compare (M32), which is the first feature that writes one.
+ * hand-set kinds and `generated_redline` land here. Redline compare
+ * (M32) is the first feature that writes the generated kind.
  *
  * The two `draft_*` kinds are **originating** rounds — paper somebody
  * wrote — and the two `redline_*` kinds are **markups** of a round that
@@ -65,7 +66,7 @@ import { uuidPk } from "./helpers.js";
  * executed pin is offered against it — so the set is fixed rather than
  * admin-configurable.
  */
-export const DOCUMENT_VERSION_KINDS = [
+export const HAND_SET_DOCUMENT_VERSION_KINDS = [
   "draft_ours",
   "draft_theirs",
   "redline_theirs",
@@ -73,7 +74,12 @@ export const DOCUMENT_VERSION_KINDS = [
   "executed",
   "amendment",
 ] as const;
+export const DOCUMENT_VERSION_KINDS = [
+  ...HAND_SET_DOCUMENT_VERSION_KINDS,
+  "generated_redline",
+] as const;
 export type DocumentVersionKind = (typeof DOCUMENT_VERSION_KINDS)[number];
+export type HandSetDocumentVersionKind = (typeof HAND_SET_DOCUMENT_VERSION_KINDS)[number];
 
 /**
  * The logical file record (DOC-001). It holds identity and ownership;
@@ -257,8 +263,9 @@ export type Document = typeof documents.$inferSelect;
 
 /**
  * One immutable file snapshot (DOC-001). Versions are numbered 1..n per
- * document, strictly linear, and **never edited or deleted
- * individually** — a correction appends a new version.
+ * document, strictly linear, and never deleted individually. A file
+ * correction appends a new version. CTR-014 allows one update to the
+ * judgement about it: `kind`, and no other column.
  *
  * There is no `updated_at`, and its absence is the decision: a row that
  * is never updated has no such time to record.
@@ -315,6 +322,9 @@ export const documentVersions = pgTable(
     // both become version 3 — the database refuses the loser rather
     // than leaving the chain with a repeat in it.
     uniqueIndex("document_versions_document_number_idx").on(table.documentId, table.versionNumber),
+    // The filed-comment marker references the exact pair, so deleting
+    // a chain can clear both of its marker columns in one FK action.
+    uniqueIndex("document_versions_document_id_id_idx").on(table.documentId, table.id),
     check("document_versions_number_check", sql`${table.versionNumber} >= 1`),
     check("document_versions_byte_size_check", sql`${table.byteSize} >= 0`),
     // Exactly 64 lowercase hex characters. The column's whole value is
@@ -327,7 +337,7 @@ export const documentVersions = pgTable(
     ),
     check(
       "document_versions_kind_check",
-      sql`${table.kind} in ('draft_ours', 'draft_theirs', 'redline_theirs', 'redline_ours', 'executed', 'amendment')`,
+      sql`${table.kind} in ('draft_ours', 'draft_theirs', 'redline_theirs', 'redline_ours', 'executed', 'amendment', 'generated_redline')`,
     ),
   ],
 );

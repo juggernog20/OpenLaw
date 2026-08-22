@@ -76,12 +76,17 @@ export function refuseOversize(ceiling: number): HttpError {
  * The multipart parser's own rejections, turned into copy a person can
  * act on. Anything else is passed through as it came.
  */
-export function asUploadRefusal(error: unknown, ceiling: number): unknown {
+export function asUploadRefusal(error: unknown, ceiling: number, maxFiles = 1): unknown {
   switch (errorCode(error)) {
     case "FST_REQ_FILE_TOO_LARGE":
       return refuseOversize(ceiling);
     case "FST_FILES_LIMIT":
-      return httpError(413, "Upload one file at a time.");
+      return httpError(
+        413,
+        maxFiles === 1
+          ? "Upload one file at a time."
+          : `Upload at most ${maxFiles} files at a time.`,
+      );
     case "FST_FIELDS_LIMIT":
     case "FST_PARTS_LIMIT":
       return httpError(413, "That upload carries more form fields than this endpoint accepts.");
@@ -138,15 +143,31 @@ export async function withStoredBlob<T>(
   fileRef: string,
   write: () => Promise<T>,
 ): Promise<T> {
+  return withStoredBlobs(storage, log, [fileRef], write);
+}
+
+/** The multi-file form of {@link withStoredBlob}. Every blob written by
+ * one refused comment post is removed; cleanup continues after an
+ * individual delete fails so one bad key cannot strand the rest. */
+export async function withStoredBlobs<T>(
+  storage: Pick<StorageAdapter, "delete">,
+  log: CleanupLogger,
+  fileRefs: readonly string[],
+  write: () => Promise<T>,
+): Promise<T> {
   try {
     return await write();
   } catch (error) {
-    await storage.delete(fileRef).catch((cleanup: unknown) => {
-      log.warn(
-        { err: cleanup, fileRef },
-        "could not remove the blob of an upload that did not commit",
-      );
-    });
+    await Promise.all(
+      fileRefs.map((fileRef) =>
+        storage.delete(fileRef).catch((cleanup: unknown) => {
+          log.warn(
+            { err: cleanup, fileRef },
+            "could not remove the blob of an upload that did not commit",
+          );
+        }),
+      ),
+    );
     throw error;
   }
 }

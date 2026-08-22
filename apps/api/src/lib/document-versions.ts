@@ -28,12 +28,20 @@
  * the commit only wakes a worker, and a lost send leaves a `pending`
  * row for the M12/6 sweep rather than a version nobody will ever read.
  *
- * **The row is immutable.** There is one INSERT into
- * `document_versions` in this repository and it is here — no UPDATE and
- * no DELETE anywhere beside it (DOC-001).
+ * **Only the kind is correctable.** There is one INSERT into
+ * `document_versions` and one UPDATE that sets only `kind`. Both live
+ * here. There is no DELETE (DOC-001, CTR-014).
  */
 
-import { desc, documentVersions, eq, type DocumentVersionKind, type Executor } from "@openlaw/db";
+import {
+  and,
+  desc,
+  documentVersions,
+  eq,
+  type DocumentVersionKind,
+  type Executor,
+  type HandSetDocumentVersionKind,
+} from "@openlaw/db";
 import { needsDisplayRendition, recordRenditionOwed } from "../pipeline/display-conversion.js";
 import { boundedQueueAsk, type JobQueue } from "../pipeline/jobs.js";
 import { extractsText, recordTextOwed } from "../pipeline/text-extraction.js";
@@ -125,6 +133,23 @@ export async function insertDocumentVersion(
   if (needsDisplayRendition(row.mimeType, row.originalFilename)) {
     await recordRenditionOwed(tx, row.versionId);
   }
+}
+
+/**
+ * Corrects the judgement attached to one round without moving any fact
+ * about the round. The caller checks access and rejects generated
+ * provenance before this one-column write runs (CTR-014).
+ */
+export async function updateDocumentVersionKind(
+  tx: Executor,
+  documentId: string,
+  versionId: string,
+  kind: HandSetDocumentVersionKind,
+): Promise<void> {
+  await tx
+    .update(documentVersions)
+    .set({ kind })
+    .where(and(eq(documentVersions.id, versionId), eq(documentVersions.documentId, documentId)));
 }
 
 /**

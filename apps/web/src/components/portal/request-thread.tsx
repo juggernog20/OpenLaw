@@ -38,11 +38,9 @@
  *
  * ### Recorded normalization points (I7 deviations accepted)
  *
- * 1. I7's composer carries an "Attach a file" link. A comment carries no
- *    file — the thread is plain text, and attachments are deliberately
- *    out of the comment model (M9/2). The paper travels with the ask
- *    (INT-002), on the Request itself, so the composer draws the box and
- *    the Send button alone.
+ * 1. I7's "Attach a file" becomes CMT-011's shared chosen-file control:
+ *    up to five removable chips, with each posted file drawn under the
+ *    reply it travelled with.
  * 2. I7 draws every message in one body with no end to it. The read is
  *    paged from the newest end (CTR-024), so a thread past one page
  *    carries a control that walks back into the older conversation.
@@ -55,12 +53,13 @@
 import { useEffect, useRef, useState } from "react";
 import { FormattedMessage, defineMessage, useIntl } from "react-intl";
 import { api } from "../../lib/api";
-import type { Comment } from "../../lib/comments";
+import { sendComment, type Comment } from "../../lib/comments";
 import { formatLongDateTime, formatRelativeOrShort } from "../../lib/format";
 import { TEXTAREA_CLASS } from "../../lib/form-controls";
 import { problemDetail } from "../../lib/messages";
 import { cn } from "../../lib/utils";
 import { Avatar } from "../avatar";
+import { CommentAttachmentRows, CommentFilePicker } from "../comments/comment-attachments";
 import { Button } from "../ui/button";
 
 /** The thread as the loader read it: the newest page, and where the page
@@ -177,6 +176,7 @@ export function RequestThread({
                 comment={comment}
                 viewerId={viewerId}
                 landed={comment.id === landed}
+                requestId={requestId}
               />
             ))}
           </ul>
@@ -210,12 +210,15 @@ function Message({
   comment,
   viewerId,
   landed,
+  requestId,
 }: Readonly<{
   comment: Comment;
   viewerId: string;
   /** Whether this is the message focus is waiting on — the oldest one a
    * "Show earlier replies" press just brought in. */
   landed: boolean;
+  /** The portal address that resolved the thread, including after conversion. */
+  requestId: string;
 }>) {
   const intl = useIntl();
   const mine = comment.author.id === viewerId;
@@ -280,6 +283,9 @@ function Message({
             <FormattedMessage {...TOMBSTONE[removed]} />
           </p>
         )}
+        {removed === null && (
+          <CommentAttachmentRows comment={comment} entityType="request" entityId={requestId} />
+        )}
       </div>
     </li>
   );
@@ -300,6 +306,7 @@ function Composer({
 }: Readonly<{ requestId: string; onPosted: (comment: Comment) => void }>) {
   const intl = useIntl();
   const [draft, setDraft] = useState("");
+  const [files, setFiles] = useState<File[]>([]);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   /** One reply per submit. A second Enter while the first is in flight
@@ -313,15 +320,15 @@ function Composer({
     inFlight.current = true;
     setBusy(true);
     setError(null);
-    const { data, error: problem } = await api
-      .POST("/api/v1/comments", {
-        body: {
-          entityType: "request",
-          entityId: requestId,
-          body,
-          visibility: "full_thread",
-        },
-      })
+    const { data, error: problem } = await sendComment(
+      {
+        entityType: "request",
+        entityId: requestId,
+        body,
+        visibility: "full_thread",
+      },
+      files,
+    )
       .catch(() => ({ data: undefined, error: undefined }))
       .finally(() => {
         inFlight.current = false;
@@ -341,10 +348,12 @@ function Composer({
     // Only once it landed: a refusal leaves the words in the box, where
     // the person who wrote them can send them again.
     setDraft("");
+    setFiles([]);
   }
 
   return (
     <form
+      id="portal-request-composer"
       className="flex flex-col gap-2"
       onSubmit={(event) => {
         event.preventDefault();
@@ -365,6 +374,7 @@ function Composer({
         onChange={(event) => setDraft(event.target.value)}
         className={TEXTAREA_CLASS}
       />
+      <CommentFilePicker files={files} disabled={busy} onChange={setFiles} />
       <div className="flex justify-end">
         <Button type="submit" disabled={busy || draft.trim() === ""}>
           <FormattedMessage id="portal.request.replySend" defaultMessage="Send" />

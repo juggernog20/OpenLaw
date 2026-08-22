@@ -16,6 +16,7 @@
 import { describe, expect, it } from "vitest";
 import { screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { REQUEST_DISPOSITIONED_PROBLEM_TYPE } from "@openlaw/shared";
 import { json, problem, renderAt, stubApi, type StubCall } from "../testing/helpers";
 
 const REQUESTER = {
@@ -393,6 +394,32 @@ describe("the Attachments basic", () => {
     // The one that did land is not named: the card says what went
     // wrong, and nothing went wrong with that file.
     expect(within(alert).queryByText(/redline\.pdf/)).not.toBeInTheDocument();
+  });
+
+  it("routes a disposition-raced upload to the Request's conversation", async () => {
+    const user = userEvent.setup();
+    openForm({
+      fields: [],
+      attach: () =>
+        json(409, {
+          type: REQUEST_DISPOSITIONED_PROBLEM_TYPE,
+          title: "This Request has already been dispositioned.",
+          status: 409,
+          detail: "Attach new paper to a reply in its thread.",
+          outcome: "converted",
+          // Not the submission's own R-42, so a link built from the
+          // wrong number source fails here rather than passing by luck.
+          request: { number: 57 },
+          convertedContract: { number: 91 },
+        }),
+    });
+    await user.upload(await screen.findByLabelText("Attachments"), file("markup.pdf"));
+    await user.type(screen.getByLabelText(/^Summary/), "MSA renewal");
+    await user.type(screen.getByLabelText(/^Description/), "They sent a redline.");
+    await user.click(screen.getByRole("button", { name: "Submit request" }));
+
+    const thread = await screen.findByRole("link", { name: "Add it to a reply on R-57" });
+    expect(thread).toHaveAttribute("href", "/portal/requests/57#portal-request-composer");
   });
 
   it("stops a requester queueing more files than a Request carries", async () => {

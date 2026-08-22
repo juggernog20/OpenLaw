@@ -16,7 +16,7 @@
  * showing that it holds something.
  */
 
-import { defineMessage, useIntl, type IntlShape } from "react-intl";
+import { defineMessage, FormattedMessage, useIntl, type IntlShape } from "react-intl";
 import type { CustomFieldValue } from "../../lib/custom-fields";
 import { formatFullDate } from "../../lib/format";
 import type { StaffRequestField, StaffRequestFieldRefs } from "../../lib/requests";
@@ -43,7 +43,33 @@ export function CustomFieldValueText({
   if (field.fieldType === "long_text") {
     return <span className="whitespace-pre-line">{String(value)}</span>;
   }
-  return <>{customFieldValueText(intl, field, value, refs)}</>;
+  const text = customFieldValueText(intl, field, value, refs);
+  if (!isArchivedCustomFieldReference(field, value, refs)) return <>{text}</>;
+  return (
+    <span className="inline-flex flex-wrap items-center gap-1.5">
+      <span>{text}</span>
+      <span className="inline-flex rounded-pill bg-status-neutral-bg px-2 py-0.5 text-xs font-medium text-status-neutral-fg">
+        <FormattedMessage id="inbox.request.archivedReference" defaultMessage="Archived" />
+      </span>
+    </span>
+  );
+}
+
+/** Whether a carried reference names a row that the staff read reports
+ * as archived. A missing row is left to the raw-id fallback: #437 is
+ * the archived-row repair and does not invent a state for hard delete. */
+export function isArchivedCustomFieldReference(
+  field: StaffRequestField,
+  value: CustomFieldValue,
+  refs: StaffRequestFieldRefs,
+): boolean {
+  if (field.fieldType === "user") {
+    return refs.users.find((person) => person.id === value)?.archived === true;
+  }
+  if (field.fieldType === "entity") {
+    return refs.entities.find((row) => row.id === value)?.archived === true;
+  }
+  return false;
 }
 
 /** The same reading as a plain string, for the places that put a value

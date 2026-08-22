@@ -57,12 +57,23 @@ function field(
 const COUNTERPARTY = field("counterparty", "Counterparty");
 const DEAL_DESK = field("deal_desk_region", "Deal desk region");
 const GOVERNING_LAW = field("governing_law", "Governing law", { isRequired: true });
+const REQUESTING_MANAGER = field("requesting_manager", "Requesting manager", {
+  fieldType: "user",
+});
+const CONTRACTING_ENTITY = field("contracting_entity", "Contracting entity", {
+  fieldType: "entity",
+});
 
 /** The live contract taxonomy the dialog draws from. NDA carries the
  * counterparty and demands nothing; MSA demands a governing law no
  * request form collects, which is the gap. */
 const CONTRACT_TYPES = [
-  { id: "ct-nda", slug: "nda", displayName: "NDA", fields: [COUNTERPARTY] },
+  {
+    id: "ct-nda",
+    slug: "nda",
+    displayName: "NDA",
+    fields: [COUNTERPARTY, REQUESTING_MANAGER, CONTRACTING_ENTITY],
+  },
   { id: "ct-msa", slug: "msa", displayName: "MSA", fields: [COUNTERPARTY, GOVERNING_LAW] },
 ];
 
@@ -78,7 +89,16 @@ const request = (overrides: Record<string, unknown> = {}) =>
 
 /** The whole detail read, around one Request. The form collected both
  * values, so both are labelled here. */
-const detail = (row: Record<string, unknown>) => staffDetail(row, [COUNTERPARTY, DEAL_DESK]);
+const detail = (
+  row: Record<string, unknown>,
+  customFieldRefs: unknown = { users: [], entities: [] },
+) => ({
+  ...(staffDetail(row, [COUNTERPARTY, DEAL_DESK, REQUESTING_MANAGER, CONTRACTING_ENTITY]) as Record<
+    string,
+    unknown
+  >),
+  customFieldRefs,
+});
 
 /**
  * The Request seam behind the screen, with Convert's own outcome on it
@@ -89,12 +109,13 @@ const detail = (row: Record<string, unknown>) => staffDetail(row, [COUNTERPARTY,
 function requestApi(
   initial = request(),
   answer: (call: StubCall) => Response | undefined = () => undefined,
+  customFieldRefs: unknown = { users: [], entities: [] },
 ) {
   const api = dispositionApi({
     segment: "convert",
     initial,
     answer,
-    detail,
+    detail: (row) => detail(row, customFieldRefs),
     applied: (row) => ({ ...row, status: "converted", convertedContract: { number: 51 } }),
     // The taxonomy read is on the page's loader for every suite, and
     // the shared scaffold lets `stubApi`'s empty default answer it.
@@ -104,10 +125,22 @@ function requestApi(
         ? json(200, {
             contractTypes: CONTRACT_TYPES,
             contractStatuses: [],
-            users: [],
+            users: [
+              {
+                id: "u2",
+                displayName: "Nadia Counsel",
+                image: null,
+                archived: false,
+                role: "legal_team_member",
+              },
+            ],
             approverGroups: [],
           })
-        : undefined,
+        : call.url.pathname === "/api/v1/entities" && call.method === "GET"
+          ? json(200, {
+              entities: [{ id: "e2", legalName: "Orion Holdings Ltd", archivedAt: null }],
+            })
+          : undefined,
   });
   return {
     handler: api.handler,
@@ -177,6 +210,56 @@ describe("the prefill (INT-002, MTR-012)", () => {
     expect(within(dialog).getByText("Northwind Labs")).toBeInTheDocument();
     // Stated, not re-typed: a carried value gets no box.
     expect(within(dialog).queryByLabelText(/^Counterparty/)).toBeNull();
+  });
+
+  it("draws no repair box for live carried references", async () => {
+    const user = userEvent.setup();
+    open(
+      requestApi(
+        request({
+          customFields: { requesting_manager: "u7", contracting_entity: "e1" },
+        }),
+        () => undefined,
+        {
+          users: [{ id: "u7", displayName: "Tom Iwu", archived: false }],
+          entities: [{ id: "e1", legalName: "Northwind GmbH", archived: false }],
+        },
+      ),
+    );
+    const dialog = await openConvert(user);
+    expect(within(dialog).getByText("Tom Iwu")).toBeInTheDocument();
+    expect(within(dialog).getByText("Northwind GmbH")).toBeInTheDocument();
+    expect(within(dialog).queryByLabelText(/^Requesting manager/)).toBeNull();
+    expect(within(dialog).queryByLabelText(/^Contracting entity/)).toBeNull();
+  });
+
+  it("draws a box for each archived carry and posts both live overrides", async () => {
+    const user = userEvent.setup();
+    const api = requestApi(
+      request({
+        customFields: { requesting_manager: "u7", contracting_entity: "e1" },
+      }),
+      () => undefined,
+      {
+        users: [{ id: "u7", displayName: "Tom Iwu", archived: true }],
+        entities: [{ id: "e1", legalName: "Wound Down GmbH", archived: true }],
+      },
+    );
+    open(api);
+    const dialog = await openConvert(user);
+    const manager = within(dialog).getByLabelText(/^Requesting manager/);
+    const entity = within(dialog).getByLabelText(/^Contracting entity/);
+    expect(within(dialog).getByText(/Tom Iwu is archived/)).toBeInTheDocument();
+    expect(within(dialog).getByText(/Wound Down GmbH is archived/)).toBeInTheDocument();
+
+    await user.selectOptions(manager, "u2");
+    await user.selectOptions(entity, "e2");
+    await user.click(within(dialog).getByRole("button", { name: "Convert" }));
+    await waitFor(() => expect(api.conversions).toHaveLength(1));
+    expect(api.conversions[0]).toEqual({
+      title: "Northwind Labs mutual NDA",
+      customFields: { requesting_manager: "u2", contracting_entity: "e2" },
+    });
   });
 
   it("says nothing about carrying until a target type is picked", async () => {

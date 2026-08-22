@@ -3920,6 +3920,176 @@ Checked against those records before this was written: every rule the four desig
 
 **The already-decided copy is `disposition.*`, not `decline.*`.** DES-058 clause 5 and DES-059's consequences both name `decline.alreadyDecided` and `decline.alreadyDecidedRead` as the scaffold's copy that all three dialogs read. The ids now say so: they are `disposition.alreadyDecided` and `disposition.alreadyDecidedRead`. The clause text above is left as it was written, as a shipped decision is; this addendum is where the current ids are.
 
+## DES-060: The archived carried reference marker and repair box (extends DES-057, DES-059)
+
+- **Status:** Accepted
+- **Date:** 2026-08-22
+
+### Context
+
+The INT-002 #437 addendum owns the product rule. A `user` or `entity` value collected on a Request can name a row that was archived before triage. DES-057 draws the value as plain text, so the archived name looks live. DES-059 states every carried value and draws boxes only for required fields the form did not answer, so Convert offers no way to replace the archived reference.
+
+This record decides how the staff detail marks that value and how the existing Convert dialog control handles the repair. It does not change which values qualify for repair. INT-002 #437 owns that rule.
+
+### Decision
+
+**1. The marker sits on the value.** The Form responses row keeps the archived person's display name or the Entity's legal name. A neutral `Archived` pill follows the name inside the value cell. It uses the existing neutral status pair, the list editor's archived word, and the pill anatomy already used for archived rows. The field label stays unchanged. A live reference draws the name alone.
+
+**2. Convert replaces the static carry line with a control for that value.** The archived reference does not appear under "Carries into the contract". It appears in the target type's field order as the same labelled `CustomFieldControl` DES-059 uses for a required gap. The label carries the required marker because Convert cannot land while the archived value remains. The picker offers live rows only.
+
+**3. The help line names both facts.** It keeps the archived name visible and says to pick a live person or Entity to convert. This lets the triager compare the old answer with the replacement without making the dead value look selectable. An empty press says `Pick a live value for {field}.` on the dialog's error line.
+
+**4. No repair control appears for a live carried reference.** It stays in DES-059's carry list as a name and value. This clause points to INT-002 #437 for the rule and only states its visual result.
+
+### Rationale
+
+The marker belongs beside the archived name because that is the first place a triager reads the answer. A banner would separate the warning from the value it describes. Removing the dead value from the carry list avoids saying it will land unchanged while a box below asks for a replacement.
+
+Reusing the gap control keeps one visual grammar for the work Convert still needs. The help line explains why this answered field has become work without adding a second warning component or a new dialog section.
+
+### Alternatives considered
+
+- **A warning banner above Form responses.** Rejected because several archived values would need a list that repeats their field names, while the rows already provide the exact anchor.
+- **Keeping the archived value in the carry list and adding a box below it.** Rejected because the same dialog would state that one value both carries and must be replaced.
+- **A disabled option holding the archived row.** Rejected because the old name belongs in explanatory text, not in the list of choices Convert can post.
+
+### Consequences
+
+`apps/web/src/components/intake/custom-field-value.tsx` owns the inline marker. `apps/web/src/components/intake/convert-dialog.tsx` derives the repair boxes from the staff detail's archived state and posts their selections in the existing `customFields` body. No new component and no new token lands. The catalogue gains `inbox.request.archivedReference`, `convert.archivedReferenceNote`, and `convert.archivedReferenceMissing`.
+
+## DES-061: Chosen comment files are removable chips (extends DES-023, DES-024)
+
+- **Status:** Accepted
+- **Date:** 2026-08-22
+
+### Context
+
+CMT-011 lets both comment composers carry up to five files. The control has to show what will travel before the comment is posted, state the bound, and let one mistaken choice be removed without clearing the draft or reopening the picker.
+
+### Decision
+
+The existing composer gains one secondary `Attach files` button with a Paperclip glyph and the persistent caption `Up to 5 files.` The native picker is multiple. Every chosen file appears below the control as a neutral rounded chip carrying its full arriving name and a 24px remove button; a long name truncates visually but remains the button's accessible name. Removing a chip removes that file only. At five files the picker is disabled. A refused post keeps the draft and every chip; a successful post clears both.
+
+The portal and staff surfaces use the same component. The portal does not gain an audience control: its comment and every chosen file remain Full Thread by the Request audience rule.
+
+### Rationale
+
+Chips make the pending upload set scannable in the same compact grammar as mentions while keeping the two lists semantically separate. A persistent bound prevents the sixth-file refusal from being the first time a person learns the limit.
+
+### Consequences
+
+The chip list is labelled `Files attached to this comment`; each remove control is `Remove {filename}`. Selection is pointer-free through the ordinary file input. No progress treatment appears: one post is one multipart request and the composer measures no per-file progress.
+
+## DES-062: Comment paper is a download row under the body (extends DES-023)
+
+- **Status:** Accepted
+- **Date:** 2026-08-22
+
+### Context
+
+A reader needs to see the paper as part of the comment whose tier governs it, without making a lightweight attachment look like a Document row or separating it from the words that introduced it.
+
+### Decision
+
+Every live comment with paper draws a compact list directly under its body. One attachment is one row: a 14px Paperclip glyph followed by the arriving filename as an underlined-on-hover download link. The row adds no size, kind, uploader, filed marker, or File action; the last two belong to M21A/3, and the lightweight row stores none of the first three. Rows retain arrival order.
+
+A soft-delete or redact tombstone draws no attachment rows. The portal uses the same row and derives its download through the Request thread address, so the visual does not change after conversion.
+
+### Rationale
+
+Placement under the body makes the tier relationship visible without another badge. Keeping the row smaller than a Document row preserves DOC-008's distinction: this is what arrived with a remark, not yet record paper.
+
+### Consequences
+
+The list is labelled `Comment attachments`; the filename is the link's accessible name and the browser download uses that same filename. No attachment count is added to the thread header, because hidden-tier paper must contribute no number a narrower reader can compare.
+
+## DES-063: The version kind pill is a picker for Member+ (extends DES-017)
+
+- **Status:** Accepted
+- **Date:** 2026-08-22
+
+### Context
+
+CTR-014's M21A addendum owns the rule that a Member+ user can correct a Document Version's kind and no other part of the round. The Contract Documents card already draws that kind as a coloured pill in the C4 version row. This record decides how that pill becomes the write control without adding a dialog or another row action.
+
+### Decision
+
+**1. The pill itself becomes a native select for Member+.** It keeps the current kind's colour pair, type size, rounded shape, and place in C4's Kind column. Pressing it opens the browser's option list. A correction commits on selection, following DES-017's immediate per-field save. The section header shows Saving, Saved, or the seam's refusal through its existing micro-state.
+
+**2. The picker offers the six hand-set kinds in negotiation order.** Draft · ours, Draft · theirs, Redline · theirs, Redline · ours, Amendment, Executed. The order matches the upload composer. `generated_redline` is never an option because it records how the file was made rather than a person's judgement about the round.
+
+**3. A generated redline stays a read-only pill for every role.** Its label is `Generated redline` and it uses the neutral pair. Member+ cannot open a picker on it. This draws CTR-014's source refusal rather than offering a control that the seam will reject.
+
+**4. A Contributor sees the existing pill.** The Documents card draws no kind select for them, just as it draws no upload or row-action controls. An archived Contract also keeps the read-only pill because all record writes are frozen there, and so does a Document that is archived on its own (DOC-010), because the seam refuses every edit to it until it is restored.
+
+**5. Every picker names its round.** Its accessible name is `Kind of version {number} of {document title}`. The visible value alone stays short enough for C4's Kind column, while the control's name distinguishes several version rows that show the same kind.
+
+### Rationale
+
+The kind already has a compact, well-understood place on every version row. Turning that value into its own control keeps the correction on the fact it changes. A dialog or an overflow item would make a one-field correction take more steps and would separate the action from the value.
+
+### Alternatives considered
+
+- **A Change kind item in each row menu.** Rejected because the value is already visible and DES-017 commits one field where it is read.
+- **A dialog opened from the pill.** Rejected because the correction collects one fixed value and needs no confirmation.
+- **Offering Generated redline as a disabled option.** Rejected because it is not a hand-set choice. The option must be absent, not advertised as unavailable.
+
+### Consequences
+
+`apps/web/src/components/documents/documents-card.tsx` owns the picker and uses the existing hand-set kind catalogue. The current value colours the closed select. A successful PATCH replaces the document row with the seam's read-back, so current and superseded rounds use the same control and update path. No new component or token lands.
+
+## DES-064: Comment paper files through one destination dialog (extends DES-062, DES-023)
+
+- **Status:** Accepted
+- **Date:** 2026-08-22
+
+### Context
+
+CMT-011 lets Member+ turn one comment attachment into record paper exactly once. The act has two shapes: start a Document at the record root, or add the next round to a chain already there. The row has to make both the available act and its permanent destination legible without turning the attachment into a second Document row.
+
+### Decision
+
+**1. An unfiled row ends with a small `File` action for Member+ on a thread whose record owns Documents.** It is absent, not disabled, for Contributors, Business Users, Requesters, and Request threads that have not converted. The download name and Paperclip stay where DES-062 put them.
+
+**2. `File` opens one modal for both destinations.** The first C10-shaped select chooses `New Document` or `New Version on an existing Document`. The dialog names the source filename above the fields and uses the upload composer's Kind catalogue and negotiation order. New Document asks for Document name and the DD-014 Confidential switch. New Version asks for the target Document and the upload composer's optional Note. The primary action is `File`; Cancel, Esc, and the overlay dismiss without writing.
+
+**3. Defaults come from what the filer is looking at.** Destination starts on New Document, the name starts on the arriving filename, and Kind starts on Draft · ours. A Legal Only comment proposes Confidential on; every other tier proposes it off. The switch remains editable because the tier is the source attachment's audience, not a permanent instruction about the Document's audience.
+
+**4. Success replaces the action with one permanent marker.** A 16px FileCheck glyph and `Filed to {Document}, version {number}` sit on a muted second line under the download. The destination phrase is a link: it opens that exact Version in the record's document panel, with the Documents route as its ordinary-link fallback. No second File action remains. A refusal stays in the open dialog so the filer can read it and repair or cancel.
+
+### Rationale
+
+One discriminated dialog keeps the shared facts shared and reveals only the controls the chosen destination needs. The marker is deliberately smaller than the attachment name: it records what happened to this comment paper without pretending the lightweight source and the resulting Document are the same row.
+
+### Consequences
+
+`apps/web/src/components/comments/comment-attachments.tsx` owns the row action, marker, and dialog. The Contract record supplies the visible Document choices and the exact-version opener; the generic comment applet receives no filing context on other record arms. The dialog reuses existing form controls, Confidential toggle, Document kind catalogue, and semantic tokens. No new token or component primitive lands.
+
+## DES-065: A dispositioned Request points paper at its composer (extends DES-062, DES-057)
+
+- **Status:** Accepted
+- **Date:** 2026-08-23
+
+### Context
+
+CMT-011 leaves two ways for paper to enter: with the submission form before the Request exists, or with a comment afterwards. INT-002's #438 addendum closes the Request attachment route after any disposition. The portal detail therefore has to say where a new file goes without introducing the second Request upload control CMT-011 rejected. The asynchronous uploads that follow a successful submission can also race a fast disposition, so the confirmation can meet the same refusal before the Request detail is open.
+
+### Decision
+
+**1. A dispositioned banner points to the existing composer.** On `converted`, `resolved`, and `declined`, the status banner ends with the link `Attach new files to a reply`. It targets the Full Thread composer in the Conversation card on the same page. The link is absent on `new`: the thread control already sits immediately below the banner, and repeating directions before a disposition would make the exceptional routing look like a standing warning.
+
+**2. There is no Request attachment control on the detail.** The submission form's `Choose files` remains the only Request attachment control, before the Request exists. The detail carries only the comment composer's `Attach files`, on every status. Hiding after a disposition therefore means the rejected third path is never drawn; the pointer distinguishes the comment control by naming a reply.
+
+**3. A submission upload that loses the race links to the same place.** The typed 409 carries the Request number. The confirmation keeps naming every file that did not attach and replaces its generic send-another-way sentence with `Add it to a reply on R-###`, linked directly to that Request's composer. The Request remains submitted and the confirmation remains a success surface.
+
+### Rationale
+
+The composer is the door CMT-011 built, so the banner should point at it rather than restating its controls or adding another picker. Keeping the instruction inside the status banner places the changed paper rule beside the disposition that caused it. The stable Request URL remains the portal address after conversion, which lets one link work for all three outcomes without exposing a Contract reference a Business User cannot open.
+
+### Consequences
+
+`apps/web/src/routes/portal-request.tsx` owns the banner link, and the shared portal composer exposes the in-page target. `apps/web/src/routes/portal-request-form.tsx` reads the named refusal's Request extension and links a raced file to the same target. The catalogue gains `portal.request.paperOnThread` and `portal.form.attachmentsMovedToThread`. No new control, token, or component primitive lands.
+
 ## Index of decisions
 
 | #       | Decision                                                                                                                                                             | Status                                                                                                     |
@@ -3983,3 +4153,9 @@ Checked against those records before this was written: every rule the four desig
 | DES-057 | The staff request detail — a record page for something that is not a record (extends DES-032, DES-016, DES-034)                                                      | Accepted; sub-bar actions added by DES-058; the Description card's absence recorded by the M21/12 addendum |
 | DES-058 | The disposition sub-bar and the Decline dialog (extends DES-057, DES-035, DES-005)                                                                                   | Accepted; the Resolve dialog added by the M21/8 addendum; the slot's third button closed by DES-059        |
 | DES-059 | The Convert dialog — a prefilled contract create (extends DES-058, DES-057, DES-044)                                                                                 | Accepted                                                                                                   |
+| DES-060 | The archived carried reference marker and repair box (extends DES-057, DES-059)                                                                                      | Accepted                                                                                                   |
+| DES-061 | Chosen comment files are removable chips (extends DES-023, DES-024)                                                                                                  | Accepted                                                                                                   |
+| DES-062 | Comment paper is a download row under the body (extends DES-023)                                                                                                     | Accepted                                                                                                   |
+| DES-063 | The version kind pill is a picker for Member+ (extends DES-017)                                                                                                      | Accepted                                                                                                   |
+| DES-064 | Comment paper files through one destination dialog (extends DES-062, DES-023)                                                                                        | Accepted                                                                                                   |
+| DES-065 | A dispositioned Request points paper at its composer (extends DES-062, DES-057)                                                                                      | Accepted                                                                                                   |

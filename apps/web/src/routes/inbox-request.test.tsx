@@ -421,7 +421,7 @@ describe("the values, labelled by the form that collected them", () => {
     expect(card.textContent).toContain("This form collected nothing beyond the basics.");
   });
 
-  it("resolves a person and an Entity into names, archived rows included", async () => {
+  it("resolves a live person and Entity into names without a marker", async () => {
     stubApi({
       signedIn: MEMBER,
       extra: pageApi(
@@ -443,8 +443,45 @@ describe("the values, labelled by the form that collected them", () => {
               }),
             ],
             customFieldRefs: {
-              users: [{ id: "u7", displayName: "Tom Iwu" }],
-              entities: [{ id: "e1", legalName: "Wound Down GmbH" }],
+              users: [{ id: "u7", displayName: "Tom Iwu", archived: false }],
+              entities: [{ id: "e1", legalName: "Orion Holdings GmbH", archived: false }],
+            },
+          }),
+        ),
+      ),
+    });
+    renderAt("/inbox/45");
+
+    const card = await screen.findByRole("region", { name: "Form responses" });
+    expect(within(card).getByText("Tom Iwu")).toBeInTheDocument();
+    expect(within(card).getByText("Orion Holdings GmbH")).toBeInTheDocument();
+    expect(within(card).queryByText("Archived")).toBeNull();
+  });
+
+  it("marks an archived person and Entity on their named values", async () => {
+    stubApi({
+      signedIn: MEMBER,
+      extra: pageApi(
+        detailApi(
+          detail({
+            request: { customFields: { manager: "u7", holder: "e1" } },
+            fields: [
+              field({
+                id: "f-manager",
+                slug: "manager",
+                displayName: "Requesting manager",
+                fieldType: "user",
+              }),
+              field({
+                id: "f-holder",
+                slug: "holder",
+                displayName: "Contracting entity",
+                fieldType: "entity",
+              }),
+            ],
+            customFieldRefs: {
+              users: [{ id: "u7", displayName: "Tom Iwu", archived: true }],
+              entities: [{ id: "e1", legalName: "Wound Down GmbH", archived: true }],
             },
           }),
         ),
@@ -455,6 +492,7 @@ describe("the values, labelled by the form that collected them", () => {
     const card = await screen.findByRole("region", { name: "Form responses" });
     expect(within(card).getByText("Tom Iwu")).toBeInTheDocument();
     expect(within(card).getByText("Wound Down GmbH")).toBeInTheDocument();
+    expect(within(card).getAllByText("Archived")).toHaveLength(2);
   });
 
   it("renders an id that resolves to nothing as the id (the INT-001 M20/10 rule)", async () => {

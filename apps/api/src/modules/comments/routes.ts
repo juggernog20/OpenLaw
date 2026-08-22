@@ -84,20 +84,27 @@
  * composer's confirmation explains the promotion, it does not enforce it.
  */
 
+import type { FastifyRequest } from "fastify";
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
 import { z } from "zod";
+import { uuidv7 } from "uuidv7";
 import {
   and,
   asc,
+  commentAttachments,
   commentLastRead,
   commentMentions,
   commentRevisions,
   comments,
+  contracts,
   COMMENT_VISIBILITIES,
   count,
   desc,
+  documents,
+  documentVersions,
   eq,
   gt,
+  HAND_SET_DOCUMENT_VERSION_KINDS,
   inArray,
   isNull,
   ne,
@@ -108,9 +115,29 @@ import {
   type SQL,
   type Transaction,
 } from "@openlaw/db";
+import {
+  COMMENT_ATTACHMENT_ALREADY_FILED_PROBLEM_TYPE,
+  MAX_COMMENT_BODY_LENGTH,
+} from "@openlaw/shared";
 import { requireRole, type AuthenticatedUser } from "../../auth/guards.js";
-import { recordActivity } from "../../lib/activity.js";
-import { httpError, problemResponse } from "../../lib/problem.js";
+import { recordActivity, RECORD_ACTIVITY_TIER } from "../../lib/activity.js";
+import { copyStoredBlob } from "../../lib/copy-stored-blob.js";
+import { documentAudienceScope, documentConfidentialityWrite } from "../../lib/contract-access.js";
+import {
+  insertDocumentVersion,
+  nextVersionNumber,
+  requestDerivations,
+  versionStorageKey,
+} from "../../lib/document-versions.js";
+import { httpError, problemResponse, problemTypeResponse } from "../../lib/problem.js";
+import {
+  asUploadRefusal,
+  attachmentDisposition,
+  refuseOversize,
+  uploadFilename,
+  withStoredBlob,
+  withStoredBlobs,
+} from "../../lib/uploads.js";
 import {
   commentAudience,
   commentEntityType,
@@ -140,6 +167,9 @@ const requireCommentReader = requireRole(...COMMENT_READER_ROLES);
  * refuses everyone else before the route reads a row. */
 const requireAdministrator = requireRole("administrator");
 
+/** Filing changes the record's paper, so it belongs to Member+ alone. */
+const requireMember = requireRole("administrator", "legal_team_member");
+
 /**
  * What a comment can hang off, as the API accepts it — the entity types
  * that have an arm in `audience.ts`, drawn from that list so the schema
@@ -155,7 +185,8 @@ const CommentEntityTypeSchema = z.enum(COMMENT_ENTITY_TYPES);
  * reaches a query, not to rule on what an id looks like. A well-formed
  * id for a record the viewer cannot reach still answers 404.
  */
-const RecordIdSchema = z.string().min(1).max(64);
+const RECORD_ID_MAX_LENGTH = 64;
+const RecordIdSchema = z.string().min(1).max(RECORD_ID_MAX_LENGTH);
 
 const VisibilitySchema = z.enum(COMMENT_VISIBILITIES);
 
@@ -176,6 +207,22 @@ const MentionSchema = z.object({
   displayName: z.string(),
 });
 
+/** One attachment as it travels inside a live comment. The storage
+ * reference never leaves the API. */
+const CommentAttachmentSchema = z.object({
+  id: z.string(),
+  filename: z.string(),
+  /** The one destination this file became, or NULL until it is filed. */
+  filed: z
+    .object({
+      documentId: z.string(),
+      documentTitle: z.string(),
+      versionId: z.string(),
+      versionNumber: z.int().positive(),
+    })
+    .optional(),
+});
+
 const CommentSchema = z.object({
   id: z.string(),
   entityType: CommentEntityTypeSchema,
@@ -190,6 +237,9 @@ const CommentSchema = z.object({
    * comment that names nobody, and emptied by a redact along with the
    * text it named them in. */
   mentions: z.array(MentionSchema),
+  /** Omitted for a paperless comment, preserving the existing JSON
+   * shape. Also omitted from both tombstones. */
+  attachments: z.array(CommentAttachmentSchema).optional(),
   createdAt: z.iso.datetime({ offset: true }),
   /** NULL until the author changes the text; a time draws the "edited"
    * marker, so a reader can tell the text moved since they read it. */
@@ -214,7 +264,47 @@ const CommentSchema = z.object({
  * record can reach is refused below anyway, so shaping the string would
  * add a second, weaker gate in front of the real one.
  */
-const MentionsSchema = z.array(z.string().min(1).max(64)).max(20);
+const MAX_MENTIONS = 20;
+const MentionsSchema = z.array(RecordIdSchema).max(MAX_MENTIONS);
+
+/** One comment carries at most five files (CMT-011). */
+const MAX_COMMENT_ATTACHMENTS = 5;
+
+/** The JSON body POST /comments has always taken. Multipart parses the
+ * same fields through this exact schema after streaming its file parts. */
+const CommentPostBodySchema = z.strictObject({
+  entityType: CommentEntityTypeSchema,
+  entityId: RecordIdSchema,
+  body: CommentBodySchema,
+  visibility: VisibilitySchema,
+  mentions: MentionsSchema.optional(),
+});
+
+/** OpenAPI description for the streamed route body. Runtime validation
+ * still goes through CommentPostBodySchema; metadata keeps the generated
+ * client's established field types while documenting the file parts. */
+const CommentPostTransportSchema = z.any().meta({
+  type: "object",
+  properties: {
+    entityType: { type: "string", enum: [...COMMENT_ENTITY_TYPES] },
+    entityId: { type: "string", minLength: 1, maxLength: RECORD_ID_MAX_LENGTH },
+    body: { type: "string", minLength: 1, maxLength: MAX_COMMENT_BODY_LENGTH },
+    visibility: { type: "string", enum: [...COMMENT_VISIBILITIES] },
+    mentions: {
+      type: "array",
+      maxItems: MAX_MENTIONS,
+      items: { type: "string", minLength: 1, maxLength: RECORD_ID_MAX_LENGTH },
+    },
+    file: {
+      type: "array",
+      maxItems: MAX_COMMENT_ATTACHMENTS,
+      items: { type: "string", format: "binary" },
+      description: "Up to five file parts, all named `file`.",
+    },
+  },
+  required: ["entityType", "entityId", "body", "visibility"],
+  additionalProperties: false,
+});
 
 /** The reference the thread is keyed by — one record, named by type and
  * id rather than by a contract's CTR-003 number, because the panel that
@@ -223,6 +313,24 @@ const EntityRefQuery = z.object({
   entityType: CommentEntityTypeSchema,
   entityId: RecordIdSchema,
 });
+
+const HandSetKindSchema = z.enum(HAND_SET_DOCUMENT_VERSION_KINDS);
+
+/** One act with two destinations (CMT-011), discriminated before any write. */
+const FilingBody = z.discriminatedUnion("destination", [
+  z.strictObject({
+    destination: z.literal("new_document"),
+    kind: HandSetKindSchema,
+    name: z.string().trim().min(1).max(200),
+    isConfidential: z.boolean(),
+  }),
+  z.strictObject({
+    destination: z.literal("new_version"),
+    documentId: RecordIdSchema,
+    kind: HandSetKindSchema,
+    note: z.string().trim().max(2000).optional(),
+  }),
+]);
 
 /**
  * How many comments one read answers (CTR-024).
@@ -301,6 +409,7 @@ export const commentsRoutes: FastifyPluginAsyncZod = async (app) => {
   /** Derived from the response schema, so the projection and what the
    * route promises cannot drift apart. */
   type Mention = z.infer<typeof MentionSchema>;
+  type Attachment = z.infer<typeof CommentAttachmentSchema>;
 
   /**
    * Who each of these comments addresses, in one read. The list is a
@@ -331,7 +440,77 @@ export const commentsRoutes: FastifyPluginAsyncZod = async (app) => {
     return byComment;
   }
 
-  function toComment(row: ThreadRow, mentions: readonly Mention[] = []) {
+  /** The paper carried by a page of comments, grouped without exposing
+   * storage references.
+   *
+   * The filed marker obeys the Document's own audience (DD-014), not the
+   * comment's. A Business User hears a Full Thread comment but reaches no
+   * Document, and a Member off the team does not reach a Confidential
+   * one; for them the row reads as plain paper, because a Document this
+   * viewer may not see never leaves the database. */
+  async function attachmentsOf(
+    db: Executor,
+    user: AuthenticatedUser,
+    commentIds: readonly string[],
+  ): Promise<Map<string, Attachment[]>> {
+    const byComment = new Map<string, Attachment[]>();
+    if (commentIds.length === 0) return byComment;
+    const rows = await db
+      .select({
+        commentId: commentAttachments.commentId,
+        id: commentAttachments.id,
+        filename: commentAttachments.filename,
+        filedDocumentId: commentAttachments.filedDocumentId,
+        filedDocumentTitle: documents.title,
+        filedVersionId: commentAttachments.filedVersionId,
+        filedVersionNumber: documentVersions.versionNumber,
+      })
+      .from(commentAttachments)
+      .leftJoin(
+        documents,
+        and(eq(commentAttachments.filedDocumentId, documents.id), documentAudienceScope(db, user)),
+      )
+      .leftJoin(
+        documentVersions,
+        and(
+          eq(commentAttachments.filedVersionId, documentVersions.id),
+          eq(documentVersions.documentId, documents.id),
+        ),
+      )
+      .where(inArray(commentAttachments.commentId, [...commentIds]))
+      .orderBy(asc(commentAttachments.createdAt), asc(commentAttachments.id));
+    for (const row of rows) {
+      const list = byComment.get(row.commentId);
+      const filed =
+        row.filedDocumentId !== null &&
+        row.filedDocumentTitle !== null &&
+        row.filedVersionId !== null &&
+        row.filedVersionNumber !== null
+          ? {
+              documentId: row.filedDocumentId,
+              documentTitle: row.filedDocumentTitle,
+              versionId: row.filedVersionId,
+              versionNumber: row.filedVersionNumber,
+            }
+          : null;
+      const attachment = {
+        id: row.id,
+        filename: row.filename,
+        ...(filed ? { filed } : {}),
+      };
+      if (list) list.push(attachment);
+      else byComment.set(row.commentId, [attachment]);
+    }
+    return byComment;
+  }
+
+  function toComment(
+    row: ThreadRow,
+    mentions: readonly Mention[] = [],
+    attachments: readonly Attachment[] = [],
+  ) {
+    const carriesPaper =
+      row.deletedAt === null && row.redactedAt === null && attachments.length > 0;
     return {
       id: row.id,
       // Narrowed for the response schema: the column admits four types,
@@ -347,6 +526,7 @@ export const commentsRoutes: FastifyPluginAsyncZod = async (app) => {
       body: row.body,
       visibility: row.visibility,
       mentions: [...mentions],
+      ...(carriesPaper ? { attachments: [...attachments] } : {}),
       createdAt: row.createdAt.toISOString(),
       editedAt: row.editedAt?.toISOString() ?? null,
       deletedAt: row.deletedAt?.toISOString() ?? null,
@@ -413,10 +593,11 @@ export const commentsRoutes: FastifyPluginAsyncZod = async (app) => {
         .orderBy(desc(comments.createdAt), desc(comments.id))
         .limit(PAGE_SIZE + 1);
       const page = rows.slice(0, PAGE_SIZE);
-      const mentions = await mentionsOf(
-        app.db,
-        page.map((row) => row.id),
-      );
+      const ids = page.map((row) => row.id);
+      const [mentions, attachments] = await Promise.all([
+        mentionsOf(app.db, ids),
+        attachmentsOf(app.db, request.user, ids),
+      ]);
       return {
         // Turned back into the order a conversation is read in
         // (CMT-002). The page is a window on the thread, not a feed:
@@ -425,7 +606,7 @@ export const commentsRoutes: FastifyPluginAsyncZod = async (app) => {
         comments: page
           .slice()
           .reverse()
-          .map((row) => toComment(row, mentions.get(row.id))),
+          .map((row) => toComment(row, mentions.get(row.id), attachments.get(row.id))),
         // The oldest row of this page is the boundary for the page
         // before it, and only when a further row was actually read.
         nextCursor: rows.length > PAGE_SIZE ? (page.at(-1)?.id ?? null) : null,
@@ -602,6 +783,128 @@ export const commentsRoutes: FastifyPluginAsyncZod = async (app) => {
     },
   );
 
+  type CommentPostBody = z.infer<typeof CommentPostBodySchema>;
+  type StoredCommentAttachment = {
+    id: string;
+    fileRef: string;
+    filename: string;
+  };
+
+  function requireJsonComment(body: unknown): CommentPostBody {
+    const parsed = CommentPostBodySchema.safeParse(body);
+    if (!parsed.success) {
+      const fields = [
+        ...new Set(
+          parsed.error.issues
+            .map((issue) => issue.path.find((part) => typeof part === "string"))
+            .filter((field): field is string => field !== undefined),
+        ),
+      ];
+      const fieldDetail = fields.length > 0 ? ` Invalid fields: ${fields.join(", ")}.` : "";
+      throw httpError(400, `That comment body is invalid.${fieldDetail}`);
+    }
+    return parsed.data;
+  }
+
+  /**
+   * Reads the comment fields and up to five file parts in one pass.
+   * Files stream directly into storage. Any parser, filename, or field
+   * refusal removes every blob the pass wrote before rethrowing.
+   */
+  async function receiveMultipartComment(
+    request: FastifyRequest,
+    commentId: string,
+  ): Promise<{ body: CommentPostBody; attachments: StoredCommentAttachment[] }> {
+    const fields: Record<string, string> = {};
+    const attachments: StoredCommentAttachment[] = [];
+    let tooManyFiles = false;
+    try {
+      const parts = request.parts({
+        limits: {
+          fileSize: app.maxUploadBytes,
+          // The route enforces five below while draining excess parts.
+          // Letting Busboy stop on the sixth would destroy the fifth
+          // stream while the storage adapter is still consuming it, so
+          // the parser admits one extra file: the sixth is drained and
+          // refused, the seventh stops the parser.
+          files: MAX_COMMENT_ATTACHMENTS + 1,
+          fields: 8,
+          fieldSize: 8192,
+          parts: MAX_COMMENT_ATTACHMENTS + 9,
+        },
+      });
+      for await (const part of parts) {
+        if (part.type === "field") {
+          if (part.valueTruncated) {
+            throw httpError(
+              413,
+              "That upload carries more form fields than this endpoint accepts.",
+            );
+          }
+          if (Object.hasOwn(fields, part.fieldname)) {
+            throw httpError(400, `The ${part.fieldname} field was sent more than once.`);
+          }
+          fields[part.fieldname] = String(part.value);
+          continue;
+        }
+        if (part.fieldname !== "file") {
+          throw httpError(400, "Attach comment files using the `file` field.");
+        }
+        if (attachments.length >= MAX_COMMENT_ATTACHMENTS) {
+          tooManyFiles = true;
+          // Keep the parser moving to its clean end. No excess byte is
+          // stored, and the whole post is refused after the pass.
+          for await (const chunk of part.file) {
+            void chunk;
+          }
+          continue;
+        }
+        const filename = uploadFilename(part.filename);
+        const id = uuidv7();
+        const fileRef = await app.storage
+          .put(`comment-attachments/${commentId}/${id}`, part.file)
+          .catch((error: unknown) => {
+            throw asUploadRefusal(error, app.maxUploadBytes, MAX_COMMENT_ATTACHMENTS);
+          });
+        if (part.file.truncated) {
+          await app.storage.delete(fileRef).catch((error: unknown) => {
+            request.log.warn({ err: error, fileRef }, "could not remove a truncated upload");
+          });
+          throw refuseOversize(app.maxUploadBytes);
+        }
+        attachments.push({ id, fileRef, filename });
+      }
+
+      if (tooManyFiles) {
+        throw httpError(413, `Upload at most ${MAX_COMMENT_ATTACHMENTS} files at a time.`);
+      }
+
+      let mentions: unknown = undefined;
+      if (fields.mentions !== undefined) {
+        try {
+          mentions = JSON.parse(fields.mentions);
+        } catch {
+          throw httpError(400, "The mentions field must be a JSON array of user ids.");
+        }
+      }
+      const parsed = CommentPostBodySchema.safeParse({ ...fields, mentions });
+      if (!parsed.success) throw httpError(400, "That comment form is invalid.");
+      return { body: parsed.data, attachments };
+    } catch (error) {
+      await Promise.all(
+        attachments.map((attachment) =>
+          app.storage.delete(attachment.fileRef).catch((cleanup: unknown) => {
+            request.log.warn(
+              { err: cleanup, fileRef: attachment.fileRef },
+              "could not remove the blob of a refused comment upload",
+            );
+          }),
+        ),
+      );
+      throw asUploadRefusal(error, app.maxUploadBytes, MAX_COMMENT_ATTACHMENTS);
+    }
+  }
+
   app.post(
     "/comments",
     {
@@ -618,17 +921,16 @@ export const commentsRoutes: FastifyPluginAsyncZod = async (app) => {
           "afterwards (CMT-005) — there is no route that changes it. " +
           "Writes one comment_mentions row per person named, and appends " +
           "a comment.posted activity entry at the comment's own tier, " +
-          "all in the same transaction",
+          "all in the same transaction. Accepts the existing JSON body " +
+          "or multipart/form-data carrying the same fields and up to five " +
+          "`file` parts. Stored blobs are removed if any later part or " +
+          "transactional write is refused",
         tags: ["comments"],
-        body: z.strictObject({
-          entityType: CommentEntityTypeSchema,
-          entityId: RecordIdSchema,
-          body: CommentBodySchema,
-          visibility: VisibilitySchema,
-          /** Who the comment addresses, by id. Repeats collapse: one
-           * person named twice is still one person to reach. */
-          mentions: MentionsSchema.optional(),
-        }),
+        consumes: ["application/json", "multipart/form-data"],
+        // Multipart is streamed and Fastify supplies an internal body
+        // placeholder before the handler runs. Both transports are
+        // parsed through CommentPostBodySchema in the handler instead.
+        body: CommentPostTransportSchema,
         response: {
           201: z.object({ comment: CommentSchema }),
           default: problemResponse,
@@ -636,70 +938,90 @@ export const commentsRoutes: FastifyPluginAsyncZod = async (app) => {
       },
     },
     async (request, reply) => {
-      const { body, visibility } = request.body;
+      const mintedCommentId = uuidv7();
+      const incoming = request.isMultipart()
+        ? await receiveMultipartComment(request, mintedCommentId)
+        : { body: requireJsonComment(request.body), attachments: [] };
+      const { body, visibility } = incoming.body;
       // One person named twice is one person to reach, and the row's
       // compound key says so too.
-      const named = [...new Set(request.body.mentions ?? [])];
+      const named = [...new Set(incoming.body.mentions ?? [])];
 
       // The seam's transaction rather than the database's: a comment
       // that names somebody is done *to* them (CMT-007, NOT-002 group
       // 1), and the bell row for it belongs inside the same commit as
       // the `comment_mentions` row it is read from.
-      const comment = await app.notifier.notifying(async (tx) => {
-        // Read on the same snapshot the rows are written on: a grant
-        // dropped between the check and the insert must not authorize a
-        // post onto a record the author no longer reaches. A refusal
-        // thrown here rolls the transaction back and keeps its status.
-        const audience = await reachedThread(tx, request.user, request.body);
-        // The composer offers a Contributor two segments; this is the
-        // refusal that holds when the request does not come from it.
-        if (!audience.tiers.includes(visibility)) {
-          throw httpError(403, "You cannot post a comment at that visibility tier.");
-        }
-
-        // Checked on that same snapshot: a grant dropped before the
-        // insert must not leave a mention nobody can hear.
-        if (named.length > 0) {
-          const candidates = await mentionCandidates(tx, audience, named);
-          const byId = new Map(candidates.map((candidate) => [candidate.id, candidate]));
-          // Somebody no tier on this record reaches is not addressable
-          // here at all. Mentioning a person does not grant them the
-          // record; whatever the arm's audience rule asks for does.
-          if (named.some((id) => !byId.has(id))) {
-            throw httpError(400, "That is not a person you can mention on this record.");
+      const write = () =>
+        app.notifier.notifying(async (tx) => {
+          // Read on the same snapshot the rows are written on: a grant
+          // dropped between the check and the insert must not authorize a
+          // post onto a record the author no longer reaches. A refusal
+          // thrown here rolls the transaction back and keeps its status.
+          const audience = await reachedThread(tx, request.user, incoming.body);
+          // The composer offers a Contributor two segments; this is the
+          // refusal that holds when the request does not come from it.
+          if (!audience.tiers.includes(visibility)) {
+            throw httpError(403, "You cannot post a comment at that visibility tier.");
           }
-          // The load-bearing refusal (CMT-007). The client's
-          // confirmation offers the promotion; this is what holds when
-          // the request did not come from it.
-          const unreachable = named
-            .map((id) => byId.get(id)!)
-            .filter((candidate) => !candidate.tiers.includes(visibility));
-          if (unreachable.length > 0) {
-            const names = unreachable.map((candidate) => candidate.displayName).join(", ");
-            throw httpError(
-              403,
-              `${names} cannot see a comment at that visibility tier. Widen the audience or take the mention out.`,
-            );
-          }
-        }
 
-        // The write itself, its `comment_mentions` rows, its activity
-        // entry, and whatever the arm raises are all one act, and
-        // `post.ts` is where that act lives — the Resolve disposition
-        // says its closing reply through the same call (INT-007).
-        const commentId = await postComment(tx, app.notifier, {
-          audience,
-          author: request.user,
-          body,
-          visibility,
-          mentions: named,
+          // Checked on that same snapshot: a grant dropped before the
+          // insert must not leave a mention nobody can hear.
+          if (named.length > 0) {
+            const candidates = await mentionCandidates(tx, audience, named);
+            const byId = new Map(candidates.map((candidate) => [candidate.id, candidate]));
+            // Somebody no tier on this record reaches is not addressable
+            // here at all. Mentioning a person does not grant them the
+            // record; whatever the arm's audience rule asks for does.
+            if (named.some((id) => !byId.has(id))) {
+              throw httpError(400, "That is not a person you can mention on this record.");
+            }
+            // The load-bearing refusal (CMT-007). The client's
+            // confirmation offers the promotion; this is what holds when
+            // the request did not come from it.
+            const unreachable = named
+              .map((id) => byId.get(id)!)
+              .filter((candidate) => !candidate.tiers.includes(visibility));
+            if (unreachable.length > 0) {
+              const names = unreachable.map((candidate) => candidate.displayName).join(", ");
+              throw httpError(
+                403,
+                `${names} cannot see a comment at that visibility tier. Widen the audience or take the mention out.`,
+              );
+            }
+          }
+
+          // The write itself, its `comment_mentions` rows, its activity
+          // entry, and whatever the arm raises are all one act, and
+          // `post.ts` is where that act lives — the Resolve disposition
+          // says its closing reply through the same call (INT-007).
+          const commentId = await postComment(tx, app.notifier, {
+            id: mintedCommentId,
+            audience,
+            author: request.user,
+            body,
+            visibility,
+            mentions: named,
+            attachments: incoming.attachments,
+          });
+          // Read back through the same projection the thread uses, so the
+          // row the poster gets is the row they will see on the next load.
+          const [posted] = await selectComments(tx).where(eq(comments.id, commentId));
+          const [mentions, attachments] = await Promise.all([
+            mentionsOf(tx, [commentId]),
+            attachmentsOf(tx, request.user, [commentId]),
+          ]);
+          return toComment(posted!, mentions.get(commentId), attachments.get(commentId));
         });
-        // Read back through the same projection the thread uses, so the
-        // row the poster gets is the row they will see on the next load.
-        const [posted] = await selectComments(tx).where(eq(comments.id, commentId));
-        const mentions = await mentionsOf(tx, [commentId]);
-        return toComment(posted!, mentions.get(commentId));
-      });
+
+      const comment =
+        incoming.attachments.length === 0
+          ? await write()
+          : await withStoredBlobs(
+              app.storage,
+              request.log,
+              incoming.attachments.map((attachment) => attachment.fileRef),
+              write,
+            );
 
       return reply.status(201).send({ comment });
     },
@@ -779,11 +1101,445 @@ export const commentsRoutes: FastifyPluginAsyncZod = async (app) => {
 
   /** The comment as it now stands, through the thread's own projection,
    * so a corrected row is the row the next load will draw. */
-  async function readBack(tx: Transaction, commentId: string) {
+  async function readBack(tx: Transaction, user: AuthenticatedUser, commentId: string) {
     const [row] = await selectComments(tx).where(eq(comments.id, commentId));
-    const mentions = await mentionsOf(tx, [commentId]);
-    return toComment(row!, mentions.get(commentId));
+    const [mentions, attachments] = await Promise.all([
+      mentionsOf(tx, [commentId]),
+      attachmentsOf(tx, user, [commentId]),
+    ]);
+    return toComment(row!, mentions.get(commentId), attachments.get(commentId));
   }
+
+  const NO_ATTACHMENT = "No comment attachment exists with this id.";
+
+  /** The attachment and room facts needed before its bytes are copied. */
+  async function filableAttachment(
+    db: Executor,
+    user: AuthenticatedUser,
+    entity: z.infer<typeof EntityRefQuery>,
+    ids: { commentId: string; attachmentId: string },
+  ) {
+    const [row] = await db
+      .select({
+        id: commentAttachments.id,
+        fileRef: commentAttachments.fileRef,
+        filename: commentAttachments.filename,
+        filedDocumentId: commentAttachments.filedDocumentId,
+        filedVersionId: commentAttachments.filedVersionId,
+        commentEntityType: comments.entityType,
+        commentEntityId: comments.entityId,
+        visibility: comments.visibility,
+        deletedAt: comments.deletedAt,
+        redactedAt: comments.redactedAt,
+      })
+      .from(commentAttachments)
+      .innerJoin(comments, eq(commentAttachments.commentId, comments.id))
+      .where(
+        and(
+          eq(commentAttachments.id, ids.attachmentId),
+          eq(commentAttachments.commentId, ids.commentId),
+        ),
+      )
+      .limit(1);
+    if (!row || row.deletedAt !== null || row.redactedAt !== null) {
+      throw httpError(404, NO_ATTACHMENT);
+    }
+    const audience = await reachedThread(db, user, entity);
+    if (
+      audience.entityType !== row.commentEntityType ||
+      audience.entityId !== row.commentEntityId ||
+      !audience.tiers.includes(row.visibility)
+    ) {
+      throw httpError(404, NO_ATTACHMENT);
+    }
+    return row;
+  }
+
+  /** A stale filing dialog is told the exact destination that won, when
+   * the filer reaches it. Outside the Document's audience (DD-014) the
+   * refusal still stands, but it names nothing. */
+  async function refuseFiled(
+    db: Executor,
+    user: AuthenticatedUser,
+    attachment: { filedDocumentId: string | null; filedVersionId: string | null },
+  ): Promise<never> {
+    if (attachment.filedDocumentId === null || attachment.filedVersionId === null) {
+      throw new Error("A filed comment attachment must name both its Document and Version.");
+    }
+    const [destination] = await db
+      .select({ title: documents.title, versionNumber: documentVersions.versionNumber })
+      .from(documents)
+      .innerJoin(
+        documentVersions,
+        and(
+          eq(documentVersions.id, attachment.filedVersionId),
+          eq(documentVersions.documentId, documents.id),
+        ),
+      )
+      .where(and(eq(documents.id, attachment.filedDocumentId), documentAudienceScope(db, user)))
+      .limit(1);
+    throw httpError(
+      409,
+      destination
+        ? `This attachment was already filed to ${destination.title}, version ${destination.versionNumber}.`
+        : "This attachment was already filed onto the record.",
+      {
+        type: COMMENT_ATTACHMENT_ALREADY_FILED_PROBLEM_TYPE,
+        extensions: destination
+          ? {
+              filedDocumentId: attachment.filedDocumentId,
+              filedVersionId: attachment.filedVersionId,
+            }
+          : {},
+      },
+    );
+  }
+
+  app.post(
+    "/comments/:commentId/attachments/:attachmentId/file",
+    {
+      preHandler: requireMember,
+      schema: {
+        operationId: "fileCommentAttachment",
+        summary:
+          "File one live comment attachment onto the record (CMT-011), either as a new root " +
+          "Document or as the next Version on a named chain. The comment's audience is the " +
+          "reach gate; a never-converted Request owns no Documents and is refused. The bytes " +
+          "are copied to a key minted from the destination ids, their media type is read from " +
+          "the blob, and the shared Version insert records every derivation an upload owes. " +
+          "The paper and the attachment marker commit together under the Contract row lock, " +
+          "so the same attachment cannot grow two rounds",
+        tags: ["comments"],
+        params: CommentParams.extend({ attachmentId: RecordIdSchema }),
+        querystring: EntityRefQuery,
+        body: FilingBody,
+        response: {
+          201: CommentEnvelope,
+          409: problemTypeResponse(
+            "The attachment was already filed, the thread does not own Documents, or the record is frozen.",
+            [COMMENT_ATTACHMENT_ALREADY_FILED_PROBLEM_TYPE],
+            { filedDocumentId: z.string().optional(), filedVersionId: z.string().optional() },
+          ),
+          default: problemResponse,
+        },
+      },
+    },
+    async (request, reply) => {
+      const source = await filableAttachment(app.db, request.user, request.query, request.params);
+      if (source.filedDocumentId !== null || source.filedVersionId !== null) {
+        await refuseFiled(app.db, request.user, source);
+      }
+      if (source.commentEntityType !== "contract") {
+        throw httpError(409, "This thread's record does not own Documents.");
+      }
+
+      const documentId =
+        request.body.destination === "new_document" ? uuidv7() : request.body.documentId;
+      const versionId = uuidv7();
+      const copied = await copyStoredBlob(app.storage, source.fileRef, {
+        key: versionStorageKey(documentId, versionId),
+        filename: source.filename,
+      });
+
+      const result = await withStoredBlob(app.storage, request.log, copied.fileRef, () =>
+        app.notifier.notifying(async (tx) => {
+          // Resolve the address first, then hold the comment. Once held,
+          // redaction and filing serialize: either the file lands and
+          // redaction later removes only its source, or the source is
+          // already gone and nothing lands.
+          const addressed = await reachedThread(tx, request.user, request.query);
+          // Resolve a Request address before taking the comment lock:
+          // conversion takes the Request row and then moves comments,
+          // so filing has to take locks in that same order.
+          const held = await heldComment(tx, request.user, request.params.commentId);
+          if (
+            held.deletedAt !== null ||
+            held.redactedAt !== null ||
+            addressed.entityType !== held.entityType ||
+            addressed.entityId !== held.entityId
+          ) {
+            throw httpError(404, NO_ATTACHMENT);
+          }
+
+          const [attachment] = await tx
+            .select({
+              id: commentAttachments.id,
+              filename: commentAttachments.filename,
+              filedDocumentId: commentAttachments.filedDocumentId,
+              filedVersionId: commentAttachments.filedVersionId,
+            })
+            .from(commentAttachments)
+            .where(
+              and(
+                eq(commentAttachments.id, request.params.attachmentId),
+                eq(commentAttachments.commentId, held.id),
+              ),
+            )
+            .limit(1)
+            .for("update");
+          if (!attachment) throw httpError(404, NO_ATTACHMENT);
+          if (attachment.filedDocumentId !== null || attachment.filedVersionId !== null) {
+            await refuseFiled(tx, request.user, attachment);
+          }
+          if (held.entityType !== "contract") {
+            throw httpError(409, "This thread's record does not own Documents.");
+          }
+
+          // Audience was just re-asked through the comment. Now hold the
+          // owning row: version numbering, primary designation, and both
+          // destination forms serialize behind this lock.
+          const [contract] = await tx
+            .select({
+              id: contracts.id,
+              managerId: contracts.managerId,
+              primaryDocumentId: contracts.primaryDocumentId,
+              archivedAt: contracts.archivedAt,
+            })
+            .from(contracts)
+            .where(eq(contracts.id, held.entityId))
+            .limit(1)
+            .for("update");
+          if (!contract) throw httpError(404, NO_ATTACHMENT);
+          if (contract.archivedAt !== null) {
+            throw httpError(409, "This contract is archived. Restore it before filing paper.");
+          }
+
+          let title: string;
+          let versionNumber: number;
+          let isConfidential: boolean;
+          if (request.body.destination === "new_document") {
+            title = request.body.name;
+            versionNumber = 1;
+            isConfidential = request.body.isConfidential;
+            // An upload lands open. Someone inside the named audience
+            // flags it afterwards. Filing sets the flag in the same act,
+            // so it asks the same question here: a Member off the team
+            // would otherwise file paper they cannot reach.
+            if (
+              isConfidential &&
+              (await documentConfidentialityWrite(tx, request.user, {
+                contractId: contract.id,
+                contractManagerId: contract.managerId,
+                createdBy: request.user.id,
+                isConfidential,
+              })) !== "allowed"
+            ) {
+              throw httpError(
+                403,
+                "Only an Administrator, the contract's Owner, or someone on its team can file " +
+                  "Confidential paper. Clear the flag, or ask to be named on the contract.",
+              );
+            }
+            await tx.insert(documents).values({
+              id: documentId,
+              title,
+              contractId: contract.id,
+              isConfidential,
+              folderId: null,
+              createdBy: request.user.id,
+            });
+          } else {
+            const [target] = await tx
+              .select({
+                title: documents.title,
+                isConfidential: documents.isConfidential,
+                archivedAt: documents.archivedAt,
+              })
+              .from(documents)
+              .where(
+                and(
+                  eq(documents.id, documentId),
+                  eq(documents.contractId, contract.id),
+                  documentAudienceScope(tx, request.user),
+                ),
+              )
+              .limit(1);
+            if (!target) throw httpError(404, "No document exists with this id.");
+            if (target.archivedAt !== null) {
+              throw httpError(409, "This document is archived. Restore it before changing it.");
+            }
+            title = target.title;
+            isConfidential = target.isConfidential;
+            versionNumber = await nextVersionNumber(tx, documentId);
+          }
+
+          await insertDocumentVersion(tx, {
+            documentId,
+            versionId,
+            versionNumber,
+            fileRef: copied.fileRef,
+            kind: request.body.kind,
+            note:
+              request.body.destination === "new_version" && request.body.note
+                ? request.body.note
+                : null,
+            originalFilename: attachment.filename,
+            mimeType: copied.mimeType,
+            byteSize: copied.byteSize,
+            checksumSha256: copied.checksumSha256,
+            createdBy: request.user.id,
+          });
+
+          if (request.body.destination === "new_document") {
+            await recordActivity(tx, {
+              entityType: "contract",
+              entityId: contract.id,
+              actorId: request.user.id,
+              action: "document.created",
+              visibility: RECORD_ACTIVITY_TIER,
+              payload: {
+                documentId,
+                versionId,
+                title,
+                folderName: null,
+                sourceCommentId: held.id,
+              },
+            });
+            if (contract.primaryDocumentId === null) {
+              await tx
+                .update(contracts)
+                .set({ primaryDocumentId: documentId })
+                .where(eq(contracts.id, contract.id));
+              await recordActivity(tx, {
+                entityType: "contract",
+                entityId: contract.id,
+                actorId: request.user.id,
+                action: "document.primary_set",
+                visibility: RECORD_ACTIVITY_TIER,
+                payload: {
+                  documentId,
+                  title,
+                  fromDocumentId: null,
+                  from: null,
+                  to: title,
+                },
+              });
+            }
+            await app.notifier.documentAdded(tx, {
+              contractId: contract.id,
+              actorId: request.user.id,
+              actorName: request.user.displayName,
+              documentId,
+              documentTitle: title,
+              isConfidential,
+            });
+          } else {
+            await tx
+              .update(documents)
+              .set({ updatedAt: new Date() })
+              .where(eq(documents.id, documentId));
+            await recordActivity(tx, {
+              entityType: "contract",
+              entityId: contract.id,
+              actorId: request.user.id,
+              action: "document.version_added",
+              visibility: RECORD_ACTIVITY_TIER,
+              payload: {
+                documentId,
+                versionId,
+                title,
+                versionNumber,
+                kind: request.body.kind,
+                sourceCommentId: held.id,
+              },
+            });
+            await app.notifier.documentVersionAdded(tx, {
+              contractId: contract.id,
+              actorId: request.user.id,
+              actorName: request.user.displayName,
+              documentId,
+              documentTitle: title,
+              isConfidential,
+              versionId,
+              versionNumber,
+            });
+          }
+
+          await tx
+            .update(commentAttachments)
+            .set({ filedDocumentId: documentId, filedVersionId: versionId })
+            .where(eq(commentAttachments.id, attachment.id));
+          return {
+            comment: await readBack(tx, request.user, held.id),
+            derivation: {
+              versionId,
+              mimeType: copied.mimeType,
+              originalFilename: attachment.filename,
+            },
+          };
+        }),
+      );
+
+      await requestDerivations(app.jobs, request.log, result.derivation);
+      return reply.status(201).send({ comment: result.comment });
+    },
+  );
+
+  app.get(
+    "/comments/:commentId/attachments/:attachmentId",
+    {
+      preHandler: requireCommentReader,
+      schema: {
+        operationId: "downloadCommentAttachment",
+        summary:
+          "Download one live comment attachment through the same audience " +
+          "arm and tier that exposed its comment. The entity reference is " +
+          "the address the reader used for the thread, so a Requester can " +
+          "continue through a converted Request while the stored comment " +
+          "hangs from its Contract. A hidden tier, another attachment, and " +
+          "either tombstone all answer 404",
+        tags: ["comments"],
+        params: CommentParams.extend({ attachmentId: RecordIdSchema }),
+        querystring: EntityRefQuery,
+        produces: ["application/octet-stream"],
+        response: {
+          200: z.any().meta({ type: "string", format: "binary" }),
+          default: problemResponse,
+        },
+      },
+    },
+    async (request, reply) => {
+      const [row] = await app.db
+        .select({
+          id: commentAttachments.id,
+          fileRef: commentAttachments.fileRef,
+          filename: commentAttachments.filename,
+          commentEntityType: comments.entityType,
+          commentEntityId: comments.entityId,
+          visibility: comments.visibility,
+          deletedAt: comments.deletedAt,
+          redactedAt: comments.redactedAt,
+        })
+        .from(commentAttachments)
+        .innerJoin(comments, eq(commentAttachments.commentId, comments.id))
+        .where(
+          and(
+            eq(commentAttachments.id, request.params.attachmentId),
+            eq(commentAttachments.commentId, request.params.commentId),
+          ),
+        )
+        .limit(1);
+      if (!row || row.deletedAt !== null || row.redactedAt !== null) {
+        throw httpError(404, "No comment attachment exists with this id.");
+      }
+      const audience = await reachedThread(app.db, request.user, request.query);
+      if (
+        audience.entityType !== row.commentEntityType ||
+        audience.entityId !== row.commentEntityId ||
+        !audience.tiers.includes(row.visibility)
+      ) {
+        throw httpError(404, "No comment attachment exists with this id.");
+      }
+
+      reply.header("content-type", "application/octet-stream");
+      reply.header("content-disposition", attachmentDisposition(row.filename));
+      reply.header("x-content-type-options", "nosniff");
+      // The blob never changes, but who reaches it does: a tier narrowed
+      // or a comment redacted must not leave a copy in a shared cache.
+      reply.header("cache-control", "private, max-age=0, must-revalidate");
+      return reply.send(await app.storage.get(row.fileRef));
+    },
+  );
 
   app.patch(
     "/comments/:commentId",
@@ -821,7 +1577,7 @@ export const commentsRoutes: FastifyPluginAsyncZod = async (app) => {
         // Nothing changed, so nothing is written: an author who saves the
         // text they started with has not edited it, and the marker would
         // say they had.
-        if (request.body.body === held.body) return readBack(tx, held.id);
+        if (request.body.body === held.body) return readBack(tx, request.user, held.id);
 
         await tx.insert(commentRevisions).values({ commentId: held.id, body: held.body });
         await tx
@@ -838,7 +1594,7 @@ export const commentsRoutes: FastifyPluginAsyncZod = async (app) => {
           // redact can still reach it (CMT-006).
           payload: { commentId: held.id },
         });
-        return readBack(tx, held.id);
+        return readBack(tx, request.user, held.id);
       });
       return { comment };
     },
@@ -870,7 +1626,8 @@ export const commentsRoutes: FastifyPluginAsyncZod = async (app) => {
         }
         // Already gone, by either hand. Nothing to move and nothing to
         // say, so the second delete is the first one's answer.
-        if (held.deletedAt !== null || held.redactedAt !== null) return readBack(tx, held.id);
+        if (held.deletedAt !== null || held.redactedAt !== null)
+          return readBack(tx, request.user, held.id);
 
         await tx.insert(commentRevisions).values({ commentId: held.id, body: held.body });
         // The body moves rather than being hidden: what the row carries
@@ -888,7 +1645,7 @@ export const commentsRoutes: FastifyPluginAsyncZod = async (app) => {
           visibility: held.visibility,
           payload: { commentId: held.id },
         });
-        return readBack(tx, held.id);
+        return readBack(tx, request.user, held.id);
       });
       return { comment };
     },
@@ -903,8 +1660,9 @@ export const commentsRoutes: FastifyPluginAsyncZod = async (app) => {
         summary:
           "Remove what a comment said, for good. An Administrator alone " +
           "may (CMT-005), on anybody's comment including their own. It " +
-          "clears the body, every comment_revisions row, and the list of " +
-          "who the text named — so text posted into the wrong record is " +
+          "clears the body, every comment_revisions row, the list of " +
+          "who the text named, and every attachment row and stored blob — " +
+          "so paper or text posted into the wrong record is " +
           "gone rather than only hidden. This is the reason prior " +
           "versions live outside the append-only log (CMT-006). The row " +
           "stays as a tombstone, because the thread around it still has " +
@@ -917,12 +1675,23 @@ export const commentsRoutes: FastifyPluginAsyncZod = async (app) => {
     async (request) => {
       const comment = await app.db.transaction(async (tx) => {
         const held = await heldComment(tx, request.user, request.params.commentId);
-        if (held.redactedAt !== null) return readBack(tx, held.id);
+        if (held.redactedAt !== null) return readBack(tx, request.user, held.id);
 
-        // The three places the text and its addressees live. All of them
+        // Read the references before clearing the rows. Storage deletion
+        // follows DOC-010's recorded ordering: inside the transaction and
+        // before commit, so a successful redact cannot strand bytes no
+        // row remains to name.
+        const paper = await tx
+          .select({ fileRef: commentAttachments.fileRef })
+          .from(commentAttachments)
+          .where(eq(commentAttachments.commentId, held.id));
+        for (const attachment of paper) await app.storage.delete(attachment.fileRef);
+
+        // The places the text, its addressees, and its paper live. All
         // are ordinary application data, which is the whole point.
         await tx.delete(commentRevisions).where(eq(commentRevisions.commentId, held.id));
         await tx.delete(commentMentions).where(eq(commentMentions.commentId, held.id));
+        await tx.delete(commentAttachments).where(eq(commentAttachments.commentId, held.id));
         await tx
           .update(comments)
           .set({ body: "", redactedAt: new Date() })
@@ -935,7 +1704,7 @@ export const commentsRoutes: FastifyPluginAsyncZod = async (app) => {
           visibility: held.visibility,
           payload: { commentId: held.id },
         });
-        return readBack(tx, held.id);
+        return readBack(tx, request.user, held.id);
       });
       return { comment };
     },

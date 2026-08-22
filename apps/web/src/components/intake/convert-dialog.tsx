@@ -71,7 +71,7 @@ import { Button } from "../ui/button";
 import { Dialog, DialogContent, DialogTitle } from "../ui/dialog";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
-import { customFieldValueText } from "./custom-field-value";
+import { customFieldValueText, isArchivedCustomFieldReference } from "./custom-field-value";
 
 /** The error line's id, named on the box a refusal is about so a screen
  * reader reads the two together (DES-011). */
@@ -117,9 +117,9 @@ export function ConvertDialog({
   customFieldRefs: StaffRequestFieldRefs;
   /** The live contract types, each with the fields it attaches. */
   contractTypes: readonly ContractTypeOption[];
-  /** What a required `user` gap field offers. */
+  /** What a `user` creation field offers. */
   people: readonly FieldReference[];
-  /** What a required `entity` gap field offers — the M7 registry. */
+  /** What an `entity` creation field offers — the M7 registry. */
   entities: readonly FieldReference[];
   busy: boolean;
   onClose: () => void;
@@ -150,7 +150,7 @@ export function ConvertDialog({
    * would take back an edit. */
   const [pickedId, setPickedId] = useState(confirmed?.id ?? "");
   const [title, setTitle] = useState(request.summary);
-  /** The gap fields' drafts, keyed by slug. They survive switching
+  /** The creation fields' drafts, keyed by slug. They survive switching
    * types and back — a value typed once should not have to be typed
    * again because somebody checked another type on the way. */
   const [drafts, setDrafts] = useState<Record<string, CustomFieldDraft>>({});
@@ -170,7 +170,15 @@ export function ConvertDialog({
 
   /** What the form already answered that the target type also attaches:
    * the values conversion carries, stated rather than re-typed. */
-  const carries = targetFields.filter((field) => isAnswered(request.customFields[field.slug]));
+  const archivedCarries = targetFields.filter(
+    (field) =>
+      isAnswered(request.customFields[field.slug]) &&
+      isArchivedCustomFieldReference(field, request.customFields[field.slug]!, customFieldRefs),
+  );
+  const archivedCarrySlugs = new Set(archivedCarries.map((field) => field.slug));
+  const carries = targetFields.filter(
+    (field) => isAnswered(request.customFields[field.slug]) && !archivedCarrySlugs.has(field.slug),
+  );
   /** Whether the two lists below can be drawn at all. Until a target
    * type is picked there is nothing to compare a collected value
    * against, and a list that claimed every value was staying behind
@@ -185,8 +193,15 @@ export function ConvertDialog({
       !targetFields.some((attached) => attached.slug === field.slug),
   );
   /** The fields the target type demands that no collected value answers
-   * — the gaps, and the only boxes on this dialog beside the title. */
+   * — the gaps that need creation boxes beside the title. */
   const gaps = unansweredRequired(targetFields, request.customFields);
+  const gapSlugs = new Set(gaps.map((field) => field.slug));
+  /** Creation boxes, in the target type's order. A missing required
+   * value and an archived carry use the same control for two reasons
+   * (#437); the latter is the only answered value triage may replace. */
+  const repairs = targetFields.filter(
+    (field) => gapSlugs.has(field.slug) || archivedCarrySlugs.has(field.slug),
+  );
   /** Re-target: this Request's front door promised something other than
    * a contract, or promised nothing at all (DD-018 rule 5). */
   const reTargeting = request.requestType.targetModule !== "contract";
@@ -218,7 +233,7 @@ export function ConvertDialog({
     // them. The seam refuses an empty one too — this saves a round trip
     // and names the field (DES-035 clause 12).
     const customFields: Record<string, CustomFieldValue> = {};
-    for (const field of gaps) {
+    for (const field of repairs) {
       const parsed = toValue(field, drafts[field.slug] ?? emptyDraft(field));
       if ("error" in parsed) {
         setError({
@@ -236,13 +251,21 @@ export function ConvertDialog({
       if (parsed.value === null) {
         setError({
           onTitle: false,
-          message: intl.formatMessage(
-            {
-              id: "contracts.form.fieldMissing",
-              defaultMessage: "Fill {field} — this contract type requires it.",
-            },
-            { field: field.displayName },
-          ),
+          message: archivedCarrySlugs.has(field.slug)
+            ? intl.formatMessage(
+                {
+                  id: "convert.archivedReferenceMissing",
+                  defaultMessage: "Pick a live value for {field}.",
+                },
+                { field: field.displayName },
+              )
+            : intl.formatMessage(
+                {
+                  id: "contracts.form.fieldMissing",
+                  defaultMessage: "Fill {field} — this contract type requires it.",
+                },
+                { field: field.displayName },
+              ),
         });
         return;
       }
@@ -535,8 +558,10 @@ export function ConvertDialog({
             {/* The target type's hard-required fields, grown into the
                 dialog the moment there is a target (CTR-016/MTR-014). A
                 record cannot be born missing what its type demands, and
-                this is where somebody can answer it. */}
-            {gaps.map((field) => (
+                this is where somebody can answer it. An archived carry
+                draws the same box (#437): the seam refuses the dead id,
+                so a live replacement is work Convert needs too. */}
+            {repairs.map((field) => (
               <div key={field.slug} className="flex flex-col gap-1.5">
                 <Label id={`convert-${field.slug}-label`} htmlFor={`convert-${field.slug}`}>
                   {field.displayName}
@@ -561,11 +586,27 @@ export function ConvertDialog({
                   }}
                 />
                 <p id={`convert-${field.slug}-help`} className="text-xs text-muted">
-                  {field.description ?? (
+                  {archivedCarrySlugs.has(field.slug) ? (
                     <FormattedMessage
-                      id="convert.gapNote"
-                      defaultMessage="Required on this contract type. The form did not collect it."
+                      id="convert.archivedReferenceNote"
+                      defaultMessage="{value} is archived. Pick a live {fieldType, select, user {person} entity {entity} other {value}} to convert."
+                      values={{
+                        value: customFieldValueText(
+                          intl,
+                          field,
+                          request.customFields[field.slug]!,
+                          customFieldRefs,
+                        ),
+                        fieldType: field.fieldType,
+                      }}
                     />
+                  ) : (
+                    (field.description ?? (
+                      <FormattedMessage
+                        id="convert.gapNote"
+                        defaultMessage="Required on this contract type. The form did not collect it."
+                      />
+                    ))
                   )}
                 </p>
               </div>

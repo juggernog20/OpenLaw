@@ -89,7 +89,7 @@ import { recreateContractFolderPath } from "../../lib/folders";
 import {
   DOCUMENT_VERSION_KINDS,
   uploadContractDocument,
-  type DocumentVersionKind,
+  type HandSetDocumentVersionKind,
 } from "../../lib/documents";
 
 /**
@@ -188,7 +188,7 @@ export function BatchDialog({
     defaultMessage: "/",
   });
   const [rows, setRows] = useState<BatchRow[]>(() => batchOf(files));
-  const [kind, setKind] = useState<DocumentVersionKind>("draft_ours");
+  const [kind, setKind] = useState<HandSetDocumentVersionKind>("draft_ours");
   /** Whether Import has been pressed. Before it, nothing has been sent
    * and Cancel creates nothing. */
   const [started, setStarted] = useState(false);
@@ -515,7 +515,12 @@ export function BatchDialog({
                 value={kind}
                 className={CONTROL_CLASS}
                 aria-describedby="batch-kind-help"
-                onChange={(event) => setKind(event.target.value as DocumentVersionKind)}
+                onChange={(event) => {
+                  const picked = DOCUMENT_VERSION_KINDS.find(
+                    (option) => option === event.target.value,
+                  );
+                  if (picked) setKind(picked);
+                }}
               >
                 {DOCUMENT_VERSION_KINDS.map((option) => (
                   <option key={option} value={option}>
@@ -525,7 +530,8 @@ export function BatchDialog({
                         defaultMessage:
                           "{kind, select, draft_ours {Draft · ours} draft_theirs {Draft · theirs} " +
                           "redline_theirs {Redline · theirs} redline_ours {Redline · ours} " +
-                          "executed {Executed} amendment {Amendment} other {Unknown}}",
+                          "executed {Executed} amendment {Amendment} " +
+                          "generated_redline {Generated redline} other {Unknown}}",
                       },
                       { kind: option },
                     )}

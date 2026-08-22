@@ -43,6 +43,7 @@ import {
   type StubCall,
 } from "../testing/helpers";
 import type { CustomFieldValue, CustomFieldValues } from "../lib/custom-fields";
+import type { Comment } from "../lib/comments";
 
 const ADMIN = {
   id: "u1",
@@ -2192,14 +2193,14 @@ describe("the contract record's comment applet (M9/2)", () => {
   function comment(
     id: string,
     body: string,
-    visibility: string,
+    visibility: Comment["visibility"],
     author = AUTHOR,
     createdAt = "2026-08-12T09:00:00.000Z",
     mentions: { id: string; displayName: string }[] = [],
     /** M9/4's three states: edited, and removed by either hand. A plain
      * comment is none of them. */
     marks: { editedAt?: string; deletedAt?: string; redactedAt?: string } = {},
-  ) {
+  ): Comment {
     return {
       id,
       entityType: "contract",
@@ -2242,6 +2243,7 @@ describe("the contract record's comment applet (M9/2)", () => {
     /** What the badge starts at (M9/5). Zero is the common case, so
      * every suite that is not about the badge draws none. */
     initialUnread = 0,
+    filingFailure?: string,
   ) {
     let thread = initial;
     let unread = initialUnread;
@@ -2252,6 +2254,8 @@ describe("the contract record's comment applet (M9/2)", () => {
     const corrections: { method: string; id: string; body?: unknown }[] = [];
     /** Every record the panel said it had read (M9/5). */
     const marksRead: unknown[] = [];
+    /** CMT-011 filing bodies, in the order the attachment route saw them. */
+    const filings: unknown[] = [];
 
     /** Puts a corrected row back in the thread, in its own place. A
      * tombstone that moved would break the thread it is holding open. */
@@ -2273,6 +2277,39 @@ describe("the contract record's comment applet (M9/2)", () => {
         marksRead.push(call.body);
         unread = 0;
         return json(200, { unread });
+      }
+      const filing = /^\/api\/v1\/comments\/([^/]+)\/attachments\/([^/]+)\/file$/.exec(
+        call.url.pathname,
+      );
+      if (filing && call.method === "POST") {
+        const row = thread.find((comment) => comment.id === filing[1]);
+        const attachment = row?.attachments?.find((paper) => paper.id === filing[2]);
+        if (!row || !attachment) return problem(404, "No comment attachment exists with this id.");
+        if (attachment.filed) return problem(409, "This attachment was already filed.");
+        if (filingFailure) return problem(409, filingFailure);
+        const body = call.body as {
+          destination: "new_document" | "new_version";
+          name?: string;
+          documentId?: string;
+        };
+        filings.push(body);
+        const updated = {
+          ...row,
+          attachments: row.attachments?.map((paper) =>
+            paper.id === attachment.id
+              ? {
+                  ...paper,
+                  filed: {
+                    documentId: body.documentId ?? "doc-filed",
+                    documentTitle: body.name ?? "Orion MSA",
+                    versionId: "ver-filed",
+                    versionNumber: body.destination === "new_version" ? 2 : 1,
+                  },
+                }
+              : paper,
+          ),
+        };
+        return replace(updated);
       }
       // The three corrections, each addressed to one comment by id.
       const correction = /^\/api\/v1\/comments\/([^/]+)(\/redact)?$/.exec(call.url.pathname);
@@ -2310,28 +2347,49 @@ describe("the contract record's comment applet (M9/2)", () => {
       }
       if (call.method === "POST") {
         posts.push(call.body);
-        const body = call.body as {
+        const form = call.body instanceof FormData ? call.body : null;
+        const body = (
+          form
+            ? {
+                body: String(form.get("body")),
+                visibility: String(form.get("visibility")),
+                mentions: form.has("mentions")
+                  ? (JSON.parse(String(form.get("mentions"))) as string[])
+                  : [],
+              }
+            : call.body
+        ) as {
           body: string;
           visibility: string;
           mentions?: string[];
         };
-        const posted = comment(
-          `c-new-${thread.length}`,
-          body.body,
-          body.visibility,
-          AUTHOR,
-          "2026-08-12T12:00:00.000Z",
-          (body.mentions ?? []).map((id) => ({
-            id,
-            displayName: candidates.find((person) => person.id === id)!.displayName,
-          })),
-        );
+        const posted = {
+          ...comment(
+            `c-new-${thread.length}`,
+            body.body,
+            body.visibility as Comment["visibility"],
+            AUTHOR,
+            "2026-08-12T12:00:00.000Z",
+            (body.mentions ?? []).map((id) => ({
+              id,
+              displayName: candidates.find((person) => person.id === id)!.displayName,
+            })),
+          ),
+          ...(form
+            ? {
+                attachments: (form.getAll("file") as File[]).map((file, index) => ({
+                  id: `a-new-${index}`,
+                  filename: file.name,
+                })),
+              }
+            : {}),
+        };
         thread = [...thread, posted];
         return json(201, { comment: posted });
       }
       return undefined;
     };
-    return { handler, posts, reads, corrections, marksRead };
+    return { handler, posts, reads, corrections, marksRead, filings };
   }
 
   /** The record page's own seam plus the thread's, in that order. */
@@ -2481,6 +2539,207 @@ describe("the contract record's comment applet (M9/2)", () => {
     expect(within(rows[1]!).getByText("Legal only")).toBeInTheDocument();
     // The box empties, so the next comment starts clean.
     expect(within(panel).getByLabelText("New comment")).toHaveValue("");
+  });
+
+  it("shows attachment rows and posts removable chosen files from the applet", async () => {
+    const user = userEvent.setup();
+    const comments = commentsApi([
+      {
+        ...comment("c-paper", "Counterparty markup.", "working_team"),
+        attachments: [{ id: "a-paper", filename: "counterparty markup.pdf" }],
+      },
+    ]);
+    stubApi({ signedIn: MEMBER, extra: pageApi(comments) });
+    renderAt("/contracts/42");
+    await openChat(user);
+
+    expect(await screen.findByRole("link", { name: "counterparty markup.pdf" })).toHaveAttribute(
+      "href",
+      "/api/v1/comments/c-paper/attachments/a-paper?entityType=contract&entityId=c1",
+    );
+    const panel = screen.getByRole("complementary", { name: "Comments" });
+    const input = within(panel).getByLabelText("Choose files for this comment");
+    await user.upload(input, [
+      new File(["one"], "round-one.pdf"),
+      new File(["two"], "round-two.pdf"),
+    ]);
+    const chosen = within(panel).getByRole("list", {
+      name: "Files attached to this comment",
+    });
+    await user.click(within(chosen).getByRole("button", { name: "Remove round-one.pdf" }));
+    await user.type(within(panel).getByLabelText("New comment"), "Our response.");
+    await user.click(within(panel).getByRole("button", { name: "Comment" }));
+
+    await waitFor(() => expect(comments.posts).toHaveLength(1));
+    const form = comments.posts[0] as FormData;
+    expect(form).toBeInstanceOf(FormData);
+    expect(form.get("entityType")).toBe("contract");
+    expect(form.get("entityId")).toBe("c1");
+    expect((form.getAll("file") as File[]).map((file) => file.name)).toEqual(["round-two.pdf"]);
+    expect(await within(panel).findByRole("link", { name: "round-two.pdf" })).toBeInTheDocument();
+    expect(
+      within(panel).queryByRole("list", { name: "Files attached to this comment" }),
+    ).toBeNull();
+  });
+
+  it("files a Legal Only attachment as a new Document with Confidential proposed on", async () => {
+    const user = userEvent.setup();
+    const comments = commentsApi([
+      {
+        ...comment("c-file", "First paper.", "legal_only"),
+        attachments: [{ id: "a-file", filename: "first-draft.pdf" }],
+      },
+    ]);
+    stubApi({ signedIn: MEMBER, extra: pageApi(comments) });
+    renderAt("/contracts/42");
+    await openChat(user);
+
+    const panel = await screen.findByRole("complementary", { name: "Comments" });
+    await user.click(within(panel).getByRole("button", { name: "File" }));
+    const dialog = await screen.findByRole("dialog", { name: "File attachment" });
+    expect(within(dialog).getByLabelText("Document name")).toHaveValue("first-draft.pdf");
+    const confidential = within(dialog).getByRole("switch", {
+      name: "Confidential — restrict to the contract team",
+    });
+    expect(confidential).toBeChecked();
+    // The proposal is not a mandate: this filer clears it before filing.
+    await user.click(confidential);
+    await user.selectOptions(within(dialog).getByLabelText("Kind"), "draft_theirs");
+    await user.clear(within(dialog).getByLabelText("Document name"));
+    await user.type(within(dialog).getByLabelText("Document name"), "Counterparty paper");
+    await user.click(within(dialog).getByRole("button", { name: "File" }));
+
+    await waitFor(() => {
+      expect(comments.filings).toEqual([
+        {
+          destination: "new_document",
+          kind: "draft_theirs",
+          name: "Counterparty paper",
+          isConfidential: false,
+        },
+      ]);
+    });
+    expect(
+      await within(panel).findByRole("link", {
+        name: "Counterparty paper, version 1",
+      }),
+    ).toHaveAttribute("href", "/contracts/42/documents");
+    expect(within(panel).queryByRole("button", { name: "File" })).not.toBeInTheDocument();
+  });
+
+  it("files another attachment as a new Version and proposes Confidential off outside Legal Only", async () => {
+    const user = userEvent.setup();
+    const comments = commentsApi([
+      {
+        ...comment("c-version", "Our markup.", "working_team"),
+        attachments: [{ id: "a-version", filename: "our-counter.docx" }],
+      },
+    ]);
+    const existing = {
+      id: "doc-existing",
+      title: "Orion MSA",
+      description: null,
+      isPrimary: true,
+      versions: [],
+      archivedAt: null,
+      isConfidential: false,
+      folderId: null,
+      createdBy: { id: "u2", displayName: "Nadia Counsel", image: null, archived: false },
+      createdAt: "2026-08-11T09:00:00.000Z",
+      updatedAt: "2026-08-11T09:00:00.000Z",
+    };
+    const record = recordApi(contractRow());
+    stubApi({
+      signedIn: MEMBER,
+      extra: (call: StubCall) =>
+        comments.handler(call) ??
+        (call.url.pathname === "/api/v1/contracts/42/documents" && call.method === "GET"
+          ? json(200, { documents: [existing], nextCursor: null })
+          : record.handler(call)),
+    });
+    renderAt("/contracts/42");
+    await openChat(user);
+
+    const panel = await screen.findByRole("complementary", { name: "Comments" });
+    await user.click(within(panel).getByRole("button", { name: "File" }));
+    const dialog = await screen.findByRole("dialog", { name: "File attachment" });
+    expect(
+      within(dialog).getByRole("switch", {
+        name: "Confidential — restrict to the contract team",
+      }),
+    ).not.toBeChecked();
+    await user.selectOptions(within(dialog).getByLabelText("Destination"), "new_version");
+    expect(within(dialog).getByLabelText("Document")).toHaveValue("doc-existing");
+    await user.selectOptions(within(dialog).getByLabelText("Kind"), "redline_ours");
+    await user.type(within(dialog).getByLabelText("Note"), "Held the liability cap.");
+    await user.click(within(dialog).getByRole("button", { name: "File" }));
+
+    await waitFor(() => {
+      expect(comments.filings).toEqual([
+        {
+          destination: "new_version",
+          documentId: "doc-existing",
+          kind: "redline_ours",
+          note: "Held the liability cap.",
+        },
+      ]);
+    });
+    expect(await within(panel).findByRole("link", { name: "Orion MSA, version 2" })).toBeVisible();
+  });
+
+  it("keeps a filing refusal in the dialog", async () => {
+    const user = userEvent.setup();
+    const row = {
+      ...comment("c-refused", "Cannot file this.", "working_team"),
+      attachments: [{ id: "a-refused", filename: "refused.pdf" }],
+    };
+    const refused = commentsApi(
+      [row],
+      CANDIDATES,
+      0,
+      "This attachment was already filed to Orion MSA, version 2.",
+    );
+    stubApi({ signedIn: MEMBER, extra: pageApi(refused) });
+    renderAt("/contracts/42");
+    await openChat(user);
+    const memberPanel = await screen.findByRole("complementary", { name: "Comments" });
+    await user.click(within(memberPanel).getByRole("button", { name: "File" }));
+    const dialog = await screen.findByRole("dialog", { name: "File attachment" });
+    await user.click(within(dialog).getByRole("button", { name: "File" }));
+    expect(
+      await within(dialog).findByText("This attachment was already filed to Orion MSA, version 2."),
+    ).toBeVisible();
+  });
+
+  it("shows the filed marker but no File action to a Contributor", async () => {
+    const user = userEvent.setup();
+    const comments = commentsApi([
+      {
+        ...comment("c-filed", "The filed round.", "working_team"),
+        attachments: [
+          {
+            id: "a-filed",
+            filename: "round.pdf",
+            filed: {
+              documentId: "doc-round",
+              documentTitle: "Negotiation",
+              versionId: "ver-round",
+              versionNumber: 2,
+            },
+          },
+        ],
+      },
+    ]);
+    const record = recordApi(contractRow(), [person("u1", "creator"), person("u3", "contributor")]);
+    stubApi({
+      signedIn: CONTRIBUTOR,
+      extra: (call: StubCall) => comments.handler(call) ?? record.handler(call),
+    });
+    renderAt("/contracts/42");
+    await openChat(user);
+    const panel = await screen.findByRole("complementary", { name: "Comments" });
+    expect(within(panel).queryByRole("button", { name: "File" })).not.toBeInTheDocument();
+    expect(within(panel).getByRole("link", { name: "Negotiation, version 2" })).toBeVisible();
   });
 
   it("gives a Contributor two segments and no trace of a Legal Only comment", async () => {
@@ -4541,6 +4800,22 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4, M11/5)",
         current = current.map((row) => (row === target ? next : row));
         return json(201, { document: next });
       }
+      // A version-kind correction changes one field on one round and
+      // answers the document with the chain in the same order.
+      const corrected = /^\/api\/v1\/documents\/([^/]+)\/versions\/([^/]+)$/.exec(pathname);
+      if (corrected && call.method === "PATCH") {
+        writes.push({ url: pathname, body: call.body });
+        const target = current.find((row) => row.id === corrected[1]);
+        if (!target) return problem(404, "No document exists with this reference.");
+        const next = {
+          ...target,
+          versions: (target.versions as Record<string, unknown>[]).map((row) =>
+            row.id === corrected[2] ? { ...row, kind: (call.body as { kind: string }).kind } : row,
+          ),
+        };
+        current = current.map((row) => (row === target ? next : row));
+        return json(200, { document: next });
+      }
       // Which document is the instrument (CTR-014). The seam answers
       // the record's whole paper, because two rows move: the one that
       // takes the designation and the one that loses it.
@@ -4711,10 +4986,57 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4, M11/5)",
     renderAt("/contracts/42/documents");
 
     const section = await documentsSection();
-    expect(within(section).getByText("Draft · theirs")).toBeVisible();
-    // And it is not read as either kind it used to have to borrow.
-    expect(within(section).queryByText("Redline · theirs")).not.toBeInTheDocument();
-    expect(within(section).queryByText("Draft · ours")).not.toBeInTheDocument();
+    expect(
+      within(section).getByRole("combobox", {
+        name: "Kind of version 1 of Orion_MSA_2026_their_paper.docx",
+      }),
+    ).toHaveValue("draft_theirs");
+  });
+
+  it("lets Member+ correct a version kind from the pill", async () => {
+    const api = documentsApi([CHAIN]);
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42/documents");
+    const user = userEvent.setup();
+
+    const section = await documentsSection();
+    const picker = within(section).getByRole("combobox", {
+      name: "Kind of version 3 of Orion Cloud — master services agreement",
+    });
+    expect(
+      within(picker)
+        .getAllByRole("option")
+        .map((option) => option.textContent),
+    ).toEqual([
+      "Draft · ours",
+      "Draft · theirs",
+      "Redline · theirs",
+      "Redline · ours",
+      "Amendment",
+      "Executed",
+    ]);
+
+    await user.selectOptions(picker, "executed");
+
+    await waitFor(() => expect(api.writes).toHaveLength(1));
+    expect(api.writes[0]).toEqual({
+      url: "/api/v1/documents/doc-3/versions/ver-c",
+      body: { kind: "executed" },
+    });
+    await waitFor(() => expect(picker).toHaveValue("executed"));
+  });
+
+  it("shows a generated redline but never offers a picker for it", async () => {
+    const generated = {
+      ...DRAFT,
+      versions: [version({ kind: "generated_redline" })],
+    };
+    stubApi({ signedIn: MEMBER, extra: documentsApi([generated]).handler });
+    renderAt("/contracts/42/documents");
+
+    const section = await documentsSection();
+    expect(within(section).getByText("Generated redline")).toBeVisible();
+    expect(within(section).queryByRole("combobox")).not.toBeInTheDocument();
   });
 
   it("says so plainly when the record has no paper on it", async () => {
@@ -4999,7 +5321,7 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4, M11/5)",
       url: "/api/v1/documents/doc-3/executed-version:POST",
       body: { versionId: "ver-b" },
     });
-    expect(await within(section).findByText("Executed")).toBeVisible();
+    expect(await within(section).findByText("Executed", { selector: "span" })).toBeVisible();
 
     // The same menu, and the item's own label carries the direction
     // now — "Unmark" once the round is pinned.
@@ -5019,7 +5341,9 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4, M11/5)",
     expect(api.writes[1]!.url).toBe("/api/v1/documents/doc-3/executed-version:DELETE");
     // Every round is still there: the pin is one column on the
     // document, and clearing it takes nothing else with it.
-    await waitFor(() => expect(within(section).queryByText("Executed")).not.toBeInTheDocument());
+    await waitFor(() =>
+      expect(within(section).queryByText("Executed", { selector: "span" })).not.toBeInTheDocument(),
+    );
     expect(within(section).getByRole("button", { name: "round_2.docx" })).toBeInTheDocument();
   });
 
@@ -5088,6 +5412,7 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4, M11/5)",
     // grid arrives in M23.
     expect(within(section).queryByRole("button", { name: "Upload" })).not.toBeInTheDocument();
     expect(within(section).queryByRole("button", { name: /^Actions for/ })).not.toBeInTheDocument();
+    expect(within(section).queryByRole("combobox")).not.toBeInTheDocument();
     expect(within(section).queryByRole("switch")).not.toBeInTheDocument();
   });
 
@@ -5184,6 +5509,7 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4, M11/5)",
     // other write on an archived document is refused until it is
     // restored, so a control for one would be a dead end — and the
     // erasure is the Administrator's, not theirs.
+    expect(within(section).queryByRole("combobox")).not.toBeInTheDocument();
     expect(await menuVerbs(user, section, "Orion_MSA_2026_draft.docx")).toEqual(["Restore"]);
     await user.keyboard("{Escape}");
   });
@@ -6432,7 +6758,7 @@ describe("the folder tree on the contract record (M13/2, DES-033)", () => {
     renderAt("/contracts/42/documents");
 
     const section = await documentsSection();
-    await within(section).findByText("Executed");
+    await within(section).findByRole("button", { name: "Expand Executed" });
     // Every folder opens (M13/3). "Empty" may be a folder whose
     // contents this viewer cannot see, so a chevron drawn only on the
     // folders that hold something would be the surface telling the two
@@ -6851,7 +7177,7 @@ describe("filing documents into folders (M13/3, DES-033)", () => {
     const user = userEvent.setup();
 
     const section = await documentsSection();
-    await within(section).findByText("Executed");
+    await within(section).findByRole("button", { name: "Expand Executed" });
     // Nothing is read for a folder nobody opened: a heavy record stays a
     // short table until somebody asks.
     expect(api.reads).not.toContain("f-1");

@@ -26,7 +26,7 @@
  */
 
 import { z } from "zod";
-import { comments, commentMentions, type CommentVisibility } from "@openlaw/db";
+import { commentAttachments, comments, commentMentions, type CommentVisibility } from "@openlaw/db";
 import { MAX_COMMENT_BODY_LENGTH } from "@openlaw/shared";
 import type { AuthenticatedUser } from "../../auth/guards.js";
 import { recordActivity } from "../../lib/activity.js";
@@ -34,7 +34,8 @@ import type { Notifier, NotifyingTransaction } from "../../lib/notifications/not
 import { notifyCommentPosted, type CommentAudience } from "./audience.js";
 
 /** Plain text, capped where every other free-text field is capped.
- * Rich text, attachments, and reactions are deliberately out.
+ * Rich text and reactions are deliberately out; CMT-011 paper travels
+ * beside this body rather than changing its format.
  *
  * Shared rather than restated, because a Request's closing reply is an
  * ordinary comment and two ceilings for one column would let one route
@@ -44,6 +45,8 @@ import { notifyCommentPosted, type CommentAudience } from "./audience.js";
 export const CommentBodySchema = z.string().trim().min(1).max(MAX_COMMENT_BODY_LENGTH);
 
 export interface NewComment {
+  /** Pre-minted when attachments need storage keys before the row exists. */
+  id?: string;
   /** The thread, and the standing that admitted this author to it. Both
    * the record's id and the tiers come from the arm that resolved it,
    * never from the wire. */
@@ -57,6 +60,13 @@ export interface NewComment {
   /** Who the comment addresses, by id, deduplicated. Omit where it names
    * nobody. */
   mentions?: readonly string[];
+  /** Blobs already written through the storage seam. Their rows commit
+   * with the comment, mentions, activity, and events. */
+  attachments?: readonly {
+    id: string;
+    fileRef: string;
+    filename: string;
+  }[];
 }
 
 /**
@@ -84,6 +94,7 @@ export async function postComment(
   const [created] = await tx
     .insert(comments)
     .values({
+      id: comment.id,
       entityType: audience.entityType,
       entityId: audience.entityId,
       authorId: author.id,
@@ -92,6 +103,15 @@ export async function postComment(
     })
     .returning({ id: comments.id });
   const commentId = created!.id;
+  if (comment.attachments && comment.attachments.length > 0) {
+    await tx.insert(commentAttachments).values(
+      comment.attachments.map((attachment) => ({
+        ...attachment,
+        commentId,
+        uploadedBy: author.id,
+      })),
+    );
+  }
   if (mentioned.length > 0) {
     await tx.insert(commentMentions).values(mentioned.map((userId) => ({ commentId, userId })));
   }

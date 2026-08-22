@@ -1111,7 +1111,7 @@ export interface paths {
     };
     get?: never;
     put?: never;
-    /** Attach one file to the caller's own Request (INT-002). The bytes ride the storage seam documents upload through and the row is a `request_attachments` row — nothing enters `documents`, because a Request is not a document owner (DOC-008) and promotion is conversion's (M21). One file per call, sent as multipart/form-data under `file`. A Request the caller did not submit answers 404, and a file past the 20-attachment bound is refused */
+    /** Attach one file to the caller's own Request (INT-002). The bytes ride the storage seam documents upload through and the row is a `request_attachments` row — nothing enters `documents`, because a Request is not a document owner (DOC-008) and promotion is conversion's (M21). One file per call, sent as multipart/form-data under `file`. A Request the caller did not submit answers 404; a dispositioned Request refuses 409 and names its thread; and a file past the 20-attachment bound is refused */
     post: operations["attachToRequest"];
     delete?: never;
     options?: never;
@@ -1891,12 +1891,29 @@ export interface paths {
     };
     get?: never;
     put?: never;
-    /** Append the next version to an existing document (DOC-001). The number is assigned under the owning contract's row lock, so two revisions uploaded at the same moment take consecutive numbers rather than colliding, and the chain runs 1..n with no gaps. The version carries one of the five CTR-014 kinds and, when the uploader wrote one, a short note saying what changed in this round. Nothing about the versions already in the chain is touched: they are immutable, and a correction is another version. Appends document.version_added on the owning contract (DD-017). The kind and note fields must be sent before the file part. An archived contract takes no new paper until it is restored. A document on a contract the uploader cannot reach answers 404, exactly as one that does not exist */
+    /** Append the next version to an existing document (DOC-001). The number is assigned under the owning contract's row lock, so two revisions uploaded at the same moment take consecutive numbers rather than colliding, and the chain runs 1..n with no gaps. The version carries one of the six hand-set CTR-014 kinds and, when the uploader wrote one, a short note saying what changed in this round. Nothing about the versions already in the chain is touched: a file correction is another version, while the kind has its own one-column PATCH. Appends document.version_added on the owning contract (DD-017). The kind and note fields must be sent before the file part. An archived contract takes no new paper until it is restored. A document on a contract the uploader cannot reach answers 404, exactly as one that does not exist */
     post: operations["uploadDocumentVersion"];
     delete?: never;
     options?: never;
     head?: never;
     patch?: never;
+    trace?: never;
+  };
+  "/api/v1/documents/{documentId}/versions/{versionId}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    /** Correct one version's kind (CTR-014). This is the only per-version update. It changes only the kind: the bytes, number, note, author, order, and executed pin stay where they are. The target must be one of the six hand-set kinds. A generated redline cannot be corrected or selected because its kind records how the file was made. Appends document.version_kind_changed on the owning contract with the kind before and after (DD-017). Member+ may correct a kind; a Contributor who reaches the record is refused 403 */
+    patch: operations["updateDocumentVersionKind"];
     trace?: never;
   };
   "/api/v1/documents/{documentId}": {
@@ -2151,7 +2168,7 @@ export interface paths {
     /** One record's comment thread, flat and oldest first (CMT-002), filtered at query time to the DD-016 tiers the viewer is in the room for. A tier they are not in is omitted entirely — no placeholder, no gap, and no count. A record they cannot reach answers 404, exactly as one that does not exist. Paged from a server-fixed page size, newest end first (CTR-024): the page reads oldest-first inside itself, and `nextCursor` walks back into the older thread */
     get: operations["listComments"];
     put?: never;
-    /** Post a comment on a record at one of the DD-016 tiers. The seam refuses a tier the poster is not in the room for, so a Contributor cannot post Legal Only whatever the client sends, and it refuses a comment whose mentions outrun its tier (CMT-007), so the composer's confirmation explains the promotion rather than enforcing it. The tier is immutable afterwards (CMT-005) — there is no route that changes it. Writes one comment_mentions row per person named, and appends a comment.posted activity entry at the comment's own tier, all in the same transaction */
+    /** Post a comment on a record at one of the DD-016 tiers. The seam refuses a tier the poster is not in the room for, so a Contributor cannot post Legal Only whatever the client sends, and it refuses a comment whose mentions outrun its tier (CMT-007), so the composer's confirmation explains the promotion rather than enforcing it. The tier is immutable afterwards (CMT-005) — there is no route that changes it. Writes one comment_mentions row per person named, and appends a comment.posted activity entry at the comment's own tier, all in the same transaction. Accepts the existing JSON body or multipart/form-data carrying the same fields and up to five `file` parts. Stored blobs are removed if any later part or transactional write is refused */
     post: operations["postComment"];
     delete?: never;
     options?: never;
@@ -2210,6 +2227,40 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/v1/comments/{commentId}/attachments/{attachmentId}/file": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** File one live comment attachment onto the record (CMT-011), either as a new root Document or as the next Version on a named chain. The comment's audience is the reach gate; a never-converted Request owns no Documents and is refused. The bytes are copied to a key minted from the destination ids, their media type is read from the blob, and the shared Version insert records every derivation an upload owes. The paper and the attachment marker commit together under the Contract row lock, so the same attachment cannot grow two rounds */
+    post: operations["fileCommentAttachment"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/comments/{commentId}/attachments/{attachmentId}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Download one live comment attachment through the same audience arm and tier that exposed its comment. The entity reference is the address the reader used for the thread, so a Requester can continue through a converted Request while the stored comment hangs from its Contract. A hidden tier, another attachment, and either tombstone all answer 404 */
+    get: operations["downloadCommentAttachment"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/v1/comments/{commentId}": {
     parameters: {
       query?: never;
@@ -2237,7 +2288,7 @@ export interface paths {
     };
     get?: never;
     put?: never;
-    /** Remove what a comment said, for good. An Administrator alone may (CMT-005), on anybody's comment including their own. It clears the body, every comment_revisions row, and the list of who the text named — so text posted into the wrong record is gone rather than only hidden. This is the reason prior versions live outside the append-only log (CMT-006). The row stays as a tombstone, because the thread around it still has to read. Appends comment.redacted at the comment's own tier */
+    /** Remove what a comment said, for good. An Administrator alone may (CMT-005), on anybody's comment including their own. It clears the body, every comment_revisions row, the list of who the text named, and every attachment row and stored blob — so paper or text posted into the wrong record is gone rather than only hidden. This is the reason prior versions live outside the append-only log (CMT-006). The row stays as a tombstone, because the thread around it still has to read. Appends comment.redacted at the comment's own tier */
     post: operations["redactComment"];
     delete?: never;
     options?: never;
@@ -6836,6 +6887,37 @@ export interface operations {
           };
         };
       };
+      /** @description A Request that is no longer new takes paper on its thread, not as another Request attachment (INT-002, CMT-011). The named refusal carries `request`, the R-### whose portal detail owns that thread; `outcome`, the disposition already recorded; and `convertedContract`, the record a conversion made when the caller may reach it (DD-014), else `null`. */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": {
+            /**
+             * @description Which refusal this is. A client branches on this, never on `detail` — `detail` is copy, and copy is rewritten. `about:blank` is a refusal at this status that names no type; print it rather than branching on it.
+             * @enum {string}
+             */
+            type: "urn:openlaw:problem:request-dispositioned" | "about:blank";
+            title: string;
+            status: number;
+            detail?: string;
+            instance?: string;
+            errors?: {
+              path: string;
+              message: string;
+            }[];
+            request?: {
+              number: number;
+            };
+            /** @enum {string} */
+            outcome?: "converted" | "resolved" | "declined";
+            convertedContract?: {
+              number: number;
+            } | null;
+          };
+        };
+      };
       /** @description Problem details (RFC 9457) */
       default: {
         headers: {
@@ -6952,10 +7034,12 @@ export interface operations {
               users: {
                 id: string;
                 displayName: string;
+                archived: boolean;
               }[];
               entities: {
                 id: string;
                 legalName: string;
+                archived: boolean;
               }[];
             };
             attachments: {
@@ -10883,7 +10967,8 @@ export interface operations {
                   | "redline_theirs"
                   | "redline_ours"
                   | "executed"
-                  | "amendment";
+                  | "amendment"
+                  | "generated_redline";
                 note: string | null;
                 originalFilename: string;
                 mimeType: string;
@@ -10991,7 +11076,8 @@ export interface operations {
                   | "redline_theirs"
                   | "redline_ours"
                   | "executed"
-                  | "amendment";
+                  | "amendment"
+                  | "generated_redline";
                 note: string | null;
                 originalFilename: string;
                 mimeType: string;
@@ -11094,7 +11180,103 @@ export interface operations {
                   | "redline_theirs"
                   | "redline_ours"
                   | "executed"
-                  | "amendment";
+                  | "amendment"
+                  | "generated_redline";
+                note: string | null;
+                originalFilename: string;
+                mimeType: string;
+                /** @enum {string} */
+                renderFamily: "pdf" | "image" | "word" | "presentation" | "email" | "other";
+                byteSize: number;
+                checksumSha256: string;
+                uploadedBy: {
+                  id: string;
+                  displayName: string;
+                  image: string | null;
+                  archived: boolean;
+                };
+                /** Format: date-time */
+                createdAt: string;
+                isCurrent: boolean;
+                isExecuted: boolean;
+              }[];
+              archivedAt: string | null;
+              isConfidential: boolean;
+              folderId: string | null;
+              createdBy: {
+                id: string;
+                displayName: string;
+                image: string | null;
+                archived: boolean;
+              };
+              /** Format: date-time */
+              createdAt: string;
+              /** Format: date-time */
+              updatedAt: string;
+            };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  updateDocumentVersionKind: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        documentId: string;
+        versionId: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          /** @enum {string} */
+          kind:
+            | "draft_ours"
+            | "draft_theirs"
+            | "redline_theirs"
+            | "redline_ours"
+            | "executed"
+            | "amendment";
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            document: {
+              id: string;
+              title: string;
+              description: string | null;
+              isPrimary: boolean;
+              versions: {
+                id: string;
+                versionNumber: number;
+                /** @enum {string} */
+                kind:
+                  | "draft_ours"
+                  | "draft_theirs"
+                  | "redline_theirs"
+                  | "redline_ours"
+                  | "executed"
+                  | "amendment"
+                  | "generated_redline";
                 note: string | null;
                 originalFilename: string;
                 mimeType: string;
@@ -11180,7 +11362,8 @@ export interface operations {
                   | "redline_theirs"
                   | "redline_ours"
                   | "executed"
-                  | "amendment";
+                  | "amendment"
+                  | "generated_redline";
                 note: string | null;
                 originalFilename: string;
                 mimeType: string;
@@ -11270,7 +11453,8 @@ export interface operations {
                   | "redline_theirs"
                   | "redline_ours"
                   | "executed"
-                  | "amendment";
+                  | "amendment"
+                  | "generated_redline";
                 note: string | null;
                 originalFilename: string;
                 mimeType: string;
@@ -11350,7 +11534,8 @@ export interface operations {
                   | "redline_theirs"
                   | "redline_ours"
                   | "executed"
-                  | "amendment";
+                  | "amendment"
+                  | "generated_redline";
                 note: string | null;
                 originalFilename: string;
                 mimeType: string;
@@ -11437,7 +11622,8 @@ export interface operations {
                   | "redline_theirs"
                   | "redline_ours"
                   | "executed"
-                  | "amendment";
+                  | "amendment"
+                  | "generated_redline";
                 note: string | null;
                 originalFilename: string;
                 mimeType: string;
@@ -11517,7 +11703,8 @@ export interface operations {
                   | "redline_theirs"
                   | "redline_ours"
                   | "executed"
-                  | "amendment";
+                  | "amendment"
+                  | "generated_redline";
                 note: string | null;
                 originalFilename: string;
                 mimeType: string;
@@ -11597,7 +11784,8 @@ export interface operations {
                   | "redline_theirs"
                   | "redline_ours"
                   | "executed"
-                  | "amendment";
+                  | "amendment"
+                  | "generated_redline";
                 note: string | null;
                 originalFilename: string;
                 mimeType: string;
@@ -11677,7 +11865,8 @@ export interface operations {
                   | "redline_theirs"
                   | "redline_ours"
                   | "executed"
-                  | "amendment";
+                  | "amendment"
+                  | "generated_redline";
                 note: string | null;
                 originalFilename: string;
                 mimeType: string;
@@ -12229,6 +12418,16 @@ export interface operations {
                 id: string;
                 displayName: string;
               }[];
+              attachments?: {
+                id: string;
+                filename: string;
+                filed?: {
+                  documentId: string;
+                  documentTitle: string;
+                  versionId: string;
+                  versionNumber: number;
+                };
+              }[];
               /** Format: date-time */
               createdAt: string;
               editedAt: string | null;
@@ -12267,6 +12466,19 @@ export interface operations {
           /** @enum {string} */
           visibility: "legal_only" | "working_team" | "full_thread";
           mentions?: string[];
+          /** @description Up to five file parts, all named `file`. */
+          file?: string[];
+        };
+        "multipart/form-data": {
+          /** @enum {string} */
+          entityType: "contract" | "request";
+          entityId: string;
+          body: string;
+          /** @enum {string} */
+          visibility: "legal_only" | "working_team" | "full_thread";
+          mentions?: string[];
+          /** @description Up to five file parts, all named `file`. */
+          file?: string[];
         };
       };
     };
@@ -12295,6 +12507,16 @@ export interface operations {
               mentions: {
                 id: string;
                 displayName: string;
+              }[];
+              attachments?: {
+                id: string;
+                filename: string;
+                filed?: {
+                  documentId: string;
+                  documentTitle: string;
+                  versionId: string;
+                  versionNumber: number;
+                };
               }[];
               /** Format: date-time */
               createdAt: string;
@@ -12428,6 +12650,168 @@ export interface operations {
       };
     };
   };
+  fileCommentAttachment: {
+    parameters: {
+      query: {
+        entityType: "contract" | "request";
+        entityId: string;
+      };
+      header?: never;
+      path: {
+        commentId: string;
+        attachmentId: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json":
+          | {
+              /** @enum {string} */
+              destination: "new_document";
+              /** @enum {string} */
+              kind:
+                | "draft_ours"
+                | "draft_theirs"
+                | "redline_theirs"
+                | "redline_ours"
+                | "executed"
+                | "amendment";
+              name: string;
+              isConfidential: boolean;
+            }
+          | {
+              /** @enum {string} */
+              destination: "new_version";
+              documentId: string;
+              /** @enum {string} */
+              kind:
+                | "draft_ours"
+                | "draft_theirs"
+                | "redline_theirs"
+                | "redline_ours"
+                | "executed"
+                | "amendment";
+              note?: string;
+            };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            comment: {
+              id: string;
+              /** @enum {string} */
+              entityType: "contract" | "request";
+              entityId: string;
+              author: {
+                id: string;
+                displayName: string;
+                image: string | null;
+                archived: boolean;
+              };
+              body: string;
+              /** @enum {string} */
+              visibility: "legal_only" | "working_team" | "full_thread";
+              mentions: {
+                id: string;
+                displayName: string;
+              }[];
+              attachments?: {
+                id: string;
+                filename: string;
+                filed?: {
+                  documentId: string;
+                  documentTitle: string;
+                  versionId: string;
+                  versionNumber: number;
+                };
+              }[];
+              /** Format: date-time */
+              createdAt: string;
+              editedAt: string | null;
+              deletedAt: string | null;
+              redactedAt: string | null;
+            };
+          };
+        };
+      };
+      /** @description The attachment was already filed, the thread does not own Documents, or the record is frozen. */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": {
+            /**
+             * @description Which refusal this is. A client branches on this, never on `detail` — `detail` is copy, and copy is rewritten. `about:blank` is a refusal at this status that names no type; print it rather than branching on it.
+             * @enum {string}
+             */
+            type: "urn:openlaw:problem:comment-attachment-already-filed" | "about:blank";
+            title: string;
+            status: number;
+            detail?: string;
+            instance?: string;
+            errors?: {
+              path: string;
+              message: string;
+            }[];
+            filedDocumentId?: string;
+            filedVersionId?: string;
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  downloadCommentAttachment: {
+    parameters: {
+      query: {
+        entityType: "contract" | "request";
+        entityId: string;
+      };
+      header?: never;
+      path: {
+        commentId: string;
+        attachmentId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/octet-stream": string;
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
   deleteComment: {
     parameters: {
       query?: never;
@@ -12463,6 +12847,16 @@ export interface operations {
               mentions: {
                 id: string;
                 displayName: string;
+              }[];
+              attachments?: {
+                id: string;
+                filename: string;
+                filed?: {
+                  documentId: string;
+                  documentTitle: string;
+                  versionId: string;
+                  versionNumber: number;
+                };
               }[];
               /** Format: date-time */
               createdAt: string;
@@ -12526,6 +12920,16 @@ export interface operations {
                 id: string;
                 displayName: string;
               }[];
+              attachments?: {
+                id: string;
+                filename: string;
+                filed?: {
+                  documentId: string;
+                  documentTitle: string;
+                  versionId: string;
+                  versionNumber: number;
+                };
+              }[];
               /** Format: date-time */
               createdAt: string;
               editedAt: string | null;
@@ -12581,6 +12985,16 @@ export interface operations {
               mentions: {
                 id: string;
                 displayName: string;
+              }[];
+              attachments?: {
+                id: string;
+                filename: string;
+                filed?: {
+                  documentId: string;
+                  documentTitle: string;
+                  versionId: string;
+                  versionNumber: number;
+                };
               }[];
               /** Format: date-time */
               createdAt: string;

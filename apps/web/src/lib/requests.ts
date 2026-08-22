@@ -380,8 +380,11 @@ export function staffRequestAttachmentHref(number: number, attachmentId: string)
  */
 export const MAX_REQUEST_ATTACHMENTS = 20;
 
-/** Whether one file landed on the Request, and why it did not. */
-export type AttachOutcome = { ok: true } | { ok: false; detail?: string };
+/** Whether one file landed on the Request, and why it did not. A
+ * disposition-raced upload names the Request thread that takes the
+ * paper now (INT-002, CMT-011). */
+export type AttachOutcome =
+  { ok: true } | { ok: false; detail?: string; thread?: { requestNumber: number } };
 
 /**
  * Attaches one file to a Request, and says whether it landed.
@@ -402,7 +405,7 @@ export async function attachToRequest(number: number, file: File): Promise<Attac
       body: form,
     });
     if (response.ok) return { ok: true };
-    return { ok: false, detail: await refusalIn(response) };
+    return await attachmentRefusalIn(response);
   } catch {
     // A dropped connection reads as a file that did not attach, which
     // is what it is. The caller says so in its own words.
@@ -411,10 +414,30 @@ export async function attachToRequest(number: number, file: File): Promise<Attac
 }
 
 /** The seam's sentence, when the body carries one. */
-async function refusalIn(response: Response): Promise<string | undefined> {
+async function attachmentRefusalIn(response: Response): Promise<AttachOutcome> {
   try {
-    return problemDetail(await response.json());
+    const problem: unknown = await response.json();
+    const detail = problemDetail(problem);
+    if (problemType(problem) !== REQUEST_DISPOSITIONED_PROBLEM_TYPE) {
+      return { ok: false, detail };
+    }
+    const requestNumber = recordedRequestNumber(problem);
+    return requestNumber === null
+      ? { ok: false, detail }
+      : { ok: false, detail, thread: { requestNumber } };
   } catch {
-    return undefined;
+    return { ok: false };
   }
+}
+
+/** The Request whose portal detail is the stable address of its thread.
+ * Read from the named refusal's extension member, never from copy. */
+function recordedRequestNumber(problem: unknown): number | null {
+  if (!isRecord(problem) || !isRecord(problem.request)) return null;
+  const { number } = problem.request;
+  return typeof number === "number" && Number.isInteger(number) && number > 0 ? number : null;
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
 }

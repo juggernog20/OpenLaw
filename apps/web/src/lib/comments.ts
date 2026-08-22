@@ -13,6 +13,7 @@
 
 import { defineMessage, type IntlShape, type MessageDescriptor } from "react-intl";
 import type { paths } from "@openlaw/api-client";
+import { api } from "./api";
 import { isMemberPlus, type Role } from "./roles";
 
 type ThreadResponse =
@@ -36,6 +37,91 @@ export type CommentTier = Comment["visibility"];
 
 /** The record a thread hangs off — the reference the panel is keyed by. */
 export type CommentEntityType = Comment["entityType"];
+
+/** The two filing destinations accepted by CMT-011's one attachment route. */
+export type CommentAttachmentFiling = NonNullable<
+  paths["/api/v1/comments/{commentId}/attachments/{attachmentId}/file"]["post"]["requestBody"]
+>["content"]["application/json"];
+
+/** Files one attachment and answers the server's marked thread row. */
+export function fileCommentAttachment(
+  entityType: CommentEntityType,
+  entityId: string,
+  commentId: string,
+  attachmentId: string,
+  body: CommentAttachmentFiling,
+) {
+  return api.POST("/api/v1/comments/{commentId}/attachments/{attachmentId}/file", {
+    params: {
+      path: { commentId, attachmentId },
+      query: { entityType, entityId },
+    },
+    body,
+  });
+}
+
+/** The fields both JSON and multipart comment posts carry. */
+export interface CommentPost {
+  entityType: CommentEntityType;
+  entityId: string;
+  body: string;
+  visibility: CommentTier;
+  mentions?: readonly string[];
+}
+
+/** Posts one comment, choosing multipart only when paper is present. */
+export async function sendComment(input: CommentPost, files: readonly File[] = []) {
+  if (files.length === 0) {
+    const { mentions, ...body } = input;
+    return api.POST("/api/v1/comments", {
+      body: {
+        ...body,
+        ...(mentions ? { mentions: [...mentions] } : {}),
+      },
+    });
+  }
+
+  const form = new FormData();
+  form.append("entityType", input.entityType);
+  form.append("entityId", input.entityId);
+  form.append("body", input.body);
+  form.append("visibility", input.visibility);
+  if (input.mentions && input.mentions.length > 0) {
+    form.append("mentions", JSON.stringify(input.mentions));
+  }
+  for (const file of files) form.append("file", file, file.name);
+
+  let response: Response;
+  try {
+    response = await fetch("/api/v1/comments", { method: "POST", body: form });
+  } catch {
+    // A dropped connection: the composer says so in its own words.
+    return { data: undefined, error: undefined };
+  }
+  // A refusal from in front of the API (a proxy's 413, say) carries no
+  // problem JSON. It is still a refusal, not a dropped connection.
+  const payload: unknown = await response.json().catch(() => undefined);
+  if (response.ok) {
+    // A 201 whose body is not the comment envelope is not a success the
+    // thread can draw, so it is checked rather than asserted. The same
+    // reason the document uploads read their answer before trusting it.
+    const comment = commentIn(payload);
+    return comment
+      ? { data: { comment }, error: undefined }
+      : { data: undefined, error: undefined };
+  }
+  return { data: undefined, error: payload };
+}
+
+/** The envelope POST /comments answers, or nothing when the body is not it. */
+function commentIn(payload: unknown): Comment | undefined {
+  if (typeof payload !== "object" || payload === null || !("comment" in payload)) return undefined;
+  const { comment } = payload;
+  if (typeof comment !== "object" || comment === null) return undefined;
+  if (!("id" in comment) || typeof comment.id !== "string") return undefined;
+  if (!("body" in comment) || typeof comment.body !== "string") return undefined;
+  return comment as Comment;
+}
 
 /** The three tiers, narrowest first — the order the composer draws them
  * in, so widening the audience is a move to the right. */

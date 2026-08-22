@@ -370,6 +370,22 @@ const patchDocument = (
     payload,
   });
 
+/** The raw answer to correcting one version's kind (CTR-014). */
+const patchVersionKind = (
+  cookies: Record<string, string>,
+  documentId: string,
+  versionId: string,
+  payload: Record<string, unknown>,
+) =>
+  harness.app.inject({
+    method: "PATCH",
+    url: `/api/v1/documents/${documentId}/versions/${versionId}`,
+    cookies,
+    payload,
+  });
+
+/** The raw answer to naming a document the contract's instrument
+ * (CTR-014). */
 const makePrimary = (cookies: Record<string, string>, documentId: string) =>
   harness.app.inject({
     method: "POST",
@@ -861,29 +877,15 @@ describe("appending the next version", () => {
   });
 });
 
-/**
- * Immutability, asserted rather than intended (DOC-001).
- *
- * The claim is about what the API does *not* offer, so the assertion is
- * about the route table itself. Injecting the verbs proves what happens
- * when somebody tries them; asking the route table proves that no such
- * route was declared at all, which is the sentence the decision makes —
- * and it fails the day somebody adds one, which is the point.
- */
-describe("a version is never edited and never deleted", () => {
+describe("correcting a version's kind", () => {
   const VERSION_URL = "/api/v1/documents/:documentId/versions/:versionId";
 
-  it("declares no route that edits or deletes one version", () => {
-    for (const method of ["PATCH", "PUT", "DELETE"] as const) {
+  it("declares one PATCH and no PUT or DELETE for a version", () => {
+    expect(harness.app.hasRoute({ method: "PATCH", url: VERSION_URL })).toBe(true);
+    for (const method of ["PUT", "DELETE"] as const) {
       expect(harness.app.hasRoute({ method, url: VERSION_URL }), `${method} ${VERSION_URL}`).toBe(
         false,
       );
-      // The document's own address is where metadata is edited, and
-      // that is a different row: no verb there reaches a version.
-      expect(
-        harness.app.hasRoute({ method, url: `${VERSION_URL}/download` }),
-        `${method} ${VERSION_URL}/download`,
-      ).toBe(false);
     }
     // DELETE at the document's own address is DOC-010's hard delete, and
     // it is whole-document by design: the erasure exists, and there is
@@ -893,27 +895,193 @@ describe("a version is never edited and never deleted", () => {
     );
   });
 
-  it("answers a request that tries anyway as a route that is not there", async () => {
-    const contract = await newContract("Orion Cloud — nothing to edit");
+  it("changes only kind and narrates both sides of the correction", async () => {
+    const contract = await newContract("Orion Cloud — corrected history");
+    const bytes = Buffer.from("the round whose kind was wrong");
+    const document = await uploaded(adminCookies, contract.number, {
+      filename: "orion_round_one.docx",
+      content: bytes,
+      kind: "draft_ours",
+      note: "Their paper, filed in a hurry.",
+    });
+    const version = currentOf(document);
+    const twoRounds = await versionAdded(adminCookies, document.id, {
+      filename: "orion_round_two.docx",
+      content: Buffer.from("the round that followed it"),
+      kind: "redline_ours",
+      note: "The next turn in the chain.",
+    });
+    const orderBefore = twoRounds.versions.map((row) => row.id);
+    const [before] = await harness.db
+      .select()
+      .from(documentVersions)
+      .where(eq(documentVersions.id, version.id));
+
+    const res = await patchVersionKind(adminCookies, document.id, version.id, {
+      kind: "draft_theirs",
+    });
+
+    expect(res.statusCode, res.body).toBe(200);
+    const answered = res.json().document as DocumentRow;
+    expect(answered.versions.map((row) => row.id)).toEqual(orderBefore);
+    expect(answered.versions.find((row) => row.id === version.id)?.kind).toBe("draft_theirs");
+    expect(currentOf(answered).id).toBe(currentOf(twoRounds).id);
+    const [after] = await harness.db
+      .select()
+      .from(documentVersions)
+      .where(eq(documentVersions.id, version.id));
+    expect(after).toEqual({ ...before, kind: "draft_theirs" });
+    expect(after!.versionNumber).toBe(before!.versionNumber);
+    expect(after!.note).toBe(before!.note);
+    expect(after!.createdBy).toBe(before!.createdBy);
+    expect(after!.fileRef).toBe(before!.fileRef);
+    expect(after!.checksumSha256).toBe(before!.checksumSha256);
+    expect((await download(adminCookies, document.id, version.id)).rawPayload.equals(bytes)).toBe(
+      true,
+    );
+
+    const entries = await feed(adminCookies, contract.id);
+    const entry = entries.find((row) => row.action === "document.version_kind_changed");
+    expect(entry, "a version-kind correction on the contract").toBeDefined();
+    expect(entry!.payload).toMatchObject({
+      documentId: document.id,
+      versionId: version.id,
+      title: "orion_round_one.docx",
+      versionNumber: 1,
+      from: "draft_ours",
+      to: "draft_theirs",
+    });
+  });
+
+  it("accepts only kind in the patch body", async () => {
+    const contract = await newContract("Orion Cloud — one correctable field");
+    const document = await uploaded(adminCookies, contract.number, {
+      note: "This note stays.",
+    });
+    const version = currentOf(document);
+
+    const res = await patchVersionKind(adminCookies, document.id, version.id, {
+      kind: "redline_ours",
+      note: "A route must not accept this.",
+    });
+
+    expect(res.statusCode, res.body).toBe(400);
+    const [row] = await paper(adminCookies, contract.number);
+    expect(currentOf(row!).kind).toBe("draft_ours");
+    expect(currentOf(row!).note).toBe("This note stays.");
+  });
+
+  it("cannot take a version from another document", async () => {
+    const firstContract = await newContract("Orion Cloud — first chain");
+    const secondContract = await newContract("Orion Cloud — second chain");
+    const first = await uploaded(adminCookies, firstContract.number);
+    const second = await uploaded(adminCookies, secondContract.number);
+
+    const res = await patchVersionKind(adminCookies, first.id, currentOf(second).id, {
+      kind: "draft_theirs",
+    });
+
+    expect(res.statusCode, res.body).toBe(404);
+    const [unchanged] = await paper(adminCookies, firstContract.number);
+    expect(currentOf(unchanged!).kind).toBe("draft_ours");
+  });
+
+  it("refuses a no-op without narrating a change", async () => {
+    const contract = await newContract("Orion Cloud — no correction");
     const document = await uploaded(adminCookies, contract.number);
     const version = currentOf(document);
 
-    for (const method of ["PATCH", "PUT", "DELETE"] as const) {
-      const res = await harness.app.inject({
-        method,
-        url: `/api/v1/documents/${document.id}/versions/${version.id}`,
-        cookies: adminCookies,
-        payload: method === "DELETE" ? undefined : { kind: "executed", note: "changed my mind" },
-      });
-      expect(res.statusCode, `${method}: ${res.body}`).toBe(404);
-    }
+    const res = await patchVersionKind(adminCookies, document.id, version.id, {
+      kind: version.kind,
+    });
 
-    // And the version is as it was.
-    const list = await listDocuments(adminCookies, contract.number);
-    const [row] = list.json().documents as DocumentRow[];
-    expect(currentOf(row!).id).toBe(version.id);
-    expect(currentOf(row!).kind).toBe("draft_ours");
-    expect(currentOf(row!).note).toBeNull();
+    expect(res.statusCode, res.body).toBe(409);
+    expect(
+      (await feed(adminCookies, contract.id)).find(
+        (row) => row.action === "document.version_kind_changed",
+      ),
+    ).toBeUndefined();
+  });
+
+  it("never reads or writes the executed pin", async () => {
+    const contract = await newContract("Orion Cloud — the independent pin");
+    const document = await uploaded(adminCookies, contract.number);
+    const version = currentOf(document);
+
+    const namedExecuted = await patchVersionKind(adminCookies, document.id, version.id, {
+      kind: "executed",
+    });
+    expect(namedExecuted.statusCode, namedExecuted.body).toBe(200);
+    expect(executedOf(namedExecuted.json().document as DocumentRow)).toEqual([]);
+
+    expect((await pinExecuted(adminCookies, document.id, version.id)).statusCode).toBe(200);
+    const namedRedline = await patchVersionKind(adminCookies, document.id, version.id, {
+      kind: "redline_ours",
+    });
+    expect(namedRedline.statusCode, namedRedline.body).toBe(200);
+    expect(executedOf(namedRedline.json().document as DocumentRow).map((row) => row.id)).toEqual([
+      version.id,
+    ]);
+  });
+
+  it("refuses generated_redline as the target and as the current kind", async () => {
+    const contract = await newContract("Orion Cloud — generated provenance");
+    const document = await uploaded(adminCookies, contract.number);
+    const version = currentOf(document);
+
+    const target = await patchVersionKind(adminCookies, document.id, version.id, {
+      kind: "generated_redline",
+    });
+    expect(target.statusCode, target.body).toBe(400);
+
+    await harness.db
+      .update(documentVersions)
+      .set({ kind: "generated_redline" })
+      .where(eq(documentVersions.id, version.id));
+    const source = await patchVersionKind(adminCookies, document.id, version.id, {
+      kind: "redline_ours",
+    });
+    expect(source.statusCode, source.body).toBe(409);
+    expect(source.json().detail).toContain("generated redline");
+    const [row] = await paper(adminCookies, contract.number);
+    expect(currentOf(row!).kind).toBe("generated_redline");
+  });
+
+  it("refuses a correction on an archived contract", async () => {
+    const contract = await newContract("Orion Cloud — frozen kind");
+    const document = await uploaded(adminCookies, contract.number);
+    const version = currentOf(document);
+    const archive = await harness.app.inject({
+      method: "POST",
+      url: `/api/v1/contracts/${contract.number}/archive`,
+      cookies: adminCookies,
+    });
+    expect(archive.statusCode, archive.body).toBe(200);
+
+    const res = await patchVersionKind(adminCookies, document.id, version.id, {
+      kind: "draft_theirs",
+    });
+
+    expect(res.statusCode, res.body).toBe(409);
+    const [row] = await harness.db
+      .select({ kind: documentVersions.kind })
+      .from(documentVersions)
+      .where(eq(documentVersions.id, version.id));
+    expect(row!.kind).toBe("draft_ours");
+  });
+
+  it("refuses a Contributor without hiding the version", async () => {
+    const contract = await newContract("Orion Cloud — Contributor correction");
+    await putOnTeam(contract.number, idOf(CONTRIBUTOR), "contributor");
+    const document = await uploaded(adminCookies, contract.number);
+    const version = currentOf(document);
+
+    const res = await patchVersionKind(contributorCookies, document.id, version.id, {
+      kind: "draft_theirs",
+    });
+
+    expect(res.statusCode, res.body).toBe(403);
+    expect((await listDocuments(contributorCookies, contract.number)).statusCode).toBe(200);
   });
 });
 
@@ -1768,6 +1936,13 @@ describe("archiving a document", () => {
     expect((await pinExecuted(adminCookies, document.id, currentOf(document).id)).statusCode).toBe(
       409,
     );
+    expect(
+      (
+        await patchVersionKind(adminCookies, document.id, currentOf(document).id, {
+          kind: "draft_theirs",
+        })
+      ).statusCode,
+    ).toBe(409);
 
     // The document beside it is untouched by any of that.
     expect((await addVersion(adminCookies, other.id)).statusCode).toBe(201);
