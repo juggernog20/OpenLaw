@@ -28,6 +28,11 @@
  * arrives with a why, so the banner is the reason rather than a line
  * about it.
  *
+ * **The pill speaks the requester's words** (the INT-003 M21/6
+ * addendum): Open, In progress, Resolved, Declined, which is what their
+ * email says about the same Request. The staff detail says the enum's
+ * words, and neither reader is ever told two names for one status.
+ *
  * ### Recorded normalization points (I7 deviations accepted)
  *
  * 1. I7 draws the Description as the thread's opening message. Nothing
@@ -276,6 +281,11 @@ function ValueRow({ label, children }: Readonly<{ label: string; children: React
  * writes the statuses and I7 draws only a new Request. Each says the
  * one thing a requester needs from that arm — and `declined` says the
  * reason itself, because INT-006 makes "no" arrive with a why.
+ *
+ * `resolved` says the request was answered *and closed* (the INT-003
+ * M21/6 addendum). An answered request is also a closed one, and a
+ * requester who is not told it is closed goes on waiting for a second
+ * reply.
  */
 function StatusBanner({
   status,
