@@ -143,7 +143,6 @@ interface ContractRow {
   title: string;
 }
 
-/** One bell item, as the API answers it. */
 interface BellItem {
   id: string;
   eventType: string;
@@ -271,7 +270,6 @@ async function moveTo(
   expect(res.statusCode, res.body).toBe(200);
 }
 
-/** One page of somebody's bell, as they would read it. */
 async function bell(fixture: { email: string }): Promise<BellItem[]> {
   const res = await harness.app.inject({
     method: "GET",
@@ -611,7 +609,6 @@ describe("paper landing on a record (DOC-001, NOT-002 group 2)", () => {
   });
 });
 
-/** The fake this app resolved. */
 function provider() {
   expect(harness.signing, "the harness's fake provider").not.toBeNull();
   return harness.signing!;
@@ -670,7 +667,6 @@ async function recordOutForSignature(
 /** How long the pipeline is given before the suite calls it stuck. */
 const SETTLE_TIMEOUT_MS = 20_000;
 
-/** Waits for something the pipeline is expected to bring about. */
 async function settles(what: string, ready: () => Promise<boolean>): Promise<void> {
   const deadline = Date.now() + SETTLE_TIMEOUT_MS;
   while (Date.now() < deadline) {
