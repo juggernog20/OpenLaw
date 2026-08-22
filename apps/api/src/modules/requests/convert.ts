@@ -24,10 +24,11 @@
  * to offer and nothing stubbed.
  *
  * **The prefill is the point of the whole milestone** (INT-002). The
- * summary becomes the title, the requester's urgency becomes the
- * contract's priority 1:1 (MTR-012 — `risk` is legal's and is never
- * born), and every collected value whose slug the target type also
- * attaches lands in that field. Nothing is re-keyed, and the server
+ * dialog seeds the title from the summary and sends whatever is in the
+ * box at the press; the requester's urgency becomes the contract's
+ * priority 1:1 (MTR-012 — `risk` is legal's and is never born); and
+ * every collected value whose slug the target type also attaches lands
+ * in that field. Nothing is re-keyed, and the server
  * lands the values rather than trusting a client to send them back:
  * carry-through is a rule, and a rule a browser holds is not a rule.
  *
@@ -114,9 +115,10 @@ export const requestConvertRoutes: FastifyPluginAsyncZod = async (app) => {
           "type), a Matter target, or no target at all. The last two are " +
           "Re-target, DD-018's lossless exception. The contract is born " +
           "ordinary — the C-### sequence, the draft-stage seed, no " +
-          "Owner, no team, no Confidential flag — with the summary as " +
-          "its title unless the body edits it, the requester's urgency " +
-          "as its priority 1:1 (MTR-012; risk is never requester-set), " +
+          "Owner, no team, no Confidential flag — with the title the " +
+          "body carries, which the dialog seeds from the summary and " +
+          "leaves editable; the requester's urgency as its priority 1:1 " +
+          "(MTR-012; risk is never requester-set); " +
           "and every collected value whose slug the target type attaches " +
           "landed in that field. A collected value the target type does " +
           "not attach does not carry and is not deleted: the Request " +
@@ -167,15 +169,16 @@ export const requestConvertRoutes: FastifyPluginAsyncZod = async (app) => {
       const answers = request.body.customFields;
 
       return dispositionOf(app, request.user, request.params.number, async (tx, held) => {
-        // Read inside the transaction, after the lock: the summary, the
-        // urgency, and the collected values this conversion carries have
-        // to be the ones the row held when it was held. The target type
-        // rides along through the live join, so an archived one arrives
-        // as NULL — "conversion reads an archived target type as no
-        // type", said by the join rather than by a branch after it.
+        // Read inside the transaction, after the lock: the urgency and
+        // the collected values this conversion carries have to be the
+        // ones the row held when it was held. The target type rides
+        // along through the live join, so an archived one arrives as
+        // NULL — "conversion reads an archived target type as no type",
+        // said by the join rather than by a branch after it. The summary
+        // is not read: it seeded the dialog's title box, and what the
+        // record is born with is whatever is in that box at the press.
         const [row] = await tx
           .select({
-            summary: requests.summary,
             urgency: requests.urgency,
             customFields: requests.customFields,
             targetContractTypeId: contractTypes.id,
