@@ -55,7 +55,6 @@ const CONTRIBUTOR = {
   password: "correct-horse-battery",
 } as const;
 
-/** One row of the Inbox, as the staff read answers it. */
 interface InboxRow {
   id: string;
   number: number;
@@ -160,7 +159,6 @@ async function plant(row: {
   return planted!;
 }
 
-/** The Inbox as one caller reads it. */
 async function readInbox(
   cookies: Record<string, string>,
   query: Record<string, string> = {},
@@ -394,7 +392,6 @@ describe("what one row carries (INT-007, I1)", () => {
 });
 
 describe("the trail from ask to work (DD-014, CTR-018)", () => {
-  /** One contract, created through the ordinary create door. */
   async function createContract(title: string, isConfidential: boolean) {
     const [type] = await harness.db.select().from(contractTypes).limit(1);
     const created = await harness.app.inject({

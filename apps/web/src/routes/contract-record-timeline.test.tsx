@@ -147,17 +147,14 @@ function recordApi(initial: Record<string, unknown> = contractRow()) {
   return { handler, patches };
 }
 
-/** The card, found by the heading that names it. */
 async function timeline() {
   return within(await screen.findByRole("region", { name: "Term timeline" }));
 }
 
-/** The gutter — the card's readable half, one row per drawn period. */
 function periodsOf(card: ReturnType<typeof within>) {
   return within(card.getByRole("list", { name: "Term periods" }));
 }
 
-/** The key under the plot, which names the fills the plot uses. */
 function keyOf(card: ReturnType<typeof within>) {
   return within(card.getByRole("list", { name: "Timeline key" }));
 }
