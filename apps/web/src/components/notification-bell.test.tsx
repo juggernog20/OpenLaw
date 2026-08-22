@@ -246,6 +246,43 @@ describe("the notification centre", () => {
     expect(link).toHaveAttribute("href", "/inbox/42");
   });
 
+  it("deep-links a mention on a Request thread to the staff request detail", async () => {
+    // One slug on two records (M21/5). A mention on a Request is a
+    // mention of a triager — the Requester is never mention-notified —
+    // so it addresses the staff detail, not the portal one, and the
+    // sentence names the Request by the summary the requester wrote.
+    const user = userEvent.setup();
+    bellApi({
+      unread: 1,
+      pages: {
+        first: {
+          notifications: [
+            item(1, {
+              eventType: "comment.mentioned",
+              entityType: "request",
+              entityId: "r1",
+              payload: {
+                requestNumber: 42,
+                requestSummary: "Review the Northwind supply redline",
+                commentId: "cm1",
+                actorName: "Omar Dib",
+              },
+            }),
+          ],
+          nextCursor: null,
+        },
+      },
+    });
+    renderAt("/");
+
+    await user.click(await bell("1 unread"));
+    const centre = await screen.findByRole("dialog", { name: "Notifications" });
+    const link = within(centre).getByRole("link", {
+      name: /Omar Dib mentioned you on Review the Northwind supply redline/,
+    });
+    expect(link).toHaveAttribute("href", "/inbox/42");
+  });
+
   it("draws the empty state and no paging foot when the bell is empty", async () => {
     const user = userEvent.setup();
     bellApi({ unread: 0 });

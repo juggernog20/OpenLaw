@@ -221,6 +221,7 @@ const contractArm: CommentEntityArm = {
       // acceptable way to drop somebody's mention.
       if (record) {
         await notifier.commentMentioned(tx, {
+          entityType: "contract",
           contractId: posted.audience.entityId,
           contractNumber: record.number,
           contractTitle: record.title,
@@ -368,7 +369,30 @@ const requestArm: CommentEntityArm = {
   },
 
   async notifyPosted(tx, notifier, posted) {
-    // A reply on a Request is NOT-002's group 5 — `requester_events`,
+    // Being named is done *to* you whatever record it happens on
+    // (NOT-002's M18/1 addendum, which M21/5 finally applies to a
+    // Request). So the mention is group 1 here exactly as it is on a
+    // contract: the bell rings and the email leaves at once. The arm
+    // says which comment it was and at which tier; the seam reads who it
+    // addressed out of `comment_mentions`, holds the tier, and answers
+    // the Request's own two facts.
+    //
+    // Nothing about the Request travels with the event. The seam reads
+    // its number and its summary out of the audience read it does
+    // anyway, which is the shape every Request event takes (M20/8) — and
+    // it is the only place that knows who the Requester is, which is
+    // what makes the M18/4 rule the seam's rather than this arm's.
+    if (posted.mentioned.length > 0) {
+      await notifier.commentMentioned(tx, {
+        entityType: "request",
+        requestId: posted.audience.entityId,
+        actorId: posted.actorId,
+        actorName: posted.actorName,
+        commentId: posted.commentId,
+        visibility: posted.visibility,
+      });
+    }
+    // And a reply on a Request is NOT-002's group 5 — `requester_events`,
     // the portal audience's own group — so it is one event and one
     // method: the Requester gets a bell row on the portal and an
     // immediate email (INT-003, which declined the status-poke button on
@@ -383,12 +407,16 @@ const requestArm: CommentEntityArm = {
     // audience, the actor exclusion, and the tier are the seam's, so
     // this arm cannot be the place one of them is forgotten.
     //
-    // There is no mention event beside it. `commentMentioned` and
-    // `commentPosted` are a contract's — they carry its CTR-003 number
-    // and its title, and they fan out over its roster — and a Request
-    // has none of those things. A Member+ named on a Request thread is
-    // named on the staff side, and what tells the staff side about a
-    // Request is group 4 (INT-006), which the Inbox brings.
+    // The people this comment named are **not** dropped from it here,
+    // which is where the contract arm drops them. The two events do not
+    // overlap on this record: the mention is the staff side's and the
+    // reply is the Requester's, so the only person who could hold both
+    // is a Member+ who raised the Request, and the seam is what settles
+    // them (M18/4).
+    //
+    // There is no group-2 event beside either. `commentPosted` fans out
+    // over a contract's roster and carries its CTR-003 number, and a
+    // Request has neither a roster nor a number of that kind.
     await notifier.requestReplied(tx, {
       requestId: posted.audience.entityId,
       actorId: posted.actorId,

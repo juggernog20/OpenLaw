@@ -187,21 +187,79 @@ export function eventTypesIn(group: NotificationEventGroup): NotificationEventTy
 }
 
 /**
- * Whether an event is the Inbox's own — the staff side of a Request
- * (INT-006) rather than the Requester's (DD-013).
+ * Which side of a Request an event is addressed to (M21/4, M21/5).
  *
- * Asked of a raw slug, because both callers read one off a row: the
- * fan-out's wall step and the send job's re-check of it. A slug this
- * build does not know answers `false`, which is the narrower of the two
+ * `requester` is DD-013's one person, and every group-5 event is theirs.
+ * `inbox` is INT-006's Member+ — group 4's arrival, and from M21/5 a
+ * group-1 mention on a Request thread, because being named on a Request
+ * is being named as staff.
+ */
+export const REQUEST_SIDES = ["requester", "inbox"] as const;
+export type RequestSide = (typeof REQUEST_SIDES)[number];
+
+/**
+ * Which side each group speaks to when its event is about a Request.
+ *
+ * **The group decides, not the slug.** `comment.mentioned` is one slug on
+ * two records, so a per-slug table would have to say two things about it;
+ * the group says one thing about every event in it, which is why the side
+ * is read here rather than passed by each method.
+ *
+ * Total over the group union, so a group added to the schema stops
+ * compiling until somebody has decided which of the two bells its Request
+ * rows belong on — the property the two scope predicates below rely on to
+ * stay disjoint.
+ */
+const REQUEST_SIDE_BY_GROUP: Record<NotificationEventGroup, RequestSide> = {
+  /** Group 1 — done *to* you. On a Request that is a mention, and a
+   * Request's mention candidates are its Requester and Member+ staff
+   * (CMT-010); the Requester's own news is group 5's, so what is left
+   * here is the staff side. */
+  assigned_to_you: "inbox",
+  /** Group 2 — ambient movement on a record's roster. No event of it is
+   * raised on a Request today: a Request has no team table for a roster
+   * to come from, and its thread raises group 5 instead. Named `inbox`
+   * because a roster is a staff fact, so a group-2 event that does
+   * arrive on a Request is the staff side's. */
+  activity_on_your_records: "inbox",
+  /** Group 3 — dates. A Request has none; the tracked dates are a
+   * contract's term (CTR-009). Staff side for group 2's reason. */
+  dates_approaching: "inbox",
+  /** Group 4 — the Inbox's own arrival (INT-006). */
+  new_requests: "inbox",
+  /** Group 5 — the portal audience's own events (DD-013). */
+  requester_events: "requester",
+};
+
+/**
+ * Which side of a Request one event speaks to.
+ *
+ * Asked of a raw slug, because every caller reads one off a row: the
+ * fan-out's wall step, the send job's re-check of it, and the template
+ * layer choosing which of the two messages this is. A slug this build
+ * does not know answers `requester`, which is the narrower of the two
  * rules and therefore the safe way to be wrong.
  */
-export function isInboxEvent(eventType: string): boolean {
-  return INBOX_EVENTS.has(eventType);
+export function requestSideOf(eventType: string): RequestSide {
+  return Object.hasOwn(REQUEST_SIDE, eventType) ? REQUEST_SIDE[eventType]! : "requester";
 }
 
-/** Group 4's slugs, as a set of plain strings — built once, because both
- * callers ask per row. */
-const INBOX_EVENTS: ReadonlySet<string> = new Set<string>(eventTypesIn("new_requests"));
+/** Every slug on one side of a Request — the bells' own filter. The two
+ * answers partition the catalog, which is what keeps the staff centre
+ * and the portal bell unable to draw each other's rows. */
+export function requestEventTypesOn(side: RequestSide): NotificationEventType[] {
+  return NOTIFICATION_EVENT_TYPES.filter((eventType) => requestSideOf(eventType) === side);
+}
+
+/** Each slug's side, resolved once through its group — both callers ask
+ * per row. Own-key reads only, because the slug comes off a row and
+ * `event_type` deliberately carries no CHECK (NOT-002). */
+const REQUEST_SIDE: Readonly<Record<string, RequestSide>> = Object.fromEntries(
+  NOTIFICATION_EVENT_TYPES.map((eventType) => [
+    eventType,
+    REQUEST_SIDE_BY_GROUP[EVENT_GROUP[eventType]],
+  ]),
+);
 
 /** Both channels, as `notification_preferences` names them. */
 export const CHANNELS: readonly NotificationChannel[] = ["in_app", "email"];
