@@ -175,10 +175,10 @@ type ContractStatusPayloads = {
 };
 
 /**
- * The Request record (INT-001, INT-002, INT-007). Two verbs: a Request
- * is born on the portal, and triage decides its outcome. The other two
- * dispositions — resolution and conversion — land with the routes that
- * write them (M21/8, M21/9).
+ * The Request record (INT-001, INT-002, INT-007). A Request is born on
+ * the portal, and triage decides its outcome. Two of INT-007's three
+ * dispositions narrate here; the conversion lands with the route that
+ * writes it (M21/9).
  *
  * The payload carries the Request's `number` and **no free text at
  * all** — not the summary, not the collected values, and not the
@@ -203,6 +203,13 @@ type RequestPayloads = {
    * which is the audit datum INT-007 asks for; the entry says the act
    * and names the Request, and the reason stays on the record. */
   "request.declined": { number: number };
+  /** INT-007's second disposition (M21/8): the ask was answered in the
+   * thread and closed. The same shape the decline's entry has, for the
+   * same reason — who resolved is the actor on the row, and the answer
+   * itself is a comment on the thread rather than text in a payload. A
+   * resolution with no closing reply looks identical here, because what
+   * this entry records is the closure and not the answer. */
+  "request.resolved": { number: number };
 };
 
 /**

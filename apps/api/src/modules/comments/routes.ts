@@ -115,13 +115,13 @@ import {
   commentAudience,
   commentEntityType,
   mentionCandidates,
-  notifyCommentPosted,
   reachedThread,
   COMMENT_ENTITY_TYPES,
   COMMENT_READER_ROLES,
   type CommentAudience,
   type CommentEntityType,
 } from "./audience.js";
+import { CommentBodySchema, postComment } from "./post.js";
 
 /**
  * The floor for reading any thread: every role that reaches a thread of
@@ -157,9 +157,6 @@ const CommentEntityTypeSchema = z.enum(COMMENT_ENTITY_TYPES);
  */
 const RecordIdSchema = z.string().min(1).max(64);
 
-/** Plain text, capped where every other free-text field is capped.
- * Rich text, attachments, and reactions are deliberately out. */
-const CommentBodySchema = z.string().trim().min(1).max(10_000);
 
 const VisibilitySchema = z.enum(COMMENT_VISIBILITIES);
 
@@ -687,52 +684,22 @@ export const commentsRoutes: FastifyPluginAsyncZod = async (app) => {
           }
         }
 
-        const [created] = await tx
-          .insert(comments)
-          .values({
-            entityType: audience.entityType,
-            entityId: audience.entityId,
-            authorId: request.user.id,
-            body,
-            visibility,
-          })
-          .returning({ id: comments.id });
-        if (named.length > 0) {
-          await tx
-            .insert(commentMentions)
-            .values(named.map((userId) => ({ commentId: created!.id, userId })));
-        }
-        // The entry rides the comment's own tier, so it is hidden from
-        // exactly the people the comment is hidden from. Ids only: the
-        // log is append-only, and text in a payload could never be
-        // redacted out of it.
-        await recordActivity(tx, {
-          entityType: audience.entityType,
-          entityId: audience.entityId,
-          actorId: request.user.id,
-          action: "comment.posted",
-          visibility,
-          payload: { commentId: created!.id },
-        });
-        // What a new comment raises is the arm's to say (NOT-002), for
-        // the reason the audience is: a contract comment rings the
-        // record's roster, and another kind of record has another kind of
-        // audience to tell. Raised here, inside the commit that wrote the
-        // comment and its `comment_mentions` rows, so the seam behind it
-        // reads the addressees from the table rather than from a body.
-        await notifyCommentPosted(tx, app.notifier, {
+        // The write itself, its `comment_mentions` rows, its activity
+        // entry, and whatever the arm raises are all one act, and
+        // `post.ts` is where that act lives — the Resolve disposition
+        // says its closing reply through the same call (INT-007).
+        const commentId = await postComment(tx, app.notifier, {
           audience,
-          actorId: request.user.id,
-          actorName: request.user.displayName,
-          commentId: created!.id,
+          author: request.user,
+          body,
           visibility,
-          mentioned: named,
+          mentions: named,
         });
         // Read back through the same projection the thread uses, so the
         // row the poster gets is the row they will see on the next load.
-        const [posted] = await selectComments(tx).where(eq(comments.id, created!.id));
-        const mentions = await mentionsOf(tx, [created!.id]);
-        return toComment(posted!, mentions.get(created!.id));
+        const [posted] = await selectComments(tx).where(eq(comments.id, commentId));
+        const mentions = await mentionsOf(tx, [commentId]);
+        return toComment(posted!, mentions.get(commentId));
       });
 
       return reply.status(201).send({ comment });
