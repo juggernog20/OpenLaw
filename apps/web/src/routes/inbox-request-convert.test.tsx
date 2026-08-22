@@ -222,6 +222,33 @@ describe("the prefill (INT-002, MTR-012)", () => {
     expect(within(dialog).queryByLabelText(/^Counterparty/)).toBeNull();
   });
 
+  it("says nothing about carrying until a target type is picked", async () => {
+    // With no target there is nothing to compare a collected value
+    // against, so a list claiming every value stays behind would be
+    // answering a question nobody has asked yet.
+    const user = userEvent.setup();
+    open(
+      requestApi(
+        request({
+          requestType: {
+            id: "rt-review",
+            displayName: "Contract review",
+            targetModule: "contract",
+            targetTypeId: null,
+            targetTypeName: null,
+          },
+        }),
+      ),
+    );
+    const dialog = await openConvert(user);
+    expect(within(dialog).queryByText("Carries into the contract")).toBeNull();
+    expect(within(dialog).queryByText("Does not carry into the contract")).toBeNull();
+
+    await user.selectOptions(within(dialog).getByLabelText(/^Contract type/), "ct-nda");
+    expect(within(dialog).getByText("Carries into the contract")).toBeInTheDocument();
+    expect(within(dialog).getByText("Does not carry into the contract")).toBeInTheDocument();
+  });
+
   it("names what does not carry, and says it stays on the request", async () => {
     // The INT-002 M19/7 addendum, paid where somebody can see it before
     // they press: the NDA contract type has no field for the deal desk

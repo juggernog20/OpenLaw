@@ -171,6 +171,11 @@ export function ConvertDialog({
   /** What the form already answered that the target type also attaches:
    * the values conversion carries, stated rather than re-typed. */
   const carries = targetFields.filter((field) => isAnswered(request.customFields[field.slug]));
+  /** Whether the two lists below can be drawn at all. Until a target
+   * type is picked there is nothing to compare a collected value
+   * against, and a list that claimed every value was staying behind
+   * would be answering a question nobody has asked yet. */
+  const knowsTarget = target !== null;
   /** What the form answered that has nowhere to land (the INT-002 M19/7
    * addendum). Named by the box that collected it, because that is what
    * the requester filled in. */
@@ -473,7 +478,7 @@ export function ConvertDialog({
                 />
               </p>
             </div>
-            {carries.length > 0 && (
+            {knowsTarget && carries.length > 0 && (
               <div className="flex flex-col gap-1.5">
                 <p className="text-sm font-medium">
                   <FormattedMessage
@@ -498,7 +503,7 @@ export function ConvertDialog({
                 </dl>
               </div>
             )}
-            {staysBehind.length > 0 && (
+            {knowsTarget && staysBehind.length > 0 && (
               // Named, never silent (the INT-002 M19/7 addendum). The
               // value is not deleted and the Request goes on showing it,
               // which is what the second sentence says.
