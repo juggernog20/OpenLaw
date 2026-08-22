@@ -466,8 +466,9 @@ first.
     the portal pill, the banner, and the email alike. The enum is untouched and staff surfaces keep its
     own words — `converted` is a fact about Legal's machinery, and "In progress" is what it means to the
     person who asked
-  - All three things M20 left "where M21 will look" are closed: the vocabulary, the Request-thread
-    mention, and the out-of-scope collected value
+  - Both things M20 left "where M21 will look" are closed — the requester-facing status vocabulary and
+    the Request-thread mention — and so is INT-002's older M19/7 residue, the collected value with no
+    field to land in, which the Convert dialog now names before the press
   - Four things are left open, each written down where the milestone that meets it will look.
     **The matter arm of conversion is M22's** — the door is built and offers only what this build can
     create, with no stubbed Matter option, so M22 adds an arm to the same guarded path rather than a

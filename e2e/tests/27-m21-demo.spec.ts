@@ -183,7 +183,10 @@ async function catalogFieldId(request: APIRequestContext): Promise<string> {
   const row = FieldRows.parse(await listed.json()).fields.find(
     (field) => field.slug === FIELD_SLUG,
   );
-  expect(row, `the ${FIELD_SLUG} field seed is missing`).toBeDefined();
+  expect(
+    row,
+    `no live ${FIELD_SLUG} field: the seed is missing, or this install archived it`,
+  ).toBeDefined();
   return row!.id;
 }
 
@@ -387,19 +390,31 @@ test.describe.serial("M21 demo path", () => {
     const onTargetBefore = await attachmentState(page.request, "contract-types", targetTypeId);
 
     const context = await browser.newContext();
-    /** Leaves the shared instance as the run found it (TECH-018). */
+    /**
+     * Leaves the shared instance as the run found it (TECH-018).
+     *
+     * Every step runs, whatever the ones before it did. The four are
+     * independent — a contract, two seeded join rows, and a person — so
+     * a sweep that stopped at the first refusal would strand the other
+     * three for the next run, which is the failure this whole function
+     * exists to prevent. What went wrong is reported together at the
+     * end rather than swallowed.
+     */
     const leaveInert = async () => {
       await context.close();
-      await ensureDemoContractsInert(page.request);
-      await restoreAttachment(page.request, "request-types", formTypeId, fieldId, onFormBefore);
-      await restoreAttachment(
-        page.request,
-        "contract-types",
-        targetTypeId,
-        fieldId,
-        onTargetBefore,
+      const failures: unknown[] = [];
+      const settle = async (step: () => Promise<void>) => {
+        await step().catch((error: unknown) => failures.push(error));
+      };
+      await settle(() => ensureDemoContractsInert(page.request));
+      await settle(() =>
+        restoreAttachment(page.request, "request-types", formTypeId, fieldId, onFormBefore),
       );
-      await ensureMemberInert(page.request, REQUESTER);
+      await settle(() =>
+        restoreAttachment(page.request, "contract-types", targetTypeId, fieldId, onTargetBefore),
+      );
+      await settle(() => ensureMemberInert(page.request, REQUESTER));
+      if (failures.length > 0) throw new AggregateError(failures, "M21 demo cleanup failed");
     };
 
     try {
@@ -433,15 +448,28 @@ test.describe.serial("M21 demo path", () => {
         (response) =>
           response.url().endsWith("/api/v1/requests") && response.request().method() === "POST",
       );
+      // The files go up after the submission, one call at a time (the
+      // INT-002 M20/6 addendum). The demo waits on that call rather than
+      // on the copy that reports it: the paper has to be on the Request
+      // before triage opens it, and a spinner going away is a weaker
+      // statement than a 201.
+      const uploaded = portal.waitForResponse(
+        (response) =>
+          /\/api\/v1\/requests\/\d+\/attachments$/.test(response.url()) &&
+          response.request().method() === "POST",
+      );
       await portal.getByRole("button", { name: "Submit request" }).click();
-      expect((await created).status()).toBe(201);
+      expect((await created).status(), await (await created).text()).toBe(201);
+      expect((await uploaded).status(), await (await uploaded).text()).toBe(201);
 
       // The reference is read off the screen, so what the rest of this
       // journey follows is what the requester was told (INT-002).
       const confirmation = portal.getByRole("heading", { name: /^Request R-\d+ is with Legal$/ });
       await expect(confirmation).toBeVisible();
-      const reference = /R-\d+/.exec((await confirmation.textContent()) ?? "")![0];
-      const number = Number(reference.slice(2));
+      const confirmed = /R-(\d+)/.exec((await confirmation.textContent()) ?? "");
+      expect(confirmed, "the confirmation heading carries no R-### reference").not.toBeNull();
+      const reference = confirmed![0];
+      const number = Number(confirmed![1]);
       await expect(portal.getByText("Attaching your files…")).toBeHidden();
       await expect(portal.getByRole("alert")).toHaveCount(0);
 
@@ -517,8 +545,9 @@ test.describe.serial("M21 demo path", () => {
       // The paper that travelled with the ask, in reach before the
       // decision — a name a triager cannot open is a label.
       const download = page.getByRole("link", { name: ATTACHMENT });
-      const attachmentHref = (await download.getAttribute("href"))!;
-      const fetched = await page.request.get(attachmentHref);
+      const attachmentHref = await download.getAttribute("href");
+      expect(attachmentHref, `the ${ATTACHMENT} row is a label rather than a link`).not.toBeNull();
+      const fetched = await page.request.get(attachmentHref!);
       expect(fetched.status(), await fetched.text()).toBe(200);
       // And the conversation, at every tier, on the same activity bar a
       // contract wears (DES-057, CMT-010).
@@ -562,7 +591,9 @@ test.describe.serial("M21 demo path", () => {
       await expect(outcome.getByText("Converted")).toBeVisible();
       const contractLink = outcome.getByRole("link", { name: /^C-\d+$/ });
       await expect(contractLink).toBeVisible();
-      const contractNumber = Number(/\d+/.exec((await contractLink.textContent()) ?? "")![0]);
+      const became = /C-(\d+)/.exec((await contractLink.textContent()) ?? "");
+      expect(became, "the Outcome card names no C-###").not.toBeNull();
+      const contractNumber = Number(became![1]);
       // The three actions are gone: a decided Request has nothing left
       // to decide.
       await expect(page.getByRole("button", { name: "Convert to contract" })).toHaveCount(0);
@@ -614,7 +645,7 @@ test.describe.serial("M21 demo path", () => {
 
       // Promotion copies rather than moves: the Request's own download
       // still answers, with the bytes the requester uploaded.
-      const stillThere = await page.request.get(attachmentHref);
+      const stillThere = await page.request.get(attachmentHref!);
       expect(stillThere.status(), await stillThere.text()).toBe(200);
       expect(await stillThere.text()).toBe(ATTACHMENT_BODY);
 
