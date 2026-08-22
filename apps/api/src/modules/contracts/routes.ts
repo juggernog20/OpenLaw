@@ -213,7 +213,11 @@ import {
 } from "@openlaw/shared";
 import { httpError, problemResponse, problemTypeResponse } from "../../lib/problem.js";
 import { assertApprovalGate, type UnresolvedApproval } from "../../lib/soft-gate.js";
-import { createContract, CONTRACT_RENEWAL_VEHICLES } from "./create.js";
+import {
+  createContract,
+  CONTRACT_RENEWAL_VEHICLES,
+  MAX_CONTRACT_TITLE_LENGTH,
+} from "./create.js";
 
 /** Every mutation, and every picker read behind one, is Member+. */
 const requireMember = requireRole("administrator", "legal_team_member");
@@ -649,7 +653,7 @@ const ApproverGroupOptionSchema = z.object({
   memberIds: z.array(z.string()),
 });
 
-const TitleSchema = z.string().trim().min(1).max(200);
+const TitleSchema = z.string().trim().min(1).max(MAX_CONTRACT_TITLE_LENGTH);
 /** CTR-011's inline creation writes exactly this and nothing else. */
 const CounterpartyNameSchema = z.string().trim().min(1).max(200);
 const DescriptionSchema = z.string().trim().max(10_000);
