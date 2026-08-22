@@ -2227,6 +2227,23 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/v1/comments/{commentId}/attachments/{attachmentId}/file": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** File one live comment attachment onto the record (CMT-011), either as a new root Document or as the next Version on a named chain. The comment's audience is the reach gate; a never-converted Request owns no Documents and is refused. The bytes are copied to a key minted from the destination ids, their media type is read from the blob, and the shared Version insert records every derivation an upload owes. The paper and the attachment marker commit together under the Contract row lock, so the same attachment cannot grow two rounds */
+    post: operations["fileCommentAttachment"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/v1/comments/{commentId}/attachments/{attachmentId}": {
     parameters: {
       query?: never;
@@ -12373,6 +12390,12 @@ export interface operations {
               attachments?: {
                 id: string;
                 filename: string;
+                filed?: {
+                  documentId: string;
+                  documentTitle: string;
+                  versionId: string;
+                  versionNumber: number;
+                };
               }[];
               /** Format: date-time */
               createdAt: string;
@@ -12457,6 +12480,12 @@ export interface operations {
               attachments?: {
                 id: string;
                 filename: string;
+                filed?: {
+                  documentId: string;
+                  documentTitle: string;
+                  versionId: string;
+                  versionNumber: number;
+                };
               }[];
               /** Format: date-time */
               createdAt: string;
@@ -12590,6 +12619,133 @@ export interface operations {
       };
     };
   };
+  fileCommentAttachment: {
+    parameters: {
+      query: {
+        entityType: "contract" | "request";
+        entityId: string;
+      };
+      header?: never;
+      path: {
+        commentId: string;
+        attachmentId: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json":
+          | {
+              /** @enum {string} */
+              destination: "new_document";
+              /** @enum {string} */
+              kind:
+                | "draft_ours"
+                | "draft_theirs"
+                | "redline_theirs"
+                | "redline_ours"
+                | "executed"
+                | "amendment";
+              name: string;
+              isConfidential: boolean;
+            }
+          | {
+              /** @enum {string} */
+              destination: "new_version";
+              documentId: string;
+              /** @enum {string} */
+              kind:
+                | "draft_ours"
+                | "draft_theirs"
+                | "redline_theirs"
+                | "redline_ours"
+                | "executed"
+                | "amendment";
+              note?: string;
+            };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            comment: {
+              id: string;
+              /** @enum {string} */
+              entityType: "contract" | "request";
+              entityId: string;
+              author: {
+                id: string;
+                displayName: string;
+                image: string | null;
+                archived: boolean;
+              };
+              body: string;
+              /** @enum {string} */
+              visibility: "legal_only" | "working_team" | "full_thread";
+              mentions: {
+                id: string;
+                displayName: string;
+              }[];
+              attachments?: {
+                id: string;
+                filename: string;
+                filed?: {
+                  documentId: string;
+                  documentTitle: string;
+                  versionId: string;
+                  versionNumber: number;
+                };
+              }[];
+              /** Format: date-time */
+              createdAt: string;
+              editedAt: string | null;
+              deletedAt: string | null;
+              redactedAt: string | null;
+            };
+          };
+        };
+      };
+      /** @description The attachment was already filed, the thread does not own Documents, or the record is frozen. */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": {
+            /**
+             * @description Which refusal this is. A client branches on this, never on `detail` — `detail` is copy, and copy is rewritten. `about:blank` is a refusal at this status that names no type; print it rather than branching on it.
+             * @enum {string}
+             */
+            type: "urn:openlaw:problem:comment-attachment-already-filed" | "about:blank";
+            title: string;
+            status: number;
+            detail?: string;
+            instance?: string;
+            errors?: {
+              path: string;
+              message: string;
+            }[];
+            filedDocumentId?: string;
+            filedVersionId?: string;
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
   downloadCommentAttachment: {
     parameters: {
       query: {
@@ -12664,6 +12820,12 @@ export interface operations {
               attachments?: {
                 id: string;
                 filename: string;
+                filed?: {
+                  documentId: string;
+                  documentTitle: string;
+                  versionId: string;
+                  versionNumber: number;
+                };
               }[];
               /** Format: date-time */
               createdAt: string;
@@ -12730,6 +12892,12 @@ export interface operations {
               attachments?: {
                 id: string;
                 filename: string;
+                filed?: {
+                  documentId: string;
+                  documentTitle: string;
+                  versionId: string;
+                  versionNumber: number;
+                };
               }[];
               /** Format: date-time */
               createdAt: string;
@@ -12790,6 +12958,12 @@ export interface operations {
               attachments?: {
                 id: string;
                 filename: string;
+                filed?: {
+                  documentId: string;
+                  documentTitle: string;
+                  versionId: string;
+                  versionNumber: number;
+                };
               }[];
               /** Format: date-time */
               createdAt: string;

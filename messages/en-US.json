@@ -896,6 +896,15 @@
   "comments.attachments.chosen": {
     "defaultMessage": "Files attached to this comment"
   },
+  "comments.attachments.destination": {
+    "defaultMessage": "{title}, version {number}"
+  },
+  "comments.attachments.file": {
+    "defaultMessage": "File"
+  },
+  "comments.attachments.filedTo": {
+    "defaultMessage": "Filed to {destination}"
+  },
   "comments.attachments.list": {
     "defaultMessage": "Comment attachments"
   },
@@ -937,6 +946,45 @@
   },
   "comments.empty": {
     "defaultMessage": "Nothing has been said about this record yet. Add the first comment to keep the conversation on the record."
+  },
+  "comments.filing.destination": {
+    "defaultMessage": "Destination"
+  },
+  "comments.filing.document": {
+    "defaultMessage": "Document"
+  },
+  "comments.filing.documentRequired": {
+    "defaultMessage": "Choose the Document this round belongs to."
+  },
+  "comments.filing.error": {
+    "defaultMessage": "That attachment could not be filed. Try again."
+  },
+  "comments.filing.kind": {
+    "defaultMessage": "Kind"
+  },
+  "comments.filing.kindOption": {
+    "defaultMessage": "{kind, select, draft_ours {Draft · ours} draft_theirs {Draft · theirs} redline_theirs {Redline · theirs} redline_ours {Redline · ours} amendment {Amendment} executed {Executed} other {{kind}}}"
+  },
+  "comments.filing.name": {
+    "defaultMessage": "Document name"
+  },
+  "comments.filing.newDocument": {
+    "defaultMessage": "New Document"
+  },
+  "comments.filing.newVersion": {
+    "defaultMessage": "New Version on an existing Document"
+  },
+  "comments.filing.note": {
+    "defaultMessage": "Note"
+  },
+  "comments.filing.notePlaceholder": {
+    "defaultMessage": "What changed in this round"
+  },
+  "comments.filing.submit": {
+    "defaultMessage": "File"
+  },
+  "comments.filing.title": {
+    "defaultMessage": "File attachment"
   },
   "comments.loadError": {
     "defaultMessage": "The conversation could not be read. Reopen the panel to try again."

@@ -322,6 +322,9 @@ export const documentVersions = pgTable(
     // both become version 3 — the database refuses the loser rather
     // than leaving the chain with a repeat in it.
     uniqueIndex("document_versions_document_number_idx").on(table.documentId, table.versionNumber),
+    // The filed-comment marker references the exact pair, so deleting
+    // a chain can clear both of its marker columns in one FK action.
+    uniqueIndex("document_versions_document_id_id_idx").on(table.documentId, table.id),
     check("document_versions_number_check", sql`${table.versionNumber} >= 1`),
     check("document_versions_byte_size_check", sql`${table.byteSize} >= 0`),
     // Exactly 64 lowercase hex characters. The column's whole value is

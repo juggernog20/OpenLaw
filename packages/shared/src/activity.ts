@@ -667,6 +667,8 @@ type DocumentPayloads = {
     versionId: string;
     title: string;
     folderName: string | null;
+    /** Present when the first file was copied out of a thread. */
+    sourceCommentId?: string;
   };
   "document.version_added": {
     documentId: string;
@@ -674,6 +676,8 @@ type DocumentPayloads = {
     title: string;
     versionNumber: number;
     kind: string;
+    /** Present when this round was copied out of a thread. */
+    sourceCommentId?: string;
   };
   "document.version_kind_changed": {
     documentId: string;

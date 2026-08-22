@@ -88,7 +88,11 @@ import { problemDetail } from "../../lib/messages";
 import type { Role } from "../../lib/roles";
 import { cn } from "../../lib/utils";
 import { Avatar } from "../avatar";
-import { CommentAttachmentRows, CommentFilePicker } from "./comment-attachments";
+import {
+  CommentAttachmentRows,
+  CommentFilePicker,
+  type CommentFilingContext,
+} from "./comment-attachments";
 import { ConfidentialMarker } from "../confidential-marker";
 import { Button } from "../ui/button";
 import { Dialog, DialogContent, DialogTitle } from "../ui/dialog";
@@ -141,6 +145,9 @@ export interface CommentAppletOptions {
    * DES-009's micro-marker, and the composer states the bound before
    * anything is posted. */
   confidential?: boolean;
+  /** Present on a thread whose record owns Documents. It carries its
+   * own write verdict; every reader still sees an existing marker. */
+  filing?: CommentFilingContext;
 }
 
 /**
@@ -160,6 +167,7 @@ export function useCommentApplet({
   role,
   viewerId,
   confidential = false,
+  filing,
 }: CommentAppletOptions): Applet {
   const [comments, setComments] = useState<Comment[] | null>(null);
   const [candidates, setCandidates] = useState<MentionCandidate[]>([]);
@@ -259,6 +267,7 @@ export function useCommentApplet({
         role={role}
         viewerId={viewerId}
         confidential={confidential}
+        filing={filing}
         comments={comments}
         candidates={candidates}
         loadFailed={loadFailed}
@@ -318,6 +327,7 @@ function CommentThread({
   role,
   viewerId,
   confidential,
+  filing,
   comments,
   candidates,
   loadFailed,
@@ -332,6 +342,7 @@ function CommentThread({
   role: Role;
   viewerId: string;
   confidential: boolean;
+  filing?: CommentFilingContext;
   /** null until the first read answers. */
   comments: readonly Comment[] | null;
   candidates: readonly MentionCandidate[];
@@ -426,6 +437,7 @@ function CommentThread({
                 entityType={entityType}
                 entityId={entityId}
                 confidential={confidential}
+                filing={filing}
                 onChanged={onChanged}
                 landed={comment.id === landed}
               />
@@ -481,6 +493,7 @@ function CommentRow({
   entityType,
   entityId,
   confidential,
+  filing,
   onChanged,
   landed = false,
 }: Readonly<{
@@ -493,6 +506,7 @@ function CommentRow({
    * marker beside its timestamp — a copied snippet then carries its
    * restriction with it. */
   confidential: boolean;
+  filing?: CommentFilingContext;
   onChanged: (comment: Comment) => void;
   /** This row is the oldest one a "Show older" press just brought, so
    * focus belongs on it: the thread grew above the reader, and a
@@ -667,7 +681,13 @@ function CommentRow({
         </p>
       )}
       {removed === null && (
-        <CommentAttachmentRows comment={comment} entityType={entityType} entityId={entityId} />
+        <CommentAttachmentRows
+          comment={comment}
+          entityType={entityType}
+          entityId={entityId}
+          filing={filing}
+          onChanged={onChanged}
+        />
       )}
       {error && (
         <p role="alert" className="text-xs text-status-danger-fg">

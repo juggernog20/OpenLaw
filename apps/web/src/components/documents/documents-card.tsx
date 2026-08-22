@@ -551,7 +551,7 @@ export function DocumentsCard({
     told.current = true;
     spoken.current = word;
     onFiled([...word.values()].flat());
-  }, [listings]);
+  }, [listings, onFiled]);
   /** The folder dialog that is open, or none. */
   const [folderDialog, setFolderDialog] = useState<FolderDialog | null>(null);
   /** The document a "Move to folder" dialog is open for, or none. */
