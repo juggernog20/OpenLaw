@@ -137,7 +137,6 @@ function sectionTab(page: Page, name: string): Locator {
   return page.getByRole("navigation", { name: "Contract sections" }).getByRole("link", { name });
 }
 
-/** Expands an applet and answers its panel (DES-016, DES-047). */
 async function openApplet(page: Page, label: "Team"): Promise<Locator> {
   await page.getByRole("toolbar", { name: "Applets" }).getByRole("button", { name: label }).click();
   const panel = page.getByRole("complementary", { name: label });
