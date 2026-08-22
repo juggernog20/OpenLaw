@@ -677,10 +677,11 @@ test.describe.serial("M11 demo path", () => {
 
       // ---- Immutable, at the seam that would have to allow it ----
       //
-      // A correction appends a round; nothing edits or removes one
-      // (story 12, DOC-001). There is no route at a version's address to
-      // do either, and the chain is unchanged for having been asked.
-      for (const method of ["PATCH", "PUT", "DELETE"] as const) {
+      // A correction appends a round; nothing replaces or removes one
+      // (story 12, DOC-001). PATCH at this address is the narrow CTR-014
+      // kind correction, covered at the API seam; PUT and DELETE remain
+      // absent, and the chain is unchanged for having been asked.
+      for (const method of ["PUT", "DELETE"] as const) {
         const refused = await uploaderPage.request.fetch(
           `/api/v1/documents/${document.id}/versions/${versions[0]!.id}`,
           { method },
