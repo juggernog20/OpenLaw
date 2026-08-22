@@ -34,16 +34,16 @@ test.describe("application shell", () => {
     await expect(header.getByText("openlaw")).toBeVisible();
     await expect(header.getByRole("searchbox", { name: "Search" })).toBeVisible();
 
-    // Nav renders from the destination registry — the M21 Inbox in the
-    // slot reserved for intake (INT-006), Home, and, for Member+, the
-    // M8 contract record and the M7 Entities registry — with the
-    // current one marked.
+    // Nav renders from the destination registry — Home in slot one,
+    // the M21 Inbox next (INT-006 M21/13), and, for Member+, the M8
+    // contract record and the M7 Entities registry — with the current
+    // one marked.
     const nav = page.getByRole("navigation");
     const links = nav.getByRole("link");
     await expect(links).toHaveCount(4);
-    await expect(links.first()).toContainText("Inbox");
-    await expect(links.nth(1)).toHaveAttribute("aria-current", "page");
-    await expect(links.nth(1)).toContainText("Home");
+    await expect(links.first()).toContainText("Home");
+    await expect(links.first()).toHaveAttribute("aria-current", "page");
+    await expect(links.nth(1)).toContainText("Inbox");
     await expect(links.nth(2)).toContainText("Contracts");
     await expect(links.nth(3)).toContainText("Entities");
 

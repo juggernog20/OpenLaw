@@ -40,11 +40,12 @@ describe("mobile shell (#46)", () => {
     // The drawer renders from the destination registry and nothing else.
     const links = within(drawer).getAllByRole("link");
     expect(links).toHaveLength(destinations.length);
-    // Intake holds slot one (INT-006); Home is the destination this
-    // shell is mounted at, so it is the marked one.
-    expect(links[0]).toHaveAccessibleName("Inbox");
-    expect(links[1]).toHaveAccessibleName("Home");
-    expect(links[1]).toHaveAttribute("aria-current", "page");
+    // Home holds slot one and Intake follows it (INT-006 M21/13). Home
+    // is also the destination this shell is mounted at, so it is the
+    // marked one.
+    expect(links[0]).toHaveAccessibleName("Home");
+    expect(links[1]).toHaveAccessibleName("Inbox");
+    expect(links[0]).toHaveAttribute("aria-current", "page");
   });
 
   it("navigates and closes the drawer on a destination click", async () => {

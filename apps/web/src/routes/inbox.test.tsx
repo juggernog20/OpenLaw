@@ -297,19 +297,19 @@ describe("the Inbox destination", () => {
 });
 
 describe("who the Inbox is for (INT-006, DD-013)", () => {
-  it("puts the Inbox in nav slot one for Member+", async () => {
+  it("puts the Inbox in nav slot two, behind Home, for Member+", async () => {
     stubApi({ signedIn: MEMBER, extra: inboxApi([]).handler });
     renderAt("/inbox");
 
     const nav = await screen.findByRole("navigation");
     const links = within(nav).getAllByRole("link");
     expect(links.map((link) => link.textContent)).toEqual([
-      "Inbox",
       "Home",
+      "Inbox",
       "Contracts",
       "Entities",
     ]);
-    expect(links[0]).toHaveAttribute("aria-current", "page");
+    expect(links[1]).toHaveAttribute("aria-current", "page");
   });
 
   it("draws no Inbox for a Contributor, and bounces them off the screen", async () => {
