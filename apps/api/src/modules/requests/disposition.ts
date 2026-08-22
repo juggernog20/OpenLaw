@@ -46,11 +46,15 @@
  */
 
 import { and, eq, isNull, requests, type RequestStatus, type Transaction } from "@openlaw/db";
-import { REQUEST_DISPOSITIONED_PROBLEM_TYPE, type RequestOutcome } from "@openlaw/shared";
+import { z } from "zod";
+import {
+  REQUEST_DISPOSITIONED_PROBLEM_TYPE,
+  REQUEST_OUTCOMES,
+  type RequestOutcome,
+} from "@openlaw/shared";
 import type { AuthenticatedUser } from "../../auth/guards.js";
 import type { Notifier, NotifyingTransaction } from "../../lib/notifications/notifier.js";
 import { httpError, problemTypeResponse } from "../../lib/problem.js";
-import { z } from "zod";
 import { NO_REQUEST, staffRequestRow, toStaffRequest } from "./projection.js";
 
 /** INT-006: Member+ triages, and there are no routing rules to narrow
@@ -102,8 +106,11 @@ export function dispositionedResponse(unnamed: string) {
       unnamed,
     [REQUEST_DISPOSITIONED_PROBLEM_TYPE],
     {
+      // From the shared list, never retyped: the document's vocabulary
+      // and the refusal's are one wire contract, and a copy that drifted
+      // would document an outcome the seam never sends.
       outcome: z
-        .enum(["converted", "resolved", "declined"])
+        .enum(REQUEST_OUTCOMES)
         .optional()
         .describe(
           "What was recorded, on the named refusal alone. A client branches on this, " +

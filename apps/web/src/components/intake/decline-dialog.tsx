@@ -7,9 +7,8 @@
  *
  * **The reason is required, and the box says so before the seam does.**
  * INT-006 makes "no" always arrive with a why. An empty box is refused
- * here so nobody presses a button to learn that; the seam refuses it
- * again, because one rule enforced in one place is a rule the API does
- * not hold.
+ * here so nobody presses a button to learn that. The seam refuses it
+ * again, because a rule only a browser holds is not a rule.
  *
  * **The dialog says who reads the reason.** I4's note under the box is
  * kept whole: the requester is mailed it and sees it on their own page.
@@ -44,7 +43,14 @@ import { Label } from "../ui/label";
  * screen reader reads the two together (DES-011). */
 const ERROR_ID = "decline-reason-error";
 
-/** What the dialog answers back to the page that opened it. */
+/**
+ * What the dialog answers back to the page that opened it.
+ *
+ * Narrower than `DispositionOutcome` on purpose: the page's write answers
+ * the whole envelope, and the dialog reads none of it. What it acts on is
+ * whether the decline landed, whether somebody else decided first, and
+ * the sentence to print when neither.
+ */
 export type DeclineResult =
   /** It landed. The page repaints from the envelope the write answered. */
   | { ok: true }
