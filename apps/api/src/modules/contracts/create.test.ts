@@ -52,13 +52,9 @@ let adminCookies: Record<string, string>;
 let memberCookies: Record<string, string>;
 let memberId: string;
 
-/** A live type with nothing attached — the ordinary create. */
 let plainTypeId: string;
-/** A type an Administrator has archived. */
 let archivedTypeId: string;
-/** A live type that hard-requires one field (CTR-016). */
 let demandingTypeId: string;
-/** That type's required field, by slug. */
 let requiredSlug: string;
 
 beforeAll(async () => {
@@ -93,7 +89,6 @@ afterAll(async () => {
   await harness.stop();
 });
 
-/** Adds a contract type, requiring success. */
 async function newType(displayName: string): Promise<string> {
   const res = await harness.app.inject({
     method: "POST",
@@ -105,7 +100,6 @@ async function newType(displayName: string): Promise<string> {
   return res.json().contractType.id as string;
 }
 
-/** Defines a text field and attaches it to a type as hard-required. */
 async function attachRequiredField(typeId: string, displayName: string): Promise<string> {
   const defined = await harness.app.inject({
     method: "POST",
@@ -125,7 +119,6 @@ async function attachRequiredField(typeId: string, displayName: string): Promise
   return field.slug;
 }
 
-/** The create as the route asks it. */
 const createOverHttp = (payload: Record<string, unknown>) =>
   harness.app.inject({
     method: "POST",
@@ -134,11 +127,9 @@ const createOverHttp = (payload: Record<string, unknown>) =>
     payload,
   });
 
-/** The create as a caller that owns the transaction asks it. */
 const createInCallerTransaction = (input: Omit<CreateContractInput, "actorId">) =>
   harness.db.transaction((tx) => createContract(tx, { actorId: memberId, ...input }));
 
-/** The refusal a call threw, or a failure if it did not refuse. */
 async function refusalOf(call: Promise<unknown>): Promise<HttpError> {
   const outcome = await call.then(
     () => null,

@@ -88,7 +88,6 @@ function countingFactory() {
   return { built, factory };
 }
 
-/** Puts one connector row in place, replacing whatever was there. */
 async function storeConnector(privateKey: string): Promise<void> {
   await db.delete(signingConnectors).where(eq(signingConnectors.provider, "docusign"));
   await db.insert(signingConnectors).values({

@@ -34,7 +34,6 @@ import {
   type TestHarness,
 } from "../../testing/harness.js";
 
-/** The person who records the dates. */
 const MEMBER = {
   email: "keydate-member@example.com",
   displayName: "Nadia Counsel",
@@ -128,7 +127,6 @@ async function newContract(title: string): Promise<ContractRow> {
   return res.json().contract as ContractRow;
 }
 
-/** A term commit that must land. */
 async function setTerm(number: number, payload: Record<string, unknown>): Promise<void> {
   const res = await harness.app.inject({
     method: "PATCH",
@@ -156,7 +154,6 @@ const addRaw = (number: number, payload: Record<string, unknown>, cookies = memb
     payload,
   });
 
-/** Adds one key date, requiring it to land, and answers its id. */
 async function add(
   number: number,
   payload: Record<string, unknown>,
@@ -189,7 +186,6 @@ async function edit(
 const removeRaw = (id: string, cookies = memberCookies) =>
   harness.app.inject({ method: "DELETE", url: `/api/v1/key-dates/${id}`, cookies });
 
-/** Every key-date entry on one contract, oldest first. */
 const keyDateEntriesOn = (contractId: string) =>
   harness.db
     .select()

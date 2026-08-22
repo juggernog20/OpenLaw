@@ -202,7 +202,6 @@ function signingEntity(id: unknown) {
   return found ? { id: found.id, legalName: found.legalName } : null;
 }
 
-/** One person as a row on the record renders them. */
 function person(id: string, role?: string) {
   const found = PEOPLE.find((entry) => entry.id === id)!;
   const shape = {

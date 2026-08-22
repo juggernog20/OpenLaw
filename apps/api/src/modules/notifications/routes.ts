@@ -113,7 +113,6 @@ const PAGE_SIZE = 25;
  * id in this API. */
 const RecordIdSchema = z.string().min(1).max(64);
 
-/** What both writes answer: the badge that remains (NOT-005). */
 const UnreadEnvelope = z.object({ unread: z.number().int().nonnegative() });
 
 /**
@@ -204,9 +203,7 @@ const PreferencesEnvelope = z.object({ groups: z.array(PreferenceSchema) });
  * one implementation in {@link bellRoutes}.
  */
 interface BellMount {
-  /** Which rows this mount may answer with (NOT-001). */
   surface: NotificationSurface;
-  /** Where the four routes sit, under the shared `/api/v1` prefix. */
   path: "/notifications" | "/portal/notifications";
   /** The four operationIds, which are the generated client's own method
    * names and so have to be distinct across the two mounts. */

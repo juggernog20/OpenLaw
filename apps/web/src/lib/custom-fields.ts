@@ -53,7 +53,6 @@ export function emptyDraft(field: AttachedField): CustomFieldDraft {
   return "";
 }
 
-/** The stored value as its control holds it. */
 export function toDraft(
   field: AttachedField,
   value: CustomFieldValue | undefined,

@@ -408,7 +408,6 @@ class DocuSignProvider implements SigningProvider {
     return this.tokenExchange;
   }
 
-  /** One JWT-grant exchange. */
   private async mintAccessToken(now: number): Promise<string> {
     const assertion = buildJwtAssertion({
       integrationKey: this.config.integrationKey,
@@ -462,7 +461,6 @@ class DocuSignProvider implements SigningProvider {
     return this.accountLookup;
   }
 
-  /** One userinfo round trip. */
   private async discoverAccount(): Promise<AccountInfo> {
     const token = await this.accessToken();
     const response = await this.call(`${this.hosts.auth}/oauth/userinfo`, { token });
@@ -585,7 +583,6 @@ class DocuSignProvider implements SigningProvider {
   }
 }
 
-/** Everything a stream yields, as one buffer. */
 async function collect(stream: Readable): Promise<Buffer> {
   const chunks: Buffer[] = [];
   for await (const chunk of stream) chunks.push(Buffer.from(chunk as Buffer));
@@ -649,7 +646,6 @@ export function buildEnvelopeDefinition(
   };
 }
 
-/** Builds the DocuSign driver for one stored connector. */
 export function createDocuSignProvider(
   config: DocuSignConfig,
   options: DocuSignDriverOptions = {},

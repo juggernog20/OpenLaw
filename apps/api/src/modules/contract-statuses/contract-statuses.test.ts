@@ -158,7 +158,6 @@ describe("the SET-002 role gate", () => {
       expect(res.statusCode, res.body).toBe(403);
       expect(res.headers["content-type"]).toContain("application/problem+json");
     }
-    // None of the refused writes landed.
     expect(await statusBySlug("draft")).toEqual(draft);
     expect((await listStatuses(true)).some((row) => row.displayName === "Sneaky")).toBe(false);
   });
@@ -571,7 +570,6 @@ describe("the SET-003 in-use guard over the contract record (#113)", () => {
     return res.json().contractStatus;
   };
 
-  /** A contract, born on the protected draft seed (CTR-001). */
   const createContract = async (title: string): Promise<{ number: number }> => {
     const types = await harness.app.inject({
       method: "GET",

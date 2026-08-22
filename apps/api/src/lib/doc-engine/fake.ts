@@ -66,27 +66,22 @@ const ZIP_END = Buffer.from([0x50, 0x4b, 0x05, 0x06]);
 /** Every PDF starts with this. */
 const PDF_HEADER = Buffer.from("%PDF-", "ascii");
 
-/** A short, stable name for a source, so answers can be told apart. */
 function digest(source: Buffer): string {
   return createHash("sha256").update(source).digest("hex").slice(0, 16);
 }
 
-/** The text the fake's conversion of `source` carries. */
 export function fakeConversionText(format: string, source: Buffer): string {
   return `Converted ${format} document ${digest(source)}`;
 }
 
-/** The text the fake reads out of a PDF that it did not produce. */
 export function fakeExtractedText(pdf: Buffer): string {
   return `Text layer of PDF ${digest(pdf)}`;
 }
 
-/** The text the fake's OCR reads out of a PDF. */
 export function fakeOcrText(pdf: Buffer): string {
   return `Text read by OCR from PDF ${digest(pdf)}`;
 }
 
-/** Everything a stream yields, as one buffer. */
 async function collect(stream: Readable): Promise<Buffer> {
   const chunks: Buffer[] = [];
   try {
@@ -102,7 +97,6 @@ async function collect(stream: Readable): Promise<Buffer> {
   return Buffer.concat(chunks);
 }
 
-/** Escapes a PDF literal string's three special characters. */
 function pdfString(text: string): string {
   return text.replaceAll("\\", "\\\\").replaceAll("(", "\\(").replaceAll(")", "\\)");
 }
@@ -147,7 +141,6 @@ function onePagePdf(marker: string, text: string, words: boolean): Buffer {
   return Buffer.from(body + table + trailer, "latin1");
 }
 
-/** The text one of this engine's markers carries, if the PDF carries it. */
 function markerOf(pdf: Buffer, marker: string): string | undefined {
   const start = pdf.indexOf(marker);
   if (start < 0) return undefined;
@@ -196,7 +189,6 @@ function assertReadablePdf(pdf: Buffer): void {
   }
 }
 
-/** Builds the deterministic doc engine. */
 export function createFakeDocEngine(): DocEngine {
   return {
     async convertToPdf(source, format) {

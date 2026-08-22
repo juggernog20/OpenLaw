@@ -193,7 +193,6 @@ describe("doc-engine HTTP client", () => {
       );
     });
 
-    /** The error the client raises when the sidecar answers `answered`. */
     async function errorFor(answered: number): Promise<unknown> {
       status = answered;
       const engine = createHttpDocEngine({ baseUrl });

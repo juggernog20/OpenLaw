@@ -94,7 +94,6 @@ function insertByName(rows: readonly GroupRow[], row: GroupRow): GroupRow[] {
   return at === -1 ? [...rows, row] : [...rows.slice(0, at), row, ...rows.slice(at)];
 }
 
-/** Somebody the picker can offer, or a member it has to keep showing. */
 interface Candidate {
   id: string;
   displayName: string;
@@ -108,7 +107,6 @@ interface Candidate {
 type UserRow =
   paths["/api/v1/users"]["get"]["responses"]["200"]["content"]["application/json"]["users"][number];
 
-/** Live Member+ users, in display-name order — who a group may hold. */
 function eligiblePeople(users: readonly UserRow[]): Candidate[] {
   return users
     .filter(
@@ -131,7 +129,6 @@ function GroupEditorDialog({
   onRowChanged,
   onCreated,
 }: Readonly<{
-  /** The group being edited, or null for create mode. */
   target: GroupRow | null;
   people: readonly Candidate[];
   onOpenChange: (open: boolean) => void;
@@ -526,7 +523,6 @@ export function SettingsApproverGroupsPage() {
   const [rows, setRows] = useState<GroupRow[]>(() => approverGroups.map((group) => toRow(group)));
   const [rowStatus, setRowStatus] = useState<Record<string, FieldStatus>>({});
   const [rowError, setRowError] = useState<Record<string, string | undefined>>({});
-  /** The editor dialog: closed, create mode, or an edit target. */
   const [editor, setEditor] = useState<{ target: GroupRow | null } | null>(null);
   const [archiveTarget, setArchiveTarget] = useState<GroupRow | null>(null);
   const listRef = useRef<HTMLUListElement>(null);

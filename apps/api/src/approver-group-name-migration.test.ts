@@ -38,7 +38,6 @@ import {
   migrationEntries,
 } from "./testing/migration-rehearsal.js";
 
-/** The last migration before the one under test. */
 const BEFORE = "0064_keyset_id_tiebreak";
 
 let container: StartedPostgreSqlContainer;
@@ -53,7 +52,6 @@ afterAll(async () => {
   await container?.stop();
 });
 
-/** An install from before the index: migrated to 0064, groups free to clash. */
 async function installBefore(name: string): Promise<Db> {
   const db = await freshDatabase(container, name);
   await migrateThroughTag(db, BEFORE, entries);
@@ -72,7 +70,6 @@ async function group(db: Db, id: string, name: string, createdAt: string, archiv
             ${archived ? createdAt : null}::timestamptz)`);
 }
 
-/** Every group's name, keyed by id. */
 async function names(db: Db): Promise<Record<string, string>> {
   const rows = await db.execute<{ id: string; name: string }>(
     sql`select id, name from approver_groups`,

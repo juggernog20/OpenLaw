@@ -113,7 +113,6 @@ interface ContractRow {
   title: string;
 }
 
-/** One bell item, as the API answers it. */
 interface BellItem {
   id: string;
   eventType: string;
@@ -157,7 +156,6 @@ afterAll(async () => {
   await harness.stop();
 });
 
-/** The `nda` seed type, which every contract here is created as. */
 async function ndaTypeId(): Promise<string> {
   const res = await harness.app.inject({
     method: "GET",
@@ -216,7 +214,6 @@ async function addKeyDate(number: number, date: string, label: string): Promise<
   return added!.keyDateId!;
 }
 
-/** Moves a key date to another day. */
 async function moveKeyDate(keyDateId: string, date: string): Promise<void> {
   const res = await harness.app.inject({
     method: "PATCH",
@@ -262,7 +259,6 @@ async function moveTo(number: number, stage: ContractStage): Promise<void> {
 const wallOff = (contractId: string) =>
   harness.db.update(contracts).set({ isConfidential: true }).where(eq(contracts.id, contractId));
 
-/** One page of somebody's bell, as they would read it. */
 async function bell(fixture: { email: string }): Promise<BellItem[]> {
   const res = await harness.app.inject({
     method: "GET",
@@ -348,7 +344,6 @@ const at = (date: string, hour: number): Date =>
 /** How long the queue is given before the suite calls it stuck. */
 const SETTLE_TIMEOUT_MS = 20_000;
 
-/** Waits for a condition the pipeline is expected to bring about. */
 async function settles(what: string, ready: () => Promise<boolean> | boolean): Promise<void> {
   const deadline = Date.now() + SETTLE_TIMEOUT_MS;
   while (Date.now() < deadline) {

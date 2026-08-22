@@ -136,7 +136,6 @@ const detach = async (typeId: string, fieldId: string) =>
     cookies: adminCookies,
   });
 
-/** A catalog field's id by slug, via the Fields pane's own list route. */
 const fieldIdBySlug = async (slug: string): Promise<string> => {
   const res = await harness.app.inject({
     method: "GET",
@@ -151,7 +150,6 @@ const fieldIdBySlug = async (slug: string): Promise<string> => {
   return row!.id;
 };
 
-/** Defines a catalog field through the Fields pane's own create route. */
 const createField = async (
   displayName: string,
   moduleScope: "contract" | "global",

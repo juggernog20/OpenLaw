@@ -123,9 +123,7 @@ afterAll(async () => {
   await harness.stop();
 });
 
-// ---------------------------------------------------------------------
 // The pane's own two calls
-// ---------------------------------------------------------------------
 
 /** The whole grid, as the pane reads it. */
 async function preferences(fixture: { email: string }): Promise<GroupPreference[]> {
@@ -172,9 +170,7 @@ async function toggle(
   return (res.json() as { groups: GroupPreference[] }).groups;
 }
 
-// ---------------------------------------------------------------------
 // The records and the events fired on them
-// ---------------------------------------------------------------------
 
 /** The `nda` seed type, which every contract here is created as. */
 async function ndaTypeId(): Promise<string> {
@@ -304,8 +300,6 @@ async function mailArrives(fixture: { email: string }, contract: ContractRow) {
   );
   return mailAbout(fixture, contract)[0]!;
 }
-
-// ---------------------------------------------------------------------
 
 describe("the grid the pane draws", () => {
   it("answers all five groups with NOT-002's defaults before anybody has an opinion", async () => {
