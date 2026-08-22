@@ -469,12 +469,16 @@ export interface Notifier {
    * A mention is done *to* you: somebody has asked you a question by
    * name, which is the same kind of act as being handed a record. So it
    * interrupts, rather than riding the ambient default an ordinary
-   * comment takes (NOT-002's M18/1 addendum).
+   * comment takes (NOT-002's M18/1 addendum) — and it interrupts
+   * whatever record it happened on, which is why the event has one arm
+   * per record type from M21/5 rather than being a contract's alone.
    *
    * The audience is read from `comment_mentions` **here**, inside the
    * transaction that wrote it — a body is never parsed — and it is
    * narrowed by the comment's own tier, so a Legal Only mention reaches
-   * nobody the tier excludes.
+   * nobody the tier excludes. On a Request it is narrowed once more, by
+   * the M18/4 rule: the Requester is told by the reply event in the one
+   * room they hear, so the mention leaves them out of it.
    */
   commentMentioned(tx: NotifyingTransaction, event: CommentMentionedEvent): Promise<void>;
 

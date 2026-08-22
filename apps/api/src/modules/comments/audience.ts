@@ -41,8 +41,8 @@
  * - `notifyPosted` — what a new comment on this type of record raises
  *   through the Notifier seam (NOT-002). It is here rather than at the
  *   route because the events differ by type: a contract comment is group
- *   1 and 2 on the record's roster, and a request comment is group 5 at
- *   its Requester.
+ *   1 and 2 on the record's roster, and a request comment is group 1 at
+ *   the staff it named and group 5 at its Requester.
  *
  * A record a viewer cannot reach and a record that is not there answer
  * the same way — `null`, and {@link NO_RECORD} above it. A refusal that
