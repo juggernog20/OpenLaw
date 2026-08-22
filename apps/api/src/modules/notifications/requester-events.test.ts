@@ -416,6 +416,28 @@ describe("the two events the Inbox will fire (INT-006, INT-007)", () => {
     expect(message.text).toContain(portalLink(request));
   });
 
+  it("speaks the four words the portal pill speaks (the INT-003 M21/6 addendum)", async () => {
+    // `converted` is the one arm where the machinery and the requester
+    // part company: a record now exists, and what that means to the
+    // person who asked is that Legal is working on it. The pill on their
+    // screen says "In progress" too, so their inbox and their page never
+    // disagree about the same Request.
+    const request = await submit(REQUESTER, "Renew the Stark supply agreement");
+    await raise((tx) =>
+      harness.app.notifier.requestStatusChanged(tx, {
+        requestId: request.id,
+        actorId: idOf(STAFF),
+        actorName: STAFF.displayName,
+        from: "new",
+        to: "converted",
+      }),
+    );
+
+    const message = await oneMailAbout(REQUESTER, request, "Your request is in progress");
+    expect(message.text).toContain("is now in progress");
+    expect(message.text).not.toContain("converted");
+  });
+
   it("tells the requester why their Request was declined", async () => {
     const request = await submit(REQUESTER, "Review the Cyberdyne research pact");
     await raise((tx) =>

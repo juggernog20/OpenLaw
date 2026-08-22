@@ -64,7 +64,7 @@ import {
   REQUEST_STATUS_PILL,
   requestAttachmentHref,
   requestReference,
-  requestStatusLabel,
+  requesterStatusLabel,
   type MyRequestAttachment,
   type MyRequestField,
   type MyRequestFieldRefs,
@@ -142,7 +142,7 @@ export function PortalRequestPage() {
           <span
             className={`inline-flex shrink-0 rounded-pill px-2 py-0.5 text-xs font-medium ${REQUEST_STATUS_PILL[request.status]}`}
           >
-            {requestStatusLabel(intl, request.status)}
+            {requesterStatusLabel(intl, request.status)}
           </span>
         </div>
         {/* I7's meta line: the reference, the front door, and the day it
@@ -318,7 +318,7 @@ const BANNER_COPY = {
   }),
   resolved: defineMessage({
     id: "portal.request.bannerResolved",
-    defaultMessage: "Legal has answered this request.",
+    defaultMessage: "Legal has answered this request and closed it.",
   }),
   declined: defineMessage({
     id: "portal.request.bannerDeclined",

@@ -176,7 +176,7 @@ describe("the request envelope", () => {
         name: "Orion Cloud MSA renewal — redline review",
       }),
     ).toBeInTheDocument();
-    expect(screen.getByText("New")).toBeInTheDocument();
+    expect(screen.getByText("Open")).toBeInTheDocument();
     expect(screen.getByText("R-45 · Contract review · Submitted Aug 6")).toBeInTheDocument();
   });
 
@@ -190,10 +190,25 @@ describe("the request envelope", () => {
     );
   });
 
+  // The INT-003 M21/6 addendum: the pill says the words the email says,
+  // so a requester's inbox and their screen never disagree about the
+  // same Request. The enum's own words are the staff detail's.
+  it.each([
+    ["new", "Open"],
+    ["converted", "In progress"],
+    ["resolved", "Resolved"],
+    ["declined", "Declined"],
+  ] as const)("says %s in the requester's own vocabulary", async (status, word) => {
+    stubApi({ signedIn: REQUESTER, extra: detailRead(detail({ status })) });
+    renderAt("/portal/requests/45");
+
+    expect(await screen.findByText(word)).toBeInTheDocument();
+  });
+
   it.each([
     ["new", "Legal has received your request"],
     ["converted", "Legal is working on this"],
-    ["resolved", "Legal has answered this request"],
+    ["resolved", "Legal has answered this request and closed it"],
     ["declined", "Legal declined this request"],
   ] as const)("says what %s means for the requester", async (status, copy) => {
     stubApi({ signedIn: REQUESTER, extra: detailRead(detail({ status })) });
@@ -210,7 +225,7 @@ describe("the request envelope", () => {
     renderAt("/portal/requests/45");
 
     expect(await screen.findByRole("heading", { level: 1 })).toBeInTheDocument();
-    expect(screen.getByText("Converted")).toBeInTheDocument();
+    expect(screen.getByText("In progress")).toBeInTheDocument();
     expect(screen.queryByRole("link", { name: /contract/i })).not.toBeInTheDocument();
   });
 
