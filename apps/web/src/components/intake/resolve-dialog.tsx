@@ -50,11 +50,8 @@ import { Label } from "../ui/label";
  * somebody else decided first, and the sentence to print when neither.
  */
 export type ResolveResult =
-  /** It landed. The page repaints from the envelope the write answered. */
   | { ok: true }
-  /** Somebody else decided first, and this is what they decided. */
   | { ok: false; alreadyDecided: RequestOutcome }
-  /** Any other refusal, in the seam's own words where it gave any. */
   | { ok: false; alreadyDecided?: undefined; detail?: string };
 
 export function ResolveDialog({
@@ -63,11 +60,9 @@ export function ResolveDialog({
   onClose,
   onResolve,
 }: Readonly<{
-  /** The Request's R-### reference, which the title quotes. */
   reference: string;
   busy: boolean;
   onClose: () => void;
-  /** Takes the closing reply, or nothing where the box was left empty. */
   onResolve: (reply?: string) => Promise<ResolveResult>;
 }>) {
   const intl = useIntl();

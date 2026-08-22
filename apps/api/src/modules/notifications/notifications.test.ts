@@ -110,7 +110,6 @@ interface ContractRow {
   title: string;
 }
 
-/** One bell item, as the API answers it. */
 interface BellItem {
   id: string;
   eventType: string;
@@ -148,7 +147,6 @@ afterAll(async () => {
   await harness.stop();
 });
 
-/** The `nda` seed type, which every contract here is created as. */
 async function ndaTypeId(): Promise<string> {
   const res = await harness.app.inject({
     method: "GET",
@@ -189,7 +187,6 @@ async function ask(number: number, approverId: string, jar = as(MEMBER)): Promis
   expect(res.statusCode, res.body).toBe(201);
 }
 
-/** One page of somebody's bell, as they would read it. */
 async function bell(
   fixture: { email: string },
   cursor?: string,
@@ -275,7 +272,6 @@ const rowsFor = (fixture: { email: string }): Promise<Notification[]> =>
  * The mailer is a capture, so this is slack for pg-boss, not for SMTP. */
 const SETTLE_TIMEOUT_MS = 20_000;
 
-/** Waits for a condition the pipeline is expected to bring about. */
 async function settles(what: string, ready: () => Promise<boolean>): Promise<void> {
   const deadline = Date.now() + SETTLE_TIMEOUT_MS;
   while (Date.now() < deadline) {

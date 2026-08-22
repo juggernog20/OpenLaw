@@ -28,10 +28,7 @@
  * promise about what is in the table.
  */
 
-/**
- * A payload with nothing in it: the slug says the whole of what
- * happened, so there is nothing to carry beside it.
- */
+/** Payload for actions fully described by their slug. */
 export type EmptyActivityPayload = Record<never, never>;
 
 /**
@@ -50,19 +47,14 @@ export type FieldChangePayload = {
   new: unknown;
 };
 
-/**
- * The `changed` map an edit carries: one entry per key, each with the
- * value before and the value after.
- */
+/** Values before and after an edit, keyed by field. */
 export type ChangedFields = Record<string, { from: unknown; to: unknown }>;
 
 /** Re-keys a payload table under one action prefix, so three taxonomies
  * that write the same seven verbs are declared once. */
 type Prefixed<P extends string, M> = { [K in keyof M & string as `${P}.${K}`]: M[K] };
 
-// ---------------------------------------------------------------------
 // The taxonomies (#85: one machinery each)
-// ---------------------------------------------------------------------
 
 /** The taxonomy tables' audit namespaces. */
 export type TaxonomyActionPrefix = "contract_type" | "matter_type" | "entity_type" | "request_type";
@@ -102,9 +94,7 @@ type TypeFieldPayloads = {
   required_changed: { typeSlug: string; fieldSlug: string; isRequired: boolean };
 };
 
-// ---------------------------------------------------------------------
 // The whole vocabulary
-// ---------------------------------------------------------------------
 
 /**
  * The profile and user administration (M5, SET-005). Each names the

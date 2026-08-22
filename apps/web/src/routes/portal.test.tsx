@@ -57,7 +57,6 @@ interface HomeLink {
  * the fixture cannot drift from what the API answers. */
 type HomeRequest = MyRequestRow;
 
-/** The three reads the home makes, answered from a fixture. */
 function portalHome(state: {
   requestTypes?: HomeType[];
   intakeLinks?: HomeLink[];

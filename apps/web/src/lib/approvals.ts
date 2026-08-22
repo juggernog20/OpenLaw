@@ -28,7 +28,6 @@ import { problemDetail } from "./messages";
 type ListResponse =
   paths["/api/v1/contracts/{number}/approvals"]["get"]["responses"]["200"]["content"]["application/json"];
 
-/** One approval request on a record (CTR-012). */
 export type ContractApproval = ListResponse["approvals"][number];
 export type ApprovalStatus = ContractApproval["status"];
 /** The two answers an approver may give. A pending row has neither. */
@@ -67,7 +66,6 @@ export const APPROVAL_PILL: Record<ApprovalStatus, string> = {
 export const isUnresolved = (approval: ContractApproval): boolean =>
   (UNRESOLVED_APPROVAL_STATUSES as readonly string[]).includes(approval.status);
 
-/** Reads one contract's approvals, whole. */
 export async function readContractApprovals(contractNumber: number): Promise<ApprovalsOutcome> {
   const { data, error } = await api.GET("/api/v1/contracts/{number}/approvals", {
     params: { path: { number: contractNumber } },

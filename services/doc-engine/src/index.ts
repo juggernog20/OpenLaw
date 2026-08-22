@@ -11,7 +11,6 @@
 
 import { createDocEngineServer } from "./server.js";
 
-/** The port the sidecar listens on inside the compose network. */
 const DEFAULT_PORT = 8080;
 
 /**
@@ -36,10 +35,8 @@ const DEFAULT_MAX_BODY_BYTES = 256 * 1024 * 1024;
  */
 const REQUEST_TIMEOUT_MS = 300_000;
 
-/** How long a shutdown waits for work in flight before dropping it. */
 const SHUTDOWN_DEADLINE_MS = 10_000;
 
-/** Reads a positive integer from the environment, or answers the default. */
 function positiveInteger(value: string | undefined, fallback: number): number {
   const parsed = Number(value);
   return Number.isSafeInteger(parsed) && parsed > 0 ? parsed : fallback;

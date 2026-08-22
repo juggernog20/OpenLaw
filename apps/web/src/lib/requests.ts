@@ -54,7 +54,6 @@ type DetailResponse =
   paths["/api/v1/portal/requests/{number}"]["get"]["responses"]["200"]["content"]["application/json"];
 export type MyRequestField = DetailResponse["fields"][number];
 export type MyRequestFieldRefs = DetailResponse["customFieldRefs"];
-/** One file that travelled with the ask (INT-002). */
 export type MyRequestAttachment = DetailResponse["attachments"][number];
 
 /**

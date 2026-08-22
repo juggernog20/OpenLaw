@@ -227,7 +227,6 @@ const requesterRowsAbout = async (
  * The mailer is a capture, so this is slack for pg-boss, not for SMTP. */
 const SETTLE_TIMEOUT_MS = 20_000;
 
-/** Waits for a condition the pipeline is expected to bring about. */
 async function settles(what: string, ready: () => boolean): Promise<void> {
   const deadline = Date.now() + SETTLE_TIMEOUT_MS;
   while (Date.now() < deadline) {

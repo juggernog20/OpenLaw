@@ -91,7 +91,6 @@ export interface NotifierLogger {
   error(fields: Record<string, unknown>, message: string): void;
 }
 
-/** Everything the seam is built from. */
 export interface NotifierDeps {
   db: Db;
   /** The pipeline, for the immediate-email wake-up. Asked after the

@@ -145,7 +145,6 @@ function detailRead(body: unknown, status = 200, thread: ThreadAnswer = { commen
   };
 }
 
-/** Answers the one write the composer makes. */
 function replyPost(answer: (body: unknown) => Response) {
   return (call: StubCall) =>
     call.url.pathname === "/api/v1/comments" && call.method === "POST"

@@ -237,7 +237,7 @@ export class FakeSigningProvider implements SigningProvider {
     };
   }
 
-  // ---- Scripting: what a suite does instead of waiting for a signer ----
+  // Test controls that stand in for signer actions
 
   /** Signs the envelope, as its last signer would. */
   complete(providerEnvelopeId: string): void {

@@ -150,7 +150,6 @@ afterAll(async () => {
   await harness.stop();
 });
 
-/** The `nda` seed type, which every contract here is created as. */
 async function ndaTypeId(): Promise<string> {
   const res = await harness.app.inject({
     method: "GET",

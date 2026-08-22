@@ -24,7 +24,6 @@ import { screen, within } from "@testing-library/react";
 import type userEvent from "@testing-library/user-event";
 import { json, type StubCall } from "./helpers";
 
-/** The triager every disposition suite signs in as. */
 export const MEMBER = {
   id: "u2",
   email: "member@example.com",
@@ -75,17 +74,14 @@ export function staffDetail(row: Record<string, unknown>, fields: unknown[] = []
   };
 }
 
-/** What one disposition seam is built from. */
 export interface DispositionSeamOptions {
   /** The route segment the write posts to: `decline`, `resolve`, or
    * `convert`. */
   segment: string;
-  /** The Request the seam starts holding. */
   initial?: Record<string, unknown>;
   /** What the row becomes once the write lands — the outcome this
    * disposition records. */
   applied: (row: Record<string, unknown>, body: unknown) => Record<string, unknown>;
-  /** The detail read around the row. Defaults to no collected fields. */
   detail?: (row: Record<string, unknown>) => unknown;
   /** A refusal in place of the write, for the race and failure cases. */
   answer?: (call: StubCall) => Response | undefined;
@@ -94,12 +90,9 @@ export interface DispositionSeamOptions {
   extra?: (call: StubCall) => Response | undefined;
 }
 
-/** One disposition seam, as a suite reads it back. */
 export interface DispositionSeam {
   handler: (call: StubCall) => Response | undefined;
-  /** Every body the screen posted, in order. */
   sent: unknown[];
-  /** How many times the page read the Request. */
   readonly reads: number;
 }
 
@@ -147,7 +140,6 @@ export function dispositionApi(options: DispositionSeamOptions): DispositionSeam
   };
 }
 
-/** The sub-bar, which is where the disposition lives. */
 export async function subbar(): Promise<HTMLElement> {
   const heading = await screen.findByRole("heading", { level: 1 });
   return heading.closest("section")!;

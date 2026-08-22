@@ -393,7 +393,6 @@ const makePrimary = (cookies: Record<string, string>, documentId: string) =>
     cookies,
   });
 
-/** The raw answer to pinning one version as the signed copy (CTR-014). */
 const pinExecuted = (cookies: Record<string, string>, documentId: string, versionId: string) =>
   harness.app.inject({
     method: "POST",

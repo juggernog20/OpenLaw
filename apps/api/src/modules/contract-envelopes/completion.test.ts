@@ -187,7 +187,6 @@ afterAll(async () => {
   await harness.stop();
 });
 
-/** The `nda` seed type, which every contract here is created as. */
 async function ndaTypeId(): Promise<string> {
   const res = await harness.app.inject({
     method: "GET",
@@ -247,7 +246,6 @@ async function recordWithPaper(title: string): Promise<{ id: string; number: num
   return contract;
 }
 
-/** The signing state of one record, requiring success. */
 async function signingState(number: number) {
   const res = await harness.app.inject({
     method: "GET",
@@ -261,7 +259,6 @@ async function signingState(number: number) {
   };
 }
 
-/** The record's paper, as the documents section draws it. */
 async function paperOf(number: number): Promise<DocumentRow[]> {
   const res = await harness.app.inject({
     method: "GET",
@@ -280,7 +277,6 @@ async function primaryOf(number: number): Promise<DocumentRow> {
   return primary!;
 }
 
-/** Sends the record's current round and answers the envelope it wrote. */
 async function sendFrom(number: number): Promise<EnvelopeRow> {
   const state = await signingState(number);
   const versionId = state.primaryDocument!.versions[0]!.id;
@@ -296,13 +292,11 @@ async function sendFrom(number: number): Promise<EnvelopeRow> {
   return rows[0]!;
 }
 
-/** The fake this app resolved. */
 function provider() {
   expect(harness.signing, "the harness's fake provider").not.toBeNull();
   return harness.signing!;
 }
 
-/** The provider's own id for one of our envelope rows. */
 async function providerIdOf(envelopeId: string): Promise<string> {
   const [row] = await harness.db
     .select({ providerEnvelopeId: contractEnvelopes.providerEnvelopeId })
@@ -327,7 +321,6 @@ function deliver(delivery: WebhookDelivery) {
   });
 }
 
-/** One envelope row, read back over HTTP. */
 async function envelopeRow(number: number, envelopeId: string): Promise<EnvelopeRow> {
   const row = (await signingState(number)).envelopes.find((entry) => entry.id === envelopeId);
   expect(row, "the envelope row").toBeDefined();
@@ -387,7 +380,6 @@ async function statusesAt(stage: ContractStage) {
     .orderBy(asc(contractStatuses.displayOrder), asc(contractStatuses.createdAt));
 }
 
-/** Moves a record onto the first live status at one stage. */
 async function moveTo(number: number, stage: ContractStage): Promise<string> {
   const [target] = await statusesAt(stage);
   expect(target, `a live status at the ${stage} stage`).toBeDefined();

@@ -178,9 +178,7 @@ export const contractTasksRoutes: FastifyPluginAsyncZod = async (app) => {
     return (row?.max ?? -1) + 1;
   }
 
-  // ------------------------------------------------------------------
   // GET /contracts/:number/tasks — read the checklist
-  // ------------------------------------------------------------------
 
   app.get(
     "/contracts/:number/tasks",
@@ -208,9 +206,7 @@ export const contractTasksRoutes: FastifyPluginAsyncZod = async (app) => {
     },
   );
 
-  // ------------------------------------------------------------------
   // POST /contracts/:number/tasks — add a task
-  // ------------------------------------------------------------------
 
   app.post(
     "/contracts/:number/tasks",
@@ -304,9 +300,7 @@ export const contractTasksRoutes: FastifyPluginAsyncZod = async (app) => {
     },
   );
 
-  // ------------------------------------------------------------------
   // PATCH /tasks/:taskId — edit a task
-  // ------------------------------------------------------------------
 
   app.patch(
     "/tasks/:taskId",
@@ -404,9 +398,7 @@ export const contractTasksRoutes: FastifyPluginAsyncZod = async (app) => {
     },
   );
 
-  // ------------------------------------------------------------------
   // POST /tasks/:taskId/toggle — toggle a task's done state
-  // ------------------------------------------------------------------
 
   app.post(
     "/tasks/:taskId/toggle",
@@ -452,9 +444,7 @@ export const contractTasksRoutes: FastifyPluginAsyncZod = async (app) => {
     },
   );
 
-  // ------------------------------------------------------------------
   // PUT /contracts/:number/tasks/reorder — reorder the checklist
-  // ------------------------------------------------------------------
 
   app.put(
     "/contracts/:number/tasks/reorder",
@@ -514,9 +504,7 @@ export const contractTasksRoutes: FastifyPluginAsyncZod = async (app) => {
     },
   );
 
-  // ------------------------------------------------------------------
   // DELETE /tasks/:taskId — remove a task
-  // ------------------------------------------------------------------
 
   app.delete(
     "/tasks/:taskId",

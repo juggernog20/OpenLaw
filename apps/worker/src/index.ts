@@ -54,7 +54,6 @@ import {
 
 const log = createConsoleLogger();
 
-/** What went wrong, in one line. */
 function reasonOf(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
 }

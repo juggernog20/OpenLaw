@@ -65,13 +65,10 @@ import {
   type TargetModule,
 } from "./form-definition.js";
 
-/** The two modules a request type may convert into, on the wire. */
 const TargetModuleSchema = z.enum(TARGET_MODULES);
 
-/** The taxonomy a module's target type comes from. */
 const TARGET_TABLES = { matter: matterTypes, contract: contractTypes } as const;
 
-/** The one type id the row holds, whichever column holds it. */
 function targetTypeId(row: RequestType): string | null {
   return row.targetContractTypeId ?? row.targetMatterTypeId;
 }

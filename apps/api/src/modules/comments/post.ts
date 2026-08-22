@@ -44,7 +44,6 @@ import { notifyCommentPosted, type CommentAudience } from "./audience.js";
  * same bound as `maxLength`. */
 export const CommentBodySchema = z.string().trim().min(1).max(MAX_COMMENT_BODY_LENGTH);
 
-/** One comment, as the act that writes it describes it. */
 export interface NewComment {
   /** Pre-minted when attachments need storage keys before the row exists. */
   id?: string;

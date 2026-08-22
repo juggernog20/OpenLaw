@@ -117,13 +117,11 @@ function contractRow(overrides: Record<string, unknown> = {}) {
   };
 }
 
-/** One person, as the roster names them. */
 const named = (id: string) => {
   const found = PEOPLE.find((entry) => entry.id === id)!;
   return { id: found.id, displayName: found.displayName, image: null };
 };
 
-/** One approval row, as the API answers it. */
 function approval(overrides: Record<string, unknown> = {}) {
   return {
     id: "a1",
@@ -152,7 +150,6 @@ function recordApi(
 ) {
   let approvals = initialApprovals;
   const writes: { method: string; path: string; body: unknown }[] = [];
-  /** What the next write answers with; a refusal when set. */
   let refuse: { status: number; detail: string } | null = null;
 
   const envelope = () => json(200, { approvals });
@@ -252,10 +249,8 @@ function recordApi(
   };
 }
 
-/** The roster's own table, once the section has drawn it. */
 async function rosterRows() {
   const table = await screen.findByRole("table");
-  // The head row is the first; every other is an ask.
   return within(table).getAllByRole("row").slice(1);
 }
 

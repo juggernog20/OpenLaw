@@ -76,7 +76,6 @@ afterAll(async () => {
   await harness.stop();
 });
 
-/** Submits one Request as the Business User, and answers the row. */
 async function submit(summary: string): Promise<{ id: string; number: number }> {
   const res = await harness.app.inject({
     method: "POST",
@@ -93,7 +92,6 @@ async function submit(summary: string): Promise<{ id: string; number: number }> 
   return res.json().request as { id: string; number: number };
 }
 
-/** Presses Decline on one Request, as one caller. */
 function decline(number: number, reason: string, cookies = memberCookies) {
   return harness.app.inject({
     method: "POST",

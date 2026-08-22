@@ -75,11 +75,6 @@ const LINK_LABELS: Record<RelationType, Record<LinkDirection, MessageDescriptor>
   related: { outgoing: LABELS.related, incoming: LABELS.related },
 };
 
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
-
-/** Groups links by their display label (relation type + direction). */
 function groupLinks(
   links: readonly ContractLink[],
 ): Map<string, { label: MessageDescriptor; entries: ContractLink[] }> {
@@ -99,10 +94,6 @@ function groupLinks(
   }
   return groups;
 }
-
-// ---------------------------------------------------------------------------
-// Entry renderers
-// ---------------------------------------------------------------------------
 
 function RelationRow({
   entry,
@@ -209,10 +200,6 @@ function LinkSubsection({
   );
 }
 
-// ---------------------------------------------------------------------------
-// Card
-// ---------------------------------------------------------------------------
-
 export const RelatedContractsCard = memo(function RelatedContractsCard({
   contractNumber,
   contractIsConfidential,
@@ -223,7 +210,6 @@ export const RelatedContractsCard = memo(function RelatedContractsCard({
   contractNumber: number;
   contractIsConfidential: boolean;
   relations: ContractRelations;
-  /** Whether the viewer is Member+ and the card should offer actions. */
   editable: boolean;
   /** Fires with the whole surface every write answers. The record holds
    * it, because the breadcrumb draws the parent chain too (#312). Must

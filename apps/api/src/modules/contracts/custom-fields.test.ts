@@ -70,7 +70,6 @@ afterAll(async () => {
   await harness.stop();
 });
 
-/** One catalog field as a record surface reads it (CTR-016). */
 interface AttachedField {
   fieldId: string;
   slug: string;
@@ -105,7 +104,6 @@ const typeBySlug = async (slug: string): Promise<TypeChoice> => {
   return choice!;
 };
 
-/** Defines a catalog field, requiring success. */
 const defineField = async (payload: Record<string, unknown>): Promise<AttachedField> => {
   const res = await harness.app.inject({
     method: "POST",
@@ -170,7 +168,6 @@ const createContract = (payload: Record<string, unknown>) =>
     payload,
   });
 
-/** Creates a contract on a type, requiring success. */
 const newContract = async (title: string, typeId: string, customFields?: unknown) => {
   const res = await createContract({
     title,

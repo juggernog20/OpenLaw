@@ -168,7 +168,6 @@ function appletSlot(page: Page, label: "Comments" | "History"): Locator {
   });
 }
 
-/** Expands an applet and answers its panel. */
 async function openApplet(page: Page, label: "Comments" | "History"): Promise<Locator> {
   await appletSlot(page, label).click();
   const panel = page.getByRole("complementary", { name: label });
@@ -176,7 +175,6 @@ async function openApplet(page: Page, label: "Comments" | "History"): Promise<Lo
   return panel;
 }
 
-/** The rows a panel is drawing, whichever applet it is. */
 function panelRows(panel: Locator, label: "Comments" | "History"): Locator {
   return panel.getByRole("list", { name: label }).getByRole("listitem");
 }

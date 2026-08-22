@@ -59,7 +59,6 @@ const PAPER_SIDE: FormField = {
   isRequired: false,
 };
 
-/** What the form posted, captured as the stub answers it. */
 interface Submissions {
   bodies: unknown[];
   /** One entry per attachment upload: the address it went to and the
@@ -123,7 +122,6 @@ function openForm(state: Parameters<typeof portalForm>[0] = {}): Submissions {
   return submissions;
 }
 
-/** Fill the three required basics and the one required attached field. */
 async function fillComplete(user: ReturnType<typeof userEvent.setup>) {
   await user.type(await screen.findByLabelText(/^Summary/), "MSA renewal with Orion Cloud");
   await user.type(screen.getByLabelText(/^Description/), "They sent a redline on the cap.");
@@ -269,7 +267,6 @@ describe("submitting the form", () => {
     expect(screen.getByText("Description is required.")).toBeInTheDocument();
     expect(screen.getByText("Counterparty is required.")).toBeInTheDocument();
     expect(screen.getByLabelText(/^Description/)).toHaveAttribute("aria-invalid", "true");
-    // Nothing was sent.
     expect(submissions.bodies).toEqual([]);
   });
 
@@ -317,7 +314,6 @@ describe("submitting the form", () => {
 });
 
 describe("the Attachments basic", () => {
-  /** One picked file, named so a test can find it again. */
   function file(name: string) {
     return new File(["the redline"], name, { type: "application/pdf" });
   }
