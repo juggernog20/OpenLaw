@@ -1048,6 +1048,29 @@ describe("correcting a version's kind", () => {
     expect(currentOf(row!).kind).toBe("generated_redline");
   });
 
+  it("refuses a correction on an archived contract", async () => {
+    const contract = await newContract("Orion Cloud — frozen kind");
+    const document = await uploaded(adminCookies, contract.number);
+    const version = currentOf(document);
+    const archive = await harness.app.inject({
+      method: "POST",
+      url: `/api/v1/contracts/${contract.number}/archive`,
+      cookies: adminCookies,
+    });
+    expect(archive.statusCode, archive.body).toBe(200);
+
+    const res = await patchVersionKind(adminCookies, document.id, version.id, {
+      kind: "draft_theirs",
+    });
+
+    expect(res.statusCode, res.body).toBe(409);
+    const [row] = await harness.db
+      .select({ kind: documentVersions.kind })
+      .from(documentVersions)
+      .where(eq(documentVersions.id, version.id));
+    expect(row!.kind).toBe("draft_ours");
+  });
+
   it("refuses a Contributor without hiding the version", async () => {
     const contract = await newContract("Orion Cloud — Contributor correction");
     await putOnTeam(contract.number, idOf(CONTRIBUTOR), "contributor");
@@ -1914,6 +1937,13 @@ describe("archiving a document", () => {
     expect((await pinExecuted(adminCookies, document.id, currentOf(document).id)).statusCode).toBe(
       409,
     );
+    expect(
+      (
+        await patchVersionKind(adminCookies, document.id, currentOf(document).id, {
+          kind: "draft_theirs",
+        })
+      ).statusCode,
+    ).toBe(409);
 
     // The document beside it is untouched by any of that.
     expect((await addVersion(adminCookies, other.id)).statusCode).toBe(201);

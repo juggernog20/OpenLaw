@@ -4020,7 +4020,7 @@ CTR-014's M21A addendum owns the rule that a Member+ user can correct a Document
 
 **3. A generated redline stays a read-only pill for every role.** Its label is `Generated redline` and it uses the neutral pair. Member+ cannot open a picker on it. This draws CTR-014's source refusal rather than offering a control that the seam will reject.
 
-**4. A Contributor sees the existing pill.** The Documents card draws no kind select for them, just as it draws no upload or row-action controls. An archived Contract also keeps the read-only pill because all record writes are frozen there.
+**4. A Contributor sees the existing pill.** The Documents card draws no kind select for them, just as it draws no upload or row-action controls. An archived Contract also keeps the read-only pill because all record writes are frozen there, and so does a Document that is archived on its own (DOC-010), because the seam refuses every edit to it until it is restored.
 
 **5. Every picker names its round.** Its accessible name is `Kind of version {number} of {document title}`. The visible value alone stays short enough for C4's Kind column, while the control's name distinguishes several version rows that show the same kind.
 
