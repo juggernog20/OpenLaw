@@ -185,6 +185,12 @@
   "activity.document.versionAdded": {
     "defaultMessage": "{version, select, unknown {{actor} added a version of {title}} other {{actor} added version {version} of {title}}}"
   },
+  "activity.document.versionKind": {
+    "defaultMessage": "{kind, select, draft_ours {Draft · ours} draft_theirs {Draft · theirs} redline_theirs {Redline · theirs} redline_ours {Redline · ours} executed {Executed} amendment {Amendment} generated_redline {Generated redline} other {{kind}}}"
+  },
+  "activity.document.versionKindChanged": {
+    "defaultMessage": "{version, select, unknown {{actor} changed the kind of a version of {title}} other {{actor} changed the kind of version {version} of {title}}}"
+  },
   "activity.empty": {
     "defaultMessage": "Nothing has happened to this record yet. Every change to it shows up here."
   },
@@ -222,7 +228,7 @@
     "defaultMessage": "{actor} exported the audit log"
   },
   "activity.field": {
-    "defaultMessage": "{key, select, title {Title} description {Description} owner {Owner} entity {Signing entity} priority {Priority} risk {Risk} contractType {Contract type} value {Value} status {Status} termType {Term type} effectiveDate {Effective date} expiryDate {Expiry date} renewalPeriodMonths {Renewal period (months)} noticePeriodDays {Notice period (days)} date {Date} label {Event} note {Note} primaryCounterparty {Primary counterparty} primaryDocument {Primary document} displayName {Name} display_name {Display name} name {Name} role {Role} email {Email} stage {Stage} moduleScope {Scope} isRequired {Required} targetModule {Target} targetType {Target type} theme {Theme} timezone {Timezone} avatar {Avatar} logo {Logo} defaultLocale {Default language} defaultTimezone {Default timezone} authMode {Sign-in method} allowedEmailDomains {Allowed email domains} reminderOffsetDays {Reminder lead times} smtpUrl {SMTP server} smtpFrom {From address} issuer {Issuer} domain {Email domain} clientId {Client ID} clientSecret {Client secret} environment {Environment} integrationKey {Integration key} apiUserId {User ID} privateKey {RSA private key} webhookSecret {Connect HMAC secret} legalName {Legal name} entityType {Entity type} jurisdiction {Jurisdiction} formedOn {Formed on} registrationNumber {Registration number} taxId {Tax ID} registeredAgent {Registered agent} registeredAddress {Registered address} other {{key}}}"
+    "defaultMessage": "{key, select, title {Title} description {Description} owner {Owner} entity {Signing entity} priority {Priority} risk {Risk} contractType {Contract type} value {Value} status {Status} termType {Term type} effectiveDate {Effective date} expiryDate {Expiry date} renewalPeriodMonths {Renewal period (months)} noticePeriodDays {Notice period (days)} date {Date} label {Event} note {Note} kind {Kind} primaryCounterparty {Primary counterparty} primaryDocument {Primary document} displayName {Name} display_name {Display name} name {Name} role {Role} email {Email} stage {Stage} moduleScope {Scope} isRequired {Required} targetModule {Target} targetType {Target type} theme {Theme} timezone {Timezone} avatar {Avatar} logo {Logo} defaultLocale {Default language} defaultTimezone {Default timezone} authMode {Sign-in method} allowedEmailDomains {Allowed email domains} reminderOffsetDays {Reminder lead times} smtpUrl {SMTP server} smtpFrom {From address} issuer {Issuer} domain {Email domain} clientId {Client ID} clientSecret {Client secret} environment {Environment} integrationKey {Integration key} apiUserId {User ID} privateKey {RSA private key} webhookSecret {Connect HMAC secret} legalName {Legal name} entityType {Entity type} jurisdiction {Jurisdiction} formedOn {Formed on} registrationNumber {Registration number} taxId {Tax ID} registeredAgent {Registered agent} registeredAddress {Registered address} other {{key}}}"
   },
   "activity.field.narrowed": {
     "defaultMessage": "{actor} narrowed the field {name} to one module"
@@ -890,6 +896,15 @@
   "comments.attachments.chosen": {
     "defaultMessage": "Files attached to this comment"
   },
+  "comments.attachments.destination": {
+    "defaultMessage": "{title}, version {number}"
+  },
+  "comments.attachments.file": {
+    "defaultMessage": "File"
+  },
+  "comments.attachments.filedTo": {
+    "defaultMessage": "Filed to {destination}"
+  },
   "comments.attachments.list": {
     "defaultMessage": "Comment attachments"
   },
@@ -931,6 +946,45 @@
   },
   "comments.empty": {
     "defaultMessage": "Nothing has been said about this record yet. Add the first comment to keep the conversation on the record."
+  },
+  "comments.filing.destination": {
+    "defaultMessage": "Destination"
+  },
+  "comments.filing.document": {
+    "defaultMessage": "Document"
+  },
+  "comments.filing.documentRequired": {
+    "defaultMessage": "Choose the Document this round belongs to."
+  },
+  "comments.filing.error": {
+    "defaultMessage": "That attachment could not be filed. Try again."
+  },
+  "comments.filing.kind": {
+    "defaultMessage": "Kind"
+  },
+  "comments.filing.kindOption": {
+    "defaultMessage": "{kind, select, draft_ours {Draft · ours} draft_theirs {Draft · theirs} redline_theirs {Redline · theirs} redline_ours {Redline · ours} amendment {Amendment} executed {Executed} other {{kind}}}"
+  },
+  "comments.filing.name": {
+    "defaultMessage": "Document name"
+  },
+  "comments.filing.newDocument": {
+    "defaultMessage": "New Document"
+  },
+  "comments.filing.newVersion": {
+    "defaultMessage": "New Version on an existing Document"
+  },
+  "comments.filing.note": {
+    "defaultMessage": "Note"
+  },
+  "comments.filing.notePlaceholder": {
+    "defaultMessage": "What changed in this round"
+  },
+  "comments.filing.submit": {
+    "defaultMessage": "File"
+  },
+  "comments.filing.title": {
+    "defaultMessage": "File attachment"
   },
   "comments.loadError": {
     "defaultMessage": "The conversation could not be read. Reopen the panel to try again."
@@ -2172,7 +2226,7 @@
     "defaultMessage": "{open, select, true {Collapse} other {Expand}} {name}"
   },
   "documents.kind": {
-    "defaultMessage": "{kind, select, draft_ours {Draft · ours} draft_theirs {Draft · theirs} redline_theirs {Redline · theirs} redline_ours {Redline · ours} executed {Executed} amendment {Amendment} other {Unknown}}"
+    "defaultMessage": "{kind, select, draft_ours {Draft · ours} draft_theirs {Draft · theirs} redline_theirs {Redline · theirs} redline_ours {Redline · ours} executed {Executed} amendment {Amendment} generated_redline {Generated redline} other {Unknown}}"
   },
   "documents.more": {
     "defaultMessage": "Show more"
@@ -2215,6 +2269,9 @@
   },
   "documents.uploadedBy": {
     "defaultMessage": "Uploaded by {name}"
+  },
+  "documents.versionKindLabel": {
+    "defaultMessage": "Kind of version {number} of {title}"
   },
   "documents.versionNumber": {
     "defaultMessage": "v{number}"
@@ -2714,6 +2771,9 @@
   "portal.form.attachmentsHint": {
     "defaultMessage": "Drop files here — the redline, the prior agreement, the term sheet. Up to {max} files."
   },
+  "portal.form.attachmentsMovedToThread": {
+    "defaultMessage": "{count, plural, one {This file did not attach.} other {These files did not attach.}} <thread>Add {count, plural, one {it} other {them}} to a reply on {reference}</thread>."
+  },
   "portal.form.attachmentsTooMany": {
     "defaultMessage": "A request carries at most {max} files."
   },
@@ -2824,6 +2884,9 @@
   },
   "portal.request.meta": {
     "defaultMessage": "{reference} · {requestType} · Submitted {submitted}"
+  },
+  "portal.request.paperOnThread": {
+    "defaultMessage": "<composer>Attach new files to a reply</composer>."
   },
   "portal.request.replyError": {
     "defaultMessage": "The reply could not be sent. Try again."

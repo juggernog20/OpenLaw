@@ -8660,7 +8660,7 @@
     "/api/v1/requests/{number}/attachments": {
       "post": {
         "operationId": "attachToRequest",
-        "summary": "Attach one file to the caller's own Request (INT-002). The bytes ride the storage seam documents upload through and the row is a `request_attachments` row — nothing enters `documents`, because a Request is not a document owner (DOC-008) and promotion is conversion's (M21). One file per call, sent as multipart/form-data under `file`. A Request the caller did not submit answers 404, and a file past the 20-attachment bound is refused",
+        "summary": "Attach one file to the caller's own Request (INT-002). The bytes ride the storage seam documents upload through and the row is a `request_attachments` row — nothing enters `documents`, because a Request is not a document owner (DOC-008) and promotion is conversion's (M21). One file per call, sent as multipart/form-data under `file`. A Request the caller did not submit answers 404; a dispositioned Request refuses 409 and names its thread; and a file past the 20-attachment bound is refused",
         "tags": ["requests"],
         "requestBody": {
           "required": true,
@@ -8719,6 +8719,91 @@
                   },
                   "required": ["attachment"],
                   "additionalProperties": false
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "A Request that is no longer new takes paper on its thread, not as another Request attachment (INT-002, CMT-011). The named refusal carries `request`, the R-### whose portal detail owns that thread; `outcome`, the disposition already recorded; and `convertedContract`, the record a conversion made when the caller may reach it (DD-014), else `null`.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string",
+                      "enum": ["urn:openlaw:problem:request-dispositioned", "about:blank"],
+                      "description": "Which refusal this is. A client branches on this, never on `detail` — `detail` is copy, and copy is rewritten. `about:blank` is a refusal at this status that names no type; print it rather than branching on it."
+                    },
+                    "title": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    "detail": {
+                      "type": "string"
+                    },
+                    "instance": {
+                      "type": "string"
+                    },
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": {
+                            "type": "string"
+                          },
+                          "message": {
+                            "type": "string"
+                          }
+                        },
+                        "required": ["path", "message"],
+                        "additionalProperties": false
+                      }
+                    },
+                    "request": {
+                      "type": "object",
+                      "properties": {
+                        "number": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        }
+                      },
+                      "required": ["number"],
+                      "additionalProperties": false
+                    },
+                    "outcome": {
+                      "type": "string",
+                      "enum": ["converted", "resolved", "declined"]
+                    },
+                    "convertedContract": {
+                      "anyOf": [
+                        {
+                          "type": "object",
+                          "properties": {
+                            "number": {
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
+                            }
+                          },
+                          "required": ["number"],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  },
+                  "required": ["type", "title", "status"],
+                  "additionalProperties": false,
+                  "description": "A Request that is no longer new takes paper on its thread, not as another Request attachment (INT-002, CMT-011). The named refusal carries `request`, the R-### whose portal detail owns that thread; `outcome`, the disposition already recorded; and `convertedContract`, the record a conversion made when the caller may reach it (DD-014), else `null`."
                 }
               }
             }
@@ -21526,7 +21611,8 @@
                                     "redline_theirs",
                                     "redline_ours",
                                     "executed",
-                                    "amendment"
+                                    "amendment",
+                                    "generated_redline"
                                   ]
                                 },
                                 "note": {
@@ -21832,7 +21918,8 @@
                                   "redline_theirs",
                                   "redline_ours",
                                   "executed",
-                                  "amendment"
+                                  "amendment",
+                                  "generated_redline"
                                 ]
                               },
                               "note": {
@@ -22019,7 +22106,7 @@
     "/api/v1/documents/{documentId}/versions": {
       "post": {
         "operationId": "uploadDocumentVersion",
-        "summary": "Append the next version to an existing document (DOC-001). The number is assigned under the owning contract's row lock, so two revisions uploaded at the same moment take consecutive numbers rather than colliding, and the chain runs 1..n with no gaps. The version carries one of the five CTR-014 kinds and, when the uploader wrote one, a short note saying what changed in this round. Nothing about the versions already in the chain is touched: they are immutable, and a correction is another version. Appends document.version_added on the owning contract (DD-017). The kind and note fields must be sent before the file part. An archived contract takes no new paper until it is restored. A document on a contract the uploader cannot reach answers 404, exactly as one that does not exist",
+        "summary": "Append the next version to an existing document (DOC-001). The number is assigned under the owning contract's row lock, so two revisions uploaded at the same moment take consecutive numbers rather than colliding, and the chain runs 1..n with no gaps. The version carries one of the six hand-set CTR-014 kinds and, when the uploader wrote one, a short note saying what changed in this round. Nothing about the versions already in the chain is touched: a file correction is another version, while the kind has its own one-column PATCH. Appends document.version_added on the owning contract (DD-017). The kind and note fields must be sent before the file part. An archived contract takes no new paper until it is restored. A document on a contract the uploader cannot reach answers 404, exactly as one that does not exist",
         "tags": ["documents"],
         "requestBody": {
           "required": true,
@@ -22119,7 +22206,296 @@
                                   "redline_theirs",
                                   "redline_ours",
                                   "executed",
-                                  "amendment"
+                                  "amendment",
+                                  "generated_redline"
+                                ]
+                              },
+                              "note": {
+                                "anyOf": [
+                                  {
+                                    "type": "string"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "originalFilename": {
+                                "type": "string"
+                              },
+                              "mimeType": {
+                                "type": "string"
+                              },
+                              "renderFamily": {
+                                "type": "string",
+                                "enum": ["pdf", "image", "word", "presentation", "email", "other"]
+                              },
+                              "byteSize": {
+                                "type": "integer",
+                                "minimum": 0,
+                                "maximum": 9007199254740991
+                              },
+                              "checksumSha256": {
+                                "type": "string"
+                              },
+                              "uploadedBy": {
+                                "type": "object",
+                                "properties": {
+                                  "id": {
+                                    "type": "string"
+                                  },
+                                  "displayName": {
+                                    "type": "string"
+                                  },
+                                  "image": {
+                                    "anyOf": [
+                                      {
+                                        "type": "string"
+                                      },
+                                      {
+                                        "type": "null"
+                                      }
+                                    ]
+                                  },
+                                  "archived": {
+                                    "type": "boolean"
+                                  }
+                                },
+                                "required": ["id", "displayName", "image", "archived"],
+                                "additionalProperties": false
+                              },
+                              "createdAt": {
+                                "type": "string",
+                                "format": "date-time",
+                                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+                              },
+                              "isCurrent": {
+                                "type": "boolean"
+                              },
+                              "isExecuted": {
+                                "type": "boolean"
+                              }
+                            },
+                            "required": [
+                              "id",
+                              "versionNumber",
+                              "kind",
+                              "note",
+                              "originalFilename",
+                              "mimeType",
+                              "renderFamily",
+                              "byteSize",
+                              "checksumSha256",
+                              "uploadedBy",
+                              "createdAt",
+                              "isCurrent",
+                              "isExecuted"
+                            ],
+                            "additionalProperties": false
+                          }
+                        },
+                        "archivedAt": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "format": "date-time",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "isConfidential": {
+                          "type": "boolean"
+                        },
+                        "folderId": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "createdBy": {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string"
+                            },
+                            "displayName": {
+                              "type": "string"
+                            },
+                            "image": {
+                              "anyOf": [
+                                {
+                                  "type": "string"
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            },
+                            "archived": {
+                              "type": "boolean"
+                            }
+                          },
+                          "required": ["id", "displayName", "image", "archived"],
+                          "additionalProperties": false
+                        },
+                        "createdAt": {
+                          "type": "string",
+                          "format": "date-time",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+                        },
+                        "updatedAt": {
+                          "type": "string",
+                          "format": "date-time",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "title",
+                        "description",
+                        "isPrimary",
+                        "versions",
+                        "archivedAt",
+                        "isConfidential",
+                        "folderId",
+                        "createdBy",
+                        "createdAt",
+                        "updatedAt"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": ["document"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/documents/{documentId}/versions/{versionId}": {
+      "patch": {
+        "operationId": "updateDocumentVersionKind",
+        "summary": "Correct one version's kind (CTR-014). This is the only per-version update. It changes only the kind: the bytes, number, note, author, order, and executed pin stay where they are. The target must be one of the six hand-set kinds. A generated redline cannot be corrected or selected because its kind records how the file was made. Appends document.version_kind_changed on the owning contract with the kind before and after (DD-017). Member+ may correct a kind; a Contributor who reaches the record is refused 403",
+        "tags": ["documents"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "kind": {
+                    "type": "string",
+                    "enum": [
+                      "draft_ours",
+                      "draft_theirs",
+                      "redline_theirs",
+                      "redline_ours",
+                      "executed",
+                      "amendment"
+                    ]
+                  }
+                },
+                "required": ["kind"],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 64
+            },
+            "in": "path",
+            "name": "documentId",
+            "required": true
+          },
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 64
+            },
+            "in": "path",
+            "name": "versionId",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "document": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "title": {
+                          "type": "string"
+                        },
+                        "description": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "isPrimary": {
+                          "type": "boolean"
+                        },
+                        "versions": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "string"
+                              },
+                              "versionNumber": {
+                                "type": "integer",
+                                "exclusiveMinimum": 0,
+                                "maximum": 9007199254740991
+                              },
+                              "kind": {
+                                "type": "string",
+                                "enum": [
+                                  "draft_ours",
+                                  "draft_theirs",
+                                  "redline_theirs",
+                                  "redline_ours",
+                                  "executed",
+                                  "amendment",
+                                  "generated_redline"
                                 ]
                               },
                               "note": {
@@ -22414,7 +22790,8 @@
                                   "redline_theirs",
                                   "redline_ours",
                                   "executed",
-                                  "amendment"
+                                  "amendment",
+                                  "generated_redline"
                                 ]
                               },
                               "note": {
@@ -22684,7 +23061,8 @@
                                     "redline_theirs",
                                     "redline_ours",
                                     "executed",
-                                    "amendment"
+                                    "amendment",
+                                    "generated_redline"
                                   ]
                                 },
                                 "note": {
@@ -22949,7 +23327,8 @@
                                     "redline_theirs",
                                     "redline_ours",
                                     "executed",
-                                    "amendment"
+                                    "amendment",
+                                    "generated_redline"
                                   ]
                                 },
                                 "note": {
@@ -23230,7 +23609,8 @@
                                   "redline_theirs",
                                   "redline_ours",
                                   "executed",
-                                  "amendment"
+                                  "amendment",
+                                  "generated_redline"
                                 ]
                               },
                               "note": {
@@ -23480,7 +23860,8 @@
                                   "redline_theirs",
                                   "redline_ours",
                                   "executed",
-                                  "amendment"
+                                  "amendment",
+                                  "generated_redline"
                                 ]
                               },
                               "note": {
@@ -23732,7 +24113,8 @@
                                   "redline_theirs",
                                   "redline_ours",
                                   "executed",
-                                  "amendment"
+                                  "amendment",
+                                  "generated_redline"
                                 ]
                               },
                               "note": {
@@ -23984,7 +24366,8 @@
                                   "redline_theirs",
                                   "redline_ours",
                                   "executed",
-                                  "amendment"
+                                  "amendment",
+                                  "generated_redline"
                                 ]
                               },
                               "note": {
@@ -25460,6 +25843,32 @@
                                 },
                                 "filename": {
                                   "type": "string"
+                                },
+                                "filed": {
+                                  "type": "object",
+                                  "properties": {
+                                    "documentId": {
+                                      "type": "string"
+                                    },
+                                    "documentTitle": {
+                                      "type": "string"
+                                    },
+                                    "versionId": {
+                                      "type": "string"
+                                    },
+                                    "versionNumber": {
+                                      "type": "integer",
+                                      "exclusiveMinimum": 0,
+                                      "maximum": 9007199254740991
+                                    }
+                                  },
+                                  "required": [
+                                    "documentId",
+                                    "documentTitle",
+                                    "versionId",
+                                    "versionNumber"
+                                  ],
+                                  "additionalProperties": false
                                 }
                               },
                               "required": ["id", "filename"],
@@ -25732,6 +26141,32 @@
                               },
                               "filename": {
                                 "type": "string"
+                              },
+                              "filed": {
+                                "type": "object",
+                                "properties": {
+                                  "documentId": {
+                                    "type": "string"
+                                  },
+                                  "documentTitle": {
+                                    "type": "string"
+                                  },
+                                  "versionId": {
+                                    "type": "string"
+                                  },
+                                  "versionNumber": {
+                                    "type": "integer",
+                                    "exclusiveMinimum": 0,
+                                    "maximum": 9007199254740991
+                                  }
+                                },
+                                "required": [
+                                  "documentId",
+                                  "documentTitle",
+                                  "versionId",
+                                  "versionNumber"
+                                ],
+                                "additionalProperties": false
                               }
                             },
                             "required": ["id", "filename"],
@@ -26022,6 +26457,372 @@
         }
       }
     },
+    "/api/v1/comments/{commentId}/attachments/{attachmentId}/file": {
+      "post": {
+        "operationId": "fileCommentAttachment",
+        "summary": "File one live comment attachment onto the record (CMT-011), either as a new root Document or as the next Version on a named chain. The comment's audience is the reach gate; a never-converted Request owns no Documents and is refused. The bytes are copied to a key minted from the destination ids, their media type is read from the blob, and the shared Version insert records every derivation an upload owes. The paper and the attachment marker commit together under the Contract row lock, so the same attachment cannot grow two rounds",
+        "tags": ["comments"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "type": "object",
+                    "properties": {
+                      "destination": {
+                        "type": "string",
+                        "enum": ["new_document"]
+                      },
+                      "kind": {
+                        "type": "string",
+                        "enum": [
+                          "draft_ours",
+                          "draft_theirs",
+                          "redline_theirs",
+                          "redline_ours",
+                          "executed",
+                          "amendment"
+                        ]
+                      },
+                      "name": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 200
+                      },
+                      "isConfidential": {
+                        "type": "boolean"
+                      }
+                    },
+                    "required": ["destination", "kind", "name", "isConfidential"],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "destination": {
+                        "type": "string",
+                        "enum": ["new_version"]
+                      },
+                      "documentId": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 64
+                      },
+                      "kind": {
+                        "type": "string",
+                        "enum": [
+                          "draft_ours",
+                          "draft_theirs",
+                          "redline_theirs",
+                          "redline_ours",
+                          "executed",
+                          "amendment"
+                        ]
+                      },
+                      "note": {
+                        "type": "string",
+                        "maxLength": 2000
+                      }
+                    },
+                    "required": ["destination", "documentId", "kind"],
+                    "additionalProperties": false
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "enum": ["contract", "request"]
+            },
+            "in": "query",
+            "name": "entityType",
+            "required": true
+          },
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 64
+            },
+            "in": "query",
+            "name": "entityId",
+            "required": true
+          },
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 64
+            },
+            "in": "path",
+            "name": "commentId",
+            "required": true
+          },
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 64
+            },
+            "in": "path",
+            "name": "attachmentId",
+            "required": true
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "comment": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "entityType": {
+                          "type": "string",
+                          "enum": ["contract", "request"]
+                        },
+                        "entityId": {
+                          "type": "string"
+                        },
+                        "author": {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string"
+                            },
+                            "displayName": {
+                              "type": "string"
+                            },
+                            "image": {
+                              "anyOf": [
+                                {
+                                  "type": "string"
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            },
+                            "archived": {
+                              "type": "boolean"
+                            }
+                          },
+                          "required": ["id", "displayName", "image", "archived"],
+                          "additionalProperties": false
+                        },
+                        "body": {
+                          "type": "string"
+                        },
+                        "visibility": {
+                          "type": "string",
+                          "enum": ["legal_only", "working_team", "full_thread"]
+                        },
+                        "mentions": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "string"
+                              },
+                              "displayName": {
+                                "type": "string"
+                              }
+                            },
+                            "required": ["id", "displayName"],
+                            "additionalProperties": false
+                          }
+                        },
+                        "attachments": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "string"
+                              },
+                              "filename": {
+                                "type": "string"
+                              },
+                              "filed": {
+                                "type": "object",
+                                "properties": {
+                                  "documentId": {
+                                    "type": "string"
+                                  },
+                                  "documentTitle": {
+                                    "type": "string"
+                                  },
+                                  "versionId": {
+                                    "type": "string"
+                                  },
+                                  "versionNumber": {
+                                    "type": "integer",
+                                    "exclusiveMinimum": 0,
+                                    "maximum": 9007199254740991
+                                  }
+                                },
+                                "required": [
+                                  "documentId",
+                                  "documentTitle",
+                                  "versionId",
+                                  "versionNumber"
+                                ],
+                                "additionalProperties": false
+                              }
+                            },
+                            "required": ["id", "filename"],
+                            "additionalProperties": false
+                          }
+                        },
+                        "createdAt": {
+                          "type": "string",
+                          "format": "date-time",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+                        },
+                        "editedAt": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "format": "date-time",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "deletedAt": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "format": "date-time",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "redactedAt": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "format": "date-time",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "entityType",
+                        "entityId",
+                        "author",
+                        "body",
+                        "visibility",
+                        "mentions",
+                        "createdAt",
+                        "editedAt",
+                        "deletedAt",
+                        "redactedAt"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": ["comment"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "The attachment was already filed, the thread does not own Documents, or the record is frozen.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string",
+                      "enum": [
+                        "urn:openlaw:problem:comment-attachment-already-filed",
+                        "about:blank"
+                      ],
+                      "description": "Which refusal this is. A client branches on this, never on `detail` — `detail` is copy, and copy is rewritten. `about:blank` is a refusal at this status that names no type; print it rather than branching on it."
+                    },
+                    "title": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    "detail": {
+                      "type": "string"
+                    },
+                    "instance": {
+                      "type": "string"
+                    },
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": {
+                            "type": "string"
+                          },
+                          "message": {
+                            "type": "string"
+                          }
+                        },
+                        "required": ["path", "message"],
+                        "additionalProperties": false
+                      }
+                    },
+                    "filedDocumentId": {
+                      "type": "string"
+                    },
+                    "filedVersionId": {
+                      "type": "string"
+                    }
+                  },
+                  "required": ["type", "title", "status"],
+                  "additionalProperties": false,
+                  "description": "The attachment was already filed, the thread does not own Documents, or the record is frozen."
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/comments/{commentId}/attachments/{attachmentId}": {
       "get": {
         "operationId": "downloadCommentAttachment",
@@ -26209,6 +27010,32 @@
                               },
                               "filename": {
                                 "type": "string"
+                              },
+                              "filed": {
+                                "type": "object",
+                                "properties": {
+                                  "documentId": {
+                                    "type": "string"
+                                  },
+                                  "documentTitle": {
+                                    "type": "string"
+                                  },
+                                  "versionId": {
+                                    "type": "string"
+                                  },
+                                  "versionNumber": {
+                                    "type": "integer",
+                                    "exclusiveMinimum": 0,
+                                    "maximum": 9007199254740991
+                                  }
+                                },
+                                "required": [
+                                  "documentId",
+                                  "documentTitle",
+                                  "versionId",
+                                  "versionNumber"
+                                ],
+                                "additionalProperties": false
                               }
                             },
                             "required": ["id", "filename"],
@@ -26387,6 +27214,32 @@
                               },
                               "filename": {
                                 "type": "string"
+                              },
+                              "filed": {
+                                "type": "object",
+                                "properties": {
+                                  "documentId": {
+                                    "type": "string"
+                                  },
+                                  "documentTitle": {
+                                    "type": "string"
+                                  },
+                                  "versionId": {
+                                    "type": "string"
+                                  },
+                                  "versionNumber": {
+                                    "type": "integer",
+                                    "exclusiveMinimum": 0,
+                                    "maximum": 9007199254740991
+                                  }
+                                },
+                                "required": [
+                                  "documentId",
+                                  "documentTitle",
+                                  "versionId",
+                                  "versionNumber"
+                                ],
+                                "additionalProperties": false
                               }
                             },
                             "required": ["id", "filename"],
@@ -26567,6 +27420,32 @@
                               },
                               "filename": {
                                 "type": "string"
+                              },
+                              "filed": {
+                                "type": "object",
+                                "properties": {
+                                  "documentId": {
+                                    "type": "string"
+                                  },
+                                  "documentTitle": {
+                                    "type": "string"
+                                  },
+                                  "versionId": {
+                                    "type": "string"
+                                  },
+                                  "versionNumber": {
+                                    "type": "integer",
+                                    "exclusiveMinimum": 0,
+                                    "maximum": 9007199254740991
+                                  }
+                                },
+                                "required": [
+                                  "documentId",
+                                  "documentTitle",
+                                  "versionId",
+                                  "versionNumber"
+                                ],
+                                "additionalProperties": false
                               }
                             },
                             "required": ["id", "filename"],

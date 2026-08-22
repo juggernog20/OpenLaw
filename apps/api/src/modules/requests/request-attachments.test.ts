@@ -55,8 +55,10 @@ let adminCookies: Record<string, string>;
 let requesterCookies: Record<string, string>;
 let otherCookies: Record<string, string>;
 let requesterId: string;
-/** The INT-002 seed this suite submits against. */
-let contractReviewId: string;
+/** The INT-002 seed this suite submits against. It names the NDA
+ * contract type, so the converted-status case can run the ordinary
+ * conversion path rather than manufacturing a linked row. */
+let requestTypeId: string;
 
 beforeAll(async () => {
   harness = await startHarness();
@@ -87,8 +89,8 @@ beforeAll(async () => {
     cookies: adminCookies,
   });
   expect(types.statusCode, types.body).toBe(200);
-  contractReviewId = (types.json().requestTypes as { slug: string; id: string }[]).find(
-    (row) => row.slug === "contract_review",
+  requestTypeId = (types.json().requestTypes as { slug: string; id: string }[]).find(
+    (row) => row.slug === "nda_request",
   )!.id;
 });
 
@@ -118,7 +120,7 @@ async function submitted(cookies = requesterCookies): Promise<number> {
     url: "/api/v1/requests",
     cookies,
     payload: {
-      requestTypeId: contractReviewId,
+      requestTypeId,
       summary: "MSA renewal with Orion Cloud",
       description: "They sent a redline on the liability cap.",
       urgency: "high",
@@ -217,27 +219,6 @@ describe("attaching paper to a Request", () => {
     ]);
   });
 
-  it("refuses new paper after every disposition and points to the thread", async () => {
-    for (const status of ["converted", "resolved", "declined"] as const) {
-      const number = await submitted();
-      await harness.db.update(requests).set({ status }).where(eq(requests.number, number));
-      const before = await storedBlobCount();
-
-      const refused = await attach(number, { filename: `${status}-round.pdf` });
-
-      expect(refused.statusCode, refused.body).toBe(409);
-      expect(refused.headers["content-type"]).toContain("application/problem+json");
-      expect(refused.json()).toMatchObject({
-        type: REQUEST_DISPOSITIONED_PROBLEM_TYPE,
-        requestNumber: number,
-        outcome: status,
-      });
-      expect(refused.json().detail).toContain("thread");
-      expect(await storedBlobCount()).toBe(before);
-      expect(await listed(number)).toEqual([]);
-    }
-  });
-
   it("writes a request_attachments row tied to the Request, and no documents row", async () => {
     const [before] = await harness.db.select({ documents: count() }).from(documents);
     const number = await submitted();
@@ -333,6 +314,77 @@ describe("attaching paper to a Request", () => {
     // The bytes reached the driver before the row was refused, so the
     // blob is taken away rather than left as an orphan (DOC-012).
     expect(await storedBlobCount()).toBe(before);
+  });
+
+  it.each(["resolved", "declined"] as const)(
+    "refuses paper once the Request is %s and names its thread",
+    async (status) => {
+      const number = await submitted();
+      await harness.db.update(requests).set({ status }).where(eq(requests.number, number));
+      const before = await storedBlobCount();
+
+      const refused = await attach(number);
+
+      expect(refused.statusCode, refused.body).toBe(409);
+      expect(refused.headers["content-type"]).toContain("application/problem+json");
+      expect(refused.json()).toMatchObject({
+        type: REQUEST_DISPOSITIONED_PROBLEM_TYPE,
+        outcome: status,
+        request: { number },
+        convertedContract: null,
+      });
+      expect(await listed(number)).toEqual([]);
+      expect(await storedBlobCount()).toBe(before);
+    },
+  );
+
+  /** Converts a Request through the ordinary staff route and answers the
+   * C-### it became. */
+  async function convertedInto(number: number): Promise<{ number: number }> {
+    const converted = await harness.app.inject({
+      method: "POST",
+      url: `/api/v1/requests/${number}/convert`,
+      cookies: adminCookies,
+      payload: { title: "MSA renewal with Orion Cloud" },
+    });
+    expect(converted.statusCode, converted.body).toBe(200);
+    return converted.json().request.convertedContract as { number: number };
+  }
+
+  it("refuses paper once the Request is converted and names the thread, not a record a Business User cannot open", async () => {
+    // DD-014: a Business User reaches no Contract, so the refusal
+    // answers `null` where the portal read would show no link either.
+    const number = await submitted();
+    await convertedInto(number);
+    const before = await storedBlobCount();
+
+    const refused = await attach(number);
+
+    expect(refused.statusCode, refused.body).toBe(409);
+    expect(refused.json()).toMatchObject({
+      type: REQUEST_DISPOSITIONED_PROBLEM_TYPE,
+      outcome: "converted",
+      request: { number },
+      convertedContract: null,
+    });
+    expect(await listed(number)).toEqual([]);
+    expect(await storedBlobCount()).toBe(before);
+  });
+
+  it("names the record a conversion made when the Requester may reach it", async () => {
+    // An Administrator who submitted the Request reaches every Contract,
+    // so the same refusal carries the C-### for them.
+    const number = await submitted(adminCookies);
+    const convertedContract = await convertedInto(number);
+
+    const refused = await attach(number, { cookies: adminCookies });
+
+    expect(refused.statusCode, refused.body).toBe(409);
+    expect(refused.json()).toMatchObject({
+      outcome: "converted",
+      request: { number },
+      convertedContract,
+    });
   });
 });
 

@@ -565,22 +565,6 @@ export function ContractRecordPage() {
   /** The saved record — the server's truth after the last commit. */
   const [saved, setSaved] = useState<ContractRow>(contract);
 
-  /** The conversation about this record (CMT-004), keyed by the
-   * entity reference the panel takes — it never learns it is a
-   * contract. Every viewer who reaches the page reaches the thread; the
-   * API decides which tiers they hear.
-   *
-   * The flag rides along so the panel can wear DES-009's Tier 1 micro
-   * marker and say its Tier 3 notice. It is read from the saved row and
-   * not the loader's copy, so flagging the record on this page moves
-   * the panel with it, exactly as it moves the banner. */
-  const chatApplet = useCommentApplet({
-    entityType: "contract",
-    entityId: contract.id,
-    role: user.role,
-    viewerId: user.id,
-    confidential: saved.isConfidential,
-  });
   /** The fields the contract's type attaches, in attachment order. They
    * are state rather than loader data because a re-type replaces them,
    * and the PATCH that re-types answers with the new set. */
@@ -725,6 +709,71 @@ export function ContractRecordPage() {
    * DES-010's restore-to-trigger rule, wired by hand because the panel
    * is a plain aside. */
   const readingTrigger = useRef<HTMLElement | null>(null);
+
+  /** Re-read the root after comment paper lands, so the Documents
+   * section and the filing marker resolve the same newly-created chain. */
+  const refreshFiledPaper = useCallback(async () => {
+    const { data } = await api.GET("/api/v1/contracts/{number}/documents", {
+      params: { path: { number: saved.number }, query: { folder: FOLDER_ROOT } },
+    });
+    if (!data) throw new Error("filed paper");
+    setPaper(data.documents);
+    setPaperCursor(data.nextCursor);
+  }, [saved.number]);
+
+  /** All reachable chains for the filing dialog, across the root and
+   * folders. Walk every server page so an older chain stays pickable. */
+  const loadFilingDocuments = useCallback(async () => {
+    const rows: { id: string; title: string }[] = [];
+    let cursor: string | undefined;
+    do {
+      const { data } = await api.GET("/api/v1/contracts/{number}/documents", {
+        params: { path: { number: saved.number }, query: { cursor } },
+      });
+      if (!data) throw new Error("filing documents");
+      rows.push(...data.documents.map(({ id, title }) => ({ id, title })));
+      cursor = data.nextCursor ?? undefined;
+    } while (cursor !== undefined);
+    return rows;
+  }, [saved.number]);
+
+  const filingContext = useMemo(
+    () => ({
+      documents: [...paper, ...filed].map(({ id, title }) => ({ id, title })),
+      loadDocuments: loadFilingDocuments,
+      recordHref: `/contracts/${saved.number}/documents`,
+      canFile: isMemberPlus(user.role) && saved.archivedAt === null,
+      onOpen: (documentId: string, versionId: string, trigger: HTMLElement) => {
+        const document = [...paper, ...filed].find((row) => row.id === documentId);
+        if (!document?.versions.some((version) => version.id === versionId)) return false;
+        readingTrigger.current = trigger;
+        setReading({ documentId, versionId });
+        return true;
+      },
+      onPaperFiled: refreshFiledPaper,
+    }),
+    [
+      paper,
+      filed,
+      loadFilingDocuments,
+      saved.number,
+      saved.archivedAt,
+      user.role,
+      refreshFiledPaper,
+    ],
+  );
+
+  /** The conversation about this record (CMT-004). This Contract arm
+   * supplies Document links to every reader and the File action only to
+   * a Member+ while the record is live. */
+  const chatApplet = useCommentApplet({
+    entityType: "contract",
+    entityId: contract.id,
+    role: user.role,
+    viewerId: user.id,
+    confidential: saved.isConfidential,
+    filing: filingContext,
+  });
   /** Whether the panel's last close was asked for — Esc, the close
    * control, or a section tab change over an overlaying panel — rather
    * than the document simply leaving the list. Only an asked-for close

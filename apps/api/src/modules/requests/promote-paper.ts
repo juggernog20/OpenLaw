@@ -71,18 +71,16 @@
  * again: a retry mints its own.
  */
 
-import { createHash } from "node:crypto";
-import { Readable } from "node:stream";
 import { asc, contracts, documents, eq, requestAttachments } from "@openlaw/db";
 import { uuidv7 } from "uuidv7";
 import { recordActivity, RECORD_ACTIVITY_TIER } from "../../lib/activity.js";
+import { copyStoredBlob } from "../../lib/copy-stored-blob.js";
 import {
   insertDocumentVersion,
   requestDerivations,
   versionStorageKey,
   type QueueLogger,
 } from "../../lib/document-versions.js";
-import { mediaTypeOfBlob, MEDIA_TYPE_HEAD_BYTES } from "../../lib/media-type.js";
 import type { Notifier, NotifyingTransaction } from "../../lib/notifications/notifier.js";
 import { formatBlobRef, type StorageAdapter } from "../../lib/storage/adapter.js";
 import type { CleanupLogger } from "../../lib/uploads.js";
@@ -238,7 +236,7 @@ async function promotePaper(
     // Recording it first costs nothing, because deleting a key that was
     // never written is a no-op the storage contract guarantees.
     paper.blobs.push(formatBlobRef(deps.storage.driver, key));
-    const copied = await copyBlob(deps.storage, attachment.fileRef, {
+    const copied = await copyStoredBlob(deps.storage, attachment.fileRef, {
       key,
       filename: attachment.filename,
     });
@@ -342,58 +340,5 @@ async function promotePaper(
       mimeType: copied.mimeType,
       originalFilename: attachment.filename,
     });
-  }
-}
-
-/** One copied blob, as the rows that follow it need it described. */
-interface CopiedBlob {
-  fileRef: string;
-  mimeType: string;
-  byteSize: number;
-  checksumSha256: string;
-}
-
-/**
- * Copies one stored blob to a new key, reading its facts on the way
- * past.
- *
- * One pass, nothing held whole in memory: the bytes are hashed, counted,
- * and their head kept as they stream from the source reference to the
- * new key. The source is destroyed whatever happens, for the reason the
- * pipeline's own fetch gives — a store that refuses part way through
- * would otherwise leave a handle open.
- */
-async function copyBlob(
-  storage: StorageAdapter,
-  from: string,
-  to: Readonly<{ key: string; filename: string }>,
-): Promise<CopiedBlob> {
-  const source = await storage.get(from);
-  const digest = createHash("sha256");
-  let byteSize = 0;
-  const head: Buffer[] = [];
-  let headBytes = 0;
-  async function* metered(stream: AsyncIterable<Buffer>) {
-    for await (const chunk of stream) {
-      digest.update(chunk);
-      byteSize += chunk.length;
-      if (headBytes < MEDIA_TYPE_HEAD_BYTES) {
-        const wanted = chunk.subarray(0, MEDIA_TYPE_HEAD_BYTES - headBytes);
-        head.push(wanted);
-        headBytes += wanted.length;
-      }
-      yield chunk;
-    }
-  }
-  try {
-    const fileRef = await storage.put(to.key, Readable.from(metered(source)));
-    return {
-      fileRef,
-      mimeType: mediaTypeOfBlob(Buffer.concat(head), to.filename),
-      byteSize,
-      checksumSha256: digest.digest("hex"),
-    };
-  } finally {
-    source.destroy();
   }
 }

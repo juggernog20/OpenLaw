@@ -143,6 +143,9 @@ interface Submitted {
   number: number;
   uploading: boolean;
   unattached: readonly { filename: string; detail?: string }[];
+  /** Set when an attachment raced a disposition. The Request detail is
+   * the stable portal address of the thread that takes the paper now. */
+  threadNumber: number | null;
 }
 
 export function PortalRequestFormPage() {
@@ -280,7 +283,7 @@ export function PortalRequestFormPage() {
     // seam's own reason beside it.
     const number = data.request.number;
     setBusy(false);
-    setSubmitted({ number, uploading: files.length > 0, unattached: [] });
+    setSubmitted({ number, uploading: files.length > 0, unattached: [], threadNumber: null });
     for (const file of files) {
       const outcome = await attachToRequest(number, file);
       if (outcome.ok) continue;
@@ -290,6 +293,7 @@ export function PortalRequestFormPage() {
           : {
               ...current,
               unattached: [...current.unattached, { filename: file.name, detail: outcome.detail }],
+              threadNumber: outcome.thread?.requestNumber ?? current.threadNumber,
             },
       );
     }
@@ -700,7 +704,7 @@ function AttachedField({
  * is holding a document it never received is worse off than one who is
  * told.
  */
-function Confirmation({ number, uploading, unattached }: Readonly<Submitted>) {
+function Confirmation({ number, uploading, unattached, threadNumber }: Readonly<Submitted>) {
   const intl = useIntl();
   const heading = useRef<HTMLHeadingElement>(null);
   // The form it replaced held the focus, and a region that appears
@@ -749,16 +753,39 @@ function Confirmation({ number, uploading, unattached }: Readonly<Submitted>) {
           <TriangleAlert aria-hidden="true" className="mt-px size-4 shrink-0" />
           <div className="flex min-w-0 flex-col gap-1">
             <p className="font-medium">
-              <FormattedMessage
-                id="portal.form.attachmentsFailed"
-                defaultMessage={
-                  "{count, plural, one {This file did not attach.} " +
-                  "other {These files did not attach.}} " +
-                  "Quote {reference} and send {count, plural, one {it} other {them}} " +
-                  "to Legal another way."
-                }
-                values={{ count: unattached.length, reference: requestReference(intl, number) }}
-              />
+              {threadNumber === null ? (
+                <FormattedMessage
+                  id="portal.form.attachmentsFailed"
+                  defaultMessage={
+                    "{count, plural, one {This file did not attach.} " +
+                    "other {These files did not attach.}} " +
+                    "Quote {reference} and send {count, plural, one {it} other {them}} " +
+                    "to Legal another way."
+                  }
+                  values={{ count: unattached.length, reference: requestReference(intl, number) }}
+                />
+              ) : (
+                <FormattedMessage
+                  id="portal.form.attachmentsMovedToThread"
+                  defaultMessage={
+                    "{count, plural, one {This file did not attach.} " +
+                    "other {These files did not attach.}} " +
+                    "<thread>Add {count, plural, one {it} other {them}} to a reply on {reference}</thread>."
+                  }
+                  values={{
+                    count: unattached.length,
+                    reference: requestReference(intl, threadNumber),
+                    thread: (chunks) => (
+                      <Link
+                        to={`/portal/requests/${String(threadNumber)}#portal-request-composer`}
+                        className="font-medium text-link underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-link"
+                      >
+                        {chunks}
+                      </Link>
+                    ),
+                  }}
+                />
+              )}
             </p>
             <ul className="flex flex-col gap-0.5">
               {unattached.map((file, index) => (
