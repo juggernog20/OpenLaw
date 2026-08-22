@@ -77,6 +77,7 @@ import {
   Lock,
   LogOut,
   MessageSquare,
+  MessagesSquare,
   Network,
   Palette,
   PenLine,
@@ -1790,6 +1791,31 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
     message: defineMessage({
       id: "activity.request.converted",
       defaultMessage: "{actor} converted this request into {contract}",
+    }),
+    values: (intl, payload) => ({
+      contract: crossReference(
+        intl,
+        payload,
+        "contractNumber",
+        defineMessage({ id: "contracts.reference", defaultMessage: "C-{number}" }),
+        defineMessage({
+          id: "activity.contract.unnamedRecord",
+          defaultMessage: "another contract",
+        }),
+      ),
+    }),
+  },
+
+  // CMT-001's promise, kept at the conversion (#422). The conversation
+  // left with the work, so the ask's own feed says where it went — by
+  // C-###, which never changes. There is no count in the sentence: how
+  // much was said is a fact at every tier, and this entry is one a
+  // Contributor reads (DD-016).
+  "request.thread_moved": {
+    icon: MessagesSquare,
+    message: defineMessage({
+      id: "activity.request.threadMoved",
+      defaultMessage: "{actor} moved this conversation onto {contract}",
     }),
     values: (intl, payload) => ({
       contract: crossReference(

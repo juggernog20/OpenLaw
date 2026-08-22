@@ -222,6 +222,25 @@ type RequestPayloads = {
    * as a check constraint.
    */
   "request.converted": { number: number; contractNumber: number };
+  /**
+   * The conversation left with the work (CMT-001, DD-017, M21/11).
+   *
+   * A conversion re-parents the Request's comment rows onto the record,
+   * tiers intact, so legal answers in exactly one place from then on.
+   * The entry is what a reader of the Request meets when they wonder
+   * where the thread went, and `contractNumber` is where it went.
+   *
+   * **It carries no count.** How many comments moved is how many
+   * comments there were, at every tier, and this entry rides the
+   * record tier a Contributor reads — a number here would say how much
+   * Legal Only talk a Request held (DD-016). The entry states the move
+   * and nothing about its size.
+   *
+   * A Request whose thread is empty writes no entry at all: nothing
+   * moved, and a sentence about it would report on something that did
+   * not happen.
+   */
+  "request.thread_moved": { number: number; contractNumber: number };
 };
 
 /**
