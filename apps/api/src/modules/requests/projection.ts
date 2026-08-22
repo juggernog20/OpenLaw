@@ -176,6 +176,14 @@ export const RequestCustomFieldRefsSchema = z.object({
   entities: z.array(z.object({ id: z.string(), legalName: z.string() })),
 });
 
+/** The staff reading of the same rows, with the liveness fact triage
+ * acts on (#437). The portal keeps the narrower shape above: an archive
+ * behind a Request is Legal's repair to make, not the Requester's. */
+export const StaffRequestCustomFieldRefsSchema = z.object({
+  users: z.array(z.object({ id: z.string(), displayName: z.string(), archived: z.boolean() })),
+  entities: z.array(z.object({ id: z.string(), legalName: z.string(), archived: z.boolean() })),
+});
+
 /**
  * One refusal for both misses. A number nobody has and a number
  * somebody else has read the same on the portal, because to a requester
@@ -271,7 +279,7 @@ export function sendAttachment(reply: FastifyReply, body: unknown, filename: str
  * pickers stop offering a person who has left, and a Request that
  * already names one must go on naming them.
  */
-export async function resolveRefs(
+async function selectResolvedRefs(
   db: Executor,
   attached: readonly AttachedCustomField[],
   values: Readonly<Record<string, CustomFieldValue>>,
@@ -290,17 +298,58 @@ export async function resolveRefs(
     userIds.length === 0
       ? []
       : db
-          .select({ id: users.id, displayName: users.displayName })
+          .select({ id: users.id, displayName: users.displayName, archivedAt: users.archivedAt })
           .from(users)
           .where(inArray(users.id, userIds)),
     entityIds.length === 0
       ? []
       : db
-          .select({ id: entities.id, legalName: entities.legalName })
+          .select({
+            id: entities.id,
+            legalName: entities.legalName,
+            archivedAt: entities.archivedAt,
+          })
           .from(entities)
           .where(inArray(entities.id, entityIds)),
   ]);
   return { users: people, entities: named };
+}
+
+/** The requester's reading. It names archived rows, but does not hand
+ * the Requester Legal's liveness state or repair work. */
+export async function resolveRefs(
+  db: Executor,
+  attached: readonly AttachedCustomField[],
+  values: Readonly<Record<string, CustomFieldValue>>,
+) {
+  const refs = await selectResolvedRefs(db, attached, values);
+  return {
+    users: refs.users.map(({ id, displayName }) => ({ id, displayName })),
+    entities: refs.entities.map(({ id, legalName }) => ({ id, legalName })),
+  };
+}
+
+/** The staff reading. A resolved row says whether it is still live, so
+ * an archived carry is a third state beside answered and unanswered
+ * before a triager opens Convert (#437). */
+export async function resolveStaffRefs(
+  db: Executor,
+  attached: readonly AttachedCustomField[],
+  values: Readonly<Record<string, CustomFieldValue>>,
+) {
+  const refs = await selectResolvedRefs(db, attached, values);
+  return {
+    users: refs.users.map(({ id, displayName, archivedAt }) => ({
+      id,
+      displayName,
+      archived: archivedAt !== null,
+    })),
+    entities: refs.entities.map(({ id, legalName, archivedAt }) => ({
+      id,
+      legalName,
+      archived: archivedAt !== null,
+    })),
+  };
 }
 
 /** Who asked, as the hero and the Requester card draw them: the name,

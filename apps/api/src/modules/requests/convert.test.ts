@@ -28,6 +28,7 @@ import {
   contractTypes,
   eq,
   requestTypes,
+  users,
 } from "@openlaw/db";
 import { REQUEST_DISPOSITIONED_PROBLEM_TYPE } from "@openlaw/shared";
 import {
@@ -93,7 +94,7 @@ beforeAll(async () => {
     ).map((row) => [row.slug, row.id] as const),
   );
 
-  // Three catalog fields, each with one job in this suite.
+  // Four catalog fields, each with one job in this suite.
   //
   // "Counterparty" is on the NDA request form *and* on both contract
   // types, so it is the value that carries. "Deal desk region" is on
@@ -101,11 +102,21 @@ beforeAll(async () => {
   // nowhere to land (the INT-002 M19/7 addendum). "Governing law" is
   // hard-required on the MSA contract type and on no request form, so
   // it is the gap the dialog has to prompt for (CTR-016/MTR-014).
+  // "Requesting manager" is a carried reference whose archived row
+  // conversion refuses until the caller supplies a live override.
   fieldSlugs = new Map();
   for (const field of [
-    { displayName: "Counterparty", onRequestForm: true, onNda: true, onMsa: true, required: false },
+    {
+      displayName: "Counterparty",
+      fieldType: "text",
+      onRequestForm: true,
+      onNda: true,
+      onMsa: true,
+      required: false,
+    },
     {
       displayName: "Deal desk region",
+      fieldType: "text",
       onRequestForm: true,
       onNda: false,
       onMsa: false,
@@ -113,10 +124,19 @@ beforeAll(async () => {
     },
     {
       displayName: "Governing law",
+      fieldType: "text",
       onRequestForm: false,
       onNda: false,
       onMsa: true,
       required: true,
+    },
+    {
+      displayName: "Requesting manager",
+      fieldType: "user",
+      onRequestForm: true,
+      onNda: true,
+      onMsa: false,
+      required: false,
     },
   ] as const) {
     const created = await harness.app.inject({
@@ -126,7 +146,7 @@ beforeAll(async () => {
       payload: {
         displayName: field.displayName,
         moduleScope: "global",
-        fieldType: "text",
+        fieldType: field.fieldType,
         fieldTag: "legal",
       },
     });
@@ -535,6 +555,35 @@ describe("what the record is born with (INT-002, MTR-012, CTR-016)", () => {
     expect((await contractNumbered(number)).customFields).toMatchObject({
       [fieldSlugs.get("Governing law")!]: "England and Wales",
     });
+  });
+
+  it("refuses an archived carry by name, then converts with the live override", async () => {
+    const manager = fieldSlugs.get("Requesting manager")!;
+    const request = await submit("A manager who left before triage", {
+      customFields: { [manager]: requesterId },
+    });
+    await harness.db.update(users).set({ archivedAt: new Date() }).where(eq(users.id, requesterId));
+
+    try {
+      const before = await contractCount();
+      const refused = await convert(request.number, { title: "Northwind NDA" });
+      expect(refused.statusCode, refused.body).toBe(400);
+      expect(refused.json().detail).toContain("Requesting manager: pick a live person.");
+      expect(await contractCount()).toBe(before);
+      expect((await stored(request.id)).status).toBe("new");
+
+      const repaired = await convert(request.number, {
+        title: "Northwind NDA",
+        customFields: { [manager]: memberId },
+      });
+      expect(repaired.statusCode, repaired.body).toBe(200);
+      const contract = await contractNumbered(
+        repaired.json().request.convertedContract.number as number,
+      );
+      expect(contract.customFields[manager]).toBe(memberId);
+    } finally {
+      await harness.db.update(users).set({ archivedAt: null }).where(eq(users.id, requesterId));
+    }
   });
 
   it("refuses an unknown key rather than dropping it", async () => {

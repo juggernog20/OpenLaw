@@ -446,10 +446,10 @@ describe("the values, labelled through the type's live fields (INT-002)", () => 
 
     const detail = (await readDetail(number)).json();
     expect(detail.customFieldRefs.users).toEqual([
-      { id: requesterId, displayName: REQUESTER.displayName },
+      { id: requesterId, displayName: REQUESTER.displayName, archived: false },
     ]);
     expect(detail.customFieldRefs.entities).toEqual([
-      { id: entityId, legalName: "Orion Cloud Holdings LLC" },
+      { id: entityId, legalName: "Orion Cloud Holdings LLC", archived: false },
     ]);
   });
 
@@ -478,12 +478,13 @@ describe("the values, labelled through the type's live fields (INT-002)", () => 
     try {
       const detail = (await readDetail(number)).json();
       // A Request that already names somebody who has left must go on
-      // naming them, exactly as a contract does.
+      // naming them, exactly as a contract does, and the third state is
+      // stated on each resolved row rather than inferred by the client.
       expect(detail.customFieldRefs.users).toEqual([
-        { id: requesterId, displayName: REQUESTER.displayName },
+        { id: requesterId, displayName: REQUESTER.displayName, archived: true },
       ]);
       expect(detail.customFieldRefs.entities).toEqual([
-        { id: entityId, legalName: "Wound Down GmbH" },
+        { id: entityId, legalName: "Wound Down GmbH", archived: true },
       ]);
     } finally {
       await harness.db.update(users).set({ archivedAt: null }).where(eq(users.id, requesterId));

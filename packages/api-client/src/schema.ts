@@ -6952,10 +6952,12 @@ export interface operations {
               users: {
                 id: string;
                 displayName: string;
+                archived: boolean;
               }[];
               entities: {
                 id: string;
                 legalName: string;
+                archived: boolean;
               }[];
             };
             attachments: {

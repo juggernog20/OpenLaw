@@ -9079,9 +9079,12 @@
                               },
                               "displayName": {
                                 "type": "string"
+                              },
+                              "archived": {
+                                "type": "boolean"
                               }
                             },
-                            "required": ["id", "displayName"],
+                            "required": ["id", "displayName", "archived"],
                             "additionalProperties": false
                           }
                         },
@@ -9095,9 +9098,12 @@
                               },
                               "legalName": {
                                 "type": "string"
+                              },
+                              "archived": {
+                                "type": "boolean"
                               }
                             },
-                            "required": ["id", "legalName"],
+                            "required": ["id", "legalName", "archived"],
                             "additionalProperties": false
                           }
                         }
