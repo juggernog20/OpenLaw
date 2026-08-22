@@ -1610,6 +1610,12 @@
   "convert.alreadyConvertedRecord": {
     "defaultMessage": "It became {contract}."
   },
+  "convert.archivedReferenceMissing": {
+    "defaultMessage": "Pick a live value for {field}."
+  },
+  "convert.archivedReferenceNote": {
+    "defaultMessage": "{value} is archived. Pick a live {fieldType, select, user {person} entity {entity} other {value}} to convert."
+  },
   "convert.carries": {
     "defaultMessage": "Carries into the contract"
   },
@@ -2377,6 +2383,9 @@
   },
   "inbox.ordering": {
     "defaultMessage": "Ordered by urgency, then age"
+  },
+  "inbox.request.archivedReference": {
+    "defaultMessage": "Archived"
   },
   "inbox.request.attachments": {
     "defaultMessage": "Attachments"

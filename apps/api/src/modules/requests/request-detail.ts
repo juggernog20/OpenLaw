@@ -77,10 +77,10 @@ import {
   DownloadSchema,
   NO_ATTACHMENT,
   RequestAttachmentSchema,
-  RequestCustomFieldRefsSchema,
-  resolveRefs,
+  resolveStaffRefs,
   selectAttachments,
   sendAttachment,
+  StaffRequestCustomFieldRefsSchema,
   staffRequestRow,
   StaffRequestSchema,
   toStaffRequest,
@@ -119,7 +119,7 @@ export const requestDetailRoutes: FastifyPluginAsyncZod = async (app) => {
              * them. A value whose field has since been detached or
              * archived is not among them and is therefore not drawn. */
             fields: z.array(AttachedCustomFieldSchema),
-            customFieldRefs: RequestCustomFieldRefsSchema,
+            customFieldRefs: StaffRequestCustomFieldRefsSchema,
             /** The paper, oldest first. Empty is an answer: a Request
              * with no attachments is a complete one (INT-002). */
             attachments: z.array(RequestAttachmentSchema),
@@ -137,7 +137,7 @@ export const requestDetailRoutes: FastifyPluginAsyncZod = async (app) => {
       return {
         request: toStaffRequest(row),
         fields: attached,
-        customFieldRefs: await resolveRefs(app.db, attached, row.customFields),
+        customFieldRefs: await resolveStaffRefs(app.db, attached, row.customFields),
         attachments,
       };
     },

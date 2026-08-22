@@ -3920,6 +3920,43 @@ Checked against those records before this was written: every rule the four desig
 
 **The already-decided copy is `disposition.*`, not `decline.*`.** DES-058 clause 5 and DES-059's consequences both name `decline.alreadyDecided` and `decline.alreadyDecidedRead` as the scaffold's copy that all three dialogs read. The ids now say so: they are `disposition.alreadyDecided` and `disposition.alreadyDecidedRead`. The clause text above is left as it was written, as a shipped decision is; this addendum is where the current ids are.
 
+## DES-060: The archived carried reference marker and repair box (extends DES-057, DES-059)
+
+- **Status:** Accepted
+- **Date:** 2026-08-22
+
+### Context
+
+The INT-002 #437 addendum owns the product rule. A `user` or `entity` value collected on a Request can name a row that was archived before triage. DES-057 draws the value as plain text, so the archived name looks live. DES-059 states every carried value and draws boxes only for required fields the form did not answer, so Convert offers no way to replace the archived reference.
+
+This record decides how the staff detail marks that value and how the existing Convert dialog control handles the repair. It does not change which values qualify for repair. INT-002 #437 owns that rule.
+
+### Decision
+
+**1. The marker sits on the value.** The Form responses row keeps the archived person's display name or the Entity's legal name. A neutral `Archived` pill follows the name inside the value cell. It uses the existing neutral status pair, the list editor's archived word, and the pill anatomy already used for archived rows. The field label stays unchanged. A live reference draws the name alone.
+
+**2. Convert replaces the static carry line with a control for that value.** The archived reference does not appear under "Carries into the contract". It appears in the target type's field order as the same labelled `CustomFieldControl` DES-059 uses for a required gap. The label carries the required marker because Convert cannot land while the archived value remains. The picker offers live rows only.
+
+**3. The help line names both facts.** It keeps the archived name visible and says to pick a live person or Entity to convert. This lets the triager compare the old answer with the replacement without making the dead value look selectable. An empty press says `Pick a live value for {field}.` on the dialog's error line.
+
+**4. No repair control appears for a live carried reference.** It stays in DES-059's carry list as a name and value. This clause points to INT-002 #437 for the rule and only states its visual result.
+
+### Rationale
+
+The marker belongs beside the archived name because that is the first place a triager reads the answer. A banner would separate the warning from the value it describes. Removing the dead value from the carry list avoids saying it will land unchanged while a box below asks for a replacement.
+
+Reusing the gap control keeps one visual grammar for the work Convert still needs. The help line explains why this answered field has become work without adding a second warning component or a new dialog section.
+
+### Alternatives considered
+
+- **A warning banner above Form responses.** Rejected because several archived values would need a list that repeats their field names, while the rows already provide the exact anchor.
+- **Keeping the archived value in the carry list and adding a box below it.** Rejected because the same dialog would state that one value both carries and must be replaced.
+- **A disabled option holding the archived row.** Rejected because the old name belongs in explanatory text, not in the list of choices Convert can post.
+
+### Consequences
+
+`apps/web/src/components/intake/custom-field-value.tsx` owns the inline marker. `apps/web/src/components/intake/convert-dialog.tsx` derives the repair boxes from the staff detail's archived state and posts their selections in the existing `customFields` body. No new component and no new token lands. The catalogue gains `inbox.request.archivedReference`, `convert.archivedReferenceNote`, and `convert.archivedReferenceMissing`.
+
 ## Index of decisions
 
 | #       | Decision                                                                                                                                                             | Status                                                                                                     |
@@ -3983,3 +4020,4 @@ Checked against those records before this was written: every rule the four desig
 | DES-057 | The staff request detail — a record page for something that is not a record (extends DES-032, DES-016, DES-034)                                                      | Accepted; sub-bar actions added by DES-058; the Description card's absence recorded by the M21/12 addendum |
 | DES-058 | The disposition sub-bar and the Decline dialog (extends DES-057, DES-035, DES-005)                                                                                   | Accepted; the Resolve dialog added by the M21/8 addendum; the slot's third button closed by DES-059        |
 | DES-059 | The Convert dialog — a prefilled contract create (extends DES-058, DES-057, DES-044)                                                                                 | Accepted                                                                                                   |
+| DES-060 | The archived carried reference marker and repair box (extends DES-057, DES-059)                                                                                      | Accepted                                                                                                   |
