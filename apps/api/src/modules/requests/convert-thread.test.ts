@@ -90,9 +90,10 @@ const userIds = new Map<string, string>();
 /** The seeded front door whose request type targets the NDA contract
  * type, so a conversion confirms the routing and chooses nothing. */
 let ndaRequestTypeId: string;
-/** A live contract type, for the one record here that is born the
- * ordinary way rather than by conversion. */
-let plainContractTypeId: string;
+/** The contract type the seeded front door targets — the one every
+ * conversion here confirms, reused deliberately for the single record
+ * that is born the ordinary way rather than by conversion. */
+let targetContractTypeId: string;
 
 const as = (fixture: { email: string }): Record<string, string> => cookies.get(fixture.email)!;
 const idOf = (fixture: { email: string }): string => userIds.get(fixture.email)!;
@@ -151,7 +152,7 @@ beforeAll(async () => {
     .where(eq(requestTypes.id, ndaRequestTypeId))
     .limit(1);
   expect(target, "the nda_request seed's target contract type").toBeDefined();
-  plainContractTypeId = target!.id;
+  targetContractTypeId = target!.id;
 });
 
 afterAll(async () => {
@@ -497,16 +498,16 @@ describe("the three windows onto one conversation (CMT-001)", () => {
     const request = await submit("Somebody else's converted ask");
     const converted = await convert(request);
     await say(MEMBER, contractRef(converted), "Answering the person who asked.");
-    for (const url of [
-      `/api/v1/comments?entityType=request&entityId=${request.id}`,
-      `/api/v1/comments?entityType=contract&entityId=${converted.contractId}`,
-    ]) {
+    // 404 through the Request's address, because to them this ask does
+    // not exist (DD-013); 403 through the record's, because a Business
+    // User reaches no contract thread at all (CTR-021). The conversion
+    // changed neither answer.
+    for (const [url, status] of [
+      [`/api/v1/comments?entityType=request&entityId=${request.id}`, 404],
+      [`/api/v1/comments?entityType=contract&entityId=${converted.contractId}`, 403],
+    ] as const) {
       const res = await harness.app.inject({ method: "GET", url, cookies: as(OUTSIDER) });
-      // 404 through the Request's address, because to them this ask does
-      // not exist (DD-013); 403 through the record's, because a Business
-      // User reaches no contract thread at all (CTR-021). The conversion
-      // changed neither answer.
-      expect([403, 404]).toContain(res.statusCode);
+      expect(res.statusCode, res.body).toBe(status);
     }
   });
 });
@@ -654,6 +655,27 @@ describe("the reply promise follows the thread (NOT-002 group 5)", () => {
     expect((await rowsAboutComment(STAFF_REQUESTER, internal)).map((row) => row.eventType)).toEqual(
       ["comment.posted"],
     );
+
+    // And a Full Thread comment that names them by name is still one
+    // row: the mention is the loudest of the three events on a record,
+    // so the reply steps aside beside the record's own group-2 item.
+    const named = await harness.app.inject({
+      method: "POST",
+      url: "/api/v1/comments",
+      cookies: as(MEMBER),
+      payload: {
+        entityType: "contract",
+        entityId: converted.contractId,
+        body: "Confirming with you directly.",
+        visibility: "full_thread",
+        mentions: [idOf(STAFF_REQUESTER)],
+      },
+    });
+    expect(named.statusCode, named.body).toBe(201);
+    const namedId = named.json().comment.id as string;
+    expect((await rowsAboutComment(STAFF_REQUESTER, namedId)).map((row) => row.eventType)).toEqual([
+      "comment.mentioned",
+    ]);
   });
 
   it("raises no reply on a contract no Request converted into", async () => {
@@ -663,7 +685,7 @@ describe("the reply promise follows the thread (NOT-002 group 5)", () => {
       cookies: as(MEMBER),
       payload: {
         title: "An ordinary contract nobody asked for",
-        contractTypeId: plainContractTypeId,
+        contractTypeId: targetContractTypeId,
       },
     });
     expect(created.statusCode, created.body).toBe(201);

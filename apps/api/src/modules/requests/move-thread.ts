@@ -18,16 +18,22 @@
  * rather than of a mapping it applies — a comment's tier is immutable
  * after posting (CMT-005), and re-parenting is not a posting.
  *
- * **The watermarks move with the rows, and only where they cannot
+ * **The watermarks move with the address, and only where they cannot
  * clobber a real read state** (CMT-009). A `comment_last_read` row says
  * where one reader had got to in one record's conversation. Leaving
  * those rows on the Request's pair after the comments left it would
  * hand every reader an unread count that starts from nothing, and their
  * badge would announce as news what they read yesterday. So each row is
- * copied onto the record's pair — unless that reader already holds one
+ * re-keyed onto the record's pair — unless that reader already holds one
  * there, in which case theirs is a real place in a real conversation and
  * the Request's stale one must not overwrite it. Then the Request's rows
- * go, because the pair they name has no comments left to be read.
+ * go, because the pair they name is not a comment target any more.
+ *
+ * It is the **address** rather than the rows they follow, so a Request
+ * whose thread was empty still has its watermarks re-keyed. That is one
+ * rule instead of two: once the back-link is written, nothing reads a
+ * watermark on the Request's pair again, and a row nobody can read is
+ * litter whether or not there were comments beside it.
  *
  * **The activity entries stay where they were written.** A
  * `comment.posted` entry on the Request records what somebody did on the
@@ -80,12 +86,12 @@ export interface ThreadMove {
  * — the conversation this moves is the conversation the Request held
  * when it was held.
  *
- * **A Request with nothing said on it moves nothing and narrates
- * nothing.** No comment, no watermark, and no entry: an empty thread is
- * an ordinary state of a complete Request (INT-002), and a sentence
- * about moving nothing would put a line on the record about something
- * that did not happen — the promotion's rule about empty paper, said
- * about empty conversation.
+ * **A Request with nothing said on it narrates nothing.** An empty
+ * thread is an ordinary state of a complete Request (INT-002), and a
+ * sentence about moving nothing would put a line on the record about
+ * something that did not happen — the promotion's rule about empty
+ * paper, said about empty conversation. The watermark clean-up above
+ * still runs, because that follows the address rather than the rows.
  */
 export async function moveThread(tx: NotifyingTransaction, move: ThreadMove): Promise<void> {
   const moved = await tx
@@ -97,7 +103,6 @@ export async function moveThread(tx: NotifyingTransaction, move: ThreadMove): Pr
     // held is how much was said at every tier, and the entry below is
     // one a Contributor reads.
     .returning({ id: comments.id });
-  if (moved.length === 0) return;
 
   // Each reader's place in the conversation, re-keyed onto the record.
   // The set is one row per person who ever opened this Request's thread,
@@ -139,10 +144,16 @@ export async function moveThread(tx: NotifyingTransaction, move: ThreadMove): Pr
     await tx.delete(commentLastRead).where(onRequest);
   }
 
-  // DD-017, on the record the conversation left. A reader of the Request
-  // who wonders where the thread went is the one this sentence is for,
-  // and C-### is where it went. The record's own feed already says it
-  // was created from R-###, so it is one entry rather than two.
+  // DD-017, on the record the conversation left — and only where there
+  // was one. A Request nobody said anything on narrates nothing: the
+  // watermarks above moved because the address moved, but a sentence
+  // about a conversation that was never had would report on something
+  // that did not happen.
+  if (moved.length === 0) return;
+  // A reader of the Request who wonders where the thread went is the one
+  // this sentence is for, and C-### is where it went. The record's own
+  // feed already says it was created from R-###, so it is one entry
+  // rather than two.
   await recordActivity(tx, {
     entityType: "request",
     entityId: move.requestId,

@@ -1072,9 +1072,18 @@ async function mentionedOnRequest(
  * them, so a Requester who is also on the record's team keeps the group-2
  * item that is their only news of it. The rule is the tier's, not the
  * person's.
+ *
+ * **And a comment that names the Requester by name drops the reply
+ * instead.** On a record the mention is the loudest of the three events
+ * and the other two step aside, which is the order the contract thread
+ * has always had. Only a Member+ who raised the Request can be in that
+ * position — a contract offers no Business User as a mention candidate
+ * (CMT-007) — and the arithmetic is the same either way: one comment,
+ * one row.
  */
 async function commentOnRecord(tx: NotifyingTransaction, event: CommentPostedEvent): Promise<void> {
   const origin = await requestConvertedInto(tx, event.contractId);
+  const named = new Set(event.mentioned ?? []);
   await fanOutToRecord(
     tx,
     "comment.posted",
@@ -1087,13 +1096,23 @@ async function commentOnRecord(tx: NotifyingTransaction, event: CommentPostedEve
       except: [
         // The people this comment named: they have just been told,
         // louder, by the mention.
-        ...(event.mentioned ?? []),
+        ...named,
         ...(origin !== null && event.visibility === "full_thread" ? [origin.requesterId] : []),
       ],
       narrowing: { tier: event.visibility },
     },
   );
   if (origin === null) return;
+  // And a Requester the comment named by name has been told louder still
+  // — on this record, by the mention. Only one person can ever be in
+  // this branch: a Member+ who raised the Request and can reach the
+  // record it became, because nobody else is offered as a mention
+  // candidate on a contract (CMT-007) and the composer refuses a name it
+  // was not offered. The mention wins here rather than the reply,
+  // because on a record the interrupting event is the one that carries
+  // the news and the ambient ones step aside — the same order the
+  // record's own group-2 event takes one call above.
+  if (named.has(origin.requesterId)) return;
   await fanOutToRequest(
     tx,
     "request.replied",

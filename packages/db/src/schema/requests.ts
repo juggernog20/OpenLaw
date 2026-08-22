@@ -129,6 +129,12 @@ export const requests = pgTable(
     // The requester's own list, which is the only list a Business User
     // ever sees (DD-013), newest first.
     index("requests_requester_idx").on(table.requesterId, table.createdAt),
+    // The back-link, read from the record's end (CMT-001, M21/11): every
+    // comment on a contract asks whether a Request converted into it, so
+    // that the reply the requester was promised can follow the thread
+    // onto the work. Without this the question is a scan of every
+    // Request ever raised, on a table that only grows.
+    index("requests_converted_contract_idx").on(table.convertedContractId),
     // "A Request becomes one record", stated as a shape rather than
     // left to the conversion route. Two targets would be two answers to
     // one question, and nothing could say which one the thread follows.
