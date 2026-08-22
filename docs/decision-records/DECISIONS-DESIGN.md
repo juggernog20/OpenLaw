@@ -3811,7 +3811,9 @@ Clause 1 is the whole shape: the disposition is the page's one act, so it goes w
 
 ### Consequences
 
-`apps/web/src/components/intake/decline-dialog.tsx` is the dialog and `apps/web/src/routes/inbox-request.tsx` grows the sub-bar slot. No new tokens and no new components: the dialog is `Dialog`, `Label`, `Button`, and the shared `TEXTAREA_CLASS`. One new message id, `intake.field.requiredMark`, joins the two module-scoped required markers already in the catalogue.
+`apps/web/src/components/intake/decline-dialog.tsx` is the dialog and `apps/web/src/routes/inbox-request.tsx` grows the sub-bar slot. No new tokens and no new components: the dialog is `Dialog`, `Label`, `Button`, and the shared `TEXTAREA_CLASS`.
+
+The catalogue gains the dialog's own copy under a `decline.*` prefix — the sub-bar's verb, the title, the opening sentence, the box's label, the note, the button, the empty-box refusal, the generic failure, and the two lines a lost race prints — plus two ids that are not this dialog's alone: `action.close`, which joins `action.cancel` in the shared action family, and `intake.field.requiredMark`, which joins the two module-scoped required markers already in the catalogue.
 
 M21/8 and M21/9 add their buttons to the same slot and their dialogs beside this one; clause 5 is the arm all three share, because the refusal is the scaffold's rather than Decline's.
 

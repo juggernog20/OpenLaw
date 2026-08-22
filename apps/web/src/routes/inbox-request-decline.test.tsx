@@ -272,9 +272,12 @@ describe("the lost race (INT-007, TECH-020)", () => {
       await within(dialog).findByText("Somebody else already converted this request."),
     ).toBeInTheDocument();
     expect(within(dialog).queryByRole("button", { name: "Decline request" })).toBeNull();
-    expect(within(dialog).getByRole("button", { name: "Close" })).toBeInTheDocument();
+    // The box and the submit that held focus have just unmounted, so the
+    // one control left takes it (DES-011).
+    const close = within(dialog).getByRole("button", { name: "Close" });
+    expect(close).toHaveFocus();
 
-    await user.click(within(dialog).getByRole("button", { name: "Close" }));
+    await user.click(close);
     await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
   });
 

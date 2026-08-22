@@ -144,7 +144,12 @@ export function DeclineDialog({
               />
             </p>
             <div className="flex justify-end">
-              <Button type="button" onClick={onClose}>
+              {/* Focus follows the content: the box and the submit that
+                  held it have just unmounted, and focus left on nothing
+                  would drop a keyboard reader to the top of the document
+                  (DES-011). The one control left is the one that takes
+                  it. */}
+              <Button type="button" autoFocus onClick={onClose}>
                 <FormattedMessage id="action.close" defaultMessage="Close" />
               </Button>
             </div>
