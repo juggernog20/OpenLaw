@@ -18,15 +18,17 @@ import {
   type Transaction,
 } from "@openlaw/db";
 import { recordActivity, RECORD_ACTIVITY_TIER } from "../../lib/activity.js";
-import { MATTER_CREATOR_ROLE } from "../../lib/matter-access.js";
+import {
+  MATTER_CREATOR_ROLE,
+  MATTER_MANAGER_REFUSAL,
+  MATTER_MANAGER_ROLES,
+} from "../../lib/matter-access.js";
 import {
   applyCustomFields,
   assertRequiredCustomFields,
   selectAttachedFields,
 } from "../../lib/custom-fields.js";
 import { httpError } from "../../lib/problem.js";
-
-const MANAGER_ROLES = new Set<string>(["administrator", "legal_team_member"]);
 
 export interface CreateMatterInput {
   actorId: string;
@@ -97,8 +99,8 @@ export async function createMatter(
       .where(eq(users.id, input.managerId))
       .limit(1)
       .for("update");
-    if (!person || person.archivedAt || !MANAGER_ROLES.has(person.role)) {
-      throw httpError(400, "The Matter Manager must be a live Legal Team Member or Administrator.");
+    if (!person || person.archivedAt || !MATTER_MANAGER_ROLES.has(person.role)) {
+      throw httpError(400, MATTER_MANAGER_REFUSAL);
     }
     manager = {
       id: person.id,

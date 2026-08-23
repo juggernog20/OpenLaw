@@ -631,7 +631,7 @@ type ContractPayloads = {
   "contract.restored": { number: number; title: string };
 };
 
-/** The matter vocabulary opened by M22. Later matter tickets add the edit verbs. */
+/** The matter record vocabulary (M22). */
 type MatterPayloads = {
   "matter.created": {
     number: number;
@@ -641,6 +641,24 @@ type MatterPayloads = {
     customFields: string[];
   };
   "matter.confidentiality_set": { number: number; title: string };
+  "matter.confidentiality_cleared": { number: number; title: string };
+  "matter.updated": {
+    number: number;
+    title: string;
+    changed: Record<string, { from: unknown; to: unknown }>;
+  };
+  "matter.status_changed": {
+    number: number;
+    title: string;
+    from: string;
+    to: string;
+    fromCategory: "open" | "closed";
+    toCategory: "open" | "closed";
+  };
+  "matter.team_added": { number: number; title: string; member: string; role: string };
+  "matter.team_removed": { number: number; title: string; member: string; role: string };
+  "matter.archived": { number: number; title: string };
+  "matter.restored": { number: number; title: string };
   "matter.type_reassigned": { number: number; title: string; from: string; to: string };
   "matter.status_reassigned": { number: number; title: string; from: string; to: string };
 };

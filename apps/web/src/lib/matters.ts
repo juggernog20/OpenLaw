@@ -11,9 +11,19 @@ type OptionsResponse =
 
 export type MatterRow = RecordResponse["matter"];
 export type MatterField = RecordResponse["fields"][number];
+export type MatterTeamMember = RecordResponse["team"][number];
+export type MatterCustomFieldRefs = RecordResponse["customFieldRefs"];
 export type MatterTypeOption = OptionsResponse["matterTypes"][number];
+export type MatterStatusOption = OptionsResponse["matterStatuses"][number];
 export type MatterUserOption = OptionsResponse["users"][number];
 export type MatterSeverity = MatterRow["priority"];
+export type MatterTeamRole = MatterTeamMember["role"];
+
+export const ADDABLE_MATTER_TEAM_ROLES: readonly Exclude<MatterTeamRole, "creator">[] = [
+  "member",
+  "watcher",
+  "contributor",
+];
 
 export const MATTER_SEVERITIES: readonly MatterSeverity[] = ["low", "medium", "high", "critical"];
 
@@ -33,5 +43,16 @@ export function matterSeverityLabel(intl: IntlShape, value: MatterSeverity): str
         "{value, select, low {Low} medium {Medium} high {High} critical {Critical} other {Unknown}}",
     },
     { value },
+  );
+}
+
+export function matterTeamRoleLabel(intl: IntlShape, role: MatterTeamRole): string {
+  return intl.formatMessage(
+    {
+      id: "matters.team.role",
+      defaultMessage:
+        "{role, select, member {Member} watcher {Watcher} creator {Creator} contributor {Contributor} other {Unknown}}",
+    },
+    { role },
   );
 }

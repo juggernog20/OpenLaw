@@ -11,8 +11,10 @@ import {
   isNull,
   matters,
   matterStatuses,
+  matterTeam,
   matterTypeFields,
   matterTypes,
+  MATTER_TEAM_ROLES,
   SEVERITY_LEVELS,
   sql,
   users,
@@ -21,6 +23,7 @@ import {
   type Executor,
   type Matter,
   type SQL,
+  type Transaction,
 } from "@openlaw/db";
 import {
   MATTER_SORT_KEYS,
@@ -29,13 +32,24 @@ import {
   type SortDirection,
 } from "@openlaw/shared";
 import { requireRole, type AuthenticatedUser } from "../../auth/guards.js";
+import { recordActivity, RECORD_ACTIVITY_TIER } from "../../lib/activity.js";
 import {
+  applyCustomFields,
+  assertRequiredCustomFields,
   AttachedCustomFieldSchema,
   CustomFieldsInput,
   CustomFieldsSchema,
   selectAttachedFields,
 } from "../../lib/custom-fields.js";
-import { matterTeamScope, NO_MATTER } from "../../lib/matter-access.js";
+import {
+  MATTER_CREATOR_ROLE,
+  MATTER_MANAGER_REFUSAL,
+  MATTER_MANAGER_ROLES,
+  matterConfidentialityWrite,
+  matterTeamScope,
+  NO_MATTER,
+  reachedMatter,
+} from "../../lib/matter-access.js";
 import { httpError, problemResponse } from "../../lib/problem.js";
 import { resolveStaffRefs, StaffRequestCustomFieldRefsSchema } from "../requests/projection.js";
 import { createMatter } from "./create.js";
@@ -96,6 +110,10 @@ const MatterEnvelope = z.object({ matter: MatterRowSchema });
 const MatterRecordEnvelope = MatterEnvelope.extend({
   fields: z.array(AttachedCustomFieldSchema),
   customFieldRefs: StaffRequestCustomFieldRefsSchema,
+  team: z.array(PersonSchema.extend({ role: z.enum(MATTER_TEAM_ROLES) })),
+});
+const MatterTeamEnvelope = z.object({
+  team: z.array(PersonSchema.extend({ role: z.enum(MATTER_TEAM_ROLES) })),
 });
 
 interface MatterContext {
@@ -162,6 +180,79 @@ export const mattersRoutes: FastifyPluginAsyncZod = async (app) => {
       .innerJoin(matterTypes, eq(matters.matterTypeId, matterTypes.id))
       .innerJoin(matterStatuses, eq(matters.statusId, matterStatuses.id))
       .leftJoin(users, eq(matters.managerId, users.id));
+
+  const selectTeam = async (db: Executor, matterId: string) => {
+    const rows = await db
+      .select({
+        id: users.id,
+        displayName: users.displayName,
+        image: users.image,
+        archivedAt: users.archivedAt,
+        role: matterTeam.role,
+      })
+      .from(matterTeam)
+      .innerJoin(users, eq(matterTeam.userId, users.id))
+      .where(eq(matterTeam.matterId, matterId))
+      .orderBy(asc(sql`lower(${users.displayName})`), asc(matterTeam.role));
+    return rows.map((row) => ({
+      id: row.id,
+      displayName: row.displayName,
+      image: row.image,
+      archived: row.archivedAt !== null,
+      role: row.role,
+    }));
+  };
+
+  async function lockedMatter(
+    tx: Transaction,
+    number: number,
+    user: AuthenticatedUser,
+  ): Promise<MatterContext> {
+    const row = await reachedMatter(tx, user, number, { lock: true });
+    if (!row) throw httpError(404, NO_MATTER);
+    const [context] = await selectMatters(tx).where(eq(matters.id, row.id)).limit(1);
+    if (!context) throw httpError(404, NO_MATTER);
+    return context;
+  }
+
+  function assertEditable(context: MatterContext): void {
+    if (context.row.archivedAt) {
+      throw httpError(409, "This matter is archived. Restore it before editing.");
+    }
+  }
+
+  async function assertAudienceActor(
+    tx: Transaction,
+    current: MatterContext,
+    user: AuthenticatedUser,
+    refusal: string,
+  ): Promise<void> {
+    const verdict = await matterConfidentialityWrite(tx, user, current.row);
+    if (verdict === "unreachable") throw httpError(404, NO_MATTER);
+    if (verdict === "refused") throw httpError(403, refusal);
+  }
+
+  async function lockedLiveUser(tx: Transaction, userId: string, managerOnly = false) {
+    const [person] = await tx
+      .select({
+        id: users.id,
+        displayName: users.displayName,
+        image: users.image,
+        archivedAt: users.archivedAt,
+        role: users.role,
+      })
+      .from(users)
+      .where(eq(users.id, userId))
+      .limit(1)
+      .for("update");
+    if (!person || person.archivedAt || (managerOnly && !MATTER_MANAGER_ROLES.has(person.role))) {
+      throw httpError(
+        400,
+        managerOnly ? MATTER_MANAGER_REFUSAL : "That is not a person we can add.",
+      );
+    }
+    return person;
+  }
 
   const scope = (user: AuthenticatedUser) => matterTeamScope(app.db, user);
   const SORTS: Record<MatterSortKey, { expr: SQL; joined: boolean }> = {
@@ -414,7 +505,12 @@ export const mattersRoutes: FastifyPluginAsyncZod = async (app) => {
       if (!context) throw httpError(404, NO_MATTER);
       const fields = await selectAttachedFields(app.db, matterTypeFields, context.row.matterTypeId);
       const customFieldRefs = await resolveStaffRefs(app.db, fields, context.row.customFields);
-      return { matter: toRow(context), fields, customFieldRefs };
+      return {
+        matter: toRow(context),
+        fields,
+        customFieldRefs,
+        team: await selectTeam(app.db, context.row.id),
+      };
     },
   );
 
@@ -445,6 +541,424 @@ export const mattersRoutes: FastifyPluginAsyncZod = async (app) => {
         createMatter(tx, { ...request.body, actorId: request.user.id }),
       );
       return reply.status(201).send({ matter: toRow(created) });
+    },
+  );
+
+  app.patch(
+    "/matters/:number",
+    {
+      preHandler: requireMember,
+      schema: {
+        operationId: "updateMatter",
+        summary:
+          "Commit matter fields individually, including re-type gaps, unrestricted live status transitions, and confidentiality",
+        tags: ["matters"],
+        params: NumberParams,
+        body: z.strictObject({
+          title: z.string().trim().min(1).max(500).optional(),
+          description: z.string().trim().max(10_000).nullable().optional(),
+          matterTypeId: z.string().optional(),
+          managerId: z.string().nullable().optional(),
+          priority: SeveritySchema.optional(),
+          risk: SeveritySchema.nullable().optional(),
+          customFields: CustomFieldsInput.optional(),
+          statusId: z.string().optional(),
+          isConfidential: z.boolean().optional(),
+        }),
+        response: { 200: MatterRecordEnvelope, default: problemResponse },
+      },
+    },
+    async (request) => {
+      const body = request.body;
+      const updated = await app.db.transaction(async (tx) => {
+        const current = await lockedMatter(tx, request.params.number, request.user);
+        if (body.isConfidential !== undefined) {
+          await assertAudienceActor(
+            tx,
+            current,
+            request.user,
+            "Only an Administrator, the matter's creator, or its Matter Manager can change this.",
+          );
+        }
+        assertEditable(current);
+        const target = current.row;
+        const patch: Partial<Matter> = {};
+        const changed: Record<string, { from: unknown; to: unknown }> = {};
+
+        if (body.title !== undefined && body.title.trim() !== target.title) {
+          patch.title = body.title.trim();
+          changed.title = { from: target.title, to: patch.title };
+        }
+        if (body.description !== undefined) {
+          const next = body.description?.trim() || null;
+          if (next !== target.description) {
+            patch.description = next;
+            changed.description = { from: target.description, to: next };
+          }
+        }
+
+        let manager = current.manager;
+        if (body.managerId !== undefined && body.managerId !== target.managerId) {
+          manager = body.managerId ? await lockedLiveUser(tx, body.managerId, true) : null;
+          patch.managerId = manager?.id ?? null;
+          changed.matterManager = {
+            from: current.manager?.displayName ?? null,
+            to: manager?.displayName ?? null,
+          };
+        }
+        if (body.priority !== undefined && body.priority !== target.priority) {
+          patch.priority = body.priority;
+          changed.priority = { from: target.priority, to: body.priority };
+        }
+        if (body.risk !== undefined && body.risk !== target.risk) {
+          patch.risk = body.risk;
+          changed.risk = { from: target.risk, to: body.risk };
+        }
+
+        let matterTypeName = current.matterTypeName;
+        const retyped =
+          body.matterTypeId !== undefined && body.matterTypeId !== target.matterTypeId;
+        if (retyped) {
+          const [matterType] = await tx
+            .select({
+              id: matterTypes.id,
+              displayName: matterTypes.displayName,
+              archivedAt: matterTypes.archivedAt,
+            })
+            .from(matterTypes)
+            .where(eq(matterTypes.id, body.matterTypeId!))
+            .limit(1)
+            .for("update");
+          if (!matterType || matterType.archivedAt) {
+            throw httpError(400, "The matter type must be a live matter type.");
+          }
+          patch.matterTypeId = matterType.id;
+          matterTypeName = matterType.displayName;
+        }
+
+        const attached = await selectAttachedFields(
+          tx,
+          matterTypeFields,
+          patch.matterTypeId ?? target.matterTypeId,
+        );
+        if (body.customFields !== undefined || retyped) {
+          const applied = await applyCustomFields(
+            tx,
+            attached,
+            target.customFields,
+            body.customFields ?? {},
+          );
+          if (retyped) {
+            assertRequiredCustomFields(attached, applied.values);
+          } else if (body.customFields !== undefined) {
+            assertRequiredCustomFields(
+              attached.filter((field) => field.slug in body.customFields!),
+              applied.values,
+            );
+          }
+          if (Object.keys(applied.changed).length > 0) {
+            patch.customFields = applied.values;
+            Object.assign(changed, applied.changed);
+          }
+        }
+
+        let statusName = current.statusName;
+        let statusCategory = current.statusCategory;
+        let statusChange:
+          | {
+              from: string;
+              to: string;
+              fromCategory: "open" | "closed";
+              toCategory: "open" | "closed";
+            }
+          | undefined;
+        if (body.statusId !== undefined && body.statusId !== target.statusId) {
+          const [status] = await tx
+            .select({
+              id: matterStatuses.id,
+              displayName: matterStatuses.displayName,
+              category: matterStatuses.category,
+              archivedAt: matterStatuses.archivedAt,
+            })
+            .from(matterStatuses)
+            .where(eq(matterStatuses.id, body.statusId))
+            .limit(1)
+            .for("update");
+          if (!status || status.archivedAt) {
+            throw httpError(400, "The status must be a live matter status.");
+          }
+          patch.statusId = status.id;
+          statusChange = {
+            from: current.statusName,
+            to: status.displayName,
+            fromCategory: current.statusCategory,
+            toCategory: status.category,
+          };
+          statusName = status.displayName;
+          statusCategory = status.category;
+          if (current.statusCategory === "open" && status.category === "closed") {
+            patch.closedAt = new Date();
+          } else if (current.statusCategory === "closed" && status.category === "open") {
+            patch.closedAt = null;
+          }
+        }
+
+        let confidentialityChange: boolean | undefined;
+        if (body.isConfidential !== undefined && body.isConfidential !== target.isConfidential) {
+          patch.isConfidential = body.isConfidential;
+          confidentialityChange = body.isConfidential;
+        }
+
+        let row: Matter = target;
+        if (Object.keys(patch).length > 0) {
+          const [written] = await tx
+            .update(matters)
+            .set({ ...patch, updatedAt: new Date() })
+            .where(eq(matters.id, target.id))
+            .returning();
+          row = written!;
+        }
+        if (Object.keys(changed).length > 0) {
+          await recordActivity(tx, {
+            entityType: "matter",
+            entityId: target.id,
+            actorId: request.user.id,
+            action: "matter.updated",
+            visibility: RECORD_ACTIVITY_TIER,
+            payload: { number: row.number, title: row.title, changed },
+          });
+        }
+        if (retyped) {
+          await recordActivity(tx, {
+            entityType: "matter",
+            entityId: target.id,
+            actorId: request.user.id,
+            action: "matter.type_reassigned",
+            visibility: RECORD_ACTIVITY_TIER,
+            payload: {
+              number: row.number,
+              title: row.title,
+              from: current.matterTypeName,
+              to: matterTypeName,
+            },
+          });
+        }
+        if (statusChange) {
+          await recordActivity(tx, {
+            entityType: "matter",
+            entityId: target.id,
+            actorId: request.user.id,
+            action: "matter.status_changed",
+            visibility: RECORD_ACTIVITY_TIER,
+            payload: { number: row.number, title: row.title, ...statusChange },
+          });
+        }
+        if (confidentialityChange !== undefined) {
+          await recordActivity(tx, {
+            entityType: "matter",
+            entityId: target.id,
+            actorId: request.user.id,
+            action: confidentialityChange
+              ? "matter.confidentiality_set"
+              : "matter.confidentiality_cleared",
+            visibility: RECORD_ACTIVITY_TIER,
+            payload: { number: row.number, title: row.title },
+          });
+        }
+        return { row, matterTypeName, statusName, statusCategory, manager, attached };
+      });
+      return {
+        matter: toRow(updated),
+        fields: updated.attached,
+        customFieldRefs: await resolveStaffRefs(app.db, updated.attached, updated.row.customFields),
+        team: await selectTeam(app.db, updated.row.id),
+      };
+    },
+  );
+
+  app.post(
+    "/matters/:number/team",
+    {
+      preHandler: requireMember,
+      schema: {
+        operationId: "addMatterTeamMember",
+        summary: "Add one person and role to a matter team",
+        tags: ["matters"],
+        params: NumberParams,
+        body: z.strictObject({ userId: z.string(), role: z.enum(MATTER_TEAM_ROLES) }),
+        response: { 201: MatterTeamEnvelope, default: problemResponse },
+      },
+    },
+    async (request, reply) => {
+      const team = await app.db.transaction(async (tx) => {
+        const current = await lockedMatter(tx, request.params.number, request.user);
+        if (current.row.isConfidential) {
+          await assertAudienceActor(
+            tx,
+            current,
+            request.user,
+            "Only an Administrator, the matter's creator, or its Matter Manager can change the team on a confidential matter.",
+          );
+        }
+        assertEditable(current);
+        if (request.body.role === MATTER_CREATOR_ROLE) {
+          throw httpError(400, "The creator is recorded when the matter is created.");
+        }
+        const person = await lockedLiveUser(tx, request.body.userId);
+        const inserted = await tx
+          .insert(matterTeam)
+          .values({ matterId: current.row.id, userId: person.id, role: request.body.role })
+          .onConflictDoNothing()
+          .returning();
+        if (inserted.length === 0) throw httpError(409, "This person already holds that role.");
+        await recordActivity(tx, {
+          entityType: "matter",
+          entityId: current.row.id,
+          actorId: request.user.id,
+          action: "matter.team_added",
+          visibility: RECORD_ACTIVITY_TIER,
+          payload: {
+            number: current.row.number,
+            title: current.row.title,
+            member: person.displayName,
+            role: request.body.role,
+          },
+        });
+        return selectTeam(tx, current.row.id);
+      });
+      return reply.status(201).send({ team });
+    },
+  );
+
+  app.delete(
+    "/matters/:number/team/:userId/:role",
+    {
+      preHandler: requireMember,
+      schema: {
+        operationId: "removeMatterTeamMember",
+        summary: "Remove one compound-key role from a matter team, except creator",
+        tags: ["matters"],
+        params: NumberParams.extend({ userId: z.string(), role: z.enum(MATTER_TEAM_ROLES) }),
+        response: { 200: MatterTeamEnvelope, default: problemResponse },
+      },
+    },
+    async (request) => {
+      const team = await app.db.transaction(async (tx) => {
+        const current = await lockedMatter(tx, request.params.number, request.user);
+        if (current.row.isConfidential) {
+          await assertAudienceActor(
+            tx,
+            current,
+            request.user,
+            "Only an Administrator, the matter's creator, or its Matter Manager can change the team on a confidential matter.",
+          );
+        }
+        assertEditable(current);
+        if (request.params.role === MATTER_CREATOR_ROLE) {
+          throw httpError(409, "The creator stays on the record — it is who made it.");
+        }
+        const [removed] = await tx
+          .delete(matterTeam)
+          .where(
+            and(
+              eq(matterTeam.matterId, current.row.id),
+              eq(matterTeam.userId, request.params.userId),
+              eq(matterTeam.role, request.params.role),
+            ),
+          )
+          .returning();
+        if (!removed) throw httpError(404, "Nobody holds that role on this matter.");
+        const [person] = await tx
+          .select({ displayName: users.displayName })
+          .from(users)
+          .where(eq(users.id, request.params.userId))
+          .limit(1);
+        await recordActivity(tx, {
+          entityType: "matter",
+          entityId: current.row.id,
+          actorId: request.user.id,
+          action: "matter.team_removed",
+          visibility: RECORD_ACTIVITY_TIER,
+          payload: {
+            number: current.row.number,
+            title: current.row.title,
+            member: person?.displayName ?? request.params.userId,
+            role: request.params.role,
+          },
+        });
+        return selectTeam(tx, current.row.id);
+      });
+      return { team };
+    },
+  );
+
+  app.post(
+    "/matters/:number/archive",
+    {
+      preHandler: requireMember,
+      schema: {
+        operationId: "archiveMatter",
+        summary: "Archive a matter so it leaves the default list",
+        tags: ["matters"],
+        params: NumberParams,
+        response: { 200: MatterEnvelope, default: problemResponse },
+      },
+    },
+    async (request) => {
+      const archived = await app.db.transaction(async (tx) => {
+        const current = await lockedMatter(tx, request.params.number, request.user);
+        if (current.row.archivedAt) throw httpError(409, "This matter is already archived.");
+        const [row] = await tx
+          .update(matters)
+          .set({ archivedAt: new Date(), updatedAt: new Date() })
+          .where(eq(matters.id, current.row.id))
+          .returning();
+        await recordActivity(tx, {
+          entityType: "matter",
+          entityId: current.row.id,
+          actorId: request.user.id,
+          action: "matter.archived",
+          visibility: RECORD_ACTIVITY_TIER,
+          payload: { number: row!.number, title: row!.title },
+        });
+        return { ...current, row: row! };
+      });
+      return { matter: toRow(archived) };
+    },
+  );
+
+  app.post(
+    "/matters/:number/restore",
+    {
+      preHandler: requireMember,
+      schema: {
+        operationId: "restoreMatter",
+        summary: "Restore an archived matter to the default list",
+        tags: ["matters"],
+        params: NumberParams,
+        response: { 200: MatterEnvelope, default: problemResponse },
+      },
+    },
+    async (request) => {
+      const restored = await app.db.transaction(async (tx) => {
+        const current = await lockedMatter(tx, request.params.number, request.user);
+        if (!current.row.archivedAt) throw httpError(409, "This matter is not archived.");
+        const [row] = await tx
+          .update(matters)
+          .set({ archivedAt: null, updatedAt: new Date() })
+          .where(eq(matters.id, current.row.id))
+          .returning();
+        await recordActivity(tx, {
+          entityType: "matter",
+          entityId: current.row.id,
+          actorId: request.user.id,
+          action: "matter.restored",
+          visibility: RECORD_ACTIVITY_TIER,
+          payload: { number: row!.number, title: row!.title },
+        });
+        return { ...current, row: row! };
+      });
+      return { matter: toRow(restored) };
     },
   );
 };
