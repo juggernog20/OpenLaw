@@ -658,6 +658,34 @@ function relatedRecord(intl: IntlShape, payload: Payload, prefix: "parent" | "re
       );
 }
 
+/** The Matter sibling of {@link relatedRecord}, using M-number vocabulary. */
+function relatedMatter(intl: IntlShape, payload: Payload, prefix: "parent" | "related"): string {
+  const number = payload[`${prefix}Number`];
+  const title = text(payload, `${prefix}Title`);
+  if (typeof number !== "number" || !Number.isInteger(number)) {
+    return (
+      title ??
+      intl.formatMessage({
+        id: "activity.matter.unnamedRecord",
+        defaultMessage: "another matter",
+      })
+    );
+  }
+  const reference = intl.formatMessage(
+    { id: "matters.reference", defaultMessage: "M-{number}" },
+    { number },
+  );
+  return title === null
+    ? reference
+    : intl.formatMessage(
+        {
+          id: "activity.matter.relatedRecord",
+          defaultMessage: "{reference} ({title})",
+        },
+        { reference, title },
+      );
+}
+
 /**
  * A record named by its own reference alone, for the two entries that
  * link an ask to the work it became (INT-006, M21/9).
@@ -1341,6 +1369,38 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
       id: "activity.matter.restored",
       defaultMessage: "{actor} restored this matter",
     }),
+  },
+  "matter.parent_set": {
+    icon: Network,
+    message: defineMessage({
+      id: "activity.matter.parentSet",
+      defaultMessage: "{actor} put this Matter under {parent}",
+    }),
+    values: (intl, payload) => ({ parent: relatedMatter(intl, payload, "parent") }),
+  },
+  "matter.parent_removed": {
+    icon: Network,
+    message: defineMessage({
+      id: "activity.matter.parentRemoved",
+      defaultMessage: "{actor} took this Matter out from under {parent}",
+    }),
+    values: (intl, payload) => ({ parent: relatedMatter(intl, payload, "parent") }),
+  },
+  "matter.relation_added": {
+    icon: Link2,
+    message: defineMessage({
+      id: "activity.matter.relationAdded",
+      defaultMessage: "{actor} related this Matter to {related}",
+    }),
+    values: (intl, payload) => ({ related: relatedMatter(intl, payload, "related") }),
+  },
+  "matter.relation_removed": {
+    icon: Link2,
+    message: defineMessage({
+      id: "activity.matter.relationRemoved",
+      defaultMessage: "{actor} removed the relation to {related}",
+    }),
+    values: (intl, payload) => ({ related: relatedMatter(intl, payload, "related") }),
   },
   // The sign-off on the record (M14/3, CTR-012). A verb per act, so a
   // reader can tell an approval from a rejection without opening a

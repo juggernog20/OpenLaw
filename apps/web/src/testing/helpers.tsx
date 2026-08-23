@@ -235,6 +235,11 @@ export function stubApi(state: ApiState) {
     if (/^\/api\/v1\/contracts\/\d+\/relations$/.test(call.url.pathname) && call.method === "GET") {
       return json(200, { parentChain: [], children: [], links: [] });
     }
+    // MTR-015's sibling surface has one immediate parent and an
+    // undirected related list. Empty is the ordinary standalone Matter.
+    if (/^\/api\/v1\/matters\/\d+\/relations$/.test(call.url.pathname) && call.method === "GET") {
+      return json(200, { parent: null, children: [], related: [] });
+    }
     // And this person's saved list views (DD-019). None by default, which
     // is what a fresh install has — the built-in layout is code, not a
     // seeded row. Only the suites about views supply any. Without this the

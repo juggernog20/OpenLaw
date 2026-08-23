@@ -58,6 +58,7 @@ import {
   reachedMatter,
 } from "../../lib/matter-access.js";
 import { httpError, problemResponse } from "../../lib/problem.js";
+import { setMatterParent } from "../../lib/matter-relations.js";
 import { resolveStaffRefs, StaffRequestCustomFieldRefsSchema } from "../requests/projection.js";
 import { createMatter } from "./create.js";
 
@@ -586,14 +587,40 @@ export const mattersRoutes: FastifyPluginAsyncZod = async (app) => {
           description: z.string().trim().max(10_000).nullable().optional(),
           customFields: CustomFieldsInput.optional(),
           isConfidential: z.boolean().optional(),
+          parentMatterNumber: z.coerce.number().int().positive().optional(),
         }),
         response: { 201: MatterEnvelope, default: problemResponse },
       },
     },
     async (request, reply) => {
-      const created = await app.db.transaction((tx) =>
-        createMatter(tx, { ...request.body, actorId: request.user.id }),
-      );
+      const created = await app.db.transaction(async (tx) => {
+        const { parentMatterNumber, ...body } = request.body;
+        const parent = parentMatterNumber
+          ? await reachedMatter(tx, request.user, parentMatterNumber, { lock: true })
+          : null;
+        if (parentMatterNumber && !parent) throw httpError(404, NO_MATTER);
+        if (parent?.archivedAt) {
+          throw httpError(409, "That parent Matter is archived. Restore it before using it.");
+        }
+        const next = await createMatter(tx, { ...body, actorId: request.user.id });
+        if (parent) {
+          await setMatterParent(tx, next.row.id, parent.id);
+          await recordActivity(tx, {
+            entityType: "matter",
+            entityId: next.row.id,
+            actorId: request.user.id,
+            action: "matter.parent_set",
+            visibility: RECORD_ACTIVITY_TIER,
+            payload: {
+              number: next.row.number,
+              title: next.row.title,
+              parentNumber: parent.number,
+              parentTitle: parent.title,
+            },
+          });
+        }
+        return next;
+      });
       return reply.status(201).send({ matter: toRow(created) });
     },
   );

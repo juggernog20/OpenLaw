@@ -305,6 +305,9 @@ Work container for any legal effort. Holds Documents and Contracts; references E
 | `created_at`, `updated_at` | timestamptz |             |                                                                                                                                                        |
 | `archived_at`              | timestamptz |             | nullable                                                                                                                                               |
 
+`parent_id` and the `matter_relations` table landed in M23/5, migration
+`0075_watery_war_machine`. Existing Matters receive `NULL` and are otherwise unchanged.
+
 ---
 
 ### `matter_types`
@@ -403,10 +406,10 @@ Undirected matter↔matter "related" links. One row per pair; application stores
 | ------------- | ----------- | --------------------------- |
 | `matter_a_id` | UUID        | FK → `matters.id`, not null |
 | `matter_b_id` | UUID        | FK → `matters.id`, not null |
-| `created_by`  | UUID        | FK → `users.id`             |
+| `created_by`  | UUID        | FK → `users.id`, not null   |
 | `created_at`  | timestamptz |                             |
 
-Compound primary key on (`matter_a_id`, `matter_b_id`); CHECK `matter_a_id <> matter_b_id`.
+Compound primary key on (`matter_a_id`, `matter_b_id`); CHECK `matter_a_id < matter_b_id`.
 
 ---
 
