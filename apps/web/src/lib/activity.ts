@@ -1230,6 +1230,14 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
     }),
     changes: (intl, payload, context) => directChange(intl, payload, "matterType", context),
   },
+  "matter.status_reassigned": {
+    icon: ArrowRightLeft,
+    message: defineMessage({
+      id: "activity.matter.statusReassigned",
+      defaultMessage: "{actor} reassigned this matter's status",
+    }),
+    changes: (intl, payload, context) => directChange(intl, payload, "status", context),
+  },
   "matter.confidentiality_set": {
     icon: Lock,
     message: defineMessage({
@@ -2160,6 +2168,14 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
   // A status has a stage rather than a description, so it never writes
   // the `updated` verb.
   ...taxonomyArms("contract_status", GitCommitHorizontal, [
+    "created",
+    "renamed",
+    "reordered",
+    "archived",
+    "restored",
+    "deleted",
+  ]),
+  ...taxonomyArms("matter_status", GitCommitHorizontal, [
     "created",
     "renamed",
     "reordered",

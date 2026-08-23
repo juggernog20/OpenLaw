@@ -287,6 +287,9 @@
   "activity.matter.created": {
     "defaultMessage": "{actor} created this matter"
   },
+  "activity.matter.statusReassigned": {
+    "defaultMessage": "{actor} reassigned this matter's status"
+  },
   "activity.matter.typeReassigned": {
     "defaultMessage": "{actor} reassigned this matter's type"
   },
@@ -3507,7 +3510,10 @@
     "defaultMessage": "{name} has an AI extraction prompt"
   },
   "settings.contractFields.help": {
-    "defaultMessage": "Field type is immutable after creation. Archiving a field keeps stored values. Global fields are shared with Matters — the sparkle marks fields with an AI extraction prompt."
+    "defaultMessage": "Field type is immutable after creation. Archiving a field keeps stored values. Global fields are shared across modules — the sparkle marks fields with a contract AI extraction prompt."
+  },
+  "settings.contractFields.invalidResponse": {
+    "defaultMessage": "The server returned a field outside this catalog."
   },
   "settings.contractFields.nameLabel": {
     "defaultMessage": "Name"
@@ -3540,13 +3546,13 @@
     "defaultMessage": "Restore {name}"
   },
   "settings.contractFields.scopeCaption": {
-    "defaultMessage": "Contract and global fields"
+    "defaultMessage": "{module, select, contract {Contract} matter {Matter} other {Module}} and global fields"
   },
   "settings.contractFields.scopeColumn": {
     "defaultMessage": "Scope"
   },
   "settings.contractFields.scopeLabel": {
-    "defaultMessage": "{scope, select, contract {Contract} global {Global} other {Unknown}}"
+    "defaultMessage": "{scope, select, contract {Contract} matter {Matter} global {Global} other {Unknown}}"
   },
   "settings.contractFields.scopePrefix": {
     "defaultMessage": "Scope:"
@@ -4103,6 +4109,87 @@
   "settings.intakeLinks.urlLabel": {
     "defaultMessage": "Address"
   },
+  "settings.matterStatuses.add": {
+    "defaultMessage": "Add status"
+  },
+  "settings.matterStatuses.addCategory": {
+    "defaultMessage": "New status category"
+  },
+  "settings.matterStatuses.addName": {
+    "defaultMessage": "New status name"
+  },
+  "settings.matterStatuses.archive": {
+    "defaultMessage": "Archive {name}"
+  },
+  "settings.matterStatuses.archiveBlocked": {
+    "defaultMessage": "{name} is the last unarchived status in its category — every category keeps at least one. Add another status to the category first."
+  },
+  "settings.matterStatuses.archiveError": {
+    "defaultMessage": "The status could not be archived."
+  },
+  "settings.matterStatuses.archiveSubmit": {
+    "defaultMessage": "Archive status"
+  },
+  "settings.matterStatuses.archiveTitle": {
+    "defaultMessage": "Archive {name}"
+  },
+  "settings.matterStatuses.archiveWarning": {
+    "defaultMessage": "{count, plural, =0 {{name} is not used by any matters.} one {{name} is the status of # matter. Pick its replacement below.} other {{name} is the status of # matters. Pick their replacement below.}}"
+  },
+  "settings.matterStatuses.auditNote": {
+    "defaultMessage": "The change applies immediately and is recorded in the audit log."
+  },
+  "settings.matterStatuses.categoryBadgePrefix": {
+    "defaultMessage": "Category:"
+  },
+  "settings.matterStatuses.categoryLabel": {
+    "defaultMessage": "{category, select, open {Open} closed {Closed} other {Unknown}}"
+  },
+  "settings.matterStatuses.categoryMissing": {
+    "defaultMessage": "Pick a category for the new status."
+  },
+  "settings.matterStatuses.categoryPlaceholder": {
+    "defaultMessage": "Category…"
+  },
+  "settings.matterStatuses.count": {
+    "defaultMessage": "{count, plural, one {# status} other {# statuses}}"
+  },
+  "settings.matterStatuses.help": {
+    "defaultMessage": "Drag to reorder. Statuses map to a fixed category picked at creation; every category keeps at least one unarchived status."
+  },
+  "settings.matterStatuses.inUse": {
+    "defaultMessage": "{count, plural, one {# matter} other {# matters}}"
+  },
+  "settings.matterStatuses.locked": {
+    "defaultMessage": "{name} is system-protected and can't be archived"
+  },
+  "settings.matterStatuses.moved": {
+    "defaultMessage": "{name} moved to position {position} of {total}."
+  },
+  "settings.matterStatuses.noCandidates": {
+    "defaultMessage": "Add or restore another status in this category first."
+  },
+  "settings.matterStatuses.pageTitle": {
+    "defaultMessage": "Matter statuses"
+  },
+  "settings.matterStatuses.reassignLabel": {
+    "defaultMessage": "Reassign {count, plural, one {# matter} other {# matters}} to"
+  },
+  "settings.matterStatuses.reassignNone": {
+    "defaultMessage": "Choose a status…"
+  },
+  "settings.matterStatuses.renameLabel": {
+    "defaultMessage": "Rename {name}"
+  },
+  "settings.matterStatuses.reorder": {
+    "defaultMessage": "Reorder {name}, position {position} of {total}. Use the arrow keys to move it."
+  },
+  "settings.matterStatuses.restore": {
+    "defaultMessage": "Restore {name}"
+  },
+  "settings.matterStatuses.title": {
+    "defaultMessage": "Matter statuses"
+  },
   "settings.matterTypeEditor.allAttached": {
     "defaultMessage": "Every eligible field is attached."
   },
@@ -4228,6 +4315,12 @@
   },
   "settings.matterTypes.title": {
     "defaultMessage": "Matter types"
+  },
+  "settings.matters.tab.fields": {
+    "defaultMessage": "Fields"
+  },
+  "settings.matters.tab.statuses": {
+    "defaultMessage": "Statuses"
   },
   "settings.matters.tab.types": {
     "defaultMessage": "Types"

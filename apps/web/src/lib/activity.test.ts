@@ -173,6 +173,28 @@ const SAMPLE_PAYLOADS: { [A in ActivityAction]: ActivityPayloadMap[A] } = {
   "contract_status.restored": { slug: "in-review", displayName: "In review" },
   "contract_status.deleted": { slug: "in-review", displayName: "In review", stage: "review" },
 
+  // Matter statuses
+  "matter_status.created": {
+    slug: "investigation",
+    displayName: "Investigation",
+    category: "open",
+  },
+  "matter_status.renamed": { slug: "investigation", from: "Review", to: "Investigation" },
+  "matter_status.reordered": { order: ["open", "investigation", "closed"] },
+  "matter_status.archived": {
+    slug: "investigation",
+    displayName: "Investigation",
+    category: "open",
+    inUseCount: 2,
+    reassignedTo: "Open",
+  },
+  "matter_status.restored": { slug: "investigation", displayName: "Investigation" },
+  "matter_status.deleted": {
+    slug: "investigation",
+    displayName: "Investigation",
+    category: "open",
+  },
+
   // Deflection links (INT-004)
   "intake_link.created": {
     label: "NDA FAQ",
@@ -411,6 +433,12 @@ const SAMPLE_PAYLOADS: { [A in ActivityAction]: ActivityPayloadMap[A] } = {
     title: "Employment advice",
     from: "Employment",
     to: "Advisory",
+  },
+  "matter.status_reassigned": {
+    number: 7,
+    title: "Employment advice",
+    from: "Investigation",
+    to: "Open",
   },
   "matter.confidentiality_set": { number: 7, title: "Employment advice" },
 

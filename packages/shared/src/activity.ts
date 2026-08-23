@@ -164,6 +164,22 @@ type ContractStatusPayloads = {
   "contract_status.deleted": { slug: string; displayName: string; stage: string };
 };
 
+/** Configurable matter statuses over the fixed open/closed category. */
+type MatterStatusPayloads = {
+  "matter_status.created": { slug: string; displayName: string; category: string };
+  "matter_status.renamed": { slug: string; from: string; to: string };
+  "matter_status.reordered": { order: string[] };
+  "matter_status.archived": {
+    slug: string;
+    displayName: string;
+    category: string;
+    inUseCount: number;
+    reassignedTo: string | null;
+  };
+  "matter_status.restored": { slug: string; displayName: string };
+  "matter_status.deleted": { slug: string; displayName: string; category: string };
+};
+
 /**
  * The Request record (INT-001, INT-002, INT-007). A Request is born on
  * the portal, and triage decides its outcome. All three of INT-007's
@@ -626,6 +642,7 @@ type MatterPayloads = {
   };
   "matter.confidentiality_set": { number: number; title: string };
   "matter.type_reassigned": { number: number; title: string; from: string; to: string };
+  "matter.status_reassigned": { number: number; title: string; from: string; to: string };
 };
 
 /**
@@ -904,6 +921,7 @@ export type ActivityPayloadMap = UserPayloads &
   Prefixed<"matter_type_field", TypeFieldPayloads> &
   Prefixed<"request_type_field", TypeFieldPayloads> &
   ContractStatusPayloads &
+  MatterStatusPayloads &
   RequestPayloads &
   IntakeLinkPayloads &
   FieldCatalogPayloads &
