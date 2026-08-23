@@ -60,7 +60,7 @@
  */
 
 import { useRef, useState } from "react";
-import { FormattedMessage, useIntl } from "react-intl";
+import { defineMessage, FormattedMessage, useIntl } from "react-intl";
 import {
   CircleAlert,
   CircleCheck,
@@ -146,6 +146,38 @@ export interface BatchDestination {
   id: string;
   name: string;
 }
+
+/**
+ * The outcome copy that names the owning record, keyed by record type.
+ * Descriptors rather than a ternary in the `id` prop: the message
+ * extractor reads ids statically and drops any it cannot see.
+ */
+const BATCH_COPY = {
+  contract: {
+    failures: defineMessage({
+      id: "documents.batch.failures",
+      defaultMessage:
+        "{failed, plural, one {# file failed} other {# files failed}}. {landed, plural, =0 {Nothing was added to the contract.} one {The other # is on the contract.} other {The other # are on the contract.}}",
+    }),
+    onRecord: defineMessage({
+      id: "documents.batch.onRecord",
+      defaultMessage:
+        "{count, plural, =0 {Nothing was added to the contract.} one {# file is already on the contract.} other {# files are already on the contract.}}",
+    }),
+  },
+  matter: {
+    failures: defineMessage({
+      id: "matters.documents.batch.failures",
+      defaultMessage:
+        "{failed, plural, one {# file failed} other {# files failed}}. {landed, plural, =0 {Nothing was added to the matter.} one {The other # is on the matter.} other {The other # are on the matter.}}",
+    }),
+    onRecord: defineMessage({
+      id: "matters.documents.batch.onRecord",
+      defaultMessage:
+        "{count, plural, =0 {Nothing was added to the matter.} one {# file is already on the matter.} other {# files are already on the matter.}}",
+    }),
+  },
+} as const;
 
 export function BatchDialog({
   record,
@@ -584,16 +616,7 @@ export function BatchDialog({
             >
               <CircleAlert size={16} aria-hidden="true" className="mt-0.5 shrink-0" />
               <FormattedMessage
-                id={
-                  record.entityType === "contract"
-                    ? "documents.batch.failures"
-                    : "matters.documents.batch.failures"
-                }
-                defaultMessage={
-                  record.entityType === "contract"
-                    ? "{failed, plural, one {# file failed} other {# files failed}}. {landed, plural, =0 {Nothing was added to the contract.} one {The other # is on the contract.} other {The other # are on the contract.}}"
-                    : "{failed, plural, one {# file failed} other {# files failed}}. {landed, plural, =0 {Nothing was added to the matter.} one {The other # is on the matter.} other {The other # are on the matter.}}"
-                }
+                {...BATCH_COPY[record.entityType].failures}
                 values={{ failed: failed.length, landed }}
               />
             </p>
@@ -630,16 +653,7 @@ export function BatchDialog({
                 />
               ) : settled ? (
                 <FormattedMessage
-                  id={
-                    record.entityType === "contract"
-                      ? "documents.batch.onRecord"
-                      : "matters.documents.batch.onRecord"
-                  }
-                  defaultMessage={
-                    record.entityType === "contract"
-                      ? "{count, plural, =0 {Nothing was added to the contract.} one {# file is already on the contract.} other {# files are already on the contract.}}"
-                      : "{count, plural, =0 {Nothing was added to the matter.} one {# file is already on the matter.} other {# files are already on the matter.}}"
-                  }
+                  {...BATCH_COPY[record.entityType].onRecord}
                   values={{ count: landed }}
                 />
               ) : (

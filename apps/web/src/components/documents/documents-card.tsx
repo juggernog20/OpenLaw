@@ -1464,14 +1464,7 @@ export function DocumentsCard({
           there. */}
       {documents.length === 0 && folders.length === 0 ? (
         <p className="px-4 py-3 text-base text-muted">
-          <FormattedMessage
-            id={record.entityType === "contract" ? "documents.empty" : "matters.documents.empty"}
-            defaultMessage={
-              record.entityType === "contract"
-                ? "No documents on this contract yet."
-                : "No documents on this matter yet."
-            }
-          />
+          <FormattedMessage {...RECORD_COPY[record.entityType].empty} />
         </p>
       ) : (
         <div className="overflow-x-auto">
@@ -2550,16 +2543,7 @@ function MoveFolderDialog({
               className={CONTROL_CLASS}
               onChange={(event) => setParentId(event.target.value)}
             >
-              <option value="">
-                {intl.formatMessage({
-                  id:
-                    recordType === "contract"
-                      ? "documents.folder.recordRoot"
-                      : "matters.documents.folder.recordRoot",
-                  defaultMessage:
-                    recordType === "contract" ? "The contract itself" : "The matter itself",
-                })}
-              </option>
+              <option value="">{intl.formatMessage(RECORD_COPY[recordType].recordRoot)}</option>
               {destinations.map((option) => (
                 <option key={option.id} value={option.id}>
                   {pathOf(folders, option, separator)}
@@ -2661,16 +2645,7 @@ function MoveDocumentDialog({
               className={CONTROL_CLASS}
               onChange={(event) => setFolderId(event.target.value)}
             >
-              <option value="">
-                {intl.formatMessage({
-                  id:
-                    recordType === "contract"
-                      ? "documents.folder.recordRoot"
-                      : "matters.documents.folder.recordRoot",
-                  defaultMessage:
-                    recordType === "contract" ? "The contract itself" : "The matter itself",
-                })}
-              </option>
+              <option value="">{intl.formatMessage(RECORD_COPY[recordType].recordRoot)}</option>
               {folders.map((option) => (
                 <option key={option.id} value={option.id}>
                   {pathOf(folders, option, separator)}
@@ -2750,18 +2725,7 @@ function DeleteFolderDialog({
               values={{ parent: parent.name }}
             />
           ) : (
-            <FormattedMessage
-              id={
-                recordType === "contract"
-                  ? "documents.folder.deleteIntoRoot"
-                  : "matters.documents.folder.deleteIntoRoot"
-              }
-              defaultMessage={
-                recordType === "contract"
-                  ? "Anything in it moves onto the contract itself. Nothing is deleted."
-                  : "Anything in it moves onto the matter itself. Nothing is deleted."
-              }
-            />
+            <FormattedMessage {...RECORD_COPY[recordType].deleteIntoRoot} />
           )}
         </p>
         {error && (
@@ -2861,6 +2825,44 @@ function OpenVersion({
 
 /** What each menu item says, in the words DES-015 asks for: a verb, in
  * sentence case, and no phrase where a word will do. */
+/**
+ * The copy that names the owning record, keyed by record type. Written
+ * out as descriptors rather than picked by a ternary inside the `id`
+ * prop, because the message extractor reads ids statically and would
+ * drop every key it cannot see (the i18n drift routine then deletes
+ * them from `en-US.json`).
+ */
+const RECORD_COPY = {
+  contract: {
+    empty: defineMessage({
+      id: "documents.empty",
+      defaultMessage: "No documents on this contract yet.",
+    }),
+    recordRoot: defineMessage({
+      id: "documents.folder.recordRoot",
+      defaultMessage: "The contract itself",
+    }),
+    deleteIntoRoot: defineMessage({
+      id: "documents.folder.deleteIntoRoot",
+      defaultMessage: "Anything in it moves onto the contract itself. Nothing is deleted.",
+    }),
+  },
+  matter: {
+    empty: defineMessage({
+      id: "matters.documents.empty",
+      defaultMessage: "No documents on this matter yet.",
+    }),
+    recordRoot: defineMessage({
+      id: "matters.documents.folder.recordRoot",
+      defaultMessage: "The matter itself",
+    }),
+    deleteIntoRoot: defineMessage({
+      id: "matters.documents.folder.deleteIntoRoot",
+      defaultMessage: "Anything in it moves onto the matter itself. Nothing is deleted.",
+    }),
+  },
+} as const;
+
 const ACTION_LABEL = {
   makePrimary: defineMessage({
     id: "documents.action.makePrimary",
