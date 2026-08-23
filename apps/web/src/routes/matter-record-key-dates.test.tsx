@@ -3,20 +3,37 @@
 /** Matter Key dates through the real record route (MTR-004, #491). */
 import { cleanup, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { json, renderAt, stubApi, type StubCall } from "../testing/helpers";
+
+/** Frozen mid-day so no plausible display timezone moves the calendar
+ * date these surfaces call today. */
+const TODAY = "2026-08-23T12:00:00Z";
+
+beforeEach(() => {
+  vi.useFakeTimers({ shouldAdvanceTime: true });
+  vi.setSystemTime(new Date(TODAY));
+});
+
+afterEach(() => {
+  vi.useRealTimers();
+});
 
 const MEMBER = {
   id: "u-member",
   email: "member@example.com",
   displayName: "Mina Member",
   role: "legal_team_member",
+  // Pins `configureFormatting`, so the dates these cases print are the
+  // same on a runner in Dubai as on one in UTC.
+  timezone: "UTC",
 };
 const CONTRIBUTOR = {
   id: "u-contributor",
   email: "contributor@example.com",
   displayName: "Casey Contributor",
   role: "contributor",
+  timezone: "UTC",
 };
 
 function matter(overrides: Record<string, unknown> = {}) {
@@ -183,7 +200,7 @@ describe("the Matter record's Key dates section", () => {
     const api = recordApi([]);
     stubApi({ signedIn: MEMBER, extra: api.handler });
     renderAt("/matters/12/key-dates");
-    const user = userEvent.setup();
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     const card = await section();
     expect(card.getByText("No Key dates on this Matter yet.")).toBeInTheDocument();
 
@@ -212,7 +229,7 @@ describe("the Matter record's Key dates section", () => {
   });
 
   it("validates writes and keeps the routed list unchanged when the server refuses them", async () => {
-    const user = userEvent.setup();
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     const postApi = recordApi([], matter(), new Set(["POST"]));
     stubApi({ signedIn: MEMBER, extra: postApi.handler });
     renderAt("/matters/12/key-dates");
