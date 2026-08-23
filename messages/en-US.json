@@ -2924,6 +2924,21 @@
   "matters.archivedPill": {
     "defaultMessage": "Archived"
   },
+  "matters.close.description": {
+    "defaultMessage": "Closing is a signal, not a lock. The Matter leaves active surfaces but stays fully writable."
+  },
+  "matters.close.openChildren": {
+    "defaultMessage": "Open child Matters"
+  },
+  "matters.close.openChildrenDescription": {
+    "defaultMessage": "These child Matters will stay open. Closing this parent changes none of them."
+  },
+  "matters.close.status": {
+    "defaultMessage": "Closed Status"
+  },
+  "matters.close.title": {
+    "defaultMessage": "Close {title}?"
+  },
   "matters.column.manager": {
     "defaultMessage": "Matter Manager"
   },
@@ -3101,8 +3116,14 @@
   "matters.record.archive": {
     "defaultMessage": "Archive"
   },
+  "matters.record.close": {
+    "defaultMessage": "Close matter"
+  },
   "matters.record.pageTitle": {
     "defaultMessage": "{reference} · {title}"
+  },
+  "matters.record.reopen": {
+    "defaultMessage": "Reopen matter"
   },
   "matters.record.restore": {
     "defaultMessage": "Restore"
@@ -3194,6 +3215,15 @@
   "matters.relations.setParent": {
     "defaultMessage": "Set parent"
   },
+  "matters.reopen.description": {
+    "defaultMessage": "The Matter returns to active surfaces. Its original opened date is preserved."
+  },
+  "matters.reopen.status": {
+    "defaultMessage": "Open Status"
+  },
+  "matters.reopen.title": {
+    "defaultMessage": "Reopen {title}?"
+  },
   "matters.restore.description": {
     "defaultMessage": "The matter returns to the default list and becomes editable again."
   },
@@ -3223,12 +3253,6 @@
   },
   "matters.showClosed": {
     "defaultMessage": "Show closed"
-  },
-  "matters.status.closed": {
-    "defaultMessage": "Closed"
-  },
-  "matters.status.open": {
-    "defaultMessage": "Open"
   },
   "matters.team.add": {
     "defaultMessage": "Add team member"

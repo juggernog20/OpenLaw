@@ -347,7 +347,7 @@ describe("the editable matter record", () => {
     );
   });
 
-  it("commits inline fields independently and groups every live status by category", async () => {
+  it("commits inline fields independently and keeps inline Status changes within the Category", async () => {
     let saved = row();
     const patches: unknown[] = [];
     stubApi({
@@ -384,16 +384,127 @@ describe("the editable matter record", () => {
     await waitFor(() => expect(patches).toContainEqual({ title: "Renamed advice" }));
 
     const status = screen.getByRole("combobox", { name: "Status" });
-    const groups = within(status).getAllByRole("group");
-    expect(groups.map((group) => group.getAttribute("label"))).toEqual(["Open", "Closed"]);
     expect(
-      within(groups[0]!)
+      within(status)
         .getAllByRole("option")
         .map((option) => option.textContent),
     ).toEqual(["Open", "Review"]);
-    await user.selectOptions(status, "s-closed");
-    await waitFor(() => expect(patches).toContainEqual({ statusId: "s-closed" }));
-    await waitFor(() => expect(status).toHaveValue("s-closed"));
+    await user.selectOptions(status, "s-review");
+    await waitFor(() => expect(patches).toContainEqual({ statusId: "s-review" }));
+    await waitFor(() => expect(status).toHaveValue("s-review"));
+  });
+
+  it("closes and reopens deliberately with no Resolution or closing-note datum", async () => {
+    let saved = row();
+    const patches: unknown[] = [];
+    stubApi({
+      signedIn: ADMIN,
+      extra: (call) => {
+        if (call.url.pathname === "/api/v1/matters/12" && call.method === "GET")
+          return json(200, record(saved));
+        if (call.url.pathname === "/api/v1/matters/options" && call.method === "GET")
+          return options();
+        if (call.url.pathname === "/api/v1/matters/12/lifecycle" && call.method === "GET") {
+          return saved.statusCategory === "open"
+            ? json(200, {
+                action: "close",
+                targetCategory: "closed",
+                statuses: [{ id: "s-closed", displayName: "Closed" }],
+                openChildren: [
+                  { restricted: false, number: 13, title: "Local proceeding" },
+                  { restricted: true },
+                ],
+              })
+            : json(200, {
+                action: "reopen",
+                targetCategory: "open",
+                statuses: [
+                  { id: "s-open", displayName: "Open" },
+                  { id: "s-review", displayName: "Review" },
+                ],
+                openChildren: [],
+              });
+        }
+        if (call.url.pathname === "/api/v1/matters/12" && call.method === "PATCH") {
+          patches.push(call.body);
+          const status = STATUSES.find(
+            (candidate) => candidate.id === (call.body as { statusId: string }).statusId,
+          )!;
+          saved = row({
+            ...saved,
+            statusId: status.id,
+            statusName: status.displayName,
+            statusCategory: status.category,
+            closedAt: status.category === "closed" ? "2026-08-23T09:00:00.000Z" : null,
+          });
+          return json(200, record(saved));
+        }
+        return undefined;
+      },
+    });
+    renderAt("/matters/12");
+    const user = userEvent.setup();
+
+    await user.click(await screen.findByRole("button", { name: "Close matter" }));
+    const close = await screen.findByRole("dialog", { name: "Close Editable advice?" });
+    expect(within(close).getByLabelText("Closed Status")).toHaveValue("s-closed");
+    expect(within(close).getByText(/M-13 Local proceeding/)).toBeInTheDocument();
+    expect(within(close).getByText("Restricted Matter")).toBeInTheDocument();
+    expect(within(close).queryByLabelText(/Resolution/i)).not.toBeInTheDocument();
+    expect(within(close).queryByLabelText(/note/i)).not.toBeInTheDocument();
+    await user.click(within(close).getByRole("button", { name: "Close matter" }));
+    await waitFor(() => expect(patches).toEqual([{ statusId: "s-closed" }]));
+    expect(screen.getByRole("textbox", { name: "Title" })).toBeEnabled();
+    expect(screen.getByRole("button", { name: "Archive" })).toBeEnabled();
+
+    await user.click(await screen.findByRole("button", { name: "Reopen matter" }));
+    const reopen = await screen.findByRole("dialog", { name: "Reopen Editable advice?" });
+    await user.selectOptions(within(reopen).getByLabelText("Open Status"), "s-review");
+    await user.click(within(reopen).getByRole("button", { name: "Reopen matter" }));
+    await waitFor(() =>
+      expect(patches).toEqual([{ statusId: "s-closed" }, { statusId: "s-review" }]),
+    );
+  });
+
+  it("shows lifecycle read and transition refusals without closing the retry path", async () => {
+    let lifecycleReads = 0;
+    stubApi({
+      signedIn: ADMIN,
+      extra: (call) => {
+        if (call.url.pathname === "/api/v1/matters/12" && call.method === "GET")
+          return json(200, record(row()));
+        if (call.url.pathname === "/api/v1/matters/options" && call.method === "GET")
+          return options();
+        if (call.url.pathname === "/api/v1/matters/12/lifecycle" && call.method === "GET") {
+          lifecycleReads += 1;
+          if (lifecycleReads === 1) return problem(409, "Restore this Matter first.");
+          return json(200, {
+            action: "close",
+            targetCategory: "closed",
+            statuses: [{ id: "s-closed", displayName: "Closed" }],
+            openChildren: [],
+          });
+        }
+        if (call.url.pathname === "/api/v1/matters/12" && call.method === "PATCH") {
+          return problem(400, "That closed Status is no longer live.");
+        }
+        return undefined;
+      },
+    });
+    renderAt("/matters/12");
+    const user = userEvent.setup();
+
+    const trigger = await screen.findByRole("button", { name: "Close matter" });
+    await user.click(trigger);
+    expect(await screen.findByText("Restore this Matter first.")).toBeInTheDocument();
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+
+    await user.click(trigger);
+    const dialog = await screen.findByRole("dialog", { name: "Close Editable advice?" });
+    await user.click(within(dialog).getByRole("button", { name: "Close matter" }));
+    expect(await within(dialog).findByText("That closed Status is no longer live.")).toBeVisible();
+    expect(dialog).toBeInTheDocument();
+    expect(within(dialog).getByRole("button", { name: "Close matter" })).toBeEnabled();
   });
 
   it("keeps an archived Matter Manager selectable and lets the record unassign them", async () => {

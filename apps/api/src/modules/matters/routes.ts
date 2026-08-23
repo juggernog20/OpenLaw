@@ -8,6 +8,7 @@ import {
   asc,
   eq,
   fields,
+  inArray,
   isNull,
   matters,
   matterStatuses,
@@ -123,6 +124,24 @@ const MatterRecordEnvelope = MatterEnvelope.extend({
 });
 const MatterTeamEnvelope = z.object({
   team: z.array(PersonSchema.extend({ role: z.enum(MATTER_TEAM_ROLES) })),
+});
+const LifecycleStatusSchema = z.strictObject({
+  id: z.string(),
+  displayName: z.string(),
+});
+const OpenChildSchema = z.union([
+  z.strictObject({ restricted: z.literal(true) }),
+  z.strictObject({
+    restricted: z.literal(false),
+    number: z.number().int(),
+    title: z.string(),
+  }),
+]);
+const MatterLifecycleEnvelope = z.strictObject({
+  action: z.enum(["close", "reopen"]),
+  targetCategory: z.enum(["open", "closed"]),
+  statuses: z.array(LifecycleStatusSchema),
+  openChildren: z.array(OpenChildSchema),
 });
 
 interface MatterContext {
@@ -565,6 +584,83 @@ export const mattersRoutes: FastifyPluginAsyncZod = async (app) => {
         fields: projection.fields,
         customFieldRefs: await resolveStaffRefs(app.db, projection.fields, projection.customFields),
         team: await selectTeam(app.db, context.row.id),
+      };
+    },
+  );
+
+  app.get(
+    "/matters/:number/lifecycle",
+    {
+      preHandler: requireMember,
+      schema: {
+        operationId: "getMatterLifecycle",
+        summary:
+          "Live Status choices for deliberate Closing or reopening, with a non-blocking open-child advisory",
+        tags: ["matters"],
+        params: NumberParams,
+        response: { 200: MatterLifecycleEnvelope, default: problemResponse },
+      },
+    },
+    async (request) => {
+      const current = await reachedMatter(app.db, request.user, request.params.number);
+      if (!current) throw httpError(404, NO_MATTER);
+      if (current.archivedAt) {
+        throw httpError(409, "This matter is archived. Restore it before changing its Status.");
+      }
+      const [currentStatus] = await app.db
+        .select({ category: matterStatuses.category })
+        .from(matterStatuses)
+        .where(eq(matterStatuses.id, current.statusId))
+        .limit(1);
+      if (!currentStatus) throw httpError(404, NO_MATTER);
+      const targetCategory: "open" | "closed" =
+        currentStatus.category === "open" ? "closed" : "open";
+      const statuses = await app.db
+        .select({ id: matterStatuses.id, displayName: matterStatuses.displayName })
+        .from(matterStatuses)
+        .where(and(eq(matterStatuses.category, targetCategory), isNull(matterStatuses.archivedAt)))
+        .orderBy(asc(matterStatuses.displayOrder), asc(matterStatuses.createdAt));
+
+      let openChildren: z.infer<typeof OpenChildSchema>[] = [];
+      if (targetCategory === "closed") {
+        const children = await app.db
+          .select({ id: matters.id })
+          .from(matters)
+          .innerJoin(matterStatuses, eq(matters.statusId, matterStatuses.id))
+          .where(
+            and(
+              eq(matters.parentId, current.id),
+              eq(matterStatuses.category, "open"),
+              isNull(matters.archivedAt),
+            ),
+          )
+          .orderBy(asc(matters.number));
+        const childIds = children.map((child) => child.id);
+        const reachable =
+          childIds.length === 0
+            ? []
+            : await app.db
+                .select({ id: matters.id, number: matters.number, title: matters.title })
+                .from(matters)
+                .where(and(inArray(matters.id, childIds), matterTeamScope(app.db, request.user)));
+        const identities = new Map(reachable.map((child) => [child.id, child]));
+        openChildren = children.map((child) => {
+          const identity = identities.get(child.id);
+          return identity
+            ? {
+                restricted: false as const,
+                number: identity.number,
+                title: identity.title,
+              }
+            : { restricted: true as const };
+        });
+      }
+      const action: "close" | "reopen" = targetCategory === "closed" ? "close" : "reopen";
+      return {
+        action,
+        targetCategory,
+        statuses,
+        openChildren,
       };
     },
   );
