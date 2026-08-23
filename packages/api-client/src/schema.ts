@@ -6389,6 +6389,8 @@ export interface operations {
                   | "multi_select"
                   | "user"
                   | "entity";
+                /** @enum {string} */
+                fieldTag: "business" | "legal";
                 options: string[] | null;
                 displayOrder: number;
                 isRequired: boolean;
@@ -6490,6 +6492,8 @@ export interface operations {
                 | "multi_select"
                 | "user"
                 | "entity";
+              /** @enum {string} */
+              fieldTag: "business" | "legal";
               options: string[] | null;
               displayOrder: number;
               isRequired: boolean;
@@ -6612,6 +6616,8 @@ export interface operations {
                 | "multi_select"
                 | "user"
                 | "entity";
+              /** @enum {string} */
+              fieldTag: "business" | "legal";
               options: string[] | null;
               displayOrder: number;
               isRequired: boolean;
@@ -7810,6 +7816,8 @@ export interface operations {
                 | "multi_select"
                 | "user"
                 | "entity";
+              /** @enum {string} */
+              fieldTag: "business" | "legal";
               options: string[] | null;
               displayOrder: number;
               isRequired: boolean;
@@ -8061,6 +8069,8 @@ export interface operations {
                 | "multi_select"
                 | "user"
                 | "entity";
+              /** @enum {string} */
+              fieldTag: "business" | "legal";
               options: string[] | null;
               displayOrder: number;
               isRequired: boolean;
@@ -8297,6 +8307,8 @@ export interface operations {
                 | "multi_select"
                 | "user"
                 | "entity";
+              /** @enum {string} */
+              fieldTag: "business" | "legal";
               options: string[] | null;
               displayOrder: number;
               isRequired: boolean;
@@ -9614,6 +9626,8 @@ export interface operations {
                   | "multi_select"
                   | "user"
                   | "entity";
+                /** @enum {string} */
+                fieldTag: "business" | "legal";
                 options: string[] | null;
                 displayOrder: number;
                 isRequired: boolean;
@@ -9742,6 +9756,8 @@ export interface operations {
                 | "multi_select"
                 | "user"
                 | "entity";
+              /** @enum {string} */
+              fieldTag: "business" | "legal";
               options: string[] | null;
               displayOrder: number;
               isRequired: boolean;
@@ -9921,6 +9937,8 @@ export interface operations {
                 | "multi_select"
                 | "user"
                 | "entity";
+              /** @enum {string} */
+              fieldTag: "business" | "legal";
               options: string[] | null;
               displayOrder: number;
               isRequired: boolean;

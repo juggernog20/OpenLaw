@@ -12,6 +12,12 @@ const ADMIN = {
   displayName: "Ada Admin",
   role: "administrator",
 };
+const CONTRIBUTOR = {
+  id: "u-contributor",
+  email: "contributor@example.com",
+  displayName: "Casey Contributor",
+  role: "contributor",
+};
 const MEMBER = {
   id: "u-member",
   displayName: "Mina Member",
@@ -25,6 +31,7 @@ const FIELD = {
   displayName: "Business unit",
   description: null,
   fieldType: "text",
+  fieldTag: "business",
   options: null,
   displayOrder: 1,
   isRequired: true,
@@ -196,6 +203,75 @@ describe("the editable matter record", () => {
       expect.arrayContaining([
         "GET /api/v1/comments?entityType=matter&entityId=m-12",
         "GET /api/v1/activity?entityType=matter&entityId=m-12",
+      ]),
+    );
+  });
+
+  it("lets a Contributor edit the description and projected business Fields only", async () => {
+    const patches: unknown[] = [];
+    let saved = row({
+      matterTypeId: "t-employment",
+      matterTypeName: "Employment",
+      customFields: { "business-unit": "People" },
+    });
+    stubApi({
+      signedIn: CONTRIBUTOR,
+      extra: (call) => {
+        if (call.url.pathname === "/api/v1/matters/12" && call.method === "GET") {
+          return json(200, {
+            matter: saved,
+            fields: [FIELD],
+            customFieldRefs: { users: [], entities: [] },
+            team: [],
+          });
+        }
+        if (call.url.pathname === "/api/v1/matters/12" && call.method === "PATCH") {
+          patches.push(call.body);
+          const body = call.body as Record<string, unknown>;
+          saved = {
+            ...saved,
+            ...body,
+            customFields: {
+              ...saved.customFields,
+              ...((body.customFields as Record<string, string> | undefined) ?? {}),
+            },
+          };
+          return json(200, {
+            matter: saved,
+            fields: [FIELD],
+            customFieldRefs: { users: [], entities: [] },
+            team: [],
+          });
+        }
+        if (call.url.pathname === "/api/v1/comments/unread") return json(200, { unread: 0 });
+        return undefined;
+      },
+    });
+    renderAt("/matters/12");
+    const user = userEvent.setup();
+
+    expect(
+      await screen.findByRole("heading", { level: 1, name: "Editable advice" }),
+    ).toBeInTheDocument();
+    expect(screen.queryByLabelText("Title")).not.toBeInTheDocument();
+    expect(screen.queryByRole("combobox", { name: "Status" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("combobox", { name: "Matter type" })).not.toBeInTheDocument();
+
+    const description = screen.getByLabelText("Description");
+    const businessUnit = screen.getByLabelText(/Business unit/);
+    expect(description).toBeEnabled();
+    expect(businessUnit).toBeEnabled();
+    await user.clear(description);
+    await user.type(description, "Business supplied context");
+    await user.tab();
+    await user.clear(businessUnit);
+    await user.type(businessUnit, "Operations");
+    await user.tab();
+
+    await waitFor(() =>
+      expect(patches).toEqual([
+        { description: "Business supplied context" },
+        { customFields: { "business-unit": "Operations" } },
       ]),
     );
   });

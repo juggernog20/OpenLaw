@@ -487,7 +487,14 @@ type ContractPayloads = {
    * either record is later edited.
    */
   "contract.created_from_request": { number: number; title: string; requestNumber: number };
-  "contract.updated": { number: number; title: string; changed: ChangedFields };
+  "contract.updated": {
+    number: number;
+    title: string;
+    changed: ChangedFields;
+    /** Present when DD-015's narrower writer made the edit, preserving
+     * the role at the time of the append even if the user changes role later. */
+    actorRole?: "contributor";
+  };
   "contract.status_changed": {
     number: number;
     title: string;
@@ -650,6 +657,8 @@ type MatterPayloads = {
     number: number;
     title: string;
     changed: Record<string, { from: unknown; to: unknown }>;
+    /** Present when DD-015's narrower writer made the edit. */
+    actorRole?: "contributor";
   };
   "matter.status_changed": {
     number: number;

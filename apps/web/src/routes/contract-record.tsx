@@ -126,11 +126,10 @@
  * authority and a second rule would drift.
  *
  * The page has two audiences (CTR-021). Member+ get the record above. A
- * Contributor on the contract's team gets the same page read-only: the
- * DES-017 inline-commit surface with every input inert, exactly the way
- * an archived record already renders, and with no archive, no restore,
- * no team or counterparty control, and no picker reads behind them. The
- * DD-015 business/legal editable-field split is not built here. A
+ * Contributor on the contract's team gets the same core context, with
+ * value, the effective-date input, and the business-tagged Fields left
+ * editable while legal-managed details render inert. Archive, restore,
+ * team and counterparty controls, and picker reads remain absent. A
  * Contributor who is not on the contract never gets this far — the API
  * answers 404, as it does for a contract that does not exist. Business
  * Users are bounced home, and the API's 403 is the real refusal.
@@ -864,13 +863,14 @@ export function ContractRecordPage() {
   });
 
   const archived = saved.archivedAt !== null;
-  /**
-   * True when every control on the page is inert. Two states reach it
-   * and they render the same way (CTR-021): an archived record, which
-   * is facts until it is restored, and a Contributor's record, which is
-   * facts because a Contributor reads. What differs is what the sub-bar
-   * offers and what the note above the cards says.
-   */
+  const contributor = user.role === "contributor";
+  /** DD-015's deliberately narrow built-ins stay writable for a
+   * Contributor on a live record; every legal-managed control keeps
+   * the standing Member+ floor. */
+  const businessFrozen = archived || (!canEdit && !contributor);
+  /** True when legal-managed controls are inert. An archived record
+   * freezes every Field; a Contributor's live record leaves only the
+   * explicit business-owned seams above writable (DD-015, CTR-021). */
   const frozen = archived || !canEdit;
   /**
    * Work waiting in the three sections that carry a count chip on the
@@ -1756,7 +1756,7 @@ export function ContractRecordPage() {
             <p className="rounded-card bg-status-neutral-bg px-3 py-2 text-md text-status-neutral-fg">
               <FormattedMessage
                 id="contracts.record.readOnlyNote"
-                defaultMessage="This record is read-only. Ask a Legal Team Member to make a change."
+                defaultMessage="Legal-managed details are read-only. You can edit the business Fields available to you."
               />
             </p>
           )}
@@ -2013,7 +2013,7 @@ export function ContractRecordPage() {
                     already made. */}
                   <ValueField
                     value={saved.value}
-                    frozen={frozen}
+                    frozen={businessFrozen}
                     status={fieldStatus.value ?? "idle"}
                     error={fieldError.value}
                     onStatus={(next, detail) => note("value", next, detail)}
@@ -2067,7 +2067,7 @@ export function ContractRecordPage() {
                       />
                     }
                     draft={termFields.effectiveDate}
-                    frozen={frozen}
+                    frozen={businessFrozen}
                     status={fieldStatus.effectiveDate ?? "idle"}
                     error={fieldError.effectiveDate}
                     onDraft={(next) =>
@@ -2320,6 +2320,7 @@ export function ContractRecordPage() {
               people={peopleReferences}
               entities={entityReferences}
               frozen={frozen}
+              businessEditable={!archived && contributor}
               status={fieldStatus}
               error={fieldError}
               onStatus={note}
@@ -3120,6 +3121,7 @@ function FieldsCard({
   people,
   entities,
   frozen,
+  businessEditable,
   status,
   error,
   onStatus,
@@ -3129,9 +3131,10 @@ function FieldsCard({
   values: CustomFieldValues;
   people: readonly FieldReference[];
   entities: readonly FieldReference[];
-  /** The record is frozen: it is archived, or this viewer reads it
-   * rather than edits it. Either way it renders as facts. */
+  /** Legal-tagged Fields keep the record's standing write floor. */
   frozen: boolean;
+  /** A live Contributor may edit only business-tagged Fields. */
+  businessEditable: boolean;
   status: Partial<Record<FieldKey, FieldStatus>>;
   error: Partial<Record<FieldKey, string | undefined>>;
   onStatus: (key: FieldKey, status: FieldStatus, detail?: string) => void;
@@ -3168,7 +3171,7 @@ function FieldsCard({
               value={values[field.slug]}
               people={people}
               entities={entities}
-              frozen={frozen}
+              frozen={frozen && !(businessEditable && field.fieldTag === "business")}
               status={status[`field:${field.slug}`] ?? "idle"}
               error={error[`field:${field.slug}`]}
               onStatus={(next, detail) => onStatus(`field:${field.slug}`, next, detail)}

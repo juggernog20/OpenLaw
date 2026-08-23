@@ -146,8 +146,12 @@ export function MatterRecordPage() {
   const [lifecycleStatus, setLifecycleStatus] = useState<FieldStatus>("idle");
   const [lifecycleError, setLifecycleError] = useState<string | null>(null);
   const canEdit = isMemberPlus(user.role);
+  const contributor = user.role === "contributor";
   const archived = saved.archivedAt !== null;
   const frozen = !canEdit || archived;
+  /** DD-015's business-owned seams stay writable on a live record for
+   * a Contributor who reached it; legal-managed details keep frozen. */
+  const businessFrozen = archived || (!canEdit && !contributor);
   const canManageAudience =
     user.role === "administrator" ||
     saved.manager?.id === user.id ||
@@ -604,7 +608,7 @@ export function MatterRecordPage() {
               <h3 className="mb-2 text-sm font-semibold">
                 <FormattedMessage id="matters.field.description" defaultMessage="Description" />
               </h3>
-              {frozen ? (
+              {businessFrozen ? (
                 <p className="whitespace-pre-wrap text-base text-muted">
                   {saved.description || notProvided(intl)}
                 </p>
@@ -643,7 +647,9 @@ export function MatterRecordPage() {
                       key={field.slug}
                       field={field}
                       saved={saved.customFields[field.slug]}
-                      frozen={frozen}
+                      frozen={
+                        frozen && !(contributor && !archived && field.fieldTag === "business")
+                      }
                       people={peopleRefs}
                       entities={customFieldRefs.entities.map((entity) => ({
                         id: entity.id,

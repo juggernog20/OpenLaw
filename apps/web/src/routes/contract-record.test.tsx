@@ -105,6 +105,7 @@ const PAYMENT_TERMS = {
   displayName: "Payment terms",
   description: "How long the other side has to pay.",
   fieldType: "text",
+  fieldTag: "business",
   options: null,
   displayOrder: 1,
   isRequired: false,
@@ -115,6 +116,7 @@ const OUR_POSITION = {
   displayName: "Our position",
   description: null,
   fieldType: "single_select",
+  fieldTag: "legal",
   options: ["Customer", "Provider"],
   displayOrder: 1,
   isRequired: true,
@@ -139,6 +141,7 @@ const EVERY_FIELD = [
   displayName: displayName as string,
   description: null,
   fieldType: fieldType as string,
+  fieldTag: "legal" as const,
   options: options as string[] | null,
   displayOrder: index + 1,
   isRequired: false,
@@ -2029,7 +2032,7 @@ describe("a Contributor on the contract record (M9/1)", () => {
     return { ...api, handler, pickerReads };
   }
 
-  it("renders the record read-only, with no edit affordance and no picker read", async () => {
+  it("lets a Contributor edit business-owned details while legal-managed context stays read-only", async () => {
     const api = contributorApi(
       contractRow(),
       [person("u1", "creator"), person("u3", "contributor")],
@@ -2046,11 +2049,10 @@ describe("a Contributor on the contract record (M9/1)", () => {
     expect(screen.getByText("Helix Labs GmbH")).toBeInTheDocument();
     const team = await openTeam(user);
     expect(within(team).getByText("Casey Contributor")).toBeInTheDocument();
-    expect(screen.getByText(/This record is read-only/)).toBeInTheDocument();
+    expect(screen.getByText(/Legal-managed details are read-only/)).toBeInTheDocument();
 
-    // Every control is inert, exactly as an archived record renders.
-    // The status is not among them: it has no control on this page for
-    // this viewer at all (DES-053).
+    // Legal-managed context is inert, while DD-015's value and
+    // effective-date inputs remain live.
     for (const label of [
       "Title",
       "Contract type",
@@ -2058,18 +2060,25 @@ describe("a Contributor on the contract record (M9/1)", () => {
       "Our entity",
       "Priority",
       "Risk",
-      "Amount",
-      "Currency",
-      "Cadence",
       "Description",
     ]) {
       expect(screen.getByLabelText(label)).toBeDisabled();
     }
+    for (const label of ["Amount", "Currency", "Cadence", "Effective date"]) {
+      expect(screen.getByLabelText(label)).toBeEnabled();
+    }
+    await user.type(screen.getByLabelText("Amount"), "1200");
+    await user.selectOptions(screen.getByLabelText("Currency"), "USD");
+    await user.selectOptions(screen.getByLabelText("Cadence"), "annually");
+    await user.keyboard("{Enter}");
     expect(screen.getByRole("combobox", { name: "Counterparties" })).toBeDisabled();
-    // The type's own fields are a tab away (DES-032) and read the same
-    // way there.
-    await userEvent.setup().click(screen.getByRole("link", { name: "Fields" }));
-    expect(await screen.findByLabelText("Payment terms")).toBeDisabled();
+    // The API projection supplies only the business-tagged attachment;
+    // that Field remains editable behind its own tab.
+    await user.click(screen.getByRole("link", { name: "Fields" }));
+    const terms = await screen.findByLabelText("Payment terms");
+    expect(terms).toBeEnabled();
+    await user.type(terms, "Net 45");
+    await user.tab();
 
     // Archive, restore, and rename are record-level mutations a
     // Contributor never gets, so the menu drops those rows rather than
@@ -2089,9 +2098,12 @@ describe("a Contributor on the contract record (M9/1)", () => {
       within(team).queryByRole("button", { name: /Take Casey Contributor off the team/ }),
     ).not.toBeInTheDocument();
 
-    // No inline commit fires, and the Member+ picker seams are never
-    // asked for.
-    expect(api.patches).toEqual([]);
+    await waitFor(() =>
+      expect(api.patches).toEqual([
+        { value: { amount: 120_000, currency: "USD", cadence: "annually" } },
+        { customFields: { payment_terms: "Net 45" } },
+      ]),
+    );
     expect(api.posts).toEqual([]);
     expect(api.pickerReads).toEqual([]);
   });
@@ -4051,6 +4063,7 @@ describe("the contract record's history applet (M9/6)", () => {
     const activity = activityApi([
       [
         entry("a3", "contract.updated", {
+          actorRole: "contributor",
           changed: {
             value: { from: null, to: { amount: 12_000_000, currency: "USD", cadence: "annually" } },
           },
@@ -4081,7 +4094,7 @@ describe("the contract record's history applet (M9/6)", () => {
     const [value, edit, status] = within(feed).getAllByRole("listitem");
     // The money reads through the record's own currency helper, cadence
     // suffix and all (CTR-010, DES-014).
-    expect(value).toHaveTextContent("Nadia Counsel changed Value");
+    expect(value).toHaveTextContent("Nadia Counsel (Contributor) changed Value");
     expect(value).toHaveTextContent("Not set → $120,000.00 /year");
     // Several fields are counted in the sentence and named on their own
     // lines, each old→new pair rendered the way the record renders it.

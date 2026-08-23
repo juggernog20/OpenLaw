@@ -214,10 +214,11 @@ type Payload = NarratableEntry["payload"];
 /** Who acted, as the sentence names them. A system-emitted entry has no
  * human actor, and saying so beats inventing one. */
 function actorName(intl: IntlShape, entry: NarratableEntry): string {
-  return (
+  const name =
     entry.actor?.displayName ??
-    intl.formatMessage({ id: "activity.actor.system", defaultMessage: "OpenLaw" })
-  );
+    intl.formatMessage({ id: "activity.actor.system", defaultMessage: "OpenLaw" });
+  const actorRole = text(entry.payload, "actorRole");
+  return actorRole ? `${name} (${roleLabel(intl, actorRole)})` : name;
 }
 
 /**
