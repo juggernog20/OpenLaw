@@ -8,10 +8,10 @@
  *
  * **The owner set is a set of one**, exactly as `documents` started: a
  * contract. `matter_id` and `entity_id` land with M22 and M27, and the
- * migration that adds the second one relaxes the NOT NULL here and
- * moves the exactly-one-owner rule into the application check DOC-008
- * describes. Nothing about the machinery is contract-shaped, so those
- * milestones inherit it by adding a column rather than by forking it.
+ * migration that adds the second one relaxes the NOT NULL here and adds
+ * the same exactly-one-owner check the documents table carries. Nothing
+ * about the machinery is contract-shaped, so those milestones inherit
+ * it by adding a column rather than by forking it.
  *
  * **`display_order` is not here**, and its absence is the decision. It
  * is deferred with the reorder surface that would read it; siblings
@@ -35,6 +35,7 @@ import { check, index, pgTable, text, timestamp, uniqueIndex } from "drizzle-orm
 import type { AnyPgColumn } from "drizzle-orm/pg-core";
 import { contracts } from "./contracts.js";
 import { uuidPk } from "./helpers.js";
+import { matters } from "./matters.js";
 
 /**
  * The longest folder name this table holds. It is the filesystem's own
@@ -48,13 +49,13 @@ export const documentFolders = pgTable(
   "document_folders",
   {
     id: uuidPk(),
-    /** DOC-008's owning record, and the whole access answer in front of
-     * this row: a viewer who cannot reach the contract cannot reach its
-     * folders. No cascade, as on `documents`: a contract is archived,
-     * never deleted, and its organization outlives an accident. */
-    contractId: text("contract_id")
-      .notNull()
-      .references(() => contracts.id),
+    /** The contract arm of DOC-008's owning record. A folder is reached
+     * only through whichever contract or matter owns it. No cascade:
+     * both record types are archived rather than deleted. */
+    contractId: text("contract_id").references(() => contracts.id),
+    /** M22's matter-owned folder arm. Writers keep exactly one owner on
+     * a folder, matching the documents filed beneath it. */
+    matterId: text("matter_id").references(() => matters.id),
     /**
      * The folder this one sits inside, or NULL at the record root
      * (DOC-011).
@@ -86,6 +87,7 @@ export const documentFolders = pgTable(
     // whole. A record's folder set is small, so the tree is drawn from
     // one read rather than one read per level.
     index("document_folders_contract_idx").on(table.contractId),
+    index("document_folders_matter_idx").on(table.matterId),
     // Sibling names are unique within their parent, and the comparison
     // is case-insensitive — the same reading the sort already takes
     // (DES-033). Two siblings that sort as equal and read as the same
@@ -99,6 +101,9 @@ export const documentFolders = pgTable(
     uniqueIndex("document_folders_root_name_idx")
       .on(table.contractId, sql`lower(${table.name})`)
       .where(sql`${table.parentId} is null`),
+    uniqueIndex("document_folders_matter_root_name_idx")
+      .on(table.matterId, sql`lower(${table.name})`)
+      .where(sql`${table.parentId} is null and ${table.matterId} is not null`),
     uniqueIndex("document_folders_sibling_name_idx")
       .on(table.parentId, sql`lower(${table.name})`)
       .where(sql`${table.parentId} is not null`),
@@ -119,6 +124,10 @@ export const documentFolders = pgTable(
     // the longer chains are the write path's to check, because no
     // constraint can walk a tree.
     check("document_folders_parent_check", sql`${table.parentId} <> ${table.id}`),
+    check(
+      "document_folders_owner_check",
+      sql`num_nonnulls(${table.matterId}, ${table.contractId}) = 1`,
+    ),
   ],
 );
 

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 /** M22/5's editable matter record: one commit per field and recoverable lifecycle acts. */
-import { useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { Archive, ArchiveRestore, ChevronRight } from "lucide-react";
 import { FormattedMessage, useIntl, type IntlShape } from "react-intl";
 import { Link, redirect, useLoaderData, useNavigate, type LoaderFunctionArgs } from "react-router";
@@ -37,6 +37,8 @@ import { useActivityApplet } from "../components/activity/activity-applet";
 import { useCommentApplet } from "../components/comments/comment-applet";
 import { CustomFieldControl, type FieldReference } from "../components/custom-field-control";
 import { MatterTeamTray } from "../components/matters/team-tray";
+import { DocPanel } from "../components/documents/doc-panel";
+import { DocumentsCard } from "../components/documents/documents-card";
 import { PageTitle } from "../components/page-title";
 import { AppShell } from "../components/shell/app-shell";
 import { RecordApplets } from "../components/shell/record-applets";
@@ -53,9 +55,17 @@ export async function matterRecordLoader({ params }: LoaderFunctionArgs) {
   const number = Number(params.matterNumber);
   if (!Number.isInteger(number) || number < 1) throw new Error("That is not a matter reference.");
   const canEdit = isMemberPlus(user.role);
-  const [record, options] = await Promise.all([
+  const [record, options, paper, folders] = await Promise.all([
     api.GET("/api/v1/matters/{number}", { params: { path: { number } } }),
     canEdit ? api.GET("/api/v1/matters/options") : undefined,
+    api
+      .GET("/api/v1/matters/{number}/documents", {
+        params: { path: { number }, query: { folder: "root" } },
+      })
+      .catch(() => ({ data: undefined })),
+    api
+      .GET("/api/v1/matters/{number}/folders", { params: { path: { number } } })
+      .catch(() => ({ data: undefined })),
   ]);
   if (!record.data) throw new Error("The matter could not be read.");
   if (canEdit && !options?.data) throw new Error("The matter's edit options could not be read.");
@@ -70,6 +80,9 @@ export async function matterRecordLoader({ params }: LoaderFunctionArgs) {
     matterTypes: options?.data?.matterTypes ?? [],
     matterStatuses: options?.data?.matterStatuses ?? [],
     users: options?.data?.users ?? [],
+    documents: paper.data?.documents ?? [],
+    documentsCursor: paper.data?.nextCursor ?? null,
+    folders: folders.data?.folders ?? [],
   };
 }
 
@@ -97,6 +110,12 @@ export function MatterRecordPage() {
   const [fields, setFields] = useState(loader.fields);
   const [customFieldRefs, setCustomFieldRefs] = useState(loader.customFieldRefs);
   const [team, setTeam] = useState<MatterTeamMember[]>(loader.team);
+  const [tab, setTab] = useState<"overview" | "documents">("overview");
+  const [paper, setPaper] = useState(loader.documents);
+  const [paperCursor, setPaperCursor] = useState(loader.documentsCursor);
+  const [folders, setFolders] = useState(loader.folders);
+  const [filed, setFiled] = useState<typeof loader.documents>([]);
+  const [reading, setReading] = useState<{ documentId: string; versionId: string } | null>(null);
   const [title, setTitle] = useState(saved.title);
   const [description, setDescription] = useState(saved.description ?? "");
   const [fieldStatus, setFieldStatus] = useState<Partial<Record<FieldKey, FieldStatus>>>({});
@@ -270,6 +289,17 @@ export function MatterRecordPage() {
     ]),
   });
 
+  const open = (() => {
+    if (!reading) return null;
+    const document = [...paper, ...filed].find((row) => row.id === reading.documentId);
+    const version = document?.versions.find((row) => row.id === reading.versionId);
+    return document && version ? { document, version } : null;
+  })();
+
+  useEffect(() => {
+    if (reading && !open) setReading(null);
+  }, [open, reading]);
+
   const reference = matterReference(intl, saved.number);
   return (
     <AppShell
@@ -366,8 +396,47 @@ export function MatterRecordPage() {
           { reference, title: saved.title },
         )}
       />
-      <RecordApplets applets={[chatApplet, historyApplet]}>
-        <div className="grid max-w-6xl gap-5 overflow-y-auto px-page-x py-page-y lg:grid-cols-[minmax(0,1fr)_18rem]">
+      <RecordApplets
+        applets={[chatApplet, historyApplet]}
+        layer={
+          open && (
+            <DocPanel
+              documentId={open.document.id}
+              title={open.document.title}
+              version={open.version}
+              onClose={() => setReading(null)}
+            />
+          )
+        }
+      >
+        <nav
+          aria-label="Matter sections"
+          className="mx-page-x mt-page-y flex gap-1 border-b border-border-default"
+        >
+          {(["overview", "documents"] as const).map((section) => (
+            <Button
+              key={section}
+              variant="ghost"
+              size="sm"
+              aria-current={tab === section ? "page" : undefined}
+              className={tab === section ? "border-b-2 border-link" : undefined}
+              onClick={() => setTab(section)}
+            >
+              {section === "overview" ? (
+                <FormattedMessage id="matters.record.tab.overview" defaultMessage="Overview" />
+              ) : (
+                <FormattedMessage id="matters.record.tab.documents" defaultMessage="Documents" />
+              )}
+            </Button>
+          ))}
+        </nav>
+        <div
+          className={
+            tab === "overview"
+              ? "grid max-w-6xl gap-5 overflow-y-auto px-page-x pb-page-y lg:grid-cols-[minmax(0,1fr)_18rem]"
+              : "hidden"
+          }
+        >
           <article className="rounded-card border border-border-default bg-raised p-5">
             <header className="mb-5">
               <p className="text-sm font-medium text-muted">{reference}</p>
@@ -376,7 +445,10 @@ export function MatterRecordPage() {
               ) : (
                 <InlineText
                   id="matter-title"
-                  label={intl.formatMessage({ id: "matters.field.title", defaultMessage: "Title" })}
+                  label={intl.formatMessage({
+                    id: "matters.field.title",
+                    defaultMessage: "Title",
+                  })}
                   value={title}
                   status={fieldStatus.title ?? "idle"}
                   error={fieldError.title}
@@ -396,7 +468,10 @@ export function MatterRecordPage() {
                 status={fieldStatus.matterTypeId ?? "idle"}
                 error={fieldError.matterTypeId}
                 onChange={pickType}
-                options={typeOptions.map((type) => ({ value: type.id, label: type.displayName }))}
+                options={typeOptions.map((type) => ({
+                  value: type.id,
+                  label: type.displayName,
+                }))}
               />
               <EditableSelectFact
                 id="matter-manager"
@@ -573,6 +648,32 @@ export function MatterRecordPage() {
             onTeam={setTeam}
           />
         </div>
+        {tab === "documents" && (
+          <div className="overflow-y-auto px-page-x pb-page-y">
+            <DocumentsCard
+              record={{ entityType: "matter", number: saved.number }}
+              documents={paper}
+              folders={folders}
+              nextCursor={paperCursor}
+              frozen={frozen}
+              role={user.role}
+              viewerId={user.id}
+              ownerId={saved.manager?.id ?? null}
+              reading={reading?.versionId ?? null}
+              amending={null}
+              onAmendmentOpened={() => undefined}
+              onRead={(document, version) =>
+                setReading({ documentId: document.id, versionId: version.id })
+              }
+              onDocuments={(documents, cursor) => {
+                setPaper(documents);
+                if (cursor !== undefined) setPaperCursor(cursor);
+              }}
+              onFiled={setFiled}
+              onFolders={setFolders}
+            />
+          </div>
+        )}
       </RecordApplets>
       {retypeTo && (
         <MatterRetypeDialog

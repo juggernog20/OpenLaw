@@ -2696,6 +2696,21 @@
   "matters.column.title": {
     "defaultMessage": "Title"
   },
+  "matters.documents.batch.failures": {
+    "defaultMessage": "{failed, plural, one {# file failed} other {# files failed}}. {landed, plural, =0 {Nothing was added to the matter.} one {The other # is on the matter.} other {The other # are on the matter.}}"
+  },
+  "matters.documents.batch.onRecord": {
+    "defaultMessage": "{count, plural, =0 {Nothing was added to the matter.} one {# file is already on the matter.} other {# files are already on the matter.}}"
+  },
+  "matters.documents.empty": {
+    "defaultMessage": "No documents on this matter yet."
+  },
+  "matters.documents.folder.deleteIntoRoot": {
+    "defaultMessage": "Anything in it moves onto the matter itself. Nothing is deleted."
+  },
+  "matters.documents.folder.recordRoot": {
+    "defaultMessage": "The matter itself"
+  },
   "matters.column.type": {
     "defaultMessage": "Type"
   },
