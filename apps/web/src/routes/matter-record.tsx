@@ -687,6 +687,7 @@ export function MatterRecordPage() {
               folders={folders}
               nextCursor={paperCursor}
               frozen={frozen}
+              supportingUploads={contributor && !archived}
               role={user.role}
               viewerId={user.id}
               ownerId={saved.manager?.id ?? null}

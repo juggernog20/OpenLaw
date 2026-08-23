@@ -5462,8 +5462,11 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4, M11/5)",
     expect(within(section).getAllByText("Primary")).toHaveLength(1);
   });
 
-  it("offers a Contributor the list and the download, and no control that writes", async () => {
-    const api = documentsApi([CHAIN], {}, [person("u1", "creator"), person("u3", "contributor")]);
+  it("offers a Contributor only supporting upload actions", async () => {
+    const api = documentsApi([DRAFT, THEIRS], {}, [
+      person("u1", "creator"),
+      person("u3", "contributor"),
+    ]);
     stubApi({
       signedIn: CONTRIBUTOR,
       extra: (call) =>
@@ -5475,17 +5478,22 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4, M11/5)",
     const user = userEvent.setup();
 
     const section = await documentsSection();
-    // They read and download what they were added to work on (DD-015),
-    // history included.
-    await user.click(
-      within(section).getByRole("button", { name: /Show the 2 earlier versions of/ }),
-    );
-    expect(within(section).getByRole("button", { name: "round_1.docx" })).toBeInTheDocument();
-    // Every control that writes is absent rather than disabled — the
-    // convention every other card on this page follows. Their write
-    // grid arrives in M23.
-    expect(within(section).queryByRole("button", { name: "Upload" })).not.toBeInTheDocument();
-    expect(within(section).queryByRole("button", { name: /^Actions for/ })).not.toBeInTheDocument();
+    await user.click(within(section).getByRole("button", { name: "Upload" }));
+    const upload = await screen.findByRole("dialog");
+    expect(within(upload).queryByRole("button", { name: "File Choose folder" })).toBeNull();
+    await user.click(within(upload).getByRole("button", { name: "Cancel" }));
+    // The primary chain has no write at all. The reached supporting
+    // chain offers the one act DD-015 allows and no administration.
+    expect(
+      within(section).queryByRole("button", {
+        name: "Actions for Orion_MSA_2026_draft.docx",
+      }),
+    ).not.toBeInTheDocument();
+    expect(await menuVerbs(user, section, "Orion_MSA_2026_redline_orion.docx")).toEqual([
+      "Add version",
+    ]);
+    await user.keyboard("{Escape}");
+    expect(within(section).queryByRole("button", { name: "New folder" })).not.toBeInTheDocument();
     expect(within(section).queryByRole("combobox")).not.toBeInTheDocument();
     expect(within(section).queryByRole("switch")).not.toBeInTheDocument();
   });
@@ -7769,7 +7777,7 @@ describe("filing documents into folders (M13/3, DES-033)", () => {
     ).toEqual(["The contract itself", "Correspondence", "Correspondence / 2026"]);
   });
 
-  it("offers a Contributor the tree and no way to file anything", async () => {
+  it("offers a Contributor only Version append inside the tree", async () => {
     const api = filingApi(
       [document("doc-1", "signed.pdf", "f-1")],
       [folder("f-1", "Executed")],
@@ -7785,8 +7793,15 @@ describe("filing documents into folders (M13/3, DES-033)", () => {
     // for everyone on it (DD-015).
     await user.click(await within(section).findByRole("button", { name: "Expand Executed" }));
     expect(await within(section).findByText("signed.pdf")).toBeVisible();
-    // What they may not do is not drawn, rather than drawn and dead.
-    expect(within(section).queryByRole("button", { name: /^Actions for/ })).toBeNull();
+    // Appending a Version to this supporting chain is the only write.
+    // Filing and folder administration remain absent rather than dead.
+    await user.click(within(section).getByRole("button", { name: "Actions for signed.pdf" }));
+    const menu = await screen.findByRole("menu");
+    expect(
+      within(menu)
+        .getAllByRole("menuitem")
+        .map((item) => item.textContent),
+    ).toEqual(["Add version"]);
   });
 
   it("says a folder's documents are on their way while they load", async () => {

@@ -119,6 +119,77 @@ describe("the editable matter record", () => {
     expect(screen.queryByText("Mark as executed")).not.toBeInTheDocument();
   });
 
+  it("offers a Contributor only supporting upload actions on Matter paper", async () => {
+    const document = {
+      id: "doc-supporting",
+      title: "supporting.pdf",
+      description: null,
+      isPrimary: false,
+      isConfidential: false,
+      folderId: null,
+      archivedAt: null,
+      createdBy: { id: MEMBER.id, displayName: MEMBER.displayName, image: null, archived: false },
+      createdAt: "2026-08-23T09:00:00.000Z",
+      updatedAt: "2026-08-23T09:00:00.000Z",
+      versions: [
+        {
+          id: "ver-supporting",
+          versionNumber: 1,
+          kind: "draft_ours",
+          note: null,
+          originalFilename: "supporting.pdf",
+          mimeType: "application/pdf",
+          renderFamily: "pdf",
+          byteSize: 24,
+          checksumSha256: "a".repeat(64),
+          uploadedBy: {
+            id: MEMBER.id,
+            displayName: MEMBER.displayName,
+            image: null,
+            archived: false,
+          },
+          createdAt: "2026-08-23T09:00:00.000Z",
+          isCurrent: true,
+          isExecuted: false,
+        },
+      ],
+    };
+    stubApi({
+      signedIn: CONTRIBUTOR,
+      extra: (call) => {
+        if (call.url.pathname === "/api/v1/matters/12" && call.method === "GET") {
+          return json(
+            200,
+            record(row(), [{ ...CONTRIBUTOR, image: null, archived: false, role: "contributor" }]),
+          );
+        }
+        if (call.url.pathname === "/api/v1/matters/12/documents" && call.method === "GET") {
+          return json(200, { documents: [document], nextCursor: null });
+        }
+        if (call.url.pathname === "/api/v1/matters/12/folders" && call.method === "GET") {
+          return json(200, { folders: [] });
+        }
+        if (call.url.pathname === "/api/v1/comments/unread") return json(200, { unread: 0 });
+        return undefined;
+      },
+    });
+    renderAt("/matters/12/documents");
+    const user = userEvent.setup();
+
+    const section = await screen.findByRole("region", { name: /^Documents/ });
+    expect(within(section).getByRole("button", { name: "Upload" })).toBeVisible();
+    expect(within(section).queryByRole("button", { name: "New folder" })).not.toBeInTheDocument();
+    await user.click(within(section).getByRole("button", { name: "Actions for supporting.pdf" }));
+    const menu = await screen.findByRole("menu");
+    expect(
+      within(menu)
+        .getAllByRole("menuitem")
+        .map((item) => item.textContent),
+    ).toEqual(["Add version"]);
+    expect(within(section).queryByRole("combobox")).not.toBeInTheDocument();
+    expect(within(section).queryByRole("switch")).not.toBeInTheDocument();
+  });
+
   it("lands on the Documents section from its own address", async () => {
     stubApi({
       signedIn: ADMIN,

@@ -16,8 +16,10 @@
  * primary document says which document *is* the contract; everything
  * else on the record is a loose attachment beside it. The executed pin
  * says which version of a document is the signed one. The first sits on
- * the contract, so exactly one document holds it and the rule is the
- * column's shape rather than a check. The second sits on the document
+ * the contract, so at most one document holds it and the rule is the
+ * column's shape rather than a check. A Contributor's supporting upload
+ * never takes an empty designation; the next Member+ upload does. The
+ * second sits on the document
  * and is explicit: a version tagged `executed` is what its uploader
  * called that round, and the pin is what the team decided — the two are
  * never inferred from one another.
@@ -59,11 +61,11 @@
  * who reaches the document but is none of them is refused plainly, the
  * way the contract's own flag refuses them.
  *
- * **A Contributor on the team reads and downloads** (DD-015, CTR-021).
- * Their write grid arrives with M23, so uploading is Member+ here: a
- * Contributor who reaches the record is refused plainly, because they
- * can already see it and a 404 would only make a real permission
- * boundary read as a bug.
+ * **A Contributor on the team reads, downloads, and supplies supporting
+ * paper** (DD-015, CTR-021). They may create a root-level supporting
+ * Document and append a Version to a non-primary supporting chain. Every
+ * designation and administration act remains Member+, and reach still
+ * comes only from the owning record's live team predicate.
  *
  * **The blob is written before the row commits** (DOC-012). The upload
  * streams straight through the storage adapter — never buffered whole in
@@ -225,8 +227,12 @@ import { extractsText } from "../../pipeline/text-extraction.js";
  * the records they hold a `contract_team` row on. */
 const requireDocumentReader = requireRole("administrator", "legal_team_member", "contributor");
 
-/** Uploading is Member+ in M11: Contributors read and download, and
- * their write grid arrives with M23 (DD-015). */
+/** Supporting uploads are the one Document write Contributors receive in
+ * M23. Reach still comes from the owning record's live team predicate; the
+ * route-level role floor alone grants nothing. */
+const requireSupportingUploader = requireRole("administrator", "legal_team_member", "contributor");
+
+/** Every Document administration action keeps the Member+ floor. */
 const requireMember = requireRole("administrator", "legal_team_member");
 
 /** Hard deletion is the Administrator's alone (DOC-010). It is the only
@@ -380,9 +386,10 @@ const DocumentSchema = z.object({
   description: z.string().nullable(),
   /**
    * Whether this document is the contract's instrument (CTR-014).
-   * Exactly one document on a contract carries it: the first upload
-   * takes it, and from there it moves. Every other document on the
-   * record is a loose attachment beside the primary chain.
+   * At most one document on a contract carries it. The first Member+
+   * upload takes an empty designation; a Contributor's supporting
+   * upload never does. From there the designation moves. Every other
+   * document on the record is a loose attachment beside the primary chain.
    */
   isPrimary: z.boolean(),
   /**
@@ -1219,7 +1226,7 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
         summary:
           "The paper on one contract (DOC-008), newest first, each with " +
           "its whole version chain in order 1..n and one version of it " +
-          "marked current. Exactly one document is marked primary — the " +
+          "marked current. At most one document is marked primary — the " +
           "instrument the contract is — and any version the team has " +
           "pinned as the signed copy is marked executed. A contract " +
           "holds as many documents as it " +
@@ -1317,7 +1324,7 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
   app.post(
     "/contracts/:number/documents",
     {
-      preHandler: requireMember,
+      preHandler: requireSupportingUploader,
       schema: {
         operationId: "uploadContractDocument",
         summary:
@@ -1334,7 +1341,10 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
           "attachment until somebody moves the designation. Appends " +
           "document.created on the owning " +
           "contract, and document.primary_set beside it when the " +
-          "designation was taken (DD-017). The document is filed where " +
+          "designation was taken (DD-017). A Contributor on the live team " +
+          "may create supporting paper at the record root; their upload " +
+          "never takes the primary designation and may not create or choose " +
+          "a folder. The document is otherwise filed where " +
           "the form says (DOC-006, DOC-011): folderId is a folder " +
           "already on this record, folderPath is a relative chain " +
           "find-or-created beneath it segment by segment, and sending " +
@@ -1387,8 +1397,14 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
       // on a record is ambient movement on it (NOT-002 group 2), and the
       // bell rows for it belong inside the same commit as the rows they
       // are about.
-      const created = await withStoredFile(request, file, () =>
-        app.notifier.notifying(async (tx) => {
+      const created = await withStoredFile(request, file, () => {
+        if (request.user.role === "contributor" && file.destination) {
+          throw httpError(
+            403,
+            "Contributors may upload supporting Documents at the record root only.",
+          );
+        }
+        return app.notifier.notifying(async (tx) => {
           // The contract row is held for the write, and reach is asked
           // again on the same snapshot: a team row dropped between the
           // first check and the insert must not leave a file on a record
@@ -1445,17 +1461,23 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
               versionId,
               title: file.filename,
               folderName: folder?.name ?? null,
+              ...(request.user.role === "contributor" ? { actorRole: "contributor" as const } : {}),
             },
           });
 
-          // The first document on a record is the instrument (CTR-014).
+          // The first Member+ upload on a record with no instrument takes
+          // the designation (CTR-014). A Contributor's paper is supporting
+          // by definition, including when the record has no instrument yet.
+          // The next Member+ upload may then take the still-empty pin.
+          // The first document on a record is otherwise the instrument.
           // Nobody asked for it, which is exactly why it gets its own
           // entry rather than being left implied by the upload above — the
           // counterparty promotion is logged for the same reason, and a
           // record born confidential is too. The contract row is held, so
           // two first uploads at once cannot both read NULL here.
-          const primaryDocumentId = locked.primaryDocumentId ?? documentId;
-          if (locked.primaryDocumentId === null) {
+          const primaryDocumentId =
+            locked.primaryDocumentId ?? (request.user.role === "contributor" ? null : documentId);
+          if (locked.primaryDocumentId === null && request.user.role !== "contributor") {
             await tx
               .update(contracts)
               .set({ primaryDocumentId: documentId })
@@ -1497,8 +1519,8 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
           // Read back through the list's own projection, so the row the
           // uploader gets is the row the next load will draw.
           return documentWithChain(tx, documentId, primaryDocumentId);
-        }),
-      );
+        });
+      });
 
       await askForDerivations(versionId, file);
       return reply.status(201).send({ document: created });
@@ -1508,13 +1530,14 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
   app.post(
     "/matters/:number/documents",
     {
-      preHandler: requireMember,
+      preHandler: requireSupportingUploader,
       schema: {
         operationId: "uploadMatterDocument",
         summary:
           "Upload a file to a matter, creating a document with version 1. The upload may name " +
           "an existing matter folder or a folder path to recreate. Matter paper has no primary " +
-          "document or executed-version designation. Administrators and Legal Team Members may upload.",
+          "document or executed-version designation. A Contributor on the live Matter team may " +
+          "upload supporting paper at the record root but may not choose or create a folder.",
         tags: ["documents"],
         consumes: ["multipart/form-data"],
         params: NumberParams,
@@ -1528,8 +1551,14 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
       const documentId = uuidv7();
       const versionId = uuidv7();
       const file = await receiveUpload(request, versionStorageKey(documentId, versionId), true);
-      const created = await withStoredFile(request, file, () =>
-        app.db.transaction(async (tx) => {
+      const created = await withStoredFile(request, file, () => {
+        if (request.user.role === "contributor" && file.destination) {
+          throw httpError(
+            403,
+            "Contributors may upload supporting Documents at the record root only.",
+          );
+        }
+        return app.db.transaction(async (tx) => {
           const locked = await reachedMatter(tx, request.user, request.params.number, {
             lock: true,
           });
@@ -1563,11 +1592,12 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
               versionId,
               title: file.filename,
               folderName: folder?.name ?? null,
+              ...(request.user.role === "contributor" ? { actorRole: "contributor" as const } : {}),
             },
           });
           return documentWithChain(tx, documentId, null);
-        }),
-      );
+        });
+      });
 
       await askForDerivations(versionId, file);
       return reply.status(201).send({ document: created });
@@ -1577,12 +1607,12 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
   app.post(
     "/documents/:documentId/versions",
     {
-      preHandler: requireMember,
+      preHandler: requireSupportingUploader,
       schema: {
         operationId: "uploadDocumentVersion",
         summary:
           "Append the next version to an existing document (DOC-001). " +
-          "The number is assigned under the owning contract's row lock, " +
+          "The number is assigned under the owning record's row lock, " +
           "so two revisions uploaded at the same moment take consecutive " +
           "numbers rather than colliding, and the chain runs 1..n with " +
           "no gaps. The version carries one of the six hand-set CTR-014 kinds " +
@@ -1591,8 +1621,10 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
           "the chain is touched: a file correction is another version, " +
           "while the kind has its own one-column PATCH. Appends " +
           "document.version_added on the owning " +
-          "contract (DD-017). The kind and note fields must be sent " +
-          "before the file part. An archived contract takes no new paper " +
+          "record (DD-017). A Contributor on that record's live team " +
+          "may append only to a non-primary supporting chain; Matter paper " +
+          "has no primary chain. The kind and note fields must be sent " +
+          "before the file part. An archived owning record takes no new paper " +
           "until it is restored. A document on a contract the uploader " +
           "cannot reach answers 404, exactly as one that does not exist",
         tags: ["documents"],
@@ -1605,65 +1637,90 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
     async (request, reply) => {
       const { documentId } = request.params;
       // Before a byte is read, for the reason the create path gives.
-      assertOpenDocument(await reachedDocument(app.db, request.user, documentId));
+      const reached = await reachedDocument(app.db, request.user, documentId);
+      assertOpenDocument(reached);
+      if (
+        request.user.role === "contributor" &&
+        reached.ownerType === "contract" &&
+        reached.primaryDocumentId === reached.id
+      ) {
+        throw httpError(
+          403,
+          "Contributors cannot append a Version to the primary Contract Document.",
+        );
+      }
 
       const versionId = uuidv7();
       const file = await receiveUpload(request, versionStorageKey(documentId, versionId));
 
       // The seam's transaction, for the create path's reason: a new
       // round on a chain is ambient movement on the record (NOT-002
-      // group 2).
-      const updated = await app.notifier.notifying(async (tx) => {
-        // The owning contract's row is held here, and this is the lock
-        // the version number is assigned under: two uploaders reading
-        // the chain's high-water mark at the same moment would both see
-        // the same number, so the second one waits here until the first
-        // has committed its row and then reads the number it wrote.
-        const locked = await reachedDocument(tx, request.user, documentId, true);
-        assertOpenDocument(locked);
+      // group 2). The storage wrapper removes the fresh blob if the
+      // locked reach/freeze/primary answer changed while it streamed.
+      const updated = await withStoredFile(request, file, () =>
+        app.notifier.notifying(async (tx) => {
+          // The owning contract's row is held here, and this is the lock
+          // the version number is assigned under: two uploaders reading
+          // the chain's high-water mark at the same moment would both see
+          // the same number, so the second one waits here until the first
+          // has committed its row and then reads the number it wrote.
+          const locked = await reachedDocument(tx, request.user, documentId, true);
+          assertOpenDocument(locked);
+          if (
+            request.user.role === "contributor" &&
+            locked.ownerType === "contract" &&
+            locked.primaryDocumentId === locked.id
+          ) {
+            throw httpError(
+              403,
+              "Contributors cannot append a Version to the primary Contract Document.",
+            );
+          }
 
-        const versionNumber = await nextVersionNumber(tx, documentId);
+          const versionNumber = await nextVersionNumber(tx, documentId);
 
-        await insertVersion(tx, { documentId, versionId, versionNumber, file, by: request.user });
-        // The document's own row is touched so that "when did this
-        // document last change" answers with the new round rather than
-        // with the day it was created.
-        await tx
-          .update(documents)
-          .set({ updatedAt: new Date() })
-          .where(eq(documents.id, documentId));
-        await recordActivity(tx, {
-          entityType: locked.ownerType,
-          entityId: locked.ownerId,
-          actorId: request.user.id,
-          action: "document.version_added",
-          visibility: RECORD_ACTIVITY_TIER,
-          payload: {
-            documentId,
-            versionId,
-            title: locked.title,
-            versionNumber,
-            kind: file.kind,
-          },
-        });
-        // The team hears that the paper moved (NOT-002 group 2). This is
-        // the door where the document flag bites: a round appended to a
-        // confidential document goes exactly as far as that document
-        // does (DD-014, DOC-008).
-        if (locked.contractId) {
-          await app.notifier.documentVersionAdded(tx, {
-            contractId: locked.contractId,
+          await insertVersion(tx, { documentId, versionId, versionNumber, file, by: request.user });
+          // The document's own row is touched so that "when did this
+          // document last change" answers with the new round rather than
+          // with the day it was created.
+          await tx
+            .update(documents)
+            .set({ updatedAt: new Date() })
+            .where(eq(documents.id, documentId));
+          await recordActivity(tx, {
+            entityType: locked.ownerType,
+            entityId: locked.ownerId,
             actorId: request.user.id,
-            actorName: request.user.displayName,
-            documentId,
-            documentTitle: locked.title,
-            isConfidential: locked.isConfidential,
-            versionId,
-            versionNumber,
+            action: "document.version_added",
+            visibility: RECORD_ACTIVITY_TIER,
+            payload: {
+              documentId,
+              versionId,
+              title: locked.title,
+              versionNumber,
+              kind: file.kind,
+              ...(request.user.role === "contributor" ? { actorRole: "contributor" as const } : {}),
+            },
           });
-        }
-        return documentWithChain(tx, documentId, locked.primaryDocumentId);
-      });
+          // The team hears that the paper moved (NOT-002 group 2). This is
+          // the door where the document flag bites: a round appended to a
+          // confidential document goes exactly as far as that document
+          // does (DD-014, DOC-008).
+          if (locked.contractId) {
+            await app.notifier.documentVersionAdded(tx, {
+              contractId: locked.contractId,
+              actorId: request.user.id,
+              actorName: request.user.displayName,
+              documentId,
+              documentTitle: locked.title,
+              isConfidential: locked.isConfidential,
+              versionId,
+              versionNumber,
+            });
+          }
+          return documentWithChain(tx, documentId, locked.primaryDocumentId);
+        }),
+      );
 
       await askForDerivations(versionId, file);
       return reply.status(201).send({ document: updated });
@@ -3168,7 +3225,7 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
     filed = false,
   ): Promise<StoredUpload> {
     const part = await request.file().catch((error: unknown) => {
-      throw asUploadRefusal(error);
+      throw asSharedUploadRefusal(error, app.maxUploadBytes);
     });
     if (!part) throw httpError(400, "Attach a file to upload.");
 
@@ -3237,7 +3294,7 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
     try {
       fileRef = await app.storage.put(key, Readable.from(metered(part.file)));
     } catch (error) {
-      throw asUploadRefusal(error);
+      throw asSharedUploadRefusal(error, app.maxUploadBytes);
     }
     // The ceiling, enforced. The parser stops the stream at the limit
     // and marks it truncated rather than throwing at whoever is
@@ -3496,9 +3553,5 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
    */
   function refuseOversize() {
     return refuseSharedOversize(app.maxUploadBytes);
-  }
-
-  function asUploadRefusal(error: unknown): unknown {
-    return asSharedUploadRefusal(error, app.maxUploadBytes);
   }
 };
