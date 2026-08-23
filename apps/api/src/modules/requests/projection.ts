@@ -45,7 +45,6 @@ import {
   eq,
   inArray,
   isNull,
-  matters,
   matterTypes,
   REQUEST_STATUSES,
   requestAttachments,
@@ -58,16 +57,10 @@ import {
 } from "@openlaw/db";
 import type { AuthenticatedUser } from "../../auth/guards.js";
 import { contractTeamScope } from "../../lib/contract-access.js";
-import { matterTeamScope } from "../../lib/matter-access.js";
 import { CustomFieldsSchema } from "../../lib/custom-fields.js";
 import { httpError } from "../../lib/problem.js";
 import { attachmentDisposition } from "../../lib/uploads.js";
 import type { AttachedCustomField } from "../../lib/custom-fields.js";
-import {
-  convertedContractOf,
-  convertedRecordOf,
-  type ConversionRecordReference,
-} from "./record-reference.js";
 
 /**
  * The front door a Request came through, with the routing the
@@ -95,20 +88,6 @@ export const StaffRequestTypeSchema = z.object({
 });
 
 /**
- * The record a conversion made, as the request projection names it.
- *
- * M22/1 moved the underlying answer to this module-aware shape; M22/8
- * adds the matter arm here so neither Request read learns a second join.
- */
-export const ConvertedRecordSchema = z.discriminatedUnion("module", [
-  z.object({ module: z.literal("contract"), number: z.number().int() }),
-  z.object({ module: z.literal("matter"), number: z.number().int() }),
-]);
-
-/** The M21 wire member, derived from the module-aware schema. */
-export const ConvertedContractSchema = z.object({ number: z.number().int() });
-
-/**
  * The join that reads a request type's target **contract** type, and
  * the rule that an archived one is no type at all.
  *
@@ -128,8 +107,10 @@ export const ConvertedContractSchema = z.object({ number: z.number().int() });
 export const liveTargetContractType = () =>
   and(eq(requestTypes.targetContractTypeId, contractTypes.id), isNull(contractTypes.archivedAt));
 
-/** The Matter half of {@link liveTargetContractType}, under the same
- * live-target rule. M22's conversion arm reads this same answer. */
+/** The matter half of {@link liveTargetContractType}, under the same
+ * rule. Nothing converts to a Matter until M22, and the taxonomy is
+ * already administered, so the reads state the target the same way for
+ * both modules rather than holding one rule for a year. */
 export const liveTargetMatterType = () =>
   and(eq(requestTypes.targetMatterTypeId, matterTypes.id), isNull(matterTypes.archivedAt));
 
@@ -369,76 +350,6 @@ export async function resolveStaffRefs(
   };
 }
 
-/**
- * Resolve the records a set of Requests became under this viewer's
- * reach, in one query.
- *
- * Both staff reads use this helper. A confidential contract outside the
- * viewer's team and an archived contract contribute no reference, while
- * the Request itself remains readable (DD-014, INT-006). The helper is
- * batched so the Inbox does not trade its duplicated join for one query
- * per row.
- */
-export async function selectConvertedRecords(
-  db: Executor,
-  user: AuthenticatedUser,
-  requestIds: readonly string[],
-): Promise<ReadonlyMap<string, ConversionRecordReference>> {
-  if (requestIds.length === 0) return new Map();
-
-  const [contractRows, matterRows] = await Promise.all([
-    db
-      .select({
-        requestId: requests.id,
-        id: contracts.id,
-        number: contracts.number,
-      })
-      .from(requests)
-      .innerJoin(
-        contracts,
-        and(
-          eq(requests.convertedContractId, contracts.id),
-          contractTeamScope(db, user),
-          isNull(contracts.archivedAt),
-        ),
-      )
-      .where(inArray(requests.id, [...requestIds])),
-    db
-      .select({
-        requestId: requests.id,
-        id: matters.id,
-        number: matters.number,
-      })
-      .from(requests)
-      .innerJoin(
-        matters,
-        and(
-          eq(requests.convertedMatterId, matters.id),
-          matterTeamScope(db, user),
-          isNull(matters.archivedAt),
-        ),
-      )
-      .where(inArray(requests.id, [...requestIds])),
-  ]);
-
-  const records = new Map<string, ConversionRecordReference>();
-  for (const row of contractRows) {
-    records.set(row.requestId, {
-      module: "contract",
-      id: row.id,
-      number: row.number,
-    });
-  }
-  for (const row of matterRows) {
-    records.set(row.requestId, {
-      module: "matter",
-      id: row.id,
-      number: row.number,
-    });
-  }
-  return records;
-}
-
 /** Who asked, as the hero and the Requester card draw them: the name,
  * the avatar, and the address a triager answers out of band on. */
 const StaffRequesterSchema = z.object({
@@ -474,10 +385,8 @@ export const StaffRequestSchema = z.object({
   requester: StaffRequesterSchema,
   /** The record a conversion made, when this viewer reaches it, and
    * `null` in every other case — never converted, converted into a
-   * record they may not see, or converted into another module. */
-  convertedContract: ConvertedContractSchema.nullable(),
-  /** The record-shaped successor to the contract-only compatibility member. */
-  convertedRecord: ConvertedRecordSchema.nullable(),
+   * record they may not see, or converted into a Matter (M22). */
+  convertedContract: z.object({ number: z.number().int() }).nullable(),
 });
 
 /**
@@ -486,11 +395,11 @@ export const StaffRequestSchema = z.object({
  *
  * There is no per-row scope to defend — Member+ read every Request
  * (INT-006) — so the only miss is a reference nobody has, or one that
- * has been archived. Converted-record resolution is delegated to the
- * helper above under this viewer's own reach, so a record they may not
- * see contributes no reference. That is the whole of the DD-014
- * omission — there is no branch after the read that decides whether to
- * keep the number.
+ * has been archived. The contract join is the one that carries a rule:
+ * it is taken under this viewer's own reach, so a record they may not
+ * see contributes no row and the left join answers NULL. That is the
+ * whole of the DD-014 omission — there is no branch after the read that
+ * decides whether to keep the number.
  *
  * It takes an `Executor` rather than the app's `db`, so a disposition
  * reads the envelope back **inside its own transaction** and answers
@@ -519,17 +428,30 @@ export async function staffRequestRow(db: Executor, user: AuthenticatedUser, num
       requesterDisplayName: users.displayName,
       requesterEmail: users.email,
       requesterImage: users.image,
+      convertedContractNumber: contracts.number,
     })
     .from(requests)
     .innerJoin(requestTypes, eq(requests.requestTypeId, requestTypes.id))
     .innerJoin(users, eq(requests.requesterId, users.id))
     .leftJoin(contractTypes, liveTargetContractType())
     .leftJoin(matterTypes, liveTargetMatterType())
+    .leftJoin(
+      contracts,
+      and(
+        eq(requests.convertedContractId, contracts.id),
+        // A contract this viewer cannot reach joins to nothing, so the
+        // envelope carries no link and the Request still carries itself
+        // (DD-014, CTR-021).
+        contractTeamScope(db, user),
+        // An archived contract is no trail either: the link would open
+        // on a record the Contracts destination hides.
+        isNull(contracts.archivedAt),
+      ),
+    )
     .where(and(eq(requests.number, number), isNull(requests.archivedAt)))
     .limit(1);
   if (!row) throw httpError(404, NO_REQUEST);
-  const records = await selectConvertedRecords(db, user, [row.id]);
-  return { ...row, convertedRecord: records.get(row.id) ?? null };
+  return row;
 }
 
 /** The joined row, as {@link StaffRequestSchema} puts it on the wire. */
@@ -551,7 +473,7 @@ export function toStaffRequest(row: Awaited<ReturnType<typeof staffRequestRow>>)
       email: row.requesterEmail,
       image: row.requesterImage,
     },
-    convertedContract: convertedContractOf(row.convertedRecord),
-    convertedRecord: convertedRecordOf(row.convertedRecord),
+    convertedContract:
+      row.convertedContractNumber === null ? null : { number: row.convertedContractNumber },
   };
 }

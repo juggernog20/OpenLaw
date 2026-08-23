@@ -106,8 +106,8 @@ a frame (#81). The sweep's deltas:
    pane renders it. Decisions win over the mocks — the frames are not redrawn.
 4. **ST6's Advisory row draws a "Default" pill and a second lock** that did not ship: MTR-001
    protects only `other`, and no default-type affordance exists. The shipped Matters · Types pane
-   (#85) locks Other alone and renders no pill. M22 closed the question without new machinery: the
-   build remains the contract and the frame's extra pill/lock are struck by the amendment below.
+   (#85) locks Other alone and renders no pill. The row stays drawn as-is; M22 either builds the
+   machinery or strikes it from the frame.
 5. **ST8's reassignment select** shipped with a third outcome beside reassign and block: in-use
    rows with no live reassignment candidate disable the select and the danger CTA with an
    explanatory line (DES-020 amendment 3). The frame stands; it draws the reassign case.
@@ -264,8 +264,9 @@ is left is a drawing task with **no decision behind it**, and adding a frame is 
 precedents say _not_ to spend a close: a frame is drawn when it would settle something, and this one
 would only restate DES-052.
 
-The **M22 settings pass** below closes this debt without a redraw: the component decisions already
-specify the surface, while the ST6 Advisory decoration contradicts MTR-001.
+It goes to the **M22 settings pass**, which this file already owes a visit for ST6's Advisory row
+(amendment 4 above). A pass that is redrawing one frame can draw a second at little extra cost;
+a close that is marking a table cannot.
 
 ## Amendment (2026-08-21, M20 close, #384) — the portal's notification pane, and what it means for ST3
 
@@ -285,7 +286,7 @@ there is no ST-numbered frame for it and none is owed here: this file inventorie
 and the request detail; none of them draws a preferences page, because M20/2 recorded that the portal
 had no settings destination at the time they were read. M20/9 gave it one. Adding a frame now would
 restate DES-050 and settle nothing, which is the ST7/ST3 precedent the M19 close set for exactly this
-choice. The **M22 settings pass** below records the same no-redraw answer for all three debts.
+choice. It goes to the **M22 settings pass** with the two frames this file already owes.
 
 ### What ST3 now shares, and what it does not
 
@@ -316,17 +317,3 @@ The portal's header carries the M18 bell rendered against the portal's own strip
 prop and nothing else (the NOT-005 M20/9 addendum). DES-049 and DES-050 carry their own M20/9 addenda
 for the two chrome facts that follow — the trigger's foreground pair per surface, and the portal
 header's two-glyph trailing cluster. No settings frame draws either, so nothing here is redrawn.
-
-## Amendment (2026-08-23, M22 close, #474) — the settings debts close without new frames
-
-M22 revisited all three items handed to this pass. **ST6's Advisory Default pill and lock are not
-product machinery.** MTR-001 protects Other alone and defines no default matter type, and the live
-Types pane still says exactly that after real Matters arm its usage counts. The extra decoration is a
-known frame deviation, not deferred work.
-
-**No reminder-lead-times or portal-notification frame is added.** Both panes are complete mounts of
-DES-050/DES-052 and a drawing would settle no behavior; the portal pane is also outside this file's
-`/settings` inventory. The ST7/ST3 precedent therefore stands. M22's actual Settings delta is the
-Statuses and Fields tabs plus live Type usage: existing settings anatomies mounted with Matter
-vocabulary, not a reason to redraw unrelated notification panes. No inventory item from an earlier
-pass is waiting on M22 now.

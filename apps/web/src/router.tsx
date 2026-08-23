@@ -15,8 +15,6 @@ import { useParams, type RouteObject } from "react-router";
 import { AuthLayout } from "./routes/auth-layout";
 import { ContractRecordPage, contractRecordLoader } from "./routes/contract-record";
 import { ContractsPage, contractsLoader } from "./routes/contracts";
-import { MattersPage, mattersLoader } from "./routes/matters";
-import { MatterRecordPage, matterRecordLoader } from "./routes/matter-record";
 import { EntitiesPage, entitiesLoader } from "./routes/entities";
 import { EntityRecordPage, entityRecordLoader } from "./routes/entity-record";
 import { RouteErrorPage } from "./routes/error-page";
@@ -44,18 +42,12 @@ import {
 } from "./routes/settings-approver-groups";
 import {
   SettingsContractFieldsPage,
-  SettingsMatterFieldsPage,
   settingsContractFieldsLoader,
-  settingsMatterFieldsLoader,
 } from "./routes/settings-contract-fields";
 import {
   SettingsContractStatusesPage,
   settingsContractStatusesLoader,
 } from "./routes/settings-contract-statuses";
-import {
-  SettingsMatterStatusesPage,
-  settingsMatterStatusesLoader,
-} from "./routes/settings-matter-statuses";
 import {
   SettingsContractTypeEditorPage,
   settingsContractTypeEditorLoader,
@@ -163,27 +155,6 @@ export const routes: RouteObject[] = [
     hydrateFallbackElement: <></>,
   },
   {
-    path: "/matters",
-    loader: mattersLoader,
-    element: <MattersPage />,
-    errorElement: <RouteErrorPage />,
-    hydrateFallbackElement: <></>,
-  },
-  {
-    // One matter's record page, addressed by its number. The optional
-    // trailing segment is the DES-032 section tab; the bare address is
-    // the Overview.
-    path: "/matters/:matterNumber/:tab?",
-    loader: matterRecordLoader,
-    element: (
-      <KeyedByParam name="matterNumber">
-        <MatterRecordPage />
-      </KeyedByParam>
-    ),
-    errorElement: <RouteErrorPage />,
-    hydrateFallbackElement: <></>,
-  },
-  {
     // The M8 Contracts destination; its loader admits Member+ only and
     // bounces everyone else home.
     path: "/contracts",
@@ -283,16 +254,6 @@ export const routes: RouteObject[] = [
         path: "matters/types",
         loader: settingsMatterTypesLoader,
         element: <SettingsMatterTypesPage />,
-      },
-      {
-        path: "matters/statuses",
-        loader: settingsMatterStatusesLoader,
-        element: <SettingsMatterStatusesPage />,
-      },
-      {
-        path: "matters/fields",
-        loader: settingsMatterFieldsLoader,
-        element: <SettingsMatterFieldsPage />,
       },
       {
         // #85: each type row opens its own editor screen (ST15).

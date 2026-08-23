@@ -142,13 +142,6 @@ async function reset(cookies = memberCookies) {
 }
 
 describe("saving and reading a view", () => {
-  it("persists the Matters surface independently", async () => {
-    const views = await create({ surface: "matters", name: "My matters", config: CONFIG });
-    expect(views).toHaveLength(1);
-    expect(views[0]!.surface).toBe("matters");
-    expect((await read(memberCookies, "matters")).map((view) => view.name)).toEqual(["My matters"]);
-  });
-
   it("saves a named view and answers the whole list back", async () => {
     await reset();
     const views = await create({ surface: "contracts", name: "Renewals", config: CONFIG });

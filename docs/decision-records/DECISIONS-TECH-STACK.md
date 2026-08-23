@@ -961,7 +961,7 @@ It needed five. This decision records the real count and says when the count sto
 
 ### Consequences
 
-- M22 widened the scope rule to `matter` with **no new hook** and opened the Matter catalog and record values. M27 repeats that extension for Entities.
+- M22 (the matter record, and the `matter` field scope) and M27 (entities) widen what the scope rule admits and need **no new hook** — the matter arm is written and live, and empty only because no matter-scoped field can exist yet.
 - The three existing taxonomy mounts and both existing attachment mounts kept their configuration; the only change to them is that `protectedSlug` is now spelled where it was assumed.
 - The five hooks are covered by the behaviour they produce at each mount, not by tests of the hooks themselves — no test asserts that a factory was configured a certain way.
 - `applyPatch` has the most reach of the five: it runs under the row lock and can refuse. A second mount wanting it is fine; a third that needs it to do something other than validate-and-narrate is the split signal above.

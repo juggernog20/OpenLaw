@@ -62,14 +62,17 @@
 import { and, comments, commentLastRead, eq } from "@openlaw/db";
 import { recordActivity, RECORD_ACTIVITY_TIER } from "../../lib/activity.js";
 import type { NotifyingTransaction } from "../../lib/notifications/notifier.js";
-import type { ConversionRecordReference } from "./record-reference.js";
 
 /** One re-parent, as the conversion describes it. */
 export interface ThreadMove {
   requestId: string;
   /** INT-002's R-###, for the entry this write appends. */
   requestNumber: number;
-  target: ConversionRecordReference;
+  contractId: string;
+  /** CTR-003's C-###, which is the record's name and never changes —
+   * the entry says where the conversation went by the one reference that
+   * survives a rename. */
+  contractNumber: number;
   /** The triager converting. The move is their act, like every other
    * write this conversion makes. */
   actorId: string;
@@ -98,7 +101,7 @@ export interface ThreadMove {
 export async function moveThread(tx: NotifyingTransaction, move: ThreadMove): Promise<void> {
   const moved = await tx
     .update(comments)
-    .set({ entityType: move.target.module, entityId: move.target.id })
+    .set({ entityType: "contract", entityId: move.contractId })
     .where(and(eq(comments.entityType, "request"), eq(comments.entityId, move.requestId)))
     // Enough to know whether anything moved. The bodies are not read and
     // the count is not narrated (DD-016): how many comments a Request
@@ -124,8 +127,8 @@ export async function moveThread(tx: NotifyingTransaction, move: ThreadMove): Pr
       .values(
         watermarks.map((row) => ({
           userId: row.userId,
-          entityType: move.target.module,
-          entityId: move.target.id,
+          entityType: "contract" as const,
+          entityId: move.contractId,
           readAt: row.readAt,
         })),
       )
@@ -153,8 +156,7 @@ export async function moveThread(tx: NotifyingTransaction, move: ThreadMove): Pr
   // that did not happen.
   if (moved.length === 0) return;
   // A reader of the Request who wonders where the thread went is the one
-  // this sentence is for, and the permanent record reference is where it
-  // went. The record's own
+  // this sentence is for, and C-### is where it went. The record's own
   // feed already says it was created from R-###, so it is one entry
   // rather than two.
   await recordActivity(tx, {
@@ -163,9 +165,6 @@ export async function moveThread(tx: NotifyingTransaction, move: ThreadMove): Pr
     actorId: move.actorId,
     action: "request.thread_moved",
     visibility: RECORD_ACTIVITY_TIER,
-    payload:
-      move.target.module === "contract"
-        ? { number: move.requestNumber, contractNumber: move.target.number }
-        : { number: move.requestNumber, matterNumber: move.target.number },
+    payload: { number: move.requestNumber, contractNumber: move.contractNumber },
   });
 }

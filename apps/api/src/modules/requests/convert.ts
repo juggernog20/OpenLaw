@@ -8,21 +8,24 @@
  * **Triage confirms the routing; it never classifies it** (DD-018 rule
  * 2). The Administrator bound the target when they configured the
  * request type, so this route reads it rather than taking it: a request
- * type naming a live type converts onto that type, and a body naming a
- * different type in the same module is refused by name. The **one** choice a
+ * type naming a live contract type converts onto that type, and a body
+ * naming a different one is refused by name. The **one** choice a
  * triager genuinely makes is the one the form honestly deferred — a
  * module-only target ("Contract review") names no type, so the body
  * must, and the same is true of a target type the taxonomy has since
  * archived, which reads as no type at all (the INT-002 M19/4 addendum).
  *
  * **Re-target is the deliberate exception, and it is the only one**
- * (DD-018 rule 5, INT-006). Either configured module can be switched to
- * the other by naming that module's type, because a mis-routed ask
- * should cost nothing. The Request survives as the portal shell.
+ * (DD-018 rule 5, INT-006). A Request whose type targets a Matter, or
+ * targets nothing, may still be converted into a contract, because a
+ * mis-routed ask should cost nothing. It is lossless: the Request
+ * survives as the requester's portal shell either way. The matter arm
+ * of this door is M22's — `matters` does not exist, so there is nothing
+ * to offer and nothing stubbed.
  *
  * **The prefill is the point of the whole milestone** (INT-002). The
  * dialog seeds the title from the summary and sends whatever is in the
- * box at the press; the requester's urgency becomes the record's
+ * box at the press; the requester's urgency becomes the contract's
  * priority 1:1 (MTR-012 — `risk` is legal's and is never born); and
  * every collected value whose slug the target type also attaches lands
  * in that field. Nothing is re-keyed, and the server
@@ -36,15 +39,17 @@
  * on rendering every one of them on both details. The dialog is what
  * names the values that will not carry, before anybody presses.
  *
- * **The record is born ordinary** through its module's create callable:
- * its own sequence, default open state, no manager, no team beyond the
- * creator row, and no Confidential flag inherited from anywhere. The one thing it
+ * **The record is born ordinary** (the M16 successor rule's sibling,
+ * CTR-015): the C-### sequence gives it its number, it starts on the
+ * protected draft seed, and no Owner, no team beyond the creator row,
+ * and no Confidential flag is inherited from anywhere. A contract born
+ * by conversion is a contract, not a special case. The one thing it
  * carries that an ordinary create does not is the priority, because
  * that is a fact somebody stated rather than an assessment nobody made.
  *
  * **Both records narrate it** (DD-017). `request.converted` on the ask
- * names the permanent reference it became; the module's
- * `created_from_request` entry names the R-### it came from. Neither carries free text: the
+ * names the C-### it became; `contract.created_from_request` on the
+ * record names the R-### it came from. Neither carries free text: the
  * two numbers are the two names, and the log is append-only.
  *
  * **`requestStatusChanged` is raised, not a conversion event of its
@@ -55,20 +60,20 @@
  * The lock, the `new` guard, the race refusal, and the envelope read
  * are all `disposition.ts`'s. The 409 gained one extension member for
  * this outcome — the record the winner made — because "somebody
- * converted this" without the permanent reference is news the loser cannot act on.
+ * converted this" without the C-### is news the loser cannot act on.
  *
- * **The paper follows onto either record** (#421, M22/9). Every attachment on
- * a converted Request becomes one document at version 1, filed at the record root,
+ * **The paper follows** (#421). Every attachment on the Request becomes
+ * one document at version 1 on the record, filed at the record root,
  * inside this same transaction. It is a copy: the attachment rows and
  * their blobs stay where they are, so the requester's portal detail goes
  * on listing and downloading the paper they submitted. The rules of the
  * promotion itself are `promote-paper.ts`'s; what this route owns is
  * that it happens here, between the create and the status write, so a
- * conversion that refuses anywhere leaves neither a record nor a
+ * conversion that refuses anywhere leaves neither a contract nor a
  * document nor a blob nobody points at.
  *
- * **The thread follows onto either record too** (#422, M22/9). Every comment on
- * a converted Request re-parents with its DD-016 tier intact, inside this
+ * **The thread follows too** (#422). Every comment on the Request
+ * re-parents onto the record with its DD-016 tier intact, inside this
  * same transaction, and each reader's place in the conversation moves
  * with it. It is a move rather than a copy — that is the whole of
  * CMT-001's promise, that legal answers in exactly one place from then
@@ -85,19 +90,16 @@ import {
   contractTypeFields,
   contractTypes,
   eq,
-  matterTypeFields,
-  matterTypes,
   requestTypes,
   requests,
   type CustomFieldValue,
 } from "@openlaw/db";
-import { MAX_CONTRACT_TITLE_LENGTH, MAX_MATTER_TITLE_LENGTH } from "@openlaw/shared";
+import { MAX_CONTRACT_TITLE_LENGTH } from "@openlaw/shared";
 import { requireRole } from "../../auth/guards.js";
 import { recordActivity, RECORD_ACTIVITY_TIER } from "../../lib/activity.js";
 import { CustomFieldsInput, selectAttachedFields } from "../../lib/custom-fields.js";
 import { httpError, problemResponse } from "../../lib/problem.js";
 import { createContract } from "../contracts/create.js";
-import { createMatter } from "../matters/create.js";
 import {
   dispositionedResponse,
   dispositionOf,
@@ -106,8 +108,7 @@ import {
 } from "./disposition.js";
 import { moveThread } from "./move-thread.js";
 import { withPromotedPaper } from "./promote-paper.js";
-import { liveTargetContractType, liveTargetMatterType, StaffRequestSchema } from "./projection.js";
-import type { ConversionRecordReference } from "./record-reference.js";
+import { liveTargetContractType, StaffRequestSchema } from "./projection.js";
 
 export const requestConvertRoutes: FastifyPluginAsyncZod = async (app) => {
   app.post(
@@ -117,51 +118,65 @@ export const requestConvertRoutes: FastifyPluginAsyncZod = async (app) => {
       schema: {
         operationId: "convertRequest",
         summary:
-          "Turn a Request into the contract or matter its request type targets " +
-          "(INT-002, DD-018, M22/9). The Request row is locked so racing " +
-          "triagers produce one record; the loser receives 409 with the " +
-          "reachable converted record's module and permanent number. Triage " +
-          "confirms a live bound type, supplies a type for a module-only or " +
-          "archived target, or explicitly Re-targets by naming the other " +
-          "module's type. A body may name a contract type or a matter type, " +
-          "never both. The record is born through its ordinary create callable " +
-          "with the title seeded from the Request summary, urgency carried to " +
-          "priority, risk unset, no manager, one creator row, and no confidential " +
-          "flag. Matching collected values carry server-side; values with no " +
-          "field remain on the Request; missing required fields and dead " +
-          "references are refused by name and can be answered in customFields. " +
-          "Both records narrate the conversion and requestStatusChanged raises " +
-          "the Requester's In progress notification. Attachments become ordinary " +
-          "root documents and the tiered thread moves onto either target while " +
-          "the Request remains the Requester's window. Member+ only",
+          "Turn a Request into the contract its request type targets " +
+          "(INT-002, DD-018). The third of INT-007's three " +
+          "dispositions: it transitions the Request from `new` to " +
+          "`converted` under the Request's own row lock, so two triagers " +
+          "racing one Request produce one contract. The loser is " +
+          "answered 409 with the recorded outcome and the record it " +
+          "became. Triage confirms the routing rather than choosing it: " +
+          "where the request type names a live contract type, that type " +
+          "is the target and a body naming a different one is refused. " +
+          "`contractTypeId` is required — and only accepted — where the " +
+          "request type names no live contract type: a module-only " +
+          "target, a target type the taxonomy has archived (read as no " +
+          "type), a Matter target, or no target at all. The last two are " +
+          "Re-target, DD-018's lossless exception. The contract is born " +
+          "ordinary — the C-### sequence, the draft-stage seed, no " +
+          "Owner, no team, no Confidential flag — with the title the " +
+          "body carries, which the dialog seeds from the summary and " +
+          "leaves editable; the requester's urgency as its priority 1:1 " +
+          "(MTR-012; risk is never requester-set); " +
+          "and every collected value whose slug the target type attaches " +
+          "landed in that field. A collected value the target type does " +
+          "not attach does not carry and is not deleted: the Request " +
+          "keeps its custom fields whole. Empty hard-required fields " +
+          "refuse the conversion by name (CTR-016/MTR-014), so " +
+          "`customFields` is where the triager answers them. Appends " +
+          "request.converted on the ask and contract.created_from_request " +
+          "on the record (DD-017), and raises `requestStatusChanged`. " +
+          "Every attachment on the Request is promoted into one document " +
+          "at version 1 at the record root, each narrated document.created " +
+          "and each owed the derivations an upload is owed (INT-002, " +
+          "DOC-008). The promotion copies: the Request keeps its " +
+          "attachments and its downloads go on answering. The thread " +
+          "moves rather than copying (CMT-001): every comment re-parents " +
+          "onto the record with its DD-016 tier intact and each reader's " +
+          "unread watermark travels with it, narrated request.thread_moved, " +
+          "and from then on the Request's thread address answers the " +
+          "record's conversation — the portal filtered to Full Thread. " +
+          "Answers the Request as the staff detail reads it. Member+ only",
         tags: ["requests"],
         params: NumberParams,
         // Strict: an unknown key is a client bug, not a silent strip.
-        body: z
-          .strictObject({
-            /** The record's title, seeded from the summary by the dialog
-             * and editable there. Its target-aware bound is checked after
-             * the locked Request has resolved the conversion module. */
-            title: z.string(),
-            /** The one choice a triager makes, and only where the request
-             * type honestly deferred it or points nowhere.
-             *
-             * Absent or a real id, never the empty string: a blank choice
-             * is no choice, and letting one through would have the route
-             * refuse it as a *different* type from the bound one, telling
-             * the caller they classified when they picked nothing. */
-            contractTypeId: z.string().min(1).optional(),
-            /** The matter sibling of contractTypeId. Supplying this on a
-             * contract target is the explicit Re-target direction. */
-            matterTypeId: z.string().min(1).optional(),
-            /** The gaps the form did not collect, keyed by field slug. The
-             * carried values are the server's to land and need not be
-             * here; a slug the target type does not attach is refused. */
-            customFields: CustomFieldsInput.optional(),
-          })
-          .refine((body) => !(body.contractTypeId && body.matterTypeId), {
-            message: "Name either a contract type or a matter type, never both.",
-          }),
+        body: z.strictObject({
+          /** The contract's title, seeded from the summary by the dialog
+           * and editable there. Trimmed and then required, so a box of
+           * spaces is the same refusal an empty one is. */
+          title: z.string().max(MAX_CONTRACT_TITLE_LENGTH),
+          /** The one choice a triager makes, and only where the request
+           * type honestly deferred it or points nowhere.
+           *
+           * Absent or a real id, never the empty string: a blank choice
+           * is no choice, and letting one through would have the route
+           * refuse it as a *different* type from the bound one, telling
+           * the caller they classified when they picked nothing. */
+          contractTypeId: z.string().min(1).optional(),
+          /** The gaps the form did not collect, keyed by field slug. The
+           * carried values are the server's to land and need not be
+           * here; a slug the target type does not attach is refused. */
+          customFields: CustomFieldsInput.optional(),
+        }),
         response: {
           200: z.object({ request: StaffRequestSchema }),
           409: dispositionedResponse(
@@ -174,12 +189,16 @@ export const requestConvertRoutes: FastifyPluginAsyncZod = async (app) => {
       },
     },
     async (request) => {
-      // Trimmed here rather than in the schema. The target-aware refusal
-      // happens after the locked Request resolves which record is being
-      // made; the create callable deliberately validates none of this.
+      // Trimmed here rather than in the schema, because the refusal has
+      // to name the field and a schema refusal names a path. A title of
+      // spaces is a title nobody wrote. The create callable deliberately
+      // validates none of this — validation is the caller's, and this is
+      // the second caller.
       const title = request.body.title.trim();
+      if (title === "") {
+        throw httpError(400, "Name the contract — a conversion is refused without a title.");
+      }
       const chosenTypeId = request.body.contractTypeId;
-      const chosenMatterTypeId = request.body.matterTypeId;
       const answers = request.body.customFields;
 
       // The promotion's wrapper sits **outside** the transaction and the
@@ -208,47 +227,18 @@ export const requestConvertRoutes: FastifyPluginAsyncZod = async (app) => {
               .select({
                 urgency: requests.urgency,
                 customFields: requests.customFields,
-                targetModule: requestTypes.targetModule,
                 targetContractTypeId: contractTypes.id,
-                targetMatterTypeId: matterTypes.id,
               })
               .from(requests)
               .innerJoin(requestTypes, eq(requests.requestTypeId, requestTypes.id))
               .leftJoin(contractTypes, liveTargetContractType())
-              .leftJoin(matterTypes, liveTargetMatterType())
               .where(eq(requests.id, held.id))
               .limit(1);
             // Unreachable: the lock read the same row a moment ago and the
             // request type FK is NOT NULL. Loud rather than silent.
             if (!row) throw httpError(500, "The request could not be read for conversion.");
 
-            const target = confirmedTarget(
-              {
-                module:
-                  row.targetModule === "contract" || row.targetModule === "matter"
-                    ? row.targetModule
-                    : null,
-                contractTypeId: row.targetContractTypeId,
-                matterTypeId: row.targetMatterTypeId,
-              },
-              { contractTypeId: chosenTypeId, matterTypeId: chosenMatterTypeId },
-            );
-
-            const targetName = target.module === "contract" ? "contract" : "matter";
-            if (title === "") {
-              throw httpError(
-                400,
-                `Name the ${targetName} — a conversion is refused without a title.`,
-              );
-            }
-            const titleLimit =
-              target.module === "contract" ? MAX_CONTRACT_TITLE_LENGTH : MAX_MATTER_TITLE_LENGTH;
-            if (title.length > titleLimit) {
-              throw httpError(
-                400,
-                `Keep the ${targetName}'s title to ${titleLimit} characters or fewer.`,
-              );
-            }
+            const contractTypeId = confirmedTarget(row.targetContractTypeId, chosenTypeId);
 
             // INT-002's carry-through, landed by the server. Every collected
             // value whose slug the target type also attaches, and nothing
@@ -257,46 +247,24 @@ export const requestConvertRoutes: FastifyPluginAsyncZod = async (app) => {
             // addendum's answer. The triager's own answers go on top, so a
             // hard-required gap they filled wins over an absent carry and an
             // edit they made in the dialog wins over the collected value.
-            const attached = await selectAttachedFields(
-              tx,
-              target.module === "contract" ? contractTypeFields : matterTypeFields,
-              target.typeId,
-            );
+            const attached = await selectAttachedFields(tx, contractTypeFields, contractTypeId);
             const carried: Record<string, CustomFieldValue | null> = {};
             for (const field of attached) {
               const value = row.customFields[field.slug];
               if (value !== undefined) carried[field.slug] = value;
             }
 
-            const customFields = { ...carried, ...(answers ?? {}) };
-            const born =
-              target.module === "contract"
-                ? await createContract(tx, {
-                    actorId: request.user.id,
-                    title,
-                    contractTypeId: target.typeId,
-                    customFields,
-                    priority: row.urgency,
-                  })
-                : await createMatter(tx, {
-                    actorId: request.user.id,
-                    // The dialog seeds this from the summary. The held
-                    // summary remains available for the M22 audit trail;
-                    // the editable title follows the existing conversion
-                    // contract and the I8 matter modal.
-                    title,
-                    matterTypeId: target.typeId,
-                    customFields,
-                    priority: row.urgency,
-                    risk: null,
-                    managerId: null,
-                    isConfidential: false,
-                  });
-            const record = {
-              module: target.module,
-              id: born.row.id,
-              number: born.row.number,
-            } satisfies ConversionRecordReference;
+            const born = await createContract(tx, {
+              actorId: request.user.id,
+              title,
+              contractTypeId,
+              customFields: { ...carried, ...(answers ?? {}) },
+              // MTR-012's 1:1 map, and the only assessment a newborn record
+              // is given: urgency is what the requester claimed, priority is
+              // what legal now holds, and they start equal and diverge
+              // afterwards. Risk is not set at all.
+              priority: row.urgency,
+            });
 
             // INT-002's paper, promoted a file at a time onto the record
             // (#421). Copies rather than moves: the attachment rows and
@@ -307,11 +275,8 @@ export const requestConvertRoutes: FastifyPluginAsyncZod = async (app) => {
             await promote(tx, {
               requestId: held.id,
               target: {
-                record,
-                primaryDocumentId:
-                  record.module === "contract" && "primaryDocumentId" in born.row
-                    ? born.row.primaryDocumentId
-                    : null,
+                contractId: born.row.id,
+                primaryDocumentId: born.row.primaryDocumentId,
               },
               actorId: request.user.id,
               actorName: request.user.displayName,
@@ -328,21 +293,14 @@ export const requestConvertRoutes: FastifyPluginAsyncZod = async (app) => {
             await moveThread(tx, {
               requestId: held.id,
               requestNumber: held.number,
-              target: record,
+              contractId: born.row.id,
+              contractNumber: born.row.number,
               actorId: request.user.id,
             });
 
             await tx
               .update(requests)
-              .set(
-                record.module === "contract"
-                  ? { status: "converted", convertedContractId: record.id, convertedMatterId: null }
-                  : {
-                      status: "converted",
-                      convertedContractId: null,
-                      convertedMatterId: record.id,
-                    },
-              )
+              .set({ status: "converted", convertedContractId: born.row.id })
               .where(eq(requests.id, held.id));
 
             // DD-017 on both records, in the transaction that made them one
@@ -355,22 +313,16 @@ export const requestConvertRoutes: FastifyPluginAsyncZod = async (app) => {
               actorId: request.user.id,
               action: "request.converted",
               visibility: RECORD_ACTIVITY_TIER,
-              payload:
-                record.module === "contract"
-                  ? { number: held.number, contractNumber: record.number }
-                  : { number: held.number, matterNumber: record.number },
+              payload: { number: held.number, contractNumber: born.row.number },
             });
             await recordActivity(tx, {
-              entityType: record.module,
-              entityId: record.id,
+              entityType: "contract",
+              entityId: born.row.id,
               actorId: request.user.id,
-              action:
-                record.module === "contract"
-                  ? "contract.created_from_request"
-                  : "matter.created_from_request",
+              action: "contract.created_from_request",
               visibility: RECORD_ACTIVITY_TIER,
               payload: {
-                number: record.number,
+                number: born.row.number,
                 title: born.row.title,
                 requestNumber: held.number,
               },
@@ -413,59 +365,22 @@ export const requestConvertRoutes: FastifyPluginAsyncZod = async (app) => {
  * character, so a blank choice is refused as a malformed body rather
  * than read as a type that differs from the bound one.
  */
-type ConversionTarget =
-  { module: "contract"; typeId: string } | { module: "matter"; typeId: string };
-
-function confirmedTarget(
-  bound: {
-    module: "contract" | "matter" | null;
-    contractTypeId: string | null;
-    matterTypeId: string | null;
-  },
-  chosen: { contractTypeId?: string; matterTypeId?: string },
-): ConversionTarget {
-  if (chosen.contractTypeId !== undefined) {
-    if (
-      bound.module === "contract" &&
-      bound.contractTypeId !== null &&
-      chosen.contractTypeId !== bound.contractTypeId
-    ) {
+function confirmedTarget(bound: string | null, chosen: string | undefined): string {
+  if (bound === null) {
+    if (chosen === undefined) {
       throw httpError(
         400,
-        "This request type already targets a contract type. Triage confirms the routing " +
-          "the Administrator bound; it does not choose it.",
+        "Pick a contract type — this request type does not name a live one to confirm.",
       );
     }
-    return { module: "contract", typeId: chosen.contractTypeId };
+    return chosen;
   }
-  if (chosen.matterTypeId !== undefined) {
-    if (
-      bound.module === "matter" &&
-      bound.matterTypeId !== null &&
-      chosen.matterTypeId !== bound.matterTypeId
-    ) {
-      throw httpError(
-        400,
-        "This request type already targets a matter type. Triage confirms the routing " +
-          "the Administrator bound; it does not choose it.",
-      );
-    }
-    return { module: "matter", typeId: chosen.matterTypeId };
-  }
-  if (bound.module === "contract" && bound.contractTypeId !== null) {
-    return { module: "contract", typeId: bound.contractTypeId };
-  }
-  if (bound.module === "matter" && bound.matterTypeId !== null) {
-    return { module: "matter", typeId: bound.matterTypeId };
-  }
-  if (bound.module === "matter") {
+  if (chosen !== undefined && chosen !== bound) {
     throw httpError(
       400,
-      "Pick a matter type — this request type does not name a live one to confirm.",
+      "This request type already targets a contract type. Triage confirms the routing " +
+        "the Administrator bound; it does not choose it.",
     );
   }
-  throw httpError(
-    400,
-    "Pick a contract type — this request type does not name a live one to confirm.",
-  );
+  return bound;
 }

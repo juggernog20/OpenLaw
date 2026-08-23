@@ -412,12 +412,12 @@ describe("posting a comment at a tier", () => {
     expect(tier.statusCode, tier.body).toBe(400);
   });
 
-  it("refuses entity types with no audience arm, though the table admits them", async () => {
-    const contract = await contractWithTeam("No document arm");
+  it("accepts contracts only, though the table admits the full vocabulary", async () => {
+    const contract = await contractWithTeam("Contracts only");
     const res = await post(memberCookies, {
-      entityType: "document",
+      entityType: "matter",
       entityId: contract.id,
-      body: "No thread here.",
+      body: "Not yet.",
       visibility: "working_team",
     });
     expect(res.statusCode, res.body).toBe(400);

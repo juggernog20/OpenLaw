@@ -288,9 +288,6 @@ export function stubApi(state: ApiState) {
         approverGroups: [],
       });
     }
-    if (call.url.pathname === "/api/v1/matters/options" && call.method === "GET") {
-      return json(200, { matterTypes: [], matterStatuses: [], users: [] });
-    }
     if (call.url.pathname === "/api/v1/entities" && call.method === "GET") {
       return json(200, { entities: [] });
     }

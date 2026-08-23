@@ -2,8 +2,8 @@
 
 /**
  * The Fields catalog routes (CTR-016, #83): the shared custom-field
- * catalog behind the module list-editor panes — list scoped to Contract,
- * Matter, and global fields, create across the nine field types, rename and
+ * catalog behind the third list-editor pane — list scoped to contract
+ * and global fields, create across the nine field types, rename and
  * describe, the options list on select types, the contract-scope-only
  * AI prompt (CTR-008), scope moves (promotion to global; narrowing back
  * only while no other module attaches the field), archive and restore.
@@ -31,7 +31,6 @@ import {
   inArray,
   isNull,
   matterTypeFields,
-  matters,
   sql,
   type Executor,
   type Field,
@@ -44,9 +43,10 @@ import { freeSlug } from "../../lib/slug.js";
 
 /**
  * The scopes this pane's catalog holds and its picker offers (CTR-016):
- * M22 added `matter`; `entity` joins with M27 and its module view.
+ * `matter` and `entity` join with their milestones (M22, M27), which
+ * bring the per-module views along.
  */
-const OPEN_SCOPES = ["contract", "matter", "global"] as const;
+const OPEN_SCOPES = ["contract", "global"] as const;
 
 const ScopeSchema = z.enum(OPEN_SCOPES);
 const FieldTypeSchema = z.enum(FIELD_TYPES);
@@ -65,8 +65,8 @@ const FieldSchema = z.object({
   archivedAt: z.iso.datetime().nullable(),
   /** Records holding a value plus type attachments — the SET-003 guard
    * number. Contract-type attachments count since #84 and matter-type
-   * attachments since #85; Contract values count since #112 and Matter
-   * values since M22. */
+   * attachments since #85; contracts holding a value count since #112,
+   * and matters join with M22. */
   inUseCount: z.number().int(),
 });
 
@@ -139,7 +139,7 @@ export const fieldsRoutes: FastifyPluginAsyncZod = async (app) => {
    * record's `custom_fields` is keyed by the field's machine identity,
    * not its id. Archived contracts count: their values are retained
    * exactly like a detached field's, so a restore must not make a
-   * number the Administrator already saw go up. Matter values joined in M22.
+   * number the Administrator already saw go up. Matters join with M22.
    */
   async function attachmentCounts(
     db: Executor,
@@ -178,22 +178,6 @@ export const fieldsRoutes: FastifyPluginAsyncZod = async (app) => {
     for (const row of held.rows) {
       const fieldId = slugToId.get(row.slug);
       // COUNT() comes back as a string on a bigint column.
-      if (fieldId) tally.set(fieldId, (tally.get(fieldId) ?? 0) + Number(row.tally));
-    }
-    const matterHeld = await db.execute<{ slug: string; tally: string }>(
-      sql`
-        SELECT slug, COUNT(*) AS tally
-        FROM (
-          SELECT jsonb_object_keys(${matters.customFields}) AS slug
-          FROM ${matters}
-          WHERE ${matters.customFields} IS NOT NULL
-        ) AS keys
-        WHERE slug = ANY(${sql.param(slugs)}::text[])
-        GROUP BY slug
-      `,
-    );
-    for (const row of matterHeld.rows) {
-      const fieldId = slugToId.get(row.slug);
       if (fieldId) tally.set(fieldId, (tally.get(fieldId) ?? 0) + Number(row.tally));
     }
     return tally;

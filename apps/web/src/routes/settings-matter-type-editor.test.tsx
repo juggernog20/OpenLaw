@@ -4,7 +4,7 @@
  * The matter type editor (#85) at the route seam: the shared
  * TypeEditorScreen on the matter mount — the identity card and the
  * attachment card against the matter routes, with the MTR-011 scope
- * rule shaping the Attach menu: matter-scoped and global fields. The
+ * rule shaping the Attach menu: global-tier fields only until M22. The
  * machinery itself is covered by the Contracts reference suite and at
  * the HTTP seam in apps/api — these tests pin the wiring: the matter
  * URL, the matter endpoints, the catalog filter, and the matter copy.
@@ -44,7 +44,7 @@ const DEPARTMENT = {
   isRequired: false,
 };
 
-/** The live catalog: one attached global field, one attachable matter
+/** The live catalog: one attached global field, one attachable global
  * field, and one contract-scoped field the menu must never offer. */
 const CATALOG = [
   {
@@ -65,7 +65,7 @@ const CATALOG = [
     slug: "department",
     displayName: "Department",
     description: null,
-    moduleScope: "matter",
+    moduleScope: "global",
     fieldType: "single_select",
     options: ["Legal", "Sales"],
     fieldTag: "business",
@@ -185,7 +185,7 @@ describe("the editor screen on the matter mount", () => {
 });
 
 describe("the MTR-011 scope rule in the Attach menu", () => {
-  it("offers unattached matter/global fields — contract-scoped fields never show", async () => {
+  it("offers only unattached global fields — contract-scoped fields never show", async () => {
     stubApi({ signedIn: ADMIN, extra: editorApi(newCalls()) });
     renderAt("/settings/matters/types/t1");
     const user = userEvent.setup();
@@ -207,7 +207,7 @@ describe("the MTR-011 scope rule in the Attach menu", () => {
     await waitFor(() => expect(calls.attaches).toEqual([{ fieldId: "f3" }]));
     expect(await screen.findByText("Budget owner")).toBeInTheDocument();
     // Everything attachable is now attached.
-    expect(screen.getByText("Every eligible field is attached.")).toBeInTheDocument();
+    expect(screen.getByText("Every global field is attached.")).toBeInTheDocument();
   });
 });
 

@@ -10,21 +10,9 @@
  * same convention as the settings rail, SET-002).
  */
 
-import {
-  BriefcaseBusiness,
-  House,
-  Inbox,
-  Landmark,
-  Signature,
-  type LucideIcon,
-} from "lucide-react";
+import { House, Inbox, Landmark, Signature, type LucideIcon } from "lucide-react";
 import { defineMessage, type MessageDescriptor } from "react-intl";
-import {
-  CONTRACT_READER_ROLES,
-  MATTER_READER_ROLES,
-  MEMBER_PLUS_ROLES,
-  type Role,
-} from "../../lib/roles";
+import { CONTRACT_READER_ROLES, MEMBER_PLUS_ROLES, type Role } from "../../lib/roles";
 
 export interface Destination {
   id: string;
@@ -55,15 +43,6 @@ export const destinations: Destination[] = [
     icon: Inbox,
     label: defineMessage({ id: "nav.inbox", defaultMessage: "Inbox" }),
     roles: MEMBER_PLUS_ROLES,
-  },
-  {
-    // The M22 matter record. The same reader floor as contracts: a
-    // Contributor reaches the matters they are on the team of.
-    id: "matters",
-    path: "/matters",
-    icon: BriefcaseBusiness,
-    label: defineMessage({ id: "nav.matters", defaultMessage: "Matters" }),
-    roles: MATTER_READER_ROLES,
   },
   {
     // The M8 contract record. Member+, plus a Contributor (CTR-021): they

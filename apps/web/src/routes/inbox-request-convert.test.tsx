@@ -77,15 +77,6 @@ const CONTRACT_TYPES = [
   { id: "ct-msa", slug: "msa", displayName: "MSA", fields: [COUNTERPARTY, GOVERNING_LAW] },
 ];
 
-const MATTER_TYPES = [
-  {
-    id: "mt-dispute",
-    slug: "dispute",
-    displayName: "Dispute",
-    fields: [COUNTERPARTY, GOVERNING_LAW],
-  },
-];
-
 /** The Request the screen opens on: a Request whose form collected two
  * values, one of which the NDA type has no field for. */
 const request = (overrides: Record<string, unknown> = {}) =>
@@ -125,27 +116,7 @@ function requestApi(
     initial,
     answer,
     detail: (row) => detail(row, customFieldRefs),
-    applied: (row, body) => {
-      const sent = body as Record<string, unknown>;
-      const requestType = row.requestType as { targetModule?: unknown };
-      const explicitModule =
-        "matterTypeId" in sent ? "matter" : "contractTypeId" in sent ? "contract" : null;
-      if (explicitModule === "matter") expect(sent).not.toHaveProperty("contractTypeId");
-      if (explicitModule === "contract") expect(sent).not.toHaveProperty("matterTypeId");
-      const targetModule = explicitModule ?? requestType.targetModule;
-      if (targetModule !== "contract" && targetModule !== "matter") {
-        throw new Error("The conversion stub needs an explicit or configured target module.");
-      }
-      const toMatter = targetModule === "matter";
-      return {
-        ...row,
-        status: "converted",
-        convertedContract: toMatter ? null : { number: 51 },
-        convertedRecord: toMatter
-          ? { module: "matter", number: 12 }
-          : { module: "contract", number: 51 },
-      };
-    },
+    applied: (row) => ({ ...row, status: "converted", convertedContract: { number: 51 } }),
     // The taxonomy read is on the page's loader for every suite, and
     // the shared scaffold lets `stubApi`'s empty default answer it.
     // Convert is the one that needs rows in it.
@@ -169,9 +140,7 @@ function requestApi(
           ? json(200, {
               entities: [{ id: "e2", legalName: "Orion Holdings Ltd", archivedAt: null }],
             })
-          : call.url.pathname === "/api/v1/matters/options" && call.method === "GET"
-            ? json(200, { matterTypes: MATTER_TYPES, matterStatuses: [], users: [] })
-            : undefined,
+          : undefined,
   });
   return {
     handler: api.handler,
@@ -202,15 +171,7 @@ describe("the sub-bar's third action (DES-058, INT-007)", () => {
   });
 
   it("offers nothing on a Request somebody has already converted", async () => {
-    open(
-      requestApi(
-        request({
-          status: "converted",
-          convertedContract: { number: 51 },
-          convertedRecord: { module: "contract", number: 51 },
-        }),
-      ),
-    );
+    open(requestApi(request({ status: "converted", convertedContract: { number: 51 } })));
     expect(
       within(await subbar()).queryByRole("button", { name: "Convert to contract" }),
     ).toBeNull();
@@ -293,7 +254,7 @@ describe("the prefill (INT-002, MTR-012)", () => {
 
     await user.selectOptions(manager, "u2");
     await user.selectOptions(entity, "e2");
-    await user.click(within(dialog).getByRole("button", { name: "Convert to contract" }));
+    await user.click(within(dialog).getByRole("button", { name: "Convert" }));
     await waitFor(() => expect(api.conversions).toHaveLength(1));
     expect(api.conversions[0]).toEqual({
       title: "Northwind Labs mutual NDA",
@@ -358,7 +319,7 @@ describe("the target is confirmed, never classified (DD-018)", () => {
     const api = requestApi();
     open(api);
     const dialog = await openConvert(user);
-    await user.click(within(dialog).getByRole("button", { name: "Convert to contract" }));
+    await user.click(within(dialog).getByRole("button", { name: "Convert" }));
     await waitFor(() => expect(api.conversions).toHaveLength(1));
     // The seam reads its own configuration; a body naming the type would
     // be the client asserting the routing.
@@ -386,12 +347,12 @@ describe("the target is confirmed, never classified (DD-018)", () => {
     ).toBeInTheDocument();
 
     // Nothing is sent until the one choice is made.
-    await user.click(within(dialog).getByRole("button", { name: "Convert to contract" }));
+    await user.click(within(dialog).getByRole("button", { name: "Convert" }));
     expect(await within(dialog).findByRole("alert")).toHaveTextContent("Pick a contract type.");
     expect(api.conversions).toEqual([]);
 
     await user.selectOptions(within(dialog).getByLabelText(/^Contract type/), "ct-nda");
-    await user.click(within(dialog).getByRole("button", { name: "Convert to contract" }));
+    await user.click(within(dialog).getByRole("button", { name: "Convert" }));
     await waitFor(() => expect(api.conversions).toHaveLength(1));
     expect(api.conversions[0]).toEqual({
       title: "Northwind Labs mutual NDA",
@@ -425,7 +386,7 @@ describe("the target is confirmed, never classified (DD-018)", () => {
     expect(within(dialog).getByLabelText(/^Contract type/)).toBeInTheDocument();
   });
 
-  it("opens a matter target on its bound matter type and module-named CTA", async () => {
+  it("names the re-target on a matter-targeting Request, and still converts", async () => {
     const user = userEvent.setup();
     const api = requestApi(
       request({
@@ -434,69 +395,28 @@ describe("the target is confirmed, never classified (DD-018)", () => {
           id: "rt-advice",
           displayName: "Advice request",
           targetModule: "matter",
-          targetTypeId: "mt-dispute",
-          targetTypeName: "Dispute",
+          targetTypeId: "mt-advice",
+          targetTypeName: "Advice",
         },
       }),
     );
     open(api);
-    const dialog = await openDisposition(user, "Convert to matter");
-    expect(within(dialog).getByRole("heading")).toHaveTextContent("Convert R-45 to a matter");
-    expect(within(dialog).getByLabelText(/^Title/)).toHaveAttribute("maxlength", "500");
-    expect(within(dialog).getByText("Dispute")).toBeInTheDocument();
-    expect(within(dialog).queryByText(/is a re-target/)).toBeNull();
-    await user.type(within(dialog).getByLabelText(/^Governing law/), "DIFC Courts");
-    await user.click(within(dialog).getByRole("button", { name: "Convert to matter" }));
+    const dialog = await openConvert(user);
+    expect(within(dialog).getByText(/is a re-target/)).toBeInTheDocument();
+    // The matter type id is not a contract type id, so the picker is
+    // drawn rather than a target confirmed off the wrong taxonomy.
+    await user.selectOptions(within(dialog).getByLabelText(/^Contract type/), "ct-nda");
+    await user.click(within(dialog).getByRole("button", { name: "Convert" }));
     await waitFor(() => expect(api.conversions).toHaveLength(1));
-    expect(api.conversions[0]).toEqual({
-      title: "Northwind Labs mutual NDA",
-      customFields: { governing_law: "DIFC Courts" },
-    });
+    expect(api.conversions[0]).toMatchObject({ contractTypeId: "ct-nda" });
   });
 
-  it("draws both Re-target directions and sends only the chosen module's type", async () => {
+  it("draws no Matter option (M22 owns that arm)", async () => {
     const user = userEvent.setup();
-    const contractApi = requestApi();
-    const contractView = open(contractApi);
-    const contractDialog = await openConvert(user);
-    await user.click(
-      within(contractDialog).getByRole("button", { name: "Convert to matter instead" }),
-    );
-    expect(
-      within(contractDialog).getByText(/does not target a matter.*re-target/),
-    ).toBeInTheDocument();
-    await user.selectOptions(within(contractDialog).getByLabelText(/^Matter type/), "mt-dispute");
-    await user.type(within(contractDialog).getByLabelText(/^Governing law/), "DIFC Courts");
-    await user.click(within(contractDialog).getByRole("button", { name: "Convert to matter" }));
-    await waitFor(() => expect(contractApi.conversions).toHaveLength(1));
-    expect(contractApi.conversions[0]).toMatchObject({ matterTypeId: "mt-dispute" });
-    contractView.view.unmount();
-
-    const matterApi = requestApi(
-      request({
-        customFields: {},
-        requestType: {
-          id: "rt-advice",
-          displayName: "Advice request",
-          targetModule: "matter",
-          targetTypeId: "mt-dispute",
-          targetTypeName: "Dispute",
-        },
-      }),
-    );
-    open(matterApi);
-    const matterDialog = await openDisposition(user, "Convert to matter");
-    await user.click(
-      within(matterDialog).getByRole("button", { name: "Convert to contract instead" }),
-    );
-    expect(
-      within(matterDialog).getByText(/does not target a contract.*re-target/),
-    ).toBeInTheDocument();
-    await user.selectOptions(within(matterDialog).getByLabelText(/^Contract type/), "ct-nda");
-    await user.click(within(matterDialog).getByRole("button", { name: "Convert to contract" }));
-    await waitFor(() => expect(matterApi.conversions).toHaveLength(1));
-    expect(matterApi.conversions[0]).toMatchObject({ contractTypeId: "ct-nda" });
-    expect(matterApi.conversions[0]).not.toHaveProperty("matterTypeId");
+    open(requestApi());
+    const dialog = await openConvert(user);
+    expect(within(dialog).queryByText(/matter instead/i)).toBeNull();
+    expect(within(dialog).queryByRole("button", { name: /matter/i })).toBeNull();
   });
 });
 
@@ -522,14 +442,14 @@ describe("the gaps the form did not collect (CTR-016, MTR-014)", () => {
       within(dialog).getByText(/Required on this contract type. The form did not collect it./),
     ).toBeInTheDocument();
 
-    await user.click(within(dialog).getByRole("button", { name: "Convert to contract" }));
+    await user.click(within(dialog).getByRole("button", { name: "Convert" }));
     expect(await within(dialog).findByRole("alert")).toHaveTextContent(
       "Fill Governing law — this contract type requires it.",
     );
     expect(api.conversions).toEqual([]);
 
     await user.type(gap, "England and Wales");
-    await user.click(within(dialog).getByRole("button", { name: "Convert to contract" }));
+    await user.click(within(dialog).getByRole("button", { name: "Convert" }));
     await waitFor(() => expect(api.conversions).toHaveLength(1));
     expect(api.conversions[0]).toEqual({
       title: "Northwind Labs mutual NDA",
@@ -543,7 +463,7 @@ describe("the gaps the form did not collect (CTR-016, MTR-014)", () => {
     open(api);
     const dialog = await openConvert(user);
     await user.clear(within(dialog).getByLabelText(/^Title/));
-    await user.click(within(dialog).getByRole("button", { name: "Convert to contract" }));
+    await user.click(within(dialog).getByRole("button", { name: "Convert" }));
     expect(await within(dialog).findByRole("alert")).toHaveTextContent("Name the contract.");
     expect(within(dialog).getByLabelText(/^Title/)).toHaveAttribute("aria-invalid", "true");
     expect(api.conversions).toEqual([]);
@@ -556,7 +476,7 @@ describe("what happens after the press (INT-007)", () => {
     const api = requestApi();
     open(api);
     const dialog = await openConvert(user);
-    await user.click(within(dialog).getByRole("button", { name: "Convert to contract" }));
+    await user.click(within(dialog).getByRole("button", { name: "Convert" }));
 
     // The write answers the whole envelope and the page still re-reads:
     // the Outcome card, the status pill, and the thread's watermark all
@@ -564,30 +484,6 @@ describe("what happens after the press (INT-007)", () => {
     expect(await screen.findByRole("link", { name: "C-51" })).toBeInTheDocument();
     await waitFor(() => expect(api.reads).toBeGreaterThan(1));
     expect(screen.queryByRole("dialog")).toBeNull();
-  });
-
-  it("links a matter conversion from the Outcome card", async () => {
-    const user = userEvent.setup();
-    const api = requestApi(
-      request({
-        customFields: {},
-        requestType: {
-          id: "rt-dispute",
-          displayName: "Dispute or claim",
-          targetModule: "matter",
-          targetTypeId: "mt-dispute",
-          targetTypeName: "Dispute",
-        },
-      }),
-    );
-    open(api);
-    const dialog = await openDisposition(user, "Convert to matter");
-    await user.type(within(dialog).getByLabelText(/^Governing law/), "DIFC Courts");
-    await user.click(within(dialog).getByRole("button", { name: "Convert to matter" }));
-    expect(await screen.findByRole("link", { name: "M-12" })).toHaveAttribute(
-      "href",
-      "/matters/12",
-    );
   });
 
   it("writes nothing when the dialog is cancelled", async () => {
@@ -612,7 +508,7 @@ describe("what happens after the press (INT-007)", () => {
     );
     open(api);
     const dialog = await openConvert(user);
-    await user.click(within(dialog).getByRole("button", { name: "Convert to contract" }));
+    await user.click(within(dialog).getByRole("button", { name: "Convert" }));
     expect(await within(dialog).findByRole("alert")).toHaveTextContent(
       "Fill Governing law first — the type requires it.",
     );
@@ -629,7 +525,7 @@ describe("a lost race (INT-007, TECH-020)", () => {
         status: 409,
         detail: "This request has already been converted.",
         outcome: "converted",
-        convertedRecord: { module: "contract", number: 51 },
+        convertedContract: { number: 51 },
       };
       return new Response(JSON.stringify(body), {
         status: 409,
@@ -638,7 +534,7 @@ describe("a lost race (INT-007, TECH-020)", () => {
     });
     open(api);
     const dialog = await openConvert(user);
-    await user.click(within(dialog).getByRole("button", { name: "Convert to contract" }));
+    await user.click(within(dialog).getByRole("button", { name: "Convert" }));
 
     expect(
       await within(dialog).findByText("Somebody else already converted this request."),
@@ -646,7 +542,7 @@ describe("a lost race (INT-007, TECH-020)", () => {
     // The one thing a plain outcome cannot say.
     expect(within(dialog).getByText("It became C-51.")).toBeInTheDocument();
     // Nothing left to decide, so the form is gone rather than pressable.
-    expect(within(dialog).queryByRole("button", { name: /Convert to/ })).toBeNull();
+    expect(within(dialog).queryByRole("button", { name: "Convert" })).toBeNull();
     expect(within(dialog).getByRole("button", { name: "Close" })).toBeInTheDocument();
   });
 
@@ -659,7 +555,7 @@ describe("a lost race (INT-007, TECH-020)", () => {
         status: 409,
         detail: "This request has already been declined.",
         outcome: "declined",
-        convertedRecord: null,
+        convertedContract: null,
       };
       return new Response(JSON.stringify(body), {
         status: 409,
@@ -668,7 +564,7 @@ describe("a lost race (INT-007, TECH-020)", () => {
     });
     open(api);
     const dialog = await openConvert(user);
-    await user.click(within(dialog).getByRole("button", { name: "Convert to contract" }));
+    await user.click(within(dialog).getByRole("button", { name: "Convert" }));
 
     expect(
       await within(dialog).findByText("Somebody else already declined this request."),

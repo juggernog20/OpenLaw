@@ -590,7 +590,7 @@ The Pencil mocks include a single inline affordance — `🔒 CONFI` text label 
 
 **Tier 3 — Composer @-mention warning.** ~~When the comment composer or the document-upload share-list inside a confidential matter receives an @-mention (or named-share) targeting a user who is not currently on the matter team, a non-blocking inline warning renders below the composer: _"@Sara Kim isn't on this confidential matter. They will be added as a watcher if you confirm."_ The submit action confirms the membership grant _and_ posts. No hard-block. The grant is recorded in the audit log per DD-014.~~
 
-**Superseded for records by CMT-007, recorded for Contracts in CTR-022/DES-029 and confirmed for Matters at the M22 close.** There is nobody to offer. The mention typeahead offers only people the record already reaches, so on a confidential record it never names somebody outside the audience — the warning has no case to fire, and the membership grant it confirmed is one CMT-007 rejected. Tier 3 survives as the composer's confidential notice, which states the flag and names the bounded audience instead of offering to widen it.
+**Superseded for contracts by CMT-007, recorded in CTR-022 and built in DES-029.** There is nobody to offer. The mention typeahead offers only people the record already reaches, so on a confidential contract it never names somebody outside the audience — the warning has no case to fire on, and the membership grant it confirmed is one CMT-007 rejected for every record. Tier 3 survives as the composer's confidential notice, which states the flag and names the bounded audience instead of offering to widen it. The clause above stands for matters until M22 answers for them.
 
 **Lock icon only.** Confidentiality everywhere uses the same `Lock` glyph from Lucide. No alternates (`ShieldAlert`, `EyeOff`) — single glyph reduces cognitive overhead and reads as "restricted access" universally.
 
@@ -1408,7 +1408,7 @@ The alternative was forcing the catalog into the plain anatomy (losing the type/
 
 ### Consequences
 
-`apps/web/src/components/list-editor.tsx` carries the pattern; the Types (#81) and Statuses (#82) panes were refactored onto it with their test suites unchanged. Later taxonomy panes choose: plain anatomy (inline add, optional reorder) or the table variant (columns, dialog editor) — both are this one component. M22 mounted Matters → Fields on the table variant and widened the scope picker to `matter`.
+`apps/web/src/components/list-editor.tsx` carries the pattern; the Types (#81) and Statuses (#82) panes were refactored onto it with their test suites unchanged. Later taxonomy panes choose: plain anatomy (inline add, optional reorder) or the table variant (columns, dialog editor) — both are this one component. The M22 Matters → Fields pane reuses the fields pane's table variant with the scope picker widened to `matter`.
 
 ### Amendment (2026-08-12, #86 acceptance sweep)
 
@@ -1448,7 +1448,7 @@ The list row stays one line only because this screen exists; writing its anatomy
 
 ### Consequences
 
-`/settings/contracts/types/:id` (#84) is the reference implementation, reached from a pencil icon button in the list row's trailing actions (the DES-021 slot; here it navigates instead of opening a dialog, because the editor is a screen). The M19 Request editor and M22 Matter editor reused this shape with their own vocabulary.
+`/settings/contracts/types/:id` (#84) is the reference implementation, reached from a pencil icon button in the list row's trailing actions (the DES-021 slot; here it navigates instead of opening a dialog, because the editor is a screen). The M22 matters editor and M19 request-type editor reuse this shape with their own vocabulary.
 
 ### Amendment (2026-08-20, [#354](https://github.com/juggernog20/OpenLaw/issues/354)) — both cards are optional slots, not fixed furniture
 
@@ -2030,12 +2030,6 @@ Three new messages per record (the nav's accessible name and one label per tab).
 
 Any surface that reads across sections must now say which section it means. A test that archives the record and checks that the type's fields froze has to cross to the Fields section to see them — which is the correct check, because the freeze is the record's state and not the section's.
 
-### Addendum (2026-08-23, M22 close, [#474](https://github.com/juggernog20/OpenLaw/issues/474)) — the Matter detail is the second record mount
-
-The Matter detail uses the record shell rather than inventing another anatomy: permanent M-### and title in the sub-bar, DES-009's confidential banner above it, routed Overview / Documents sections, and DES-016's Team, Comments, and History applets beside every section. Overview uses DES-017's one-field commits for title, description, type, Matter Manager, priority, risk, and attached custom fields; status, confidentiality, archive, restore, re-type, and team edits keep their compound controls. A Contributor sees the same record anatomy with unavailable writes absent or inert under the record's archived state.
-
-Two `designs/matters.pen` **M8** deviations are normalized here rather than left as accidents. First, M8 draws `Manager *`; the build draws **Matter Manager** without the asterisk and offers **Unassigned**, because MTR-003 makes `manager_id` nullable and Request conversion must not invent an owner. Second, M8 draws a **Template** row; the M22 create dialog omits it because template entities and their task instantiation belong to M24. The type, required custom fields, priority, risk, description, and Confidential control are live now; adding a dead Template picker would make an unbuilt option look selectable.
-
 ## DES-033: The folder tree and the record-scoped batch drop (extends DES-032, DES-025)
 
 - **Status:** Accepted
@@ -2162,7 +2156,7 @@ Keeping Retry off a refusal the file earned is a small honesty. A control that c
 
 ### Consequences
 
-The Documents section grows a tree renderer, a folder row, and the batch dialog with its three states. The folder machinery is built against the owning record rather than against contracts, so Matters inherited the surface in M22 by gaining an owner column; Entities do the same in M27 rather than forking it.
+The Documents section grows a tree renderer, a folder row, and the batch dialog with its three states. The folder machinery is built against the owning record rather than against contracts, so matters (M22) and entities (M27) inherit the surface by gaining an owner column, not by forking it.
 
 New messages: the folder count plural, the two drop-hint lines, the read-only notice, the folder and document menu items, the folder-delete dialog's title and consequence sentence, and the batch dialog's strings — title, destination, tree meta, version-kind label and helper, OCR note, the per-file states, the failure reasons, the retry controls, and the two feet. No new tokens: the tree reuses the table's own surfaces, the status families already shipped, and DES-008's Lucide set.
 
@@ -3110,10 +3104,6 @@ Clause 2 costs the counterparty cell its bespoke `w-44 truncate` span, which exi
 
 The mobile floor is untouched and not improved: DES-012 already parks a stacked-card table rendering for below 768px, and a column strip nobody can see is not the thing that unparks it. Below md the two menus stay in the `actions` slot, which that decision already hides.
 
-### Addendum (2026-08-23, M22 close, [#474](https://github.com/juggernog20/OpenLaw/issues/474)) — Matters adopt the managed list whole
-
-The Matters destination is DES-046's second catalogue and the first proof that the primitive is not contract-shaped. Its required columns are M-### and Title; Type, Status, Priority, Risk, Matter Manager, and Opened complete the built-in layout, each with a server sort key. Status, type, priority, Manager (including `me`), and Incomplete join the layout's saved filters; closed and archived are explicit toggles. The team-scope predicate sits in the paged query, and the sub-bar states only the loaded open/on-hold counts, so hidden confidential rows cannot leak through a total. Column widths, resize, ordering, sorting, saved views, keyset foot, and row truncation are the shared components unchanged.
-
 ## DES-047: The Team roster is an activity-bar applet (amends DES-016, DES-032, DES-028)
 
 - **Status:** Accepted
@@ -3880,7 +3870,7 @@ DES-058 put INT-007's disposition in the staff request detail's sub-bar and said
 
 ### Recorded normalization points (I3 deviations accepted)
 
-1. **There was no "Convert to matter instead" in the M21 footer.** I3 draws it as a left-aligned link, but the door then offered only what the build could create and drew no stubbed or disabled Matter choice. M22/8 superseded this normalization: both Re-target directions now appear, one at a time, and the footer remains a single right-aligned action row.
+1. **There is no "Convert to matter instead" in the footer.** I3 draws it as a left-aligned link. `matters` lands in M22, so there is nothing to convert into; the door offers what this build can create, and no stubbed or disabled Matter choice is drawn.
 2. **The carried values are not editable boxes.** I3 draws Counterparty, Value, and Needed by as prefilled inputs with a "· from the form" caption. Under clause 4 they are stated instead. Two of the three are contract columns rather than catalog fields on this build anyway, and the record's own inline editing (DES-017) is where any of them is corrected.
 3. **The reference is in the title rather than in the body line.** I3's body opens "From R-45 · Contract review · submitted by Tom Iwu". DES-058 clause 3 already puts the reference in the title, so the body line keeps the front door and the requester and drops the repeat.
 4. **The footer is one right-aligned action row.** I3 splits it, with the re-target link on the left. With normalization point 1 there is nothing on the left, and the house dialog's foot is Cancel beside the verb.

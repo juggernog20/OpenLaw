@@ -4,8 +4,9 @@
  * The matter type editor's attachment routes (MTR-011, #85): the
  * shared per-type field attachment machinery (`typeFieldRoutes`)
  * mounted on `matter_type_fields`. The scope rule is one line for every
- * matter type. M22 opened the `matter` field scope, so this mount admits
- * matter-scoped and global fields; Contract and Entity scopes are
+ * matter type, and global-only for now: the `matter` field scope opens
+ * with the matter record milestone (M22), which widens the mount's
+ * constant to match CTR-016's sibling rule; contract-scoped fields are
  * refused here for good. See the factory for the behavior set.
  */
 
@@ -20,9 +21,10 @@ export const matterAttachedFieldsRoutes = typeFieldRoutes({
   idInfix: "MatterType",
   noun: "matter type",
   scopeRule: {
-    scopes: ["matter", "global"],
-    refusal: "Only matter-scoped and global fields attach to matter types.",
+    scopes: ["global"],
+    refusal: "Only global fields attach to matter types until the matter milestone (M22).",
   },
-  scopeSummary: "matter-scoped and global fields (MTR-011)",
+  scopeSummary: "global fields only until M22 opens the matter scope (MTR-011)",
   actionPrefix: "matter_type_field",
+  requiredMilestone: "M22",
 });

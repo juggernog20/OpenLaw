@@ -27,8 +27,9 @@ import { uuidPk } from "./helpers.js";
 
 /**
  * The CTR-016 scope enum: module-scoped fields attach only inside their
- * module; `global` attaches across all of them. M22 opened `matter`;
- * `entity` remains gated until M27.
+ * module; `global` attaches across all of them. The catalog only holds
+ * `contract` and `global` rows until the matter (M22) and entity (M27)
+ * milestones open their scopes — the API gates creation accordingly.
  */
 export const FIELD_MODULE_SCOPES = ["matter", "contract", "entity", "global"] as const;
 export type FieldModuleScope = (typeof FIELD_MODULE_SCOPES)[number];
@@ -141,8 +142,9 @@ export const typeFieldColumns = () => ({
   /** Per-type form order, 1-based; reorder rewrites the rows whose
    * fields are live. */
   displayOrder: integer("display_order").notNull(),
-  /** MTR-014: hard-enforced by both record modules at creation and at
-   * re-type — Contracts since M8 and Matters since M22. */
+  /** MTR-014: hard-enforced by the record module at creation and at
+   * re-type — contracts from M8, matters when their record lands (M22),
+   * where the flag is stored and editable only until then. */
   isRequired: boolean("is_required").notNull().default(false),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });

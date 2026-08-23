@@ -53,8 +53,6 @@ import {
   eq,
   inArray,
   isNull,
-  matters,
-  matterTeam,
   notifications,
   or,
   requests,
@@ -66,13 +64,11 @@ import {
 } from "@openlaw/db";
 import type { AuthenticatedUser } from "../../auth/user.js";
 import { contractMentionCandidates, contractTeamScope } from "../contract-access.js";
-import { matterMentionCandidates, matterTeamScope } from "../matter-access.js";
 import { requestEventTypesOn, type RequestSide } from "./catalog.js";
 
 /** The one entity type M18 writes. Named so the fan-out, the reads, and
  * the send job agree on it in one place. */
 export const CONTRACT_ENTITY = "contract" as const;
-export const MATTER_ENTITY = "matter" as const;
 
 /** The second one, written from M20/8 by NOT-002's group 5 and from
  * M21/4 by group 4. Named here beside the first for the same reason. */
@@ -155,22 +151,6 @@ export async function reachedBy(
   );
 }
 
-/** The matter arm of the notification wall, including the comment's tier. */
-export async function matterReachedBy(
-  db: Executor,
-  matterId: string,
-  userIds: readonly string[],
-  narrowing: { tier?: CommentVisibility } = {},
-): Promise<Set<string>> {
-  if (userIds.length === 0) return new Set();
-  const candidates = await matterMentionCandidates(db, matterId, userIds);
-  return new Set(
-    candidates
-      .filter((person) => narrowing.tier === undefined || person.tiers.includes(narrowing.tier))
-      .map((person) => person.id),
-  );
-}
-
 /** One record, and the people NOT-002's group 2 is about. */
 export interface RecordAudience {
   /** CTR-003's number — the record's address, and what every item and
@@ -242,26 +222,6 @@ export async function contractRecordAudience(
   };
 }
 
-/** One matter and the Matter Manager plus its explicit team roster. */
-export async function matterRecordAudience(
-  db: Executor,
-  matterId: string,
-): Promise<{ matterNumber: number; matterTitle: string; userIds: readonly string[] } | null> {
-  const [record] = await db
-    .select({ number: matters.number, title: matters.title, managerId: matters.managerId })
-    .from(matters)
-    .where(eq(matters.id, matterId))
-    .limit(1);
-  if (!record) return null;
-  const team = await db
-    .select({ userId: matterTeam.userId })
-    .from(matterTeam)
-    .where(eq(matterTeam.matterId, matterId));
-  const userIds = new Set(team.map((row) => row.userId));
-  if (record.managerId) userIds.add(record.managerId);
-  return { matterNumber: record.number, matterTitle: record.title, userIds: [...userIds] };
-}
-
 /** One Request, and the person NOT-002's group 5 is about. */
 export interface RequestAudience {
   /** INT-002's number — the Request's address, shown as R-###, and what
@@ -330,13 +290,13 @@ export interface ConvertedFrom {
 }
 
 /**
- * The Request a conversion turned into this record, or `null` where no
+ * The Request a conversion turned into this contract, or `null` where no
  * Request did (CMT-001, INT-002).
  *
  * **The back-link is read behind the seam, and this is what makes the
  * reply promise survive the thread's move.** A staff Full Thread comment
  * on a converted record is a reply to the person who asked, whatever
- * screen it was typed on — the record's applet, the staff request
+ * screen it was typed on — the contract's applet, the staff request
  * detail, or the portal — so the fan-out finds them from the record
  * rather than being told about them by a call site. No comment route
  * knows a Request exists, which is the property that keeps this from
@@ -347,25 +307,18 @@ export interface ConvertedFrom {
  * something to send anybody a message about.
  *
  * At most one row can answer — a Request becomes one record, and the
- * table holds that as a check constraint — but a record could in
+ * table holds that as a check constraint — but a contract could in
  * principle be named by two rows if the column were ever written twice,
  * so the read is bounded and ordered rather than trusting the planner.
  */
 export async function requestConvertedInto(
   db: Executor,
-  target: { module: "contract" | "matter"; id: string },
+  contractId: string,
 ): Promise<ConvertedFrom | null> {
   const [record] = await db
     .select({ id: requests.id, requesterId: requests.requesterId })
     .from(requests)
-    .where(
-      and(
-        target.module === "contract"
-          ? eq(requests.convertedContractId, target.id)
-          : eq(requests.convertedMatterId, target.id),
-        isNull(requests.archivedAt),
-      ),
-    )
+    .where(and(eq(requests.convertedContractId, contractId), isNull(requests.archivedAt)))
     .orderBy(asc(requests.number))
     .limit(1);
   if (!record) return null;
@@ -508,9 +461,9 @@ export type NotificationSurface = (typeof NOTIFICATION_SURFACES)[number];
  * anybody about.
  *
  * **A row about anything else does not pass at all**, and that is the
- * safe direction rather than an omission. M22 added the Matter reach
- * rule before Matters began writing rows. Any later entity type remains
- * invisible until it gains its own rule. Failing closed
+ * safe direction rather than an omission. When matters (M22) start
+ * writing rows, a reach rule for them has to be added here, and until it
+ * is their items are invisible rather than unguarded. Failing closed
  * shows up as a missing item somebody notices; failing open would show
  * up as a leak nobody does. The send job refuses an entity it has no
  * rule for on exactly the same reasoning.
@@ -543,7 +496,6 @@ export function notificationScope(
  */
 function staffScope(db: Executor, user: AuthenticatedUser): SQL | undefined {
   const scope = contractTeamScope(db, user);
-  const matterScope = matterTeamScope(db, user);
   return or(
     and(
       eq(notifications.entityType, CONTRACT_ENTITY),
@@ -556,15 +508,6 @@ function staffScope(db: Executor, user: AuthenticatedUser): SQL | undefined {
         : inArray(
             notifications.entityId,
             db.select({ id: contracts.id }).from(contracts).where(scope),
-          ),
-    ),
-    and(
-      eq(notifications.entityType, MATTER_ENTITY),
-      matterScope === undefined
-        ? undefined
-        : inArray(
-            notifications.entityId,
-            db.select({ id: matters.id }).from(matters).where(matterScope),
           ),
     ),
     MEMBER_PLUS.includes(user.role) ? inboxRows(db) : undefined,

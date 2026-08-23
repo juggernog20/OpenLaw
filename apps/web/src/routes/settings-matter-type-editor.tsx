@@ -6,8 +6,9 @@
  * vocabulary and the API adapter over the matter-types attachment
  * routes; the DES-022 behavior lives in the shared component, which is
  * the point: the matter editor is configuration, not a copy of the
- * contract one. The Attach menu offers matter-scoped and global fields.
- * The loader is the client half of SET-002's gate; the API's
+ * contract one. The Attach menu offers global-tier fields only — the
+ * matter-scope Fields view ships with the matter record milestone
+ * (M22). The loader is the client half of SET-002's gate; the API's
  * 403 is the real refusal.
  */
 
@@ -35,9 +36,9 @@ export async function settingsMatterTypeEditorLoader({ params }: LoaderFunctionA
   return {
     matterType: typeRes.data.matterType,
     attachedFields: attachedRes.data.attachedFields,
-    catalog: catalogRes.data.fields.filter(
-      (field) => field.moduleScope === "matter" || field.moduleScope === "global",
-    ),
+    // The MTR-011 scope rule until M22: the Attach menu offers only the
+    // global tier — the API refuses everything else anyway.
+    catalog: catalogRes.data.fields.filter((field) => field.moduleScope === "global"),
   };
 }
 
@@ -75,7 +76,7 @@ const MESSAGES = defineMessages({
   attached: { id: "settings.matterTypeEditor.attached", defaultMessage: "{name} attached." },
   allAttached: {
     id: "settings.matterTypeEditor.allAttached",
-    defaultMessage: "Every eligible field is attached.",
+    defaultMessage: "Every global field is attached.",
   },
   empty: {
     id: "settings.matterTypeEditor.empty",

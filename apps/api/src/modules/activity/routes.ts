@@ -7,9 +7,10 @@
  *
  * The route is keyed by an entity reference rather than by a record's
  * own address, exactly as the comment thread is: the panel that reads it
- * is entity-generic. Matter joined Contract as a direct feed target in
- * M22; document actions remain filtered entries on their owning record's
- * feed. The `activity_log` vocabulary stays wider than this route.
+ * is entity-generic, and matters (M22) and documents (M11) mount the
+ * same component. The `activity_log` entity vocabulary is already the
+ * full seven; the API accepts `contract` alone until the other records
+ * exist.
  *
  * **The feed is filtered at query time by the same predicate the thread
  * uses** (DD-016, DD-017). `contractAudience` is the one gate: it
@@ -62,7 +63,6 @@ import { z } from "zod";
 import { activityLog, and, COMMENT_VISIBILITIES, desc, eq, inArray, sql, users } from "@openlaw/db";
 import { requireRole } from "../../auth/guards.js";
 import { confidentialDocumentEntryScope, contractAudience } from "../../lib/contract-access.js";
-import { matterAudience } from "../../lib/matter-access.js";
 import { httpError, problemResponse } from "../../lib/problem.js";
 
 /**
@@ -84,11 +84,10 @@ const PAGE_SIZE = 25;
 
 /**
  * What the feed hangs off, as the API accepts it. The table's CHECK
- * admits the full seven; matters and contracts are the two with a feed
- * so far, and each answers the reach question through its own audience
- * rule below.
+ * admits the full seven; only contracts are reachable until the other
+ * records land.
  */
-const ActivityEntityType = z.enum(["matter", "contract"]);
+const ActivityEntityType = z.enum(["contract"]);
 
 /** The record's id. Bounded rather than shaped, as every id in this API
  * is: an opaque text primary key, with no UUID pattern asserted
@@ -180,13 +179,8 @@ export const activityRoutes: FastifyPluginAsyncZod = async (app) => {
     },
     async (request) => {
       const { entityType, entityId, cursor } = request.query;
-      const audience =
-        entityType === "contract"
-          ? await contractAudience(app.db, request.user, entityId)
-          : await matterAudience(app.db, request.user, entityId);
+      const audience = await contractAudience(app.db, request.user, entityId);
       if (!audience) throw httpError(404, NO_RECORD);
-      const reachedId =
-        audience.entityType === "contract" ? audience.contractId : audience.matterId;
 
       // Keyset, on the pair the feed is ordered by. The cursor row's own
       // position comes from the table rather than from the client, so a
@@ -203,7 +197,7 @@ export const activityRoutes: FastifyPluginAsyncZod = async (app) => {
             from ${activityLog}
             where ${activityLog.id} = ${cursor}
               and ${activityLog.entityType} = ${entityType}
-              and ${activityLog.entityId} = ${reachedId}
+              and ${activityLog.entityId} = ${audience.contractId}
           )`
         : undefined;
 
@@ -227,7 +221,7 @@ export const activityRoutes: FastifyPluginAsyncZod = async (app) => {
         .where(
           and(
             eq(activityLog.entityType, entityType),
-            eq(activityLog.entityId, reachedId),
+            eq(activityLog.entityId, audience.contractId),
             inArray(activityLog.visibility, [...audience.tiers]),
             // DD-014's per-document flag, one level below the tier
             // filter and applied the same way. An entry naming a

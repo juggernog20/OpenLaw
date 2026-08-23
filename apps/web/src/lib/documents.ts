@@ -35,12 +35,6 @@ type ListResponse =
 /** One document on a record, with its whole version chain. */
 export type ContractDocument = ListResponse["documents"][number];
 
-/** The record whose paper the shared Documents section is drawing. */
-export interface DocumentRecord {
-  entityType: "contract" | "matter";
-  number: number;
-}
-
 /**
  * The listing context that is the record root — the documents filed in
  * no folder (DOC-006, M13/3).
@@ -361,13 +355,6 @@ export function uploadContractDocument(
   return send(`/api/v1/contracts/${contractNumber}/documents`, draft);
 }
 
-export function uploadRecordDocument(
-  record: DocumentRecord,
-  draft: DocumentUploadDraft,
-): Promise<UploadOutcome> {
-  return send(`/api/v1/${record.entityType}s/${record.number}/documents`, draft);
-}
-
 /**
  * Appends the next version to a document (DOC-001).
  *
@@ -534,30 +521,6 @@ export async function readContractDocuments(
   const { data, error } = await api.GET("/api/v1/contracts/{number}/documents", {
     params: {
       path: { number: contractNumber },
-      query: {
-        ...(includeArchived ? { includeArchived: "true" as const } : {}),
-        ...(cursor ? { cursor } : {}),
-        ...(folder ? { folder } : {}),
-      },
-    },
-  });
-  return data
-    ? { ok: true, documents: data.documents, nextCursor: data.nextCursor }
-    : { ok: false, detail: problemDetail(error) };
-}
-
-export async function readRecordDocuments(
-  record: DocumentRecord,
-  includeArchived: boolean,
-  cursor?: string,
-  folder?: string,
-): Promise<PaperOutcome> {
-  if (record.entityType === "contract") {
-    return readContractDocuments(record.number, includeArchived, cursor, folder);
-  }
-  const { data, error } = await api.GET("/api/v1/matters/{number}/documents", {
-    params: {
-      path: { number: record.number },
       query: {
         ...(includeArchived ? { includeArchived: "true" as const } : {}),
         ...(cursor ? { cursor } : {}),

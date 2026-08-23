@@ -49,8 +49,6 @@ import {
 } from "@openlaw/db";
 import {
   CONTRACT_ENTITY,
-  matterReachedBy,
-  MATTER_ENTITY,
   reachedBy,
   requestReachedBy,
   REQUEST_ENTITY,
@@ -224,13 +222,6 @@ async function sendNotificationEmail(
     const title = typeof payload.contractTitle === "string" ? payload.contractTitle : "";
     if (number === null || title === "") return "unaddressable";
     record = { entityType: "contract", number, title };
-  } else if (row.entityType === MATTER_ENTITY) {
-    const reachable = await matterReachedBy(deps.db, row.entityId, [row.userId]);
-    if (!reachable.has(row.userId)) return "unreachable";
-    const number = addressOf(payload.matterNumber);
-    const title = typeof payload.matterTitle === "string" ? payload.matterTitle : "";
-    if (number === null || title === "") return "unaddressable";
-    record = { entityType: "matter", number, title };
   } else if (row.entityType === REQUEST_ENTITY) {
     const reachable = await requestReachedBy(deps.db, row.entityId, [row.userId], {
       side: requestSideOf(row.eventType),

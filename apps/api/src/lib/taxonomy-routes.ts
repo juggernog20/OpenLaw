@@ -13,8 +13,8 @@
  * Three things are per mount, and nothing else is.
  *
  * **In-use counts.** A module whose record milestone has landed arms
- * `usage` and gets genuine counts plus the live SET-003 guard. Entities
- * armed it in #100, Contracts in #113, and Matters in M22.
+ * `usage` (entities #100, contracts #113) and gets genuine counts plus
+ * the live SET-003 guard; matter types read zero until M22 arms theirs.
  *
  * **The system-protected row.** `protectedSlug` names the fallback row
  * archive and delete refuse here, not just in the UI, regardless of

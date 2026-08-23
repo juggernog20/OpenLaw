@@ -47,7 +47,6 @@ import { users } from "./auth.js";
 import { contracts, SEVERITY_LEVELS } from "./contracts.js";
 import type { CustomFieldValue } from "./fields.js";
 import { uuidPk } from "./helpers.js";
-import { matters } from "./matters.js";
 import { requestTypes } from "./request-types.js";
 
 /**
@@ -101,10 +100,12 @@ export const requests = pgTable(
      * NULL while it is `new`, and at most one is ever set — a Request
      * becomes one record, not two.
      *
-     * M22 added the `converted_matter_id` foreign key and index with the
-     * Matter table; both conversion arms now have no-cascade references.
+     * `converted_matter_id` carries no foreign key yet: `matters` lands
+     * in M22, and a reference to a table that does not exist is not a
+     * reference. It gains one with that table. SCHEMA.md records the
+     * FK as the destination.
      */
-    convertedMatterId: text("converted_matter_id").references(() => matters.id),
+    convertedMatterId: text("converted_matter_id"),
     /** The contract conversion made, if it made one. No cascade: a
      * contract is soft-deleted, never dropped. */
     convertedContractId: text("converted_contract_id").references(() => contracts.id),
@@ -134,7 +135,6 @@ export const requests = pgTable(
     // onto the work. Without this the question is a scan of every
     // Request ever raised, on a table that only grows.
     index("requests_converted_contract_idx").on(table.convertedContractId),
-    index("requests_converted_matter_idx").on(table.convertedMatterId),
     // "A Request becomes one record", stated as a shape rather than
     // left to the conversion route. Two targets would be two answers to
     // one question, and nothing could say which one the thread follows.

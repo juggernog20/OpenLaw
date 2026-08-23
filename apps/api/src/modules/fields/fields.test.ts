@@ -217,15 +217,8 @@ describe("creating fields (the nine-type, scope, and options matrix)", () => {
     expect(duplicated.statusCode, duplicated.body).toBe(400);
   });
 
-  it("offers contract, matter, and global scopes — entity waits", async () => {
-    const matter = await createField({
-      displayName: "Matter field",
-      moduleScope: "matter",
-      fieldType: "text",
-      fieldTag: "business",
-    });
-    expect(matter.statusCode, matter.body).toBe(201);
-    for (const moduleScope of ["entity", "nonsense"]) {
+  it("offers contract and global scopes only — matter and entity wait", async () => {
+    for (const moduleScope of ["matter", "entity", "nonsense"]) {
       const res = await createField({
         displayName: "Too early",
         moduleScope,

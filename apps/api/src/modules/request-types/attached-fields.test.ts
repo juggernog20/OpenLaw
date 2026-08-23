@@ -173,8 +173,8 @@ const setRequired = async (typeId: string, fieldId: string, isRequired: boolean)
     payload: { isRequired },
   });
 
-/** A non-Contract scoped field planted directly to isolate this suite
- * from the catalog route that M22 opened for Matter. */
+/** A `matter`-scoped field, which no route can create until M22 opens
+ * the scope — planted the way that milestone's migration would. */
 const plantScopedField = async (
   slug: string,
   displayName: string,
@@ -321,7 +321,8 @@ describe("the scope rule, in all three target arms (INT-002)", () => {
   it("takes matter-scoped and global fields when the target is Matter", async () => {
     const type = await addType("Matter arm");
     await setTarget(type.id, { targetModule: "matter" });
-    // The Matter arm admits Matter and global fields after M22.
+    // The matter arm is live and empty until M22 opens the scope, so the
+    // only field it can be shown is one planted the way M22 will.
     const matterField = await plantScopedField(
       "matter_arm_practice",
       "Matter arm practice",

@@ -62,8 +62,6 @@ import {
   eq,
   inArray,
   isNull,
-  matters,
-  matterTeam,
   or,
   sql,
   users,
@@ -329,29 +327,6 @@ function namedOnTheOwningContract(db: Executor, user: AuthenticatedUser): SQL {
   );
 }
 
-/** The matter arm of DD-014's named audience, expressed over the
- * document owner column so it composes into every document query. */
-function namedOnTheOwningMatter(db: Executor, user: AuthenticatedUser): SQL {
-  return inArray(
-    documents.matterId,
-    db
-      .select({ id: matters.id })
-      .from(matters)
-      .where(
-        or(
-          eq(matters.managerId, user.id),
-          inArray(
-            matters.id,
-            db
-              .select({ matterId: matterTeam.matterId })
-              .from(matterTeam)
-              .where(eq(matterTeam.userId, user.id)),
-          ),
-        ),
-      ),
-  );
-}
-
 /**
  * How far one viewer sees across the document table (DD-014, DOC-008) —
  * the per-document flag M10 deferred until `documents` existed.
@@ -391,11 +366,7 @@ export function documentAudienceScope(db: Executor, user: AuthenticatedUser): SQ
       return undefined;
     case "legal_team_member":
     case "contributor":
-      return or(
-        eq(documents.isConfidential, false),
-        namedOnTheOwningContract(db, user),
-        namedOnTheOwningMatter(db, user),
-      );
+      return or(eq(documents.isConfidential, false), namedOnTheOwningContract(db, user));
     case "business_user":
       return sql`false`;
     default: {
@@ -482,7 +453,6 @@ function inNamedAudience(person: Standing, isConfidential: boolean): boolean {
 
 /** One viewer's standing on one contract they can reach. */
 export interface ContractAudience {
-  entityType: "contract";
   /** The contract's id, re-read here rather than trusted from the client. */
   contractId: string;
   /** The tiers this viewer hears on it; never empty. */
@@ -536,7 +506,6 @@ export async function contractAudience(
   const tiers = readableTiers(user.role, row.onTeam);
   if (tiers.length === 0) return null;
   return {
-    entityType: "contract",
     contractId: row.id,
     tiers,
     // The same audience the document scope filters rows by, said over
@@ -598,7 +567,7 @@ export async function contractAudience(
  * silent.
  */
 export function confidentialDocumentEntryScope(
-  audience: Pick<ContractAudience, "seesConfidentialDocuments">,
+  audience: ContractAudience,
 ): SQL<unknown> | undefined {
   if (audience.seesConfidentialDocuments) return undefined;
   // One clause per document key the payloads use. Parenthesised here

@@ -581,7 +581,7 @@ test.describe.serial("M21 demo path", () => {
           response.url().endsWith(`/api/v1/requests/${String(number)}/convert`) &&
           response.request().method() === "POST",
       );
-      await dialog.getByRole("button", { name: "Convert to contract", exact: true }).click();
+      await dialog.getByRole("button", { name: "Convert" }).click();
       expect((await converted).status(), await (await converted).text()).toBe(200);
       await expect(dialog).toBeHidden();
 

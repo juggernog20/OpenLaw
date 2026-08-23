@@ -40,8 +40,8 @@
  * The row carries one more column for the same reason: ST12's **Form
  * fields** count, read over the whole answer set rather than per row.
  *
- * In-use counts are live over Requests, as Matter type counts became
- * live over Matters in M22.
+ * In-use counts read zero until `requests` exists in M20, exactly as
+ * matter types read zero until M22.
  */
 
 import { z } from "zod";

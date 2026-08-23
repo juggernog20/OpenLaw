@@ -45,8 +45,7 @@
  * commits like every other. A promoted version owes nothing to its
  * origin and is owed nothing for it.
  *
- * **The first document on a contract is the instrument** (CTR-014); a
- * matter has no instrument designation. The
+ * **The first document on a record is the instrument** (CTR-014). The
  * upload route's rule is mechanical — whatever lands first takes the
  * designation, and it is movable afterwards — and a promotion is not
  * the place to make an exception to it. A conversion that left the
@@ -86,13 +85,12 @@ import type { Notifier, NotifyingTransaction } from "../../lib/notifications/not
 import { formatBlobRef, type StorageAdapter } from "../../lib/storage/adapter.js";
 import type { CleanupLogger } from "../../lib/uploads.js";
 import type { JobQueue } from "../../pipeline/jobs.js";
-import type { ConversionRecordReference } from "./record-reference.js";
 
 /** The record one promotion files onto, as this write needs it
- * described. Only a contract can hold an instrument designation; a
- * matter carries `null` here and never enters that arm. */
+ * described: the newborn contract, and whether anything holds its
+ * instrument designation yet (CTR-014). */
 export interface PromotionTarget {
-  record: ConversionRecordReference;
+  contractId: string;
   primaryDocumentId: string | null;
 }
 
@@ -155,7 +153,7 @@ export type PromotePaper = (tx: NotifyingTransaction, input: PromotionInput) => 
  *
  * **Before the commit**: nothing. The promotion is a write inside
  * `run`'s own transaction, so it rolls back with everything else that
- * act wrote — no record, no documents, no half-converted Request.
+ * act wrote — no contract, no documents, no half-converted Request.
  *
  * **When `run` refuses**: every blob the promotion had already written
  * is removed (DOC-012). The bytes reach the driver before the rows
@@ -208,7 +206,6 @@ async function promotePaper(
   input: PromotionInput,
   paper: PromotedPaper,
 ): Promise<void> {
-  const record = input.target.record;
   const attachments = await tx
     .select({
       fileRef: requestAttachments.fileRef,
@@ -253,7 +250,7 @@ async function promotePaper(
       // be called something, and what a reader recognises is the name
       // the file arrived under. Renameable from there (DOC-007).
       title: attachment.filename,
-      ...(record.module === "contract" ? { contractId: record.id } : { matterId: record.id }),
+      contractId: input.target.contractId,
       createdBy: input.actorId,
     });
     await insertDocumentVersion(tx, {
@@ -278,8 +275,8 @@ async function promotePaper(
     // there. `folderName` is null because the record root is where every
     // promotion files.
     await recordActivity(tx, {
-      entityType: record.module,
-      entityId: record.id,
+      entityType: "contract",
+      entityId: input.target.contractId,
       actorId: input.actorId,
       action: "document.created",
       visibility: RECORD_ACTIVITY_TIER,
@@ -291,19 +288,19 @@ async function promotePaper(
       },
     });
 
-    // CTR-014's contract designation, taken by whatever lands first —
-    // the upload route's rule, applied where the first thing to land is
-    // a promotion. Matters have no instrument designation, so their
-    // promoted documents stay ordinary root documents.
-    if (record.module === "contract" && primaryDocumentId === null) {
+    // CTR-014's designation, taken by whatever lands first — the upload
+    // route's rule, applied where the first thing to land is a
+    // promotion. A record born by conversion is an ordinary record, and
+    // an ordinary record's first document is its instrument.
+    if (primaryDocumentId === null) {
       primaryDocumentId = documentId;
       await tx
         .update(contracts)
         .set({ primaryDocumentId: documentId })
-        .where(eq(contracts.id, record.id));
+        .where(eq(contracts.id, input.target.contractId));
       await recordActivity(tx, {
-        entityType: record.module,
-        entityId: record.id,
+        entityType: "contract",
+        entityId: input.target.contractId,
         actorId: input.actorId,
         action: "document.primary_set",
         visibility: RECORD_ACTIVITY_TIER,
@@ -329,16 +326,14 @@ async function promotePaper(
     // *document's* own (DOC-008), not the record's: this write just
     // made the row, and a document is born with the flag clear — the
     // upload route says the same thing about the same insert.
-    if (record.module === "contract") {
-      await deps.notifier.documentAdded(tx, {
-        contractId: record.id,
-        actorId: input.actorId,
-        actorName: input.actorName,
-        documentId,
-        documentTitle: attachment.filename,
-        isConfidential: false,
-      });
-    }
+    await deps.notifier.documentAdded(tx, {
+      contractId: input.target.contractId,
+      actorId: input.actorId,
+      actorName: input.actorName,
+      documentId,
+      documentTitle: attachment.filename,
+      isConfidential: false,
+    });
 
     paper.versions.push({
       versionId,

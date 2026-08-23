@@ -248,16 +248,6 @@ export const MAX_TASK_TITLE_LENGTH = 200;
 export const MAX_CONTRACT_TITLE_LENGTH = 200;
 
 /**
- * How long a matter's title may be (MTR-003).
- *
- * Matter creation and Request conversion are two callers of the same
- * create callable. Keep their route validation and title inputs on the
- * same ceiling so switching Convert to the Matter arm does not retain
- * the Contract arm's shorter bound.
- */
-export const MAX_MATTER_TITLE_LENGTH = 500;
-
-/**
  * How many people one envelope may be sent to (CTR-013).
  *
  * A bound rather than a preference, and a generous one: naming a
@@ -301,7 +291,7 @@ export const MAX_ENVELOPE_REASON_LENGTH = 1000;
  * app names it on every read. One typo in either copy would silently
  * save views nobody's list ever asks for.
  */
-export const LIST_VIEW_SURFACES = ["contracts", "matters"] as const;
+export const LIST_VIEW_SURFACES = ["contracts"] as const;
 export type ListViewSurface = (typeof LIST_VIEW_SURFACES)[number];
 
 /**
@@ -375,19 +365,6 @@ export const CONTRACT_SORT_KEYS = [
   "updatedAt",
 ] as const;
 export type ContractSortKey = (typeof CONTRACT_SORT_KEYS)[number];
-
-/** Columns the matters list can order and keyset-page on (M22/3). */
-export const MATTER_SORT_KEYS = [
-  "number",
-  "title",
-  "type",
-  "status",
-  "priority",
-  "risk",
-  "manager",
-  "openedAt",
-] as const;
-export type MatterSortKey = (typeof MATTER_SORT_KEYS)[number];
 
 /** Which way a sorted column runs. */
 export const SORT_DIRECTIONS = ["asc", "desc"] as const;
