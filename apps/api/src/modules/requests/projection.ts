@@ -391,7 +391,9 @@ export async function selectConvertedRecords(
       contractNumber: contracts.number,
     })
     .from(requests)
-    .leftJoin(
+    // An inner join: a Request whose record is out of reach, archived,
+    // or absent contributes no row, and the map simply lacks its key.
+    .innerJoin(
       contracts,
       and(
         eq(requests.convertedContractId, contracts.id),
@@ -403,7 +405,6 @@ export async function selectConvertedRecords(
 
   const records = new Map<string, ConversionRecordReference>();
   for (const row of rows) {
-    if (row.contractId === null || row.contractNumber === null) continue;
     records.set(row.requestId, {
       module: "contract",
       id: row.contractId,

@@ -15,13 +15,6 @@ export type ConversionRecordReference = {
   number: number;
 };
 
-/** The public identity of a converted record, without its database id. */
-export type ConvertedRecord = Pick<ConversionRecordReference, "module" | "number">;
-
-export function convertedRecordOf(record: ConversionRecordReference): ConvertedRecord {
-  return { module: record.module, number: record.number };
-}
-
 /** M21's contract-only wire shape, retained byte-for-byte by the M22/1 prefactor. */
 export function convertedContractOf(
   record: ConversionRecordReference | null,
