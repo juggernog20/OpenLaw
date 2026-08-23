@@ -5746,8 +5746,113 @@
     "/api/v1/matters": {
       "get": {
         "operationId": "listMatters",
-        "summary": "List the matters this reader reaches, newest M-number first",
+        "summary": "The managed Matters list, filtered and keyset-paged after access scope, with active counts",
         "tags": ["matters"],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "enum": ["true", "false"]
+            },
+            "in": "query",
+            "name": "includeClosed",
+            "required": false
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": ["true", "false"]
+            },
+            "in": "query",
+            "name": "includeArchived",
+            "required": false
+          },
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 64
+            },
+            "in": "query",
+            "name": "status",
+            "required": false
+          },
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 64
+            },
+            "in": "query",
+            "name": "type",
+            "required": false
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": ["low", "medium", "high", "critical"]
+            },
+            "in": "query",
+            "name": "priority",
+            "required": false
+          },
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 64
+            },
+            "in": "query",
+            "name": "manager",
+            "required": false
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": ["true", "false"]
+            },
+            "in": "query",
+            "name": "incomplete",
+            "required": false
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "number",
+                "title",
+                "type",
+                "status",
+                "priority",
+                "risk",
+                "manager",
+                "openedAt"
+              ]
+            },
+            "in": "query",
+            "name": "sort",
+            "required": false
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": ["asc", "desc"]
+            },
+            "in": "query",
+            "name": "dir",
+            "required": false
+          },
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 64
+            },
+            "in": "query",
+            "name": "cursor",
+            "required": false
+          }
+        ],
         "responses": {
           "200": {
             "description": "Default Response",
@@ -5937,9 +6042,36 @@
                         ],
                         "additionalProperties": false
                       }
+                    },
+                    "nextCursor": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "counts": {
+                      "type": "object",
+                      "properties": {
+                        "open": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "onHold": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        }
+                      },
+                      "required": ["open", "onHold"],
+                      "additionalProperties": false
                     }
                   },
-                  "required": ["matters"],
+                  "required": ["matters", "nextCursor", "counts"],
                   "additionalProperties": false
                 }
               }
@@ -32021,7 +32153,7 @@
           {
             "schema": {
               "type": "string",
-              "enum": ["contracts"]
+              "enum": ["contracts", "matters"]
             },
             "in": "query",
             "name": "surface",
@@ -32046,7 +32178,7 @@
                           },
                           "surface": {
                             "type": "string",
-                            "enum": ["contracts"]
+                            "enum": ["contracts", "matters"]
                           },
                           "name": {
                             "type": "string"
@@ -32181,7 +32313,7 @@
                 "properties": {
                   "surface": {
                     "type": "string",
-                    "enum": ["contracts"]
+                    "enum": ["contracts", "matters"]
                   },
                   "name": {
                     "type": "string",
@@ -32306,7 +32438,7 @@
                           },
                           "surface": {
                             "type": "string",
-                            "enum": ["contracts"]
+                            "enum": ["contracts", "matters"]
                           },
                           "name": {
                             "type": "string"
@@ -32575,7 +32707,7 @@
                           },
                           "surface": {
                             "type": "string",
-                            "enum": ["contracts"]
+                            "enum": ["contracts", "matters"]
                           },
                           "name": {
                             "type": "string"
@@ -32731,7 +32863,7 @@
                           },
                           "surface": {
                             "type": "string",
-                            "enum": ["contracts"]
+                            "enum": ["contracts", "matters"]
                           },
                           "name": {
                             "type": "string"

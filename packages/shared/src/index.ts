@@ -291,7 +291,7 @@ export const MAX_ENVELOPE_REASON_LENGTH = 1000;
  * app names it on every read. One typo in either copy would silently
  * save views nobody's list ever asks for.
  */
-export const LIST_VIEW_SURFACES = ["contracts"] as const;
+export const LIST_VIEW_SURFACES = ["contracts", "matters"] as const;
 export type ListViewSurface = (typeof LIST_VIEW_SURFACES)[number];
 
 /**
@@ -365,6 +365,19 @@ export const CONTRACT_SORT_KEYS = [
   "updatedAt",
 ] as const;
 export type ContractSortKey = (typeof CONTRACT_SORT_KEYS)[number];
+
+/** Columns the matters list can order and keyset-page on (M22/3). */
+export const MATTER_SORT_KEYS = [
+  "number",
+  "title",
+  "type",
+  "status",
+  "priority",
+  "risk",
+  "manager",
+  "openedAt",
+] as const;
+export type MatterSortKey = (typeof MATTER_SORT_KEYS)[number];
 
 /** Which way a sorted column runs. */
 export const SORT_DIRECTIONS = ["asc", "desc"] as const;
