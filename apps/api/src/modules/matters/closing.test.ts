@@ -331,5 +331,11 @@ describe("Matter Closing", () => {
     expect(archive.statusCode, archive.body).toBe(200);
     const frozen = await patch(matter.number, { description: "Must not land" });
     expect(frozen.statusCode).toBe(409);
+    const archivedLifecycle = await harness.app.inject({
+      method: "GET",
+      url: `/api/v1/matters/${matter.number}/lifecycle`,
+      cookies: memberCookies,
+    });
+    expect(archivedLifecycle.statusCode, archivedLifecycle.body).toBe(409);
   });
 });
