@@ -1,21 +1,32 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-/** M22/8: the matter arm of Request conversion, exercised at the HTTP seam. */
+/** M22/8–9: Matter conversion and everything that follows it, at the HTTP seam. */
+import { createHash } from "node:crypto";
+import { readdir } from "node:fs/promises";
+import { join } from "node:path";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import {
   activityLog,
   and,
+  comments,
+  commentLastRead,
   contracts,
   contractTypes,
+  documents,
+  documentVersions,
   eq,
   matters,
   matterStatuses,
   matterTeam,
   matterTypes,
+  notifications,
+  requestAttachments,
   requestTypes,
   users,
+  type CommentVisibility,
 } from "@openlaw/db";
 import { REQUEST_DISPOSITIONED_PROBLEM_TYPE } from "@openlaw/shared";
+import { fakeExtractedText } from "../../lib/doc-engine/fake.js";
 import {
   dispositionScaffold,
   REQUESTER,
@@ -195,6 +206,150 @@ async function matterNumbered(number: number) {
 
 async function matterCount() {
   return (await harness.db.select({ id: matters.id }).from(matters)).length;
+}
+
+const BOUNDARY = "openlaw-matter-conversion-boundary";
+
+interface AttachmentRow {
+  id: string;
+  filename: string;
+}
+
+interface DocumentRow {
+  id: string;
+  title: string;
+  isPrimary: boolean;
+  folderId: string | null;
+  versions: {
+    id: string;
+    versionNumber: number;
+    originalFilename: string;
+    byteSize: number;
+    checksumSha256: string;
+  }[];
+}
+
+function filePart(filename: string, content: Buffer) {
+  const head = Buffer.from(
+    `--${BOUNDARY}\r\n` +
+      `content-disposition: form-data; name="file"; filename="${filename}"\r\n` +
+      "content-type: application/pdf\r\n\r\n",
+  );
+  return {
+    payload: Buffer.concat([head, content, Buffer.from(`\r\n--${BOUNDARY}--\r\n`)]),
+    headers: { "content-type": `multipart/form-data; boundary=${BOUNDARY}` },
+  };
+}
+
+async function attachFile(
+  number: number,
+  filename: string,
+  content: Buffer,
+): Promise<AttachmentRow> {
+  const form = filePart(filename, content);
+  const res = await harness.app.inject({
+    method: "POST",
+    url: `/api/v1/requests/${number}/attachments`,
+    cookies: requesterCookies,
+    headers: form.headers,
+    payload: form.payload,
+  });
+  expect(res.statusCode, res.body).toBe(201);
+  return res.json().attachment as AttachmentRow;
+}
+
+async function matterPaper(number: number): Promise<DocumentRow[]> {
+  const res = await harness.app.inject({
+    method: "GET",
+    url: `/api/v1/matters/${number}/documents`,
+    cookies: memberCookies,
+  });
+  expect(res.statusCode, res.body).toBe(200);
+  return (res.json().documents as DocumentRow[]).reverse();
+}
+
+async function attachmentRef(id: string): Promise<string> {
+  const [row] = await harness.db
+    .select({ fileRef: requestAttachments.fileRef })
+    .from(requestAttachments)
+    .where(eq(requestAttachments.id, id));
+  return row!.fileRef;
+}
+
+async function storedVersionBlobs(): Promise<number> {
+  const root = join(harness.storageRoot, "documents");
+  const directories = await readdir(root).catch(() => [] as string[]);
+  let count = 0;
+  for (const directory of directories) count += (await readdir(join(root, directory))).length;
+  return count;
+}
+
+type ThreadRef = { entityType: "request" | "matter"; entityId: string };
+
+async function say(
+  cookies: Record<string, string>,
+  ref: ThreadRef,
+  body: string,
+  visibility: CommentVisibility = "full_thread",
+): Promise<string> {
+  const res = await harness.app.inject({
+    method: "POST",
+    url: "/api/v1/comments",
+    cookies,
+    payload: { ...ref, body, visibility },
+  });
+  expect(res.statusCode, res.body).toBe(201);
+  return res.json().comment.id as string;
+}
+
+async function read(cookies: Record<string, string>, ref: ThreadRef) {
+  const res = await harness.app.inject({
+    method: "GET",
+    url: `/api/v1/comments?entityType=${ref.entityType}&entityId=${ref.entityId}`,
+    cookies,
+  });
+  expect(res.statusCode, res.body).toBe(200);
+  return res.json().comments as {
+    id: string;
+    entityType: string;
+    entityId: string;
+    body: string;
+    visibility: CommentVisibility;
+  }[];
+}
+
+async function unread(cookies: Record<string, string>, ref: ThreadRef): Promise<number> {
+  const res = await harness.app.inject({
+    method: "GET",
+    url: `/api/v1/comments/unread?entityType=${ref.entityType}&entityId=${ref.entityId}`,
+    cookies,
+  });
+  expect(res.statusCode, res.body).toBe(200);
+  return res.json().unread as number;
+}
+
+async function markRead(cookies: Record<string, string>, ref: ThreadRef): Promise<void> {
+  const res = await harness.app.inject({
+    method: "POST",
+    url: "/api/v1/comments/read",
+    cookies,
+    payload: ref,
+  });
+  expect(res.statusCode, res.body).toBe(200);
+}
+
+async function threadRows(entityType: "request" | "matter", entityId: string) {
+  return harness.db
+    .select({ id: comments.id, body: comments.body, visibility: comments.visibility })
+    .from(comments)
+    .where(and(eq(comments.entityType, entityType), eq(comments.entityId, entityId)))
+    .orderBy(comments.createdAt, comments.id);
+}
+
+async function rowsAboutComment(userId: string, commentId: string) {
+  return (
+    await harness.db.select().from(notifications).where(eq(notifications.userId, userId))
+  ).filter((row) => row.payload.commentId === commentId);
 }
 
 describe("the matter target", () => {
@@ -460,5 +615,260 @@ describe("Re-target, reach, narration, and the race", () => {
         number: winner.json().request.convertedRecord.number,
       },
     });
+  });
+});
+
+describe("paper follows onto the matter (INT-002, DOC-008)", () => {
+  it("promotes ordinary root documents while the portal keeps its copies", async () => {
+    const request = await submit("Matter conversion with evidence");
+    const files = [
+      { filename: "notice.pdf", content: Buffer.from("%PDF-1.7 notice before action") },
+      { filename: "timeline.pdf", content: Buffer.from("%PDF-1.7 events in order") },
+    ];
+    const attachments = [];
+    for (const file of files)
+      attachments.push(await attachFile(request.number, file.filename, file.content));
+
+    const converted = await convert(request.number, { title: "Matter conversion with evidence" });
+    expect(converted.statusCode, converted.body).toBe(200);
+    const matter = await matterNumbered(converted.json().request.convertedRecord.number as number);
+    const paper = await matterPaper(matter.number);
+    expect(paper.map((row) => row.title)).toEqual(files.map((file) => file.filename));
+
+    for (const [index, document] of paper.entries()) {
+      const file = files[index]!;
+      expect(document.folderId).toBeNull();
+      expect(document.isPrimary).toBe(false);
+      expect(document.versions).toHaveLength(1);
+      expect(document.versions[0]).toMatchObject({
+        versionNumber: 1,
+        originalFilename: file.filename,
+        byteSize: file.content.byteLength,
+        checksumSha256: createHash("sha256").update(file.content).digest("hex"),
+      });
+      const download = await harness.app.inject({
+        method: "GET",
+        url: `/api/v1/documents/${document.id}/versions/${document.versions[0]!.id}/download`,
+        cookies: memberCookies,
+      });
+      expect(download.statusCode, download.body).toBe(200);
+      expect(download.rawPayload).toEqual(file.content);
+    }
+
+    const entries = await harness.db
+      .select()
+      .from(activityLog)
+      .where(and(eq(activityLog.entityType, "matter"), eq(activityLog.entityId, matter.id)))
+      .orderBy(activityLog.createdAt, activityLog.id);
+    expect(
+      entries.filter((row) => row.action === "document.created").map((row) => row.payload.title),
+    ).toEqual(files.map((file) => file.filename));
+    expect(entries.map((row) => row.action)).not.toContain("document.primary_set");
+
+    const portal = await harness.app.inject({
+      method: "GET",
+      url: `/api/v1/portal/requests/${request.number}`,
+      cookies: requesterCookies,
+    });
+    expect(portal.statusCode, portal.body).toBe(200);
+    expect(portal.json().attachments.map((row: AttachmentRow) => row.filename)).toEqual(
+      files.map((file) => file.filename),
+    );
+    const portalDownload = await harness.app.inject({
+      method: "GET",
+      url: `/api/v1/portal/requests/${request.number}/attachments/${attachments[0]!.id}`,
+      cookies: requesterCookies,
+    });
+    expect(portalDownload.statusCode, portalDownload.body).toBe(200);
+    expect(portalDownload.rawPayload).toEqual(files[0]!.content);
+
+    const firstVersion = paper[0]!.versions[0]!;
+    const [storedVersion] = await harness.db
+      .select({ fileRef: documentVersions.fileRef })
+      .from(documentVersions)
+      .where(eq(documentVersions.id, firstVersion.id));
+    expect(storedVersion!.fileRef).not.toBe(await attachmentRef(attachments[0]!.id));
+
+    const deadline = Date.now() + 20_000;
+    let extracted: { state: string; text: string | null } | undefined;
+    while (Date.now() < deadline) {
+      const text = await harness.app.inject({
+        method: "GET",
+        url: `/api/v1/documents/${paper[0]!.id}/versions/${firstVersion.id}/text`,
+        cookies: memberCookies,
+      });
+      expect(text.statusCode, text.body).toBe(200);
+      extracted = text.json().text;
+      if (extracted?.state !== "pending") break;
+      await new Promise((resolve) => setTimeout(resolve, 50));
+    }
+    expect(extracted).toMatchObject({
+      state: "ready",
+      text: fakeExtractedText(files[0]!.content),
+    });
+  });
+
+  it("removes the Matter, document rows, and copied blobs when promotion fails", async () => {
+    const request = await submit("Matter conversion with a missing attachment");
+    await attachFile(request.number, "first.pdf", Buffer.from("%PDF-1.7 copied first"));
+    const missing = await attachFile(
+      request.number,
+      "missing.pdf",
+      Buffer.from("%PDF-1.7 removed"),
+    );
+    await harness.storage.delete(await attachmentRef(missing.id));
+
+    const mattersBefore = await matterCount();
+    const documentsBefore = (await harness.db.select({ id: documents.id }).from(documents)).length;
+    const blobsBefore = await storedVersionBlobs();
+    const res = await convert(request.number, { title: "Matter conversion must roll back" });
+    expect(res.statusCode, res.body).toBe(500);
+    expect(res.headers["content-type"]).toContain("application/problem+json");
+    expect(await matterCount()).toBe(mattersBefore);
+    expect(await harness.db.select({ id: documents.id }).from(documents)).toHaveLength(
+      documentsBefore,
+    );
+    expect(await storedVersionBlobs()).toBe(blobsBefore);
+    expect(await cast.stored(request.id)).toMatchObject({
+      status: "new",
+      convertedContractId: null,
+      convertedMatterId: null,
+    });
+  });
+});
+
+describe("the Request thread follows onto the matter (CMT-001, NOT-002)", () => {
+  it("keeps one tiered thread, truthful watermarks, and both notification audiences", async () => {
+    const request = await submit("Matter conversion with a live thread");
+    const requestRef = { entityType: "request", entityId: request.id } as const;
+    const first = await say(requesterCookies, requestRef, "The first requester message.");
+    const legal = await say(memberCookies, requestRef, "Legal analysis.", "legal_only");
+    const working = await say(memberCookies, requestRef, "Working note.", "working_team");
+    await markRead(memberCookies, requestRef);
+    const second = await say(requesterCookies, requestRef, "The second requester message.");
+    expect(await unread(memberCookies, requestRef)).toBe(1);
+
+    const converted = await convert(request.number, {
+      title: "Matter conversion with a live thread",
+    });
+    expect(converted.statusCode, converted.body).toBe(200);
+    const matter = await matterNumbered(converted.json().request.convertedRecord.number as number);
+    const matterRef = { entityType: "matter", entityId: matter.id } as const;
+
+    expect(await threadRows("request", request.id)).toEqual([]);
+    expect(await threadRows("matter", matter.id)).toEqual([
+      { id: first, body: "The first requester message.", visibility: "full_thread" },
+      { id: legal, body: "Legal analysis.", visibility: "legal_only" },
+      { id: working, body: "Working note.", visibility: "working_team" },
+      { id: second, body: "The second requester message.", visibility: "full_thread" },
+    ]);
+
+    const staffAtMatter = await read(memberCookies, matterRef);
+    const staffAtRequest = await read(memberCookies, requestRef);
+    expect(staffAtRequest).toEqual(staffAtMatter);
+    expect(new Set(staffAtMatter.map((row) => row.entityType))).toEqual(new Set(["matter"]));
+    expect(new Set(staffAtMatter.map((row) => row.entityId))).toEqual(new Set([matter.id]));
+    expect((await read(requesterCookies, requestRef)).map((row) => row.id)).toEqual([
+      first,
+      second,
+    ]);
+    const directRequester = await harness.app.inject({
+      method: "GET",
+      url: `/api/v1/comments?entityType=matter&entityId=${matter.id}`,
+      cookies: requesterCookies,
+    });
+    expect(directRequester.statusCode, directRequester.body).toBe(403);
+
+    expect(await unread(memberCookies, matterRef)).toBe(1);
+    expect(await unread(memberCookies, requestRef)).toBe(1);
+    expect(
+      await harness.db
+        .select({ userId: commentLastRead.userId })
+        .from(commentLastRead)
+        .where(
+          and(eq(commentLastRead.entityType, "request"), eq(commentLastRead.entityId, request.id)),
+        ),
+    ).toEqual([]);
+    expect(
+      await harness.db
+        .select({ userId: commentLastRead.userId })
+        .from(commentLastRead)
+        .where(
+          and(eq(commentLastRead.entityType, "matter"), eq(commentLastRead.entityId, matter.id)),
+        ),
+    ).toContainEqual({ userId: memberId });
+
+    const move = (
+      await harness.db
+        .select()
+        .from(activityLog)
+        .where(and(eq(activityLog.entityType, "request"), eq(activityLog.entityId, request.id)))
+    ).find((row) => row.action === "request.thread_moved");
+    expect(move?.payload).toEqual({ number: request.number, matterNumber: matter.number });
+
+    const requesterReply = await say(
+      requesterCookies,
+      requestRef,
+      "More facts from the requester.",
+    );
+    expect((await threadRows("matter", matter.id)).map((row) => row.id)).toContain(requesterReply);
+    expect((await rowsAboutComment(memberId, requesterReply)).map((row) => row.eventType)).toEqual([
+      "comment.posted",
+    ]);
+    expect(await rowsAboutComment(requesterId, requesterReply)).toEqual([]);
+
+    const internalAfter = await say(
+      memberCookies,
+      matterRef,
+      "Internal after conversion.",
+      "legal_only",
+    );
+    expect(await rowsAboutComment(requesterId, internalAfter)).toEqual([]);
+    const answer = await say(memberCookies, matterRef, "An answer on the matter.");
+    expect((await rowsAboutComment(requesterId, answer)).map((row) => row.eventType)).toEqual([
+      "request.replied",
+    ]);
+    expect(await rowsAboutComment(memberId, answer)).toEqual([]);
+    await settles(`matter reply mail about R-${request.number}`, () =>
+      cast
+        .mailAbout(REQUESTER.email, request.number)
+        .some((mail) => mail.subject.includes("Legal replied")),
+    );
+  });
+
+  it("tells a staff Requester on the matter roster exactly once", async () => {
+    const request = await submit("Requester belongs on both sides");
+    const converted = await convert(request.number, { title: "Requester belongs on both sides" });
+    expect(converted.statusCode, converted.body).toBe(200);
+    const matter = await matterNumbered(converted.json().request.convertedRecord.number as number);
+
+    await harness.db
+      .update(users)
+      .set({ role: "legal_team_member" })
+      .where(eq(users.id, requesterId));
+    try {
+      const joined = await harness.app.inject({
+        method: "POST",
+        url: `/api/v1/matters/${matter.number}/team`,
+        cookies: memberCookies,
+        payload: { userId: requesterId, role: "member" },
+      });
+      expect(joined.statusCode, joined.body).toBe(201);
+
+      const reply = await say(
+        memberCookies,
+        { entityType: "matter", entityId: matter.id },
+        "One answer for one person.",
+      );
+      expect((await rowsAboutComment(requesterId, reply)).map((row) => row.eventType)).toEqual([
+        "request.replied",
+      ]);
+      expect(await rowsAboutComment(memberId, reply)).toEqual([]);
+    } finally {
+      await harness.db
+        .update(users)
+        .set({ role: "business_user" })
+        .where(eq(users.id, requesterId));
+    }
   });
 });

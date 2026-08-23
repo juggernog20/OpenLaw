@@ -235,7 +235,8 @@ type RequestPayloads = {
    * A conversion re-parents the Request's comment rows onto the record,
    * tiers intact, so legal answers in exactly one place from then on.
    * The entry is what a reader of the Request meets when they wonder
-   * where the thread went, and `contractNumber` is where it went.
+   * where the thread went, and the module-specific permanent number is
+   * where it went.
    *
    * **It carries no count.** How many comments moved is how many
    * comments there were, at every tier, and this entry rides the
@@ -247,7 +248,8 @@ type RequestPayloads = {
    * moved, and a sentence about it would report on something that did
    * not happen.
    */
-  "request.thread_moved": { number: number; contractNumber: number };
+  "request.thread_moved":
+    { number: number; contractNumber: number } | { number: number; matterNumber: number };
 };
 
 /**

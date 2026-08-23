@@ -728,6 +728,9 @@ describe("the cross-reference fallbacks between an ask and its record", () => {
     expect(narrate("request.converted", { number: 42, matterNumber: 12 }).sentence).toBe(
       "Nadia Counsel converted this request into M-12",
     );
+    expect(narrate("request.thread_moved", { number: 42, matterNumber: 12 }).sentence).toBe(
+      "Nadia Counsel moved this conversation onto M-12",
+    );
   });
 
   it("names a request when the record's own entry carries no number", () => {

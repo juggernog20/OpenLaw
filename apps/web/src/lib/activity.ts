@@ -1972,16 +1972,16 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
 
   // CMT-001's promise, kept at the conversion (#422). The conversation
   // left with the work, so the ask's own feed says where it went — by
-  // C-###, which never changes. There is no count in the sentence: how
+  // its permanent reference, which never changes. There is no count in the sentence: how
   // much was said is a fact at every tier, and this entry is one a
   // Contributor reads (DD-016).
   "request.thread_moved": {
     icon: MessagesSquare,
     message: defineMessage({
       id: "activity.request.threadMoved",
-      defaultMessage: "{actor} moved this conversation onto {contract}",
+      defaultMessage: "{actor} moved this conversation onto {record}",
     }),
-    values: (intl, payload) => ({ contract: convertedContract(intl, payload) }),
+    values: (intl, payload) => ({ record: convertedRecord(intl, payload) }),
   },
 
   // ---- User administration and the profile (audit log only) ----

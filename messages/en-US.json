@@ -357,7 +357,7 @@
     "defaultMessage": "{actor} resolved this request"
   },
   "activity.request.threadMoved": {
-    "defaultMessage": "{actor} moved this conversation onto {contract}"
+    "defaultMessage": "{actor} moved this conversation onto {record}"
   },
   "activity.request.unnamedRecord": {
     "defaultMessage": "a request"
