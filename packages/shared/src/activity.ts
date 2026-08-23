@@ -164,22 +164,6 @@ type ContractStatusPayloads = {
   "contract_status.deleted": { slug: string; displayName: string; stage: string };
 };
 
-/** Configurable matter statuses over the fixed open/closed category. */
-type MatterStatusPayloads = {
-  "matter_status.created": { slug: string; displayName: string; category: string };
-  "matter_status.renamed": { slug: string; from: string; to: string };
-  "matter_status.reordered": { order: string[] };
-  "matter_status.archived": {
-    slug: string;
-    displayName: string;
-    category: string;
-    inUseCount: number;
-    reassignedTo: string | null;
-  };
-  "matter_status.restored": { slug: string; displayName: string };
-  "matter_status.deleted": { slug: string; displayName: string; category: string };
-};
-
 /**
  * The Request record (INT-001, INT-002, INT-007). A Request is born on
  * the portal, and triage decides its outcome. All three of INT-007's
@@ -222,21 +206,19 @@ type RequestPayloads = {
    * number rather than a title for the reason a Request's own payload
    * carries no title — C-42 *is* the contract's name and the sequence
    * never reissues it, so the sentence survives a rename and no free
-   * text enters an append-only log. Conversion carries a module-aware
-   * record reference internally; each module projects its own permanent
-   * number key into this closed payload union. A Request becomes one
-   * record, and the table already holds that as a check constraint.
+   * text enters an append-only log. The matter arm lands with M22, and
+   * it will be a second key beside this one rather than a widening of
+   * it: a Request becomes one record, and the table already holds that
+   * as a check constraint.
    */
-  "request.converted":
-    { number: number; contractNumber: number } | { number: number; matterNumber: number };
+  "request.converted": { number: number; contractNumber: number };
   /**
    * The conversation left with the work (CMT-001, DD-017, M21/11).
    *
    * A conversion re-parents the Request's comment rows onto the record,
    * tiers intact, so legal answers in exactly one place from then on.
    * The entry is what a reader of the Request meets when they wonder
-   * where the thread went, and the module-specific permanent number is
-   * where it went.
+   * where the thread went, and `contractNumber` is where it went.
    *
    * **It carries no count.** How many comments moved is how many
    * comments there were, at every tier, and this entry rides the
@@ -248,8 +230,7 @@ type RequestPayloads = {
    * moved, and a sentence about it would report on something that did
    * not happen.
    */
-  "request.thread_moved":
-    { number: number; contractNumber: number } | { number: number; matterNumber: number };
+  "request.thread_moved": { number: number; contractNumber: number };
 };
 
 /**
@@ -634,39 +615,6 @@ type ContractPayloads = {
   "contract.restored": { number: number; title: string };
 };
 
-/** The matter record vocabulary (M22). */
-type MatterPayloads = {
-  "matter.created": {
-    number: number;
-    title: string;
-    matterType: string;
-    status: string;
-    customFields: string[];
-  };
-  "matter.created_from_request": { number: number; title: string; requestNumber: number };
-  "matter.confidentiality_set": { number: number; title: string };
-  "matter.confidentiality_cleared": { number: number; title: string };
-  "matter.updated": {
-    number: number;
-    title: string;
-    changed: Record<string, { from: unknown; to: unknown }>;
-  };
-  "matter.status_changed": {
-    number: number;
-    title: string;
-    from: string;
-    to: string;
-    fromCategory: "open" | "closed";
-    toCategory: "open" | "closed";
-  };
-  "matter.team_added": { number: number; title: string; member: string; role: string };
-  "matter.team_removed": { number: number; title: string; member: string; role: string };
-  "matter.archived": { number: number; title: string };
-  "matter.restored": { number: number; title: string };
-  "matter.type_reassigned": { number: number; title: string; from: string; to: string };
-  "matter.status_reassigned": { number: number; title: string; from: string; to: string };
-};
-
 /**
  * The conversation on a record (M9/2, M9/4). Every entry carries the
  * comment's own tier, so a Legal Only comment leaves no trace for anyone
@@ -943,7 +891,6 @@ export type ActivityPayloadMap = UserPayloads &
   Prefixed<"matter_type_field", TypeFieldPayloads> &
   Prefixed<"request_type_field", TypeFieldPayloads> &
   ContractStatusPayloads &
-  MatterStatusPayloads &
   RequestPayloads &
   IntakeLinkPayloads &
   FieldCatalogPayloads &
@@ -953,7 +900,6 @@ export type ActivityPayloadMap = UserPayloads &
   TaskPayloads &
   EntityPayloads &
   ContractPayloads &
-  MatterPayloads &
   CommentPayloads &
   DocumentPayloads &
   FolderPayloads &

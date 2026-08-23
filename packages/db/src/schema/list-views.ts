@@ -10,9 +10,9 @@
  * (DD-002) answers "send me your columns" with a sentence.
  *
  * **The surface is a string, so one table serves every destination.**
- * Contracts and Matters (M22) write their own surface slugs today;
- * Documents (M26) and Entities (M27) add theirs by rendering the same
- * managed table (DES-046), not by adding a table here. Nothing
+ * `contracts` is the only value the build writes today; matters (M22),
+ * documents (M26), and entities (M27) each add theirs by rendering the
+ * same managed table (DES-046), not by adding a table here. Nothing
  * joins to a view, which is what makes this the cheap kind of
  * polymorphism rather than the kind DD-008 avoids.
  *

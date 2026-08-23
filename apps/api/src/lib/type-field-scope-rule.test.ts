@@ -59,7 +59,7 @@ const probeAttachedFieldsRoutes = typeFieldRoutes({
       : { scopes: ["global"], refusal: UNTARGETED_REFUSAL },
   scopeSummary: "the scopes the type's own rule allows (#352)",
   actionPrefix: "matter_type_field",
-  requiredMilestone: "probe milestone",
+  requiredMilestone: "M22",
 });
 
 let harness: TestHarness;
@@ -232,7 +232,7 @@ describe("the OpenAPI document", () => {
       "contract-scoped and global fields only (CTR-016)",
     );
     expect(await attachSummary("matter-types")).toContain(
-      "matter-scoped and global fields (MTR-011)",
+      "global fields only until M22 opens the matter scope (MTR-011)",
     );
   });
 });

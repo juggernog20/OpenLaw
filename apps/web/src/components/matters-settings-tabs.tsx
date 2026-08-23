@@ -3,8 +3,9 @@
 /**
  * The Matters settings section head on the shared SettingsSectionTabs
  * anatomy (#85), per the ST6 frame of settings.pen. Types is the only
- * pane at #85; M22 added Statuses and Fields, while Templates stays on
- * M24. The strip grows through the same shared component as Contracts.
+ * pane this milestone; Statuses, Fields, and Templates join the strip
+ * as their tickets land (M22, M24), the same way the Contracts strip
+ * grew.
  */
 
 import { FormattedMessage, useIntl } from "react-intl";
@@ -14,14 +15,6 @@ const TABS = [
   {
     path: "/settings/matters/types",
     label: <FormattedMessage id="settings.matters.tab.types" defaultMessage="Types" />,
-  },
-  {
-    path: "/settings/matters/statuses",
-    label: <FormattedMessage id="settings.matters.tab.statuses" defaultMessage="Statuses" />,
-  },
-  {
-    path: "/settings/matters/fields",
-    label: <FormattedMessage id="settings.matters.tab.fields" defaultMessage="Fields" />,
   },
 ] as const;
 

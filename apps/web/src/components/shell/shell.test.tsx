@@ -44,8 +44,8 @@ describe("app shell chrome", () => {
 
   it("renders the nav from the destination registry, filtered to the signed-in role", async () => {
     // Member+ gets every registered destination — Home in slot one,
-    // then the M21 Inbox, M22 Matters, the M8 contract record, and the
-    // M7 Entities registry — with the current one marked.
+    // then the M21 Inbox (INT-006 M21/13), the M8 contract record, and
+    // the M7 Entities registry — with the current one marked.
     stubApi({ signedIn: MEMBER });
     renderAt("/");
 
@@ -54,7 +54,6 @@ describe("app shell chrome", () => {
     expect(links.map((link) => link.textContent)).toEqual([
       "Home",
       "Inbox",
-      "Matters",
       "Contracts",
       "Entities",
     ]);
@@ -62,9 +61,9 @@ describe("app shell chrome", () => {
     expect(links[1]).not.toHaveAttribute("aria-current");
   });
 
-  it("draws a Contributor the scoped record destinations and nothing else", async () => {
-    // A Contributor sees Matters and Contracts; each API narrows those
-    // lists to records they are on the team of. Entities stays Member+.
+  it("draws a Contributor the Contracts destination and nothing else (M9/1)", async () => {
+    // A Contributor now has contracts to see — the ones they are on the
+    // team of — so the destination is drawn. Entities stays Member+.
     stubApi({
       signedIn: {
         id: "u3",
@@ -77,7 +76,7 @@ describe("app shell chrome", () => {
 
     const nav = await screen.findByRole("navigation");
     const links = within(nav).getAllByRole("link");
-    expect(links.map((link) => link.textContent)).toEqual(["Home", "Matters", "Contracts"]);
+    expect(links.map((link) => link.textContent)).toEqual(["Home", "Contracts"]);
   });
 
   it("never draws the shell for a Business User at all (INT-001)", async () => {

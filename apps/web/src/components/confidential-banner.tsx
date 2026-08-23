@@ -30,13 +30,11 @@ const LOCK_SIZE = 16;
 
 export function ConfidentialBanner({
   manageTeamHref,
-  record = "contract",
 }: Readonly<{
   /** Where "Manage team" goes, for a viewer who may change the
    * audience. Absent for everyone else, so the link is not rendered at
    * all — an affordance nobody may use is worse than none. */
   manageTeamHref?: string;
-  record?: "contract" | "matter";
 }>) {
   const intl = useIntl();
   return (
@@ -44,33 +42,19 @@ export function ConfidentialBanner({
     // list after half an hour inside the record — the same persistence
     // the strip gives a sighted reader.
     <section
-      aria-label={
-        record === "matter"
-          ? intl.formatMessage({
-              id: "matters.confidential.bannerRegion",
-              defaultMessage: "Confidential matter",
-            })
-          : intl.formatMessage({
-              id: "contracts.confidential.bannerRegion",
-              defaultMessage: "Confidential contract",
-            })
-      }
+      aria-label={intl.formatMessage({
+        id: "contracts.confidential.bannerRegion",
+        defaultMessage: "Confidential contract",
+      })}
       className="flex h-(--height-record-banner) shrink-0 items-center justify-between gap-4 border-b border-border-default bg-confidential-bg px-page-x text-confidential"
     >
       <p className="flex min-w-0 items-center gap-2">
         <Lock size={LOCK_SIZE} aria-hidden="true" className="shrink-0" />
         <span className="truncate text-sm font-medium">
-          {record === "matter" ? (
-            <FormattedMessage
-              id="matters.confidential.banner"
-              defaultMessage="Confidential matter — the matter team, the Matter Manager, and Administrators see it."
-            />
-          ) : (
-            <FormattedMessage
-              id="contracts.confidential.banner"
-              defaultMessage="Confidential contract — the contract team, the Owner, and Administrators see it."
-            />
-          )}
+          <FormattedMessage
+            id="contracts.confidential.banner"
+            defaultMessage="Confidential contract — the contract team, the Owner, and Administrators see it."
+          />
         </span>
       </p>
       {manageTeamHref !== undefined && (
@@ -84,11 +68,7 @@ export function ConfidentialBanner({
           href={manageTeamHref}
           className="flex shrink-0 items-center gap-1 rounded-chip text-sm font-semibold text-confidential hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-current"
         >
-          {record === "matter" ? (
-            <FormattedMessage id="matters.confidential.manageTeam" defaultMessage="Manage team" />
-          ) : (
-            <FormattedMessage id="contracts.confidential.manageTeam" defaultMessage="Manage team" />
-          )}
+          <FormattedMessage id="contracts.confidential.manageTeam" defaultMessage="Manage team" />
           <ArrowRight size={LOCK_SIZE} aria-hidden="true" />
         </a>
       )}

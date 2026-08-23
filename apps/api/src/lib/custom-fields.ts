@@ -4,7 +4,7 @@
  * The custom-field value machinery (CTR-016, MTR-014): what a stored
  * value may be, which fields a record renders, and the hard-required
  * rule that closes the M6 `is_required` stub. Written once here because
- * Matters mount the same catalog and attachment join since M22
+ * matters (M22) mount the same catalog through the same attachment join
  * — `type-field-routes.ts` is the settings half of the pair, this is the
  * record half.
  *

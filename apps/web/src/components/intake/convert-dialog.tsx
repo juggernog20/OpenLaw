@@ -6,20 +6,25 @@
  * INT-007's three dispositions, and the outcome the Inbox exists to
  * reach.
  *
- * **It is a prefilled record create, and the prefill is the point.**
+ * **It is a prefilled contract create, and the prefill is the point.**
  * I3 opens with a line naming where the ask came from, then a note
  * saying the form responses carry through, then the boxes. That order
  * is kept: a triager reads what is already decided before they are
  * asked for anything.
  *
  * **Triage confirms the target; it never classifies it** (DD-018). Where
- * the request type names a live type in its module, the dialog states it and
+ * the request type names a live contract type, the dialog states it and
  * offers no picker, because there is nothing to pick — the Administrator
  * bound the routing at configuration. The picker appears only for the
  * one choice the form honestly deferred: a module-only target, a target
- * type the taxonomy has archived (which reads as no type), or the
- * deliberate switch to the other module. That switch is DD-018's
- * lossless **Re-target**, and the dialog says so in a line of its own.
+ * type the taxonomy has archived (which reads as no type), or a Request
+ * that targets a Matter or nothing at all. The last two are DD-018's
+ * lossless **Re-target**, and the dialog says so in a line of its own so
+ * nobody takes the exception for the rule.
+ *
+ * **There is no Matter option, disabled or otherwise.** I3's footer
+ * draws "Convert to matter instead". `matters` lands in M22, so the
+ * dialog offers exactly what this build can create.
  *
  * **What carries is named, and so is what does not.** Every collected
  * value whose slug the target type also attaches is listed with the
@@ -38,24 +43,19 @@
  * the dialog in a statement** — both the scaffold's, unchanged from
  * Decline (DES-058 clause 5). Convert's statement names the record the
  * winner made when the seam gave one, because "somebody converted this"
- * without its permanent reference is news a triager cannot act on.
+ * without the C-### is news a triager cannot act on.
  */
 
 import { useState } from "react";
 import { FormattedMessage, useIntl } from "react-intl";
 import { ArrowRightLeft, FilePen, Info } from "lucide-react";
-import {
-  MAX_CONTRACT_TITLE_LENGTH,
-  MAX_MATTER_TITLE_LENGTH,
-  type RequestOutcome,
-} from "@openlaw/shared";
+import { MAX_CONTRACT_TITLE_LENGTH, type RequestOutcome } from "@openlaw/shared";
 import {
   contractReference,
   severityLabel,
   SEVERITY_PILL,
   type ContractTypeOption,
 } from "../../lib/contracts";
-import { matterReference, type MatterTypeOption } from "../../lib/matters";
 import {
   emptyDraft,
   isAnswered,
@@ -65,12 +65,7 @@ import {
   type CustomFieldValue,
 } from "../../lib/custom-fields";
 import { CONTROL_CLASS } from "../../lib/form-controls";
-import type {
-  ConvertedRecord,
-  StaffRequest,
-  StaffRequestField,
-  StaffRequestFieldRefs,
-} from "../../lib/requests";
+import type { StaffRequest, StaffRequestField, StaffRequestFieldRefs } from "../../lib/requests";
 import { CustomFieldControl, type FieldReference } from "../custom-field-control";
 import { Button } from "../ui/button";
 import { Dialog, DialogContent, DialogTitle } from "../ui/dialog";
@@ -96,7 +91,7 @@ export type ConvertResult =
   | {
       ok: false;
       alreadyDecided: RequestOutcome;
-      convertedRecord: ConvertedRecord | null;
+      convertedContract: { number: number } | null;
     }
   /** Any other refusal, in the seam's own words where it gave any. */
   | { ok: false; alreadyDecided?: undefined; detail?: string };
@@ -107,7 +102,6 @@ export function ConvertDialog({
   fields,
   customFieldRefs,
   contractTypes,
-  matterTypes,
   people,
   entities,
   busy,
@@ -123,8 +117,6 @@ export function ConvertDialog({
   customFieldRefs: StaffRequestFieldRefs;
   /** The live contract types, each with the fields it attaches. */
   contractTypes: readonly ContractTypeOption[];
-  /** The live matter taxonomy, in the same attached-field shape. */
-  matterTypes: readonly MatterTypeOption[];
   /** What a `user` creation field offers. */
   people: readonly FieldReference[];
   /** What an `entity` creation field offers — the M7 registry. */
@@ -134,7 +126,6 @@ export function ConvertDialog({
   onConvert: (input: {
     title: string;
     contractTypeId?: string;
-    matterTypeId?: string;
     customFields?: Record<string, CustomFieldValue>;
   }) => Promise<ConvertResult>;
 }>) {
@@ -150,26 +141,14 @@ export function ConvertDialog({
    * is how "an archived target type reads as no type" reaches the
    * screen without the screen knowing the rule.
    */
-  type TargetModule = "contract" | "matter";
-  const initialModule: TargetModule = request.requestType.targetModule ?? "contract";
-  const [targetModule, setTargetModule] = useState<TargetModule>(initialModule);
-  const targetTypes = targetModule === "contract" ? contractTypes : matterTypes;
   const bound =
-    request.requestType.targetModule === targetModule ? request.requestType.targetTypeId : null;
-  const confirmed = targetTypes.find((option) => option.id === bound) ?? null;
+    request.requestType.targetModule === "contract" ? request.requestType.targetTypeId : null;
+  const confirmed = contractTypes.find((option) => option.id === bound) ?? null;
 
   /** The picker's value, and the empty string until a deferred target
    * has been answered. Seeded once: a prefill that re-applied itself
    * would take back an edit. */
-  const [pickedIds, setPickedIds] = useState<Record<TargetModule, string>>({
-    contract:
-      request.requestType.targetModule === "contract"
-        ? (request.requestType.targetTypeId ?? "")
-        : "",
-    matter:
-      request.requestType.targetModule === "matter" ? (request.requestType.targetTypeId ?? "") : "",
-  });
-  const pickedId = pickedIds[targetModule];
+  const [pickedId, setPickedId] = useState(confirmed?.id ?? "");
   const [title, setTitle] = useState(request.summary);
   /** The creation fields' drafts, keyed by slug. They survive switching
    * types and back — a value typed once should not have to be typed
@@ -183,10 +162,10 @@ export function ConvertDialog({
    * so. Set, the dialog stops being a form and becomes a statement. */
   const [alreadyDecided, setAlreadyDecided] = useState<{
     outcome: RequestOutcome;
-    convertedRecord: ConvertedRecord | null;
+    convertedContract: { number: number } | null;
   } | null>(null);
 
-  const target = confirmed ?? targetTypes.find((option) => option.id === pickedId) ?? null;
+  const target = confirmed ?? contractTypes.find((option) => option.id === pickedId) ?? null;
   const targetFields = target?.fields ?? [];
 
   /** What the form already answered that the target type also attaches:
@@ -225,7 +204,7 @@ export function ConvertDialog({
   );
   /** Re-target: this Request's front door promised something other than
    * a contract, or promised nothing at all (DD-018 rule 5). */
-  const reTargeting = request.requestType.targetModule !== targetModule;
+  const reTargeting = request.requestType.targetModule !== "contract";
 
   async function submit() {
     if (busy) return;
@@ -233,26 +212,20 @@ export function ConvertDialog({
     if (named === "") {
       setError({
         onTitle: true,
-        message: intl.formatMessage(
-          {
-            id: "convert.needTitle",
-            defaultMessage: "Name the {module, select, matter {matter} other {contract}}.",
-          },
-          { module: targetModule },
-        ),
+        message: intl.formatMessage({
+          id: "convert.needTitle",
+          defaultMessage: "Name the contract.",
+        }),
       });
       return;
     }
     if (target === null) {
       setError({
         onTitle: false,
-        message: intl.formatMessage(
-          {
-            id: "convert.needType",
-            defaultMessage: "Pick a {module, select, matter {matter} other {contract}} type.",
-          },
-          { module: targetModule },
-        ),
+        message: intl.formatMessage({
+          id: "convert.needType",
+          defaultMessage: "Pick a contract type.",
+        }),
       });
       return;
     }
@@ -288,11 +261,10 @@ export function ConvertDialog({
               )
             : intl.formatMessage(
                 {
-                  id: "convert.fieldMissing",
-                  defaultMessage:
-                    "Fill {field} — this {module, select, matter {matter} other {contract}} type requires it.",
+                  id: "contracts.form.fieldMissing",
+                  defaultMessage: "Fill {field} — this contract type requires it.",
                 },
-                { field: field.displayName, module: targetModule },
+                { field: field.displayName },
               ),
         });
         return;
@@ -305,18 +277,14 @@ export function ConvertDialog({
       // Sent only where the request type deferred it. Where it named a
       // live type, the seam reads its own configuration and a body that
       // repeated it would be the client asserting the routing.
-      ...(confirmed === null
-        ? targetModule === "contract"
-          ? { contractTypeId: target.id }
-          : { matterTypeId: target.id }
-        : {}),
+      ...(confirmed === null ? { contractTypeId: target.id } : {}),
       ...(Object.keys(customFields).length === 0 ? {} : { customFields }),
     });
     if (result.ok) return;
     if (result.alreadyDecided) {
       setAlreadyDecided({
         outcome: result.alreadyDecided,
-        convertedRecord: result.convertedRecord,
+        convertedContract: result.convertedContract,
       });
       setError(null);
       return;
@@ -338,8 +306,8 @@ export function ConvertDialog({
         <DialogTitle>
           <FormattedMessage
             id="convert.title"
-            defaultMessage="Convert {reference} to a {module, select, matter {matter} other {contract}}"
-            values={{ reference, module: targetModule }}
+            defaultMessage="Convert {reference} to a contract"
+            values={{ reference }}
           />
         </DialogTitle>
         {alreadyDecided ? (
@@ -356,16 +324,13 @@ export function ConvertDialog({
             {/* The record the winner made, where the seam named one. It
                 is the one thing a plain outcome cannot say, and it is
                 what the loser opens instead of pressing again. */}
-            {alreadyDecided.convertedRecord && (
+            {alreadyDecided.convertedContract && (
               <p className="text-sm text-muted">
                 <FormattedMessage
                   id="convert.alreadyConvertedRecord"
-                  defaultMessage="It became {record}."
+                  defaultMessage="It became {contract}."
                   values={{
-                    record:
-                      alreadyDecided.convertedRecord.module === "matter"
-                        ? matterReference(intl, alreadyDecided.convertedRecord.number)
-                        : contractReference(intl, alreadyDecided.convertedRecord.number),
+                    contract: contractReference(intl, alreadyDecided.convertedContract.number),
                   }}
                 />
               </p>
@@ -410,8 +375,7 @@ export function ConvertDialog({
               <Info size={16} aria-hidden="true" className="mt-px shrink-0" />
               <FormattedMessage
                 id="convert.carryNote"
-                defaultMessage="Form responses carry into the {module, select, matter {matter} other {contract}} — nothing is re-keyed."
-                values={{ module: targetModule }}
+                defaultMessage="Form responses carry into the contract — nothing is re-keyed."
               />
             </p>
             {reTargeting && (
@@ -422,8 +386,7 @@ export function ConvertDialog({
                 <ArrowRightLeft size={16} aria-hidden="true" className="mt-px shrink-0" />
                 <FormattedMessage
                   id="convert.retarget"
-                  defaultMessage="This request type does not target a {module, select, matter {matter} other {contract}}. Converting it to one is a re-target, and the request itself is kept."
-                  values={{ module: targetModule }}
+                  defaultMessage="This request type does not target a contract. Converting it to one is a re-target, and the request itself is kept."
                 />
               </p>
             )}
@@ -444,9 +407,7 @@ export function ConvertDialog({
                 // The seam is what enforces it; the box restates it so
                 // nobody types past a bound they will only meet on the
                 // press. The Decline dialog's rule, applied to a title.
-                maxLength={
-                  targetModule === "contract" ? MAX_CONTRACT_TITLE_LENGTH : MAX_MATTER_TITLE_LENGTH
-                }
+                maxLength={MAX_CONTRACT_TITLE_LENGTH}
                 {...(error?.onTitle
                   ? { "aria-invalid": true, "aria-describedby": TITLE_ERROR_ID }
                   : {})}
@@ -470,11 +431,7 @@ export function ConvertDialog({
                       routing when they configured the request type, and
                       triage confirms rather than classifies (DD-018). */}
                   <p className="text-sm font-medium text-primary">
-                    <FormattedMessage
-                      id="convert.typeField"
-                      defaultMessage="{module, select, matter {Matter} other {Contract}} type"
-                      values={{ module: targetModule }}
-                    />
+                    <FormattedMessage id="convert.typeField" defaultMessage="Contract type" />
                   </p>
                   <p className="text-base">{confirmed.displayName}</p>
                   <p className="text-xs text-muted">
@@ -487,11 +444,7 @@ export function ConvertDialog({
               ) : (
                 <>
                   <Label htmlFor="convert-type">
-                    <FormattedMessage
-                      id="convert.typeField"
-                      defaultMessage="{module, select, matter {Matter} other {Contract}} type"
-                      values={{ module: targetModule }}
-                    />
+                    <FormattedMessage id="convert.typeField" defaultMessage="Contract type" />
                     <span aria-hidden="true" className="ms-0.5 text-status-danger-fg">
                       *
                     </span>
@@ -507,10 +460,7 @@ export function ConvertDialog({
                     value={pickedId}
                     className={CONTROL_CLASS}
                     onChange={(event) => {
-                      setPickedIds((current) => ({
-                        ...current,
-                        [targetModule]: event.target.value,
-                      }));
+                      setPickedId(event.target.value);
                       if (event.target.value !== "") setError(null);
                     }}
                   >
@@ -520,7 +470,7 @@ export function ConvertDialog({
                         defaultMessage: "Type…",
                       })}
                     </option>
-                    {targetTypes.map((option) => (
+                    {contractTypes.map((option) => (
                       <option key={option.id} value={option.id}>
                         {option.displayName}
                       </option>
@@ -529,8 +479,7 @@ export function ConvertDialog({
                   <p className="text-xs text-muted">
                     <FormattedMessage
                       id="convert.typeDeferred"
-                      defaultMessage="This request type left the {module, select, matter {matter} other {contract}} type to conversion."
-                      values={{ module: targetModule }}
+                      defaultMessage="This request type left the contract type to conversion."
                     />
                   </p>
                 </>
@@ -561,8 +510,7 @@ export function ConvertDialog({
                 <p className="text-sm font-medium">
                   <FormattedMessage
                     id="convert.carries"
-                    defaultMessage="Carries into the {module, select, matter {matter} other {contract}}"
-                    values={{ module: targetModule }}
+                    defaultMessage="Carries into the contract"
                   />
                 </p>
                 <dl className="flex flex-col gap-1">
@@ -590,8 +538,7 @@ export function ConvertDialog({
                 <p className="text-sm font-medium">
                   <FormattedMessage
                     id="convert.staysBehind"
-                    defaultMessage="Does not carry into the {module, select, matter {matter} other {contract}}"
-                    values={{ module: targetModule }}
+                    defaultMessage="Does not carry into the contract"
                   />
                 </p>
                 <p className="text-xs text-muted">
@@ -603,8 +550,7 @@ export function ConvertDialog({
                 <p className="text-xs text-muted">
                   <FormattedMessage
                     id="convert.staysBehindNote"
-                    defaultMessage="This {module, select, matter {matter} other {contract}} type has no field for these. Nothing is deleted, and they stay on the request where you can still read them."
-                    values={{ module: targetModule }}
+                    defaultMessage="This contract type has no field for these. Nothing is deleted, and they stay on the request where you can still read them."
                   />
                 </p>
               </div>
@@ -658,8 +604,7 @@ export function ConvertDialog({
                     (field.description ?? (
                       <FormattedMessage
                         id="convert.gapNote"
-                        defaultMessage="Required on this {module, select, matter {matter} other {contract}} type. The form did not collect it."
-                        values={{ module: targetModule }}
+                        defaultMessage="Required on this contract type. The form did not collect it."
                       />
                     ))
                   )}
@@ -671,35 +616,16 @@ export function ConvertDialog({
                 {error.message}
               </p>
             )}
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              <Button
-                type="button"
-                variant="secondary"
-                onClick={() => {
-                  setTargetModule(targetModule === "contract" ? "matter" : "contract");
-                  setError(null);
-                }}
-              >
-                <ArrowRightLeft size={16} aria-hidden="true" />
-                <FormattedMessage
-                  id="convert.otherModule"
-                  defaultMessage="Convert to {module, select, matter {contract} other {matter}} instead"
-                  values={{ module: targetModule }}
-                />
+            <div className="flex justify-end gap-2">
+              <Button type="button" variant="secondary" onClick={onClose}>
+                <FormattedMessage id="action.cancel" defaultMessage="Cancel" />
               </Button>
-              <div className="flex gap-2">
-                <Button type="button" variant="secondary" onClick={onClose}>
-                  <FormattedMessage id="action.cancel" defaultMessage="Cancel" />
-                </Button>
-                <Button type="submit" disabled={busy}>
-                  <FilePen size={16} aria-hidden="true" />
-                  <FormattedMessage
-                    id="convert.submit"
-                    defaultMessage="Convert to {module, select, matter {matter} other {contract}}"
-                    values={{ module: targetModule }}
-                  />
-                </Button>
-              </div>
+              {/* I3's own verb and glyph, on the CTA: this is the outcome
+                  the Inbox exists to reach (DES-058 clause 2). */}
+              <Button type="submit" disabled={busy}>
+                <FilePen size={16} aria-hidden="true" />
+                <FormattedMessage id="convert.submit" defaultMessage="Convert" />
+              </Button>
             </div>
           </form>
         )}

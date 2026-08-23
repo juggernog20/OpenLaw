@@ -41,7 +41,7 @@ document is the map, not the territory.
 
 ## Where we are
 
-**Arc 4 is complete, and Arc 5 now has its record: M22 shipped the Matter workspace and the second arm of conversion.** Arc 1 is done: the monorepo and CI,
+**Arc 4 is complete: the front door and its paper run end to end through M21A.** Arc 1 is done: the monorepo and CI,
 the authentication chain, the Compose stack a deployer actually runs, the themed app shell, and the
 `/settings` destination with its Personal and Organization rails. Arc 2 is done too: the
 configurable types and statuses, the Entities registry, the contract record, the conversation on a
@@ -85,14 +85,9 @@ of it: the same address, the same conversation, and one vocabulary — Open, In 
 Declined — on the pill, the banner, and the email alike. M21A completes the hand-off after conversion:
 paper rides a comment at its tier, a Member+ files it as a new Document or the next Version, and the
 round's kind can be corrected without moving the bytes or the executed pin. A dispositioned Request
-takes no more attachments of its own; its stable portal thread is the door beside that wall. M22 added the
-second workspace: a Matter is born under its own M-###, configured type and open/closed status, one
-nullable Matter Manager and roster, priority and risk, hard-required matter fields, lifecycle timestamps,
-confidential reach, a managed list, an editable detail, and the same comments, history, notifications, and
-document machinery a Contract already wears. The Request door now converts into either record through
-one guarded transaction; its values, paper, thread, watermarks, and requester window all follow the Matter
-arm too. M23 is where the record becomes a full work surface: key dates, tasks, relationships, linked
-Contracts, the rest of the Contributor grid, and the close flow remain there; templates remain M24.
+takes no more attachments of its own; its stable portal thread is the door beside that wall. A Business
+User can now ask, Legal can answer with paper, and the next work is the second workspace and the matter
+arm of the door M21 hung (M22).
 
 ---
 
@@ -483,9 +478,10 @@ first.
   - Both things M20 left "where M21 will look" are closed — the requester-facing status vocabulary and
     the Request-thread mention — and so is INT-002's older M19/7 residue, the collected value with no
     field to land in, which the Convert dialog now names before the press
-  - Four things were left open and are now closed in the records that own them. **The matter arm of
-    conversion shipped in M22** on the same guarded path rather than as a second conversion. **A carried
-    `user` or `entity` value whose row is archived between submission and
+  - Four things are left open, each written down where the milestone that meets it will look.
+    **The matter arm of conversion is M22's** — the door is built and offers only what this build can
+    create, with no stubbed Matter option, so M22 adds an arm to the same guarded path rather than a
+    second conversion. **A carried `user` or `entity` value whose row is archived between submission and
     triage dead-ends the dialog** — conversion refuses it by name and all-or-nothing holds, but the
     dialog draws no box to fix it, because the field is answered rather than missing; the API takes an
     override and the screen does not offer one. Which of the three repairs to build was a design decision
@@ -493,8 +489,9 @@ first.
     **A Requester may still attach paper to an already-converted Request**, and that paper never promotes —
     M20/6 behaviour that conversion did not change (#438). The answer turned out not to be a better copy:
     the upload is refused and the paper goes on the thread instead, which M21A builds. **The
-    converted-contract left join was written twice**, in the Inbox read and the staff detail read; M22/1
-    folded both into `projection.ts` before adding the Matter arm
+    converted-contract left join is written twice**, in the Inbox read and the staff detail read, both
+    pinned by tests; M22's matter arm is the third reader, and the third is what should fold it into
+    `projection.ts`
   - _Decisions:_ INT-002, INT-003, INT-006, INT-007, CMT-001, CMT-010, NOT-002, DD-018, DES-056, DES-057,
     DES-058, DES-059 · _Issues:_ #412–#423
 
@@ -502,7 +499,7 @@ first.
       _Demo:_ Legal sends a draft out, the business gets the counterparty's markup back, posts it on the
       contract's thread, and a lawyer files it as the next version of the chain.
   - Attachments on comments, on every thread the audience seam already answers for — a contract, a Request,
-    a document, and the Matter arm added in M22. One upload path, with the storage rules documents and
+    a document, and the matter arm when M22 adds it. One upload path, with the storage rules documents and
     request attachments already share
   - **A file takes its comment's tier by being part of the comment**, so a Legal Only note keeps its paper
     legal only, and a redact takes the file with the words
@@ -524,17 +521,19 @@ first.
 Matters. Six MTR decisions are explicit siblings of CTR ones, so this arc inherits finished patterns rather
 than racing them — which is the whole reason it sits here and not next to Arc 2.
 
-- [x] **M22 — The matter record**
+- [ ] **M22 — The matter record**
       _Demo:_ Create a matter from scratch, then create a second one by converting a request, and see both in
       the list.
   - `matters` with the global M-### sequence; matter types and status labels mapped to open/closed categories
   - One Matter Manager plus the matter team; priority and risk
   - The field catalog at `matter` scope; hard-required fields enforced at creation
   - `opened_at` / `closed_at` maintained on category transitions
-  - **The matter arm of the conversion door M21 built.** The one guarded path now resolves either module,
-    confirms a bound Matter target or asks for a module-only one, and Re-targets in both directions. M22/1
-    moved the converted-record projection into `apps/api/src/modules/requests/projection.ts`; the Matter
-    arm then added one reader rather than a third join
+  - **The matter arm of the conversion door M21 built.** The door is one guarded path with a per-module
+    arm; M21 shipped the contract arm and deliberately offered no stubbed Matter option, so "create a
+    matter by converting a request" is this milestone's second demo sentence rather than a new surface.
+    The contract→matter Re-target direction and the matter-target confirmation come with it. The arm is
+    the third reader of the converted-record left join, which is the point at which it should move into
+    `apps/api/src/modules/requests/projection.ts` instead of being written a third time
   - _Decisions:_ MTR-001, MTR-002, MTR-003, MTR-009, MTR-011, MTR-012, MTR-016, INT-002, INT-007, CMT-001
 
 - [ ] **M23 — Matter work surfaces**

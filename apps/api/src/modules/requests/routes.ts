@@ -108,6 +108,7 @@ import { uuidv7 } from "uuidv7";
 import {
   and,
   count,
+  contracts,
   desc,
   entities,
   eq,
@@ -125,6 +126,7 @@ import {
 } from "@openlaw/db";
 import { REQUEST_DISPOSITIONED_PROBLEM_TYPE, REQUEST_OUTCOMES } from "@openlaw/shared";
 import { requireAuth } from "../../auth/guards.js";
+import { contractTeamScope } from "../../lib/contract-access.js";
 import {
   asUploadRefusal,
   refuseOversize,
@@ -151,12 +153,10 @@ import {
   RequestAttachmentSchema,
   RequestCustomFieldRefsSchema,
   resolveRefs,
-  selectConvertedRecords,
   selectAttachments,
   sendAttachment,
   toAttachment,
 } from "./projection.js";
-import { convertedContractOf, convertedRecordOf } from "./record-reference.js";
 
 /** The Request as its creator is answered. Narrow on purpose: the
  * confirmation needs the number to quote and the status to state, and
@@ -545,20 +545,13 @@ export const requestsRoutes: FastifyPluginAsyncZod = async (app) => {
             "A Request that is no longer new takes paper on its thread, not as another " +
               "Request attachment (INT-002, CMT-011). The named refusal carries " +
               "`request`, the R-### whose portal detail owns that thread; `outcome`, " +
-              "the disposition already recorded; and `convertedRecord`, the record " +
+              "the disposition already recorded; and `convertedContract`, the record " +
               "a conversion made when the caller may reach it (DD-014), else `null`.",
             [REQUEST_DISPOSITIONED_PROBLEM_TYPE],
             {
               request: z.object({ number: z.number().int() }).optional(),
               outcome: z.enum(REQUEST_OUTCOMES).optional(),
               convertedContract: z.object({ number: z.number().int() }).nullable().optional(),
-              convertedRecord: z
-                .discriminatedUnion("module", [
-                  z.object({ module: z.literal("contract"), number: z.number().int() }),
-                  z.object({ module: z.literal("matter"), number: z.number().int() }),
-                ])
-                .nullable()
-                .optional(),
             },
           ),
           default: problemResponse,
@@ -672,12 +665,14 @@ export const requestsRoutes: FastifyPluginAsyncZod = async (app) => {
     id: string;
     number: number;
     status: (typeof REQUEST_STATUSES)[number];
+    convertedContractId: string | null;
   }> {
     const query = db
       .select({
         id: requests.id,
         number: requests.number,
         status: requests.status,
+        convertedContractId: requests.convertedContractId,
       })
       .from(requests)
       .where(
@@ -701,7 +696,7 @@ export const requestsRoutes: FastifyPluginAsyncZod = async (app) => {
    * row lock, for the disposition that lands between the two.
    *
    * The record a conversion made is named under the caller's own
-   * record's own reach (DD-014) and never an archived one. The route is the
+   * contract reach (DD-014) and never an archived one. The route is the
    * Requester's, and a Business User reaches no Contract at all, so for
    * them this is `null` — the same answer the portal read and the staff
    * disposition refusal give. A refusal must not hand out a reference
@@ -713,7 +708,20 @@ export const requestsRoutes: FastifyPluginAsyncZod = async (app) => {
     held: Awaited<ReturnType<typeof reachedRequest>>,
   ): Promise<void> {
     if (held.status === "new") return;
-    const convertedRecords = await selectConvertedRecords(db, user, [held.id]);
+    const [convertedContract] =
+      held.convertedContractId === null
+        ? []
+        : await db
+            .select({ number: contracts.number })
+            .from(contracts)
+            .where(
+              and(
+                eq(contracts.id, held.convertedContractId),
+                contractTeamScope(db, user),
+                isNull(contracts.archivedAt),
+              ),
+            )
+            .limit(1);
     throw httpError(
       409,
       "This Request has already been dispositioned. Attach new paper to a reply in its thread.",
@@ -722,8 +730,7 @@ export const requestsRoutes: FastifyPluginAsyncZod = async (app) => {
         extensions: {
           request: { number: held.number },
           outcome: held.status,
-          convertedContract: convertedContractOf(convertedRecords.get(held.id) ?? null),
-          convertedRecord: convertedRecordOf(convertedRecords.get(held.id) ?? null),
+          convertedContract: convertedContract ?? null,
         },
       },
     );

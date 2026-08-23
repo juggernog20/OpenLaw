@@ -44,9 +44,9 @@
  * contract is joined under this viewer's own reach (DD-014, CTR-021),
  * so a confidential record they are not on resolves to no row and the
  * answer says `null` rather than refusing the Request. The withholding
- * is the server's decision, in the CTR-018 posture. The record is
- * resolved through `projection.ts`'s module-aware reference, shared
- * with the Inbox rather than joined again here.
+ * is the server's decision, in the CTR-018 posture. The matter arm is
+ * not drawn: `converted_matter_id` carries no foreign key yet and
+ * `matters` lands in M22.
  *
  * **The paper downloads through this mount too**, with the portal's own
  * answer — `application/octet-stream`, the same disposition, the same

@@ -56,7 +56,6 @@ import {
   eq,
   inArray,
   isNull,
-  matters,
   or,
   requests,
   sql,
@@ -74,7 +73,6 @@ import {
   type MentionCandidate,
 } from "../../lib/contract-access.js";
 import type { Notifier, NotifyingTransaction } from "../../lib/notifications/notifier.js";
-import { matterAudience, matterMentionCandidates } from "../../lib/matter-access.js";
 import { httpError } from "../../lib/problem.js";
 
 /**
@@ -86,7 +84,7 @@ import { httpError } from "../../lib/problem.js";
  * and one arm together, and the route schemas are built from it, so a
  * type with no arm cannot be asked for.
  */
-export const COMMENT_ENTITY_TYPES = ["matter", "contract", "request"] as const;
+export const COMMENT_ENTITY_TYPES = ["contract", "request"] as const;
 
 export type CommentEntityType = (typeof COMMENT_ENTITY_TYPES)[number];
 
@@ -257,51 +255,6 @@ const contractArm: CommentEntityArm = {
   },
 };
 
-/** The matter arm uses M22's reach predicate in both directions. */
-const matterArm: CommentEntityArm = {
-  readerRoles: ["administrator", "legal_team_member", "contributor"],
-
-  async resolve(db, user, entityId) {
-    const audience = await matterAudience(db, user, entityId);
-    if (!audience) return null;
-    return { entityType: "matter", entityId: audience.matterId, tiers: audience.tiers };
-  },
-
-  async mentionCandidates(db, audience, only) {
-    return await matterMentionCandidates(db, audience.entityId, only);
-  },
-
-  async notifyPosted(tx, notifier, posted) {
-    const [record] = await tx
-      .select({ number: matters.number, title: matters.title })
-      .from(matters)
-      .where(eq(matters.id, posted.audience.entityId))
-      .limit(1);
-    if (!record) return;
-    if (posted.mentioned.length > 0) {
-      await notifier.commentMentioned(tx, {
-        entityType: "matter",
-        matterId: posted.audience.entityId,
-        matterNumber: record.number,
-        matterTitle: record.title,
-        actorId: posted.actorId,
-        actorName: posted.actorName,
-        commentId: posted.commentId,
-        visibility: posted.visibility,
-      });
-    }
-    await notifier.commentPosted(tx, {
-      entityType: "matter",
-      matterId: posted.audience.entityId,
-      actorId: posted.actorId,
-      actorName: posted.actorName,
-      commentId: posted.commentId,
-      visibility: posted.visibility,
-      mentioned: [...posted.mentioned],
-    });
-  },
-};
-
 /** Member+ (CONTEXT.md), and every tier they hear. On a Request that is
  * the whole of the staff rule: there is no team table to consult and no
  * wall to apply (DD-014 is a contract's, and INT-002 gives a Request
@@ -340,20 +293,20 @@ const REQUESTER_TIERS: readonly CommentVisibility[] = ["full_thread"];
  * the comment rows onto the record and leaves a back-link, so from that
  * moment this arm answers **the record's pair**, not the Request's. That
  * one line is what keeps the conversation from forking: the portal, the
- * staff request detail, and the target record's own applet are three windows
+ * staff request detail, and the contract's own applet are three windows
  * onto one thread, and a reply typed into any of them lands in the same
  * place. `request` stays a comment target for a Request that never
  * converted, which is every Request that is still `new`, resolved, or
  * declined.
  *
  * **Who is in the room after the move is the record's question, with one
- * addition.** Staff take the target arm's own answer, so its wall and
- * reach govern the moved thread exactly as they govern the record — the
- * thread cannot outlive the reach of the thing it is about. The Requester
- * keeps Full Thread by being the Requester, which is a standing neither
- * record's own rule has a way to express: a Business User reaches no staff
- * record directly, and CMT-001 nevertheless promises them their window.
- * Full Thread *means* "the requester hears this"
+ * addition.** Staff take the contract arm's own answer, so DD-014's wall
+ * and CTR-021's reach govern the moved thread exactly as they govern the
+ * record — the thread cannot outlive the reach of the thing it is about.
+ * The Requester keeps Full Thread by being the Requester, which is a
+ * standing the contract's own rule has no way to express: a Business
+ * User reaches no contract (CTR-021), and CMT-001 nevertheless promises
+ * them their window. Full Thread *means* "the requester hears this"
  * (DD-016), so the tier is the grant and no wall narrows it further.
  */
 const requestArm: CommentEntityArm = {
@@ -374,7 +327,6 @@ const requestArm: CommentEntityArm = {
         // The back-link a conversion leaves (INT-002). NULL is the
         // whole of "this Request is still a comment target".
         convertedContractId: requests.convertedContractId,
-        convertedMatterId: requests.convertedMatterId,
       })
       .from(requests)
       .where(and(eq(requests.id, entityId), isNull(requests.archivedAt)))
@@ -394,22 +346,16 @@ const requestArm: CommentEntityArm = {
     const requester = record.requesterId === user.id;
     if (!staff && !requester) return null;
 
-    if (record.convertedContractId !== null || record.convertedMatterId !== null) {
-      const target =
-        record.convertedMatterId !== null
-          ? { arm: matterArm, entityType: "matter" as const, id: record.convertedMatterId }
-          : {
-              arm: contractArm,
-              entityType: "contract" as const,
-              id: record.convertedContractId!,
-            };
+    if (record.convertedContractId !== null) {
       // The thread moved with the work (CMT-001), so the standing is
-      // asked about the record it moved onto. Staff take that record
+      // asked about the record it moved onto. Staff take the contract
       // arm's own answer — the wall and the reach rule are the record's,
       // and a thread that outran them would be the leak DD-014 exists to
       // close. The `entityId` it answers with is re-read from
-      // the record table, which is that arm's promise and this one's too.
-      const onRecord = staff ? await target.arm.resolve(db, user, target.id) : null;
+      // `contracts`, which is that arm's promise and this one's too.
+      const onRecord = staff
+        ? await contractArm.resolve(db, user, record.convertedContractId)
+        : null;
       if (onRecord) return onRecord;
       // And being the Requester never takes a room away (the M20/7
       // rule): a Member+ who raised the Request and cannot reach the
@@ -417,8 +363,8 @@ const requestArm: CommentEntityArm = {
       // is the Request's own column rather than anything a client sent.
       return requester
         ? {
-            entityType: target.entityType,
-            entityId: target.id,
+            entityType: "contract",
+            entityId: record.convertedContractId,
             tiers: REQUESTER_TIERS,
           }
         : null;
@@ -436,13 +382,13 @@ const requestArm: CommentEntityArm = {
 
   async mentionCandidates(db, audience, only) {
     // Never asked about a converted Request: `resolve` answers a
-    // target record's pair for one, and the dispatch below keys on the pair
+    // `contract` pair for one, and the dispatch below keys on the pair
     // that came back — so the addressees of a moved thread are the
     // record's, which is CMT-007's promise said about the record the
     // comment will actually land on.
     //
     // The audience rule read over people instead of over rows, exactly
-    // as the record arms' are: somebody belongs here when this Request
+    // as the contract arm's is: somebody belongs here when this Request
     // reaches them and they hear at least one tier on it. So it is the
     // Requester plus every live Member+, and nobody else — a Contributor
     // who did not raise it is not offered, because a name no tier
@@ -542,7 +488,7 @@ const requestArm: CommentEntityArm = {
     // this arm cannot be the place one of them is forgotten.
     //
     // The people this comment named are **not** dropped from it here,
-    // which is where the record arms drop them. The two events do not
+    // which is where the contract arm drops them. The two events do not
     // overlap on this record: the mention is the staff side's and the
     // reply is the Requester's, so the only person who could hold both
     // is a Member+ who raised the Request, and the seam is what settles
@@ -565,7 +511,6 @@ const requestArm: CommentEntityArm = {
  * so a name added to {@link COMMENT_ENTITY_TYPES} with no arm fails the
  * build rather than 500ing at the first request for it. */
 const ARMS: { readonly [T in CommentEntityType]: CommentEntityArm } = {
-  matter: matterArm,
   contract: contractArm,
   request: requestArm,
 };
@@ -612,10 +557,10 @@ export function commentEntityType(value: string): CommentEntityType | null {
  *
  * **The reference that arrives and the pair that comes back need not
  * name the same record** (CMT-001, M21/11). A converted Request is asked
- * for by its own id and answers the converted record's pair, because that is
+ * for by its own id and answers the contract's pair, because that is
  * where its thread is. The role gate is still the arm the caller asked
  * for — a Business User reaches a converted Request's thread through the
- * `request` arm, which admits them, and never through the target record
+ * `request` arm, which admits them, and never through the `contract`
  * arm, which does not.
  */
 export async function commentAudience(

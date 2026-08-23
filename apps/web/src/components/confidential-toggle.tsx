@@ -33,7 +33,6 @@ export function ConfidentialToggle({
   confidential,
   disabled = false,
   status,
-  record = "contract",
   onChange,
 }: Readonly<{
   /** The switch's own id; the label's id is derived from it, so two
@@ -45,7 +44,6 @@ export function ConfidentialToggle({
   disabled?: boolean;
   /** The commit's micro-state, where a surface commits (DES-017). */
   status?: ReactNode;
-  record?: "contract" | "matter";
   onChange: (confidential: boolean) => void;
 }>) {
   const labelId = `${id}-label`;
@@ -61,17 +59,10 @@ export function ConfidentialToggle({
         />
         <Lock size={16} aria-hidden="true" className="shrink-0 text-confidential" />
         <span id={labelId} className="text-sm font-medium text-primary">
-          {record === "matter" ? (
-            <FormattedMessage
-              id="matters.confidential.field"
-              defaultMessage="Confidential — restrict to the matter team"
-            />
-          ) : (
-            <FormattedMessage
-              id="contracts.confidential.field"
-              defaultMessage="Confidential — restrict to the contract team"
-            />
-          )}
+          <FormattedMessage
+            id="contracts.confidential.field"
+            defaultMessage="Confidential — restrict to the contract team"
+          />
         </span>
         {status}
       </div>

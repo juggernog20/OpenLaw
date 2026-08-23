@@ -4,11 +4,12 @@
  * The per-type field attachment join for matters (MTR-011, mirrored by
  * CTR-016's `contract_type_fields` — the shared columns live in
  * `typeFieldColumns`): which catalog fields appear on which matter
- * types, in what order, and whether each is required there. M22 opened
- * the `matter` field scope, so matter-scoped and global fields attach
- * here while other module scopes are refused. Detaching deletes the join
- * row only; the catalog definition and stored values are untouched
- * (MTR-014). Matter writes hard-enforce `is_required`.
+ * types, in what order, and whether each is required there. Until the
+ * matter record milestone (M22) opens the `matter` field scope, only
+ * `global` fields attach here (application-enforced); `matter` joins
+ * the rule when that scope opens. Detaching deletes the join row only;
+ * the catalog definition and stored values are untouched (MTR-014).
+ * Hard enforcement of `is_required` arrives with M22.
  */
 
 import { index, pgTable, primaryKey, text } from "drizzle-orm/pg-core";

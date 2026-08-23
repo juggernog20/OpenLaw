@@ -49,7 +49,6 @@ import { users } from "./auth.js";
 import { contracts } from "./contracts.js";
 import { documentFolders } from "./document-folders.js";
 import { uuidPk } from "./helpers.js";
-import { matters } from "./matters.js";
 
 /**
  * What a version is, in the negotiation's own words (CTR-014). The six
@@ -88,10 +87,11 @@ export type HandSetDocumentVersionKind = (typeof HAND_SET_DOCUMENT_VERSION_KINDS
  *
  * **Exactly one owning record** (DOC-008): a matter, a contract, an
  * entity, or a knowledge item, and there is no such thing as a
- * standalone document. M11 began with Contract as the only owner; M22
- * added Matter, while Entity and Knowledge remain with M27/M28. The
- * current constraint therefore names `matter_id` and `contract_id` and
- * requires exactly one.
+ * standalone document. The owner set is a set of one in M11 — a
+ * contract — and the other three FK columns land with their own modules
+ * (M22, M27, M28). `contract_id` is therefore `NOT NULL` here: with one
+ * owner declared, that is the exactly-one-owner rule stated exactly, and
+ * it costs nothing to hold.
  *
  * **The migration that adds a second owner column must carry the rule
  * down with it, not hand it to the application.** Dropping `NOT NULL`
@@ -135,13 +135,12 @@ export const documents = pgTable(
      * metadata and the only prose the record carries: there are no tags
      * and no custom fields on a document. NULL when nobody wrote one. */
     description: text("description"),
-    /** The contract arm of DOC-008's owning record. A viewer reaches a
-     * document only through whichever contract or matter owns it. */
-    contractId: text("contract_id").references(() => contracts.id),
-    /** M22's second owning record. Exactly one of this and
-     * `contract_id` is present; the table check below is the floor under
-     * every application write (DOC-008). */
-    matterId: text("matter_id").references(() => matters.id),
+    /** DOC-008's owning record, and the whole access answer in front of
+     * this row: a viewer who cannot reach the contract cannot reach its
+     * documents (DD-014, CTR-021). */
+    contractId: text("contract_id")
+      .notNull()
+      .references(() => contracts.id),
     /**
      * CTR-014's executed pin: which version of this document is the
      * signed one (M11/4). It is the file previews, exports, and AI
@@ -240,7 +239,6 @@ export const documents = pgTable(
     // `(created_at, id)` and the tie-break belongs in the index that
     // answers the order (CTR-024, #391).
     index("documents_contract_idx").on(table.contractId, table.createdAt, table.id),
-    index("documents_matter_idx").on(table.matterId, table.createdAt, table.id),
     // The executed pin's own column — the referencing side of the
     // foreign key into `document_versions` (M11/5). No read filters on
     // it, so it carried no index until now: what needs one is DOC-010's
@@ -258,7 +256,6 @@ export const documents = pgTable(
     // tie-break: one folder's page is the record's page under one more
     // filter, and it walks `(created_at, id)` too.
     index("documents_folder_idx").on(table.folderId, table.createdAt, table.id),
-    check("documents_owner_check", sql`num_nonnulls(${table.matterId}, ${table.contractId}) = 1`),
   ],
 );
 
