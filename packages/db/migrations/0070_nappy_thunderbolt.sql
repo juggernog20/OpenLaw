@@ -9,9 +9,9 @@ COMMIT;
 --> statement-breakpoint
 BEGIN;
 --> statement-breakpoint
-ALTER TABLE "comment_attachments" DROP CONSTRAINT IF EXISTS "comment_attachments_filed_document_id_documents_id_fk";
+ALTER TABLE "comment_attachments" DROP CONSTRAINT "comment_attachments_filed_document_id_documents_id_fk";
 --> statement-breakpoint
-ALTER TABLE "comment_attachments" DROP CONSTRAINT IF EXISTS "comment_attachments_filed_version_id_document_versions_id_fk";
+ALTER TABLE "comment_attachments" DROP CONSTRAINT "comment_attachments_filed_version_id_document_versions_id_fk";
 --> statement-breakpoint
 UPDATE "comment_attachments" AS "attachment"
 SET "filed_document_id" = NULL, "filed_version_id" = NULL
