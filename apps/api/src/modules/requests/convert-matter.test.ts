@@ -5,6 +5,8 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import {
   activityLog,
   and,
+  contracts,
+  contractTypes,
   eq,
   matters,
   matterStatuses,
@@ -351,6 +353,35 @@ describe("Re-target, reach, narration, and the race", () => {
       expect(stored.convertedMatterId).not.toBeNull();
       expect(stored.convertedContractId).toBeNull();
     }
+  });
+
+  it("re-targets a matter-bound Request into a contract and leaves the matter id null", async () => {
+    const [nda] = await harness.db
+      .select({ id: contractTypes.id })
+      .from(contractTypes)
+      .where(eq(contractTypes.slug, "nda"));
+    const request = await submit("This dispute is really paper");
+    const before = await matterCount();
+    const res = await convert(request.number, {
+      title: "Re-targeted contract",
+      contractTypeId: nda!.id,
+    });
+    expect(res.statusCode, res.body).toBe(200);
+    expect(res.json().request.convertedRecord).toEqual({
+      module: "contract",
+      number: expect.any(Number),
+    });
+    expect(res.json().request.convertedContract).toEqual({ number: expect.any(Number) });
+    const stored = await cast.stored(request.id);
+    expect(stored.status).toBe("converted");
+    expect(stored.convertedContractId).not.toBeNull();
+    expect(stored.convertedMatterId).toBeNull();
+    const [born] = await harness.db
+      .select({ contractTypeId: contracts.contractTypeId })
+      .from(contracts)
+      .where(eq(contracts.id, stored.convertedContractId!));
+    expect(born!.contractTypeId).toBe(nda!.id);
+    expect(await matterCount()).toBe(before);
   });
 
   it("links Inbox and detail under matter reach, and withholds a confidential outsider", async () => {
