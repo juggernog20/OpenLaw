@@ -186,7 +186,8 @@ export const activityRoutes: FastifyPluginAsyncZod = async (app) => {
           ? await contractAudience(app.db, request.user, entityId)
           : await matterAudience(app.db, request.user, entityId);
       if (!audience) throw httpError(404, NO_RECORD);
-      const reachedId = "contractId" in audience ? audience.contractId : audience.matterId;
+      const reachedId =
+        audience.entityType === "contract" ? audience.contractId : audience.matterId;
 
       // Keyset, on the pair the feed is ordered by. The cursor row's own
       // position comes from the table rather than from the client, so a
@@ -235,7 +236,7 @@ export const activityRoutes: FastifyPluginAsyncZod = async (app) => {
             // page — not redacted, because every payload here carries
             // the document's title, and a redacted row would still say
             // that something happened.
-            "contractId" in audience ? confidentialDocumentEntryScope(audience) : undefined,
+            confidentialDocumentEntryScope(audience),
             before,
           ),
         )

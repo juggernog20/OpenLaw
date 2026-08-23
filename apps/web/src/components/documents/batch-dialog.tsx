@@ -60,7 +60,7 @@
  */
 
 import { useRef, useState } from "react";
-import { FormattedMessage, useIntl } from "react-intl";
+import { defineMessage, FormattedMessage, useIntl } from "react-intl";
 import {
   CircleAlert,
   CircleCheck,
@@ -85,10 +85,11 @@ import {
   type BatchState,
   type DroppedFile,
 } from "../../lib/batch-upload";
-import { recreateContractFolderPath } from "../../lib/folders";
+import { recreateRecordFolderPath } from "../../lib/folders";
 import {
   DOCUMENT_VERSION_KINDS,
-  uploadContractDocument,
+  uploadRecordDocument,
+  type DocumentRecord,
   type HandSetDocumentVersionKind,
 } from "../../lib/documents";
 
@@ -146,8 +147,40 @@ export interface BatchDestination {
   name: string;
 }
 
+/**
+ * The outcome copy that names the owning record, keyed by record type.
+ * Descriptors rather than a ternary in the `id` prop: the message
+ * extractor reads ids statically and drops any it cannot see.
+ */
+const BATCH_COPY = {
+  contract: {
+    failures: defineMessage({
+      id: "documents.batch.failures",
+      defaultMessage:
+        "{failed, plural, one {# file failed} other {# files failed}}. {landed, plural, =0 {Nothing was added to the contract.} one {The other # is on the contract.} other {The other # are on the contract.}}",
+    }),
+    onRecord: defineMessage({
+      id: "documents.batch.onRecord",
+      defaultMessage:
+        "{count, plural, =0 {Nothing was added to the contract.} one {# file is already on the contract.} other {# files are already on the contract.}}",
+    }),
+  },
+  matter: {
+    failures: defineMessage({
+      id: "matters.documents.batch.failures",
+      defaultMessage:
+        "{failed, plural, one {# file failed} other {# files failed}}. {landed, plural, =0 {Nothing was added to the matter.} one {The other # is on the matter.} other {The other # are on the matter.}}",
+    }),
+    onRecord: defineMessage({
+      id: "matters.documents.batch.onRecord",
+      defaultMessage:
+        "{count, plural, =0 {Nothing was added to the matter.} one {# file is already on the matter.} other {# files are already on the matter.}}",
+    }),
+  },
+} as const;
+
 export function BatchDialog({
-  contractNumber,
+  record,
   files,
   emptyFolders,
   unreadable,
@@ -158,7 +191,7 @@ export function BatchDialog({
 }: Readonly<{
   /** CTR-003's reference — the address every file of the batch is sent
    * to, one call per file. */
-  contractNumber: number;
+  record: DocumentRecord;
   /** What was dropped or chosen, each file with the folder chain it sat
    * at. Fixed for the life of the dialog: the batch is what the gesture
    * carried, and adding to it would be a second gesture. */
@@ -281,7 +314,7 @@ export function BatchDialog({
       // sat at in the dropped tree. The seam makes that chain under the
       // contract's row lock, so the files of one folder converge on one
       // folder without anything here co-ordinating them.
-      const outcome = await uploadContractDocument(contractNumber, {
+      const outcome = await uploadRecordDocument(record, {
         file: row.file,
         kind,
         note: "",
@@ -327,7 +360,7 @@ export function BatchDialog({
   async function recreateEmptyFolders(): Promise<boolean> {
     if (emptyFolders.length === 0) return true;
     for (const path of emptyFolders) {
-      const outcome = await recreateContractFolderPath(contractNumber, {
+      const outcome = await recreateRecordFolderPath(record, {
         path,
         ...(destination ? { parentId: destination.id } : {}),
       });
@@ -583,8 +616,7 @@ export function BatchDialog({
             >
               <CircleAlert size={16} aria-hidden="true" className="mt-0.5 shrink-0" />
               <FormattedMessage
-                id="documents.batch.failures"
-                defaultMessage="{failed, plural, one {# file failed} other {# files failed}}. {landed, plural, =0 {Nothing was added to the contract.} one {The other # is on the contract.} other {The other # are on the contract.}}"
+                {...BATCH_COPY[record.entityType].failures}
                 values={{ failed: failed.length, landed }}
               />
             </p>
@@ -621,8 +653,7 @@ export function BatchDialog({
                 />
               ) : settled ? (
                 <FormattedMessage
-                  id="documents.batch.onRecord"
-                  defaultMessage="{count, plural, =0 {Nothing was added to the contract.} one {# file is already on the contract.} other {# files are already on the contract.}}"
+                  {...BATCH_COPY[record.entityType].onRecord}
                   values={{ count: landed }}
                 />
               ) : (

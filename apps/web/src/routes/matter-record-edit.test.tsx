@@ -79,6 +79,64 @@ function options() {
 }
 
 describe("the editable matter record", () => {
+  it("mounts the shared Documents section on the matter Documents tab", async () => {
+    stubApi({
+      signedIn: ADMIN,
+      extra: (call) => {
+        if (call.url.pathname === "/api/v1/matters/12" && call.method === "GET") {
+          return json(200, record(row()));
+        }
+        if (call.url.pathname === "/api/v1/matters/options" && call.method === "GET") {
+          return options();
+        }
+        if (call.url.pathname === "/api/v1/matters/12/documents" && call.method === "GET") {
+          expect(call.url.searchParams.get("folder")).toBe("root");
+          return json(200, { documents: [], nextCursor: null });
+        }
+        if (call.url.pathname === "/api/v1/matters/12/folders" && call.method === "GET") {
+          return json(200, { folders: [] });
+        }
+        if (call.url.pathname === "/api/v1/comments/unread") return json(200, { unread: 0 });
+        return undefined;
+      },
+    });
+    renderAt("/matters/12");
+    const user = userEvent.setup();
+    // DES-032: the strip is a nav of links, and the section is a URL.
+    const strip = await screen.findByRole("navigation", { name: "Matter sections" });
+    await user.click(within(strip).getByRole("link", { name: "Documents" }));
+    expect(await screen.findByRole("heading", { name: "Documents" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Upload" })).toBeInTheDocument();
+    expect(screen.getByText("No documents on this matter yet.")).toBeInTheDocument();
+    expect(screen.queryByText("Make primary")).not.toBeInTheDocument();
+    expect(screen.queryByText("Mark as executed")).not.toBeInTheDocument();
+  });
+
+  it("lands on the Documents section from its own address", async () => {
+    stubApi({
+      signedIn: ADMIN,
+      extra: (call) => {
+        if (call.url.pathname === "/api/v1/matters/12" && call.method === "GET") {
+          return json(200, record(row()));
+        }
+        if (call.url.pathname === "/api/v1/matters/options" && call.method === "GET") {
+          return options();
+        }
+        if (call.url.pathname === "/api/v1/matters/12/documents" && call.method === "GET") {
+          return json(200, { documents: [], nextCursor: null });
+        }
+        if (call.url.pathname === "/api/v1/matters/12/folders" && call.method === "GET") {
+          return json(200, { folders: [] });
+        }
+        if (call.url.pathname === "/api/v1/comments/unread") return json(200, { unread: 0 });
+        return undefined;
+      },
+    });
+    renderAt("/matters/12/documents");
+    expect(await screen.findByRole("heading", { name: "Documents" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Documents" })).toHaveAttribute("aria-current", "page");
+  });
+
   it("mounts the matter comments and history applets on the activity bar", async () => {
     const calls: StubCall[] = [];
     stubApi({

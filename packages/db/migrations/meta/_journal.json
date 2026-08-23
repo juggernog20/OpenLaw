@@ -505,6 +505,13 @@
       "when": 1787448631767,
       "tag": "0071_parched_ronan",
       "breakpoints": true
+    },
+    {
+      "idx": 72,
+      "version": "7",
+      "when": 1787464396578,
+      "tag": "0072_hot_annihilus",
+      "breakpoints": true
     }
   ]
 }

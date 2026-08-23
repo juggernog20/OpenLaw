@@ -107,9 +107,12 @@ import {
   eq,
   isNotNull,
   isNull,
+  matters,
+  or,
   MAX_FOLDER_NAME_LENGTH,
   sql,
   type Executor,
+  type Matter,
   type Transaction,
 } from "@openlaw/db";
 import { requireRole, type AuthenticatedUser } from "../../auth/guards.js";
@@ -122,6 +125,12 @@ import {
   type LockedContract,
   type ReachedContract,
 } from "../../lib/contract-access.js";
+import {
+  matterTeamScope,
+  NO_MATTER,
+  reachedMatter,
+  type LockedMatter,
+} from "../../lib/matter-access.js";
 import { httpError, problemResponse } from "../../lib/problem.js";
 
 /** The contract read floor (CTR-021), which is the folder read floor
@@ -189,6 +198,15 @@ interface FolderRow {
   updatedAt: Date;
 }
 
+export interface FolderOwner {
+  type: "contract" | "matter";
+  id: string;
+}
+
+function folderOwner(owner: string | FolderOwner): FolderOwner {
+  return typeof owner === "string" ? { type: "contract", id: owner } : owner;
+}
+
 /**
  * Every folder on one contract, siblings in the order they are drawn.
  *
@@ -201,7 +219,8 @@ interface FolderRow {
  * The whole set, never one level: the section draws the tree from one
  * read, and every invariant below is asked of the same set.
  */
-async function foldersOf(db: Executor, contractId: string): Promise<FolderRow[]> {
+async function foldersOf(db: Executor, owner: string | FolderOwner): Promise<FolderRow[]> {
+  const record = folderOwner(owner);
   return db
     .select({
       id: documentFolders.id,
@@ -211,7 +230,11 @@ async function foldersOf(db: Executor, contractId: string): Promise<FolderRow[]>
       updatedAt: documentFolders.updatedAt,
     })
     .from(documentFolders)
-    .where(eq(documentFolders.contractId, contractId))
+    .where(
+      record.type === "contract"
+        ? eq(documentFolders.contractId, record.id)
+        : eq(documentFolders.matterId, record.id),
+    )
     .orderBy(asc(sql`lower(${documentFolders.name})`), asc(documentFolders.id));
 }
 
@@ -386,12 +409,12 @@ function folderIn(tree: Tree, folderId: string | null): FolderRow | null {
  */
 export async function folderOnRecord(
   db: Executor,
-  contractId: string,
+  owner: string | FolderOwner,
   folderId: string,
 ): Promise<{ id: string; name: string }> {
   // Never `null`: `folderId` is a real id, so `folderIn` either answers
   // a row of this record's tree or refuses.
-  const folder = folderIn(treeOf(await foldersOf(db, contractId)), folderId)!;
+  const folder = folderIn(treeOf(await foldersOf(db, owner)), folderId)!;
   return { id: folder.id, name: folder.name };
 }
 
@@ -549,11 +572,14 @@ export async function findOrCreateFolderPath(
   // inserts on the connection that holds it. On a pooled handle they
   // would run outside the lock the brand vouches for.
   tx: Transaction,
-  contract: LockedContract,
+  contract: LockedContract | LockedMatter,
   destination: FolderDestination,
 ): Promise<ResolvedFolder | null> {
-  const contractId = contract.id;
-  const tree = treeOf(await foldersOf(tx, contractId));
+  const owner: FolderOwner =
+    "matterTypeId" in contract
+      ? { type: "matter", id: contract.id }
+      : { type: "contract", id: contract.id };
+  const tree = treeOf(await foldersOf(tx, owner));
   let at = folderIn(tree, destination.folderId);
   // Asked once, of the whole chain, before anything is written: a path
   // that would end up too deep creates none of its shallower folders
@@ -570,7 +596,11 @@ export async function findOrCreateFolderPath(
     }
     const [created] = await tx
       .insert(documentFolders)
-      .values({ contractId, parentId: at?.id ?? null, name: segment })
+      .values({
+        ...(owner.type === "contract" ? { contractId: owner.id } : { matterId: owner.id }),
+        parentId: at?.id ?? null,
+        name: segment,
+      })
       .returning({
         id: documentFolders.id,
         name: documentFolders.name,
@@ -701,9 +731,8 @@ export const documentFoldersRoutes: FastifyPluginAsyncZod = async (app) => {
     id: string;
     name: string;
     parentId: string | null;
-    contractId: string;
-    /** The owning contract's SET-003 soft delete (CTR-021). */
-    contractArchivedAt: Date | null;
+    owner: FolderOwner;
+    ownerArchivedAt: Date | null;
   }
 
   /**
@@ -732,14 +761,53 @@ export const documentFoldersRoutes: FastifyPluginAsyncZod = async (app) => {
         name: documentFolders.name,
         parentId: documentFolders.parentId,
         contractId: documentFolders.contractId,
+        matterId: documentFolders.matterId,
         contractArchivedAt: contracts.archivedAt,
+        matterArchivedAt: matters.archivedAt,
       })
       .from(documentFolders)
-      .innerJoin(contracts, eq(documentFolders.contractId, contracts.id))
-      .where(and(eq(documentFolders.id, folderId), contractTeamScope(db, user)))
+      .leftJoin(contracts, eq(documentFolders.contractId, contracts.id))
+      .leftJoin(matters, eq(documentFolders.matterId, matters.id))
+      .where(
+        and(
+          eq(documentFolders.id, folderId),
+          or(
+            and(isNotNull(documentFolders.contractId), contractTeamScope(db, user)),
+            and(isNotNull(documentFolders.matterId), matterTeamScope(db, user)),
+          ),
+        ),
+      )
       .limit(1);
-    const [row] = await (lock ? query.for("update", { of: contracts }) : query);
-    return row ?? null;
+    let [row] = await query;
+    if (!row) return null;
+    if (lock) {
+      if (row.contractId) {
+        await db
+          .select({ id: contracts.id })
+          .from(contracts)
+          .where(eq(contracts.id, row.contractId))
+          .for("update", { of: contracts });
+      } else if (row.matterId) {
+        await db
+          .select({ id: matters.id })
+          .from(matters)
+          .where(eq(matters.id, row.matterId))
+          .for("update", { of: matters });
+      }
+      [row] = await query;
+      if (!row) return null;
+    }
+    const contractOwned = row.contractId !== null;
+    return {
+      id: row.id,
+      name: row.name,
+      parentId: row.parentId,
+      owner: {
+        type: contractOwned ? "contract" : "matter",
+        id: (row.contractId ?? row.matterId)!,
+      },
+      ownerArchivedAt: contractOwned ? row.contractArchivedAt : row.matterArchivedAt,
+    };
   }
 
   /**
@@ -764,14 +832,17 @@ export const documentFoldersRoutes: FastifyPluginAsyncZod = async (app) => {
   async function countsOf(
     db: Executor,
     user: AuthenticatedUser,
-    contractId: string,
+    owner: string | FolderOwner,
   ): Promise<Map<string, number>> {
+    const record = folderOwner(owner);
     const rows = await db
       .select({ folderId: documents.folderId, filed: count() })
       .from(documents)
       .where(
         and(
-          eq(documents.contractId, contractId),
+          record.type === "contract"
+            ? eq(documents.contractId, record.id)
+            : eq(documents.matterId, record.id),
           isNotNull(documents.folderId),
           isNull(documents.archivedAt),
           documentAudienceScope(db, user),
@@ -795,12 +866,16 @@ export const documentFoldersRoutes: FastifyPluginAsyncZod = async (app) => {
   /** The record's folders as the routes answer them, read back through
    * the same projection the list uses — so what a write returns is what
    * the next load will draw. */
-  async function foldersEnvelope(db: Executor, user: AuthenticatedUser, contractId: string) {
+  async function foldersEnvelope(
+    db: Executor,
+    user: AuthenticatedUser,
+    owner: string | FolderOwner,
+  ) {
     // One after the other, never in parallel: this runs inside a
     // transaction as often as not, and a transaction is one connection —
     // two statements racing down it is not a speed-up.
-    const rows = await foldersOf(db, contractId);
-    const counts = await countsOf(db, user, contractId);
+    const rows = await foldersOf(db, owner);
+    const counts = await countsOf(db, user, owner);
     return { folders: rows.map((row) => toFolder(row, counts.get(row.id) ?? 0)) };
   }
 
@@ -820,12 +895,24 @@ export const documentFoldersRoutes: FastifyPluginAsyncZod = async (app) => {
     }
   }
 
+  function assertOpenMatter<T extends Pick<Matter, "archivedAt">>(
+    matter: T | null,
+  ): asserts matter is T {
+    if (!matter) throw httpError(404, NO_MATTER);
+    if (matter.archivedAt) {
+      throw httpError(409, "This matter is archived. Restore it before changing its folders.");
+    }
+  }
+
   /** The same two refusals for a write addressed at a folder rather than
    * at the record. */
   function assertOpenFolder(folder: ReachedFolder | null): asserts folder is ReachedFolder {
     if (!folder) throw httpError(404, NO_FOLDER);
-    if (folder.contractArchivedAt) {
-      throw httpError(409, "This contract is archived. Restore it before changing its folders.");
+    if (folder.ownerArchivedAt) {
+      throw httpError(
+        409,
+        `This ${folder.owner.type} is archived. Restore it before changing its folders.`,
+      );
     }
   }
 
@@ -984,6 +1071,86 @@ export const documentFoldersRoutes: FastifyPluginAsyncZod = async (app) => {
     },
   );
 
+  app.get(
+    "/matters/:number/folders",
+    {
+      preHandler: requireFolderReader,
+      schema: {
+        operationId: "listMatterFolders",
+        summary:
+          "The complete folder tree on one matter. Counts include only live documents the viewer reaches.",
+        tags: ["documents"],
+        params: NumberParams,
+        response: { 200: FoldersEnvelope, default: problemResponse },
+      },
+    },
+    async (request) => {
+      const matter = await reachedMatter(app.db, request.user, request.params.number);
+      if (!matter) throw httpError(404, NO_MATTER);
+      return foldersEnvelope(app.db, request.user, { type: "matter", id: matter.id });
+    },
+  );
+
+  app.post(
+    "/matters/:number/folders",
+    {
+      preHandler: requireMember,
+      schema: {
+        operationId: "createMatterFolder",
+        summary:
+          "Create a folder on a matter, or recreate a dropped folder path beneath an optional parent.",
+        tags: ["documents"],
+        params: NumberParams,
+        body: CreateFolderBody,
+        response: { 201: FoldersEnvelope, default: problemResponse },
+      },
+    },
+    async (request, reply) => {
+      const { name: rawName, path: rawPath, parentId } = request.body;
+      if ((rawName === undefined) === (rawPath === undefined)) {
+        throw httpError(400, "Give the folder a name, or a path to recreate.");
+      }
+      if (rawPath !== undefined) {
+        const path = folderPathSegments(rawPath);
+        if (path.length === 0) throw httpError(400, "Give the folder a path to recreate.");
+        const recreated = await app.db.transaction(async (tx) => {
+          const matter = await reachedMatter(tx, request.user, request.params.number, {
+            lock: true,
+          });
+          assertOpenMatter(matter);
+          await findOrCreateFolderPath(tx, matter, { folderId: parentId ?? null, path });
+          return foldersEnvelope(tx, request.user, { type: "matter", id: matter.id });
+        });
+        return reply.status(201).send(recreated);
+      }
+
+      const folders = await app.db.transaction(async (tx) => {
+        const matter = await reachedMatter(tx, request.user, request.params.number, { lock: true });
+        assertOpenMatter(matter);
+        const name = folderName(rawName!);
+        const owner = { type: "matter", id: matter.id } as const;
+        const tree = treeOf(await foldersOf(tx, owner));
+        const parent = folderIn(tree, parentId ?? null);
+        assertNameFree(tree, parent?.id ?? null, name);
+        assertDepth(tree, parent, 0);
+        const [created] = await tx
+          .insert(documentFolders)
+          .values({ matterId: matter.id, parentId: parent?.id ?? null, name })
+          .returning({ id: documentFolders.id });
+        await recordActivity(tx, {
+          entityType: "matter",
+          entityId: matter.id,
+          actorId: request.user.id,
+          action: "folder.created",
+          visibility: RECORD_ACTIVITY_TIER,
+          payload: { folderId: created!.id, name, parentName: parent?.name ?? null },
+        });
+        return foldersEnvelope(tx, request.user, owner);
+      });
+      return reply.status(201).send(folders);
+    },
+  );
+
   app.patch(
     "/folders/:folderId",
     {
@@ -1032,7 +1199,7 @@ export const documentFoldersRoutes: FastifyPluginAsyncZod = async (app) => {
         assertOpenFolder(target);
 
         const name = body.name === undefined ? target.name : folderName(body.name);
-        const tree = treeOf(await foldersOf(tx, target.contractId));
+        const tree = treeOf(await foldersOf(tx, target.owner));
         // The move is asked of the parent the body named; a request that
         // named none leaves the folder where it is.
         const moving = body.parentId !== undefined;
@@ -1067,8 +1234,8 @@ export const documentFoldersRoutes: FastifyPluginAsyncZod = async (app) => {
         // writes no misleading from==to entry.
         if (renamed) {
           await recordActivity(tx, {
-            entityType: "contract",
-            entityId: target.contractId,
+            entityType: target.owner.type,
+            entityId: target.owner.id,
             actorId: request.user.id,
             action: "folder.renamed",
             visibility: RECORD_ACTIVITY_TIER,
@@ -1077,8 +1244,8 @@ export const documentFoldersRoutes: FastifyPluginAsyncZod = async (app) => {
         }
         if (moved) {
           await recordActivity(tx, {
-            entityType: "contract",
-            entityId: target.contractId,
+            entityType: target.owner.type,
+            entityId: target.owner.id,
             actorId: request.user.id,
             action: "folder.moved",
             visibility: RECORD_ACTIVITY_TIER,
@@ -1089,7 +1256,7 @@ export const documentFoldersRoutes: FastifyPluginAsyncZod = async (app) => {
           });
         }
 
-        return foldersEnvelope(tx, request.user, target.contractId);
+        return foldersEnvelope(tx, request.user, target.owner);
       });
     },
   );
@@ -1133,7 +1300,7 @@ export const documentFoldersRoutes: FastifyPluginAsyncZod = async (app) => {
         const target = await reachedFolder(tx, request.user, folderId, true);
         assertOpenFolder(target);
 
-        const tree = treeOf(await foldersOf(tx, target.contractId));
+        const tree = treeOf(await foldersOf(tx, target.owner));
         const children = tree.children.get(target.id) ?? [];
 
         // Re-filing can only break one invariant, and it is the sibling
@@ -1165,15 +1332,15 @@ export const documentFoldersRoutes: FastifyPluginAsyncZod = async (app) => {
           .where(eq(documents.folderId, target.id));
         await tx.delete(documentFolders).where(eq(documentFolders.id, target.id));
         await recordActivity(tx, {
-          entityType: "contract",
-          entityId: target.contractId,
+          entityType: target.owner.type,
+          entityId: target.owner.id,
           actorId: request.user.id,
           action: "folder.deleted",
           visibility: RECORD_ACTIVITY_TIER,
           payload: { folderId: target.id, name: target.name },
         });
 
-        return foldersEnvelope(tx, request.user, target.contractId);
+        return foldersEnvelope(tx, request.user, target.owner);
       });
     },
   );

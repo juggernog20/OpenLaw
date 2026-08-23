@@ -1,10 +1,17 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 /** M22/5's editable matter record: one commit per field and recoverable lifecycle acts. */
-import { useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { Archive, ArchiveRestore, ChevronRight } from "lucide-react";
 import { FormattedMessage, useIntl, type IntlShape } from "react-intl";
-import { Link, redirect, useLoaderData, useNavigate, type LoaderFunctionArgs } from "react-router";
+import {
+  Link,
+  redirect,
+  useLoaderData,
+  useNavigate,
+  useParams,
+  type LoaderFunctionArgs,
+} from "react-router";
 import { api } from "../lib/api";
 import { authClient } from "../lib/auth-client";
 import {
@@ -37,14 +44,22 @@ import { useActivityApplet } from "../components/activity/activity-applet";
 import { useCommentApplet } from "../components/comments/comment-applet";
 import { CustomFieldControl, type FieldReference } from "../components/custom-field-control";
 import { MatterTeamTray } from "../components/matters/team-tray";
+import { DocPanel } from "../components/documents/doc-panel";
+import { DocumentsCard } from "../components/documents/documents-card";
 import { PageTitle } from "../components/page-title";
 import { AppShell } from "../components/shell/app-shell";
 import { RecordApplets } from "../components/shell/record-applets";
+import { RecordTabs } from "../components/shell/record-tabs";
 import { StatusNote, type FieldStatus } from "../components/status-note";
 import { Button } from "../components/ui/button";
 import { Dialog, DialogContent, DialogTitle } from "../components/ui/dialog";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
+
+/** The DES-032 sections a matter record has beyond its Overview. Each
+ * is one trailing URL segment; the bare address is the Overview. */
+const RECORD_TABS = ["documents"] as const;
+type RecordTabName = "overview" | (typeof RECORD_TABS)[number];
 
 export async function matterRecordLoader({ params }: LoaderFunctionArgs) {
   const user = await currentUser();
@@ -52,10 +67,24 @@ export async function matterRecordLoader({ params }: LoaderFunctionArgs) {
   if (!canReadMatters(user.role)) return redirect("/");
   const number = Number(params.matterNumber);
   if (!Number.isInteger(number) || number < 1) throw new Error("That is not a matter reference.");
+  // A section this record does not have is not an error — the record
+  // exists. It lands on the Overview, which is what the bare address
+  // already means (DES-032).
+  if (params.tab && !RECORD_TABS.includes(params.tab as (typeof RECORD_TABS)[number])) {
+    return redirect(`/matters/${number}`);
+  }
   const canEdit = isMemberPlus(user.role);
-  const [record, options] = await Promise.all([
+  const [record, options, paper, folders] = await Promise.all([
     api.GET("/api/v1/matters/{number}", { params: { path: { number } } }),
     canEdit ? api.GET("/api/v1/matters/options") : undefined,
+    api
+      .GET("/api/v1/matters/{number}/documents", {
+        params: { path: { number }, query: { folder: "root" } },
+      })
+      .catch(() => ({ data: undefined })),
+    api
+      .GET("/api/v1/matters/{number}/folders", { params: { path: { number } } })
+      .catch(() => ({ data: undefined })),
   ]);
   if (!record.data) throw new Error("The matter could not be read.");
   if (canEdit && !options?.data) throw new Error("The matter's edit options could not be read.");
@@ -70,6 +99,9 @@ export async function matterRecordLoader({ params }: LoaderFunctionArgs) {
     matterTypes: options?.data?.matterTypes ?? [],
     matterStatuses: options?.data?.matterStatuses ?? [],
     users: options?.data?.users ?? [],
+    documents: paper.data?.documents ?? [],
+    documentsCursor: paper.data?.nextCursor ?? null,
+    folders: folders.data?.folders ?? [],
   };
 }
 
@@ -97,6 +129,14 @@ export function MatterRecordPage() {
   const [fields, setFields] = useState(loader.fields);
   const [customFieldRefs, setCustomFieldRefs] = useState(loader.customFieldRefs);
   const [team, setTeam] = useState<MatterTeamMember[]>(loader.team);
+  // Which section is on screen (DES-032). The loader has already sent
+  // an unknown segment back to the bare address, so the cast is safe.
+  const tab = (useParams().tab ?? "overview") as RecordTabName;
+  const [paper, setPaper] = useState(loader.documents);
+  const [paperCursor, setPaperCursor] = useState(loader.documentsCursor);
+  const [folders, setFolders] = useState(loader.folders);
+  const [filed, setFiled] = useState<typeof loader.documents>([]);
+  const [reading, setReading] = useState<{ documentId: string; versionId: string } | null>(null);
   const [title, setTitle] = useState(saved.title);
   const [description, setDescription] = useState(saved.description ?? "");
   const [fieldStatus, setFieldStatus] = useState<Partial<Record<FieldKey, FieldStatus>>>({});
@@ -270,6 +310,17 @@ export function MatterRecordPage() {
     ]),
   });
 
+  const open = (() => {
+    if (!reading) return null;
+    const document = [...paper, ...filed].find((row) => row.id === reading.documentId);
+    const version = document?.versions.find((row) => row.id === reading.versionId);
+    return document && version ? { document, version } : null;
+  })();
+
+  useEffect(() => {
+    if (reading && !open) setReading(null);
+  }, [open, reading]);
+
   const reference = matterReference(intl, saved.number);
   return (
     <AppShell
@@ -285,79 +336,104 @@ export function MatterRecordPage() {
         ) : undefined
       }
       subbar={
-        <section
-          aria-labelledby="page-title"
-          className="flex min-h-(--height-subbar) shrink-0 items-center gap-2 border-b border-(--chrome-subbar-border) bg-canvas px-page-x"
-        >
-          <Link to="/matters" className="text-link hover:underline">
-            <FormattedMessage id="matters.title" defaultMessage="Matters" />
-          </Link>
-          <ChevronRight size={16} aria-hidden="true" className="text-subtle" />
-          <span className="text-sm text-muted">{reference}</span>
-          <h1 id="page-title" className="min-w-0 flex-1 truncate text-xl font-semibold">
-            {saved.title}
-          </h1>
-          {frozen ? (
-            <span className="rounded-pill bg-status-info-bg px-2 py-0.5 text-xs font-medium text-status-info-fg">
-              {saved.statusName}
-            </span>
-          ) : (
-            <select
-              id="matter-status"
-              aria-label={intl.formatMessage({
-                id: "matters.field.status",
-                defaultMessage: "Status",
-              })}
-              className={CONTROL_CLASS}
-              value={saved.statusId}
-              disabled={fieldStatus.statusId === "saving"}
-              onChange={(event) => void commit("statusId", { statusId: event.target.value })}
-            >
-              <StatusGroup
-                label={intl.formatMessage({
-                  id: "matters.status.open",
-                  defaultMessage: "Open",
+        <>
+          <section
+            aria-labelledby="page-title"
+            // No bottom border of its own: the DES-032 strip beneath
+            // carries the sub-bar border, so the two read as one slab.
+            className="flex min-h-(--height-subbar) shrink-0 items-center gap-2 bg-canvas px-page-x"
+          >
+            <Link to="/matters" className="text-link hover:underline">
+              <FormattedMessage id="matters.title" defaultMessage="Matters" />
+            </Link>
+            <ChevronRight size={16} aria-hidden="true" className="text-subtle" />
+            <span className="text-sm text-muted">{reference}</span>
+            <h1 id="page-title" className="min-w-0 flex-1 truncate text-xl font-semibold">
+              {saved.title}
+            </h1>
+            {frozen ? (
+              <span className="rounded-pill bg-status-info-bg px-2 py-0.5 text-xs font-medium text-status-info-fg">
+                {saved.statusName}
+              </span>
+            ) : (
+              <select
+                id="matter-status"
+                aria-label={intl.formatMessage({
+                  id: "matters.field.status",
+                  defaultMessage: "Status",
                 })}
-                category="open"
-                statuses={statusOptions}
-              />
-              <StatusGroup
-                label={intl.formatMessage({
-                  id: "matters.status.closed",
-                  defaultMessage: "Closed",
-                })}
-                category="closed"
-                statuses={statusOptions}
-              />
-            </select>
-          )}
-          {!frozen && (
-            <StatusNote status={fieldStatus.statusId ?? "idle"} detail={fieldError.statusId} />
-          )}
-          {archived && (
-            <span className="rounded-pill bg-badge-count-bg px-2 py-0.5 text-xs font-medium text-badge-count-fg">
-              <FormattedMessage id="matters.archivedPill" defaultMessage="Archived" />
-            </span>
-          )}
-          {canEdit && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setLifecycleDialog(archived ? "restore" : "archive")}
-            >
-              {archived ? (
-                <ArchiveRestore size={16} aria-hidden="true" />
-              ) : (
-                <Archive size={16} aria-hidden="true" />
-              )}
-              {archived ? (
-                <FormattedMessage id="matters.record.restore" defaultMessage="Restore" />
-              ) : (
-                <FormattedMessage id="matters.record.archive" defaultMessage="Archive" />
-              )}
-            </Button>
-          )}
-        </section>
+                className={CONTROL_CLASS}
+                value={saved.statusId}
+                disabled={fieldStatus.statusId === "saving"}
+                onChange={(event) => void commit("statusId", { statusId: event.target.value })}
+              >
+                <StatusGroup
+                  label={intl.formatMessage({
+                    id: "matters.status.open",
+                    defaultMessage: "Open",
+                  })}
+                  category="open"
+                  statuses={statusOptions}
+                />
+                <StatusGroup
+                  label={intl.formatMessage({
+                    id: "matters.status.closed",
+                    defaultMessage: "Closed",
+                  })}
+                  category="closed"
+                  statuses={statusOptions}
+                />
+              </select>
+            )}
+            {!frozen && (
+              <StatusNote status={fieldStatus.statusId ?? "idle"} detail={fieldError.statusId} />
+            )}
+            {archived && (
+              <span className="rounded-pill bg-badge-count-bg px-2 py-0.5 text-xs font-medium text-badge-count-fg">
+                <FormattedMessage id="matters.archivedPill" defaultMessage="Archived" />
+              </span>
+            )}
+            {canEdit && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setLifecycleDialog(archived ? "restore" : "archive")}
+              >
+                {archived ? (
+                  <ArchiveRestore size={16} aria-hidden="true" />
+                ) : (
+                  <Archive size={16} aria-hidden="true" />
+                )}
+                {archived ? (
+                  <FormattedMessage id="matters.record.restore" defaultMessage="Restore" />
+                ) : (
+                  <FormattedMessage id="matters.record.archive" defaultMessage="Archive" />
+                )}
+              </Button>
+            )}
+          </section>
+          <RecordTabs
+            label={intl.formatMessage({
+              id: "matters.record.sections",
+              defaultMessage: "Matter sections",
+            })}
+            tabs={[
+              {
+                to: `/matters/${saved.number}`,
+                end: true,
+                label: (
+                  <FormattedMessage id="matters.record.tab.overview" defaultMessage="Overview" />
+                ),
+              },
+              {
+                to: `/matters/${saved.number}/documents`,
+                label: (
+                  <FormattedMessage id="matters.record.tab.documents" defaultMessage="Documents" />
+                ),
+              },
+            ]}
+          />
+        </>
       }
     >
       <PageTitle
@@ -366,8 +442,26 @@ export function MatterRecordPage() {
           { reference, title: saved.title },
         )}
       />
-      <RecordApplets applets={[chatApplet, historyApplet]}>
-        <div className="grid max-w-6xl gap-5 overflow-y-auto px-page-x py-page-y lg:grid-cols-[minmax(0,1fr)_18rem]">
+      <RecordApplets
+        applets={[chatApplet, historyApplet]}
+        layer={
+          open && (
+            <DocPanel
+              documentId={open.document.id}
+              title={open.document.title}
+              version={open.version}
+              onClose={() => setReading(null)}
+            />
+          )
+        }
+      >
+        <div
+          className={
+            tab === "overview"
+              ? "grid max-w-6xl gap-5 overflow-y-auto px-page-x py-page-y lg:grid-cols-[minmax(0,1fr)_18rem]"
+              : "hidden"
+          }
+        >
           <article className="rounded-card border border-border-default bg-raised p-5">
             <header className="mb-5">
               <p className="text-sm font-medium text-muted">{reference}</p>
@@ -376,7 +470,10 @@ export function MatterRecordPage() {
               ) : (
                 <InlineText
                   id="matter-title"
-                  label={intl.formatMessage({ id: "matters.field.title", defaultMessage: "Title" })}
+                  label={intl.formatMessage({
+                    id: "matters.field.title",
+                    defaultMessage: "Title",
+                  })}
                   value={title}
                   status={fieldStatus.title ?? "idle"}
                   error={fieldError.title}
@@ -396,7 +493,10 @@ export function MatterRecordPage() {
                 status={fieldStatus.matterTypeId ?? "idle"}
                 error={fieldError.matterTypeId}
                 onChange={pickType}
-                options={typeOptions.map((type) => ({ value: type.id, label: type.displayName }))}
+                options={typeOptions.map((type) => ({
+                  value: type.id,
+                  label: type.displayName,
+                }))}
               />
               <EditableSelectFact
                 id="matter-manager"
@@ -573,6 +673,32 @@ export function MatterRecordPage() {
             onTeam={setTeam}
           />
         </div>
+        {tab === "documents" && (
+          <div className="overflow-y-auto px-page-x py-page-y">
+            <DocumentsCard
+              record={{ entityType: "matter", number: saved.number }}
+              documents={paper}
+              folders={folders}
+              nextCursor={paperCursor}
+              frozen={frozen}
+              role={user.role}
+              viewerId={user.id}
+              ownerId={saved.manager?.id ?? null}
+              reading={reading?.versionId ?? null}
+              amending={null}
+              onAmendmentOpened={() => undefined}
+              onRead={(document, version) =>
+                setReading({ documentId: document.id, versionId: version.id })
+              }
+              onDocuments={(documents, cursor) => {
+                setPaper(documents);
+                if (cursor !== undefined) setPaperCursor(cursor);
+              }}
+              onFiled={setFiled}
+              onFolders={setFolders}
+            />
+          </div>
+        )}
       </RecordApplets>
       {retypeTo && (
         <MatterRetypeDialog

@@ -49,6 +49,7 @@ import { users } from "./auth.js";
 import { contracts } from "./contracts.js";
 import { documentFolders } from "./document-folders.js";
 import { uuidPk } from "./helpers.js";
+import { matters } from "./matters.js";
 
 /**
  * What a version is, in the negotiation's own words (CTR-014). The six
@@ -135,12 +136,13 @@ export const documents = pgTable(
      * metadata and the only prose the record carries: there are no tags
      * and no custom fields on a document. NULL when nobody wrote one. */
     description: text("description"),
-    /** DOC-008's owning record, and the whole access answer in front of
-     * this row: a viewer who cannot reach the contract cannot reach its
-     * documents (DD-014, CTR-021). */
-    contractId: text("contract_id")
-      .notNull()
-      .references(() => contracts.id),
+    /** The contract arm of DOC-008's owning record. A viewer reaches a
+     * document only through whichever contract or matter owns it. */
+    contractId: text("contract_id").references(() => contracts.id),
+    /** M22's second owning record. Exactly one of this and
+     * `contract_id` is present; the table check below is the floor under
+     * every application write (DOC-008). */
+    matterId: text("matter_id").references(() => matters.id),
     /**
      * CTR-014's executed pin: which version of this document is the
      * signed one (M11/4). It is the file previews, exports, and AI
@@ -239,6 +241,7 @@ export const documents = pgTable(
     // `(created_at, id)` and the tie-break belongs in the index that
     // answers the order (CTR-024, #391).
     index("documents_contract_idx").on(table.contractId, table.createdAt, table.id),
+    index("documents_matter_idx").on(table.matterId, table.createdAt, table.id),
     // The executed pin's own column — the referencing side of the
     // foreign key into `document_versions` (M11/5). No read filters on
     // it, so it carried no index until now: what needs one is DOC-010's
@@ -256,6 +259,7 @@ export const documents = pgTable(
     // tie-break: one folder's page is the record's page under one more
     // filter, and it walks `(created_at, id)` too.
     index("documents_folder_idx").on(table.folderId, table.createdAt, table.id),
+    check("documents_owner_check", sql`num_nonnulls(${table.matterId}, ${table.contractId}) = 1`),
   ],
 );
 

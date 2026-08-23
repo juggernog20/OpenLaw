@@ -114,8 +114,10 @@ export async function matterConfidentialityWrite(
 }
 
 export interface MatterAudience {
+  entityType: "matter";
   matterId: string;
   tiers: readonly CommentVisibility[];
+  seesConfidentialDocuments: boolean;
 }
 
 export interface MatterMentionCandidate {
@@ -132,7 +134,15 @@ export async function matterAudience(
   matterId: string,
 ): Promise<MatterAudience | null> {
   const [row] = await db
-    .select({ id: matters.id })
+    .select({
+      id: matters.id,
+      managerId: matters.managerId,
+      onTeam: sql<boolean>`exists (
+        select 1 from ${matterTeam}
+        where ${matterTeam.matterId} = ${matters.id}
+          and ${matterTeam.userId} = ${user.id}
+      )`,
+    })
     .from(matters)
     .where(and(eq(matters.id, matterId), matterTeamScope(db, user)))
     .limit(1);
@@ -142,7 +152,15 @@ export async function matterAudience(
     : user.role === "contributor"
       ? WORKING_TIERS
       : [];
-  return tiers.length > 0 ? { matterId: row.id, tiers } : null;
+  return tiers.length > 0
+    ? {
+        entityType: "matter",
+        matterId: row.id,
+        tiers,
+        seesConfidentialDocuments:
+          user.role === "administrator" || row.onTeam || row.managerId === user.id,
+      }
+    : null;
 }
 
 /** Everyone the matter reaches, said over people for mentions and notification fan-out. */
