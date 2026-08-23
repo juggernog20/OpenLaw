@@ -638,6 +638,21 @@ type ContractPayloads = {
     parentNumber: number;
     parentTitle: string;
   };
+  /** MTR-007's one canonical Contract.matter_id mutation. The Activity
+   * entry belongs to the Contract whose row changed; the Matter reads
+   * the same datum rather than receiving a duplicate narration. */
+  "contract.matter_linked": {
+    number: number;
+    title: string;
+    matterNumber: number;
+    matterTitle: string;
+  };
+  "contract.matter_unlinked": {
+    number: number;
+    title: string;
+    matterNumber: number;
+    matterTitle: string;
+  };
   "contract.archived": { number: number; title: string };
   "contract.restored": { number: number; title: string };
 };

@@ -1754,6 +1754,119 @@ describe("the /contracts/:number record page", () => {
   });
 });
 
+describe("the contract record's broader Matter context (M23/6)", () => {
+  const linkedMatter = {
+    restricted: false as const,
+    number: 12,
+    title: "Regulatory programme",
+    statusName: "Open",
+    statusCategory: "open" as const,
+    isConfidential: false,
+    archived: false,
+  };
+
+  it("shows standalone and restricted states without leaking a Matter reference", async () => {
+    Object.defineProperty(window, "innerWidth", { configurable: true, value: 360 });
+    const api = recordApi(contractRow());
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    const first = renderAt("/contracts/42");
+
+    expect(
+      await screen.findByText("Standalone Contract — no broader Matter is linked."),
+    ).toBeVisible();
+    expect(screen.getByRole("button", { name: "Link to Matter" })).toBeVisible();
+
+    first.view.unmount();
+    stubApi({
+      signedIn: CONTRIBUTOR,
+      extra: (call) => {
+        if (call.url.pathname === "/api/v1/contracts/42/matter" && call.method === "GET") {
+          return json(200, { matter: { restricted: true } });
+        }
+        return api.handler(call);
+      },
+    });
+    renderAt("/contracts/42");
+
+    expect(await screen.findByText("Restricted matter")).toBeVisible();
+    expect(screen.queryByText(/M-12|Regulatory programme/)).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Link to Matter" })).not.toBeInTheDocument();
+  });
+
+  it("follows the linked Matter and unlinks back to standalone", async () => {
+    let matter: Record<string, unknown> | null = linkedMatter;
+    let unlinks = 0;
+    const api = recordApi(contractRow());
+    stubApi({
+      signedIn: MEMBER,
+      extra: (call) => {
+        if (call.url.pathname === "/api/v1/contracts/42/matter" && call.method === "GET") {
+          return json(200, { matter });
+        }
+        if (call.url.pathname === "/api/v1/contracts/42/matter" && call.method === "DELETE") {
+          matter = null;
+          unlinks += 1;
+          return json(200, { matter: null });
+        }
+        return api.handler(call);
+      },
+    });
+    renderAt("/contracts/42");
+    const user = userEvent.setup();
+
+    expect(await screen.findByRole("link", { name: "M-12 Regulatory programme" })).toHaveAttribute(
+      "href",
+      "/matters/12",
+    );
+    await user.click(screen.getByRole("button", { name: "Unlink" }));
+    await waitFor(() => expect(unlinks).toBe(1));
+    expect(
+      await screen.findByText("Standalone Contract — no broader Matter is linked."),
+    ).toBeVisible();
+  });
+
+  it("links from the record and makes a one-time, non-mutating mismatch suggestion", async () => {
+    const writes: string[] = [];
+    const confidentialMatter = { ...linkedMatter, isConfidential: true };
+    const api = recordApi(contractRow({ isConfidential: false }));
+    stubApi({
+      signedIn: MEMBER,
+      extra: (call) => {
+        if (call.url.pathname === "/api/v1/contracts/42/matter" && call.method === "GET") {
+          return json(200, { matter: null });
+        }
+        if (
+          call.url.pathname === "/api/v1/contracts/42/matter-candidates" &&
+          call.method === "GET"
+        ) {
+          return json(200, { candidates: [confidentialMatter] });
+        }
+        if (call.url.pathname === "/api/v1/contracts/42/matter" && call.method === "POST") {
+          writes.push("link");
+          return json(200, { matter: confidentialMatter, confidentialityMismatch: true });
+        }
+        if (call.method === "PATCH") writes.push("patch");
+        return api.handler(call);
+      },
+    });
+    renderAt("/contracts/42");
+    const user = userEvent.setup();
+
+    await user.click(await screen.findByRole("button", { name: "Link to Matter" }));
+    await user.type(screen.getByLabelText("Search by number or title"), "Regulatory");
+    await user.click(await screen.findByRole("button", { name: /Regulatory programme/ }));
+    await user.click(screen.getByRole("button", { name: "Link" }));
+
+    expect(await screen.findByRole("heading", { name: "Confidentiality differs" })).toBeVisible();
+    expect(
+      screen.getByText("This suggestion changes neither record.", { exact: false }),
+    ).toBeVisible();
+    await user.click(screen.getByRole("button", { name: "Leave them as they are" }));
+    expect(await screen.findByRole("link", { name: "M-12 Regulatory programme" })).toBeVisible();
+    expect(writes).toEqual(["link"]);
+  });
+});
+
 /**
  * The six-stage pipeline on the record (M14/2, CTR-001, grill-plan
  * D.8): the fixed backbone in canonical order, with the marker on the

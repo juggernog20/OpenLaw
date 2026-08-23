@@ -327,6 +327,18 @@ const SAMPLE_PAYLOADS: { [A in ActivityAction]: ActivityPayloadMap[A] } = {
     status: "Draft",
     customFields: ["governing-law"],
   },
+  "contract.matter_linked": {
+    number: 51,
+    title: "Northwind NDA",
+    matterNumber: 12,
+    matterTitle: "Northwind expansion",
+  },
+  "contract.matter_unlinked": {
+    number: 51,
+    title: "Northwind NDA",
+    matterNumber: 12,
+    matterTitle: "Northwind expansion",
+  },
   "contract.updated": {
     number: 41,
     title: "Helix supply agreement",

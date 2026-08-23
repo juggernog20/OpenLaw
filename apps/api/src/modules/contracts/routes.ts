@@ -180,6 +180,7 @@ import {
   NO_CONTRACT,
   reachesLockedContract,
 } from "../../lib/contract-access.js";
+import { NO_MATTER, reachedMatter } from "../../lib/matter-access.js";
 import {
   daysRemaining,
   noticeDeadline,
@@ -1779,6 +1780,10 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
           /** CTR-007's routing (M16/5). Omitted is the ordinary create:
            * a record that renews nothing and sits under nobody. */
           renewalOf: RenewalOfSchema.optional(),
+          /** MTR-007's optional broader-work container. Omitted keeps
+           * the Contract standalone; an archived or unreachable Matter
+           * is refused rather than accepted from a stale picker. */
+          matterNumber: z.coerce.number().int().positive().optional(),
         }),
         response: {
           201: ContractEnvelope,
@@ -1802,7 +1807,7 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
       },
     },
     async (request, reply) => {
-      const { title, contractTypeId, renewalOf } = request.body;
+      const { title, contractTypeId, renewalOf, matterNumber } = request.body;
       const created = await app.db.transaction(async (tx) => {
         // The predecessor first, and under its own row lock, so the
         // facts copied onto the successor are the ones the record held
@@ -1818,6 +1823,13 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
               predecessor: (await editableContract(tx, renewalOf.number, request.user)).row,
             }
           : null;
+        const matter = matterNumber
+          ? await reachedMatter(tx, request.user, matterNumber, { lock: true })
+          : null;
+        if (matterNumber && !matter) throw httpError(404, NO_MATTER);
+        if (matter?.archivedAt) {
+          throw httpError(409, "This matter is archived. Restore it before linking to it.");
+        }
         const born = await createContract(tx, {
           actorId: request.user.id,
           title,
@@ -1825,6 +1837,7 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
           customFields: request.body.customFields,
           isConfidential: request.body.isConfidential,
           renewal,
+          matter,
         });
         if (!renewal) {
           return {

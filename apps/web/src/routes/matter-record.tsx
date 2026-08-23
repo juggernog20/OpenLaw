@@ -47,6 +47,7 @@ import { MatterTeamTray } from "../components/matters/team-tray";
 import { MatterKeyDatesCard } from "../components/matters/key-dates-card";
 import { MatterTasksCard } from "../components/matters/tasks-card";
 import { RelatedMattersCard } from "../components/matters/related-matters-card";
+import { LinkedContractsCard } from "../components/matters/linked-contracts-card";
 import { CreateMatterDialog } from "../components/matters/create-matter-dialog";
 import { DocPanel } from "../components/documents/doc-panel";
 import { DocumentsCard } from "../components/documents/documents-card";
@@ -78,12 +79,13 @@ export async function matterRecordLoader({ params }: LoaderFunctionArgs) {
     return redirect(`/matters/${number}`);
   }
   const canEdit = isMemberPlus(user.role);
-  const [record, options, entities, relations, paper, folders, keyDates, tasks] = await Promise.all(
-    [
+  const [record, options, entities, relations, linkedContracts, paper, folders, keyDates, tasks] =
+    await Promise.all([
       api.GET("/api/v1/matters/{number}", { params: { path: { number } } }),
       canEdit ? api.GET("/api/v1/matters/options") : undefined,
       canEdit ? api.GET("/api/v1/entities").catch(() => ({ data: undefined })) : undefined,
       api.GET("/api/v1/matters/{number}/relations", { params: { path: { number } } }),
+      api.GET("/api/v1/matters/{number}/contracts", { params: { path: { number } } }),
       api
         .GET("/api/v1/matters/{number}/documents", {
           params: { path: { number }, query: { folder: "root" } },
@@ -94,9 +96,8 @@ export async function matterRecordLoader({ params }: LoaderFunctionArgs) {
         .catch(() => ({ data: undefined })),
       api.GET("/api/v1/matters/{number}/key-dates", { params: { path: { number } } }),
       api.GET("/api/v1/matters/{number}/tasks", { params: { path: { number } } }),
-    ],
-  );
-  if (!record.data || !relations.data || !keyDates.data || !tasks.data) {
+    ]);
+  if (!record.data || !relations.data || !linkedContracts.data || !keyDates.data || !tasks.data) {
     throw new Error("The matter could not be read.");
   }
   if (canEdit && !options?.data) {
@@ -115,6 +116,7 @@ export async function matterRecordLoader({ params }: LoaderFunctionArgs) {
     users: options?.data?.users ?? [],
     entities: entities?.data?.entities ?? [],
     relations: relations.data,
+    linkedContracts: linkedContracts.data.contracts,
     documents: paper.data?.documents ?? [],
     documentsCursor: paper.data?.nextCursor ?? null,
     folders: folders.data?.folders ?? [],
@@ -150,6 +152,7 @@ export function MatterRecordPage() {
   const [customFieldRefs, setCustomFieldRefs] = useState(loader.customFieldRefs);
   const [team, setTeam] = useState<MatterTeamMember[]>(loader.team);
   const [relations, setRelations] = useState(loader.relations);
+  const [linkedContracts, setLinkedContracts] = useState(loader.linkedContracts);
   const [subMatterOpen, setSubMatterOpen] = useState(false);
   // Which section is on screen (DES-032). The loader has already sent
   // an unknown segment back to the bare address, so the cast is safe.
@@ -762,6 +765,13 @@ export function MatterRecordPage() {
               editable={canEdit && !archived}
               onChanged={setRelations}
               onCreateChild={() => setSubMatterOpen(true)}
+            />
+            <LinkedContractsCard
+              matterNumber={saved.number}
+              matterIsConfidential={saved.isConfidential}
+              contracts={linkedContracts}
+              editable={canEdit && !archived}
+              onContracts={setLinkedContracts}
             />
           </div>
           <MatterTeamTray

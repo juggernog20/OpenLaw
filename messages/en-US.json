@@ -29,6 +29,9 @@
   "action.edit": {
     "defaultMessage": "Edit"
   },
+  "action.link": {
+    "defaultMessage": "Link"
+  },
   "action.reload": {
     "defaultMessage": "Reload"
   },
@@ -103,6 +106,12 @@
   },
   "activity.contract.createdFromRequest": {
     "defaultMessage": "{actor} created this contract from {request}"
+  },
+  "activity.contract.matterLinked": {
+    "defaultMessage": "{actor} linked this contract to {matter}"
+  },
+  "activity.contract.matterUnlinked": {
+    "defaultMessage": "{actor} unlinked this contract from {matter}"
   },
   "activity.contract.parentRemoved": {
     "defaultMessage": "{actor} took this contract out from under {parent}"
@@ -1124,6 +1133,66 @@
   "confidential.markerShort": {
     "defaultMessage": "CONFI"
   },
+  "contractMatter.contracts.empty": {
+    "defaultMessage": "No Contracts are linked to this Matter."
+  },
+  "contractMatter.contracts.heading": {
+    "defaultMessage": "Linked Contracts"
+  },
+  "contractMatter.link.error": {
+    "defaultMessage": "The Contract could not be linked to the Matter."
+  },
+  "contractMatter.linkContract": {
+    "defaultMessage": "Link Contract"
+  },
+  "contractMatter.linkMatter": {
+    "defaultMessage": "Link to Matter"
+  },
+  "contractMatter.matter.heading": {
+    "defaultMessage": "Matter"
+  },
+  "contractMatter.mismatch.body": {
+    "defaultMessage": "{contract} and {matter} keep independent Confidential flags. Consider aligning them if that matches the work. This suggestion changes neither record."
+  },
+  "contractMatter.mismatch.dismiss": {
+    "defaultMessage": "Leave them as they are"
+  },
+  "contractMatter.mismatch.preview": {
+    "defaultMessage": "These records have different Confidential flags. Linking will not change either one."
+  },
+  "contractMatter.mismatch.title": {
+    "defaultMessage": "Confidentiality differs"
+  },
+  "contractMatter.noMatches": {
+    "defaultMessage": "No eligible records found."
+  },
+  "contractMatter.refresh.error": {
+    "defaultMessage": "The linked Contracts could not be refreshed."
+  },
+  "contractMatter.restrictedContract": {
+    "defaultMessage": "Restricted contract"
+  },
+  "contractMatter.restrictedMatter": {
+    "defaultMessage": "Restricted matter"
+  },
+  "contractMatter.search": {
+    "defaultMessage": "Search by number or title"
+  },
+  "contractMatter.search.error": {
+    "defaultMessage": "Eligible records could not be searched."
+  },
+  "contractMatter.searching": {
+    "defaultMessage": "Searching…"
+  },
+  "contractMatter.standalone": {
+    "defaultMessage": "Standalone Contract — no broader Matter is linked."
+  },
+  "contractMatter.unlink": {
+    "defaultMessage": "Unlink"
+  },
+  "contractMatter.unlink.error": {
+    "defaultMessage": "The Contract could not be unlinked from the Matter."
+  },
   "contracts.applet.settings": {
     "defaultMessage": "Contract settings"
   },
@@ -1318,6 +1387,24 @@
   },
   "contracts.form.lastRenewal": {
     "defaultMessage": "Last renewal"
+  },
+  "contracts.form.matter": {
+    "defaultMessage": "Matter (optional)"
+  },
+  "contracts.form.matterHelp": {
+    "defaultMessage": "Link only when this Contract is part of broader Matter work. Nothing else flows across the link."
+  },
+  "contracts.form.matterMatches": {
+    "defaultMessage": "Matter matches"
+  },
+  "contracts.form.matterMismatch": {
+    "defaultMessage": "This Contract and Matter will have different Confidential flags. Consider aligning them later if appropriate; creation changes neither flag automatically."
+  },
+  "contracts.form.matterPlaceholder": {
+    "defaultMessage": "Search by number or title; leave blank for standalone"
+  },
+  "contracts.form.matterSearchError": {
+    "defaultMessage": "Eligible Matters could not be searched."
   },
   "contracts.form.noticePeriod": {
     "defaultMessage": "Notice period (days)"

@@ -367,10 +367,14 @@ Contracts can be **both**: standalone where no matter work is needed (e.g., an a
 
 ### Consequences
 
-- No schema changes (DD-007 already provides the FK).
+- The implementation adds DD-007's nullable, indexed `contracts.matter_id` FK incrementally; existing Contracts remain null/standalone.
 - Contract creation flow offers an optional matter picker; matter detail needs a Contracts section.
 - Confidentiality interaction resolved by **CTR-018**: matter and contract `is_confidential` flags stay independent — no cascade in either direction; creating a link where one side is confidential shows a one-time "make this confidential too?" nudge, never enforcement.
 - The rule-of-thumb wording above goes into user-facing docs.
+
+### Implementation note (2026-08-24, M23/6)
+
+Migration `0076_thankful_cerebro` lands the nullable FK and its index without a backfill. One canonical Contract datum now drives the optional creation picker, both record-side link/unlink flows, the Matter's Linked Contracts section, and the Contract's Matter context. Writes lock the Contract, require Member+ reach to both live records, and refuse a direct move until an explicit unlink. Independently unreachable relatives are represented only as `{ restricted: true }`; candidate searches omit them, archived records, linked Contracts, and other ineligible rows.
 
 ---
 

@@ -27,6 +27,12 @@ export const ADDABLE_MATTER_TEAM_ROLES: readonly Exclude<MatterTeamRole, "creato
 
 export const MATTER_SEVERITIES: readonly MatterSeverity[] = ["low", "medium", "high", "critical"];
 
+/** Matter status colors follow the fixed Category, never the renameable label. */
+export const MATTER_STATUS_PILL: Record<MatterRow["statusCategory"], string> = {
+  open: "bg-status-info-bg text-status-info-fg",
+  closed: "bg-status-onhold-bg text-status-onhold-fg",
+};
+
 export function matterPath(number: number): string {
   return `/matters/${number}`;
 }

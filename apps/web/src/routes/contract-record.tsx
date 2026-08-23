@@ -219,6 +219,7 @@ import { CreateContractDialog } from "../components/contracts/create-contract-di
 import { KeyDatesCard } from "../components/contracts/key-dates-card";
 import { RecordActionsMenu } from "../components/contracts/record-actions-menu";
 import { RelatedContractsCard } from "../components/contracts/related-contracts-card";
+import { LinkedMatterCard } from "../components/contracts/linked-matter-card";
 import type { ContractRelations } from "../lib/relations";
 import { TasksCard } from "../components/contracts/tasks-card";
 import { RenewalBanner } from "../components/contracts/renewal-banner";
@@ -273,6 +274,7 @@ export async function contractRecordLoader({ params }: LoaderFunctionArgs) {
     keyDates,
     tasks,
     relations,
+    linkedMatter,
     options,
     registry,
   ] = await Promise.all([
@@ -323,6 +325,7 @@ export async function contractRecordLoader({ params }: LoaderFunctionArgs) {
     api
       .GET("/api/v1/contracts/{number}/relations", { params: { path: { number } } })
       .catch(() => ({ data: undefined, error: undefined })),
+    api.GET("/api/v1/contracts/{number}/matter", { params: { path: { number } } }),
     canEdit ? api.GET("/api/v1/contracts/options") : undefined,
     // The registry's own Member+ list is the signing-entity picker's
     // source (CTR-011): it is ordered by legal name and already leaves
@@ -343,6 +346,7 @@ export async function contractRecordLoader({ params }: LoaderFunctionArgs) {
     !signing.data ||
     !keyDates.data ||
     !tasks.data ||
+    !linkedMatter.data ||
     (canEdit && !(options?.data && registry?.data))
   ) {
     throw new Error("The contract could not be read.");
@@ -399,6 +403,7 @@ export async function contractRecordLoader({ params }: LoaderFunctionArgs) {
      * children, and typed links. Optional — a read failure hides the
      * card rather than blocking the page. */
     relations: relations?.data ?? null,
+    linkedMatter: linkedMatter.data.matter,
   };
 }
 
@@ -560,12 +565,15 @@ export function ContractRecordPage() {
     approverGroups,
     entities,
     relations: loadedRelations,
+    linkedMatter: loadedMatter,
   } = useLoaderData<typeof contractRecordLoader>();
   const intl = useIntl();
   const navigate = useNavigate();
 
   /** The saved record — the server's truth after the last commit. */
   const [saved, setSaved] = useState<ContractRow>(contract);
+  /** MTR-007's one linked Matter, redrawn from the canonical Contract datum. */
+  const [linkedMatter, setLinkedMatter] = useState(loadedMatter);
 
   /** The fields the contract's type attaches, in attachment order. They
    * are state rather than loader data because a re-type replaces them,
@@ -2291,6 +2299,13 @@ export function ContractRecordPage() {
                       holds nothing of its own: every mark on it is one
                       of the record's dates. */}
               <TermTimelineCard contract={saved} />
+              <LinkedMatterCard
+                contractNumber={saved.number}
+                contractIsConfidential={saved.isConfidential}
+                matter={linkedMatter}
+                editable={canEdit && !archived}
+                onMatter={setLinkedMatter}
+              />
               {/* The contract's relation surface (M17/2, CTR-015): the
                       parent chain, the children, and the typed links this
                       contract carries. Absent when the read failed — an

@@ -240,6 +240,15 @@ export function stubApi(state: ApiState) {
     if (/^\/api\/v1\/matters\/\d+\/relations$/.test(call.url.pathname) && call.method === "GET") {
       return json(200, { parent: null, children: [], related: [] });
     }
+    // MTR-007's two views of one Contract.matter_id. Standalone and no
+    // linked Contracts are the ordinary defaults; route suites about
+    // the link supply their own rows through `extra`.
+    if (/^\/api\/v1\/contracts\/\d+\/matter$/.test(call.url.pathname) && call.method === "GET") {
+      return json(200, { matter: null });
+    }
+    if (/^\/api\/v1\/matters\/\d+\/contracts$/.test(call.url.pathname) && call.method === "GET") {
+      return json(200, { contracts: [] });
+    }
     // And this person's saved list views (DD-019). None by default, which
     // is what a fresh install has — the built-in layout is code, not a
     // seeded row. Only the suites about views supply any. Without this the

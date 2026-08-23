@@ -520,7 +520,7 @@ Source: **DD-007**, **DD-014**, **CTR-001**
 
 Workflow object with parties; owns one or more Documents (draft, redlines, executed version, amendments). Referenced by Matters; can also stand alone.
 
-All columns landed through M17. Schema details in `DECISIONS-CONTRACTS.md` (`CTR-###`).
+All columns except `matter_id` landed through M17; the Matter link landed incrementally in M23/6. Schema details in `DECISIONS-CONTRACTS.md` (`CTR-###`).
 
 Columns:
 
@@ -546,7 +546,7 @@ Columns:
 - `parent_id` FK → `contracts.id`, nullable per **CTR-015** — single parent, arbitrary depth, no cycles (application-enforced); no inheritance semantics. Landed in M16/5, migration `0048_contract_relations`, with the routing that first writes it (CTR-007's child-contract vehicle). A `parent_id <> id` check states the shortest cycle as a row rule; the longer ones are the write path's walk. Indexed for the walk and the M17 hierarchy surfaces
 - `ended_at` — timestamptz, nullable per **CTR-019**: set on transition into the `ended` stage, cleared on reopen (activity log remains source of truth). Landed in M17/3, migration `0050_contract_ended_at`, with no backfill
 - `is_confidential` boolean per **DD-014**; never cascades to/from linked records per **CTR-018**
-- `matter_id` FK → `matters.id`, nullable per **DD-007** (contracts can stand alone)
+- `matter_id` FK → `matters.id`, nullable and indexed per **DD-007** (contracts can stand alone). Landed incrementally in M23/6, migration `0076_thankful_cerebro`, with no backfill: every existing Contract remains null/standalone
 - `primary_document_id` FK → `documents.id`, nullable, `ON DELETE SET NULL` per **CTR-014** — which document is the instrument. One column, so exactly one document holds the designation; the first upload takes it, and from there it moves to another document on the same contract or it stays where it is. That the named document belongs to this contract is enforced at write time. This settles the mechanism the `documents` section below left open (flag there vs FK here).
 
 Ended behavior per **CTR-019**: signal not lock — record stays writable; drops from default lists, counts, and renewal-calendar surfaces; `archived_at` remains a separate soft-delete (mistakes/imports), not end-of-life.
