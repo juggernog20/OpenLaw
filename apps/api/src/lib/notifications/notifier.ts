@@ -168,6 +168,18 @@ export interface TaskAssignedEvent {
   assigneeId: string;
 }
 
+/** What one Matter Task assignment tells its assignee (MTR-005). */
+export interface MatterTaskAssignedEvent {
+  matterId: string;
+  matterNumber: number;
+  matterTitle: string;
+  actorId: string;
+  actorName: string;
+  taskId: string;
+  taskTitle: string;
+  assigneeId: string;
+}
+
 /** What every mention carries, whichever record it happened on. */
 interface MentionedOnAnyRecord {
   actorId: string;
@@ -496,6 +508,9 @@ export interface Notifier {
    * whether they may be told.
    */
   taskAssigned(tx: NotifyingTransaction, event: TaskAssignedEvent): Promise<void>;
+
+  /** A Matter Task was handed to an existing person on that Matter. */
+  matterTaskAssigned(tx: NotifyingTransaction, event: MatterTaskAssignedEvent): Promise<void>;
 
   /**
    * A comment has addressed somebody by name (CMT-007) — group 1, bell
@@ -1366,6 +1381,31 @@ export function createNotifier(deps: NotifierDeps): Notifier {
             payload: {
               contractNumber: event.contractNumber,
               contractTitle: event.contractTitle,
+              actorId: event.actorId,
+              actorName: event.actorName,
+              taskId: event.taskId,
+              taskTitle: event.taskTitle,
+            },
+          },
+        ],
+      );
+    },
+
+    async matterTaskAssigned(
+      tx: NotifyingTransaction,
+      event: MatterTaskAssignedEvent,
+    ): Promise<void> {
+      await fanOut(
+        tx,
+        "matter.task_assigned",
+        { type: MATTER_ENTITY, id: event.matterId },
+        event.actorId,
+        [
+          {
+            userId: event.assigneeId,
+            payload: {
+              matterNumber: event.matterNumber,
+              matterTitle: event.matterTitle,
               actorId: event.actorId,
               actorName: event.actorName,
               taskId: event.taskId,

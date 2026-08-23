@@ -467,6 +467,8 @@ Lightweight checklist items on a matter. Deliberately not a task entity: no comm
 
 Indexed on (`matter_id`, `display_order`).
 
+Landed in incremental migration `0074_bored_felicia_hardy.sql` (M23/4, #492). The migration only adds this table, its two foreign keys, title check, and ordering index; it does not rewrite existing Matter rows.
+
 ---
 
 ### `matter_statuses`

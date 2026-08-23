@@ -414,6 +414,7 @@ type TaskPayloads = {
   "task.edited": { taskId: string; title: string; changed: ChangedFields };
   "task.completed": { taskId: string; title: string };
   "task.reopened": { taskId: string; title: string };
+  "task.reordered": { taskIds: string[] };
   "task.removed": { taskId: string; title: string };
 };
 

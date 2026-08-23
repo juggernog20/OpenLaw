@@ -218,6 +218,11 @@ export function stubApi(state: ApiState) {
     if (/^\/api\/v1\/matters\/\d+\/key-dates$/.test(call.url.pathname) && call.method === "GET") {
       return json(200, { deadlines: [] });
     }
+    // Matter Tasks are likewise an empty-by-default record seam. The
+    // routed checklist suite supplies assigned and ordered rows.
+    if (/^\/api\/v1\/matters\/\d+\/tasks$/.test(call.url.pathname) && call.method === "GET") {
+      return json(200, { tasks: [], doneCount: 0, totalCount: 0 });
+    }
     // And every task on it (M17/1, CTR-017). Empty by default for the
     // roster's reason: a record with no tasks is the ordinary case, and
     // only the suites about the checklist supply one.

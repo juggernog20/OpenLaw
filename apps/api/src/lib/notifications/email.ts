@@ -183,6 +183,24 @@ function matterMail(
   const named = `M-${record.number} · ${record.title}`;
   const link = matterLink(baseUrl, record.number);
   const who = notification.actorName ?? "Somebody";
+  if (notification.eventType === "matter.task_assigned") {
+    const task = detail(notification, "taskTitle");
+    return {
+      to,
+      subject: task ? `Task assigned: ${task} (${named})` : `Task assigned on ${named}`,
+      text: [
+        `Hello ${notification.recipientName},`,
+        "",
+        task
+          ? `${who} has given you a Task on ${named}: ${task}.`
+          : `${who} has given you a Task on ${named}.`,
+        "",
+        `${link}/tasks`,
+        "",
+        "The checklist is on the Matter record.",
+      ].join("\n"),
+    };
+  }
   if (notification.eventType === "comment.mentioned") {
     return {
       to,

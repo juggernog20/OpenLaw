@@ -92,6 +92,8 @@ export const NOTIFICATION_EVENT_TYPES = [
   "contract.owner_assigned",
   /** A task on a contract was assigned (CTR-017, MTR-005). */
   "contract.task_assigned",
+  /** A Task on a Matter was assigned (MTR-005). */
+  "matter.task_assigned",
   /** Somebody was asked to sign a contract off (CTR-012). */
   "approval.requested",
   /** A comment addressed somebody by name (CMT-007, DD-016). */

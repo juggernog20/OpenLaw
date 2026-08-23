@@ -501,6 +501,13 @@ describe("Matter Key dates in the morning round", () => {
   beforeAll(async () => {
     active = await newMatter("Aster regulatory response");
     await addMatterKeyDate(active.number, plusDays(TODAY, 1), "Agency response due");
+    const task = await harness.app.inject({
+      method: "POST",
+      url: `/api/v1/matters/${active.number}/tasks`,
+      cookies: as(OWNER),
+      payload: { title: "Prepare internal draft", dueDate: plusDays(TODAY, 1) },
+    });
+    expect(task.statusCode, task.body).toBe(201);
 
     closed = await newMatter("Closed investigation");
     await addMatterKeyDate(closed.number, plusDays(TODAY, 1), "Retained closed date");
@@ -523,6 +530,8 @@ describe("Matter Key dates in the morning round", () => {
 
   it("rings the reached team member's bell and includes the Matter in the briefing", async () => {
     const items = await bellFor(OWNER, active);
+    // The Task due on the same civil date is the negative control: it
+    // remains an internal to-do and contributes no date reminder.
     expect(items).toHaveLength(1);
     expect(items[0]).toMatchObject({ eventType: "date.key_date_approaching" });
     expect(items[0]!.payload).toMatchObject({

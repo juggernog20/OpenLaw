@@ -1049,6 +1049,76 @@ export interface paths {
     patch: operations["updateMatterKeyDate"];
     trace?: never;
   };
+  "/api/v1/matters/{number}/tasks": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** List a reached Matter's lightweight checklist in stable display order. Contributors on the Matter can read it; Task due dates are internal and never enter deadline surfaces */
+    get: operations["listMatterTasks"];
+    put?: never;
+    /** Add a Task to a reached, non-archived Matter. Closing does not freeze the checklist */
+    post: operations["addMatterTask"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/matter-tasks/{taskId}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    /** Remove one Task from a reached, non-archived Matter */
+    delete: operations["removeMatterTask"];
+    options?: never;
+    head?: never;
+    /** Edit a Task's title, assignee, or internal due date on a reached Matter */
+    patch: operations["updateMatterTask"];
+    trace?: never;
+  };
+  "/api/v1/matter-tasks/{taskId}/toggle": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Complete or reopen one Task on a reached, non-archived Matter */
+    post: operations["toggleMatterTask"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/matters/{number}/tasks/reorder": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    /** Replace a reached Matter checklist's complete display order */
+    put: operations["reorderMatterTasks"];
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/v1/request-types": {
     parameters: {
       query?: never;
@@ -7114,6 +7184,286 @@ export interface operations {
               overdue: boolean;
               isNext: boolean;
             }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  listMatterTasks: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        number: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            tasks: {
+              id: string;
+              title: string;
+              isDone: boolean;
+              assigneeId: string | null;
+              assigneeName: string | null;
+              dueDate: string | null;
+              displayOrder: number;
+            }[];
+            doneCount: number;
+            totalCount: number;
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  addMatterTask: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        number: number;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          title: string;
+          assigneeId?: string | null;
+          dueDate?: string | null;
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            tasks: {
+              id: string;
+              title: string;
+              isDone: boolean;
+              assigneeId: string | null;
+              assigneeName: string | null;
+              dueDate: string | null;
+              displayOrder: number;
+            }[];
+            doneCount: number;
+            totalCount: number;
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  removeMatterTask: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        taskId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            tasks: {
+              id: string;
+              title: string;
+              isDone: boolean;
+              assigneeId: string | null;
+              assigneeName: string | null;
+              dueDate: string | null;
+              displayOrder: number;
+            }[];
+            doneCount: number;
+            totalCount: number;
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  updateMatterTask: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        taskId: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          title?: string;
+          assigneeId?: string | null;
+          dueDate?: string | null;
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            tasks: {
+              id: string;
+              title: string;
+              isDone: boolean;
+              assigneeId: string | null;
+              assigneeName: string | null;
+              dueDate: string | null;
+              displayOrder: number;
+            }[];
+            doneCount: number;
+            totalCount: number;
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  toggleMatterTask: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        taskId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            tasks: {
+              id: string;
+              title: string;
+              isDone: boolean;
+              assigneeId: string | null;
+              assigneeName: string | null;
+              dueDate: string | null;
+              displayOrder: number;
+            }[];
+            doneCount: number;
+            totalCount: number;
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  reorderMatterTasks: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        number: number;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          taskIds: string[];
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            tasks: {
+              id: string;
+              title: string;
+              isDone: boolean;
+              assigneeId: string | null;
+              assigneeName: string | null;
+              dueDate: string | null;
+              displayOrder: number;
+            }[];
+            doneCount: number;
+            totalCount: number;
           };
         };
       };

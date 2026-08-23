@@ -45,6 +45,7 @@ import { useCommentApplet } from "../components/comments/comment-applet";
 import { CustomFieldControl, type FieldReference } from "../components/custom-field-control";
 import { MatterTeamTray } from "../components/matters/team-tray";
 import { MatterKeyDatesCard } from "../components/matters/key-dates-card";
+import { MatterTasksCard } from "../components/matters/tasks-card";
 import { DocPanel } from "../components/documents/doc-panel";
 import { DocumentsCard } from "../components/documents/documents-card";
 import { PageTitle } from "../components/page-title";
@@ -59,7 +60,7 @@ import { Label } from "../components/ui/label";
 
 /** The DES-032 sections a matter record has beyond its Overview. Each
  * is one trailing URL segment; the bare address is the Overview. */
-const RECORD_TABS = ["documents", "key-dates"] as const;
+const RECORD_TABS = ["documents", "key-dates", "tasks"] as const;
 type RecordTabName = "overview" | (typeof RECORD_TABS)[number];
 
 export async function matterRecordLoader({ params }: LoaderFunctionArgs) {
@@ -75,7 +76,7 @@ export async function matterRecordLoader({ params }: LoaderFunctionArgs) {
     return redirect(`/matters/${number}`);
   }
   const canEdit = isMemberPlus(user.role);
-  const [record, options, paper, folders, keyDates] = await Promise.all([
+  const [record, options, paper, folders, keyDates, tasks] = await Promise.all([
     api.GET("/api/v1/matters/{number}", { params: { path: { number } } }),
     canEdit ? api.GET("/api/v1/matters/options") : undefined,
     api
@@ -87,8 +88,11 @@ export async function matterRecordLoader({ params }: LoaderFunctionArgs) {
       .GET("/api/v1/matters/{number}/folders", { params: { path: { number } } })
       .catch(() => ({ data: undefined })),
     api.GET("/api/v1/matters/{number}/key-dates", { params: { path: { number } } }),
+    api.GET("/api/v1/matters/{number}/tasks", { params: { path: { number } } }),
   ]);
-  if (!record.data || !keyDates.data) throw new Error("The matter could not be read.");
+  if (!record.data || !keyDates.data || !tasks.data) {
+    throw new Error("The matter could not be read.");
+  }
   if (canEdit && !options?.data) throw new Error("The matter's edit options could not be read.");
   return {
     user,
@@ -105,6 +109,9 @@ export async function matterRecordLoader({ params }: LoaderFunctionArgs) {
     documentsCursor: paper.data?.nextCursor ?? null,
     folders: folders.data?.folders ?? [],
     deadlines: keyDates.data.deadlines,
+    tasks: tasks.data.tasks,
+    taskDoneCount: tasks.data.doneCount,
+    taskTotalCount: tasks.data.totalCount,
   };
 }
 
@@ -139,6 +146,11 @@ export function MatterRecordPage() {
   const [paperCursor, setPaperCursor] = useState(loader.documentsCursor);
   const [folders, setFolders] = useState(loader.folders);
   const [deadlines, setDeadlines] = useState(loader.deadlines);
+  const [checklist, setChecklist] = useState({
+    tasks: loader.tasks,
+    doneCount: loader.taskDoneCount,
+    totalCount: loader.taskTotalCount,
+  });
   const [filed, setFiled] = useState<typeof loader.documents>([]);
   const [reading, setReading] = useState<{ documentId: string; versionId: string } | null>(null);
   const [title, setTitle] = useState(saved.title);
@@ -179,6 +191,13 @@ export function MatterRecordPage() {
     ...people,
     ...heldPeople.filter((held) => !people.some((row) => row.id === held.id)),
   ];
+  const taskAssignees = useMemo(() => {
+    const candidates = [
+      ...(saved.manager && !saved.manager.archived ? [saved.manager] : []),
+      ...team.filter((person) => !person.archived),
+    ];
+    return [...new Map(candidates.map((person) => [person.id, person])).values()];
+  }, [saved.manager, team]);
 
   async function signOut() {
     await authClient.signOut();
@@ -452,6 +471,18 @@ export function MatterRecordPage() {
                       "{count, plural, one {# upcoming date} other {# upcoming dates}}",
                   },
                   { count: deadlines.filter((row) => !row.overdue).length },
+                ),
+              },
+              {
+                to: `/matters/${saved.number}/tasks`,
+                label: <FormattedMessage id="matters.record.tab.tasks" defaultMessage="Tasks" />,
+                count: checklist.totalCount - checklist.doneCount,
+                countLabel: intl.formatMessage(
+                  {
+                    id: "matters.record.tab.tasks.open",
+                    defaultMessage: "{count, plural, one {# open Task} other {# open Tasks}}",
+                  },
+                  { count: checklist.totalCount - checklist.doneCount },
                 ),
               },
             ]}
@@ -732,6 +763,19 @@ export function MatterRecordPage() {
               deadlines={deadlines}
               frozen={frozen}
               onDeadlines={setDeadlines}
+            />
+          </div>
+        )}
+        {tab === "tasks" && (
+          <div className="overflow-y-auto px-page-x py-page-y">
+            <MatterTasksCard
+              matterNumber={saved.number}
+              tasks={checklist.tasks}
+              doneCount={checklist.doneCount}
+              totalCount={checklist.totalCount}
+              assignees={taskAssignees}
+              frozen={frozen}
+              onTasksChange={setChecklist}
             />
           </div>
         )}
