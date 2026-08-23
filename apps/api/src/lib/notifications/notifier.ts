@@ -869,13 +869,25 @@ async function fanOut(
   return written.length;
 }
 
+/**
+ * One Matter comment can address two audiences after a conversion: the
+ * Matter roster in group 2 and the originating Requester in group 5.
+ * Full Thread reserves the Requester for the reply event so a staff
+ * Requester on the roster is told once; mentions remain louder than both.
+ * The ordinary actor exclusion stays inside each fan-out.
+ */
 async function fanOutToMatter(
   tx: NotifyingTransaction,
   event: MatterCommentPostedEvent,
 ): Promise<void> {
   const audience = await matterRecordAudience(tx, event.matterId);
   if (!audience) return;
-  const except = new Set(event.mentioned ?? []);
+  const origin = await requestConvertedInto(tx, { module: "matter", id: event.matterId });
+  const named = new Set(event.mentioned ?? []);
+  const except = new Set([
+    ...named,
+    ...(origin !== null && event.visibility === "full_thread" ? [origin.requesterId] : []),
+  ]);
   await fanOut(
     tx,
     "comment.posted",
@@ -893,6 +905,14 @@ async function fanOutToMatter(
           commentId: event.commentId,
         },
       })),
+    { narrowing: { tier: event.visibility } },
+  );
+  if (origin === null || named.has(origin.requesterId)) return;
+  await fanOutToRequest(
+    tx,
+    "request.replied",
+    { requestId: origin.requestId, actorId: event.actorId, actorName: event.actorName },
+    { commentId: event.commentId },
     { narrowing: { tier: event.visibility } },
   );
 }
@@ -1139,7 +1159,7 @@ async function commentOnRecord(
   tx: NotifyingTransaction,
   event: ContractCommentPostedEvent,
 ): Promise<void> {
-  const origin = await requestConvertedInto(tx, event.contractId);
+  const origin = await requestConvertedInto(tx, { module: "contract", id: event.contractId });
   const named = new Set(event.mentioned ?? []);
   await fanOutToRecord(
     tx,

@@ -330,13 +330,13 @@ export interface ConvertedFrom {
 }
 
 /**
- * The Request a conversion turned into this contract, or `null` where no
+ * The Request a conversion turned into this record, or `null` where no
  * Request did (CMT-001, INT-002).
  *
  * **The back-link is read behind the seam, and this is what makes the
  * reply promise survive the thread's move.** A staff Full Thread comment
  * on a converted record is a reply to the person who asked, whatever
- * screen it was typed on — the contract's applet, the staff request
+ * screen it was typed on — the record's applet, the staff request
  * detail, or the portal — so the fan-out finds them from the record
  * rather than being told about them by a call site. No comment route
  * knows a Request exists, which is the property that keeps this from
@@ -347,18 +347,25 @@ export interface ConvertedFrom {
  * something to send anybody a message about.
  *
  * At most one row can answer — a Request becomes one record, and the
- * table holds that as a check constraint — but a contract could in
+ * table holds that as a check constraint — but a record could in
  * principle be named by two rows if the column were ever written twice,
  * so the read is bounded and ordered rather than trusting the planner.
  */
 export async function requestConvertedInto(
   db: Executor,
-  contractId: string,
+  target: { module: "contract" | "matter"; id: string },
 ): Promise<ConvertedFrom | null> {
   const [record] = await db
     .select({ id: requests.id, requesterId: requests.requesterId })
     .from(requests)
-    .where(and(eq(requests.convertedContractId, contractId), isNull(requests.archivedAt)))
+    .where(
+      and(
+        target.module === "contract"
+          ? eq(requests.convertedContractId, target.id)
+          : eq(requests.convertedMatterId, target.id),
+        isNull(requests.archivedAt),
+      ),
+    )
     .orderBy(asc(requests.number))
     .limit(1);
   if (!record) return null;

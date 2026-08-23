@@ -57,18 +57,18 @@
  * this outcome — the record the winner made — because "somebody
  * converted this" without the permanent reference is news the loser cannot act on.
  *
- * **The paper follows on the contract arm** (#421). Every attachment on
- * a Request converted to a contract becomes one document at version 1, filed at the record root,
+ * **The paper follows onto either record** (#421, M22/9). Every attachment on
+ * a converted Request becomes one document at version 1, filed at the record root,
  * inside this same transaction. It is a copy: the attachment rows and
  * their blobs stay where they are, so the requester's portal detail goes
  * on listing and downloading the paper they submitted. The rules of the
  * promotion itself are `promote-paper.ts`'s; what this route owns is
  * that it happens here, between the create and the status write, so a
- * conversion that refuses anywhere leaves neither a contract nor a
+ * conversion that refuses anywhere leaves neither a record nor a
  * document nor a blob nobody points at.
  *
- * **The thread follows on the contract arm too** (#422). Every comment on
- * a Request converted to a contract re-parents with its DD-016 tier intact, inside this
+ * **The thread follows onto either record too** (#422, M22/9). Every comment on
+ * a converted Request re-parents with its DD-016 tier intact, inside this
  * same transaction, and each reader's place in the conversation moves
  * with it. It is a move rather than a copy — that is the whole of
  * CMT-001's promise, that legal answers in exactly one place from then
@@ -118,7 +118,7 @@ export const requestConvertRoutes: FastifyPluginAsyncZod = async (app) => {
         operationId: "convertRequest",
         summary:
           "Turn a Request into the contract or matter its request type targets " +
-          "(INT-002, DD-018, M22/8). The Request row is locked so racing " +
+          "(INT-002, DD-018, M22/9). The Request row is locked so racing " +
           "triagers produce one record; the loser receives 409 with the " +
           "reachable converted record's module and permanent number. Triage " +
           "confirms a live bound type, supplies a type for a module-only or " +
@@ -131,8 +131,9 @@ export const requestConvertRoutes: FastifyPluginAsyncZod = async (app) => {
           "field remain on the Request; missing required fields and dead " +
           "references are refused by name and can be answered in customFields. " +
           "Both records narrate the conversion and requestStatusChanged raises " +
-          "the Requester's In progress notification. Paper promotion and thread " +
-          "move remain on the contract arm until M22/9. Member+ only",
+          "the Requester's In progress notification. Attachments become ordinary " +
+          "root documents and the tiered thread moves onto either target while " +
+          "the Request remains the Requester's window. Member+ only",
         tags: ["requests"],
         params: NumberParams,
         // Strict: an unknown key is a client bug, not a silent strip.
@@ -303,18 +304,18 @@ export const requestConvertRoutes: FastifyPluginAsyncZod = async (app) => {
             // listing and downloading what they submitted. A Request
             // that carried nothing promotes nothing, and says nothing
             // about having promoted nothing.
-            if (record.module === "contract") {
-              await promote(tx, {
-                requestId: held.id,
-                target: {
-                  record,
-                  primaryDocumentId:
-                    "primaryDocumentId" in born.row ? born.row.primaryDocumentId : null,
-                },
-                actorId: request.user.id,
-                actorName: request.user.displayName,
-              });
-            }
+            await promote(tx, {
+              requestId: held.id,
+              target: {
+                record,
+                primaryDocumentId:
+                  record.module === "contract" && "primaryDocumentId" in born.row
+                    ? born.row.primaryDocumentId
+                    : null,
+              },
+              actorId: request.user.id,
+              actorName: request.user.displayName,
+            });
 
             // CMT-001's thread, moved onto the record beside the paper
             // (#422). Tiers are preserved because the write does not
@@ -324,14 +325,12 @@ export const requestConvertRoutes: FastifyPluginAsyncZod = async (app) => {
             // happens here, inside the transaction that made the record
             // — a conversion that refuses anywhere leaves the
             // conversation exactly where the requester left it.
-            if (record.module === "contract") {
-              await moveThread(tx, {
-                requestId: held.id,
-                requestNumber: held.number,
-                target: record,
-                actorId: request.user.id,
-              });
-            }
+            await moveThread(tx, {
+              requestId: held.id,
+              requestNumber: held.number,
+              target: record,
+              actorId: request.user.id,
+            });
 
             await tx
               .update(requests)

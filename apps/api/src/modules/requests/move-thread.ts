@@ -153,7 +153,8 @@ export async function moveThread(tx: NotifyingTransaction, move: ThreadMove): Pr
   // that did not happen.
   if (moved.length === 0) return;
   // A reader of the Request who wonders where the thread went is the one
-  // this sentence is for, and C-### is where it went. The record's own
+  // this sentence is for, and the permanent record reference is where it
+  // went. The record's own
   // feed already says it was created from R-###, so it is one entry
   // rather than two.
   await recordActivity(tx, {
@@ -162,6 +163,9 @@ export async function moveThread(tx: NotifyingTransaction, move: ThreadMove): Pr
     actorId: move.actorId,
     action: "request.thread_moved",
     visibility: RECORD_ACTIVITY_TIER,
-    payload: { number: move.requestNumber, contractNumber: move.target.number },
+    payload:
+      move.target.module === "contract"
+        ? { number: move.requestNumber, contractNumber: move.target.number }
+        : { number: move.requestNumber, matterNumber: move.target.number },
   });
 }
