@@ -58,6 +58,7 @@ function field(
     displayOrder: 1,
     isRequired: false,
     ...overrides,
+    fieldTag: overrides.fieldTag ?? "business",
   };
 }
 

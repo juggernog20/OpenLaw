@@ -7132,6 +7132,10 @@
                                     "entity"
                                   ]
                                 },
+                                "fieldTag": {
+                                  "type": "string",
+                                  "enum": ["business", "legal"]
+                                },
                                 "options": {
                                   "anyOf": [
                                     {
@@ -7160,6 +7164,7 @@
                                 "displayName",
                                 "description",
                                 "fieldType",
+                                "fieldTag",
                                 "options",
                                 "displayOrder",
                                 "isRequired"
@@ -7495,6 +7500,10 @@
                               "entity"
                             ]
                           },
+                          "fieldTag": {
+                            "type": "string",
+                            "enum": ["business", "legal"]
+                          },
                           "options": {
                             "anyOf": [
                               {
@@ -7523,6 +7532,7 @@
                           "displayName",
                           "description",
                           "fieldType",
+                          "fieldTag",
                           "options",
                           "displayOrder",
                           "isRequired"
@@ -7963,6 +7973,10 @@
                               "entity"
                             ]
                           },
+                          "fieldTag": {
+                            "type": "string",
+                            "enum": ["business", "legal"]
+                          },
                           "options": {
                             "anyOf": [
                               {
@@ -7991,6 +8005,7 @@
                           "displayName",
                           "description",
                           "fieldType",
+                          "fieldTag",
                           "options",
                           "displayOrder",
                           "isRequired"
@@ -10857,6 +10872,10 @@
                               "entity"
                             ]
                           },
+                          "fieldTag": {
+                            "type": "string",
+                            "enum": ["business", "legal"]
+                          },
                           "options": {
                             "anyOf": [
                               {
@@ -10885,6 +10904,7 @@
                           "displayName",
                           "description",
                           "fieldType",
+                          "fieldTag",
                           "options",
                           "displayOrder",
                           "isRequired"
@@ -11583,6 +11603,10 @@
                               "entity"
                             ]
                           },
+                          "fieldTag": {
+                            "type": "string",
+                            "enum": ["business", "legal"]
+                          },
                           "options": {
                             "anyOf": [
                               {
@@ -11611,6 +11635,7 @@
                           "displayName",
                           "description",
                           "fieldType",
+                          "fieldTag",
                           "options",
                           "displayOrder",
                           "isRequired"
@@ -12242,6 +12267,10 @@
                               "entity"
                             ]
                           },
+                          "fieldTag": {
+                            "type": "string",
+                            "enum": ["business", "legal"]
+                          },
                           "options": {
                             "anyOf": [
                               {
@@ -12270,6 +12299,7 @@
                           "displayName",
                           "description",
                           "fieldType",
+                          "fieldTag",
                           "options",
                           "displayOrder",
                           "isRequired"
@@ -16072,6 +16102,10 @@
                                     "entity"
                                   ]
                                 },
+                                "fieldTag": {
+                                  "type": "string",
+                                  "enum": ["business", "legal"]
+                                },
                                 "options": {
                                   "anyOf": [
                                     {
@@ -16100,6 +16134,7 @@
                                 "displayName",
                                 "description",
                                 "fieldType",
+                                "fieldTag",
                                 "options",
                                 "displayOrder",
                                 "isRequired"
@@ -16620,6 +16655,10 @@
                               "entity"
                             ]
                           },
+                          "fieldTag": {
+                            "type": "string",
+                            "enum": ["business", "legal"]
+                          },
                           "options": {
                             "anyOf": [
                               {
@@ -16648,6 +16687,7 @@
                           "displayName",
                           "description",
                           "fieldType",
+                          "fieldTag",
                           "options",
                           "displayOrder",
                           "isRequired"
@@ -17446,6 +17486,10 @@
                               "entity"
                             ]
                           },
+                          "fieldTag": {
+                            "type": "string",
+                            "enum": ["business", "legal"]
+                          },
                           "options": {
                             "anyOf": [
                               {
@@ -17474,6 +17518,7 @@
                           "displayName",
                           "description",
                           "fieldType",
+                          "fieldTag",
                           "options",
                           "displayOrder",
                           "isRequired"

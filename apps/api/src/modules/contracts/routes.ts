@@ -106,16 +106,14 @@
  * reassignment deliberately will not, since that is a system move rather
  * than a re-type anyone chose.
  *
- * Access has two floors (CTR-021). Every mutation is Member+ —
- * Administrators and Legal Team Members equally — and so is every
- * picker read behind one. The list and the record read one step wider:
- * a Contributor reaches them, and the shared `contractTeamScope` narrows
- * what they reach to the contracts they hold a `contract_team` row on.
- * Being added to the team is what grants the access (DD-015), so a
- * contract a Contributor is not on answers exactly as a contract that
- * does not exist. Business Users are refused everywhere. The DD-015
- * business/legal editable-field split is not built here: a Contributor
- * reads.
+ * Access has two floors (CTR-021). Picker reads and every mutation
+ * except the per-field PATCH are Member+ — Administrators and Legal
+ * Team Members equally. The list, record read, and PATCH reach one step
+ * wider: a Contributor reaches contracts they hold a `contract_team`
+ * row on. DD-015 then narrows their PATCH to value, effective date, and
+ * business-tagged Fields; legal-tagged Fields are omitted from their
+ * projection. A contract a Contributor is not on answers exactly as a
+ * contract that does not exist. Business Users are refused everywhere.
  *
  * The same predicate carries DD-014's Confidential flag (M10). A
  * confidential contract is reached by the named team, its Owner, and
@@ -191,9 +189,11 @@ import {
 import {
   AttachedCustomFieldSchema,
   applyCustomFields,
+  assertContributorCustomFieldWrite,
   assertRequiredCustomFields,
   CustomFieldsInput,
   CustomFieldsSchema,
+  projectCustomFields,
   selectAttachedFields,
   type AttachedCustomField,
 } from "../../lib/custom-fields.js";
@@ -741,7 +741,10 @@ function sameValue(
   );
 }
 
-function toRow(context: ContractContext) {
+function toRow(
+  context: ContractContext,
+  customFields: Readonly<Record<string, CustomFieldValue>> = context.row.customFields,
+) {
   const { row } = context;
   return {
     id: row.id,
@@ -776,7 +779,7 @@ function toRow(context: ContractContext) {
     renewalPendingConfirmation: renewalPending(row),
     proposedRenewalExpiry: proposedRollExpiry(row),
     description: row.description,
-    customFields: row.customFields,
+    customFields,
     isConfidential: row.isConfidential,
     endedAt: row.endedAt?.toISOString() ?? null,
     archivedAt: row.archivedAt?.toISOString() ?? null,
@@ -1425,11 +1428,16 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
 
   /** The whole custom-field half of an answer: the type's attachments
    * and the rows its values name. */
-  async function customFieldsEnvelope(db: Executor, context: ContractContext) {
+  async function customFieldsEnvelope(
+    db: Executor,
+    context: ContractContext,
+    user: AuthenticatedUser,
+  ) {
     const attached = await attachedFieldsOf(db, context.row.contractTypeId);
+    const projection = projectCustomFields(user.role, attached, context.row.customFields);
     return {
-      fields: attached,
-      customFieldRefs: await customFieldRefs(db, attached, context.row.customFields),
+      ...projection,
+      customFieldRefs: await customFieldRefs(db, projection.fields, projection.customFields),
     };
   }
 
@@ -1528,8 +1536,30 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
         // is more without counting anything.
         .limit(PAGE_SIZE + 1);
       const page = rows.slice(0, PAGE_SIZE);
+      const contributorFields =
+        request.user.role === "contributor"
+          ? new Map(
+              await Promise.all(
+                [...new Set(page.map((context) => context.row.contractTypeId))].map(
+                  async (contractTypeId) =>
+                    [contractTypeId, await attachedFieldsOf(app.db, contractTypeId)] as const,
+                ),
+              ),
+            )
+          : null;
       return {
-        contracts: page.map(toRow),
+        contracts: page.map((context) =>
+          toRow(
+            context,
+            contributorFields
+              ? projectCustomFields(
+                  request.user.role,
+                  contributorFields.get(context.row.contractTypeId) ?? [],
+                  context.row.customFields,
+                ).customFields
+              : context.row.customFields,
+          ),
+        ),
         // Only when a further row was actually read. A cursor on the
         // last page would send the client for an empty one.
         nextCursor: rows.length > PAGE_SIZE ? (page.at(-1)?.row.id ?? null) : null,
@@ -1691,10 +1721,17 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
       const [team, parties, custom, renewals] = await Promise.all([
         selectTeam(app.db, row.row.id),
         selectCounterparties(app.db, row.row.id),
-        customFieldsEnvelope(app.db, row),
+        customFieldsEnvelope(app.db, row, request.user),
         selectRenewals(app.db, row.row.id),
       ]);
-      return { contract: toRow(row), ...custom, team, counterparties: parties, renewals };
+      return {
+        contract: toRow(row, custom.customFields),
+        fields: custom.fields,
+        customFieldRefs: custom.customFieldRefs,
+        team,
+        counterparties: parties,
+        renewals,
+      };
     },
   );
 
@@ -1815,7 +1852,7 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
   app.patch(
     "/contracts/:number",
     {
-      preHandler: requireMember,
+      preHandler: requireContractReader,
       schema: {
         operationId: "updateContract",
         summary:
@@ -1935,6 +1972,20 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
       // bell row for it belongs inside the same commit as the column.
       const updated = await app.notifier.notifying(async (tx) => {
         const current = await lockedContract(tx, request.params.number, request.user);
+        let contributorAttached: AttachedCustomField[] | null = null;
+        if (request.user.role === "contributor") {
+          const allowed = new Set(["value", "effectiveDate", "customFields"]);
+          if (Object.keys(body).some((key) => !allowed.has(key))) {
+            throw httpError(
+              403,
+              "Contributors can edit only the value, effective date, and business Fields on this contract.",
+            );
+          }
+          if (body.customFields !== undefined) {
+            contributorAttached = await attachedFieldsOf(tx, current.row.contractTypeId);
+            assertContributorCustomFieldWrite(contributorAttached, body.customFields);
+          }
+        }
         // Reach was answered above, for this patch and every other one,
         // whatever the body carries. What is left is the flag's own
         // narrower actor set, and it is asked before the archived
@@ -2151,7 +2202,9 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
         // otherwise. Everything below is checked against these, so a
         // slug is only writable while the type that attaches it is the
         // type the contract will hold.
-        const attached = await attachedFieldsOf(tx, patch.contractTypeId ?? target.contractTypeId);
+        const attached =
+          contributorAttached ??
+          (await attachedFieldsOf(tx, patch.contractTypeId ?? target.contractTypeId));
         if (body.customFields !== undefined || retyped) {
           const applied = await applyCustomFields(
             tx,
@@ -2296,7 +2349,12 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
             actorId: request.user.id,
             action: "contract.updated",
             visibility: RECORD_ACTIVITY_TIER,
-            payload: { number: row!.number, title: row!.title, changed },
+            payload: {
+              number: row!.number,
+              title: row!.title,
+              changed,
+              ...(request.user.role === "contributor" ? { actorRole: request.user.role } : {}),
+            },
           });
         }
         if (statusChange) {
@@ -2405,10 +2463,11 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
       // The attachments ride out because a re-type changed them: a
       // client that adopted only the row would keep drawing the old
       // type's fields over the new type's values.
+      const projection = projectCustomFields(request.user.role, attached, context.row.customFields);
       return {
-        contract: toRow(context),
-        fields: attached,
-        customFieldRefs: await customFieldRefs(app.db, attached, context.row.customFields),
+        contract: toRow(context, projection.customFields),
+        fields: projection.fields,
+        customFieldRefs: await customFieldRefs(app.db, projection.fields, projection.customFields),
       };
     },
   );

@@ -364,7 +364,7 @@ describe("the term on the contract record", () => {
     expect(notice).toHaveValue(1.5);
   });
 
-  it("gives a Contributor the term as facts", async () => {
+  it("lets a Contributor edit only the business effective-date input", async () => {
     stubApi({
       signedIn: CONTRIBUTOR,
       extra: recordApi(contractRow({ termType: "auto_renew", renewalPeriodMonths: 12 })).handler,
@@ -372,7 +372,7 @@ describe("the term on the contract record", () => {
     renderAt("/contracts/42");
 
     expect(await screen.findByLabelText("Term type")).toBeDisabled();
-    expect(screen.getByLabelText("Effective date")).toBeDisabled();
+    expect(screen.getByLabelText("Effective date")).toBeEnabled();
     expect(screen.getByLabelText("Expiry date")).toBeDisabled();
     expect(screen.getByLabelText("Renewal period (months)")).toBeDisabled();
     expect(screen.getByLabelText("Notice period (days)")).toBeDisabled();

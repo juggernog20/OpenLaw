@@ -20,6 +20,7 @@ import {
   users,
   USER_ROLES,
   type AnyPgColumn,
+  type CustomFieldValue,
   type Executor,
   type Matter,
   type SQL,
@@ -36,11 +37,14 @@ import { requireRole, type AuthenticatedUser } from "../../auth/guards.js";
 import { recordActivity, RECORD_ACTIVITY_TIER } from "../../lib/activity.js";
 import {
   applyCustomFields,
+  assertContributorCustomFieldWrite,
   assertRequiredCustomFields,
   AttachedCustomFieldSchema,
   CustomFieldsInput,
   CustomFieldsSchema,
+  projectCustomFields,
   selectAttachedFields,
+  type AttachedCustomField,
 } from "../../lib/custom-fields.js";
 import {
   MATTER_CREATOR_ROLE,
@@ -130,7 +134,10 @@ interface MatterContext {
   } | null;
 }
 
-function toRow(context: MatterContext) {
+function toRow(
+  context: MatterContext,
+  customFields: Readonly<Record<string, CustomFieldValue>> = context.row.customFields,
+) {
   const { row } = context;
   return {
     id: row.id,
@@ -152,7 +159,7 @@ function toRow(context: MatterContext) {
       : null,
     priority: row.priority,
     risk: row.risk,
-    customFields: row.customFields,
+    customFields,
     openedAt: row.openedAt.toISOString(),
     closedAt: row.closedAt?.toISOString() ?? null,
     isConfidential: row.isConfidential,
@@ -392,8 +399,33 @@ export const mattersRoutes: FastifyPluginAsyncZod = async (app) => {
         .from(matters)
         .innerJoin(matterStatuses, eq(matters.statusId, matterStatuses.id))
         .where(and(isNull(matters.archivedAt), scope(request.user)));
+      const contributorFields =
+        request.user.role === "contributor"
+          ? new Map(
+              await Promise.all(
+                [...new Set(page.map((context) => context.row.matterTypeId))].map(
+                  async (matterTypeId) =>
+                    [
+                      matterTypeId,
+                      await selectAttachedFields(app.db, matterTypeFields, matterTypeId),
+                    ] as const,
+                ),
+              ),
+            )
+          : null;
       return {
-        matters: page.map(toRow),
+        matters: page.map((context) =>
+          toRow(
+            context,
+            contributorFields
+              ? projectCustomFields(
+                  request.user.role,
+                  contributorFields.get(context.row.matterTypeId) ?? [],
+                  context.row.customFields,
+                ).customFields
+              : context.row.customFields,
+          ),
+        ),
         nextCursor: rows.length > PAGE_SIZE ? (page.at(-1)?.row.id ?? null) : null,
         counts: counts ?? { open: 0, onHold: 0 },
       };
@@ -504,12 +536,16 @@ export const mattersRoutes: FastifyPluginAsyncZod = async (app) => {
         )
         .limit(1);
       if (!context) throw httpError(404, NO_MATTER);
-      const fields = await selectAttachedFields(app.db, matterTypeFields, context.row.matterTypeId);
-      const customFieldRefs = await resolveStaffRefs(app.db, fields, context.row.customFields);
+      const attached = await selectAttachedFields(
+        app.db,
+        matterTypeFields,
+        context.row.matterTypeId,
+      );
+      const projection = projectCustomFields(request.user.role, attached, context.row.customFields);
       return {
-        matter: toRow(context),
-        fields,
-        customFieldRefs,
+        matter: toRow(context, projection.customFields),
+        fields: projection.fields,
+        customFieldRefs: await resolveStaffRefs(app.db, projection.fields, projection.customFields),
         team: await selectTeam(app.db, context.row.id),
       };
     },
@@ -548,7 +584,7 @@ export const mattersRoutes: FastifyPluginAsyncZod = async (app) => {
   app.patch(
     "/matters/:number",
     {
-      preHandler: requireMember,
+      preHandler: requireReader,
       schema: {
         operationId: "updateMatter",
         summary:
@@ -573,6 +609,24 @@ export const mattersRoutes: FastifyPluginAsyncZod = async (app) => {
       const body = request.body;
       const updated = await app.db.transaction(async (tx) => {
         const current = await lockedMatter(tx, request.params.number, request.user);
+        let contributorAttached: AttachedCustomField[] | null = null;
+        if (request.user.role === "contributor") {
+          const allowed = new Set(["description", "customFields"]);
+          if (Object.keys(body).some((key) => !allowed.has(key))) {
+            throw httpError(
+              403,
+              "Contributors can edit only the description and business Fields on this matter.",
+            );
+          }
+          if (body.customFields !== undefined) {
+            contributorAttached = await selectAttachedFields(
+              tx,
+              matterTypeFields,
+              current.row.matterTypeId,
+            );
+            assertContributorCustomFieldWrite(contributorAttached, body.customFields);
+          }
+        }
         if (body.isConfidential !== undefined) {
           await assertAudienceActor(
             tx,
@@ -637,11 +691,13 @@ export const mattersRoutes: FastifyPluginAsyncZod = async (app) => {
           matterTypeName = matterType.displayName;
         }
 
-        const attached = await selectAttachedFields(
-          tx,
-          matterTypeFields,
-          patch.matterTypeId ?? target.matterTypeId,
-        );
+        const attached =
+          contributorAttached ??
+          (await selectAttachedFields(
+            tx,
+            matterTypeFields,
+            patch.matterTypeId ?? target.matterTypeId,
+          ));
         if (body.customFields !== undefined || retyped) {
           const applied = await applyCustomFields(
             tx,
@@ -726,7 +782,12 @@ export const mattersRoutes: FastifyPluginAsyncZod = async (app) => {
             actorId: request.user.id,
             action: "matter.updated",
             visibility: RECORD_ACTIVITY_TIER,
-            payload: { number: row.number, title: row.title, changed },
+            payload: {
+              number: row.number,
+              title: row.title,
+              changed,
+              ...(request.user.role === "contributor" ? { actorRole: request.user.role } : {}),
+            },
           });
         }
         if (retyped) {
@@ -768,10 +829,15 @@ export const mattersRoutes: FastifyPluginAsyncZod = async (app) => {
         }
         return { row, matterTypeName, statusName, statusCategory, manager, attached };
       });
+      const projection = projectCustomFields(
+        request.user.role,
+        updated.attached,
+        updated.row.customFields,
+      );
       return {
-        matter: toRow(updated),
-        fields: updated.attached,
-        customFieldRefs: await resolveStaffRefs(app.db, updated.attached, updated.row.customFields),
+        matter: toRow(updated, projection.customFields),
+        fields: projection.fields,
+        customFieldRefs: await resolveStaffRefs(app.db, projection.fields, projection.customFields),
         team: await selectTeam(app.db, updated.row.id),
       };
     },
