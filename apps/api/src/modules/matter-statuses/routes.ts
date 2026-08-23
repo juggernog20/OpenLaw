@@ -19,7 +19,7 @@ import {
 } from "@openlaw/db";
 import { requireRole } from "../../auth/guards.js";
 import { recordActivity, RECORD_ACTIVITY_TIER } from "../../lib/activity.js";
-import { httpError, problemResponse } from "../../lib/problem.js";
+import { HttpError, httpError, problemResponse } from "../../lib/problem.js";
 import { freeSlug } from "../../lib/slug.js";
 import { recordNounPhrase } from "../../lib/taxonomy-routes.js";
 
@@ -285,18 +285,18 @@ export const matterStatusesRoutes: FastifyPluginAsyncZod = async (app) => {
               "every category keeps at least one. Add another status to the category first.",
           );
         }
-        const inUseCount = (await usageCounts(tx, [target.id])).get(target.id) ?? 0;
+        // A supplied target is validated whether or not it ends up used.
+        // The count can move between the pane's read and this request,
+        // so an unneeded target is ignored, not refused — the same rule
+        // the shared taxonomy guard applies.
         let reassignment: MatterStatus | null = null;
-        if (inUseCount > 0) {
-          if (!request.body.reassignToId) {
-            throw httpError(
-              409,
-              `${target.displayName} is the status of ${inUsePhrase(inUseCount)}. ` +
-                "Choose another status for them first.",
-            );
-          }
-          reassignment = await lockedStatus(tx, request.body.reassignToId);
+        if (request.body.reassignToId) {
+          reassignment = await lockedStatus(tx, request.body.reassignToId).catch((error) => {
+            if (error instanceof HttpError && error.statusCode === 404) return null;
+            throw error;
+          });
           if (
+            !reassignment ||
             reassignment.id === target.id ||
             reassignment.archivedAt ||
             reassignment.category !== target.category
@@ -304,6 +304,16 @@ export const matterStatusesRoutes: FastifyPluginAsyncZod = async (app) => {
             throw httpError(
               400,
               "The reassignment target must be another live status in the same category.",
+            );
+          }
+        }
+        const inUseCount = (await usageCounts(tx, [target.id])).get(target.id) ?? 0;
+        if (inUseCount > 0) {
+          if (!reassignment) {
+            throw httpError(
+              409,
+              `${target.displayName} is the status of ${inUsePhrase(inUseCount)}. ` +
+                "Choose another status for them first.",
             );
           }
           const moved = await tx
@@ -327,11 +337,8 @@ export const matterStatusesRoutes: FastifyPluginAsyncZod = async (app) => {
               },
             })),
           );
-        } else if (request.body.reassignToId) {
-          throw httpError(
-            400,
-            "A reassignment target is only needed when matters use this status.",
-          );
+        } else {
+          reassignment = null;
         }
         const [updated] = await tx
           .update(matterStatuses)

@@ -239,6 +239,35 @@ describe("archive and delete invariants", () => {
       .where(eq(matterStatuses.id, closed.id));
   });
 
+  it("refuses a cross-category target and ignores one that no matter needs", async () => {
+    const unused = await createStatus("Dormant", "open");
+    const closed = await bySlug("closed");
+    const crossCategory = await harness.app.inject({
+      method: "POST",
+      url: `/api/v1/matter-statuses/${unused.id}/archive`,
+      cookies: adminCookies,
+      payload: { reassignToId: closed.id },
+    });
+    expect(crossCategory.statusCode, crossCategory.body).toBe(400);
+    expect(crossCategory.json().detail).toContain("same category");
+
+    const open = await bySlug("open");
+    const archived = await harness.app.inject({
+      method: "POST",
+      url: `/api/v1/matter-statuses/${unused.id}/archive`,
+      cookies: adminCookies,
+      payload: { reassignToId: open.id },
+    });
+    expect(archived.statusCode, archived.body).toBe(200);
+    expect(archived.json().matterStatus.archivedAt).not.toBeNull();
+    const entries = await harness.db
+      .select({ payload: activityLog.payload })
+      .from(activityLog)
+      .where(eq(activityLog.action, "matter_status.archived"))
+      .orderBy(asc(activityLog.createdAt));
+    expect(entries.at(-1)?.payload).toMatchObject({ slug: "dormant", reassignedTo: null });
+  });
+
   it("requires a target for an in-use status, moves every matter, and narrates each move", async () => {
     const source = await createStatus("Discovery", "open");
     const target = await createStatus("Investigation", "open");
