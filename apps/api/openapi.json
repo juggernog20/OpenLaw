@@ -4900,7 +4900,7 @@
       },
       "delete": {
         "operationId": "deleteMatterType",
-        "summary": "Hard-delete a matter type; `other` refuses (MTR-001), and once matters exist (M22) an in-use type will refuse too",
+        "summary": "Hard-delete a matter type; `other` refuses (MTR-001), and so does a type still used by matters",
         "tags": ["matter-types"],
         "parameters": [
           {
@@ -5048,7 +5048,7 @@
     "/api/v1/matter-types/{id}/archive": {
       "post": {
         "operationId": "archiveMatterType",
-        "summary": "Archive a matter type (SET-003 guarded): it leaves pickers and the default list; nothing is deleted; `other` refuses",
+        "summary": "Archive a matter type (SET-003 guarded): a type still used by matters requires a reassignment target, which takes them; nothing is deleted; `other` refuses",
         "tags": ["matter-types"],
         "requestBody": {
           "required": true,
@@ -5319,7 +5319,7 @@
                           },
                           "moduleScope": {
                             "type": "string",
-                            "enum": ["global"]
+                            "enum": ["matter", "global"]
                           },
                           "displayOrder": {
                             "type": "integer",
@@ -5363,7 +5363,7 @@
       },
       "post": {
         "operationId": "attachMatterTypeField",
-        "summary": "Attach a catalog field to a matter type: global fields only until M22 opens the matter scope (MTR-011), appended to the per-type order, optional from the start unless isRequired says otherwise",
+        "summary": "Attach a catalog field to a matter type: matter-scoped and global fields (MTR-011), appended to the per-type order, optional from the start unless isRequired says otherwise",
         "tags": ["matter-types"],
         "requestBody": {
           "required": true,
@@ -5430,7 +5430,7 @@
                         },
                         "moduleScope": {
                           "type": "string",
-                          "enum": ["global"]
+                          "enum": ["matter", "global"]
                         },
                         "displayOrder": {
                           "type": "integer",
@@ -5475,7 +5475,7 @@
     "/api/v1/matter-types/{id}/fields/{fieldId}": {
       "patch": {
         "operationId": "setMatterTypeFieldRequired",
-        "summary": "Set an attachment's required flag: per attachment, so a field can be required for one type and optional elsewhere; hard enforcement arrives with the record milestone (M22)",
+        "summary": "Set an attachment's required flag: per attachment, so a field can be required for one type and optional elsewhere; hard-enforced when a record is created on this type and when one is re-typed onto it (MTR-014)",
         "tags": ["matter-types"],
         "requestBody": {
           "required": true,
@@ -5547,7 +5547,7 @@
                         },
                         "moduleScope": {
                           "type": "string",
-                          "enum": ["global"]
+                          "enum": ["matter", "global"]
                         },
                         "displayOrder": {
                           "type": "integer",
@@ -5700,7 +5700,7 @@
                           },
                           "moduleScope": {
                             "type": "string",
-                            "enum": ["global"]
+                            "enum": ["matter", "global"]
                           },
                           "displayOrder": {
                             "type": "integer",
@@ -5725,6 +5725,1007 @@
                     }
                   },
                   "required": ["attachedFields"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/matters": {
+      "get": {
+        "operationId": "listMatters",
+        "summary": "List the matters this reader reaches, newest M-number first",
+        "tags": ["matters"],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "matters": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "number": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          },
+                          "title": {
+                            "type": "string"
+                          },
+                          "description": {
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "matterTypeId": {
+                            "type": "string"
+                          },
+                          "matterTypeName": {
+                            "type": "string"
+                          },
+                          "statusId": {
+                            "type": "string"
+                          },
+                          "statusName": {
+                            "type": "string"
+                          },
+                          "statusCategory": {
+                            "type": "string",
+                            "enum": ["open", "closed"]
+                          },
+                          "manager": {
+                            "anyOf": [
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "id": {
+                                    "type": "string"
+                                  },
+                                  "displayName": {
+                                    "type": "string"
+                                  },
+                                  "image": {
+                                    "anyOf": [
+                                      {
+                                        "type": "string"
+                                      },
+                                      {
+                                        "type": "null"
+                                      }
+                                    ]
+                                  },
+                                  "archived": {
+                                    "type": "boolean"
+                                  }
+                                },
+                                "required": ["id", "displayName", "image", "archived"],
+                                "additionalProperties": false
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "priority": {
+                            "type": "string",
+                            "enum": ["low", "medium", "high", "critical"]
+                          },
+                          "risk": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "enum": ["low", "medium", "high", "critical"]
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "customFields": {
+                            "type": "object",
+                            "propertyNames": {
+                              "type": "string"
+                            },
+                            "additionalProperties": {
+                              "anyOf": [
+                                {
+                                  "type": "string"
+                                },
+                                {
+                                  "type": "number"
+                                },
+                                {
+                                  "type": "boolean"
+                                },
+                                {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "string"
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          "openedAt": {
+                            "type": "string",
+                            "format": "date-time",
+                            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+                          },
+                          "closedAt": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "format": "date-time",
+                                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "isConfidential": {
+                            "type": "boolean"
+                          },
+                          "archivedAt": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "format": "date-time",
+                                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "createdAt": {
+                            "type": "string",
+                            "format": "date-time",
+                            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+                          },
+                          "updatedAt": {
+                            "type": "string",
+                            "format": "date-time",
+                            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "number",
+                          "title",
+                          "description",
+                          "matterTypeId",
+                          "matterTypeName",
+                          "statusId",
+                          "statusName",
+                          "statusCategory",
+                          "manager",
+                          "priority",
+                          "risk",
+                          "customFields",
+                          "openedAt",
+                          "closedAt",
+                          "isConfidential",
+                          "archivedAt",
+                          "createdAt",
+                          "updatedAt"
+                        ],
+                        "additionalProperties": false
+                      }
+                    }
+                  },
+                  "required": ["matters"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "operationId": "createMatter",
+        "summary": "Create the next M-number on the first live open status, enforcing required type fields",
+        "tags": ["matters"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "title": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 500
+                  },
+                  "matterTypeId": {
+                    "type": "string"
+                  },
+                  "managerId": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "priority": {
+                    "type": "string",
+                    "enum": ["low", "medium", "high", "critical"]
+                  },
+                  "risk": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "enum": ["low", "medium", "high", "critical"]
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "description": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "maxLength": 10000
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "customFields": {
+                    "type": "object",
+                    "propertyNames": {
+                      "type": "string"
+                    },
+                    "additionalProperties": {
+                      "anyOf": [
+                        {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "number"
+                            },
+                            {
+                              "type": "boolean"
+                            },
+                            {
+                              "type": "array",
+                              "items": {
+                                "type": "string"
+                              }
+                            }
+                          ]
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  },
+                  "isConfidential": {
+                    "type": "boolean"
+                  }
+                },
+                "required": ["title", "matterTypeId"],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "matter": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "number": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "title": {
+                          "type": "string"
+                        },
+                        "description": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "matterTypeId": {
+                          "type": "string"
+                        },
+                        "matterTypeName": {
+                          "type": "string"
+                        },
+                        "statusId": {
+                          "type": "string"
+                        },
+                        "statusName": {
+                          "type": "string"
+                        },
+                        "statusCategory": {
+                          "type": "string",
+                          "enum": ["open", "closed"]
+                        },
+                        "manager": {
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "properties": {
+                                "id": {
+                                  "type": "string"
+                                },
+                                "displayName": {
+                                  "type": "string"
+                                },
+                                "image": {
+                                  "anyOf": [
+                                    {
+                                      "type": "string"
+                                    },
+                                    {
+                                      "type": "null"
+                                    }
+                                  ]
+                                },
+                                "archived": {
+                                  "type": "boolean"
+                                }
+                              },
+                              "required": ["id", "displayName", "image", "archived"],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "priority": {
+                          "type": "string",
+                          "enum": ["low", "medium", "high", "critical"]
+                        },
+                        "risk": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "enum": ["low", "medium", "high", "critical"]
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "customFields": {
+                          "type": "object",
+                          "propertyNames": {
+                            "type": "string"
+                          },
+                          "additionalProperties": {
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "number"
+                              },
+                              {
+                                "type": "boolean"
+                              },
+                              {
+                                "type": "array",
+                                "items": {
+                                  "type": "string"
+                                }
+                              }
+                            ]
+                          }
+                        },
+                        "openedAt": {
+                          "type": "string",
+                          "format": "date-time",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+                        },
+                        "closedAt": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "format": "date-time",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "isConfidential": {
+                          "type": "boolean"
+                        },
+                        "archivedAt": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "format": "date-time",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "createdAt": {
+                          "type": "string",
+                          "format": "date-time",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+                        },
+                        "updatedAt": {
+                          "type": "string",
+                          "format": "date-time",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "number",
+                        "title",
+                        "description",
+                        "matterTypeId",
+                        "matterTypeName",
+                        "statusId",
+                        "statusName",
+                        "statusCategory",
+                        "manager",
+                        "priority",
+                        "risk",
+                        "customFields",
+                        "openedAt",
+                        "closedAt",
+                        "isConfidential",
+                        "archivedAt",
+                        "createdAt",
+                        "updatedAt"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": ["matter"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/matters/options": {
+      "get": {
+        "operationId": "listMatterOptions",
+        "summary": "Live matter types with attached fields, statuses, and assignable people",
+        "tags": ["matters"],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "matterTypes": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "slug": {
+                            "type": "string"
+                          },
+                          "displayName": {
+                            "type": "string"
+                          },
+                          "fields": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "fieldId": {
+                                  "type": "string"
+                                },
+                                "slug": {
+                                  "type": "string"
+                                },
+                                "displayName": {
+                                  "type": "string"
+                                },
+                                "description": {
+                                  "anyOf": [
+                                    {
+                                      "type": "string"
+                                    },
+                                    {
+                                      "type": "null"
+                                    }
+                                  ]
+                                },
+                                "fieldType": {
+                                  "type": "string",
+                                  "enum": [
+                                    "text",
+                                    "long_text",
+                                    "number",
+                                    "date",
+                                    "boolean",
+                                    "single_select",
+                                    "multi_select",
+                                    "user",
+                                    "entity"
+                                  ]
+                                },
+                                "options": {
+                                  "anyOf": [
+                                    {
+                                      "type": "array",
+                                      "items": {
+                                        "type": "string"
+                                      }
+                                    },
+                                    {
+                                      "type": "null"
+                                    }
+                                  ]
+                                },
+                                "displayOrder": {
+                                  "type": "integer",
+                                  "minimum": -9007199254740991,
+                                  "maximum": 9007199254740991
+                                },
+                                "isRequired": {
+                                  "type": "boolean"
+                                }
+                              },
+                              "required": [
+                                "fieldId",
+                                "slug",
+                                "displayName",
+                                "description",
+                                "fieldType",
+                                "options",
+                                "displayOrder",
+                                "isRequired"
+                              ],
+                              "additionalProperties": false
+                            }
+                          }
+                        },
+                        "required": ["id", "slug", "displayName", "fields"],
+                        "additionalProperties": false
+                      }
+                    },
+                    "matterStatuses": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "slug": {
+                            "type": "string"
+                          },
+                          "displayName": {
+                            "type": "string"
+                          },
+                          "category": {
+                            "type": "string",
+                            "enum": ["open", "closed"]
+                          }
+                        },
+                        "required": ["id", "slug", "displayName", "category"],
+                        "additionalProperties": false
+                      }
+                    },
+                    "users": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "displayName": {
+                            "type": "string"
+                          },
+                          "image": {
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "archived": {
+                            "type": "boolean"
+                          },
+                          "role": {
+                            "type": "string",
+                            "enum": [
+                              "administrator",
+                              "legal_team_member",
+                              "contributor",
+                              "business_user"
+                            ]
+                          }
+                        },
+                        "required": ["id", "displayName", "image", "archived", "role"],
+                        "additionalProperties": false
+                      }
+                    }
+                  },
+                  "required": ["matterTypes", "matterStatuses", "users"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/matters/{number}": {
+      "get": {
+        "operationId": "getMatter",
+        "summary": "Read one matter by its M-number, including its type-driven fields",
+        "tags": ["matters"],
+        "parameters": [
+          {
+            "schema": {
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
+            },
+            "in": "path",
+            "name": "number",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "matter": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "number": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "title": {
+                          "type": "string"
+                        },
+                        "description": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "matterTypeId": {
+                          "type": "string"
+                        },
+                        "matterTypeName": {
+                          "type": "string"
+                        },
+                        "statusId": {
+                          "type": "string"
+                        },
+                        "statusName": {
+                          "type": "string"
+                        },
+                        "statusCategory": {
+                          "type": "string",
+                          "enum": ["open", "closed"]
+                        },
+                        "manager": {
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "properties": {
+                                "id": {
+                                  "type": "string"
+                                },
+                                "displayName": {
+                                  "type": "string"
+                                },
+                                "image": {
+                                  "anyOf": [
+                                    {
+                                      "type": "string"
+                                    },
+                                    {
+                                      "type": "null"
+                                    }
+                                  ]
+                                },
+                                "archived": {
+                                  "type": "boolean"
+                                }
+                              },
+                              "required": ["id", "displayName", "image", "archived"],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "priority": {
+                          "type": "string",
+                          "enum": ["low", "medium", "high", "critical"]
+                        },
+                        "risk": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "enum": ["low", "medium", "high", "critical"]
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "customFields": {
+                          "type": "object",
+                          "propertyNames": {
+                            "type": "string"
+                          },
+                          "additionalProperties": {
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "number"
+                              },
+                              {
+                                "type": "boolean"
+                              },
+                              {
+                                "type": "array",
+                                "items": {
+                                  "type": "string"
+                                }
+                              }
+                            ]
+                          }
+                        },
+                        "openedAt": {
+                          "type": "string",
+                          "format": "date-time",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+                        },
+                        "closedAt": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "format": "date-time",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "isConfidential": {
+                          "type": "boolean"
+                        },
+                        "archivedAt": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "format": "date-time",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "createdAt": {
+                          "type": "string",
+                          "format": "date-time",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+                        },
+                        "updatedAt": {
+                          "type": "string",
+                          "format": "date-time",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "number",
+                        "title",
+                        "description",
+                        "matterTypeId",
+                        "matterTypeName",
+                        "statusId",
+                        "statusName",
+                        "statusCategory",
+                        "manager",
+                        "priority",
+                        "risk",
+                        "customFields",
+                        "openedAt",
+                        "closedAt",
+                        "isConfidential",
+                        "archivedAt",
+                        "createdAt",
+                        "updatedAt"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "fields": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "fieldId": {
+                            "type": "string"
+                          },
+                          "slug": {
+                            "type": "string"
+                          },
+                          "displayName": {
+                            "type": "string"
+                          },
+                          "description": {
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "fieldType": {
+                            "type": "string",
+                            "enum": [
+                              "text",
+                              "long_text",
+                              "number",
+                              "date",
+                              "boolean",
+                              "single_select",
+                              "multi_select",
+                              "user",
+                              "entity"
+                            ]
+                          },
+                          "options": {
+                            "anyOf": [
+                              {
+                                "type": "array",
+                                "items": {
+                                  "type": "string"
+                                }
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "displayOrder": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          },
+                          "isRequired": {
+                            "type": "boolean"
+                          }
+                        },
+                        "required": [
+                          "fieldId",
+                          "slug",
+                          "displayName",
+                          "description",
+                          "fieldType",
+                          "options",
+                          "displayOrder",
+                          "isRequired"
+                        ],
+                        "additionalProperties": false
+                      }
+                    }
+                  },
+                  "required": ["matter", "fields"],
                   "additionalProperties": false
                 }
               }
@@ -30037,7 +31038,7 @@
                           },
                           "moduleScope": {
                             "type": "string",
-                            "enum": ["contract", "global"]
+                            "enum": ["contract", "matter", "global"]
                           },
                           "fieldType": {
                             "type": "string",
@@ -30155,7 +31156,7 @@
                   },
                   "moduleScope": {
                     "type": "string",
-                    "enum": ["contract", "global"]
+                    "enum": ["contract", "matter", "global"]
                   },
                   "fieldType": {
                     "type": "string",
@@ -30227,7 +31228,7 @@
                         },
                         "moduleScope": {
                           "type": "string",
-                          "enum": ["contract", "global"]
+                          "enum": ["contract", "matter", "global"]
                         },
                         "fieldType": {
                           "type": "string",
@@ -30424,7 +31425,7 @@
                         },
                         "moduleScope": {
                           "type": "string",
-                          "enum": ["contract", "global"]
+                          "enum": ["contract", "matter", "global"]
                         },
                         "fieldType": {
                           "type": "string",
@@ -30534,7 +31535,7 @@
                 "properties": {
                   "moduleScope": {
                     "type": "string",
-                    "enum": ["contract", "global"]
+                    "enum": ["contract", "matter", "global"]
                   }
                 },
                 "required": ["moduleScope"]
@@ -30584,7 +31585,7 @@
                         },
                         "moduleScope": {
                           "type": "string",
-                          "enum": ["contract", "global"]
+                          "enum": ["contract", "matter", "global"]
                         },
                         "fieldType": {
                           "type": "string",
@@ -30727,7 +31728,7 @@
                         },
                         "moduleScope": {
                           "type": "string",
-                          "enum": ["contract", "global"]
+                          "enum": ["contract", "matter", "global"]
                         },
                         "fieldType": {
                           "type": "string",
@@ -30870,7 +31871,7 @@
                         },
                         "moduleScope": {
                           "type": "string",
-                          "enum": ["contract", "global"]
+                          "enum": ["contract", "matter", "global"]
                         },
                         "fieldType": {
                           "type": "string",

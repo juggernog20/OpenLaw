@@ -102,7 +102,7 @@ const attach = async (typeId: string, payload: Record<string, unknown>) => {
 };
 
 /** Defines a catalog field through the Fields pane's own create route. */
-const createField = async (displayName: string, moduleScope: "contract" | "global") => {
+const createField = async (displayName: string, moduleScope: "contract" | "matter" | "global") => {
   const res = await harness.app.inject({
     method: "POST",
     url: "/api/v1/fields",
@@ -160,7 +160,7 @@ describe("the SET-002 role gate", () => {
   });
 });
 
-describe("the MTR-011 scope rule: global only until M22", () => {
+describe("the MTR-011 scope rule", () => {
   it("attaches a global field, appended to the per-type order", async () => {
     const employment = await typeBySlug("employment");
     const budget = await createField("Budget owner", "global");
@@ -200,24 +200,13 @@ describe("the MTR-011 scope rule: global only until M22", () => {
     );
   });
 
-  it("refuses a matter-scoped field as 400 — that scope opens with M22", async () => {
+  it("attaches a matter-scoped field", async () => {
     const employment = await typeBySlug("employment");
-    // The catalog's create route doesn't offer the matter scope yet, so
-    // plant the row directly — the schema allows what the API gates.
-    const [matterField] = await harness.db
-      .insert(fields)
-      .values({
-        slug: "case_number",
-        displayName: "Case number",
-        moduleScope: "matter",
-        fieldType: "text",
-        fieldTag: "legal",
-      })
-      .returning();
-    const res = await attach(employment.id, { fieldId: matterField!.id });
-    expect(res.statusCode, res.body).toBe(400);
-    expect((await listAttached(employment.id)).some((row) => row.slug === "case_number")).toBe(
-      false,
+    const matterField = await createField("Case number", "matter");
+    const res = await attach(employment.id, { fieldId: matterField.id });
+    expect(res.statusCode, res.body).toBe(201);
+    expect((await listAttached(employment.id)).some((row) => row.slug === matterField.slug)).toBe(
+      true,
     );
   });
 

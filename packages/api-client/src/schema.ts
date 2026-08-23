@@ -693,7 +693,7 @@ export interface paths {
     get: operations["getMatterType"];
     put?: never;
     post?: never;
-    /** Hard-delete a matter type; `other` refuses (MTR-001), and once matters exist (M22) an in-use type will refuse too */
+    /** Hard-delete a matter type; `other` refuses (MTR-001), and so does a type still used by matters */
     delete: operations["deleteMatterType"];
     options?: never;
     head?: never;
@@ -727,7 +727,7 @@ export interface paths {
     };
     get?: never;
     put?: never;
-    /** Archive a matter type (SET-003 guarded): it leaves pickers and the default list; nothing is deleted; `other` refuses */
+    /** Archive a matter type (SET-003 guarded): a type still used by matters requires a reassignment target, which takes them; nothing is deleted; `other` refuses */
     post: operations["archiveMatterType"];
     delete?: never;
     options?: never;
@@ -762,7 +762,7 @@ export interface paths {
     /** One matter type's attached fields in per-type order — the type editor's Attached fields card */
     get: operations["listMatterTypeFields"];
     put?: never;
-    /** Attach a catalog field to a matter type: global fields only until M22 opens the matter scope (MTR-011), appended to the per-type order, optional from the start unless isRequired says otherwise */
+    /** Attach a catalog field to a matter type: matter-scoped and global fields (MTR-011), appended to the per-type order, optional from the start unless isRequired says otherwise */
     post: operations["attachMatterTypeField"];
     delete?: never;
     options?: never;
@@ -784,7 +784,7 @@ export interface paths {
     delete: operations["detachMatterTypeField"];
     options?: never;
     head?: never;
-    /** Set an attachment's required flag: per attachment, so a field can be required for one type and optional elsewhere; hard enforcement arrives with the record milestone (M22) */
+    /** Set an attachment's required flag: per attachment, so a field can be required for one type and optional elsewhere; hard-enforced when a record is created on this type and when one is re-typed onto it (MTR-014) */
     patch: operations["setMatterTypeFieldRequired"];
     trace?: never;
   };
@@ -798,6 +798,58 @@ export interface paths {
     get?: never;
     /** Apply a full permutation of one type's attached fields (SET-003 immediate apply); per-type orders renumber from 1 */
     put: operations["reorderMatterTypeFields"];
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/matters": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** List the matters this reader reaches, newest M-number first */
+    get: operations["listMatters"];
+    put?: never;
+    /** Create the next M-number on the first live open status, enforcing required type fields */
+    post: operations["createMatter"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/matters/options": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Live matter types with attached fields, statuses, and assignable people */
+    get: operations["listMatterOptions"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/matters/{number}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Read one matter by its M-number, including its type-driven fields */
+    get: operations["getMatter"];
+    put?: never;
     post?: never;
     delete?: never;
     options?: never;
@@ -5417,7 +5469,7 @@ export interface operations {
                 | "user"
                 | "entity";
               /** @enum {string} */
-              moduleScope: "global";
+              moduleScope: "matter" | "global";
               displayOrder: number;
               isRequired: boolean;
             }[];
@@ -5476,7 +5528,7 @@ export interface operations {
                 | "user"
                 | "entity";
               /** @enum {string} */
-              moduleScope: "global";
+              moduleScope: "matter" | "global";
               displayOrder: number;
               isRequired: boolean;
             };
@@ -5565,7 +5617,7 @@ export interface operations {
                 | "user"
                 | "entity";
               /** @enum {string} */
-              moduleScope: "global";
+              moduleScope: "matter" | "global";
               displayOrder: number;
               isRequired: boolean;
             };
@@ -5623,7 +5675,304 @@ export interface operations {
                 | "user"
                 | "entity";
               /** @enum {string} */
-              moduleScope: "global";
+              moduleScope: "matter" | "global";
+              displayOrder: number;
+              isRequired: boolean;
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  listMatters: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            matters: {
+              id: string;
+              number: number;
+              title: string;
+              description: string | null;
+              matterTypeId: string;
+              matterTypeName: string;
+              statusId: string;
+              statusName: string;
+              /** @enum {string} */
+              statusCategory: "open" | "closed";
+              manager: {
+                id: string;
+                displayName: string;
+                image: string | null;
+                archived: boolean;
+              } | null;
+              /** @enum {string} */
+              priority: "low" | "medium" | "high" | "critical";
+              risk: ("low" | "medium" | "high" | "critical") | null;
+              customFields: {
+                [key: string]: string | number | boolean | string[];
+              };
+              /** Format: date-time */
+              openedAt: string;
+              closedAt: string | null;
+              isConfidential: boolean;
+              archivedAt: string | null;
+              /** Format: date-time */
+              createdAt: string;
+              /** Format: date-time */
+              updatedAt: string;
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  createMatter: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          title: string;
+          matterTypeId: string;
+          managerId?: string | null;
+          /** @enum {string} */
+          priority?: "low" | "medium" | "high" | "critical";
+          risk?: ("low" | "medium" | "high" | "critical") | null;
+          description?: string | null;
+          customFields?: {
+            [key: string]: (string | number | boolean | string[]) | null;
+          };
+          isConfidential?: boolean;
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            matter: {
+              id: string;
+              number: number;
+              title: string;
+              description: string | null;
+              matterTypeId: string;
+              matterTypeName: string;
+              statusId: string;
+              statusName: string;
+              /** @enum {string} */
+              statusCategory: "open" | "closed";
+              manager: {
+                id: string;
+                displayName: string;
+                image: string | null;
+                archived: boolean;
+              } | null;
+              /** @enum {string} */
+              priority: "low" | "medium" | "high" | "critical";
+              risk: ("low" | "medium" | "high" | "critical") | null;
+              customFields: {
+                [key: string]: string | number | boolean | string[];
+              };
+              /** Format: date-time */
+              openedAt: string;
+              closedAt: string | null;
+              isConfidential: boolean;
+              archivedAt: string | null;
+              /** Format: date-time */
+              createdAt: string;
+              /** Format: date-time */
+              updatedAt: string;
+            };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  listMatterOptions: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            matterTypes: {
+              id: string;
+              slug: string;
+              displayName: string;
+              fields: {
+                fieldId: string;
+                slug: string;
+                displayName: string;
+                description: string | null;
+                /** @enum {string} */
+                fieldType:
+                  | "text"
+                  | "long_text"
+                  | "number"
+                  | "date"
+                  | "boolean"
+                  | "single_select"
+                  | "multi_select"
+                  | "user"
+                  | "entity";
+                options: string[] | null;
+                displayOrder: number;
+                isRequired: boolean;
+              }[];
+            }[];
+            matterStatuses: {
+              id: string;
+              slug: string;
+              displayName: string;
+              /** @enum {string} */
+              category: "open" | "closed";
+            }[];
+            users: {
+              id: string;
+              displayName: string;
+              image: string | null;
+              archived: boolean;
+              /** @enum {string} */
+              role: "administrator" | "legal_team_member" | "contributor" | "business_user";
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  getMatter: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        number: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            matter: {
+              id: string;
+              number: number;
+              title: string;
+              description: string | null;
+              matterTypeId: string;
+              matterTypeName: string;
+              statusId: string;
+              statusName: string;
+              /** @enum {string} */
+              statusCategory: "open" | "closed";
+              manager: {
+                id: string;
+                displayName: string;
+                image: string | null;
+                archived: boolean;
+              } | null;
+              /** @enum {string} */
+              priority: "low" | "medium" | "high" | "critical";
+              risk: ("low" | "medium" | "high" | "critical") | null;
+              customFields: {
+                [key: string]: string | number | boolean | string[];
+              };
+              /** Format: date-time */
+              openedAt: string;
+              closedAt: string | null;
+              isConfidential: boolean;
+              archivedAt: string | null;
+              /** Format: date-time */
+              createdAt: string;
+              /** Format: date-time */
+              updatedAt: string;
+            };
+            fields: {
+              fieldId: string;
+              slug: string;
+              displayName: string;
+              description: string | null;
+              /** @enum {string} */
+              fieldType:
+                | "text"
+                | "long_text"
+                | "number"
+                | "date"
+                | "boolean"
+                | "single_select"
+                | "multi_select"
+                | "user"
+                | "entity";
+              options: string[] | null;
               displayOrder: number;
               isRequired: boolean;
             }[];
@@ -13924,7 +14273,7 @@ export interface operations {
               displayName: string;
               description: string | null;
               /** @enum {string} */
-              moduleScope: "contract" | "global";
+              moduleScope: "contract" | "matter" | "global";
               /** @enum {string} */
               fieldType:
                 | "text"
@@ -13970,7 +14319,7 @@ export interface operations {
           displayName: string;
           description?: string;
           /** @enum {string} */
-          moduleScope: "contract" | "global";
+          moduleScope: "contract" | "matter" | "global";
           /** @enum {string} */
           fieldType:
             | "text"
@@ -14003,7 +14352,7 @@ export interface operations {
               displayName: string;
               description: string | null;
               /** @enum {string} */
-              moduleScope: "contract" | "global";
+              moduleScope: "contract" | "matter" | "global";
               /** @enum {string} */
               fieldType:
                 | "text"
@@ -14071,7 +14420,7 @@ export interface operations {
               displayName: string;
               description: string | null;
               /** @enum {string} */
-              moduleScope: "contract" | "global";
+              moduleScope: "contract" | "matter" | "global";
               /** @enum {string} */
               fieldType:
                 | "text"
@@ -14117,7 +14466,7 @@ export interface operations {
       content: {
         "application/json": {
           /** @enum {string} */
-          moduleScope: "contract" | "global";
+          moduleScope: "contract" | "matter" | "global";
         };
       };
     };
@@ -14135,7 +14484,7 @@ export interface operations {
               displayName: string;
               description: string | null;
               /** @enum {string} */
-              moduleScope: "contract" | "global";
+              moduleScope: "contract" | "matter" | "global";
               /** @enum {string} */
               fieldType:
                 | "text"
@@ -14192,7 +14541,7 @@ export interface operations {
               displayName: string;
               description: string | null;
               /** @enum {string} */
-              moduleScope: "contract" | "global";
+              moduleScope: "contract" | "matter" | "global";
               /** @enum {string} */
               fieldType:
                 | "text"
@@ -14249,7 +14598,7 @@ export interface operations {
               displayName: string;
               description: string | null;
               /** @enum {string} */
-              moduleScope: "contract" | "global";
+              moduleScope: "contract" | "matter" | "global";
               /** @enum {string} */
               fieldType:
                 | "text"

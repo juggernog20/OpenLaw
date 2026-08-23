@@ -31,6 +31,7 @@ import {
   inArray,
   isNull,
   matterTypeFields,
+  matters,
   sql,
   type Executor,
   type Field,
@@ -46,7 +47,7 @@ import { freeSlug } from "../../lib/slug.js";
  * `matter` and `entity` join with their milestones (M22, M27), which
  * bring the per-module views along.
  */
-const OPEN_SCOPES = ["contract", "global"] as const;
+const OPEN_SCOPES = ["contract", "matter", "global"] as const;
 
 const ScopeSchema = z.enum(OPEN_SCOPES);
 const FieldTypeSchema = z.enum(FIELD_TYPES);
@@ -178,6 +179,22 @@ export const fieldsRoutes: FastifyPluginAsyncZod = async (app) => {
     for (const row of held.rows) {
       const fieldId = slugToId.get(row.slug);
       // COUNT() comes back as a string on a bigint column.
+      if (fieldId) tally.set(fieldId, (tally.get(fieldId) ?? 0) + Number(row.tally));
+    }
+    const matterHeld = await db.execute<{ slug: string; tally: string }>(
+      sql`
+        SELECT slug, COUNT(*) AS tally
+        FROM (
+          SELECT jsonb_object_keys(${matters.customFields}) AS slug
+          FROM ${matters}
+          WHERE ${matters.customFields} IS NOT NULL
+        ) AS keys
+        WHERE slug = ANY(${sql.param(slugs)}::text[])
+        GROUP BY slug
+      `,
+    );
+    for (const row of matterHeld.rows) {
+      const fieldId = slugToId.get(row.slug);
       if (fieldId) tally.set(fieldId, (tally.get(fieldId) ?? 0) + Number(row.tally));
     }
     return tally;

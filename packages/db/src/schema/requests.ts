@@ -47,6 +47,7 @@ import { users } from "./auth.js";
 import { contracts, SEVERITY_LEVELS } from "./contracts.js";
 import type { CustomFieldValue } from "./fields.js";
 import { uuidPk } from "./helpers.js";
+import { matters } from "./matters.js";
 import { requestTypes } from "./request-types.js";
 
 /**
@@ -105,7 +106,7 @@ export const requests = pgTable(
      * reference. It gains one with that table. SCHEMA.md records the
      * FK as the destination.
      */
-    convertedMatterId: text("converted_matter_id"),
+    convertedMatterId: text("converted_matter_id").references(() => matters.id),
     /** The contract conversion made, if it made one. No cascade: a
      * contract is soft-deleted, never dropped. */
     convertedContractId: text("converted_contract_id").references(() => contracts.id),
@@ -135,6 +136,7 @@ export const requests = pgTable(
     // onto the work. Without this the question is a scan of every
     // Request ever raised, on a table that only grows.
     index("requests_converted_contract_idx").on(table.convertedContractId),
+    index("requests_converted_matter_idx").on(table.convertedMatterId),
     // "A Request becomes one record", stated as a shape rather than
     // left to the conversion route. Two targets would be two answers to
     // one question, and nothing could say which one the thread follows.

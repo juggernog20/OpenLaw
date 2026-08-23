@@ -615,6 +615,19 @@ type ContractPayloads = {
   "contract.restored": { number: number; title: string };
 };
 
+/** The matter vocabulary opened by M22. Later matter tickets add the edit verbs. */
+type MatterPayloads = {
+  "matter.created": {
+    number: number;
+    title: string;
+    matterType: string;
+    status: string;
+    customFields: string[];
+  };
+  "matter.confidentiality_set": { number: number; title: string };
+  "matter.type_reassigned": { number: number; title: string; from: string; to: string };
+};
+
 /**
  * The conversation on a record (M9/2, M9/4). Every entry carries the
  * comment's own tier, so a Legal Only comment leaves no trace for anyone
@@ -900,6 +913,7 @@ export type ActivityPayloadMap = UserPayloads &
   TaskPayloads &
   EntityPayloads &
   ContractPayloads &
+  MatterPayloads &
   CommentPayloads &
   DocumentPayloads &
   FolderPayloads &

@@ -398,6 +398,22 @@ const SAMPLE_PAYLOADS: { [A in ActivityAction]: ActivityPayloadMap[A] } = {
   "contract.archived": { number: 41, title: "Helix supply agreement" },
   "contract.restored": { number: 41, title: "Helix supply agreement" },
 
+  // Matter record
+  "matter.created": {
+    number: 7,
+    title: "Employment advice",
+    matterType: "Employment",
+    status: "Open",
+    customFields: ["business-unit"],
+  },
+  "matter.type_reassigned": {
+    number: 7,
+    title: "Employment advice",
+    from: "Employment",
+    to: "Advisory",
+  },
+  "matter.confidentiality_set": { number: 7, title: "Employment advice" },
+
   // Record conversation
   "comment.posted": { commentId: "cmt_1" },
   "comment.edited": { commentId: "cmt_1" },
