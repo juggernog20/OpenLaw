@@ -14,7 +14,7 @@ coverage/
 .claude/
 .markdownlint.json
 .scannerwork/
-
+.pi/
 # Playwright (e2e/)
 test-results/
 playwright-report/
