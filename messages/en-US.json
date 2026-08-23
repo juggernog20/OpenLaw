@@ -3053,6 +3053,9 @@
   "matters.relations.changeParent": {
     "defaultMessage": "Change parent"
   },
+  "matters.relations.children": {
+    "defaultMessage": "Children"
+  },
   "matters.relations.cycle": {
     "defaultMessage": "That parent would close a loop in the Matter hierarchy."
   },
@@ -3067,6 +3070,12 @@
   },
   "matters.relations.noMatches": {
     "defaultMessage": "No Matters to link."
+  },
+  "matters.relations.parent": {
+    "defaultMessage": "Parent"
+  },
+  "matters.relations.related": {
+    "defaultMessage": "Related"
   },
   "matters.relations.remove": {
     "defaultMessage": "Remove"

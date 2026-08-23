@@ -2,7 +2,7 @@
 
 /** Parent, children, and flat related Matters on the Matter Overview. */
 import { useRef, useState } from "react";
-import { FormattedMessage, useIntl, type MessageDescriptor } from "react-intl";
+import { defineMessage, FormattedMessage, useIntl, type MessageDescriptor } from "react-intl";
 import { Link } from "react-router";
 import {
   removeMatterParent,
@@ -166,17 +166,20 @@ export function RelatedMattersCard({
           <div className="flex flex-col gap-4">
             {relations.parent && (
               <Group
-                label={{ id: "matters.relations.parent", defaultMessage: "Parent" }}
+                label={defineMessage({ id: "matters.relations.parent", defaultMessage: "Parent" })}
                 rows={[relations.parent]}
                 onRemove={editable ? () => void unparent() : undefined}
               />
             )}
             <Group
-              label={{ id: "matters.relations.children", defaultMessage: "Children" }}
+              label={defineMessage({
+                id: "matters.relations.children",
+                defaultMessage: "Children",
+              })}
               rows={relations.children}
             />
             <Group
-              label={{ id: "matters.relations.related", defaultMessage: "Related" }}
+              label={defineMessage({ id: "matters.relations.related", defaultMessage: "Related" })}
               rows={relations.related}
               onRemove={editable ? (row) => void unlink(row) : undefined}
             />
