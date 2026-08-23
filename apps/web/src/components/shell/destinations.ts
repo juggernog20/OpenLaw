@@ -57,9 +57,8 @@ export const destinations: Destination[] = [
     roles: MEMBER_PLUS_ROLES,
   },
   {
-    // The M8 contract record. Member+, plus a Contributor (CTR-021): they
-    // have contracts to see — the ones they are on the team of — so
-    // the destination is drawn for them too.
+    // The M22 matter record. The same reader floor as contracts: a
+    // Contributor reaches the matters they are on the team of.
     id: "matters",
     path: "/matters",
     icon: BriefcaseBusiness,
@@ -67,6 +66,9 @@ export const destinations: Destination[] = [
     roles: MATTER_READER_ROLES,
   },
   {
+    // The M8 contract record. Member+, plus a Contributor (CTR-021): they
+    // have contracts to see — the ones they are on the team of — so
+    // the destination is drawn for them too.
     id: "contracts",
     path: "/contracts",
     icon: Signature,

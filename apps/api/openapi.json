@@ -6723,9 +6723,54 @@
                         ],
                         "additionalProperties": false
                       }
+                    },
+                    "customFieldRefs": {
+                      "type": "object",
+                      "properties": {
+                        "users": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "string"
+                              },
+                              "displayName": {
+                                "type": "string"
+                              },
+                              "archived": {
+                                "type": "boolean"
+                              }
+                            },
+                            "required": ["id", "displayName", "archived"],
+                            "additionalProperties": false
+                          }
+                        },
+                        "entities": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "string"
+                              },
+                              "legalName": {
+                                "type": "string"
+                              },
+                              "archived": {
+                                "type": "boolean"
+                              }
+                            },
+                            "required": ["id", "legalName", "archived"],
+                            "additionalProperties": false
+                          }
+                        }
+                      },
+                      "required": ["users", "entities"],
+                      "additionalProperties": false
                     }
                   },
-                  "required": ["matter", "fields"],
+                  "required": ["matter", "fields", "customFieldRefs"],
                   "additionalProperties": false
                 }
               }

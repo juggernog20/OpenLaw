@@ -11,6 +11,7 @@ import { formatFullDate } from "../lib/format";
 import { matterReference, matterSeverityLabel } from "../lib/matters";
 import { canReadMatters } from "../lib/roles";
 import { currentUser, needsSetup } from "../lib/session";
+import { CustomFieldValueText } from "../components/intake/custom-field-value";
 import { PageTitle } from "../components/page-title";
 import { AppShell } from "../components/shell/app-shell";
 
@@ -19,32 +20,18 @@ export async function matterRecordLoader({ params }: LoaderFunctionArgs) {
   if (!user) return redirect((await needsSetup()) ? "/auth/setup" : "/auth/login");
   if (!canReadMatters(user.role)) return redirect("/");
   const number = Number(params.matterNumber);
+  if (!Number.isInteger(number) || number < 1) throw new Error("That is not a matter reference.");
   const { data } = await api.GET("/api/v1/matters/{number}", { params: { path: { number } } });
   if (!data) throw new Error("The matter could not be read.");
-  return { user, matter: data.matter, fields: data.fields };
+  return { user, matter: data.matter, fields: data.fields, customFieldRefs: data.customFieldRefs };
 }
 
 function notProvided(intl: IntlShape): string {
   return intl.formatMessage({ id: "matters.notProvided", defaultMessage: "Not provided" });
 }
 
-function renderValue(
-  intl: IntlShape,
-  value: string | number | boolean | string[] | undefined,
-): string {
-  if (value === undefined) return notProvided(intl);
-  if (Array.isArray(value))
-    return value.length ? intl.formatList(value, { type: "conjunction" }) : notProvided(intl);
-  if (typeof value === "boolean")
-    return intl.formatMessage(
-      { id: "matters.boolean", defaultMessage: "{value, select, true {Yes} other {No}}" },
-      { value: String(value) },
-    );
-  return String(value);
-}
-
 export function MatterRecordPage() {
-  const { user, matter, fields } = useLoaderData<typeof matterRecordLoader>();
+  const { user, matter, fields, customFieldRefs } = useLoaderData<typeof matterRecordLoader>();
   const intl = useIntl();
   const navigate = useNavigate();
   async function signOut() {
@@ -132,13 +119,22 @@ export function MatterRecordPage() {
               <FormattedMessage id="matters.customFields" defaultMessage="Custom fields" />
             </h3>
             <dl className="grid gap-4 sm:grid-cols-2">
-              {fields.map((field) => (
-                <Fact
-                  key={field.fieldId}
-                  label={field.displayName}
-                  value={renderValue(intl, matter.customFields[field.slug])}
-                />
-              ))}
+              {fields.map((field) => {
+                const value = matter.customFields[field.slug];
+                return (
+                  <Fact
+                    key={field.fieldId}
+                    label={field.displayName}
+                    value={
+                      value === undefined ? (
+                        notProvided(intl)
+                      ) : (
+                        <CustomFieldValueText field={field} value={value} refs={customFieldRefs} />
+                      )
+                    }
+                  />
+                );
+              })}
             </dl>
           </section>
         )}
@@ -147,7 +143,7 @@ export function MatterRecordPage() {
   );
 }
 
-function Fact({ label, value }: { label: ReactNode; value: string }) {
+function Fact({ label, value }: { label: ReactNode; value: ReactNode }) {
   return (
     <div>
       <dt className="text-xs font-medium text-muted">{label}</dt>

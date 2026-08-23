@@ -35,6 +35,16 @@ const REQUIRED_FIELD = {
   displayOrder: 1,
   isRequired: true,
 } as const;
+const SPONSOR_FIELD = {
+  fieldId: "f-sponsor",
+  slug: "sponsor",
+  displayName: "Sponsor",
+  description: null,
+  fieldType: "user",
+  options: null,
+  displayOrder: 2,
+  isRequired: false,
+} as const;
 const TYPE = {
   id: "type-employment",
   slug: "employment",
@@ -99,6 +109,7 @@ function matterApi(onPost?: (call: StubCall) => Response) {
           customFields: { "business-unit": "Operations" },
         }),
         fields: [REQUIRED_FIELD],
+        customFieldRefs: { users: [], entities: [] },
       });
     return undefined;
   };
@@ -232,7 +243,14 @@ describe("the matter hero", () => {
       signedIn: MEMBER,
       extra: (call) =>
         call.url.pathname === "/api/v1/matters/7"
-          ? json(200, { matter: matter(), fields: [REQUIRED_FIELD] })
+          ? json(200, {
+              matter: matter({ customFields: { "business-unit": "People", sponsor: "u-sponsor" } }),
+              fields: [REQUIRED_FIELD, SPONSOR_FIELD],
+              customFieldRefs: {
+                users: [{ id: "u-sponsor", displayName: "Sam Sponsor", archived: false }],
+                entities: [],
+              },
+            })
           : undefined,
     });
     renderAt("/matters/7");
@@ -249,6 +267,9 @@ describe("the matter hero", () => {
       "Advice on a transfer.",
       "Business unit",
       "People",
+      // A `user` field stores an id; the hero draws the person's name.
+      "Sponsor",
+      "Sam Sponsor",
     ])
       expect(screen.getAllByText(text).length).toBeGreaterThan(0);
     expect(screen.queryByRole("textbox")).not.toBeInTheDocument();

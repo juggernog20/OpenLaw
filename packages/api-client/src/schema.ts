@@ -5976,6 +5976,18 @@ export interface operations {
               displayOrder: number;
               isRequired: boolean;
             }[];
+            customFieldRefs: {
+              users: {
+                id: string;
+                displayName: string;
+                archived: boolean;
+              }[];
+              entities: {
+                id: string;
+                legalName: string;
+                archived: boolean;
+              }[];
+            };
           };
         };
       };

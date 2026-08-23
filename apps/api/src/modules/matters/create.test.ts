@@ -331,6 +331,64 @@ describe("matter reach", () => {
     ).toBe(403);
   });
 
+  it("admits a Manager who is not on the team, and names the people its fields hold", async () => {
+    const sponsorTypeId = await newType("Matter sponsored");
+    const defined = await harness.app.inject({
+      method: "POST",
+      url: "/api/v1/fields",
+      cookies: adminCookies,
+      payload: {
+        moduleScope: "matter",
+        fieldTag: "legal",
+        displayName: "Sponsor",
+        fieldType: "user",
+      },
+    });
+    expect(defined.statusCode, defined.body).toBe(201);
+    const attached = await harness.app.inject({
+      method: "POST",
+      url: `/api/v1/matter-types/${sponsorTypeId}/fields`,
+      cookies: adminCookies,
+      payload: { fieldId: defined.json().field.id },
+    });
+    expect(attached.statusCode, attached.body).toBe(201);
+    const [outsider] = await harness.db
+      .select({ id: users.id })
+      .from(users)
+      .where(eq(users.email, OUTSIDER.email));
+    // The Administrator creates it, so the Manager holds no team row:
+    // the manager column alone must carry the reach (DD-014).
+    const created = await harness.app.inject({
+      method: "POST",
+      url: "/api/v1/matters",
+      cookies: adminCookies,
+      payload: {
+        title: "Managed privately",
+        matterTypeId: sponsorTypeId,
+        managerId: outsider!.id,
+        isConfidential: true,
+        customFields: { [defined.json().field.slug]: memberId },
+      },
+    });
+    expect(created.statusCode, created.body).toBe(201);
+    const outsiderCookies = await signInCookies(harness.app, OUTSIDER.email, OUTSIDER.password);
+    const read = await harness.app.inject({
+      method: "GET",
+      url: `/api/v1/matters/${created.json().matter.number}`,
+      cookies: outsiderCookies,
+    });
+    expect(read.statusCode, read.body).toBe(200);
+    expect(read.json().customFieldRefs.users).toEqual([
+      { id: memberId, displayName: MEMBER.displayName, archived: false },
+    ]);
+    const unreached = await harness.app.inject({
+      method: "GET",
+      url: `/api/v1/matters/${created.json().matter.number}`,
+      cookies: memberCookies,
+    });
+    expect(unreached.statusCode, unreached.body).toBe(404);
+  });
+
   it("refuses creation to a Contributor and a Business User", async () => {
     for (const fixture of [CONTRIBUTOR, BUSINESS]) {
       const cookies = await signInCookies(harness.app, fixture.email, fixture.password);

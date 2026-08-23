@@ -29,6 +29,7 @@ import {
 } from "../../lib/custom-fields.js";
 import { matterTeamScope, NO_MATTER } from "../../lib/matter-access.js";
 import { httpError, problemResponse } from "../../lib/problem.js";
+import { resolveStaffRefs, StaffRequestCustomFieldRefsSchema } from "../requests/projection.js";
 import { createMatter } from "./create.js";
 
 const requireMember = requireRole("administrator", "legal_team_member");
@@ -66,7 +67,14 @@ const MatterRowSchema = z.object({
 });
 
 const MatterEnvelope = z.object({ matter: MatterRowSchema });
-const MatterRecordEnvelope = MatterEnvelope.extend({ fields: z.array(AttachedCustomFieldSchema) });
+/** The record plus the fields its type attaches and the people and
+ * Entities its stored values name. A `user` or `entity` field holds an
+ * id, and the hero must draw a name, so the read resolves them the way
+ * the contract and Request reads do. */
+const MatterRecordEnvelope = MatterEnvelope.extend({
+  fields: z.array(AttachedCustomFieldSchema),
+  customFieldRefs: StaffRequestCustomFieldRefsSchema,
+});
 
 interface MatterContext {
   row: Matter;
@@ -260,7 +268,8 @@ export const mattersRoutes: FastifyPluginAsyncZod = async (app) => {
         .limit(1);
       if (!context) throw httpError(404, NO_MATTER);
       const fields = await selectAttachedFields(app.db, matterTypeFields, context.row.matterTypeId);
-      return { matter: toRow(context), fields };
+      const customFieldRefs = await resolveStaffRefs(app.db, fields, context.row.customFields);
+      return { matter: toRow(context), fields, customFieldRefs };
     },
   );
 
