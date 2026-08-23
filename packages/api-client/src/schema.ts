@@ -1049,6 +1049,60 @@ export interface paths {
     patch: operations["updateMatterKeyDate"];
     trace?: never;
   };
+  "/api/v1/matters/{number}/relations": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** The Matter's parent, children, and undirected related Matters (MTR-015) */
+    get: operations["getMatterRelations"];
+    put?: never;
+    /** Add one undirected related-Matter link */
+    post: operations["addMatterRelation"];
+    /** Remove one undirected related-Matter link */
+    delete: operations["removeMatterRelation"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/matters/{number}/relation-candidates": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Live reached Matters selectable as a parent or related Matter */
+    get: operations["listMatterRelationCandidates"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/matters/{number}/parent": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    /** Set or replace a Matter's parent */
+    put: operations["setMatterParent"];
+    post?: never;
+    /** Remove a Matter's parent after checking reach on both Matters */
+    delete: operations["removeMatterParent"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/v1/matters/{number}/tasks": {
     parameters: {
       query?: never;
@@ -6406,6 +6460,7 @@ export interface operations {
             [key: string]: (string | number | boolean | string[]) | null;
           };
           isConfidential?: boolean;
+          parentMatterNumber?: number;
         };
       };
     };
@@ -7184,6 +7239,510 @@ export interface operations {
               overdue: boolean;
               isNext: boolean;
             }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  getMatterRelations: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        number: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            parent:
+              | (
+                  | {
+                      /** @enum {boolean} */
+                      restricted: true;
+                    }
+                  | {
+                      /** @enum {boolean} */
+                      restricted: false;
+                      number: number;
+                      title: string;
+                      statusName: string;
+                      /** @enum {string} */
+                      statusCategory: "open" | "closed";
+                    }
+                )
+              | null;
+            children: (
+              | {
+                  /** @enum {boolean} */
+                  restricted: true;
+                }
+              | {
+                  /** @enum {boolean} */
+                  restricted: false;
+                  number: number;
+                  title: string;
+                  statusName: string;
+                  /** @enum {string} */
+                  statusCategory: "open" | "closed";
+                }
+            )[];
+            related: (
+              | {
+                  /** @enum {boolean} */
+                  restricted: true;
+                }
+              | {
+                  /** @enum {boolean} */
+                  restricted: false;
+                  number: number;
+                  title: string;
+                  statusName: string;
+                  /** @enum {string} */
+                  statusCategory: "open" | "closed";
+                }
+            )[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  addMatterRelation: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        number: number;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          relatedMatterNumber: number;
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            parent:
+              | (
+                  | {
+                      /** @enum {boolean} */
+                      restricted: true;
+                    }
+                  | {
+                      /** @enum {boolean} */
+                      restricted: false;
+                      number: number;
+                      title: string;
+                      statusName: string;
+                      /** @enum {string} */
+                      statusCategory: "open" | "closed";
+                    }
+                )
+              | null;
+            children: (
+              | {
+                  /** @enum {boolean} */
+                  restricted: true;
+                }
+              | {
+                  /** @enum {boolean} */
+                  restricted: false;
+                  number: number;
+                  title: string;
+                  statusName: string;
+                  /** @enum {string} */
+                  statusCategory: "open" | "closed";
+                }
+            )[];
+            related: (
+              | {
+                  /** @enum {boolean} */
+                  restricted: true;
+                }
+              | {
+                  /** @enum {boolean} */
+                  restricted: false;
+                  number: number;
+                  title: string;
+                  statusName: string;
+                  /** @enum {string} */
+                  statusCategory: "open" | "closed";
+                }
+            )[];
+          };
+        };
+      };
+      /** @description The relationship is invalid or already exists. */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": {
+            /**
+             * @description Which refusal this is. A client branches on this, never on `detail` — `detail` is copy, and copy is rewritten. `about:blank` is a refusal at this status that names no type; print it rather than branching on it.
+             * @enum {string}
+             */
+            type:
+              | "urn:openlaw:problem:matter-relation-exists"
+              | "urn:openlaw:problem:matter-self-relation"
+              | "about:blank";
+            title: string;
+            status: number;
+            detail?: string;
+            instance?: string;
+            errors?: {
+              path: string;
+              message: string;
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  removeMatterRelation: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        number: number;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          relatedMatterNumber: number;
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            parent:
+              | (
+                  | {
+                      /** @enum {boolean} */
+                      restricted: true;
+                    }
+                  | {
+                      /** @enum {boolean} */
+                      restricted: false;
+                      number: number;
+                      title: string;
+                      statusName: string;
+                      /** @enum {string} */
+                      statusCategory: "open" | "closed";
+                    }
+                )
+              | null;
+            children: (
+              | {
+                  /** @enum {boolean} */
+                  restricted: true;
+                }
+              | {
+                  /** @enum {boolean} */
+                  restricted: false;
+                  number: number;
+                  title: string;
+                  statusName: string;
+                  /** @enum {string} */
+                  statusCategory: "open" | "closed";
+                }
+            )[];
+            related: (
+              | {
+                  /** @enum {boolean} */
+                  restricted: true;
+                }
+              | {
+                  /** @enum {boolean} */
+                  restricted: false;
+                  number: number;
+                  title: string;
+                  statusName: string;
+                  /** @enum {string} */
+                  statusCategory: "open" | "closed";
+                }
+            )[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  listMatterRelationCandidates: {
+    parameters: {
+      query: {
+        q: string;
+      };
+      header?: never;
+      path: {
+        number: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            candidates: {
+              number: number;
+              title: string;
+              statusName: string;
+              /** @enum {string} */
+              statusCategory: "open" | "closed";
+              isConfidential: boolean;
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  setMatterParent: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        number: number;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          parentMatterNumber: number;
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            parent:
+              | (
+                  | {
+                      /** @enum {boolean} */
+                      restricted: true;
+                    }
+                  | {
+                      /** @enum {boolean} */
+                      restricted: false;
+                      number: number;
+                      title: string;
+                      statusName: string;
+                      /** @enum {string} */
+                      statusCategory: "open" | "closed";
+                    }
+                )
+              | null;
+            children: (
+              | {
+                  /** @enum {boolean} */
+                  restricted: true;
+                }
+              | {
+                  /** @enum {boolean} */
+                  restricted: false;
+                  number: number;
+                  title: string;
+                  statusName: string;
+                  /** @enum {string} */
+                  statusCategory: "open" | "closed";
+                }
+            )[];
+            related: (
+              | {
+                  /** @enum {boolean} */
+                  restricted: true;
+                }
+              | {
+                  /** @enum {boolean} */
+                  restricted: false;
+                  number: number;
+                  title: string;
+                  statusName: string;
+                  /** @enum {string} */
+                  statusCategory: "open" | "closed";
+                }
+            )[];
+          };
+        };
+      };
+      /** @description The parent would close a hierarchy cycle. */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": {
+            /**
+             * @description Which refusal this is. A client branches on this, never on `detail` — `detail` is copy, and copy is rewritten. `about:blank` is a refusal at this status that names no type; print it rather than branching on it.
+             * @enum {string}
+             */
+            type: "urn:openlaw:problem:matter-parent-cycle" | "about:blank";
+            title: string;
+            status: number;
+            detail?: string;
+            instance?: string;
+            errors?: {
+              path: string;
+              message: string;
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  removeMatterParent: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        number: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            parent:
+              | (
+                  | {
+                      /** @enum {boolean} */
+                      restricted: true;
+                    }
+                  | {
+                      /** @enum {boolean} */
+                      restricted: false;
+                      number: number;
+                      title: string;
+                      statusName: string;
+                      /** @enum {string} */
+                      statusCategory: "open" | "closed";
+                    }
+                )
+              | null;
+            children: (
+              | {
+                  /** @enum {boolean} */
+                  restricted: true;
+                }
+              | {
+                  /** @enum {boolean} */
+                  restricted: false;
+                  number: number;
+                  title: string;
+                  statusName: string;
+                  /** @enum {string} */
+                  statusCategory: "open" | "closed";
+                }
+            )[];
+            related: (
+              | {
+                  /** @enum {boolean} */
+                  restricted: true;
+                }
+              | {
+                  /** @enum {boolean} */
+                  restricted: false;
+                  number: number;
+                  title: string;
+                  statusName: string;
+                  /** @enum {string} */
+                  statusCategory: "open" | "closed";
+                }
+            )[];
           };
         };
       };

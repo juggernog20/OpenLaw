@@ -216,6 +216,11 @@ export const CONTRACT_PARENT_CYCLE_PROBLEM_TYPE = "urn:openlaw:problem:contract-
  * far end, not another parent. */
 export const CONTRACT_SELF_LINK_PROBLEM_TYPE = "urn:openlaw:problem:contract-self-link";
 
+/** MTR-015's stable hierarchy and undirected-pair refusals. */
+export const MATTER_RELATION_EXISTS_PROBLEM_TYPE = "urn:openlaw:problem:matter-relation-exists";
+export const MATTER_PARENT_CYCLE_PROBLEM_TYPE = "urn:openlaw:problem:matter-parent-cycle";
+export const MATTER_SELF_RELATION_PROBLEM_TYPE = "urn:openlaw:problem:matter-self-relation";
+
 /**
  * The two bounds one key date is held to (CTR-009).
  *

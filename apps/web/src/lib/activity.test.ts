@@ -475,6 +475,30 @@ const SAMPLE_PAYLOADS: { [A in ActivityAction]: ActivityPayloadMap[A] } = {
   },
   "matter.archived": { number: 7, title: "Employment advice" },
   "matter.restored": { number: 7, title: "Employment advice" },
+  "matter.parent_set": {
+    number: 7,
+    title: "Employment advice",
+    parentNumber: 3,
+    parentTitle: "Workforce programme",
+  },
+  "matter.parent_removed": {
+    number: 7,
+    title: "Employment advice",
+    parentNumber: 3,
+    parentTitle: "Workforce programme",
+  },
+  "matter.relation_added": {
+    number: 7,
+    title: "Employment advice",
+    relatedNumber: 9,
+    relatedTitle: "Regulatory response",
+  },
+  "matter.relation_removed": {
+    number: 7,
+    title: "Employment advice",
+    relatedNumber: 9,
+    relatedTitle: "Regulatory response",
+  },
 
   // Record conversation
   "comment.posted": { commentId: "cmt_1" },
@@ -879,6 +903,15 @@ describe("the sentences a reader gets", () => {
     expect(narrate("contract.relation_added", later).sentence).toBe(
       "Nadia Counsel linked this contract — related to C-12 (Helix master services agreement)",
     );
+  });
+
+  it("narrates Matter hierarchy and related-Matter actions", () => {
+    expect(narrate("matter.parent_set", SAMPLE_PAYLOADS["matter.parent_set"]).sentence).toBe(
+      "Nadia Counsel put this Matter under M-3 (Workforce programme)",
+    );
+    expect(
+      narrate("matter.relation_added", SAMPLE_PAYLOADS["matter.relation_added"]).sentence,
+    ).toBe("Nadia Counsel related this Matter to M-9 (Regulatory response)");
   });
 
   it("reads a relation entry that lost one half of the far record's name", () => {

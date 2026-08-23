@@ -675,6 +675,30 @@ type MatterPayloads = {
   "matter.restored": { number: number; title: string };
   "matter.type_reassigned": { number: number; title: string; from: string; to: string };
   "matter.status_reassigned": { number: number; title: string; from: string; to: string };
+  "matter.parent_set": {
+    number: number;
+    title: string;
+    parentNumber: number;
+    parentTitle: string;
+  };
+  "matter.parent_removed": {
+    number: number;
+    title: string;
+    parentNumber: number;
+    parentTitle: string;
+  };
+  "matter.relation_added": {
+    number: number;
+    title: string;
+    relatedNumber: number;
+    relatedTitle: string;
+  };
+  "matter.relation_removed": {
+    number: number;
+    title: string;
+    relatedNumber: number;
+    relatedTitle: string;
+  };
 };
 
 /**

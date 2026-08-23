@@ -12,6 +12,7 @@ import {
   text,
   timestamp,
   uniqueIndex,
+  type AnyPgColumn,
 } from "drizzle-orm/pg-core";
 import { users } from "./auth.js";
 import { SEVERITY_LEVELS } from "./contracts.js";
@@ -44,6 +45,9 @@ export const matters = pgTable(
       .$type<Record<string, CustomFieldValue>>()
       .notNull()
       .default({}),
+    /** MTR-015's navigational hierarchy. Nothing inherits along this
+     * reference; the write path alone prevents arbitrary-depth cycles. */
+    parentId: text("parent_id").references((): AnyPgColumn => matters.id),
     openedAt: timestamp("opened_at", { withTimezone: true }).notNull().defaultNow(),
     // Null means the matter is not closed.
     closedAt: timestamp("closed_at", { withTimezone: true }),
@@ -64,6 +68,11 @@ export const matters = pgTable(
     index("matters_type_idx").on(table.matterTypeId),
     index("matters_status_idx").on(table.statusId),
     index("matters_manager_idx").on(table.managerId),
+    index("matters_parent_idx").on(table.parentId),
+    check(
+      "matters_parent_self_check",
+      sql`${table.parentId} is null or ${table.parentId} <> ${table.id}`,
+    ),
     check(
       "matters_priority_check",
       sql`${table.priority} in ('low', 'medium', 'high', 'critical')`,

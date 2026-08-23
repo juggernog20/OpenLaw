@@ -14,6 +14,7 @@ import { CONTROL_CLASS, TEXTAREA_CLASS } from "../../lib/form-controls";
 import {
   MATTER_SEVERITIES,
   matterSeverityLabel,
+  matterReference,
   type MatterRow,
   type MatterTypeOption,
   type MatterUserOption,
@@ -34,12 +35,14 @@ export function CreateMatterDialog({
   matterTypes,
   users,
   entities,
+  parent,
   onOpenChange,
   onCreated,
 }: Readonly<{
   matterTypes: MatterTypeOption[];
   users: MatterUserOption[];
   entities: readonly FieldReference[];
+  parent?: Readonly<{ number: number; title: string }>;
   onOpenChange: (open: boolean) => void;
   onCreated: (matter: MatterRow) => void;
 }>) {
@@ -112,6 +115,7 @@ export function CreateMatterDialog({
           description: description.trim() || null,
           customFields,
           isConfidential: confidential,
+          ...(parent ? { parentMatterNumber: parent.number } : {}),
         },
       })
       .catch(() => ({ data: undefined, error: undefined }));
@@ -134,8 +138,24 @@ export function CreateMatterDialog({
     <Dialog open onOpenChange={onOpenChange}>
       <DialogContent aria-describedby={undefined}>
         <DialogTitle>
-          <FormattedMessage id="matters.create.title" defaultMessage="Create matter" />
+          {parent ? (
+            <FormattedMessage
+              id="matters.create.subMatterTitle"
+              defaultMessage="Create sub-Matter"
+            />
+          ) : (
+            <FormattedMessage id="matters.create.title" defaultMessage="Create matter" />
+          )}
         </DialogTitle>
+        {parent && (
+          <p className="mt-2 text-sm text-muted">
+            <FormattedMessage
+              id="matters.create.parent"
+              defaultMessage="Parent: {reference} {title}"
+              values={{ reference: matterReference(intl, parent.number), title: parent.title }}
+            />
+          </p>
+        )}
         <form
           className="mt-4 flex flex-col gap-4"
           onSubmit={(event) => {

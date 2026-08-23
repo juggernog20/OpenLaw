@@ -296,6 +296,21 @@
   "activity.matter.createdFromRequest": {
     "defaultMessage": "{actor} created this matter from {request}"
   },
+  "activity.matter.parentRemoved": {
+    "defaultMessage": "{actor} took this Matter out from under {parent}"
+  },
+  "activity.matter.parentSet": {
+    "defaultMessage": "{actor} put this Matter under {parent}"
+  },
+  "activity.matter.relatedRecord": {
+    "defaultMessage": "{reference} ({title})"
+  },
+  "activity.matter.relationAdded": {
+    "defaultMessage": "{actor} related this Matter to {related}"
+  },
+  "activity.matter.relationRemoved": {
+    "defaultMessage": "{actor} removed the relation to {related}"
+  },
   "activity.matter.restored": {
     "defaultMessage": "{actor} restored this matter"
   },
@@ -2864,6 +2879,12 @@
   "matters.counts": {
     "defaultMessage": "{open} open · {onHold} on hold"
   },
+  "matters.create.parent": {
+    "defaultMessage": "Parent: {reference} {title}"
+  },
+  "matters.create.subMatterTitle": {
+    "defaultMessage": "Create sub-Matter"
+  },
   "matters.create.submit": {
     "defaultMessage": "Create"
   },
@@ -3022,6 +3043,60 @@
   },
   "matters.reference": {
     "defaultMessage": "M-{number}"
+  },
+  "matters.relations.addRelated": {
+    "defaultMessage": "Add related Matter"
+  },
+  "matters.relations.changeError": {
+    "defaultMessage": "The Matter relationship could not be changed."
+  },
+  "matters.relations.changeParent": {
+    "defaultMessage": "Change parent"
+  },
+  "matters.relations.cycle": {
+    "defaultMessage": "That parent would close a loop in the Matter hierarchy."
+  },
+  "matters.relations.duplicate": {
+    "defaultMessage": "These Matters are already related."
+  },
+  "matters.relations.empty": {
+    "defaultMessage": "No related Matters."
+  },
+  "matters.relations.newChild": {
+    "defaultMessage": "New sub-Matter"
+  },
+  "matters.relations.noMatches": {
+    "defaultMessage": "No Matters to link."
+  },
+  "matters.relations.remove": {
+    "defaultMessage": "Remove"
+  },
+  "matters.relations.restricted": {
+    "defaultMessage": "Restricted Matter"
+  },
+  "matters.relations.saveError": {
+    "defaultMessage": "The Matter relationship could not be saved."
+  },
+  "matters.relations.saveParent": {
+    "defaultMessage": "Set parent"
+  },
+  "matters.relations.saveRelated": {
+    "defaultMessage": "Add relation"
+  },
+  "matters.relations.searchLabel": {
+    "defaultMessage": "Search by M-number or title"
+  },
+  "matters.relations.searching": {
+    "defaultMessage": "Searching…"
+  },
+  "matters.relations.section": {
+    "defaultMessage": "Related Matters"
+  },
+  "matters.relations.self": {
+    "defaultMessage": "A Matter cannot be related to itself."
+  },
+  "matters.relations.setParent": {
+    "defaultMessage": "Set parent"
   },
   "matters.restore.description": {
     "defaultMessage": "The matter returns to the default list and becomes editable again."
