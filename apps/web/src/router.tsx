@@ -44,12 +44,18 @@ import {
 } from "./routes/settings-approver-groups";
 import {
   SettingsContractFieldsPage,
+  SettingsMatterFieldsPage,
   settingsContractFieldsLoader,
+  settingsMatterFieldsLoader,
 } from "./routes/settings-contract-fields";
 import {
   SettingsContractStatusesPage,
   settingsContractStatusesLoader,
 } from "./routes/settings-contract-statuses";
+import {
+  SettingsMatterStatusesPage,
+  settingsMatterStatusesLoader,
+} from "./routes/settings-matter-statuses";
 import {
   SettingsContractTypeEditorPage,
   settingsContractTypeEditorLoader,
@@ -274,6 +280,16 @@ export const routes: RouteObject[] = [
         path: "matters/types",
         loader: settingsMatterTypesLoader,
         element: <SettingsMatterTypesPage />,
+      },
+      {
+        path: "matters/statuses",
+        loader: settingsMatterStatusesLoader,
+        element: <SettingsMatterStatusesPage />,
+      },
+      {
+        path: "matters/fields",
+        loader: settingsMatterFieldsLoader,
+        element: <SettingsMatterFieldsPage />,
       },
       {
         // #85: each type row opens its own editor screen (ST15).

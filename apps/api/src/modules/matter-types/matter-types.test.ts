@@ -12,7 +12,7 @@
  */
 
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { activityLog, asc, eq, inArray, users } from "@openlaw/db";
+import { activityLog, asc, eq, inArray, matters, users } from "@openlaw/db";
 import { provisionUser } from "../../auth/instance.js";
 import {
   signInCookies as harnessSignInCookies,
@@ -404,6 +404,59 @@ describe("POST /matter-types/:id/archive and /restore", () => {
       cookies: adminCookies,
     });
     expect(res.statusCode, res.body).toBe(409);
+  });
+
+  it("reports live matter usage and requires a target that moves and narrates those matters", async () => {
+    const createdType = await harness.app.inject({
+      method: "POST",
+      url: "/api/v1/matter-types",
+      cookies: adminCookies,
+      payload: { displayName: "Usage probe" },
+    });
+    expect(createdType.statusCode, createdType.body).toBe(201);
+    const source = createdType.json().matterType as TypeRow;
+    const target = await typeBySlug("employment");
+    const createdMatter = await harness.app.inject({
+      method: "POST",
+      url: "/api/v1/matters",
+      cookies: adminCookies,
+      payload: { title: "Matter type usage probe", matterTypeId: source.id },
+    });
+    expect(createdMatter.statusCode, createdMatter.body).toBe(201);
+    const matterId = createdMatter.json().matter.id as string;
+    expect((await typeBySlug(source.slug)).inUseCount).toBe(1);
+
+    const guarded = await harness.app.inject({
+      method: "POST",
+      url: `/api/v1/matter-types/${source.id}/archive`,
+      cookies: adminCookies,
+      payload: {},
+    });
+    expect(guarded.statusCode, guarded.body).toBe(409);
+    expect(guarded.json().detail).toContain("1 matter");
+
+    const archived = await harness.app.inject({
+      method: "POST",
+      url: `/api/v1/matter-types/${source.id}/archive`,
+      cookies: adminCookies,
+      payload: { reassignToId: target.id },
+    });
+    expect(archived.statusCode, archived.body).toBe(200);
+    const [moved] = await harness.db
+      .select({ matterTypeId: matters.matterTypeId })
+      .from(matters)
+      .where(eq(matters.id, matterId));
+    expect(moved?.matterTypeId).toBe(target.id);
+    const narration = await harness.db
+      .select({ payload: activityLog.payload })
+      .from(activityLog)
+      .where(eq(activityLog.action, "matter.type_reassigned"))
+      .orderBy(asc(activityLog.createdAt));
+    expect(narration.at(-1)?.payload).toMatchObject({
+      number: createdMatter.json().matter.number,
+      from: "Usage probe",
+      to: "Employment",
+    });
   });
 });
 

@@ -16,6 +16,14 @@ const TABS = [
     path: "/settings/matters/types",
     label: <FormattedMessage id="settings.matters.tab.types" defaultMessage="Types" />,
   },
+  {
+    path: "/settings/matters/statuses",
+    label: <FormattedMessage id="settings.matters.tab.statuses" defaultMessage="Statuses" />,
+  },
+  {
+    path: "/settings/matters/fields",
+    label: <FormattedMessage id="settings.matters.tab.fields" defaultMessage="Fields" />,
+  },
 ] as const;
 
 export function MattersSettingsTabs() {
