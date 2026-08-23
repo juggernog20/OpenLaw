@@ -146,12 +146,12 @@ async function bell(fixture: { email: string }, matterId: string) {
 }
 
 const BOUNDARY = "openlaw-matter-comment-paper";
-function paper(matterId: string) {
+function paper(matterId: string, visibility = "working_team") {
   const payload = Buffer.from(
     `--${BOUNDARY}\r\ncontent-disposition: form-data; name="entityType"\r\n\r\nmatter\r\n` +
       `--${BOUNDARY}\r\ncontent-disposition: form-data; name="entityId"\r\n\r\n${matterId}\r\n` +
       `--${BOUNDARY}\r\ncontent-disposition: form-data; name="body"\r\n\r\nPaper attached.\r\n` +
-      `--${BOUNDARY}\r\ncontent-disposition: form-data; name="visibility"\r\n\r\nworking_team\r\n` +
+      `--${BOUNDARY}\r\ncontent-disposition: form-data; name="visibility"\r\n\r\n${visibility}\r\n` +
       `--${BOUNDARY}\r\ncontent-disposition: form-data; name="file"; filename="advice.pdf"\r\ncontent-type: application/pdf\r\n\r\nadvice-bytes\r\n` +
       `--${BOUNDARY}--\r\n`,
   );
@@ -185,6 +185,10 @@ describe("a matter speaks", () => {
     ]);
     const outside = await thread(OUTSIDER, matter.id);
     expect(outside.statusCode, outside.body).toBe(404);
+    // A mention does not grant the record: a Member outside a confidential
+    // matter's team is not a person the thread can name.
+    const named = await post(ACTOR, matter.id, "Psst.", "full_thread", [idOf(OUTSIDER)]);
+    expect(named.statusCode, named.body).toBe(400);
 
     expect((await unread(MEMBER, matter.id)).json().unread).toBe(2);
     expect((await unread(CONTRIBUTOR, matter.id)).json().unread).toBe(1);
@@ -248,5 +252,19 @@ describe("a matter speaks", () => {
       cookies: as(OUTSIDER),
     });
     expect(outside.statusCode, outside.body).toBe(404);
+
+    // The attachment takes its comment's tier: Legal Only paper is not
+    // there for a Contributor, even one on the team.
+    const sealed = await paper(matter.id, "legal_only");
+    expect(sealed.statusCode, sealed.body).toBe(201);
+    const sealedComment = sealed.json().comment as { id: string; attachments: { id: string }[] };
+    const held = await harness.app.inject({
+      method: "GET",
+      url:
+        `/api/v1/comments/${sealedComment.id}/attachments/${sealedComment.attachments[0]!.id}` +
+        `?entityType=matter&entityId=${matter.id}`,
+      cookies: as(CONTRIBUTOR),
+    });
+    expect(held.statusCode, held.body).toBe(404);
   });
 });

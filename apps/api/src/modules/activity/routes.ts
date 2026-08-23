@@ -85,8 +85,9 @@ const PAGE_SIZE = 25;
 
 /**
  * What the feed hangs off, as the API accepts it. The table's CHECK
- * admits the full seven; only contracts are reachable until the other
- * records land.
+ * admits the full seven; matters and contracts are the two with a feed
+ * so far, and each answers the reach question through its own audience
+ * rule below.
  */
 const ActivityEntityType = z.enum(["matter", "contract"]);
 
