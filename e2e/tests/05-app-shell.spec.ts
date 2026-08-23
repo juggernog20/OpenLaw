@@ -35,17 +35,18 @@ test.describe("application shell", () => {
     await expect(header.getByRole("searchbox", { name: "Search" })).toBeVisible();
 
     // Nav renders from the destination registry — Home in slot one,
-    // the M21 Inbox next (INT-006 M21/13), and, for Member+, the M8
-    // contract record and the M7 Entities registry — with the current
-    // one marked.
+    // the M21 Inbox next (INT-006 M21/13), then the M22 Matters, M8
+    // Contracts, and M7 Entities destinations — with the current one
+    // marked.
     const nav = page.getByRole("navigation");
     const links = nav.getByRole("link");
-    await expect(links).toHaveCount(4);
+    await expect(links).toHaveCount(5);
     await expect(links.first()).toContainText("Home");
     await expect(links.first()).toHaveAttribute("aria-current", "page");
     await expect(links.nth(1)).toContainText("Inbox");
-    await expect(links.nth(2)).toContainText("Contracts");
-    await expect(links.nth(3)).toContainText("Entities");
+    await expect(links.nth(2)).toContainText("Matters");
+    await expect(links.nth(3)).toContainText("Contracts");
+    await expect(links.nth(4)).toContainText("Entities");
 
     // Sub-bar carries the page title as the page's single h1.
     await expect(page.getByRole("heading", { level: 1, name: "Home" })).toBeVisible();

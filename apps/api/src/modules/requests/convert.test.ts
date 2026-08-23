@@ -191,9 +191,8 @@ beforeAll(async () => {
     .set({ archivedAt: new Date() })
     .where(eq(contractTypes.id, retiredType.json().contractType.id as string));
 
-  // The Matter arm of the taxonomy exists as configuration long before
-  // `matters` does (M22). A Request that came through it can still be
-  // converted into a contract — DD-018 rule 5's lossless Re-target.
+  // A Matter-targeting Request can still convert into a Contract —
+  // DD-018 rule 5's lossless Re-target, symmetric since M22.
   matterTargetTypeId = await makeRequestType("Advice request", { targetModule: "matter" });
 });
 

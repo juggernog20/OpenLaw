@@ -349,6 +349,11 @@ const NUMBERED = defineMessage({
   defaultMessage: "contract {number}",
 });
 
+const NUMBERED_MATTER = defineMessage({
+  id: "notifications.matterNumber",
+  defaultMessage: "M-{number}",
+});
+
 /** The same for a Request, whose human reference is R-### (INT-002). */
 const NUMBERED_REQUEST = defineMessage({
   id: "notifications.requestNumber",
@@ -390,6 +395,14 @@ function recordName(intl: IntlShape, item: BellItem): string {
       ? intl.formatMessage(UNNAMED)
       : intl.formatMessage(NUMBERED_REQUEST, { number: String(number) });
   }
+  if (item.entityType === "matter") {
+    const title = text(item.payload, "matterTitle");
+    if (title) return title;
+    const number = wholeNumber(item.payload, "matterNumber");
+    return number === null
+      ? intl.formatMessage(UNNAMED)
+      : intl.formatMessage(NUMBERED_MATTER, { number: String(number) });
+  }
   const title = text(item.payload, "contractTitle");
   if (title) return title;
   const number = wholeNumber(item.payload, "contractNumber");
@@ -419,6 +432,10 @@ function hrefFor(item: BellItem, arm: Arm | undefined): string | null {
     const number = wholeNumber(item.payload, "requestNumber");
     if (number === null) return null;
     return arm?.staffSide ? `/inbox/${number}` : `/portal/requests/${number}`;
+  }
+  if (item.entityType === "matter") {
+    const number = wholeNumber(item.payload, "matterNumber");
+    return number === null ? null : `/matters/${number}`;
   }
   if (item.entityType !== "contract") return null;
   const number = wholeNumber(item.payload, "contractNumber");

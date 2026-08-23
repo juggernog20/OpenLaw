@@ -101,6 +101,10 @@ Behavior:
 
 - **Matters Settings → Types** — list view with add / rename / reorder / archive actions; in-place edit for display name and description; system-default and `other` rows display a lock icon.
 
+### Addendum (2026-08-23, M22 close, [#474](https://github.com/juggernog20/OpenLaw/issues/474)) — the taxonomy now names records
+
+M22 shipped the nine seed rows, the Administrator's Types pane and type editor, and the non-null `matters.matter_type_id` reference. The create and re-type writes lock the selected live type; re-type retains values whose fields the new type does not attach. The live-usage count is now a count of reachable records rather than the placeholder the settings machinery carried before matters existed, and archiving an in-use type requires SET-003's reassignment.
+
 ---
 
 ## MTR-002: Matter lifecycle — fixed open/closed system dimension + configurable status labels
@@ -161,6 +165,10 @@ Behavior:
 
 - **Matters Settings → Statuses** — list view with add / rename / reorder / archive; category picker (open/closed) at creation, immutable after; seed `open` and `closed` rows show the lock icon.
 
+### Addendum (2026-08-23, M22 close, [#474](https://github.com/juggernog20/OpenLaw/issues/474)) — both lifecycle layers are live
+
+M22 shipped the four seed statuses, the Statuses pane, and the record's status control. Category is immutable, every transition remains allowed, and the application branches only on `open | closed`: the list opens on open records, the header counts open and on-hold work, and the write maintains `closed_at`. At least one live row in each category remains, the seed `open` and `closed` rows are protected, and an in-use archive requires reassignment. A closed matter stays writable; archive remains a separate act.
+
 ---
 
 ## MTR-003: Matter assignment — one Matter Manager, plus legal team members added as needed
@@ -200,6 +208,10 @@ Every matter needs an ownership answer: single primary owner vs multiple assigne
 - The same shape was adopted for Contracts by **CTR-004**: `contracts.manager_id` (UI label "Owner") + `contract_team` with the identical role enum.
 - UI: matter header shows the Matter Manager avatar/name; unassigned matters show an explicit "Unassigned" affordance, not an empty gap.
 - Intake handoff (per **DD-010**) sets the Matter Manager at triage, not at submission.
+
+### Addendum (2026-08-23, M22 close, [#474](https://github.com/juggernog20/OpenLaw/issues/474)) — one owner and one roster, built
+
+`manager_id` shipped nullable and independently editable, with an explicit Unassigned rendering on the record and list. The list's Manager filter accepts a person or `me`, which is the first-class "my matters" answer for this surface. `matter_team` shipped with `creator | member | watcher | contributor`; the creator row is written at birth and cannot be removed, while Member+ can maintain the other three in the Team applet. Conversion deliberately creates an unassigned matter and adds only the triager's creator row, so intake does not invent ownership.
 
 ---
 
@@ -514,6 +526,10 @@ Behavior details:
 - **Matters Settings → Fields** — global catalog: add / rename / describe / archive; type picker at creation (immutable); DD-015 tag picker; options editor for selects.
 - **Matters Settings → Types → [type]** — attach/detach fields, per-type display order.
 
+### Addendum (2026-08-23, M22 close, [#474](https://github.com/juggernog20/OpenLaw/issues/474)) — the matter scope is open
+
+M22 widened the shared field catalog to admit `matter`, mounted the Fields pane under Matters, and let each matter type attach `matter` and `global` fields through the existing editor. Create, record read/edit, re-type, list completeness, and Request conversion all use the same attachment definition and store values by slug in `matters.custom_fields`; detached values stay stored and disappear from the active form. The original `matter_fields` table name in the consequence above is historical: **CTR-016**'s shared `fields` table and `module_scope` are the shipped schema.
+
 ---
 
 ## MTR-012: Priority and risk — both first-class default fields on every matter
@@ -557,6 +573,10 @@ Behavior:
 - Two new columns on `matters` in `SCHEMA.md`.
 - The triage queue (DD-010 surfaces) sorts by priority; dashboards get risk-mix and urgent-share cuts.
 - Screen mocks need priority/risk affordances on matter lists, headers, and the intake triage view.
+
+### Addendum (2026-08-23, M22 close, [#474](https://github.com/juggernog20/OpenLaw/issues/474)) — the two severities keep their different sources
+
+Priority and risk shipped as first-class columns and as filters/columns on the managed Matters list. A direct create can set both; a Request conversion maps requester urgency one-for-one into priority, leaves risk unassessed, and lets Legal edit either on the record. Both use DES-018's shared severity labels and pill families, so the list, create dialog, and detail do not invent module-local scales.
 
 ---
 
@@ -635,6 +655,10 @@ Enterprise research flagged required-ness as the first thing users ask of a cust
 - Intake conversion UI (**DD-010**) must render required fields for the chosen type at triage.
 - Warning inherited from research: deactivating/archiving a field must **never** delete data (contrast Legal Tracker, where field deactivation destroys values) — MTR-011's retention semantics already guarantee this.
 
+### Addendum (2026-08-23, M22 close, [#474](https://github.com/juggernog20/OpenLaw/issues/474)) — hard-required at every write that can make a gap
+
+M22 enforces the attachment's `is_required` at direct creation, conversion, re-type, and field edit. Each refusal names every missing field; re-type and conversion render controls for the gaps before retrying. Making a field required later does not rewrite old rows: the managed list's Incomplete filter finds them, and their next relevant edit must satisfy the rule. Detaching or archiving a definition never removes a stored value.
+
 ## MTR-015: Matter relationships — parent/child hierarchy plus flat related links; no cascade semantics
 
 - **Status:** Accepted
@@ -704,6 +728,10 @@ Cycle-time reporting ("avg days to close, by type") is a named metric in every p
 
 - Two columns on `matters` in `SCHEMA.md`; status-change code path must maintain `closed_at`.
 - Dashboards can ship a cycle-time report in v1 with zero additional data work.
+
+### Addendum (2026-08-23, M22 close, [#474](https://github.com/juggernog20/OpenLaw/issues/474)) — transition timestamps are maintained
+
+The create callable writes `opened_at` once. The status write sets `closed_at` on an open→closed category transition, clears it on closed→open, and leaves it alone for moves within one category; `opened_at` never changes. The same callable is used by direct creation and Request conversion, and the activity entry retains the from/to status and category needed to reconstruct repeated cycles.
 
 ## Index of decisions
 

@@ -13,9 +13,8 @@
  * **No protected row.** There is no fallback request type, so a row an
  * Administrator names "Other" archives and deletes like any other.
  *
- * **In-use counts read zero.** `requests` lands in M20, so the SET-003
- * guard reads zero on every row and archive needs no reassignment —
- * exactly where matter types sit until M22.
+ * **In-use counts are live.** Request rows arm the SET-003 guard as
+ * Matters armed their own taxonomy counts in M22.
  *
  * **The target rides the extras hook (#354).** The module and the one
  * type id join the row projection and the strict PATCH body, and the

@@ -2324,7 +2324,7 @@ export function ContractRecordPage() {
                   places in a wider sibling layer opens from here. */}
           {tab === "documents" && (
             <DocumentsCard
-              contractNumber={saved.number}
+              record={{ entityType: "contract", number: saved.number }}
               documents={paper}
               folders={tree}
               nextCursor={paperCursor}

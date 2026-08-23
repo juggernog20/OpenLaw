@@ -184,27 +184,28 @@ import {
   FOLDER_ROOT,
   hardDeleteDocument,
   isPreviewable,
-  readContractDocuments,
+  readRecordDocuments,
   restoreDocument,
   setExecutedVersion,
   setPrimaryDocument,
   updateDocument,
   updateDocumentVersionKind,
-  uploadContractDocument,
+  uploadRecordDocument,
   uploadDocumentVersion,
   type ContractDocument,
   type DocumentVersion,
   type DocumentVersionKind,
+  type DocumentRecord,
   type HandSetDocumentVersionKind,
   type UploadDraft,
 } from "../../lib/documents";
 import {
   childrenOf,
-  createContractFolder,
+  createRecordFolder,
   deleteContractFolder,
   movableInto,
   pathOf,
-  readContractFolders,
+  readRecordFolders,
   updateContractFolder,
   type ContractFolder,
   type FoldersOutcome,
@@ -334,6 +335,7 @@ const FOLDER_SKELETON_ROWS = 3;
  * same fifteen through two call sites is how the two come to differ.
  */
 interface RowContext {
+  designations: boolean;
   frozen: boolean;
   busy: boolean;
   intl: IntlShape;
@@ -372,7 +374,7 @@ interface RowContext {
 }
 
 export function DocumentsCard({
-  contractNumber,
+  record,
   documents,
   folders,
   nextCursor,
@@ -389,7 +391,7 @@ export function DocumentsCard({
   onAmendmentOpened,
 }: Readonly<{
   /** CTR-003's reference — the address the upload route takes. */
-  contractNumber: number;
+  record: DocumentRecord;
   documents: readonly ContractDocument[];
   /** The record's folders, whole (M13/2, DOC-006). The tree is drawn
    * from this one set: a record's folders are few, so there is no read
@@ -643,12 +645,7 @@ export function DocumentsCard({
     if (busy || nextCursor === null) return;
     setBusy(true);
     setPageError(null);
-    const outcome = await readContractDocuments(
-      contractNumber,
-      showArchived,
-      nextCursor,
-      FOLDER_ROOT,
-    );
+    const outcome = await readRecordDocuments(record, showArchived, nextCursor, FOLDER_ROOT);
     setBusy(false);
     if (!outcome.ok) {
       setPageError(outcome.detail ?? readFailed());
@@ -689,7 +686,7 @@ export function DocumentsCard({
       loading: true,
       error: null,
     });
-    const outcome = await readContractDocuments(contractNumber, showArchived, cursor, folderId);
+    const outcome = await readRecordDocuments(record, showArchived, cursor, folderId);
     if (!outcome.ok) {
       // A failed "Show more" keeps the cursor it tried, so the control
       // that failed is still there and the retry is the button already
@@ -728,7 +725,7 @@ export function DocumentsCard({
    * that would put every filed document at the root.
    */
   async function refreshPaper(dissolved?: string): Promise<void> {
-    const root = await readContractDocuments(contractNumber, showArchived, undefined, FOLDER_ROOT);
+    const root = await readRecordDocuments(record, showArchived, undefined, FOLDER_ROOT);
     if (root.ok) onDocuments(root.documents, root.nextCursor);
     setAppended(null);
     // A closed folder's cached listing is evicted rather than re-read:
@@ -777,7 +774,7 @@ export function DocumentsCard({
    * to a question DD-014 allows only one of.
    */
   async function refreshFolders(): Promise<void> {
-    const outcome = await readContractFolders(contractNumber);
+    const outcome = await readRecordFolders(record);
     if (outcome.ok) onFolders(outcome.folders);
   }
 
@@ -895,7 +892,7 @@ export function DocumentsCard({
     setBusy(true);
     setStatus("saving");
     setDetail(null);
-    const outcome = await readContractDocuments(contractNumber, next, undefined, FOLDER_ROOT);
+    const outcome = await readRecordDocuments(record, next, undefined, FOLDER_ROOT);
     if (!outcome.ok) {
       setBusy(false);
       setStatus("error");
@@ -922,7 +919,7 @@ export function DocumentsCard({
       ),
     );
     for (const folderId of openFolders) {
-      const folder = await readContractDocuments(contractNumber, next, undefined, folderId);
+      const folder = await readRecordDocuments(record, next, undefined, folderId);
       putListing(folderId, {
         documents: folder.ok ? folder.documents : [],
         nextCursor: folder.ok ? folder.nextCursor : null,
@@ -1337,6 +1334,7 @@ export function DocumentsCard({
   /** Everything a document row draws from, built once and handed to
    * every listing — the record root's and each open folder's. */
   const rowContext: RowContext = {
+    designations: record.entityType === "contract",
     frozen,
     busy,
     intl,
@@ -1466,10 +1464,7 @@ export function DocumentsCard({
           there. */}
       {documents.length === 0 && folders.length === 0 ? (
         <p className="px-4 py-3 text-base text-muted">
-          <FormattedMessage
-            id="documents.empty"
-            defaultMessage="No documents on this contract yet."
-          />
+          <FormattedMessage {...RECORD_COPY[record.entityType].empty} />
         </p>
       ) : (
         <div className="overflow-x-auto">
@@ -1570,7 +1565,7 @@ export function DocumentsCard({
       </p>
       {composer && (
         <UploadDialog
-          contractNumber={contractNumber}
+          record={record}
           document={composer.document}
           seedKind={composer.kind}
           onClose={() => setComposer(null)}
@@ -1605,7 +1600,7 @@ export function DocumentsCard({
       )}
       {batch && (
         <BatchDialog
-          contractNumber={contractNumber}
+          record={record}
           files={batch.files}
           emptyFolders={batch.emptyFolders}
           unreadable={batch.unreadable}
@@ -1633,6 +1628,7 @@ export function DocumentsCard({
       )}
       {filing && (
         <MoveDocumentDialog
+          recordType={record.entityType}
           document={filing}
           folders={folders}
           busy={busy}
@@ -1658,7 +1654,7 @@ export function DocumentsCard({
             const parent = folderDialog.mode === "create" ? folderDialog.parent : null;
             const refusal = await writeFolders(() =>
               folderDialog.mode === "create"
-                ? createContractFolder(contractNumber, {
+                ? createRecordFolder(record, {
                     name,
                     ...(parent ? { parentId: parent.id } : {}),
                   })
@@ -1678,6 +1674,7 @@ export function DocumentsCard({
       )}
       {folderDialog?.mode === "move" && (
         <MoveFolderDialog
+          recordType={record.entityType}
           folder={folderDialog.folder}
           folders={folders}
           busy={busy}
@@ -1689,6 +1686,7 @@ export function DocumentsCard({
       )}
       {folderDialog?.mode === "delete" && (
         <DeleteFolderDialog
+          recordType={record.entityType}
           folder={folderDialog.folder}
           folders={folders}
           busy={busy}
@@ -1882,6 +1880,7 @@ function DocumentRows({
                     <DocumentActions
                       document={document}
                       version={chain.current}
+                      designations={rows.designations}
                       busy={rows.busy}
                       canErase={rows.canErase}
                       canFlag={rows.canFlag(document)}
@@ -1952,7 +1951,7 @@ function DocumentRows({
                           head. An archived document takes none,
                           for the reason its own row gives. */}
                       <span className="flex items-center justify-end gap-1">
-                        {document.archivedAt === null && (
+                        {rows.designations && document.archivedAt === null && (
                           <VersionPinMenu
                             document={document}
                             version={version}
@@ -2483,12 +2482,14 @@ function FolderNameDialog({
  * says nothing when two groupings each have one.
  */
 function MoveFolderDialog({
+  recordType,
   folder,
   folders,
   busy,
   onClose,
   onConfirm,
 }: Readonly<{
+  recordType: DocumentRecord["entityType"];
   folder: ContractFolder;
   folders: readonly ContractFolder[];
   busy: boolean;
@@ -2542,12 +2543,7 @@ function MoveFolderDialog({
               className={CONTROL_CLASS}
               onChange={(event) => setParentId(event.target.value)}
             >
-              <option value="">
-                {intl.formatMessage({
-                  id: "documents.folder.recordRoot",
-                  defaultMessage: "The contract itself",
-                })}
-              </option>
+              <option value="">{intl.formatMessage(RECORD_COPY[recordType].recordRoot)}</option>
               {destinations.map((option) => (
                 <option key={option.id} value={option.id}>
                   {pathOf(folders, option, separator)}
@@ -2588,12 +2584,14 @@ function MoveFolderDialog({
  * bare "2026" says nothing when two groupings each have one.
  */
 function MoveDocumentDialog({
+  recordType,
   document,
   folders,
   busy,
   onClose,
   onConfirm,
 }: Readonly<{
+  recordType: DocumentRecord["entityType"];
   document: ContractDocument;
   folders: readonly ContractFolder[];
   busy: boolean;
@@ -2647,12 +2645,7 @@ function MoveDocumentDialog({
               className={CONTROL_CLASS}
               onChange={(event) => setFolderId(event.target.value)}
             >
-              <option value="">
-                {intl.formatMessage({
-                  id: "documents.folder.recordRoot",
-                  defaultMessage: "The contract itself",
-                })}
-              </option>
+              <option value="">{intl.formatMessage(RECORD_COPY[recordType].recordRoot)}</option>
               {folders.map((option) => (
                 <option key={option.id} value={option.id}>
                   {pathOf(folders, option, separator)}
@@ -2690,12 +2683,14 @@ function MoveDocumentDialog({
  * in two seconds.
  */
 function DeleteFolderDialog({
+  recordType,
   folder,
   folders,
   busy,
   onClose,
   onConfirm,
 }: Readonly<{
+  recordType: DocumentRecord["entityType"];
   folder: ContractFolder;
   folders: readonly ContractFolder[];
   busy: boolean;
@@ -2730,10 +2725,7 @@ function DeleteFolderDialog({
               values={{ parent: parent.name }}
             />
           ) : (
-            <FormattedMessage
-              id="documents.folder.deleteIntoRoot"
-              defaultMessage="Anything in it moves onto the contract itself. Nothing is deleted."
-            />
+            <FormattedMessage {...RECORD_COPY[recordType].deleteIntoRoot} />
           )}
         </p>
         {error && (
@@ -2833,6 +2825,44 @@ function OpenVersion({
 
 /** What each menu item says, in the words DES-015 asks for: a verb, in
  * sentence case, and no phrase where a word will do. */
+/**
+ * The copy that names the owning record, keyed by record type. Written
+ * out as descriptors rather than picked by a ternary inside the `id`
+ * prop, because the message extractor reads ids statically and would
+ * drop every key it cannot see (the i18n drift routine then deletes
+ * them from `en-US.json`).
+ */
+const RECORD_COPY = {
+  contract: {
+    empty: defineMessage({
+      id: "documents.empty",
+      defaultMessage: "No documents on this contract yet.",
+    }),
+    recordRoot: defineMessage({
+      id: "documents.folder.recordRoot",
+      defaultMessage: "The contract itself",
+    }),
+    deleteIntoRoot: defineMessage({
+      id: "documents.folder.deleteIntoRoot",
+      defaultMessage: "Anything in it moves onto the contract itself. Nothing is deleted.",
+    }),
+  },
+  matter: {
+    empty: defineMessage({
+      id: "matters.documents.empty",
+      defaultMessage: "No documents on this matter yet.",
+    }),
+    recordRoot: defineMessage({
+      id: "matters.documents.folder.recordRoot",
+      defaultMessage: "The matter itself",
+    }),
+    deleteIntoRoot: defineMessage({
+      id: "matters.documents.folder.deleteIntoRoot",
+      defaultMessage: "Anything in it moves onto the matter itself. Nothing is deleted.",
+    }),
+  },
+} as const;
+
 const ACTION_LABEL = {
   makePrimary: defineMessage({
     id: "documents.action.makePrimary",
@@ -2899,6 +2929,7 @@ const FOLDER_ACTION_LABEL = {
 function DocumentActions({
   document,
   version,
+  designations,
   busy,
   canErase,
   canFlag,
@@ -2919,6 +2950,7 @@ function DocumentActions({
    * `VersionPinMenu` — because it has no document-level act to sit
    * beside. */
   version: DocumentVersion;
+  designations: boolean;
   busy: boolean;
   canErase: boolean;
   /** Whether this viewer is one of DD-014's three actors for this
@@ -2959,7 +2991,7 @@ function DocumentActions({
                 the Primary mark beside the name is what says why. There
                 is no clear: a record with paper on it has an
                 instrument, so the designation moves or it stays. */}
-            {!document.isPrimary && (
+            {designations && !document.isPrimary && (
               <DropdownMenuItem onSelect={onMakePrimary}>
                 <Star size={16} aria-hidden="true" />
                 <FormattedMessage {...ACTION_LABEL.makePrimary} />
@@ -2969,12 +3001,16 @@ function DocumentActions({
                 is the signed copy, as opposed to which document is the
                 instrument. A distinct verb from Make primary, so the
                 two never read as one choice. */}
-            <DropdownMenuItem onSelect={onToggleExecuted}>
-              <Pin size={16} aria-hidden="true" />
-              <FormattedMessage
-                {...(version.isExecuted ? ACTION_LABEL.unmarkExecuted : ACTION_LABEL.markExecuted)}
-              />
-            </DropdownMenuItem>
+            {designations && (
+              <DropdownMenuItem onSelect={onToggleExecuted}>
+                <Pin size={16} aria-hidden="true" />
+                <FormattedMessage
+                  {...(version.isExecuted
+                    ? ACTION_LABEL.unmarkExecuted
+                    : ACTION_LABEL.markExecuted)}
+                />
+              </DropdownMenuItem>
+            )}
             <DropdownMenuItem onSelect={onAddVersion}>
               <FilePlus2 size={16} aria-hidden="true" />
               <FormattedMessage {...ACTION_LABEL.addVersion} />
@@ -3319,14 +3355,14 @@ function UploaderCell({ version, intl }: Readonly<{ version: DocumentVersion; in
  * versions.
  */
 function UploadDialog({
-  contractNumber,
+  record,
   document,
   seedKind,
   onClose,
   onBatch,
   onSaved,
 }: Readonly<{
-  contractNumber: number;
+  record: DocumentRecord;
   /** The document being added to, or undefined for a new one. */
   document: ContractDocument | undefined;
   /** What the kind picker starts on. Only a renewal routed here to be
@@ -3379,7 +3415,7 @@ function UploadDialog({
     const draft: UploadDraft = { file, kind, note };
     const outcome = document
       ? await uploadDocumentVersion(document.id, draft)
-      : await uploadContractDocument(contractNumber, draft);
+      : await uploadRecordDocument(record, draft);
     setBusy(false);
     if (outcome.ok) {
       onSaved(outcome.document);
