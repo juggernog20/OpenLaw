@@ -170,7 +170,10 @@ export const routes: RouteObject[] = [
     hydrateFallbackElement: <></>,
   },
   {
-    path: "/matters/:matterNumber",
+    // One matter's record page, addressed by its number. The optional
+    // trailing segment is the DES-032 section tab; the bare address is
+    // the Overview.
+    path: "/matters/:matterNumber/:tab?",
     loader: matterRecordLoader,
     element: (
       <KeyedByParam name="matterNumber">
