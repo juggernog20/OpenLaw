@@ -88,11 +88,10 @@ export type HandSetDocumentVersionKind = (typeof HAND_SET_DOCUMENT_VERSION_KINDS
  *
  * **Exactly one owning record** (DOC-008): a matter, a contract, an
  * entity, or a knowledge item, and there is no such thing as a
- * standalone document. The owner set is a set of one in M11 — a
- * contract — and the other three FK columns land with their own modules
- * (M22, M27, M28). `contract_id` is therefore `NOT NULL` here: with one
- * owner declared, that is the exactly-one-owner rule stated exactly, and
- * it costs nothing to hold.
+ * standalone document. M11 began with Contract as the only owner; M22
+ * added Matter, while Entity and Knowledge remain with M27/M28. The
+ * current constraint therefore names `matter_id` and `contract_id` and
+ * requires exactly one.
  *
  * **The migration that adds a second owner column must carry the rule
  * down with it, not hand it to the application.** Dropping `NOT NULL`

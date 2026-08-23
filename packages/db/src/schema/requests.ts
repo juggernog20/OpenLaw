@@ -101,10 +101,8 @@ export const requests = pgTable(
      * NULL while it is `new`, and at most one is ever set — a Request
      * becomes one record, not two.
      *
-     * `converted_matter_id` carries no foreign key yet: `matters` lands
-     * in M22, and a reference to a table that does not exist is not a
-     * reference. It gains one with that table. SCHEMA.md records the
-     * FK as the destination.
+     * M22 added the `converted_matter_id` foreign key and index with the
+     * Matter table; both conversion arms now have no-cascade references.
      */
     convertedMatterId: text("converted_matter_id").references(() => matters.id),
     /** The contract conversion made, if it made one. No cascade: a

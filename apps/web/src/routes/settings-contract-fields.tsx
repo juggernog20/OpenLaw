@@ -620,9 +620,8 @@ function ArchiveFieldDialog({
             <TriangleAlert size={16} aria-hidden="true" className="mt-0.5 shrink-0" />
             {/* Fields never reassign and never block: everything is
                 retained by rule (MTR-014), which is the whole message.
-                The count is type attachments until the record
-                milestones (M8, M22) add records holding values — the
-                copy revisits then. */}
+                M8 and M22 added record values to this same count; the
+                copy deliberately calls every source "uses". */}
             <p>
               <FormattedMessage
                 id="settings.contractFields.archiveWarning"

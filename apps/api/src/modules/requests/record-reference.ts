@@ -14,7 +14,7 @@ export type ConversionRecordReference = {
   number: number;
 };
 
-/** The module-aware wire reference M22's second conversion arm needs. */
+/** The module-aware wire reference used by M22's second conversion arm. */
 export function convertedRecordOf(
   record: ConversionRecordReference | null,
 ): { module: "contract" | "matter"; number: number } | null {

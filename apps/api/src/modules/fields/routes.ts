@@ -2,8 +2,8 @@
 
 /**
  * The Fields catalog routes (CTR-016, #83): the shared custom-field
- * catalog behind the third list-editor pane — list scoped to contract
- * and global fields, create across the nine field types, rename and
+ * catalog behind the module list-editor panes — list scoped to Contract,
+ * Matter, and global fields, create across the nine field types, rename and
  * describe, the options list on select types, the contract-scope-only
  * AI prompt (CTR-008), scope moves (promotion to global; narrowing back
  * only while no other module attaches the field), archive and restore.
@@ -44,8 +44,7 @@ import { freeSlug } from "../../lib/slug.js";
 
 /**
  * The scopes this pane's catalog holds and its picker offers (CTR-016):
- * `matter` and `entity` join with their milestones (M22, M27), which
- * bring the per-module views along.
+ * M22 added `matter`; `entity` joins with M27 and its module view.
  */
 const OPEN_SCOPES = ["contract", "matter", "global"] as const;
 
@@ -66,8 +65,8 @@ const FieldSchema = z.object({
   archivedAt: z.iso.datetime().nullable(),
   /** Records holding a value plus type attachments — the SET-003 guard
    * number. Contract-type attachments count since #84 and matter-type
-   * attachments since #85; contracts holding a value count since #112,
-   * and matters join with M22. */
+   * attachments since #85; Contract values count since #112 and Matter
+   * values since M22. */
   inUseCount: z.number().int(),
 });
 
@@ -140,7 +139,7 @@ export const fieldsRoutes: FastifyPluginAsyncZod = async (app) => {
    * record's `custom_fields` is keyed by the field's machine identity,
    * not its id. Archived contracts count: their values are retained
    * exactly like a detached field's, so a restore must not make a
-   * number the Administrator already saw go up. Matters join with M22.
+   * number the Administrator already saw go up. Matter values joined in M22.
    */
   async function attachmentCounts(
     db: Executor,

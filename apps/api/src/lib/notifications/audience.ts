@@ -508,9 +508,9 @@ export type NotificationSurface = (typeof NOTIFICATION_SURFACES)[number];
  * anybody about.
  *
  * **A row about anything else does not pass at all**, and that is the
- * safe direction rather than an omission. When matters (M22) start
- * writing rows, a reach rule for them has to be added here, and until it
- * is their items are invisible rather than unguarded. Failing closed
+ * safe direction rather than an omission. M22 added the Matter reach
+ * rule before Matters began writing rows. Any later entity type remains
+ * invisible until it gains its own rule. Failing closed
  * shows up as a missing item somebody notices; failing open would show
  * up as a leak nobody does. The send job refuses an entity it has no
  * rule for on exactly the same reasoning.

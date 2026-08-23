@@ -50,10 +50,9 @@
  *
  * ### Recorded normalization points (I2 deviations accepted)
  *
- * 1. **The sub-bar draws all three of I2's actions.** Decline, Resolve,
- *    and Convert to contract, in I2's own order and chromatic ranking
- *    (DES-058 clause 2). What is not drawn is I3's "Convert to matter
- *    instead" — there is nothing to convert into until M22.
+ * 1. **The sub-bar originally drew I2's three M21 actions.** M22/8
+ *    superseded that normalization: Convert now names the configured
+ *    target module, and either dialog offers the opposite Re-target.
  * 2. **The hero scrolls with the page** where I2 draws it as a second
  *    fixed band under the sub-bar. What it says is a fact about the
  *    Request rather than a control that must stay in reach, and a

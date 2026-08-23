@@ -6,12 +6,10 @@
  * anything, and they carry only the columns that step reads and writes
  * (TECH-014). SCHEMA.md is the naming reference for the rest.
  *
- * **The owner set is a set of one**, exactly as `documents` started: a
- * contract. `matter_id` and `entity_id` land with M22 and M27, and the
- * migration that adds the second one relaxes the NOT NULL here and adds
- * the same exactly-one-owner check the documents table carries. Nothing
- * about the machinery is contract-shaped, so those milestones inherit
- * it by adding a column rather than by forking it.
+ * **The owner set is a set of one**, exactly as `documents` requires.
+ * M22 added `matter_id`, relaxed Contract's NOT NULL, and widened the
+ * check to the two current owners. M27 adds Entity by widening the same
+ * constraint; nothing about the machinery is module-shaped.
  *
  * **`display_order` is not here**, and its absence is the decision. It
  * is deferred with the reorder surface that would read it; siblings

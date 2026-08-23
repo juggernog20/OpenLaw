@@ -7,10 +7,9 @@
  *
  * The route is keyed by an entity reference rather than by a record's
  * own address, exactly as the comment thread is: the panel that reads it
- * is entity-generic, and matters (M22) and documents (M11) mount the
- * same component. The `activity_log` entity vocabulary is already the
- * full seven; the API accepts `contract` alone until the other records
- * exist.
+ * is entity-generic. Matter joined Contract as a direct feed target in
+ * M22; document actions remain filtered entries on their owning record's
+ * feed. The `activity_log` vocabulary stays wider than this route.
  *
  * **The feed is filtered at query time by the same predicate the thread
  * uses** (DD-016, DD-017). `contractAudience` is the one gate: it
