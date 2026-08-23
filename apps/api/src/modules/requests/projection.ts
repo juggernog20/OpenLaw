@@ -45,6 +45,7 @@ import {
   eq,
   inArray,
   isNull,
+  matters,
   matterTypes,
   REQUEST_STATUSES,
   requestAttachments,
@@ -57,11 +58,16 @@ import {
 } from "@openlaw/db";
 import type { AuthenticatedUser } from "../../auth/guards.js";
 import { contractTeamScope } from "../../lib/contract-access.js";
+import { matterTeamScope } from "../../lib/matter-access.js";
 import { CustomFieldsSchema } from "../../lib/custom-fields.js";
 import { httpError } from "../../lib/problem.js";
 import { attachmentDisposition } from "../../lib/uploads.js";
 import type { AttachedCustomField } from "../../lib/custom-fields.js";
-import { convertedContractOf, type ConversionRecordReference } from "./record-reference.js";
+import {
+  convertedContractOf,
+  convertedRecordOf,
+  type ConversionRecordReference,
+} from "./record-reference.js";
 
 /**
  * The front door a Request came through, with the routing the
@@ -91,18 +97,16 @@ export const StaffRequestTypeSchema = z.object({
 /**
  * The record a conversion made, as the request projection names it.
  *
- * M22/1 keeps the existing contract-only HTTP fields intact, but moves
- * the underlying answer to this module-aware shape. The Matter arm can
- * therefore extend this schema and the one resolver below without
- * teaching each Request read how records are reached.
+ * M22/1 moved the underlying answer to this module-aware shape; M22/8
+ * adds the matter arm here so neither Request read learns a second join.
  */
-export const ConvertedRecordSchema = z.object({
-  module: z.literal("contract"),
-  number: z.number().int(),
-});
+export const ConvertedRecordSchema = z.discriminatedUnion("module", [
+  z.object({ module: z.literal("contract"), number: z.number().int() }),
+  z.object({ module: z.literal("matter"), number: z.number().int() }),
+]);
 
 /** The M21 wire member, derived from the module-aware schema. */
-export const ConvertedContractSchema = ConvertedRecordSchema.omit({ module: true });
+export const ConvertedContractSchema = z.object({ number: z.number().int() });
 
 /**
  * The join that reads a request type's target **contract** type, and
@@ -384,31 +388,54 @@ export async function selectConvertedRecords(
 ): Promise<ReadonlyMap<string, ConversionRecordReference>> {
   if (requestIds.length === 0) return new Map();
 
-  const rows = await db
-    .select({
-      requestId: requests.id,
-      contractId: contracts.id,
-      contractNumber: contracts.number,
-    })
-    .from(requests)
-    // An inner join: a Request whose record is out of reach, archived,
-    // or absent contributes no row, and the map simply lacks its key.
-    .innerJoin(
-      contracts,
-      and(
-        eq(requests.convertedContractId, contracts.id),
-        contractTeamScope(db, user),
-        isNull(contracts.archivedAt),
-      ),
-    )
-    .where(inArray(requests.id, [...requestIds]));
+  const [contractRows, matterRows] = await Promise.all([
+    db
+      .select({
+        requestId: requests.id,
+        id: contracts.id,
+        number: contracts.number,
+      })
+      .from(requests)
+      .innerJoin(
+        contracts,
+        and(
+          eq(requests.convertedContractId, contracts.id),
+          contractTeamScope(db, user),
+          isNull(contracts.archivedAt),
+        ),
+      )
+      .where(inArray(requests.id, [...requestIds])),
+    db
+      .select({
+        requestId: requests.id,
+        id: matters.id,
+        number: matters.number,
+      })
+      .from(requests)
+      .innerJoin(
+        matters,
+        and(
+          eq(requests.convertedMatterId, matters.id),
+          matterTeamScope(db, user),
+          isNull(matters.archivedAt),
+        ),
+      )
+      .where(inArray(requests.id, [...requestIds])),
+  ]);
 
   const records = new Map<string, ConversionRecordReference>();
-  for (const row of rows) {
+  for (const row of contractRows) {
     records.set(row.requestId, {
       module: "contract",
-      id: row.contractId,
-      number: row.contractNumber,
+      id: row.id,
+      number: row.number,
+    });
+  }
+  for (const row of matterRows) {
+    records.set(row.requestId, {
+      module: "matter",
+      id: row.id,
+      number: row.number,
     });
   }
   return records;
@@ -451,6 +478,8 @@ export const StaffRequestSchema = z.object({
    * `null` in every other case — never converted, converted into a
    * record they may not see, or converted into another module. */
   convertedContract: ConvertedContractSchema.nullable(),
+  /** The record-shaped successor to the contract-only compatibility member. */
+  convertedRecord: ConvertedRecordSchema.nullable(),
 });
 
 /**
@@ -525,5 +554,6 @@ export function toStaffRequest(row: Awaited<ReturnType<typeof staffRequestRow>>)
       image: row.requesterImage,
     },
     convertedContract: convertedContractOf(row.convertedRecord),
+    convertedRecord: convertedRecordOf(row.convertedRecord),
   };
 }

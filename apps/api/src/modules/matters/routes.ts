@@ -26,6 +26,7 @@ import {
   type Transaction,
 } from "@openlaw/db";
 import {
+  MAX_MATTER_TITLE_LENGTH,
   MATTER_SORT_KEYS,
   SORT_DIRECTIONS,
   type MatterSortKey,
@@ -524,7 +525,7 @@ export const mattersRoutes: FastifyPluginAsyncZod = async (app) => {
           "Create the next M-number on the first live open status, enforcing required type fields",
         tags: ["matters"],
         body: z.strictObject({
-          title: z.string().trim().min(1).max(500),
+          title: z.string().trim().min(1).max(MAX_MATTER_TITLE_LENGTH),
           matterTypeId: z.string(),
           managerId: z.string().nullable().optional(),
           priority: SeveritySchema.optional(),
@@ -555,7 +556,7 @@ export const mattersRoutes: FastifyPluginAsyncZod = async (app) => {
         tags: ["matters"],
         params: NumberParams,
         body: z.strictObject({
-          title: z.string().trim().min(1).max(500).optional(),
+          title: z.string().trim().min(1).max(MAX_MATTER_TITLE_LENGTH).optional(),
           description: z.string().trim().max(10_000).nullable().optional(),
           matterTypeId: z.string().optional(),
           managerId: z.string().nullable().optional(),

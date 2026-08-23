@@ -227,7 +227,8 @@ type RequestPayloads = {
    * number key into this closed payload union. A Request becomes one
    * record, and the table already holds that as a check constraint.
    */
-  "request.converted": { number: number; contractNumber: number };
+  "request.converted":
+    { number: number; contractNumber: number } | { number: number; matterNumber: number };
   /**
    * The conversation left with the work (CMT-001, DD-017, M21/11).
    *
@@ -640,6 +641,7 @@ type MatterPayloads = {
     status: string;
     customFields: string[];
   };
+  "matter.created_from_request": { number: number; title: string; requestNumber: number };
   "matter.confidentiality_set": { number: number; title: string };
   "matter.confidentiality_cleared": { number: number; title: string };
   "matter.updated": {

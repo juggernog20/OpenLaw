@@ -1265,7 +1265,7 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** The Inbox (INT-006, INT-007): the Requests whose fate is undecided, ordered by urgency rank — critical first — then age, oldest first, and paged by cursor. The answer is exactly the `new` Requests; includeTriaged=true widens it to the converted, resolved, and declined ones with their outcomes. A converted row carries the contract it became only when the caller reaches that contract, and carries null otherwise (DD-014). Member+ only: a Contributor and a Business User are refused */
+    /** The Inbox (INT-006, INT-007): the Requests whose fate is undecided, ordered by urgency rank — critical first — then age, oldest first, and paged by cursor. The answer is exactly the `new` Requests; includeTriaged=true widens it to the converted, resolved, and declined ones with their outcomes. A converted row carries the contract or matter it became only when the caller reaches that record, and carries null otherwise (DD-014). Member+ only: a Contributor and a Business User are refused */
     get: operations["listInbox"];
     put?: never;
     /** Submit a Request through a request type's portal form (INT-001). The Requester is the session; the type must be live; Summary, Description, and Urgency are required, as is every attached field the type marks required; values are accepted for exactly the fields the type attaches, and a user or entity field's value must name a live row */
@@ -1421,7 +1421,7 @@ export interface paths {
     };
     get?: never;
     put?: never;
-    /** Turn a Request into the contract its request type targets (INT-002, DD-018). The third of INT-007's three dispositions: it transitions the Request from `new` to `converted` under the Request's own row lock, so two triagers racing one Request produce one contract. The loser is answered 409 with the recorded outcome and the record it became. Triage confirms the routing rather than choosing it: where the request type names a live contract type, that type is the target and a body naming a different one is refused. `contractTypeId` is required — and only accepted — where the request type names no live contract type: a module-only target, a target type the taxonomy has archived (read as no type), a Matter target, or no target at all. The last two are Re-target, DD-018's lossless exception. The contract is born ordinary — the C-### sequence, the draft-stage seed, no Owner, no team, no Confidential flag — with the title the body carries, which the dialog seeds from the summary and leaves editable; the requester's urgency as its priority 1:1 (MTR-012; risk is never requester-set); and every collected value whose slug the target type attaches landed in that field. A collected value the target type does not attach does not carry and is not deleted: the Request keeps its custom fields whole. Empty hard-required fields refuse the conversion by name (CTR-016/MTR-014), so `customFields` is where the triager answers them. Appends request.converted on the ask and contract.created_from_request on the record (DD-017), and raises `requestStatusChanged`. Every attachment on the Request is promoted into one document at version 1 at the record root, each narrated document.created and each owed the derivations an upload is owed (INT-002, DOC-008). The promotion copies: the Request keeps its attachments and its downloads go on answering. The thread moves rather than copying (CMT-001): every comment re-parents onto the record with its DD-016 tier intact and each reader's unread watermark travels with it, narrated request.thread_moved, and from then on the Request's thread address answers the record's conversation — the portal filtered to Full Thread. Answers the Request as the staff detail reads it. Member+ only */
+    /** Turn a Request into the contract or matter its request type targets (INT-002, DD-018, M22/8). The Request row is locked so racing triagers produce one record; the loser receives 409 with the reachable converted record's module and permanent number. Triage confirms a live bound type, supplies a type for a module-only or archived target, or explicitly Re-targets by naming the other module's type. A body may name a contract type or a matter type, never both. The record is born through its ordinary create callable with the title seeded from the Request summary, urgency carried to priority, risk unset, no manager, one creator row, and no confidential flag. Matching collected values carry server-side; values with no field remain on the Request; missing required fields and dead references are refused by name and can be answered in customFields. Both records narrate the conversion and requestStatusChanged raises the Requester's In progress notification. Paper promotion and thread move remain on the contract arm until M22/9. Member+ only */
     post: operations["convertRequest"];
     delete?: never;
     options?: never;
@@ -7876,6 +7876,20 @@ export interface operations {
               convertedContract: {
                 number: number;
               } | null;
+              convertedRecord:
+                | (
+                    | {
+                        /** @enum {string} */
+                        module: "contract";
+                        number: number;
+                      }
+                    | {
+                        /** @enum {string} */
+                        module: "matter";
+                        number: number;
+                      }
+                  )
+                | null;
             }[];
             nextCursor: string | null;
           };
@@ -8116,7 +8130,7 @@ export interface operations {
           };
         };
       };
-      /** @description A Request that is no longer new takes paper on its thread, not as another Request attachment (INT-002, CMT-011). The named refusal carries `request`, the R-### whose portal detail owns that thread; `outcome`, the disposition already recorded; and `convertedContract`, the record a conversion made when the caller may reach it (DD-014), else `null`. */
+      /** @description A Request that is no longer new takes paper on its thread, not as another Request attachment (INT-002, CMT-011). The named refusal carries `request`, the R-### whose portal detail owns that thread; `outcome`, the disposition already recorded; and `convertedRecord`, the record a conversion made when the caller may reach it (DD-014), else `null`. */
       409: {
         headers: {
           [name: string]: unknown;
@@ -8144,6 +8158,20 @@ export interface operations {
             convertedContract?: {
               number: number;
             } | null;
+            convertedRecord?:
+              | (
+                  | {
+                      /** @enum {string} */
+                      module: "contract";
+                      number: number;
+                    }
+                  | {
+                      /** @enum {string} */
+                      module: "matter";
+                      number: number;
+                    }
+                )
+              | null;
           };
         };
       };
@@ -8238,6 +8266,20 @@ export interface operations {
               convertedContract: {
                 number: number;
               } | null;
+              convertedRecord:
+                | (
+                    | {
+                        /** @enum {string} */
+                        module: "contract";
+                        number: number;
+                      }
+                    | {
+                        /** @enum {string} */
+                        module: "matter";
+                        number: number;
+                      }
+                  )
+                | null;
             };
             fields: {
               fieldId: string;
@@ -8376,11 +8418,25 @@ export interface operations {
               convertedContract: {
                 number: number;
               } | null;
+              convertedRecord:
+                | (
+                    | {
+                        /** @enum {string} */
+                        module: "contract";
+                        number: number;
+                      }
+                    | {
+                        /** @enum {string} */
+                        module: "matter";
+                        number: number;
+                      }
+                  )
+                | null;
             };
           };
         };
       };
-      /** @description The named type says somebody has already dispositioned this Request (INT-007) — there is no claim step, so two triagers can open one Request and only the first press writes. The refusal carries `outcome`: the recorded decision, which the loser's client states instead of asking again; and, where that decision was a conversion this caller may reach, `convertedContract`: the record it became. There is no unnamed 409 on this route — an archived Request answers 404 and a missing reason answers 400. */
+      /** @description The named type says somebody has already dispositioned this Request (INT-007) — there is no claim step, so two triagers can open one Request and only the first press writes. The refusal carries `outcome`: the recorded decision, which the loser's client states instead of asking again; and, where that decision was a conversion this caller may reach, `convertedRecord`: the module and permanent number it became. There is no unnamed 409 on this route — an archived Request answers 404 and a missing reason answers 400. */
       409: {
         headers: {
           [name: string]: unknown;
@@ -8409,6 +8465,21 @@ export interface operations {
             convertedContract?: {
               number: number;
             } | null;
+            /** @description The contract or matter the winning conversion made, by module and permanent number — null on every other outcome and when this caller cannot reach it. */
+            convertedRecord?:
+              | (
+                  | {
+                      /** @enum {string} */
+                      module: "contract";
+                      number: number;
+                    }
+                  | {
+                      /** @enum {string} */
+                      module: "matter";
+                      number: number;
+                    }
+                )
+              | null;
           };
         };
       };
@@ -8477,11 +8548,25 @@ export interface operations {
               convertedContract: {
                 number: number;
               } | null;
+              convertedRecord:
+                | (
+                    | {
+                        /** @enum {string} */
+                        module: "contract";
+                        number: number;
+                      }
+                    | {
+                        /** @enum {string} */
+                        module: "matter";
+                        number: number;
+                      }
+                  )
+                | null;
             };
           };
         };
       };
-      /** @description The named type says somebody has already dispositioned this Request (INT-007) — there is no claim step, so two triagers can open one Request and only the first press writes. The refusal carries `outcome`: the recorded decision, which the loser's client states instead of asking again; and, where that decision was a conversion this caller may reach, `convertedContract`: the record it became. There is no unnamed 409 on this route — an archived Request answers 404. */
+      /** @description The named type says somebody has already dispositioned this Request (INT-007) — there is no claim step, so two triagers can open one Request and only the first press writes. The refusal carries `outcome`: the recorded decision, which the loser's client states instead of asking again; and, where that decision was a conversion this caller may reach, `convertedRecord`: the module and permanent number it became. There is no unnamed 409 on this route — an archived Request answers 404. */
       409: {
         headers: {
           [name: string]: unknown;
@@ -8510,6 +8595,21 @@ export interface operations {
             convertedContract?: {
               number: number;
             } | null;
+            /** @description The contract or matter the winning conversion made, by module and permanent number — null on every other outcome and when this caller cannot reach it. */
+            convertedRecord?:
+              | (
+                  | {
+                      /** @enum {string} */
+                      module: "contract";
+                      number: number;
+                    }
+                  | {
+                      /** @enum {string} */
+                      module: "matter";
+                      number: number;
+                    }
+                )
+              | null;
           };
         };
       };
@@ -8538,6 +8638,7 @@ export interface operations {
         "application/json": {
           title: string;
           contractTypeId?: string;
+          matterTypeId?: string;
           customFields?: {
             [key: string]: (string | number | boolean | string[]) | null;
           };
@@ -8582,11 +8683,25 @@ export interface operations {
               convertedContract: {
                 number: number;
               } | null;
+              convertedRecord:
+                | (
+                    | {
+                        /** @enum {string} */
+                        module: "contract";
+                        number: number;
+                      }
+                    | {
+                        /** @enum {string} */
+                        module: "matter";
+                        number: number;
+                      }
+                  )
+                | null;
             };
           };
         };
       };
-      /** @description The named type says somebody has already dispositioned this Request (INT-007) — there is no claim step, so two triagers can open one Request and only the first press writes. The refusal carries `outcome`: the recorded decision, which the loser's client states instead of asking again; and, where that decision was a conversion this caller may reach, `convertedContract`: the record it became. There is no unnamed 409 on this route — an archived Request answers 404, and a missing title, a contradicted target, or an unfilled hard-required field answers 400. */
+      /** @description The named type says somebody has already dispositioned this Request (INT-007) — there is no claim step, so two triagers can open one Request and only the first press writes. The refusal carries `outcome`: the recorded decision, which the loser's client states instead of asking again; and, where that decision was a conversion this caller may reach, `convertedRecord`: the module and permanent number it became. There is no unnamed 409 on this route — an archived Request answers 404, and a missing title, a contradicted target, or an unfilled hard-required field answers 400. */
       409: {
         headers: {
           [name: string]: unknown;
@@ -8615,6 +8730,21 @@ export interface operations {
             convertedContract?: {
               number: number;
             } | null;
+            /** @description The contract or matter the winning conversion made, by module and permanent number — null on every other outcome and when this caller cannot reach it. */
+            convertedRecord?:
+              | (
+                  | {
+                      /** @enum {string} */
+                      module: "contract";
+                      number: number;
+                    }
+                  | {
+                      /** @enum {string} */
+                      module: "matter";
+                      number: number;
+                    }
+                )
+              | null;
           };
         };
       };

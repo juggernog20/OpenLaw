@@ -705,6 +705,19 @@ function convertedContract(intl: IntlShape, payload: Payload): string {
   );
 }
 
+function convertedRecord(intl: IntlShape, payload: Payload): string {
+  if (typeof payload.matterNumber === "number" && Number.isInteger(payload.matterNumber)) {
+    return crossReference(
+      intl,
+      payload,
+      "matterNumber",
+      defineMessage({ id: "matters.reference", defaultMessage: "M-{number}" }),
+      defineMessage({ id: "activity.matter.unnamedRecord", defaultMessage: "another matter" }),
+    );
+  }
+  return convertedContract(intl, payload);
+}
+
 function named(intl: IntlShape, payload: Payload, key: string): string {
   return (
     text(payload, key) ?? intl.formatMessage({ id: "activity.someone", defaultMessage: "someone" })
@@ -1220,6 +1233,25 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
     message: defineMessage({
       id: "activity.matter.created",
       defaultMessage: "{actor} created this matter",
+    }),
+  },
+  "matter.created_from_request": {
+    icon: ArrowRightLeft,
+    message: defineMessage({
+      id: "activity.matter.createdFromRequest",
+      defaultMessage: "{actor} created this matter from {request}",
+    }),
+    values: (intl, payload) => ({
+      request: crossReference(
+        intl,
+        payload,
+        "requestNumber",
+        defineMessage({
+          id: "requests.reference",
+          defaultMessage: "R-{number, number, ::group-off}",
+        }),
+        defineMessage({ id: "activity.request.unnamedRecord", defaultMessage: "a request" }),
+      ),
     }),
   },
   "matter.updated": {
@@ -1933,9 +1965,9 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
     icon: FilePen,
     message: defineMessage({
       id: "activity.request.converted",
-      defaultMessage: "{actor} converted this request into {contract}",
+      defaultMessage: "{actor} converted this request into {record}",
     }),
-    values: (intl, payload) => ({ contract: convertedContract(intl, payload) }),
+    values: (intl, payload) => ({ record: convertedRecord(intl, payload) }),
   },
 
   // CMT-001's promise, kept at the conversion (#422). The conversation

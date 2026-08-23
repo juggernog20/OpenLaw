@@ -52,6 +52,7 @@ function inboxRow(overrides: Partial<Record<string, unknown>> = {}) {
     requester: { id: "u7", displayName: "Dana Reyes" },
     createdAt: "2026-08-20T11:00:00.000Z",
     convertedContract: null,
+    convertedRecord: null,
     ...overrides,
   };
 }
@@ -225,6 +226,7 @@ describe("the Inbox destination", () => {
             status: "converted",
             summary: "NDA with Northwind Labs",
             convertedContract: { number: 91 },
+            convertedRecord: { module: "contract", number: 91 },
           }),
         ],
       ).handler,
@@ -238,6 +240,31 @@ describe("the Inbox destination", () => {
       "href",
       "/contracts/91",
     );
+  });
+
+  it("links a converted Request to a matter", async () => {
+    stubApi({
+      signedIn: MEMBER,
+      extra: inboxApi(
+        [],
+        [
+          inboxRow({
+            id: "r-matter",
+            number: 42,
+            status: "converted",
+            summary: "Meridian dispute",
+            convertedContract: null,
+            convertedRecord: { module: "matter", number: 12 },
+          }),
+        ],
+      ).handler,
+    });
+    renderAt("/inbox");
+    const user = userEvent.setup();
+    await user.click(await screen.findByRole("switch", { name: "Show triaged" }));
+
+    const row = await screen.findByRole("row", { name: /Meridian dispute/ });
+    expect(within(row).getByRole("link", { name: "M-12" })).toHaveAttribute("href", "/matters/12");
   });
 
   it("draws no link when the server withheld the record (DD-014)", async () => {

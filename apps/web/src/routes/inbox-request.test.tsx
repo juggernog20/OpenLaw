@@ -80,6 +80,7 @@ function detail(overrides: Partial<Record<string, unknown>> = {}) {
       image: null,
     },
     convertedContract: null,
+    convertedRecord: null,
     ...((overrides.request as Record<string, unknown>) ?? {}),
   };
   return {
@@ -296,7 +297,11 @@ describe("the envelope (I2)", () => {
       extra: pageApi(
         detailApi(
           detail({
-            request: { status: "converted", convertedContract: { number: 12 } },
+            request: {
+              status: "converted",
+              convertedContract: { number: 12 },
+              convertedRecord: { module: "contract", number: 12 },
+            },
           }),
         ),
       ),
@@ -340,7 +345,15 @@ describe("the envelope (I2)", () => {
     stubApi({
       signedIn: MEMBER,
       extra: pageApi(
-        detailApi(detail({ request: { status: "converted", convertedContract: { number: 12 } } })),
+        detailApi(
+          detail({
+            request: {
+              status: "converted",
+              convertedContract: { number: 12 },
+              convertedRecord: { module: "contract", number: 12 },
+            },
+          }),
+        ),
       ),
     });
     renderAt("/inbox/45");

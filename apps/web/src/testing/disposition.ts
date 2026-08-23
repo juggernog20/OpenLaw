@@ -58,6 +58,7 @@ export function staffRequest(overrides: Record<string, unknown> = {}): Record<st
     },
     requester: { id: "u7", displayName: "Tom Iwu", email: "tom.iwu@acme.com", image: null },
     convertedContract: null,
+    convertedRecord: null,
     ...overrides,
   };
 }

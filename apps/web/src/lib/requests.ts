@@ -123,6 +123,7 @@ export function requesterStatusLabel(intl: IntlShape, status: RequestStatus): st
 type StaffDetailResponse =
   paths["/api/v1/requests/{number}"]["get"]["responses"]["200"]["content"]["application/json"];
 export type StaffRequest = StaffDetailResponse["request"];
+export type ConvertedRecord = NonNullable<StaffRequest["convertedRecord"]>;
 export type StaffRequestField = StaffDetailResponse["fields"][number];
 export type StaffRequestFieldRefs = StaffDetailResponse["customFieldRefs"];
 export type StaffRequestAttachment = StaffDetailResponse["attachments"][number];
@@ -211,7 +212,7 @@ export type DispositionOutcome =
       /** The record the winning conversion made, where this viewer
        * reaches it (DD-014). `null` on every other outcome, so a dialog
        * that names it draws the link only when there is one. */
-      convertedContract: { number: number } | null;
+      convertedRecord: ConvertedRecord | null;
     }
   | { ok: false; alreadyDecided?: undefined; detail?: string };
 
@@ -295,6 +296,7 @@ export async function convertRequest(
   input: {
     title: string;
     contractTypeId?: string;
+    matterTypeId?: string;
     customFields?: Record<string, CustomFieldValue>;
   },
 ): Promise<DispositionOutcome> {
@@ -305,6 +307,7 @@ export async function convertRequest(
       body: {
         title: input.title,
         ...(input.contractTypeId === undefined ? {} : { contractTypeId: input.contractTypeId }),
+        ...(input.matterTypeId === undefined ? {} : { matterTypeId: input.matterTypeId }),
         ...(input.customFields === undefined ? {} : { customFields: input.customFields }),
       },
     })
@@ -328,7 +331,7 @@ function refusal(problem: unknown): DispositionOutcome {
   if (problemType(problem) === REQUEST_DISPOSITIONED_PROBLEM_TYPE) {
     const recorded = recordedOutcome(problem);
     if (recorded) {
-      return { ok: false, alreadyDecided: recorded, convertedContract: recordedContract(problem) };
+      return { ok: false, alreadyDecided: recorded, convertedRecord: recordedRecord(problem) };
     }
   }
   return { ok: false, detail: problemDetail(problem) };
@@ -351,12 +354,16 @@ function recordedOutcome(problem: unknown): RequestOutcome | null {
  * and an older build that sent no member at all. In each of them the
  * dialog says what was decided without offering a link.
  */
-function recordedContract(problem: unknown): { number: number } | null {
-  if (!problem || typeof problem !== "object" || !("convertedContract" in problem)) return null;
-  const { convertedContract } = problem as { convertedContract?: unknown };
-  if (!convertedContract || typeof convertedContract !== "object") return null;
-  const { number } = convertedContract as { number?: unknown };
-  return typeof number === "number" && Number.isInteger(number) ? { number } : null;
+function recordedRecord(problem: unknown): ConvertedRecord | null {
+  if (!problem || typeof problem !== "object" || !("convertedRecord" in problem)) return null;
+  const { convertedRecord } = problem as { convertedRecord?: unknown };
+  if (!convertedRecord || typeof convertedRecord !== "object") return null;
+  const { module, number } = convertedRecord as { module?: unknown; number?: unknown };
+  return (module === "contract" || module === "matter") &&
+    typeof number === "number" &&
+    Number.isInteger(number)
+    ? { module, number }
+    : null;
 }
 
 /**

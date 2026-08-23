@@ -428,6 +428,11 @@ const SAMPLE_PAYLOADS: { [A in ActivityAction]: ActivityPayloadMap[A] } = {
     status: "Open",
     customFields: ["business-unit"],
   },
+  "matter.created_from_request": {
+    number: 7,
+    title: "Employment advice",
+    requestNumber: 42,
+  },
   "matter.updated": {
     number: 7,
     title: "Employment advice",
@@ -719,6 +724,12 @@ describe("the cross-reference fallbacks between an ask and its record", () => {
     );
   });
 
+  it("names the matter a Request became", () => {
+    expect(narrate("request.converted", { number: 42, matterNumber: 12 }).sentence).toBe(
+      "Nadia Counsel converted this request into M-12",
+    );
+  });
+
   it("names a request when the record's own entry carries no number", () => {
     expect(
       narrate("contract.created_from_request", { number: 51, title: "Northwind NDA" }).sentence,
@@ -730,6 +741,12 @@ describe("the cross-reference fallbacks between an ask and its record", () => {
         requestNumber: null,
       }).sentence,
     ).toBe("Nadia Counsel created this contract from a request");
+    expect(
+      narrate("matter.created_from_request", {
+        number: 12,
+        title: "Meridian dispute",
+      }).sentence,
+    ).toBe("Nadia Counsel created this matter from a request");
   });
 });
 
