@@ -1545,6 +1545,13 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
     }),
     values: (intl, payload) => ({ title: taskNamed(intl, payload) }),
   },
+  "task.reordered": {
+    icon: ListOrdered,
+    message: defineMessage({
+      id: "activity.task.reordered",
+      defaultMessage: "{actor} reordered the task checklist",
+    }),
+  },
   "task.removed": {
     icon: Trash2,
     message: defineMessage({

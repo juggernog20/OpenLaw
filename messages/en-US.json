@@ -407,6 +407,9 @@
   "activity.task.reopened": {
     "defaultMessage": "{actor} reopened the task {title}"
   },
+  "activity.task.reordered": {
+    "defaultMessage": "{actor} reordered the task checklist"
+  },
   "activity.task.untitled": {
     "defaultMessage": "(untitled)"
   },
@@ -2750,6 +2753,66 @@
   "matterKeyDates.writeFailed": {
     "defaultMessage": "The change could not be saved. Try again."
   },
+  "matterTasks.actions": {
+    "defaultMessage": "Actions for {title}"
+  },
+  "matterTasks.add": {
+    "defaultMessage": "Add Task"
+  },
+  "matterTasks.addTitle": {
+    "defaultMessage": "Add a Task"
+  },
+  "matterTasks.countLabel": {
+    "defaultMessage": "{count, plural, one {# Task} other {# Tasks}}"
+  },
+  "matterTasks.doneCount": {
+    "defaultMessage": "{done} of {total} done"
+  },
+  "matterTasks.down": {
+    "defaultMessage": "Move down"
+  },
+  "matterTasks.due": {
+    "defaultMessage": "Due {date}"
+  },
+  "matterTasks.edit": {
+    "defaultMessage": "Edit Task"
+  },
+  "matterTasks.editTitle": {
+    "defaultMessage": "Edit Task"
+  },
+  "matterTasks.empty": {
+    "defaultMessage": "No Tasks on this Matter yet."
+  },
+  "matterTasks.field.assignee": {
+    "defaultMessage": "Assignee"
+  },
+  "matterTasks.field.due": {
+    "defaultMessage": "Due date (optional)"
+  },
+  "matterTasks.field.title": {
+    "defaultMessage": "Title"
+  },
+  "matterTasks.needTitle": {
+    "defaultMessage": "Name what needs doing."
+  },
+  "matterTasks.remove": {
+    "defaultMessage": "Remove Task"
+  },
+  "matterTasks.section": {
+    "defaultMessage": "Tasks"
+  },
+  "matterTasks.toggle": {
+    "defaultMessage": "{done, select, true {Reopen Task: {title}} other {Complete Task: {title}}}"
+  },
+  "matterTasks.unassigned": {
+    "defaultMessage": "Unassigned"
+  },
+  "matterTasks.up": {
+    "defaultMessage": "Move up"
+  },
+  "matterTasks.writeFailed": {
+    "defaultMessage": "The Task change could not be saved. Try again."
+  },
   "matters.archive.description": {
     "defaultMessage": "The matter leaves the default list. Its history and M-number are kept."
   },
@@ -2951,6 +3014,12 @@
   "matters.record.tab.overview": {
     "defaultMessage": "Overview"
   },
+  "matters.record.tab.tasks": {
+    "defaultMessage": "Tasks"
+  },
+  "matters.record.tab.tasks.open": {
+    "defaultMessage": "{count, plural, one {# open Task} other {# open Tasks}}"
+  },
   "matters.reference": {
     "defaultMessage": "M-{number}"
   },
@@ -3118,6 +3187,9 @@
   },
   "notifications.markAllRead": {
     "defaultMessage": "Mark all read"
+  },
+  "notifications.matter.taskAssigned": {
+    "defaultMessage": "{hasActor, select, yes {{actor} assigned you a Task on {contract}} other {You were assigned a Task on {contract}}}"
   },
   "notifications.matterNumber": {
     "defaultMessage": "M-{number}"

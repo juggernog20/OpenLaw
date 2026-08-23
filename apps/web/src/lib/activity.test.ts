@@ -300,6 +300,7 @@ const SAMPLE_PAYLOADS: { [A in ActivityAction]: ActivityPayloadMap[A] } = {
   },
   "task.completed": { taskId: "t-1", title: "Draft the NDA" },
   "task.reopened": { taskId: "t-1", title: "Draft the NDA" },
+  "task.reordered": { taskIds: ["t-2", "t-1"] },
   "task.removed": { taskId: "t-1", title: "Draft the NDA" },
 
   // Entity registry

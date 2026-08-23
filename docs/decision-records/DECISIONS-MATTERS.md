@@ -294,6 +294,12 @@ Matters need some way to track "who's doing which piece of this, and is it done"
 - Whether Contracts gets the same checklist is a Contracts-grill question (likely yes via the same table shape).
 - If richer tasking demand emerges post-v1, it graduates via `FUTURE-FEATURES.md` — do not grow this table into a task entity ad hoc.
 
+### Implementation note (2026-08-24, M23/4, [#492](https://github.com/juggernog20/OpenLaw/issues/492))
+
+Matter Tasks landed as the same flat checklist discipline proven on Contracts, with deterministic manual order and completed/total counts on the Matter record. Member+ can add, edit, reorder, complete, reopen, and remove Tasks through Closing; Archiving alone freezes the checklist. Contributors who reach the Matter read the same rows but receive no mutation controls and every write route refuses them.
+
+Assignment is deliberately narrower than reach: the assignee must be active and already be the active Matter Manager or represented on the Matter team. Assignment does not create team membership, team removal remains independent, and a newly handed-off Task raises the existing direct-assignment notification through the Matter reach wall. Task due dates remain civil, date-only internal targets and are absent from both Next deadline and the morning approaching-date round.
+
 ---
 
 ## MTR-006: External counsel — collaboration via Contributor role; fee tracking deferred

@@ -519,6 +519,13 @@
       "when": 1787509886472,
       "tag": "0073_shocking_raider",
       "breakpoints": true
+    },
+    {
+      "idx": 74,
+      "version": "7",
+      "when": 1787515496982,
+      "tag": "0074_bored_felicia_hardy",
+      "breakpoints": true
     }
   ]
 }

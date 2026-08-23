@@ -193,6 +193,16 @@ const ARMS: Readonly<Record<string, Arm>> = {
         "other {You were assigned a task on {contract}}}",
     }),
   },
+  "matter.task_assigned": {
+    icon: SquareCheck,
+    section: "tasks",
+    message: defineMessage({
+      id: "notifications.matter.taskAssigned",
+      defaultMessage:
+        "{hasActor, select, yes {{actor} assigned you a Task on {contract}} " +
+        "other {You were assigned a Task on {contract}}}",
+    }),
+  },
   // One slug, two records (M21/5). The sentence names whichever record
   // the row is about, and `staffSide` sends a Request's mention to the
   // staff detail: a mention on a Request is a mention of a triager, and
