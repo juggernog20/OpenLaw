@@ -53,6 +53,8 @@ import {
   eq,
   inArray,
   isNull,
+  matters,
+  matterTeam,
   notifications,
   or,
   requests,
@@ -64,11 +66,13 @@ import {
 } from "@openlaw/db";
 import type { AuthenticatedUser } from "../../auth/user.js";
 import { contractMentionCandidates, contractTeamScope } from "../contract-access.js";
+import { matterMentionCandidates, matterTeamScope } from "../matter-access.js";
 import { requestEventTypesOn, type RequestSide } from "./catalog.js";
 
 /** The one entity type M18 writes. Named so the fan-out, the reads, and
  * the send job agree on it in one place. */
 export const CONTRACT_ENTITY = "contract" as const;
+export const MATTER_ENTITY = "matter" as const;
 
 /** The second one, written from M20/8 by NOT-002's group 5 and from
  * M21/4 by group 4. Named here beside the first for the same reason. */
@@ -151,6 +155,22 @@ export async function reachedBy(
   );
 }
 
+/** The matter arm of the notification wall, including the comment's tier. */
+export async function matterReachedBy(
+  db: Executor,
+  matterId: string,
+  userIds: readonly string[],
+  narrowing: { tier?: CommentVisibility } = {},
+): Promise<Set<string>> {
+  if (userIds.length === 0) return new Set();
+  const candidates = await matterMentionCandidates(db, matterId, userIds);
+  return new Set(
+    candidates
+      .filter((person) => narrowing.tier === undefined || person.tiers.includes(narrowing.tier))
+      .map((person) => person.id),
+  );
+}
+
 /** One record, and the people NOT-002's group 2 is about. */
 export interface RecordAudience {
   /** CTR-003's number — the record's address, and what every item and
@@ -220,6 +240,26 @@ export async function contractRecordAudience(
     contractTitle: record.title,
     userIds: [...userIds],
   };
+}
+
+/** One matter and the Matter Manager plus its explicit team roster. */
+export async function matterRecordAudience(
+  db: Executor,
+  matterId: string,
+): Promise<{ matterNumber: number; matterTitle: string; userIds: readonly string[] } | null> {
+  const [record] = await db
+    .select({ number: matters.number, title: matters.title, managerId: matters.managerId })
+    .from(matters)
+    .where(eq(matters.id, matterId))
+    .limit(1);
+  if (!record) return null;
+  const team = await db
+    .select({ userId: matterTeam.userId })
+    .from(matterTeam)
+    .where(eq(matterTeam.matterId, matterId));
+  const userIds = new Set(team.map((row) => row.userId));
+  if (record.managerId) userIds.add(record.managerId);
+  return { matterNumber: record.number, matterTitle: record.title, userIds: [...userIds] };
 }
 
 /** One Request, and the person NOT-002's group 5 is about. */
@@ -496,6 +536,7 @@ export function notificationScope(
  */
 function staffScope(db: Executor, user: AuthenticatedUser): SQL | undefined {
   const scope = contractTeamScope(db, user);
+  const matterScope = matterTeamScope(db, user);
   return or(
     and(
       eq(notifications.entityType, CONTRACT_ENTITY),
@@ -508,6 +549,15 @@ function staffScope(db: Executor, user: AuthenticatedUser): SQL | undefined {
         : inArray(
             notifications.entityId,
             db.select({ id: contracts.id }).from(contracts).where(scope),
+          ),
+    ),
+    and(
+      eq(notifications.entityType, MATTER_ENTITY),
+      matterScope === undefined
+        ? undefined
+        : inArray(
+            notifications.entityId,
+            db.select({ id: matters.id }).from(matters).where(matterScope),
           ),
     ),
     MEMBER_PLUS.includes(user.role) ? inboxRows(db) : undefined,

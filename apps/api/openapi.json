@@ -28729,7 +28729,7 @@
           {
             "schema": {
               "type": "string",
-              "enum": ["contract", "request"]
+              "enum": ["matter", "contract", "request"]
             },
             "in": "query",
             "name": "entityType",
@@ -28774,7 +28774,7 @@
                           },
                           "entityType": {
                             "type": "string",
-                            "enum": ["contract", "request"]
+                            "enum": ["matter", "contract", "request"]
                           },
                           "entityId": {
                             "type": "string"
@@ -28970,7 +28970,7 @@
                 "properties": {
                   "entityType": {
                     "type": "string",
-                    "enum": ["contract", "request"]
+                    "enum": ["matter", "contract", "request"]
                   },
                   "entityId": {
                     "type": "string",
@@ -29015,7 +29015,7 @@
                 "properties": {
                   "entityType": {
                     "type": "string",
-                    "enum": ["contract", "request"]
+                    "enum": ["matter", "contract", "request"]
                   },
                   "entityId": {
                     "type": "string",
@@ -29072,7 +29072,7 @@
                         },
                         "entityType": {
                           "type": "string",
-                          "enum": ["contract", "request"]
+                          "enum": ["matter", "contract", "request"]
                         },
                         "entityId": {
                           "type": "string"
@@ -29254,7 +29254,7 @@
           {
             "schema": {
               "type": "string",
-              "enum": ["contract", "request"]
+              "enum": ["matter", "contract", "request"]
             },
             "in": "query",
             "name": "entityType",
@@ -29341,7 +29341,7 @@
           {
             "schema": {
               "type": "string",
-              "enum": ["contract", "request"]
+              "enum": ["matter", "contract", "request"]
             },
             "in": "query",
             "name": "entityType",
@@ -29405,7 +29405,7 @@
                 "properties": {
                   "entityType": {
                     "type": "string",
-                    "enum": ["contract", "request"]
+                    "enum": ["matter", "contract", "request"]
                   },
                   "entityId": {
                     "type": "string",
@@ -29533,7 +29533,7 @@
           {
             "schema": {
               "type": "string",
-              "enum": ["contract", "request"]
+              "enum": ["matter", "contract", "request"]
             },
             "in": "query",
             "name": "entityType",
@@ -29586,7 +29586,7 @@
                         },
                         "entityType": {
                           "type": "string",
-                          "enum": ["contract", "request"]
+                          "enum": ["matter", "contract", "request"]
                         },
                         "entityId": {
                           "type": "string"
@@ -29827,7 +29827,7 @@
           {
             "schema": {
               "type": "string",
-              "enum": ["contract", "request"]
+              "enum": ["matter", "contract", "request"]
             },
             "in": "query",
             "name": "entityType",
@@ -29941,7 +29941,7 @@
                         },
                         "entityType": {
                           "type": "string",
-                          "enum": ["contract", "request"]
+                          "enum": ["matter", "contract", "request"]
                         },
                         "entityId": {
                           "type": "string"
@@ -30145,7 +30145,7 @@
                         },
                         "entityType": {
                           "type": "string",
-                          "enum": ["contract", "request"]
+                          "enum": ["matter", "contract", "request"]
                         },
                         "entityId": {
                           "type": "string"
@@ -30351,7 +30351,7 @@
                         },
                         "entityType": {
                           "type": "string",
-                          "enum": ["contract", "request"]
+                          "enum": ["matter", "contract", "request"]
                         },
                         "entityId": {
                           "type": "string"
@@ -30533,7 +30533,7 @@
           {
             "schema": {
               "type": "string",
-              "enum": ["contract"]
+              "enum": ["matter", "contract"]
             },
             "in": "query",
             "name": "entityType",

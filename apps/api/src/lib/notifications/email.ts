@@ -52,6 +52,7 @@ import { requestSideOf } from "./catalog.js";
  * and this is the one place that knows which is which.
  */
 export type MailRecord =
+  | { entityType: "matter"; number: number; title: string }
   | { entityType: "contract"; number: number; title: string }
   | { entityType: "request"; number: number; summary: string };
 
@@ -95,6 +96,10 @@ function origin(baseUrl: string): string {
 /** The deep link one notification points at: the record itself. */
 function recordLink(baseUrl: string, contractNumber: number): string {
   return `${origin(baseUrl)}/contracts/${contractNumber}`;
+}
+
+function matterLink(baseUrl: string, matterNumber: number): string {
+  return `${origin(baseUrl)}/matters/${matterNumber}`;
 }
 
 /**
@@ -159,6 +164,7 @@ export function renderNotificationMail(
   baseUrl: string,
 ): MailMessage | null {
   const { record } = notification;
+  if (record.entityType === "matter") return matterMail(notification, record, to, baseUrl);
   if (record.entityType === "contract") return contractMail(notification, record, to, baseUrl);
   // A Request is read from two sides, so the group is what says which
   // message this is. The record alone cannot: both audiences hold rows
@@ -166,6 +172,48 @@ export function renderNotificationMail(
   return requestSideOf(notification.eventType) === "inbox"
     ? staffRequestMail(notification, record, to, baseUrl)
     : requestMail(notification, record, to, baseUrl);
+}
+
+function matterMail(
+  notification: NotificationMail,
+  record: Extract<MailRecord, { entityType: "matter" }>,
+  to: string,
+  baseUrl: string,
+): MailMessage | null {
+  const named = `M-${record.number} · ${record.title}`;
+  const link = matterLink(baseUrl, record.number);
+  const who = notification.actorName ?? "Somebody";
+  if (notification.eventType === "comment.mentioned") {
+    return {
+      to,
+      subject: `You were mentioned on ${named}`,
+      text: [
+        `Hello ${notification.recipientName},`,
+        "",
+        `${who} mentioned you in a comment on ${named}.`,
+        "",
+        link,
+        "",
+        "The comment is on the matter.",
+      ].join("\n"),
+    };
+  }
+  if (notification.eventType === "comment.posted") {
+    return {
+      to,
+      subject: `New comment on ${named}`,
+      text: [
+        `Hello ${notification.recipientName},`,
+        "",
+        `${who} commented on ${named}.`,
+        "",
+        link,
+        "",
+        "The comment is on the matter.",
+      ].join("\n"),
+    };
+  }
+  return null;
 }
 
 /**

@@ -56,6 +56,7 @@ import {
   eq,
   inArray,
   isNull,
+  matters,
   or,
   requests,
   sql,
@@ -73,6 +74,7 @@ import {
   type MentionCandidate,
 } from "../../lib/contract-access.js";
 import type { Notifier, NotifyingTransaction } from "../../lib/notifications/notifier.js";
+import { matterAudience, matterMentionCandidates } from "../../lib/matter-access.js";
 import { httpError } from "../../lib/problem.js";
 
 /**
@@ -84,7 +86,7 @@ import { httpError } from "../../lib/problem.js";
  * and one arm together, and the route schemas are built from it, so a
  * type with no arm cannot be asked for.
  */
-export const COMMENT_ENTITY_TYPES = ["contract", "request"] as const;
+export const COMMENT_ENTITY_TYPES = ["matter", "contract", "request"] as const;
 
 export type CommentEntityType = (typeof COMMENT_ENTITY_TYPES)[number];
 
@@ -246,6 +248,51 @@ const contractArm: CommentEntityArm = {
     // told, louder. One comment tells one person once.
     await notifier.commentPosted(tx, {
       contractId: posted.audience.entityId,
+      actorId: posted.actorId,
+      actorName: posted.actorName,
+      commentId: posted.commentId,
+      visibility: posted.visibility,
+      mentioned: [...posted.mentioned],
+    });
+  },
+};
+
+/** The matter arm uses M22's reach predicate in both directions. */
+const matterArm: CommentEntityArm = {
+  readerRoles: ["administrator", "legal_team_member", "contributor"],
+
+  async resolve(db, user, entityId) {
+    const audience = await matterAudience(db, user, entityId);
+    if (!audience) return null;
+    return { entityType: "matter", entityId: audience.matterId, tiers: audience.tiers };
+  },
+
+  async mentionCandidates(db, audience, only) {
+    return await matterMentionCandidates(db, audience.entityId, only);
+  },
+
+  async notifyPosted(tx, notifier, posted) {
+    const [record] = await tx
+      .select({ number: matters.number, title: matters.title })
+      .from(matters)
+      .where(eq(matters.id, posted.audience.entityId))
+      .limit(1);
+    if (!record) return;
+    if (posted.mentioned.length > 0) {
+      await notifier.commentMentioned(tx, {
+        entityType: "matter",
+        matterId: posted.audience.entityId,
+        matterNumber: record.number,
+        matterTitle: record.title,
+        actorId: posted.actorId,
+        actorName: posted.actorName,
+        commentId: posted.commentId,
+        visibility: posted.visibility,
+      });
+    }
+    await notifier.commentPosted(tx, {
+      entityType: "matter",
+      matterId: posted.audience.entityId,
       actorId: posted.actorId,
       actorName: posted.actorName,
       commentId: posted.commentId,
@@ -511,6 +558,7 @@ const requestArm: CommentEntityArm = {
  * so a name added to {@link COMMENT_ENTITY_TYPES} with no arm fails the
  * build rather than 500ing at the first request for it. */
 const ARMS: { readonly [T in CommentEntityType]: CommentEntityArm } = {
+  matter: matterArm,
   contract: contractArm,
   request: requestArm,
 };

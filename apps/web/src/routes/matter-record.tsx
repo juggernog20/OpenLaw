@@ -33,10 +33,13 @@ import { canReadMatters, isMemberPlus } from "../lib/roles";
 import { currentUser, needsSetup } from "../lib/session";
 import { ConfidentialBanner } from "../components/confidential-banner";
 import { ConfidentialToggle } from "../components/confidential-toggle";
+import { useActivityApplet } from "../components/activity/activity-applet";
+import { useCommentApplet } from "../components/comments/comment-applet";
 import { CustomFieldControl, type FieldReference } from "../components/custom-field-control";
 import { MatterTeamTray } from "../components/matters/team-tray";
 import { PageTitle } from "../components/page-title";
 import { AppShell } from "../components/shell/app-shell";
+import { RecordApplets } from "../components/shell/record-applets";
 import { StatusNote, type FieldStatus } from "../components/status-note";
 import { Button } from "../components/ui/button";
 import { Dialog, DialogContent, DialogTitle } from "../components/ui/dialog";
@@ -249,12 +252,30 @@ export function MatterRecordPage() {
     saved.manager && !managerOptions.some((person) => person.id === saved.manager!.id)
       ? [saved.manager]
       : [];
+  const chatApplet = useCommentApplet({
+    entityType: "matter",
+    entityId: saved.id,
+    role: user.role,
+    viewerId: user.id,
+    confidential: saved.isConfidential,
+  });
+  const historyApplet = useActivityApplet({
+    entityType: "matter",
+    entityId: saved.id,
+    confidential: saved.isConfidential,
+    fields,
+    referenceNames: Object.fromEntries([
+      ...peopleRefs.map((person) => [person.id, person.label] as const),
+      ...customFieldRefs.entities.map((entity) => [entity.id, entity.legalName] as const),
+    ]),
+  });
 
   const reference = matterReference(intl, saved.number);
   return (
     <AppShell
       user={user}
       onSignOut={() => void signOut()}
+      flush
       banner={
         saved.isConfidential ? (
           <ConfidentialBanner
@@ -345,212 +366,214 @@ export function MatterRecordPage() {
           { reference, title: saved.title },
         )}
       />
-      <div className="grid max-w-6xl gap-5 lg:grid-cols-[minmax(0,1fr)_18rem]">
-        <article className="rounded-card border border-border-default bg-raised p-5">
-          <header className="mb-5">
-            <p className="text-sm font-medium text-muted">{reference}</p>
-            {frozen ? (
-              <h2 className="mt-1 text-2xl font-semibold">{saved.title}</h2>
-            ) : (
-              <InlineText
-                id="matter-title"
-                label={intl.formatMessage({ id: "matters.field.title", defaultMessage: "Title" })}
-                value={title}
-                status={fieldStatus.title ?? "idle"}
-                error={fieldError.title}
-                onValue={setTitle}
-                onCommit={() => commitText("title")}
-                title
+      <RecordApplets applets={[chatApplet, historyApplet]}>
+        <div className="grid max-w-6xl gap-5 overflow-y-auto px-page-x py-page-y lg:grid-cols-[minmax(0,1fr)_18rem]">
+          <article className="rounded-card border border-border-default bg-raised p-5">
+            <header className="mb-5">
+              <p className="text-sm font-medium text-muted">{reference}</p>
+              {frozen ? (
+                <h2 className="mt-1 text-2xl font-semibold">{saved.title}</h2>
+              ) : (
+                <InlineText
+                  id="matter-title"
+                  label={intl.formatMessage({ id: "matters.field.title", defaultMessage: "Title" })}
+                  value={title}
+                  status={fieldStatus.title ?? "idle"}
+                  error={fieldError.title}
+                  onValue={setTitle}
+                  onCommit={() => commitText("title")}
+                  title
+                />
+              )}
+            </header>
+            <dl className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              <EditableSelectFact
+                id="matter-type"
+                label={<FormattedMessage id="matters.field.type" defaultMessage="Matter type" />}
+                frozen={frozen}
+                value={saved.matterTypeId}
+                display={saved.matterTypeName}
+                status={fieldStatus.matterTypeId ?? "idle"}
+                error={fieldError.matterTypeId}
+                onChange={pickType}
+                options={typeOptions.map((type) => ({ value: type.id, label: type.displayName }))}
               />
-            )}
-          </header>
-          <dl className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            <EditableSelectFact
-              id="matter-type"
-              label={<FormattedMessage id="matters.field.type" defaultMessage="Matter type" />}
-              frozen={frozen}
-              value={saved.matterTypeId}
-              display={saved.matterTypeName}
-              status={fieldStatus.matterTypeId ?? "idle"}
-              error={fieldError.matterTypeId}
-              onChange={pickType}
-              options={typeOptions.map((type) => ({ value: type.id, label: type.displayName }))}
-            />
-            <EditableSelectFact
-              id="matter-manager"
-              label={
-                <FormattedMessage id="matters.field.manager" defaultMessage="Matter Manager" />
-              }
-              frozen={frozen}
-              value={saved.manager?.id ?? ""}
-              display={
-                saved.manager?.displayName ??
-                intl.formatMessage({ id: "matters.unassigned", defaultMessage: "Unassigned" })
-              }
-              status={fieldStatus.managerId ?? "idle"}
-              error={fieldError.managerId}
-              onChange={(managerId) => void commit("managerId", { managerId: managerId || null })}
-              options={[
-                {
-                  value: "",
-                  label: intl.formatMessage({
-                    id: "matters.unassigned",
-                    defaultMessage: "Unassigned",
-                  }),
-                },
-                ...[...heldManager, ...managerOptions].map((person) => ({
-                  value: person.id,
-                  label: person.displayName,
-                })),
-              ]}
-            />
-            <EditableSelectFact
-              id="matter-priority"
-              label={<FormattedMessage id="matters.field.priority" defaultMessage="Priority" />}
-              frozen={frozen}
-              value={saved.priority}
-              display={matterSeverityLabel(intl, saved.priority)}
-              status={fieldStatus.priority ?? "idle"}
-              error={fieldError.priority}
-              onChange={(priority) => void commit("priority", { priority })}
-              options={MATTER_SEVERITIES.map((severity) => ({
-                value: severity,
-                label: matterSeverityLabel(intl, severity),
-              }))}
-            />
-            <EditableSelectFact
-              id="matter-risk"
-              label={<FormattedMessage id="matters.field.risk" defaultMessage="Risk" />}
-              frozen={frozen}
-              value={saved.risk ?? ""}
-              display={
-                saved.risk
-                  ? matterSeverityLabel(intl, saved.risk)
-                  : intl.formatMessage({
-                      id: "matters.notAssessed",
-                      defaultMessage: "Not assessed",
-                    })
-              }
-              status={fieldStatus.risk ?? "idle"}
-              error={fieldError.risk}
-              onChange={(risk) => void commit("risk", { risk: risk || null })}
-              options={[
-                {
-                  value: "",
-                  label: intl.formatMessage({
-                    id: "matters.notAssessed",
-                    defaultMessage: "Not assessed",
-                  }),
-                },
-                ...MATTER_SEVERITIES.map((severity) => ({
+              <EditableSelectFact
+                id="matter-manager"
+                label={
+                  <FormattedMessage id="matters.field.manager" defaultMessage="Matter Manager" />
+                }
+                frozen={frozen}
+                value={saved.manager?.id ?? ""}
+                display={
+                  saved.manager?.displayName ??
+                  intl.formatMessage({ id: "matters.unassigned", defaultMessage: "Unassigned" })
+                }
+                status={fieldStatus.managerId ?? "idle"}
+                error={fieldError.managerId}
+                onChange={(managerId) => void commit("managerId", { managerId: managerId || null })}
+                options={[
+                  {
+                    value: "",
+                    label: intl.formatMessage({
+                      id: "matters.unassigned",
+                      defaultMessage: "Unassigned",
+                    }),
+                  },
+                  ...[...heldManager, ...managerOptions].map((person) => ({
+                    value: person.id,
+                    label: person.displayName,
+                  })),
+                ]}
+              />
+              <EditableSelectFact
+                id="matter-priority"
+                label={<FormattedMessage id="matters.field.priority" defaultMessage="Priority" />}
+                frozen={frozen}
+                value={saved.priority}
+                display={matterSeverityLabel(intl, saved.priority)}
+                status={fieldStatus.priority ?? "idle"}
+                error={fieldError.priority}
+                onChange={(priority) => void commit("priority", { priority })}
+                options={MATTER_SEVERITIES.map((severity) => ({
                   value: severity,
                   label: matterSeverityLabel(intl, severity),
-                })),
-              ]}
-            />
-            <Fact
-              label={<FormattedMessage id="matters.field.opened" defaultMessage="Opened" />}
-              value={formatFullDate(saved.openedAt)}
-            />
-            <Fact
-              label={<FormattedMessage id="matters.field.closed" defaultMessage="Closed" />}
-              value={saved.closedAt ? formatFullDate(saved.closedAt) : notProvided(intl)}
-            />
-          </dl>
-          <section className="mt-6 border-t border-border-default pt-5">
-            <div className="mb-4 flex items-center gap-2">
-              <h3 className="text-sm font-semibold">
-                <FormattedMessage
-                  id="matters.field.confidential"
-                  defaultMessage="Confidentiality"
-                />
-              </h3>
-              <StatusNote
-                status={fieldStatus.isConfidential ?? "idle"}
-                detail={fieldError.isConfidential}
+                }))}
               />
-            </div>
-            <ConfidentialToggle
-              id="matter-confidential"
-              record="matter"
-              confidential={saved.isConfidential}
-              disabled={frozen || !canManageAudience}
-              onChange={(isConfidential) => void commit("isConfidential", { isConfidential })}
-            />
-          </section>
-          <section className="mt-6 border-t border-border-default pt-5">
-            <h3 className="mb-2 text-sm font-semibold">
-              <FormattedMessage id="matters.field.description" defaultMessage="Description" />
-            </h3>
-            {frozen ? (
-              <p className="whitespace-pre-wrap text-base text-muted">
-                {saved.description || notProvided(intl)}
-              </p>
-            ) : (
-              <>
-                <textarea
-                  aria-label={intl.formatMessage({
-                    id: "matters.field.description",
-                    defaultMessage: "Description",
-                  })}
-                  className={TEXTAREA_CLASS}
-                  value={description}
-                  onChange={(event) => setDescription(event.target.value)}
-                  onBlur={() => commitText("description")}
-                  onKeyDown={(event) => {
-                    if (event.key === "Escape") setDescription(saved.description ?? "");
-                  }}
-                />
-                <StatusNote
-                  status={fieldStatus.description ?? "idle"}
-                  detail={fieldError.description}
-                />
-              </>
-            )}
-          </section>
-          {fields.length > 0 && (
-            <section className="mt-6 border-t border-border-default pt-5">
-              <h3 className="mb-4 text-sm font-semibold">
-                <FormattedMessage id="matters.customFields" defaultMessage="Custom fields" />
-              </h3>
-              <div className="grid gap-4 sm:grid-cols-2">
-                {fields.map((field) => (
-                  <MatterCustomField
-                    // Keyed by slug, so a re-type onto a type that attaches
-                    // the same field keeps that control's draft.
-                    key={field.slug}
-                    field={field}
-                    saved={saved.customFields[field.slug]}
-                    frozen={frozen}
-                    people={peopleRefs}
-                    entities={customFieldRefs.entities.map((entity) => ({
-                      id: entity.id,
-                      label: entity.legalName,
-                    }))}
-                    status={fieldStatus[`field:${field.slug}`] ?? "idle"}
-                    error={fieldError[`field:${field.slug}`]}
-                    onInvalid={(detail) => note(`field:${field.slug}`, "error", detail)}
-                    onCommit={(value) =>
-                      commit(`field:${field.slug}`, {
-                        customFields: { [field.slug]: value },
+              <EditableSelectFact
+                id="matter-risk"
+                label={<FormattedMessage id="matters.field.risk" defaultMessage="Risk" />}
+                frozen={frozen}
+                value={saved.risk ?? ""}
+                display={
+                  saved.risk
+                    ? matterSeverityLabel(intl, saved.risk)
+                    : intl.formatMessage({
+                        id: "matters.notAssessed",
+                        defaultMessage: "Not assessed",
                       })
-                    }
+                }
+                status={fieldStatus.risk ?? "idle"}
+                error={fieldError.risk}
+                onChange={(risk) => void commit("risk", { risk: risk || null })}
+                options={[
+                  {
+                    value: "",
+                    label: intl.formatMessage({
+                      id: "matters.notAssessed",
+                      defaultMessage: "Not assessed",
+                    }),
+                  },
+                  ...MATTER_SEVERITIES.map((severity) => ({
+                    value: severity,
+                    label: matterSeverityLabel(intl, severity),
+                  })),
+                ]}
+              />
+              <Fact
+                label={<FormattedMessage id="matters.field.opened" defaultMessage="Opened" />}
+                value={formatFullDate(saved.openedAt)}
+              />
+              <Fact
+                label={<FormattedMessage id="matters.field.closed" defaultMessage="Closed" />}
+                value={saved.closedAt ? formatFullDate(saved.closedAt) : notProvided(intl)}
+              />
+            </dl>
+            <section className="mt-6 border-t border-border-default pt-5">
+              <div className="mb-4 flex items-center gap-2">
+                <h3 className="text-sm font-semibold">
+                  <FormattedMessage
+                    id="matters.field.confidential"
+                    defaultMessage="Confidentiality"
                   />
-                ))}
+                </h3>
+                <StatusNote
+                  status={fieldStatus.isConfidential ?? "idle"}
+                  detail={fieldError.isConfidential}
+                />
               </div>
+              <ConfidentialToggle
+                id="matter-confidential"
+                record="matter"
+                confidential={saved.isConfidential}
+                disabled={frozen || !canManageAudience}
+                onChange={(isConfidential) => void commit("isConfidential", { isConfidential })}
+              />
             </section>
-          )}
-        </article>
-        <MatterTeamTray
-          number={saved.number}
-          manager={saved.manager}
-          team={team}
-          users={users}
-          frozen={frozen}
-          audienceLocked={audienceLocked}
-          onTeam={setTeam}
-        />
-      </div>
+            <section className="mt-6 border-t border-border-default pt-5">
+              <h3 className="mb-2 text-sm font-semibold">
+                <FormattedMessage id="matters.field.description" defaultMessage="Description" />
+              </h3>
+              {frozen ? (
+                <p className="whitespace-pre-wrap text-base text-muted">
+                  {saved.description || notProvided(intl)}
+                </p>
+              ) : (
+                <>
+                  <textarea
+                    aria-label={intl.formatMessage({
+                      id: "matters.field.description",
+                      defaultMessage: "Description",
+                    })}
+                    className={TEXTAREA_CLASS}
+                    value={description}
+                    onChange={(event) => setDescription(event.target.value)}
+                    onBlur={() => commitText("description")}
+                    onKeyDown={(event) => {
+                      if (event.key === "Escape") setDescription(saved.description ?? "");
+                    }}
+                  />
+                  <StatusNote
+                    status={fieldStatus.description ?? "idle"}
+                    detail={fieldError.description}
+                  />
+                </>
+              )}
+            </section>
+            {fields.length > 0 && (
+              <section className="mt-6 border-t border-border-default pt-5">
+                <h3 className="mb-4 text-sm font-semibold">
+                  <FormattedMessage id="matters.customFields" defaultMessage="Custom fields" />
+                </h3>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  {fields.map((field) => (
+                    <MatterCustomField
+                      // Keyed by slug, so a re-type onto a type that attaches
+                      // the same field keeps that control's draft.
+                      key={field.slug}
+                      field={field}
+                      saved={saved.customFields[field.slug]}
+                      frozen={frozen}
+                      people={peopleRefs}
+                      entities={customFieldRefs.entities.map((entity) => ({
+                        id: entity.id,
+                        label: entity.legalName,
+                      }))}
+                      status={fieldStatus[`field:${field.slug}`] ?? "idle"}
+                      error={fieldError[`field:${field.slug}`]}
+                      onInvalid={(detail) => note(`field:${field.slug}`, "error", detail)}
+                      onCommit={(value) =>
+                        commit(`field:${field.slug}`, {
+                          customFields: { [field.slug]: value },
+                        })
+                      }
+                    />
+                  ))}
+                </div>
+              </section>
+            )}
+          </article>
+          <MatterTeamTray
+            number={saved.number}
+            manager={saved.manager}
+            team={team}
+            users={users}
+            frozen={frozen}
+            audienceLocked={audienceLocked}
+            onTeam={setTeam}
+          />
+        </div>
+      </RecordApplets>
       {retypeTo && (
         <MatterRetypeDialog
           target={retypeTo}
