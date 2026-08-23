@@ -118,6 +118,7 @@ import {
 import {
   COMMENT_ATTACHMENT_ALREADY_FILED_PROBLEM_TYPE,
   MAX_COMMENT_ATTACHMENTS,
+  MAX_COMMENT_BODY_LENGTH,
 } from "@openlaw/shared";
 import { requireRole, type AuthenticatedUser } from "../../auth/guards.js";
 import { recordActivity, RECORD_ACTIVITY_TIER } from "../../lib/activity.js";
@@ -185,7 +186,8 @@ const CommentEntityTypeSchema = z.enum(COMMENT_ENTITY_TYPES);
  * reaches a query, not to rule on what an id looks like. A well-formed
  * id for a record the viewer cannot reach still answers 404.
  */
-const RecordIdSchema = z.string().min(1).max(64);
+const RECORD_ID_MAX_LENGTH = 64;
+const RecordIdSchema = z.string().min(1).max(RECORD_ID_MAX_LENGTH);
 
 const VisibilitySchema = z.enum(COMMENT_VISIBILITIES);
 
@@ -263,7 +265,8 @@ const CommentSchema = z.object({
  * record can reach is refused below anyway, so shaping the string would
  * add a second, weaker gate in front of the real one.
  */
-const MentionsSchema = z.array(z.string().min(1).max(64)).max(20);
+const MAX_MENTIONS = 20;
+const MentionsSchema = z.array(RecordIdSchema).max(MAX_MENTIONS);
 
 /** The JSON body POST /comments has always taken. Multipart parses the
  * same fields through this exact schema after streaming its file parts. */
@@ -282,13 +285,13 @@ const CommentPostTransportSchema = z.any().meta({
   type: "object",
   properties: {
     entityType: { type: "string", enum: [...COMMENT_ENTITY_TYPES] },
-    entityId: { type: "string", minLength: 1, maxLength: 64 },
-    body: { type: "string", minLength: 1, maxLength: 10_000 },
+    entityId: { type: "string", minLength: 1, maxLength: RECORD_ID_MAX_LENGTH },
+    body: { type: "string", minLength: 1, maxLength: MAX_COMMENT_BODY_LENGTH },
     visibility: { type: "string", enum: [...COMMENT_VISIBILITIES] },
     mentions: {
       type: "array",
-      maxItems: 20,
-      items: { type: "string", minLength: 1, maxLength: 64 },
+      maxItems: MAX_MENTIONS,
+      items: { type: "string", minLength: 1, maxLength: RECORD_ID_MAX_LENGTH },
     },
     file: {
       type: "array",
@@ -819,11 +822,13 @@ export const commentsRoutes: FastifyPluginAsyncZod = async (app) => {
           fileSize: app.maxUploadBytes,
           // The route enforces five below while draining excess parts.
           // Letting Busboy stop on the sixth would destroy the fifth
-          // stream while the storage adapter is still consuming it.
-          files: 64,
+          // stream while the storage adapter is still consuming it, so
+          // the parser admits one extra file: the sixth is drained and
+          // refused, the seventh stops the parser.
+          files: MAX_COMMENT_ATTACHMENTS + 1,
           fields: 8,
           fieldSize: 8192,
-          parts: 72,
+          parts: MAX_COMMENT_ATTACHMENTS + 9,
         },
       });
       for await (const part of parts) {

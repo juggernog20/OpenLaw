@@ -713,16 +713,34 @@ export function ContractRecordPage() {
    * is a plain aside. */
   const readingTrigger = useRef<HTMLElement | null>(null);
 
-  /** Re-read the root after comment paper lands, so the Documents
-   * section and the filing marker resolve the same newly-created chain. */
-  const refreshFiledPaper = useCallback(async () => {
-    const { data } = await api.GET("/api/v1/contracts/{number}/documents", {
-      params: { path: { number: saved.number }, query: { folder: FOLDER_ROOT } },
-    });
-    if (!data) throw new Error("filed paper");
-    setPaper(data.documents);
-    setPaperCursor(data.nextCursor);
-  }, [saved.number]);
+  /** Re-read the paper after comment paper lands, so the Documents
+   * section and the filing marker resolve the same chain. The root is
+   * always re-read: a new Document lands there. A Version filed onto a
+   * chain inside a folder is re-read from that folder, or the marker
+   * would search a stale chain for a round it cannot find. */
+  const refreshFiledPaper = useCallback(
+    async (documentId: string) => {
+      const inFolder = filed.find((row) => row.id === documentId)?.folderId ?? null;
+      const [root, folder] = await Promise.all([
+        api.GET("/api/v1/contracts/{number}/documents", {
+          params: { path: { number: saved.number }, query: { folder: FOLDER_ROOT } },
+        }),
+        inFolder === null
+          ? Promise.resolve(null)
+          : api.GET("/api/v1/contracts/{number}/documents", {
+              params: { path: { number: saved.number }, query: { folder: inFolder } },
+            }),
+      ]);
+      if (!root.data) throw new Error("filed paper");
+      setPaper(root.data.documents);
+      setPaperCursor(root.data.nextCursor);
+      if (folder?.data) {
+        const fresh = folder.data.documents;
+        setFiled((rows) => [...rows.filter((row) => row.folderId !== inFolder), ...fresh]);
+      }
+    },
+    [filed, saved.number],
+  );
 
   /** All reachable chains for the filing dialog, across the root and
    * folders. Walk every server page so an older chain stays pickable. */

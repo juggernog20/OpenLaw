@@ -677,10 +677,12 @@ test.describe.serial("M11 demo path", () => {
 
       // ---- Immutable, at the seam that would have to allow it ----
       //
-      // A correction appends a round; nothing replaces or removes one
-      // (story 12, DOC-001). PATCH at this address is the narrow CTR-014
-      // kind correction, covered at the API seam; PUT and DELETE remain
-      // absent, and the chain is unchanged for having been asked.
+      // A correction appends a round; nothing edits or removes one
+      // (story 12, DOC-001). There is no route at a version's address to
+      // replace or remove it, and the chain is unchanged for having
+      // been asked. PATCH is the one exception, and it moves the kind
+      // alone (CTR-014's M21A addendum): asked with no kind it is a
+      // 400, and the bytes, the number, and the order stay put.
       for (const method of ["PUT", "DELETE"] as const) {
         const refused = await uploaderPage.request.fetch(
           `/api/v1/documents/${document.id}/versions/${versions[0]!.id}`,
@@ -690,6 +692,11 @@ test.describe.serial("M11 demo path", () => {
           refused.status(),
         );
       }
+      const kindless = await uploaderPage.request.patch(
+        `/api/v1/documents/${document.id}/versions/${versions[0]!.id}`,
+        { data: {} },
+      );
+      expect(kindless.status(), await kindless.text()).toBe(400);
       expect(await readPaper(uploaderPage.request, contract.number)).toEqual(paper);
 
       // The record's narrative includes its paper (story 21, DD-017), at
