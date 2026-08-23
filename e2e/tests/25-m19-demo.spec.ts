@@ -359,10 +359,10 @@ test.describe.serial("M19 demo path", () => {
       // explain, they do not detach quietly.
       //
       // This is where the rule is visible from a browser. The offered
-      // set cannot show the other half today: no matter-scoped field can
-      // did not exist before M22 opened that scope, and the seed defines no
-      // global field, so there is nothing to assert as present-or-absent
-      // that the two attachments above have not already shown.
+      // set cannot show the other half here: this run plants no
+      // matter-scoped field, and the seed defines no global field, so
+      // there is nothing to assert as present-or-absent that the two
+      // attachments above have not already shown.
       const refused = page.waitForResponse(
         (response) =>
           response.url().includes(`/api/v1/request-types/${typeId}`) &&
