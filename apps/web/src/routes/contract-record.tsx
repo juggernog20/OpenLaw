@@ -2338,6 +2338,7 @@ export function ContractRecordPage() {
               folders={tree}
               nextCursor={paperCursor}
               frozen={frozen}
+              supportingUploads={contributor && !archived}
               // DOC-010's erasure is the Administrator's alone, and it
               // is the one control on this section a role decides.
               role={user.role}

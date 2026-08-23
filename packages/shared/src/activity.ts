@@ -720,6 +720,8 @@ type DocumentPayloads = {
     folderName: string | null;
     /** Present when the first file was copied out of a thread. */
     sourceCommentId?: string;
+    /** Preserves DD-015's narrower writer at append time. */
+    actorRole?: "contributor";
   };
   "document.version_added": {
     documentId: string;
@@ -729,6 +731,8 @@ type DocumentPayloads = {
     kind: string;
     /** Present when this round was copied out of a thread. */
     sourceCommentId?: string;
+    /** Preserves DD-015's narrower writer at append time. */
+    actorRole?: "contributor";
   };
   "document.version_kind_changed": {
     documentId: string;
