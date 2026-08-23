@@ -85,12 +85,13 @@ import type { Notifier, NotifyingTransaction } from "../../lib/notifications/not
 import { formatBlobRef, type StorageAdapter } from "../../lib/storage/adapter.js";
 import type { CleanupLogger } from "../../lib/uploads.js";
 import type { JobQueue } from "../../pipeline/jobs.js";
+import type { ConversionRecordReference } from "./record-reference.js";
 
 /** The record one promotion files onto, as this write needs it
  * described: the newborn contract, and whether anything holds its
  * instrument designation yet (CTR-014). */
 export interface PromotionTarget {
-  contractId: string;
+  record: ConversionRecordReference;
   primaryDocumentId: string | null;
 }
 
@@ -206,6 +207,7 @@ async function promotePaper(
   input: PromotionInput,
   paper: PromotedPaper,
 ): Promise<void> {
+  const record = input.target.record;
   const attachments = await tx
     .select({
       fileRef: requestAttachments.fileRef,
@@ -250,7 +252,7 @@ async function promotePaper(
       // be called something, and what a reader recognises is the name
       // the file arrived under. Renameable from there (DOC-007).
       title: attachment.filename,
-      contractId: input.target.contractId,
+      contractId: record.id,
       createdBy: input.actorId,
     });
     await insertDocumentVersion(tx, {
@@ -275,8 +277,8 @@ async function promotePaper(
     // there. `folderName` is null because the record root is where every
     // promotion files.
     await recordActivity(tx, {
-      entityType: "contract",
-      entityId: input.target.contractId,
+      entityType: record.module,
+      entityId: record.id,
       actorId: input.actorId,
       action: "document.created",
       visibility: RECORD_ACTIVITY_TIER,
@@ -297,10 +299,10 @@ async function promotePaper(
       await tx
         .update(contracts)
         .set({ primaryDocumentId: documentId })
-        .where(eq(contracts.id, input.target.contractId));
+        .where(eq(contracts.id, record.id));
       await recordActivity(tx, {
-        entityType: "contract",
-        entityId: input.target.contractId,
+        entityType: record.module,
+        entityId: record.id,
         actorId: input.actorId,
         action: "document.primary_set",
         visibility: RECORD_ACTIVITY_TIER,
@@ -327,7 +329,7 @@ async function promotePaper(
     // made the row, and a document is born with the flag clear — the
     // upload route says the same thing about the same insert.
     await deps.notifier.documentAdded(tx, {
-      contractId: input.target.contractId,
+      contractId: record.id,
       actorId: input.actorId,
       actorName: input.actorName,
       documentId,

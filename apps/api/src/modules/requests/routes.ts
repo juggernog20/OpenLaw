@@ -108,7 +108,6 @@ import { uuidv7 } from "uuidv7";
 import {
   and,
   count,
-  contracts,
   desc,
   entities,
   eq,
@@ -126,7 +125,6 @@ import {
 } from "@openlaw/db";
 import { REQUEST_DISPOSITIONED_PROBLEM_TYPE, REQUEST_OUTCOMES } from "@openlaw/shared";
 import { requireAuth } from "../../auth/guards.js";
-import { contractTeamScope } from "../../lib/contract-access.js";
 import {
   asUploadRefusal,
   refuseOversize,
@@ -153,10 +151,12 @@ import {
   RequestAttachmentSchema,
   RequestCustomFieldRefsSchema,
   resolveRefs,
+  selectConvertedRecords,
   selectAttachments,
   sendAttachment,
   toAttachment,
 } from "./projection.js";
+import { convertedContractOf } from "./record-reference.js";
 
 /** The Request as its creator is answered. Narrow on purpose: the
  * confirmation needs the number to quote and the status to state, and
@@ -665,14 +665,12 @@ export const requestsRoutes: FastifyPluginAsyncZod = async (app) => {
     id: string;
     number: number;
     status: (typeof REQUEST_STATUSES)[number];
-    convertedContractId: string | null;
   }> {
     const query = db
       .select({
         id: requests.id,
         number: requests.number,
         status: requests.status,
-        convertedContractId: requests.convertedContractId,
       })
       .from(requests)
       .where(
@@ -708,20 +706,7 @@ export const requestsRoutes: FastifyPluginAsyncZod = async (app) => {
     held: Awaited<ReturnType<typeof reachedRequest>>,
   ): Promise<void> {
     if (held.status === "new") return;
-    const [convertedContract] =
-      held.convertedContractId === null
-        ? []
-        : await db
-            .select({ number: contracts.number })
-            .from(contracts)
-            .where(
-              and(
-                eq(contracts.id, held.convertedContractId),
-                contractTeamScope(db, user),
-                isNull(contracts.archivedAt),
-              ),
-            )
-            .limit(1);
+    const convertedRecords = await selectConvertedRecords(db, user, [held.id]);
     throw httpError(
       409,
       "This Request has already been dispositioned. Attach new paper to a reply in its thread.",
@@ -730,7 +715,7 @@ export const requestsRoutes: FastifyPluginAsyncZod = async (app) => {
         extensions: {
           request: { number: held.number },
           outcome: held.status,
-          convertedContract: convertedContract ?? null,
+          convertedContract: convertedContractOf(convertedRecords.get(held.id) ?? null),
         },
       },
     );

@@ -206,10 +206,10 @@ type RequestPayloads = {
    * number rather than a title for the reason a Request's own payload
    * carries no title — C-42 *is* the contract's name and the sequence
    * never reissues it, so the sentence survives a rename and no free
-   * text enters an append-only log. The matter arm lands with M22, and
-   * it will be a second key beside this one rather than a widening of
-   * it: a Request becomes one record, and the table already holds that
-   * as a check constraint.
+   * text enters an append-only log. Conversion carries a module-aware
+   * record reference internally; each module projects its own permanent
+   * number key into this closed payload union. A Request becomes one
+   * record, and the table already holds that as a check constraint.
    */
   "request.converted": { number: number; contractNumber: number };
   /**
