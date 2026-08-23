@@ -128,6 +128,44 @@ describe("the editable matter record", () => {
     await waitFor(() => expect(status).toHaveValue("s-closed"));
   });
 
+  it("keeps an archived Matter Manager selectable and lets the record unassign them", async () => {
+    const gone = {
+      id: "u-gone",
+      displayName: "Gus Gone",
+      image: null,
+      archived: true,
+    };
+    let saved = row({ manager: gone });
+    const patches: unknown[] = [];
+    stubApi({
+      signedIn: ADMIN,
+      extra: (call) => {
+        if (call.url.pathname === "/api/v1/matters/12" && call.method === "GET")
+          return json(200, record(saved));
+        if (call.url.pathname === "/api/v1/matters/options" && call.method === "GET")
+          return options();
+        if (call.url.pathname === "/api/v1/matters/12" && call.method === "PATCH") {
+          patches.push(call.body);
+          saved = row({ ...saved, manager: null });
+          return json(200, record(saved));
+        }
+        return undefined;
+      },
+    });
+    renderAt("/matters/12");
+    const user = userEvent.setup();
+    const manager = await screen.findByRole("combobox", { name: "Matter Manager" });
+    expect(manager).toHaveValue("u-gone");
+    expect(
+      within(manager)
+        .getAllByRole("option")
+        .map((option) => option.textContent),
+    ).toEqual(["Unassigned", "Gus Gone", "Mina Member"]);
+    await user.selectOptions(manager, "");
+    await waitFor(() => expect(patches).toEqual([{ managerId: null }]));
+    await waitFor(() => expect(manager).toHaveValue(""));
+  });
+
   it("shows a PATCH refusal beside its field and lets that field retry", async () => {
     let saved = row();
     let patchCount = 0;

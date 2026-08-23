@@ -217,6 +217,39 @@ export function MatterRecordPage() {
     setLifecycleDialog(null);
   }
 
+  // The saved type, status, or Matter Manager may have been archived
+  // since the options were read. Keep each selectable as itself, or the
+  // select shows its first option and the record lies about what it holds.
+  const typeOptions = matterTypes.some((option) => option.id === saved.matterTypeId)
+    ? matterTypes
+    : [
+        {
+          id: saved.matterTypeId,
+          slug: saved.matterTypeId,
+          displayName: saved.matterTypeName,
+          fields,
+        },
+        ...matterTypes,
+      ];
+  const statusOptions = matterStatuses.some((option) => option.id === saved.statusId)
+    ? matterStatuses
+    : [
+        {
+          id: saved.statusId,
+          slug: saved.statusId,
+          displayName: saved.statusName,
+          category: saved.statusCategory,
+        },
+        ...matterStatuses,
+      ];
+  const managerOptions = users.filter(
+    (person) => person.role === "administrator" || person.role === "legal_team_member",
+  );
+  const heldManager =
+    saved.manager && !managerOptions.some((person) => person.id === saved.manager!.id)
+      ? [saved.manager]
+      : [];
+
   const reference = matterReference(intl, saved.number);
   return (
     <AppShell
@@ -265,7 +298,7 @@ export function MatterRecordPage() {
                   defaultMessage: "Open",
                 })}
                 category="open"
-                statuses={matterStatuses}
+                statuses={statusOptions}
               />
               <StatusGroup
                 label={intl.formatMessage({
@@ -273,7 +306,7 @@ export function MatterRecordPage() {
                   defaultMessage: "Closed",
                 })}
                 category="closed"
-                statuses={matterStatuses}
+                statuses={statusOptions}
               />
             </select>
           )}
@@ -341,7 +374,7 @@ export function MatterRecordPage() {
               status={fieldStatus.matterTypeId ?? "idle"}
               error={fieldError.matterTypeId}
               onChange={pickType}
-              options={matterTypes.map((type) => ({ value: type.id, label: type.displayName }))}
+              options={typeOptions.map((type) => ({ value: type.id, label: type.displayName }))}
             />
             <EditableSelectFact
               id="matter-manager"
@@ -365,12 +398,10 @@ export function MatterRecordPage() {
                     defaultMessage: "Unassigned",
                   }),
                 },
-                ...users
-                  .filter(
-                    (person) =>
-                      person.role === "administrator" || person.role === "legal_team_member",
-                  )
-                  .map((person) => ({ value: person.id, label: person.displayName })),
+                ...[...heldManager, ...managerOptions].map((person) => ({
+                  value: person.id,
+                  label: person.displayName,
+                })),
               ]}
             />
             <EditableSelectFact
@@ -485,7 +516,9 @@ export function MatterRecordPage() {
               <div className="grid gap-4 sm:grid-cols-2">
                 {fields.map((field) => (
                   <MatterCustomField
-                    key={field.fieldId}
+                    // Keyed by slug, so a re-type onto a type that attaches
+                    // the same field keeps that control's draft.
+                    key={field.slug}
                     field={field}
                     saved={saved.customFields[field.slug]}
                     frozen={frozen}
@@ -696,8 +729,20 @@ function MatterCustomField({
 }) {
   const intl = useIntl();
   const [draft, setDraft] = useState<CustomFieldDraft>(() => toDraft(field, saved));
+  // The value the draft was last seeded from, compared by content. A
+  // re-type that filled this field answers with a new saved value, and
+  // the control must show it rather than the empty draft it held.
+  const [seed, setSeed] = useState(() => JSON.stringify(saved ?? null));
+  const seeded = JSON.stringify(saved ?? null);
+  if (seed !== seeded) {
+    setSeed(seeded);
+    setDraft(toDraft(field, saved));
+  }
   const id = `matter-field-${field.slug}`;
   function commitDraft(next = draft) {
+    // Enter already committed this draft and the PATCH is in flight;
+    // the blur that follows must not send a duplicate.
+    if (status === "saving") return;
     if (sameDraft(next, toDraft(field, saved))) return;
     const converted = toValue(field, next);
     if ("error" in converted) {
