@@ -408,7 +408,7 @@
     "defaultMessage": "{actor} reopened the task {title}"
   },
   "activity.task.reordered": {
-    "defaultMessage": "{actor} reordered the Task checklist"
+    "defaultMessage": "{actor} reordered the task checklist"
   },
   "activity.task.untitled": {
     "defaultMessage": "(untitled)"

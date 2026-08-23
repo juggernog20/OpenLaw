@@ -187,6 +187,24 @@ describe("Matter Tasks", () => {
     expect((await listRaw(matter.number)).json()).toMatchObject({ doneCount: 0, totalCount: 2 });
   });
 
+  it("refuses a reorder that does not name every task exactly once", async () => {
+    const matter = await newMatter("Tasks bad reorder");
+    const a = await add(matter.number, { title: "Alpha" });
+    await add(matter.number, { title: "Beta" });
+    const other = await newMatter("Tasks reorder neighbour");
+    const foreign = await add(other.number, { title: "Gamma" });
+
+    // Missing one.
+    expect((await reorderRaw(matter.number, [a.id])).statusCode).toBe(400);
+    // Duplicate.
+    expect((await reorderRaw(matter.number, [a.id, a.id])).statusCode).toBe(400);
+    // A task belonging to another matter.
+    expect((await reorderRaw(matter.number, [a.id, foreign.id])).statusCode).toBe(400);
+
+    // The refusals left the original order alone.
+    expect((await list(matter.number)).map((row) => row.title)).toEqual(["Alpha", "Beta"]);
+  });
+
   it("edits, completes, reopens, reorders, and removes while narrating every accepted mutation", async () => {
     const matter = await newMatter("Every mutation narrated", { closed: true });
     const first = await add(matter.number, { title: "First" });
