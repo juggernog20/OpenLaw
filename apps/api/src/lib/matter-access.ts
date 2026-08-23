@@ -17,6 +17,9 @@ import {
 import type { AuthenticatedUser } from "../auth/user.js";
 
 export const MATTER_CREATOR_ROLE = "creator";
+export const MATTER_MANAGER_ROLES = new Set<string>(["administrator", "legal_team_member"]);
+export const MATTER_MANAGER_REFUSAL =
+  "The Matter Manager must be a live Legal Team Member or Administrator.";
 export const NO_MATTER = "No matter exists with this number.";
 
 function mattersTheyAreOn(db: Executor, user: AuthenticatedUser): SQL {

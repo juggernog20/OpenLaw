@@ -428,6 +428,19 @@ const SAMPLE_PAYLOADS: { [A in ActivityAction]: ActivityPayloadMap[A] } = {
     status: "Open",
     customFields: ["business-unit"],
   },
+  "matter.updated": {
+    number: 7,
+    title: "Employment advice",
+    changed: { priority: { from: "medium", to: "high" } },
+  },
+  "matter.status_changed": {
+    number: 7,
+    title: "Employment advice",
+    from: "Open",
+    to: "Resolved",
+    fromCategory: "open",
+    toCategory: "closed",
+  },
   "matter.type_reassigned": {
     number: 7,
     title: "Employment advice",
@@ -441,6 +454,21 @@ const SAMPLE_PAYLOADS: { [A in ActivityAction]: ActivityPayloadMap[A] } = {
     to: "Open",
   },
   "matter.confidentiality_set": { number: 7, title: "Employment advice" },
+  "matter.confidentiality_cleared": { number: 7, title: "Employment advice" },
+  "matter.team_added": {
+    number: 7,
+    title: "Employment advice",
+    member: "Mina Member",
+    role: "member",
+  },
+  "matter.team_removed": {
+    number: 7,
+    title: "Employment advice",
+    member: "Mina Member",
+    role: "member",
+  },
+  "matter.archived": { number: 7, title: "Employment advice" },
+  "matter.restored": { number: 7, title: "Employment advice" },
 
   // Record conversation
   "comment.posted": { commentId: "cmt_1" },

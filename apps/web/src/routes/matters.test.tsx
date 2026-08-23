@@ -379,9 +379,9 @@ describe("the Matters destination", () => {
 });
 
 describe("the matter hero", () => {
-  it("renders the M-number, status, type, Unassigned manager, severity, opened date, description, and custom fields read-only", async () => {
+  it("renders the M-number, status, type, Unassigned manager, severity, opened date, description, and custom fields read-only for a Contributor", async () => {
     stubApi({
-      signedIn: MEMBER,
+      signedIn: CONTRIBUTOR,
       extra: (call) =>
         call.url.pathname === "/api/v1/matters/7"
           ? json(200, {
@@ -391,6 +391,15 @@ describe("the matter hero", () => {
                 users: [{ id: "u-sponsor", displayName: "Sam Sponsor", archived: false }],
                 entities: [],
               },
+              team: [
+                {
+                  id: CONTRIBUTOR.id,
+                  displayName: CONTRIBUTOR.displayName,
+                  image: null,
+                  archived: false,
+                  role: "contributor",
+                },
+              ],
             })
           : undefined,
     });

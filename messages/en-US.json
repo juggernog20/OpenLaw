@@ -228,7 +228,7 @@
     "defaultMessage": "{actor} exported the audit log"
   },
   "activity.field": {
-    "defaultMessage": "{key, select, title {Title} description {Description} owner {Owner} entity {Signing entity} priority {Priority} risk {Risk} matterType {Matter type} contractType {Contract type} value {Value} status {Status} termType {Term type} effectiveDate {Effective date} expiryDate {Expiry date} renewalPeriodMonths {Renewal period (months)} noticePeriodDays {Notice period (days)} date {Date} label {Event} note {Note} kind {Kind} primaryCounterparty {Primary counterparty} primaryDocument {Primary document} displayName {Name} display_name {Display name} name {Name} role {Role} email {Email} stage {Stage} moduleScope {Scope} isRequired {Required} targetModule {Target} targetType {Target type} theme {Theme} timezone {Timezone} avatar {Avatar} logo {Logo} defaultLocale {Default language} defaultTimezone {Default timezone} authMode {Sign-in method} allowedEmailDomains {Allowed email domains} reminderOffsetDays {Reminder lead times} smtpUrl {SMTP server} smtpFrom {From address} issuer {Issuer} domain {Email domain} clientId {Client ID} clientSecret {Client secret} environment {Environment} integrationKey {Integration key} apiUserId {User ID} privateKey {RSA private key} webhookSecret {Connect HMAC secret} legalName {Legal name} entityType {Entity type} jurisdiction {Jurisdiction} formedOn {Formed on} registrationNumber {Registration number} taxId {Tax ID} registeredAgent {Registered agent} registeredAddress {Registered address} other {{key}}}"
+    "defaultMessage": "{key, select, title {Title} description {Description} owner {Owner} entity {Signing entity} priority {Priority} risk {Risk} matterManager {Matter Manager} matterType {Matter type} contractType {Contract type} value {Value} status {Status} termType {Term type} effectiveDate {Effective date} expiryDate {Expiry date} renewalPeriodMonths {Renewal period (months)} noticePeriodDays {Notice period (days)} date {Date} label {Event} note {Note} kind {Kind} primaryCounterparty {Primary counterparty} primaryDocument {Primary document} displayName {Name} display_name {Display name} name {Name} role {Role} email {Email} stage {Stage} moduleScope {Scope} isRequired {Required} targetModule {Target} targetType {Target type} theme {Theme} timezone {Timezone} avatar {Avatar} logo {Logo} defaultLocale {Default language} defaultTimezone {Default timezone} authMode {Sign-in method} allowedEmailDomains {Allowed email domains} reminderOffsetDays {Reminder lead times} smtpUrl {SMTP server} smtpFrom {From address} issuer {Issuer} domain {Email domain} clientId {Client ID} clientSecret {Client secret} environment {Environment} integrationKey {Integration key} apiUserId {User ID} privateKey {RSA private key} webhookSecret {Connect HMAC secret} legalName {Legal name} entityType {Entity type} jurisdiction {Jurisdiction} formedOn {Formed on} registrationNumber {Registration number} taxId {Tax ID} registeredAgent {Registered agent} registeredAddress {Registered address} other {{key}}}"
   },
   "activity.field.narrowed": {
     "defaultMessage": "{actor} narrowed the field {name} to one module"
@@ -281,17 +281,38 @@
   "activity.loadError": {
     "defaultMessage": "The history could not be read. Reopen the panel to try again."
   },
+  "activity.matter.archived": {
+    "defaultMessage": "{actor} archived this matter"
+  },
+  "activity.matter.confidentialityCleared": {
+    "defaultMessage": "{actor} cleared this matter's confidential mark"
+  },
   "activity.matter.confidentialitySet": {
     "defaultMessage": "{actor} marked this matter confidential"
   },
   "activity.matter.created": {
     "defaultMessage": "{actor} created this matter"
   },
+  "activity.matter.restored": {
+    "defaultMessage": "{actor} restored this matter"
+  },
+  "activity.matter.statusChanged": {
+    "defaultMessage": "{actor} changed the status"
+  },
   "activity.matter.statusReassigned": {
     "defaultMessage": "{actor} reassigned this matter's status"
   },
+  "activity.matter.teamAdded": {
+    "defaultMessage": "{actor} added {member} to the team as {role}"
+  },
+  "activity.matter.teamRemoved": {
+    "defaultMessage": "{actor} took {member} off the team as {role}"
+  },
   "activity.matter.typeReassigned": {
     "defaultMessage": "{actor} reassigned this matter's type"
+  },
+  "activity.matter.updated": {
+    "defaultMessage": "{actor} changed {count, plural, =0 {this matter} one {{field}} other {# fields}}"
   },
   "activity.notSet": {
     "defaultMessage": "Not set"
@@ -2645,6 +2666,12 @@
   "listEditor.showArchived": {
     "defaultMessage": "Show archived"
   },
+  "matters.archive.description": {
+    "defaultMessage": "The matter leaves the default list. Its history and M-number are kept."
+  },
+  "matters.archive.title": {
+    "defaultMessage": "Archive {title}?"
+  },
   "matters.archivedPill": {
     "defaultMessage": "Archived"
   },
@@ -2672,8 +2699,17 @@
   "matters.column.type": {
     "defaultMessage": "Type"
   },
+  "matters.confidential.banner": {
+    "defaultMessage": "Confidential matter — the matter team, the Matter Manager, and Administrators see it."
+  },
+  "matters.confidential.bannerRegion": {
+    "defaultMessage": "Confidential matter"
+  },
   "matters.confidential.field": {
     "defaultMessage": "Confidential — restrict to the matter team"
+  },
+  "matters.confidential.manageTeam": {
+    "defaultMessage": "Manage team"
   },
   "matters.counts": {
     "defaultMessage": "{open} open · {onHold} on hold"
@@ -2690,6 +2726,9 @@
   "matters.customFields": {
     "defaultMessage": "Custom fields"
   },
+  "matters.edit.error": {
+    "defaultMessage": "The change could not be saved."
+  },
   "matters.empty.body": {
     "defaultMessage": "Matters organize legal work that is not centered on a contract."
   },
@@ -2701,6 +2740,12 @@
   },
   "matters.empty.title": {
     "defaultMessage": "No matters yet"
+  },
+  "matters.field.closed": {
+    "defaultMessage": "Closed"
+  },
+  "matters.field.confidential": {
+    "defaultMessage": "Confidentiality"
   },
   "matters.field.description": {
     "defaultMessage": "Description"
@@ -2780,11 +2825,35 @@
   "matters.notProvided": {
     "defaultMessage": "Not provided"
   },
+  "matters.record.archive": {
+    "defaultMessage": "Archive"
+  },
   "matters.record.pageTitle": {
     "defaultMessage": "{reference} · {title}"
   },
+  "matters.record.restore": {
+    "defaultMessage": "Restore"
+  },
   "matters.reference": {
     "defaultMessage": "M-{number}"
+  },
+  "matters.restore.description": {
+    "defaultMessage": "The matter returns to the default list and becomes editable again."
+  },
+  "matters.restore.title": {
+    "defaultMessage": "Restore {title}?"
+  },
+  "matters.retype.confirm": {
+    "defaultMessage": "Change type"
+  },
+  "matters.retype.description": {
+    "defaultMessage": "Complete the new type's required fields before changing it."
+  },
+  "matters.retype.invalidField": {
+    "defaultMessage": "{field} must be a number."
+  },
+  "matters.retype.title": {
+    "defaultMessage": "Change matter type to {type}"
   },
   "matters.risk.none": {
     "defaultMessage": "Not assessed"
@@ -2797,6 +2866,48 @@
   },
   "matters.showClosed": {
     "defaultMessage": "Show closed"
+  },
+  "matters.status.closed": {
+    "defaultMessage": "Closed"
+  },
+  "matters.status.open": {
+    "defaultMessage": "Open"
+  },
+  "matters.team.add": {
+    "defaultMessage": "Add team member"
+  },
+  "matters.team.addError": {
+    "defaultMessage": "That person could not be added to the matter team."
+  },
+  "matters.team.addSubmit": {
+    "defaultMessage": "Add to team"
+  },
+  "matters.team.empty": {
+    "defaultMessage": "Nobody is on this matter yet."
+  },
+  "matters.team.person": {
+    "defaultMessage": "Person"
+  },
+  "matters.team.personMissing": {
+    "defaultMessage": "Pick a person."
+  },
+  "matters.team.pickPerson": {
+    "defaultMessage": "Pick a person"
+  },
+  "matters.team.remove": {
+    "defaultMessage": "Take {name} off the matter team as {role}"
+  },
+  "matters.team.removeError": {
+    "defaultMessage": "That person could not be taken off the matter team."
+  },
+  "matters.team.role": {
+    "defaultMessage": "{role, select, member {Member} watcher {Watcher} creator {Creator} contributor {Contributor} other {Unknown}}"
+  },
+  "matters.team.roleLabel": {
+    "defaultMessage": "Role"
+  },
+  "matters.team.title": {
+    "defaultMessage": "Matter team"
   },
   "matters.title": {
     "defaultMessage": "Matters"

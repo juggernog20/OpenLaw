@@ -941,6 +941,75 @@ export interface paths {
     delete?: never;
     options?: never;
     head?: never;
+    /** Commit matter fields individually, including re-type gaps, unrestricted live status transitions, and confidentiality */
+    patch: operations["updateMatter"];
+    trace?: never;
+  };
+  "/api/v1/matters/{number}/team": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Add one person and role to a matter team */
+    post: operations["addMatterTeamMember"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/matters/{number}/team/{userId}/{role}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    /** Remove one compound-key role from a matter team, except creator */
+    delete: operations["removeMatterTeamMember"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/matters/{number}/archive": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Archive a matter so it leaves the default list */
+    post: operations["archiveMatter"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/matters/{number}/restore": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Restore an archived matter to the default list */
+    post: operations["restoreMatter"];
+    delete?: never;
+    options?: never;
+    head?: never;
     patch?: never;
     trace?: never;
   };
@@ -6400,6 +6469,356 @@ export interface operations {
                 legalName: string;
                 archived: boolean;
               }[];
+            };
+            team: {
+              id: string;
+              displayName: string;
+              image: string | null;
+              archived: boolean;
+              /** @enum {string} */
+              role: "member" | "watcher" | "creator" | "contributor";
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  updateMatter: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        number: number;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          title?: string;
+          description?: string | null;
+          matterTypeId?: string;
+          managerId?: string | null;
+          /** @enum {string} */
+          priority?: "low" | "medium" | "high" | "critical";
+          risk?: ("low" | "medium" | "high" | "critical") | null;
+          customFields?: {
+            [key: string]: (string | number | boolean | string[]) | null;
+          };
+          statusId?: string;
+          isConfidential?: boolean;
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            matter: {
+              id: string;
+              number: number;
+              title: string;
+              description: string | null;
+              matterTypeId: string;
+              matterTypeName: string;
+              statusId: string;
+              statusName: string;
+              /** @enum {string} */
+              statusCategory: "open" | "closed";
+              manager: {
+                id: string;
+                displayName: string;
+                image: string | null;
+                archived: boolean;
+              } | null;
+              /** @enum {string} */
+              priority: "low" | "medium" | "high" | "critical";
+              risk: ("low" | "medium" | "high" | "critical") | null;
+              customFields: {
+                [key: string]: string | number | boolean | string[];
+              };
+              /** Format: date-time */
+              openedAt: string;
+              closedAt: string | null;
+              isConfidential: boolean;
+              archivedAt: string | null;
+              /** Format: date-time */
+              createdAt: string;
+              /** Format: date-time */
+              updatedAt: string;
+            };
+            fields: {
+              fieldId: string;
+              slug: string;
+              displayName: string;
+              description: string | null;
+              /** @enum {string} */
+              fieldType:
+                | "text"
+                | "long_text"
+                | "number"
+                | "date"
+                | "boolean"
+                | "single_select"
+                | "multi_select"
+                | "user"
+                | "entity";
+              options: string[] | null;
+              displayOrder: number;
+              isRequired: boolean;
+            }[];
+            customFieldRefs: {
+              users: {
+                id: string;
+                displayName: string;
+                archived: boolean;
+              }[];
+              entities: {
+                id: string;
+                legalName: string;
+                archived: boolean;
+              }[];
+            };
+            team: {
+              id: string;
+              displayName: string;
+              image: string | null;
+              archived: boolean;
+              /** @enum {string} */
+              role: "member" | "watcher" | "creator" | "contributor";
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  addMatterTeamMember: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        number: number;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          userId: string;
+          /** @enum {string} */
+          role: "member" | "watcher" | "creator" | "contributor";
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            team: {
+              id: string;
+              displayName: string;
+              image: string | null;
+              archived: boolean;
+              /** @enum {string} */
+              role: "member" | "watcher" | "creator" | "contributor";
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  removeMatterTeamMember: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        number: number;
+        userId: string;
+        role: "member" | "watcher" | "creator" | "contributor";
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            team: {
+              id: string;
+              displayName: string;
+              image: string | null;
+              archived: boolean;
+              /** @enum {string} */
+              role: "member" | "watcher" | "creator" | "contributor";
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  archiveMatter: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        number: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            matter: {
+              id: string;
+              number: number;
+              title: string;
+              description: string | null;
+              matterTypeId: string;
+              matterTypeName: string;
+              statusId: string;
+              statusName: string;
+              /** @enum {string} */
+              statusCategory: "open" | "closed";
+              manager: {
+                id: string;
+                displayName: string;
+                image: string | null;
+                archived: boolean;
+              } | null;
+              /** @enum {string} */
+              priority: "low" | "medium" | "high" | "critical";
+              risk: ("low" | "medium" | "high" | "critical") | null;
+              customFields: {
+                [key: string]: string | number | boolean | string[];
+              };
+              /** Format: date-time */
+              openedAt: string;
+              closedAt: string | null;
+              isConfidential: boolean;
+              archivedAt: string | null;
+              /** Format: date-time */
+              createdAt: string;
+              /** Format: date-time */
+              updatedAt: string;
+            };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  restoreMatter: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        number: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            matter: {
+              id: string;
+              number: number;
+              title: string;
+              description: string | null;
+              matterTypeId: string;
+              matterTypeName: string;
+              statusId: string;
+              statusName: string;
+              /** @enum {string} */
+              statusCategory: "open" | "closed";
+              manager: {
+                id: string;
+                displayName: string;
+                image: string | null;
+                archived: boolean;
+              } | null;
+              /** @enum {string} */
+              priority: "low" | "medium" | "high" | "critical";
+              risk: ("low" | "medium" | "high" | "critical") | null;
+              customFields: {
+                [key: string]: string | number | boolean | string[];
+              };
+              /** Format: date-time */
+              openedAt: string;
+              closedAt: string | null;
+              isConfidential: boolean;
+              archivedAt: string | null;
+              /** Format: date-time */
+              createdAt: string;
+              /** Format: date-time */
+              updatedAt: string;
             };
           };
         };
