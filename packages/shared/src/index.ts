@@ -248,6 +248,16 @@ export const MAX_TASK_TITLE_LENGTH = 200;
 export const MAX_CONTRACT_TITLE_LENGTH = 200;
 
 /**
+ * How long a matter's title may be (MTR-003).
+ *
+ * Matter creation and Request conversion are two callers of the same
+ * create callable. Keep their route validation and title inputs on the
+ * same ceiling so switching Convert to the Matter arm does not retain
+ * the Contract arm's shorter bound.
+ */
+export const MAX_MATTER_TITLE_LENGTH = 500;
+
+/**
  * How many people one envelope may be sent to (CTR-013).
  *
  * A bound rather than a preference, and a generous one: naming a

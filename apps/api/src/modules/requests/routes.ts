@@ -156,7 +156,7 @@ import {
   sendAttachment,
   toAttachment,
 } from "./projection.js";
-import { convertedContractOf } from "./record-reference.js";
+import { convertedContractOf, convertedRecordOf } from "./record-reference.js";
 
 /** The Request as its creator is answered. Narrow on purpose: the
  * confirmation needs the number to quote and the status to state, and
@@ -545,13 +545,20 @@ export const requestsRoutes: FastifyPluginAsyncZod = async (app) => {
             "A Request that is no longer new takes paper on its thread, not as another " +
               "Request attachment (INT-002, CMT-011). The named refusal carries " +
               "`request`, the R-### whose portal detail owns that thread; `outcome`, " +
-              "the disposition already recorded; and `convertedContract`, the record " +
+              "the disposition already recorded; and `convertedRecord`, the record " +
               "a conversion made when the caller may reach it (DD-014), else `null`.",
             [REQUEST_DISPOSITIONED_PROBLEM_TYPE],
             {
               request: z.object({ number: z.number().int() }).optional(),
               outcome: z.enum(REQUEST_OUTCOMES).optional(),
               convertedContract: z.object({ number: z.number().int() }).nullable().optional(),
+              convertedRecord: z
+                .discriminatedUnion("module", [
+                  z.object({ module: z.literal("contract"), number: z.number().int() }),
+                  z.object({ module: z.literal("matter"), number: z.number().int() }),
+                ])
+                .nullable()
+                .optional(),
             },
           ),
           default: problemResponse,
@@ -694,7 +701,7 @@ export const requestsRoutes: FastifyPluginAsyncZod = async (app) => {
    * row lock, for the disposition that lands between the two.
    *
    * The record a conversion made is named under the caller's own
-   * contract reach (DD-014) and never an archived one. The route is the
+   * record's own reach (DD-014) and never an archived one. The route is the
    * Requester's, and a Business User reaches no Contract at all, so for
    * them this is `null` — the same answer the portal read and the staff
    * disposition refusal give. A refusal must not hand out a reference
@@ -716,6 +723,7 @@ export const requestsRoutes: FastifyPluginAsyncZod = async (app) => {
           request: { number: held.number },
           outcome: held.status,
           convertedContract: convertedContractOf(convertedRecords.get(held.id) ?? null),
+          convertedRecord: convertedRecordOf(convertedRecords.get(held.id) ?? null),
         },
       },
     );

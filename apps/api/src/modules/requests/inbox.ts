@@ -74,11 +74,16 @@ import {
   liveTargetContractType,
   liveTargetMatterType,
   ConvertedContractSchema,
+  ConvertedRecordSchema,
   selectConvertedRecords,
   StaffRequestTypeSchema,
   toStaffRequestType,
 } from "./projection.js";
-import { convertedContractOf, type ConversionRecordReference } from "./record-reference.js";
+import {
+  convertedContractOf,
+  convertedRecordOf,
+  type ConversionRecordReference,
+} from "./record-reference.js";
 
 /** INT-006: Member+ triages, and there are no routing rules to narrow
  * that further. A Contributor and a Business User are refused rather
@@ -132,6 +137,7 @@ const InboxRowSchema = z.object({
    * `null` in every other case — never converted, converted into a
    * record they may not see, or converted into another module. */
   convertedContract: ConvertedContractSchema.nullable(),
+  convertedRecord: ConvertedRecordSchema.nullable(),
 });
 
 export const requestInboxRoutes: FastifyPluginAsyncZod = async (app) => {
@@ -147,8 +153,8 @@ export const requestInboxRoutes: FastifyPluginAsyncZod = async (app) => {
           "age, oldest first, and paged by cursor. The answer is " +
           "exactly the `new` Requests; includeTriaged=true widens it " +
           "to the converted, resolved, and declined ones with their " +
-          "outcomes. A converted row carries the contract it became " +
-          "only when the caller reaches that contract, and carries " +
+          "outcomes. A converted row carries the contract or matter it became " +
+          "only when the caller reaches that record, and carries " +
           "null otherwise (DD-014). Member+ only: a Contributor and a " +
           "Business User are refused",
         tags: ["requests"],
@@ -322,5 +328,6 @@ function toRow(
     requester: { id: row.requesterId, displayName: row.requesterDisplayName },
     createdAt: row.createdAt.toISOString(),
     convertedContract: convertedContractOf(convertedRecord),
+    convertedRecord: convertedRecordOf(convertedRecord),
   };
 }

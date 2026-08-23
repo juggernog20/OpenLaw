@@ -39,9 +39,8 @@
  * outcomes, with Convert on the CTA because it is the one the Inbox
  * exists to reach. The actions are drawn only while the Request is
  * `new`: a decided Request has nothing left to decide, and the Outcome
- * card says what was decided. There is no Matter arm beside Convert —
- * `matters` lands in M22, and the door offers what this build can
- * create.
+ * card says what was decided. Convert opens on the module the Request
+ * type targets and the dialog holds Re-target as the deliberate switch.
  *
  * **Opening a disposition dialog writes nothing.** INT-007 has no claim
  * step and no parked state, so the Inbox row's Assign button is an entry
@@ -118,6 +117,7 @@ import {
   type RegistryEntity,
   type UserOption,
 } from "../lib/contracts";
+import { matterPath, matterReference } from "../lib/matters";
 import { isAnswered } from "../lib/custom-fields";
 import { formatLongDateTime, formatRelativeOrShort } from "../lib/format";
 import {
@@ -162,27 +162,38 @@ export async function inboxRequestLoader({ params }: LoaderFunctionArgs) {
   // Entities a required `entity` one offers. Both ride the loader rather
   // than the dialog, so opening the dialog is instant and still writes
   // nothing (INT-007).
-  const [res, options, registry] = await Promise.all([
+  const [res, options, matterOptions, registry] = await Promise.all([
     api.GET("/api/v1/requests/{number}", { params: { path: { number } } }),
     api.GET("/api/v1/contracts/options"),
+    api.GET("/api/v1/matters/options"),
     api.GET("/api/v1/entities"),
   ]);
   if (res.response.status === 404) return redirect("/inbox");
-  if (!res.data || !options.data || !registry.data) {
+  if (!res.data || !options.data || !matterOptions.data || !registry.data) {
     throw new Error("The request could not be read.");
   }
   return {
     user,
     ...res.data,
     contractTypes: options.data.contractTypes,
+    matterTypes: matterOptions.data.matterTypes,
     people: options.data.users,
     entities: registry.data.entities,
   };
 }
 
 export function InboxRequestPage() {
-  const { user, request, fields, customFieldRefs, attachments, contractTypes, people, entities } =
-    useLoaderData<typeof inboxRequestLoader>();
+  const {
+    user,
+    request,
+    fields,
+    customFieldRefs,
+    attachments,
+    contractTypes,
+    matterTypes,
+    people,
+    entities,
+  } = useLoaderData<typeof inboxRequestLoader>();
   const intl = useIntl();
   const navigate = useNavigate();
   const revalidator = useRevalidator();
@@ -296,14 +307,16 @@ export function InboxRequestPage() {
                 <Check size={16} aria-hidden="true" />
                 <FormattedMessage id="resolve.action" defaultMessage="Resolve" />
               </Button>
-              {/* I2's third action and the page's call to action
-                  (DES-058 clause 2): converting is what the Inbox is
-                  for. There is no Matter arm beside it — `matters`
-                  lands in M22, and the door offers what this build can
-                  create. */}
+              {/* I2's third action and the page's call to action. Its
+                  label states the configured module; the dialog owns
+                  the deliberate Re-target to the other one. */}
               <Button disabled={busy} onClick={() => setDisposing("convert")}>
                 <FilePen size={16} aria-hidden="true" />
-                <FormattedMessage id="convert.action" defaultMessage="Convert to contract" />
+                <FormattedMessage
+                  id="convert.action"
+                  defaultMessage="Convert to {module, select, matter {matter} other {contract}}"
+                  values={{ module: request.requestType.targetModule ?? "contract" }}
+                />
               </Button>
             </div>
           )}
@@ -317,6 +330,7 @@ export function InboxRequestPage() {
           fields={fields}
           customFieldRefs={customFieldRefs}
           contractTypes={contractTypes}
+          matterTypes={matterTypes}
           people={people.map((person: UserOption) => ({
             id: person.id,
             label: person.displayName,
@@ -671,12 +685,18 @@ function Outcome({ request }: Readonly<{ request: StaffRequest }>) {
         >
           {requestStatusLabel(intl, request.status)}
         </span>
-        {request.convertedContract && (
+        {request.convertedRecord && (
           <Link
-            to={contractPath(request.convertedContract.number)}
+            to={
+              request.convertedRecord.module === "matter"
+                ? matterPath(request.convertedRecord.number)
+                : contractPath(request.convertedRecord.number)
+            }
             className="rounded-chip text-base font-medium text-link hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-link"
           >
-            {contractReference(intl, request.convertedContract.number)}
+            {request.convertedRecord.module === "matter"
+              ? matterReference(intl, request.convertedRecord.number)
+              : contractReference(intl, request.convertedRecord.number)}
           </Link>
         )}
       </span>

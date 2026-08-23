@@ -293,6 +293,9 @@
   "activity.matter.created": {
     "defaultMessage": "{actor} created this matter"
   },
+  "activity.matter.createdFromRequest": {
+    "defaultMessage": "{actor} created this matter from {request}"
+  },
   "activity.matter.restored": {
     "defaultMessage": "{actor} restored this matter"
   },
@@ -310,6 +313,9 @@
   },
   "activity.matter.typeReassigned": {
     "defaultMessage": "{actor} reassigned this matter's type"
+  },
+  "activity.matter.unnamedRecord": {
+    "defaultMessage": "another matter"
   },
   "activity.matter.updated": {
     "defaultMessage": "{actor} changed {count, plural, =0 {this matter} one {{field}} other {# fields}}"
@@ -339,7 +345,7 @@
     "defaultMessage": "{days, plural, =0 {day of} one {# day} other {# days}}"
   },
   "activity.request.converted": {
-    "defaultMessage": "{actor} converted this request into {contract}"
+    "defaultMessage": "{actor} converted this request into {record}"
   },
   "activity.request.created": {
     "defaultMessage": "{actor} submitted this request"
@@ -1710,10 +1716,10 @@
     "defaultMessage": "{cadence, select, monthly {{amount} /month} annually {{amount} /year} other {{amount}}}"
   },
   "convert.action": {
-    "defaultMessage": "Convert to contract"
+    "defaultMessage": "Convert to {module, select, matter {matter} other {contract}}"
   },
   "convert.alreadyConvertedRecord": {
-    "defaultMessage": "It became {contract}."
+    "defaultMessage": "It became {record}."
   },
   "convert.archivedReferenceMissing": {
     "defaultMessage": "Pick a live value for {field}."
@@ -1722,25 +1728,31 @@
     "defaultMessage": "{value} is archived. Pick a live {fieldType, select, user {person} entity {entity} other {value}} to convert."
   },
   "convert.carries": {
-    "defaultMessage": "Carries into the contract"
+    "defaultMessage": "Carries into the {module, select, matter {matter} other {contract}}"
   },
   "convert.carryNote": {
-    "defaultMessage": "Form responses carry into the contract — nothing is re-keyed."
+    "defaultMessage": "Form responses carry into the {module, select, matter {matter} other {contract}} — nothing is re-keyed."
   },
   "convert.failed": {
     "defaultMessage": "The request could not be converted. Try again."
+  },
+  "convert.fieldMissing": {
+    "defaultMessage": "Fill {field} — this {module, select, matter {matter} other {contract}} type requires it."
   },
   "convert.from": {
     "defaultMessage": "{requestType} · submitted by {requester}"
   },
   "convert.gapNote": {
-    "defaultMessage": "Required on this contract type. The form did not collect it."
+    "defaultMessage": "Required on this {module, select, matter {matter} other {contract}} type. The form did not collect it."
   },
   "convert.needTitle": {
-    "defaultMessage": "Name the contract."
+    "defaultMessage": "Name the {module, select, matter {matter} other {contract}}."
   },
   "convert.needType": {
-    "defaultMessage": "Pick a contract type."
+    "defaultMessage": "Pick a {module, select, matter {matter} other {contract}} type."
+  },
+  "convert.otherModule": {
+    "defaultMessage": "Convert to {module, select, matter {contract} other {matter}} instead"
   },
   "convert.priority": {
     "defaultMessage": "Priority"
@@ -1749,19 +1761,19 @@
     "defaultMessage": "Taken from the urgency the requester gave. Risk stays yours to set on the record."
   },
   "convert.retarget": {
-    "defaultMessage": "This request type does not target a contract. Converting it to one is a re-target, and the request itself is kept."
+    "defaultMessage": "This request type does not target a {module, select, matter {matter} other {contract}}. Converting it to one is a re-target, and the request itself is kept."
   },
   "convert.staysBehind": {
-    "defaultMessage": "Does not carry into the contract"
+    "defaultMessage": "Does not carry into the {module, select, matter {matter} other {contract}}"
   },
   "convert.staysBehindNote": {
-    "defaultMessage": "This contract type has no field for these. Nothing is deleted, and they stay on the request where you can still read them."
+    "defaultMessage": "This {module, select, matter {matter} other {contract}} type has no field for these. Nothing is deleted, and they stay on the request where you can still read them."
   },
   "convert.submit": {
-    "defaultMessage": "Convert"
+    "defaultMessage": "Convert to {module, select, matter {matter} other {contract}}"
   },
   "convert.title": {
-    "defaultMessage": "Convert {reference} to a contract"
+    "defaultMessage": "Convert {reference} to a {module, select, matter {matter} other {contract}}"
   },
   "convert.titleField": {
     "defaultMessage": "Title"
@@ -1773,10 +1785,10 @@
     "defaultMessage": "Set by the request type. Triage confirms the routing rather than choosing it."
   },
   "convert.typeDeferred": {
-    "defaultMessage": "This request type left the contract type to conversion."
+    "defaultMessage": "This request type left the {module, select, matter {matter} other {contract}} type to conversion."
   },
   "convert.typeField": {
-    "defaultMessage": "Contract type"
+    "defaultMessage": "{module, select, matter {Matter} other {Contract}} type"
   },
   "counterparty.picker.create": {
     "defaultMessage": "Create \"{name}\""
