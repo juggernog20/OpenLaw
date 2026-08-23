@@ -224,6 +224,64 @@ describe("matter documents", () => {
     }
   });
 
+  it("answers paper on a confidential matter as absent outside the matter team", async () => {
+    const matter = await newMatter("Confidential matter");
+    const { document } = await upload(matter.number, "privileged.pdf");
+    const [version] = document.versions;
+    const walled = await harness.app.inject({
+      method: "PATCH",
+      url: `/api/v1/matters/${matter.number}`,
+      cookies: memberCookies,
+      payload: { isConfidential: true },
+    });
+    expect(walled.statusCode, walled.body).toBe(200);
+
+    // The flag is the matter's, not the document's: an open document on
+    // a walled matter is still out of reach, because reach goes
+    // through the owner.
+    for (const leaf of ["documents", "folders"] as const) {
+      const response = await harness.app.inject({
+        method: "GET",
+        url: `/api/v1/matters/${matter.number}/${leaf}`,
+        cookies: outsiderCookies,
+      });
+      expect(response.statusCode, response.body).toBe(404);
+    }
+    for (const leaf of ["download", "preview", "text"] as const) {
+      const response = await harness.app.inject({
+        method: "GET",
+        url: `/api/v1/documents/${document.id}/versions/${version!.id}/${leaf}`,
+        cookies: outsiderCookies,
+      });
+      expect(response.statusCode, response.body).toBe(404);
+    }
+    const onTeam = await harness.app.inject({
+      method: "GET",
+      url: `/api/v1/documents/${document.id}/versions/${version!.id}/download`,
+      cookies: memberCookies,
+    });
+    expect(onTeam.statusCode, onTeam.body).toBe(200);
+  });
+
+  it("refuses the primary and executed designations on matter paper", async () => {
+    const matter = await newMatter("No designations");
+    const { document } = await upload(matter.number, "brief.pdf");
+    const [version] = document.versions;
+    const primary = await harness.app.inject({
+      method: "POST",
+      url: `/api/v1/documents/${document.id}/primary`,
+      cookies: memberCookies,
+    });
+    expect(primary.statusCode, primary.body).toBe(409);
+    const executed = await harness.app.inject({
+      method: "POST",
+      url: `/api/v1/documents/${document.id}/executed-version`,
+      cookies: memberCookies,
+      payload: { versionId: version!.id },
+    });
+    expect(executed.statusCode, executed.body).toBe(409);
+  });
+
   it("refuses paper rows with two owners or no owner", async () => {
     const matter = await newMatter("Constraint matter");
     const contract = await newContract("Constraint contract");

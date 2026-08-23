@@ -3462,11 +3462,18 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
     if (!document) throw httpError(404, NO_DOCUMENT);
   }
 
+  /** The primary and executed designations are contract concepts
+   * (M22/7). A document the viewer can read but that a matter owns is
+   * refused in the open: a 404 here would hide nothing and would read
+   * as a bug. */
   function assertContractDocument(
     document: ReachedDocument,
   ): asserts document is ReachedDocument & { contractId: string; ownerType: "contract" } {
     if (document.ownerType !== "contract" || document.contractId === null) {
-      throw httpError(404, NO_DOCUMENT);
+      throw httpError(
+        409,
+        "Matter paper has no primary document or executed copy. Those are contract designations.",
+      );
     }
   }
 
