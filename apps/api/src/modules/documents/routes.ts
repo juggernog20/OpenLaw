@@ -1397,14 +1397,8 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
       // on a record is ambient movement on it (NOT-002 group 2), and the
       // bell rows for it belong inside the same commit as the rows they
       // are about.
-      const created = await withStoredFile(request, file, () => {
-        if (request.user.role === "contributor" && file.destination) {
-          throw httpError(
-            403,
-            "Contributors may upload supporting Documents at the record root only.",
-          );
-        }
-        return app.notifier.notifying(async (tx) => {
+      const created = await withStoredFile(request, file, () =>
+        app.notifier.notifying(async (tx) => {
           // The contract row is held for the write, and reach is asked
           // again on the same snapshot: a team row dropped between the
           // first check and the insert must not leave a file on a record
@@ -1519,8 +1513,8 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
           // Read back through the list's own projection, so the row the
           // uploader gets is the row the next load will draw.
           return documentWithChain(tx, documentId, primaryDocumentId);
-        });
-      });
+        }),
+      );
 
       await askForDerivations(versionId, file);
       return reply.status(201).send({ document: created });
@@ -1551,14 +1545,8 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
       const documentId = uuidv7();
       const versionId = uuidv7();
       const file = await receiveUpload(request, versionStorageKey(documentId, versionId), true);
-      const created = await withStoredFile(request, file, () => {
-        if (request.user.role === "contributor" && file.destination) {
-          throw httpError(
-            403,
-            "Contributors may upload supporting Documents at the record root only.",
-          );
-        }
-        return app.db.transaction(async (tx) => {
+      const created = await withStoredFile(request, file, () =>
+        app.db.transaction(async (tx) => {
           const locked = await reachedMatter(tx, request.user, request.params.number, {
             lock: true,
           });
@@ -1596,8 +1584,8 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
             },
           });
           return documentWithChain(tx, documentId, null);
-        });
-      });
+        }),
+      );
 
       await askForDerivations(versionId, file);
       return reply.status(201).send({ document: created });
@@ -3240,6 +3228,12 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
     // the contract's row lock: that is the only place it can be created
     // without two racing uploads making two of it.
     const destination = filed ? folderDestination(part.fields) : null;
+    // Refused with the malformed paths, and for their reason: a
+    // Contributor's destination is known bad before the file part is
+    // read, so no blob is written only to be taken away (DD-015).
+    if (destination && request.user.role === "contributor") {
+      throw httpError(403, "Contributors may upload supporting Documents at the record root only.");
+    }
     const kind: HandSetDocumentVersionKind = rawKind
       ? (HandSetKindSchema.safeParse(rawKind).data ?? refuseKind())
       : "draft_ours";
