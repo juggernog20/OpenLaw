@@ -130,6 +130,14 @@ export function MattersPage() {
     : builtInLayout(CATALOGUE);
   const modified = !sameLayout(layout, storedLayout);
   const filters = matterFilters(layout.filters);
+  // A filter that answers nothing is not the module's first visit: the
+  // empty state has to say which of the two it is.
+  const narrowed =
+    filters.status !== "" ||
+    filters.type !== "" ||
+    filters.priority !== "" ||
+    filters.manager !== "" ||
+    filters.incomplete;
 
   async function signOut() {
     await authClient.signOut();
@@ -266,7 +274,9 @@ export function MattersPage() {
               values={counts}
             />
           }
-          actions={tableControls}
+          // DES-046 point 7: a list drawing its empty state has no column
+          // strip to arrange, so neither menu is drawn.
+          actions={rows.length === 0 ? undefined : tableControls}
           primaryAction={createButton}
         />
       }
@@ -290,7 +300,10 @@ export function MattersPage() {
           </div>
         )}
         {rows.length === 0 ? (
-          <EmptyMatters onCreate={loaded.canCreate ? () => setCreateOpen(true) : undefined} />
+          <EmptyMatters
+            narrowed={narrowed}
+            onCreate={loaded.canCreate ? () => setCreateOpen(true) : undefined}
+          />
         ) : (
           <ManagedTable
             catalogue={CATALOGUE}
@@ -498,22 +511,42 @@ function ToggleFilter({
   );
 }
 
-function EmptyMatters({ onCreate }: Readonly<{ onCreate?: () => void }>) {
+/** The module's pitch on the first visit, or the plain fact that the
+ * filters on screen match nothing. New matter is offered only on the
+ * first: a filter that answers nothing is cleared, not created into. */
+function EmptyMatters({
+  narrowed,
+  onCreate,
+}: Readonly<{ narrowed: boolean; onCreate?: () => void }>) {
   return (
     <div className="flex flex-col items-center gap-4 rounded-card border border-border-default bg-raised px-6 py-16 text-center">
       <BriefcaseBusiness size={24} aria-hidden="true" className="text-subtle" />
       <div>
         <h2 className="text-md font-semibold">
-          <FormattedMessage id="matters.empty.title" defaultMessage="No matters yet" />
+          {narrowed ? (
+            <FormattedMessage
+              id="matters.empty.narrowed.title"
+              defaultMessage="No matters match these filters"
+            />
+          ) : (
+            <FormattedMessage id="matters.empty.title" defaultMessage="No matters yet" />
+          )}
         </h2>
         <p className="mt-1 max-w-md text-base text-muted">
-          <FormattedMessage
-            id="matters.empty.body"
-            defaultMessage="Matters organize legal work that is not centered on a contract."
-          />
+          {narrowed ? (
+            <FormattedMessage
+              id="matters.empty.narrowed.body"
+              defaultMessage="Clear a filter to widen the list."
+            />
+          ) : (
+            <FormattedMessage
+              id="matters.empty.body"
+              defaultMessage="Matters organize legal work that is not centered on a contract."
+            />
+          )}
         </p>
       </div>
-      {onCreate && (
+      {!narrowed && onCreate && (
         <Button onClick={onCreate}>
           <Plus size={16} aria-hidden="true" />
           <FormattedMessage id="matters.new" defaultMessage="New matter" />

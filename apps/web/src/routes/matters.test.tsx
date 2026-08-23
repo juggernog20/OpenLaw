@@ -242,6 +242,21 @@ describe("the Matters destination", () => {
     expect(calls.at(-1)?.searchParams.get("includeArchived")).toBe("true");
   });
 
+  it("draws no table menus on the empty state and names a filter that matches nothing", async () => {
+    stubApi({ signedIn: MEMBER, extra: matterApi() });
+    renderAt("/matters");
+    expect(await screen.findByRole("heading", { name: "No matters yet" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Default view/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Columns" })).not.toBeInTheDocument();
+
+    const user = userEvent.setup();
+    await user.selectOptions(screen.getByLabelText("Priority"), "critical");
+    expect(
+      await screen.findByRole("heading", { name: "No matters match these filters" }),
+    ).toBeInTheDocument();
+    expect(screen.getAllByRole("button", { name: "New matter" })).toHaveLength(1);
+  });
+
   it("is visible to a Legal Team Member and a Contributor, but absent for a Business User", async () => {
     for (const signedIn of [MEMBER, CONTRIBUTOR]) {
       stubApi({ signedIn, extra: matterApi() });
