@@ -1065,16 +1065,16 @@ Source: **CMT-011**, **DOC-008**, **DOC-012**
 
 The lightweight paper carried by a comment. It is not a Document and has no version chain, folder, confidentiality flag, media type, or byte count. Its comment supplies the visibility tier; a soft-deleted comment suppresses its paper from reads, while an Administrator's redact deletes the stored blobs and these rows with the text.
 
-| Column              | Type        | Notes                                                                                                                      |
-| ------------------- | ----------- | -------------------------------------------------------------------------------------------------------------------------- |
-| `id`                | UUID        | PK, uuidv7                                                                                                                 |
-| `comment_id`        | UUID        | FK → `comments.id`, not null, `ON DELETE CASCADE`                                                                          |
-| `file_ref`          | text        | not null; storage seam `<driver>:<key>` reference; key minted from the comment id and attachment id, never the filename    |
-| `filename`          | text        | not null; the name the file arrived under and the name its download offers back                                            |
-| `uploaded_by`       | UUID        | FK → `users.id`, not null, no cascade                                                                                      |
-| `filed_document_id` | UUID        | nullable FK → `documents.id`, `ON DELETE SET NULL`; ticket 3 writes the Document this attachment was filed as              |
-| `filed_version_id`  | UUID        | nullable FK → `document_versions.id`, `ON DELETE SET NULL`; ticket 3 writes the exact Document Version the filing produced |
-| `created_at`        | timestamptz | not null                                                                                                                   |
+| Column              | Type        | Notes                                                                                                                                                                                                         |
+| ------------------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `id`                | UUID        | PK, uuidv7                                                                                                                                                                                                    |
+| `comment_id`        | UUID        | FK → `comments.id`, not null, `ON DELETE CASCADE`                                                                                                                                                             |
+| `file_ref`          | text        | not null; storage seam `<driver>:<key>` reference; key minted from the comment id and attachment id, never the filename                                                                                       |
+| `filename`          | text        | not null; the name the file arrived under and the name its download offers back                                                                                                                               |
+| `uploaded_by`       | UUID        | FK → `users.id`, not null, no cascade                                                                                                                                                                         |
+| `filed_document_id` | UUID        | nullable; paired with `filed_version_id` in composite FK `comment_attachments_filed_version_fk` → `document_versions(document_id, id)`, `ON DELETE SET NULL`; names the Document this attachment was filed as |
+| `filed_version_id`  | UUID        | nullable; paired with `filed_document_id` in the same composite FK; names the exact Document Version the filing produced                                                                                      |
+| `created_at`        | timestamptz | not null                                                                                                                                                                                                      |
 
 Indexed on (`comment_id`, `created_at`, `id`) for the one read: a comment's attachments in arrival order. The table landed in M21A/2, migration 0068.
 

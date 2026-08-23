@@ -117,6 +117,7 @@ import {
 } from "@openlaw/db";
 import {
   COMMENT_ATTACHMENT_ALREADY_FILED_PROBLEM_TYPE,
+  MAX_COMMENT_ATTACHMENTS,
   MAX_COMMENT_BODY_LENGTH,
 } from "@openlaw/shared";
 import { requireRole, type AuthenticatedUser } from "../../auth/guards.js";
@@ -266,9 +267,6 @@ const CommentSchema = z.object({
  */
 const MAX_MENTIONS = 20;
 const MentionsSchema = z.array(RecordIdSchema).max(MAX_MENTIONS);
-
-/** One comment carries at most five files (CMT-011). */
-const MAX_COMMENT_ATTACHMENTS = 5;
 
 /** The JSON body POST /comments has always taken. Multipart parses the
  * same fields through this exact schema after streaming its file parts. */

@@ -5,6 +5,7 @@
 import { useEffect, useRef, useState } from "react";
 import { FormattedMessage, useIntl } from "react-intl";
 import { FileCheck2, Paperclip, X } from "lucide-react";
+import { MAX_COMMENT_ATTACHMENTS } from "@openlaw/shared";
 import { fileCommentAttachment, type Comment, type CommentEntityType } from "../../lib/comments";
 import { DOCUMENT_VERSION_KINDS, type HandSetDocumentVersionKind } from "../../lib/documents";
 import { CONTROL_CLASS, TEXTAREA_CLASS } from "../../lib/form-controls";
@@ -18,8 +19,6 @@ import { Label } from "../ui/label";
 /** The two places a filing can land (CMT-011), as the dialog offers them. */
 const FILING_DESTINATIONS = ["new_document", "new_version"] as const;
 type FilingDestination = (typeof FILING_DESTINATIONS)[number];
-
-export const MAX_COMMENT_ATTACHMENTS = 5;
 
 /** The record-owned part of filing, supplied only where Documents exist. */
 export interface CommentFilingContext {
@@ -160,7 +159,7 @@ export function CommentAttachmentRows({
       {comment.attachments.map((attachment) => (
         <li key={attachment.id} className="flex min-w-0 flex-col gap-0.5 text-sm">
           <span className="flex min-w-0 items-center gap-1.5">
-            <Paperclip size={14} className="shrink-0 text-muted" aria-hidden="true" />
+            <Paperclip size={16} className="shrink-0 text-muted" aria-hidden="true" />
             <a
               className="truncate text-link underline-offset-2 hover:underline"
               href={commentAttachmentHref(comment.id, attachment.id, entityType, entityId)}
@@ -269,11 +268,21 @@ function FilingDialog({
         setDocuments(rows);
         setDocumentId((current) => current || rows[0]?.id || "");
       })
-      .catch(() => undefined);
+      .catch(() => {
+        if (!live) return;
+        setDocuments([]);
+        setDocumentId("");
+        setError(
+          intl.formatMessage({
+            id: "comments.filing.documentsError",
+            defaultMessage: "The Documents could not be loaded. Try again.",
+          }),
+        );
+      });
     return () => {
       live = false;
     };
-  }, [loadDocuments]);
+  }, [intl, loadDocuments]);
 
   async function submit() {
     if (busy) return;

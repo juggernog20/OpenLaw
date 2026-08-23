@@ -326,6 +326,7 @@ describe("attaching paper to a Request", () => {
       const refused = await attach(number);
 
       expect(refused.statusCode, refused.body).toBe(409);
+      expect(refused.headers["content-type"]).toContain("application/problem+json");
       expect(refused.json()).toMatchObject({
         type: REQUEST_DISPOSITIONED_PROBLEM_TYPE,
         outcome: status,

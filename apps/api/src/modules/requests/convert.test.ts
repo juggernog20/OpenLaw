@@ -255,6 +255,15 @@ function convert(number: number, body: Record<string, unknown>, cookies = member
   });
 }
 
+/** Reads the staff-visible Request state after a conversion attempt. */
+function readRequest(number: number) {
+  return harness.app.inject({
+    method: "GET",
+    url: `/api/v1/requests/${number}`,
+    cookies: memberCookies,
+  });
+}
+
 /** The stored Request, for the facts the wire does not state. */
 const stored = (id: string) => cast.stored(id);
 
@@ -570,7 +579,12 @@ describe("what the record is born with (INT-002, MTR-012, CTR-016)", () => {
       expect(refused.statusCode, refused.body).toBe(400);
       expect(refused.json().detail).toContain("Requesting manager: pick a live person.");
       expect(await contractCount()).toBe(before);
-      expect((await stored(request.id)).status).toBe("new");
+      const unchanged = await readRequest(request.number);
+      expect(unchanged.statusCode, unchanged.body).toBe(200);
+      expect(unchanged.json().request).toMatchObject({
+        status: "new",
+        convertedContract: null,
+      });
 
       const repaired = await convert(request.number, {
         title: "Northwind NDA",

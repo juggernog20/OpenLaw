@@ -2582,6 +2582,38 @@ describe("the contract record's comment applet (M9/2)", () => {
     ).toBeNull();
   });
 
+  it("keeps the draft and shows the generic refusal for a non-JSON upload 413", async () => {
+    const user = userEvent.setup();
+    const comments = commentsApi();
+    const record = recordApi(contractRow());
+    stubApi({
+      signedIn: MEMBER,
+      extra: (call) =>
+        call.url.pathname === "/api/v1/comments" && call.method === "POST"
+          ? new Response("Payload Too Large", {
+              status: 413,
+              headers: { "content-type": "text/plain" },
+            })
+          : (comments.handler(call) ?? record.handler(call)),
+    });
+    renderAt("/contracts/42");
+    await openChat(user);
+
+    const panel = await screen.findByRole("complementary", { name: "Comments" });
+    await user.upload(
+      within(panel).getByLabelText("Choose files for this comment"),
+      new File(["paper"], "large.pdf"),
+    );
+    await user.type(within(panel).getByLabelText("New comment"), "Keep this draft.");
+    await user.click(within(panel).getByRole("button", { name: "Comment" }));
+
+    expect(await within(panel).findByRole("alert")).toHaveTextContent(
+      "The comment could not be posted. Try again.",
+    );
+    expect(within(panel).getByLabelText("New comment")).toHaveValue("Keep this draft.");
+    expect(within(panel).getByText("large.pdf")).toBeInTheDocument();
+  });
+
   it("files a Legal Only attachment as a new Document with Confidential proposed on", async () => {
     const user = userEvent.setup();
     const comments = commentsApi([
@@ -2685,6 +2717,35 @@ describe("the contract record's comment applet (M9/2)", () => {
       ]);
     });
     expect(await within(panel).findByRole("link", { name: "Orion MSA, version 2" })).toBeVisible();
+  });
+
+  it("refuses a filing list whose cursor does not advance", async () => {
+    const user = userEvent.setup();
+    const comments = commentsApi([
+      {
+        ...comment("c-loop", "Paper to file.", "working_team"),
+        attachments: [{ id: "a-loop", filename: "loop.pdf" }],
+      },
+    ]);
+    const record = recordApi(contractRow());
+    stubApi({
+      signedIn: MEMBER,
+      extra: (call) =>
+        comments.handler(call) ??
+        (call.url.pathname === "/api/v1/contracts/42/documents" && call.method === "GET"
+          ? json(200, { documents: [], nextCursor: "same-cursor" })
+          : record.handler(call)),
+    });
+    renderAt("/contracts/42");
+    await openChat(user);
+    const panel = await screen.findByRole("complementary", { name: "Comments" });
+    await user.click(within(panel).getByRole("button", { name: "File" }));
+
+    const dialog = await screen.findByRole("dialog", { name: "File attachment" });
+    expect(await within(dialog).findByRole("alert")).toHaveTextContent(
+      "The Documents could not be loaded. Try again.",
+    );
+    expect(within(dialog).getByRole("option", { name: /New Version/ })).toBeDisabled();
   });
 
   it("keeps a filing refusal in the dialog", async () => {
