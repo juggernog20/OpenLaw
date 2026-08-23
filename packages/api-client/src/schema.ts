@@ -13576,7 +13576,7 @@ export interface operations {
   listComments: {
     parameters: {
       query: {
-        entityType: "contract" | "request";
+        entityType: "matter" | "contract" | "request";
         entityId: string;
         cursor?: string;
       };
@@ -13596,7 +13596,7 @@ export interface operations {
             comments: {
               id: string;
               /** @enum {string} */
-              entityType: "contract" | "request";
+              entityType: "matter" | "contract" | "request";
               entityId: string;
               author: {
                 id: string;
@@ -13653,7 +13653,7 @@ export interface operations {
       content: {
         "application/json": {
           /** @enum {string} */
-          entityType: "contract" | "request";
+          entityType: "matter" | "contract" | "request";
           entityId: string;
           body: string;
           /** @enum {string} */
@@ -13664,7 +13664,7 @@ export interface operations {
         };
         "multipart/form-data": {
           /** @enum {string} */
-          entityType: "contract" | "request";
+          entityType: "matter" | "contract" | "request";
           entityId: string;
           body: string;
           /** @enum {string} */
@@ -13686,7 +13686,7 @@ export interface operations {
             comment: {
               id: string;
               /** @enum {string} */
-              entityType: "contract" | "request";
+              entityType: "matter" | "contract" | "request";
               entityId: string;
               author: {
                 id: string;
@@ -13734,7 +13734,7 @@ export interface operations {
   listMentionCandidates: {
     parameters: {
       query: {
-        entityType: "contract" | "request";
+        entityType: "matter" | "contract" | "request";
         entityId: string;
       };
       header?: never;
@@ -13773,7 +13773,7 @@ export interface operations {
   readUnreadComments: {
     parameters: {
       query: {
-        entityType: "contract" | "request";
+        entityType: "matter" | "contract" | "request";
         entityId: string;
       };
       header?: never;
@@ -13815,7 +13815,7 @@ export interface operations {
       content: {
         "application/json": {
           /** @enum {string} */
-          entityType: "contract" | "request";
+          entityType: "matter" | "contract" | "request";
           entityId: string;
         };
       };
@@ -13846,7 +13846,7 @@ export interface operations {
   fileCommentAttachment: {
     parameters: {
       query: {
-        entityType: "contract" | "request";
+        entityType: "matter" | "contract" | "request";
         entityId: string;
       };
       header?: never;
@@ -13900,7 +13900,7 @@ export interface operations {
             comment: {
               id: string;
               /** @enum {string} */
-              entityType: "contract" | "request";
+              entityType: "matter" | "contract" | "request";
               entityId: string;
               author: {
                 id: string;
@@ -13973,7 +13973,7 @@ export interface operations {
   downloadCommentAttachment: {
     parameters: {
       query: {
-        entityType: "contract" | "request";
+        entityType: "matter" | "contract" | "request";
         entityId: string;
       };
       header?: never;
@@ -14026,7 +14026,7 @@ export interface operations {
             comment: {
               id: string;
               /** @enum {string} */
-              entityType: "contract" | "request";
+              entityType: "matter" | "contract" | "request";
               entityId: string;
               author: {
                 id: string;
@@ -14098,7 +14098,7 @@ export interface operations {
             comment: {
               id: string;
               /** @enum {string} */
-              entityType: "contract" | "request";
+              entityType: "matter" | "contract" | "request";
               entityId: string;
               author: {
                 id: string;
@@ -14164,7 +14164,7 @@ export interface operations {
             comment: {
               id: string;
               /** @enum {string} */
-              entityType: "contract" | "request";
+              entityType: "matter" | "contract" | "request";
               entityId: string;
               author: {
                 id: string;
@@ -14212,7 +14212,7 @@ export interface operations {
   listActivity: {
     parameters: {
       query: {
-        entityType: "contract";
+        entityType: "matter" | "contract";
         entityId: string;
         cursor?: string;
       };

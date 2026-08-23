@@ -79,6 +79,69 @@ function options() {
 }
 
 describe("the editable matter record", () => {
+  it("mounts the matter comments and history applets on the activity bar", async () => {
+    const calls: StubCall[] = [];
+    stubApi({
+      signedIn: ADMIN,
+      extra: (call) => {
+        if (call.url.pathname === "/api/v1/matters/12" && call.method === "GET")
+          return json(200, record(row()));
+        if (call.url.pathname === "/api/v1/matters/options" && call.method === "GET")
+          return options();
+        if (call.url.pathname === "/api/v1/comments/unread" && call.method === "GET")
+          return json(200, { unread: 1 });
+        if (call.url.pathname === "/api/v1/comments" && call.method === "GET") {
+          calls.push(call);
+          return json(200, { comments: [], nextCursor: null });
+        }
+        if (call.url.pathname === "/api/v1/comments/mention-candidates")
+          return json(200, { candidates: [] });
+        if (call.url.pathname === "/api/v1/comments/read" && call.method === "POST")
+          return json(200, { unread: 0 });
+        if (call.url.pathname === "/api/v1/activity" && call.method === "GET") {
+          calls.push(call);
+          return json(200, {
+            entries: [
+              {
+                id: "a-created",
+                action: "matter.created",
+                visibility: "working_team",
+                actor: {
+                  id: ADMIN.id,
+                  displayName: ADMIN.displayName,
+                  image: null,
+                  archived: false,
+                },
+                createdAt: "2026-08-23T08:00:00.000Z",
+                payload: { title: "Editable advice" },
+              },
+            ],
+            nextCursor: null,
+          });
+        }
+        return undefined;
+      },
+    });
+    renderAt("/matters/12");
+    const user = userEvent.setup();
+    await user.click(await screen.findByRole("button", { name: "Comments (1)" }));
+    expect(
+      await screen.findByText(
+        "Nothing has been said about this record yet. Add the first comment to keep the conversation on the record.",
+      ),
+    ).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "History" }));
+    expect(await screen.findByText("Ada Admin created this matter")).toBeInTheDocument();
+    expect(
+      calls.map((call) => `${call.method} ${call.url.pathname}?${call.url.searchParams}`),
+    ).toEqual(
+      expect.arrayContaining([
+        "GET /api/v1/comments?entityType=matter&entityId=m-12",
+        "GET /api/v1/activity?entityType=matter&entityId=m-12",
+      ]),
+    );
+  });
+
   it("commits inline fields independently and groups every live status by category", async () => {
     let saved = row();
     const patches: unknown[] = [];
