@@ -422,8 +422,8 @@ describe("the archive guard (retention, never reassignment)", () => {
   });
 
   it("labels an in-use field's count as type attachments, not records", async () => {
-    // Records don't exist until M8/M22 — the count is attachments only,
-    // and the dialog must say so.
+    // This stub count represents attachments only; the dialog must not
+    // claim record values from the M8/M22 modules.
     const calls = newCalls();
     const rows = seededFields().map((row) => (row.id === "f3" ? { ...row, inUseCount: 3 } : row));
     stubApi({ signedIn: ADMIN, extra: fieldsApi(calls, rows) });

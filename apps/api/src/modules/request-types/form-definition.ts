@@ -15,8 +15,7 @@
  * type does not have a scope of its own, so it borrows the scope of the
  * module its target names. Target Contract takes `contract` and
  * `global`; target Matter takes `matter` and `global`; no target takes
- * `global` only. The matter arm is live and empty until M22 opens the
- * `matter` field scope, exactly as `matter_type_fields` already is.
+ * `global` only. M22 opened the Matter arm and its field scope.
  */
 
 import { and, asc, count, eq, fields, inArray, isNull, requestTypeFields } from "@openlaw/db";

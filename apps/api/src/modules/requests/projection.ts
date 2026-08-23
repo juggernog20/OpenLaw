@@ -128,10 +128,8 @@ export const ConvertedContractSchema = z.object({ number: z.number().int() });
 export const liveTargetContractType = () =>
   and(eq(requestTypes.targetContractTypeId, contractTypes.id), isNull(contractTypes.archivedAt));
 
-/** The matter half of {@link liveTargetContractType}, under the same
- * rule. Nothing converts to a Matter until M22, and the taxonomy is
- * already administered, so the reads state the target the same way for
- * both modules rather than holding one rule for a year. */
+/** The Matter half of {@link liveTargetContractType}, under the same
+ * live-target rule. M22's conversion arm reads this same answer. */
 export const liveTargetMatterType = () =>
   and(eq(requestTypes.targetMatterTypeId, matterTypes.id), isNull(matterTypes.archivedAt));
 

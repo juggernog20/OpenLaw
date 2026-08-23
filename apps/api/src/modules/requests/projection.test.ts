@@ -4,8 +4,8 @@
  * The converted-record projection (#465).
  *
  * The Inbox and staff detail keep their HTTP assertions in their own
- * suites. This pins the one reach-aware resolver both now call, so its
- * contract arm has one test home before M22 adds the Matter arm.
+ * suites. This pins the one reach-aware resolver both call and both
+ * record arms M22 completed.
  */
 
 import { afterAll, beforeAll, describe, expect, it } from "vitest";

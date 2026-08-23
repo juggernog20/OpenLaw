@@ -3,8 +3,8 @@
 /**
  * The matter type editor (#85) at the HTTP seam: the single-type read
  * behind the editor, and the MTR-011 attachment machinery on the
- * matter mount — attach for global fields only, with contract- and
- * matter-scoped fields refused until M22 opens the matter scope,
+ * matter mount — attach for Matter and global fields after M22 opened
+ * the scope, with Contract- and Entity-scoped fields refused,
  * per-type reordering, the per-attachment required flag, and detach
  * never touching the catalog definition — behind SET-002's one role
  * gate, with every attachment mutation appending to the activity log
@@ -343,9 +343,8 @@ describe("the CTR-016 narrowing guard counts matter attachments (#85)", () => {
 
   it("refuses moving an attached matter-scoped field to contract as 409", async () => {
     const litigation = await typeBySlug("litigation");
-    // The catalog offers no matter scope until M22 and the attach route
-    // refuses matter-scoped fields, so plant both rows directly — the
-    // guard must hold even for state the API cannot create yet.
+    // M22 opened Matter scope. Plant both rows directly here because this
+    // test isolates the narrowing guard from catalog-route setup.
     const [planted] = await harness.db
       .insert(fields)
       .values({

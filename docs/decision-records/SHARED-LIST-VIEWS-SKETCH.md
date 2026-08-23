@@ -29,11 +29,12 @@ The thing being extended is small, and the price is mostly in how tightly it is 
 | `apps/api/src/modules/list-views/list-views.test.ts` | 394 lines  | Asserts the 404-not-403 convention throughout.                  |
 | `apps/web/src/lib/list-views.ts`                     | 320 lines  | Catalogue, layout, view. `resolveLayout` reads a stored layout. |
 | `apps/web/src/components/table/views-menu.tsx`       | 321 lines  | The DES-046 clause 6 control.                                   |
-| `apps/web/src/routes/contracts.tsx`                  | 610 lines  | The only surface that adopts it.                                |
+| `apps/web/src/routes/contracts.tsx`                  | 610 lines  | The first surface that adopted it.                              |
 
-**One surface adopts saved views today.** `LIST_VIEW_SURFACES` is `["contracts"]`, and `ManagedTable` is
-rendered by `contracts.tsx` alone. The Entities list is a bespoke table. Matters (M22), Documents (M26), and
-Entities (M27) each adopt the same machinery later, so **any per-surface price is paid up to four times**.
+**Two surfaces adopt saved views today.** M22 added `matters` beside `contracts` in
+`LIST_VIEW_SURFACES`, and both routes render `ManagedTable`. The Entities list is still bespoke;
+Documents (M26) and Entities (M27) adopt the same machinery later, so **any per-surface price is paid up
+to four times**.
 
 **Every surface reads views the same way, in three lines.** The contracts loader reads this person's views,
 takes the row that carries `isDefault`, and resolves it against the column catalogue — or draws the built-in
@@ -207,7 +208,8 @@ For estimating, when the trigger fires:
 - `apps/web/src/lib/list-views.ts` — `SavedView` gains a scope; `readViews` answers two groups.
 - `apps/web/src/components/table/views-menu.tsx` — grouped menu, role-gated acts, and Save falling back to
   Save as on a view the reader may not edit.
-- `apps/web/src/routes/contracts.tsx` — the three-level merge, repeated as M22, M26, and M27 land.
+- `apps/web/src/routes/contracts.tsx` and `matters.tsx` — the three-level merge already repeated by M22,
+  with M26 and M27 still to adopt it.
 - A DES-046 amendment for the menu, and a new `DD-` record appended to `DECISIONS.md` — the file DD-019 lives
   in — that carries the sharing decision. DD-019 is kept and marked superseded, with a pointer to the new
   record's number. Never deleted, and never a file of its own.

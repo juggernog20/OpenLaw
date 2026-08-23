@@ -59,7 +59,7 @@ const probeAttachedFieldsRoutes = typeFieldRoutes({
       : { scopes: ["global"], refusal: UNTARGETED_REFUSAL },
   scopeSummary: "the scopes the type's own rule allows (#352)",
   actionPrefix: "matter_type_field",
-  requiredMilestone: "M22",
+  requiredMilestone: "probe milestone",
 });
 
 let harness: TestHarness;

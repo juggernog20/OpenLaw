@@ -168,7 +168,7 @@ describe("GET /matter-types", () => {
     for (const row of rows) {
       expect(row.isSystemDefault).toBe(true);
       expect(row.archivedAt).toBeNull();
-      // No matters exist until M22, so the live-usage count is zero.
+      // This fresh test has no Matter rows, so the M22 live-usage count is zero.
       expect(row.inUseCount).toBe(0);
     }
     expect(rows.find((row) => row.slug === "ip")!.displayName).toBe("IP");
