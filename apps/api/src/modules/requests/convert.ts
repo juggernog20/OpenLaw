@@ -109,6 +109,7 @@ import {
 import { moveThread } from "./move-thread.js";
 import { withPromotedPaper } from "./promote-paper.js";
 import { liveTargetContractType, StaffRequestSchema } from "./projection.js";
+import type { ConversionRecordReference } from "./record-reference.js";
 
 export const requestConvertRoutes: FastifyPluginAsyncZod = async (app) => {
   app.post(
@@ -265,6 +266,11 @@ export const requestConvertRoutes: FastifyPluginAsyncZod = async (app) => {
               // afterwards. Risk is not set at all.
               priority: row.urgency,
             });
+            const record = {
+              module: "contract",
+              id: born.row.id,
+              number: born.row.number,
+            } satisfies ConversionRecordReference;
 
             // INT-002's paper, promoted a file at a time onto the record
             // (#421). Copies rather than moves: the attachment rows and
@@ -275,7 +281,7 @@ export const requestConvertRoutes: FastifyPluginAsyncZod = async (app) => {
             await promote(tx, {
               requestId: held.id,
               target: {
-                contractId: born.row.id,
+                record,
                 primaryDocumentId: born.row.primaryDocumentId,
               },
               actorId: request.user.id,
@@ -293,14 +299,13 @@ export const requestConvertRoutes: FastifyPluginAsyncZod = async (app) => {
             await moveThread(tx, {
               requestId: held.id,
               requestNumber: held.number,
-              contractId: born.row.id,
-              contractNumber: born.row.number,
+              target: record,
               actorId: request.user.id,
             });
 
             await tx
               .update(requests)
-              .set({ status: "converted", convertedContractId: born.row.id })
+              .set({ status: "converted", convertedContractId: record.id })
               .where(eq(requests.id, held.id));
 
             // DD-017 on both records, in the transaction that made them one
@@ -313,11 +318,11 @@ export const requestConvertRoutes: FastifyPluginAsyncZod = async (app) => {
               actorId: request.user.id,
               action: "request.converted",
               visibility: RECORD_ACTIVITY_TIER,
-              payload: { number: held.number, contractNumber: born.row.number },
+              payload: { number: held.number, contractNumber: record.number },
             });
             await recordActivity(tx, {
-              entityType: "contract",
-              entityId: born.row.id,
+              entityType: record.module,
+              entityId: record.id,
               actorId: request.user.id,
               action: "contract.created_from_request",
               visibility: RECORD_ACTIVITY_TIER,

@@ -59,6 +59,7 @@ import type { AuthenticatedUser } from "../../auth/guards.js";
 import type { Notifier, NotifyingTransaction } from "../../lib/notifications/notifier.js";
 import { httpError, problemTypeResponse } from "../../lib/problem.js";
 import { NO_REQUEST, staffRequestRow, toStaffRequest } from "./projection.js";
+import { convertedContractOf } from "./record-reference.js";
 
 /** INT-006: Member+ triages, and there are no routing rules to narrow
  * that further. Every disposition route wears it. */
@@ -136,7 +137,8 @@ export function dispositionedResponse(unnamed: string) {
         .describe(
           "The contract the winning conversion made, by its C-### number — null on " +
             "every other outcome, and null on a record this caller cannot reach " +
-            "(DD-014). The matter arm lands with M22.",
+            "(DD-014). The value is projected from the conversion's module-aware " +
+            "record reference.",
         ),
     },
   );
@@ -208,10 +210,10 @@ async function lockUndecided(
     // only on the refusal path: the winning triager never pays for it,
     // and the loser is about to be told something the plain `outcome`
     // cannot say — which C-### to open.
-    const { convertedContract } = toStaffRequest(await staffRequestRow(tx, user, number));
+    const request = await staffRequestRow(tx, user, number);
     throw httpError(409, REFUSALS[outcome], {
       type: REQUEST_DISPOSITIONED_PROBLEM_TYPE,
-      extensions: { outcome, convertedContract },
+      extensions: { outcome, convertedContract: convertedContractOf(request.convertedRecord) },
     });
   }
   return { id: row.id, number: row.number };
