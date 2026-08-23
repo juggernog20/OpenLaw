@@ -8,6 +8,8 @@ type RecordResponse =
   paths["/api/v1/matters/{number}"]["get"]["responses"]["200"]["content"]["application/json"];
 type OptionsResponse =
   paths["/api/v1/matters/options"]["get"]["responses"]["200"]["content"]["application/json"];
+type LifecycleResponse =
+  paths["/api/v1/matters/{number}/lifecycle"]["get"]["responses"]["200"]["content"]["application/json"];
 
 export type MatterRow = RecordResponse["matter"];
 export type MatterField = RecordResponse["fields"][number];
@@ -15,6 +17,7 @@ export type MatterTeamMember = RecordResponse["team"][number];
 export type MatterCustomFieldRefs = RecordResponse["customFieldRefs"];
 export type MatterTypeOption = OptionsResponse["matterTypes"][number];
 export type MatterStatusOption = OptionsResponse["matterStatuses"][number];
+export type MatterLifecycle = LifecycleResponse;
 export type MatterUserOption = OptionsResponse["users"][number];
 export type MatterSeverity = MatterRow["priority"];
 export type MatterTeamRole = MatterTeamMember["role"];

@@ -21,7 +21,7 @@ Decisions are numbered `MTR-###`.
 Queued 2026-08-07 from the matters.pen ↔ decision-record audit — mock drift that needs a decision rather than a silent strip:
 
 1. ~~**Key-date owner** — M5 mocks an Owner column per key date; **MTR-004** modeled key dates as `date + label + note`.~~ **Resolved by M23/3 (#491):** the Owner column is stripped. A Key date remains date + label + optional note, with no owner and no per-date schedule.
-2. **Close dialog "Resolution" and closing note** — M10 mocks a Resolution select ("Completed") plus an optional closing note; **MTR-002**/**MTR-008** define closing as moving to a closed-category status, with no resolution concept. Decide: is Resolution the closed-status picker (relabel it), a new first-class field, or out?
+2. ~~**Close dialog "Resolution" and closing note** — M10 mocks a Resolution select ("Completed") plus an optional closing note; **MTR-002**/**MTR-008** define closing as moving to a closed-category status, with no resolution concept.~~ **Resolved by M23/7 (#495):** the dialog asks only for one live closed-Category Status. Resolution and closing note are out; no field, payload, or control is created for either.
 3. **Template key dates** — M8 mocks "Template adds 4 tasks and 2 key dates"; **MTR-013** template content is pre-fill values + tasks only. Decide: do templates also carry relative key dates (offset-from-creation, like template tasks)?
 4. **"My matters" / "matters I'm on" affordance** — **MTR-003** defines both views; M1 offers only a Manager filter chip and Saved views. Decide: first-class views, saved-view presets, or filter-chip-only.
 
@@ -413,6 +413,12 @@ Migration `0076_thankful_cerebro` lands the nullable FK and its index without a 
 - Matter list needs an archived-excluded default plus an Admin-visible archived filter; closed matters need a visible closed pill (category-mapped per **DES-005**) so post-close edits are made knowingly.
 - Search treats closed matters as normal results; archived matters excluded by default.
 - `FUTURE-FEATURES.md` gains a retention-policies entry.
+
+### Implementation note (2026-08-24, M23/7, [#495](https://github.com/juggernog20/OpenLaw/issues/495))
+
+Closing and reopening landed as deliberate record actions over the ordinary Status transition. The current Category's Statuses remain available inline; crossing Categories opens a confirmation that offers only live Statuses in the target Category. Closing names every reachable open child Matter and represents each inaccessible open child only as a Restricted Matter placeholder. The advisory never blocks and confirmation sends only `statusId` through the existing write, so no child or sibling datum is touched.
+
+The existing timestamp rules remain the whole lifecycle model: open-to-closed stamps `closed_at`, closed-to-open clears it, moves within one Category preserve it, and `opened_at` never moves. Closed Matters remain writable across Fields, comments, Documents, Key dates, Tasks, and relationships. They stay outside default and active deadline surfaces until reopened; Archiving remains the separate write freeze. Each accepted transition appends `matter.status_changed` with from/to Status and Category.
 
 ---
 

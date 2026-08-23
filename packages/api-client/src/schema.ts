@@ -945,6 +945,23 @@ export interface paths {
     patch: operations["updateMatter"];
     trace?: never;
   };
+  "/api/v1/matters/{number}/lifecycle": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Live Status choices for deliberate Closing or reopening, with a non-blocking open-child advisory */
+    get: operations["getMatterLifecycle"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/v1/matters/{number}/team": {
     parameters: {
       query?: never;
@@ -6910,6 +6927,58 @@ export interface operations {
               /** @enum {string} */
               role: "member" | "watcher" | "creator" | "contributor";
             }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  getMatterLifecycle: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        number: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            /** @enum {string} */
+            action: "close" | "reopen";
+            /** @enum {string} */
+            targetCategory: "open" | "closed";
+            statuses: {
+              id: string;
+              displayName: string;
+            }[];
+            openChildren: (
+              | {
+                  /** @enum {boolean} */
+                  restricted: true;
+                }
+              | {
+                  /** @enum {boolean} */
+                  restricted: false;
+                  number: number;
+                  title: string;
+                }
+            )[];
           };
         };
       };

@@ -2,7 +2,7 @@
 
 /** M22/5's editable matter record: one commit per field and recoverable lifecycle acts. */
 import { useEffect, useMemo, useState, type ReactNode } from "react";
-import { Archive, ArchiveRestore, ChevronRight } from "lucide-react";
+import { Archive, ArchiveRestore, CheckCircle2, ChevronRight, RotateCcw } from "lucide-react";
 import { FormattedMessage, useIntl, type IntlShape } from "react-intl";
 import {
   Link,
@@ -30,8 +30,8 @@ import {
   matterReference,
   matterSeverityLabel,
   type MatterField,
+  type MatterLifecycle,
   type MatterRow,
-  type MatterStatusOption,
   type MatterTeamMember,
   type MatterTypeOption,
 } from "../lib/matters";
@@ -176,6 +176,10 @@ export function MatterRecordPage() {
   const [lifecycleDialog, setLifecycleDialog] = useState<"archive" | "restore" | null>(null);
   const [lifecycleStatus, setLifecycleStatus] = useState<FieldStatus>("idle");
   const [lifecycleError, setLifecycleError] = useState<string | null>(null);
+  const [matterLifecycle, setMatterLifecycle] = useState<MatterLifecycle | null>(null);
+  const [matterLifecycleStatusId, setMatterLifecycleStatusId] = useState("");
+  const [matterLifecycleStatus, setMatterLifecycleStatus] = useState<FieldStatus>("idle");
+  const [matterLifecycleError, setMatterLifecycleError] = useState<string | null>(null);
   const canEdit = isMemberPlus(user.role);
   const contributor = user.role === "contributor";
   const archived = saved.archivedAt !== null;
@@ -300,6 +304,39 @@ export function MatterRecordPage() {
     setSaved(result.data.matter);
     setLifecycleStatus("saved");
     setLifecycleDialog(null);
+  }
+
+  async function openMatterLifecycle() {
+    if (matterLifecycleStatus === "saving") return;
+    setMatterLifecycleStatus("saving");
+    setMatterLifecycleError(null);
+    const { data, error } = await api
+      .GET("/api/v1/matters/{number}/lifecycle", {
+        params: { path: { number: saved.number } },
+      })
+      .catch(() => ({ data: undefined, error: undefined }));
+    if (!data) {
+      setMatterLifecycleStatus("error");
+      setMatterLifecycleError(problemDetail(error) ?? null);
+      return;
+    }
+    setMatterLifecycle(data);
+    setMatterLifecycleStatusId(data.statuses[0]?.id ?? "");
+    setMatterLifecycleStatus("idle");
+  }
+
+  async function commitMatterLifecycle() {
+    if (!matterLifecycleStatusId || matterLifecycleStatus === "saving") return;
+    setMatterLifecycleStatus("saving");
+    setMatterLifecycleError(null);
+    const refusal = await commit("statusId", { statusId: matterLifecycleStatusId });
+    if (refusal) {
+      setMatterLifecycleStatus("error");
+      setMatterLifecycleError(refusal);
+      return;
+    }
+    setMatterLifecycleStatus("idle");
+    setMatterLifecycle(null);
   }
 
   // The saved type, status, or Matter Manager may have been archived
@@ -431,22 +468,13 @@ export function MatterRecordPage() {
                 disabled={fieldStatus.statusId === "saving"}
                 onChange={(event) => void commit("statusId", { statusId: event.target.value })}
               >
-                <StatusGroup
-                  label={intl.formatMessage({
-                    id: "matters.status.open",
-                    defaultMessage: "Open",
-                  })}
-                  category="open"
-                  statuses={statusOptions}
-                />
-                <StatusGroup
-                  label={intl.formatMessage({
-                    id: "matters.status.closed",
-                    defaultMessage: "Closed",
-                  })}
-                  category="closed"
-                  statuses={statusOptions}
-                />
+                {statusOptions
+                  .filter((status) => status.category === saved.statusCategory)
+                  .map((status) => (
+                    <option key={status.id} value={status.id}>
+                      {status.displayName}
+                    </option>
+                  ))}
               </select>
             )}
             {!frozen && (
@@ -456,6 +484,28 @@ export function MatterRecordPage() {
               <span className="rounded-pill bg-badge-count-bg px-2 py-0.5 text-xs font-medium text-badge-count-fg">
                 <FormattedMessage id="matters.archivedPill" defaultMessage="Archived" />
               </span>
+            )}
+            {canEdit && !archived && (
+              <>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  disabled={matterLifecycleStatus === "saving"}
+                  onClick={() => void openMatterLifecycle()}
+                >
+                  {saved.statusCategory === "open" ? (
+                    <CheckCircle2 size={16} aria-hidden="true" />
+                  ) : (
+                    <RotateCcw size={16} aria-hidden="true" />
+                  )}
+                  {saved.statusCategory === "open" ? (
+                    <FormattedMessage id="matters.record.close" defaultMessage="Close matter" />
+                  ) : (
+                    <FormattedMessage id="matters.record.reopen" defaultMessage="Reopen matter" />
+                  )}
+                </Button>
+                <StatusNote status={matterLifecycleStatus} detail={matterLifecycleError} />
+              </>
             )}
             {canEdit && (
               <Button
@@ -869,6 +919,20 @@ export function MatterRecordPage() {
           onConfirm={() => void archiveOrRestore()}
         />
       )}
+      {matterLifecycle && (
+        <MatterLifecycleDialog
+          lifecycle={matterLifecycle}
+          matterTitle={saved.title}
+          statusId={matterLifecycleStatusId}
+          saving={matterLifecycleStatus === "saving"}
+          error={matterLifecycleError}
+          onStatusId={setMatterLifecycleStatusId}
+          onOpenChange={(open) => {
+            if (!open) setMatterLifecycle(null);
+          }}
+          onConfirm={() => void commitMatterLifecycle()}
+        />
+      )}
       {subMatterOpen && (
         <CreateMatterDialog
           matterTypes={matterTypes}
@@ -880,28 +944,6 @@ export function MatterRecordPage() {
         />
       )}
     </AppShell>
-  );
-}
-
-function StatusGroup({
-  label,
-  category,
-  statuses,
-}: {
-  label: string;
-  category: "open" | "closed";
-  statuses: readonly MatterStatusOption[];
-}) {
-  return (
-    <optgroup label={label}>
-      {statuses
-        .filter((status) => status.category === category)
-        .map((status) => (
-          <option key={status.id} value={status.id}>
-            {status.displayName}
-          </option>
-        ))}
-    </optgroup>
   );
 }
 
@@ -1262,6 +1304,137 @@ function LifecycleDialog({
               <FormattedMessage id="matters.record.archive" defaultMessage="Archive" />
             ) : (
               <FormattedMessage id="matters.record.restore" defaultMessage="Restore" />
+            )}
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function MatterLifecycleDialog({
+  lifecycle,
+  matterTitle,
+  statusId,
+  saving,
+  error,
+  onStatusId,
+  onOpenChange,
+  onConfirm,
+}: {
+  lifecycle: MatterLifecycle;
+  matterTitle: string;
+  statusId: string;
+  saving: boolean;
+  error: string | null;
+  onStatusId: (statusId: string) => void;
+  onOpenChange: (open: boolean) => void;
+  onConfirm: () => void;
+}) {
+  const intl = useIntl();
+  const closing = lifecycle.action === "close";
+  return (
+    <Dialog open onOpenChange={onOpenChange}>
+      <DialogContent aria-describedby="matter-status-lifecycle-description">
+        <DialogTitle>
+          {closing ? (
+            <FormattedMessage
+              id="matters.close.title"
+              defaultMessage="Close {title}?"
+              values={{ title: matterTitle }}
+            />
+          ) : (
+            <FormattedMessage
+              id="matters.reopen.title"
+              defaultMessage="Reopen {title}?"
+              values={{ title: matterTitle }}
+            />
+          )}
+        </DialogTitle>
+        <p id="matter-status-lifecycle-description" className="mt-2 text-sm text-muted">
+          {closing ? (
+            <FormattedMessage
+              id="matters.close.description"
+              defaultMessage="Closing is a signal, not a lock. The Matter leaves active surfaces but stays fully writable."
+            />
+          ) : (
+            <FormattedMessage
+              id="matters.reopen.description"
+              defaultMessage="The Matter returns to active surfaces. Its original opened date is preserved."
+            />
+          )}
+        </p>
+        <div className="mt-4 flex flex-col gap-1.5">
+          <Label htmlFor="matter-lifecycle-status">
+            {closing ? (
+              <FormattedMessage id="matters.close.status" defaultMessage="Closed Status" />
+            ) : (
+              <FormattedMessage id="matters.reopen.status" defaultMessage="Open Status" />
+            )}
+          </Label>
+          <select
+            id="matter-lifecycle-status"
+            className={CONTROL_CLASS}
+            value={statusId}
+            disabled={saving}
+            onChange={(event) => onStatusId(event.target.value)}
+          >
+            {lifecycle.statuses.map((status) => (
+              <option key={status.id} value={status.id}>
+                {status.displayName}
+              </option>
+            ))}
+          </select>
+        </div>
+        {closing && lifecycle.openChildren.length > 0 && (
+          <section
+            aria-labelledby="matter-open-children-title"
+            className="mt-4 rounded-card border border-border-default bg-subtle p-3"
+          >
+            <h3 id="matter-open-children-title" className="text-sm font-semibold">
+              <FormattedMessage
+                id="matters.close.openChildren"
+                defaultMessage="Open child Matters"
+              />
+            </h3>
+            <p className="mt-1 text-sm text-muted">
+              <FormattedMessage
+                id="matters.close.openChildrenDescription"
+                defaultMessage="These child Matters will stay open. Closing this parent changes none of them."
+              />
+            </p>
+            <ul className="mt-2 list-disc space-y-1 ps-5 text-sm">
+              {lifecycle.openChildren.map((child, index) => (
+                <li key={child.restricted ? `restricted-${index}` : child.number}>
+                  {child.restricted ? (
+                    <FormattedMessage
+                      id="matters.relations.restricted"
+                      defaultMessage="Restricted Matter"
+                    />
+                  ) : (
+                    <Link to={`/matters/${child.number}`} className="text-link hover:underline">
+                      {matterReference(intl, child.number)} {child.title}
+                    </Link>
+                  )}
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
+        {error && (
+          <p role="alert" className="mt-3 text-sm text-status-danger-fg">
+            {error}
+          </p>
+        )}
+        <div className="mt-5 flex justify-end gap-2">
+          <Button variant="ghost" onClick={() => onOpenChange(false)}>
+            <FormattedMessage id="action.cancel" defaultMessage="Cancel" />
+          </Button>
+          <Button disabled={saving || !statusId} onClick={onConfirm}>
+            {closing ? (
+              <FormattedMessage id="matters.record.close" defaultMessage="Close matter" />
+            ) : (
+              <FormattedMessage id="matters.record.reopen" defaultMessage="Reopen matter" />
             )}
           </Button>
         </div>
