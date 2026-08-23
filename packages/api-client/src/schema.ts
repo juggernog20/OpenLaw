@@ -1013,6 +1013,42 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/v1/matters/{number}/key-dates": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** List a reached Matter's named Key dates chronologically, marking overdue rows and the earliest active Next deadline. Closed and archived Matters retain their rows but mark none active */
+    get: operations["listMatterKeyDates"];
+    put?: never;
+    /** Add a named civil Key date to a reached, non-archived Matter. Closing does not freeze the record */
+    post: operations["addMatterKeyDate"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/matter-key-dates/{keyDateId}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    /** Remove one reached Matter Key date while retaining its Activity narration */
+    delete: operations["removeMatterKeyDate"];
+    options?: never;
+    head?: never;
+    /** Move, rename, or amend one reached Matter Key date */
+    patch: operations["updateMatterKeyDate"];
+    trace?: never;
+  };
   "/api/v1/request-types": {
     parameters: {
       query?: never;
@@ -6254,6 +6290,11 @@ export interface operations {
               createdAt: string;
               /** Format: date-time */
               updatedAt: string;
+              nextDeadline: {
+                /** Format: date */
+                date: string;
+                label: string;
+              } | null;
             }[];
             nextCursor: string | null;
             counts: {
@@ -6338,6 +6379,11 @@ export interface operations {
               createdAt: string;
               /** Format: date-time */
               updatedAt: string;
+              nextDeadline: {
+                /** Format: date */
+                date: string;
+                label: string;
+              } | null;
             };
           };
         };
@@ -6475,6 +6521,11 @@ export interface operations {
               createdAt: string;
               /** Format: date-time */
               updatedAt: string;
+              nextDeadline: {
+                /** Format: date */
+                date: string;
+                label: string;
+              } | null;
             };
             fields: {
               fieldId: string;
@@ -6599,6 +6650,11 @@ export interface operations {
               createdAt: string;
               /** Format: date-time */
               updatedAt: string;
+              nextDeadline: {
+                /** Format: date */
+                date: string;
+                label: string;
+              } | null;
             };
             fields: {
               fieldId: string;
@@ -6796,6 +6852,11 @@ export interface operations {
               createdAt: string;
               /** Format: date-time */
               updatedAt: string;
+              nextDeadline: {
+                /** Format: date */
+                date: string;
+                label: string;
+              } | null;
             };
           };
         };
@@ -6861,7 +6922,198 @@ export interface operations {
               createdAt: string;
               /** Format: date-time */
               updatedAt: string;
+              nextDeadline: {
+                /** Format: date */
+                date: string;
+                label: string;
+              } | null;
             };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  listMatterKeyDates: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        number: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            deadlines: {
+              keyDateId: string;
+              /** Format: date */
+              date: string;
+              label: string;
+              note: string | null;
+              daysAway: number;
+              overdue: boolean;
+              isNext: boolean;
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  addMatterKeyDate: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        number: number;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          /** Format: date */
+          date: string;
+          label: string;
+          note?: string | null;
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            deadlines: {
+              keyDateId: string;
+              /** Format: date */
+              date: string;
+              label: string;
+              note: string | null;
+              daysAway: number;
+              overdue: boolean;
+              isNext: boolean;
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  removeMatterKeyDate: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        keyDateId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            deadlines: {
+              keyDateId: string;
+              /** Format: date */
+              date: string;
+              label: string;
+              note: string | null;
+              daysAway: number;
+              overdue: boolean;
+              isNext: boolean;
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  updateMatterKeyDate: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        keyDateId: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          /** Format: date */
+          date?: string;
+          label?: string;
+          note?: string | null;
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            deadlines: {
+              keyDateId: string;
+              /** Format: date */
+              date: string;
+              label: string;
+              note: string | null;
+              daysAway: number;
+              overdue: boolean;
+              isNext: boolean;
+            }[];
           };
         };
       };

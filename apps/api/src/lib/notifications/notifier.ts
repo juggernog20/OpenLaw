@@ -358,6 +358,18 @@ export interface KeyDateReminderEvent extends DateReminderEvent {
   label: string;
 }
 
+/** One approaching Key date on a Matter (MTR-004). */
+export interface MatterKeyDateReminderEvent {
+  matterId: string;
+  matterNumber: number;
+  matterTitle: string;
+  reminderDate: string;
+  offsetDays: number;
+  userIds: readonly string[];
+  keyDateId: string;
+  label: string;
+}
+
 /**
  * What every event on a Request carries (NOT-002 group 5).
  *
@@ -579,6 +591,12 @@ export interface Notifier {
    * every round after the first.
    */
   keyDateApproaching(tx: NotifyingTransaction, event: KeyDateReminderEvent): Promise<number>;
+
+  /** A reached, open Matter's named Key date is approaching (MTR-004). */
+  matterKeyDateApproaching(
+    tx: NotifyingTransaction,
+    event: MatterKeyDateReminderEvent,
+  ): Promise<number>;
 
   /**
    * A record's notice deadline is approaching (CTR-006) — group 3, bell
@@ -1468,6 +1486,32 @@ export function createNotifier(deps: NotifierDeps): Notifier {
         keyDateId: event.keyDateId,
         label: event.label,
       });
+    },
+
+    matterKeyDateApproaching(
+      tx: NotifyingTransaction,
+      event: MatterKeyDateReminderEvent,
+    ): Promise<number> {
+      return fanOut(
+        tx,
+        "date.key_date_approaching",
+        { type: MATTER_ENTITY, id: event.matterId },
+        null,
+        event.userIds.map((userId) => ({
+          userId,
+          payload: {
+            keyDateId: event.keyDateId,
+            label: event.label,
+            matterNumber: event.matterNumber,
+            matterTitle: event.matterTitle,
+            actorId: null,
+            actorName: null,
+            reminderDate: event.reminderDate,
+            offsetDays: event.offsetDays,
+          },
+        })),
+        { reminder: { date: event.reminderDate, offsetDays: event.offsetDays } },
+      );
     },
 
     noticeDeadlineApproaching(tx: NotifyingTransaction, event: DateReminderEvent): Promise<number> {

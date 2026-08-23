@@ -44,6 +44,7 @@ import {
   desc,
   eq,
   notifications,
+  matterStatuses,
   orgSettings,
   sql,
   users,
@@ -112,6 +113,7 @@ interface ContractRow {
   number: number;
   title: string;
 }
+type MatterRow = ContractRow;
 
 interface BellItem {
   id: string;
@@ -212,6 +214,52 @@ async function addKeyDate(number: number, date: string, label: string): Promise<
     .pop();
   expect(added, "the key date just added").toBeDefined();
   return added!.keyDateId!;
+}
+
+async function newMatter(title: string): Promise<MatterRow> {
+  const options = await harness.app.inject({
+    method: "GET",
+    url: "/api/v1/matters/options",
+    cookies: as(OWNER),
+  });
+  expect(options.statusCode, options.body).toBe(200);
+  const matterTypeId = (options.json().matterTypes as { id: string }[])[0]!.id;
+  const response = await harness.app.inject({
+    method: "POST",
+    url: "/api/v1/matters",
+    cookies: as(OWNER),
+    payload: { title, matterTypeId },
+  });
+  expect(response.statusCode, response.body).toBe(201);
+  return response.json().matter as MatterRow;
+}
+
+async function addMatterKeyDate(number: number, date: string, label: string): Promise<string> {
+  const response = await harness.app.inject({
+    method: "POST",
+    url: `/api/v1/matters/${number}/key-dates`,
+    cookies: as(OWNER),
+    payload: { date, label },
+  });
+  expect(response.statusCode, response.body).toBe(201);
+  return (response.json().deadlines as { keyDateId: string; label: string }[]).find(
+    (row) => row.label === label,
+  )!.keyDateId;
+}
+
+async function moveMatterTo(number: number, category: "open" | "closed"): Promise<void> {
+  const [status] = await harness.db
+    .select({ id: matterStatuses.id })
+    .from(matterStatuses)
+    .where(eq(matterStatuses.category, category))
+    .orderBy(asc(matterStatuses.displayOrder), asc(matterStatuses.createdAt));
+  const response = await harness.app.inject({
+    method: "PATCH",
+    url: `/api/v1/matters/${number}`,
+    cookies: as(OWNER),
+    payload: { statusId: status!.id },
+  });
+  expect(response.statusCode, response.body).toBe(200);
 }
 
 async function moveKeyDate(keyDateId: string, date: string): Promise<void> {
@@ -323,6 +371,9 @@ async function round(now: Date): Promise<{ summary: MorningRoundSummary; lines: 
  * the whole test: no other message in this system carries it. */
 const digestsTo = (fixture: { email: string }) =>
   harness.mailer.messagesTo(fixture.email).filter((m) => /on your contracts$/.test(m.subject));
+
+const matterDigestsTo = (fixture: { email: string }) =>
+  harness.mailer.messagesTo(fixture.email).filter((m) => m.subject.includes("on your matters"));
 
 /** The most recent briefing one person was sent, requiring one. */
 function lastDigestTo(fixture: { email: string }) {
@@ -437,6 +488,69 @@ describe("a second round on the same tick", () => {
 
     expect(await bellFor(OWNER, contract)).toHaveLength(1);
     expect(digestsTo(OWNER)).toHaveLength(briefings);
+  });
+});
+
+describe("Matter Key dates in the morning round", () => {
+  const TODAY = "2026-04-20";
+  let active: MatterRow;
+  let closed: MatterRow;
+  let archived: MatterRow;
+  let reopening: MatterRow;
+
+  beforeAll(async () => {
+    active = await newMatter("Aster regulatory response");
+    await addMatterKeyDate(active.number, plusDays(TODAY, 1), "Agency response due");
+
+    closed = await newMatter("Closed investigation");
+    await addMatterKeyDate(closed.number, plusDays(TODAY, 1), "Retained closed date");
+    await moveMatterTo(closed.number, "closed");
+
+    archived = await newMatter("Archived filing mistake");
+    await addMatterKeyDate(archived.number, plusDays(TODAY, 1), "Retained archived date");
+    const archivedResponse = await harness.app.inject({
+      method: "POST",
+      url: `/api/v1/matters/${archived.number}/archive`,
+      cookies: as(OWNER),
+    });
+    expect(archivedResponse.statusCode, archivedResponse.body).toBe(200);
+
+    reopening = await newMatter("Reopening inquiry");
+    await addMatterKeyDate(reopening.number, plusDays(TODAY, 1), "Future response");
+    await moveMatterTo(reopening.number, "closed");
+    await round(at(TODAY, 8));
+  });
+
+  it("rings the reached team member's bell and includes the Matter in the briefing", async () => {
+    const items = await bellFor(OWNER, active);
+    expect(items).toHaveLength(1);
+    expect(items[0]).toMatchObject({ eventType: "date.key_date_approaching" });
+    expect(items[0]!.payload).toMatchObject({
+      matterNumber: active.number,
+      matterTitle: active.title,
+      label: "Agency response due",
+      actorId: null,
+    });
+    const briefing = matterDigestsTo(OWNER).at(-1)!;
+    expect(briefing.subject).toBe("1 date on your matters");
+    expect(briefing.text).toContain(`M-${active.number}`);
+    expect(briefing.text).toContain(`http://localhost/matters/${active.number}/key-dates`);
+    expect((await rowsFor(OUTSIDER)).some((row) => row.entityId === active.id)).toBe(false);
+  });
+
+  it("writes nothing for closed or archived Matters", async () => {
+    const ownerRows = await rowsFor(OWNER);
+    expect(ownerRows.some((row) => row.entityId === closed.id)).toBe(false);
+    expect(ownerRows.some((row) => row.entityId === archived.id)).toBe(false);
+  });
+
+  it("makes a still-future date active again after reopening", async () => {
+    expect((await rowsFor(OWNER)).some((row) => row.entityId === reopening.id)).toBe(false);
+    await moveMatterTo(reopening.number, "open");
+    const result = await round(at(TODAY, 9));
+    expect(result.summary.reminders).toBe(1);
+    expect(await bellFor(OWNER, reopening)).toHaveLength(1);
+    expect((await round(at(plusDays(TODAY, 1), 8))).summary.digests).toBe(1);
   });
 });
 

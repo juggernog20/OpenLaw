@@ -44,6 +44,7 @@ import { useActivityApplet } from "../components/activity/activity-applet";
 import { useCommentApplet } from "../components/comments/comment-applet";
 import { CustomFieldControl, type FieldReference } from "../components/custom-field-control";
 import { MatterTeamTray } from "../components/matters/team-tray";
+import { MatterKeyDatesCard } from "../components/matters/key-dates-card";
 import { DocPanel } from "../components/documents/doc-panel";
 import { DocumentsCard } from "../components/documents/documents-card";
 import { PageTitle } from "../components/page-title";
@@ -58,7 +59,7 @@ import { Label } from "../components/ui/label";
 
 /** The DES-032 sections a matter record has beyond its Overview. Each
  * is one trailing URL segment; the bare address is the Overview. */
-const RECORD_TABS = ["documents"] as const;
+const RECORD_TABS = ["documents", "key-dates"] as const;
 type RecordTabName = "overview" | (typeof RECORD_TABS)[number];
 
 export async function matterRecordLoader({ params }: LoaderFunctionArgs) {
@@ -74,7 +75,7 @@ export async function matterRecordLoader({ params }: LoaderFunctionArgs) {
     return redirect(`/matters/${number}`);
   }
   const canEdit = isMemberPlus(user.role);
-  const [record, options, paper, folders] = await Promise.all([
+  const [record, options, paper, folders, keyDates] = await Promise.all([
     api.GET("/api/v1/matters/{number}", { params: { path: { number } } }),
     canEdit ? api.GET("/api/v1/matters/options") : undefined,
     api
@@ -85,8 +86,9 @@ export async function matterRecordLoader({ params }: LoaderFunctionArgs) {
     api
       .GET("/api/v1/matters/{number}/folders", { params: { path: { number } } })
       .catch(() => ({ data: undefined })),
+    api.GET("/api/v1/matters/{number}/key-dates", { params: { path: { number } } }),
   ]);
-  if (!record.data) throw new Error("The matter could not be read.");
+  if (!record.data || !keyDates.data) throw new Error("The matter could not be read.");
   if (canEdit && !options?.data) throw new Error("The matter's edit options could not be read.");
   return {
     user,
@@ -102,6 +104,7 @@ export async function matterRecordLoader({ params }: LoaderFunctionArgs) {
     documents: paper.data?.documents ?? [],
     documentsCursor: paper.data?.nextCursor ?? null,
     folders: folders.data?.folders ?? [],
+    deadlines: keyDates.data.deadlines,
   };
 }
 
@@ -135,6 +138,7 @@ export function MatterRecordPage() {
   const [paper, setPaper] = useState(loader.documents);
   const [paperCursor, setPaperCursor] = useState(loader.documentsCursor);
   const [folders, setFolders] = useState(loader.folders);
+  const [deadlines, setDeadlines] = useState(loader.deadlines);
   const [filed, setFiled] = useState<typeof loader.documents>([]);
   const [reading, setReading] = useState<{ documentId: string; versionId: string } | null>(null);
   const [title, setTitle] = useState(saved.title);
@@ -435,6 +439,21 @@ export function MatterRecordPage() {
                   <FormattedMessage id="matters.record.tab.documents" defaultMessage="Documents" />
                 ),
               },
+              {
+                to: `/matters/${saved.number}/key-dates`,
+                label: (
+                  <FormattedMessage id="matters.record.tab.keyDates" defaultMessage="Key dates" />
+                ),
+                count: deadlines.filter((row) => !row.overdue).length,
+                countLabel: intl.formatMessage(
+                  {
+                    id: "matters.record.tab.keyDates.upcoming",
+                    defaultMessage:
+                      "{count, plural, one {# upcoming date} other {# upcoming dates}}",
+                  },
+                  { count: deadlines.filter((row) => !row.overdue).length },
+                ),
+              },
             ]}
           />
         </>
@@ -703,6 +722,16 @@ export function MatterRecordPage() {
               }}
               onFiled={setFiled}
               onFolders={setFolders}
+            />
+          </div>
+        )}
+        {tab === "key-dates" && (
+          <div className="overflow-y-auto px-page-x py-page-y">
+            <MatterKeyDatesCard
+              matterNumber={saved.number}
+              deadlines={deadlines}
+              frozen={frozen}
+              onDeadlines={setDeadlines}
             />
           </div>
         )}

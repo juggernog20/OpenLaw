@@ -15,6 +15,7 @@ import {
   matterTypeFields,
   matterTypes,
   MATTER_TEAM_ROLES,
+  matterKeyDates,
   SEVERITY_LEVELS,
   sql,
   users,
@@ -35,6 +36,7 @@ import {
 } from "@openlaw/shared";
 import { requireRole, type AuthenticatedUser } from "../../auth/guards.js";
 import { recordActivity, RECORD_ACTIVITY_TIER } from "../../lib/activity.js";
+import { civilToday } from "../../lib/contract-term.js";
 import {
   applyCustomFields,
   assertContributorCustomFieldWrite,
@@ -105,6 +107,7 @@ const MatterRowSchema = z.object({
   archivedAt: z.iso.datetime().nullable(),
   createdAt: z.iso.datetime(),
   updatedAt: z.iso.datetime(),
+  nextDeadline: z.object({ date: z.iso.date(), label: z.string() }).nullable(),
 });
 
 const MatterEnvelope = z.object({ matter: MatterRowSchema });
@@ -132,6 +135,7 @@ interface MatterContext {
     image: string | null;
     archivedAt: Date | null;
   } | null;
+  nextDeadline?: { date: string; label: string } | null;
 }
 
 function toRow(
@@ -166,11 +170,12 @@ function toRow(
     archivedAt: row.archivedAt?.toISOString() ?? null,
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
+    nextDeadline: context.nextDeadline ?? null,
   };
 }
 
 export const mattersRoutes: FastifyPluginAsyncZod = async (app) => {
-  const selectMatters = (db: Executor) =>
+  const selectMatters = (db: Executor, today: string = civilToday()) =>
     db
       .select({
         row: matters,
@@ -183,6 +188,17 @@ export const mattersRoutes: FastifyPluginAsyncZod = async (app) => {
           image: users.image,
           archivedAt: users.archivedAt,
         },
+        nextDeadline: sql<{ date: string; label: string } | null>`case
+          when ${matterStatuses.category} = 'open' and ${matters.archivedAt} is null then (
+            select json_build_object('date', ${matterKeyDates.date}, 'label', ${matterKeyDates.label})
+            from ${matterKeyDates}
+            where ${matterKeyDates.matterId} = ${matters.id}
+              and ${matterKeyDates.date} >= ${today}
+            order by ${matterKeyDates.date}, ${matterKeyDates.id}
+            limit 1
+          )
+          else null
+        end`,
       })
       .from(matters)
       .innerJoin(matterTypes, eq(matters.matterTypeId, matterTypes.id))
@@ -362,10 +378,11 @@ export const mattersRoutes: FastifyPluginAsyncZod = async (app) => {
       },
     },
     async (request) => {
+      const today = civilToday();
       const sort: SortRequest | null = request.query.sort
         ? { key: request.query.sort, dir: request.query.dir ?? "asc" }
         : null;
-      const rows = await selectMatters(app.db)
+      const rows = await selectMatters(app.db, today)
         .where(
           and(
             request.query.includeArchived === "true" ? undefined : isNull(matters.archivedAt),
@@ -607,7 +624,8 @@ export const mattersRoutes: FastifyPluginAsyncZod = async (app) => {
     },
     async (request) => {
       const body = request.body;
-      const updated = await app.db.transaction(async (tx) => {
+      const today = civilToday();
+      const written = await app.db.transaction(async (tx) => {
         const current = await lockedMatter(tx, request.params.number, request.user);
         let contributorAttached: AttachedCustomField[] | null = null;
         if (request.user.role === "contributor") {
@@ -829,9 +847,13 @@ export const mattersRoutes: FastifyPluginAsyncZod = async (app) => {
         }
         return { row, matterTypeName, statusName, statusCategory, manager, attached };
       });
+      const [updated] = await selectMatters(app.db, today)
+        .where(eq(matters.id, written.row.id))
+        .limit(1);
+      if (!updated) throw httpError(404, NO_MATTER);
       const projection = projectCustomFields(
         request.user.role,
-        updated.attached,
+        written.attached,
         updated.row.customFields,
       );
       return {
@@ -972,6 +994,7 @@ export const mattersRoutes: FastifyPluginAsyncZod = async (app) => {
       },
     },
     async (request) => {
+      const today = civilToday();
       const archived = await app.db.transaction(async (tx) => {
         const current = await lockedMatter(tx, request.params.number, request.user);
         if (current.row.archivedAt) throw httpError(409, "This matter is already archived.");
@@ -990,7 +1013,11 @@ export const mattersRoutes: FastifyPluginAsyncZod = async (app) => {
         });
         return { ...current, row: row! };
       });
-      return { matter: toRow(archived) };
+      const [fresh] = await selectMatters(app.db, today)
+        .where(eq(matters.id, archived.row.id))
+        .limit(1);
+      if (!fresh) throw httpError(404, NO_MATTER);
+      return { matter: toRow(fresh) };
     },
   );
 
@@ -1007,6 +1034,7 @@ export const mattersRoutes: FastifyPluginAsyncZod = async (app) => {
       },
     },
     async (request) => {
+      const today = civilToday();
       const restored = await app.db.transaction(async (tx) => {
         const current = await lockedMatter(tx, request.params.number, request.user);
         if (!current.row.archivedAt) throw httpError(409, "This matter is not archived.");
@@ -1025,7 +1053,11 @@ export const mattersRoutes: FastifyPluginAsyncZod = async (app) => {
         });
         return { ...current, row: row! };
       });
-      return { matter: toRow(restored) };
+      const [fresh] = await selectMatters(app.db, today)
+        .where(eq(matters.id, restored.row.id))
+        .limit(1);
+      if (!fresh) throw httpError(404, NO_MATTER);
+      return { matter: toRow(fresh) };
     },
   );
 };

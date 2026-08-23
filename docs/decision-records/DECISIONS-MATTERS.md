@@ -20,7 +20,7 @@ Decisions are numbered `MTR-###`.
 
 Queued 2026-08-07 from the matters.pen ↔ decision-record audit — mock drift that needs a decision rather than a silent strip:
 
-1. **Key-date owner** — M5 mocks an Owner column per key date; **MTR-004** modeled key dates as `date + label + note`. The reminder half of the original question is settled: **NOT-004** fixed a single global admin-configurable offset list (seeded 7 days / 1 day / day-of) applied to every tracked date and explicitly rejected per-date schedules, and **NOT-003** fixed the daily digest — the M5 "7d · 1d · same day" and digest copy render that global contract, not per-date config. Decide only: does MTR-004 gain an optional owner per key date, or is the Owner column stripped?
+1. ~~**Key-date owner** — M5 mocks an Owner column per key date; **MTR-004** modeled key dates as `date + label + note`.~~ **Resolved by M23/3 (#491):** the Owner column is stripped. A Key date remains date + label + optional note, with no owner and no per-date schedule.
 2. **Close dialog "Resolution" and closing note** — M10 mocks a Resolution select ("Completed") plus an optional closing note; **MTR-002**/**MTR-008** define closing as moving to a closed-category status, with no resolution concept. Decide: is Resolution the closed-status picker (relabel it), a new first-class field, or out?
 3. **Template key dates** — M8 mocks "Template adds 4 tasks and 2 key dates"; **MTR-013** template content is pre-fill values + tasks only. Decide: do templates also carry relative key dates (offset-from-creation, like template tasks)?
 4. **"My matters" / "matters I'm on" affordance** — **MTR-003** defines both views; M1 offers only a Manager filter chip and Saved views. Decide: first-class views, saved-view presets, or filter-chip-only.
@@ -252,6 +252,10 @@ Every matter needs an ownership answer: single primary owner vs multiple assigne
 - New `docs/FUTURE-FEATURES.md` parking lot created (first entries: SLA engine, plus pre-existing deferrals DD-005 reporting destination and DES-010 Cmd-K).
 - Matter list/detail screens need a "next deadline" affordance; the events-card pattern in the contract mock (region H) is the likely shared component.
 - Resolved in the Contracts grill: renewal/expiry/notice dates got their own typed columns with a derived notice deadline (**CTR-006**), and ad-hoc contract dates reuse this table's shape as `contract_key_dates` (**CTR-009**).
+
+### Implementation note (2026-08-23, M23/3, [#491](https://github.com/juggernog20/OpenLaw/issues/491))
+
+`matter_key_dates` landed as the M16 sibling promised: one civil date, a trimmed label, and an optional trimmed note, with no owner, per-date schedule, special statute-of-limitations type, or SLA behavior. The record keeps every row through closing and archiving; only an open, non-archived Matter marks a Next deadline or enters the morning round. Closing remains writable, reopening reactivates still-future dates, and archiving alone freezes mutations. Matter reach is the read wall, while the reminder audience is the Matter Manager and explicit team roster narrowed through that wall again at send time.
 
 ---
 

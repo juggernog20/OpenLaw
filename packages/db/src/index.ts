@@ -39,6 +39,7 @@ import * as intakeLinksSchema from "./schema/intake-links.js";
 import * as listViewsSchema from "./schema/list-views.js";
 import * as matterTypeFieldsSchema from "./schema/matter-type-fields.js";
 import * as matterTypesSchema from "./schema/matter-types.js";
+import * as matterKeyDatesSchema from "./schema/matter-key-dates.js";
 import * as matterStatusesSchema from "./schema/matter-statuses.js";
 import * as mattersSchema from "./schema/matters.js";
 import * as matterTeamSchema from "./schema/matter-team.js";
@@ -79,6 +80,7 @@ export * from "./schema/intake-links.js";
 export * from "./schema/list-views.js";
 export * from "./schema/matter-type-fields.js";
 export * from "./schema/matter-types.js";
+export * from "./schema/matter-key-dates.js";
 export * from "./schema/matter-statuses.js";
 export * from "./schema/matters.js";
 export * from "./schema/matter-team.js";
@@ -121,6 +123,7 @@ export const schema = {
   ...listViewsSchema,
   ...matterTypeFieldsSchema,
   ...matterTypesSchema,
+  ...matterKeyDatesSchema,
   ...matterStatusesSchema,
   ...mattersSchema,
   ...matterTeamSchema,

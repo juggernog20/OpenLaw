@@ -3,7 +3,7 @@
 /** The stable column catalogue and saved filter vocabulary for the Matters list. */
 import { FormattedMessage } from "react-intl";
 import { Link } from "react-router";
-import { formatShortDate } from "../../lib/format";
+import { formatDeadline, formatShortDate } from "../../lib/format";
 import type { ColumnCatalogue, ColumnDef } from "../../lib/list-views";
 import {
   matterPath,
@@ -90,6 +90,28 @@ const COLUMNS: ColumnDef<MatterRow>[] = [
     render: (row, intl) => matterSeverityLabel(intl, row.priority),
   },
   {
+    key: "nextDeadline",
+    header: <FormattedMessage id="matters.column.nextDeadline" defaultMessage="Next deadline" />,
+    label: (intl) =>
+      intl.formatMessage({ id: "matters.column.nextDeadline", defaultMessage: "Next deadline" }),
+    defaultWidth: 220,
+    minWidth: 144,
+    render: (row) =>
+      row.nextDeadline ? (
+        <Link
+          to={`${matterPath(row.number)}/key-dates`}
+          className="flex min-w-0 flex-col rounded-chip hover:text-link hover:underline"
+        >
+          <span className="truncate">{row.nextDeadline.label}</span>
+          <span className="text-xs text-muted">{formatDeadline(row.nextDeadline.date)}</span>
+        </Link>
+      ) : (
+        <span className="text-muted">
+          <FormattedMessage id="matters.value.noDeadline" defaultMessage="—" />
+        </span>
+      ),
+  },
+  {
     key: "risk",
     header: <FormattedMessage id="matters.column.risk" defaultMessage="Risk" />,
     label: (intl) => intl.formatMessage({ id: "matters.column.risk", defaultMessage: "Risk" }),
@@ -146,6 +168,7 @@ export const MATTERS_CATALOGUE: ColumnCatalogue<MatterRow> = {
     "title",
     "type",
     "status",
+    "nextDeadline",
     "priority",
     "risk",
     "manager",
