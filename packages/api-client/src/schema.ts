@@ -7176,7 +7176,7 @@ export interface operations {
              * @enum {string}
              */
             outcome?: "converted" | "resolved" | "declined";
-            /** @description The contract the winning conversion made, by its C-### number — null on every other outcome, and null on a record this caller cannot reach (DD-014). The matter arm lands with M22. */
+            /** @description The contract the winning conversion made, by its C-### number — null on every other outcome, and null on a record this caller cannot reach (DD-014). The value is projected from the conversion's module-aware record reference. */
             convertedContract?: {
               number: number;
             } | null;
@@ -7277,7 +7277,7 @@ export interface operations {
              * @enum {string}
              */
             outcome?: "converted" | "resolved" | "declined";
-            /** @description The contract the winning conversion made, by its C-### number — null on every other outcome, and null on a record this caller cannot reach (DD-014). The matter arm lands with M22. */
+            /** @description The contract the winning conversion made, by its C-### number — null on every other outcome, and null on a record this caller cannot reach (DD-014). The value is projected from the conversion's module-aware record reference. */
             convertedContract?: {
               number: number;
             } | null;
@@ -7382,7 +7382,7 @@ export interface operations {
              * @enum {string}
              */
             outcome?: "converted" | "resolved" | "declined";
-            /** @description The contract the winning conversion made, by its C-### number — null on every other outcome, and null on a record this caller cannot reach (DD-014). The matter arm lands with M22. */
+            /** @description The contract the winning conversion made, by its C-### number — null on every other outcome, and null on a record this caller cannot reach (DD-014). The value is projected from the conversion's module-aware record reference. */
             convertedContract?: {
               number: number;
             } | null;
