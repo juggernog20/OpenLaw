@@ -995,6 +995,9 @@
   "comments.filing.documentRequired": {
     "defaultMessage": "Choose the Document this round belongs to."
   },
+  "comments.filing.documentsError": {
+    "defaultMessage": "The Documents could not be loaded. Try again."
+  },
   "comments.filing.error": {
     "defaultMessage": "That attachment could not be filed. Try again."
   },
@@ -1398,7 +1401,7 @@
     "defaultMessage": "—"
   },
   "contracts.record.readOnlyNote": {
-    "defaultMessage": "This record is read-only. Ask a Legal Team Member to make a change."
+    "defaultMessage": "Legal-managed details are read-only. You can edit the business Fields available to you."
   },
   "contracts.record.rename": {
     "defaultMessage": "Rename contract"
@@ -2678,6 +2681,75 @@
   "listEditor.showArchived": {
     "defaultMessage": "Show archived"
   },
+  "matterKeyDates.actions": {
+    "defaultMessage": "Actions"
+  },
+  "matterKeyDates.actionsFor": {
+    "defaultMessage": "Actions for {label}"
+  },
+  "matterKeyDates.add": {
+    "defaultMessage": "Add date"
+  },
+  "matterKeyDates.addTitle": {
+    "defaultMessage": "Add a Key date"
+  },
+  "matterKeyDates.count": {
+    "defaultMessage": "{count, plural, one {# date} other {# dates}}"
+  },
+  "matterKeyDates.date": {
+    "defaultMessage": "Date"
+  },
+  "matterKeyDates.edit": {
+    "defaultMessage": "Edit date"
+  },
+  "matterKeyDates.editTitle": {
+    "defaultMessage": "Edit Key date"
+  },
+  "matterKeyDates.empty": {
+    "defaultMessage": "No Key dates on this Matter yet."
+  },
+  "matterKeyDates.event": {
+    "defaultMessage": "Event"
+  },
+  "matterKeyDates.heading": {
+    "defaultMessage": "Key dates"
+  },
+  "matterKeyDates.needDate": {
+    "defaultMessage": "Pick a date."
+  },
+  "matterKeyDates.needLabel": {
+    "defaultMessage": "Name what the date is."
+  },
+  "matterKeyDates.next": {
+    "defaultMessage": "Next"
+  },
+  "matterKeyDates.note": {
+    "defaultMessage": "Note (optional)"
+  },
+  "matterKeyDates.overdue": {
+    "defaultMessage": "Overdue"
+  },
+  "matterKeyDates.remove": {
+    "defaultMessage": "Remove date"
+  },
+  "matterKeyDates.removePrompt": {
+    "defaultMessage": "Remove {label} on {date}? This cannot be undone."
+  },
+  "matterKeyDates.removeTitle": {
+    "defaultMessage": "Remove Key date?"
+  },
+  "matterKeyDates.state": {
+    "defaultMessage": "State"
+  },
+  "matterKeyDates.tally": {
+    "defaultMessage": "{upcoming} upcoming · {overdue} overdue"
+  },
+  "matterKeyDates.upcoming": {
+    "defaultMessage": "Upcoming"
+  },
+  "matterKeyDates.writeFailed": {
+    "defaultMessage": "The change could not be saved. Try again."
+  },
   "matters.archive.description": {
     "defaultMessage": "The matter leaves the default list. Its history and M-number are kept."
   },
@@ -2689,6 +2761,9 @@
   },
   "matters.column.manager": {
     "defaultMessage": "Matter Manager"
+  },
+  "matters.column.nextDeadline": {
+    "defaultMessage": "Next deadline"
   },
   "matters.column.opened": {
     "defaultMessage": "Opened"
@@ -2867,6 +2942,12 @@
   "matters.record.tab.documents": {
     "defaultMessage": "Documents"
   },
+  "matters.record.tab.keyDates": {
+    "defaultMessage": "Key dates"
+  },
+  "matters.record.tab.keyDates.upcoming": {
+    "defaultMessage": "{count, plural, one {# upcoming date} other {# upcoming dates}}"
+  },
   "matters.record.tab.overview": {
     "defaultMessage": "Overview"
   },
@@ -2959,6 +3040,9 @@
   },
   "matters.validation.number": {
     "defaultMessage": "Enter {fields} as a number."
+  },
+  "matters.value.noDeadline": {
+    "defaultMessage": "—"
   },
   "nav.contracts": {
     "defaultMessage": "Contracts"

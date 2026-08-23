@@ -435,7 +435,8 @@ function hrefFor(item: BellItem, arm: Arm | undefined): string | null {
   }
   if (item.entityType === "matter") {
     const number = wholeNumber(item.payload, "matterNumber");
-    return number === null ? null : `/matters/${number}`;
+    if (number === null) return null;
+    return arm?.section ? `/matters/${number}/${arm.section}` : `/matters/${number}`;
   }
   if (item.entityType !== "contract") return null;
   const number = wholeNumber(item.payload, "contractNumber");

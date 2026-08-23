@@ -63,6 +63,7 @@ import { entityTypesRoutes } from "./modules/entity-types/routes.js";
 import { matterTypesRoutes } from "./modules/matter-types/routes.js";
 import { matterAttachedFieldsRoutes } from "./modules/matter-types/attached-fields.js";
 import { matterStatusesRoutes } from "./modules/matter-statuses/routes.js";
+import { matterKeyDatesRoutes } from "./modules/matter-key-dates/routes.js";
 import { mattersRoutes } from "./modules/matters/routes.js";
 import { requestTypeFieldsRoutes } from "./modules/request-types/attached-fields.js";
 import { requestTypesRoutes } from "./modules/request-types/routes.js";
@@ -419,6 +420,7 @@ export async function buildApp(deps: AppDeps, opts: FastifyServerOptions = {}) {
   await app.register(matterAttachedFieldsRoutes, { prefix: "/api/v1" });
   await app.register(matterStatusesRoutes, { prefix: "/api/v1" });
   await app.register(mattersRoutes, { prefix: "/api/v1" });
+  await app.register(matterKeyDatesRoutes, { prefix: "/api/v1" });
   await app.register(requestTypesRoutes, { prefix: "/api/v1" });
   await app.register(requestTypeFieldsRoutes, { prefix: "/api/v1" });
   await app.register(intakeLinksRoutes, { prefix: "/api/v1" });

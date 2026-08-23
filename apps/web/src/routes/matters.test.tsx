@@ -64,6 +64,7 @@ function matter(overrides: Partial<Record<string, unknown>> = {}) {
     archivedAt: null,
     createdAt: "2026-08-23T08:00:00.000Z",
     updatedAt: "2026-08-23T08:00:00.000Z",
+    nextDeadline: null,
     ...overrides,
   };
 }
@@ -155,6 +156,7 @@ describe("the Matters destination", () => {
     const calls: URL[] = [];
     const open = matter({
       manager: { id: MEMBER.id, displayName: MEMBER.displayName, image: null, archived: false },
+      nextDeadline: { date: "2026-08-23", label: "Response due" },
     });
     const closed = matter({
       id: "matter-8",
@@ -211,6 +213,7 @@ describe("the Matters destination", () => {
       "Title",
       "Type",
       "Status",
+      "Next deadline",
       "Priority",
       "Risk",
       "Matter Manager",
@@ -219,6 +222,12 @@ describe("the Matters destination", () => {
       expect(
         within(table).getByRole("columnheader", { name: new RegExp(`^${heading}$`) }),
       ).toBeInTheDocument();
+
+    expect(within(table).getByText("Response due")).toBeInTheDocument();
+    expect(within(table).getByRole("link", { name: /Response due/ })).toHaveAttribute(
+      "href",
+      "/matters/7/key-dates",
+    );
 
     const user = userEvent.setup();
     await user.selectOptions(screen.getByLabelText("Manager"), "me");

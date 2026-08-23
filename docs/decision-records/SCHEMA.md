@@ -341,13 +341,15 @@ Named deadlines on a matter. Zero-to-many per matter; the earliest upcoming entr
 | Column                     | Type        | Notes                                                                                            |
 | -------------------------- | ----------- | ------------------------------------------------------------------------------------------------ |
 | `id`                       | UUID        | PK                                                                                               |
-| `matter_id`                | UUID        | FK → `matters.id`, not null                                                                      |
+| `matter_id`                | UUID        | FK → `matters.id`, not null, cascade — a Key date is part of the Matter                          |
 | `date`                     | date        | not null; a calendar date, not a timestamp (deadlines are day-granular; display per **DES-014**) |
-| `label`                    | text        | not null, e.g., "SOL expires", "Preliminary hearing"                                             |
-| `note`                     | text        | nullable                                                                                         |
+| `label`                    | text        | not null, 1–200 trimmed characters, e.g., "SOL expires", "Preliminary hearing"                   |
+| `note`                     | text        | nullable, 1–2000 trimmed characters; a blank write is normalized to NULL                         |
 | `created_at`, `updated_at` | timestamptz |                                                                                                  |
 
 Indexed on (`matter_id`, `date`). CRUD audit-logged per **DD-017**.
+
+Landed in M23/3, migration `0073_shocking_raider`. Closing and archiving retain these rows. Only an open, non-archived Matter contributes a Next deadline or approaching-date notification; archive freezes CRUD, while closing does not.
 
 ---
 
