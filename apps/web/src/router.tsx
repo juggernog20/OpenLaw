@@ -15,6 +15,8 @@ import { useParams, type RouteObject } from "react-router";
 import { AuthLayout } from "./routes/auth-layout";
 import { ContractRecordPage, contractRecordLoader } from "./routes/contract-record";
 import { ContractsPage, contractsLoader } from "./routes/contracts";
+import { MattersPage, mattersLoader } from "./routes/matters";
+import { MatterRecordPage, matterRecordLoader } from "./routes/matter-record";
 import { EntitiesPage, entitiesLoader } from "./routes/entities";
 import { EntityRecordPage, entityRecordLoader } from "./routes/entity-record";
 import { RouteErrorPage } from "./routes/error-page";
@@ -149,6 +151,24 @@ export const routes: RouteObject[] = [
     element: (
       <KeyedByParam name="number">
         <InboxRequestPage />
+      </KeyedByParam>
+    ),
+    errorElement: <RouteErrorPage />,
+    hydrateFallbackElement: <></>,
+  },
+  {
+    path: "/matters",
+    loader: mattersLoader,
+    element: <MattersPage />,
+    errorElement: <RouteErrorPage />,
+    hydrateFallbackElement: <></>,
+  },
+  {
+    path: "/matters/:matterNumber",
+    loader: matterRecordLoader,
+    element: (
+      <KeyedByParam name="matterNumber">
+        <MatterRecordPage />
       </KeyedByParam>
     ),
     errorElement: <RouteErrorPage />,

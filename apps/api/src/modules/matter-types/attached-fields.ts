@@ -21,10 +21,9 @@ export const matterAttachedFieldsRoutes = typeFieldRoutes({
   idInfix: "MatterType",
   noun: "matter type",
   scopeRule: {
-    scopes: ["global"],
-    refusal: "Only global fields attach to matter types until the matter milestone (M22).",
+    scopes: ["matter", "global"],
+    refusal: "Only matter-scoped and global fields attach to matter types.",
   },
-  scopeSummary: "global fields only until M22 opens the matter scope (MTR-011)",
+  scopeSummary: "matter-scoped and global fields (MTR-011)",
   actionPrefix: "matter_type_field",
-  requiredMilestone: "M22",
 });

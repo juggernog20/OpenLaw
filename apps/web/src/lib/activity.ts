@@ -311,7 +311,7 @@ function changeLabel(intl: IntlShape, key: string, context: NarrationContext): s
       // honest rendering for one this build no longer writes.
       defaultMessage:
         "{key, select, title {Title} description {Description} owner {Owner} " +
-        "entity {Signing entity} priority {Priority} risk {Risk} " +
+        "entity {Signing entity} priority {Priority} risk {Risk} matterType {Matter type} " +
         "contractType {Contract type} value {Value} status {Status} " +
         "termType {Term type} effectiveDate {Effective date} " +
         "expiryDate {Expiry date} renewalPeriodMonths {Renewal period (months)} " +
@@ -1213,6 +1213,28 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
     message: defineMessage({
       id: "activity.contract.confidentialityCleared",
       defaultMessage: "{actor} cleared this contract's confidential mark",
+    }),
+  },
+  "matter.created": {
+    icon: FilePlus2,
+    message: defineMessage({
+      id: "activity.matter.created",
+      defaultMessage: "{actor} created this matter",
+    }),
+  },
+  "matter.type_reassigned": {
+    icon: ArrowRightLeft,
+    message: defineMessage({
+      id: "activity.matter.typeReassigned",
+      defaultMessage: "{actor} reassigned this matter's type",
+    }),
+    changes: (intl, payload, context) => directChange(intl, payload, "matterType", context),
+  },
+  "matter.confidentiality_set": {
+    icon: Lock,
+    message: defineMessage({
+      id: "activity.matter.confidentialitySet",
+      defaultMessage: "{actor} marked this matter confidential",
     }),
   },
   // The sign-off on the record (M14/3, CTR-012). A verb per act, so a

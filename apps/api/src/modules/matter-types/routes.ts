@@ -11,6 +11,7 @@
 
 import { matterTypes } from "@openlaw/db";
 import { taxonomyRoutes } from "../../lib/taxonomy-routes.js";
+import { matterTypeUsage } from "../matters/type-usage.js";
 
 export const matterTypesRoutes = taxonomyRoutes({
   table: matterTypes,
@@ -23,7 +24,7 @@ export const matterTypesRoutes = taxonomyRoutes({
   noun: "matter type",
   decision: "MTR-001",
   actionPrefix: "matter_type",
-  recordsMilestone: "M22",
+  usage: matterTypeUsage,
   recordNoun: { singular: "matter", plural: "matters" },
   protectedSlug: "other",
 });

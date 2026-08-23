@@ -16,6 +16,7 @@
  */
 
 import { useRef, useState } from "react";
+import type { paths } from "@openlaw/api-client";
 import { redirect, useLoaderData } from "react-router";
 import { FormattedMessage, useIntl, type IntlShape } from "react-intl";
 import { History, Pencil, Sparkles, TriangleAlert } from "lucide-react";
@@ -39,7 +40,9 @@ export async function settingsContractFieldsLoader() {
     params: { query: { includeArchived: "true" } },
   });
   if (!data) throw new Error("The fields could not be read.");
-  return { fields: data.fields };
+  return {
+    fields: data.fields.filter(isFieldRow),
+  };
 }
 
 /** The nine CTR-016 field types, immutable after creation. */
@@ -67,19 +70,19 @@ type Scope = (typeof SCOPES)[number];
 const TAGS = ["business", "legal"] as const;
 type Tag = (typeof TAGS)[number];
 
-/** One row of GET /fields, as the client sees it. */
-interface FieldRow {
-  id: string;
-  slug: string;
-  displayName: string;
-  description: string | null;
-  moduleScope: Scope;
-  fieldType: FieldType;
-  options: string[] | null;
-  fieldTag: Tag;
-  aiPrompt: string | null;
-  archivedAt: string | null;
-  inUseCount: number;
+type ApiField =
+  paths["/api/v1/fields"]["get"]["responses"]["200"]["content"]["application/json"]["fields"][number];
+type FieldRow = ApiField & { moduleScope: Scope };
+
+function isFieldRow(field: ApiField): field is FieldRow {
+  return field.moduleScope === "contract" || field.moduleScope === "global";
+}
+
+function fieldRow(field: ApiField): FieldRow {
+  if (!isFieldRow(field)) {
+    throw new Error("A contract field operation returned a field outside this catalog.");
+  }
+  return field;
 }
 
 function typeLabel(intl: IntlShape, fieldType: FieldType): string {
@@ -222,7 +225,7 @@ function FieldEditorDialog({
       );
       return false;
     }
-    onCreated(data.field);
+    onCreated(fieldRow(data.field));
     return true;
   }
 
@@ -246,7 +249,7 @@ function FieldEditorDialog({
         );
         return false;
       }
-      latest = data.field as FieldRow;
+      latest = fieldRow(data.field);
       onRowChanged(latest);
     }
 
@@ -279,7 +282,7 @@ function FieldEditorDialog({
       );
       return false;
     }
-    onRowChanged(data.field as FieldRow);
+    onRowChanged(fieldRow(data.field));
     return true;
   }
 
@@ -544,7 +547,7 @@ function ArchiveFieldDialog({
       });
       if (data) {
         archived.current = true;
-        onArchived(data.field as FieldRow);
+        onArchived(fieldRow(data.field));
         onOpenChange(false);
       } else {
         // The API's own refusal (already archived, a stale list) is
@@ -642,7 +645,7 @@ export function SettingsContractFieldsPage() {
   const { fields } = useLoaderData<typeof settingsContractFieldsLoader>();
   const intl = useIntl();
 
-  const [rows, setRows] = useState<FieldRow[]>(fields as FieldRow[]);
+  const [rows, setRows] = useState<FieldRow[]>(fields);
   const [rowStatus, setRowStatus] = useState<Record<string, FieldStatus>>({});
   const [rowError, setRowError] = useState<Record<string, string | undefined>>({});
   /** The editor dialog: closed, create mode, or an edit target. */
@@ -673,7 +676,7 @@ export function SettingsContractFieldsPage() {
       })
       .catch(() => ({ data: null, error: undefined }));
     if (data) {
-      replaceRow(data.field as FieldRow);
+      replaceRow(fieldRow(data.field));
       noteRow(row.id, "saved");
     } else {
       noteRow(row.id, "error", problemDetail(error));
@@ -686,7 +689,7 @@ export function SettingsContractFieldsPage() {
       .POST("/api/v1/fields/{id}/restore", { params: { path: { id: row.id } } })
       .catch(() => ({ data: null, error: undefined }));
     if (data) {
-      replaceRow(data.field as FieldRow);
+      replaceRow(fieldRow(data.field));
       noteRow(row.id, "saved");
     } else {
       noteRow(row.id, "error", problemDetail(error));
