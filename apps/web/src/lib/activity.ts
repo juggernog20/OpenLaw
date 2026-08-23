@@ -659,7 +659,11 @@ function relatedRecord(intl: IntlShape, payload: Payload, prefix: "parent" | "re
 }
 
 /** The Matter sibling of {@link relatedRecord}, using M-number vocabulary. */
-function relatedMatter(intl: IntlShape, payload: Payload, prefix: "parent" | "related"): string {
+function relatedMatter(
+  intl: IntlShape,
+  payload: Payload,
+  prefix: "parent" | "related" | "matter",
+): string {
   const number = payload[`${prefix}Number`];
   const title = text(payload, `${prefix}Title`);
   if (typeof number !== "number" || !Number.isInteger(number)) {
@@ -1526,6 +1530,22 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
       defaultMessage: "{actor} took this contract out from under {parent}",
     }),
     values: (intl, payload) => ({ parent: relatedRecord(intl, payload, "parent") }),
+  },
+  "contract.matter_linked": {
+    icon: Link2,
+    message: defineMessage({
+      id: "activity.contract.matterLinked",
+      defaultMessage: "{actor} linked this contract to {matter}",
+    }),
+    values: (intl, payload) => ({ matter: relatedMatter(intl, payload, "matter") }),
+  },
+  "contract.matter_unlinked": {
+    icon: Unlink,
+    message: defineMessage({
+      id: "activity.contract.matterUnlinked",
+      defaultMessage: "{actor} unlinked this contract from {matter}",
+    }),
+    values: (intl, payload) => ({ matter: relatedMatter(intl, payload, "matter") }),
   },
   // The record's free-form dates (M16/3, CTR-009). A verb per act, so a
   // reader can tell a date being put on the record from one being moved

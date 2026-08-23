@@ -29,10 +29,14 @@
  * Confidential flag are never copied at all (CTR-015).
  */
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { FormattedMessage, useIntl } from "react-intl";
 import { api } from "../../lib/api";
 import { contractReference, type ContractRow, type ContractTypeOption } from "../../lib/contracts";
+import {
+  searchCreateMatterCandidates,
+  type CreateMatterLinkCandidate,
+} from "../../lib/contract-matters";
 import {
   emptyDraft,
   toValue,
@@ -41,12 +45,15 @@ import {
 } from "../../lib/custom-fields";
 import { CONTROL_CLASS } from "../../lib/form-controls";
 import { problemDetail } from "../../lib/messages";
+import { matterReference } from "../../lib/matters";
 import { ConfidentialToggle } from "../confidential-toggle";
 import { CustomFieldControl, type FieldReference } from "../custom-field-control";
 import { Button } from "../ui/button";
 import { Dialog, DialogContent, DialogTitle } from "../ui/dialog";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
+
+const MATTER_SEARCH_DEBOUNCE_MS = 200;
 
 /**
  * What a routed renewal seeds the two drawn fields with, and which
@@ -100,6 +107,11 @@ export function CreateContractDialog({
    * the wrong audience, even briefly. The actor is the creator by
    * definition, so no gate is needed: whoever may create may flag. */
   const [confidential, setConfidential] = useState(false);
+  const [matterQuery, setMatterQuery] = useState("");
+  const [matterCandidates, setMatterCandidates] = useState<CreateMatterLinkCandidate[]>([]);
+  const [selectedMatter, setSelectedMatter] = useState<CreateMatterLinkCandidate | null>(null);
+  const [matterSearching, setMatterSearching] = useState(false);
+  const [matterSearchError, setMatterSearchError] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -109,6 +121,30 @@ export function CreateContractDialog({
     contractTypes
       .find((contractType) => contractType.id === contractTypeId)
       ?.fields.filter((field) => field.isRequired) ?? [];
+
+  const trimmedMatterQuery = matterQuery.trim();
+  useEffect(() => {
+    if (trimmedMatterQuery === "" || selectedMatter) return;
+    let live = true;
+    const timer = setTimeout(() => {
+      void searchCreateMatterCandidates(trimmedMatterQuery)
+        .then((rows) => {
+          if (!live) return;
+          setMatterCandidates(rows);
+          setMatterSearching(false);
+        })
+        .catch(() => {
+          if (!live) return;
+          setMatterCandidates([]);
+          setMatterSearching(false);
+          setMatterSearchError(true);
+        });
+    }, MATTER_SEARCH_DEBOUNCE_MS);
+    return () => {
+      live = false;
+      clearTimeout(timer);
+    };
+  }, [selectedMatter, trimmedMatterQuery]);
 
   async function submit() {
     if (busy) return;
@@ -170,6 +206,7 @@ export function CreateContractDialog({
           contractTypeId,
           customFields,
           isConfidential: confidential,
+          ...(selectedMatter ? { matterNumber: selectedMatter.number } : {}),
           // The routing, if this create is one. The seam does the rest
           // of the copying and writes the link; nothing here derives
           // either, so the dialog cannot disagree with the record about
@@ -259,6 +296,85 @@ export function CreateContractDialog({
             />
           </div>
           <div className="flex flex-col gap-1.5">
+            <Label htmlFor="contract-new-matter">
+              <FormattedMessage id="contracts.form.matter" defaultMessage="Matter (optional)" />
+            </Label>
+            <Input
+              id="contract-new-matter"
+              aria-describedby="contract-new-matter-help"
+              value={
+                selectedMatter
+                  ? `${matterReference(intl, selectedMatter.number)} ${selectedMatter.title}`
+                  : matterQuery
+              }
+              placeholder={intl.formatMessage({
+                id: "contracts.form.matterPlaceholder",
+                defaultMessage: "Search by number or title; leave blank for standalone",
+              })}
+              onChange={(event) => {
+                const next = event.target.value;
+                setSelectedMatter(null);
+                setMatterQuery(next);
+                setMatterCandidates([]);
+                setMatterSearching(next.trim() !== "");
+                setMatterSearchError(false);
+                setError(null);
+              }}
+            />
+            {!selectedMatter && trimmedMatterQuery !== "" && (
+              <ul
+                className="max-h-40 overflow-y-auto rounded-md border border-border"
+                aria-label={intl.formatMessage({
+                  id: "contracts.form.matterMatches",
+                  defaultMessage: "Matter matches",
+                })}
+              >
+                {matterSearching ? (
+                  <li className="p-3 text-sm text-muted">
+                    <FormattedMessage id="contractMatter.searching" defaultMessage="Searching…" />
+                  </li>
+                ) : matterCandidates.length === 0 ? (
+                  <li className="p-3 text-sm text-muted">
+                    <FormattedMessage
+                      id="contractMatter.noMatches"
+                      defaultMessage="No eligible records found."
+                    />
+                  </li>
+                ) : (
+                  matterCandidates.map((matter) => (
+                    <li key={matter.number}>
+                      <button
+                        type="button"
+                        className="flex w-full gap-2 px-3 py-2 text-left text-sm hover:bg-muted/40 focus-visible:outline-2 focus-visible:outline-inset focus-visible:outline-link"
+                        onClick={() => {
+                          setSelectedMatter(matter);
+                          setMatterSearching(false);
+                        }}
+                      >
+                        <span className="font-medium">{matterReference(intl, matter.number)}</span>{" "}
+                        <span className="min-w-0 break-words">{matter.title}</span>
+                      </button>
+                    </li>
+                  ))
+                )}
+              </ul>
+            )}
+            {matterSearchError && (
+              <p className="text-xs text-status-danger-fg">
+                <FormattedMessage
+                  id="contracts.form.matterSearchError"
+                  defaultMessage="Eligible Matters could not be searched."
+                />
+              </p>
+            )}
+            <p id="contract-new-matter-help" className="text-xs text-muted">
+              <FormattedMessage
+                id="contracts.form.matterHelp"
+                defaultMessage="Link only when this Contract is part of broader Matter work. Nothing else flows across the link."
+              />
+            </p>
+          </div>
+          <div className="flex flex-col gap-1.5">
             <Label htmlFor="contract-new-type">
               <FormattedMessage id="contracts.form.type" defaultMessage="Contract type" />
             </Label>
@@ -327,6 +443,14 @@ export function CreateContractDialog({
             confidential={confidential}
             onChange={setConfidential}
           />
+          {selectedMatter && selectedMatter.isConfidential !== confidential && (
+            <p className="text-xs text-status-warning-fg">
+              <FormattedMessage
+                id="contracts.form.matterMismatch"
+                defaultMessage="This Contract and Matter will have different Confidential flags. Consider aligning them later if appropriate; creation changes neither flag automatically."
+              />
+            </p>
+          )}
           {error && (
             <p role="alert" className="text-xs text-status-danger-fg">
               {error}

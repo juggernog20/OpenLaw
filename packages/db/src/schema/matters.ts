@@ -15,11 +15,11 @@ import {
   type AnyPgColumn,
 } from "drizzle-orm/pg-core";
 import { users } from "./auth.js";
-import { SEVERITY_LEVELS } from "./contracts.js";
 import type { CustomFieldValue } from "./fields.js";
 import { uuidPk } from "./helpers.js";
 import { matterStatuses } from "./matter-statuses.js";
 import { matterTypes } from "./matter-types.js";
+import { SEVERITY_LEVELS } from "./severity.js";
 
 export const matters = pgTable(
   "matters",

@@ -269,3 +269,94 @@ describe("Matter relationship projections", () => {
     ).toBeInTheDocument();
   });
 });
+
+describe("the Matter record's linked Contracts (M23/6)", () => {
+  const linkedContract = {
+    restricted: false as const,
+    number: 42,
+    title: "Programme services agreement",
+    statusName: "Draft",
+    stage: "draft" as const,
+    isConfidential: false,
+    archived: false,
+  };
+
+  it("draws reachable and restricted Contracts without leaking the restricted reference", async () => {
+    Object.defineProperty(window, "innerWidth", { configurable: true, value: 360 });
+    mountApi(CONTRIBUTOR, { parent: null, children: [], related: [] }, (call) => {
+      if (call.url.pathname === "/api/v1/matters/12/contracts" && call.method === "GET") {
+        return json(200, { contracts: [linkedContract, { restricted: true }] });
+      }
+      return undefined;
+    });
+    renderAt("/matters/12");
+
+    expect(
+      await screen.findByRole("link", { name: "C-42 Programme services agreement" }),
+    ).toHaveAttribute("href", "/contracts/42");
+    expect(screen.getByText("Restricted contract")).toBeVisible();
+    expect(screen.queryByText(/C-99|Secret acquisition/)).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Link Contract" })).not.toBeInTheDocument();
+  });
+
+  it("links an eligible standalone Contract from the Matter and refreshes the canonical list", async () => {
+    let isLinked = false;
+    let body: unknown;
+    mountApi(MEMBER, { parent: null, children: [], related: [] }, (call) => {
+      if (call.url.pathname === "/api/v1/matters/12/contracts" && call.method === "GET") {
+        return json(200, { contracts: isLinked ? [linkedContract] : [] });
+      }
+      if (call.url.pathname === "/api/v1/matters/12/contract-candidates" && call.method === "GET") {
+        return json(200, { candidates: [linkedContract] });
+      }
+      if (call.url.pathname === "/api/v1/contracts/42/matter" && call.method === "POST") {
+        body = call.body;
+        isLinked = true;
+        return json(200, {
+          matter: {
+            restricted: false,
+            number: 12,
+            title: MATTER.title,
+            statusName: MATTER.statusName,
+            statusCategory: MATTER.statusCategory,
+            isConfidential: MATTER.isConfidential,
+            archived: false,
+          },
+          confidentialityMismatch: false,
+        });
+      }
+      return undefined;
+    });
+    renderAt("/matters/12");
+    const user = userEvent.setup();
+
+    await user.click(await screen.findByRole("button", { name: "Link Contract" }));
+    await user.type(screen.getByLabelText("Search by number or title"), "Programme");
+    await user.click(await screen.findByRole("button", { name: /Programme services agreement/ }));
+    await user.click(screen.getByRole("button", { name: "Link" }));
+
+    await waitFor(() => expect(body).toEqual({ matterNumber: 12 }));
+    expect(
+      await screen.findByRole("link", { name: "C-42 Programme services agreement" }),
+    ).toBeVisible();
+  });
+
+  it("unlinks a Contract from the Matter and redraws the empty state", async () => {
+    let isLinked = true;
+    mountApi(MEMBER, { parent: null, children: [], related: [] }, (call) => {
+      if (call.url.pathname === "/api/v1/matters/12/contracts" && call.method === "GET") {
+        return json(200, { contracts: isLinked ? [linkedContract] : [] });
+      }
+      if (call.url.pathname === "/api/v1/contracts/42/matter" && call.method === "DELETE") {
+        isLinked = false;
+        return json(200, { matter: null });
+      }
+      return undefined;
+    });
+    renderAt("/matters/12");
+    const user = userEvent.setup();
+
+    await user.click(await screen.findByRole("button", { name: "Unlink" }));
+    expect(await screen.findByText("No Contracts are linked to this Matter.")).toBeVisible();
+  });
+});

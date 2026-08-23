@@ -2091,6 +2091,93 @@ export interface paths {
     patch: operations["updateContractKeyDate"];
     trace?: never;
   };
+  "/api/v1/contracts/matter-candidates": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Reachable live Matters eligible for optional Contract creation. Unreachable and archived Matters are silently omitted. */
+    get: operations["listCreateContractMatterCandidates"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/contracts/{number}/matter": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** The one Matter this Contract belongs to, or null while it stands alone. A Matter the viewer cannot independently reach is { restricted: true } with no number or title. */
+    get: operations["getContractMatter"];
+    put?: never;
+    /** Link one standalone Contract to one reachable live Matter. A Contract already linked anywhere must be explicitly unlinked first. Returns a one-time informational Confidentiality-mismatch signal and changes neither flag. */
+    post: operations["linkContractMatter"];
+    /** Make a linked Contract standalone again. Requires Member+ reach to both records and writes one canonical Activity narration on the Contract. */
+    delete: operations["unlinkContractMatter"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/matters/{number}/contracts": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Contracts whose one canonical matter_id names this Matter. Any Contract the viewer cannot independently reach is { restricted: true } with no number or title. */
+    get: operations["listMatterContracts"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/contracts/{number}/matter-candidates": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Live Matters this Member+ viewer independently reaches and may link to a standalone Contract. Unreachable and archived Matters are silently omitted. */
+    get: operations["listContractMatterCandidates"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/matters/{number}/contract-candidates": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Reachable live standalone Contracts eligible for this Matter's link flow. Linked, unreachable, and archived Contracts are silently omitted. */
+    get: operations["listMatterContractCandidates"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/v1/contracts/{number}/relations": {
     parameters: {
       query?: never;
@@ -10644,6 +10731,7 @@ export interface operations {
             /** @enum {string} */
             vehicle: "child" | "successor";
           };
+          matterNumber?: number;
         };
       };
     };
@@ -12619,6 +12707,345 @@ export interface operations {
               note: string | null;
               daysAway: number;
               isNext: boolean;
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  listCreateContractMatterCandidates: {
+    parameters: {
+      query: {
+        q: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            candidates: {
+              /** @enum {boolean} */
+              restricted: false;
+              number: number;
+              title: string;
+              statusName: string;
+              /** @enum {string} */
+              statusCategory: "open" | "closed";
+              isConfidential: boolean;
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  getContractMatter: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        number: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            matter:
+              | (
+                  | {
+                      /** @enum {boolean} */
+                      restricted: true;
+                    }
+                  | {
+                      /** @enum {boolean} */
+                      restricted: false;
+                      number: number;
+                      title: string;
+                      statusName: string;
+                      /** @enum {string} */
+                      statusCategory: "open" | "closed";
+                      isConfidential: boolean;
+                      archived: boolean;
+                    }
+                )
+              | null;
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  linkContractMatter: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        number: number;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          matterNumber: number;
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            matter:
+              | (
+                  | {
+                      /** @enum {boolean} */
+                      restricted: true;
+                    }
+                  | {
+                      /** @enum {boolean} */
+                      restricted: false;
+                      number: number;
+                      title: string;
+                      statusName: string;
+                      /** @enum {string} */
+                      statusCategory: "open" | "closed";
+                      isConfidential: boolean;
+                      archived: boolean;
+                    }
+                )
+              | null;
+            confidentialityMismatch: boolean;
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  unlinkContractMatter: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        number: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            matter:
+              | (
+                  | {
+                      /** @enum {boolean} */
+                      restricted: true;
+                    }
+                  | {
+                      /** @enum {boolean} */
+                      restricted: false;
+                      number: number;
+                      title: string;
+                      statusName: string;
+                      /** @enum {string} */
+                      statusCategory: "open" | "closed";
+                      isConfidential: boolean;
+                      archived: boolean;
+                    }
+                )
+              | null;
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  listMatterContracts: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        number: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            contracts: (
+              | {
+                  /** @enum {boolean} */
+                  restricted: true;
+                }
+              | {
+                  /** @enum {boolean} */
+                  restricted: false;
+                  number: number;
+                  title: string;
+                  statusName: string;
+                  /** @enum {string} */
+                  stage: "draft" | "review" | "approval" | "signature" | "active" | "ended";
+                  isConfidential: boolean;
+                  archived: boolean;
+                }
+            )[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  listContractMatterCandidates: {
+    parameters: {
+      query: {
+        q: string;
+      };
+      header?: never;
+      path: {
+        number: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            candidates: {
+              /** @enum {boolean} */
+              restricted: false;
+              number: number;
+              title: string;
+              statusName: string;
+              /** @enum {string} */
+              statusCategory: "open" | "closed";
+              isConfidential: boolean;
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  listMatterContractCandidates: {
+    parameters: {
+      query: {
+        q: string;
+      };
+      header?: never;
+      path: {
+        number: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            candidates: {
+              /** @enum {boolean} */
+              restricted: false;
+              number: number;
+              title: string;
+              statusName: string;
+              /** @enum {string} */
+              stage: "draft" | "review" | "approval" | "signature" | "active" | "ended";
+              isConfidential: boolean;
             }[];
           };
         };

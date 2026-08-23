@@ -72,6 +72,13 @@ const OPTIONS = {
       role: "legal_team_member",
     },
   ],
+  matters: [
+    {
+      number: 12,
+      title: "Regulatory programme",
+      isConfidential: false,
+    },
+  ],
 };
 
 /** The Owner as a list row carries them (CTR-004). */
@@ -123,6 +130,16 @@ function listApi(
   const handler = (call: StubCall): Response | undefined => {
     if (call.url.pathname === "/api/v1/contracts/options" && call.method === "GET") {
       return json(200, OPTIONS);
+    }
+    if (call.url.pathname === "/api/v1/contracts/matter-candidates" && call.method === "GET") {
+      return json(200, {
+        candidates: OPTIONS.matters.map((matter) => ({
+          ...matter,
+          restricted: false,
+          statusName: "Open",
+          statusCategory: "open",
+        })),
+      });
     }
     // The create dialog can grow an `entity` field, so the list reads
     // the M7 registry the same way the record does (CTR-016).
@@ -266,6 +283,44 @@ describe("the /contracts destination", () => {
     expect(await screen.findByRole("link", { name: "Globex NDA" })).toHaveAttribute(
       "href",
       "/contracts/43",
+    );
+  });
+
+  it("offers an optional reachable Matter and otherwise leaves creation standalone", async () => {
+    const standalone = listApi([]);
+    stubApi({ signedIn: MEMBER, extra: standalone.handler });
+    const first = renderAt("/contracts");
+    const user = userEvent.setup();
+
+    await openCreateDialog(user);
+    expect(screen.getByLabelText("Matter (optional)")).toHaveValue("");
+    await user.type(screen.getByLabelText("Title"), "Standalone NDA");
+    await user.selectOptions(screen.getByLabelText("Contract type"), "t-nda");
+    await user.click(screen.getByRole("button", { name: "Create" }));
+    await waitFor(() => expect(standalone.creates).toHaveLength(1));
+    expect(standalone.creates[0]).not.toHaveProperty("matterNumber");
+
+    first.view.unmount();
+    const linked = listApi([]);
+    stubApi({ signedIn: MEMBER, extra: linked.handler });
+    renderAt("/contracts");
+    await openCreateDialog(user);
+    await user.type(screen.getByLabelText("Title"), "Programme NDA");
+    await user.selectOptions(screen.getByLabelText("Contract type"), "t-nda");
+    await user.type(screen.getByLabelText("Matter (optional)"), "Regulatory");
+    await user.click(await screen.findByRole("button", { name: /Regulatory programme/ }));
+    await user.click(screen.getByRole("button", { name: "Create" }));
+
+    await waitFor(() =>
+      expect(linked.creates).toEqual([
+        {
+          title: "Programme NDA",
+          contractTypeId: "t-nda",
+          customFields: {},
+          isConfidential: false,
+          matterNumber: 12,
+        },
+      ]),
     );
   });
 

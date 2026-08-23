@@ -333,7 +333,9 @@ describe("the target is confirmed, never classified (DD-018, INT-002)", () => {
     expect(res.statusCode, res.body).toBe(200);
 
     const number = res.json().request.convertedContract.number as number;
-    expect((await contractNumbered(number)).contractTypeId).toBe(contractTypeIds.get("nda"));
+    const contract = await contractNumbered(number);
+    expect(contract.contractTypeId).toBe(contractTypeIds.get("nda"));
+    expect(contract.matterId).toBeNull();
   });
 
   it("accepts a body that repeats the bound type — echoing is agreeing", async () => {

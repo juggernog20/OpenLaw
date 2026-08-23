@@ -45,6 +45,7 @@ import { authRoutes } from "./modules/auth/routes.js";
 import { approverGroupsRoutes } from "./modules/approver-groups/routes.js";
 import { contractApprovalsRoutes } from "./modules/contract-approvals/routes.js";
 import { contractKeyDatesRoutes } from "./modules/contract-key-dates/routes.js";
+import { contractMattersRoutes } from "./modules/contract-matters/routes.js";
 import { contractTasksRoutes } from "./modules/contract-tasks/routes.js";
 import { contractEnvelopesRoutes } from "./modules/contract-envelopes/routes.js";
 import { contractRelationsRoutes } from "./modules/contract-relations/routes.js";
@@ -441,6 +442,7 @@ export async function buildApp(deps: AppDeps, opts: FastifyServerOptions = {}) {
   await app.register(contractApprovalsRoutes, { prefix: "/api/v1" });
   await app.register(contractEnvelopesRoutes, { prefix: "/api/v1" });
   await app.register(contractKeyDatesRoutes, { prefix: "/api/v1" });
+  await app.register(contractMattersRoutes, { prefix: "/api/v1" });
   await app.register(contractRelationsRoutes, { prefix: "/api/v1" });
   await app.register(contractTasksRoutes, { prefix: "/api/v1" });
   await app.register(counterpartiesRoutes, { prefix: "/api/v1" });

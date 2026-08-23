@@ -66,6 +66,7 @@ import {
   type Contract,
   type ContractStage,
   type CustomFieldValue,
+  type Matter,
   type SeverityLevel,
   type Transaction,
 } from "@openlaw/db";
@@ -137,6 +138,10 @@ export interface CreateContractInput {
   /** CTR-007's routing. Omitted is the ordinary create: a record that
    * renews nothing and sits under nobody. */
   renewal?: ContractRenewalRouting | null | undefined;
+  /** MTR-007's optional broader-work container, already locked,
+   * reach-checked, and verified live by the caller. Omitted keeps the
+   * Contract standalone. */
+  matter?: Pick<Matter, "id" | "number" | "title"> | null | undefined;
 }
 
 /**
@@ -193,7 +198,7 @@ export async function createContract(
   tx: Transaction,
   input: CreateContractInput,
 ): Promise<CreatedContract> {
-  const { actorId, title, contractTypeId, renewal } = input;
+  const { actorId, title, contractTypeId, renewal, matter } = input;
   // Lock the type row so a concurrent archive can't slip between the
   // check and the insert.
   const [contractType] = await tx
@@ -274,6 +279,7 @@ export async function createContract(
       statusId: draft.id,
       customFields,
       isConfidential,
+      matterId: matter?.id ?? null,
       // Only where the caller holds a stated one; otherwise the column's
       // own `medium` default stands, which is what an unassessed record
       // honestly is (MTR-012).
@@ -320,6 +326,21 @@ export async function createContract(
       action: "contract.confidentiality_set",
       visibility: RECORD_ACTIVITY_TIER,
       payload: { number: row!.number, title: row!.title },
+    });
+  }
+  if (matter) {
+    await recordActivity(tx, {
+      entityType: "contract",
+      entityId: row!.id,
+      actorId,
+      action: "contract.matter_linked",
+      visibility: RECORD_ACTIVITY_TIER,
+      payload: {
+        number: row!.number,
+        title: row!.title,
+        matterNumber: matter.number,
+        matterTitle: matter.title,
+      },
     });
   }
 
