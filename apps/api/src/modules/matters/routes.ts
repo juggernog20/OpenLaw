@@ -6,8 +6,8 @@ import { z } from "zod";
 import {
   and,
   asc,
-  desc,
   eq,
+  fields,
   isNull,
   matters,
   matterStatuses,
@@ -17,10 +17,18 @@ import {
   sql,
   users,
   USER_ROLES,
+  type AnyPgColumn,
   type Executor,
   type Matter,
+  type SQL,
 } from "@openlaw/db";
-import { requireRole } from "../../auth/guards.js";
+import {
+  MATTER_SORT_KEYS,
+  SORT_DIRECTIONS,
+  type MatterSortKey,
+  type SortDirection,
+} from "@openlaw/shared";
+import { requireRole, type AuthenticatedUser } from "../../auth/guards.js";
 import {
   AttachedCustomFieldSchema,
   CustomFieldsInput,
@@ -36,6 +44,20 @@ const requireMember = requireRole("administrator", "legal_team_member");
 const requireReader = requireRole("administrator", "legal_team_member", "contributor");
 const SeveritySchema = z.enum(SEVERITY_LEVELS);
 const NumberParams = z.object({ number: z.coerce.number().int().positive() });
+const PAGE_SIZE = 50;
+const CursorSchema = z.string().min(1).max(64);
+
+interface SortRequest {
+  key: MatterSortKey;
+  dir: SortDirection;
+}
+
+function severityRank(column: AnyPgColumn): SQL {
+  const arms = SEVERITY_LEVELS.map(
+    (level, index) => sql`when ${level} then ${sql.raw(String(index + 1))}`,
+  );
+  return sql`case ${column} ${sql.join(arms, sql` `)} end`;
+}
 
 const PersonSchema = z.object({
   id: z.string(),
@@ -141,32 +163,155 @@ export const mattersRoutes: FastifyPluginAsyncZod = async (app) => {
       .innerJoin(matterStatuses, eq(matters.statusId, matterStatuses.id))
       .leftJoin(users, eq(matters.managerId, users.id));
 
+  const scope = (user: AuthenticatedUser) => matterTeamScope(app.db, user);
+  const SORTS: Record<MatterSortKey, { expr: SQL; joined: boolean }> = {
+    number: { expr: sql`${matters.number}`, joined: false },
+    title: { expr: sql`lower(${matters.title})`, joined: false },
+    type: { expr: sql`lower(${matterTypes.displayName})`, joined: true },
+    status: { expr: sql`${matterStatuses.displayOrder}`, joined: true },
+    priority: { expr: severityRank(matters.priority), joined: false },
+    risk: { expr: severityRank(matters.risk), joined: false },
+    manager: { expr: sql`lower(${users.displayName})`, joined: true },
+    openedAt: { expr: sql`${matters.openedAt}`, joined: false },
+  };
+
+  function listOrder(sort: SortRequest | null): SQL[] {
+    if (!sort) return [sql`${matters.number} desc`];
+    const { expr } = SORTS[sort.key];
+    return [
+      sql`${expr} ${sql.raw(sort.dir === "asc" ? "asc" : "desc")} nulls last`,
+      sql`${matters.number} desc`,
+    ];
+  }
+
+  function furtherDownThan(cursor: string, user: AuthenticatedUser, sort: SortRequest | null): SQL {
+    const reach = scope(user);
+    const at = sql`(
+      select ${matters.number} from ${matters}
+      where ${and(eq(matters.id, cursor), reach)}
+    )`;
+    if (!sort) return sql`${matters.number} < ${at}`;
+    const { expr, joined } = SORTS[sort.key];
+    const value = joined
+      ? sql`(
+          select ${expr} from ${matters}
+            inner join ${matterTypes} on ${eq(matters.matterTypeId, matterTypes.id)}
+            inner join ${matterStatuses} on ${eq(matters.statusId, matterStatuses.id)}
+            left join ${users} on ${eq(matters.managerId, users.id)}
+          where ${and(eq(matters.id, cursor), reach)}
+          limit 1
+        )`
+      : sql`(
+          select ${expr} from ${matters}
+          where ${and(eq(matters.id, cursor), reach)}
+        )`;
+    const later = sql.raw(sort.dir === "asc" ? ">" : "<");
+    return sql`case
+      when ${value} is null
+        then (${expr} is null and ${matters.number} < ${at})
+      else (
+        ${expr} is null
+        or ${expr} ${later} ${value}
+        or (${expr} = ${value} and ${matters.number} < ${at})
+      )
+    end`;
+  }
+
+  const incomplete = sql`exists (
+    select 1 from ${matterTypeFields}
+    inner join ${fields} on ${fields.id} = ${matterTypeFields.fieldId}
+    where ${matterTypeFields.typeId} = ${matters.matterTypeId}
+      and ${matterTypeFields.isRequired} = true
+      and ${fields.archivedAt} is null
+      and (
+        not jsonb_exists(${matters.customFields}, ${fields.slug})
+        or ${matters.customFields} -> ${fields.slug} = 'null'::jsonb
+        or ${matters.customFields} -> ${fields.slug} = '[]'::jsonb
+        or ${matters.customFields} ->> ${fields.slug} = ''
+      )
+  )`;
+
   app.get(
     "/matters",
     {
       preHandler: requireReader,
       schema: {
         operationId: "listMatters",
-        summary: "List the matters this reader reaches, newest M-number first",
+        summary:
+          "The managed Matters list, filtered and keyset-paged after access scope, with active counts",
         tags: ["matters"],
+        querystring: z.object({
+          includeClosed: z.enum(["true", "false"]).optional(),
+          includeArchived: z.enum(["true", "false"]).optional(),
+          status: z.string().min(1).max(64).optional(),
+          type: z.string().min(1).max(64).optional(),
+          priority: SeveritySchema.optional(),
+          manager: z.string().min(1).max(64).optional(),
+          incomplete: z.enum(["true", "false"]).optional(),
+          sort: z.enum(MATTER_SORT_KEYS).optional(),
+          dir: z.enum(SORT_DIRECTIONS).optional(),
+          cursor: CursorSchema.optional(),
+        }),
         response: {
-          200: z.object({ matters: z.array(MatterRowSchema) }),
+          200: z.object({
+            matters: z.array(MatterRowSchema),
+            nextCursor: z.string().nullable(),
+            counts: z.object({ open: z.number().int(), onHold: z.number().int() }),
+          }),
           default: problemResponse,
         },
       },
     },
     async (request) => {
+      const sort: SortRequest | null = request.query.sort
+        ? { key: request.query.sort, dir: request.query.dir ?? "asc" }
+        : null;
       const rows = await selectMatters(app.db)
-        .where(and(isNull(matters.archivedAt), matterTeamScope(app.db, request.user)))
-        .orderBy(desc(matters.number));
-      return { matters: rows.map(toRow) };
+        .where(
+          and(
+            request.query.includeArchived === "true" ? undefined : isNull(matters.archivedAt),
+            request.query.includeClosed === "true"
+              ? undefined
+              : eq(matterStatuses.category, "open"),
+            request.query.status ? eq(matters.statusId, request.query.status) : undefined,
+            request.query.type ? eq(matters.matterTypeId, request.query.type) : undefined,
+            request.query.priority ? eq(matters.priority, request.query.priority) : undefined,
+            request.query.manager
+              ? eq(
+                  matters.managerId,
+                  request.query.manager === "me" ? request.user.id : request.query.manager,
+                )
+              : undefined,
+            request.query.incomplete === "true" ? incomplete : undefined,
+            scope(request.user),
+            request.query.cursor
+              ? furtherDownThan(request.query.cursor, request.user, sort)
+              : undefined,
+          ),
+        )
+        .orderBy(...listOrder(sort))
+        .limit(PAGE_SIZE + 1);
+      const page = rows.slice(0, PAGE_SIZE);
+      const [counts] = await app.db
+        .select({
+          open: sql<number>`count(*) filter (where ${matterStatuses.slug} = 'open')::int`,
+          onHold: sql<number>`count(*) filter (where ${matterStatuses.slug} = 'on_hold')::int`,
+        })
+        .from(matters)
+        .innerJoin(matterStatuses, eq(matters.statusId, matterStatuses.id))
+        .where(and(isNull(matters.archivedAt), scope(request.user)));
+      return {
+        matters: page.map(toRow),
+        nextCursor: rows.length > PAGE_SIZE ? (page.at(-1)?.row.id ?? null) : null,
+        counts: counts ?? { open: 0, onHold: 0 },
+      };
     },
   );
 
   app.get(
     "/matters/options",
     {
-      preHandler: requireMember,
+      preHandler: requireReader,
       schema: {
         operationId: "listMatterOptions",
         summary: "Live matter types with attached fields, statuses, and assignable people",

@@ -228,7 +228,7 @@
     "defaultMessage": "{actor} exported the audit log"
   },
   "activity.field": {
-    "defaultMessage": "{key, select, title {Title} description {Description} owner {Owner} entity {Signing entity} priority {Priority} risk {Risk} contractType {Contract type} value {Value} status {Status} termType {Term type} effectiveDate {Effective date} expiryDate {Expiry date} renewalPeriodMonths {Renewal period (months)} noticePeriodDays {Notice period (days)} date {Date} label {Event} note {Note} kind {Kind} primaryCounterparty {Primary counterparty} primaryDocument {Primary document} displayName {Name} display_name {Display name} name {Name} role {Role} email {Email} stage {Stage} moduleScope {Scope} isRequired {Required} targetModule {Target} targetType {Target type} theme {Theme} timezone {Timezone} avatar {Avatar} logo {Logo} defaultLocale {Default language} defaultTimezone {Default timezone} authMode {Sign-in method} allowedEmailDomains {Allowed email domains} reminderOffsetDays {Reminder lead times} smtpUrl {SMTP server} smtpFrom {From address} issuer {Issuer} domain {Email domain} clientId {Client ID} clientSecret {Client secret} environment {Environment} integrationKey {Integration key} apiUserId {User ID} privateKey {RSA private key} webhookSecret {Connect HMAC secret} legalName {Legal name} entityType {Entity type} jurisdiction {Jurisdiction} formedOn {Formed on} registrationNumber {Registration number} taxId {Tax ID} registeredAgent {Registered agent} registeredAddress {Registered address} other {{key}}}"
+    "defaultMessage": "{key, select, title {Title} description {Description} owner {Owner} entity {Signing entity} priority {Priority} risk {Risk} matterType {Matter type} contractType {Contract type} value {Value} status {Status} termType {Term type} effectiveDate {Effective date} expiryDate {Expiry date} renewalPeriodMonths {Renewal period (months)} noticePeriodDays {Notice period (days)} date {Date} label {Event} note {Note} kind {Kind} primaryCounterparty {Primary counterparty} primaryDocument {Primary document} displayName {Name} display_name {Display name} name {Name} role {Role} email {Email} stage {Stage} moduleScope {Scope} isRequired {Required} targetModule {Target} targetType {Target type} theme {Theme} timezone {Timezone} avatar {Avatar} logo {Logo} defaultLocale {Default language} defaultTimezone {Default timezone} authMode {Sign-in method} allowedEmailDomains {Allowed email domains} reminderOffsetDays {Reminder lead times} smtpUrl {SMTP server} smtpFrom {From address} issuer {Issuer} domain {Email domain} clientId {Client ID} clientSecret {Client secret} environment {Environment} integrationKey {Integration key} apiUserId {User ID} privateKey {RSA private key} webhookSecret {Connect HMAC secret} legalName {Legal name} entityType {Entity type} jurisdiction {Jurisdiction} formedOn {Formed on} registrationNumber {Registration number} taxId {Tax ID} registeredAgent {Registered agent} registeredAddress {Registered address} other {{key}}}"
   },
   "activity.field.narrowed": {
     "defaultMessage": "{actor} narrowed the field {name} to one module"
@@ -280,6 +280,15 @@
   },
   "activity.loadError": {
     "defaultMessage": "The history could not be read. Reopen the panel to try again."
+  },
+  "activity.matter.confidentialitySet": {
+    "defaultMessage": "{actor} marked this matter confidential"
+  },
+  "activity.matter.created": {
+    "defaultMessage": "{actor} created this matter"
+  },
+  "activity.matter.typeReassigned": {
+    "defaultMessage": "{actor} reassigned this matter's type"
   },
   "activity.notSet": {
     "defaultMessage": "Not set"
@@ -2633,6 +2642,174 @@
   "listEditor.showArchived": {
     "defaultMessage": "Show archived"
   },
+  "matters.archivedPill": {
+    "defaultMessage": "Archived"
+  },
+  "matters.column.manager": {
+    "defaultMessage": "Matter Manager"
+  },
+  "matters.column.opened": {
+    "defaultMessage": "Opened"
+  },
+  "matters.column.priority": {
+    "defaultMessage": "Priority"
+  },
+  "matters.column.reference": {
+    "defaultMessage": "Matter"
+  },
+  "matters.column.risk": {
+    "defaultMessage": "Risk"
+  },
+  "matters.column.status": {
+    "defaultMessage": "Status"
+  },
+  "matters.column.title": {
+    "defaultMessage": "Title"
+  },
+  "matters.column.type": {
+    "defaultMessage": "Type"
+  },
+  "matters.confidential.field": {
+    "defaultMessage": "Confidential — restrict to the matter team"
+  },
+  "matters.counts": {
+    "defaultMessage": "{open} open · {onHold} on hold"
+  },
+  "matters.create.submit": {
+    "defaultMessage": "Create"
+  },
+  "matters.create.title": {
+    "defaultMessage": "Create matter"
+  },
+  "matters.createFailed": {
+    "defaultMessage": "The matter could not be created."
+  },
+  "matters.customFields": {
+    "defaultMessage": "Custom fields"
+  },
+  "matters.empty.body": {
+    "defaultMessage": "Matters organize legal work that is not centered on a contract."
+  },
+  "matters.empty.narrowed.body": {
+    "defaultMessage": "Clear a filter to widen the list."
+  },
+  "matters.empty.narrowed.title": {
+    "defaultMessage": "No matters match these filters"
+  },
+  "matters.empty.title": {
+    "defaultMessage": "No matters yet"
+  },
+  "matters.field.description": {
+    "defaultMessage": "Description"
+  },
+  "matters.field.manager": {
+    "defaultMessage": "Matter Manager"
+  },
+  "matters.field.opened": {
+    "defaultMessage": "Opened"
+  },
+  "matters.field.priority": {
+    "defaultMessage": "Priority"
+  },
+  "matters.field.risk": {
+    "defaultMessage": "Risk"
+  },
+  "matters.field.status": {
+    "defaultMessage": "Status"
+  },
+  "matters.field.title": {
+    "defaultMessage": "Title"
+  },
+  "matters.field.type": {
+    "defaultMessage": "Matter type"
+  },
+  "matters.filter.incomplete": {
+    "defaultMessage": "Incomplete"
+  },
+  "matters.filter.manager": {
+    "defaultMessage": "Manager"
+  },
+  "matters.filter.manager.all": {
+    "defaultMessage": "All managers"
+  },
+  "matters.filter.manager.me": {
+    "defaultMessage": "Me"
+  },
+  "matters.filter.managerMe": {
+    "defaultMessage": "Manager: me"
+  },
+  "matters.filter.priority": {
+    "defaultMessage": "Priority"
+  },
+  "matters.filter.priority.all": {
+    "defaultMessage": "All priorities"
+  },
+  "matters.filter.status": {
+    "defaultMessage": "Status"
+  },
+  "matters.filter.status.all": {
+    "defaultMessage": "All statuses"
+  },
+  "matters.filter.type": {
+    "defaultMessage": "Type"
+  },
+  "matters.filter.type.all": {
+    "defaultMessage": "All types"
+  },
+  "matters.listError": {
+    "defaultMessage": "The matter list could not be read. Try again."
+  },
+  "matters.more": {
+    "defaultMessage": "Show more"
+  },
+  "matters.moreAdded": {
+    "defaultMessage": "{count, plural, one {# more matter} other {# more matters}}. {total} shown."
+  },
+  "matters.moreError": {
+    "defaultMessage": "The next matters could not be read. Try again."
+  },
+  "matters.new": {
+    "defaultMessage": "New matter"
+  },
+  "matters.notAssessed": {
+    "defaultMessage": "Not assessed"
+  },
+  "matters.notProvided": {
+    "defaultMessage": "Not provided"
+  },
+  "matters.record.pageTitle": {
+    "defaultMessage": "{reference} · {title}"
+  },
+  "matters.reference": {
+    "defaultMessage": "M-{number}"
+  },
+  "matters.risk.none": {
+    "defaultMessage": "Not assessed"
+  },
+  "matters.severity": {
+    "defaultMessage": "{value, select, low {Low} medium {Medium} high {High} critical {Critical} other {Unknown}}"
+  },
+  "matters.showArchived": {
+    "defaultMessage": "Show archived"
+  },
+  "matters.showClosed": {
+    "defaultMessage": "Show closed"
+  },
+  "matters.title": {
+    "defaultMessage": "Matters"
+  },
+  "matters.typePlaceholder": {
+    "defaultMessage": "Type…"
+  },
+  "matters.unassigned": {
+    "defaultMessage": "Unassigned"
+  },
+  "matters.validation.missing": {
+    "defaultMessage": "Fill {fields}."
+  },
+  "matters.validation.number": {
+    "defaultMessage": "Enter {fields} as a number."
+  },
   "nav.contracts": {
     "defaultMessage": "Contracts"
   },
@@ -2644,6 +2821,9 @@
   },
   "nav.inbox": {
     "defaultMessage": "Inbox"
+  },
+  "nav.matters": {
+    "defaultMessage": "Matters"
   },
   "notifications.approval.requested": {
     "defaultMessage": "{hasActor, select, yes {{actor} asked you to approve {contract}} other {You were asked to approve {contract}}}"
@@ -3924,7 +4104,7 @@
     "defaultMessage": "Address"
   },
   "settings.matterTypeEditor.allAttached": {
-    "defaultMessage": "Every global field is attached."
+    "defaultMessage": "Every eligible field is attached."
   },
   "settings.matterTypeEditor.allTypes": {
     "defaultMessage": "All types"

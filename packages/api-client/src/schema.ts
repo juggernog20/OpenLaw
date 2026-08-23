@@ -812,7 +812,7 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** List the matters this reader reaches, newest M-number first */
+    /** The managed Matters list, filtered and keyset-paged after access scope, with active counts */
     get: operations["listMatters"];
     put?: never;
     /** Create the next M-number on the first live open status, enforcing required type fields */
@@ -5695,7 +5695,19 @@ export interface operations {
   };
   listMatters: {
     parameters: {
-      query?: never;
+      query?: {
+        includeClosed?: "true" | "false";
+        includeArchived?: "true" | "false";
+        status?: string;
+        type?: string;
+        priority?: "low" | "medium" | "high" | "critical";
+        manager?: string;
+        incomplete?: "true" | "false";
+        sort?:
+          "number" | "title" | "type" | "status" | "priority" | "risk" | "manager" | "openedAt";
+        dir?: "asc" | "desc";
+        cursor?: string;
+      };
       header?: never;
       path?: never;
       cookie?: never;
@@ -5742,6 +5754,11 @@ export interface operations {
               /** Format: date-time */
               updatedAt: string;
             }[];
+            nextCursor: string | null;
+            counts: {
+              open: number;
+              onHold: number;
+            };
           };
         };
       };
@@ -14646,7 +14663,7 @@ export interface operations {
   listSavedViews: {
     parameters: {
       query: {
-        surface: "contracts";
+        surface: "contracts" | "matters";
       };
       header?: never;
       path?: never;
@@ -14664,7 +14681,7 @@ export interface operations {
             views: {
               id: string;
               /** @enum {string} */
-              surface: "contracts";
+              surface: "contracts" | "matters";
               name: string;
               config: {
                 columns: {
@@ -14708,7 +14725,7 @@ export interface operations {
       content: {
         "application/json": {
           /** @enum {string} */
-          surface: "contracts";
+          surface: "contracts" | "matters";
           name: string;
           config: {
             columns: {
@@ -14740,7 +14757,7 @@ export interface operations {
             views: {
               id: string;
               /** @enum {string} */
-              surface: "contracts";
+              surface: "contracts" | "matters";
               name: string;
               config: {
                 columns: {
@@ -14794,7 +14811,7 @@ export interface operations {
             views: {
               id: string;
               /** @enum {string} */
-              surface: "contracts";
+              surface: "contracts" | "matters";
               name: string;
               config: {
                 columns: {
@@ -14870,7 +14887,7 @@ export interface operations {
             views: {
               id: string;
               /** @enum {string} */
-              surface: "contracts";
+              surface: "contracts" | "matters";
               name: string;
               config: {
                 columns: {

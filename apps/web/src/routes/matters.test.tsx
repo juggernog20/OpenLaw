@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 /** The M22 matter destination, creation dialog, and read-only hero through the real router. */
-import { cleanup, screen, within } from "@testing-library/react";
+import { cleanup, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it } from "vitest";
 import { json, renderAt, stubApi, type StubCall } from "../testing/helpers";
@@ -80,7 +80,7 @@ function matter(overrides: Partial<Record<string, unknown>> = {}) {
 function matterApi(onPost?: (call: StubCall) => Response) {
   return (call: StubCall): Response | undefined => {
     if (call.url.pathname === "/api/v1/matters" && call.method === "GET")
-      return json(200, { matters: [] });
+      return json(200, { matters: [], nextCursor: null, counts: { open: 0, onHold: 0 } });
     if (call.url.pathname === "/api/v1/matters/options" && call.method === "GET")
       return json(200, {
         matterTypes: [TYPE],
@@ -116,6 +116,147 @@ function matterApi(onPost?: (call: StubCall) => Response) {
 }
 
 describe("the Matters destination", () => {
+  it("opens a matters saved view while reading past a removed column", async () => {
+    let surface: string | null = null;
+    stubApi({
+      signedIn: MEMBER,
+      extra: (call) => {
+        if (call.url.pathname === "/api/v1/list-views" && call.method === "GET") {
+          surface = call.url.searchParams.get("surface");
+          return json(200, {
+            views: [
+              {
+                id: "view-matters",
+                surface: "matters",
+                name: "Matter triage",
+                isDefault: true,
+                config: {
+                  columns: [
+                    { key: "removed-column", width: 100 },
+                    { key: "status", width: 128 },
+                  ],
+                  flexKey: "removed-column",
+                  sort: { key: "removed-sort", dir: "asc" },
+                  filters: {},
+                },
+              },
+            ],
+          });
+        }
+        if (call.url.pathname === "/api/v1/matters" && call.method === "GET")
+          return json(200, {
+            matters: [matter()],
+            nextCursor: null,
+            counts: { open: 1, onHold: 0 },
+          });
+        return matterApi()(call);
+      },
+    });
+    renderAt("/matters");
+    expect(await screen.findByRole("button", { name: /Matter triage/ })).toBeInTheDocument();
+    expect(surface).toBe("matters");
+    expect(
+      screen.getAllByRole("columnheader").map((cell) => cell.getAttribute("aria-label")),
+    ).toEqual(["Status", "Title"]);
+  });
+
+  it("renders every list column, active counts, toggles, and the Manager: me chip", async () => {
+    const calls: URL[] = [];
+    const open = matter({
+      manager: { id: MEMBER.id, displayName: MEMBER.displayName, image: null, archived: false },
+    });
+    const closed = matter({
+      id: "matter-8",
+      number: 8,
+      title: "Closed advice",
+      statusId: "status-closed",
+      statusName: "Closed",
+      statusCategory: "closed",
+      closedAt: "2026-08-23T09:00:00.000Z",
+    });
+    const archived = matter({
+      id: "matter-9",
+      number: 9,
+      title: "Archived advice",
+      archivedAt: "2026-08-23T10:00:00.000Z",
+    });
+    stubApi({
+      signedIn: MEMBER,
+      extra: (call) => {
+        if (call.url.pathname === "/api/v1/matters/options" && call.method === "GET")
+          return json(200, {
+            matterTypes: [TYPE],
+            matterStatuses: [
+              { id: "status-open", slug: "open", displayName: "Open", category: "open" },
+              { id: "status-closed", slug: "closed", displayName: "Closed", category: "closed" },
+            ],
+            users: [
+              {
+                id: MEMBER.id,
+                displayName: MEMBER.displayName,
+                image: null,
+                archived: false,
+                role: MEMBER.role,
+              },
+            ],
+          });
+        if (call.url.pathname === "/api/v1/entities" && call.method === "GET")
+          return json(200, { entities: [] });
+        if (call.url.pathname === "/api/v1/matters" && call.method === "GET") {
+          calls.push(call.url);
+          const rows = [open];
+          if (call.url.searchParams.get("includeClosed") === "true") rows.push(closed);
+          if (call.url.searchParams.get("includeArchived") === "true") rows.push(archived);
+          return json(200, { matters: rows, nextCursor: null, counts: { open: 4, onHold: 2 } });
+        }
+        return undefined;
+      },
+    });
+    renderAt("/matters");
+    expect(await screen.findByText("4 open · 2 on hold")).toBeInTheDocument();
+    const table = screen.getByRole("table");
+    for (const heading of [
+      "Matter",
+      "Title",
+      "Type",
+      "Status",
+      "Priority",
+      "Risk",
+      "Matter Manager",
+      "Opened",
+    ])
+      expect(
+        within(table).getByRole("columnheader", { name: new RegExp(`^${heading}$`) }),
+      ).toBeInTheDocument();
+
+    const user = userEvent.setup();
+    await user.selectOptions(screen.getByLabelText("Manager"), "me");
+    expect(await screen.findByText("Manager: me")).toBeInTheDocument();
+    await waitFor(() => expect(calls.at(-1)?.searchParams.get("manager")).toBe("me"));
+
+    await user.click(screen.getByRole("switch", { name: "Show closed" }));
+    expect(await screen.findByText("Closed advice")).toBeInTheDocument();
+    expect(calls.at(-1)?.searchParams.get("includeClosed")).toBe("true");
+    await user.click(screen.getByRole("switch", { name: "Show archived" }));
+    expect(await screen.findByText("Archived advice")).toBeInTheDocument();
+    expect(calls.at(-1)?.searchParams.get("includeArchived")).toBe("true");
+  });
+
+  it("draws no table menus on the empty state and names a filter that matches nothing", async () => {
+    stubApi({ signedIn: MEMBER, extra: matterApi() });
+    renderAt("/matters");
+    expect(await screen.findByRole("heading", { name: "No matters yet" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Default view/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Columns" })).not.toBeInTheDocument();
+
+    const user = userEvent.setup();
+    await user.selectOptions(screen.getByLabelText("Priority"), "critical");
+    expect(
+      await screen.findByRole("heading", { name: "No matters match these filters" }),
+    ).toBeInTheDocument();
+    expect(screen.getAllByRole("button", { name: "New matter" })).toHaveLength(1);
+  });
+
   it("is visible to a Legal Team Member and a Contributor, but absent for a Business User", async () => {
     for (const signedIn of [MEMBER, CONTRIBUTOR]) {
       stubApi({ signedIn, extra: matterApi() });
