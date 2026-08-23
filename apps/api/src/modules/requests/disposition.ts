@@ -29,8 +29,8 @@
  * never parses the sentence, because the sentence is copy. So the second
  * triager is told what happened rather than being handed a second
  * decision, and one Request never becomes two records. A conversion
- * carries `convertedContract` beside it, because "somebody converted
- * this" without the C-### is news the loser cannot act on (M21/9).
+ * carries `convertedRecord` beside it, because "somebody converted
+ * this" without the permanent reference is news the loser cannot act on.
  *
  * **The three outcomes are three routes over one scaffold.** Decline
  * (M21/7), Resolve (M21/8), and Convert (M21/9) each hang their own work
@@ -59,6 +59,7 @@ import type { AuthenticatedUser } from "../../auth/guards.js";
 import type { Notifier, NotifyingTransaction } from "../../lib/notifications/notifier.js";
 import { httpError, problemTypeResponse } from "../../lib/problem.js";
 import { NO_REQUEST, staffRequestRow, toStaffRequest } from "./projection.js";
+import { convertedContractOf, convertedRecordOf } from "./record-reference.js";
 
 /** INT-006: Member+ triages, and there are no routing rules to narrow
  * that further. Every disposition route wears it. */
@@ -103,7 +104,7 @@ const REFUSALS: Record<RequestOutcome, string> = {
  * **Two extension members, because a lost race has two facts in it**
  * (the INT-006 M21/2 addendum: "an RFC 9457 problem type carrying the
  * outcome and, for a conversion, the record it became"). `outcome` says
- * what was decided and `convertedContract` says what it produced, and
+ * what was decided and `convertedRecord` says what it produced, and
  * the second is only ever set on a conversion. It is `null` on every
  * other outcome and on a conversion into a record this caller may not
  * reach — the same DD-014 rule the envelope's own link obeys, so a
@@ -115,7 +116,7 @@ export function dispositionedResponse(unnamed: string) {
       "there is no claim step, so two triagers can open one Request and only the first " +
       "press writes. The refusal carries `outcome`: the recorded decision, which the " +
       "loser's client states instead of asking again; and, where that decision was a " +
-      "conversion this caller may reach, `convertedContract`: the record it became. " +
+      "conversion this caller may reach, `convertedRecord`: the module and permanent number it became. " +
       unnamed,
     [REQUEST_DISPOSITIONED_PROBLEM_TYPE],
     {
@@ -136,7 +137,18 @@ export function dispositionedResponse(unnamed: string) {
         .describe(
           "The contract the winning conversion made, by its C-### number — null on " +
             "every other outcome, and null on a record this caller cannot reach " +
-            "(DD-014). The matter arm lands with M22.",
+            "(DD-014). The value is projected from the conversion's module-aware " +
+            "record reference.",
+        ),
+      convertedRecord: z
+        .discriminatedUnion("module", [
+          z.object({ module: z.literal("contract"), number: z.number().int() }),
+          z.object({ module: z.literal("matter"), number: z.number().int() }),
+        ])
+        .nullable()
+        .optional()
+        .describe(
+          "The contract or matter the winning conversion made, by module and permanent number — null on every other outcome and when this caller cannot reach it.",
         ),
     },
   );
@@ -208,10 +220,14 @@ async function lockUndecided(
     // only on the refusal path: the winning triager never pays for it,
     // and the loser is about to be told something the plain `outcome`
     // cannot say — which C-### to open.
-    const { convertedContract } = toStaffRequest(await staffRequestRow(tx, user, number));
+    const request = await staffRequestRow(tx, user, number);
     throw httpError(409, REFUSALS[outcome], {
       type: REQUEST_DISPOSITIONED_PROBLEM_TYPE,
-      extensions: { outcome, convertedContract },
+      extensions: {
+        outcome,
+        convertedContract: convertedContractOf(request.convertedRecord),
+        convertedRecord: convertedRecordOf(request.convertedRecord),
+      },
     });
   }
   return { id: row.id, number: row.number };

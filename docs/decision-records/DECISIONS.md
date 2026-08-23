@@ -584,6 +584,12 @@ Per **DD-013**, Legal Team Members default to broad access but cannot see "sensi
 - The audit log records `confidentiality_set` and `confidentiality_cleared` events with actor, timestamp, and matter/contract/document ID.
 - The Pencil mocks must include the "matter list with hidden confidential" view for Members, and the "confidential team management" UI for Admins / matter creators.
 
+### Addendum (2026-08-23, M22 close, [#474](https://github.com/juggernog20/OpenLaw/issues/474)) — the Matter gate is one predicate over every read
+
+M22 shipped the shared Matter reach predicate and uses it inside list, record, converted-record, comment, activity, notification, and document queries. Administrators reach every Matter; a Legal Team Member reaches an open Matter by default and a confidential one only through a team row or as Matter Manager; a Contributor reaches only Matters with their team row; a Business User reaches none directly. An omitted Matter contributes no row, link, notification, document, comment, activity entry, or count.
+
+The write actor set extends the original creator rule the same way Contracts extended it for their Owner: an Administrator, the Matter's creator, or its Matter Manager may set or clear confidentiality and maintain the roster of a confidential Matter. The persistent banner, external-title marker, comment notice, and bounded mention picker all read that same answer. There is no auto-grant on mention: candidates are already inside the audience, so DES-009's old warning arm has no case to fire.
+
 ---
 
 ## DD-015: Contributor permission grid — read, comment, upload, edit business fields
@@ -848,7 +854,7 @@ Confirms DD-007's layered model, MTR-007's standalone-contracts-with-optional-li
 
 The contracts list shipped with a fixed seven-column table (M8). Feedback on the built surface: it is cramped, and the columns are not the reader's to choose. The record already carries far more than seven fields a list could show — risk, priority, the CTR-006 term dates, the derived notice deadline and days remaining, the signing entity, the CTR-016 custom fields — and which of them matter depends entirely on what the reader came to do. A renewals sweep wants expiry and notice deadline. A triage pass wants Owner and status. A portfolio review wants value and counterparty.
 
-Nothing in the decision records covers this. The MTR grill parked the neighbouring question — "first-class views, saved-view presets, or filter-chip-only" (MTR-003's open item) — and no DES draws a destination list's column strip. Matters (M22), Documents (M26), and Entities (M27) all land the same list surface later, so the answer has to be one every destination can adopt rather than a contracts-only affordance.
+Nothing in the decision records covered this at decision time. The MTR grill parked the neighbouring question — "first-class views, saved-view presets, or filter-chip-only" (MTR-003's open item) — and no DES drew a destination list's column strip. Matters adopted the same list surface in M22; Documents (M26) and Entities (M27) follow later, so the answer remains one every destination can adopt rather than a contracts-only affordance.
 
 ### Decision
 

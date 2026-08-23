@@ -283,8 +283,8 @@ describe("attach and detach (CTR-016 scopes)", () => {
 
   it("refuses a field whose scope belongs to another module", async () => {
     const nda = await typeBySlug("nda");
-    // No matter-scoped field can exist through the open API yet (M22),
-    // so plant one the way that milestone's migration would.
+    // Plant a Matter-scoped field directly to isolate the Contract
+    // attachment refusal from the catalog route M22 opened.
     const [matterField] = await harness.db
       .insert(fields)
       .values({

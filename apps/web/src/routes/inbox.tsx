@@ -44,6 +44,7 @@ import { Inbox, UserPlus } from "lucide-react";
 import { api } from "../lib/api";
 import { authClient } from "../lib/auth-client";
 import { contractPath, contractReference, SEVERITY_PILL, severityLabel } from "../lib/contracts";
+import { matterPath, matterReference } from "../lib/matters";
 import { formatRelativeOrShort } from "../lib/format";
 import {
   requestReference,
@@ -331,12 +332,18 @@ function QueueTable({ rows, showOutcome }: Readonly<{ rows: InboxRow[]; showOutc
                       >
                         {requestStatusLabel(intl, row.status)}
                       </span>
-                      {row.convertedContract && (
+                      {row.convertedRecord && (
                         <Link
-                          to={contractPath(row.convertedContract.number)}
+                          to={
+                            row.convertedRecord.module === "matter"
+                              ? matterPath(row.convertedRecord.number)
+                              : contractPath(row.convertedRecord.number)
+                          }
                           className="rounded-chip text-sm font-medium text-primary hover:text-link hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-link"
                         >
-                          {contractReference(intl, row.convertedContract.number)}
+                          {row.convertedRecord.module === "matter"
+                            ? matterReference(intl, row.convertedRecord.number)
+                            : contractReference(intl, row.convertedRecord.number)}
                         </Link>
                       )}
                     </span>

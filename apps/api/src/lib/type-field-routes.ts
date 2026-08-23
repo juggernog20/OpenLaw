@@ -10,9 +10,8 @@
  * deletes the join row only: the catalog definition and any stored
  * values survive by rule (MTR-014). The required flag is stored and
  * editable here; the module that collects the value enforces it.
- * Contracts do from #112, at creation and at re-type; matters do when
- * their record lands (M22), and the portal does when a requester
- * submits (M20). Everything sits behind SET-002's single role gate —
+ * Contracts do from #112, Matters from M22, and the portal when a
+ * requester submits (M20). Everything sits behind SET-002's single role gate —
  * Administrators only — and every mutation appends to the activity log
  * (DD-017) inside the same transaction.
  *
@@ -148,9 +147,8 @@ export interface TypeFieldRoutesConfig<TRow extends TaxonomyRow = TaxonomyRow> {
   /** DD-017 action prefix, e.g. `contract_type_field`. */
   actionPrefix: TypeFieldActionPrefix;
   /** The milestone that will hard-enforce `isRequired`, for a module
-   * whose record does not exist yet (M22 for matters). Omitted once it
-   * does: contracts enforce the flag from #112, at creation and at
-   * re-type, so their summary states the rule rather than promising it. */
+   * whose record does not exist yet. Omitted once it does, so the route
+   * summary states the live rule rather than promising it. */
   requiredMilestone?: string;
 }
 

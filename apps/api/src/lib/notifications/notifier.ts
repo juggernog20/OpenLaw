@@ -75,6 +75,9 @@ import {
   contractRecordAudience,
   CONTRACT_ENTITY,
   inboxAudience,
+  matterReachedBy,
+  matterRecordAudience,
+  MATTER_ENTITY,
   reachedBy,
   requestAudience,
   requestConvertedInto,
@@ -190,6 +193,13 @@ export interface ContractMentionedEvent extends MentionedOnAnyRecord {
   contractTitle: string;
 }
 
+export interface MatterMentionedEvent extends MentionedOnAnyRecord {
+  entityType: typeof MATTER_ENTITY;
+  matterId: string;
+  matterNumber: number;
+  matterTitle: string;
+}
+
 /**
  * A mention on a Request thread (M21/5).
  *
@@ -211,7 +221,8 @@ export interface RequestMentionedEvent extends MentionedOnAnyRecord {
  * happens on (NOT-002's M18/1 addendum) and the two records name
  * themselves and reach people differently.
  */
-export type CommentMentionedEvent = ContractMentionedEvent | RequestMentionedEvent;
+export type CommentMentionedEvent =
+  ContractMentionedEvent | MatterMentionedEvent | RequestMentionedEvent;
 
 /**
  * What every ambient event on a record carries (NOT-002 group 2).
@@ -250,7 +261,7 @@ export interface StatusChangedEvent extends RecordEvent {
 }
 
 /** What one ordinary comment tells the record's people (DD-016). */
-export interface CommentPostedEvent extends RecordEvent {
+export interface ContractCommentPostedEvent extends RecordEvent {
   commentId: string;
   /** The comment's DD-016 tier, carried so the fan-out can hold it: a
    * Legal Only comment never reaches a Contributor. */
@@ -264,6 +275,18 @@ export interface CommentPostedEvent extends RecordEvent {
    */
   mentioned?: readonly string[];
 }
+
+export interface MatterCommentPostedEvent {
+  entityType: typeof MATTER_ENTITY;
+  matterId: string;
+  actorId: string;
+  actorName: string;
+  commentId: string;
+  visibility: CommentVisibility;
+  mentioned?: readonly string[];
+}
+
+export type CommentPostedEvent = ContractCommentPostedEvent | MatterCommentPostedEvent;
 
 /** What a document landing tells the record's people (DOC-001). */
 export interface DocumentEvent extends RecordEvent {
@@ -690,7 +713,9 @@ interface PendingNotification {
  * names it. Which arm answers the wall question is read from `type`,
  * so an entity added later is an arm rather than a branch at a route. */
 type NotificationEntity =
-  { type: typeof CONTRACT_ENTITY; id: string } | { type: typeof REQUEST_ENTITY; id: string };
+  | { type: typeof MATTER_ENTITY; id: string }
+  | { type: typeof CONTRACT_ENTITY; id: string }
+  | { type: typeof REQUEST_ENTITY; id: string };
 
 /** Everything one event may ask of the fan-out beyond its people. */
 interface FanOutOptions {
@@ -759,14 +784,16 @@ async function fanOut(
   const reachable =
     entity.type === CONTRACT_ENTITY
       ? await reachedBy(tx, entity.id, [...byUser.keys()], narrowing)
-      : await requestReachedBy(tx, entity.id, [...byUser.keys()], {
-          ...narrowing,
-          // Which standing this event addressed (M21/4, M21/5). It is
-          // read from the catalog rather than passed by the method, so
-          // an event added to a group later inherits that group's side
-          // and cannot be the one that forgets to ask for it.
-          side: requestSideOf(eventType),
-        });
+      : entity.type === MATTER_ENTITY
+        ? await matterReachedBy(tx, entity.id, [...byUser.keys()], narrowing)
+        : await requestReachedBy(tx, entity.id, [...byUser.keys()], {
+            ...narrowing,
+            // Which standing this event addressed (M21/4, M21/5). It is
+            // read from the catalog rather than passed by the method, so
+            // an event added to a group later inherits that group's side
+            // and cannot be the one that forgets to ask for it.
+            side: requestSideOf(eventType),
+          });
 
   // 3. The preferences, over the group's defaults (NOT-001/002).
   const recipients = [...byUser.keys()].filter((id) => reachable.has(id));
@@ -840,6 +867,54 @@ async function fanOut(
   const wakeUps = wakeUpsOf(tx);
   for (const row of written) if (row.emailOwed) wakeUps.push(row.id);
   return written.length;
+}
+
+/**
+ * One Matter comment can address two audiences after a conversion: the
+ * Matter roster in group 2 and the originating Requester in group 5.
+ * Full Thread reserves the Requester for the reply event so a staff
+ * Requester on the roster is told once; mentions remain louder than both.
+ * The ordinary actor exclusion stays inside each fan-out.
+ */
+async function fanOutToMatter(
+  tx: NotifyingTransaction,
+  event: MatterCommentPostedEvent,
+): Promise<void> {
+  const audience = await matterRecordAudience(tx, event.matterId);
+  if (!audience) return;
+  const origin = await requestConvertedInto(tx, { module: "matter", id: event.matterId });
+  const named = new Set(event.mentioned ?? []);
+  const except = new Set([
+    ...named,
+    ...(origin !== null && event.visibility === "full_thread" ? [origin.requesterId] : []),
+  ]);
+  await fanOut(
+    tx,
+    "comment.posted",
+    { type: MATTER_ENTITY, id: event.matterId },
+    event.actorId,
+    audience.userIds
+      .filter((userId) => !except.has(userId))
+      .map((userId) => ({
+        userId,
+        payload: {
+          matterNumber: audience.matterNumber,
+          matterTitle: audience.matterTitle,
+          actorId: event.actorId,
+          actorName: event.actorName,
+          commentId: event.commentId,
+        },
+      })),
+    { narrowing: { tier: event.visibility } },
+  );
+  if (origin === null || named.has(origin.requesterId)) return;
+  await fanOutToRequest(
+    tx,
+    "request.replied",
+    { requestId: origin.requestId, actorId: event.actorId, actorName: event.actorName },
+    { commentId: event.commentId },
+    { narrowing: { tier: event.visibility } },
+  );
 }
 
 /**
@@ -1080,8 +1155,11 @@ async function mentionedOnRequest(
  * (CMT-007) — and the arithmetic is the same either way: one comment,
  * one row.
  */
-async function commentOnRecord(tx: NotifyingTransaction, event: CommentPostedEvent): Promise<void> {
-  const origin = await requestConvertedInto(tx, event.contractId);
+async function commentOnRecord(
+  tx: NotifyingTransaction,
+  event: ContractCommentPostedEvent,
+): Promise<void> {
+  const origin = await requestConvertedInto(tx, { module: "contract", id: event.contractId });
   const named = new Set(event.mentioned ?? []);
   await fanOutToRecord(
     tx,
@@ -1299,6 +1377,25 @@ export function createNotifier(deps: NotifierDeps): Notifier {
         await mentionedOnRequest(tx, event, named, who);
         return;
       }
+      if (event.entityType === MATTER_ENTITY) {
+        await fanOut(
+          tx,
+          "comment.mentioned",
+          { type: MATTER_ENTITY, id: event.matterId },
+          event.actorId,
+          named.map((row) => ({
+            userId: row.userId,
+            payload: {
+              matterNumber: event.matterNumber,
+              matterTitle: event.matterTitle,
+              ...who,
+              commentId: event.commentId,
+            },
+          })),
+          { narrowing: { tier: event.visibility } },
+        );
+        return;
+      }
       await fanOut(
         tx,
         "comment.mentioned",
@@ -1327,7 +1424,8 @@ export function createNotifier(deps: NotifierDeps): Notifier {
     },
 
     async commentPosted(tx: NotifyingTransaction, event: CommentPostedEvent): Promise<void> {
-      await commentOnRecord(tx, event);
+      if ("entityType" in event) await fanOutToMatter(tx, event);
+      else await commentOnRecord(tx, event);
     },
 
     async documentAdded(tx: NotifyingTransaction, event: DocumentEvent): Promise<void> {

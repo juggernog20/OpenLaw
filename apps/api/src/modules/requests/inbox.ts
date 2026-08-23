@@ -43,10 +43,10 @@
  * way: it is still triage's business, and an absence in the queue would
  * be the existence leak DD-014 exists to close.
  *
- * The matter arm of the trail is not here. `matters` lands in M22 and
- * `converted_matter_id` carries no foreign key yet, so there is no row
- * to join and nothing honest to answer; the column gains its arm with
- * the table it points at.
+ * Converted-record resolution lives in `projection.ts`, where one
+ * module-aware reference supplies this read and the staff detail. A
+ * second record module extends that resolver rather than adding another
+ * join here.
  */
 
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
@@ -54,7 +54,6 @@ import { z } from "zod";
 import {
   and,
   asc,
-  contracts,
   contractTypes,
   desc,
   eq,
@@ -69,15 +68,22 @@ import {
   type AnyPgColumn,
   type SQL,
 } from "@openlaw/db";
-import { requireRole, type AuthenticatedUser } from "../../auth/guards.js";
-import { contractTeamScope } from "../../lib/contract-access.js";
+import { requireRole } from "../../auth/guards.js";
 import { problemResponse } from "../../lib/problem.js";
 import {
   liveTargetContractType,
   liveTargetMatterType,
+  ConvertedContractSchema,
+  ConvertedRecordSchema,
+  selectConvertedRecords,
   StaffRequestTypeSchema,
   toStaffRequestType,
 } from "./projection.js";
+import {
+  convertedContractOf,
+  convertedRecordOf,
+  type ConversionRecordReference,
+} from "./record-reference.js";
 
 /** INT-006: Member+ triages, and there are no routing rules to narrow
  * that further. A Contributor and a Business User are refused rather
@@ -129,8 +135,9 @@ const InboxRowSchema = z.object({
   createdAt: z.string(),
   /** The record a conversion made, when this viewer reaches it, and
    * `null` in every other case — never converted, converted into a
-   * record they may not see, or converted into a Matter (M22). */
-  convertedContract: z.object({ number: z.number().int() }).nullable(),
+   * record they may not see, or converted into another module. */
+  convertedContract: ConvertedContractSchema.nullable(),
+  convertedRecord: ConvertedRecordSchema.nullable(),
 });
 
 export const requestInboxRoutes: FastifyPluginAsyncZod = async (app) => {
@@ -146,8 +153,8 @@ export const requestInboxRoutes: FastifyPluginAsyncZod = async (app) => {
           "age, oldest first, and paged by cursor. The answer is " +
           "exactly the `new` Requests; includeTriaged=true widens it " +
           "to the converted, resolved, and declined ones with their " +
-          "outcomes. A converted row carries the contract it became " +
-          "only when the caller reaches that contract, and carries " +
+          "outcomes. A converted row carries the contract or matter it became " +
+          "only when the caller reaches that record, and carries " +
           "null otherwise (DD-014). Member+ only: a Contributor and a " +
           "Business User are refused",
         tags: ["requests"],
@@ -169,7 +176,7 @@ export const requestInboxRoutes: FastifyPluginAsyncZod = async (app) => {
       },
     },
     async (request) => {
-      const rows = await selectInbox(request.user)
+      const rows = await selectInbox()
         .where(
           and(
             // The house rule that NULL means live. Nothing archives a
@@ -185,8 +192,13 @@ export const requestInboxRoutes: FastifyPluginAsyncZod = async (app) => {
         // there is more without counting anything.
         .limit(PAGE_SIZE + 1);
       const page = rows.slice(0, PAGE_SIZE);
+      const convertedRecords = await selectConvertedRecords(
+        app.db,
+        request.user,
+        page.map((row) => row.id),
+      );
       return {
-        requests: page.map(toRow),
+        requests: page.map((row) => toRow(row, convertedRecords.get(row.id) ?? null)),
         // Only when a further row was actually read. A cursor on the
         // last page would send the client for an empty one.
         nextCursor: rows.length > PAGE_SIZE ? (page.at(-1)?.id ?? null) : null,
@@ -197,13 +209,13 @@ export const requestInboxRoutes: FastifyPluginAsyncZod = async (app) => {
   /**
    * The queue's read, with everything a row states joined onto it.
    *
-   * The contract join is the one that carries a rule: it is taken under
-   * this viewer's own reach, so a record they may not see contributes
-   * no row and the left join answers NULL. That is the whole of the
-   * DD-014 omission — there is no branch after the read that decides
-   * whether to keep the number.
+   * Converted records are resolved for the finished page through the
+   * shared projection helper under this viewer's own reach. A record
+   * they may not see contributes no reference; that is the whole of the
+   * DD-014 omission, with no branch here deciding whether to keep its
+   * number.
    */
-  function selectInbox(user: AuthenticatedUser) {
+  function selectInbox() {
     return app.db
       .select({
         id: requests.id,
@@ -221,26 +233,12 @@ export const requestInboxRoutes: FastifyPluginAsyncZod = async (app) => {
         targetMatterTypeName: matterTypes.displayName,
         requesterId: users.id,
         requesterDisplayName: users.displayName,
-        convertedContractNumber: contracts.number,
       })
       .from(requests)
       .innerJoin(requestTypes, eq(requests.requestTypeId, requestTypes.id))
       .innerJoin(users, eq(requests.requesterId, users.id))
       .leftJoin(contractTypes, liveTargetContractType())
-      .leftJoin(matterTypes, liveTargetMatterType())
-      .leftJoin(
-        contracts,
-        and(
-          eq(requests.convertedContractId, contracts.id),
-          // A contract this viewer cannot reach joins to nothing, so
-          // the row carries no link and the Request still carries
-          // itself (DD-014, CTR-021).
-          contractTeamScope(app.db, user),
-          // An archived contract is no trail either: the link would
-          // open on a record the Contracts destination hides.
-          isNull(contracts.archivedAt),
-        ),
-      );
+      .leftJoin(matterTypes, liveTargetMatterType());
   }
 };
 
@@ -300,24 +298,26 @@ function furtherDownThan(cursor: string): SQL {
 }
 
 /** The joined row, reshaped into the answer's nested shape. */
-function toRow(row: {
-  id: string;
-  number: number;
-  status: (typeof REQUEST_STATUSES)[number];
-  summary: string;
-  urgency: (typeof SEVERITY_LEVELS)[number];
-  createdAt: Date;
-  typeId: string;
-  typeDisplayName: string;
-  targetModule: string | null;
-  targetContractTypeId: string | null;
-  targetContractTypeName: string | null;
-  targetMatterTypeId: string | null;
-  targetMatterTypeName: string | null;
-  requesterId: string;
-  requesterDisplayName: string;
-  convertedContractNumber: number | null;
-}) {
+function toRow(
+  row: {
+    id: string;
+    number: number;
+    status: (typeof REQUEST_STATUSES)[number];
+    summary: string;
+    urgency: (typeof SEVERITY_LEVELS)[number];
+    createdAt: Date;
+    typeId: string;
+    typeDisplayName: string;
+    targetModule: string | null;
+    targetContractTypeId: string | null;
+    targetContractTypeName: string | null;
+    targetMatterTypeId: string | null;
+    targetMatterTypeName: string | null;
+    requesterId: string;
+    requesterDisplayName: string;
+  },
+  convertedRecord: ConversionRecordReference | null,
+) {
   return {
     id: row.id,
     number: row.number,
@@ -327,7 +327,7 @@ function toRow(row: {
     requestType: toStaffRequestType(row),
     requester: { id: row.requesterId, displayName: row.requesterDisplayName },
     createdAt: row.createdAt.toISOString(),
-    convertedContract:
-      row.convertedContractNumber === null ? null : { number: row.convertedContractNumber },
+    convertedContract: convertedContractOf(convertedRecord),
+    convertedRecord: convertedRecordOf(convertedRecord),
   };
 }

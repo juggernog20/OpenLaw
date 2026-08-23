@@ -290,6 +290,7 @@ Work container for any legal effort. Holds Documents and Contracts; references E
 | `id`                       | UUID        |             | PK                                                                                                                                                     |
 | `number`                   | integer     | **MTR-009** | unique, DB sequence, immutable, never reused; displayed as `M-42`; used in URLs (`/matters/42`)                                                        |
 | `title`                    | text        | **MTR-009** | not null; free text, editable (audit-logged)                                                                                                           |
+| `description`              | text        |             | nullable; free-text summary, editable and audit-logged                                                                                                 |
 | `matter_type_id`           | UUID        | **MTR-001** | FK → `matter_types.id`, not null                                                                                                                       |
 | `status_id`                | UUID        | **MTR-002** | FK → `matter_statuses.id`, not null; defaults to first `open`-category status by display order                                                         |
 | `manager_id`               | UUID        | **MTR-003** | FK → `users.id`, nullable; the Matter Manager. Null = unassigned (surfaced in triage)                                                                  |
@@ -303,10 +304,6 @@ Work container for any legal effort. Holds Documents and Contracts; references E
 | `created_by`               | UUID        |             | FK → `users.id`; the matter creator (relevant to **DD-014** team-default)                                                                              |
 | `created_at`, `updated_at` | timestamptz |             |                                                                                                                                                        |
 | `archived_at`              | timestamptz |             | nullable                                                                                                                                               |
-
-**TBD columns** to be added by upcoming Matters decisions:
-
-- Description / summary
 
 ---
 
@@ -993,7 +990,7 @@ Structured request envelope, created only via portal forms. Not a work container
 | `description`              | text        | nullable                                                                                                                                                                                                          |
 | `urgency`                  | text (enum) | `low` \| `medium` \| `high` \| `critical` (levels per **DES-018**), requester-supplied, not null; maps 1:1 to `priority` at conversion (MTR-012 — `risk` is never requester-set)                                  |
 | `custom_fields`            | jsonb       | collected form values keyed by field slug per **INT-002**; not null, default `{}`; carried into the converted record                                                                                              |
-| `converted_matter_id`      | UUID        | → `matters.id`, nullable; the FK constraint lands with `matters` in M22 (see below)                                                                                                                               |
+| `converted_matter_id`      | UUID        | → `matters.id`, nullable; FK added with the M22 matter table                                                                                                                                                      |
 | `converted_contract_id`    | UUID        | FK → `contracts.id`, nullable                                                                                                                                                                                     |
 | `declined_reason`          | text        | nullable                                                                                                                                                                                                          |
 | `created_at`, `updated_at` | timestamptz |                                                                                                                                                                                                                   |
@@ -1003,7 +1000,7 @@ Indexes: `requests_number_unique`, a **unique** index on `(number)` — the iden
 
 Checks: `requests_converted_target_check` — `num_nonnulls(converted_matter_id, converted_contract_id) <= 1`, so "a Request becomes one record, not two" is the table's rule rather than the conversion route's; `requests_status_check` and `requests_urgency_check`, closing the two unions to their listed values, the house rule for every closed union in this schema.
 
-The table landed with M20/4 (#378), migration 0061, and was reconciled against the schema file at the M21 close (#423, through migration 0067). Two notes on what it holds today. `number` is a Postgres identity column, `GENERATED ALWAYS`, so no write path can set or correct it — the immutability INT-002 asks for is a database rule rather than an application convention, and it is the CTR-003 contract sequence's sibling. `converted_matter_id` carries **no foreign key constraint yet** — `matters` arrives in M22, and the constraint arrives with the table it points at; the column is here because a Request converts into one of two shapes and a table that could record only one of them would misstate the model. `converted_contract_id` does carry its FK, with no cascade: a contract is soft-deleted, never dropped. `request_type_id` carries no cascade either — a request type in use refuses hard delete, and an archived one keeps naming the Requests it took.
+The table landed with M20/4 (#378), migration 0061, and was reconciled against the schema file at the M21 close (#423, through migration 0067). Two notes on what it holds today. `number` is a Postgres identity column, `GENERATED ALWAYS`, so no write path can set or correct it — the immutability INT-002 asks for is a database rule rather than an application convention, and it is the CTR-003 contract sequence's sibling. M22 added the `converted_matter_id` foreign key and index with the `matters` table; both converted-record references now carry no-cascade foreign keys because their records are soft-deleted, never dropped. The check constraint keeps at most one non-null. `request_type_id` carries no cascade either — a request type in use refuses hard delete, and an archived one keeps naming the Requests it took.
 
 ---
 
@@ -1123,7 +1120,7 @@ One person's saved way of reading one list. **Private to that person** — there
 | `is_default`               | boolean     | not null, default false. The one view this person's list opens on. All-false means the list opens on the built-in layout, which is code rather than a seeded row (DD-019 clause 7)                                      |
 | `created_at`, `updated_at` | timestamptz |                                                                                                                                                                                                                         |
 
-**The surface is a string, so one table serves every destination.** Matters (M22), documents (M26), and entities (M27) each add theirs by rendering the same managed table (DES-046), not by adding a table here. Nothing joins to a view, which is what makes this the cheap kind of polymorphism rather than the kind DD-008 avoids. A `surface` value is a slug the build writes, never user text — CHECK: `^[a-z][a-z0-9_]*$`.
+**The surface is a string, so one table serves every destination.** Matters added `matters` in M22; documents (M26) and entities (M27) add theirs by rendering the same managed table (DES-046), not by adding a table here. Nothing joins to a view, which is what makes this the cheap kind of polymorphism rather than the kind DD-008 avoids. A `surface` value is a slug the build writes, never user text — CHECK: `^[a-z][a-z0-9_]*$`.
 
 **A config may name a column the build no longer has.** DD-019 clause 7 makes that a read-past rather than an error: the surface resolves the config against the column catalogue it actually ships, drops what it cannot draw, and renders the rest. So nothing here constrains the config's contents, and no migration ever has to rewrite one.
 

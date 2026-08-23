@@ -311,7 +311,7 @@ function changeLabel(intl: IntlShape, key: string, context: NarrationContext): s
       // honest rendering for one this build no longer writes.
       defaultMessage:
         "{key, select, title {Title} description {Description} owner {Owner} " +
-        "entity {Signing entity} priority {Priority} risk {Risk} " +
+        "entity {Signing entity} priority {Priority} risk {Risk} matterManager {Matter Manager} matterType {Matter type} " +
         "contractType {Contract type} value {Value} status {Status} " +
         "termType {Term type} effectiveDate {Effective date} " +
         "expiryDate {Expiry date} renewalPeriodMonths {Renewal period (months)} " +
@@ -703,6 +703,19 @@ function convertedContract(intl: IntlShape, payload: Payload): string {
       defaultMessage: "another contract",
     }),
   );
+}
+
+function convertedRecord(intl: IntlShape, payload: Payload): string {
+  if (typeof payload.matterNumber === "number" && Number.isInteger(payload.matterNumber)) {
+    return crossReference(
+      intl,
+      payload,
+      "matterNumber",
+      defineMessage({ id: "matters.reference", defaultMessage: "M-{number}" }),
+      defineMessage({ id: "activity.matter.unnamedRecord", defaultMessage: "another matter" }),
+    );
+  }
+  return convertedContract(intl, payload);
 }
 
 function named(intl: IntlShape, payload: Payload, key: string): string {
@@ -1213,6 +1226,119 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
     message: defineMessage({
       id: "activity.contract.confidentialityCleared",
       defaultMessage: "{actor} cleared this contract's confidential mark",
+    }),
+  },
+  "matter.created": {
+    icon: FilePlus2,
+    message: defineMessage({
+      id: "activity.matter.created",
+      defaultMessage: "{actor} created this matter",
+    }),
+  },
+  "matter.created_from_request": {
+    icon: ArrowRightLeft,
+    message: defineMessage({
+      id: "activity.matter.createdFromRequest",
+      defaultMessage: "{actor} created this matter from {request}",
+    }),
+    values: (intl, payload) => ({
+      request: crossReference(
+        intl,
+        payload,
+        "requestNumber",
+        defineMessage({
+          id: "requests.reference",
+          defaultMessage: "R-{number, number, ::group-off}",
+        }),
+        defineMessage({ id: "activity.request.unnamedRecord", defaultMessage: "a request" }),
+      ),
+    }),
+  },
+  "matter.updated": {
+    icon: PencilLine,
+    message: defineMessage({
+      id: "activity.matter.updated",
+      defaultMessage:
+        "{actor} changed {count, plural, =0 {this matter} one {{field}} other {# fields}}",
+    }),
+    changes: changesFrom,
+    values: (_intl, _payload, changes) => ({
+      count: changes.length,
+      field: changes[0]?.label ?? "",
+    }),
+  },
+  "matter.status_changed": {
+    icon: GitCommitHorizontal,
+    message: defineMessage({
+      id: "activity.matter.statusChanged",
+      defaultMessage: "{actor} changed the status",
+    }),
+    changes: (intl, payload, context) => directChange(intl, payload, "status", context),
+  },
+  "matter.type_reassigned": {
+    icon: ArrowRightLeft,
+    message: defineMessage({
+      id: "activity.matter.typeReassigned",
+      defaultMessage: "{actor} reassigned this matter's type",
+    }),
+    changes: (intl, payload, context) => directChange(intl, payload, "matterType", context),
+  },
+  "matter.team_added": {
+    icon: Users,
+    message: defineMessage({
+      id: "activity.matter.teamAdded",
+      defaultMessage: "{actor} added {member} to the team as {role}",
+    }),
+    values: (intl, payload) => ({
+      member: named(intl, payload, "member"),
+      role: teamRole(intl, payload),
+    }),
+  },
+  "matter.team_removed": {
+    icon: Users,
+    message: defineMessage({
+      id: "activity.matter.teamRemoved",
+      defaultMessage: "{actor} took {member} off the team as {role}",
+    }),
+    values: (intl, payload) => ({
+      member: named(intl, payload, "member"),
+      role: teamRole(intl, payload),
+    }),
+  },
+  "matter.status_reassigned": {
+    icon: ArrowRightLeft,
+    message: defineMessage({
+      id: "activity.matter.statusReassigned",
+      defaultMessage: "{actor} reassigned this matter's status",
+    }),
+    changes: (intl, payload, context) => directChange(intl, payload, "status", context),
+  },
+  "matter.confidentiality_set": {
+    icon: Lock,
+    message: defineMessage({
+      id: "activity.matter.confidentialitySet",
+      defaultMessage: "{actor} marked this matter confidential",
+    }),
+  },
+  "matter.confidentiality_cleared": {
+    icon: Lock,
+    message: defineMessage({
+      id: "activity.matter.confidentialityCleared",
+      defaultMessage: "{actor} cleared this matter's confidential mark",
+    }),
+  },
+  "matter.archived": {
+    icon: Archive,
+    message: defineMessage({
+      id: "activity.matter.archived",
+      defaultMessage: "{actor} archived this matter",
+    }),
+  },
+  "matter.restored": {
+    icon: ArchiveRestore,
+    message: defineMessage({
+      id: "activity.matter.restored",
+      defaultMessage: "{actor} restored this matter",
     }),
   },
   // The sign-off on the record (M14/3, CTR-012). A verb per act, so a
@@ -1839,23 +1965,23 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
     icon: FilePen,
     message: defineMessage({
       id: "activity.request.converted",
-      defaultMessage: "{actor} converted this request into {contract}",
+      defaultMessage: "{actor} converted this request into {record}",
     }),
-    values: (intl, payload) => ({ contract: convertedContract(intl, payload) }),
+    values: (intl, payload) => ({ record: convertedRecord(intl, payload) }),
   },
 
   // CMT-001's promise, kept at the conversion (#422). The conversation
   // left with the work, so the ask's own feed says where it went — by
-  // C-###, which never changes. There is no count in the sentence: how
+  // its permanent reference, which never changes. There is no count in the sentence: how
   // much was said is a fact at every tier, and this entry is one a
   // Contributor reads (DD-016).
   "request.thread_moved": {
     icon: MessagesSquare,
     message: defineMessage({
       id: "activity.request.threadMoved",
-      defaultMessage: "{actor} moved this conversation onto {contract}",
+      defaultMessage: "{actor} moved this conversation onto {record}",
     }),
-    values: (intl, payload) => ({ contract: convertedContract(intl, payload) }),
+    values: (intl, payload) => ({ record: convertedRecord(intl, payload) }),
   },
 
   // ---- User administration and the profile (audit log only) ----
@@ -2138,6 +2264,14 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
   // A status has a stage rather than a description, so it never writes
   // the `updated` verb.
   ...taxonomyArms("contract_status", GitCommitHorizontal, [
+    "created",
+    "renamed",
+    "reordered",
+    "archived",
+    "restored",
+    "deleted",
+  ]),
+  ...taxonomyArms("matter_status", GitCommitHorizontal, [
     "created",
     "renamed",
     "reordered",

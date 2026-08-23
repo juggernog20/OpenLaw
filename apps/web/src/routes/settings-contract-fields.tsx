@@ -15,7 +15,8 @@
  * 403 is the real refusal.
  */
 
-import { useRef, useState } from "react";
+import { useRef, useState, type ReactNode } from "react";
+import type { paths } from "@openlaw/api-client";
 import { redirect, useLoaderData } from "react-router";
 import { FormattedMessage, useIntl, type IntlShape } from "react-intl";
 import { History, Pencil, Sparkles, TriangleAlert } from "lucide-react";
@@ -23,6 +24,7 @@ import { api } from "../lib/api";
 import { problemDetail } from "../lib/messages";
 import { currentUser, needsSetup } from "../lib/session";
 import { ContractsSettingsTabs } from "../components/contracts-settings-tabs";
+import { MattersSettingsTabs } from "../components/matters-settings-tabs";
 import { ListEditor } from "../components/list-editor";
 import { PageTitle } from "../components/page-title";
 import { type FieldStatus } from "../components/status-note";
@@ -31,7 +33,7 @@ import { Dialog, DialogContent, DialogTitle } from "../components/ui/dialog";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
 
-export async function settingsContractFieldsLoader() {
+async function settingsFieldsLoader(module: ModuleScope) {
   const user = await currentUser();
   if (!user) return redirect((await needsSetup()) ? "/auth/setup" : "/auth/login");
   if (user.role !== "administrator") return redirect("/settings/profile");
@@ -39,7 +41,17 @@ export async function settingsContractFieldsLoader() {
     params: { query: { includeArchived: "true" } },
   });
   if (!data) throw new Error("The fields could not be read.");
-  return { fields: data.fields };
+  return {
+    fields: data.fields.filter((field) => isFieldRow(field, module)),
+  };
+}
+
+export function settingsContractFieldsLoader() {
+  return settingsFieldsLoader("contract");
+}
+
+export function settingsMatterFieldsLoader() {
+  return settingsFieldsLoader("matter");
 }
 
 /** The nine CTR-016 field types, immutable after creation. */
@@ -61,25 +73,25 @@ const SELECT_TYPES = new Set<FieldType>(["single_select", "multi_select"]);
 
 /** The scopes this pane's picker offers (CTR-016): matter and entity
  * join with their milestones. */
-const SCOPES = ["contract", "global"] as const;
-type Scope = (typeof SCOPES)[number];
+type ModuleScope = "contract" | "matter";
+type Scope = ModuleScope | "global";
 
 const TAGS = ["business", "legal"] as const;
 type Tag = (typeof TAGS)[number];
 
-/** One row of GET /fields, as the client sees it. */
-interface FieldRow {
-  id: string;
-  slug: string;
-  displayName: string;
-  description: string | null;
-  moduleScope: Scope;
-  fieldType: FieldType;
-  options: string[] | null;
-  fieldTag: Tag;
-  aiPrompt: string | null;
-  archivedAt: string | null;
-  inUseCount: number;
+type ApiField =
+  paths["/api/v1/fields"]["get"]["responses"]["200"]["content"]["application/json"]["fields"][number];
+type FieldRow = ApiField & { moduleScope: Scope };
+
+function isFieldRow(field: ApiField, module: ModuleScope): field is FieldRow {
+  return field.moduleScope === module || field.moduleScope === "global";
+}
+
+function fieldRow(field: ApiField, module: ModuleScope): FieldRow {
+  if (!isFieldRow(field, module)) {
+    throw new Error(`A ${module} field operation returned a field outside this catalog.`);
+  }
+  return field;
 }
 
 function typeLabel(intl: IntlShape, fieldType: FieldType): string {
@@ -99,7 +111,8 @@ function scopeLabel(intl: IntlShape, scope: Scope): string {
   return intl.formatMessage(
     {
       id: "settings.contractFields.scopeLabel",
-      defaultMessage: "{scope, select, contract {Contract} global {Global} other {Unknown}}",
+      defaultMessage:
+        "{scope, select, contract {Contract} matter {Matter} global {Global} other {Unknown}}",
     },
     { scope },
   );
@@ -136,13 +149,13 @@ interface EditorDraft {
   aiPrompt: string;
 }
 
-function draftOf(target: FieldRow | null): EditorDraft {
+function draftOf(target: FieldRow | null, module: ModuleScope): EditorDraft {
   if (!target) {
     return {
       name: "",
       description: "",
       fieldType: "",
-      scope: "contract",
+      scope: module,
       tag: "business",
       optionsText: "",
       aiPrompt: "",
@@ -169,21 +182,24 @@ function parseOptions(optionsText: string): string[] {
 
 function FieldEditorDialog({
   target,
+  module,
   onOpenChange,
   onRowChanged,
   onCreated,
 }: Readonly<{
   /** The field being edited, or null for create mode. */
   target: FieldRow | null;
+  module: ModuleScope;
   onOpenChange: (open: boolean) => void;
   /** An edited row, after each successful step (scope, then the rest). */
   onRowChanged: (row: FieldRow) => void;
   onCreated: (row: FieldRow) => void;
 }>) {
   const intl = useIntl();
-  const [draft, setDraft] = useState<EditorDraft>(() => draftOf(target));
+  const [draft, setDraft] = useState<EditorDraft>(() => draftOf(target, module));
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const scopes: Scope[] = [module, "global"];
 
   const isSelect = draft.fieldType !== "" && SELECT_TYPES.has(draft.fieldType);
   // The prompt rides on contract-scoped fields only (CTR-008/CTR-016).
@@ -222,7 +238,7 @@ function FieldEditorDialog({
       );
       return false;
     }
-    onCreated(data.field);
+    onCreated(fieldRow(data.field, module));
     return true;
   }
 
@@ -246,7 +262,7 @@ function FieldEditorDialog({
         );
         return false;
       }
-      latest = data.field as FieldRow;
+      latest = fieldRow(data.field, module);
       onRowChanged(latest);
     }
 
@@ -279,7 +295,7 @@ function FieldEditorDialog({
       );
       return false;
     }
-    onRowChanged(data.field as FieldRow);
+    onRowChanged(fieldRow(data.field, module));
     return true;
   }
 
@@ -314,9 +330,19 @@ function FieldEditorDialog({
       return;
     }
     setBusy(true);
-    const done = target === null ? await create() : await edit(target);
-    setBusy(false);
-    if (done) onOpenChange(false);
+    try {
+      const done = target === null ? await create() : await edit(target);
+      if (done) onOpenChange(false);
+    } catch {
+      setError(
+        intl.formatMessage({
+          id: "settings.contractFields.invalidResponse",
+          defaultMessage: "The server returned a field outside this catalog.",
+        }),
+      );
+    } finally {
+      setBusy(false);
+    }
   }
 
   return (
@@ -422,7 +448,7 @@ function FieldEditorDialog({
                 className={CONTROL_CLASS}
                 onChange={(event) => set("scope", event.target.value as Scope)}
               >
-                {SCOPES.map((scope) => (
+                {scopes.map((scope) => (
                   <option key={scope} value={scope}>
                     {scopeLabel(intl, scope)}
                   </option>
@@ -519,11 +545,13 @@ function FieldEditorDialog({
 
 function ArchiveFieldDialog({
   target,
+  module,
   onOpenChange,
   onArchived,
   onArchivedCloseFocus,
 }: Readonly<{
   target: FieldRow;
+  module: ModuleScope;
   onOpenChange: (open: boolean) => void;
   onArchived: (row: FieldRow) => void;
   /** Where focus lands after a successful archive — the row's archive
@@ -544,7 +572,7 @@ function ArchiveFieldDialog({
       });
       if (data) {
         archived.current = true;
-        onArchived(data.field as FieldRow);
+        onArchived(fieldRow(data.field, module));
         onOpenChange(false);
       } else {
         // The API's own refusal (already archived, a stale list) is
@@ -592,9 +620,8 @@ function ArchiveFieldDialog({
             <TriangleAlert size={16} aria-hidden="true" className="mt-0.5 shrink-0" />
             {/* Fields never reassign and never block: everything is
                 retained by rule (MTR-014), which is the whole message.
-                The count is type attachments until the record
-                milestones (M8, M22) add records holding values — the
-                copy revisits then. */}
+                M8 and M22 added record values to this same count; the
+                copy deliberately calls every source "uses". */}
             <p>
               <FormattedMessage
                 id="settings.contractFields.archiveWarning"
@@ -638,11 +665,14 @@ function ArchiveFieldDialog({
   );
 }
 
-export function SettingsContractFieldsPage() {
-  const { fields } = useLoaderData<typeof settingsContractFieldsLoader>();
+function SettingsFieldsPage({
+  initialFields,
+  module,
+  tabs,
+}: Readonly<{ initialFields: FieldRow[]; module: ModuleScope; tabs: ReactNode }>) {
   const intl = useIntl();
 
-  const [rows, setRows] = useState<FieldRow[]>(fields as FieldRow[]);
+  const [rows, setRows] = useState<FieldRow[]>(initialFields);
   const [rowStatus, setRowStatus] = useState<Record<string, FieldStatus>>({});
   const [rowError, setRowError] = useState<Record<string, string | undefined>>({});
   /** The editor dialog: closed, create mode, or an edit target. */
@@ -673,7 +703,7 @@ export function SettingsContractFieldsPage() {
       })
       .catch(() => ({ data: null, error: undefined }));
     if (data) {
-      replaceRow(data.field as FieldRow);
+      replaceRow(fieldRow(data.field, module));
       noteRow(row.id, "saved");
     } else {
       noteRow(row.id, "error", problemDetail(error));
@@ -686,7 +716,7 @@ export function SettingsContractFieldsPage() {
       .POST("/api/v1/fields/{id}/restore", { params: { path: { id: row.id } } })
       .catch(() => ({ data: null, error: undefined }));
     if (data) {
-      replaceRow(data.field as FieldRow);
+      replaceRow(fieldRow(data.field, module));
       noteRow(row.id, "saved");
     } else {
       noteRow(row.id, "error", problemDetail(error));
@@ -770,7 +800,7 @@ export function SettingsContractFieldsPage() {
         })}
       />
       <div className="flex w-full max-w-(--width-settings-card) flex-col gap-4">
-        <ContractsSettingsTabs />
+        {tabs}
         <ListEditor
           rows={live}
           archivedRows={archived}
@@ -778,7 +808,8 @@ export function SettingsContractFieldsPage() {
           headerCaption={
             <FormattedMessage
               id="settings.contractFields.scopeCaption"
-              defaultMessage="Contract and global fields"
+              defaultMessage="{module, select, contract {Contract} matter {Matter} other {Module}} and global fields"
+              values={{ module }}
             />
           }
           count={
@@ -797,8 +828,8 @@ export function SettingsContractFieldsPage() {
               id="settings.contractFields.help"
               defaultMessage={
                 "Field type is immutable after creation. Archiving a field keeps stored " +
-                "values. Global fields are shared with Matters — the sparkle marks fields " +
-                "with an AI extraction prompt."
+                "values. Global fields are shared across modules — the sparkle marks fields " +
+                "with a contract AI extraction prompt."
               }
             />
           }
@@ -882,6 +913,7 @@ export function SettingsContractFieldsPage() {
       {editor && (
         <FieldEditorDialog
           target={editor.target}
+          module={module}
           onOpenChange={(open) => {
             if (!open) setEditor(null);
           }}
@@ -892,6 +924,7 @@ export function SettingsContractFieldsPage() {
       {archiveTarget && (
         <ArchiveFieldDialog
           target={archiveTarget}
+          module={module}
           onOpenChange={(open) => {
             if (!open) setArchiveTarget(null);
           }}
@@ -900,5 +933,19 @@ export function SettingsContractFieldsPage() {
         />
       )}
     </>
+  );
+}
+
+export function SettingsContractFieldsPage() {
+  const { fields } = useLoaderData<typeof settingsContractFieldsLoader>();
+  return (
+    <SettingsFieldsPage initialFields={fields} module="contract" tabs={<ContractsSettingsTabs />} />
+  );
+}
+
+export function SettingsMatterFieldsPage() {
+  const { fields } = useLoaderData<typeof settingsMatterFieldsLoader>();
+  return (
+    <SettingsFieldsPage initialFields={fields} module="matter" tabs={<MattersSettingsTabs />} />
   );
 }

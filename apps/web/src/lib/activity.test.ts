@@ -173,6 +173,28 @@ const SAMPLE_PAYLOADS: { [A in ActivityAction]: ActivityPayloadMap[A] } = {
   "contract_status.restored": { slug: "in-review", displayName: "In review" },
   "contract_status.deleted": { slug: "in-review", displayName: "In review", stage: "review" },
 
+  // Matter statuses
+  "matter_status.created": {
+    slug: "investigation",
+    displayName: "Investigation",
+    category: "open",
+  },
+  "matter_status.renamed": { slug: "investigation", from: "Review", to: "Investigation" },
+  "matter_status.reordered": { order: ["open", "investigation", "closed"] },
+  "matter_status.archived": {
+    slug: "investigation",
+    displayName: "Investigation",
+    category: "open",
+    inUseCount: 2,
+    reassignedTo: "Open",
+  },
+  "matter_status.restored": { slug: "investigation", displayName: "Investigation" },
+  "matter_status.deleted": {
+    slug: "investigation",
+    displayName: "Investigation",
+    category: "open",
+  },
+
   // Deflection links (INT-004)
   "intake_link.created": {
     label: "NDA FAQ",
@@ -397,6 +419,61 @@ const SAMPLE_PAYLOADS: { [A in ActivityAction]: ActivityPayloadMap[A] } = {
   "contract.confidentiality_cleared": { number: 41, title: "Helix supply agreement" },
   "contract.archived": { number: 41, title: "Helix supply agreement" },
   "contract.restored": { number: 41, title: "Helix supply agreement" },
+
+  // Matter record
+  "matter.created": {
+    number: 7,
+    title: "Employment advice",
+    matterType: "Employment",
+    status: "Open",
+    customFields: ["business-unit"],
+  },
+  "matter.created_from_request": {
+    number: 7,
+    title: "Employment advice",
+    requestNumber: 42,
+  },
+  "matter.updated": {
+    number: 7,
+    title: "Employment advice",
+    changed: { priority: { from: "medium", to: "high" } },
+  },
+  "matter.status_changed": {
+    number: 7,
+    title: "Employment advice",
+    from: "Open",
+    to: "Resolved",
+    fromCategory: "open",
+    toCategory: "closed",
+  },
+  "matter.type_reassigned": {
+    number: 7,
+    title: "Employment advice",
+    from: "Employment",
+    to: "Advisory",
+  },
+  "matter.status_reassigned": {
+    number: 7,
+    title: "Employment advice",
+    from: "Investigation",
+    to: "Open",
+  },
+  "matter.confidentiality_set": { number: 7, title: "Employment advice" },
+  "matter.confidentiality_cleared": { number: 7, title: "Employment advice" },
+  "matter.team_added": {
+    number: 7,
+    title: "Employment advice",
+    member: "Mina Member",
+    role: "member",
+  },
+  "matter.team_removed": {
+    number: 7,
+    title: "Employment advice",
+    member: "Mina Member",
+    role: "member",
+  },
+  "matter.archived": { number: 7, title: "Employment advice" },
+  "matter.restored": { number: 7, title: "Employment advice" },
 
   // Record conversation
   "comment.posted": { commentId: "cmt_1" },
@@ -647,6 +724,15 @@ describe("the cross-reference fallbacks between an ask and its record", () => {
     );
   });
 
+  it("names the matter a Request became", () => {
+    expect(narrate("request.converted", { number: 42, matterNumber: 12 }).sentence).toBe(
+      "Nadia Counsel converted this request into M-12",
+    );
+    expect(narrate("request.thread_moved", { number: 42, matterNumber: 12 }).sentence).toBe(
+      "Nadia Counsel moved this conversation onto M-12",
+    );
+  });
+
   it("names a request when the record's own entry carries no number", () => {
     expect(
       narrate("contract.created_from_request", { number: 51, title: "Northwind NDA" }).sentence,
@@ -658,6 +744,12 @@ describe("the cross-reference fallbacks between an ask and its record", () => {
         requestNumber: null,
       }).sentence,
     ).toBe("Nadia Counsel created this contract from a request");
+    expect(
+      narrate("matter.created_from_request", {
+        number: 12,
+        title: "Meridian dispute",
+      }).sentence,
+    ).toBe("Nadia Counsel created this matter from a request");
   });
 });
 

@@ -62,3 +62,10 @@ export const CONTRACT_READER_ROLES: readonly Role[] = [...MEMBER_PLUS_ROLES, "co
 export function canReadContracts(role: Role): boolean {
   return CONTRACT_READER_ROLES.includes(role);
 }
+
+/** Matters share the record-reader floor: Member+, plus a scoped Contributor. */
+export const MATTER_READER_ROLES: readonly Role[] = [...MEMBER_PLUS_ROLES, "contributor"];
+
+export function canReadMatters(role: Role): boolean {
+  return MATTER_READER_ROLES.includes(role);
+}

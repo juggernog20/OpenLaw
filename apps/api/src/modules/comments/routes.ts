@@ -6,11 +6,9 @@
  *
  * The routes are keyed by an entity reference rather than by a record's
  * own address, because the thread is one machinery across matters,
- * contracts, documents, and requests (CMT-001). Matters (M22) and
- * documents (M11) mount these same routes; the entity vocabulary the
- * table admits is the full four, and the API accepts the types that have
- * an arm in `audience.ts` — `contract` and `request` today, and matters
- * and documents when those records exist.
+ * Contracts, Documents, Requests, and Matters (M22) (CMT-001). The
+ * entity vocabulary the table admits is the full four, and the API accepts the types with an
+ * arm in `audience.ts` — Contract, Request, Document, and Matter (M22).
  *
  * The thread is flat and chronological (CMT-002). There is no nesting
  * and no `parent_comment_id`: a conversation between a handful of people

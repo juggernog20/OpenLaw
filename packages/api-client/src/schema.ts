@@ -693,7 +693,7 @@ export interface paths {
     get: operations["getMatterType"];
     put?: never;
     post?: never;
-    /** Hard-delete a matter type; `other` refuses (MTR-001), and once matters exist (M22) an in-use type will refuse too */
+    /** Hard-delete a matter type; `other` refuses (MTR-001), and so does a type still used by matters */
     delete: operations["deleteMatterType"];
     options?: never;
     head?: never;
@@ -727,7 +727,7 @@ export interface paths {
     };
     get?: never;
     put?: never;
-    /** Archive a matter type (SET-003 guarded): it leaves pickers and the default list; nothing is deleted; `other` refuses */
+    /** Archive a matter type (SET-003 guarded): a type still used by matters requires a reassignment target, which takes them; nothing is deleted; `other` refuses */
     post: operations["archiveMatterType"];
     delete?: never;
     options?: never;
@@ -762,7 +762,7 @@ export interface paths {
     /** One matter type's attached fields in per-type order — the type editor's Attached fields card */
     get: operations["listMatterTypeFields"];
     put?: never;
-    /** Attach a catalog field to a matter type: global fields only until M22 opens the matter scope (MTR-011), appended to the per-type order, optional from the start unless isRequired says otherwise */
+    /** Attach a catalog field to a matter type: matter-scoped and global fields (MTR-011), appended to the per-type order, optional from the start unless isRequired says otherwise */
     post: operations["attachMatterTypeField"];
     delete?: never;
     options?: never;
@@ -784,7 +784,7 @@ export interface paths {
     delete: operations["detachMatterTypeField"];
     options?: never;
     head?: never;
-    /** Set an attachment's required flag: per attachment, so a field can be required for one type and optional elsewhere; hard enforcement arrives with the record milestone (M22) */
+    /** Set an attachment's required flag: per attachment, so a field can be required for one type and optional elsewhere; hard-enforced when a record is created on this type and when one is re-typed onto it (MTR-014) */
     patch: operations["setMatterTypeFieldRequired"];
     trace?: never;
   };
@@ -799,6 +799,214 @@ export interface paths {
     /** Apply a full permutation of one type's attached fields (SET-003 immediate apply); per-type orders renumber from 1 */
     put: operations["reorderMatterTypeFields"];
     post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/matter-statuses": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** List configurable matter statuses in display order (MTR-002) */
+    get: operations["listMatterStatuses"];
+    put?: never;
+    /** Add a matter status with an immutable open or closed category */
+    post: operations["createMatterStatus"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/matter-statuses/{id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    /** Delete an unused matter status while preserving category minimums */
+    delete: operations["deleteMatterStatus"];
+    options?: never;
+    head?: never;
+    /** Rename a matter status; its slug and category are immutable */
+    patch: operations["renameMatterStatus"];
+    trace?: never;
+  };
+  "/api/v1/matter-statuses/order": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    /** Apply a full permutation of live matter statuses */
+    put: operations["reorderMatterStatuses"];
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/matter-statuses/{id}/archive": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Archive a matter status, reassigning matters that currently use it */
+    post: operations["archiveMatterStatus"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/matter-statuses/{id}/restore": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Restore an archived matter status at the end of the display order */
+    post: operations["restoreMatterStatus"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/matters": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** The managed Matters list, filtered and keyset-paged after access scope, with active counts */
+    get: operations["listMatters"];
+    put?: never;
+    /** Create the next M-number on the first live open status, enforcing required type fields */
+    post: operations["createMatter"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/matters/options": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Live matter types with attached fields, statuses, and assignable people */
+    get: operations["listMatterOptions"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/matters/{number}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Read one matter by its M-number, including its type-driven fields */
+    get: operations["getMatter"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    /** Commit matter fields individually, including re-type gaps, unrestricted live status transitions, and confidentiality */
+    patch: operations["updateMatter"];
+    trace?: never;
+  };
+  "/api/v1/matters/{number}/team": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Add one person and role to a matter team */
+    post: operations["addMatterTeamMember"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/matters/{number}/team/{userId}/{role}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    /** Remove one compound-key role from a matter team, except creator */
+    delete: operations["removeMatterTeamMember"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/matters/{number}/archive": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Archive a matter so it leaves the default list */
+    post: operations["archiveMatter"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/matters/{number}/restore": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Restore an archived matter to the default list */
+    post: operations["restoreMatter"];
     delete?: never;
     options?: never;
     head?: never;
@@ -1057,7 +1265,7 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** The Inbox (INT-006, INT-007): the Requests whose fate is undecided, ordered by urgency rank — critical first — then age, oldest first, and paged by cursor. The answer is exactly the `new` Requests; includeTriaged=true widens it to the converted, resolved, and declined ones with their outcomes. A converted row carries the contract it became only when the caller reaches that contract, and carries null otherwise (DD-014). Member+ only: a Contributor and a Business User are refused */
+    /** The Inbox (INT-006, INT-007): the Requests whose fate is undecided, ordered by urgency rank — critical first — then age, oldest first, and paged by cursor. The answer is exactly the `new` Requests; includeTriaged=true widens it to the converted, resolved, and declined ones with their outcomes. A converted row carries the contract or matter it became only when the caller reaches that record, and carries null otherwise (DD-014). Member+ only: a Contributor and a Business User are refused */
     get: operations["listInbox"];
     put?: never;
     /** Submit a Request through a request type's portal form (INT-001). The Requester is the session; the type must be live; Summary, Description, and Urgency are required, as is every attached field the type marks required; values are accepted for exactly the fields the type attaches, and a user or entity field's value must name a live row */
@@ -1213,7 +1421,7 @@ export interface paths {
     };
     get?: never;
     put?: never;
-    /** Turn a Request into the contract its request type targets (INT-002, DD-018). The third of INT-007's three dispositions: it transitions the Request from `new` to `converted` under the Request's own row lock, so two triagers racing one Request produce one contract. The loser is answered 409 with the recorded outcome and the record it became. Triage confirms the routing rather than choosing it: where the request type names a live contract type, that type is the target and a body naming a different one is refused. `contractTypeId` is required — and only accepted — where the request type names no live contract type: a module-only target, a target type the taxonomy has archived (read as no type), a Matter target, or no target at all. The last two are Re-target, DD-018's lossless exception. The contract is born ordinary — the C-### sequence, the draft-stage seed, no Owner, no team, no Confidential flag — with the title the body carries, which the dialog seeds from the summary and leaves editable; the requester's urgency as its priority 1:1 (MTR-012; risk is never requester-set); and every collected value whose slug the target type attaches landed in that field. A collected value the target type does not attach does not carry and is not deleted: the Request keeps its custom fields whole. Empty hard-required fields refuse the conversion by name (CTR-016/MTR-014), so `customFields` is where the triager answers them. Appends request.converted on the ask and contract.created_from_request on the record (DD-017), and raises `requestStatusChanged`. Every attachment on the Request is promoted into one document at version 1 at the record root, each narrated document.created and each owed the derivations an upload is owed (INT-002, DOC-008). The promotion copies: the Request keeps its attachments and its downloads go on answering. The thread moves rather than copying (CMT-001): every comment re-parents onto the record with its DD-016 tier intact and each reader's unread watermark travels with it, narrated request.thread_moved, and from then on the Request's thread address answers the record's conversation — the portal filtered to Full Thread. Answers the Request as the staff detail reads it. Member+ only */
+    /** Turn a Request into the contract or matter its request type targets (INT-002, DD-018, M22/9). The Request row is locked so racing triagers produce one record; the loser receives 409 with the reachable converted record's module and permanent number. Triage confirms a live bound type, supplies a type for a module-only or archived target, or explicitly Re-targets by naming the other module's type. A body may name a contract type or a matter type, never both. The record is born through its ordinary create callable with the title seeded from the Request summary, urgency carried to priority, risk unset, no manager, one creator row, and no confidential flag. Matching collected values carry server-side; values with no field remain on the Request; missing required fields and dead references are refused by name and can be answered in customFields. Both records narrate the conversion and requestStatusChanged raises the Requester's In progress notification. Attachments become ordinary root documents and the tiered thread moves onto either target while the Request remains the Requester's window. Member+ only */
     post: operations["convertRequest"];
     delete?: never;
     options?: never;
@@ -1882,6 +2090,24 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/v1/matters/{number}/documents": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** The paper on one matter, newest first, with each document's complete version chain. Access is inherited from the matter and a confidential document narrows to its team, Matter Manager, and Administrators. Administrators, Legal Team Members, and Contributors may read matter paper. Primary and executed designations are contract concepts. */
+    get: operations["listMatterDocuments"];
+    put?: never;
+    /** Upload a file to a matter, creating a document with version 1. The upload may name an existing matter folder or a folder path to recreate. Matter paper has no primary document or executed-version designation. Administrators and Legal Team Members may upload. */
+    post: operations["uploadMatterDocument"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/v1/documents/{documentId}/versions": {
     parameters: {
       query?: never;
@@ -2134,6 +2360,24 @@ export interface paths {
     put?: never;
     /** Create a folder on a contract, at the record root or inside another folder (DOC-006). The name is trimmed, must not be empty, is bounded at the filesystem's own ceiling, may not hold a slash, and may not be . or .. — a folder drop addresses a chain by path, and neither a name with a separator in it nor one of the two names a path is written with could be one segment of one. Those are the same rules every segment of a dropped path is held to, so a folder that can be typed can always be addressed by path and the reverse. Three invariants are refused here rather than left to the database: a parent on another contract is answered exactly as a parent that was never created, a sibling name already taken under the same parent is refused 409, and a folder deeper than the tree's ceiling is refused 409. Appends folder.created on the owning contract (DD-017), carrying the name so the entry outlives a later rename. Send path instead of name to recreate an empty directory of a dropped tree (DOC-011): the relative chain is find-or-created segment by segment beneath parentId, under the owning contract's row lock, so a segment already there is used rather than refused and two drops racing on one path converge on one folder. That form writes no activity — a folder a drop passed through is traversal rather than an act somebody performed, and the drop's story is its uploads (DD-017). Exactly one of name and path. Answers the record's whole folder set, because that is what the tree is drawn from. Member+: a Contributor who reaches the record is refused 403 rather than 404, because they can already see it. An archived contract takes no new folder until it is restored */
     post: operations["createContractFolder"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/matters/{number}/folders": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** The complete folder tree on one matter. Counts include only live documents the viewer reaches. */
+    get: operations["listMatterFolders"];
+    put?: never;
+    /** Create a folder on a matter, or recreate a dropped folder path beneath an optional parent. */
+    post: operations["createMatterFolder"];
     delete?: never;
     options?: never;
     head?: never;
@@ -5417,7 +5661,7 @@ export interface operations {
                 | "user"
                 | "entity";
               /** @enum {string} */
-              moduleScope: "global";
+              moduleScope: "matter" | "global";
               displayOrder: number;
               isRequired: boolean;
             }[];
@@ -5476,7 +5720,7 @@ export interface operations {
                 | "user"
                 | "entity";
               /** @enum {string} */
-              moduleScope: "global";
+              moduleScope: "matter" | "global";
               displayOrder: number;
               isRequired: boolean;
             };
@@ -5565,7 +5809,7 @@ export interface operations {
                 | "user"
                 | "entity";
               /** @enum {string} */
-              moduleScope: "global";
+              moduleScope: "matter" | "global";
               displayOrder: number;
               isRequired: boolean;
             };
@@ -5623,10 +5867,995 @@ export interface operations {
                 | "user"
                 | "entity";
               /** @enum {string} */
-              moduleScope: "global";
+              moduleScope: "matter" | "global";
               displayOrder: number;
               isRequired: boolean;
             }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  listMatterStatuses: {
+    parameters: {
+      query?: {
+        includeArchived?: "true" | "false";
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            matterStatuses: {
+              id: string;
+              slug: string;
+              displayName: string;
+              /** @enum {string} */
+              category: "open" | "closed";
+              displayOrder: number;
+              isSystemDefault: boolean;
+              archivedAt: string | null;
+              inUseCount: number;
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  createMatterStatus: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          displayName: string;
+          /** @enum {string} */
+          category: "open" | "closed";
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            matterStatus: {
+              id: string;
+              slug: string;
+              displayName: string;
+              /** @enum {string} */
+              category: "open" | "closed";
+              displayOrder: number;
+              isSystemDefault: boolean;
+              archivedAt: string | null;
+              inUseCount: number;
+            };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  deleteMatterStatus: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  renameMatterStatus: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          displayName: string;
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            matterStatus: {
+              id: string;
+              slug: string;
+              displayName: string;
+              /** @enum {string} */
+              category: "open" | "closed";
+              displayOrder: number;
+              isSystemDefault: boolean;
+              archivedAt: string | null;
+              inUseCount: number;
+            };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  reorderMatterStatuses: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          ids: string[];
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            matterStatuses: {
+              id: string;
+              slug: string;
+              displayName: string;
+              /** @enum {string} */
+              category: "open" | "closed";
+              displayOrder: number;
+              isSystemDefault: boolean;
+              archivedAt: string | null;
+              inUseCount: number;
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  archiveMatterStatus: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          reassignToId?: string;
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            matterStatus: {
+              id: string;
+              slug: string;
+              displayName: string;
+              /** @enum {string} */
+              category: "open" | "closed";
+              displayOrder: number;
+              isSystemDefault: boolean;
+              archivedAt: string | null;
+              inUseCount: number;
+            };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  restoreMatterStatus: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            matterStatus: {
+              id: string;
+              slug: string;
+              displayName: string;
+              /** @enum {string} */
+              category: "open" | "closed";
+              displayOrder: number;
+              isSystemDefault: boolean;
+              archivedAt: string | null;
+              inUseCount: number;
+            };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  listMatters: {
+    parameters: {
+      query?: {
+        includeClosed?: "true" | "false";
+        includeArchived?: "true" | "false";
+        status?: string;
+        type?: string;
+        priority?: "low" | "medium" | "high" | "critical";
+        manager?: string;
+        incomplete?: "true" | "false";
+        sort?:
+          "number" | "title" | "type" | "status" | "priority" | "risk" | "manager" | "openedAt";
+        dir?: "asc" | "desc";
+        cursor?: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            matters: {
+              id: string;
+              number: number;
+              title: string;
+              description: string | null;
+              matterTypeId: string;
+              matterTypeName: string;
+              statusId: string;
+              statusName: string;
+              /** @enum {string} */
+              statusCategory: "open" | "closed";
+              manager: {
+                id: string;
+                displayName: string;
+                image: string | null;
+                archived: boolean;
+              } | null;
+              /** @enum {string} */
+              priority: "low" | "medium" | "high" | "critical";
+              risk: ("low" | "medium" | "high" | "critical") | null;
+              customFields: {
+                [key: string]: string | number | boolean | string[];
+              };
+              /** Format: date-time */
+              openedAt: string;
+              closedAt: string | null;
+              isConfidential: boolean;
+              archivedAt: string | null;
+              /** Format: date-time */
+              createdAt: string;
+              /** Format: date-time */
+              updatedAt: string;
+            }[];
+            nextCursor: string | null;
+            counts: {
+              open: number;
+              onHold: number;
+            };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  createMatter: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          title: string;
+          matterTypeId: string;
+          managerId?: string | null;
+          /** @enum {string} */
+          priority?: "low" | "medium" | "high" | "critical";
+          risk?: ("low" | "medium" | "high" | "critical") | null;
+          description?: string | null;
+          customFields?: {
+            [key: string]: (string | number | boolean | string[]) | null;
+          };
+          isConfidential?: boolean;
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            matter: {
+              id: string;
+              number: number;
+              title: string;
+              description: string | null;
+              matterTypeId: string;
+              matterTypeName: string;
+              statusId: string;
+              statusName: string;
+              /** @enum {string} */
+              statusCategory: "open" | "closed";
+              manager: {
+                id: string;
+                displayName: string;
+                image: string | null;
+                archived: boolean;
+              } | null;
+              /** @enum {string} */
+              priority: "low" | "medium" | "high" | "critical";
+              risk: ("low" | "medium" | "high" | "critical") | null;
+              customFields: {
+                [key: string]: string | number | boolean | string[];
+              };
+              /** Format: date-time */
+              openedAt: string;
+              closedAt: string | null;
+              isConfidential: boolean;
+              archivedAt: string | null;
+              /** Format: date-time */
+              createdAt: string;
+              /** Format: date-time */
+              updatedAt: string;
+            };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  listMatterOptions: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            matterTypes: {
+              id: string;
+              slug: string;
+              displayName: string;
+              fields: {
+                fieldId: string;
+                slug: string;
+                displayName: string;
+                description: string | null;
+                /** @enum {string} */
+                fieldType:
+                  | "text"
+                  | "long_text"
+                  | "number"
+                  | "date"
+                  | "boolean"
+                  | "single_select"
+                  | "multi_select"
+                  | "user"
+                  | "entity";
+                options: string[] | null;
+                displayOrder: number;
+                isRequired: boolean;
+              }[];
+            }[];
+            matterStatuses: {
+              id: string;
+              slug: string;
+              displayName: string;
+              /** @enum {string} */
+              category: "open" | "closed";
+            }[];
+            users: {
+              id: string;
+              displayName: string;
+              image: string | null;
+              archived: boolean;
+              /** @enum {string} */
+              role: "administrator" | "legal_team_member" | "contributor" | "business_user";
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  getMatter: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        number: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            matter: {
+              id: string;
+              number: number;
+              title: string;
+              description: string | null;
+              matterTypeId: string;
+              matterTypeName: string;
+              statusId: string;
+              statusName: string;
+              /** @enum {string} */
+              statusCategory: "open" | "closed";
+              manager: {
+                id: string;
+                displayName: string;
+                image: string | null;
+                archived: boolean;
+              } | null;
+              /** @enum {string} */
+              priority: "low" | "medium" | "high" | "critical";
+              risk: ("low" | "medium" | "high" | "critical") | null;
+              customFields: {
+                [key: string]: string | number | boolean | string[];
+              };
+              /** Format: date-time */
+              openedAt: string;
+              closedAt: string | null;
+              isConfidential: boolean;
+              archivedAt: string | null;
+              /** Format: date-time */
+              createdAt: string;
+              /** Format: date-time */
+              updatedAt: string;
+            };
+            fields: {
+              fieldId: string;
+              slug: string;
+              displayName: string;
+              description: string | null;
+              /** @enum {string} */
+              fieldType:
+                | "text"
+                | "long_text"
+                | "number"
+                | "date"
+                | "boolean"
+                | "single_select"
+                | "multi_select"
+                | "user"
+                | "entity";
+              options: string[] | null;
+              displayOrder: number;
+              isRequired: boolean;
+            }[];
+            customFieldRefs: {
+              users: {
+                id: string;
+                displayName: string;
+                archived: boolean;
+              }[];
+              entities: {
+                id: string;
+                legalName: string;
+                archived: boolean;
+              }[];
+            };
+            team: {
+              id: string;
+              displayName: string;
+              image: string | null;
+              archived: boolean;
+              /** @enum {string} */
+              role: "member" | "watcher" | "creator" | "contributor";
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  updateMatter: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        number: number;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          title?: string;
+          description?: string | null;
+          matterTypeId?: string;
+          managerId?: string | null;
+          /** @enum {string} */
+          priority?: "low" | "medium" | "high" | "critical";
+          risk?: ("low" | "medium" | "high" | "critical") | null;
+          customFields?: {
+            [key: string]: (string | number | boolean | string[]) | null;
+          };
+          statusId?: string;
+          isConfidential?: boolean;
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            matter: {
+              id: string;
+              number: number;
+              title: string;
+              description: string | null;
+              matterTypeId: string;
+              matterTypeName: string;
+              statusId: string;
+              statusName: string;
+              /** @enum {string} */
+              statusCategory: "open" | "closed";
+              manager: {
+                id: string;
+                displayName: string;
+                image: string | null;
+                archived: boolean;
+              } | null;
+              /** @enum {string} */
+              priority: "low" | "medium" | "high" | "critical";
+              risk: ("low" | "medium" | "high" | "critical") | null;
+              customFields: {
+                [key: string]: string | number | boolean | string[];
+              };
+              /** Format: date-time */
+              openedAt: string;
+              closedAt: string | null;
+              isConfidential: boolean;
+              archivedAt: string | null;
+              /** Format: date-time */
+              createdAt: string;
+              /** Format: date-time */
+              updatedAt: string;
+            };
+            fields: {
+              fieldId: string;
+              slug: string;
+              displayName: string;
+              description: string | null;
+              /** @enum {string} */
+              fieldType:
+                | "text"
+                | "long_text"
+                | "number"
+                | "date"
+                | "boolean"
+                | "single_select"
+                | "multi_select"
+                | "user"
+                | "entity";
+              options: string[] | null;
+              displayOrder: number;
+              isRequired: boolean;
+            }[];
+            customFieldRefs: {
+              users: {
+                id: string;
+                displayName: string;
+                archived: boolean;
+              }[];
+              entities: {
+                id: string;
+                legalName: string;
+                archived: boolean;
+              }[];
+            };
+            team: {
+              id: string;
+              displayName: string;
+              image: string | null;
+              archived: boolean;
+              /** @enum {string} */
+              role: "member" | "watcher" | "creator" | "contributor";
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  addMatterTeamMember: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        number: number;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          userId: string;
+          /** @enum {string} */
+          role: "member" | "watcher" | "creator" | "contributor";
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            team: {
+              id: string;
+              displayName: string;
+              image: string | null;
+              archived: boolean;
+              /** @enum {string} */
+              role: "member" | "watcher" | "creator" | "contributor";
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  removeMatterTeamMember: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        number: number;
+        userId: string;
+        role: "member" | "watcher" | "creator" | "contributor";
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            team: {
+              id: string;
+              displayName: string;
+              image: string | null;
+              archived: boolean;
+              /** @enum {string} */
+              role: "member" | "watcher" | "creator" | "contributor";
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  archiveMatter: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        number: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            matter: {
+              id: string;
+              number: number;
+              title: string;
+              description: string | null;
+              matterTypeId: string;
+              matterTypeName: string;
+              statusId: string;
+              statusName: string;
+              /** @enum {string} */
+              statusCategory: "open" | "closed";
+              manager: {
+                id: string;
+                displayName: string;
+                image: string | null;
+                archived: boolean;
+              } | null;
+              /** @enum {string} */
+              priority: "low" | "medium" | "high" | "critical";
+              risk: ("low" | "medium" | "high" | "critical") | null;
+              customFields: {
+                [key: string]: string | number | boolean | string[];
+              };
+              /** Format: date-time */
+              openedAt: string;
+              closedAt: string | null;
+              isConfidential: boolean;
+              archivedAt: string | null;
+              /** Format: date-time */
+              createdAt: string;
+              /** Format: date-time */
+              updatedAt: string;
+            };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  restoreMatter: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        number: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            matter: {
+              id: string;
+              number: number;
+              title: string;
+              description: string | null;
+              matterTypeId: string;
+              matterTypeName: string;
+              statusId: string;
+              statusName: string;
+              /** @enum {string} */
+              statusCategory: "open" | "closed";
+              manager: {
+                id: string;
+                displayName: string;
+                image: string | null;
+                archived: boolean;
+              } | null;
+              /** @enum {string} */
+              priority: "low" | "medium" | "high" | "critical";
+              risk: ("low" | "medium" | "high" | "critical") | null;
+              customFields: {
+                [key: string]: string | number | boolean | string[];
+              };
+              /** Format: date-time */
+              openedAt: string;
+              closedAt: string | null;
+              isConfidential: boolean;
+              archivedAt: string | null;
+              /** Format: date-time */
+              createdAt: string;
+              /** Format: date-time */
+              updatedAt: string;
+            };
           };
         };
       };
@@ -6647,6 +7876,20 @@ export interface operations {
               convertedContract: {
                 number: number;
               } | null;
+              convertedRecord:
+                | (
+                    | {
+                        /** @enum {string} */
+                        module: "contract";
+                        number: number;
+                      }
+                    | {
+                        /** @enum {string} */
+                        module: "matter";
+                        number: number;
+                      }
+                  )
+                | null;
             }[];
             nextCursor: string | null;
           };
@@ -6887,7 +8130,7 @@ export interface operations {
           };
         };
       };
-      /** @description A Request that is no longer new takes paper on its thread, not as another Request attachment (INT-002, CMT-011). The named refusal carries `request`, the R-### whose portal detail owns that thread; `outcome`, the disposition already recorded; and `convertedContract`, the record a conversion made when the caller may reach it (DD-014), else `null`. */
+      /** @description A Request that is no longer new takes paper on its thread, not as another Request attachment (INT-002, CMT-011). The named refusal carries `request`, the R-### whose portal detail owns that thread; `outcome`, the disposition already recorded; and `convertedRecord`, the record a conversion made when the caller may reach it (DD-014), else `null`. */
       409: {
         headers: {
           [name: string]: unknown;
@@ -6915,6 +8158,20 @@ export interface operations {
             convertedContract?: {
               number: number;
             } | null;
+            convertedRecord?:
+              | (
+                  | {
+                      /** @enum {string} */
+                      module: "contract";
+                      number: number;
+                    }
+                  | {
+                      /** @enum {string} */
+                      module: "matter";
+                      number: number;
+                    }
+                )
+              | null;
           };
         };
       };
@@ -7009,6 +8266,20 @@ export interface operations {
               convertedContract: {
                 number: number;
               } | null;
+              convertedRecord:
+                | (
+                    | {
+                        /** @enum {string} */
+                        module: "contract";
+                        number: number;
+                      }
+                    | {
+                        /** @enum {string} */
+                        module: "matter";
+                        number: number;
+                      }
+                  )
+                | null;
             };
             fields: {
               fieldId: string;
@@ -7147,11 +8418,25 @@ export interface operations {
               convertedContract: {
                 number: number;
               } | null;
+              convertedRecord:
+                | (
+                    | {
+                        /** @enum {string} */
+                        module: "contract";
+                        number: number;
+                      }
+                    | {
+                        /** @enum {string} */
+                        module: "matter";
+                        number: number;
+                      }
+                  )
+                | null;
             };
           };
         };
       };
-      /** @description The named type says somebody has already dispositioned this Request (INT-007) — there is no claim step, so two triagers can open one Request and only the first press writes. The refusal carries `outcome`: the recorded decision, which the loser's client states instead of asking again; and, where that decision was a conversion this caller may reach, `convertedContract`: the record it became. There is no unnamed 409 on this route — an archived Request answers 404 and a missing reason answers 400. */
+      /** @description The named type says somebody has already dispositioned this Request (INT-007) — there is no claim step, so two triagers can open one Request and only the first press writes. The refusal carries `outcome`: the recorded decision, which the loser's client states instead of asking again; and, where that decision was a conversion this caller may reach, `convertedRecord`: the module and permanent number it became. There is no unnamed 409 on this route — an archived Request answers 404 and a missing reason answers 400. */
       409: {
         headers: {
           [name: string]: unknown;
@@ -7176,10 +8461,25 @@ export interface operations {
              * @enum {string}
              */
             outcome?: "converted" | "resolved" | "declined";
-            /** @description The contract the winning conversion made, by its C-### number — null on every other outcome, and null on a record this caller cannot reach (DD-014). The matter arm lands with M22. */
+            /** @description The contract the winning conversion made, by its C-### number — null on every other outcome, and null on a record this caller cannot reach (DD-014). The value is projected from the conversion's module-aware record reference. */
             convertedContract?: {
               number: number;
             } | null;
+            /** @description The contract or matter the winning conversion made, by module and permanent number — null on every other outcome and when this caller cannot reach it. */
+            convertedRecord?:
+              | (
+                  | {
+                      /** @enum {string} */
+                      module: "contract";
+                      number: number;
+                    }
+                  | {
+                      /** @enum {string} */
+                      module: "matter";
+                      number: number;
+                    }
+                )
+              | null;
           };
         };
       };
@@ -7248,11 +8548,25 @@ export interface operations {
               convertedContract: {
                 number: number;
               } | null;
+              convertedRecord:
+                | (
+                    | {
+                        /** @enum {string} */
+                        module: "contract";
+                        number: number;
+                      }
+                    | {
+                        /** @enum {string} */
+                        module: "matter";
+                        number: number;
+                      }
+                  )
+                | null;
             };
           };
         };
       };
-      /** @description The named type says somebody has already dispositioned this Request (INT-007) — there is no claim step, so two triagers can open one Request and only the first press writes. The refusal carries `outcome`: the recorded decision, which the loser's client states instead of asking again; and, where that decision was a conversion this caller may reach, `convertedContract`: the record it became. There is no unnamed 409 on this route — an archived Request answers 404. */
+      /** @description The named type says somebody has already dispositioned this Request (INT-007) — there is no claim step, so two triagers can open one Request and only the first press writes. The refusal carries `outcome`: the recorded decision, which the loser's client states instead of asking again; and, where that decision was a conversion this caller may reach, `convertedRecord`: the module and permanent number it became. There is no unnamed 409 on this route — an archived Request answers 404. */
       409: {
         headers: {
           [name: string]: unknown;
@@ -7277,10 +8591,25 @@ export interface operations {
              * @enum {string}
              */
             outcome?: "converted" | "resolved" | "declined";
-            /** @description The contract the winning conversion made, by its C-### number — null on every other outcome, and null on a record this caller cannot reach (DD-014). The matter arm lands with M22. */
+            /** @description The contract the winning conversion made, by its C-### number — null on every other outcome, and null on a record this caller cannot reach (DD-014). The value is projected from the conversion's module-aware record reference. */
             convertedContract?: {
               number: number;
             } | null;
+            /** @description The contract or matter the winning conversion made, by module and permanent number — null on every other outcome and when this caller cannot reach it. */
+            convertedRecord?:
+              | (
+                  | {
+                      /** @enum {string} */
+                      module: "contract";
+                      number: number;
+                    }
+                  | {
+                      /** @enum {string} */
+                      module: "matter";
+                      number: number;
+                    }
+                )
+              | null;
           };
         };
       };
@@ -7309,6 +8638,7 @@ export interface operations {
         "application/json": {
           title: string;
           contractTypeId?: string;
+          matterTypeId?: string;
           customFields?: {
             [key: string]: (string | number | boolean | string[]) | null;
           };
@@ -7353,11 +8683,25 @@ export interface operations {
               convertedContract: {
                 number: number;
               } | null;
+              convertedRecord:
+                | (
+                    | {
+                        /** @enum {string} */
+                        module: "contract";
+                        number: number;
+                      }
+                    | {
+                        /** @enum {string} */
+                        module: "matter";
+                        number: number;
+                      }
+                  )
+                | null;
             };
           };
         };
       };
-      /** @description The named type says somebody has already dispositioned this Request (INT-007) — there is no claim step, so two triagers can open one Request and only the first press writes. The refusal carries `outcome`: the recorded decision, which the loser's client states instead of asking again; and, where that decision was a conversion this caller may reach, `convertedContract`: the record it became. There is no unnamed 409 on this route — an archived Request answers 404, and a missing title, a contradicted target, or an unfilled hard-required field answers 400. */
+      /** @description The named type says somebody has already dispositioned this Request (INT-007) — there is no claim step, so two triagers can open one Request and only the first press writes. The refusal carries `outcome`: the recorded decision, which the loser's client states instead of asking again; and, where that decision was a conversion this caller may reach, `convertedRecord`: the module and permanent number it became. There is no unnamed 409 on this route — an archived Request answers 404, and a missing title, a contradicted target, or an unfilled hard-required field answers 400. */
       409: {
         headers: {
           [name: string]: unknown;
@@ -7382,10 +8726,25 @@ export interface operations {
              * @enum {string}
              */
             outcome?: "converted" | "resolved" | "declined";
-            /** @description The contract the winning conversion made, by its C-### number — null on every other outcome, and null on a record this caller cannot reach (DD-014). The matter arm lands with M22. */
+            /** @description The contract the winning conversion made, by its C-### number — null on every other outcome, and null on a record this caller cannot reach (DD-014). The value is projected from the conversion's module-aware record reference. */
             convertedContract?: {
               number: number;
             } | null;
+            /** @description The contract or matter the winning conversion made, by module and permanent number — null on every other outcome and when this caller cannot reach it. */
+            convertedRecord?:
+              | (
+                  | {
+                      /** @enum {string} */
+                      module: "contract";
+                      number: number;
+                    }
+                  | {
+                      /** @enum {string} */
+                      module: "matter";
+                      number: number;
+                    }
+                )
+              | null;
           };
         };
       };
@@ -11124,6 +12483,200 @@ export interface operations {
       };
     };
   };
+  listMatterDocuments: {
+    parameters: {
+      query?: {
+        includeArchived?: "true" | "false";
+        folder?: "root" | string;
+        cursor?: string;
+      };
+      header?: never;
+      path: {
+        number: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            documents: {
+              id: string;
+              title: string;
+              description: string | null;
+              isPrimary: boolean;
+              versions: {
+                id: string;
+                versionNumber: number;
+                /** @enum {string} */
+                kind:
+                  | "draft_ours"
+                  | "draft_theirs"
+                  | "redline_theirs"
+                  | "redline_ours"
+                  | "executed"
+                  | "amendment"
+                  | "generated_redline";
+                note: string | null;
+                originalFilename: string;
+                mimeType: string;
+                /** @enum {string} */
+                renderFamily: "pdf" | "image" | "word" | "presentation" | "email" | "other";
+                byteSize: number;
+                checksumSha256: string;
+                uploadedBy: {
+                  id: string;
+                  displayName: string;
+                  image: string | null;
+                  archived: boolean;
+                };
+                /** Format: date-time */
+                createdAt: string;
+                isCurrent: boolean;
+                isExecuted: boolean;
+              }[];
+              archivedAt: string | null;
+              isConfidential: boolean;
+              folderId: string | null;
+              createdBy: {
+                id: string;
+                displayName: string;
+                image: string | null;
+                archived: boolean;
+              };
+              /** Format: date-time */
+              createdAt: string;
+              /** Format: date-time */
+              updatedAt: string;
+            }[];
+            nextCursor: string | null;
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  uploadMatterDocument: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        number: number;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "multipart/form-data": {
+          /**
+           * Format: binary
+           * @description The file itself. Any type is accepted (DOC-004).
+           */
+          file: string;
+          /**
+           * @description What this version is in the negotiation (CTR-014). Defaults to `draft_ours`. Must be sent before the file part.
+           * @enum {string}
+           */
+          kind?:
+            | "draft_ours"
+            | "draft_theirs"
+            | "redline_theirs"
+            | "redline_ours"
+            | "executed"
+            | "amendment";
+          /** @description What changed in this round, kept beside the file. Must be sent before the file part. */
+          note?: string;
+          /** @description Where the file is filed: a folder already on this record (DOC-006), or omitted for the record root. Must be sent before the file part. */
+          folderId?: string;
+          /** @description A relative folder path, `/` separated, find-or-created beneath `folderId` before the document is filed into its last segment (DOC-011). Must be sent before the file part. */
+          folderPath?: string;
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            document: {
+              id: string;
+              title: string;
+              description: string | null;
+              isPrimary: boolean;
+              versions: {
+                id: string;
+                versionNumber: number;
+                /** @enum {string} */
+                kind:
+                  | "draft_ours"
+                  | "draft_theirs"
+                  | "redline_theirs"
+                  | "redline_ours"
+                  | "executed"
+                  | "amendment"
+                  | "generated_redline";
+                note: string | null;
+                originalFilename: string;
+                mimeType: string;
+                /** @enum {string} */
+                renderFamily: "pdf" | "image" | "word" | "presentation" | "email" | "other";
+                byteSize: number;
+                checksumSha256: string;
+                uploadedBy: {
+                  id: string;
+                  displayName: string;
+                  image: string | null;
+                  archived: boolean;
+                };
+                /** Format: date-time */
+                createdAt: string;
+                isCurrent: boolean;
+                isExecuted: boolean;
+              }[];
+              archivedAt: string | null;
+              isConfidential: boolean;
+              folderId: string | null;
+              createdBy: {
+                id: string;
+                displayName: string;
+                image: string | null;
+                archived: boolean;
+              };
+              /** Format: date-time */
+              createdAt: string;
+              /** Format: date-time */
+              updatedAt: string;
+            };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
   uploadDocumentVersion: {
     parameters: {
       query?: never;
@@ -12289,6 +13842,98 @@ export interface operations {
       };
     };
   };
+  listMatterFolders: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        number: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            folders: {
+              id: string;
+              name: string;
+              parentId: string | null;
+              documentCount: number;
+              /** Format: date-time */
+              createdAt: string;
+              /** Format: date-time */
+              updatedAt: string;
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  createMatterFolder: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        number: number;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          name?: string;
+          path?: string;
+          parentId?: string;
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            folders: {
+              id: string;
+              name: string;
+              parentId: string | null;
+              documentCount: number;
+              /** Format: date-time */
+              createdAt: string;
+              /** Format: date-time */
+              updatedAt: string;
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
   deleteContractFolder: {
     parameters: {
       query?: never;
@@ -12383,7 +14028,7 @@ export interface operations {
   listComments: {
     parameters: {
       query: {
-        entityType: "contract" | "request";
+        entityType: "matter" | "contract" | "request";
         entityId: string;
         cursor?: string;
       };
@@ -12403,7 +14048,7 @@ export interface operations {
             comments: {
               id: string;
               /** @enum {string} */
-              entityType: "contract" | "request";
+              entityType: "matter" | "contract" | "request";
               entityId: string;
               author: {
                 id: string;
@@ -12460,7 +14105,7 @@ export interface operations {
       content: {
         "application/json": {
           /** @enum {string} */
-          entityType: "contract" | "request";
+          entityType: "matter" | "contract" | "request";
           entityId: string;
           body: string;
           /** @enum {string} */
@@ -12471,7 +14116,7 @@ export interface operations {
         };
         "multipart/form-data": {
           /** @enum {string} */
-          entityType: "contract" | "request";
+          entityType: "matter" | "contract" | "request";
           entityId: string;
           body: string;
           /** @enum {string} */
@@ -12493,7 +14138,7 @@ export interface operations {
             comment: {
               id: string;
               /** @enum {string} */
-              entityType: "contract" | "request";
+              entityType: "matter" | "contract" | "request";
               entityId: string;
               author: {
                 id: string;
@@ -12541,7 +14186,7 @@ export interface operations {
   listMentionCandidates: {
     parameters: {
       query: {
-        entityType: "contract" | "request";
+        entityType: "matter" | "contract" | "request";
         entityId: string;
       };
       header?: never;
@@ -12580,7 +14225,7 @@ export interface operations {
   readUnreadComments: {
     parameters: {
       query: {
-        entityType: "contract" | "request";
+        entityType: "matter" | "contract" | "request";
         entityId: string;
       };
       header?: never;
@@ -12622,7 +14267,7 @@ export interface operations {
       content: {
         "application/json": {
           /** @enum {string} */
-          entityType: "contract" | "request";
+          entityType: "matter" | "contract" | "request";
           entityId: string;
         };
       };
@@ -12653,7 +14298,7 @@ export interface operations {
   fileCommentAttachment: {
     parameters: {
       query: {
-        entityType: "contract" | "request";
+        entityType: "matter" | "contract" | "request";
         entityId: string;
       };
       header?: never;
@@ -12707,7 +14352,7 @@ export interface operations {
             comment: {
               id: string;
               /** @enum {string} */
-              entityType: "contract" | "request";
+              entityType: "matter" | "contract" | "request";
               entityId: string;
               author: {
                 id: string;
@@ -12780,7 +14425,7 @@ export interface operations {
   downloadCommentAttachment: {
     parameters: {
       query: {
-        entityType: "contract" | "request";
+        entityType: "matter" | "contract" | "request";
         entityId: string;
       };
       header?: never;
@@ -12833,7 +14478,7 @@ export interface operations {
             comment: {
               id: string;
               /** @enum {string} */
-              entityType: "contract" | "request";
+              entityType: "matter" | "contract" | "request";
               entityId: string;
               author: {
                 id: string;
@@ -12905,7 +14550,7 @@ export interface operations {
             comment: {
               id: string;
               /** @enum {string} */
-              entityType: "contract" | "request";
+              entityType: "matter" | "contract" | "request";
               entityId: string;
               author: {
                 id: string;
@@ -12971,7 +14616,7 @@ export interface operations {
             comment: {
               id: string;
               /** @enum {string} */
-              entityType: "contract" | "request";
+              entityType: "matter" | "contract" | "request";
               entityId: string;
               author: {
                 id: string;
@@ -13019,7 +14664,7 @@ export interface operations {
   listActivity: {
     parameters: {
       query: {
-        entityType: "contract";
+        entityType: "matter" | "contract";
         entityId: string;
         cursor?: string;
       };
@@ -13924,7 +15569,7 @@ export interface operations {
               displayName: string;
               description: string | null;
               /** @enum {string} */
-              moduleScope: "contract" | "global";
+              moduleScope: "contract" | "matter" | "global";
               /** @enum {string} */
               fieldType:
                 | "text"
@@ -13970,7 +15615,7 @@ export interface operations {
           displayName: string;
           description?: string;
           /** @enum {string} */
-          moduleScope: "contract" | "global";
+          moduleScope: "contract" | "matter" | "global";
           /** @enum {string} */
           fieldType:
             | "text"
@@ -14003,7 +15648,7 @@ export interface operations {
               displayName: string;
               description: string | null;
               /** @enum {string} */
-              moduleScope: "contract" | "global";
+              moduleScope: "contract" | "matter" | "global";
               /** @enum {string} */
               fieldType:
                 | "text"
@@ -14071,7 +15716,7 @@ export interface operations {
               displayName: string;
               description: string | null;
               /** @enum {string} */
-              moduleScope: "contract" | "global";
+              moduleScope: "contract" | "matter" | "global";
               /** @enum {string} */
               fieldType:
                 | "text"
@@ -14117,7 +15762,7 @@ export interface operations {
       content: {
         "application/json": {
           /** @enum {string} */
-          moduleScope: "contract" | "global";
+          moduleScope: "contract" | "matter" | "global";
         };
       };
     };
@@ -14135,7 +15780,7 @@ export interface operations {
               displayName: string;
               description: string | null;
               /** @enum {string} */
-              moduleScope: "contract" | "global";
+              moduleScope: "contract" | "matter" | "global";
               /** @enum {string} */
               fieldType:
                 | "text"
@@ -14192,7 +15837,7 @@ export interface operations {
               displayName: string;
               description: string | null;
               /** @enum {string} */
-              moduleScope: "contract" | "global";
+              moduleScope: "contract" | "matter" | "global";
               /** @enum {string} */
               fieldType:
                 | "text"
@@ -14249,7 +15894,7 @@ export interface operations {
               displayName: string;
               description: string | null;
               /** @enum {string} */
-              moduleScope: "contract" | "global";
+              moduleScope: "contract" | "matter" | "global";
               /** @enum {string} */
               fieldType:
                 | "text"
@@ -14285,7 +15930,7 @@ export interface operations {
   listSavedViews: {
     parameters: {
       query: {
-        surface: "contracts";
+        surface: "contracts" | "matters";
       };
       header?: never;
       path?: never;
@@ -14303,7 +15948,7 @@ export interface operations {
             views: {
               id: string;
               /** @enum {string} */
-              surface: "contracts";
+              surface: "contracts" | "matters";
               name: string;
               config: {
                 columns: {
@@ -14347,7 +15992,7 @@ export interface operations {
       content: {
         "application/json": {
           /** @enum {string} */
-          surface: "contracts";
+          surface: "contracts" | "matters";
           name: string;
           config: {
             columns: {
@@ -14379,7 +16024,7 @@ export interface operations {
             views: {
               id: string;
               /** @enum {string} */
-              surface: "contracts";
+              surface: "contracts" | "matters";
               name: string;
               config: {
                 columns: {
@@ -14433,7 +16078,7 @@ export interface operations {
             views: {
               id: string;
               /** @enum {string} */
-              surface: "contracts";
+              surface: "contracts" | "matters";
               name: string;
               config: {
                 columns: {
@@ -14509,7 +16154,7 @@ export interface operations {
             views: {
               id: string;
               /** @enum {string} */
-              surface: "contracts";
+              surface: "contracts" | "matters";
               name: string;
               config: {
                 columns: {
