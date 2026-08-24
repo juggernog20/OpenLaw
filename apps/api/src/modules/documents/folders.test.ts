@@ -66,8 +66,8 @@ const OUTSIDER = {
   displayName: "Otto Outsider",
   password: "correct-horse-battery",
 } as const;
-/** A Contributor on the team: reads the tree (DD-015, CTR-021), and
- * does not organize it until M23. */
+/** A Contributor on the team reads the tree but does not organize it
+ * (DD-015, CTR-021). */
 const CONTRIBUTOR = {
   email: "folders-contributor@example.com",
   displayName: "Casey Contributor",
@@ -811,7 +811,7 @@ describe("who may reach a contract's folders", () => {
 
     // 403, not 404: they can already see the record, so a
     // missing-record answer would only make a real boundary read as a
-    // bug. Their write grid arrives with M23 (DD-015).
+    // bug. DD-015 gives them supporting upload, not folder administration.
     expect(
       (await createFolder(contributorCookies, contract.number, { name: "Drafts" })).statusCode,
     ).toBe(403);

@@ -46,10 +46,9 @@
  * and byte count; a user's role; whether the signing connector still
  * holds its credentials.
  *
- * **Matters are missing from the seed because they do not exist yet.**
- * The install has matter *types* and no matter records (no module, no
- * table), so the seed fills the taxonomy and stops there. It grows a
- * matter the same day the product does.
+ * Matters, Contracts, Fields, teams, Documents, Activity, and lifecycle
+ * timestamps all ride the fingerprint. The baseline API creates every
+ * row; the script never writes the database directly.
  */
 
 import { createHash, randomUUID } from "node:crypto";
@@ -224,7 +223,7 @@ async function seed() {
     .matterType;
   const entityType = (await post("/api/v1/entity-types", { displayName: "Upgrade Holdco" }))
     .entityType;
-  const field = (
+  const contractField = (
     await post("/api/v1/fields", {
       displayName: "Upgrade reference",
       moduleScope: "contract",
@@ -233,7 +232,19 @@ async function seed() {
     })
   ).field;
   await post(`/api/v1/contract-types/${contractType.id}/fields`, {
-    fieldId: field.id,
+    fieldId: contractField.id,
+    isRequired: false,
+  });
+  const matterField = (
+    await post("/api/v1/fields", {
+      displayName: "Upgrade Matter reference",
+      moduleScope: "matter",
+      fieldType: "text",
+      fieldTag: "business",
+    })
+  ).field;
+  await post(`/api/v1/matter-types/${matterType.id}/fields`, {
+    fieldId: matterField.id,
     isRequired: false,
   });
   const customStatus = (
@@ -277,7 +288,7 @@ async function seed() {
         description: `Seeded at the ${stage} stage before the upgrade.`,
         priority: "high",
         entityId: entity.id,
-        customFields: { [field.slug]: `ref-${stage}` },
+        customFields: { [contractField.slug]: `ref-${stage}` },
         isConfidential: stage === "signature",
       })
     ).contract;
@@ -321,6 +332,73 @@ async function seed() {
     body: commentBody,
     visibility: "working_team",
   });
+
+  // M22 Matter data must cross the complete M23 migration chain. The
+  // main record carries each existing child table that M23 must leave
+  // alone; the second record is archived so backfills also meet rows
+  // outside the default list.
+  const openMatter = (
+    await post("/api/v1/matters", {
+      title: "Upgrade regulatory advice",
+      matterTypeId: matterType.id,
+    })
+  ).matter;
+  const matter = (
+    await patch(`/api/v1/matters/${openMatter.number}`, {
+      description: "Seeded before the M23 upgrade.",
+      priority: "high",
+      risk: "medium",
+      managerId: invited[0].id,
+      customFields: { [matterField.slug]: "matter-ref-open" },
+    })
+  ).matter;
+  await post(`/api/v1/matters/${matter.number}/team`, {
+    userId: invited[0].id,
+    role: "member",
+  });
+  const matterCommentBody = "Matter activity seeded before the M23 upgrade.";
+  await post("/api/v1/comments", {
+    entityType: "matter",
+    entityId: matter.id,
+    body: matterCommentBody,
+    visibility: "working_team",
+  });
+
+  const matterDocumentForm = new FormData();
+  matterDocumentForm.append(
+    "file",
+    fixtureFile("upgrade-matter-support.txt", "Matter paper seeded before M23.\n"),
+  );
+  const matterDocument = (
+    await call("POST", `/api/v1/matters/${matter.number}/documents`, {
+      form: matterDocumentForm,
+      accept: [201],
+    })
+  ).document;
+
+  const closedStatus = (await get("/api/v1/matter-statuses")).matterStatuses.find(
+    (row) => row.category === "closed" && row.archivedAt === null,
+  );
+  check(closedStatus !== undefined, "the M22 baseline has no live closed Matter Status");
+  const closedMatter = (
+    await patch(`/api/v1/matters/${matter.number}`, { statusId: closedStatus.id })
+  ).matter;
+
+  const archivedMatter = (
+    await post("/api/v1/matters", {
+      title: "Upgrade archived advice",
+      matterTypeId: matterType.id,
+      customFields: { [matterField.slug]: "matter-ref-archived" },
+    })
+  ).matter;
+  await post(`/api/v1/matters/${archivedMatter.number}/archive`);
+
+  const matterDocuments = (await get(`/api/v1/matters/${closedMatter.number}/documents`)).documents;
+  const seededMatterDocument = matterDocuments.find((row) => row.id === matterDocument.id);
+  check(seededMatterDocument !== undefined, "the seeded Matter Document was not in the answer");
+  const matterFeed = await get(
+    `/api/v1/activity?entityType=matter&entityId=${encodeURIComponent(closedMatter.id)}`,
+  );
 
   // Documents: a two-version chain on the record root, and a second
   // document filed into a folder. The bytes are what the verify checks —
@@ -411,11 +489,65 @@ async function seed() {
       contractTypeName: contractType.displayName,
       matterTypeName: matterType.displayName,
       entityTypeName: entityType.displayName,
-      fieldSlug: field.slug,
+      fieldSlug: contractField.slug,
+      matterFieldSlug: matterField.slug,
       customStatusName: customStatus.displayName,
     },
     entity: { id: entity.id, legalName: entity.legalName },
     contracts,
+    matters: [
+      {
+        id: closedMatter.id,
+        number: closedMatter.number,
+        title: closedMatter.title,
+        description: closedMatter.description,
+        priority: closedMatter.priority,
+        risk: closedMatter.risk,
+        statusName: closedMatter.statusName,
+        statusCategory: closedMatter.statusCategory,
+        managerId: closedMatter.manager?.id ?? null,
+        customFields: closedMatter.customFields,
+        openedAt: closedMatter.openedAt,
+        closedAt: closedMatter.closedAt,
+        archived: false,
+      },
+      {
+        id: archivedMatter.id,
+        number: archivedMatter.number,
+        title: archivedMatter.title,
+        description: archivedMatter.description,
+        priority: archivedMatter.priority,
+        risk: archivedMatter.risk,
+        statusName: archivedMatter.statusName,
+        statusCategory: archivedMatter.statusCategory,
+        managerId: archivedMatter.manager?.id ?? null,
+        customFields: archivedMatter.customFields,
+        openedAt: archivedMatter.openedAt,
+        closedAt: archivedMatter.closedAt,
+        archived: true,
+      },
+    ],
+    matterTeam: {
+      matterNumber: closedMatter.number,
+      userId: invited[0].id,
+      role: "member",
+    },
+    matterComment: {
+      matterId: closedMatter.id,
+      body: matterCommentBody,
+    },
+    matterDocument: {
+      matterNumber: closedMatter.number,
+      id: seededMatterDocument.id,
+      title: seededMatterDocument.title,
+      versions: seededMatterDocument.versions.map((version) => ({
+        id: version.id,
+        versionNumber: version.versionNumber,
+        originalFilename: version.originalFilename,
+        byteSize: version.byteSize,
+        checksumSha256: version.checksumSha256,
+      })),
+    },
     folder: { id: folder.id, name: folder.name, contractNumber: docHost.number },
     comment: { contractId: approvalHostId, contractNumber: approvalHost.number, body: commentBody },
     documents: { contractNumber: docHost.number, list: documents },
@@ -429,6 +561,7 @@ async function seed() {
     // Only ever asserted as a floor. An install that logged more is not
     // a regression; one that logged fewer has lost an audit record.
     activityFloor: feed.entries.length,
+    matterActivityFloor: matterFeed.entries.length,
   };
 }
 
@@ -469,6 +602,16 @@ async function verify(fingerprint) {
     "the seeded contract status is gone after the upgrade",
   );
 
+  const fields = (await get("/api/v1/fields?includeArchived=true")).fields;
+  check(
+    fields.some((row) => row.slug === fingerprint.taxonomy.fieldSlug),
+    "the seeded Contract Field is gone after the upgrade",
+  );
+  check(
+    fields.some((row) => row.slug === fingerprint.taxonomy.matterFieldSlug),
+    "the seeded Matter Field is gone after the upgrade",
+  );
+
   const entity = (await get(`/api/v1/entities/${fingerprint.entity.id}`)).entity;
   same(entity.legalName, fingerprint.entity.legalName, "entity legal name");
 
@@ -489,6 +632,53 @@ async function verify(fingerprint) {
       (read.archivedAt !== null) === seeded.archived,
       `contract ${seeded.number} archival changed across the upgrade`,
     );
+  }
+
+  for (const seeded of fingerprint.matters) {
+    const read = (await get(`/api/v1/matters/${seeded.number}`)).matter;
+    same(read.title, seeded.title, `Matter ${seeded.number} title`);
+    same(read.description, seeded.description, `Matter ${seeded.number} description`);
+    same(read.priority, seeded.priority, `Matter ${seeded.number} priority`);
+    same(read.risk, seeded.risk, `Matter ${seeded.number} risk`);
+    same(read.statusName, seeded.statusName, `Matter ${seeded.number} Status`);
+    same(read.statusCategory, seeded.statusCategory, `Matter ${seeded.number} Status category`);
+    same(read.manager?.id ?? null, seeded.managerId, `Matter ${seeded.number} Manager`);
+    same(read.customFields, seeded.customFields, `Matter ${seeded.number} custom Fields`);
+    same(read.openedAt, seeded.openedAt, `Matter ${seeded.number} opened timestamp`);
+    same(read.closedAt, seeded.closedAt, `Matter ${seeded.number} closed timestamp`);
+    check(
+      (read.archivedAt !== null) === seeded.archived,
+      `Matter ${seeded.number} archival changed across the upgrade`,
+    );
+  }
+
+  const matterTeam = (await get(`/api/v1/matters/${fingerprint.matterTeam.matterNumber}`)).team;
+  const teamMember = matterTeam.find((row) => row.id === fingerprint.matterTeam.userId);
+  check(teamMember !== undefined, "the seeded Matter team member is gone after the upgrade");
+  same(teamMember.role, fingerprint.matterTeam.role, "seeded Matter team role");
+
+  const matterDocuments = (
+    await get(`/api/v1/matters/${fingerprint.matterDocument.matterNumber}/documents`)
+  ).documents;
+  const matterDocument = matterDocuments.find((row) => row.id === fingerprint.matterDocument.id);
+  check(matterDocument !== undefined, "the seeded Matter Document is gone after the upgrade");
+  same(matterDocument.title, fingerprint.matterDocument.title, "Matter Document title");
+  same(
+    matterDocument.versions.length,
+    fingerprint.matterDocument.versions.length,
+    "Matter Document version count",
+  );
+  for (const version of fingerprint.matterDocument.versions) {
+    const readVersion = matterDocument.versions.find((row) => row.id === version.id);
+    check(readVersion !== undefined, `Matter Document Version ${version.versionNumber} is gone`);
+    same(readVersion.versionNumber, version.versionNumber, "Matter Document Version number");
+    same(readVersion.originalFilename, version.originalFilename, "Matter Document filename");
+    same(readVersion.byteSize, version.byteSize, "Matter Document byte size");
+    same(readVersion.checksumSha256, version.checksumSha256, "Matter Document checksum");
+    const downloaded = await downloadChecksum(
+      `/api/v1/documents/${matterDocument.id}/versions/${version.id}/download`,
+    );
+    same(downloaded, version.checksumSha256, `stored Matter bytes of Version ${version.id}`);
   }
 
   const documents = (
@@ -538,6 +728,22 @@ async function verify(fingerprint) {
     feed.entries.length >= fingerprint.activityFloor,
     `the record's activity feed shrank across the upgrade: ${feed.entries.length} entries, ${fingerprint.activityFloor} before`,
   );
+  const matterFeed = await get(
+    `/api/v1/activity?entityType=matter&entityId=${encodeURIComponent(fingerprint.matterComment.matterId)}`,
+  );
+  check(
+    matterFeed.entries.length >= fingerprint.matterActivityFloor,
+    `the Matter Activity feed shrank across the upgrade: ${matterFeed.entries.length} entries, ${fingerprint.matterActivityFloor} before`,
+  );
+  const matterComments = (
+    await get(
+      `/api/v1/comments?entityType=matter&entityId=${encodeURIComponent(fingerprint.matterComment.matterId)}`,
+    )
+  ).comments;
+  check(
+    matterComments.some((row) => row.body === fingerprint.matterComment.body),
+    "the seeded Matter comment is gone after the upgrade",
+  );
 }
 
 // ----------------------------------------------------------------- cli
@@ -553,7 +759,8 @@ if (command === "seed") {
   const fingerprint = await seed();
   await writeFile(out, `${JSON.stringify(fingerprint, null, 2)}\n`);
   console.log(
-    `seeded ${fingerprint.contracts.length} contracts, ${fingerprint.documents.list.length} documents, ` +
+    `seeded ${fingerprint.contracts.length} Contracts, ${fingerprint.matters.length} Matters, ` +
+      `${fingerprint.documents.list.length + 1} Documents, ` +
       `${fingerprint.users.length} invited users and one signing connector; fingerprint written to ${out}`,
   );
 } else if (command === "verify") {

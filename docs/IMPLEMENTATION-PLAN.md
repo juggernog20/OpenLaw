@@ -41,7 +41,7 @@ document is the map, not the territory.
 
 ## Where we are
 
-**Arc 4 is complete, and Arc 5 now has its record: M22 shipped the Matter workspace and the second arm of conversion.** Arc 1 is done: the monorepo and CI,
+**Arc 4 is complete, and Arc 5 now has a complete Matter workspace: M23 shipped the work surfaces around the M22 record.** Key dates join the active deadline system; Tasks stay a lightweight internal checklist; parent, child, and flat relationships remain navigational; Contracts link without losing their standalone identity; reached Contributors can edit business Fields and supply supporting Documents; and Closing is an advisory signal that leaves the record writable. M24, Matter templates, is the next Matter milestone. Arc 1 is done: the monorepo and CI,
 the authentication chain, the Compose stack a deployer actually runs, the themed app shell, and the
 `/settings` destination with its Personal and Organization rails. Arc 2 is done too: the
 configurable types and statuses, the Entities registry, the contract record, the conversation on a
@@ -91,8 +91,8 @@ nullable Matter Manager and roster, priority and risk, hard-required matter fiel
 confidential reach, a managed list, an editable detail, and the same comments, history, notifications, and
 document machinery a Contract already wears. The Request door now converts into either record through
 one guarded transaction; its values, paper, thread, watermarks, and requester window all follow the Matter
-arm too. M23 is where the record becomes a full work surface: key dates, tasks, relationships, linked
-Contracts, the rest of the Contributor grid, and the close flow remain there; templates remain M24.
+arm too. M23 completed the record as a work surface with Key dates, Tasks, relationships, linked
+Contracts, the Contributor grid, and Closing that leaves the record writable. Matter templates remain M24.
 
 ---
 
@@ -203,8 +203,8 @@ every later module reuses, so it is slower than it looks and pays for itself thr
   - The three-tier affordance: inline marker, record banner, composer notice
   - Three actors decide the audience — an Administrator, the creator, and the Owner — and each set and
     clear is its own activity action, so the audit log holds the walling-off itself
-  - The flag on documents waits for the `documents` table in M11; the CTR-018 link-time nudge waits for the
-    first link surface (M17/M23); search inherits the gate in M25
+  - The flag on Documents landed in M11 and the CTR-018 link-time nudge on the M17 Contract links and M23
+    Contract-to-Matter link; search inherits the gate in M25
   - _Decisions:_ DD-014, CTR-021 (extended in place), CTR-022, DES-009, DES-028, DES-029
 
 ---
@@ -537,7 +537,7 @@ than racing them — which is the whole reason it sits here and not next to Arc 
     arm then added one reader rather than a third join
   - _Decisions:_ MTR-001, MTR-002, MTR-003, MTR-009, MTR-011, MTR-012, MTR-016, INT-002, INT-007, CMT-001
 
-- [ ] **M23 — Matter work surfaces**
+- [x] **M23 — Matter work surfaces**
       _Demo:_ Open a matter, link an existing contract to it, add a sub-matter, invite external counsel as a
       Contributor, then close it and keep writing to it.
   - Key dates and checklist tasks, reusing the M16/M17 machinery
@@ -545,7 +545,8 @@ than racing them — which is the whole reason it sits here and not next to Arc 
   - Matter ↔ Contract linking; contracts stay standalone by default
   - The Contributor permission grid — read, comment, upload, edit business fields
   - Closing as a signal, not a lock
-  - _Decisions:_ MTR-004 to MTR-008, MTR-015, DD-015
+  - The close journey proves the complete sentence against fresh Compose images; the retained upgrade gate carries populated M22 Matter records, Fields, teams, Documents, Activity, and lifecycle timestamps through all four M23 migrations
+  - _Decisions:_ MTR-004 to MTR-008, MTR-015, DD-014 to DD-017, DOC-008, DOC-012, CTR-018, NOT-001, NOT-002, NOT-004 · _Issues:_ #489–#496
 
 - [ ] **M24 — Matter templates**
       _Demo:_ Create an employment matter from a template and find its checklist already populated with

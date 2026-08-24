@@ -53,8 +53,8 @@ const OUTSIDER = {
   displayName: "Otto Outsider",
   password: "correct-horse-battery",
 } as const;
-/** A Contributor on the team: reads the tree and the paper in it, and
- * files nothing until M23. */
+/** A Contributor on the team: reads the tree and paper, but cannot file
+ * comment attachments into the legal Document record. */
 const CONTRIBUTOR = {
   email: "filing-contributor@example.com",
   displayName: "Casey Contributor",

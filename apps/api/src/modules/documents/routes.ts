@@ -227,9 +227,9 @@ import { extractsText } from "../../pipeline/text-extraction.js";
  * the records they hold a `contract_team` row on. */
 const requireDocumentReader = requireRole("administrator", "legal_team_member", "contributor");
 
-/** Supporting uploads are the one Document write Contributors receive in
- * M23. Reach still comes from the owning record's live team predicate; the
- * route-level role floor alone grants nothing. */
+/** Supporting uploads are the one Document write Contributors receive.
+ * Reach still comes from the owning record's live team predicate; the
+ * route-level role floor alone grants nothing (DD-015). */
 const requireSupportingUploader = requireRole("administrator", "legal_team_member", "contributor");
 
 /** Every Document administration action keeps the Member+ floor. */
@@ -1996,7 +1996,7 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
           "owning contract (DD-017). An Administrator or a Legal Team " +
           "Member who reaches the contract may move it; a Contributor " +
           "on the team reads the record and is refused 403, because " +
-          "their write grid arrives with M23 (DD-015). An archived " +
+          "DD-015 permits supporting uploads but not moves. An archived " +
           "contract keeps the " +
           "designation it has until it is restored. A document on a " +
           "contract the actor cannot reach answers 404, exactly as one " +
@@ -2238,7 +2238,7 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
           "owning contract (DD-017). An Administrator or a Legal Team " +
           "Member who reaches the contract may archive; a Contributor " +
           "on the team reads the record and is refused 403, because " +
-          "their write grid arrives with M23 (DD-015). An archived " +
+          "DD-015 permits supporting uploads but not archival. An archived " +
           "contract keeps its paper as it stands until it is restored. " +
           "A document on a contract the actor cannot reach answers 404, " +
           "exactly as one that does not exist",
