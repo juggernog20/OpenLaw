@@ -51,8 +51,8 @@
  * therefore inherits for free: the roster of a walled-off record is
  * invisible to everybody outside its audience, and no rule here had to
  * say so. Reads are the contract read floor, so a Contributor on the
- * team sees who was asked; writes are Member+, and their write grid
- * arrives with M23 (DD-015).
+ * team sees who was asked; DD-015 deliberately keeps these legal writes
+ * at Member+.
  *
  * **Every act is narrated** (DD-017). Request, approve, reject, and
  * cancel each append one entry on the owning contract at the standing
@@ -115,8 +115,8 @@ import { httpError, problemResponse } from "../../lib/problem.js";
 const requireApprovalReader = requireRole("administrator", "legal_team_member", "contributor");
 
 /** Asking, deciding, and cancelling are Member+ in M14, as putting
- * paper on a record is. A Contributor reads the roster; their write
- * grid arrives with M23 (DD-015). Deciding is narrowed further by the
+ * paper on a record is. A Contributor reads the roster but DD-015 gives
+ * them no approval write. Deciding is narrowed further by the
  * route itself — only the approver named on a request decides it. */
 const requireMember = requireRole("administrator", "legal_team_member");
 

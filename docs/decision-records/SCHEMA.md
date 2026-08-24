@@ -371,7 +371,7 @@ Custom-field catalog (Jira model), shared across modules with a scope. A field i
 | `module_scope`             | text (enum) | `matter` \| `contract` \| `entity` (**ENT-001**) \| `global` per **CTR-016**; global attaches across modules. Promotion to `global` allowed; narrowing blocked while cross-module attachments exist |
 | `field_type`               | text (enum) | `text` \| `long_text` \| `number` \| `date` \| `boolean` \| `single_select` \| `multi_select` \| `user` \| `entity` (**CTR-016** adds `entity`) — **immutable**                                     |
 | `options`                  | jsonb       | nullable; option list for select types                                                                                                                                                              |
-| `field_tag`                | text (enum) | `business` \| `legal` per **DD-015**; drives Contributor visibility                                                                                                                                 |
+| `field_tag`                | text (enum) | `business` \| `legal` per **DD-015**; drives Contributor projection and write permission                                                                                                            |
 | `ai_prompt`                | text        | nullable per **CTR-008/CTR-016**; extraction prompt consumed by contract AI analysis; seeded defaults on contract core fields, editable                                                             |
 | `archived_at`              | timestamptz | nullable; archived fields hidden everywhere, stored values retained                                                                                                                                 |
 | `created_at`, `updated_at` | timestamptz |                                                                                                                                                                                                     |
@@ -471,6 +471,8 @@ Lightweight checklist items on a matter. Deliberately not a task entity: no comm
 Indexed on (`matter_id`, `display_order`).
 
 Landed in incremental migration `0074_bored_felicia_hardy.sql` (M23/4, #492). The migration only adds this table, its two foreign keys, title check, and ordering index; it does not rewrite existing Matter rows.
+
+At M23 close, these additions remain four incremental migrations over the M22 model: `matter_key_dates`, `matter_tasks`, `matters.parent_id` plus `matter_relations`, and nullable `contracts.matter_id`. None rewrites existing Matter, Contract, Field, team, Document, Activity, `opened_at`, or `closed_at` data. Closing adds no Resolution or note column; Key dates add no owner; M24 templates still carry Tasks only unless MTR-013's open question later changes that contract. Relationships and Contract links carry no inheritance or cascade columns.
 
 ---
 

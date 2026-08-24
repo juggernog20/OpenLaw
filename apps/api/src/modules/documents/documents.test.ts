@@ -69,8 +69,8 @@ const OUTSIDER = {
   displayName: "Otto Outsider",
   password: "correct-horse-battery",
 } as const;
-/** A Contributor on the team: reads and downloads (DD-015, CTR-021),
- * and does not upload until M23. */
+/** A Contributor on the team: reads, downloads, and supplies supporting
+ * paper, but cannot administer or replace the primary chain. */
 const CONTRIBUTOR = {
   email: "docs-contributor@example.com",
   displayName: "Casey Contributor",
