@@ -254,6 +254,9 @@ test.describe.serial("M23 deployer journey", () => {
       await expect(contributor.getByText(DOCUMENT)).toBeVisible();
 
       await contributor.goto(`/matters/${matter.number}`);
+      // Anchor on the rendered record first: the absence assertions
+      // below would pass vacuously against a page that has not painted.
+      await expect(contributor.getByRole("region", { name: MATTER_TITLE })).toBeVisible();
       await expect(contributor.getByRole("button", { name: "Close matter" })).toHaveCount(0);
       await expect(contributor.getByRole("button", { name: "New sub-Matter" })).toHaveCount(0);
       await expect(contributor.getByRole("button", { name: "Link Contract" })).toHaveCount(0);
