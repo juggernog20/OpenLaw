@@ -590,6 +590,10 @@ M22 shipped the shared Matter reach predicate and uses it inside list, record, c
 
 The write actor set extends the original creator rule the same way Contracts extended it for their Owner: an Administrator, the Matter's creator, or its Matter Manager may set or clear confidentiality and maintain the roster of a confidential Matter. The persistent banner, external-title marker, comment notice, and bounded mention picker all read that same answer. There is no auto-grant on mention: candidates are already inside the audience, so DES-009's old warning arm has no case to fire.
 
+### Addendum (2026-08-24, M23 close, [#496](https://github.com/juggernog20/OpenLaw/issues/496)) — the wall covers every work surface
+
+Key dates, Tasks, Matter relationships, Contract links, Contributor Field writes, supporting Documents, lifecycle advisories, Activity, and notifications all resolve Matter reach through the same predicate. A reachable relative may be named; an unreachable one is either omitted or represented only as a Restricted Matter. Linking and hierarchy never copy a flag or audience, and Closing never changes either.
+
 ---
 
 ## DD-015: Contributor permission grid — read, comment, upload, edit business fields
@@ -649,6 +653,10 @@ All Contributor edits and uploads carry the user's name and role tag in the acti
 - Document upload UIs distinguish "attach a supporting document" (Contributor-allowed) from "upload a new version of the primary contract" (Member-only).
 - The audit log records every Contributor edit with field name, old value, new value, actor, and timestamp.
 - A Contributor's view of a matter is visually distinct in the mocks from a Member's view — different action menus, different field lock states, hidden internal-comment thread.
+
+### Addendum (2026-08-24, M23 close, [#496](https://github.com/juggernog20/OpenLaw/issues/496)) — the complete grid is live
+
+On a reached Matter or Contract, a Contributor reads the record and its permitted comments, Activity, Documents, dates, Tasks, and relationships; posts at Working Team or Full Thread; edits the description and projected business Fields; and creates or extends supporting Document chains. Status and lifecycle, type, Manager or Owner, team, confidentiality, legal Fields, primary-document designations, Key dates, Tasks, relationships, approvals, and envelopes remain Member+ legal actions. Every route enforces the same distinction before storage, and every accepted write records the Contributor as actor and uploader.
 
 ---
 
@@ -711,6 +719,10 @@ Three audience-tiered visibility levels on every comment, named after their actu
 - Activity feed entries (status changes, document uploads, field edits) follow the same visibility model — an activity entry is generated at the appropriate tier based on what action it represents.
 - The composer UI must show all three options to Members/Admins, and only Working Team / Full Thread to Contributors. Business Users do not see a tier selector — their comments are always Full Thread by definition.
 - Pencil mocks must include the composer with the visibility selector and three example comment renderings (one of each tier) on the matter detail timeline.
+
+### Addendum (2026-08-24, M23 close, [#496](https://github.com/juggernog20/OpenLaw/issues/496)) — one thread survives Closing
+
+Matter work surfaces use the existing three tiers without a new audience. Reached Contributors remain in Working Team and Full Thread, Business Users remain outside the direct Matter record, and hidden Legal Only rows contribute no placeholder or count. Closing changes none of those rooms, so the same comment composer remains writable afterward; Archiving alone freezes the record.
 
 ---
 
@@ -809,6 +821,10 @@ The audit log's page size is its own constant (50), larger than the feed's, and 
 Search reads the payload's own text, and that term is a sequential scan. The other four filters and the ordering are all indexed — `activity_log_created_at_idx` on `(created_at, id)` lands with this surface, because the audit log orders the whole table by the pair its cursor walks and none of the three existing indexes serves that. A `payload::text` match cannot be, short of a `pg_trgm` GIN index on the expression and the extension to go with it. That is deliberate at this size: SET-002 anchors the product at 2–10 people, an Administrator is the only reader, and a scan of that organization's log is cheap. The trigram index is the named upgrade path when a deployment's volume makes it worth a new extension dependency; dropping payload search instead would cost the thing search is for, which is finding the entry whose filter you cannot name.
 
 The narration layer now covers the whole vocabulary rather than a record feed's half of it, because this surface reads all of it. Its entry type is structural rather than one response shape, so both surfaces narrate the same rows without either converting for the other.
+
+### Addendum (2026-08-24, M23 close, [#496](https://github.com/juggernog20/OpenLaw/issues/496)) — M23 actions use the one ledger
+
+Matter business-Field edits, supporting-Document uploads and Versions, Key-date and Task mutations, hierarchy and related-link changes, Contract link changes, and Status transitions append their established action slugs with record ids and bounded metadata. The Matter feed applies DD-014 reach and DD-016 tiers; the Administrator audit log keeps the same rows. Closing neither rewrites nor truncates history, and the M22-to-M23 rehearsal asserts that a populated Matter feed never shrinks.
 
 ---
 

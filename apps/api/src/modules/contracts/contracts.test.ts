@@ -391,8 +391,8 @@ const auditRowsFor = async (id: string) =>
  * Every mutation seam a contract has, aimed at whoever holds these
  * cookies: create, the per-field PATCH, the status change and the value
  * and custom fields that ride it, archive, restore, the team, and the
- * counterparties. The whole set is Member+, so a Contributor and a
- * Business User are both refused all of it.
+ * counterparties. Business Users are refused at the role floor; a
+ * Contributor reaches PATCH so it can apply DD-015 after record reach.
  */
 const refusedWrites = (cookies: Record<string, string>) => [
   harness.app.inject({
@@ -511,20 +511,23 @@ describe("the Member+ access floor on contract surfaces", () => {
     ).toBe(false);
   });
 
-  it("refuses a Contributor every write and the Member+ picker read", async () => {
-    const attempts = [
-      // The pickers exist to be assigned from, and a Contributor
-      // assigns nothing — so the picker read stays Member+ (M9/1).
-      harness.app.inject({
-        method: "GET",
-        url: "/api/v1/contracts/options",
-        cookies: contributorCookies,
-      }),
-      ...refusedWrites(contributorCookies),
-    ];
-    for (const res of await Promise.all(attempts)) {
-      expect(res.statusCode, `${CONTRIBUTOR.email}: ${res.body}`).toBe(403);
-      expect(res.headers["content-type"]).toContain("application/problem+json");
+  it("keeps creation, relationship writes, and the picker Member+ while PATCH omits unknown records", async () => {
+    const options = await harness.app.inject({
+      method: "GET",
+      url: "/api/v1/contracts/options",
+      cookies: contributorCookies,
+    });
+    expect(options.statusCode, options.body).toBe(403);
+
+    const attempts = await Promise.all(refusedWrites(contributorCookies));
+    // PATCH first performs the same reach check as GET: an absent record
+    // and an unreached one are both omitted before field policy runs.
+    for (const res of attempts.slice(1, 5)) {
+      expect(res.statusCode, `${CONTRIBUTOR.email}: ${res.body}`).toBe(404);
+    }
+    for (const res of [attempts[0], ...attempts.slice(5)]) {
+      expect(res!.statusCode, `${CONTRIBUTOR.email}: ${res!.body}`).toBe(403);
+      expect(res!.headers["content-type"]).toContain("application/problem+json");
     }
     expect(
       (await listContracts(adminCookies, true)).some((row) => row.title === "Sneaky NDA"),
@@ -621,17 +624,19 @@ describe("Contributor team access to the contract record (M9/1)", () => {
     expect(res.json().contracts).toEqual([]);
   });
 
-  it("refuses every write on a contract they are on, and leaves the record as it was", async () => {
-    const contract = await newContract("Contributor cannot edit this one");
+  it("accepts value but refuses every legal-managed write on a contract they are on", async () => {
+    const contract = await newContract("Contributor edits business details only");
     await putOnTeam(contract.number, idOf(CONTRIBUTOR));
+
+    const value = await patchContract(contributorCookies, contract.number, {
+      value: { amount: 500, currency: "USD", cadence: "one_time" },
+    });
+    expect(value.statusCode, value.body).toBe(200);
 
     const attempts = [
       patchContract(contributorCookies, contract.number, { title: "Renamed by a Contributor" }),
       patchContract(contributorCookies, contract.number, { statusId: "any" }),
       patchContract(contributorCookies, contract.number, { managerId: idOf(CONTRIBUTOR) }),
-      patchContract(contributorCookies, contract.number, {
-        value: { amount: 500, currency: "USD", cadence: "one_time" },
-      }),
       patchContract(contributorCookies, contract.number, { customFields: { anything: "x" } }),
       addTeamMember(contributorCookies, contract.number, {
         userId: idOf(MEMBER),
@@ -649,8 +654,11 @@ describe("Contributor team access to the contract record (M9/1)", () => {
 
     const after = await getContract(contributorCookies, contract.number);
     expect(after.statusCode, after.body).toBe(200);
-    expect(after.json().contract.title).toBe("Contributor cannot edit this one");
-    expect(after.json().contract.archivedAt).toBeNull();
+    expect(after.json().contract).toMatchObject({
+      title: "Contributor edits business details only",
+      value: { amount: 500, currency: "USD", cadence: "one_time" },
+      archivedAt: null,
+    });
     expect(after.json().team.map((row: TeamMember) => row.id)).toContain(idOf(CONTRIBUTOR));
   });
 
@@ -669,6 +677,15 @@ describe("Contributor team access to the contract record (M9/1)", () => {
 
     const res = await getContract(contributorCookies, contract.number);
     expect(res.statusCode, res.body).toBe(404);
+    const removedWrite = await patchContract(contributorCookies, contract.number, {
+      value: { amount: 100, currency: "USD", cadence: "one_time" },
+    });
+    const unknownWrite = await patchContract(contributorCookies, 999_999, {
+      value: { amount: 100, currency: "USD", cadence: "one_time" },
+    });
+    expect(removedWrite.statusCode, removedWrite.body).toBe(404);
+    const withoutInstance = (body: Record<string, unknown>) => ({ ...body, instance: undefined });
+    expect(withoutInstance(removedWrite.json())).toEqual(withoutInstance(unknownWrite.json()));
     expect((await listContracts(contributorCookies)).map((row) => row.number)).not.toContain(
       contract.number,
     );

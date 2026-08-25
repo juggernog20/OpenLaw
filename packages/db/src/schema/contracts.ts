@@ -51,6 +51,8 @@ import { documents } from "./documents.js";
 import { entities } from "./entities.js";
 import type { CustomFieldValue } from "./fields.js";
 import { uuidPk } from "./helpers.js";
+import { matters } from "./matters.js";
+import { SEVERITY_LEVELS } from "./severity.js";
 
 /**
  * DES-018's one ordinal severity ramp, shared by priority and risk
@@ -58,8 +60,7 @@ import { uuidPk } from "./helpers.js";
  * — sorting a review queue, coloring a pill — so it is a fixed enum,
  * not an admin-configurable list.
  */
-export const SEVERITY_LEVELS = ["low", "medium", "high", "critical"] as const;
-export type SeverityLevel = (typeof SEVERITY_LEVELS)[number];
+export { SEVERITY_LEVELS, type SeverityLevel } from "./severity.js";
 
 /**
  * CTR-010's cadence: what the recorded amount is per. It backs the
@@ -182,6 +183,10 @@ export const contracts = pgTable(
     // the reference closes on this same table, and TypeScript cannot
     // infer a type that depends on itself.
     parentId: text("parent_id").references((): AnyPgColumn => contracts.id),
+    /** MTR-007's one optional broader-work container. NULL is the
+     * ordinary standalone Contract; the link is navigational only and
+     * no Matter or Contract state inherits across it. */
+    matterId: text("matter_id").references(() => matters.id),
     /** DD-014's opt-in gate, and the whole of it: when set, only the
      * named team, the Owner, and Administrators reach the record or
      * anything attached to it. Not null with a `false` default because
@@ -284,6 +289,9 @@ export const contracts = pgTable(
     // breadcrumb and relations panel ride, and the walk the cycle guard
     // already makes on every parent write.
     index("contracts_parent_idx").on(table.parentId),
+    // The Matter record's linked-Contracts section reads this side of
+    // the one-to-many relationship.
+    index("contracts_matter_idx").on(table.matterId),
     // `entity_id` carries no index yet: nothing in M8 reads contracts by
     // the entity that signs them. The roll-up that will (ENT-007, M27)
     // brings its own, per the incremental-schema doctrine.

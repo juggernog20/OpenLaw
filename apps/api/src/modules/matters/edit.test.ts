@@ -2,7 +2,7 @@
 
 /** M22/5: matter edits, lifecycle timestamps, team reach, and recovery. */
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { activityLog, eq, matters, matterTeam, users } from "@openlaw/db";
+import { activityLog, and, eq, matters, matterTeam, users } from "@openlaw/db";
 import { provisionUser } from "../../auth/instance.js";
 import {
   signInCookies,
@@ -110,12 +110,17 @@ async function newStatus(displayName: string, category: "open" | "closed"): Prom
   return response.json().matterStatus.id;
 }
 
-async function attachRequiredText(typeId: string, displayName: string): Promise<string> {
+async function attachText(
+  typeId: string,
+  displayName: string,
+  fieldTag: "business" | "legal",
+  isRequired = false,
+): Promise<string> {
   const fieldResponse = await harness.app.inject({
     method: "POST",
     url: "/api/v1/fields",
     cookies: adminCookies,
-    payload: { moduleScope: "matter", fieldTag: "legal", displayName, fieldType: "text" },
+    payload: { moduleScope: "matter", fieldTag, displayName, fieldType: "text" },
   });
   expect(fieldResponse.statusCode, fieldResponse.body).toBe(201);
   const field = fieldResponse.json().field as { id: string; slug: string };
@@ -123,11 +128,14 @@ async function attachRequiredText(typeId: string, displayName: string): Promise<
     method: "POST",
     url: `/api/v1/matter-types/${typeId}/fields`,
     cookies: adminCookies,
-    payload: { fieldId: field.id, isRequired: true },
+    payload: { fieldId: field.id, isRequired },
   });
   expect(attached.statusCode, attached.body).toBe(201);
   return field.slug;
 }
+
+const attachRequiredText = (typeId: string, displayName: string) =>
+  attachText(typeId, displayName, "legal", true);
 
 async function create(payload: Record<string, unknown> = {}) {
   const response = await harness.app.inject({
@@ -149,7 +157,89 @@ const patchMatter = (number: number, payload: Record<string, unknown>, cookies =
   });
 
 describe("per-field matter PATCH", () => {
-  it("commits scalar fields, returns the projection, and refuses every Contributor write", async () => {
+  it("projects only business Fields and values to a Contributor on the team", async () => {
+    const projectionTypeId = await newType("Contributor projection");
+    const businessSlug = await attachText(projectionTypeId, "Business context", "business");
+    const legalSlug = await attachText(projectionTypeId, "Legal analysis", "legal");
+    const matter = await create({
+      matterTypeId: projectionTypeId,
+      customFields: {
+        [businessSlug]: "Finance",
+        [legalSlug]: "Counsel only",
+      },
+    });
+    await harness.db
+      .insert(matterTeam)
+      .values({ matterId: matter.id, userId: contributorId, role: "contributor" });
+
+    const response = await harness.app.inject({
+      method: "GET",
+      url: `/api/v1/matters/${matter.number}`,
+      cookies: contributorCookies,
+    });
+    expect(response.statusCode, response.body).toBe(200);
+    expect(response.json().fields).toEqual([
+      expect.objectContaining({ slug: businessSlug, fieldTag: "business" }),
+    ]);
+    expect(response.json().matter.customFields).toEqual({ [businessSlug]: "Finance" });
+    const list = await harness.app.inject({
+      method: "GET",
+      url: "/api/v1/matters",
+      cookies: contributorCookies,
+    });
+    expect(list.statusCode, list.body).toBe(200);
+    expect(
+      list.json().matters.find((row: { number: number }) => row.number === matter.number)
+        ?.customFields,
+    ).toEqual({ [businessSlug]: "Finance" });
+
+    for (const payload of [
+      { description: "Business supplied context" },
+      { customFields: { [businessSlug]: "Operations" } },
+    ]) {
+      const accepted = await patchMatter(matter.number, payload, contributorCookies);
+      expect(accepted.statusCode, accepted.body).toBe(200);
+    }
+    for (const payload of [
+      { title: "Crafted rename" },
+      { title: "Mixed crafted rename", description: "Must not land" },
+      { customFields: { [legalSlug]: "New analysis" } },
+    ]) {
+      const refused = await patchMatter(matter.number, payload, contributorCookies);
+      expect(refused.statusCode, refused.body).toBe(403);
+    }
+
+    const updates = await harness.db
+      .select()
+      .from(activityLog)
+      .where(eq(activityLog.entityId, matter.id));
+    const contributorUpdates = updates.filter(
+      (entry) => entry.action === "matter.updated" && entry.actorId === contributorId,
+    );
+    expect(contributorUpdates).toHaveLength(2);
+    expect(contributorUpdates.every((entry) => entry.payload.actorRole === "contributor")).toBe(
+      true,
+    );
+
+    await harness.db
+      .delete(matterTeam)
+      .where(and(eq(matterTeam.matterId, matter.id), eq(matterTeam.userId, contributorId)));
+    const removed = await patchMatter(
+      matter.number,
+      { description: "No longer reachable" },
+      contributorCookies,
+    );
+    const unknown = await patchMatter(
+      999_999,
+      { description: "No record here" },
+      contributorCookies,
+    );
+    expect(removed.statusCode, removed.body).toBe(404);
+    const withoutInstance = (body: Record<string, unknown>) => ({ ...body, instance: undefined });
+    expect(withoutInstance(removed.json())).toEqual(withoutInstance(unknown.json()));
+  });
+
+  it("commits Member+ scalar fields and refuses a Contributor's legal-managed write", async () => {
     const matter = await create();
     for (const payload of [
       { title: "Renamed matter" },

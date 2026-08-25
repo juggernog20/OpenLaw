@@ -8,6 +8,8 @@ type RecordResponse =
   paths["/api/v1/matters/{number}"]["get"]["responses"]["200"]["content"]["application/json"];
 type OptionsResponse =
   paths["/api/v1/matters/options"]["get"]["responses"]["200"]["content"]["application/json"];
+type LifecycleResponse =
+  paths["/api/v1/matters/{number}/lifecycle"]["get"]["responses"]["200"]["content"]["application/json"];
 
 export type MatterRow = RecordResponse["matter"];
 export type MatterField = RecordResponse["fields"][number];
@@ -15,6 +17,7 @@ export type MatterTeamMember = RecordResponse["team"][number];
 export type MatterCustomFieldRefs = RecordResponse["customFieldRefs"];
 export type MatterTypeOption = OptionsResponse["matterTypes"][number];
 export type MatterStatusOption = OptionsResponse["matterStatuses"][number];
+export type MatterLifecycle = LifecycleResponse;
 export type MatterUserOption = OptionsResponse["users"][number];
 export type MatterSeverity = MatterRow["priority"];
 export type MatterTeamRole = MatterTeamMember["role"];
@@ -26,6 +29,12 @@ export const ADDABLE_MATTER_TEAM_ROLES: readonly Exclude<MatterTeamRole, "creato
 ];
 
 export const MATTER_SEVERITIES: readonly MatterSeverity[] = ["low", "medium", "high", "critical"];
+
+/** Matter status colors follow the fixed Category, never the renameable label. */
+export const MATTER_STATUS_PILL: Record<MatterRow["statusCategory"], string> = {
+  open: "bg-status-info-bg text-status-info-fg",
+  closed: "bg-status-onhold-bg text-status-onhold-fg",
+};
 
 export function matterPath(number: number): string {
   return `/matters/${number}`;

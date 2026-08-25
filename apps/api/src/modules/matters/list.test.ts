@@ -2,7 +2,7 @@
 
 /** The Matters list contract at the HTTP seam, against real Postgres. */
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { eq, matters, matterStatuses, matterTeam, users } from "@openlaw/db";
+import { eq, matterKeyDates, matters, matterStatuses, matterTeam, users } from "@openlaw/db";
 import { provisionUser } from "../../auth/instance.js";
 import {
   signInCookies,
@@ -39,6 +39,7 @@ interface MatterListAnswer {
     title: string;
     statusName: string;
     manager: { id: string } | null;
+    nextDeadline: { date: string; label: string } | null;
   }[];
   nextCursor: string | null;
   counts: { open: number; onHold: number };
@@ -326,5 +327,41 @@ describe("the Matters list", () => {
       expect(new Set(ids).size).toBe(ids.length);
       expect(ids).toHaveLength(54);
     }
+  });
+
+  it("returns the earliest today-or-future Key date only for an active Matter", async () => {
+    const today = new Date().toISOString().slice(0, 10);
+    await harness.db.insert(matterKeyDates).values([
+      { matterId: visibleIds[0]!, date: "2020-01-01", label: "Already passed" },
+      { matterId: visibleIds[0]!, date: "2099-01-01", label: "Later deadline" },
+      { matterId: visibleIds[0]!, date: today, label: "Today deadline" },
+      { matterId: visibleIds[1]!, date: "2020-01-02", label: "Past only" },
+    ]);
+    const deadlineOf = (answer: MatterListAnswer, id: string) =>
+      answer.matters.find((row) => row.id === id)!.nextDeadline;
+
+    const active = await list(contributorCookies);
+    expect(deadlineOf(active, visibleIds[0]!)).toEqual({
+      date: today,
+      label: "Today deadline",
+    });
+    const pastOnly = await list(memberCookies, { manager: memberId });
+    expect(deadlineOf(pastOnly, visibleIds[1]!)).toBeNull();
+
+    await harness.db
+      .update(matters)
+      .set({ statusId: closedStatusId, closedAt: new Date() })
+      .where(eq(matters.id, visibleIds[0]!));
+    const closed = await list(contributorCookies, { includeClosed: "true" });
+    expect(deadlineOf(closed, visibleIds[0]!)).toBeNull();
+
+    await harness.db
+      .update(matters)
+      .set({ statusId: openStatusId, closedAt: null })
+      .where(eq(matters.id, visibleIds[0]!));
+    expect(deadlineOf(await list(contributorCookies), visibleIds[0]!)).toEqual({
+      date: today,
+      label: "Today deadline",
+    });
   });
 });

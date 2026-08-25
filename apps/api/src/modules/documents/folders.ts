@@ -139,9 +139,9 @@ import { httpError, problemResponse } from "../../lib/problem.js";
  * it to the records they hold a `contract_team` row on. */
 const requireFolderReader = requireRole("administrator", "legal_team_member", "contributor");
 
-/** Organizing a record's paper is Member+ in M13, as putting paper on it
- * is: a Contributor reads the tree, and their write grid arrives with
- * M23 (DD-015). */
+/** Organizing a record's paper is Member+ in M13. A Contributor reads the
+ * tree and may supply supporting paper, but DD-015 gives them no folder
+ * administration. */
 const requireMember = requireRole("administrator", "legal_team_member");
 
 /**

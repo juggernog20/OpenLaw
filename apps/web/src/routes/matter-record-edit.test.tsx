@@ -12,6 +12,12 @@ const ADMIN = {
   displayName: "Ada Admin",
   role: "administrator",
 };
+const CONTRIBUTOR = {
+  id: "u-contributor",
+  email: "contributor@example.com",
+  displayName: "Casey Contributor",
+  role: "contributor",
+};
 const MEMBER = {
   id: "u-member",
   displayName: "Mina Member",
@@ -25,6 +31,7 @@ const FIELD = {
   displayName: "Business unit",
   description: null,
   fieldType: "text",
+  fieldTag: "business",
   options: null,
   displayOrder: 1,
   isRequired: true,
@@ -110,6 +117,77 @@ describe("the editable matter record", () => {
     expect(screen.getByText("No documents on this matter yet.")).toBeInTheDocument();
     expect(screen.queryByText("Make primary")).not.toBeInTheDocument();
     expect(screen.queryByText("Mark as executed")).not.toBeInTheDocument();
+  });
+
+  it("offers a Contributor only supporting upload actions on Matter paper", async () => {
+    const document = {
+      id: "doc-supporting",
+      title: "supporting.pdf",
+      description: null,
+      isPrimary: false,
+      isConfidential: false,
+      folderId: null,
+      archivedAt: null,
+      createdBy: { id: MEMBER.id, displayName: MEMBER.displayName, image: null, archived: false },
+      createdAt: "2026-08-23T09:00:00.000Z",
+      updatedAt: "2026-08-23T09:00:00.000Z",
+      versions: [
+        {
+          id: "ver-supporting",
+          versionNumber: 1,
+          kind: "draft_ours",
+          note: null,
+          originalFilename: "supporting.pdf",
+          mimeType: "application/pdf",
+          renderFamily: "pdf",
+          byteSize: 24,
+          checksumSha256: "a".repeat(64),
+          uploadedBy: {
+            id: MEMBER.id,
+            displayName: MEMBER.displayName,
+            image: null,
+            archived: false,
+          },
+          createdAt: "2026-08-23T09:00:00.000Z",
+          isCurrent: true,
+          isExecuted: false,
+        },
+      ],
+    };
+    stubApi({
+      signedIn: CONTRIBUTOR,
+      extra: (call) => {
+        if (call.url.pathname === "/api/v1/matters/12" && call.method === "GET") {
+          return json(
+            200,
+            record(row(), [{ ...CONTRIBUTOR, image: null, archived: false, role: "contributor" }]),
+          );
+        }
+        if (call.url.pathname === "/api/v1/matters/12/documents" && call.method === "GET") {
+          return json(200, { documents: [document], nextCursor: null });
+        }
+        if (call.url.pathname === "/api/v1/matters/12/folders" && call.method === "GET") {
+          return json(200, { folders: [] });
+        }
+        if (call.url.pathname === "/api/v1/comments/unread") return json(200, { unread: 0 });
+        return undefined;
+      },
+    });
+    renderAt("/matters/12/documents");
+    const user = userEvent.setup();
+
+    const section = await screen.findByRole("region", { name: /^Documents/ });
+    expect(within(section).getByRole("button", { name: "Upload" })).toBeVisible();
+    expect(within(section).queryByRole("button", { name: "New folder" })).not.toBeInTheDocument();
+    await user.click(within(section).getByRole("button", { name: "Actions for supporting.pdf" }));
+    const menu = await screen.findByRole("menu");
+    expect(
+      within(menu)
+        .getAllByRole("menuitem")
+        .map((item) => item.textContent),
+    ).toEqual(["Add version"]);
+    expect(within(section).queryByRole("combobox")).not.toBeInTheDocument();
+    expect(within(section).queryByRole("switch")).not.toBeInTheDocument();
   });
 
   it("lands on the Documents section from its own address", async () => {
@@ -200,7 +278,76 @@ describe("the editable matter record", () => {
     );
   });
 
-  it("commits inline fields independently and groups every live status by category", async () => {
+  it("lets a Contributor edit the description and projected business Fields only", async () => {
+    const patches: unknown[] = [];
+    let saved = row({
+      matterTypeId: "t-employment",
+      matterTypeName: "Employment",
+      customFields: { "business-unit": "People" },
+    });
+    stubApi({
+      signedIn: CONTRIBUTOR,
+      extra: (call) => {
+        if (call.url.pathname === "/api/v1/matters/12" && call.method === "GET") {
+          return json(200, {
+            matter: saved,
+            fields: [FIELD],
+            customFieldRefs: { users: [], entities: [] },
+            team: [],
+          });
+        }
+        if (call.url.pathname === "/api/v1/matters/12" && call.method === "PATCH") {
+          patches.push(call.body);
+          const body = call.body as Record<string, unknown>;
+          saved = {
+            ...saved,
+            ...body,
+            customFields: {
+              ...saved.customFields,
+              ...((body.customFields as Record<string, string> | undefined) ?? {}),
+            },
+          };
+          return json(200, {
+            matter: saved,
+            fields: [FIELD],
+            customFieldRefs: { users: [], entities: [] },
+            team: [],
+          });
+        }
+        if (call.url.pathname === "/api/v1/comments/unread") return json(200, { unread: 0 });
+        return undefined;
+      },
+    });
+    renderAt("/matters/12");
+    const user = userEvent.setup();
+
+    expect(
+      await screen.findByRole("heading", { level: 1, name: "Editable advice" }),
+    ).toBeInTheDocument();
+    expect(screen.queryByLabelText("Title")).not.toBeInTheDocument();
+    expect(screen.queryByRole("combobox", { name: "Status" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("combobox", { name: "Matter type" })).not.toBeInTheDocument();
+
+    const description = screen.getByLabelText("Description");
+    const businessUnit = screen.getByLabelText(/Business unit/);
+    expect(description).toBeEnabled();
+    expect(businessUnit).toBeEnabled();
+    await user.clear(description);
+    await user.type(description, "Business supplied context");
+    await user.tab();
+    await user.clear(businessUnit);
+    await user.type(businessUnit, "Operations");
+    await user.tab();
+
+    await waitFor(() =>
+      expect(patches).toEqual([
+        { description: "Business supplied context" },
+        { customFields: { "business-unit": "Operations" } },
+      ]),
+    );
+  });
+
+  it("commits inline fields independently and keeps inline Status changes within the Category", async () => {
     let saved = row();
     const patches: unknown[] = [];
     stubApi({
@@ -237,16 +384,127 @@ describe("the editable matter record", () => {
     await waitFor(() => expect(patches).toContainEqual({ title: "Renamed advice" }));
 
     const status = screen.getByRole("combobox", { name: "Status" });
-    const groups = within(status).getAllByRole("group");
-    expect(groups.map((group) => group.getAttribute("label"))).toEqual(["Open", "Closed"]);
     expect(
-      within(groups[0]!)
+      within(status)
         .getAllByRole("option")
         .map((option) => option.textContent),
     ).toEqual(["Open", "Review"]);
-    await user.selectOptions(status, "s-closed");
-    await waitFor(() => expect(patches).toContainEqual({ statusId: "s-closed" }));
-    await waitFor(() => expect(status).toHaveValue("s-closed"));
+    await user.selectOptions(status, "s-review");
+    await waitFor(() => expect(patches).toContainEqual({ statusId: "s-review" }));
+    await waitFor(() => expect(status).toHaveValue("s-review"));
+  });
+
+  it("closes and reopens deliberately with no Resolution or closing-note datum", async () => {
+    let saved = row();
+    const patches: unknown[] = [];
+    stubApi({
+      signedIn: ADMIN,
+      extra: (call) => {
+        if (call.url.pathname === "/api/v1/matters/12" && call.method === "GET")
+          return json(200, record(saved));
+        if (call.url.pathname === "/api/v1/matters/options" && call.method === "GET")
+          return options();
+        if (call.url.pathname === "/api/v1/matters/12/lifecycle" && call.method === "GET") {
+          return saved.statusCategory === "open"
+            ? json(200, {
+                action: "close",
+                targetCategory: "closed",
+                statuses: [{ id: "s-closed", displayName: "Closed" }],
+                openChildren: [
+                  { restricted: false, number: 13, title: "Local proceeding" },
+                  { restricted: true },
+                ],
+              })
+            : json(200, {
+                action: "reopen",
+                targetCategory: "open",
+                statuses: [
+                  { id: "s-open", displayName: "Open" },
+                  { id: "s-review", displayName: "Review" },
+                ],
+                openChildren: [],
+              });
+        }
+        if (call.url.pathname === "/api/v1/matters/12" && call.method === "PATCH") {
+          patches.push(call.body);
+          const status = STATUSES.find(
+            (candidate) => candidate.id === (call.body as { statusId: string }).statusId,
+          )!;
+          saved = row({
+            ...saved,
+            statusId: status.id,
+            statusName: status.displayName,
+            statusCategory: status.category,
+            closedAt: status.category === "closed" ? "2026-08-23T09:00:00.000Z" : null,
+          });
+          return json(200, record(saved));
+        }
+        return undefined;
+      },
+    });
+    renderAt("/matters/12");
+    const user = userEvent.setup();
+
+    await user.click(await screen.findByRole("button", { name: "Close matter" }));
+    const close = await screen.findByRole("dialog", { name: "Close Editable advice?" });
+    expect(within(close).getByLabelText("Closed Status")).toHaveValue("s-closed");
+    expect(within(close).getByText(/M-13 Local proceeding/)).toBeInTheDocument();
+    expect(within(close).getByText("Restricted Matter")).toBeInTheDocument();
+    expect(within(close).queryByLabelText(/Resolution/i)).not.toBeInTheDocument();
+    expect(within(close).queryByLabelText(/note/i)).not.toBeInTheDocument();
+    await user.click(within(close).getByRole("button", { name: "Close matter" }));
+    await waitFor(() => expect(patches).toEqual([{ statusId: "s-closed" }]));
+    expect(screen.getByRole("textbox", { name: "Title" })).toBeEnabled();
+    expect(screen.getByRole("button", { name: "Archive" })).toBeEnabled();
+
+    await user.click(await screen.findByRole("button", { name: "Reopen matter" }));
+    const reopen = await screen.findByRole("dialog", { name: "Reopen Editable advice?" });
+    await user.selectOptions(within(reopen).getByLabelText("Open Status"), "s-review");
+    await user.click(within(reopen).getByRole("button", { name: "Reopen matter" }));
+    await waitFor(() =>
+      expect(patches).toEqual([{ statusId: "s-closed" }, { statusId: "s-review" }]),
+    );
+  });
+
+  it("shows lifecycle read and transition refusals without closing the retry path", async () => {
+    let lifecycleReads = 0;
+    stubApi({
+      signedIn: ADMIN,
+      extra: (call) => {
+        if (call.url.pathname === "/api/v1/matters/12" && call.method === "GET")
+          return json(200, record(row()));
+        if (call.url.pathname === "/api/v1/matters/options" && call.method === "GET")
+          return options();
+        if (call.url.pathname === "/api/v1/matters/12/lifecycle" && call.method === "GET") {
+          lifecycleReads += 1;
+          if (lifecycleReads === 1) return problem(409, "Restore this Matter first.");
+          return json(200, {
+            action: "close",
+            targetCategory: "closed",
+            statuses: [{ id: "s-closed", displayName: "Closed" }],
+            openChildren: [],
+          });
+        }
+        if (call.url.pathname === "/api/v1/matters/12" && call.method === "PATCH") {
+          return problem(400, "That closed Status is no longer live.");
+        }
+        return undefined;
+      },
+    });
+    renderAt("/matters/12");
+    const user = userEvent.setup();
+
+    const trigger = await screen.findByRole("button", { name: "Close matter" });
+    await user.click(trigger);
+    expect(await screen.findByText("Restore this Matter first.")).toBeInTheDocument();
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+
+    await user.click(trigger);
+    const dialog = await screen.findByRole("dialog", { name: "Close Editable advice?" });
+    await user.click(within(dialog).getByRole("button", { name: "Close matter" }));
+    expect(await within(dialog).findByText("That closed Status is no longer live.")).toBeVisible();
+    expect(dialog).toBeInTheDocument();
+    expect(within(dialog).getByRole("button", { name: "Close matter" })).toBeEnabled();
   });
 
   it("keeps an archived Matter Manager selectable and lets the record unassign them", async () => {

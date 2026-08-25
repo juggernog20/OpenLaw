@@ -855,22 +855,23 @@ describe("who may set and clear the flag (M10/2, DD-014)", () => {
     expect((await getContract(outsiderCookies, contract.number)).statusCode).toBe(200);
   });
 
-  it("keeps every other viewer refused where the contract routes already refuse them", async () => {
+  it("refuses a reached Contributor plainly and omits the record from an unreached one", async () => {
     const contract = await contractWithEveryone("Confi actors: below the Member+ floor");
     await putOnTeam(contract.number, idOf(CONTRIBUTOR), "contributor");
 
-    // The per-field PATCH is Member+ (CTR-021), so a Contributor is
-    // refused at the guard whether they are on the record or not — the
-    // flag widens nobody's reach and narrows nobody's floor.
-    for (const cookies of [contributorCookies, strangerCookies]) {
-      const refused = await patchContract(cookies, contract.number, { isConfidential: true });
-      expect(refused.statusCode, refused.body).toBe(403);
-      expect(refused.headers["content-type"]).toContain("application/problem+json");
-      // The route's own floor, not the flag's actor set: the words are
-      // the guard's, and they name no record.
-      expect(refused.json()).toMatchObject({ status: 403 });
-      expect(refused.body).not.toContain("below the Member+ floor");
-    }
+    const reached = await patchContract(contributorCookies, contract.number, {
+      isConfidential: true,
+    });
+    expect(reached.statusCode, reached.body).toBe(403);
+    expect(reached.headers["content-type"]).toContain("application/problem+json");
+
+    const unreached = await patchContract(strangerCookies, contract.number, {
+      isConfidential: true,
+    });
+    const unknown = await patchContract(strangerCookies, 999_999, { isConfidential: true });
+    expect(unreached.statusCode, unreached.body).toBe(404);
+    const withoutInstance = (body: Record<string, unknown>) => ({ ...body, instance: undefined });
+    expect(withoutInstance(unreached.json())).toEqual(withoutInstance(unknown.json()));
   });
 
   it("refuses the flag on an archived contract, like every other edit", async () => {

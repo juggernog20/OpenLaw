@@ -168,6 +168,18 @@ export interface TaskAssignedEvent {
   assigneeId: string;
 }
 
+/** What one Matter Task assignment tells its assignee (MTR-005). */
+export interface MatterTaskAssignedEvent {
+  matterId: string;
+  matterNumber: number;
+  matterTitle: string;
+  actorId: string;
+  actorName: string;
+  taskId: string;
+  taskTitle: string;
+  assigneeId: string;
+}
+
 /** What every mention carries, whichever record it happened on. */
 interface MentionedOnAnyRecord {
   actorId: string;
@@ -358,6 +370,18 @@ export interface KeyDateReminderEvent extends DateReminderEvent {
   label: string;
 }
 
+/** One approaching Key date on a Matter (MTR-004). */
+export interface MatterKeyDateReminderEvent {
+  matterId: string;
+  matterNumber: number;
+  matterTitle: string;
+  reminderDate: string;
+  offsetDays: number;
+  userIds: readonly string[];
+  keyDateId: string;
+  label: string;
+}
+
 /**
  * What every event on a Request carries (NOT-002 group 5).
  *
@@ -485,6 +509,9 @@ export interface Notifier {
    */
   taskAssigned(tx: NotifyingTransaction, event: TaskAssignedEvent): Promise<void>;
 
+  /** A Matter Task was handed to an existing person on that Matter. */
+  matterTaskAssigned(tx: NotifyingTransaction, event: MatterTaskAssignedEvent): Promise<void>;
+
   /**
    * A comment has addressed somebody by name (CMT-007) — group 1, bell
    * on and email immediate (NOT-002).
@@ -579,6 +606,12 @@ export interface Notifier {
    * every round after the first.
    */
   keyDateApproaching(tx: NotifyingTransaction, event: KeyDateReminderEvent): Promise<number>;
+
+  /** A reached, open Matter's named Key date is approaching (MTR-004). */
+  matterKeyDateApproaching(
+    tx: NotifyingTransaction,
+    event: MatterKeyDateReminderEvent,
+  ): Promise<number>;
 
   /**
    * A record's notice deadline is approaching (CTR-006) — group 3, bell
@@ -1358,6 +1391,31 @@ export function createNotifier(deps: NotifierDeps): Notifier {
       );
     },
 
+    async matterTaskAssigned(
+      tx: NotifyingTransaction,
+      event: MatterTaskAssignedEvent,
+    ): Promise<void> {
+      await fanOut(
+        tx,
+        "matter.task_assigned",
+        { type: MATTER_ENTITY, id: event.matterId },
+        event.actorId,
+        [
+          {
+            userId: event.assigneeId,
+            payload: {
+              matterNumber: event.matterNumber,
+              matterTitle: event.matterTitle,
+              actorId: event.actorId,
+              actorName: event.actorName,
+              taskId: event.taskId,
+              taskTitle: event.taskTitle,
+            },
+          },
+        ],
+      );
+    },
+
     async commentMentioned(tx: NotifyingTransaction, event: CommentMentionedEvent): Promise<void> {
       // Read from the table, in the transaction that wrote it. Who a
       // comment addresses is a list somebody chose from a typeahead
@@ -1468,6 +1526,32 @@ export function createNotifier(deps: NotifierDeps): Notifier {
         keyDateId: event.keyDateId,
         label: event.label,
       });
+    },
+
+    matterKeyDateApproaching(
+      tx: NotifyingTransaction,
+      event: MatterKeyDateReminderEvent,
+    ): Promise<number> {
+      return fanOut(
+        tx,
+        "date.key_date_approaching",
+        { type: MATTER_ENTITY, id: event.matterId },
+        null,
+        event.userIds.map((userId) => ({
+          userId,
+          payload: {
+            keyDateId: event.keyDateId,
+            label: event.label,
+            matterNumber: event.matterNumber,
+            matterTitle: event.matterTitle,
+            actorId: null,
+            actorName: null,
+            reminderDate: event.reminderDate,
+            offsetDays: event.offsetDays,
+          },
+        })),
+        { reminder: { date: event.reminderDate, offsetDays: event.offsetDays } },
+      );
     },
 
     noticeDeadlineApproaching(tx: NotifyingTransaction, event: DateReminderEvent): Promise<number> {

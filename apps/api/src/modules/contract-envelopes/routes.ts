@@ -151,7 +151,7 @@ import { applyEnvelopeStatus } from "../../lib/signing/transitions.js";
 const requireEnvelopeReader = requireRole("administrator", "legal_team_member", "contributor");
 
 /** Sending is Member+, the same audience approvals use (CTR-013). A
- * Contributor reads; their write grid arrives with M23 (DD-015). */
+ * Contributor reads but DD-015 gives them no envelope write. */
 const requireMember = requireRole("administrator", "legal_team_member");
 
 /** The sentence every write on a frozen record answers with (CTR-021):

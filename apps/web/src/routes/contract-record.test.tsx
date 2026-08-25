@@ -105,6 +105,7 @@ const PAYMENT_TERMS = {
   displayName: "Payment terms",
   description: "How long the other side has to pay.",
   fieldType: "text",
+  fieldTag: "business",
   options: null,
   displayOrder: 1,
   isRequired: false,
@@ -115,6 +116,7 @@ const OUR_POSITION = {
   displayName: "Our position",
   description: null,
   fieldType: "single_select",
+  fieldTag: "legal",
   options: ["Customer", "Provider"],
   displayOrder: 1,
   isRequired: true,
@@ -139,6 +141,7 @@ const EVERY_FIELD = [
   displayName: displayName as string,
   description: null,
   fieldType: fieldType as string,
+  fieldTag: "legal" as const,
   options: options as string[] | null,
   displayOrder: index + 1,
   isRequired: false,
@@ -1751,6 +1754,119 @@ describe("the /contracts/:number record page", () => {
   });
 });
 
+describe("the contract record's broader Matter context (M23/6)", () => {
+  const linkedMatter = {
+    restricted: false as const,
+    number: 12,
+    title: "Regulatory programme",
+    statusName: "Open",
+    statusCategory: "open" as const,
+    isConfidential: false,
+    archived: false,
+  };
+
+  it("shows standalone and restricted states without leaking a Matter reference", async () => {
+    Object.defineProperty(window, "innerWidth", { configurable: true, value: 360 });
+    const api = recordApi(contractRow());
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    const first = renderAt("/contracts/42");
+
+    expect(
+      await screen.findByText("Standalone Contract — no broader Matter is linked."),
+    ).toBeVisible();
+    expect(screen.getByRole("button", { name: "Link to Matter" })).toBeVisible();
+
+    first.view.unmount();
+    stubApi({
+      signedIn: CONTRIBUTOR,
+      extra: (call) => {
+        if (call.url.pathname === "/api/v1/contracts/42/matter" && call.method === "GET") {
+          return json(200, { matter: { restricted: true } });
+        }
+        return api.handler(call);
+      },
+    });
+    renderAt("/contracts/42");
+
+    expect(await screen.findByText("Restricted matter")).toBeVisible();
+    expect(screen.queryByText(/M-12|Regulatory programme/)).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Link to Matter" })).not.toBeInTheDocument();
+  });
+
+  it("follows the linked Matter and unlinks back to standalone", async () => {
+    let matter: Record<string, unknown> | null = linkedMatter;
+    let unlinks = 0;
+    const api = recordApi(contractRow());
+    stubApi({
+      signedIn: MEMBER,
+      extra: (call) => {
+        if (call.url.pathname === "/api/v1/contracts/42/matter" && call.method === "GET") {
+          return json(200, { matter });
+        }
+        if (call.url.pathname === "/api/v1/contracts/42/matter" && call.method === "DELETE") {
+          matter = null;
+          unlinks += 1;
+          return json(200, { matter: null });
+        }
+        return api.handler(call);
+      },
+    });
+    renderAt("/contracts/42");
+    const user = userEvent.setup();
+
+    expect(await screen.findByRole("link", { name: "M-12 Regulatory programme" })).toHaveAttribute(
+      "href",
+      "/matters/12",
+    );
+    await user.click(screen.getByRole("button", { name: "Unlink" }));
+    await waitFor(() => expect(unlinks).toBe(1));
+    expect(
+      await screen.findByText("Standalone Contract — no broader Matter is linked."),
+    ).toBeVisible();
+  });
+
+  it("links from the record and makes a one-time, non-mutating mismatch suggestion", async () => {
+    const writes: string[] = [];
+    const confidentialMatter = { ...linkedMatter, isConfidential: true };
+    const api = recordApi(contractRow({ isConfidential: false }));
+    stubApi({
+      signedIn: MEMBER,
+      extra: (call) => {
+        if (call.url.pathname === "/api/v1/contracts/42/matter" && call.method === "GET") {
+          return json(200, { matter: null });
+        }
+        if (
+          call.url.pathname === "/api/v1/contracts/42/matter-candidates" &&
+          call.method === "GET"
+        ) {
+          return json(200, { candidates: [confidentialMatter] });
+        }
+        if (call.url.pathname === "/api/v1/contracts/42/matter" && call.method === "POST") {
+          writes.push("link");
+          return json(200, { matter: confidentialMatter, confidentialityMismatch: true });
+        }
+        if (call.method === "PATCH") writes.push("patch");
+        return api.handler(call);
+      },
+    });
+    renderAt("/contracts/42");
+    const user = userEvent.setup();
+
+    await user.click(await screen.findByRole("button", { name: "Link to Matter" }));
+    await user.type(screen.getByLabelText("Search by number or title"), "Regulatory");
+    await user.click(await screen.findByRole("button", { name: /Regulatory programme/ }));
+    await user.click(screen.getByRole("button", { name: "Link" }));
+
+    expect(await screen.findByRole("heading", { name: "Confidentiality differs" })).toBeVisible();
+    expect(
+      screen.getByText("This suggestion changes neither record.", { exact: false }),
+    ).toBeVisible();
+    await user.click(screen.getByRole("button", { name: "Leave them as they are" }));
+    expect(await screen.findByRole("link", { name: "M-12 Regulatory programme" })).toBeVisible();
+    expect(writes).toEqual(["link"]);
+  });
+});
+
 /**
  * The six-stage pipeline on the record (M14/2, CTR-001, grill-plan
  * D.8): the fixed backbone in canonical order, with the marker on the
@@ -2029,7 +2145,7 @@ describe("a Contributor on the contract record (M9/1)", () => {
     return { ...api, handler, pickerReads };
   }
 
-  it("renders the record read-only, with no edit affordance and no picker read", async () => {
+  it("lets a Contributor edit business-owned details while legal-managed context stays read-only", async () => {
     const api = contributorApi(
       contractRow(),
       [person("u1", "creator"), person("u3", "contributor")],
@@ -2046,11 +2162,10 @@ describe("a Contributor on the contract record (M9/1)", () => {
     expect(screen.getByText("Helix Labs GmbH")).toBeInTheDocument();
     const team = await openTeam(user);
     expect(within(team).getByText("Casey Contributor")).toBeInTheDocument();
-    expect(screen.getByText(/This record is read-only/)).toBeInTheDocument();
+    expect(screen.getByText(/Legal-managed details are read-only/)).toBeInTheDocument();
 
-    // Every control is inert, exactly as an archived record renders.
-    // The status is not among them: it has no control on this page for
-    // this viewer at all (DES-053).
+    // Legal-managed context is inert, while DD-015's value and
+    // effective-date inputs remain live.
     for (const label of [
       "Title",
       "Contract type",
@@ -2058,18 +2173,25 @@ describe("a Contributor on the contract record (M9/1)", () => {
       "Our entity",
       "Priority",
       "Risk",
-      "Amount",
-      "Currency",
-      "Cadence",
       "Description",
     ]) {
       expect(screen.getByLabelText(label)).toBeDisabled();
     }
+    for (const label of ["Amount", "Currency", "Cadence", "Effective date"]) {
+      expect(screen.getByLabelText(label)).toBeEnabled();
+    }
+    await user.type(screen.getByLabelText("Amount"), "1200");
+    await user.selectOptions(screen.getByLabelText("Currency"), "USD");
+    await user.selectOptions(screen.getByLabelText("Cadence"), "annually");
+    await user.keyboard("{Enter}");
     expect(screen.getByRole("combobox", { name: "Counterparties" })).toBeDisabled();
-    // The type's own fields are a tab away (DES-032) and read the same
-    // way there.
-    await userEvent.setup().click(screen.getByRole("link", { name: "Fields" }));
-    expect(await screen.findByLabelText("Payment terms")).toBeDisabled();
+    // The API projection supplies only the business-tagged attachment;
+    // that Field remains editable behind its own tab.
+    await user.click(screen.getByRole("link", { name: "Fields" }));
+    const terms = await screen.findByLabelText("Payment terms");
+    expect(terms).toBeEnabled();
+    await user.type(terms, "Net 45");
+    await user.tab();
 
     // Archive, restore, and rename are record-level mutations a
     // Contributor never gets, so the menu drops those rows rather than
@@ -2089,9 +2211,12 @@ describe("a Contributor on the contract record (M9/1)", () => {
       within(team).queryByRole("button", { name: /Take Casey Contributor off the team/ }),
     ).not.toBeInTheDocument();
 
-    // No inline commit fires, and the Member+ picker seams are never
-    // asked for.
-    expect(api.patches).toEqual([]);
+    await waitFor(() =>
+      expect(api.patches).toEqual([
+        { value: { amount: 120_000, currency: "USD", cadence: "annually" } },
+        { customFields: { payment_terms: "Net 45" } },
+      ]),
+    );
     expect(api.posts).toEqual([]);
     expect(api.pickerReads).toEqual([]);
   });
@@ -4051,6 +4176,7 @@ describe("the contract record's history applet (M9/6)", () => {
     const activity = activityApi([
       [
         entry("a3", "contract.updated", {
+          actorRole: "contributor",
           changed: {
             value: { from: null, to: { amount: 12_000_000, currency: "USD", cadence: "annually" } },
           },
@@ -4081,7 +4207,7 @@ describe("the contract record's history applet (M9/6)", () => {
     const [value, edit, status] = within(feed).getAllByRole("listitem");
     // The money reads through the record's own currency helper, cadence
     // suffix and all (CTR-010, DES-014).
-    expect(value).toHaveTextContent("Nadia Counsel changed Value");
+    expect(value).toHaveTextContent("Nadia Counsel (Contributor) changed Value");
     expect(value).toHaveTextContent("Not set → $120,000.00 /year");
     // Several fields are counted in the sentence and named on their own
     // lines, each old→new pair rendered the way the record renders it.
@@ -5449,8 +5575,11 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4, M11/5)",
     expect(within(section).getAllByText("Primary")).toHaveLength(1);
   });
 
-  it("offers a Contributor the list and the download, and no control that writes", async () => {
-    const api = documentsApi([CHAIN], {}, [person("u1", "creator"), person("u3", "contributor")]);
+  it("offers a Contributor only supporting upload actions", async () => {
+    const api = documentsApi([DRAFT, THEIRS], {}, [
+      person("u1", "creator"),
+      person("u3", "contributor"),
+    ]);
     stubApi({
       signedIn: CONTRIBUTOR,
       extra: (call) =>
@@ -5462,17 +5591,22 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4, M11/5)",
     const user = userEvent.setup();
 
     const section = await documentsSection();
-    // They read and download what they were added to work on (DD-015),
-    // history included.
-    await user.click(
-      within(section).getByRole("button", { name: /Show the 2 earlier versions of/ }),
-    );
-    expect(within(section).getByRole("button", { name: "round_1.docx" })).toBeInTheDocument();
-    // Every control that writes is absent rather than disabled — the
-    // convention every other card on this page follows. Their write
-    // grid arrives in M23.
-    expect(within(section).queryByRole("button", { name: "Upload" })).not.toBeInTheDocument();
-    expect(within(section).queryByRole("button", { name: /^Actions for/ })).not.toBeInTheDocument();
+    await user.click(within(section).getByRole("button", { name: "Upload" }));
+    const upload = await screen.findByRole("dialog");
+    expect(within(upload).queryByRole("button", { name: "File Choose folder" })).toBeNull();
+    await user.click(within(upload).getByRole("button", { name: "Cancel" }));
+    // The primary chain has no write at all. The reached supporting
+    // chain offers the one act DD-015 allows and no administration.
+    expect(
+      within(section).queryByRole("button", {
+        name: "Actions for Orion_MSA_2026_draft.docx",
+      }),
+    ).not.toBeInTheDocument();
+    expect(await menuVerbs(user, section, "Orion_MSA_2026_redline_orion.docx")).toEqual([
+      "Add version",
+    ]);
+    await user.keyboard("{Escape}");
+    expect(within(section).queryByRole("button", { name: "New folder" })).not.toBeInTheDocument();
     expect(within(section).queryByRole("combobox")).not.toBeInTheDocument();
     expect(within(section).queryByRole("switch")).not.toBeInTheDocument();
   });
@@ -7756,7 +7890,7 @@ describe("filing documents into folders (M13/3, DES-033)", () => {
     ).toEqual(["The contract itself", "Correspondence", "Correspondence / 2026"]);
   });
 
-  it("offers a Contributor the tree and no way to file anything", async () => {
+  it("offers a Contributor only Version append inside the tree", async () => {
     const api = filingApi(
       [document("doc-1", "signed.pdf", "f-1")],
       [folder("f-1", "Executed")],
@@ -7772,8 +7906,15 @@ describe("filing documents into folders (M13/3, DES-033)", () => {
     // for everyone on it (DD-015).
     await user.click(await within(section).findByRole("button", { name: "Expand Executed" }));
     expect(await within(section).findByText("signed.pdf")).toBeVisible();
-    // What they may not do is not drawn, rather than drawn and dead.
-    expect(within(section).queryByRole("button", { name: /^Actions for/ })).toBeNull();
+    // Appending a Version to this supporting chain is the only write.
+    // Filing and folder administration remain absent rather than dead.
+    await user.click(within(section).getByRole("button", { name: "Actions for signed.pdf" }));
+    const menu = await screen.findByRole("menu");
+    expect(
+      within(menu)
+        .getAllByRole("menuitem")
+        .map((item) => item.textContent),
+    ).toEqual(["Add version"]);
   });
 
   it("says a folder's documents are on their way while they load", async () => {

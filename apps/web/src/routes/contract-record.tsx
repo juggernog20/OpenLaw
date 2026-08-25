@@ -126,11 +126,10 @@
  * authority and a second rule would drift.
  *
  * The page has two audiences (CTR-021). Member+ get the record above. A
- * Contributor on the contract's team gets the same page read-only: the
- * DES-017 inline-commit surface with every input inert, exactly the way
- * an archived record already renders, and with no archive, no restore,
- * no team or counterparty control, and no picker reads behind them. The
- * DD-015 business/legal editable-field split is not built here. A
+ * Contributor on the contract's team gets the same core context, with
+ * value, the effective-date input, and the business-tagged Fields left
+ * editable while legal-managed details render inert. Archive, restore,
+ * team and counterparty controls, and picker reads remain absent. A
  * Contributor who is not on the contract never gets this far — the API
  * answers 404, as it does for a contract that does not exist. Business
  * Users are bounced home, and the API's 403 is the real refusal.
@@ -220,6 +219,7 @@ import { CreateContractDialog } from "../components/contracts/create-contract-di
 import { KeyDatesCard } from "../components/contracts/key-dates-card";
 import { RecordActionsMenu } from "../components/contracts/record-actions-menu";
 import { RelatedContractsCard } from "../components/contracts/related-contracts-card";
+import { LinkedMatterCard } from "../components/contracts/linked-matter-card";
 import type { ContractRelations } from "../lib/relations";
 import { TasksCard } from "../components/contracts/tasks-card";
 import { RenewalBanner } from "../components/contracts/renewal-banner";
@@ -274,6 +274,7 @@ export async function contractRecordLoader({ params }: LoaderFunctionArgs) {
     keyDates,
     tasks,
     relations,
+    linkedMatter,
     options,
     registry,
   ] = await Promise.all([
@@ -324,6 +325,7 @@ export async function contractRecordLoader({ params }: LoaderFunctionArgs) {
     api
       .GET("/api/v1/contracts/{number}/relations", { params: { path: { number } } })
       .catch(() => ({ data: undefined, error: undefined })),
+    api.GET("/api/v1/contracts/{number}/matter", { params: { path: { number } } }),
     canEdit ? api.GET("/api/v1/contracts/options") : undefined,
     // The registry's own Member+ list is the signing-entity picker's
     // source (CTR-011): it is ordered by legal name and already leaves
@@ -344,6 +346,7 @@ export async function contractRecordLoader({ params }: LoaderFunctionArgs) {
     !signing.data ||
     !keyDates.data ||
     !tasks.data ||
+    !linkedMatter.data ||
     (canEdit && !(options?.data && registry?.data))
   ) {
     throw new Error("The contract could not be read.");
@@ -400,6 +403,7 @@ export async function contractRecordLoader({ params }: LoaderFunctionArgs) {
      * children, and typed links. Optional — a read failure hides the
      * card rather than blocking the page. */
     relations: relations?.data ?? null,
+    linkedMatter: linkedMatter.data.matter,
   };
 }
 
@@ -561,12 +565,15 @@ export function ContractRecordPage() {
     approverGroups,
     entities,
     relations: loadedRelations,
+    linkedMatter: loadedMatter,
   } = useLoaderData<typeof contractRecordLoader>();
   const intl = useIntl();
   const navigate = useNavigate();
 
   /** The saved record — the server's truth after the last commit. */
   const [saved, setSaved] = useState<ContractRow>(contract);
+  /** MTR-007's one linked Matter, redrawn from the canonical Contract datum. */
+  const [linkedMatter, setLinkedMatter] = useState(loadedMatter);
 
   /** The fields the contract's type attaches, in attachment order. They
    * are state rather than loader data because a re-type replaces them,
@@ -864,13 +871,14 @@ export function ContractRecordPage() {
   });
 
   const archived = saved.archivedAt !== null;
-  /**
-   * True when every control on the page is inert. Two states reach it
-   * and they render the same way (CTR-021): an archived record, which
-   * is facts until it is restored, and a Contributor's record, which is
-   * facts because a Contributor reads. What differs is what the sub-bar
-   * offers and what the note above the cards says.
-   */
+  const contributor = user.role === "contributor";
+  /** DD-015's deliberately narrow built-ins stay writable for a
+   * Contributor on a live record; every legal-managed control keeps
+   * the standing Member+ floor. */
+  const businessFrozen = archived || (!canEdit && !contributor);
+  /** True when legal-managed controls are inert. An archived record
+   * freezes every Field; a Contributor's live record leaves only the
+   * explicit business-owned seams above writable (DD-015, CTR-021). */
   const frozen = archived || !canEdit;
   /**
    * Work waiting in the three sections that carry a count chip on the
@@ -1756,7 +1764,7 @@ export function ContractRecordPage() {
             <p className="rounded-card bg-status-neutral-bg px-3 py-2 text-md text-status-neutral-fg">
               <FormattedMessage
                 id="contracts.record.readOnlyNote"
-                defaultMessage="This record is read-only. Ask a Legal Team Member to make a change."
+                defaultMessage="Legal-managed details are read-only. You can edit the business Fields available to you."
               />
             </p>
           )}
@@ -2013,7 +2021,7 @@ export function ContractRecordPage() {
                     already made. */}
                   <ValueField
                     value={saved.value}
-                    frozen={frozen}
+                    frozen={businessFrozen}
                     status={fieldStatus.value ?? "idle"}
                     error={fieldError.value}
                     onStatus={(next, detail) => note("value", next, detail)}
@@ -2067,7 +2075,7 @@ export function ContractRecordPage() {
                       />
                     }
                     draft={termFields.effectiveDate}
-                    frozen={frozen}
+                    frozen={businessFrozen}
                     status={fieldStatus.effectiveDate ?? "idle"}
                     error={fieldError.effectiveDate}
                     onDraft={(next) =>
@@ -2291,6 +2299,13 @@ export function ContractRecordPage() {
                       holds nothing of its own: every mark on it is one
                       of the record's dates. */}
               <TermTimelineCard contract={saved} />
+              <LinkedMatterCard
+                contractNumber={saved.number}
+                contractIsConfidential={saved.isConfidential}
+                matter={linkedMatter}
+                editable={canEdit && !archived}
+                onMatter={setLinkedMatter}
+              />
               {/* The contract's relation surface (M17/2, CTR-015): the
                       parent chain, the children, and the typed links this
                       contract carries. Absent when the read failed — an
@@ -2320,6 +2335,7 @@ export function ContractRecordPage() {
               people={peopleReferences}
               entities={entityReferences}
               frozen={frozen}
+              businessEditable={!archived && contributor}
               status={fieldStatus}
               error={fieldError}
               onStatus={note}
@@ -2337,6 +2353,7 @@ export function ContractRecordPage() {
               folders={tree}
               nextCursor={paperCursor}
               frozen={frozen}
+              supportingUploads={contributor && !archived}
               // DOC-010's erasure is the Administrator's alone, and it
               // is the one control on this section a role decides.
               role={user.role}
@@ -3120,6 +3137,7 @@ function FieldsCard({
   people,
   entities,
   frozen,
+  businessEditable,
   status,
   error,
   onStatus,
@@ -3129,9 +3147,10 @@ function FieldsCard({
   values: CustomFieldValues;
   people: readonly FieldReference[];
   entities: readonly FieldReference[];
-  /** The record is frozen: it is archived, or this viewer reads it
-   * rather than edits it. Either way it renders as facts. */
+  /** Legal-tagged Fields keep the record's standing write floor. */
   frozen: boolean;
+  /** A live Contributor may edit only business-tagged Fields. */
+  businessEditable: boolean;
   status: Partial<Record<FieldKey, FieldStatus>>;
   error: Partial<Record<FieldKey, string | undefined>>;
   onStatus: (key: FieldKey, status: FieldStatus, detail?: string) => void;
@@ -3168,7 +3187,7 @@ function FieldsCard({
               value={values[field.slug]}
               people={people}
               entities={entities}
-              frozen={frozen}
+              frozen={frozen && !(businessEditable && field.fieldTag === "business")}
               status={status[`field:${field.slug}`] ?? "idle"}
               error={error[`field:${field.slug}`]}
               onStatus={(next, detail) => onStatus(`field:${field.slug}`, next, detail)}

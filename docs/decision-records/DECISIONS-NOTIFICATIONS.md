@@ -62,6 +62,8 @@ _None — queue cleared 2026-08-05 (NOT-001 through NOT-005)._
 
   **Nothing else collapses.** Two approval requests for one person on one record are still two rows — the partial index only covers rows that carry a reminder date (M18/6) — and a date that **moves** carries a different value and is a different identity, so it fires again.
 
+- **Addendum (2026-08-24, M23 close, [#496](https://github.com/juggernog20/OpenLaw/issues/496))** — **Matter events use the same engine and one continuous wall.** Matter assignment, Task assignment, Activity, comments, Documents, Status changes, and approaching Key dates all enter through the existing `Notifier`. Audience resolution starts with the Matter Manager and explicit team, then DD-014 reach and DD-016 tier narrow it. The same Matter predicate is re-applied on bell reads and sends, so a removed or archived reader gets no row, count, or title leak; Closing alone changes neither audience nor writability.
+
 ## NOT-002 — Event catalog: five groups, defaults by interruptiveness
 
 - **Status** — Accepted
@@ -209,6 +211,8 @@ _None — queue cleared 2026-08-05 (NOT-001 through NOT-005)._
 
   **An archived Request would end the reply promise on the record's thread, and nothing archives one.** The back-link read filters on `archived_at is null`, so an archived Request stops raising `request.replied` from the contract it converted into — and stops being excluded from the record's own group-2 event, so a Member+ Requester would start hearing the ambient item again instead of the reply. If two Requests ever named one contract the lowest R-### would win. Both arms are unreachable today: no route archives a Request, and the conversion writes one back-link per record. They are written down for the reason the watermark conflict arm is — the milestone that builds a Request archive surface inherits them, and an unreachable rule nobody wrote down is a rule that gets rediscovered as a bug.
 
+- **Addendum (2026-08-24, M23 close, [#496](https://github.com/juggernog20/OpenLaw/issues/496))** — **The Matter catalog arms are complete.** A new Matter Manager and a newly assigned Matter Task use Assigned to you; Matter Status, comment, supporting-Document, and Version events use Activity on your records; Matter Key dates use Dates approaching. Task due dates remain outside group 3. Actors are excluded as usual, assignment is independently reachable, and archived Matters are omitted; Closing raises its Status event but does not silence later record Activity.
+
 ## NOT-003 — Timing: direct events immediate; date reminders in a daily digest
 
 - **Status** — Accepted; **amended by NOT-008** (the daily briefing subsumes the date-only digest)
@@ -259,6 +263,8 @@ _None — queue cleared 2026-08-05 (NOT-001 through NOT-005)._
 - **Addendum (2026-08-18, M18/8, [#323](https://github.com/juggernog20/OpenLaw/issues/323))** — **A day with no round at all is a day of dates nobody hears about, and that bound is the price of equality matching.** The addendum above says an offset names one day and the comparison is equality. The consequence was left unwritten: the reminders owed on a given local date are only ever raised by a round that runs on that date. The `>= 08:00` gate covers an install whose worker was down at somebody's eight o'clock — they are served at nine, or at noon — and it covers nothing wider. A worker down from one midnight to the next skips that day's dates outright, and the next day's round asks about the next day's dates.
 
   It is recorded rather than closed. Widening the match to "on or before today, and not already fired" would heal the outage and would also fire every past offset the moment an install lengthens its list, which is precisely what M18/6 declined. The honest statement is that reminders are best-effort against a running install, while the deadline surfaces on the record (CTR-006, CTR-009) are always true — the record is the source, and the briefing is a prompt.
+
+- **Addendum (2026-08-24, M23 close, [#496](https://github.com/juggernog20/OpenLaw/issues/496))** — **Matter Key dates join the existing offset list unchanged.** The morning round unions them with Contract Key dates, expiries, and derived notice deadlines, using the same live `[7, 1, 0]` defaults and per-user calendar. Only open, non-archived Matters participate. No per-date schedule, owner, template date, Task-date arm, or new reminder setting was added.
 
 ## NOT-005 — Badge: unread count, 9+ cap, read-on-open
 

@@ -31,19 +31,10 @@ const REQUIRED_FIELD = {
   displayName: "Business unit",
   description: "Who owns the work.",
   fieldType: "text",
+  fieldTag: "business",
   options: null,
   displayOrder: 1,
   isRequired: true,
-} as const;
-const SPONSOR_FIELD = {
-  fieldId: "f-sponsor",
-  slug: "sponsor",
-  displayName: "Sponsor",
-  description: null,
-  fieldType: "user",
-  options: null,
-  displayOrder: 2,
-  isRequired: false,
 } as const;
 const TYPE = {
   id: "type-employment",
@@ -73,6 +64,7 @@ function matter(overrides: Partial<Record<string, unknown>> = {}) {
     archivedAt: null,
     createdAt: "2026-08-23T08:00:00.000Z",
     updatedAt: "2026-08-23T08:00:00.000Z",
+    nextDeadline: null,
     ...overrides,
   };
 }
@@ -164,6 +156,7 @@ describe("the Matters destination", () => {
     const calls: URL[] = [];
     const open = matter({
       manager: { id: MEMBER.id, displayName: MEMBER.displayName, image: null, archived: false },
+      nextDeadline: { date: "2026-08-23", label: "Response due" },
     });
     const closed = matter({
       id: "matter-8",
@@ -220,6 +213,7 @@ describe("the Matters destination", () => {
       "Title",
       "Type",
       "Status",
+      "Next deadline",
       "Priority",
       "Risk",
       "Matter Manager",
@@ -228,6 +222,12 @@ describe("the Matters destination", () => {
       expect(
         within(table).getByRole("columnheader", { name: new RegExp(`^${heading}$`) }),
       ).toBeInTheDocument();
+
+    expect(within(table).getByText("Response due")).toBeInTheDocument();
+    expect(within(table).getByRole("link", { name: /Response due/ })).toHaveAttribute(
+      "href",
+      "/matters/7/key-dates",
+    );
 
     const user = userEvent.setup();
     await user.selectOptions(screen.getByLabelText("Manager"), "me");
@@ -379,18 +379,15 @@ describe("the Matters destination", () => {
 });
 
 describe("the matter hero", () => {
-  it("renders the M-number, status, type, Unassigned manager, severity, opened date, description, and custom fields read-only for a Contributor", async () => {
+  it("leaves business inputs editable and omits legal Fields for a Contributor", async () => {
     stubApi({
       signedIn: CONTRIBUTOR,
       extra: (call) =>
         call.url.pathname === "/api/v1/matters/7"
           ? json(200, {
-              matter: matter({ customFields: { "business-unit": "People", sponsor: "u-sponsor" } }),
-              fields: [REQUIRED_FIELD, SPONSOR_FIELD],
-              customFieldRefs: {
-                users: [{ id: "u-sponsor", displayName: "Sam Sponsor", archived: false }],
-                entities: [],
-              },
+              matter: matter({ customFields: { "business-unit": "People" } }),
+              fields: [REQUIRED_FIELD],
+              customFieldRefs: { users: [], entities: [] },
               team: [
                 {
                   id: CONTRIBUTOR.id,
@@ -407,21 +404,12 @@ describe("the matter hero", () => {
     expect(
       await screen.findByRole("heading", { level: 1, name: "Employment advice" }),
     ).toBeInTheDocument();
-    for (const text of [
-      "M-7",
-      "Open",
-      "Employment",
-      "Unassigned",
-      "Medium",
-      "Not assessed",
-      "Advice on a transfer.",
-      "Business unit",
-      "People",
-      // A `user` field stores an id; the hero draws the person's name.
-      "Sponsor",
-      "Sam Sponsor",
-    ])
+    for (const text of ["M-7", "Open", "Employment", "Unassigned", "Medium", "Not assessed"]) {
       expect(screen.getAllByText(text).length).toBeGreaterThan(0);
-    expect(screen.queryByRole("textbox")).not.toBeInTheDocument();
+    }
+    expect(screen.getByLabelText("Description")).toBeEnabled();
+    expect(screen.getByLabelText(/Business unit/)).toBeEnabled();
+    expect(screen.queryByText("Sponsor")).not.toBeInTheDocument();
+    expect(screen.queryByText("Sam Sponsor")).not.toBeInTheDocument();
   });
 });

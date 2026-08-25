@@ -337,6 +337,10 @@ const FOLDER_SKELETON_ROWS = 3;
 interface RowContext {
   designations: boolean;
   frozen: boolean;
+  /** The narrow live-record write mode DD-015 grants a Contributor. */
+  supportingUploads: boolean;
+  /** Whether this section draws an Actions column at all. */
+  showActionColumn: boolean;
   busy: boolean;
   intl: IntlShape;
   reading: string | null;
@@ -379,6 +383,7 @@ export function DocumentsCard({
   folders,
   nextCursor,
   frozen,
+  supportingUploads,
   role,
   viewerId,
   ownerId,
@@ -400,9 +405,14 @@ export function DocumentsCard({
   /** Where the next page starts, or null at the end of the record's
    * paper (CTR-024). */
   nextCursor: string | null;
-  /** The record is frozen: it is archived, or this viewer reads it
-   * rather than edits it. Either way it renders as facts. */
+  /** General Document administration is frozen: the record is archived,
+   * or this viewer is below Member+. `supportingUploads` is the one
+   * deliberate live-record carve-out. */
   frozen: boolean;
+  /** Whether this viewer may create supporting paper and append to a
+   * supporting chain. This is true only for a Contributor on a live
+   * reached record; every administration control remains frozen. */
+  supportingUploads: boolean;
   /** The viewer's role. It answers one question the section cannot ask
    * of the rows: whether to draw DOC-010's erasure, which is the
    * Administrator's alone. */
@@ -1331,11 +1341,17 @@ export function DocumentsCard({
     // what the drop carried to `setBatch` and nothing else.
   }, [frozen]);
 
+  /** A Contributor gets one narrow Actions column on a live record;
+   * Member+ gets the full one. An archived record gets neither. */
+  const showActionColumn = !frozen || supportingUploads;
+
   /** Everything a document row draws from, built once and handed to
    * every listing — the record root's and each open folder's. */
   const rowContext: RowContext = {
     designations: record.entityType === "contract",
     frozen,
+    supportingUploads,
+    showActionColumn,
     busy,
     intl,
     reading,
@@ -1426,31 +1442,35 @@ export function DocumentsCard({
             {intl.formatNumber(liveCount)}
           </span>
         </div>
-        {!frozen && (
+        {showActionColumn && (
           <div className="flex shrink-0 items-center gap-2">
             <StatusNote status={status} detail={detail} />
-            {/* The archived view, where restoring one is offered — the
+            {!frozen && (
+              <>
+                {/* The archived view, where restoring one is offered — the
                 same control the contracts list and the entity registry
                 already carry, in the same words. */}
-            <Label htmlFor="documents-show-archived" className="text-sm font-normal text-muted">
-              <FormattedMessage id="documents.showArchived" defaultMessage="Show archived" />
-            </Label>
-            <Switch
-              id="documents-show-archived"
-              checked={showArchived}
-              disabled={busy}
-              onCheckedChange={(next) => void toggleArchived(next)}
-            />
-            {/* The keyboard twin of every organizing gesture the drop
+                <Label htmlFor="documents-show-archived" className="text-sm font-normal text-muted">
+                  <FormattedMessage id="documents.showArchived" defaultMessage="Show archived" />
+                </Label>
+                <Switch
+                  id="documents-show-archived"
+                  checked={showArchived}
+                  disabled={busy}
+                  onCheckedChange={(next) => void toggleArchived(next)}
+                />
+                {/* The keyboard twin of every organizing gesture the drop
                 will add in M13/4 (DES-033): a folder is made from a
                 control, never only by dropping one. */}
-            <Button
-              variant="secondary"
-              onClick={() => setFolderDialog({ mode: "create", parent: null })}
-            >
-              <FolderPlus size={16} aria-hidden="true" />
-              <FormattedMessage id="documents.newFolder" defaultMessage="New folder" />
-            </Button>
+                <Button
+                  variant="secondary"
+                  onClick={() => setFolderDialog({ mode: "create", parent: null })}
+                >
+                  <FolderPlus size={16} aria-hidden="true" />
+                  <FormattedMessage id="documents.newFolder" defaultMessage="New folder" />
+                </Button>
+              </>
+            )}
             <Button variant="secondary" onClick={() => setComposer({ document: undefined })}>
               <Upload size={16} aria-hidden="true" />
               <FormattedMessage id="documents.upload" defaultMessage="Upload" />
@@ -1496,7 +1516,7 @@ export function DocumentsCard({
                     />
                   </span>
                 </th>
-                {!frozen && (
+                {showActionColumn && (
                   <th scope="col" className="w-10 px-2 py-2 text-end font-medium">
                     <span className="sr-only">
                       <FormattedMessage id="documents.column.actions" defaultMessage="Actions" />
@@ -1568,6 +1588,7 @@ export function DocumentsCard({
           record={record}
           document={composer.document}
           seedKind={composer.kind}
+          supportingOnly={supportingUploads && frozen}
           onClose={() => setComposer(null)}
           onBatch={(files) => {
             // More than one file is a batch, wherever it came from
@@ -1874,27 +1895,33 @@ function DocumentRows({
               <VersionCell version={chain.current} intl={rows.intl} />
               <ModifiedCell version={chain.current} />
               <UploaderCell version={chain.current} intl={rows.intl} />
-              {!rows.frozen && (
+              {rows.showActionColumn && (
                 <td className="px-2 py-2.5">
                   <span className="flex items-center justify-end gap-1">
-                    <DocumentActions
-                      document={document}
-                      version={chain.current}
-                      designations={rows.designations}
-                      busy={rows.busy}
-                      canErase={rows.canErase}
-                      canFlag={rows.canFlag(document)}
-                      intl={rows.intl}
-                      onMakePrimary={() => rows.onMakePrimary(document)}
-                      onAddVersion={() => rows.onAddVersion(document)}
-                      onEditDetails={() => rows.onEditDetails(document)}
-                      onMoveToFolder={() => rows.onMoveToFolder(document)}
-                      onSetConfidential={(next) => rows.onSetConfidential(document, next)}
-                      onArchive={() => rows.onArchive(document, true)}
-                      onRestore={() => rows.onArchive(document, false)}
-                      onDelete={() => rows.onDelete(document)}
-                      onToggleExecuted={() => rows.onPin(document, chain.current)}
-                    />
+                    {(!rows.frozen ||
+                      (rows.supportingUploads &&
+                        document.archivedAt === null &&
+                        (!rows.designations || !document.isPrimary))) && (
+                      <DocumentActions
+                        document={document}
+                        version={chain.current}
+                        designations={rows.designations}
+                        supportingOnly={rows.frozen}
+                        busy={rows.busy}
+                        canErase={rows.canErase}
+                        canFlag={rows.canFlag(document)}
+                        intl={rows.intl}
+                        onMakePrimary={() => rows.onMakePrimary(document)}
+                        onAddVersion={() => rows.onAddVersion(document)}
+                        onEditDetails={() => rows.onEditDetails(document)}
+                        onMoveToFolder={() => rows.onMoveToFolder(document)}
+                        onSetConfidential={(next) => rows.onSetConfidential(document, next)}
+                        onArchive={() => rows.onArchive(document, true)}
+                        onRestore={() => rows.onArchive(document, false)}
+                        onDelete={() => rows.onDelete(document)}
+                        onToggleExecuted={() => rows.onPin(document, chain.current)}
+                      />
+                    )}
                   </span>
                 </td>
               )}
@@ -1942,16 +1969,15 @@ function DocumentRows({
                   <VersionCell version={version} intl={rows.intl} />
                   <ModifiedCell version={version} />
                   <UploaderCell version={version} intl={rows.intl} />
-                  {!rows.frozen && (
+                  {rows.showActionColumn && (
                     <td className="px-2 py-2.5">
                       {/* A superseded round takes the pin as
-                          readily as the current one: a contract
-                          signed in round two and amended in round
-                          three has its signed copy behind its
-                          head. An archived document takes none,
-                          for the reason its own row gives. */}
+                          readily as the current one for Member+.
+                          Supporting upload permission adds a new round
+                          from the document row and never administers an
+                          existing round. */}
                       <span className="flex items-center justify-end gap-1">
-                        {rows.designations && document.archivedAt === null && (
+                        {!rows.frozen && rows.designations && document.archivedAt === null && (
                           <VersionPinMenu
                             document={document}
                             version={version}
@@ -2138,16 +2164,18 @@ function FolderRows({
                 <td className="px-4 py-2.5" />
                 <td className="px-4 py-2.5" />
                 <td className="px-4 py-2.5" />
-                {!rows.frozen && (
+                {rows.showActionColumn && (
                   <td className="px-2 py-2.5">
-                    <span className="flex items-center justify-end gap-1">
-                      <FolderActions
-                        folder={folder}
-                        busy={rows.busy}
-                        intl={rows.intl}
-                        onDialog={onDialog}
-                      />
-                    </span>
+                    {!rows.frozen && (
+                      <span className="flex items-center justify-end gap-1">
+                        <FolderActions
+                          folder={folder}
+                          busy={rows.busy}
+                          intl={rows.intl}
+                          onDialog={onDialog}
+                        />
+                      </span>
+                    )}
                   </td>
                 )}
               </tr>
@@ -2930,6 +2958,7 @@ function DocumentActions({
   document,
   version,
   designations,
+  supportingOnly,
   busy,
   canErase,
   canFlag,
@@ -2951,6 +2980,9 @@ function DocumentActions({
    * beside. */
   version: DocumentVersion;
   designations: boolean;
+  /** Draw only DD-015's append action; every designation and
+   * administration act remains absent. */
+  supportingOnly: boolean;
   busy: boolean;
   canErase: boolean;
   /** Whether this viewer is one of DD-014's three actors for this
@@ -2985,80 +3017,89 @@ function DocumentActions({
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
-        {!archived && (
+        {supportingOnly ? (
+          <DropdownMenuItem onSelect={onAddVersion}>
+            <FilePlus2 size={16} aria-hidden="true" />
+            <FormattedMessage {...ACTION_LABEL.addVersion} />
+          </DropdownMenuItem>
+        ) : (
           <>
-            {/* Absent on the row that already holds the designation —
+            {!archived && (
+              <>
+                {/* Absent on the row that already holds the designation —
                 the Primary mark beside the name is what says why. There
                 is no clear: a record with paper on it has an
                 instrument, so the designation moves or it stays. */}
-            {designations && !document.isPrimary && (
-              <DropdownMenuItem onSelect={onMakePrimary}>
-                <Star size={16} aria-hidden="true" />
-                <FormattedMessage {...ACTION_LABEL.makePrimary} />
-              </DropdownMenuItem>
-            )}
-            {/* The other of CTR-014's two designations: which version
+                {designations && !document.isPrimary && (
+                  <DropdownMenuItem onSelect={onMakePrimary}>
+                    <Star size={16} aria-hidden="true" />
+                    <FormattedMessage {...ACTION_LABEL.makePrimary} />
+                  </DropdownMenuItem>
+                )}
+                {/* The other of CTR-014's two designations: which version
                 is the signed copy, as opposed to which document is the
                 instrument. A distinct verb from Make primary, so the
                 two never read as one choice. */}
-            {designations && (
-              <DropdownMenuItem onSelect={onToggleExecuted}>
-                <Pin size={16} aria-hidden="true" />
-                <FormattedMessage
-                  {...(version.isExecuted
-                    ? ACTION_LABEL.unmarkExecuted
-                    : ACTION_LABEL.markExecuted)}
-                />
-              </DropdownMenuItem>
-            )}
-            <DropdownMenuItem onSelect={onAddVersion}>
-              <FilePlus2 size={16} aria-hidden="true" />
-              <FormattedMessage {...ACTION_LABEL.addVersion} />
-            </DropdownMenuItem>
-            <DropdownMenuItem onSelect={onEditDetails}>
-              <Pencil size={16} aria-hidden="true" />
-              <FormattedMessage {...ACTION_LABEL.editDetails} />
-            </DropdownMenuItem>
-            {/* Filing, and the keyboard twin of the drop M13/4 will add
+                {designations && (
+                  <DropdownMenuItem onSelect={onToggleExecuted}>
+                    <Pin size={16} aria-hidden="true" />
+                    <FormattedMessage
+                      {...(version.isExecuted
+                        ? ACTION_LABEL.unmarkExecuted
+                        : ACTION_LABEL.markExecuted)}
+                    />
+                  </DropdownMenuItem>
+                )}
+                <DropdownMenuItem onSelect={onAddVersion}>
+                  <FilePlus2 size={16} aria-hidden="true" />
+                  <FormattedMessage {...ACTION_LABEL.addVersion} />
+                </DropdownMenuItem>
+                <DropdownMenuItem onSelect={onEditDetails}>
+                  <Pencil size={16} aria-hidden="true" />
+                  <FormattedMessage {...ACTION_LABEL.editDetails} />
+                </DropdownMenuItem>
+                {/* Filing, and the keyboard twin of the drop M13/4 will add
                 (DES-033): a document is filed from a control, never only
                 by dragging it. Offered on every document, because moving
                 one back out to the record root is the same act. */}
-            <DropdownMenuItem onSelect={onMoveToFolder}>
-              <FolderInput size={16} aria-hidden="true" />
-              <FormattedMessage {...ACTION_LABEL.moveToFolder} />
-            </DropdownMenuItem>
-            {/* DD-014's flag, one item that says which way it goes
+                <DropdownMenuItem onSelect={onMoveToFolder}>
+                  <FolderInput size={16} aria-hidden="true" />
+                  <FormattedMessage {...ACTION_LABEL.moveToFolder} />
+                </DropdownMenuItem>
+                {/* DD-014's flag, one item that says which way it goes
                 (CTR-022). One glyph for confidentiality everywhere, as
                 DES-009 asks: the words are what tell the set from the
                 clear. It is drawn for the three actors and for nobody
                 else — absent, not disabled, as every other item here. */}
-            {canFlag && (
-              <DropdownMenuItem onSelect={() => onSetConfidential(!document.isConfidential)}>
-                <Lock size={16} aria-hidden="true" />
-                <FormattedMessage
-                  {...(document.isConfidential
-                    ? ACTION_LABEL.clearConfidential
-                    : ACTION_LABEL.markConfidential)}
-                />
+                {canFlag && (
+                  <DropdownMenuItem onSelect={() => onSetConfidential(!document.isConfidential)}>
+                    <Lock size={16} aria-hidden="true" />
+                    <FormattedMessage
+                      {...(document.isConfidential
+                        ? ACTION_LABEL.clearConfidential
+                        : ACTION_LABEL.markConfidential)}
+                    />
+                  </DropdownMenuItem>
+                )}
+                <DropdownMenuItem onSelect={onArchive}>
+                  <Archive size={16} aria-hidden="true" />
+                  <FormattedMessage {...ACTION_LABEL.archive} />
+                </DropdownMenuItem>
+              </>
+            )}
+            {archived && (
+              <DropdownMenuItem onSelect={onRestore}>
+                <ArchiveRestore size={16} aria-hidden="true" />
+                <FormattedMessage {...ACTION_LABEL.restore} />
               </DropdownMenuItem>
             )}
-            <DropdownMenuItem onSelect={onArchive}>
-              <Archive size={16} aria-hidden="true" />
-              <FormattedMessage {...ACTION_LABEL.archive} />
-            </DropdownMenuItem>
+            {canErase && (
+              <DropdownMenuItem onSelect={onDelete}>
+                <Trash2 size={16} aria-hidden="true" />
+                <FormattedMessage {...ACTION_LABEL.delete} />
+              </DropdownMenuItem>
+            )}
           </>
-        )}
-        {archived && (
-          <DropdownMenuItem onSelect={onRestore}>
-            <ArchiveRestore size={16} aria-hidden="true" />
-            <FormattedMessage {...ACTION_LABEL.restore} />
-          </DropdownMenuItem>
-        )}
-        {canErase && (
-          <DropdownMenuItem onSelect={onDelete}>
-            <Trash2 size={16} aria-hidden="true" />
-            <FormattedMessage {...ACTION_LABEL.delete} />
-          </DropdownMenuItem>
         )}
       </DropdownMenuContent>
     </DropdownMenu>
@@ -3358,6 +3399,7 @@ function UploadDialog({
   record,
   document,
   seedKind,
+  supportingOnly,
   onClose,
   onBatch,
   onSaved,
@@ -3370,6 +3412,9 @@ function UploadDialog({
    * on the draft the negotiation usually opens with. It is a seed and
    * not a lock — the person may pick another kind before uploading. */
   seedKind: HandSetDocumentVersionKind | undefined;
+  /** A Contributor may use this one-file supporting upload action, but
+   * not the folder picker that recreates and administers a tree. */
+  supportingOnly: boolean;
   onClose: () => void;
   /** Hand several chosen files to the batch confirmation (M13/4,
    * M13/5). This is the drop's pointer-free twin: the picker is where a
@@ -3490,7 +3535,7 @@ function UploadDialog({
                   survives a drop — one file or a hundred, a directory is
                   always a batch, because what was picked is a structure
                   and the composer's own fields are one round's. */}
-              {document === undefined && (
+              {document === undefined && !supportingOnly && (
                 <input
                   ref={directoryPicker}
                   id="document-directory"
@@ -3538,7 +3583,7 @@ function UploadDialog({
                   <FormattedMessage id="documents.composer.choose" defaultMessage="Choose file" />
                 )}
               </Button>
-              {document === undefined && (
+              {document === undefined && !supportingOnly && (
                 <Button
                   type="button"
                   variant="secondary"

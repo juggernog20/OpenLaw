@@ -213,6 +213,16 @@ export function stubApi(state: ApiState) {
     if (/^\/api\/v1\/contracts\/\d+\/key-dates$/.test(call.url.pathname) && call.method === "GET") {
       return json(200, { deadlines: [] });
     }
+    // Matter Key dates use the same empty-by-default record-loader
+    // fixture. Their own route suite supplies the lifecycle states.
+    if (/^\/api\/v1\/matters\/\d+\/key-dates$/.test(call.url.pathname) && call.method === "GET") {
+      return json(200, { deadlines: [] });
+    }
+    // Matter Tasks are likewise an empty-by-default record seam. The
+    // routed checklist suite supplies assigned and ordered rows.
+    if (/^\/api\/v1\/matters\/\d+\/tasks$/.test(call.url.pathname) && call.method === "GET") {
+      return json(200, { tasks: [], doneCount: 0, totalCount: 0 });
+    }
     // And every task on it (M17/1, CTR-017). Empty by default for the
     // roster's reason: a record with no tasks is the ordinary case, and
     // only the suites about the checklist supply one.
@@ -224,6 +234,20 @@ export function stubApi(state: ApiState) {
     // case, and only the suites about the relations surface supply one.
     if (/^\/api\/v1\/contracts\/\d+\/relations$/.test(call.url.pathname) && call.method === "GET") {
       return json(200, { parentChain: [], children: [], links: [] });
+    }
+    // MTR-015's sibling surface has one immediate parent and an
+    // undirected related list. Empty is the ordinary standalone Matter.
+    if (/^\/api\/v1\/matters\/\d+\/relations$/.test(call.url.pathname) && call.method === "GET") {
+      return json(200, { parent: null, children: [], related: [] });
+    }
+    // MTR-007's two views of one Contract.matter_id. Standalone and no
+    // linked Contracts are the ordinary defaults; route suites about
+    // the link supply their own rows through `extra`.
+    if (/^\/api\/v1\/contracts\/\d+\/matter$/.test(call.url.pathname) && call.method === "GET") {
+      return json(200, { matter: null });
+    }
+    if (/^\/api\/v1\/matters\/\d+\/contracts$/.test(call.url.pathname) && call.method === "GET") {
+      return json(200, { contracts: [] });
     }
     // And this person's saved list views (DD-019). None by default, which
     // is what a fresh install has — the built-in layout is code, not a
