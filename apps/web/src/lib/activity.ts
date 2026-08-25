@@ -214,10 +214,11 @@ type Payload = NarratableEntry["payload"];
 /** Who acted, as the sentence names them. A system-emitted entry has no
  * human actor, and saying so beats inventing one. */
 function actorName(intl: IntlShape, entry: NarratableEntry): string {
-  return (
+  const name =
     entry.actor?.displayName ??
-    intl.formatMessage({ id: "activity.actor.system", defaultMessage: "OpenLaw" })
-  );
+    intl.formatMessage({ id: "activity.actor.system", defaultMessage: "OpenLaw" });
+  const actorRole = text(entry.payload, "actorRole");
+  return actorRole ? `${name} (${roleLabel(intl, actorRole)})` : name;
 }
 
 /**
@@ -651,6 +652,38 @@ function relatedRecord(intl: IntlShape, payload: Payload, prefix: "parent" | "re
     : intl.formatMessage(
         {
           id: "activity.contract.relatedRecord",
+          defaultMessage: "{reference} ({title})",
+        },
+        { reference, title },
+      );
+}
+
+/** The Matter sibling of {@link relatedRecord}, using M-number vocabulary. */
+function relatedMatter(
+  intl: IntlShape,
+  payload: Payload,
+  prefix: "parent" | "related" | "matter",
+): string {
+  const number = payload[`${prefix}Number`];
+  const title = text(payload, `${prefix}Title`);
+  if (typeof number !== "number" || !Number.isInteger(number)) {
+    return (
+      title ??
+      intl.formatMessage({
+        id: "activity.matter.unnamedRecord",
+        defaultMessage: "another matter",
+      })
+    );
+  }
+  const reference = intl.formatMessage(
+    { id: "matters.reference", defaultMessage: "M-{number}" },
+    { number },
+  );
+  return title === null
+    ? reference
+    : intl.formatMessage(
+        {
+          id: "activity.matter.relatedRecord",
           defaultMessage: "{reference} ({title})",
         },
         { reference, title },
@@ -1341,6 +1374,38 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
       defaultMessage: "{actor} restored this matter",
     }),
   },
+  "matter.parent_set": {
+    icon: Network,
+    message: defineMessage({
+      id: "activity.matter.parentSet",
+      defaultMessage: "{actor} put this Matter under {parent}",
+    }),
+    values: (intl, payload) => ({ parent: relatedMatter(intl, payload, "parent") }),
+  },
+  "matter.parent_removed": {
+    icon: Network,
+    message: defineMessage({
+      id: "activity.matter.parentRemoved",
+      defaultMessage: "{actor} took this Matter out from under {parent}",
+    }),
+    values: (intl, payload) => ({ parent: relatedMatter(intl, payload, "parent") }),
+  },
+  "matter.relation_added": {
+    icon: Link2,
+    message: defineMessage({
+      id: "activity.matter.relationAdded",
+      defaultMessage: "{actor} related this Matter to {related}",
+    }),
+    values: (intl, payload) => ({ related: relatedMatter(intl, payload, "related") }),
+  },
+  "matter.relation_removed": {
+    icon: Link2,
+    message: defineMessage({
+      id: "activity.matter.relationRemoved",
+      defaultMessage: "{actor} removed the relation to {related}",
+    }),
+    values: (intl, payload) => ({ related: relatedMatter(intl, payload, "related") }),
+  },
   // The sign-off on the record (M14/3, CTR-012). A verb per act, so a
   // reader can tell an approval from a rejection without opening a
   // payload — and so an Administrator can filter the audit log on the
@@ -1466,6 +1531,22 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
     }),
     values: (intl, payload) => ({ parent: relatedRecord(intl, payload, "parent") }),
   },
+  "contract.matter_linked": {
+    icon: Link2,
+    message: defineMessage({
+      id: "activity.contract.matterLinked",
+      defaultMessage: "{actor} linked this contract to {matter}",
+    }),
+    values: (intl, payload) => ({ matter: relatedMatter(intl, payload, "matter") }),
+  },
+  "contract.matter_unlinked": {
+    icon: Unlink,
+    message: defineMessage({
+      id: "activity.contract.matterUnlinked",
+      defaultMessage: "{actor} unlinked this contract from {matter}",
+    }),
+    values: (intl, payload) => ({ matter: relatedMatter(intl, payload, "matter") }),
+  },
   // The record's free-form dates (M16/3, CTR-009). A verb per act, so a
   // reader can tell a date being put on the record from one being moved
   // or taken off without opening a payload.
@@ -1543,6 +1624,13 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
       defaultMessage: "{actor} reopened the task {title}",
     }),
     values: (intl, payload) => ({ title: taskNamed(intl, payload) }),
+  },
+  "task.reordered": {
+    icon: ListOrdered,
+    message: defineMessage({
+      id: "activity.task.reordered",
+      defaultMessage: "{actor} reordered the task checklist",
+    }),
   },
   "task.removed": {
     icon: Trash2,

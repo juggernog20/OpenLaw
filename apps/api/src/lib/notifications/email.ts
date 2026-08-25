@@ -183,6 +183,24 @@ function matterMail(
   const named = `M-${record.number} · ${record.title}`;
   const link = matterLink(baseUrl, record.number);
   const who = notification.actorName ?? "Somebody";
+  if (notification.eventType === "matter.task_assigned") {
+    const task = detail(notification, "taskTitle");
+    return {
+      to,
+      subject: task ? `Task assigned: ${task} (${named})` : `Task assigned on ${named}`,
+      text: [
+        `Hello ${notification.recipientName},`,
+        "",
+        task
+          ? `${who} has given you a Task on ${named}: ${task}.`
+          : `${who} has given you a Task on ${named}.`,
+        "",
+        `${link}/tasks`,
+        "",
+        "The checklist is on the Matter record.",
+      ].join("\n"),
+    };
+  }
   if (notification.eventType === "comment.mentioned") {
     return {
       to,
@@ -707,8 +725,9 @@ function statusWord(status: string | null): string | null {
 export interface DigestRow {
   /** Which of the three tracked dates this is (NOT-002 group 3). */
   eventType: NotificationEventType;
-  contractNumber: number;
-  contractTitle: string;
+  entityType: "matter" | "contract";
+  recordNumber: number;
+  recordTitle: string;
   /** The date itself, as a civil date. */
   date: string;
   /**
@@ -771,7 +790,8 @@ function whenIs(daysAway: number): string {
 function digestLine(row: DigestRow): string {
   const kind = row.label ?? DIGEST_KIND[row.eventType] ?? "Date";
   const on = DIGEST_DATE.format(civilInstant(row.date));
-  return `${whenIs(row.daysAway)} (${on}) — ${kind}: ${row.contractTitle} (#${row.contractNumber})`;
+  const reference = row.entityType === "matter" ? `M-${row.recordNumber}` : `#${row.recordNumber}`;
+  return `${whenIs(row.daysAway)} (${on}) — ${kind}: ${row.recordTitle} (${reference})`;
 }
 
 /**
@@ -800,19 +820,26 @@ export function renderDigestMail(
     }
     const byRank = (DIGEST_RANK[left.eventType] ?? 9) - (DIGEST_RANK[right.eventType] ?? 9);
     if (byRank !== 0) return byRank;
-    const byTitle = left.contractTitle.localeCompare(right.contractTitle);
-    return byTitle !== 0 ? byTitle : left.contractNumber - right.contractNumber;
+    const byTitle = left.recordTitle.localeCompare(right.recordTitle);
+    return byTitle !== 0 ? byTitle : left.recordNumber - right.recordNumber;
   });
   const count = rows.length;
+  const kinds = new Set(rows.map((row) => row.entityType));
+  const destination =
+    kinds.size > 1
+      ? "your matters and contracts"
+      : kinds.has("matter")
+        ? "your matters"
+        : "your contracts";
   return {
     to,
     // Digits, sentence case, no full stop — a subject is a fragment
     // (DES-015 rules 6, 7, 9).
-    subject: count === 1 ? "1 date on your contracts" : `${count} dates on your contracts`,
+    subject: `${count} ${count === 1 ? "date" : "dates"} on ${destination}`,
     text: [
       `Hello ${digest.recipientName},`,
       "",
-      "These dates are coming up on your contracts, nearest first.",
+      `These dates are coming up on ${destination}, nearest first.`,
       "",
       // One record per pair of lines: the sentence, then where to act on
       // it. The Key dates section is the address (DES-049 clause 9) —
@@ -820,7 +847,7 @@ export function renderDigestMail(
       // they were just told about is one click short of the promise.
       ...rows.flatMap((row) => [
         digestLine(row),
-        `${recordLink(baseUrl, row.contractNumber)}/key-dates`,
+        `${row.entityType === "matter" ? matterLink(baseUrl, row.recordNumber) : recordLink(baseUrl, row.recordNumber)}/key-dates`,
         "",
       ]),
       // The way out, on the one channel where the reader is not already

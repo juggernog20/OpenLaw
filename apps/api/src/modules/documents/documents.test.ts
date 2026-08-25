@@ -69,8 +69,8 @@ const OUTSIDER = {
   displayName: "Otto Outsider",
   password: "correct-horse-battery",
 } as const;
-/** A Contributor on the team: reads and downloads (DD-015, CTR-021),
- * and does not upload until M23. */
+/** A Contributor on the team: reads, downloads, and supplies supporting
+ * paper, but cannot administer or replace the primary chain. */
 const CONTRIBUTOR = {
   email: "docs-contributor@example.com",
   displayName: "Casey Contributor",
@@ -1315,16 +1315,19 @@ describe("who reaches a contract's paper", () => {
     expect(file.rawPayload.equals(content)).toBe(true);
   });
 
-  it("refuses a Contributor's upload without hiding the record from them", async () => {
+  it("lets a Contributor upload supporting paper without taking an empty primary designation", async () => {
     const contract = await newContract("Orion Cloud — the Contributor's pen");
     await putOnTeam(contract.number, idOf(CONTRIBUTOR), "contributor");
 
     const res = await upload(contributorCookies, contract.number);
 
-    // 403, not 404: they can already see the record, so a missing-record
-    // answer would only make a real boundary read as a bug. Their write
-    // grid arrives with M23 (DD-015).
-    expect(res.statusCode, res.body).toBe(403);
+    expect(res.statusCode, res.body).toBe(201);
+    expect((res.json().document as DocumentRow).isPrimary).toBe(false);
+
+    const legalUpload = await uploaded(adminCookies, contract.number, {
+      filename: "instrument.pdf",
+    });
+    expect(legalUpload.isPrimary).toBe(true);
   });
 
   it("answers a Contributor who is not on the contract as it answers for one that does not exist", async () => {
@@ -1373,14 +1376,11 @@ describe("who reaches a contract's paper", () => {
     expect(write.statusCode).toBe(404);
   });
 
-  it("refuses a Contributor's version upload and metadata edit without hiding the record", async () => {
+  it("refuses a Contributor on the primary chain and on Document metadata", async () => {
     const contract = await newContract("Orion Cloud — the Contributor's revision");
     await putOnTeam(contract.number, idOf(CONTRIBUTOR), "contributor");
     const document = await uploaded(adminCookies, contract.number);
 
-    // 403 on both, for the reason the first upload gives: they can
-    // already see the record, so a missing-record answer would make a
-    // real boundary read as a bug. Their write grid arrives with M23.
     const version = await addVersion(contributorCookies, document.id);
     expect(version.statusCode, version.body).toBe(403);
     const rename = await patchDocument(contributorCookies, document.id, { title: "Mine now" });

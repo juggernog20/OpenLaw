@@ -205,6 +205,8 @@ export interface ReachedContract {
   primaryDocumentId: string | null;
   /** DD-014's flag, as it stands on this row. */
   isConfidential: boolean;
+  /** MTR-007's broader-work container, or NULL while standalone. */
+  matterId: string | null;
   /** CTR-006's end of term, or NULL where none is recorded — and always
    * NULL on an evergreen contract, which has no end. Two of the three
    * dates the CTR-009 deadline union is built from are this column and
@@ -288,6 +290,7 @@ export async function reachedContract(
       managerId: contracts.managerId,
       primaryDocumentId: contracts.primaryDocumentId,
       isConfidential: contracts.isConfidential,
+      matterId: contracts.matterId,
       expiryDate: contracts.expiryDate,
       noticePeriodDays: contracts.noticePeriodDays,
     })

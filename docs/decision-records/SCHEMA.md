@@ -305,6 +305,9 @@ Work container for any legal effort. Holds Documents and Contracts; references E
 | `created_at`, `updated_at` | timestamptz |             |                                                                                                                                                        |
 | `archived_at`              | timestamptz |             | nullable                                                                                                                                               |
 
+`parent_id` and the `matter_relations` table landed in M23/5, migration
+`0075_watery_war_machine`. Existing Matters receive `NULL` and are otherwise unchanged.
+
 ---
 
 ### `matter_types`
@@ -341,13 +344,15 @@ Named deadlines on a matter. Zero-to-many per matter; the earliest upcoming entr
 | Column                     | Type        | Notes                                                                                            |
 | -------------------------- | ----------- | ------------------------------------------------------------------------------------------------ |
 | `id`                       | UUID        | PK                                                                                               |
-| `matter_id`                | UUID        | FK → `matters.id`, not null                                                                      |
+| `matter_id`                | UUID        | FK → `matters.id`, not null, cascade — a Key date is part of the Matter                          |
 | `date`                     | date        | not null; a calendar date, not a timestamp (deadlines are day-granular; display per **DES-014**) |
-| `label`                    | text        | not null, e.g., "SOL expires", "Preliminary hearing"                                             |
-| `note`                     | text        | nullable                                                                                         |
+| `label`                    | text        | not null, 1–200 trimmed characters, e.g., "SOL expires", "Preliminary hearing"                   |
+| `note`                     | text        | nullable, 1–2000 trimmed characters; a blank write is normalized to NULL                         |
 | `created_at`, `updated_at` | timestamptz |                                                                                                  |
 
 Indexed on (`matter_id`, `date`). CRUD audit-logged per **DD-017**.
+
+Landed in M23/3, migration `0073_shocking_raider`. Closing and archiving retain these rows. Only an open, non-archived Matter contributes a Next deadline or approaching-date notification; archive freezes CRUD, while closing does not.
 
 ---
 
@@ -366,7 +371,7 @@ Custom-field catalog (Jira model), shared across modules with a scope. A field i
 | `module_scope`             | text (enum) | `matter` \| `contract` \| `entity` (**ENT-001**) \| `global` per **CTR-016**; global attaches across modules. Promotion to `global` allowed; narrowing blocked while cross-module attachments exist |
 | `field_type`               | text (enum) | `text` \| `long_text` \| `number` \| `date` \| `boolean` \| `single_select` \| `multi_select` \| `user` \| `entity` (**CTR-016** adds `entity`) — **immutable**                                     |
 | `options`                  | jsonb       | nullable; option list for select types                                                                                                                                                              |
-| `field_tag`                | text (enum) | `business` \| `legal` per **DD-015**; drives Contributor visibility                                                                                                                                 |
+| `field_tag`                | text (enum) | `business` \| `legal` per **DD-015**; drives Contributor projection and write permission                                                                                                            |
 | `ai_prompt`                | text        | nullable per **CTR-008/CTR-016**; extraction prompt consumed by contract AI analysis; seeded defaults on contract core fields, editable                                                             |
 | `archived_at`              | timestamptz | nullable; archived fields hidden everywhere, stored values retained                                                                                                                                 |
 | `created_at`, `updated_at` | timestamptz |                                                                                                                                                                                                     |
@@ -401,10 +406,10 @@ Undirected matter↔matter "related" links. One row per pair; application stores
 | ------------- | ----------- | --------------------------- |
 | `matter_a_id` | UUID        | FK → `matters.id`, not null |
 | `matter_b_id` | UUID        | FK → `matters.id`, not null |
-| `created_by`  | UUID        | FK → `users.id`             |
+| `created_by`  | UUID        | FK → `users.id`, not null   |
 | `created_at`  | timestamptz |                             |
 
-Compound primary key on (`matter_a_id`, `matter_b_id`); CHECK `matter_a_id <> matter_b_id`.
+Compound primary key on (`matter_a_id`, `matter_b_id`); CHECK `matter_a_id < matter_b_id`.
 
 ---
 
@@ -465,6 +470,10 @@ Lightweight checklist items on a matter. Deliberately not a task entity: no comm
 
 Indexed on (`matter_id`, `display_order`).
 
+Landed in incremental migration `0074_bored_felicia_hardy.sql` (M23/4, #492). The migration only adds this table, its two foreign keys, title check, and ordering index; it does not rewrite existing Matter rows.
+
+At M23 close, these additions remain four incremental migrations over the M22 model: `matter_key_dates`, `matter_tasks`, `matters.parent_id` plus `matter_relations`, and nullable `contracts.matter_id`. None rewrites existing Matter, Contract, Field, team, Document, Activity, `opened_at`, or `closed_at` data. Closing adds no Resolution or note column; Key dates add no owner; M24 templates still carry Tasks only unless MTR-013's open question later changes that contract. Relationships and Contract links carry no inheritance or cascade columns.
+
 ---
 
 ### `matter_statuses`
@@ -513,7 +522,7 @@ Source: **DD-007**, **DD-014**, **CTR-001**
 
 Workflow object with parties; owns one or more Documents (draft, redlines, executed version, amendments). Referenced by Matters; can also stand alone.
 
-All columns landed through M17. Schema details in `DECISIONS-CONTRACTS.md` (`CTR-###`).
+All columns except `matter_id` landed through M17; the Matter link landed incrementally in M23/6. Schema details in `DECISIONS-CONTRACTS.md` (`CTR-###`).
 
 Columns:
 
@@ -539,7 +548,7 @@ Columns:
 - `parent_id` FK → `contracts.id`, nullable per **CTR-015** — single parent, arbitrary depth, no cycles (application-enforced); no inheritance semantics. Landed in M16/5, migration `0048_contract_relations`, with the routing that first writes it (CTR-007's child-contract vehicle). A `parent_id <> id` check states the shortest cycle as a row rule; the longer ones are the write path's walk. Indexed for the walk and the M17 hierarchy surfaces
 - `ended_at` — timestamptz, nullable per **CTR-019**: set on transition into the `ended` stage, cleared on reopen (activity log remains source of truth). Landed in M17/3, migration `0050_contract_ended_at`, with no backfill
 - `is_confidential` boolean per **DD-014**; never cascades to/from linked records per **CTR-018**
-- `matter_id` FK → `matters.id`, nullable per **DD-007** (contracts can stand alone)
+- `matter_id` FK → `matters.id`, nullable and indexed per **DD-007** (contracts can stand alone). Landed incrementally in M23/6, migration `0076_thankful_cerebro`, with no backfill: every existing Contract remains null/standalone
 - `primary_document_id` FK → `documents.id`, nullable, `ON DELETE SET NULL` per **CTR-014** — which document is the instrument. One column, so exactly one document holds the designation; the first upload takes it, and from there it moves to another document on the same contract or it stays where it is. That the named document belongs to this contract is enforced at write time. This settles the mechanism the `documents` section below left open (flag there vs FK here).
 
 Ended behavior per **CTR-019**: signal not lock — record stays writable; drops from default lists, counts, and renewal-calendar surfaces; `archived_at` remains a separate soft-delete (mistakes/imports), not end-of-life.

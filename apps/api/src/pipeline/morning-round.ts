@@ -68,6 +68,9 @@ import {
   lt,
   ne,
   notifications,
+  matterKeyDates,
+  matters,
+  matterStatuses,
   sql,
   users,
   type Db,
@@ -78,6 +81,9 @@ import type { MailerResolver } from "../lib/mailer.js";
 import {
   contractRecordAudience,
   CONTRACT_ENTITY,
+  matterReachedBy,
+  matterRecordAudience,
+  MATTER_ENTITY,
   reachedBy,
 } from "../lib/notifications/audience.js";
 import { renderDigestMail, type DigestRow } from "../lib/notifications/email.js";
@@ -227,7 +233,8 @@ interface Served {
 /** One date that has come due for one cohort, before anybody has been
  * told about it. */
 interface DueDateFields {
-  contractId: string;
+  entityType: typeof CONTRACT_ENTITY | typeof MATTER_ENTITY;
+  entityId: string;
   /** The date itself, as a civil date. */
   date: string;
   /** Which NOT-004 offset brought it up. */
@@ -395,13 +402,17 @@ async function raiseReminders(
   const inCohort = new Set(cohort.map((person) => person.id));
 
   let written = 0;
-  for (const [contractId, dates] of byContract(due)) {
+  for (const [recordKey, dates] of byRecord(due)) {
     if (signal?.aborted) return written;
     // Who the record is about (NOT-002's group-2 audience, which is the
     // same question here): the Owner and everybody holding a team row.
     // The number and the title ride along, so the round never asks for
     // two columns it has already been handed.
-    const audience = await contractRecordAudience(deps.db, contractId);
+    const first = dates[0]!;
+    const audience =
+      first.entityType === CONTRACT_ENTITY
+        ? await contractRecordAudience(deps.db, first.entityId)
+        : await matterRecordAudience(deps.db, first.entityId);
     // A record that went while the round was running is about nobody.
     if (!audience) continue;
     const userIds = audience.userIds.filter((userId) => inCohort.has(userId));
@@ -411,8 +422,25 @@ async function raiseReminders(
       written += await deps.notifier.notifying(async (tx) => {
         let rows = 0;
         for (const date of dates) {
+          if (date.entityType === MATTER_ENTITY) {
+            if (date.eventType !== "date.key_date_approaching" || !("matterNumber" in audience)) {
+              continue;
+            }
+            rows += await deps.notifier.matterKeyDateApproaching(tx, {
+              matterId: date.entityId,
+              matterNumber: audience.matterNumber,
+              matterTitle: audience.matterTitle,
+              reminderDate: date.date,
+              offsetDays: date.offsetDays,
+              userIds,
+              keyDateId: date.keyDateId,
+              label: date.label,
+            });
+            continue;
+          }
+          if (!("contractNumber" in audience)) continue;
           const event = {
-            contractId,
+            contractId: date.entityId,
             contractNumber: audience.contractNumber,
             contractTitle: audience.contractTitle,
             reminderDate: date.date,
@@ -438,7 +466,7 @@ async function raiseReminders(
       // a record whose reminders could not be written this round is
       // still due at the next tick — nothing has been marked.
       deps.log.error(
-        { contractId, reason: reasonOf(error) },
+        { recordKey, reason: reasonOf(error) },
         "the morning round could not raise a record's date reminders",
       );
     }
@@ -448,12 +476,13 @@ async function raiseReminders(
 
 /** The due dates one contract has, grouped so one transaction covers
  * them. */
-function byContract(due: readonly DueDate[]): Map<string, DueDate[]> {
+function byRecord(due: readonly DueDate[]): Map<string, DueDate[]> {
   const byId = new Map<string, DueDate[]>();
   for (const date of due) {
-    const held = byId.get(date.contractId);
+    const key = `${date.entityType}:${date.entityId}`;
+    const held = byId.get(key);
     if (held) held.push(date);
-    else byId.set(date.contractId, [date]);
+    else byId.set(key, [date]);
   }
   return byId;
 }
@@ -521,7 +550,8 @@ async function dueDates(db: Db, today: string, offsets: readonly number[]): Prom
   const due: DueDate[] = [];
   for (const row of expiries) {
     due.push({
-      contractId: row.contractId,
+      entityType: CONTRACT_ENTITY,
+      entityId: row.contractId,
       eventType: "date.expiry_approaching",
       date: row.date!,
       offsetDays: offsetOf.get(row.date!)!,
@@ -529,7 +559,8 @@ async function dueDates(db: Db, today: string, offsets: readonly number[]): Prom
   }
   for (const row of deadlines) {
     due.push({
-      contractId: row.contractId,
+      entityType: CONTRACT_ENTITY,
+      entityId: row.contractId,
       eventType: "date.notice_deadline_approaching",
       date: row.date,
       offsetDays: offsetOf.get(row.date)!,
@@ -537,7 +568,36 @@ async function dueDates(db: Db, today: string, offsets: readonly number[]): Prom
   }
   for (const row of keyDates) {
     due.push({
-      contractId: row.contractId,
+      entityType: CONTRACT_ENTITY,
+      entityId: row.contractId,
+      eventType: "date.key_date_approaching",
+      date: row.date,
+      offsetDays: offsetOf.get(row.date)!,
+      keyDateId: row.keyDateId,
+      label: row.label,
+    });
+  }
+  const matterDates = await db
+    .select({
+      matterId: matterKeyDates.matterId,
+      date: matterKeyDates.date,
+      keyDateId: matterKeyDates.id,
+      label: matterKeyDates.label,
+    })
+    .from(matterKeyDates)
+    .innerJoin(matters, eq(matterKeyDates.matterId, matters.id))
+    .innerJoin(matterStatuses, eq(matters.statusId, matterStatuses.id))
+    .where(
+      and(
+        eq(matterStatuses.category, "open"),
+        isNull(matters.archivedAt),
+        inArray(matterKeyDates.date, dates),
+      ),
+    );
+  for (const row of matterDates) {
+    due.push({
+      entityType: MATTER_ENTITY,
+      entityId: row.matterId,
       eventType: "date.key_date_approaching",
       date: row.date,
       offsetDays: offsetOf.get(row.date)!,
@@ -631,16 +691,15 @@ async function sendBriefing(
   const unreadable = new Set<string>();
   for (const entityId of new Set(owed.map((row) => row.entityId))) {
     const rows = owed.filter((row) => row.entityId === entityId);
-    // Failing closed on an entity this briefing has no reach rule for,
-    // as the immediate send job does. Group 3's records are contracts
-    // and nothing else — the rows read above all carry a reminder
-    // identity, which no other group writes — and a row about something
-    // with no rule here must not be the one thing that leaves unchecked.
-    if (rows[0]!.entityType !== CONTRACT_ENTITY) {
+    const entityType = rows[0]!.entityType;
+    if (entityType !== CONTRACT_ENTITY && entityType !== MATTER_ENTITY) {
       unreadable.add(entityId);
       continue;
     }
-    const reaches = await reachedBy(deps.db, entityId, [person.id]);
+    const reaches =
+      entityType === CONTRACT_ENTITY
+        ? await reachedBy(deps.db, entityId, [person.id])
+        : await matterReachedBy(deps.db, entityId, [person.id]);
     if (reaches.has(person.id)) reachable.add(entityId);
     else unreadable.add(entityId);
   }
@@ -712,22 +771,25 @@ async function sendBriefing(
 function digestRow(
   row: {
     eventType: string;
+    entityType: string;
     payload: Record<string, unknown>;
     reminderDate: string | null;
   },
   today: string,
 ): DigestRow | null {
-  const contractNumber = Number(row.payload.contractNumber);
-  const contractTitle =
-    typeof row.payload.contractTitle === "string" ? row.payload.contractTitle : "";
-  if (!Number.isSafeInteger(contractNumber) || contractNumber <= 0) return null;
-  if (contractTitle === "" || row.reminderDate === null) return null;
+  const matter = row.entityType === MATTER_ENTITY;
+  const recordNumber = Number(matter ? row.payload.matterNumber : row.payload.contractNumber);
+  const heldTitle = matter ? row.payload.matterTitle : row.payload.contractTitle;
+  const recordTitle = typeof heldTitle === "string" ? heldTitle : "";
+  if (!Number.isSafeInteger(recordNumber) || recordNumber <= 0) return null;
+  if (recordTitle === "" || row.reminderDate === null) return null;
   const label =
     typeof row.payload.label === "string" && row.payload.label ? row.payload.label : null;
   return {
     eventType: row.eventType as NotificationEventType,
-    contractNumber,
-    contractTitle,
+    entityType: matter ? MATTER_ENTITY : CONTRACT_ENTITY,
+    recordNumber,
+    recordTitle,
     date: row.reminderDate,
     // Counted against the reader's own today rather than taken from the
     // row's offset: a reminder that missed its briefing rides the next

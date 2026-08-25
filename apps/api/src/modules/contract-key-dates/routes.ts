@@ -39,8 +39,7 @@
  * on the listing and on every write alike. Confidentiality therefore
  * inherits for free, and no rule here had to say so. Reads are the
  * contract read floor, so a Contributor on the team reads the record's
- * deadlines; writes are Member+, and their write grid arrives with M23
- * (DD-015).
+ * deadlines; DD-015 deliberately keeps date writes at Member+.
  *
  * **Every act is narrated** (DD-017). Add, edit, and remove each append
  * one entry on the owning contract at the standing record tier, inside
@@ -85,8 +84,8 @@ import { httpError, problemResponse } from "../../lib/problem.js";
 const requireKeyDateReader = requireRole("administrator", "legal_team_member", "contributor");
 
 /** Adding, moving, and removing a date are Member+ in M16, as putting
- * paper on a record is. A Contributor reads the surface; their write
- * grid arrives with M23 (DD-015). */
+ * paper on a record is. A Contributor reads the surface but DD-015 gives
+ * them no Key-date write. */
 const requireMember = requireRole("administrator", "legal_team_member");
 
 /**
@@ -202,6 +201,7 @@ export const contractKeyDatesRoutes: FastifyPluginAsyncZod = async (app) => {
           archivedAt: contracts.archivedAt,
           managerId: contracts.managerId,
           primaryDocumentId: contracts.primaryDocumentId,
+          matterId: contracts.matterId,
           isConfidential: contracts.isConfidential,
           expiryDate: contracts.expiryDate,
           noticePeriodDays: contracts.noticePeriodDays,

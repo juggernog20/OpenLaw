@@ -311,7 +311,7 @@ describe("the prefill (INT-002, MTR-012)", () => {
     open(api);
     const dialog = await openConvert(user);
 
-    await user.click(within(dialog).getByRole("button", { name: "Convert" }));
+    await user.click(within(dialog).getByRole("button", { name: "Convert to contract" }));
 
     expect(await within(dialog).findByRole("alert")).toHaveTextContent(
       "Pick a live value for Requesting manager.",

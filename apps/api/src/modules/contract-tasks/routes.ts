@@ -57,8 +57,7 @@ import { httpError, problemResponse } from "../../lib/problem.js";
 const requireTaskReader = requireRole("administrator", "legal_team_member", "contributor");
 
 /** Adding, editing, toggling, reordering, and removing tasks are Member+.
- * A Contributor reads the checklist; their write grid arrives with M23
- * (DD-015). */
+ * A Contributor reads the checklist but DD-015 gives them no Task write. */
 const requireMember = requireRole("administrator", "legal_team_member");
 
 const NO_TASK = "No task exists with this id.";
@@ -125,6 +124,7 @@ export const contractTasksRoutes: FastifyPluginAsyncZod = async (app) => {
           archivedAt: contracts.archivedAt,
           managerId: contracts.managerId,
           primaryDocumentId: contracts.primaryDocumentId,
+          matterId: contracts.matterId,
           isConfidential: contracts.isConfidential,
           expiryDate: contracts.expiryDate,
           noticePeriodDays: contracts.noticePeriodDays,

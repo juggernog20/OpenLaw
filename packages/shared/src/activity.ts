@@ -414,6 +414,7 @@ type TaskPayloads = {
   "task.edited": { taskId: string; title: string; changed: ChangedFields };
   "task.completed": { taskId: string; title: string };
   "task.reopened": { taskId: string; title: string };
+  "task.reordered": { taskIds: string[] };
   "task.removed": { taskId: string; title: string };
 };
 
@@ -487,7 +488,14 @@ type ContractPayloads = {
    * either record is later edited.
    */
   "contract.created_from_request": { number: number; title: string; requestNumber: number };
-  "contract.updated": { number: number; title: string; changed: ChangedFields };
+  "contract.updated": {
+    number: number;
+    title: string;
+    changed: ChangedFields;
+    /** Present when DD-015's narrower writer made the edit, preserving
+     * the role at the time of the append even if the user changes role later. */
+    actorRole?: "contributor";
+  };
   "contract.status_changed": {
     number: number;
     title: string;
@@ -630,6 +638,21 @@ type ContractPayloads = {
     parentNumber: number;
     parentTitle: string;
   };
+  /** MTR-007's one canonical Contract.matter_id mutation. The Activity
+   * entry belongs to the Contract whose row changed; the Matter reads
+   * the same datum rather than receiving a duplicate narration. */
+  "contract.matter_linked": {
+    number: number;
+    title: string;
+    matterNumber: number;
+    matterTitle: string;
+  };
+  "contract.matter_unlinked": {
+    number: number;
+    title: string;
+    matterNumber: number;
+    matterTitle: string;
+  };
   "contract.archived": { number: number; title: string };
   "contract.restored": { number: number; title: string };
 };
@@ -650,6 +673,8 @@ type MatterPayloads = {
     number: number;
     title: string;
     changed: Record<string, { from: unknown; to: unknown }>;
+    /** Present when DD-015's narrower writer made the edit. */
+    actorRole?: "contributor";
   };
   "matter.status_changed": {
     number: number;
@@ -665,6 +690,30 @@ type MatterPayloads = {
   "matter.restored": { number: number; title: string };
   "matter.type_reassigned": { number: number; title: string; from: string; to: string };
   "matter.status_reassigned": { number: number; title: string; from: string; to: string };
+  "matter.parent_set": {
+    number: number;
+    title: string;
+    parentNumber: number;
+    parentTitle: string;
+  };
+  "matter.parent_removed": {
+    number: number;
+    title: string;
+    parentNumber: number;
+    parentTitle: string;
+  };
+  "matter.relation_added": {
+    number: number;
+    title: string;
+    relatedNumber: number;
+    relatedTitle: string;
+  };
+  "matter.relation_removed": {
+    number: number;
+    title: string;
+    relatedNumber: number;
+    relatedTitle: string;
+  };
 };
 
 /**
@@ -711,6 +760,8 @@ type DocumentPayloads = {
     folderName: string | null;
     /** Present when the first file was copied out of a thread. */
     sourceCommentId?: string;
+    /** Preserves DD-015's narrower writer at append time. */
+    actorRole?: "contributor";
   };
   "document.version_added": {
     documentId: string;
@@ -720,6 +771,8 @@ type DocumentPayloads = {
     kind: string;
     /** Present when this round was copied out of a thread. */
     sourceCommentId?: string;
+    /** Preserves DD-015's narrower writer at append time. */
+    actorRole?: "contributor";
   };
   "document.version_kind_changed": {
     documentId: string;

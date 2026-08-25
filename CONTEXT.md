@@ -56,7 +56,7 @@ In-house counsel or paralegal with full functional access to legal work, excludi
 _Avoid_: lawyer, attorney, staff
 
 **Contributor**:
-A non-legal colleague (procurement, compliance, finance) granted access to specific matters or contracts they were added to — made, not born [DD-015].
+A person, such as a procurement colleague or external counsel, granted access to specific Matters or Contracts they were added to. Contributors are made, not born: on a reached record they may read and comment, edit business Fields, and supply supporting Documents, but legal actions remain Member+ [DD-015, MTR-006].
 _Avoid_: collaborator, guest, external user
 
 **Business User**:
@@ -157,6 +157,10 @@ _Avoid_: relation type (use "link type" in prose), connection type
 **Restricted contract**:
 The server's answer when a relative on the relations surface is a Contract the viewer cannot reach. The response carries no number and no title — the placeholder is the server's decision, not the client's redaction [CTR-018].
 _Avoid_: hidden contract, redacted contract, inaccessible contract
+
+**Restricted Matter**:
+The title-free placeholder shown when a relationship is visible but the related Matter is not. It carries no number or other record data and grants no navigation or access [DD-014, MTR-015].
+_Avoid_: hidden Matter, redacted Matter, inaccessible Matter
 
 ### Configuration
 

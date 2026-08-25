@@ -29,6 +29,9 @@
   "action.edit": {
     "defaultMessage": "Edit"
   },
+  "action.link": {
+    "defaultMessage": "Link"
+  },
   "action.reload": {
     "defaultMessage": "Reload"
   },
@@ -103,6 +106,12 @@
   },
   "activity.contract.createdFromRequest": {
     "defaultMessage": "{actor} created this contract from {request}"
+  },
+  "activity.contract.matterLinked": {
+    "defaultMessage": "{actor} linked this contract to {matter}"
+  },
+  "activity.contract.matterUnlinked": {
+    "defaultMessage": "{actor} unlinked this contract from {matter}"
   },
   "activity.contract.parentRemoved": {
     "defaultMessage": "{actor} took this contract out from under {parent}"
@@ -296,6 +305,21 @@
   "activity.matter.createdFromRequest": {
     "defaultMessage": "{actor} created this matter from {request}"
   },
+  "activity.matter.parentRemoved": {
+    "defaultMessage": "{actor} took this Matter out from under {parent}"
+  },
+  "activity.matter.parentSet": {
+    "defaultMessage": "{actor} put this Matter under {parent}"
+  },
+  "activity.matter.relatedRecord": {
+    "defaultMessage": "{reference} ({title})"
+  },
+  "activity.matter.relationAdded": {
+    "defaultMessage": "{actor} related this Matter to {related}"
+  },
+  "activity.matter.relationRemoved": {
+    "defaultMessage": "{actor} removed the relation to {related}"
+  },
   "activity.matter.restored": {
     "defaultMessage": "{actor} restored this matter"
   },
@@ -406,6 +430,9 @@
   },
   "activity.task.reopened": {
     "defaultMessage": "{actor} reopened the task {title}"
+  },
+  "activity.task.reordered": {
+    "defaultMessage": "{actor} reordered the task checklist"
   },
   "activity.task.untitled": {
     "defaultMessage": "(untitled)"
@@ -995,6 +1022,9 @@
   "comments.filing.documentRequired": {
     "defaultMessage": "Choose the Document this round belongs to."
   },
+  "comments.filing.documentsError": {
+    "defaultMessage": "The Documents could not be loaded. Try again."
+  },
   "comments.filing.error": {
     "defaultMessage": "That attachment could not be filed. Try again."
   },
@@ -1102,6 +1132,66 @@
   },
   "confidential.markerShort": {
     "defaultMessage": "CONFI"
+  },
+  "contractMatter.contracts.empty": {
+    "defaultMessage": "No Contracts are linked to this Matter."
+  },
+  "contractMatter.contracts.heading": {
+    "defaultMessage": "Linked Contracts"
+  },
+  "contractMatter.link.error": {
+    "defaultMessage": "The Contract could not be linked to the Matter."
+  },
+  "contractMatter.linkContract": {
+    "defaultMessage": "Link Contract"
+  },
+  "contractMatter.linkMatter": {
+    "defaultMessage": "Link to Matter"
+  },
+  "contractMatter.matter.heading": {
+    "defaultMessage": "Matter"
+  },
+  "contractMatter.mismatch.body": {
+    "defaultMessage": "{contract} and {matter} keep independent Confidential flags. Consider aligning them if that matches the work. This suggestion changes neither record."
+  },
+  "contractMatter.mismatch.dismiss": {
+    "defaultMessage": "Leave them as they are"
+  },
+  "contractMatter.mismatch.preview": {
+    "defaultMessage": "These records have different Confidential flags. Linking will not change either one."
+  },
+  "contractMatter.mismatch.title": {
+    "defaultMessage": "Confidentiality differs"
+  },
+  "contractMatter.noMatches": {
+    "defaultMessage": "No eligible records found."
+  },
+  "contractMatter.refresh.error": {
+    "defaultMessage": "The linked Contracts could not be refreshed."
+  },
+  "contractMatter.restrictedContract": {
+    "defaultMessage": "Restricted contract"
+  },
+  "contractMatter.restrictedMatter": {
+    "defaultMessage": "Restricted matter"
+  },
+  "contractMatter.search": {
+    "defaultMessage": "Search by number or title"
+  },
+  "contractMatter.search.error": {
+    "defaultMessage": "Eligible records could not be searched."
+  },
+  "contractMatter.searching": {
+    "defaultMessage": "Searching…"
+  },
+  "contractMatter.standalone": {
+    "defaultMessage": "Standalone Contract — no broader Matter is linked."
+  },
+  "contractMatter.unlink": {
+    "defaultMessage": "Unlink"
+  },
+  "contractMatter.unlink.error": {
+    "defaultMessage": "The Contract could not be unlinked from the Matter."
   },
   "contracts.applet.settings": {
     "defaultMessage": "Contract settings"
@@ -1298,6 +1388,24 @@
   "contracts.form.lastRenewal": {
     "defaultMessage": "Last renewal"
   },
+  "contracts.form.matter": {
+    "defaultMessage": "Matter (optional)"
+  },
+  "contracts.form.matterHelp": {
+    "defaultMessage": "Link only when this Contract is part of broader Matter work. Nothing else flows across the link."
+  },
+  "contracts.form.matterMatches": {
+    "defaultMessage": "Matter matches"
+  },
+  "contracts.form.matterMismatch": {
+    "defaultMessage": "This Contract and Matter will have different Confidential flags. Consider aligning them later if appropriate; creation changes neither flag automatically."
+  },
+  "contracts.form.matterPlaceholder": {
+    "defaultMessage": "Search by number or title; leave blank for standalone"
+  },
+  "contracts.form.matterSearchError": {
+    "defaultMessage": "Eligible Matters could not be searched."
+  },
   "contracts.form.noticePeriod": {
     "defaultMessage": "Notice period (days)"
   },
@@ -1398,7 +1506,7 @@
     "defaultMessage": "—"
   },
   "contracts.record.readOnlyNote": {
-    "defaultMessage": "This record is read-only. Ask a Legal Team Member to make a change."
+    "defaultMessage": "Legal-managed details are read-only. You can edit the business Fields available to you."
   },
   "contracts.record.rename": {
     "defaultMessage": "Rename contract"
@@ -2678,6 +2786,135 @@
   "listEditor.showArchived": {
     "defaultMessage": "Show archived"
   },
+  "matterKeyDates.actions": {
+    "defaultMessage": "Actions"
+  },
+  "matterKeyDates.actionsFor": {
+    "defaultMessage": "Actions for {label}"
+  },
+  "matterKeyDates.add": {
+    "defaultMessage": "Add date"
+  },
+  "matterKeyDates.addTitle": {
+    "defaultMessage": "Add a Key date"
+  },
+  "matterKeyDates.count": {
+    "defaultMessage": "{count, plural, one {# date} other {# dates}}"
+  },
+  "matterKeyDates.date": {
+    "defaultMessage": "Date"
+  },
+  "matterKeyDates.edit": {
+    "defaultMessage": "Edit date"
+  },
+  "matterKeyDates.editTitle": {
+    "defaultMessage": "Edit Key date"
+  },
+  "matterKeyDates.empty": {
+    "defaultMessage": "No Key dates on this Matter yet."
+  },
+  "matterKeyDates.event": {
+    "defaultMessage": "Event"
+  },
+  "matterKeyDates.heading": {
+    "defaultMessage": "Key dates"
+  },
+  "matterKeyDates.needDate": {
+    "defaultMessage": "Pick a date."
+  },
+  "matterKeyDates.needLabel": {
+    "defaultMessage": "Name what the date is."
+  },
+  "matterKeyDates.next": {
+    "defaultMessage": "Next"
+  },
+  "matterKeyDates.note": {
+    "defaultMessage": "Note (optional)"
+  },
+  "matterKeyDates.overdue": {
+    "defaultMessage": "Overdue"
+  },
+  "matterKeyDates.remove": {
+    "defaultMessage": "Remove date"
+  },
+  "matterKeyDates.removePrompt": {
+    "defaultMessage": "Remove {label} on {date}? This cannot be undone."
+  },
+  "matterKeyDates.removeTitle": {
+    "defaultMessage": "Remove Key date?"
+  },
+  "matterKeyDates.state": {
+    "defaultMessage": "State"
+  },
+  "matterKeyDates.tally": {
+    "defaultMessage": "{upcoming} upcoming · {overdue} overdue"
+  },
+  "matterKeyDates.upcoming": {
+    "defaultMessage": "Upcoming"
+  },
+  "matterKeyDates.writeFailed": {
+    "defaultMessage": "The change could not be saved. Try again."
+  },
+  "matterTasks.actions": {
+    "defaultMessage": "Actions for {title}"
+  },
+  "matterTasks.add": {
+    "defaultMessage": "Add Task"
+  },
+  "matterTasks.addTitle": {
+    "defaultMessage": "Add a Task"
+  },
+  "matterTasks.countLabel": {
+    "defaultMessage": "{count, plural, one {# Task} other {# Tasks}}"
+  },
+  "matterTasks.doneCount": {
+    "defaultMessage": "{done} of {total} done"
+  },
+  "matterTasks.down": {
+    "defaultMessage": "Move down"
+  },
+  "matterTasks.due": {
+    "defaultMessage": "Due {date}"
+  },
+  "matterTasks.edit": {
+    "defaultMessage": "Edit Task"
+  },
+  "matterTasks.editTitle": {
+    "defaultMessage": "Edit Task"
+  },
+  "matterTasks.empty": {
+    "defaultMessage": "No Tasks on this Matter yet."
+  },
+  "matterTasks.field.assignee": {
+    "defaultMessage": "Assignee"
+  },
+  "matterTasks.field.due": {
+    "defaultMessage": "Due date (optional)"
+  },
+  "matterTasks.field.title": {
+    "defaultMessage": "Title"
+  },
+  "matterTasks.needTitle": {
+    "defaultMessage": "Name what needs doing."
+  },
+  "matterTasks.remove": {
+    "defaultMessage": "Remove Task"
+  },
+  "matterTasks.section": {
+    "defaultMessage": "Tasks"
+  },
+  "matterTasks.toggle": {
+    "defaultMessage": "{done, select, true {Reopen Task: {title}} other {Complete Task: {title}}}"
+  },
+  "matterTasks.unassigned": {
+    "defaultMessage": "Unassigned"
+  },
+  "matterTasks.up": {
+    "defaultMessage": "Move up"
+  },
+  "matterTasks.writeFailed": {
+    "defaultMessage": "The Task change could not be saved. Try again."
+  },
   "matters.archive.description": {
     "defaultMessage": "The matter leaves the default list. Its history and M-number are kept."
   },
@@ -2687,8 +2924,26 @@
   "matters.archivedPill": {
     "defaultMessage": "Archived"
   },
+  "matters.close.description": {
+    "defaultMessage": "Closing is a signal, not a lock. The Matter leaves active surfaces but stays fully writable."
+  },
+  "matters.close.openChildren": {
+    "defaultMessage": "Open child Matters"
+  },
+  "matters.close.openChildrenDescription": {
+    "defaultMessage": "These child Matters will stay open. Closing this parent changes none of them."
+  },
+  "matters.close.status": {
+    "defaultMessage": "Closed Status"
+  },
+  "matters.close.title": {
+    "defaultMessage": "Close {title}?"
+  },
   "matters.column.manager": {
     "defaultMessage": "Matter Manager"
+  },
+  "matters.column.nextDeadline": {
+    "defaultMessage": "Next deadline"
   },
   "matters.column.opened": {
     "defaultMessage": "Opened"
@@ -2725,6 +2980,12 @@
   },
   "matters.counts": {
     "defaultMessage": "{open} open · {onHold} on hold"
+  },
+  "matters.create.parent": {
+    "defaultMessage": "Parent: {reference} {title}"
+  },
+  "matters.create.subMatterTitle": {
+    "defaultMessage": "Create sub-Matter"
   },
   "matters.create.submit": {
     "defaultMessage": "Create"
@@ -2855,8 +3116,14 @@
   "matters.record.archive": {
     "defaultMessage": "Archive"
   },
+  "matters.record.close": {
+    "defaultMessage": "Close matter"
+  },
   "matters.record.pageTitle": {
     "defaultMessage": "{reference} · {title}"
+  },
+  "matters.record.reopen": {
+    "defaultMessage": "Reopen matter"
   },
   "matters.record.restore": {
     "defaultMessage": "Restore"
@@ -2867,11 +3134,95 @@
   "matters.record.tab.documents": {
     "defaultMessage": "Documents"
   },
+  "matters.record.tab.keyDates": {
+    "defaultMessage": "Key dates"
+  },
+  "matters.record.tab.keyDates.upcoming": {
+    "defaultMessage": "{count, plural, one {# upcoming date} other {# upcoming dates}}"
+  },
   "matters.record.tab.overview": {
     "defaultMessage": "Overview"
   },
+  "matters.record.tab.tasks": {
+    "defaultMessage": "Tasks"
+  },
+  "matters.record.tab.tasks.open": {
+    "defaultMessage": "{count, plural, one {# open Task} other {# open Tasks}}"
+  },
   "matters.reference": {
     "defaultMessage": "M-{number}"
+  },
+  "matters.relations.addRelated": {
+    "defaultMessage": "Add related Matter"
+  },
+  "matters.relations.changeError": {
+    "defaultMessage": "The Matter relationship could not be changed."
+  },
+  "matters.relations.changeParent": {
+    "defaultMessage": "Change parent"
+  },
+  "matters.relations.children": {
+    "defaultMessage": "Children"
+  },
+  "matters.relations.cycle": {
+    "defaultMessage": "That parent would close a loop in the Matter hierarchy."
+  },
+  "matters.relations.duplicate": {
+    "defaultMessage": "These Matters are already related."
+  },
+  "matters.relations.empty": {
+    "defaultMessage": "No related Matters."
+  },
+  "matters.relations.newChild": {
+    "defaultMessage": "New sub-Matter"
+  },
+  "matters.relations.noMatches": {
+    "defaultMessage": "No Matters to link."
+  },
+  "matters.relations.parent": {
+    "defaultMessage": "Parent"
+  },
+  "matters.relations.related": {
+    "defaultMessage": "Related"
+  },
+  "matters.relations.remove": {
+    "defaultMessage": "Remove"
+  },
+  "matters.relations.restricted": {
+    "defaultMessage": "Restricted Matter"
+  },
+  "matters.relations.saveError": {
+    "defaultMessage": "The Matter relationship could not be saved."
+  },
+  "matters.relations.saveParent": {
+    "defaultMessage": "Set parent"
+  },
+  "matters.relations.saveRelated": {
+    "defaultMessage": "Add relation"
+  },
+  "matters.relations.searchLabel": {
+    "defaultMessage": "Search by M-number or title"
+  },
+  "matters.relations.searching": {
+    "defaultMessage": "Searching…"
+  },
+  "matters.relations.section": {
+    "defaultMessage": "Related Matters"
+  },
+  "matters.relations.self": {
+    "defaultMessage": "A Matter cannot be related to itself."
+  },
+  "matters.relations.setParent": {
+    "defaultMessage": "Set parent"
+  },
+  "matters.reopen.description": {
+    "defaultMessage": "The Matter returns to active surfaces. Its original opened date is preserved."
+  },
+  "matters.reopen.status": {
+    "defaultMessage": "Open Status"
+  },
+  "matters.reopen.title": {
+    "defaultMessage": "Reopen {title}?"
   },
   "matters.restore.description": {
     "defaultMessage": "The matter returns to the default list and becomes editable again."
@@ -2902,12 +3253,6 @@
   },
   "matters.showClosed": {
     "defaultMessage": "Show closed"
-  },
-  "matters.status.closed": {
-    "defaultMessage": "Closed"
-  },
-  "matters.status.open": {
-    "defaultMessage": "Open"
   },
   "matters.team.add": {
     "defaultMessage": "Add team member"
@@ -2959,6 +3304,9 @@
   },
   "matters.validation.number": {
     "defaultMessage": "Enter {fields} as a number."
+  },
+  "matters.value.noDeadline": {
+    "defaultMessage": "—"
   },
   "nav.contracts": {
     "defaultMessage": "Contracts"
@@ -3034,6 +3382,9 @@
   },
   "notifications.markAllRead": {
     "defaultMessage": "Mark all read"
+  },
+  "notifications.matter.taskAssigned": {
+    "defaultMessage": "{hasActor, select, yes {{actor} assigned you a Task on {contract}} other {You were assigned a Task on {contract}}}"
   },
   "notifications.matterNumber": {
     "defaultMessage": "M-{number}"

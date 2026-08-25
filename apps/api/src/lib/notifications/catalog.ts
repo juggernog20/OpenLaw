@@ -119,6 +119,7 @@ export const EVENT_GROUP: Record<NotificationEventType, NotificationEventGroup> 
   // question to you by name (settled in the M18 spec's grill).
   "contract.owner_assigned": "assigned_to_you",
   "contract.task_assigned": "assigned_to_you",
+  "matter.task_assigned": "assigned_to_you",
   "approval.requested": "assigned_to_you",
   "comment.mentioned": "assigned_to_you",
   // Group 2 — activity on your records.

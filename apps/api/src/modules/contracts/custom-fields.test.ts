@@ -39,11 +39,18 @@ const MEMBER = {
   displayName: "Legal Member",
   password: "correct-horse-battery",
 } as const;
+const CONTRIBUTOR = {
+  email: "field-contributor@example.com",
+  displayName: "Casey Contributor",
+  password: "correct-horse-battery",
+} as const;
 
 let harness: TestHarness;
 let adminCookies: Record<string, string>;
 let memberCookies: Record<string, string>;
+let contributorCookies: Record<string, string>;
 let memberId: string;
+let contributorId: string;
 let adminId: string;
 
 beforeAll(async () => {
@@ -62,8 +69,12 @@ beforeAll(async () => {
   const member = await provisionUser(harness.app.auth, MEMBER);
   await harness.db.update(users).set({ role: "legal_team_member" }).where(eq(users.id, member.id));
   memberId = member.id;
+  const contributor = await provisionUser(harness.app.auth, CONTRIBUTOR);
+  await harness.db.update(users).set({ role: "contributor" }).where(eq(users.id, contributor.id));
+  contributorId = contributor.id;
   adminCookies = await signInCookies(harness.app, ADMIN.email, ADMIN.password);
   memberCookies = await signInCookies(harness.app, MEMBER.email, MEMBER.password);
+  contributorCookies = await signInCookies(harness.app, CONTRIBUTOR.email, CONTRIBUTOR.password);
 });
 
 afterAll(async () => {
@@ -76,6 +87,7 @@ interface AttachedField {
   displayName: string;
   description: string | null;
   fieldType: string;
+  fieldTag: "business" | "legal";
   options: string[] | null;
   displayOrder: number;
   isRequired: boolean;
@@ -240,6 +252,99 @@ const auditRowsFor = async (id: string) =>
   ).filter((row) => row.entityId === id);
 
 describe("the fields a contract's type attaches (CTR-016)", () => {
+  it("projects only business Fields and values to a Contributor on the team", async () => {
+    const type = await newType("Contributor projection");
+    const business = await defineField({
+      displayName: "Payment terms",
+      fieldType: "text",
+      fieldTag: "business",
+    });
+    const legal = await defineField({
+      displayName: "Governing law",
+      fieldType: "text",
+      fieldTag: "legal",
+    });
+    await attachField(type.id, business.fieldId, true);
+    await attachField(type.id, legal.fieldId);
+    const contract = await newContract("Contributor fields", type.id, {
+      [business.slug]: "Net 30",
+      [legal.slug]: "England and Wales",
+    });
+    const added = await harness.app.inject({
+      method: "POST",
+      url: `/api/v1/contracts/${contract.number}/team`,
+      cookies: memberCookies,
+      payload: { userId: contributorId, role: "contributor" },
+    });
+    expect(added.statusCode, added.body).toBe(201);
+
+    const response = await harness.app.inject({
+      method: "GET",
+      url: `/api/v1/contracts/${contract.number}`,
+      cookies: contributorCookies,
+    });
+    expect(response.statusCode, response.body).toBe(200);
+    expect(response.json().fields).toEqual([
+      expect.objectContaining({ slug: business.slug, fieldTag: "business" }),
+    ]);
+    expect(response.json().contract.customFields).toEqual({ [business.slug]: "Net 30" });
+    const list = await harness.app.inject({
+      method: "GET",
+      url: "/api/v1/contracts",
+      cookies: contributorCookies,
+    });
+    expect(list.statusCode, list.body).toBe(200);
+    expect(
+      list.json().contracts.find((row: { number: number }) => row.number === contract.number)
+        ?.customFields,
+    ).toEqual({ [business.slug]: "Net 30" });
+
+    for (const payload of [
+      { customFields: { [business.slug]: "Net 45" } },
+      { value: { amount: 125_000, currency: "USD", cadence: "annually" } },
+      { effectiveDate: "2026-09-01" },
+    ]) {
+      const accepted = await harness.app.inject({
+        method: "PATCH",
+        url: `/api/v1/contracts/${contract.number}`,
+        cookies: contributorCookies,
+        payload,
+      });
+      expect(accepted.statusCode, accepted.body).toBe(200);
+    }
+    const required = await harness.app.inject({
+      method: "PATCH",
+      url: `/api/v1/contracts/${contract.number}`,
+      cookies: contributorCookies,
+      payload: { customFields: { [business.slug]: null } },
+    });
+    expect(required.statusCode, required.body).toBe(400);
+
+    for (const payload of [
+      { customFields: { [legal.slug]: "New York" } },
+      { title: "Crafted rename" },
+      {
+        title: "Mixed crafted rename",
+        value: { amount: 1, currency: "USD", cadence: "one_time" },
+      },
+    ]) {
+      const refused = await harness.app.inject({
+        method: "PATCH",
+        url: `/api/v1/contracts/${contract.number}`,
+        cookies: contributorCookies,
+        payload,
+      });
+      expect(refused.statusCode, refused.body).toBe(403);
+    }
+
+    const updates = (await auditRowsFor(contract.id)).filter(
+      (row) => row.action === "contract.updated",
+    );
+    expect(updates).toHaveLength(3);
+    expect(updates.every((row) => row.actorId === contributorId)).toBe(true);
+    expect(updates.every((row) => row.payload.actorRole === "contributor")).toBe(true);
+  });
+
   it("renders the type's live attachments in attachment order, and no others", async () => {
     const type = await newType("Order form");
     const other = await newType("Statement of work");

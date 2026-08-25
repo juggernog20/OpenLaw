@@ -20,8 +20,8 @@ Decisions are numbered `MTR-###`.
 
 Queued 2026-08-07 from the matters.pen ↔ decision-record audit — mock drift that needs a decision rather than a silent strip:
 
-1. **Key-date owner** — M5 mocks an Owner column per key date; **MTR-004** modeled key dates as `date + label + note`. The reminder half of the original question is settled: **NOT-004** fixed a single global admin-configurable offset list (seeded 7 days / 1 day / day-of) applied to every tracked date and explicitly rejected per-date schedules, and **NOT-003** fixed the daily digest — the M5 "7d · 1d · same day" and digest copy render that global contract, not per-date config. Decide only: does MTR-004 gain an optional owner per key date, or is the Owner column stripped?
-2. **Close dialog "Resolution" and closing note** — M10 mocks a Resolution select ("Completed") plus an optional closing note; **MTR-002**/**MTR-008** define closing as moving to a closed-category status, with no resolution concept. Decide: is Resolution the closed-status picker (relabel it), a new first-class field, or out?
+1. ~~**Key-date owner** — M5 mocks an Owner column per key date; **MTR-004** modeled key dates as `date + label + note`.~~ **Resolved by M23/3 (#491):** the Owner column is stripped. A Key date remains date + label + optional note, with no owner and no per-date schedule.
+2. ~~**Close dialog "Resolution" and closing note** — M10 mocks a Resolution select ("Completed") plus an optional closing note; **MTR-002**/**MTR-008** define closing as moving to a closed-category status, with no resolution concept.~~ **Resolved by M23/7 (#495):** the dialog asks only for one live closed-Category Status. Resolution and closing note are out; no field, payload, or control is created for either.
 3. **Template key dates** — M8 mocks "Template adds 4 tasks and 2 key dates"; **MTR-013** template content is pre-fill values + tasks only. Decide: do templates also carry relative key dates (offset-from-creation, like template tasks)?
 4. **"My matters" / "matters I'm on" affordance** — **MTR-003** defines both views; M1 offers only a Manager filter chip and Saved views. Decide: first-class views, saved-view presets, or filter-chip-only.
 
@@ -253,6 +253,14 @@ Every matter needs an ownership answer: single primary owner vs multiple assigne
 - Matter list/detail screens need a "next deadline" affordance; the events-card pattern in the contract mock (region H) is the likely shared component.
 - Resolved in the Contracts grill: renewal/expiry/notice dates got their own typed columns with a derived notice deadline (**CTR-006**), and ad-hoc contract dates reuse this table's shape as `contract_key_dates` (**CTR-009**).
 
+### Implementation note (2026-08-23, M23/3, [#491](https://github.com/juggernog20/OpenLaw/issues/491))
+
+`matter_key_dates` landed as the M16 sibling promised: one civil date, a trimmed label, and an optional trimmed note, with no owner, per-date schedule, special statute-of-limitations type, or SLA behavior. The record keeps every row through closing and archiving; only an open, non-archived Matter marks a Next deadline or enters the morning round. Closing remains writable, reopening reactivates still-future dates, and archiving alone freezes mutations. Matter reach is the read wall, while the reminder audience is the Matter Manager and explicit team roster narrowed through that wall again at send time.
+
+### Addendum (2026-08-24, M23 close, [#496](https://github.com/juggernog20/OpenLaw/issues/496))
+
+The deployer journey now proves that same date on the real Matter record and the cross-slice suite keeps the boundary explicit: reached Contributors may read Key dates but never mutate them, closed Matters retain writable dates while contributing none to active deadline surfaces, and archived Matters freeze them. No owner, template date, derived date, or per-date reminder contract was added.
+
 ---
 
 ## MTR-005: Tasks — lightweight checklist, not a task entity
@@ -289,6 +297,16 @@ Matters need some way to track "who's doing which piece of this, and is it done"
 - Matter detail screen needs a tasks section (checklist affordance); counts (e.g., "3/7 done") can use `--badge-count-*` per **DES-005**.
 - Whether Contracts gets the same checklist is a Contracts-grill question (likely yes via the same table shape).
 - If richer tasking demand emerges post-v1, it graduates via `FUTURE-FEATURES.md` — do not grow this table into a task entity ad hoc.
+
+### Implementation note (2026-08-24, M23/4, [#492](https://github.com/juggernog20/OpenLaw/issues/492))
+
+Matter Tasks landed as the same flat checklist discipline proven on Contracts, with deterministic manual order and completed/total counts on the Matter record. Member+ can add, edit, reorder, complete, reopen, and remove Tasks through Closing; Archiving alone freezes the checklist. Contributors who reach the Matter read the same rows but receive no mutation controls and every write route refuses them.
+
+Assignment is deliberately narrower than reach: the assignee must be active and already be the active Matter Manager or represented on the Matter team. Assignment does not create team membership, team removal remains independent, and a newly handed-off Task raises the existing direct-assignment notification through the Matter reach wall. Task due dates remain civil, date-only internal targets and are absent from both Next deadline and the morning approaching-date round.
+
+### Addendum (2026-08-24, M23 close, [#496](https://github.com/juggernog20/OpenLaw/issues/496))
+
+The close pass confirms Tasks as one section of the Matter rather than a parallel record: the four platform roles receive their existing Matter reach answer, only Member+ can mutate the checklist, assignment raises the direct-assignment notification, and Closing does not freeze it. Task dates still have no deadline or reminder behavior, and templates remain M24's work.
 
 ---
 
@@ -328,6 +346,10 @@ Outside counsel touch matters in two distinct ways: participating in the work (d
 - Onboarding docs should note the pattern: invite outside counsel as Contributors, add them to their matters.
 - A future spend module may want a way to mark a user or counterparty as a law firm — noted in the future-features entry, not modeled now.
 
+### Addendum (2026-08-24, M23 close, [#496](https://github.com/juggernog20/OpenLaw/issues/496))
+
+The shipped external-counsel path is the ordinary Contributor path end to end: invite one user, add one `contributor` team row, then use DD-015's business-Field, supporting-Document, comment, and read permissions on that reached Matter. There is no law-firm record, counsel subtype, budget, invoice, or spend field hidden behind the label.
+
 ---
 
 ## MTR-007: Matter ↔ Contract — contracts standalone by default, linked to a matter when part of broader work
@@ -357,10 +379,18 @@ Contracts can be **both**: standalone where no matter work is needed (e.g., an a
 
 ### Consequences
 
-- No schema changes (DD-007 already provides the FK).
+- The implementation adds DD-007's nullable, indexed `contracts.matter_id` FK incrementally; existing Contracts remain null/standalone.
 - Contract creation flow offers an optional matter picker; matter detail needs a Contracts section.
 - Confidentiality interaction resolved by **CTR-018**: matter and contract `is_confidential` flags stay independent — no cascade in either direction; creating a link where one side is confidential shows a one-time "make this confidential too?" nudge, never enforcement.
 - The rule-of-thumb wording above goes into user-facing docs.
+
+### Implementation note (2026-08-24, M23/6)
+
+Migration `0076_thankful_cerebro` lands the nullable FK and its index without a backfill. One canonical Contract datum now drives the optional creation picker, both record-side link/unlink flows, the Matter's Linked Contracts section, and the Contract's Matter context. Writes lock the Contract, require Member+ reach to both live records, and refuse a direct move until an explicit unlink. Independently unreachable relatives are represented only as `{ restricted: true }`; candidate searches omit them, archived records, linked Contracts, and other ineligible rows.
+
+### Addendum (2026-08-24, M23 close, [#496](https://github.com/juggernog20/OpenLaw/issues/496))
+
+The close journey links an already-existing standalone Contract from the Matter surface and reads the result from the canonical `contracts.matter_id`. The regression matrix holds one link at most, explicit unlink before move, Member+ reach to both records, silent candidate omission, restricted projections, and independent lifecycle, team, Field, Document, date, Task, and confidentiality state.
 
 ---
 
@@ -399,6 +429,16 @@ Contracts can be **both**: standalone where no matter work is needed (e.g., an a
 - Matter list needs an archived-excluded default plus an Admin-visible archived filter; closed matters need a visible closed pill (category-mapped per **DES-005**) so post-close edits are made knowingly.
 - Search treats closed matters as normal results; archived matters excluded by default.
 - `FUTURE-FEATURES.md` gains a retention-policies entry.
+
+### Implementation note (2026-08-24, M23/7, [#495](https://github.com/juggernog20/OpenLaw/issues/495))
+
+Closing and reopening landed as deliberate record actions over the ordinary Status transition. The current Category's Statuses remain available inline; crossing Categories opens a confirmation that offers only live Statuses in the target Category. Closing names every reachable open child Matter and represents each inaccessible open child only as a Restricted Matter placeholder. The advisory never blocks and confirmation sends only `statusId` through the existing write, so no child or sibling datum is touched.
+
+The existing timestamp rules remain the whole lifecycle model: open-to-closed stamps `closed_at`, closed-to-open clears it, moves within one Category preserve it, and `opened_at` never moves. Closed Matters remain writable across Fields, comments, Documents, Key dates, Tasks, and relationships. They stay outside default and active deadline surfaces until reopened; Archiving remains the separate write freeze. Each accepted transition appends `matter.status_changed` with from/to Status and Category.
+
+### Addendum (2026-08-24, M23 close, [#496](https://github.com/juggernog20/OpenLaw/issues/496))
+
+The real close dialog now demonstrates the whole boundary: it lists the reachable open child, changes only the parent's Status, and then accepts a new comment on the closed Matter. The matrix also proves continued Field, Document, Key-date, Task, and relationship writes after Closing. No Resolution, closing note, inheritance, retention action, or cascade entered the record.
 
 ---
 
@@ -698,6 +738,10 @@ Matters had no way to reference each other. Research: TeamConnect supports full 
 - Matter detail gains a hierarchy section (parent breadcrumb, children list) and a Related list; matter lists may indicate child matters (indent or badge — screen grill decides).
 - Confidentiality note for the screen grills: a user may see a child but lack access to its confidential parent (or vice versa) — render inaccessible relatives as "restricted matter", never leak titles (**DD-014**/**DES-009**).
 - Cycle prevention is an application-layer invariant.
+
+### Addendum (2026-08-24, M23 close, [#496](https://github.com/juggernog20/OpenLaw/issues/496))
+
+The hierarchy and flat-link surfaces are complete with canonical undirected pairs, one parent, cycle refusal under concurrent writes, and restricted placeholders that disclose no number or title. Reach, confidentiality, Manager, team, Documents, Fields, Key dates, Tasks, lifecycle, and notifications remain properties of each Matter. The open-child close advisory reads the relationship but changes nothing through it.
 
 ## MTR-016: Lifecycle timestamps — `opened_at` / `closed_at` maintained on category transitions
 

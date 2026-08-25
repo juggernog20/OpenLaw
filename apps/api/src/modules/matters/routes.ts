@@ -8,6 +8,7 @@ import {
   asc,
   eq,
   fields,
+  inArray,
   isNull,
   matters,
   matterStatuses,
@@ -15,11 +16,13 @@ import {
   matterTypeFields,
   matterTypes,
   MATTER_TEAM_ROLES,
+  matterKeyDates,
   SEVERITY_LEVELS,
   sql,
   users,
   USER_ROLES,
   type AnyPgColumn,
+  type CustomFieldValue,
   type Executor,
   type Matter,
   type SQL,
@@ -34,13 +37,17 @@ import {
 } from "@openlaw/shared";
 import { requireRole, type AuthenticatedUser } from "../../auth/guards.js";
 import { recordActivity, RECORD_ACTIVITY_TIER } from "../../lib/activity.js";
+import { civilToday } from "../../lib/contract-term.js";
 import {
   applyCustomFields,
+  assertContributorCustomFieldWrite,
   assertRequiredCustomFields,
   AttachedCustomFieldSchema,
   CustomFieldsInput,
   CustomFieldsSchema,
+  projectCustomFields,
   selectAttachedFields,
+  type AttachedCustomField,
 } from "../../lib/custom-fields.js";
 import {
   MATTER_CREATOR_ROLE,
@@ -52,6 +59,7 @@ import {
   reachedMatter,
 } from "../../lib/matter-access.js";
 import { httpError, problemResponse } from "../../lib/problem.js";
+import { setMatterParent } from "../../lib/matter-relations.js";
 import { resolveStaffRefs, StaffRequestCustomFieldRefsSchema } from "../requests/projection.js";
 import { createMatter } from "./create.js";
 
@@ -101,6 +109,7 @@ const MatterRowSchema = z.object({
   archivedAt: z.iso.datetime().nullable(),
   createdAt: z.iso.datetime(),
   updatedAt: z.iso.datetime(),
+  nextDeadline: z.object({ date: z.iso.date(), label: z.string() }).nullable(),
 });
 
 const MatterEnvelope = z.object({ matter: MatterRowSchema });
@@ -116,6 +125,24 @@ const MatterRecordEnvelope = MatterEnvelope.extend({
 const MatterTeamEnvelope = z.object({
   team: z.array(PersonSchema.extend({ role: z.enum(MATTER_TEAM_ROLES) })),
 });
+const LifecycleStatusSchema = z.strictObject({
+  id: z.string(),
+  displayName: z.string(),
+});
+const OpenChildSchema = z.union([
+  z.strictObject({ restricted: z.literal(true) }),
+  z.strictObject({
+    restricted: z.literal(false),
+    number: z.number().int(),
+    title: z.string(),
+  }),
+]);
+const MatterLifecycleEnvelope = z.strictObject({
+  action: z.enum(["close", "reopen"]),
+  targetCategory: z.enum(["open", "closed"]),
+  statuses: z.array(LifecycleStatusSchema),
+  openChildren: z.array(OpenChildSchema),
+});
 
 interface MatterContext {
   row: Matter;
@@ -128,9 +155,13 @@ interface MatterContext {
     image: string | null;
     archivedAt: Date | null;
   } | null;
+  nextDeadline?: { date: string; label: string } | null;
 }
 
-function toRow(context: MatterContext) {
+function toRow(
+  context: MatterContext,
+  customFields: Readonly<Record<string, CustomFieldValue>> = context.row.customFields,
+) {
   const { row } = context;
   return {
     id: row.id,
@@ -152,18 +183,19 @@ function toRow(context: MatterContext) {
       : null,
     priority: row.priority,
     risk: row.risk,
-    customFields: row.customFields,
+    customFields,
     openedAt: row.openedAt.toISOString(),
     closedAt: row.closedAt?.toISOString() ?? null,
     isConfidential: row.isConfidential,
     archivedAt: row.archivedAt?.toISOString() ?? null,
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
+    nextDeadline: context.nextDeadline ?? null,
   };
 }
 
 export const mattersRoutes: FastifyPluginAsyncZod = async (app) => {
-  const selectMatters = (db: Executor) =>
+  const selectMatters = (db: Executor, today: string = civilToday()) =>
     db
       .select({
         row: matters,
@@ -176,6 +208,17 @@ export const mattersRoutes: FastifyPluginAsyncZod = async (app) => {
           image: users.image,
           archivedAt: users.archivedAt,
         },
+        nextDeadline: sql<{ date: string; label: string } | null>`case
+          when ${matterStatuses.category} = 'open' and ${matters.archivedAt} is null then (
+            select json_build_object('date', ${matterKeyDates.date}, 'label', ${matterKeyDates.label})
+            from ${matterKeyDates}
+            where ${matterKeyDates.matterId} = ${matters.id}
+              and ${matterKeyDates.date} >= ${today}
+            order by ${matterKeyDates.date}, ${matterKeyDates.id}
+            limit 1
+          )
+          else null
+        end`,
       })
       .from(matters)
       .innerJoin(matterTypes, eq(matters.matterTypeId, matterTypes.id))
@@ -355,10 +398,11 @@ export const mattersRoutes: FastifyPluginAsyncZod = async (app) => {
       },
     },
     async (request) => {
+      const today = civilToday();
       const sort: SortRequest | null = request.query.sort
         ? { key: request.query.sort, dir: request.query.dir ?? "asc" }
         : null;
-      const rows = await selectMatters(app.db)
+      const rows = await selectMatters(app.db, today)
         .where(
           and(
             request.query.includeArchived === "true" ? undefined : isNull(matters.archivedAt),
@@ -392,8 +436,33 @@ export const mattersRoutes: FastifyPluginAsyncZod = async (app) => {
         .from(matters)
         .innerJoin(matterStatuses, eq(matters.statusId, matterStatuses.id))
         .where(and(isNull(matters.archivedAt), scope(request.user)));
+      const contributorFields =
+        request.user.role === "contributor"
+          ? new Map(
+              await Promise.all(
+                [...new Set(page.map((context) => context.row.matterTypeId))].map(
+                  async (matterTypeId) =>
+                    [
+                      matterTypeId,
+                      await selectAttachedFields(app.db, matterTypeFields, matterTypeId),
+                    ] as const,
+                ),
+              ),
+            )
+          : null;
       return {
-        matters: page.map(toRow),
+        matters: page.map((context) =>
+          toRow(
+            context,
+            contributorFields
+              ? projectCustomFields(
+                  request.user.role,
+                  contributorFields.get(context.row.matterTypeId) ?? [],
+                  context.row.customFields,
+                ).customFields
+              : context.row.customFields,
+          ),
+        ),
         nextCursor: rows.length > PAGE_SIZE ? (page.at(-1)?.row.id ?? null) : null,
         counts: counts ?? { open: 0, onHold: 0 },
       };
@@ -504,13 +573,94 @@ export const mattersRoutes: FastifyPluginAsyncZod = async (app) => {
         )
         .limit(1);
       if (!context) throw httpError(404, NO_MATTER);
-      const fields = await selectAttachedFields(app.db, matterTypeFields, context.row.matterTypeId);
-      const customFieldRefs = await resolveStaffRefs(app.db, fields, context.row.customFields);
+      const attached = await selectAttachedFields(
+        app.db,
+        matterTypeFields,
+        context.row.matterTypeId,
+      );
+      const projection = projectCustomFields(request.user.role, attached, context.row.customFields);
       return {
-        matter: toRow(context),
-        fields,
-        customFieldRefs,
+        matter: toRow(context, projection.customFields),
+        fields: projection.fields,
+        customFieldRefs: await resolveStaffRefs(app.db, projection.fields, projection.customFields),
         team: await selectTeam(app.db, context.row.id),
+      };
+    },
+  );
+
+  app.get(
+    "/matters/:number/lifecycle",
+    {
+      preHandler: requireMember,
+      schema: {
+        operationId: "getMatterLifecycle",
+        summary:
+          "Live Status choices for deliberate Closing or reopening, with a non-blocking open-child advisory",
+        tags: ["matters"],
+        params: NumberParams,
+        response: { 200: MatterLifecycleEnvelope, default: problemResponse },
+      },
+    },
+    async (request) => {
+      const current = await reachedMatter(app.db, request.user, request.params.number);
+      if (!current) throw httpError(404, NO_MATTER);
+      if (current.archivedAt) {
+        throw httpError(409, "This matter is archived. Restore it before changing its Status.");
+      }
+      const [currentStatus] = await app.db
+        .select({ category: matterStatuses.category })
+        .from(matterStatuses)
+        .where(eq(matterStatuses.id, current.statusId))
+        .limit(1);
+      if (!currentStatus) throw httpError(404, NO_MATTER);
+      const targetCategory: "open" | "closed" =
+        currentStatus.category === "open" ? "closed" : "open";
+      const statuses = await app.db
+        .select({ id: matterStatuses.id, displayName: matterStatuses.displayName })
+        .from(matterStatuses)
+        .where(and(eq(matterStatuses.category, targetCategory), isNull(matterStatuses.archivedAt)))
+        .orderBy(asc(matterStatuses.displayOrder), asc(matterStatuses.createdAt));
+
+      let openChildren: z.infer<typeof OpenChildSchema>[] = [];
+      if (targetCategory === "closed") {
+        const children = await app.db
+          .select({ id: matters.id })
+          .from(matters)
+          .innerJoin(matterStatuses, eq(matters.statusId, matterStatuses.id))
+          .where(
+            and(
+              eq(matters.parentId, current.id),
+              eq(matterStatuses.category, "open"),
+              isNull(matters.archivedAt),
+            ),
+          )
+          .orderBy(asc(matters.number));
+        const childIds = children.map((child) => child.id);
+        const reachable =
+          childIds.length === 0
+            ? []
+            : await app.db
+                .select({ id: matters.id, number: matters.number, title: matters.title })
+                .from(matters)
+                .where(and(inArray(matters.id, childIds), matterTeamScope(app.db, request.user)));
+        const identities = new Map(reachable.map((child) => [child.id, child]));
+        openChildren = children.map((child) => {
+          const identity = identities.get(child.id);
+          return identity
+            ? {
+                restricted: false as const,
+                number: identity.number,
+                title: identity.title,
+              }
+            : { restricted: true as const };
+        });
+      }
+      const action: "close" | "reopen" = targetCategory === "closed" ? "close" : "reopen";
+      return {
+        action,
+        targetCategory,
+        statuses,
+        openChildren,
       };
     },
   );
@@ -533,14 +683,40 @@ export const mattersRoutes: FastifyPluginAsyncZod = async (app) => {
           description: z.string().trim().max(10_000).nullable().optional(),
           customFields: CustomFieldsInput.optional(),
           isConfidential: z.boolean().optional(),
+          parentMatterNumber: z.coerce.number().int().positive().optional(),
         }),
         response: { 201: MatterEnvelope, default: problemResponse },
       },
     },
     async (request, reply) => {
-      const created = await app.db.transaction((tx) =>
-        createMatter(tx, { ...request.body, actorId: request.user.id }),
-      );
+      const created = await app.db.transaction(async (tx) => {
+        const { parentMatterNumber, ...body } = request.body;
+        const parent = parentMatterNumber
+          ? await reachedMatter(tx, request.user, parentMatterNumber, { lock: true })
+          : null;
+        if (parentMatterNumber && !parent) throw httpError(404, NO_MATTER);
+        if (parent?.archivedAt) {
+          throw httpError(409, "That parent Matter is archived. Restore it before using it.");
+        }
+        const next = await createMatter(tx, { ...body, actorId: request.user.id });
+        if (parent) {
+          await setMatterParent(tx, next.row.id, parent.id);
+          await recordActivity(tx, {
+            entityType: "matter",
+            entityId: next.row.id,
+            actorId: request.user.id,
+            action: "matter.parent_set",
+            visibility: RECORD_ACTIVITY_TIER,
+            payload: {
+              number: next.row.number,
+              title: next.row.title,
+              parentNumber: parent.number,
+              parentTitle: parent.title,
+            },
+          });
+        }
+        return next;
+      });
       return reply.status(201).send({ matter: toRow(created) });
     },
   );
@@ -548,7 +724,7 @@ export const mattersRoutes: FastifyPluginAsyncZod = async (app) => {
   app.patch(
     "/matters/:number",
     {
-      preHandler: requireMember,
+      preHandler: requireReader,
       schema: {
         operationId: "updateMatter",
         summary:
@@ -571,8 +747,27 @@ export const mattersRoutes: FastifyPluginAsyncZod = async (app) => {
     },
     async (request) => {
       const body = request.body;
-      const updated = await app.db.transaction(async (tx) => {
+      const today = civilToday();
+      const written = await app.db.transaction(async (tx) => {
         const current = await lockedMatter(tx, request.params.number, request.user);
+        let contributorAttached: AttachedCustomField[] | null = null;
+        if (request.user.role === "contributor") {
+          const allowed = new Set(["description", "customFields"]);
+          if (Object.keys(body).some((key) => !allowed.has(key))) {
+            throw httpError(
+              403,
+              "Contributors can edit only the description and business Fields on this matter.",
+            );
+          }
+          if (body.customFields !== undefined) {
+            contributorAttached = await selectAttachedFields(
+              tx,
+              matterTypeFields,
+              current.row.matterTypeId,
+            );
+            assertContributorCustomFieldWrite(contributorAttached, body.customFields);
+          }
+        }
         if (body.isConfidential !== undefined) {
           await assertAudienceActor(
             tx,
@@ -637,11 +832,13 @@ export const mattersRoutes: FastifyPluginAsyncZod = async (app) => {
           matterTypeName = matterType.displayName;
         }
 
-        const attached = await selectAttachedFields(
-          tx,
-          matterTypeFields,
-          patch.matterTypeId ?? target.matterTypeId,
-        );
+        const attached =
+          contributorAttached ??
+          (await selectAttachedFields(
+            tx,
+            matterTypeFields,
+            patch.matterTypeId ?? target.matterTypeId,
+          ));
         if (body.customFields !== undefined || retyped) {
           const applied = await applyCustomFields(
             tx,
@@ -726,7 +923,12 @@ export const mattersRoutes: FastifyPluginAsyncZod = async (app) => {
             actorId: request.user.id,
             action: "matter.updated",
             visibility: RECORD_ACTIVITY_TIER,
-            payload: { number: row.number, title: row.title, changed },
+            payload: {
+              number: row.number,
+              title: row.title,
+              changed,
+              ...(request.user.role === "contributor" ? { actorRole: request.user.role } : {}),
+            },
           });
         }
         if (retyped) {
@@ -768,10 +970,19 @@ export const mattersRoutes: FastifyPluginAsyncZod = async (app) => {
         }
         return { row, matterTypeName, statusName, statusCategory, manager, attached };
       });
+      const [updated] = await selectMatters(app.db, today)
+        .where(eq(matters.id, written.row.id))
+        .limit(1);
+      if (!updated) throw httpError(404, NO_MATTER);
+      const projection = projectCustomFields(
+        request.user.role,
+        written.attached,
+        updated.row.customFields,
+      );
       return {
-        matter: toRow(updated),
-        fields: updated.attached,
-        customFieldRefs: await resolveStaffRefs(app.db, updated.attached, updated.row.customFields),
+        matter: toRow(updated, projection.customFields),
+        fields: projection.fields,
+        customFieldRefs: await resolveStaffRefs(app.db, projection.fields, projection.customFields),
         team: await selectTeam(app.db, updated.row.id),
       };
     },
@@ -906,6 +1117,7 @@ export const mattersRoutes: FastifyPluginAsyncZod = async (app) => {
       },
     },
     async (request) => {
+      const today = civilToday();
       const archived = await app.db.transaction(async (tx) => {
         const current = await lockedMatter(tx, request.params.number, request.user);
         if (current.row.archivedAt) throw httpError(409, "This matter is already archived.");
@@ -924,7 +1136,11 @@ export const mattersRoutes: FastifyPluginAsyncZod = async (app) => {
         });
         return { ...current, row: row! };
       });
-      return { matter: toRow(archived) };
+      const [fresh] = await selectMatters(app.db, today)
+        .where(eq(matters.id, archived.row.id))
+        .limit(1);
+      if (!fresh) throw httpError(404, NO_MATTER);
+      return { matter: toRow(fresh) };
     },
   );
 
@@ -941,6 +1157,7 @@ export const mattersRoutes: FastifyPluginAsyncZod = async (app) => {
       },
     },
     async (request) => {
+      const today = civilToday();
       const restored = await app.db.transaction(async (tx) => {
         const current = await lockedMatter(tx, request.params.number, request.user);
         if (!current.row.archivedAt) throw httpError(409, "This matter is not archived.");
@@ -959,7 +1176,11 @@ export const mattersRoutes: FastifyPluginAsyncZod = async (app) => {
         });
         return { ...current, row: row! };
       });
-      return { matter: toRow(restored) };
+      const [fresh] = await selectMatters(app.db, today)
+        .where(eq(matters.id, restored.row.id))
+        .limit(1);
+      if (!fresh) throw httpError(404, NO_MATTER);
+      return { matter: toRow(fresh) };
     },
   );
 };
