@@ -10,6 +10,7 @@ import {
   eq,
   inArray,
   isNull,
+  MATTER_TEMPLATE_ASSIGNEE_ROLES,
   matterTemplateKeyDates,
   matterTemplateTasks,
   matterTemplates,
@@ -28,7 +29,7 @@ const SeveritySchema = z.enum(["low", "medium", "high", "critical"]);
 const NameSchema = z.string().trim().min(1).max(100);
 const DescriptionSchema = z.string().trim().max(500);
 const TitlePrefixSchema = z.string().trim().max(100);
-const AssigneeRoleSchema = z.enum(["matter_manager", "none"]);
+const AssigneeRoleSchema = z.enum(MATTER_TEMPLATE_ASSIGNEE_ROLES);
 const OffsetSchema = z.number().int().min(0).max(3650);
 const TemplateTaskInputSchema = z.strictObject({
   title: z.string().trim().min(1).max(200),
@@ -38,7 +39,7 @@ const TemplateTaskInputSchema = z.strictObject({
 const TemplateKeyDateInputSchema = z.strictObject({
   label: z.string().trim().min(1).max(200),
   offsetDays: OffsetSchema,
-  note: z.string().trim().min(1).max(2000).nullable(),
+  note: z.string().trim().max(2000).nullable(),
 });
 
 const NAME_TAKEN = "A template of this Matter type is already called that.";

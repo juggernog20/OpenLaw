@@ -522,7 +522,7 @@ describe("ordered template content", () => {
     );
   });
 
-  it("validates required text, role targets, offsets, bounds, and ids", async () => {
+  it("validates required text, role targets, offsets, bounds, and ids, and blanks an empty note", async () => {
     const template = await createTemplate({
       matterTypeId: employmentTypeId,
       name: "Content validation",
@@ -562,6 +562,15 @@ describe("ordered template content", () => {
       });
       expect(response.statusCode, response.body).toBe(400);
     }
+
+    const blankNote = await harness.app.inject({
+      method: "PUT",
+      url: `/api/v1/matter-templates/${template.id}/key-dates`,
+      cookies: adminCookies,
+      payload: { keyDates: [{ label: "Date", offsetDays: 1, note: "  " }] },
+    });
+    expect(blankNote.statusCode, blankNote.body).toBe(200);
+    expect(blankNote.json().matterTemplate.keyDates[0].note).toBeNull();
 
     const missing = await harness.app.inject({
       method: "PUT",
