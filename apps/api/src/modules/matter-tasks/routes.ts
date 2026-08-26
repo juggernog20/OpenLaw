@@ -7,11 +7,8 @@ import {
   and,
   asc,
   eq,
-  isNull,
   matters,
   matterTasks,
-  matterTeam,
-  sql,
   users,
   type Executor,
   type Matter,
@@ -22,6 +19,7 @@ import { requireRole, type AuthenticatedUser } from "../../auth/guards.js";
 import { recordActivity, RECORD_ACTIVITY_TIER } from "../../lib/activity.js";
 import { matterTeamScope, NO_MATTER, reachedMatter } from "../../lib/matter-access.js";
 import { httpError, problemResponse } from "../../lib/problem.js";
+import { assertValidMatterTaskAssignee, createMatterTask } from "./create.js";
 
 const requireReader = requireRole("administrator", "legal_team_member", "contributor");
 const requireMember = requireRole("administrator", "legal_team_member");
@@ -30,8 +28,6 @@ const TaskParams = z.object({ taskId: z.string().min(1).max(64) });
 const TitleSchema = z.string().trim().min(1).max(MAX_TASK_TITLE_LENGTH);
 const NO_TASK = "No Matter Task exists with this id.";
 const FROZEN = "This matter is archived. Restore it before changing its Tasks.";
-const INVALID_ASSIGNEE =
-  "The assignee must be the active Matter Manager or an active user on the Matter team.";
 
 const TaskSchema = z.object({
   id: z.string(),
@@ -114,35 +110,6 @@ export const matterTasksRoutes: FastifyPluginAsyncZod = async (app) => {
     if (task.matter.archivedAt) throw httpError(409, FROZEN);
   }
 
-  async function assertValidAssignee(
-    tx: Transaction,
-    matter: Pick<Matter, "id" | "managerId">,
-    assigneeId: string | null,
-  ): Promise<void> {
-    if (assigneeId === null) return;
-    const [active] = await tx
-      .select({ id: users.id })
-      .from(users)
-      .where(and(eq(users.id, assigneeId), isNull(users.archivedAt)))
-      .limit(1);
-    if (!active) throw httpError(400, INVALID_ASSIGNEE);
-    if (matter.managerId === assigneeId) return;
-    const [onTeam] = await tx
-      .select({ userId: matterTeam.userId })
-      .from(matterTeam)
-      .where(and(eq(matterTeam.matterId, matter.id), eq(matterTeam.userId, assigneeId)))
-      .limit(1);
-    if (!onTeam) throw httpError(400, INVALID_ASSIGNEE);
-  }
-
-  async function nextDisplayOrder(db: Executor, matterId: string): Promise<number> {
-    const [row] = await db
-      .select({ max: sql<number>`coalesce(max(${matterTasks.displayOrder}), -1)` })
-      .from(matterTasks)
-      .where(eq(matterTasks.matterId, matterId));
-    return (row?.max ?? -1) + 1;
-  }
-
   app.get(
     "/matters/:number/tasks",
     {
@@ -186,24 +153,12 @@ export const matterTasksRoutes: FastifyPluginAsyncZod = async (app) => {
         const matter = await reachedMatter(tx, request.user, request.params.number, { lock: true });
         assertWritable(matter);
         const assigneeId = request.body.assigneeId ?? null;
-        await assertValidAssignee(tx, matter, assigneeId);
-        const [created] = await tx
-          .insert(matterTasks)
-          .values({
-            matterId: matter.id,
-            title: request.body.title,
-            assigneeId,
-            dueDate: request.body.dueDate ?? null,
-            displayOrder: await nextDisplayOrder(tx, matter.id),
-          })
-          .returning({ id: matterTasks.id });
-        await recordActivity(tx, {
-          entityType: "matter",
-          entityId: matter.id,
+        const created = await createMatterTask(tx, {
+          matter,
+          title: request.body.title,
+          assigneeId,
+          dueDate: request.body.dueDate ?? null,
           actorId: request.user.id,
-          action: "task.added",
-          visibility: RECORD_ACTIVITY_TIER,
-          payload: { taskId: created!.id, title: request.body.title },
         });
         if (assigneeId) {
           await app.notifier.matterTaskAssigned(tx, {
@@ -212,7 +167,7 @@ export const matterTasksRoutes: FastifyPluginAsyncZod = async (app) => {
             matterTitle: matter.title,
             actorId: request.user.id,
             actorName: request.user.displayName,
-            taskId: created!.id,
+            taskId: created.id,
             taskTitle: request.body.title,
             assigneeId,
           });
@@ -252,7 +207,7 @@ export const matterTasksRoutes: FastifyPluginAsyncZod = async (app) => {
         const assigneeId =
           request.body.assigneeId === undefined ? task.assigneeId : request.body.assigneeId;
         if (request.body.assigneeId !== undefined) {
-          await assertValidAssignee(tx, task.matter, assigneeId);
+          await assertValidMatterTaskAssignee(tx, task.matter, assigneeId);
         }
         const wanted = {
           title: request.body.title ?? task.title,
