@@ -3,7 +3,16 @@
 /** HTTP-seam coverage for the MTR-013 template entity core. */
 
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { activityLog, asc, eq, inArray, matterTypes, users } from "@openlaw/db";
+import {
+  activityLog,
+  asc,
+  eq,
+  fields,
+  inArray,
+  matterTypeFields,
+  matterTypes,
+  users,
+} from "@openlaw/db";
 import { provisionUser } from "../../auth/instance.js";
 import {
   signInCookies,
@@ -117,11 +126,127 @@ describe("the SET-002 gate", () => {
         cookies: memberCookies,
         payload: { keyDates: [] },
       }),
+      harness.app.inject({
+        method: "PUT",
+        url: `/api/v1/matter-templates/${template.id}/custom-fields`,
+        cookies: memberCookies,
+        payload: { defaultCustomFields: {} },
+      }),
     ];
     for (const response of await Promise.all(attempts)) {
       expect(response.statusCode, response.body).toBe(403);
       expect(response.headers["content-type"]).toContain("application/problem+json");
     }
+  });
+});
+
+describe("custom-field defaults", () => {
+  it("uses Matter creation's coercion and keeps detached values marked stale", async () => {
+    const typeResponse = await harness.app.inject({
+      method: "POST",
+      url: "/api/v1/matter-types",
+      cookies: adminCookies,
+      payload: { displayName: "Template defaults probe" },
+    });
+    expect(typeResponse.statusCode, typeResponse.body).toBe(201);
+    const typeId = typeResponse.json().matterType.id as string;
+    const [businessUnit, budget] = await harness.db
+      .insert(fields)
+      .values([
+        {
+          slug: "template_business_unit",
+          displayName: "Template business unit",
+          moduleScope: "matter" as const,
+          fieldType: "single_select" as const,
+          fieldTag: "business" as const,
+          options: ["Finance", "People"],
+        },
+        {
+          slug: "template_budget",
+          displayName: "Template budget",
+          moduleScope: "matter" as const,
+          fieldType: "number" as const,
+          fieldTag: "legal" as const,
+        },
+      ])
+      .returning();
+    await harness.db.insert(matterTypeFields).values([
+      { typeId, fieldId: businessUnit!.id, displayOrder: 1 },
+      { typeId, fieldId: budget!.id, displayOrder: 2 },
+    ]);
+    const template = await createTemplate({ matterTypeId: typeId, name: "With defaults" });
+
+    const invalidTemplate = await harness.app.inject({
+      method: "PUT",
+      url: `/api/v1/matter-templates/${template.id}/custom-fields`,
+      cookies: adminCookies,
+      payload: { defaultCustomFields: { template_budget: "not a number" } },
+    });
+    const invalidMatter = await harness.app.inject({
+      method: "POST",
+      url: "/api/v1/matters",
+      cookies: adminCookies,
+      payload: {
+        title: "Same coercion probe",
+        matterTypeId: typeId,
+        customFields: { template_budget: "not a number" },
+      },
+    });
+    expect(invalidTemplate.statusCode, invalidTemplate.body).toBe(400);
+    expect(invalidTemplate.json()).toMatchObject({
+      type: invalidMatter.json().type,
+      status: invalidMatter.json().status,
+      detail: invalidMatter.json().detail,
+    });
+
+    const saved = await harness.app.inject({
+      method: "PUT",
+      url: `/api/v1/matter-templates/${template.id}/custom-fields`,
+      cookies: adminCookies,
+      payload: {
+        defaultCustomFields: {
+          template_business_unit: "Finance",
+          template_budget: 1250,
+        },
+      },
+    });
+    expect(saved.statusCode, saved.body).toBe(200);
+    expect(saved.json().matterTemplate).toMatchObject({
+      defaultCustomFields: {
+        template_business_unit: "Finance",
+        template_budget: 1250,
+      },
+      staleCustomFieldSlugs: [],
+      customFieldCount: 2,
+    });
+
+    await harness.db.delete(matterTypeFields).where(eq(matterTypeFields.fieldId, businessUnit!.id));
+    const read = await harness.app.inject({
+      method: "GET",
+      url: `/api/v1/matter-templates?matterTypeId=${typeId}`,
+      cookies: adminCookies,
+    });
+    expect(read.statusCode, read.body).toBe(200);
+    expect(read.json().matterTemplates[0]).toMatchObject({
+      defaultCustomFields: {
+        template_business_unit: "Finance",
+        template_budget: 1250,
+      },
+      staleCustomFieldSlugs: ["template_business_unit"],
+    });
+
+    const clearedActive = await harness.app.inject({
+      method: "PUT",
+      url: `/api/v1/matter-templates/${template.id}/custom-fields`,
+      cookies: adminCookies,
+      payload: { defaultCustomFields: {} },
+    });
+    expect(clearedActive.statusCode, clearedActive.body).toBe(200);
+    expect(clearedActive.json().matterTemplate).toMatchObject({
+      defaultCustomFields: { template_business_unit: "Finance" },
+      staleCustomFieldSlugs: ["template_business_unit"],
+      customFieldCount: 1,
+    });
   });
 });
 

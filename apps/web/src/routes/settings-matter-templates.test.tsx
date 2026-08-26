@@ -98,6 +98,12 @@ const TEMPLATES = [
     taskCount: 4,
     keyDateCount: 2,
     customFieldCount: 3,
+    defaultCustomFields: {
+      business_unit: "Finance",
+      budget: 5000,
+      old_region: "MEA",
+    },
+    staleCustomFieldSlugs: ["old_region"],
   },
   {
     id: "tpl-old",
@@ -114,6 +120,8 @@ const TEMPLATES = [
     taskCount: 1,
     keyDateCount: 0,
     customFieldCount: 0,
+    defaultCustomFields: {},
+    staleCustomFieldSlugs: [],
   },
   {
     id: "tpl-litigation",
@@ -130,6 +138,77 @@ const TEMPLATES = [
     taskCount: 2,
     keyDateCount: 1,
     customFieldCount: 1,
+    defaultCustomFields: {},
+    staleCustomFieldSlugs: [],
+  },
+];
+
+const ATTACHED_FIELDS = [
+  {
+    fieldId: "field-business-unit",
+    slug: "business_unit",
+    displayName: "Business unit",
+    fieldType: "single_select" as const,
+    moduleScope: "matter" as const,
+    displayOrder: 1,
+    isRequired: false,
+  },
+  {
+    fieldId: "field-budget",
+    slug: "budget",
+    displayName: "Budget",
+    fieldType: "number" as const,
+    moduleScope: "matter" as const,
+    displayOrder: 2,
+    isRequired: false,
+  },
+];
+
+const FIELD_CATALOG = [
+  {
+    id: "field-business-unit",
+    slug: "business_unit",
+    displayName: "Business unit",
+    description: "The team funding the work.",
+    moduleScope: "matter" as const,
+    fieldType: "single_select" as const,
+    options: ["Finance", "People"],
+    fieldTag: "business" as const,
+    aiPrompt: null,
+    archivedAt: null,
+    attachmentCount: 1,
+    createdAt: "2026-01-01T00:00:00.000Z",
+    updatedAt: "2026-01-01T00:00:00.000Z",
+  },
+  {
+    id: "field-budget",
+    slug: "budget",
+    displayName: "Budget",
+    description: null,
+    moduleScope: "matter" as const,
+    fieldType: "number" as const,
+    options: null,
+    fieldTag: "legal" as const,
+    aiPrompt: null,
+    archivedAt: null,
+    attachmentCount: 1,
+    createdAt: "2026-01-01T00:00:00.000Z",
+    updatedAt: "2026-01-01T00:00:00.000Z",
+  },
+  {
+    id: "field-old-region",
+    slug: "old_region",
+    displayName: "Old region",
+    description: null,
+    moduleScope: "matter" as const,
+    fieldType: "text" as const,
+    options: null,
+    fieldTag: "business" as const,
+    aiPrompt: null,
+    archivedAt: null,
+    attachmentCount: 0,
+    createdAt: "2026-01-01T00:00:00.000Z",
+    updatedAt: "2026-01-01T00:00:00.000Z",
   },
 ];
 
@@ -138,6 +217,7 @@ interface Calls {
   updates: { id: string; body: unknown }[];
   taskReplacements: { id: string; body: unknown }[];
   keyDateReplacements: { id: string; body: unknown }[];
+  customFieldReplacements: { id: string; body: unknown }[];
   archives: string[];
   restores: string[];
 }
@@ -150,6 +230,18 @@ function templateApi(calls: Calls) {
     }
     if (path === "/api/v1/matter-templates" && call.method === "GET") {
       return json(200, { matterTemplates: TEMPLATES });
+    }
+    if (path === "/api/v1/matter-types/mt-employment/fields" && call.method === "GET") {
+      return json(200, { attachedFields: ATTACHED_FIELDS });
+    }
+    if (path === "/api/v1/fields" && call.method === "GET") {
+      return json(200, { fields: FIELD_CATALOG });
+    }
+    if (path === "/api/v1/users" && call.method === "GET") {
+      return json(200, { users: [ADMIN] });
+    }
+    if (path === "/api/v1/entities" && call.method === "GET") {
+      return json(200, { entities: [] });
     }
     if (path === "/api/v1/matter-templates" && call.method === "POST") {
       calls.creates.push(call.body);
@@ -170,6 +262,8 @@ function templateApi(calls: Calls) {
           taskCount: 0,
           keyDateCount: 0,
           customFieldCount: 0,
+          defaultCustomFields: {},
+          staleCustomFieldSlugs: [],
         },
       });
     }
@@ -199,6 +293,24 @@ function templateApi(calls: Calls) {
             displayOrder: index + 1,
           })),
           taskCount: body.tasks.length,
+        },
+      });
+    }
+    const customFields = /^\/api\/v1\/matter-templates\/([^/]+)\/custom-fields$/.exec(path);
+    if (customFields && call.method === "PUT") {
+      calls.customFieldReplacements.push({ id: customFields[1]!, body: call.body });
+      const original = TEMPLATES.find((template) => template.id === customFields[1])!;
+      const body = call.body as { defaultCustomFields: Record<string, unknown> };
+      return json(200, {
+        matterTemplate: {
+          ...original,
+          defaultCustomFields: {
+            old_region: original.defaultCustomFields.old_region,
+            ...body.defaultCustomFields,
+          },
+          customFieldCount:
+            Object.keys(body.defaultCustomFields).length +
+            (original.defaultCustomFields.old_region === undefined ? 0 : 1),
         },
       });
     }
@@ -276,6 +388,7 @@ function newCalls(): Calls {
     updates: [],
     taskReplacements: [],
     keyDateReplacements: [],
+    customFieldReplacements: [],
     archives: [],
     restores: [],
   };
@@ -392,12 +505,44 @@ describe("the core template editor", () => {
         },
       }),
     );
+    expect(calls.customFieldReplacements).toHaveLength(1);
     expect(calls.taskReplacements).toHaveLength(1);
     expect(calls.keyDateReplacements).toHaveLength(1);
     expect(await screen.findByText("Saved")).toBeInTheDocument();
 
     await user.click(screen.getByRole("link", { name: "All templates" }));
     expect(router.state.location.pathname).toBe("/settings/matters/templates");
+  });
+
+  it("renders shared controls and keeps a detached default visibly stale", async () => {
+    const calls = newCalls();
+    stubApi({ signedIn: ADMIN, extra: templateApi(calls) });
+    renderAt("/settings/matters/templates/tpl-employment");
+    const user = userEvent.setup();
+
+    expect(await screen.findByRole("combobox", { name: "Business unit" })).toHaveValue("Finance");
+    expect(screen.getByRole("spinbutton", { name: "Budget" })).toHaveValue(5000);
+    expect(
+      screen.getByText(
+        "Old region is no longer attached to this Matter type. Its saved value (MEA) is retained.",
+      ),
+    ).toBeInTheDocument();
+
+    await user.selectOptions(screen.getByRole("combobox", { name: "Business unit" }), "People");
+    const budget = screen.getByRole("spinbutton", { name: "Budget" });
+    await user.clear(budget);
+    await user.type(budget, "7500");
+    await user.click(screen.getByRole("button", { name: "Save template" }));
+
+    await waitFor(() =>
+      expect(calls.customFieldReplacements).toEqual([
+        {
+          id: "tpl-employment",
+          body: { defaultCustomFields: { business_unit: "People", budget: 7500 } },
+        },
+      ]),
+    );
+    expect(await screen.findByText("Saved")).toBeInTheDocument();
   });
 
   it("edits, adds, removes, and reorders template tasks and key dates", async () => {
@@ -496,6 +641,7 @@ describe("the core template editor", () => {
       ),
     ).toBeInTheDocument();
     expect(calls.updates).toEqual([]);
+    expect(calls.customFieldReplacements).toEqual([]);
     expect(calls.taskReplacements).toEqual([]);
     expect(calls.keyDateReplacements).toEqual([]);
   });

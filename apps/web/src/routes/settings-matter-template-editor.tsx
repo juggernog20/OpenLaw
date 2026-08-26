@@ -3,14 +3,24 @@
 /** ST21 Matter-template editor for reusable defaults, tasks, and key dates. */
 
 import { useState } from "react";
-import { ArrowLeft } from "lucide-react";
+import { AlertTriangle, ArrowLeft } from "lucide-react";
 import { defineMessages, FormattedMessage, useIntl } from "react-intl";
 import { Link, redirect, useLoaderData, type LoaderFunctionArgs } from "react-router";
 import type { paths } from "@openlaw/api-client";
 import { api } from "../lib/api";
+import {
+  emptyDraft,
+  toDraft,
+  toValue,
+  type AttachedField,
+  type CustomFieldDraft,
+  type CustomFieldValue,
+  type CustomFieldValues,
+} from "../lib/custom-fields";
 import { problemDetail } from "../lib/messages";
 import { currentUser, needsSetup } from "../lib/session";
 import { MattersSettingsTabs } from "../components/matters-settings-tabs";
+import { CustomFieldControl, type FieldReference } from "../components/custom-field-control";
 import {
   newDraftKey,
   TemplateKeyDatesEditor,
@@ -41,9 +51,50 @@ export async function settingsMatterTemplateEditorLoader({ params }: LoaderFunct
   );
   if (!matterTemplate)
     throw new Response("No Matter template exists with this id.", { status: 404 });
+  const [attachments, catalog, users, entities] = await Promise.all([
+    api.GET("/api/v1/matter-types/{id}/fields", {
+      params: { path: { id: matterTemplate.matterTypeId } },
+    }),
+    api.GET("/api/v1/fields", { params: { query: { includeArchived: "true" } } }),
+    api.GET("/api/v1/users", {}),
+    api.GET("/api/v1/entities", { params: { query: { includeArchived: "true" } } }),
+  ]);
+  if (!attachments.data || !catalog.data || !users.data || !entities.data) {
+    throw new Error("The Matter template fields could not be read.");
+  }
+  const catalogById = new Map(catalog.data.fields.map((field) => [field.id, field]));
+  const attachedFields = attachments.data.attachedFields.flatMap((attachment) => {
+    const field = catalogById.get(attachment.fieldId);
+    if (!field) return [];
+    return [
+      {
+        fieldId: attachment.fieldId,
+        slug: attachment.slug,
+        displayName: attachment.displayName,
+        description: field.description,
+        fieldType: attachment.fieldType,
+        fieldTag: field.fieldTag,
+        options: field.options,
+        displayOrder: attachment.displayOrder,
+        isRequired: attachment.isRequired,
+      } satisfies AttachedField,
+    ];
+  });
   return {
     matterTemplate,
     matterType: types.data.matterTypes.find((type) => type.id === matterTemplate.matterTypeId),
+    attachedFields,
+    fieldCatalog: catalog.data.fields,
+    people: users.data.users.map((person) => ({
+      id: person.id,
+      label: person.displayName,
+      archived: person.status === "archived",
+    })),
+    entities: entities.data.entities.map((entity) => ({
+      id: entity.id,
+      label: entity.legalName,
+      archived: entity.archivedAt !== null,
+    })),
   };
 }
 
@@ -59,8 +110,34 @@ const SEVERITY_MESSAGES = defineMessages({
   critical: { id: "severity.critical", defaultMessage: "Critical" },
 });
 
+function initialCustomFieldDrafts(
+  fields: readonly AttachedField[],
+  values: CustomFieldValues,
+): Record<string, CustomFieldDraft> {
+  return Object.fromEntries(
+    fields.map((field) => [field.slug, toDraft(field, values[field.slug])]),
+  );
+}
+
+function staleValueLabel(
+  value: CustomFieldValue,
+  fieldType: string | undefined,
+  people: readonly FieldReference[],
+  entities: readonly FieldReference[],
+): string {
+  if (Array.isArray(value)) return value.join(", ");
+  if (typeof value === "boolean") return value ? "Yes" : "No";
+  if (fieldType === "user")
+    return people.find((person) => person.id === value)?.label ?? String(value);
+  if (fieldType === "entity") {
+    return entities.find((entity) => entity.id === value)?.label ?? String(value);
+  }
+  return String(value);
+}
+
 export function SettingsMatterTemplateEditorPage() {
-  const { matterTemplate, matterType } = useLoaderData<typeof settingsMatterTemplateEditorLoader>();
+  const { matterTemplate, matterType, attachedFields, fieldCatalog, people, entities } =
+    useLoaderData<typeof settingsMatterTemplateEditorLoader>();
   const intl = useIntl();
   const [template, setTemplate] = useState(matterTemplate);
   const [name, setName] = useState(template.name);
@@ -70,6 +147,9 @@ export function SettingsMatterTemplateEditorPage() {
   );
   const [defaultRisk, setDefaultRisk] = useState<Severity | "">(template.defaultRisk ?? "");
   const [titlePrefix, setTitlePrefix] = useState(template.titlePrefix ?? "");
+  const [customFieldDrafts, setCustomFieldDrafts] = useState<Record<string, CustomFieldDraft>>(() =>
+    initialCustomFieldDrafts(attachedFields, template.defaultCustomFields),
+  );
   const [tasks, setTasks] = useState<TemplateTaskDraft[]>(() =>
     template.tasks.map((task) => ({
       key: task.id,
@@ -127,6 +207,24 @@ export function SettingsMatterTemplateEditorPage() {
       );
       return;
     }
+    const customFieldValues: Record<string, CustomFieldValue> = {};
+    for (const field of attachedFields) {
+      const result = toValue(field, customFieldDrafts[field.slug] ?? emptyDraft(field));
+      if ("error" in result) {
+        setStatus("error");
+        setDetail(
+          intl.formatMessage(
+            {
+              id: "settings.matterTemplateEditor.fieldNumberInvalid",
+              defaultMessage: "Give {field} a number.",
+            },
+            { field: field.displayName },
+          ),
+        );
+        return;
+      }
+      if (result.value !== null) customFieldValues[field.slug] = result.value;
+    }
     setStatus("saving");
     setDetail(null);
     const { data, error } = await api
@@ -153,6 +251,25 @@ export function SettingsMatterTemplateEditorPage() {
       return;
     }
     setTemplate(data.matterTemplate);
+
+    const fieldResult = await api
+      .PUT("/api/v1/matter-templates/{id}/custom-fields", {
+        params: { path: { id: template.id } },
+        body: { defaultCustomFields: customFieldValues },
+      })
+      .catch(() => ({ data: null, error: undefined }));
+    if (!fieldResult.data) {
+      setStatus("error");
+      setDetail(
+        problemDetail(fieldResult.error) ??
+          intl.formatMessage({
+            id: "settings.matterTemplateEditor.fieldsSaveError",
+            defaultMessage: "The custom-field defaults could not be saved.",
+          }),
+      );
+      return;
+    }
+    setTemplate(fieldResult.data.matterTemplate);
 
     const taskResult = await api
       .PUT("/api/v1/matter-templates/{id}/tasks", {
@@ -203,6 +320,12 @@ export function SettingsMatterTemplateEditorPage() {
       return;
     }
     setTemplate(keyDateResult.data.matterTemplate);
+    setCustomFieldDrafts(
+      initialCustomFieldDrafts(
+        attachedFields,
+        keyDateResult.data.matterTemplate.defaultCustomFields,
+      ),
+    );
     setTasks(
       keyDateResult.data.matterTemplate.tasks.map((task) => ({
         key: task.id || newDraftKey("task"),
@@ -353,6 +476,81 @@ export function SettingsMatterTemplateEditorPage() {
             </div>
           </SettingsCard>
         </div>
+        <SettingsCard
+          title={
+            <FormattedMessage
+              id="settings.matterTemplateEditor.customFields"
+              defaultMessage="Custom field defaults"
+            />
+          }
+        >
+          {attachedFields.length === 0 && template.staleCustomFieldSlugs.length === 0 ? (
+            <p className="text-base text-muted">
+              <FormattedMessage
+                id="settings.matterTemplateEditor.noCustomFields"
+                defaultMessage="This Matter type has no custom fields."
+              />
+            </p>
+          ) : (
+            <div className="grid grid-cols-1 gap-4 @3xl/page:grid-cols-2">
+              {attachedFields.map((field) => {
+                const controlId = `template-field-${field.fieldId}`;
+                const descriptionId = field.description ? `${controlId}-description` : undefined;
+                return (
+                  <div key={field.fieldId} className="flex flex-col gap-1.5">
+                    <Label id={`${controlId}-label`} htmlFor={controlId}>
+                      {field.displayName}
+                    </Label>
+                    <CustomFieldControl
+                      id={controlId}
+                      field={field}
+                      draft={customFieldDrafts[field.slug] ?? emptyDraft(field)}
+                      disabled={status === "saving" || template.archivedAt !== null}
+                      people={people}
+                      entities={entities}
+                      describedBy={descriptionId}
+                      onDraft={(draft) =>
+                        setCustomFieldDrafts((current) => ({
+                          ...current,
+                          [field.slug]: draft,
+                        }))
+                      }
+                    />
+                    {field.description && (
+                      <p id={descriptionId} className="text-xs text-muted">
+                        {field.description}
+                      </p>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+          {template.staleCustomFieldSlugs.map((slug) => {
+            const field = fieldCatalog.find((candidate) => candidate.slug === slug);
+            const value = template.defaultCustomFields[slug];
+            if (value === undefined) return null;
+            return (
+              <div
+                key={slug}
+                role="status"
+                className="flex gap-2 rounded-card bg-status-warning-bg p-3 text-sm text-status-warning-fg"
+              >
+                <AlertTriangle className="mt-0.5 shrink-0" size={16} aria-hidden="true" />
+                <p>
+                  <FormattedMessage
+                    id="settings.matterTemplateEditor.staleField"
+                    defaultMessage="{field} is no longer attached to this Matter type. Its saved value ({value}) is retained."
+                    values={{
+                      field: field?.displayName ?? slug,
+                      value: staleValueLabel(value, field?.fieldType, people, entities),
+                    }}
+                  />
+                </p>
+              </div>
+            );
+          })}
+        </SettingsCard>
         <TemplateTasksEditor
           rows={tasks}
           disabled={status === "saving" || template.archivedAt !== null}
