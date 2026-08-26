@@ -527,6 +527,13 @@ describe("the matter target", () => {
     ).toEqual({ [carrySlug]: "Triager opponent" });
   });
 
+  it("refuses a template on a contract conversion", async () => {
+    const request = await submit("Template on the wrong arm", contractTargetRequestTypeId);
+    const refused = await convert(request.number, { title: "An NDA", templateId });
+    expect(refused.statusCode, refused.body).toBe(400);
+    expect(refused.json().detail).toContain("matter template");
+  });
+
   it("uses the matter title ceiling rather than the contract ceiling", async () => {
     const longMatterTitle = "M".repeat(201);
     const accepted = await submit("A matter with a deliberately long title");

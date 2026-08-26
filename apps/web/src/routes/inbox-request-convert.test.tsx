@@ -510,7 +510,7 @@ describe("the target is confirmed, never classified (DD-018)", () => {
     );
     open(api);
     const dialog = await openDisposition(user, "Convert to matter");
-    const template = within(dialog).getByLabelText("Template");
+    const template = within(dialog).getByLabelText(/^Template/);
     expect(template).toHaveValue("tpl-employment");
     expect(
       within(template)
@@ -540,6 +540,30 @@ describe("the target is confirmed, never classified (DD-018)", () => {
     expect(api.conversions[0]).toEqual({
       title: "Northwind Labs mutual NDA",
       templateId: "tpl-employment",
+      customFields: { governing_law: "DIFC Courts" },
+    });
+  });
+
+  it("drops a template pre-fill when the picked type changes to one without that template", async () => {
+    const user = userEvent.setup();
+    const api = requestApi(request({ customFields: {} }));
+    open(api);
+    const dialog = await openConvert(user);
+    await user.click(within(dialog).getByRole("button", { name: "Convert to matter instead" }));
+    const typePicker = within(dialog).getByLabelText(/^Matter type/);
+    await user.selectOptions(typePicker, "mt-employment");
+    expect(within(dialog).getByLabelText(/^Template/)).toHaveValue("tpl-employment");
+    expect(within(dialog).getByLabelText(/^Governing law/)).toHaveValue("Template forum");
+
+    await user.selectOptions(typePicker, "mt-dispute");
+    expect(within(dialog).getByLabelText(/^Template/)).toHaveValue("");
+    expect(within(dialog).getByLabelText(/^Governing law/)).toHaveValue("");
+    await user.type(within(dialog).getByLabelText(/^Governing law/), "DIFC Courts");
+    await user.click(within(dialog).getByRole("button", { name: "Convert to matter" }));
+    await waitFor(() => expect(api.conversions).toHaveLength(1));
+    expect(api.conversions[0]).toEqual({
+      title: "Northwind Labs mutual NDA",
+      matterTypeId: "mt-dispute",
       customFields: { governing_law: "DIFC Courts" },
     });
   });

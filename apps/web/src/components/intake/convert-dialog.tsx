@@ -205,14 +205,19 @@ export function ConvertDialog({
   /** Template defaults sit below both carried Request values and what
    * the triager types. A carried value therefore never gets replaced
    * in the drafts; an unanswered creation field is seeded (or cleared)
-   * when the template choice changes. */
+   * when the template choice changes. The type being left is reseeded
+   * too, so a default the old template put in a shared box does not
+   * outlive the template. */
   function seedTemplate(type: MatterTypeOption, nextTemplateId: string) {
     const template = type.templates?.find((candidate) => candidate.id === nextTemplateId);
     setTemplateId(template?.id ?? "");
+    const leaving = (matterTarget?.fields ?? []).filter(
+      (field) => !type.fields.some((attached) => attached.slug === field.slug),
+    );
     setDrafts((current) => ({
       ...current,
       ...Object.fromEntries(
-        type.fields.map((field) => [
+        [...leaving, ...type.fields].map((field) => [
           field.slug,
           isAnswered(request.customFields[field.slug])
             ? (current[field.slug] ?? emptyDraft(field))
@@ -347,7 +352,7 @@ export function ConvertDialog({
           ? { contractTypeId: target.id }
           : { matterTypeId: target.id }
         : {}),
-      ...(targetModule === "matter" && templateId ? { templateId } : {}),
+      ...(selectedTemplate ? { templateId: selectedTemplate.id } : {}),
       ...(Object.keys(customFields).length === 0 ? {} : { customFields }),
     });
     if (result.ok) return;
@@ -555,6 +560,7 @@ export function ConvertDialog({
                         const onlyTemplate =
                           nextType?.templates?.length === 1 ? nextType.templates[0] : undefined;
                         if (nextType && onlyTemplate) seedTemplate(nextType, onlyTemplate.id);
+                        else if (nextType && templateId) seedTemplate(nextType, "");
                         else setTemplateId("");
                       }
                       if (nextId !== "") setError(null);
@@ -585,7 +591,10 @@ export function ConvertDialog({
             {matterTarget && (
               <div className="flex flex-col gap-1.5">
                 <Label htmlFor="convert-template">
-                  <FormattedMessage id="matters.field.template" defaultMessage="Template" />
+                  <FormattedMessage
+                    id="matters.field.template"
+                    defaultMessage="Template (optional)"
+                  />
                 </Label>
                 <select
                   id="convert-template"
