@@ -9,6 +9,10 @@ import {
   matters,
   matterStatuses,
   matterTeam,
+  matterKeyDates,
+  matterTemplateKeyDates,
+  matterTemplateTasks,
+  matterTemplates,
   matterTypeFields,
   matterTypes,
   users,
@@ -18,6 +22,7 @@ import {
   type Transaction,
 } from "@openlaw/db";
 import { recordActivity, RECORD_ACTIVITY_TIER } from "../../lib/activity.js";
+import { civilToday, shiftDays } from "../../lib/contract-term.js";
 import {
   MATTER_CREATOR_ROLE,
   MATTER_MANAGER_REFUSAL,
@@ -29,6 +34,7 @@ import {
   selectAttachedFields,
 } from "../../lib/custom-fields.js";
 import { httpError } from "../../lib/problem.js";
+import { createMatterTask } from "../matter-tasks/create.js";
 
 export interface CreateMatterInput {
   actorId: string;
@@ -39,6 +45,7 @@ export interface CreateMatterInput {
   risk?: SeverityLevel | null;
   description?: string | null;
   customFields?: Readonly<Record<string, CustomFieldValue | null>>;
+  templateId?: string;
   isConfidential?: boolean;
 }
 
@@ -72,6 +79,37 @@ export async function createMatter(
   if (!matterType || matterType.archivedAt) {
     throw httpError(400, "The matter type must be a live matter type.");
   }
+
+  const template = input.templateId
+    ? (
+        await tx
+          .select()
+          .from(matterTemplates)
+          .where(eq(matterTemplates.id, input.templateId))
+          .limit(1)
+          .for("update")
+      )[0]
+    : null;
+  if (
+    input.templateId &&
+    (!template || template.archivedAt || template.matterTypeId !== matterType.id)
+  ) {
+    throw httpError(400, "The template must be live and belong to the selected matter type.");
+  }
+  const templateContent = template
+    ? await Promise.all([
+        tx
+          .select()
+          .from(matterTemplateTasks)
+          .where(eq(matterTemplateTasks.matterTemplateId, template.id))
+          .orderBy(asc(matterTemplateTasks.displayOrder), asc(matterTemplateTasks.id)),
+        tx
+          .select()
+          .from(matterTemplateKeyDates)
+          .where(eq(matterTemplateKeyDates.matterTemplateId, template.id))
+          .orderBy(asc(matterTemplateKeyDates.displayOrder), asc(matterTemplateKeyDates.id)),
+      ])
+    : ([[], []] as const);
 
   const [status] = await tx
     .select({
@@ -111,11 +149,23 @@ export async function createMatter(
   }
 
   const attached = await selectAttachedFields(tx, matterTypeFields, matterType.id);
+  // Template defaults sit under the caller's values in one pass. A
+  // default the caller overrides is never validated, so a stale option
+  // or an archived person left in a template cannot refuse a creation
+  // that does not use it. Defaults under slugs the type no longer
+  // attaches are dropped for the same reason.
+  const attachedSlugs = new Set(attached.map((field) => field.slug));
+  const templateDefaults = Object.fromEntries(
+    Object.entries(template?.defaultCustomFields ?? {}).filter(([slug]) => attachedSlugs.has(slug)),
+  );
   const { values: customFields } = await applyCustomFields(
     tx,
     attached,
     {},
-    input.customFields ?? {},
+    {
+      ...templateDefaults,
+      ...(input.customFields ?? {}),
+    },
   );
   assertRequiredCustomFields(attached, customFields);
 
@@ -128,8 +178,8 @@ export async function createMatter(
       matterTypeId: matterType.id,
       statusId: status.id,
       managerId: manager?.id ?? null,
-      priority: input.priority ?? "medium",
-      risk: input.risk ?? null,
+      priority: input.priority ?? template?.defaultPriority ?? "medium",
+      risk: input.risk !== undefined ? input.risk : (template?.defaultRisk ?? null),
       customFields,
       isConfidential: confidential,
       createdBy: input.actorId,
@@ -150,8 +200,41 @@ export async function createMatter(
       matterType: matterType.displayName,
       status: status.displayName,
       customFields: Object.keys(customFields).sort((a, b) => a.localeCompare(b)),
+      ...(template ? { template: template.name } : {}),
     },
   });
+  if (template) {
+    const createdOn = civilToday(row!.createdAt);
+    for (const task of templateContent[0]) {
+      await createMatterTask(tx, {
+        matter: row!,
+        title: task.title,
+        assigneeId: task.assigneeRole === "matter_manager" ? row!.managerId : null,
+        dueDate: task.dueOffsetDays === null ? null : shiftDays(createdOn, task.dueOffsetDays),
+        actorId: input.actorId,
+      });
+    }
+    for (const keyDate of templateContent[1]) {
+      const date = shiftDays(createdOn, keyDate.offsetDays);
+      const [created] = await tx
+        .insert(matterKeyDates)
+        .values({
+          matterId: row!.id,
+          date,
+          label: keyDate.label,
+          note: keyDate.note,
+        })
+        .returning({ id: matterKeyDates.id });
+      await recordActivity(tx, {
+        entityType: "matter",
+        entityId: row!.id,
+        actorId: input.actorId,
+        action: "key_date.added",
+        visibility: RECORD_ACTIVITY_TIER,
+        payload: { keyDateId: created!.id, label: keyDate.label, date },
+      });
+    }
+  }
   if (confidential) {
     await recordActivity(tx, {
       entityType: "matter",

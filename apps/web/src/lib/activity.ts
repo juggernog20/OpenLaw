@@ -1265,8 +1265,11 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
     icon: FilePlus2,
     message: defineMessage({
       id: "activity.matter.created",
-      defaultMessage: "{actor} created this matter",
+      defaultMessage:
+        "{template, select, none {{actor} created this matter} " +
+        "other {{actor} created this matter from the {template} template}}",
     }),
+    values: (_intl, payload) => ({ template: text(payload, "template") ?? "none" }),
   },
   "matter.created_from_request": {
     icon: ArrowRightLeft,

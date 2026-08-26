@@ -6,6 +6,7 @@ import { FormattedMessage, useIntl } from "react-intl";
 import { api } from "../../lib/api";
 import {
   emptyDraft,
+  toDraft,
   toValue,
   type CustomFieldDraft,
   type CustomFieldValue,
@@ -49,6 +50,7 @@ export function CreateMatterDialog({
   const intl = useIntl();
   const [title, setTitle] = useState("");
   const [matterTypeId, setMatterTypeId] = useState("");
+  const [templateId, setTemplateId] = useState("");
   const [managerId, setManagerId] = useState("");
   const [priority, setPriority] = useState<MatterRow["priority"]>("medium");
   const [risk, setRisk] = useState<MatterRow["risk"]>(null);
@@ -58,6 +60,9 @@ export function CreateMatterDialog({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const fields = matterTypes.find((type) => type.id === matterTypeId)?.fields ?? [];
+  const selectedType = matterTypes.find((type) => type.id === matterTypeId);
+  const templates = selectedType?.templates ?? [];
+  const selectedTemplate = templates.find((template) => template.id === templateId);
   const people = users.map((person) => ({
     id: person.id,
     label: person.displayName,
@@ -66,6 +71,30 @@ export function CreateMatterDialog({
   const managers = users.filter(
     (person) => person.role === "administrator" || person.role === "legal_team_member",
   );
+
+  /**
+   * Re-seed the form from a template, or from none. Priority, risk, and
+   * the custom-field drafts always follow the new template. The title
+   * follows only while it is blank or still the previous template's
+   * prefix, so a title the person typed survives a template or type
+   * switch.
+   */
+  function seedTemplate(type: MatterTypeOption | undefined, nextTemplateId: string) {
+    const template = type?.templates?.find((candidate) => candidate.id === nextTemplateId);
+    setTemplateId(template?.id ?? "");
+    const untouched = title.trim() === "" || title === (selectedTemplate?.titlePrefix ?? "");
+    if (untouched) setTitle(template?.titlePrefix ?? "");
+    setPriority(template?.defaultPriority ?? "medium");
+    setRisk(template?.defaultRisk ?? null);
+    setDrafts(
+      Object.fromEntries(
+        (type?.fields ?? []).map((field) => [
+          field.slug,
+          toDraft(field, template?.defaultCustomFields[field.slug]),
+        ]),
+      ),
+    );
+  }
 
   async function submit() {
     if (busy) return;
@@ -114,6 +143,7 @@ export function CreateMatterDialog({
           risk,
           description: description.trim() || null,
           customFields,
+          ...(templateId ? { templateId } : {}),
           isConfidential: confidential,
           ...(parent ? { parentMatterNumber: parent.number } : {}),
         },
@@ -183,7 +213,12 @@ export function CreateMatterDialog({
               className={CONTROL_CLASS}
               value={matterTypeId}
               onChange={(event) => {
+                const nextType = matterTypes.find((type) => type.id === event.target.value);
                 setMatterTypeId(event.target.value);
+                const nextTemplates = nextType?.templates ?? [];
+                if (nextTemplates.length === 1) seedTemplate(nextType, nextTemplates[0]!.id);
+                else if (templateId) seedTemplate(nextType, "");
+                else setTemplateId("");
                 setError(null);
               }}
             >
@@ -197,6 +232,49 @@ export function CreateMatterDialog({
               ))}
             </select>
           </div>
+          {selectedType && (
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="matter-new-template">
+                <FormattedMessage
+                  id="matters.field.template"
+                  defaultMessage="Template (optional)"
+                />
+              </Label>
+              <select
+                id="matter-new-template"
+                className={CONTROL_CLASS}
+                value={templateId}
+                onChange={(event) => {
+                  seedTemplate(selectedType, event.target.value);
+                  setError(null);
+                }}
+              >
+                <option value="">
+                  {intl.formatMessage({
+                    id: "matters.template.none",
+                    defaultMessage: "No template",
+                  })}
+                </option>
+                {templates.map((template) => (
+                  <option key={template.id} value={template.id}>
+                    {template.name}
+                  </option>
+                ))}
+              </select>
+              {selectedTemplate && (
+                <p className="text-xs text-muted">
+                  <FormattedMessage
+                    id="matters.template.contentHint"
+                    defaultMessage="Template adds {taskCount, plural, one {# task} other {# tasks}} and {keyDateCount, plural, one {# key date} other {# key dates}}."
+                    values={{
+                      taskCount: selectedTemplate.taskCount,
+                      keyDateCount: selectedTemplate.keyDateCount,
+                    }}
+                  />
+                </p>
+              )}
+            </div>
+          )}
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="matter-new-manager">
               <FormattedMessage id="matters.field.manager" defaultMessage="Matter Manager" />

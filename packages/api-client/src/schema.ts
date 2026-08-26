@@ -917,7 +917,7 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** Live matter types with attached fields, statuses, and assignable people */
+    /** Live matter types with attached fields and creation templates, statuses, and assignable people */
     get: operations["listMatterOptions"];
     put?: never;
     post?: never;
@@ -6685,6 +6685,7 @@ export interface operations {
           };
           isConfidential?: boolean;
           parentMatterNumber?: number;
+          templateId?: string;
         };
       };
     };
@@ -6789,6 +6790,19 @@ export interface operations {
                 options: string[] | null;
                 displayOrder: number;
                 isRequired: boolean;
+              }[];
+              templates: {
+                id: string;
+                name: string;
+                description: string | null;
+                defaultPriority: ("low" | "medium" | "high" | "critical") | null;
+                defaultRisk: ("low" | "medium" | "high" | "critical") | null;
+                defaultCustomFields: {
+                  [key: string]: string | number | boolean | string[];
+                };
+                titlePrefix: string | null;
+                taskCount: number;
+                keyDateCount: number;
               }[];
             }[];
             matterStatuses: {

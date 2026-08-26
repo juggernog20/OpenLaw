@@ -782,6 +782,18 @@ describe("the cross-reference fallbacks between an ask and its record", () => {
     );
   });
 
+  it("names the template a matter was created from, and stays quiet without one", () => {
+    expect(
+      narrate("matter.created", {
+        ...SAMPLE_PAYLOADS["matter.created"],
+        template: "Employment standard",
+      }).sentence,
+    ).toBe("Nadia Counsel created this matter from the Employment standard template");
+    expect(narrate("matter.created", SAMPLE_PAYLOADS["matter.created"]).sentence).toBe(
+      "Nadia Counsel created this matter",
+    );
+  });
+
   it("names a request when the record's own entry carries no number", () => {
     expect(
       narrate("contract.created_from_request", { number: 51, title: "Northwind NDA" }).sentence,

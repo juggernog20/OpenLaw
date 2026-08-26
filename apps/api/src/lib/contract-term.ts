@@ -86,6 +86,12 @@ export function daysBetween(from: string, to: string): number {
   return Math.round((civilInstant(to) - civilInstant(from)) / DAY_MS);
 }
 
+/** A civil date shifted by whole days. Used when a stored relative
+ * offset becomes an ordinary date on a newly created record. */
+export function shiftDays(date: string, days: number): string {
+  return civilDate(civilInstant(date) + days * DAY_MS);
+}
+
 /**
  * A civil date shifted by whole months, clamped to the target month's
  * last day — `2026-01-31` forward one month is February's 28th, not
