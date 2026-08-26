@@ -281,3 +281,87 @@ describe("Matter template lifecycle", () => {
     expect(archivedType.statusCode).toBe(409);
   });
 });
+
+/**
+ * The name is the only identity the creation picker will show inside one
+ * type, so two live templates of a type may not share one. The index is
+ * partial on the live rows, which is what makes archiving free the name.
+ */
+describe("the name is unique among live templates of a type", () => {
+  it("refuses a second live template of the type with the same name, case-insensitively", async () => {
+    await createTemplate({ matterTypeId: employmentTypeId, name: "Unique probe" });
+    const res = await harness.app.inject({
+      method: "POST",
+      url: "/api/v1/matter-templates",
+      cookies: adminCookies,
+      payload: { matterTypeId: employmentTypeId, name: "UNIQUE PROBE" },
+    });
+    expect(res.statusCode, res.body).toBe(409);
+    // The whole envelope, because the refusal comes from the index
+    // rather than from a hand-written throw: a raw unique violation
+    // would arrive as a 500 with none of this on it.
+    expect(res.headers["content-type"]).toContain("application/problem+json");
+    expect(res.json()).toMatchObject({
+      status: 409,
+      type: "about:blank",
+      detail: "A template of this Matter type is already called that.",
+    });
+  });
+
+  it("lets another type carry the same name", async () => {
+    await createTemplate({ matterTypeId: employmentTypeId, name: "Shared across types" });
+    const [otherType] = await harness.db
+      .select()
+      .from(matterTypes)
+      .where(eq(matterTypes.slug, "ip"))
+      .limit(1);
+    const res = await harness.app.inject({
+      method: "POST",
+      url: "/api/v1/matter-templates",
+      cookies: adminCookies,
+      payload: { matterTypeId: otherType!.id, name: "Shared across types" },
+    });
+    expect(res.statusCode, res.body).toBe(201);
+  });
+
+  it("refuses a rename onto a live sibling's name, but takes a case-only rename", async () => {
+    await createTemplate({ matterTypeId: employmentTypeId, name: "Rename target" });
+    const other = await createTemplate({ matterTypeId: employmentTypeId, name: "Rename source" });
+    const clash = await harness.app.inject({
+      method: "PATCH",
+      url: `/api/v1/matter-templates/${other.id}`,
+      cookies: adminCookies,
+      payload: { name: "rename target" },
+    });
+    expect(clash.statusCode, clash.body).toBe(409);
+
+    const caseOnly = await harness.app.inject({
+      method: "PATCH",
+      url: `/api/v1/matter-templates/${other.id}`,
+      cookies: adminCookies,
+      payload: { name: "RENAME SOURCE" },
+    });
+    expect(caseOnly.statusCode, caseOnly.body).toBe(200);
+    expect(caseOnly.json().matterTemplate.name).toBe("RENAME SOURCE");
+  });
+
+  it("frees the name on archive, and refuses the restore that would take it back", async () => {
+    const first = await createTemplate({ matterTypeId: employmentTypeId, name: "Rotating" });
+    const archive = await harness.app.inject({
+      method: "POST",
+      url: `/api/v1/matter-templates/${first.id}/archive`,
+      cookies: adminCookies,
+    });
+    expect(archive.statusCode, archive.body).toBe(200);
+
+    await createTemplate({ matterTypeId: employmentTypeId, name: "Rotating" });
+
+    const restore = await harness.app.inject({
+      method: "POST",
+      url: `/api/v1/matter-templates/${first.id}/restore`,
+      cookies: adminCookies,
+    });
+    expect(restore.statusCode, restore.body).toBe(409);
+    expect(restore.json().detail).toContain("Rename that one first");
+  });
+});

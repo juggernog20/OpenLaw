@@ -24,6 +24,28 @@ const NameSchema = z.string().trim().min(1).max(100);
 const DescriptionSchema = z.string().trim().max(500);
 const TitlePrefixSchema = z.string().trim().max(100);
 
+const NAME_TAKEN = "A template of this Matter type is already called that.";
+const RESTORE_NAME_TAKEN =
+  "A live template of this Matter type is already called that. Rename that one first, then restore this one.";
+
+/**
+ * Postgres's unique-violation code. `matter_templates_name_idx` is the
+ * authority on a duplicate name rather than a read-then-write check, the
+ * same way the approver-groups routes handle theirs: two creates racing
+ * would both find the name free and both insert it.
+ */
+const UNIQUE_VIOLATION = "23505";
+const NAME_INDEX = "matter_templates_name_idx";
+
+/** A duplicate name arrives as a unique violation and reads as a 409, not a 500. */
+function asNameConflict(error: unknown, detail: string): never {
+  const cause = (error as { cause?: { code?: string; constraint?: string } } | null)?.cause;
+  if (cause?.code === UNIQUE_VIOLATION && cause.constraint === NAME_INDEX) {
+    throw httpError(409, detail);
+  }
+  throw error;
+}
+
 const MatterTemplateSchema = z.object({
   id: z.string(),
   matterTypeId: z.string(),
@@ -131,7 +153,9 @@ export const matterTemplatesRoutes: FastifyPluginAsyncZod = async (app) => {
       preHandler: requireRole("administrator"),
       schema: {
         operationId: "createMatterTemplate",
-        summary: "Create a named Matter template for one live Matter type",
+        summary:
+          "Create a named Matter template for one live Matter type; 409 if a live " +
+          "template of that type already carries the name, compared case-insensitively",
         tags: ["matter-templates"],
         body: z.object({
           matterTypeId: z.string(),
@@ -146,37 +170,39 @@ export const matterTemplatesRoutes: FastifyPluginAsyncZod = async (app) => {
     },
     async (request, reply) => {
       const body = request.body;
-      const result = await app.db.transaction(async (tx) => {
-        const [matterType] = await tx
-          .select()
-          .from(matterTypes)
-          .where(eq(matterTypes.id, body.matterTypeId))
-          .limit(1)
-          .for("update");
-        if (!matterType) throw httpError(404, "No Matter type exists with this id.");
-        if (matterType.archivedAt) {
-          throw httpError(409, "An archived Matter type cannot receive a new template.");
-        }
-        const [created] = await tx
-          .insert(matterTemplates)
-          .values({
-            matterTypeId: matterType.id,
-            name: body.name.trim(),
-            description: body.description?.trim() || null,
-            defaultPriority: body.defaultPriority ?? null,
-            defaultRisk: body.defaultRisk ?? null,
-            titlePrefix: body.titlePrefix?.trim() || null,
-          })
-          .returning();
-        await recordActivity(tx, {
-          entityType: "system",
-          actorId: request.user.id,
-          action: "matter_template.created",
-          visibility: "admin_only",
-          payload: { displayName: created!.name, matterTypeName: matterType.displayName },
-        });
-        return { row: created!, matterTypeName: matterType.displayName };
-      });
+      const result = await app.db
+        .transaction(async (tx) => {
+          const [matterType] = await tx
+            .select()
+            .from(matterTypes)
+            .where(eq(matterTypes.id, body.matterTypeId))
+            .limit(1)
+            .for("update");
+          if (!matterType) throw httpError(404, "No Matter type exists with this id.");
+          if (matterType.archivedAt) {
+            throw httpError(409, "An archived Matter type cannot receive a new template.");
+          }
+          const [created] = await tx
+            .insert(matterTemplates)
+            .values({
+              matterTypeId: matterType.id,
+              name: body.name.trim(),
+              description: body.description?.trim() || null,
+              defaultPriority: body.defaultPriority ?? null,
+              defaultRisk: body.defaultRisk ?? null,
+              titlePrefix: body.titlePrefix?.trim() || null,
+            })
+            .returning();
+          await recordActivity(tx, {
+            entityType: "system",
+            actorId: request.user.id,
+            action: "matter_template.created",
+            visibility: "admin_only",
+            payload: { displayName: created!.name, matterTypeName: matterType.displayName },
+          });
+          return { row: created!, matterTypeName: matterType.displayName };
+        })
+        .catch((error: unknown) => asNameConflict(error, NAME_TAKEN));
       return reply.status(201).send({ matterTemplate: rowJson(result.row, result.matterTypeName) });
     },
   );
@@ -203,48 +229,50 @@ export const matterTemplatesRoutes: FastifyPluginAsyncZod = async (app) => {
       },
     },
     async (request) => {
-      const result = await app.db.transaction(async (tx) => {
-        const target = await lockedTemplate(tx, request.params.id);
-        const values = {
-          ...(request.body.name !== undefined ? { name: request.body.name.trim() } : {}),
-          ...(request.body.description !== undefined
-            ? { description: request.body.description?.trim() || null }
-            : {}),
-          ...(request.body.defaultPriority !== undefined
-            ? { defaultPriority: request.body.defaultPriority }
-            : {}),
-          ...(request.body.defaultRisk !== undefined
-            ? { defaultRisk: request.body.defaultRisk }
-            : {}),
-          ...(request.body.titlePrefix !== undefined
-            ? { titlePrefix: request.body.titlePrefix?.trim() || null }
-            : {}),
-        };
-        const changed = Object.fromEntries(
-          Object.entries(values)
-            .filter(([key, value]) => value !== target[key as keyof MatterTemplate])
-            .map(([key, value]) => [
-              key,
-              { from: target[key as keyof MatterTemplate] ?? null, to: value ?? null },
-            ]),
-        );
-        if (Object.keys(changed).length === 0) {
-          return { row: target, matterTypeName: await typeName(tx, target.matterTypeId) };
-        }
-        const [updated] = await tx
-          .update(matterTemplates)
-          .set(values)
-          .where(eq(matterTemplates.id, target.id))
-          .returning();
-        await recordActivity(tx, {
-          entityType: "system",
-          actorId: request.user.id,
-          action: "matter_template.updated",
-          visibility: "admin_only",
-          payload: { displayName: updated!.name, changed },
-        });
-        return { row: updated!, matterTypeName: await typeName(tx, target.matterTypeId) };
-      });
+      const result = await app.db
+        .transaction(async (tx) => {
+          const target = await lockedTemplate(tx, request.params.id);
+          const values = {
+            ...(request.body.name !== undefined ? { name: request.body.name.trim() } : {}),
+            ...(request.body.description !== undefined
+              ? { description: request.body.description?.trim() || null }
+              : {}),
+            ...(request.body.defaultPriority !== undefined
+              ? { defaultPriority: request.body.defaultPriority }
+              : {}),
+            ...(request.body.defaultRisk !== undefined
+              ? { defaultRisk: request.body.defaultRisk }
+              : {}),
+            ...(request.body.titlePrefix !== undefined
+              ? { titlePrefix: request.body.titlePrefix?.trim() || null }
+              : {}),
+          };
+          const changed = Object.fromEntries(
+            Object.entries(values)
+              .filter(([key, value]) => value !== target[key as keyof MatterTemplate])
+              .map(([key, value]) => [
+                key,
+                { from: target[key as keyof MatterTemplate] ?? null, to: value ?? null },
+              ]),
+          );
+          if (Object.keys(changed).length === 0) {
+            return { row: target, matterTypeName: await typeName(tx, target.matterTypeId) };
+          }
+          const [updated] = await tx
+            .update(matterTemplates)
+            .set(values)
+            .where(eq(matterTemplates.id, target.id))
+            .returning();
+          await recordActivity(tx, {
+            entityType: "system",
+            actorId: request.user.id,
+            action: "matter_template.updated",
+            visibility: "admin_only",
+            payload: { displayName: updated!.name, changed },
+          });
+          return { row: updated!, matterTypeName: await typeName(tx, target.matterTypeId) };
+        })
+        .catch((error: unknown) => asNameConflict(error, NAME_TAKEN));
       return { matterTemplate: rowJson(result.row, result.matterTypeName) };
     },
   );
@@ -289,30 +317,34 @@ export const matterTemplatesRoutes: FastifyPluginAsyncZod = async (app) => {
       preHandler: requireRole("administrator"),
       schema: {
         operationId: "restoreMatterTemplate",
-        summary: "Restore an archived Matter template with its definition intact",
+        summary:
+          "Restore an archived Matter template with its definition intact; 409 when a " +
+          "live template of the type has taken its name since",
         tags: ["matter-templates"],
         params: z.object({ id: z.string() }),
         response: { 200: MatterTemplateEnvelope, default: problemResponse },
       },
     },
     async (request) => {
-      const result = await app.db.transaction(async (tx) => {
-        const target = await lockedTemplate(tx, request.params.id);
-        if (!target.archivedAt) throw httpError(409, "This Matter template is not archived.");
-        const [updated] = await tx
-          .update(matterTemplates)
-          .set({ archivedAt: null })
-          .where(eq(matterTemplates.id, target.id))
-          .returning();
-        await recordActivity(tx, {
-          entityType: "system",
-          actorId: request.user.id,
-          action: "matter_template.restored",
-          visibility: "admin_only",
-          payload: { displayName: target.name },
-        });
-        return { row: updated!, matterTypeName: await typeName(tx, target.matterTypeId) };
-      });
+      const result = await app.db
+        .transaction(async (tx) => {
+          const target = await lockedTemplate(tx, request.params.id);
+          if (!target.archivedAt) throw httpError(409, "This Matter template is not archived.");
+          const [updated] = await tx
+            .update(matterTemplates)
+            .set({ archivedAt: null })
+            .where(eq(matterTemplates.id, target.id))
+            .returning();
+          await recordActivity(tx, {
+            entityType: "system",
+            actorId: request.user.id,
+            action: "matter_template.restored",
+            visibility: "admin_only",
+            payload: { displayName: target.name },
+          });
+          return { row: updated!, matterTypeName: await typeName(tx, target.matterTypeId) };
+        })
+        .catch((error: unknown) => asNameConflict(error, RESTORE_NAME_TAKEN));
       return { matterTemplate: rowJson(result.row, result.matterTypeName) };
     },
   );

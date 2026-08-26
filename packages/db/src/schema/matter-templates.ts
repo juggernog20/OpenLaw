@@ -7,7 +7,8 @@
  * changes a Matter that already exists.
  */
 
-import { index, jsonb, pgTable, text, timestamp } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
+import { index, jsonb, pgTable, text, timestamp, uniqueIndex } from "drizzle-orm/pg-core";
 import type { CustomFieldValue } from "./fields.js";
 import { uuidPk } from "./helpers.js";
 import { matterTypes } from "./matter-types.js";
@@ -33,7 +34,19 @@ export const matterTemplates = pgTable(
       .defaultNow()
       .$onUpdate(() => new Date()),
   },
-  (table) => [index("matter_templates_type_idx").on(table.matterTypeId, table.name)],
+  (table) => [
+    index("matter_templates_type_idx").on(table.matterTypeId, table.name),
+    /**
+     * The name is the only identity the creation picker shows inside one
+     * type, so two live templates of a type may not share one. Partial on
+     * the live rows, because archiving frees the name: an archived
+     * template is out of the picker, and a Matter it was applied to holds
+     * its own copy of the values (MTR-013).
+     */
+    uniqueIndex("matter_templates_name_idx")
+      .on(table.matterTypeId, sql`lower(${table.name})`)
+      .where(sql`${table.archivedAt} is null`),
+  ],
 );
 
 export type MatterTemplate = typeof matterTemplates.$inferSelect;

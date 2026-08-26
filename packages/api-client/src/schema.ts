@@ -1200,7 +1200,7 @@ export interface paths {
     /** List named Matter creation templates in type and name order; optionally filter to one Matter type and include archived rows */
     get: operations["listMatterTemplates"];
     put?: never;
-    /** Create a named Matter template for one live Matter type */
+    /** Create a named Matter template for one live Matter type; 409 if a live template of that type already carries the name, compared case-insensitively */
     post: operations["createMatterTemplate"];
     delete?: never;
     options?: never;
@@ -1251,7 +1251,7 @@ export interface paths {
     };
     get?: never;
     put?: never;
-    /** Restore an archived Matter template with its definition intact */
+    /** Restore an archived Matter template with its definition intact; 409 when a live template of the type has taken its name since */
     post: operations["restoreMatterTemplate"];
     delete?: never;
     options?: never;
