@@ -3053,6 +3053,9 @@
   "matters.field.status": {
     "defaultMessage": "Status"
   },
+  "matters.field.template": {
+    "defaultMessage": "Template (optional)"
+  },
   "matters.field.title": {
     "defaultMessage": "Title"
   },
@@ -3289,6 +3292,12 @@
   },
   "matters.team.title": {
     "defaultMessage": "Matter team"
+  },
+  "matters.template.contentHint": {
+    "defaultMessage": "Template adds {taskCount, plural, one {# task} other {# tasks}} and {keyDateCount, plural, one {# key date} other {# key dates}}."
+  },
+  "matters.template.none": {
+    "defaultMessage": "No template"
   },
   "matters.title": {
     "defaultMessage": "Matters"

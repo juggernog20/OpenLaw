@@ -42,6 +42,17 @@ const TYPE = {
   displayName: "Employment",
   fields: [REQUIRED_FIELD],
 };
+const TEMPLATE = {
+  id: "template-employment",
+  name: "Employment standard",
+  description: "The usual opening playbook.",
+  defaultPriority: "high" as const,
+  defaultRisk: "low" as const,
+  defaultCustomFields: { "business-unit": "Finance" },
+  titlePrefix: "EMP —",
+  taskCount: 4,
+  keyDateCount: 2,
+};
 
 function matter(overrides: Partial<Record<string, unknown>> = {}) {
   return {
@@ -347,6 +358,94 @@ describe("the Matters destination", () => {
       customFields: { "business-unit": "Operations" },
       isConfidential: true,
     });
+  });
+
+  it("auto-selects one type template, seeds overridable values, and stays clearable", async () => {
+    let posted: unknown;
+    const templatedType = { ...TYPE, templates: [TEMPLATE] };
+    const otherType = {
+      ...TYPE,
+      id: "type-litigation",
+      slug: "litigation",
+      displayName: "Litigation",
+      templates: [{ ...TEMPLATE, id: "template-litigation", name: "Claim standard" }],
+    };
+    stubApi({
+      signedIn: MEMBER,
+      extra: (call) => {
+        if (call.url.pathname === "/api/v1/matters/options" && call.method === "GET") {
+          return json(200, {
+            matterTypes: [templatedType, otherType],
+            matterStatuses: [
+              { id: "status-open", slug: "open", displayName: "Open", category: "open" },
+            ],
+            users: [],
+          });
+        }
+        if (call.url.pathname === "/api/v1/entities" && call.method === "GET") {
+          return json(200, { entities: [] });
+        }
+        if (call.url.pathname === "/api/v1/matters" && call.method === "GET") {
+          return json(200, { matters: [], nextCursor: null, counts: { open: 0, onHold: 0 } });
+        }
+        if (call.url.pathname === "/api/v1/matters" && call.method === "POST") {
+          posted = call.body;
+          return json(201, {
+            matter: matter({
+              id: "matter-8",
+              number: 8,
+              title: "EMP — Transfer",
+              customFields: { "business-unit": "People" },
+            }),
+          });
+        }
+        return undefined;
+      },
+    });
+    renderAt("/matters");
+    const user = userEvent.setup();
+    await screen.findByRole("heading", { name: "No matters yet" });
+    await user.click(screen.getAllByRole("button", { name: "New matter" })[0]!);
+    const dialog = await screen.findByRole("dialog");
+    await user.selectOptions(within(dialog).getByLabelText("Matter type"), templatedType.id);
+
+    const picker = within(dialog).getByLabelText("Template (optional)");
+    expect(picker).toHaveValue(TEMPLATE.id);
+    expect(within(picker).getByRole("option", { name: TEMPLATE.name })).toBeInTheDocument();
+    expect(
+      within(picker).queryByRole("option", { name: "Claim standard" }),
+    ).not.toBeInTheDocument();
+    expect(within(dialog).getByLabelText("Title")).toHaveValue("EMP —");
+    expect(within(dialog).getByLabelText("Priority")).toHaveValue("high");
+    expect(within(dialog).getByLabelText("Risk")).toHaveValue("low");
+    expect(within(dialog).getByLabelText(/Business unit/)).toHaveValue("Finance");
+    expect(within(dialog).getByText("Template adds 4 tasks and 2 key dates.")).toBeInTheDocument();
+
+    await user.selectOptions(picker, "");
+    expect(within(dialog).getByLabelText("Title")).toHaveValue("");
+    expect(within(dialog).getByLabelText("Priority")).toHaveValue("medium");
+    expect(within(dialog).getByLabelText("Risk")).toHaveValue("");
+    expect(within(dialog).getByLabelText(/Business unit/)).toHaveValue("");
+
+    await user.selectOptions(picker, TEMPLATE.id);
+    await user.type(within(dialog).getByLabelText("Title"), " Transfer");
+    await user.selectOptions(within(dialog).getByLabelText("Priority"), "critical");
+    await user.selectOptions(within(dialog).getByLabelText("Risk"), "critical");
+    const unit = within(dialog).getByLabelText(/Business unit/);
+    await user.clear(unit);
+    await user.type(unit, "People");
+    await user.click(within(dialog).getByRole("button", { name: "Create" }));
+
+    await waitFor(() =>
+      expect(posted).toMatchObject({
+        title: "EMP — Transfer",
+        matterTypeId: templatedType.id,
+        templateId: TEMPLATE.id,
+        priority: "critical",
+        risk: "critical",
+        customFields: { "business-unit": "People" },
+      }),
+    );
   });
 
   it("keeps the dialog actionable and explains a failed create", async () => {
