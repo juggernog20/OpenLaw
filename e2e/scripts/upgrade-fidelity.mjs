@@ -46,9 +46,10 @@
  * and byte count; a user's role; whether the signing connector still
  * holds its credentials.
  *
- * Matters, Contracts, Fields, teams, Documents, Activity, and lifecycle
- * timestamps all ride the fingerprint. The baseline API creates every
- * row; the script never writes the database directly.
+ * Matters, their Tasks and Key dates, Contracts, Fields, teams,
+ * Documents, Activity, and lifecycle timestamps all ride the
+ * fingerprint. The baseline API creates every row; the script never
+ * writes the database directly.
  */
 
 import { createHash, randomUUID } from "node:crypto";
@@ -363,6 +364,24 @@ async function seed() {
     body: matterCommentBody,
     visibility: "working_team",
   });
+  const matterTaskTitle = "Checklist row seeded before M24";
+  const matterTask = (
+    await post(`/api/v1/matters/${matter.number}/tasks`, {
+      title: matterTaskTitle,
+      assigneeId: invited[0].id,
+      dueDate: "2031-02-03",
+    })
+  ).tasks.find((row) => row.title === matterTaskTitle);
+  check(matterTask !== undefined, "the seeded Matter Task was not in the answer");
+  const matterKeyDateLabel = "Deadline seeded before M24";
+  const matterKeyDate = (
+    await post(`/api/v1/matters/${matter.number}/key-dates`, {
+      date: "2031-02-10",
+      label: matterKeyDateLabel,
+      note: "This deadline predates Matter templates.",
+    })
+  ).deadlines.find((row) => row.label === matterKeyDateLabel);
+  check(matterKeyDate !== undefined, "the seeded Matter Key date was not in the answer");
 
   const matterDocumentForm = new FormData();
   matterDocumentForm.append(
@@ -532,6 +551,22 @@ async function seed() {
       userId: invited[0].id,
       role: "member",
     },
+    matterTask: {
+      matterNumber: closedMatter.number,
+      id: matterTask.id,
+      title: matterTask.title,
+      isDone: matterTask.isDone,
+      assigneeId: matterTask.assigneeId,
+      dueDate: matterTask.dueDate,
+      displayOrder: matterTask.displayOrder,
+    },
+    matterKeyDate: {
+      matterNumber: closedMatter.number,
+      id: matterKeyDate.keyDateId,
+      date: matterKeyDate.date,
+      label: matterKeyDate.label,
+      note: matterKeyDate.note,
+    },
     matterComment: {
       matterId: closedMatter.id,
       body: matterCommentBody,
@@ -656,6 +691,27 @@ async function verify(fingerprint) {
   const teamMember = matterTeam.find((row) => row.id === fingerprint.matterTeam.userId);
   check(teamMember !== undefined, "the seeded Matter team member is gone after the upgrade");
   same(teamMember.role, fingerprint.matterTeam.role, "seeded Matter team role");
+
+  const matterTasks = (await get(`/api/v1/matters/${fingerprint.matterTask.matterNumber}/tasks`))
+    .tasks;
+  const matterTask = matterTasks.find((row) => row.id === fingerprint.matterTask.id);
+  check(matterTask !== undefined, "the seeded Matter Task is gone after the upgrade");
+  same(matterTask.title, fingerprint.matterTask.title, "Matter Task title");
+  same(matterTask.isDone, fingerprint.matterTask.isDone, "Matter Task completion");
+  same(matterTask.assigneeId, fingerprint.matterTask.assigneeId, "Matter Task assignee");
+  same(matterTask.dueDate, fingerprint.matterTask.dueDate, "Matter Task due date");
+  same(matterTask.displayOrder, fingerprint.matterTask.displayOrder, "Matter Task order");
+
+  const matterKeyDates = (
+    await get(`/api/v1/matters/${fingerprint.matterKeyDate.matterNumber}/key-dates`)
+  ).deadlines;
+  const matterKeyDate = matterKeyDates.find(
+    (row) => row.keyDateId === fingerprint.matterKeyDate.id,
+  );
+  check(matterKeyDate !== undefined, "the seeded Matter Key date is gone after the upgrade");
+  same(matterKeyDate.date, fingerprint.matterKeyDate.date, "Matter Key date date");
+  same(matterKeyDate.label, fingerprint.matterKeyDate.label, "Matter Key date label");
+  same(matterKeyDate.note, fingerprint.matterKeyDate.note, "Matter Key date note");
 
   const matterDocuments = (
     await get(`/api/v1/matters/${fingerprint.matterDocument.matterNumber}/documents`)
