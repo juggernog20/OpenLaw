@@ -42,12 +42,14 @@ function ReorderButton({
   total,
   disabled,
   onMove,
+  onDragStart,
 }: Readonly<{
   name: string;
   position: number;
   total: number;
   disabled: boolean;
   onMove: (to: number) => void;
+  onDragStart: () => void;
 }>) {
   const intl = useIntl();
   function onKeyDown(event: KeyboardEvent<HTMLButtonElement>) {
@@ -67,6 +69,8 @@ function ReorderButton({
       size="sm"
       className="cursor-grab px-1"
       aria-disabled={disabled}
+      draggable={!disabled}
+      onDragStart={onDragStart}
       aria-label={intl.formatMessage(
         {
           id: "settings.matterTemplateEditor.reorder",
@@ -183,10 +187,6 @@ export function TemplateTasksEditor({
                 return (
                   <li
                     key={row.key}
-                    draggable={!disabled}
-                    onDragStart={() => {
-                      dragFrom.current = index;
-                    }}
                     onDragOver={(event) => event.preventDefault()}
                     onDrop={(event) => drop(event, index)}
                     className="grid grid-cols-[2.5rem_minmax(12rem,1fr)_8rem_11rem_2.5rem] items-center border-b border-border-muted px-2 py-2"
@@ -197,6 +197,9 @@ export function TemplateTasksEditor({
                       total={rows.length}
                       disabled={disabled}
                       onMove={(to) => !disabled && onChange(move(rows, index, to))}
+                      onDragStart={() => {
+                        dragFrom.current = index;
+                      }}
                     />
                     <Input
                       value={row.title}
@@ -408,10 +411,6 @@ export function TemplateKeyDatesEditor({
                 return (
                   <li
                     key={row.key}
-                    draggable={!disabled}
-                    onDragStart={() => {
-                      dragFrom.current = index;
-                    }}
                     onDragOver={(event) => event.preventDefault()}
                     onDrop={(event) => drop(event, index)}
                     className="grid grid-cols-[2.5rem_minmax(10rem,1fr)_8rem_minmax(12rem,1fr)_2.5rem] items-center border-b border-border-muted px-2 py-2"
@@ -422,6 +421,9 @@ export function TemplateKeyDatesEditor({
                       total={rows.length}
                       disabled={disabled}
                       onMove={(to) => !disabled && onChange(move(rows, index, to))}
+                      onDragStart={() => {
+                        dragFrom.current = index;
+                      }}
                     />
                     <Input
                       value={row.label}
