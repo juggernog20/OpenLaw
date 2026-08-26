@@ -16,6 +16,7 @@ import { api } from "../lib/api";
 import { authClient } from "../lib/auth-client";
 import {
   commitsOnChange,
+  isAnswered,
   sameDraft,
   toDraft,
   toValue,
@@ -1103,8 +1104,8 @@ function MatterCustomField({
       </Label>
       {frozen ? (
         <span>
-          {saved === undefined
-            ? "—"
+          {!isAnswered(saved)
+            ? intl.formatMessage({ id: "matters.record.notRecorded", defaultMessage: "—" })
             : field.fieldType === "user"
               ? (people.find((person) => person.id === saved)?.label ?? String(saved))
               : field.fieldType === "entity"

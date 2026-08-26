@@ -3119,6 +3119,9 @@
   "matters.record.close": {
     "defaultMessage": "Close matter"
   },
+  "matters.record.notRecorded": {
+    "defaultMessage": "—"
+  },
   "matters.record.pageTitle": {
     "defaultMessage": "{reference} · {title}"
   },
