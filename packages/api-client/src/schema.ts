@@ -1225,6 +1225,23 @@ export interface paths {
     patch: operations["updateMatterTemplate"];
     trace?: never;
   };
+  "/api/v1/matter-templates/{id}/custom-fields": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    /** Replace the defaults for fields currently attached to the template's Matter type; detached defaults remain stored and are reported as stale */
+    put: operations["setMatterTemplateCustomFields"];
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/v1/matter-templates/{id}/tasks": {
     parameters: {
       query?: never;
@@ -8343,6 +8360,10 @@ export interface operations {
               taskCount: number;
               keyDateCount: number;
               customFieldCount: number;
+              defaultCustomFields: {
+                [key: string]: string | number | boolean | string[];
+              };
+              staleCustomFieldSlugs: string[];
             }[];
           };
         };
@@ -8413,6 +8434,10 @@ export interface operations {
               taskCount: number;
               keyDateCount: number;
               customFieldCount: number;
+              defaultCustomFields: {
+                [key: string]: string | number | boolean | string[];
+              };
+              staleCustomFieldSlugs: string[];
             };
           };
         };
@@ -8484,6 +8509,83 @@ export interface operations {
               taskCount: number;
               keyDateCount: number;
               customFieldCount: number;
+              defaultCustomFields: {
+                [key: string]: string | number | boolean | string[];
+              };
+              staleCustomFieldSlugs: string[];
+            };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  setMatterTemplateCustomFields: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          defaultCustomFields: {
+            [key: string]: (string | number | boolean | string[]) | null;
+          };
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            matterTemplate: {
+              id: string;
+              matterTypeId: string;
+              matterTypeName: string;
+              name: string;
+              description: string | null;
+              defaultPriority: ("low" | "medium" | "high" | "critical") | null;
+              defaultRisk: ("low" | "medium" | "high" | "critical") | null;
+              titlePrefix: string | null;
+              archivedAt: string | null;
+              tasks: {
+                id: string;
+                title: string;
+                dueOffsetDays: number | null;
+                /** @enum {string} */
+                assigneeRole: "matter_manager" | "none";
+                displayOrder: number;
+              }[];
+              keyDates: {
+                id: string;
+                label: string;
+                offsetDays: number;
+                note: string | null;
+                displayOrder: number;
+              }[];
+              taskCount: number;
+              keyDateCount: number;
+              customFieldCount: number;
+              defaultCustomFields: {
+                [key: string]: string | number | boolean | string[];
+              };
+              staleCustomFieldSlugs: string[];
             };
           };
         };
@@ -8556,6 +8658,10 @@ export interface operations {
               taskCount: number;
               keyDateCount: number;
               customFieldCount: number;
+              defaultCustomFields: {
+                [key: string]: string | number | boolean | string[];
+              };
+              staleCustomFieldSlugs: string[];
             };
           };
         };
@@ -8627,6 +8733,10 @@ export interface operations {
               taskCount: number;
               keyDateCount: number;
               customFieldCount: number;
+              defaultCustomFields: {
+                [key: string]: string | number | boolean | string[];
+              };
+              staleCustomFieldSlugs: string[];
             };
           };
         };
@@ -8688,6 +8798,10 @@ export interface operations {
               taskCount: number;
               keyDateCount: number;
               customFieldCount: number;
+              defaultCustomFields: {
+                [key: string]: string | number | boolean | string[];
+              };
+              staleCustomFieldSlugs: string[];
             };
           };
         };
@@ -8749,6 +8863,10 @@ export interface operations {
               taskCount: number;
               keyDateCount: number;
               customFieldCount: number;
+              defaultCustomFields: {
+                [key: string]: string | number | boolean | string[];
+              };
+              staleCustomFieldSlugs: string[];
             };
           };
         };

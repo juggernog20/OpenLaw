@@ -8,9 +8,11 @@ import {
   and,
   asc,
   eq,
+  fields,
   inArray,
   isNull,
   MATTER_TEMPLATE_ASSIGNEE_ROLES,
+  matterTypeFields,
   matterTemplateKeyDates,
   matterTemplateTasks,
   matterTemplates,
@@ -23,6 +25,12 @@ import {
 } from "@openlaw/db";
 import { requireRole } from "../../auth/guards.js";
 import { recordActivity } from "../../lib/activity.js";
+import {
+  applyCustomFields,
+  CustomFieldsInput,
+  CustomFieldsSchema,
+  selectAttachedFields,
+} from "../../lib/custom-fields.js";
 import { httpError, problemResponse } from "../../lib/problem.js";
 
 const SeveritySchema = z.enum(["low", "medium", "high", "critical"]);
@@ -95,6 +103,8 @@ const MatterTemplateSchema = z.object({
   taskCount: z.number().int(),
   keyDateCount: z.number().int(),
   customFieldCount: z.number().int(),
+  defaultCustomFields: CustomFieldsSchema,
+  staleCustomFieldSlugs: z.array(z.string()),
 });
 
 const MatterTemplateEnvelope = z.object({ matterTemplate: MatterTemplateSchema });
@@ -127,7 +137,9 @@ function rowJson(
   matterTypeName: string,
   tasks: MatterTemplateTask[],
   keyDates: MatterTemplateKeyDate[],
+  attachedSlugs: ReadonlySet<string>,
 ) {
+  const defaultCustomFields = row.defaultCustomFields ?? {};
   return {
     id: row.id,
     matterTypeId: row.matterTypeId,
@@ -142,16 +154,25 @@ function rowJson(
     keyDates: keyDates.map(keyDateJson),
     taskCount: tasks.length,
     keyDateCount: keyDates.length,
-    customFieldCount: Object.keys(row.defaultCustomFields ?? {}).length,
+    customFieldCount: Object.keys(defaultCustomFields).length,
+    defaultCustomFields,
+    staleCustomFieldSlugs: Object.keys(defaultCustomFields)
+      .filter((slug) => !attachedSlugs.has(slug))
+      .sort(),
   };
 }
 
 export const matterTemplatesRoutes: FastifyPluginAsyncZod = async (app) => {
-  async function contentOf(db: Executor, ids: string[]) {
+  async function contentOf(db: Executor, templates: MatterTemplate[]) {
     const tasksByTemplate = new Map<string, MatterTemplateTask[]>();
     const keyDatesByTemplate = new Map<string, MatterTemplateKeyDate[]>();
-    if (ids.length === 0) return { tasksByTemplate, keyDatesByTemplate };
-    const [tasks, keyDates] = await Promise.all([
+    const attachedSlugsByType = new Map<string, Set<string>>();
+    if (templates.length === 0) {
+      return { tasksByTemplate, keyDatesByTemplate, attachedSlugsByType };
+    }
+    const ids = templates.map((template) => template.id);
+    const typeIds = [...new Set(templates.map((template) => template.matterTypeId))];
+    const [tasks, keyDates, attachments] = await Promise.all([
       db
         .select()
         .from(matterTemplateTasks)
@@ -170,6 +191,11 @@ export const matterTemplatesRoutes: FastifyPluginAsyncZod = async (app) => {
           asc(matterTemplateKeyDates.displayOrder),
           asc(matterTemplateKeyDates.id),
         ),
+      db
+        .select({ typeId: matterTypeFields.typeId, slug: fields.slug })
+        .from(matterTypeFields)
+        .innerJoin(fields, eq(fields.id, matterTypeFields.fieldId))
+        .where(and(inArray(matterTypeFields.typeId, typeIds), isNull(fields.archivedAt))),
     ]);
     for (const task of tasks) {
       const rows = tasksByTemplate.get(task.matterTemplateId) ?? [];
@@ -181,16 +207,22 @@ export const matterTemplatesRoutes: FastifyPluginAsyncZod = async (app) => {
       rows.push(keyDate);
       keyDatesByTemplate.set(keyDate.matterTemplateId, rows);
     }
-    return { tasksByTemplate, keyDatesByTemplate };
+    for (const attachment of attachments) {
+      const slugs = attachedSlugsByType.get(attachment.typeId) ?? new Set<string>();
+      slugs.add(attachment.slug);
+      attachedSlugsByType.set(attachment.typeId, slugs);
+    }
+    return { tasksByTemplate, keyDatesByTemplate, attachedSlugsByType };
   }
 
   async function rowWithContent(row: MatterTemplate, matterTypeName: string) {
-    const content = await contentOf(app.db, [row.id]);
+    const content = await contentOf(app.db, [row]);
     return rowJson(
       row,
       matterTypeName,
       content.tasksByTemplate.get(row.id) ?? [],
       content.keyDatesByTemplate.get(row.id) ?? [],
+      content.attachedSlugsByType.get(row.matterTypeId) ?? new Set(),
     );
   }
 
@@ -251,7 +283,7 @@ export const matterTemplatesRoutes: FastifyPluginAsyncZod = async (app) => {
         );
       const content = await contentOf(
         app.db,
-        rows.map(({ template }) => template.id),
+        rows.map(({ template }) => template),
       );
       return {
         matterTemplates: rows.map(({ template, matterTypeName }) =>
@@ -260,6 +292,7 @@ export const matterTemplatesRoutes: FastifyPluginAsyncZod = async (app) => {
             matterTypeName,
             content.tasksByTemplate.get(template.id) ?? [],
             content.keyDatesByTemplate.get(template.id) ?? [],
+            content.attachedSlugsByType.get(template.matterTypeId) ?? new Set(),
           ),
         ),
       };
@@ -394,6 +427,61 @@ export const matterTemplatesRoutes: FastifyPluginAsyncZod = async (app) => {
           return { row: updated!, matterTypeName: await typeName(tx, target.matterTypeId) };
         })
         .catch((error: unknown) => asNameConflict(error, NAME_TAKEN));
+      return { matterTemplate: await rowWithContent(result.row, result.matterTypeName) };
+    },
+  );
+
+  app.put(
+    "/matter-templates/:id/custom-fields",
+    {
+      preHandler: requireRole("administrator"),
+      schema: {
+        operationId: "setMatterTemplateCustomFields",
+        summary:
+          "Replace the defaults for fields currently attached to the template's Matter type; " +
+          "detached defaults remain stored and are reported as stale",
+        tags: ["matter-templates"],
+        params: z.object({ id: z.string() }),
+        body: z.strictObject({ defaultCustomFields: CustomFieldsInput }),
+        response: { 200: MatterTemplateEnvelope, default: problemResponse },
+      },
+    },
+    async (request) => {
+      const result = await app.db.transaction(async (tx) => {
+        const target = await lockedTemplate(tx, request.params.id);
+        const attached = await selectAttachedFields(tx, matterTypeFields, target.matterTypeId);
+        const submitted = request.body.defaultCustomFields;
+        const replacement = Object.fromEntries(
+          attached.map((field) => [
+            field.slug,
+            Object.hasOwn(submitted, field.slug) ? submitted[field.slug]! : null,
+          ]),
+        );
+        // Pass submitted keys through too. `applyCustomFields` is the Matter-create
+        // coercion path and therefore owns both type refusals and unattached-slug refusals.
+        const incoming = { ...replacement, ...submitted };
+        const before = target.defaultCustomFields ?? {};
+        const applied = await applyCustomFields(tx, attached, before, incoming);
+        if (Object.keys(applied.changed).length === 0) {
+          return { row: target, matterTypeName: await typeName(tx, target.matterTypeId) };
+        }
+        const [updated] = await tx
+          .update(matterTemplates)
+          .set({ defaultCustomFields: applied.values })
+          .where(eq(matterTemplates.id, target.id))
+          .returning();
+        await recordActivity(tx, {
+          entityType: "system",
+          actorId: request.user.id,
+          action: "matter_template.updated",
+          visibility: "admin_only",
+          payload: {
+            displayName: target.name,
+            changed: { defaultCustomFields: { from: before, to: applied.values } },
+          },
+        });
+        return { row: updated!, matterTypeName: await typeName(tx, target.matterTypeId) };
+      });
       return { matterTemplate: await rowWithContent(result.row, result.matterTypeName) };
     },
   );

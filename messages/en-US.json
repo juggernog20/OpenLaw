@@ -4703,6 +4703,9 @@
   "settings.matterTemplateEditor.contentInvalid": {
     "defaultMessage": "Give every row a name and use whole-number offsets from 0 to 3650 days."
   },
+  "settings.matterTemplateEditor.customFields": {
+    "defaultMessage": "Custom field defaults"
+  },
   "settings.matterTemplateEditor.dateOffset": {
     "defaultMessage": "Date offset"
   },
@@ -4717,6 +4720,12 @@
   },
   "settings.matterTemplateEditor.dueOffset": {
     "defaultMessage": "Due offset"
+  },
+  "settings.matterTemplateEditor.fieldNumberInvalid": {
+    "defaultMessage": "Give {field} a number."
+  },
+  "settings.matterTemplateEditor.fieldsSaveError": {
+    "defaultMessage": "The custom-field defaults could not be saved."
   },
   "settings.matterTemplateEditor.keyDateLabelNumber": {
     "defaultMessage": "Key date {number} label"
@@ -4750,6 +4759,9 @@
   },
   "settings.matterTemplateEditor.nameMissing": {
     "defaultMessage": "Name the template."
+  },
+  "settings.matterTemplateEditor.noCustomFields": {
+    "defaultMessage": "This Matter type has no custom fields."
   },
   "settings.matterTemplateEditor.noDefault": {
     "defaultMessage": "No default"
@@ -4789,6 +4801,15 @@
   },
   "settings.matterTemplateEditor.saveError": {
     "defaultMessage": "The Matter template could not be saved."
+  },
+  "settings.matterTemplateEditor.staleField": {
+    "defaultMessage": "{field} is no longer attached to this Matter type. Its saved value ({value}) is retained."
+  },
+  "settings.matterTemplateEditor.staleNo": {
+    "defaultMessage": "No"
+  },
+  "settings.matterTemplateEditor.staleYes": {
+    "defaultMessage": "Yes"
   },
   "settings.matterTemplateEditor.taskDueNumber": {
     "defaultMessage": "Task {number} due offset in days"
