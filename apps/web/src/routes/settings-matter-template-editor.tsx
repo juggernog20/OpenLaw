@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-/** Core ST21 Matter-template editor; later M24 slices add its content rows. */
+/** ST21 Matter-template editor for reusable defaults, tasks, and key dates. */
 
 import { useState } from "react";
 import { ArrowLeft } from "lucide-react";
@@ -11,6 +11,13 @@ import { api } from "../lib/api";
 import { problemDetail } from "../lib/messages";
 import { currentUser, needsSetup } from "../lib/session";
 import { MattersSettingsTabs } from "../components/matters-settings-tabs";
+import {
+  newDraftKey,
+  TemplateKeyDatesEditor,
+  TemplateTasksEditor,
+  type TemplateKeyDateDraft,
+  type TemplateTaskDraft,
+} from "../components/matter-template-content-editor";
 import { PageTitle } from "../components/page-title";
 import { SettingsCard } from "../components/settings-card";
 import { StatusNote, type FieldStatus } from "../components/status-note";
@@ -63,6 +70,22 @@ export function SettingsMatterTemplateEditorPage() {
   );
   const [defaultRisk, setDefaultRisk] = useState<Severity | "">(template.defaultRisk ?? "");
   const [titlePrefix, setTitlePrefix] = useState(template.titlePrefix ?? "");
+  const [tasks, setTasks] = useState<TemplateTaskDraft[]>(() =>
+    template.tasks.map((task) => ({
+      key: task.id,
+      title: task.title,
+      dueOffsetDays: task.dueOffsetDays === null ? "" : String(task.dueOffsetDays),
+      assigneeRole: task.assigneeRole,
+    })),
+  );
+  const [keyDates, setKeyDates] = useState<TemplateKeyDateDraft[]>(() =>
+    template.keyDates.map((keyDate) => ({
+      key: keyDate.id,
+      label: keyDate.label,
+      offsetDays: String(keyDate.offsetDays),
+      note: keyDate.note ?? "",
+    })),
+  );
   const [status, setStatus] = useState<FieldStatus>("idle");
   const [detail, setDetail] = useState<string | null>(null);
 
@@ -74,6 +97,32 @@ export function SettingsMatterTemplateEditorPage() {
         intl.formatMessage({
           id: "settings.matterTemplateEditor.nameMissing",
           defaultMessage: "Name the template.",
+        }),
+      );
+      return;
+    }
+    const invalidTask = tasks.some((task) => {
+      if (task.title.trim() === "") return true;
+      if (task.dueOffsetDays === "") return false;
+      const dueOffsetDays = Number(task.dueOffsetDays);
+      return !Number.isInteger(dueOffsetDays) || dueOffsetDays < 0 || dueOffsetDays > 3650;
+    });
+    const invalidKeyDate = keyDates.some((keyDate) => {
+      const offsetDays = Number(keyDate.offsetDays);
+      return (
+        keyDate.label.trim() === "" ||
+        keyDate.offsetDays === "" ||
+        !Number.isInteger(offsetDays) ||
+        offsetDays < 0 ||
+        offsetDays > 3650
+      );
+    });
+    if (invalidTask || invalidKeyDate) {
+      setStatus("error");
+      setDetail(
+        intl.formatMessage({
+          id: "settings.matterTemplateEditor.contentInvalid",
+          defaultMessage: "Give every row a name and use whole-number offsets from 0 to 3650 days.",
         }),
       );
       return;
@@ -104,6 +153,72 @@ export function SettingsMatterTemplateEditorPage() {
       return;
     }
     setTemplate(data.matterTemplate);
+
+    const taskResult = await api
+      .PUT("/api/v1/matter-templates/{id}/tasks", {
+        params: { path: { id: template.id } },
+        body: {
+          tasks: tasks.map((task) => ({
+            title: task.title.trim(),
+            dueOffsetDays: task.dueOffsetDays === "" ? null : Number(task.dueOffsetDays),
+            assigneeRole: task.assigneeRole,
+          })),
+        },
+      })
+      .catch(() => ({ data: null, error: undefined }));
+    if (!taskResult.data) {
+      setStatus("error");
+      setDetail(
+        problemDetail(taskResult.error) ??
+          intl.formatMessage({
+            id: "settings.matterTemplateEditor.tasksSaveError",
+            defaultMessage: "The template tasks could not be saved.",
+          }),
+      );
+      return;
+    }
+    setTemplate(taskResult.data.matterTemplate);
+
+    const keyDateResult = await api
+      .PUT("/api/v1/matter-templates/{id}/key-dates", {
+        params: { path: { id: template.id } },
+        body: {
+          keyDates: keyDates.map((keyDate) => ({
+            label: keyDate.label.trim(),
+            offsetDays: Number(keyDate.offsetDays),
+            note: keyDate.note.trim() || null,
+          })),
+        },
+      })
+      .catch(() => ({ data: null, error: undefined }));
+    if (!keyDateResult.data) {
+      setStatus("error");
+      setDetail(
+        problemDetail(keyDateResult.error) ??
+          intl.formatMessage({
+            id: "settings.matterTemplateEditor.keyDatesSaveError",
+            defaultMessage: "The template key dates could not be saved.",
+          }),
+      );
+      return;
+    }
+    setTemplate(keyDateResult.data.matterTemplate);
+    setTasks(
+      keyDateResult.data.matterTemplate.tasks.map((task) => ({
+        key: task.id || newDraftKey("task"),
+        title: task.title,
+        dueOffsetDays: task.dueOffsetDays === null ? "" : String(task.dueOffsetDays),
+        assigneeRole: task.assigneeRole,
+      })),
+    );
+    setKeyDates(
+      keyDateResult.data.matterTemplate.keyDates.map((keyDate) => ({
+        key: keyDate.id || newDraftKey("key-date"),
+        label: keyDate.label,
+        offsetDays: String(keyDate.offsetDays),
+        note: keyDate.note ?? "",
+      })),
+    );
     setStatus("saved");
   }
 
@@ -238,6 +353,16 @@ export function SettingsMatterTemplateEditorPage() {
             </div>
           </SettingsCard>
         </div>
+        <TemplateTasksEditor
+          rows={tasks}
+          disabled={status === "saving" || template.archivedAt !== null}
+          onChange={setTasks}
+        />
+        <TemplateKeyDatesEditor
+          rows={keyDates}
+          disabled={status === "saving" || template.archivedAt !== null}
+          onChange={setKeyDates}
+        />
         <div className="flex items-center justify-end gap-3">
           <StatusNote status={status} detail={detail} />
           <Button

@@ -451,6 +451,23 @@ Task rows carried by a template; instantiated as `matter_tasks` when the templat
 
 ---
 
+### `matter_template_key_dates`
+
+Source: **MTR-013 addendum (M24/4)**
+
+Ordered relative Key dates carried by a template; instantiated as `matter_key_dates` when the template is applied at Matter creation.
+
+| Column               | Type    | Notes                                       |
+| -------------------- | ------- | ------------------------------------------- |
+| `id`                 | UUID    | PK                                          |
+| `matter_template_id` | UUID    | FK → `matter_templates.id`, not null        |
+| `label`              | text    | not null                                    |
+| `offset_days`        | integer | not null; whole number from 0 through 3,650 |
+| `note`               | text    | nullable                                    |
+| `display_order`      | integer | not null                                    |
+
+---
+
 ### `matter_tasks`
 
 Source: **MTR-005**

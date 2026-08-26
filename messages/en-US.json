@@ -4691,8 +4691,20 @@
   "settings.matterStatuses.title": {
     "defaultMessage": "Matter statuses"
   },
+  "settings.matterTemplateEditor.addKeyDate": {
+    "defaultMessage": "Add key date"
+  },
+  "settings.matterTemplateEditor.addTask": {
+    "defaultMessage": "Add task"
+  },
   "settings.matterTemplateEditor.allTemplates": {
     "defaultMessage": "All templates"
+  },
+  "settings.matterTemplateEditor.contentInvalid": {
+    "defaultMessage": "Give every row a name and use whole-number offsets from 0 to 3650 days."
+  },
+  "settings.matterTemplateEditor.dateOffset": {
+    "defaultMessage": "Date offset"
   },
   "settings.matterTemplateEditor.defaults": {
     "defaultMessage": "Matter defaults"
@@ -4703,6 +4715,36 @@
   "settings.matterTemplateEditor.details": {
     "defaultMessage": "Template details"
   },
+  "settings.matterTemplateEditor.dueOffset": {
+    "defaultMessage": "Due offset"
+  },
+  "settings.matterTemplateEditor.keyDateLabelNumber": {
+    "defaultMessage": "Key date {number} label"
+  },
+  "settings.matterTemplateEditor.keyDateNoteNumber": {
+    "defaultMessage": "Key date {number} note"
+  },
+  "settings.matterTemplateEditor.keyDateNumber": {
+    "defaultMessage": "Key date {number}"
+  },
+  "settings.matterTemplateEditor.keyDateOffsetNumber": {
+    "defaultMessage": "Key date {number} offset in days"
+  },
+  "settings.matterTemplateEditor.keyDates": {
+    "defaultMessage": "Key dates"
+  },
+  "settings.matterTemplateEditor.keyDatesHint": {
+    "defaultMessage": "Dates resolve relative to the Matter creation date"
+  },
+  "settings.matterTemplateEditor.keyDatesSaveError": {
+    "defaultMessage": "The template key dates could not be saved."
+  },
+  "settings.matterTemplateEditor.label": {
+    "defaultMessage": "Label"
+  },
+  "settings.matterTemplateEditor.matterManager": {
+    "defaultMessage": "Matter Manager"
+  },
   "settings.matterTemplateEditor.name": {
     "defaultMessage": "Name"
   },
@@ -4712,11 +4754,35 @@
   "settings.matterTemplateEditor.noDefault": {
     "defaultMessage": "No default"
   },
+  "settings.matterTemplateEditor.noKeyDates": {
+    "defaultMessage": "No key dates are included in this template."
+  },
+  "settings.matterTemplateEditor.noTasks": {
+    "defaultMessage": "No tasks are included in this template."
+  },
+  "settings.matterTemplateEditor.note": {
+    "defaultMessage": "Note"
+  },
+  "settings.matterTemplateEditor.order": {
+    "defaultMessage": "Order"
+  },
   "settings.matterTemplateEditor.priority": {
     "defaultMessage": "Priority"
   },
+  "settings.matterTemplateEditor.removeKeyDate": {
+    "defaultMessage": "Remove {name}"
+  },
+  "settings.matterTemplateEditor.removeTask": {
+    "defaultMessage": "Remove {name}"
+  },
+  "settings.matterTemplateEditor.reorder": {
+    "defaultMessage": "Reorder {name}, position {position} of {total}. Use the arrow keys to move it."
+  },
   "settings.matterTemplateEditor.risk": {
     "defaultMessage": "Risk"
+  },
+  "settings.matterTemplateEditor.role": {
+    "defaultMessage": "Role"
   },
   "settings.matterTemplateEditor.save": {
     "defaultMessage": "Save template"
@@ -4724,11 +4790,38 @@
   "settings.matterTemplateEditor.saveError": {
     "defaultMessage": "The Matter template could not be saved."
   },
+  "settings.matterTemplateEditor.taskDueNumber": {
+    "defaultMessage": "Task {number} due offset in days"
+  },
+  "settings.matterTemplateEditor.taskNumber": {
+    "defaultMessage": "Task {number}"
+  },
+  "settings.matterTemplateEditor.taskRoleNumber": {
+    "defaultMessage": "Task {number} role"
+  },
+  "settings.matterTemplateEditor.taskTitle": {
+    "defaultMessage": "Title"
+  },
+  "settings.matterTemplateEditor.taskTitleNumber": {
+    "defaultMessage": "Task {number} title"
+  },
+  "settings.matterTemplateEditor.tasks": {
+    "defaultMessage": "Tasks"
+  },
+  "settings.matterTemplateEditor.tasksHint": {
+    "defaultMessage": "Ordered checklist inserted when the Matter is created"
+  },
+  "settings.matterTemplateEditor.tasksSaveError": {
+    "defaultMessage": "The template tasks could not be saved."
+  },
   "settings.matterTemplateEditor.titlePrefix": {
     "defaultMessage": "Title prefix"
   },
   "settings.matterTemplateEditor.type": {
     "defaultMessage": "Matter type: {name}"
+  },
+  "settings.matterTemplateEditor.unassigned": {
+    "defaultMessage": "Unassigned"
   },
   "settings.matterTemplates.add": {
     "defaultMessage": "Add template"

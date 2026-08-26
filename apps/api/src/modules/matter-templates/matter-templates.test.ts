@@ -105,6 +105,18 @@ describe("the SET-002 gate", () => {
         url: `/api/v1/matter-templates/${template.id}/restore`,
         cookies: memberCookies,
       }),
+      harness.app.inject({
+        method: "PUT",
+        url: `/api/v1/matter-templates/${template.id}/tasks`,
+        cookies: memberCookies,
+        payload: { tasks: [] },
+      }),
+      harness.app.inject({
+        method: "PUT",
+        url: `/api/v1/matter-templates/${template.id}/key-dates`,
+        cookies: memberCookies,
+        payload: { keyDates: [] },
+      }),
     ];
     for (const response of await Promise.all(attempts)) {
       expect(response.statusCode, response.body).toBe(403);
@@ -363,5 +375,249 @@ describe("the name is unique among live templates of a type", () => {
     });
     expect(restore.statusCode, restore.body).toBe(409);
     expect(restore.json().detail).toContain("Rename that one first");
+  });
+});
+
+describe("ordered template content", () => {
+  it("replaces Tasks and Key dates as whole ordered lists and audits each changed list", async () => {
+    const template = await createTemplate({
+      matterTypeId: employmentTypeId,
+      name: "Content playbook",
+    });
+
+    const tasks = await harness.app.inject({
+      method: "PUT",
+      url: `/api/v1/matter-templates/${template.id}/tasks`,
+      cookies: adminCookies,
+      payload: {
+        tasks: [
+          { title: "Confirm scope", dueOffsetDays: 1, assigneeRole: "matter_manager" },
+          { title: "Send notice", dueOffsetDays: null, assigneeRole: "none" },
+        ],
+      },
+    });
+    expect(tasks.statusCode, tasks.body).toBe(200);
+    expect(tasks.json().matterTemplate).toMatchObject({
+      taskCount: 2,
+      keyDateCount: 0,
+      tasks: [
+        {
+          id: expect.any(String),
+          title: "Confirm scope",
+          dueOffsetDays: 1,
+          assigneeRole: "matter_manager",
+          displayOrder: 1,
+        },
+        {
+          id: expect.any(String),
+          title: "Send notice",
+          dueOffsetDays: null,
+          assigneeRole: "none",
+          displayOrder: 2,
+        },
+      ],
+    });
+    const originalTaskIds = tasks
+      .json()
+      .matterTemplate.tasks.map((task: { id: string }) => task.id);
+
+    const noOp = await harness.app.inject({
+      method: "PUT",
+      url: `/api/v1/matter-templates/${template.id}/tasks`,
+      cookies: adminCookies,
+      payload: {
+        tasks: [
+          { title: "Confirm scope", dueOffsetDays: 1, assigneeRole: "matter_manager" },
+          { title: "Send notice", dueOffsetDays: null, assigneeRole: "none" },
+        ],
+      },
+    });
+    expect(noOp.statusCode, noOp.body).toBe(200);
+    expect(noOp.json().matterTemplate.tasks.map((task: { id: string }) => task.id)).toEqual(
+      originalTaskIds,
+    );
+
+    const reordered = await harness.app.inject({
+      method: "PUT",
+      url: `/api/v1/matter-templates/${template.id}/tasks`,
+      cookies: adminCookies,
+      payload: {
+        tasks: [
+          { title: "Send notice", dueOffsetDays: 2, assigneeRole: "none" },
+          { title: "Confirm scope", dueOffsetDays: 1, assigneeRole: "matter_manager" },
+        ],
+      },
+    });
+    expect(reordered.statusCode, reordered.body).toBe(200);
+    expect(
+      reordered
+        .json()
+        .matterTemplate.tasks.map((task: { title: string; displayOrder: number }) => [
+          task.title,
+          task.displayOrder,
+        ]),
+    ).toEqual([
+      ["Send notice", 1],
+      ["Confirm scope", 2],
+    ]);
+
+    const keyDates = await harness.app.inject({
+      method: "PUT",
+      url: `/api/v1/matter-templates/${template.id}/key-dates`,
+      cookies: adminCookies,
+      payload: {
+        keyDates: [
+          {
+            label: "Response deadline",
+            offsetDays: 14,
+            note: "Confirm the statutory deadline.",
+          },
+          { label: "Review checkpoint", offsetDays: 30, note: null },
+        ],
+      },
+    });
+    expect(keyDates.statusCode, keyDates.body).toBe(200);
+    expect(keyDates.json().matterTemplate).toMatchObject({
+      taskCount: 2,
+      keyDateCount: 2,
+      keyDates: [
+        {
+          id: expect.any(String),
+          label: "Response deadline",
+          offsetDays: 14,
+          note: "Confirm the statutory deadline.",
+          displayOrder: 1,
+        },
+        {
+          id: expect.any(String),
+          label: "Review checkpoint",
+          offsetDays: 30,
+          note: null,
+          displayOrder: 2,
+        },
+      ],
+    });
+
+    const list = await harness.app.inject({
+      method: "GET",
+      url: `/api/v1/matter-templates?matterTypeId=${employmentTypeId}`,
+      cookies: adminCookies,
+    });
+    const listed = list
+      .json()
+      .matterTemplates.find((row: { id: string }) => row.id === template.id);
+    expect(listed.tasks).toEqual(reordered.json().matterTemplate.tasks);
+    expect(listed.keyDates).toEqual(keyDates.json().matterTemplate.keyDates);
+
+    const entries = await harness.db
+      .select()
+      .from(activityLog)
+      .where(eq(activityLog.action, "matter_template.updated"));
+    const contentEntries = entries.filter(
+      (entry) => entry.payload.displayName === "Content playbook",
+    );
+    expect(contentEntries).toHaveLength(3);
+    expect(contentEntries.map((entry) => Object.keys(entry.payload.changed as object))).toEqual(
+      expect.arrayContaining([["tasks"], ["tasks"], ["keyDates"]]),
+    );
+  });
+
+  it("validates required text, role targets, offsets, bounds, and ids, and blanks an empty note", async () => {
+    const template = await createTemplate({
+      matterTypeId: employmentTypeId,
+      name: "Content validation",
+    });
+    const attempts = [
+      {
+        url: `/api/v1/matter-templates/${template.id}/tasks`,
+        payload: { tasks: [{ title: " ", dueOffsetDays: 1, assigneeRole: "none" }] },
+      },
+      {
+        url: `/api/v1/matter-templates/${template.id}/tasks`,
+        payload: { tasks: [{ title: "Task", dueOffsetDays: -1, assigneeRole: "none" }] },
+      },
+      {
+        url: `/api/v1/matter-templates/${template.id}/tasks`,
+        payload: { tasks: [{ title: "Task", dueOffsetDays: 1, assigneeRole: "owner" }] },
+      },
+      {
+        url: `/api/v1/matter-templates/${template.id}/key-dates`,
+        payload: { keyDates: [{ label: " ", offsetDays: 1, note: null }] },
+      },
+      {
+        url: `/api/v1/matter-templates/${template.id}/key-dates`,
+        payload: { keyDates: [{ label: "Date", offsetDays: 3651, note: null }] },
+      },
+      {
+        url: `/api/v1/matter-templates/${template.id}/key-dates`,
+        payload: { keyDates: [{ label: "Date", offsetDays: 1.5, note: null }] },
+      },
+    ];
+    for (const attempt of attempts) {
+      const response = await harness.app.inject({
+        method: "PUT",
+        url: attempt.url,
+        cookies: adminCookies,
+        payload: attempt.payload,
+      });
+      expect(response.statusCode, response.body).toBe(400);
+    }
+
+    const blankNote = await harness.app.inject({
+      method: "PUT",
+      url: `/api/v1/matter-templates/${template.id}/key-dates`,
+      cookies: adminCookies,
+      payload: { keyDates: [{ label: "Date", offsetDays: 1, note: "  " }] },
+    });
+    expect(blankNote.statusCode, blankNote.body).toBe(200);
+    expect(blankNote.json().matterTemplate.keyDates[0].note).toBeNull();
+
+    const missing = await harness.app.inject({
+      method: "PUT",
+      url: "/api/v1/matter-templates/no-such-template/tasks",
+      cookies: adminCookies,
+      payload: { tasks: [] },
+    });
+    expect(missing.statusCode, missing.body).toBe(404);
+  });
+
+  it("keeps both child lists intact through archive and restore", async () => {
+    const template = await createTemplate({
+      matterTypeId: employmentTypeId,
+      name: "Retained content",
+    });
+    await harness.app.inject({
+      method: "PUT",
+      url: `/api/v1/matter-templates/${template.id}/tasks`,
+      cookies: adminCookies,
+      payload: {
+        tasks: [{ title: "Retained task", dueOffsetDays: 0, assigneeRole: "none" }],
+      },
+    });
+    await harness.app.inject({
+      method: "PUT",
+      url: `/api/v1/matter-templates/${template.id}/key-dates`,
+      cookies: adminCookies,
+      payload: { keyDates: [{ label: "Retained date", offsetDays: 7, note: null }] },
+    });
+    const archived = await harness.app.inject({
+      method: "POST",
+      url: `/api/v1/matter-templates/${template.id}/archive`,
+      cookies: adminCookies,
+    });
+    expect(archived.json().matterTemplate).toMatchObject({
+      tasks: [{ title: "Retained task", dueOffsetDays: 0 }],
+      keyDates: [{ label: "Retained date", offsetDays: 7 }],
+    });
+    const restored = await harness.app.inject({
+      method: "POST",
+      url: `/api/v1/matter-templates/${template.id}/restore`,
+      cookies: adminCookies,
+    });
+    expect(restored.statusCode, restored.body).toBe(200);
+    expect(restored.json().matterTemplate).toMatchObject({
+      tasks: [{ title: "Retained task", dueOffsetDays: 0 }],
+      keyDates: [{ label: "Retained date", offsetDays: 7 }],
+    });
   });
 });

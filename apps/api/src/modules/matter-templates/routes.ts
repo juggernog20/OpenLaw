@@ -8,11 +8,17 @@ import {
   and,
   asc,
   eq,
+  inArray,
   isNull,
+  MATTER_TEMPLATE_ASSIGNEE_ROLES,
+  matterTemplateKeyDates,
+  matterTemplateTasks,
   matterTemplates,
   matterTypes,
   type Executor,
   type MatterTemplate,
+  type MatterTemplateKeyDate,
+  type MatterTemplateTask,
   type Transaction,
 } from "@openlaw/db";
 import { requireRole } from "../../auth/guards.js";
@@ -23,6 +29,18 @@ const SeveritySchema = z.enum(["low", "medium", "high", "critical"]);
 const NameSchema = z.string().trim().min(1).max(100);
 const DescriptionSchema = z.string().trim().max(500);
 const TitlePrefixSchema = z.string().trim().max(100);
+const AssigneeRoleSchema = z.enum(MATTER_TEMPLATE_ASSIGNEE_ROLES);
+const OffsetSchema = z.number().int().min(0).max(3650);
+const TemplateTaskInputSchema = z.strictObject({
+  title: z.string().trim().min(1).max(200),
+  dueOffsetDays: OffsetSchema.nullable(),
+  assigneeRole: AssigneeRoleSchema,
+});
+const TemplateKeyDateInputSchema = z.strictObject({
+  label: z.string().trim().min(1).max(200),
+  offsetDays: OffsetSchema,
+  note: z.string().trim().max(2000).nullable(),
+});
 
 const NAME_TAKEN = "A template of this Matter type is already called that.";
 const RESTORE_NAME_TAKEN =
@@ -46,6 +64,22 @@ function asNameConflict(error: unknown, detail: string): never {
   throw error;
 }
 
+const MatterTemplateTaskSchema = z.object({
+  id: z.string(),
+  title: z.string(),
+  dueOffsetDays: z.number().int().nullable(),
+  assigneeRole: AssigneeRoleSchema,
+  displayOrder: z.number().int(),
+});
+
+const MatterTemplateKeyDateSchema = z.object({
+  id: z.string(),
+  label: z.string(),
+  offsetDays: z.number().int(),
+  note: z.string().nullable(),
+  displayOrder: z.number().int(),
+});
+
 const MatterTemplateSchema = z.object({
   id: z.string(),
   matterTypeId: z.string(),
@@ -56,6 +90,8 @@ const MatterTemplateSchema = z.object({
   defaultRisk: SeveritySchema.nullable(),
   titlePrefix: z.string().nullable(),
   archivedAt: z.iso.datetime().nullable(),
+  tasks: z.array(MatterTemplateTaskSchema),
+  keyDates: z.array(MatterTemplateKeyDateSchema),
   taskCount: z.number().int(),
   keyDateCount: z.number().int(),
   customFieldCount: z.number().int(),
@@ -66,7 +102,32 @@ const MatterTemplateListEnvelope = z.object({
   matterTemplates: z.array(MatterTemplateSchema),
 });
 
-function rowJson(row: MatterTemplate, matterTypeName: string) {
+function taskJson(row: MatterTemplateTask) {
+  return {
+    id: row.id,
+    title: row.title,
+    dueOffsetDays: row.dueOffsetDays,
+    assigneeRole: row.assigneeRole,
+    displayOrder: row.displayOrder,
+  };
+}
+
+function keyDateJson(row: MatterTemplateKeyDate) {
+  return {
+    id: row.id,
+    label: row.label,
+    offsetDays: row.offsetDays,
+    note: row.note,
+    displayOrder: row.displayOrder,
+  };
+}
+
+function rowJson(
+  row: MatterTemplate,
+  matterTypeName: string,
+  tasks: MatterTemplateTask[],
+  keyDates: MatterTemplateKeyDate[],
+) {
   return {
     id: row.id,
     matterTypeId: row.matterTypeId,
@@ -77,13 +138,62 @@ function rowJson(row: MatterTemplate, matterTypeName: string) {
     defaultRisk: row.defaultRisk,
     titlePrefix: row.titlePrefix,
     archivedAt: row.archivedAt?.toISOString() ?? null,
-    taskCount: 0,
-    keyDateCount: 0,
+    tasks: tasks.map(taskJson),
+    keyDates: keyDates.map(keyDateJson),
+    taskCount: tasks.length,
+    keyDateCount: keyDates.length,
     customFieldCount: Object.keys(row.defaultCustomFields ?? {}).length,
   };
 }
 
 export const matterTemplatesRoutes: FastifyPluginAsyncZod = async (app) => {
+  async function contentOf(db: Executor, ids: string[]) {
+    const tasksByTemplate = new Map<string, MatterTemplateTask[]>();
+    const keyDatesByTemplate = new Map<string, MatterTemplateKeyDate[]>();
+    if (ids.length === 0) return { tasksByTemplate, keyDatesByTemplate };
+    const [tasks, keyDates] = await Promise.all([
+      db
+        .select()
+        .from(matterTemplateTasks)
+        .where(inArray(matterTemplateTasks.matterTemplateId, ids))
+        .orderBy(
+          asc(matterTemplateTasks.matterTemplateId),
+          asc(matterTemplateTasks.displayOrder),
+          asc(matterTemplateTasks.id),
+        ),
+      db
+        .select()
+        .from(matterTemplateKeyDates)
+        .where(inArray(matterTemplateKeyDates.matterTemplateId, ids))
+        .orderBy(
+          asc(matterTemplateKeyDates.matterTemplateId),
+          asc(matterTemplateKeyDates.displayOrder),
+          asc(matterTemplateKeyDates.id),
+        ),
+    ]);
+    for (const task of tasks) {
+      const rows = tasksByTemplate.get(task.matterTemplateId) ?? [];
+      rows.push(task);
+      tasksByTemplate.set(task.matterTemplateId, rows);
+    }
+    for (const keyDate of keyDates) {
+      const rows = keyDatesByTemplate.get(keyDate.matterTemplateId) ?? [];
+      rows.push(keyDate);
+      keyDatesByTemplate.set(keyDate.matterTemplateId, rows);
+    }
+    return { tasksByTemplate, keyDatesByTemplate };
+  }
+
+  async function rowWithContent(row: MatterTemplate, matterTypeName: string) {
+    const content = await contentOf(app.db, [row.id]);
+    return rowJson(
+      row,
+      matterTypeName,
+      content.tasksByTemplate.get(row.id) ?? [],
+      content.keyDatesByTemplate.get(row.id) ?? [],
+    );
+  }
+
   async function lockedTemplate(tx: Transaction, id: string): Promise<MatterTemplate> {
     const [row] = await tx
       .select()
@@ -139,9 +249,18 @@ export const matterTemplatesRoutes: FastifyPluginAsyncZod = async (app) => {
           asc(matterTemplates.name),
           asc(matterTemplates.createdAt),
         );
+      const content = await contentOf(
+        app.db,
+        rows.map(({ template }) => template.id),
+      );
       return {
         matterTemplates: rows.map(({ template, matterTypeName }) =>
-          rowJson(template, matterTypeName),
+          rowJson(
+            template,
+            matterTypeName,
+            content.tasksByTemplate.get(template.id) ?? [],
+            content.keyDatesByTemplate.get(template.id) ?? [],
+          ),
         ),
       };
     },
@@ -203,7 +322,9 @@ export const matterTemplatesRoutes: FastifyPluginAsyncZod = async (app) => {
           return { row: created!, matterTypeName: matterType.displayName };
         })
         .catch((error: unknown) => asNameConflict(error, NAME_TAKEN));
-      return reply.status(201).send({ matterTemplate: rowJson(result.row, result.matterTypeName) });
+      return reply
+        .status(201)
+        .send({ matterTemplate: await rowWithContent(result.row, result.matterTypeName) });
     },
   );
 
@@ -273,7 +394,136 @@ export const matterTemplatesRoutes: FastifyPluginAsyncZod = async (app) => {
           return { row: updated!, matterTypeName: await typeName(tx, target.matterTypeId) };
         })
         .catch((error: unknown) => asNameConflict(error, NAME_TAKEN));
-      return { matterTemplate: rowJson(result.row, result.matterTypeName) };
+      return { matterTemplate: await rowWithContent(result.row, result.matterTypeName) };
+    },
+  );
+
+  app.put(
+    "/matter-templates/:id/tasks",
+    {
+      preHandler: requireRole("administrator"),
+      schema: {
+        operationId: "setMatterTemplateTasks",
+        summary:
+          "Replace a Matter template's ordered task list; offsets are whole days from " +
+          "Matter creation and assignment targets are roles, never named users",
+        tags: ["matter-templates"],
+        params: z.object({ id: z.string() }),
+        body: z.strictObject({ tasks: z.array(TemplateTaskInputSchema).max(100) }),
+        response: { 200: MatterTemplateEnvelope, default: problemResponse },
+      },
+    },
+    async (request) => {
+      const wanted = request.body.tasks.map((task, index) => ({
+        title: task.title.trim(),
+        dueOffsetDays: task.dueOffsetDays,
+        assigneeRole: task.assigneeRole,
+        displayOrder: index + 1,
+      }));
+      const result = await app.db.transaction(async (tx) => {
+        const target = await lockedTemplate(tx, request.params.id);
+        const current = await tx
+          .select()
+          .from(matterTemplateTasks)
+          .where(eq(matterTemplateTasks.matterTemplateId, target.id))
+          .orderBy(asc(matterTemplateTasks.displayOrder), asc(matterTemplateTasks.id))
+          .for("update");
+        const before = current.map(({ title, dueOffsetDays, assigneeRole, displayOrder }) => ({
+          title,
+          dueOffsetDays,
+          assigneeRole,
+          displayOrder,
+        }));
+        if (JSON.stringify(before) === JSON.stringify(wanted)) {
+          return { row: target, matterTypeName: await typeName(tx, target.matterTypeId) };
+        }
+        await tx
+          .delete(matterTemplateTasks)
+          .where(eq(matterTemplateTasks.matterTemplateId, target.id));
+        if (wanted.length > 0) {
+          await tx.insert(matterTemplateTasks).values(
+            wanted.map((task) => ({
+              matterTemplateId: target.id,
+              ...task,
+            })),
+          );
+        }
+        await recordActivity(tx, {
+          entityType: "system",
+          actorId: request.user.id,
+          action: "matter_template.updated",
+          visibility: "admin_only",
+          payload: { displayName: target.name, changed: { tasks: { from: before, to: wanted } } },
+        });
+        return { row: target, matterTypeName: await typeName(tx, target.matterTypeId) };
+      });
+      return { matterTemplate: await rowWithContent(result.row, result.matterTypeName) };
+    },
+  );
+
+  app.put(
+    "/matter-templates/:id/key-dates",
+    {
+      preHandler: requireRole("administrator"),
+      schema: {
+        operationId: "setMatterTemplateKeyDates",
+        summary:
+          "Replace a Matter template's ordered relative Key dates; each offset is a " +
+          "whole day from Matter creation",
+        tags: ["matter-templates"],
+        params: z.object({ id: z.string() }),
+        body: z.strictObject({ keyDates: z.array(TemplateKeyDateInputSchema).max(100) }),
+        response: { 200: MatterTemplateEnvelope, default: problemResponse },
+      },
+    },
+    async (request) => {
+      const wanted = request.body.keyDates.map((keyDate, index) => ({
+        label: keyDate.label.trim(),
+        offsetDays: keyDate.offsetDays,
+        note: keyDate.note?.trim() || null,
+        displayOrder: index + 1,
+      }));
+      const result = await app.db.transaction(async (tx) => {
+        const target = await lockedTemplate(tx, request.params.id);
+        const current = await tx
+          .select()
+          .from(matterTemplateKeyDates)
+          .where(eq(matterTemplateKeyDates.matterTemplateId, target.id))
+          .orderBy(asc(matterTemplateKeyDates.displayOrder), asc(matterTemplateKeyDates.id))
+          .for("update");
+        const before = current.map(({ label, offsetDays, note, displayOrder }) => ({
+          label,
+          offsetDays,
+          note,
+          displayOrder,
+        }));
+        if (JSON.stringify(before) === JSON.stringify(wanted)) {
+          return { row: target, matterTypeName: await typeName(tx, target.matterTypeId) };
+        }
+        await tx
+          .delete(matterTemplateKeyDates)
+          .where(eq(matterTemplateKeyDates.matterTemplateId, target.id));
+        if (wanted.length > 0) {
+          await tx.insert(matterTemplateKeyDates).values(
+            wanted.map((keyDate) => ({
+              matterTemplateId: target.id,
+              ...keyDate,
+            })),
+          );
+        }
+        await recordActivity(tx, {
+          entityType: "system",
+          actorId: request.user.id,
+          action: "matter_template.updated",
+          visibility: "admin_only",
+          payload: {
+            displayName: target.name,
+            changed: { keyDates: { from: before, to: wanted } },
+          },
+        });
+        return { row: target, matterTypeName: await typeName(tx, target.matterTypeId) };
+      });
+      return { matterTemplate: await rowWithContent(result.row, result.matterTypeName) };
     },
   );
 
@@ -307,7 +557,7 @@ export const matterTemplatesRoutes: FastifyPluginAsyncZod = async (app) => {
         });
         return { row: updated!, matterTypeName: await typeName(tx, target.matterTypeId) };
       });
-      return { matterTemplate: rowJson(result.row, result.matterTypeName) };
+      return { matterTemplate: await rowWithContent(result.row, result.matterTypeName) };
     },
   );
 
@@ -345,7 +595,7 @@ export const matterTemplatesRoutes: FastifyPluginAsyncZod = async (app) => {
           return { row: updated!, matterTypeName: await typeName(tx, target.matterTypeId) };
         })
         .catch((error: unknown) => asNameConflict(error, RESTORE_NAME_TAKEN));
-      return { matterTemplate: rowJson(result.row, result.matterTypeName) };
+      return { matterTemplate: await rowWithContent(result.row, result.matterTypeName) };
     },
   );
 };

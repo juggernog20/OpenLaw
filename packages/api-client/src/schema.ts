@@ -1225,6 +1225,40 @@ export interface paths {
     patch: operations["updateMatterTemplate"];
     trace?: never;
   };
+  "/api/v1/matter-templates/{id}/tasks": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    /** Replace a Matter template's ordered task list; offsets are whole days from Matter creation and assignment targets are roles, never named users */
+    put: operations["setMatterTemplateTasks"];
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/matter-templates/{id}/key-dates": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    /** Replace a Matter template's ordered relative Key dates; each offset is a whole day from Matter creation */
+    put: operations["setMatterTemplateKeyDates"];
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/v1/matter-templates/{id}/archive": {
     parameters: {
       query?: never;
@@ -8291,6 +8325,21 @@ export interface operations {
               defaultRisk: ("low" | "medium" | "high" | "critical") | null;
               titlePrefix: string | null;
               archivedAt: string | null;
+              tasks: {
+                id: string;
+                title: string;
+                dueOffsetDays: number | null;
+                /** @enum {string} */
+                assigneeRole: "matter_manager" | "none";
+                displayOrder: number;
+              }[];
+              keyDates: {
+                id: string;
+                label: string;
+                offsetDays: number;
+                note: string | null;
+                displayOrder: number;
+              }[];
               taskCount: number;
               keyDateCount: number;
               customFieldCount: number;
@@ -8346,6 +8395,21 @@ export interface operations {
               defaultRisk: ("low" | "medium" | "high" | "critical") | null;
               titlePrefix: string | null;
               archivedAt: string | null;
+              tasks: {
+                id: string;
+                title: string;
+                dueOffsetDays: number | null;
+                /** @enum {string} */
+                assigneeRole: "matter_manager" | "none";
+                displayOrder: number;
+              }[];
+              keyDates: {
+                id: string;
+                label: string;
+                offsetDays: number;
+                note: string | null;
+                displayOrder: number;
+              }[];
               taskCount: number;
               keyDateCount: number;
               customFieldCount: number;
@@ -8402,6 +8466,164 @@ export interface operations {
               defaultRisk: ("low" | "medium" | "high" | "critical") | null;
               titlePrefix: string | null;
               archivedAt: string | null;
+              tasks: {
+                id: string;
+                title: string;
+                dueOffsetDays: number | null;
+                /** @enum {string} */
+                assigneeRole: "matter_manager" | "none";
+                displayOrder: number;
+              }[];
+              keyDates: {
+                id: string;
+                label: string;
+                offsetDays: number;
+                note: string | null;
+                displayOrder: number;
+              }[];
+              taskCount: number;
+              keyDateCount: number;
+              customFieldCount: number;
+            };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  setMatterTemplateTasks: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          tasks: {
+            title: string;
+            dueOffsetDays: number | null;
+            /** @enum {string} */
+            assigneeRole: "matter_manager" | "none";
+          }[];
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            matterTemplate: {
+              id: string;
+              matterTypeId: string;
+              matterTypeName: string;
+              name: string;
+              description: string | null;
+              defaultPriority: ("low" | "medium" | "high" | "critical") | null;
+              defaultRisk: ("low" | "medium" | "high" | "critical") | null;
+              titlePrefix: string | null;
+              archivedAt: string | null;
+              tasks: {
+                id: string;
+                title: string;
+                dueOffsetDays: number | null;
+                /** @enum {string} */
+                assigneeRole: "matter_manager" | "none";
+                displayOrder: number;
+              }[];
+              keyDates: {
+                id: string;
+                label: string;
+                offsetDays: number;
+                note: string | null;
+                displayOrder: number;
+              }[];
+              taskCount: number;
+              keyDateCount: number;
+              customFieldCount: number;
+            };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  setMatterTemplateKeyDates: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          keyDates: {
+            label: string;
+            offsetDays: number;
+            note: string | null;
+          }[];
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            matterTemplate: {
+              id: string;
+              matterTypeId: string;
+              matterTypeName: string;
+              name: string;
+              description: string | null;
+              defaultPriority: ("low" | "medium" | "high" | "critical") | null;
+              defaultRisk: ("low" | "medium" | "high" | "critical") | null;
+              titlePrefix: string | null;
+              archivedAt: string | null;
+              tasks: {
+                id: string;
+                title: string;
+                dueOffsetDays: number | null;
+                /** @enum {string} */
+                assigneeRole: "matter_manager" | "none";
+                displayOrder: number;
+              }[];
+              keyDates: {
+                id: string;
+                label: string;
+                offsetDays: number;
+                note: string | null;
+                displayOrder: number;
+              }[];
               taskCount: number;
               keyDateCount: number;
               customFieldCount: number;
@@ -8448,6 +8670,21 @@ export interface operations {
               defaultRisk: ("low" | "medium" | "high" | "critical") | null;
               titlePrefix: string | null;
               archivedAt: string | null;
+              tasks: {
+                id: string;
+                title: string;
+                dueOffsetDays: number | null;
+                /** @enum {string} */
+                assigneeRole: "matter_manager" | "none";
+                displayOrder: number;
+              }[];
+              keyDates: {
+                id: string;
+                label: string;
+                offsetDays: number;
+                note: string | null;
+                displayOrder: number;
+              }[];
               taskCount: number;
               keyDateCount: number;
               customFieldCount: number;
@@ -8494,6 +8731,21 @@ export interface operations {
               defaultRisk: ("low" | "medium" | "high" | "critical") | null;
               titlePrefix: string | null;
               archivedAt: string | null;
+              tasks: {
+                id: string;
+                title: string;
+                dueOffsetDays: number | null;
+                /** @enum {string} */
+                assigneeRole: "matter_manager" | "none";
+                displayOrder: number;
+              }[];
+              keyDates: {
+                id: string;
+                label: string;
+                offsetDays: number;
+                note: string | null;
+                displayOrder: number;
+              }[];
               taskCount: number;
               keyDateCount: number;
               customFieldCount: number;
