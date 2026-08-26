@@ -41124,7 +41124,7 @@
                                     },
                                     {
                                       "type": "frame",
-                                      "id": "s6V22G",
+                                      "id": "syk9S",
                                       "name": "Detached Field default",
                                       "width": "fill_container",
                                       "height": 38,
@@ -41142,14 +41142,14 @@
                                       "children": [
                                         {
                                           "type": "frame",
-                                          "id": "g5w7E",
+                                          "id": "fjPNZ",
                                           "name": "Detached Field identity",
                                           "gap": 6,
                                           "alignItems": "center",
                                           "children": [
                                             {
                                               "type": "icon",
-                                              "id": "a182rk",
+                                              "id": "I2p0wy",
                                               "name": "Detached Field warning icon",
                                               "width": 14,
                                               "height": 14,
@@ -41159,7 +41159,7 @@
                                             },
                                             {
                                               "type": "text",
-                                              "id": "pbPX7",
+                                              "id": "xhKvt",
                                               "name": "Detached Field name",
                                               "fill": "$status-warning-fg",
                                               "content": "Office location",
@@ -41170,14 +41170,33 @@
                                           ]
                                         },
                                         {
-                                          "type": "text",
-                                          "id": "giT8m",
-                                          "name": "Detached Field flag",
-                                          "fill": "$status-warning-fg",
-                                          "content": "Stale · Field detached from Matter type",
-                                          "fontFamily": "$font",
-                                          "fontSize": 11,
-                                          "fontWeight": "normal"
+                                          "type": "frame",
+                                          "id": "YkKsO",
+                                          "name": "Detached Field value line",
+                                          "gap": 10,
+                                          "alignItems": "center",
+                                          "children": [
+                                            {
+                                              "type": "text",
+                                              "id": "FOD23",
+                                              "name": "Detached Field value",
+                                              "fill": "$status-warning-fg",
+                                              "content": "Dubai",
+                                              "fontFamily": "$font",
+                                              "fontSize": 12,
+                                              "fontWeight": "600"
+                                            },
+                                            {
+                                              "type": "text",
+                                              "id": "XtxpV",
+                                              "name": "Detached Field flag",
+                                              "fill": "$status-warning-fg",
+                                              "content": "Stale · Field detached from Matter type",
+                                              "fontFamily": "$font",
+                                              "fontSize": 11,
+                                              "fontWeight": "normal"
+                                            }
+                                          ]
                                         }
                                       ]
                                     }
@@ -41446,7 +41465,7 @@
                                   "id": "C2atu",
                                   "name": "Confirm scope task offset text",
                                   "fill": "$text-primary",
-                                  "content": "+1 business day",
+                                  "content": "+1 day",
                                   "fontFamily": "$font",
                                   "fontSize": 12,
                                   "fontWeight": "normal"
