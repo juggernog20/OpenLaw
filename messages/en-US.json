@@ -300,7 +300,7 @@
     "defaultMessage": "{actor} marked this matter confidential"
   },
   "activity.matter.created": {
-    "defaultMessage": "{actor} created this matter"
+    "defaultMessage": "{template, select, none {{actor} created this matter} other {{actor} created this matter from the {template} template}}"
   },
   "activity.matter.createdFromRequest": {
     "defaultMessage": "{actor} created this matter from {request}"
