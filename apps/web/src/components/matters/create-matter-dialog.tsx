@@ -72,14 +72,18 @@ export function CreateMatterDialog({
     (person) => person.role === "administrator" || person.role === "legal_team_member",
   );
 
-  function seedTemplate(
-    type: MatterTypeOption | undefined,
-    nextTemplateId: string,
-    preserveTitle = false,
-  ) {
+  /**
+   * Re-seed the form from a template, or from none. Priority, risk, and
+   * the custom-field drafts always follow the new template. The title
+   * follows only while it is blank or still the previous template's
+   * prefix, so a title the person typed survives a template or type
+   * switch.
+   */
+  function seedTemplate(type: MatterTypeOption | undefined, nextTemplateId: string) {
     const template = type?.templates?.find((candidate) => candidate.id === nextTemplateId);
     setTemplateId(template?.id ?? "");
-    if (!preserveTitle || title.trim() === "") setTitle(template?.titlePrefix ?? "");
+    const untouched = title.trim() === "" || title === (selectedTemplate?.titlePrefix ?? "");
+    if (untouched) setTitle(template?.titlePrefix ?? "");
     setPriority(template?.defaultPriority ?? "medium");
     setRisk(template?.defaultRisk ?? null);
     setDrafts(
@@ -212,9 +216,8 @@ export function CreateMatterDialog({
                 const nextType = matterTypes.find((type) => type.id === event.target.value);
                 setMatterTypeId(event.target.value);
                 const nextTemplates = nextType?.templates ?? [];
-                if (nextTemplates.length === 1) {
-                  seedTemplate(nextType, nextTemplates[0]!.id, templateId === "");
-                } else if (templateId) seedTemplate(nextType, "");
+                if (nextTemplates.length === 1) seedTemplate(nextType, nextTemplates[0]!.id);
+                else if (templateId) seedTemplate(nextType, "");
                 else setTemplateId("");
                 setError(null);
               }}

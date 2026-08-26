@@ -429,6 +429,11 @@ describe("the Matters destination", () => {
 
     await user.selectOptions(picker, TEMPLATE.id);
     await user.type(within(dialog).getByLabelText("Title"), " Transfer");
+    await user.selectOptions(picker, "");
+    expect(within(dialog).getByLabelText("Title")).toHaveValue("EMP — Transfer");
+    await user.selectOptions(picker, TEMPLATE.id);
+    expect(within(dialog).getByLabelText("Title")).toHaveValue("EMP — Transfer");
+    expect(within(dialog).getByLabelText("Priority")).toHaveValue("high");
     await user.selectOptions(within(dialog).getByLabelText("Priority"), "critical");
     await user.selectOptions(within(dialog).getByLabelText("Risk"), "critical");
     const unit = within(dialog).getByLabelText(/Business unit/);
