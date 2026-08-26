@@ -275,13 +275,13 @@ export async function resolveRequest(number: number, reply?: string): Promise<Di
 }
 
 /**
- * Turns a Request into the contract its request type targets (INT-002,
+ * Turns a Request into the contract or matter its request type targets (INT-002,
  * DD-018, INT-007).
  *
  * **The dialog sends what it drew and nothing more.** The title, the
- * contract type where the request type deferred it, and the answers to
- * the hard-required fields the form did not collect. The collected
- * values are not sent back: carry-through is the seam's rule (INT-002),
+ * target type where the request type deferred it, the optional matter
+ * template, and the answers to the hard-required fields the form did
+ * not collect. The collected values are not sent back: carry-through is the seam's rule (INT-002),
  * and a client that re-keyed them could drop one.
  *
  * `contractTypeId` is omitted where the request type already names a
@@ -297,6 +297,7 @@ export async function convertRequest(
     title: string;
     contractTypeId?: string;
     matterTypeId?: string;
+    templateId?: string;
     customFields?: Record<string, CustomFieldValue>;
   },
 ): Promise<DispositionOutcome> {
@@ -308,6 +309,7 @@ export async function convertRequest(
         title: input.title,
         ...(input.contractTypeId === undefined ? {} : { contractTypeId: input.contractTypeId }),
         ...(input.matterTypeId === undefined ? {} : { matterTypeId: input.matterTypeId }),
+        ...(input.templateId === undefined ? {} : { templateId: input.templateId }),
         ...(input.customFields === undefined ? {} : { customFields: input.customFields }),
       },
     })

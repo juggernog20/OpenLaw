@@ -64,6 +64,21 @@ const CONTRACTING_ENTITY = field("contracting_entity", "Contracting entity", {
   fieldType: "entity",
 });
 
+const EMPLOYMENT_TEMPLATE = {
+  id: "tpl-employment",
+  name: "Employment response",
+  description: "The standard employment checklist.",
+  defaultPriority: "low",
+  defaultRisk: "high",
+  defaultCustomFields: {
+    counterparty: "Template employer",
+    governing_law: "Template forum",
+  },
+  titlePrefix: "EMP —",
+  taskCount: 2,
+  keyDateCount: 1,
+};
+
 /** The live contract taxonomy the dialog draws from. NDA carries the
  * counterparty and demands nothing; MSA demands a governing law no
  * request form collects, which is the gap. */
@@ -83,6 +98,14 @@ const MATTER_TYPES = [
     slug: "dispute",
     displayName: "Dispute",
     fields: [COUNTERPARTY, GOVERNING_LAW],
+    templates: [],
+  },
+  {
+    id: "mt-employment",
+    slug: "employment",
+    displayName: "Employment",
+    fields: [COUNTERPARTY, GOVERNING_LAW],
+    templates: [EMPLOYMENT_TEMPLATE],
   },
 ];
 
@@ -469,6 +492,80 @@ describe("the target is confirmed, never classified (DD-018)", () => {
     expect(api.conversions[0]).toEqual({
       title: "Northwind Labs mutual NDA",
       customFields: { governing_law: "DIFC Courts" },
+    });
+  });
+
+  it("offers the confirmed type's optional template and sends an overridable pre-fill", async () => {
+    const user = userEvent.setup();
+    const api = requestApi(
+      request({
+        requestType: {
+          id: "rt-employment",
+          displayName: "Employment request",
+          targetModule: "matter",
+          targetTypeId: "mt-employment",
+          targetTypeName: "Employment",
+        },
+      }),
+    );
+    open(api);
+    const dialog = await openDisposition(user, "Convert to matter");
+    const template = within(dialog).getByLabelText("Template");
+    expect(template).toHaveValue("tpl-employment");
+    expect(
+      within(template)
+        .getAllByRole("option")
+        .map((option) => option.textContent),
+    ).toEqual(["No template", "Employment response"]);
+    expect(within(dialog).getByText("Template adds 2 tasks and 1 key date.")).toBeInTheDocument();
+    expect(within(dialog).getByLabelText(/^Title/)).toHaveValue("Northwind Labs mutual NDA");
+    expect(within(dialog).queryByLabelText(/^Counterparty/)).toBeNull();
+
+    const forum = within(dialog).getByLabelText(/^Governing law/);
+    expect(forum).toHaveValue("Template forum");
+    await user.selectOptions(template, "");
+    expect(forum).toHaveValue("");
+    await user.click(within(dialog).getByRole("button", { name: "Convert to matter" }));
+    expect(await within(dialog).findByRole("alert")).toHaveTextContent(
+      "Fill Governing law — this matter type requires it.",
+    );
+    expect(api.conversions).toEqual([]);
+
+    await user.selectOptions(template, "tpl-employment");
+    expect(forum).toHaveValue("Template forum");
+    await user.clear(forum);
+    await user.type(forum, "DIFC Courts");
+    await user.click(within(dialog).getByRole("button", { name: "Convert to matter" }));
+    await waitFor(() => expect(api.conversions).toHaveLength(1));
+    expect(api.conversions[0]).toEqual({
+      title: "Northwind Labs mutual NDA",
+      templateId: "tpl-employment",
+      customFields: { governing_law: "DIFC Courts" },
+    });
+  });
+
+  it("submits a template-satisfied required field without making triage re-enter it", async () => {
+    const user = userEvent.setup();
+    const api = requestApi(
+      request({
+        requestType: {
+          id: "rt-employment",
+          displayName: "Employment request",
+          targetModule: "matter",
+          targetTypeId: "mt-employment",
+          targetTypeName: "Employment",
+        },
+      }),
+    );
+    open(api);
+    const dialog = await openDisposition(user, "Convert to matter");
+    expect(within(dialog).getByLabelText(/^Governing law/)).toHaveValue("Template forum");
+    await user.click(within(dialog).getByRole("button", { name: "Convert to matter" }));
+    await waitFor(() => expect(api.conversions).toHaveLength(1));
+    expect(api.conversions[0]).toEqual({
+      title: "Northwind Labs mutual NDA",
+      templateId: "tpl-employment",
+      customFields: { governing_law: "Template forum" },
     });
   });
 

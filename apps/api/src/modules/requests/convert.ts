@@ -130,6 +130,8 @@ export const requestConvertRoutes: FastifyPluginAsyncZod = async (app) => {
           "flag. Matching collected values carry server-side; values with no " +
           "field remain on the Request; missing required fields and dead " +
           "references are refused by name and can be answered in customFields. " +
+          "Matter conversions may apply a live template for the confirmed type; " +
+          "carried values and triager answers override its defaults. " +
           "Both records narrate the conversion and requestStatusChanged raises " +
           "the Requester's In progress notification. Attachments become ordinary " +
           "root documents and the tiered thread moves onto either target while " +
@@ -154,6 +156,11 @@ export const requestConvertRoutes: FastifyPluginAsyncZod = async (app) => {
             /** The matter sibling of contractTypeId. Supplying this on a
              * contract target is the explicit Re-target direction. */
             matterTypeId: z.string().min(1).optional(),
+            /** Optional only on the matter arm. The ordinary Matter
+             * creation callable owns live/type validation and content
+             * instantiation, so direct creation and conversion cannot
+             * drift. */
+            templateId: z.string().min(1).optional(),
             /** The gaps the form did not collect, keyed by field slug. The
              * carried values are the server's to land and need not be
              * here; a slug the target type does not attach is refused. */
@@ -180,6 +187,7 @@ export const requestConvertRoutes: FastifyPluginAsyncZod = async (app) => {
       const title = request.body.title.trim();
       const chosenTypeId = request.body.contractTypeId;
       const chosenMatterTypeId = request.body.matterTypeId;
+      const chosenTemplateId = request.body.templateId;
       const answers = request.body.customFields;
 
       // The promotion's wrapper sits **outside** the transaction and the
@@ -235,6 +243,9 @@ export const requestConvertRoutes: FastifyPluginAsyncZod = async (app) => {
             );
 
             const targetName = target.module === "contract" ? "contract" : "matter";
+            if (target.module === "contract" && chosenTemplateId !== undefined) {
+              throw httpError(400, "A matter template can only be applied to a matter conversion.");
+            }
             if (title === "") {
               throw httpError(
                 400,
@@ -286,6 +297,7 @@ export const requestConvertRoutes: FastifyPluginAsyncZod = async (app) => {
                     // contract and the I8 matter modal.
                     title,
                     matterTypeId: target.typeId,
+                    ...(chosenTemplateId === undefined ? {} : { templateId: chosenTemplateId }),
                     customFields,
                     priority: row.urgency,
                     risk: null,
