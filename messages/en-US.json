@@ -4805,6 +4805,12 @@
   "settings.matterTemplateEditor.staleField": {
     "defaultMessage": "{field} is no longer attached to this Matter type. Its saved value ({value}) is retained."
   },
+  "settings.matterTemplateEditor.staleNo": {
+    "defaultMessage": "No"
+  },
+  "settings.matterTemplateEditor.staleYes": {
+    "defaultMessage": "Yes"
+  },
   "settings.matterTemplateEditor.taskDueNumber": {
     "defaultMessage": "Task {number} due offset in days"
   },

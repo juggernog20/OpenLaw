@@ -4,7 +4,7 @@
 
 import { useState } from "react";
 import { AlertTriangle, ArrowLeft } from "lucide-react";
-import { defineMessages, FormattedMessage, useIntl } from "react-intl";
+import { defineMessages, FormattedMessage, useIntl, type IntlShape } from "react-intl";
 import { Link, redirect, useLoaderData, type LoaderFunctionArgs } from "react-router";
 import type { paths } from "@openlaw/api-client";
 import { api } from "../lib/api";
@@ -120,13 +120,18 @@ function initialCustomFieldDrafts(
 }
 
 function staleValueLabel(
+  intl: IntlShape,
   value: CustomFieldValue,
   fieldType: string | undefined,
   people: readonly FieldReference[],
   entities: readonly FieldReference[],
 ): string {
   if (Array.isArray(value)) return value.join(", ");
-  if (typeof value === "boolean") return value ? "Yes" : "No";
+  if (typeof value === "boolean") {
+    return value
+      ? intl.formatMessage({ id: "settings.matterTemplateEditor.staleYes", defaultMessage: "Yes" })
+      : intl.formatMessage({ id: "settings.matterTemplateEditor.staleNo", defaultMessage: "No" });
+  }
   if (fieldType === "user")
     return people.find((person) => person.id === value)?.label ?? String(value);
   if (fieldType === "entity") {
@@ -543,7 +548,7 @@ export function SettingsMatterTemplateEditorPage() {
                     defaultMessage="{field} is no longer attached to this Matter type. Its saved value ({value}) is retained."
                     values={{
                       field: field?.displayName ?? slug,
-                      value: staleValueLabel(value, field?.fieldType, people, entities),
+                      value: staleValueLabel(intl, value, field?.fieldType, people, entities),
                     }}
                   />
                 </p>
