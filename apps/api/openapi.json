@@ -11501,6 +11501,839 @@
         }
       }
     },
+    "/api/v1/matter-templates": {
+      "get": {
+        "operationId": "listMatterTemplates",
+        "summary": "List named Matter creation templates in type and name order; optionally filter to one Matter type and include archived rows",
+        "tags": ["matter-templates"],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "query",
+            "name": "matterTypeId",
+            "required": false
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": ["true", "false"]
+            },
+            "in": "query",
+            "name": "includeArchived",
+            "required": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "matterTemplates": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "matterTypeId": {
+                            "type": "string"
+                          },
+                          "matterTypeName": {
+                            "type": "string"
+                          },
+                          "name": {
+                            "type": "string"
+                          },
+                          "description": {
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "defaultPriority": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "enum": ["low", "medium", "high", "critical"]
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "defaultRisk": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "enum": ["low", "medium", "high", "critical"]
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "titlePrefix": {
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "archivedAt": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "format": "date-time",
+                                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "taskCount": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          },
+                          "keyDateCount": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          },
+                          "customFieldCount": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "matterTypeId",
+                          "matterTypeName",
+                          "name",
+                          "description",
+                          "defaultPriority",
+                          "defaultRisk",
+                          "titlePrefix",
+                          "archivedAt",
+                          "taskCount",
+                          "keyDateCount",
+                          "customFieldCount"
+                        ],
+                        "additionalProperties": false
+                      }
+                    }
+                  },
+                  "required": ["matterTemplates"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "operationId": "createMatterTemplate",
+        "summary": "Create a named Matter template for one live Matter type; 409 if a live template of that type already carries the name, compared case-insensitively",
+        "tags": ["matter-templates"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "matterTypeId": {
+                    "type": "string"
+                  },
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 100
+                  },
+                  "description": {
+                    "type": "string",
+                    "maxLength": 500
+                  },
+                  "defaultPriority": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "enum": ["low", "medium", "high", "critical"]
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "defaultRisk": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "enum": ["low", "medium", "high", "critical"]
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "titlePrefix": {
+                    "type": "string",
+                    "maxLength": 100
+                  }
+                },
+                "required": ["matterTypeId", "name"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "matterTemplate": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "matterTypeId": {
+                          "type": "string"
+                        },
+                        "matterTypeName": {
+                          "type": "string"
+                        },
+                        "name": {
+                          "type": "string"
+                        },
+                        "description": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "defaultPriority": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "enum": ["low", "medium", "high", "critical"]
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "defaultRisk": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "enum": ["low", "medium", "high", "critical"]
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "titlePrefix": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "archivedAt": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "format": "date-time",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "taskCount": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "keyDateCount": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "customFieldCount": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "matterTypeId",
+                        "matterTypeName",
+                        "name",
+                        "description",
+                        "defaultPriority",
+                        "defaultRisk",
+                        "titlePrefix",
+                        "archivedAt",
+                        "taskCount",
+                        "keyDateCount",
+                        "customFieldCount"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": ["matterTemplate"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/matter-templates/{id}": {
+      "patch": {
+        "operationId": "updateMatterTemplate",
+        "summary": "Update a Matter template's name, description, priority, risk, or title prefix",
+        "tags": ["matter-templates"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 100
+                  },
+                  "description": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "maxLength": 500
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "defaultPriority": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "enum": ["low", "medium", "high", "critical"]
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "defaultRisk": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "enum": ["low", "medium", "high", "critical"]
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "titlePrefix": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "maxLength": 100
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                },
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "matterTemplate": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "matterTypeId": {
+                          "type": "string"
+                        },
+                        "matterTypeName": {
+                          "type": "string"
+                        },
+                        "name": {
+                          "type": "string"
+                        },
+                        "description": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "defaultPriority": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "enum": ["low", "medium", "high", "critical"]
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "defaultRisk": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "enum": ["low", "medium", "high", "critical"]
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "titlePrefix": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "archivedAt": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "format": "date-time",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "taskCount": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "keyDateCount": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "customFieldCount": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "matterTypeId",
+                        "matterTypeName",
+                        "name",
+                        "description",
+                        "defaultPriority",
+                        "defaultRisk",
+                        "titlePrefix",
+                        "archivedAt",
+                        "taskCount",
+                        "keyDateCount",
+                        "customFieldCount"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": ["matterTemplate"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/matter-templates/{id}/archive": {
+      "post": {
+        "operationId": "archiveMatterTemplate",
+        "summary": "Archive a Matter template so it leaves the live settings and creation sets",
+        "tags": ["matter-templates"],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "matterTemplate": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "matterTypeId": {
+                          "type": "string"
+                        },
+                        "matterTypeName": {
+                          "type": "string"
+                        },
+                        "name": {
+                          "type": "string"
+                        },
+                        "description": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "defaultPriority": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "enum": ["low", "medium", "high", "critical"]
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "defaultRisk": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "enum": ["low", "medium", "high", "critical"]
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "titlePrefix": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "archivedAt": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "format": "date-time",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "taskCount": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "keyDateCount": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "customFieldCount": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "matterTypeId",
+                        "matterTypeName",
+                        "name",
+                        "description",
+                        "defaultPriority",
+                        "defaultRisk",
+                        "titlePrefix",
+                        "archivedAt",
+                        "taskCount",
+                        "keyDateCount",
+                        "customFieldCount"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": ["matterTemplate"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/matter-templates/{id}/restore": {
+      "post": {
+        "operationId": "restoreMatterTemplate",
+        "summary": "Restore an archived Matter template with its definition intact; 409 when a live template of the type has taken its name since",
+        "tags": ["matter-templates"],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "matterTemplate": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "matterTypeId": {
+                          "type": "string"
+                        },
+                        "matterTypeName": {
+                          "type": "string"
+                        },
+                        "name": {
+                          "type": "string"
+                        },
+                        "description": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "defaultPriority": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "enum": ["low", "medium", "high", "critical"]
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "defaultRisk": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "enum": ["low", "medium", "high", "critical"]
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "titlePrefix": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "archivedAt": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "format": "date-time",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "taskCount": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "keyDateCount": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "customFieldCount": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "matterTypeId",
+                        "matterTypeName",
+                        "name",
+                        "description",
+                        "defaultPriority",
+                        "defaultRisk",
+                        "titlePrefix",
+                        "archivedAt",
+                        "taskCount",
+                        "keyDateCount",
+                        "customFieldCount"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": ["matterTemplate"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/request-types": {
       "get": {
         "operationId": "listRequestTypes",

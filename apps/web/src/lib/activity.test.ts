@@ -263,6 +263,18 @@ const SAMPLE_PAYLOADS: { [A in ActivityAction]: ActivityPayloadMap[A] } = {
     memberName: "Sarah Chen",
   },
 
+  // Matter creation templates
+  "matter_template.created": {
+    displayName: "Employment – Termination",
+    matterTypeName: "Employment",
+  },
+  "matter_template.updated": {
+    displayName: "Employment – Termination",
+    changed: { defaultPriority: { from: null, to: "high" } },
+  },
+  "matter_template.archived": { displayName: "Employment – Termination" },
+  "matter_template.restored": { displayName: "Employment – Termination" },
+
   // Sign-off on one contract
   "approval.requested": {
     ...APPROVER,

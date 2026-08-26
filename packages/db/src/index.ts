@@ -42,6 +42,7 @@ import * as matterTypesSchema from "./schema/matter-types.js";
 import * as matterKeyDatesSchema from "./schema/matter-key-dates.js";
 import * as matterRelationsSchema from "./schema/matter-relations.js";
 import * as matterTasksSchema from "./schema/matter-tasks.js";
+import * as matterTemplatesSchema from "./schema/matter-templates.js";
 import * as matterStatusesSchema from "./schema/matter-statuses.js";
 import * as mattersSchema from "./schema/matters.js";
 import * as matterTeamSchema from "./schema/matter-team.js";
@@ -85,6 +86,7 @@ export * from "./schema/matter-types.js";
 export * from "./schema/matter-key-dates.js";
 export * from "./schema/matter-relations.js";
 export * from "./schema/matter-tasks.js";
+export * from "./schema/matter-templates.js";
 export * from "./schema/matter-statuses.js";
 export * from "./schema/matters.js";
 export * from "./schema/matter-team.js";
@@ -130,6 +132,7 @@ export const schema = {
   ...matterKeyDatesSchema,
   ...matterRelationsSchema,
   ...matterTasksSchema,
+  ...matterTemplatesSchema,
   ...matterStatusesSchema,
   ...mattersSchema,
   ...matterTeamSchema,

@@ -1190,6 +1190,75 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/v1/matter-templates": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** List named Matter creation templates in type and name order; optionally filter to one Matter type and include archived rows */
+    get: operations["listMatterTemplates"];
+    put?: never;
+    /** Create a named Matter template for one live Matter type; 409 if a live template of that type already carries the name, compared case-insensitively */
+    post: operations["createMatterTemplate"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/matter-templates/{id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    /** Update a Matter template's name, description, priority, risk, or title prefix */
+    patch: operations["updateMatterTemplate"];
+    trace?: never;
+  };
+  "/api/v1/matter-templates/{id}/archive": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Archive a Matter template so it leaves the live settings and creation sets */
+    post: operations["archiveMatterTemplate"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/matter-templates/{id}/restore": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Restore an archived Matter template with its definition intact; 409 when a live template of the type has taken its name since */
+    post: operations["restoreMatterTemplate"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/v1/request-types": {
     parameters: {
       query?: never;
@@ -8179,6 +8248,256 @@ export interface operations {
             }[];
             doneCount: number;
             totalCount: number;
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  listMatterTemplates: {
+    parameters: {
+      query?: {
+        matterTypeId?: string;
+        includeArchived?: "true" | "false";
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            matterTemplates: {
+              id: string;
+              matterTypeId: string;
+              matterTypeName: string;
+              name: string;
+              description: string | null;
+              defaultPriority: ("low" | "medium" | "high" | "critical") | null;
+              defaultRisk: ("low" | "medium" | "high" | "critical") | null;
+              titlePrefix: string | null;
+              archivedAt: string | null;
+              taskCount: number;
+              keyDateCount: number;
+              customFieldCount: number;
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  createMatterTemplate: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          matterTypeId: string;
+          name: string;
+          description?: string;
+          defaultPriority?: ("low" | "medium" | "high" | "critical") | null;
+          defaultRisk?: ("low" | "medium" | "high" | "critical") | null;
+          titlePrefix?: string;
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            matterTemplate: {
+              id: string;
+              matterTypeId: string;
+              matterTypeName: string;
+              name: string;
+              description: string | null;
+              defaultPriority: ("low" | "medium" | "high" | "critical") | null;
+              defaultRisk: ("low" | "medium" | "high" | "critical") | null;
+              titlePrefix: string | null;
+              archivedAt: string | null;
+              taskCount: number;
+              keyDateCount: number;
+              customFieldCount: number;
+            };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  updateMatterTemplate: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          name?: string;
+          description?: string | null;
+          defaultPriority?: ("low" | "medium" | "high" | "critical") | null;
+          defaultRisk?: ("low" | "medium" | "high" | "critical") | null;
+          titlePrefix?: string | null;
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            matterTemplate: {
+              id: string;
+              matterTypeId: string;
+              matterTypeName: string;
+              name: string;
+              description: string | null;
+              defaultPriority: ("low" | "medium" | "high" | "critical") | null;
+              defaultRisk: ("low" | "medium" | "high" | "critical") | null;
+              titlePrefix: string | null;
+              archivedAt: string | null;
+              taskCount: number;
+              keyDateCount: number;
+              customFieldCount: number;
+            };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  archiveMatterTemplate: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            matterTemplate: {
+              id: string;
+              matterTypeId: string;
+              matterTypeName: string;
+              name: string;
+              description: string | null;
+              defaultPriority: ("low" | "medium" | "high" | "critical") | null;
+              defaultRisk: ("low" | "medium" | "high" | "critical") | null;
+              titlePrefix: string | null;
+              archivedAt: string | null;
+              taskCount: number;
+              keyDateCount: number;
+              customFieldCount: number;
+            };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  restoreMatterTemplate: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            matterTemplate: {
+              id: string;
+              matterTypeId: string;
+              matterTypeName: string;
+              name: string;
+              description: string | null;
+              defaultPriority: ("low" | "medium" | "high" | "critical") | null;
+              defaultRisk: ("low" | "medium" | "high" | "critical") | null;
+              titlePrefix: string | null;
+              archivedAt: string | null;
+              taskCount: number;
+              keyDateCount: number;
+              customFieldCount: number;
+            };
           };
         };
       };
