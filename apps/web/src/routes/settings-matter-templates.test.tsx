@@ -49,6 +49,52 @@ const TEMPLATES = [
     defaultRisk: "high" as const,
     titlePrefix: "EMP",
     archivedAt: null,
+    tasks: [
+      {
+        id: "task-conflict-check",
+        title: "Run conflict check",
+        dueOffsetDays: 1,
+        assigneeRole: "matter_manager" as const,
+        displayOrder: 1,
+      },
+      {
+        id: "task-preservation",
+        title: "Issue preservation notice",
+        dueOffsetDays: 2,
+        assigneeRole: "none" as const,
+        displayOrder: 2,
+      },
+      {
+        id: "task-documents",
+        title: "Collect initial documents",
+        dueOffsetDays: null,
+        assigneeRole: "matter_manager" as const,
+        displayOrder: 3,
+      },
+      {
+        id: "task-interview",
+        title: "Schedule client interview",
+        dueOffsetDays: 5,
+        assigneeRole: "none" as const,
+        displayOrder: 4,
+      },
+    ],
+    keyDates: [
+      {
+        id: "date-response",
+        label: "Response deadline",
+        offsetDays: 14,
+        note: "Confirm any governing rule",
+        displayOrder: 1,
+      },
+      {
+        id: "date-review",
+        label: "Initial case review",
+        offsetDays: 30,
+        note: null,
+        displayOrder: 2,
+      },
+    ],
     taskCount: 4,
     keyDateCount: 2,
     customFieldCount: 3,
@@ -63,6 +109,8 @@ const TEMPLATES = [
     defaultRisk: null,
     titlePrefix: null,
     archivedAt: "2026-08-20T10:00:00.000Z",
+    tasks: [],
+    keyDates: [],
     taskCount: 1,
     keyDateCount: 0,
     customFieldCount: 0,
@@ -77,6 +125,8 @@ const TEMPLATES = [
     defaultRisk: "critical" as const,
     titlePrefix: "LIT",
     archivedAt: null,
+    tasks: [],
+    keyDates: [],
     taskCount: 2,
     keyDateCount: 1,
     customFieldCount: 1,
@@ -86,6 +136,8 @@ const TEMPLATES = [
 interface Calls {
   creates: unknown[];
   updates: { id: string; body: unknown }[];
+  taskReplacements: { id: string; body: unknown }[];
+  keyDateReplacements: { id: string; body: unknown }[];
   archives: string[];
   restores: string[];
 }
@@ -113,6 +165,8 @@ function templateApi(calls: Calls) {
           defaultRisk: null,
           titlePrefix: null,
           archivedAt: null,
+          tasks: [],
+          keyDates: [],
           taskCount: 0,
           keyDateCount: 0,
           customFieldCount: 0,
@@ -124,6 +178,65 @@ function templateApi(calls: Calls) {
       calls.updates.push({ id: update[1]!, body: call.body });
       const original = TEMPLATES.find((template) => template.id === update[1])!;
       return json(200, { matterTemplate: { ...original, ...(call.body as object) } });
+    }
+    const tasks = /^\/api\/v1\/matter-templates\/([^/]+)\/tasks$/.exec(path);
+    if (tasks && call.method === "PUT") {
+      calls.taskReplacements.push({ id: tasks[1]!, body: call.body });
+      const original = TEMPLATES.find((template) => template.id === tasks[1])!;
+      const body = call.body as {
+        tasks: Array<{
+          title: string;
+          dueOffsetDays: number | null;
+          assigneeRole: "matter_manager" | "none";
+        }>;
+      };
+      return json(200, {
+        matterTemplate: {
+          ...original,
+          tasks: body.tasks.map((task, index) => ({
+            id: `saved-task-${index + 1}`,
+            ...task,
+            displayOrder: index + 1,
+          })),
+          taskCount: body.tasks.length,
+        },
+      });
+    }
+    const keyDates = /^\/api\/v1\/matter-templates\/([^/]+)\/key-dates$/.exec(path);
+    if (keyDates && call.method === "PUT") {
+      calls.keyDateReplacements.push({ id: keyDates[1]!, body: call.body });
+      const original = TEMPLATES.find((template) => template.id === keyDates[1])!;
+      const latestTasks = calls.taskReplacements.filter((entry) => entry.id === keyDates[1]).at(-1)
+        ?.body as
+        | {
+            tasks: Array<{
+              title: string;
+              dueOffsetDays: number | null;
+              assigneeRole: "matter_manager" | "none";
+            }>;
+          }
+        | undefined;
+      const body = call.body as {
+        keyDates: Array<{ label: string; offsetDays: number; note: string | null }>;
+      };
+      return json(200, {
+        matterTemplate: {
+          ...original,
+          tasks:
+            latestTasks?.tasks.map((task, index) => ({
+              id: `saved-task-${index + 1}`,
+              ...task,
+              displayOrder: index + 1,
+            })) ?? original.tasks,
+          taskCount: latestTasks?.tasks.length ?? original.taskCount,
+          keyDates: body.keyDates.map((keyDate, index) => ({
+            id: `saved-date-${index + 1}`,
+            ...keyDate,
+            displayOrder: index + 1,
+          })),
+          keyDateCount: body.keyDates.length,
+        },
+      });
     }
     const archive = /^\/api\/v1\/matter-templates\/([^/]+)\/archive$/.exec(path);
     if (archive && call.method === "POST") {
@@ -158,7 +271,14 @@ function templateApi(calls: Calls) {
 }
 
 function newCalls(): Calls {
-  return { creates: [], updates: [], archives: [], restores: [] };
+  return {
+    creates: [],
+    updates: [],
+    taskReplacements: [],
+    keyDateReplacements: [],
+    archives: [],
+    restores: [],
+  };
 }
 
 describe("the SET-002 gate", () => {
@@ -272,9 +392,111 @@ describe("the core template editor", () => {
         },
       }),
     );
+    expect(calls.taskReplacements).toHaveLength(1);
+    expect(calls.keyDateReplacements).toHaveLength(1);
     expect(await screen.findByText("Saved")).toBeInTheDocument();
 
     await user.click(screen.getByRole("link", { name: "All templates" }));
     expect(router.state.location.pathname).toBe("/settings/matters/templates");
+  });
+
+  it("edits, adds, removes, and reorders template tasks and key dates", async () => {
+    const calls = newCalls();
+    stubApi({ signedIn: ADMIN, extra: templateApi(calls) });
+    renderAt("/settings/matters/templates/tpl-employment");
+    const user = userEvent.setup();
+
+    const conflictTitle = await screen.findByRole("textbox", { name: "Task 1 title" });
+    await user.clear(conflictTitle);
+    await user.type(conflictTitle, "Complete conflict review");
+    await user.click(screen.getByRole("button", { name: "Remove Collect initial documents" }));
+    await user.click(screen.getByRole("button", { name: "Add task" }));
+    const newTaskTitle = screen.getByRole("textbox", { name: "Task 4 title" });
+    await user.type(newTaskTitle, "Prepare engagement letter");
+    await user.type(screen.getByRole("spinbutton", { name: "Task 4 due offset in days" }), "3");
+    await user.selectOptions(
+      screen.getByRole("combobox", { name: "Task 4 role" }),
+      "matter_manager",
+    );
+    const newTaskGrip = screen.getByRole("button", {
+      name: /Reorder Prepare engagement letter, position 4 of 4/,
+    });
+    newTaskGrip.focus();
+    await user.keyboard("{ArrowUp}");
+
+    await user.click(screen.getByRole("button", { name: "Remove Initial case review" }));
+    await user.click(screen.getByRole("button", { name: "Add key date" }));
+    await user.type(screen.getByRole("textbox", { name: "Key date 2 label" }), "Status review");
+    await user.type(screen.getByRole("spinbutton", { name: "Key date 2 offset in days" }), "21");
+    await user.type(screen.getByRole("textbox", { name: "Key date 2 note" }), "Review progress");
+    const newDateGrip = screen.getByRole("button", {
+      name: /Reorder Status review, position 2 of 2/,
+    });
+    newDateGrip.focus();
+    await user.keyboard("{ArrowUp}");
+
+    await user.click(screen.getByRole("button", { name: "Save template" }));
+
+    await waitFor(() => expect(calls.taskReplacements).toHaveLength(1));
+    expect(calls.taskReplacements[0]).toEqual({
+      id: "tpl-employment",
+      body: {
+        tasks: [
+          {
+            title: "Complete conflict review",
+            dueOffsetDays: 1,
+            assigneeRole: "matter_manager",
+          },
+          {
+            title: "Issue preservation notice",
+            dueOffsetDays: 2,
+            assigneeRole: "none",
+          },
+          {
+            title: "Prepare engagement letter",
+            dueOffsetDays: 3,
+            assigneeRole: "matter_manager",
+          },
+          {
+            title: "Schedule client interview",
+            dueOffsetDays: 5,
+            assigneeRole: "none",
+          },
+        ],
+      },
+    });
+    expect(calls.keyDateReplacements[0]).toEqual({
+      id: "tpl-employment",
+      body: {
+        keyDates: [
+          { label: "Status review", offsetDays: 21, note: "Review progress" },
+          {
+            label: "Response deadline",
+            offsetDays: 14,
+            note: "Confirm any governing rule",
+          },
+        ],
+      },
+    });
+    expect(await screen.findByText("Saved")).toBeInTheDocument();
+  });
+
+  it("blocks invalid content before any write", async () => {
+    const calls = newCalls();
+    stubApi({ signedIn: ADMIN, extra: templateApi(calls) });
+    renderAt("/settings/matters/templates/tpl-employment");
+    const user = userEvent.setup();
+
+    await user.clear(await screen.findByRole("textbox", { name: "Task 1 title" }));
+    await user.click(screen.getByRole("button", { name: "Save template" }));
+
+    expect(
+      await screen.findByText(
+        "Give every row a name and use whole-number offsets from 0 to 3650 days.",
+      ),
+    ).toBeInTheDocument();
+    expect(calls.updates).toEqual([]);
+    expect(calls.taskReplacements).toEqual([]);
+    expect(calls.keyDateReplacements).toEqual([]);
   });
 });

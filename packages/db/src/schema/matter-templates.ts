@@ -8,7 +8,16 @@
  */
 
 import { sql } from "drizzle-orm";
-import { index, jsonb, pgTable, text, timestamp, uniqueIndex } from "drizzle-orm/pg-core";
+import {
+  check,
+  index,
+  integer,
+  jsonb,
+  pgTable,
+  text,
+  timestamp,
+  uniqueIndex,
+} from "drizzle-orm/pg-core";
 import type { CustomFieldValue } from "./fields.js";
 import { uuidPk } from "./helpers.js";
 import { matterTypes } from "./matter-types.js";
@@ -50,3 +59,66 @@ export const matterTemplates = pgTable(
 );
 
 export type MatterTemplate = typeof matterTemplates.$inferSelect;
+
+export const MATTER_TEMPLATE_ASSIGNEE_ROLES = ["matter_manager", "none"] as const;
+
+/** Ordered checklist rows copied into a Matter when its template is applied. */
+export const matterTemplateTasks = pgTable(
+  "matter_template_tasks",
+  {
+    id: uuidPk(),
+    matterTemplateId: text("matter_template_id")
+      .notNull()
+      .references(() => matterTemplates.id, { onDelete: "cascade" }),
+    title: text("title").notNull(),
+    dueOffsetDays: integer("due_offset_days"),
+    assigneeRole: text("assignee_role", { enum: MATTER_TEMPLATE_ASSIGNEE_ROLES })
+      .notNull()
+      .default("none"),
+    displayOrder: integer("display_order").notNull(),
+  },
+  (table) => [
+    index("matter_template_tasks_order_idx").on(table.matterTemplateId, table.displayOrder),
+    check(
+      "matter_template_tasks_title_check",
+      sql`length(btrim(${table.title})) between 1 and 200`,
+    ),
+    check(
+      "matter_template_tasks_due_offset_check",
+      sql`${table.dueOffsetDays} is null or ${table.dueOffsetDays} between 0 and 3650`,
+    ),
+    check("matter_template_tasks_order_check", sql`${table.displayOrder} >= 1`),
+  ],
+);
+
+export type MatterTemplateTask = typeof matterTemplateTasks.$inferSelect;
+
+/** Ordered civil dates resolved from the Matter creation date on application. */
+export const matterTemplateKeyDates = pgTable(
+  "matter_template_key_dates",
+  {
+    id: uuidPk(),
+    matterTemplateId: text("matter_template_id")
+      .notNull()
+      .references(() => matterTemplates.id, { onDelete: "cascade" }),
+    label: text("label").notNull(),
+    offsetDays: integer("offset_days").notNull(),
+    note: text("note"),
+    displayOrder: integer("display_order").notNull(),
+  },
+  (table) => [
+    index("matter_template_key_dates_order_idx").on(table.matterTemplateId, table.displayOrder),
+    check(
+      "matter_template_key_dates_label_check",
+      sql`length(btrim(${table.label})) between 1 and 200`,
+    ),
+    check("matter_template_key_dates_offset_check", sql`${table.offsetDays} between 0 and 3650`),
+    check(
+      "matter_template_key_dates_note_check",
+      sql`${table.note} is null or length(btrim(${table.note})) between 1 and 2000`,
+    ),
+    check("matter_template_key_dates_order_check", sql`${table.displayOrder} >= 1`),
+  ],
+);
+
+export type MatterTemplateKeyDate = typeof matterTemplateKeyDates.$inferSelect;
