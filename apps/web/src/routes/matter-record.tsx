@@ -1104,7 +1104,7 @@ function MatterCustomField({
       {frozen ? (
         <span>
           {saved === undefined
-            ? "—"
+            ? intl.formatMessage({ id: "matters.record.notRecorded", defaultMessage: "—" })
             : field.fieldType === "user"
               ? (people.find((person) => person.id === saved)?.label ?? String(saved))
               : field.fieldType === "entity"
