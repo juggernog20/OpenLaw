@@ -149,21 +149,23 @@ export async function createMatter(
   }
 
   const attached = await selectAttachedFields(tx, matterTypeFields, matterType.id);
+  // Template defaults sit under the caller's values in one pass. A
+  // default the caller overrides is never validated, so a stale option
+  // or an archived person left in a template cannot refuse a creation
+  // that does not use it. Defaults under slugs the type no longer
+  // attaches are dropped for the same reason.
   const attachedSlugs = new Set(attached.map((field) => field.slug));
   const templateDefaults = Object.fromEntries(
     Object.entries(template?.defaultCustomFields ?? {}).filter(([slug]) => attachedSlugs.has(slug)),
   );
-  const { values: seededCustomFields } = await applyCustomFields(
-    tx,
-    attached,
-    {},
-    templateDefaults,
-  );
   const { values: customFields } = await applyCustomFields(
     tx,
     attached,
-    seededCustomFields,
-    input.customFields ?? {},
+    {},
+    {
+      ...templateDefaults,
+      ...(input.customFields ?? {}),
+    },
   );
   assertRequiredCustomFields(attached, customFields);
 

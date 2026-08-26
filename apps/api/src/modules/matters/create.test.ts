@@ -391,6 +391,31 @@ describe("matter creation", () => {
     ).toHaveLength(2);
   });
 
+  it("never validates a template default the caller overrides", async () => {
+    const [stale] = await harness.db
+      .insert(matterTemplates)
+      .values({
+        matterTypeId: templateTypeId,
+        name: "Stale defaults",
+        defaultCustomFields: { [templateRequiredSlug]: 123, "detached-slug": "held" },
+      })
+      .returning();
+    const refused = await createOverHttp({
+      title: "Stale default kept",
+      matterTypeId: templateTypeId,
+      templateId: stale!.id,
+    });
+    expect(refused.statusCode, refused.body).toBe(400);
+    const overridden = await createOverHttp({
+      title: "Stale default overridden",
+      matterTypeId: templateTypeId,
+      templateId: stale!.id,
+      customFields: { [templateRequiredSlug]: "People" },
+    });
+    expect(overridden.statusCode, overridden.body).toBe(201);
+    expect(overridden.json().matter.customFields).toEqual({ [templateRequiredSlug]: "People" });
+  });
+
   it("refuses a body-supplied number", async () => {
     const response = await createOverHttp({
       number: 999,
