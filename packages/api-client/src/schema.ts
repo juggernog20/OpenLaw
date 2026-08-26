@@ -1718,7 +1718,7 @@ export interface paths {
     };
     get?: never;
     put?: never;
-    /** Turn a Request into the contract or matter its request type targets (INT-002, DD-018, M22/9). The Request row is locked so racing triagers produce one record; the loser receives 409 with the reachable converted record's module and permanent number. Triage confirms a live bound type, supplies a type for a module-only or archived target, or explicitly Re-targets by naming the other module's type. A body may name a contract type or a matter type, never both. The record is born through its ordinary create callable with the title seeded from the Request summary, urgency carried to priority, risk unset, no manager, one creator row, and no confidential flag. Matching collected values carry server-side; values with no field remain on the Request; missing required fields and dead references are refused by name and can be answered in customFields. Both records narrate the conversion and requestStatusChanged raises the Requester's In progress notification. Attachments become ordinary root documents and the tiered thread moves onto either target while the Request remains the Requester's window. Member+ only */
+    /** Turn a Request into the contract or matter its request type targets (INT-002, DD-018, M22/9). The Request row is locked so racing triagers produce one record; the loser receives 409 with the reachable converted record's module and permanent number. Triage confirms a live bound type, supplies a type for a module-only or archived target, or explicitly Re-targets by naming the other module's type. A body may name a contract type or a matter type, never both. The record is born through its ordinary create callable with the title seeded from the Request summary, urgency carried to priority, risk unset, no manager, one creator row, and no confidential flag. Matching collected values carry server-side; values with no field remain on the Request; missing required fields and dead references are refused by name and can be answered in customFields. Matter conversions may apply a live template for the confirmed type; carried values and triager answers override its defaults. Both records narrate the conversion and requestStatusChanged raises the Requester's In progress notification. Attachments become ordinary root documents and the tiered thread moves onto either target while the Request remains the Requester's window. Member+ only */
     post: operations["convertRequest"];
     delete?: never;
     options?: never;
@@ -10671,6 +10671,7 @@ export interface operations {
           title: string;
           contractTypeId?: string;
           matterTypeId?: string;
+          templateId?: string;
           customFields?: {
             [key: string]: (string | number | boolean | string[]) | null;
           };

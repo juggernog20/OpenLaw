@@ -60,6 +60,7 @@ import {
   emptyDraft,
   isAnswered,
   unansweredRequired,
+  toDraft,
   toValue,
   type CustomFieldDraft,
   type CustomFieldValue,
@@ -135,6 +136,7 @@ export function ConvertDialog({
     title: string;
     contractTypeId?: string;
     matterTypeId?: string;
+    templateId?: string;
     customFields?: Record<string, CustomFieldValue>;
   }) => Promise<ConvertResult>;
 }>) {
@@ -170,6 +172,14 @@ export function ConvertDialog({
       request.requestType.targetModule === "matter" ? (request.requestType.targetTypeId ?? "") : "",
   });
   const pickedId = pickedIds[targetModule];
+  const initialMatterTemplates =
+    request.requestType.targetModule === "matter"
+      ? (matterTypes.find((option) => option.id === request.requestType.targetTypeId)?.templates ??
+        [])
+      : [];
+  const [templateId, setTemplateId] = useState(
+    initialMatterTemplates.length === 1 ? initialMatterTemplates[0]!.id : "",
+  );
   const [title, setTitle] = useState(request.summary);
   /** The creation fields' drafts, keyed by slug. They survive switching
    * types and back — a value typed once should not have to be typed
@@ -188,6 +198,35 @@ export function ConvertDialog({
 
   const target = confirmed ?? targetTypes.find((option) => option.id === pickedId) ?? null;
   const targetFields = target?.fields ?? [];
+  const matterTarget = targetModule === "matter" ? (target as MatterTypeOption | null) : null;
+  const templates = matterTarget?.templates ?? [];
+  const selectedTemplate = templates.find((template) => template.id === templateId);
+
+  /** Template defaults sit below both carried Request values and what
+   * the triager types. A carried value therefore never gets replaced
+   * in the drafts; an unanswered creation field is seeded (or cleared)
+   * when the template choice changes. The type being left is reseeded
+   * too, so a default the old template put in a shared box does not
+   * outlive the template. */
+  function seedTemplate(type: MatterTypeOption, nextTemplateId: string) {
+    const template = type.templates?.find((candidate) => candidate.id === nextTemplateId);
+    setTemplateId(template?.id ?? "");
+    const leaving = (matterTarget?.fields ?? []).filter(
+      (field) => !type.fields.some((attached) => attached.slug === field.slug),
+    );
+    setDrafts((current) => ({
+      ...current,
+      ...Object.fromEntries(
+        [...leaving, ...type.fields].map((field) => [
+          field.slug,
+          isAnswered(request.customFields[field.slug])
+            ? (current[field.slug] ?? emptyDraft(field))
+            : toDraft(field, template?.defaultCustomFields[field.slug]),
+        ]),
+      ),
+    }));
+    setError(null);
+  }
 
   /** What the form already answered that the target type also attaches:
    * the values conversion carries, stated rather than re-typed. */
@@ -261,7 +300,10 @@ export function ConvertDialog({
     // and names the field (DES-035 clause 12).
     const customFields: Record<string, CustomFieldValue> = {};
     for (const field of repairs) {
-      const parsed = toValue(field, drafts[field.slug] ?? emptyDraft(field));
+      const parsed = toValue(
+        field,
+        drafts[field.slug] ?? toDraft(field, selectedTemplate?.defaultCustomFields[field.slug]),
+      );
       if ("error" in parsed) {
         setError({
           onTitle: false,
@@ -310,6 +352,7 @@ export function ConvertDialog({
           ? { contractTypeId: target.id }
           : { matterTypeId: target.id }
         : {}),
+      ...(selectedTemplate ? { templateId: selectedTemplate.id } : {}),
       ...(Object.keys(customFields).length === 0 ? {} : { customFields }),
     });
     if (result.ok) return;
@@ -507,11 +550,20 @@ export function ConvertDialog({
                     value={pickedId}
                     className={CONTROL_CLASS}
                     onChange={(event) => {
+                      const nextId = event.target.value;
                       setPickedIds((current) => ({
                         ...current,
-                        [targetModule]: event.target.value,
+                        [targetModule]: nextId,
                       }));
-                      if (event.target.value !== "") setError(null);
+                      if (targetModule === "matter") {
+                        const nextType = matterTypes.find((option) => option.id === nextId);
+                        const onlyTemplate =
+                          nextType?.templates?.length === 1 ? nextType.templates[0] : undefined;
+                        if (nextType && onlyTemplate) seedTemplate(nextType, onlyTemplate.id);
+                        else if (nextType && templateId) seedTemplate(nextType, "");
+                        else setTemplateId("");
+                      }
+                      if (nextId !== "") setError(null);
                     }}
                   >
                     <option value="">
@@ -536,6 +588,46 @@ export function ConvertDialog({
                 </>
               )}
             </div>
+            {matterTarget && (
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="convert-template">
+                  <FormattedMessage
+                    id="matters.field.template"
+                    defaultMessage="Template (optional)"
+                  />
+                </Label>
+                <select
+                  id="convert-template"
+                  value={selectedTemplate?.id ?? ""}
+                  className={CONTROL_CLASS}
+                  onChange={(event) => seedTemplate(matterTarget, event.target.value)}
+                >
+                  <option value="">
+                    {intl.formatMessage({
+                      id: "matters.template.none",
+                      defaultMessage: "No template",
+                    })}
+                  </option>
+                  {templates.map((template) => (
+                    <option key={template.id} value={template.id}>
+                      {template.name}
+                    </option>
+                  ))}
+                </select>
+                {selectedTemplate && (
+                  <p className="text-xs text-muted">
+                    <FormattedMessage
+                      id="matters.template.contentHint"
+                      defaultMessage="Template adds {taskCount, plural, one {# task} other {# tasks}} and {keyDateCount, plural, one {# key date} other {# key dates}}."
+                      values={{
+                        taskCount: selectedTemplate.taskCount,
+                        keyDateCount: selectedTemplate.keyDateCount,
+                      }}
+                    />
+                  </p>
+                )}
+              </div>
+            )}
             {/* MTR-012's 1:1 map, stated rather than offered: urgency is
                 what the requester claimed and priority is what legal now
                 holds. Risk is not here at all — it is never
@@ -629,7 +721,10 @@ export function ConvertDialog({
                 <CustomFieldControl
                   id={`convert-${field.slug}`}
                   field={field}
-                  draft={drafts[field.slug] ?? emptyDraft(field)}
+                  draft={
+                    drafts[field.slug] ??
+                    toDraft(field, selectedTemplate?.defaultCustomFields[field.slug])
+                  }
                   people={people}
                   entities={entities}
                   required

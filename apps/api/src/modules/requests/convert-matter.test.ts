@@ -15,9 +15,14 @@ import {
   documents,
   documentVersions,
   eq,
+  matterKeyDates,
   matters,
   matterStatuses,
+  matterTasks,
   matterTeam,
+  matterTemplateKeyDates,
+  matterTemplateTasks,
+  matterTemplates,
   matterTypes,
   notifications,
   requestAttachments,
@@ -26,6 +31,7 @@ import {
   type CommentVisibility,
 } from "@openlaw/db";
 import { REQUEST_DISPOSITIONED_PROBLEM_TYPE } from "@openlaw/shared";
+import { civilToday, shiftDays } from "../../lib/contract-term.js";
 import { fakeExtractedText } from "../../lib/doc-engine/fake.js";
 import {
   dispositionScaffold,
@@ -55,6 +61,8 @@ let carrySlug: string;
 let staysSlug: string;
 let requiredSlug: string;
 let ownerSlug: string;
+let templateId: string;
+let emptyRequiredTemplateId: string;
 
 beforeAll(async () => {
   harness = await startHarness();
@@ -108,6 +116,47 @@ beforeAll(async () => {
   await attach("matter-types", ordinaryMatterTypeId, carry.id, false);
   await attach("matter-types", ordinaryMatterTypeId, owner.id, false);
   await attach("matter-types", requiredMatterTypeId, required.id, true);
+
+  const [template] = await harness.db
+    .insert(matterTemplates)
+    .values({
+      matterTypeId: ordinaryMatterTypeId,
+      name: "Dispute response",
+      defaultPriority: "low",
+      defaultRisk: "high",
+      defaultCustomFields: { [carrySlug]: "Template opponent" },
+      titlePrefix: "DSP —",
+    })
+    .returning();
+  templateId = template!.id;
+  await harness.db.insert(matterTemplateTasks).values([
+    {
+      matterTemplateId: templateId,
+      title: "Preserve evidence",
+      dueOffsetDays: 2,
+      assigneeRole: "matter_manager",
+      displayOrder: 1,
+    },
+    {
+      matterTemplateId: templateId,
+      title: "Open the response file",
+      dueOffsetDays: null,
+      assigneeRole: "none",
+      displayOrder: 2,
+    },
+  ]);
+  await harness.db.insert(matterTemplateKeyDates).values({
+    matterTemplateId: templateId,
+    label: "Response deadline",
+    offsetDays: 5,
+    note: "Confirm after conversion.",
+    displayOrder: 1,
+  });
+  const [emptyRequiredTemplate] = await harness.db
+    .insert(matterTemplates)
+    .values({ matterTypeId: requiredMatterTypeId, name: "Investigation shell" })
+    .returning();
+  emptyRequiredTemplateId = emptyRequiredTemplate!.id;
 });
 
 afterAll(async () => harness.stop());
@@ -391,6 +440,98 @@ describe("the matter target", () => {
         .from(matterTeam)
         .where(eq(matterTeam.matterId, matter.id)),
     ).toEqual([{ userId: memberId, role: "creator" }]);
+    expect(
+      await harness.db.select().from(matterTasks).where(eq(matterTasks.matterId, matter.id)),
+    ).toEqual([]);
+    expect(
+      await harness.db.select().from(matterKeyDates).where(eq(matterKeyDates.matterId, matter.id)),
+    ).toEqual([]);
+  });
+
+  it("applies a template through ordinary creation with carried and triager values on top", async () => {
+    const carried = await submit(
+      "Carried title beats the template prefix",
+      boundRequestTypeId,
+      { [carrySlug]: "Carried opponent" },
+      "critical",
+    );
+    const carriedResult = await convert(carried.number, {
+      title: "Triager title beats every pre-fill",
+      templateId,
+    });
+    expect(carriedResult.statusCode, carriedResult.body).toBe(200);
+    const carriedMatter = await matterNumbered(
+      carriedResult.json().request.convertedRecord.number as number,
+    );
+    expect(carriedMatter).toMatchObject({
+      title: "Triager title beats every pre-fill",
+      priority: "critical",
+      risk: null,
+      customFields: { [carrySlug]: "Carried opponent" },
+    });
+    const bornOn = civilToday(carriedMatter.createdAt);
+    expect(
+      await harness.db
+        .select({
+          title: matterTasks.title,
+          dueDate: matterTasks.dueDate,
+          assigneeId: matterTasks.assigneeId,
+          displayOrder: matterTasks.displayOrder,
+        })
+        .from(matterTasks)
+        .where(eq(matterTasks.matterId, carriedMatter.id))
+        .orderBy(matterTasks.displayOrder),
+    ).toEqual([
+      {
+        title: "Preserve evidence",
+        dueDate: shiftDays(bornOn, 2),
+        assigneeId: null,
+        displayOrder: 0,
+      },
+      {
+        title: "Open the response file",
+        dueDate: null,
+        assigneeId: null,
+        displayOrder: 1,
+      },
+    ]);
+    expect(
+      await harness.db
+        .select({
+          label: matterKeyDates.label,
+          date: matterKeyDates.date,
+          note: matterKeyDates.note,
+        })
+        .from(matterKeyDates)
+        .where(eq(matterKeyDates.matterId, carriedMatter.id)),
+    ).toEqual([
+      {
+        label: "Response deadline",
+        date: shiftDays(bornOn, 5),
+        note: "Confirm after conversion.",
+      },
+    ]);
+
+    const answered = await submit("Triager custom-field precedence", boundRequestTypeId, {
+      [carrySlug]: "Carried opponent",
+    });
+    const answeredResult = await convert(answered.number, {
+      title: "Triager custom-field precedence",
+      templateId,
+      customFields: { [carrySlug]: "Triager opponent" },
+    });
+    expect(answeredResult.statusCode, answeredResult.body).toBe(200);
+    expect(
+      (await matterNumbered(answeredResult.json().request.convertedRecord.number as number))
+        .customFields,
+    ).toEqual({ [carrySlug]: "Triager opponent" });
+  });
+
+  it("refuses a template on a contract conversion", async () => {
+    const request = await submit("Template on the wrong arm", contractTargetRequestTypeId);
+    const refused = await convert(request.number, { title: "An NDA", templateId });
+    expect(refused.statusCode, refused.body).toBe(400);
+    expect(refused.json().detail).toContain("matter template");
   });
 
   it("uses the matter title ceiling rather than the contract ceiling", async () => {
@@ -457,6 +598,7 @@ describe("matter field carry and repair", () => {
     const refused = await convert(request.number, {
       title: "An investigation",
       matterTypeId: requiredMatterTypeId,
+      templateId: emptyRequiredTemplateId,
     });
     expect(refused.statusCode, refused.body).toBe(400);
     expect(refused.json().detail).toContain("Forum");
