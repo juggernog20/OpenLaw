@@ -3047,6 +3047,9 @@
   "matters.field.priority": {
     "defaultMessage": "Priority"
   },
+  "matters.field.requiredMark": {
+    "defaultMessage": "(required)"
+  },
   "matters.field.risk": {
     "defaultMessage": "Risk"
   },
