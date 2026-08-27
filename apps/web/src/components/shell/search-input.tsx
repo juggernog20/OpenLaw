@@ -139,11 +139,22 @@ export function SearchInput() {
         onChange={(event) => {
           const next = event.target.value;
           setQuery(next);
-          setActiveIndex(0);
-          setOutcome(null);
-          const hasQuery = next.trim().length >= MIN_QUERY_LENGTH;
-          setSearching(hasQuery);
+          const nextTrimmed = next.trim();
+          const hasQuery = nextTrimmed.length >= MIN_QUERY_LENGTH;
           setOpen(hasQuery);
+          if (nextTrimmed !== trimmed) {
+            setActiveIndex(0);
+            setOutcome(null);
+            setSearching(hasQuery);
+          } else if (hasQuery && !open) {
+            // Same trimmed query, list closed (Esc, then a whitespace
+            // keystroke): refetch, as the focus handler does.
+            setOutcome(null);
+            setSearching(true);
+          }
+          // Same trimmed query with the list open: keep the current
+          // answer. The fetch effect keys on the trimmed value, so
+          // clearing it here would strand the spinner.
         }}
         onFocus={() => {
           if (trimmed.length >= MIN_QUERY_LENGTH) {

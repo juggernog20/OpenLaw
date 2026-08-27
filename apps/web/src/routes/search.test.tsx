@@ -139,6 +139,25 @@ describe("the header search box", () => {
     await waitFor(() => expect(router.state.location.pathname).toBe("/matters/51"));
   });
 
+  it("keeps the answer when a keystroke changes only whitespace", async () => {
+    stubApi({
+      signedIn: MEMBER,
+      extra: (call) => (searchCall(call) ? searchAnswer([CONTRACT]) : undefined),
+    });
+    renderAt("/");
+    const input = await headerSearch();
+    const user = userEvent.setup();
+    await user.type(input, "term");
+    await screen.findByRole("option", { name: /C-58/i });
+
+    // A trailing space changes the value but not the trimmed query.
+    // Nothing refetches, so the answer must stay on screen instead of
+    // an unresolvable spinner.
+    await user.type(input, " ");
+    expect(screen.getByRole("option", { name: /C-58/i })).toBeVisible();
+    expect(screen.queryByText("Searching…")).not.toBeInTheDocument();
+  });
+
   it("closes locally on Esc and leaves the query in place", async () => {
     const bubbled = vi.fn();
     window.addEventListener("keydown", bubbled);
