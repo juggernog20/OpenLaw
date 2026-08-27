@@ -37,6 +37,7 @@ import {
   type MatterTypeOption,
 } from "../lib/matters";
 import { problemDetail } from "../lib/messages";
+import { documentLandingParams, readDocumentLanding } from "../lib/documents";
 import { canReadMatters, isMemberPlus } from "../lib/roles";
 import { currentUser, needsSetup } from "../lib/session";
 import { ConfidentialBanner } from "../components/confidential-banner";
@@ -67,7 +68,7 @@ import { Label } from "../components/ui/label";
 const RECORD_TABS = ["documents", "key-dates", "tasks"] as const;
 type RecordTabName = "overview" | (typeof RECORD_TABS)[number];
 
-export async function matterRecordLoader({ params }: LoaderFunctionArgs) {
+export async function matterRecordLoader({ params, request }: LoaderFunctionArgs) {
   const user = await currentUser();
   if (!user) return redirect((await needsSetup()) ? "/auth/setup" : "/auth/login");
   if (!canReadMatters(user.role)) return redirect("/");
@@ -80,24 +81,42 @@ export async function matterRecordLoader({ params }: LoaderFunctionArgs) {
     return redirect(`/matters/${number}`);
   }
   const canEdit = isMemberPlus(user.role);
-  const [record, options, entities, relations, linkedContracts, paper, folders, keyDates, tasks] =
-    await Promise.all([
-      api.GET("/api/v1/matters/{number}", { params: { path: { number } } }),
-      canEdit ? api.GET("/api/v1/matters/options") : undefined,
-      canEdit ? api.GET("/api/v1/entities").catch(() => ({ data: undefined })) : undefined,
-      api.GET("/api/v1/matters/{number}/relations", { params: { path: { number } } }),
-      api.GET("/api/v1/matters/{number}/contracts", { params: { path: { number } } }),
-      api
-        .GET("/api/v1/matters/{number}/documents", {
-          params: { path: { number }, query: { folder: "root" } },
-        })
-        .catch(() => ({ data: undefined })),
-      api
-        .GET("/api/v1/matters/{number}/folders", { params: { path: { number } } })
-        .catch(() => ({ data: undefined })),
-      api.GET("/api/v1/matters/{number}/key-dates", { params: { path: { number } } }),
-      api.GET("/api/v1/matters/{number}/tasks", { params: { path: { number } } }),
-    ]);
+  const landingTarget = documentLandingParams(request, params.tab);
+  const [
+    record,
+    options,
+    entities,
+    relations,
+    linkedContracts,
+    paper,
+    folders,
+    keyDates,
+    tasks,
+    documentLanding,
+  ] = await Promise.all([
+    api.GET("/api/v1/matters/{number}", { params: { path: { number } } }),
+    canEdit ? api.GET("/api/v1/matters/options") : undefined,
+    canEdit ? api.GET("/api/v1/entities").catch(() => ({ data: undefined })) : undefined,
+    api.GET("/api/v1/matters/{number}/relations", { params: { path: { number } } }),
+    api.GET("/api/v1/matters/{number}/contracts", { params: { path: { number } } }),
+    api
+      .GET("/api/v1/matters/{number}/documents", {
+        params: { path: { number }, query: { folder: "root" } },
+      })
+      .catch(() => ({ data: undefined })),
+    api
+      .GET("/api/v1/matters/{number}/folders", { params: { path: { number } } })
+      .catch(() => ({ data: undefined })),
+    api.GET("/api/v1/matters/{number}/key-dates", { params: { path: { number } } }),
+    api.GET("/api/v1/matters/{number}/tasks", { params: { path: { number } } }),
+    landingTarget
+      ? readDocumentLanding(
+          { entityType: "matter", number },
+          landingTarget.documentId,
+          landingTarget.versionId,
+        )
+      : Promise.resolve(null),
+  ]);
   if (!record.data || !relations.data || !linkedContracts.data || !keyDates.data || !tasks.data) {
     throw new Error("The matter could not be read.");
   }
@@ -125,6 +144,7 @@ export async function matterRecordLoader({ params }: LoaderFunctionArgs) {
     tasks: tasks.data.tasks,
     taskDoneCount: tasks.data.doneCount,
     taskTotalCount: tasks.data.totalCount,
+    documentLanding,
   };
 }
 
@@ -167,8 +187,20 @@ export function MatterRecordPage() {
     doneCount: loader.taskDoneCount,
     totalCount: loader.taskTotalCount,
   });
-  const [filed, setFiled] = useState<typeof loader.documents>([]);
-  const [reading, setReading] = useState<{ documentId: string; versionId: string } | null>(null);
+  const [filed, setFiled] = useState<typeof loader.documents>(() =>
+    loader.documentLanding &&
+    !loader.documents.some((document) => document.id === loader.documentLanding?.document.id)
+      ? [loader.documentLanding.document]
+      : [],
+  );
+  const [reading, setReading] = useState<{ documentId: string; versionId: string } | null>(() =>
+    loader.documentLanding
+      ? {
+          documentId: loader.documentLanding.document.id,
+          versionId: loader.documentLanding.versionId,
+        }
+      : null,
+  );
   const [title, setTitle] = useState(saved.title);
   const [description, setDescription] = useState(saved.description ?? "");
   const [fieldStatus, setFieldStatus] = useState<Partial<Record<FieldKey, FieldStatus>>>({});

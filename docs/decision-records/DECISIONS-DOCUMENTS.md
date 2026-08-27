@@ -100,6 +100,8 @@ _Settled in M12/5, where email became the last rendered family:_
 - _**An attachment's download never echoes what the message said the file was.** A version's declared type was bounded and shape-checked when it was uploaded; an attachment's came out of the middle of a file nobody checked, so it is answered `application/octet-stream` with the attachment disposition. The attachment **preview** sets a type from the same routing table every other preview uses, so a PDF or a raster image inside a message opens on the panel's own surfaces. There is no conversion path for an attachment — a Word file inside an email downloads._
 - _**A message that cannot be read is a 422, not a 404 and not a 415.** They are three different facts: the reader cannot reach the document, the file is not an email at all, or the bytes are not the email they claim to be. Only the last is worth a download link in the message, and the panel ends it at the same honest card every path with no preview ends at._
 
+_Extended in M25/4: **search never parses a stored file.** Every Document hit joins its Version to `document_version_text` and reads the text and provenance already written by extraction. The email parse that writes the body now writes the nullable subject beside it, so an email hit can use the subject as its title through that same join. The panel read still parses the immutable message when somebody opens it; the stored subject and body are search derivations, not a cached preview._
+
 ## DOC-005 — OCR on upload for image-only PDFs
 
 - **Status** — Accepted

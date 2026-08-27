@@ -8,6 +8,9 @@ import {
   contractStatuses,
   contractTypes,
   counterparties,
+  documents,
+  documentVersions,
+  documentVersionText,
   entities,
   entityTypes,
   eq,
@@ -19,6 +22,14 @@ import {
   users,
 } from "@openlaw/db";
 import { provisionUser } from "../../auth/instance.js";
+import {
+  fakeConversionText,
+  fakeExtractedText,
+  fakeImageOnlyPdf,
+  fakeOcrText,
+} from "../../lib/doc-engine/fake.js";
+import { emlFixture } from "../../testing/fixtures/email.js";
+import { DOCX_MIME_TYPE, officePackage } from "../../testing/fixtures/office.js";
 import {
   signInCookies,
   startHarness,
@@ -39,6 +50,11 @@ interface SearchRow {
   title: string;
   isConfidential: boolean;
   rank: number;
+  ownerKind?: "contract" | "matter";
+  ownerNumber?: number;
+  versionId?: string;
+  versionNumber?: number;
+  snippet?: string;
 }
 
 interface SearchAnswer {
@@ -270,6 +286,82 @@ async function oneKind(q: string, kind: SearchRow["kind"]): Promise<SearchRow[]>
   return (await search(`q=${encodeURIComponent(q)}&kind=${kind}`)).results;
 }
 
+const UPLOAD_BOUNDARY = "openlaw-search-document-boundary";
+
+function uploadBody(file: { filename: string; contentType: string; content: Buffer }) {
+  return {
+    payload: Buffer.concat([
+      Buffer.from(`--${UPLOAD_BOUNDARY}\r\n`),
+      Buffer.from('content-disposition: form-data; name="kind"\r\n\r\ndraft_ours\r\n'),
+      Buffer.from(`--${UPLOAD_BOUNDARY}\r\n`),
+      Buffer.from(
+        `content-disposition: form-data; name="file"; filename="${file.filename}"\r\n` +
+          `content-type: ${file.contentType}\r\n\r\n`,
+      ),
+      file.content,
+      Buffer.from("\r\n"),
+      Buffer.from(`--${UPLOAD_BOUNDARY}--\r\n`),
+    ]),
+    headers: { "content-type": `multipart/form-data; boundary=${UPLOAD_BOUNDARY}` },
+  };
+}
+
+interface SearchDocument {
+  id: string;
+  title: string;
+  versions: { id: string; versionNumber: number; isCurrent: boolean }[];
+}
+
+async function uploadDocument(file: {
+  filename: string;
+  contentType: string;
+  content: Buffer;
+}): Promise<SearchDocument> {
+  const body = uploadBody(file);
+  const response = await harness.app.inject({
+    method: "POST",
+    url: `/api/v1/contracts/${contractNumber}/documents`,
+    cookies,
+    ...body,
+  });
+  expect(response.statusCode, response.body).toBe(201);
+  return response.json().document as SearchDocument;
+}
+
+async function appendVersion(
+  documentId: string,
+  file: { filename: string; contentType: string; content: Buffer },
+): Promise<SearchDocument> {
+  const body = uploadBody(file);
+  const response = await harness.app.inject({
+    method: "POST",
+    url: `/api/v1/documents/${documentId}/versions`,
+    cookies,
+    ...body,
+  });
+  expect(response.statusCode, response.body).toBe(201);
+  return response.json().document as SearchDocument;
+}
+
+async function settledText(documentId: string, versionId: string) {
+  const deadline = Date.now() + 20_000;
+  while (Date.now() < deadline) {
+    const response = await harness.app.inject({
+      method: "GET",
+      url: `/api/v1/documents/${documentId}/versions/${versionId}/text`,
+      cookies,
+    });
+    expect(response.statusCode, response.body).toBe(200);
+    const row = response.json().text as { state: string; source: string | null };
+    if (row.state !== "pending") return row;
+    await new Promise((resolve) => setTimeout(resolve, 50));
+  }
+  throw new Error(`the text for ${versionId} did not settle`);
+}
+
+const currentVersion = (document: SearchDocument) =>
+  document.versions.find((version) => version.isCurrent)!;
+
 describe("GET /search across the indexed records", () => {
   it("matches each kind by its own title", async () => {
     for (const [query, kind, id] of [
@@ -409,16 +501,185 @@ describe("search ordering and bounds", () => {
     expect(new Set([...first.results, ...second.results].map((row) => row.id)).size).toBe(3);
   });
 
-  it("accepts Document as an empty follow-on kind", async () => {
-    expect(await search("q=crossmodule&kind=document")).toEqual({
-      results: [],
-      nextCursor: null,
-    });
-  });
-
   it("excludes archived rows but includes ended Contracts and closed Matters", async () => {
     expect((await search("q=archivedneedle")).results).toEqual([]);
     expect((await oneKind("aurora", "contract")).map((row) => row.id)).toContain(contractId);
     expect((await oneKind("nimbus", "matter")).map((row) => row.id)).toContain(matterId);
+  });
+});
+
+describe("Document search", () => {
+  it("finds text produced by every extraction source and reports the owning Contract", async () => {
+    const nativeBytes = Buffer.from("%PDF-1.7\nsearch native fixture");
+    const scanBytes = fakeImageOnlyPdf("search OCR fixture");
+    const wordBytes = officePackage("search rendition fixture");
+    const emailBody = "emailbodyneedle appears only in this message body";
+    const cases = [
+      {
+        file: { filename: "native.pdf", contentType: "application/pdf", content: nativeBytes },
+        source: "native_layer",
+        query: fakeExtractedText(nativeBytes).split(" ").at(-1)!,
+      },
+      {
+        file: { filename: "scan.pdf", contentType: "application/pdf", content: scanBytes },
+        source: "ocr",
+        query: fakeOcrText(scanBytes).split(" ").at(-1)!,
+      },
+      {
+        file: { filename: "draft.docx", contentType: DOCX_MIME_TYPE, content: wordBytes },
+        source: "rendition",
+        query: fakeConversionText("docx", wordBytes).split(" ").at(-1)!,
+      },
+      {
+        file: {
+          filename: "thread.eml",
+          contentType: "message/rfc822",
+          content: emlFixture({ subject: "Recognisable email subject", text: emailBody }),
+        },
+        source: "email_body",
+        query: "emailbodyneedle",
+      },
+    ] as const;
+
+    for (const testCase of cases) {
+      const document = await uploadDocument(testCase.file);
+      const version = currentVersion(document);
+      expect(await settledText(document.id, version.id)).toMatchObject({
+        state: "ready",
+        source: testCase.source,
+      });
+
+      const [row] = await oneKind(testCase.query, "document");
+      expect(row).toMatchObject({
+        kind: "document",
+        id: document.id,
+        ownerKind: "contract",
+        ownerNumber: contractNumber,
+        versionId: version.id,
+        versionNumber: version.versionNumber,
+      });
+      expect(row!.snippet).toContain("<mark>");
+      if (testCase.source === "email_body") expect(row!.title).toBe("Recognisable email subject");
+    }
+  });
+
+  it("reports a Matter as the owning record", async () => {
+    const [document] = await harness.db
+      .insert(documents)
+      .values({
+        matterId,
+        createdBy: memberId,
+        title: "Matterowningneedle Exhibit",
+      })
+      .returning({ id: documents.id });
+    const [version] = await harness.db
+      .insert(documentVersions)
+      .values({
+        documentId: document!.id,
+        versionNumber: 1,
+        fileRef: "local:search/matter-owner",
+        kind: "draft_ours",
+        originalFilename: "matter-exhibit.pdf",
+        mimeType: "application/pdf",
+        byteSize: 1,
+        checksumSha256: "a".repeat(64),
+        createdBy: memberId,
+      })
+      .returning({ id: documentVersions.id });
+
+    expect(await oneKind("matterowningneedle", "document")).toEqual([
+      expect.objectContaining({
+        id: document!.id,
+        ownerKind: "matter",
+        ownerNumber: matterNumber,
+        versionId: version!.id,
+        versionNumber: 1,
+      }),
+    ]);
+  });
+
+  it("matches title, filename, and description while text is unavailable", async () => {
+    const states = ["pending", "failed", "unsupported"] as const;
+    for (const [index, state] of states.entries()) {
+      const [document] = await harness.db
+        .insert(documents)
+        .values({
+          contractId,
+          createdBy: memberId,
+          title: `${state}titleneedle Document`,
+          description: index === 0 ? "pendingdescriptionneedle" : null,
+        })
+        .returning({ id: documents.id });
+      const [version] = await harness.db
+        .insert(documentVersions)
+        .values({
+          documentId: document!.id,
+          versionNumber: 1,
+          fileRef: `local:search/${state}`,
+          kind: "draft_ours",
+          originalFilename: `${state}filenameneedle.bin`,
+          mimeType: "application/octet-stream",
+          byteSize: 1,
+          checksumSha256: String(index + 1).repeat(64),
+          createdBy: memberId,
+        })
+        .returning({ id: documentVersions.id });
+      if (state !== "unsupported") {
+        await harness.db.insert(documentVersionText).values({
+          versionId: version!.id,
+          state,
+        });
+      }
+
+      for (const query of [`${state}titleneedle`, `${state}filenameneedle`]) {
+        expect((await oneKind(query, "document"))[0], query).toMatchObject({ id: document!.id });
+      }
+    }
+    expect((await oneKind("pendingdescriptionneedle", "document"))[0]?.title).toBe(
+      "pendingtitleneedle Document",
+    );
+  });
+
+  it("rolls version hits up to one Document, preferring the latest matching version", async () => {
+    const firstBytes = Buffer.from("%PDF-1.7\nfirst search version");
+    const secondBytes = Buffer.from("%PDF-1.7\nsecond search version");
+    const first = await uploadDocument({
+      filename: "round-one.pdf",
+      contentType: "application/pdf",
+      content: firstBytes,
+    });
+    const firstVersion = currentVersion(first);
+    expect((await settledText(first.id, firstVersion.id)).state).toBe("ready");
+    const second = await appendVersion(first.id, {
+      filename: "round-two.pdf",
+      contentType: "application/pdf",
+      content: secondBytes,
+    });
+    const secondVersion = currentVersion(second);
+    expect((await settledText(second.id, secondVersion.id)).state).toBe("ready");
+
+    await harness.db
+      .update(documentVersionText)
+      .set({ text: "sharedversionneedle oldversiononlyneedle" })
+      .where(eq(documentVersionText.versionId, firstVersion.id));
+    await harness.db
+      .update(documentVersionText)
+      .set({ text: "sharedversionneedle latest words" })
+      .where(eq(documentVersionText.versionId, secondVersion.id));
+
+    expect(await oneKind("sharedversionneedle", "document")).toEqual([
+      expect.objectContaining({
+        id: first.id,
+        versionId: secondVersion.id,
+        versionNumber: 2,
+      }),
+    ]);
+    expect(await oneKind("oldversiononlyneedle", "document")).toEqual([
+      expect.objectContaining({
+        id: first.id,
+        versionId: firstVersion.id,
+        versionNumber: 1,
+      }),
+    ]);
   });
 });

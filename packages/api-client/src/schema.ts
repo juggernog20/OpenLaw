@@ -3175,7 +3175,7 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** Ranked full-text search across Contracts, Matters, Entities, Counterparties, and Requests (M25). Omit limit, kind, and cursor for the header's grouped answer of ten per kind. Supplying any of them selects the flat results-page order, which defaults to 25 and pages by rank and id. Document is an accepted empty kind until M25/4 */
+    /** Ranked full-text search across Contracts, Matters, Documents, Entities, Counterparties, and Requests (M25). Omit limit, kind, and cursor for the header's grouped answer of ten per kind. Supplying any of them selects the flat results-page order, which defaults to 25 and pages by rank and id. Document hits identify the owning record and matched version */
     get: operations["search"];
     put?: never;
     post?: never;
@@ -18028,15 +18028,32 @@ export interface operations {
         };
         content: {
           "application/json": {
-            results: {
-              /** @enum {string} */
-              kind: "contract" | "matter" | "document" | "entity" | "counterparty" | "request";
-              id: string;
-              number: number | null;
-              title: string;
-              isConfidential: boolean;
-              rank: number;
-            }[];
+            results: (
+              | {
+                  /** @enum {string} */
+                  kind: "contract" | "matter" | "entity" | "counterparty" | "request";
+                  id: string;
+                  number: number | null;
+                  title: string;
+                  isConfidential: boolean;
+                  rank: number;
+                }
+              | {
+                  /** @enum {string} */
+                  kind: "document";
+                  id: string;
+                  number: number | null;
+                  title: string;
+                  isConfidential: boolean;
+                  rank: number;
+                  /** @enum {string} */
+                  ownerKind: "contract" | "matter";
+                  ownerNumber: number;
+                  versionId: string;
+                  versionNumber: number;
+                  snippet: string;
+                }
+            )[];
             nextCursor: string | null;
           };
         };

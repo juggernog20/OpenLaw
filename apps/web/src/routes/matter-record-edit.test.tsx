@@ -46,6 +46,41 @@ const STATUSES = [
   { id: "s-closed", slug: "closed", displayName: "Closed", category: "closed" },
 ];
 
+const SEARCH_LANDING_DOCUMENT = {
+  id: "doc-matter-search",
+  title: "Matter search exhibit.pdf",
+  description: null,
+  isPrimary: false,
+  isConfidential: false,
+  folderId: "folder-search",
+  archivedAt: null,
+  createdBy: { id: MEMBER.id, displayName: MEMBER.displayName, image: null, archived: false },
+  createdAt: "2026-08-23T09:00:00.000Z",
+  updatedAt: "2026-08-23T09:00:00.000Z",
+  versions: [
+    {
+      id: "ver-matter-search",
+      versionNumber: 3,
+      kind: "draft_ours",
+      note: null,
+      originalFilename: "matter-exhibit.pdf",
+      mimeType: "application/pdf",
+      renderFamily: "pdf",
+      byteSize: 24,
+      checksumSha256: "a".repeat(64),
+      uploadedBy: {
+        id: MEMBER.id,
+        displayName: MEMBER.displayName,
+        image: null,
+        archived: false,
+      },
+      createdAt: "2026-08-23T09:00:00.000Z",
+      isCurrent: true,
+      isExecuted: false,
+    },
+  ],
+};
+
 function row(overrides: Record<string, unknown> = {}) {
   return {
     id: "m-12",
@@ -213,6 +248,66 @@ describe("the editable matter record", () => {
     renderAt("/matters/12/documents");
     expect(await screen.findByRole("heading", { name: "Documents" })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Documents" })).toHaveAttribute("aria-current", "page");
+  });
+
+  it("opens the version named by the Document search landing params", async () => {
+    stubApi({
+      signedIn: ADMIN,
+      extra: (call) => {
+        if (call.url.pathname === "/api/v1/matters/12" && call.method === "GET") {
+          return json(200, record(row()));
+        }
+        if (call.url.pathname === "/api/v1/matters/options" && call.method === "GET") {
+          return options();
+        }
+        if (call.url.pathname === "/api/v1/matters/12/documents" && call.method === "GET") {
+          return json(200, {
+            documents:
+              call.url.searchParams.get("folder") === "root" ? [] : [SEARCH_LANDING_DOCUMENT],
+            nextCursor: null,
+          });
+        }
+        if (call.url.pathname === "/api/v1/matters/12/folders" && call.method === "GET") {
+          return json(200, { folders: [] });
+        }
+        return undefined;
+      },
+    });
+
+    renderAt("/matters/12/documents?doc=doc-matter-search&version=ver-matter-search");
+
+    expect(
+      await screen.findByRole("complementary", {
+        name: "Matter search exhibit.pdf, version 3",
+      }),
+    ).toBeInTheDocument();
+  });
+
+  it("shows no panel or error placeholder when the Document landing is unreachable", async () => {
+    stubApi({
+      signedIn: ADMIN,
+      extra: (call) => {
+        if (call.url.pathname === "/api/v1/matters/12" && call.method === "GET") {
+          return json(200, record(row()));
+        }
+        if (call.url.pathname === "/api/v1/matters/options" && call.method === "GET") {
+          return options();
+        }
+        if (call.url.pathname === "/api/v1/matters/12/documents" && call.method === "GET") {
+          return json(200, { documents: [], nextCursor: null });
+        }
+        if (call.url.pathname === "/api/v1/matters/12/folders" && call.method === "GET") {
+          return json(200, { folders: [] });
+        }
+        return undefined;
+      },
+    });
+
+    renderAt("/matters/12/documents?doc=unreachable&version=unreachable");
+
+    expect(await screen.findByRole("heading", { name: "Documents" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Close the document" })).not.toBeInTheDocument();
+    expect(screen.queryByText(/could not be read/i)).not.toBeInTheDocument();
   });
 
   it("mounts the matter comments and history applets on the activity bar", async () => {

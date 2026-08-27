@@ -241,31 +241,36 @@ async function sourceRows(
   db: Db,
   migrated: boolean,
 ): Promise<Array<{ table_name: string; rows: unknown[] }>> {
-  const withoutVector = migrated ? sql.raw(" - 'search_vector'") : sql.raw("");
+  // Later migrations may add more derived search inputs beside the
+  // generated vector. Neither is source data this M25 rehearsal is
+  // promising to preserve byte-for-byte.
+  const withoutDerivedSearch = migrated
+    ? sql.raw(" - 'search_vector' - 'email_subject'")
+    : sql.raw("");
   const tableNames = SEARCH_TABLE_NAMES.map((name) => sql`${name}`);
   const result = await db.execute<{ table_name: string; rows: unknown[] }>(sql`
     select table_name, rows
     from (
       select 'contracts' as table_name,
-        jsonb_agg(to_jsonb(row)${withoutVector} order by row.id) as rows from contracts row
+        jsonb_agg(to_jsonb(row)${withoutDerivedSearch} order by row.id) as rows from contracts row
       union all
       select 'counterparties',
-        jsonb_agg(to_jsonb(row)${withoutVector} order by row.id) from counterparties row
+        jsonb_agg(to_jsonb(row)${withoutDerivedSearch} order by row.id) from counterparties row
       union all
       select 'document_version_text',
-        jsonb_agg(to_jsonb(row)${withoutVector} order by row.version_id) from document_version_text row
+        jsonb_agg(to_jsonb(row)${withoutDerivedSearch} order by row.version_id) from document_version_text row
       union all
       select 'documents',
-        jsonb_agg(to_jsonb(row)${withoutVector} order by row.id) from documents row
+        jsonb_agg(to_jsonb(row)${withoutDerivedSearch} order by row.id) from documents row
       union all
       select 'entities',
-        jsonb_agg(to_jsonb(row)${withoutVector} order by row.id) from entities row
+        jsonb_agg(to_jsonb(row)${withoutDerivedSearch} order by row.id) from entities row
       union all
       select 'matters',
-        jsonb_agg(to_jsonb(row)${withoutVector} order by row.id) from matters row
+        jsonb_agg(to_jsonb(row)${withoutDerivedSearch} order by row.id) from matters row
       union all
       select 'requests',
-        jsonb_agg(to_jsonb(row)${withoutVector} order by row.id) from requests row
+        jsonb_agg(to_jsonb(row)${withoutDerivedSearch} order by row.id) from requests row
     ) source_rows
     where table_name in (${sql.join(tableNames, sql`, `)})
     order by table_name

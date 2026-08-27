@@ -1,0 +1,2 @@
+ALTER TABLE "document_version_text" ADD COLUMN "email_subject" text;--> statement-breakpoint
+ALTER TABLE "document_version_text" ADD CONSTRAINT "document_version_text_email_subject_check" CHECK ("document_version_text"."email_subject" is null or "document_version_text"."source" = 'email_body');
