@@ -269,6 +269,12 @@ export function stubApi(state: ApiState) {
     if (call.url.pathname === "/api/v1/notifications" && call.method === "GET") {
       return json(200, { notifications: [], nextCursor: null });
     }
+    // M25's global search runs from the staff shell. An empty answer is
+    // the ordinary fresh-install state; search surface suites replace
+    // it through `extra` before this default runs.
+    if (call.url.pathname === "/api/v1/search" && call.method === "GET") {
+      return json(200, { results: [], nextCursor: null });
+    }
     // The portal's own bell, which every portal render reads on mount
     // and on every navigation (NOT-001, M20/9). Zero and empty by
     // default, exactly as the staff bell's two reads above; only the
