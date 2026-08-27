@@ -145,6 +145,7 @@ export async function matterRecordLoader({ params, request }: LoaderFunctionArgs
     taskDoneCount: tasks.data.doneCount,
     taskTotalCount: tasks.data.totalCount,
     documentLanding,
+    documentFindQuery: documentLanding ? (landingTarget?.findQuery ?? null) : null,
   };
 }
 
@@ -624,6 +625,12 @@ export function MatterRecordPage() {
               documentId={open.document.id}
               title={open.document.title}
               version={open.version}
+              initialFind={
+                loader.documentLanding?.document.id === open.document.id &&
+                loader.documentLanding.versionId === open.version.id
+                  ? loader.documentFindQuery
+                  : null
+              }
               onClose={() => setReading(null)}
             />
           )

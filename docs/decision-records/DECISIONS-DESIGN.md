@@ -1212,6 +1212,12 @@ Below the 1400px docking threshold the doc panel overlays the record's content c
 
 The fix: `DocPanel` watches its own `ResizeObserver`-reported width and tells its caller whether it is currently docked. `ContractRecord` keeps the answer in a ref and, only when its `tab` param actually changes, closes the panel if that ref says it is overlaying. Docked, a tab change leaves the panel open — the same "beside, not instead" behavior point 1 already named, now actually reachable from every section rather than just two of them.
 
+### Addendum (2026-08-28, M25/6, [#538](https://github.com/juggernog20/OpenLaw/issues/538)): K.T7 built
+
+K.T7 now lives with the other PDF reading controls. Its compact button opens C35's find bar; a search landing carrying `?find=` opens that bar already filled. The browser reads pdf.js's text content across the whole file, highlights the matching runs in each rendered text layer, reports the current ordinal and total, and moves through them with the previous/next controls or Enter/Shift+Enter. Moving the current answer scrolls its page into the well.
+
+The control belongs to the PDF surface, so a stored PDF and a converted Word or PowerPoint rendition both have it. A raster image, an email surface (including the message's attachment reader), and a download card do not. No global key joins DES-010's map; the find input owns Enter, Shift+Enter, and its close behavior locally. This supersedes only point 4's statement that K.T7 was not built; K.T9 remains absent.
+
 ## DES-017: Editing model — per-field inline commit, no page edit mode
 
 - **Status:** Accepted
