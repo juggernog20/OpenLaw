@@ -80,6 +80,14 @@ import {
   settingsMatterTypesLoader,
 } from "./routes/settings-matter-types";
 import {
+  SettingsMatterTemplatesPage,
+  settingsMatterTemplatesLoader,
+} from "./routes/settings-matter-templates";
+import {
+  SettingsMatterTemplateEditorPage,
+  settingsMatterTemplateEditorLoader,
+} from "./routes/settings-matter-template-editor";
+import {
   SettingsRequestTypesPage,
   settingsIntakeIndexLoader,
   settingsRequestTypesLoader,
@@ -293,6 +301,20 @@ export const routes: RouteObject[] = [
         path: "matters/fields",
         loader: settingsMatterFieldsLoader,
         element: <SettingsMatterFieldsPage />,
+      },
+      {
+        path: "matters/templates",
+        loader: settingsMatterTemplatesLoader,
+        element: <SettingsMatterTemplatesPage />,
+      },
+      {
+        path: "matters/templates/:templateId",
+        loader: settingsMatterTemplateEditorLoader,
+        element: (
+          <KeyedByParam name="templateId">
+            <SettingsMatterTemplateEditorPage />
+          </KeyedByParam>
+        ),
       },
       {
         // #85: each type row opens its own editor screen (ST15).

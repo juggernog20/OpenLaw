@@ -2,8 +2,22 @@
 
 /** Matter birth at both seams: HTTP and a caller-owned transaction. */
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { activityLog, and, eq, matters, matterTeam, users } from "@openlaw/db";
+import {
+  activityLog,
+  and,
+  asc,
+  eq,
+  matterKeyDates,
+  matters,
+  matterTasks,
+  matterTeam,
+  matterTemplateKeyDates,
+  matterTemplateTasks,
+  matterTemplates,
+  users,
+} from "@openlaw/db";
 import { provisionUser } from "../../auth/instance.js";
+import { civilToday, shiftDays } from "../../lib/contract-term.js";
 import { HttpError, type Problem } from "../../lib/problem.js";
 import {
   signInCookies,
@@ -43,6 +57,9 @@ let plainTypeId: string;
 let archivedTypeId: string;
 let demandingTypeId: string;
 let requiredSlug: string;
+let templateTypeId: string;
+let templateId: string;
+let templateRequiredSlug: string;
 
 beforeAll(async () => {
   harness = await startHarness();
@@ -76,6 +93,52 @@ beforeAll(async () => {
   expect(archive.statusCode, archive.body).toBe(200);
   demandingTypeId = await newType("Matter demanding");
   requiredSlug = await attachRequiredField(demandingTypeId, "Business unit");
+  templateTypeId = await newType("Matter templated");
+  templateRequiredSlug = await attachRequiredField(templateTypeId, "Template business unit");
+  const [template] = await harness.db
+    .insert(matterTemplates)
+    .values({
+      matterTypeId: templateTypeId,
+      name: "Employment standard",
+      defaultPriority: "high",
+      defaultRisk: "low",
+      defaultCustomFields: { [templateRequiredSlug]: "Legal" },
+      titlePrefix: "EMP —",
+    })
+    .returning();
+  templateId = template!.id;
+  await harness.db.insert(matterTemplateTasks).values([
+    {
+      matterTemplateId: templateId,
+      title: "Contact the manager",
+      dueOffsetDays: 2,
+      assigneeRole: "matter_manager",
+      displayOrder: 1,
+    },
+    {
+      matterTemplateId: templateId,
+      title: "Review the file",
+      dueOffsetDays: null,
+      assigneeRole: "none",
+      displayOrder: 2,
+    },
+  ]);
+  await harness.db.insert(matterTemplateKeyDates).values([
+    {
+      matterTemplateId: templateId,
+      label: "Initial review",
+      offsetDays: 0,
+      note: null,
+      displayOrder: 1,
+    },
+    {
+      matterTemplateId: templateId,
+      label: "Response target",
+      offsetDays: 5,
+      note: "Confirm the forum",
+      displayOrder: 2,
+    },
+  ]);
 });
 
 afterAll(async () => {
@@ -130,6 +193,7 @@ async function expectMatchingRefusal(payload: {
   title: string;
   matterTypeId: string;
   customFields?: Record<string, string>;
+  templateId?: string;
 }) {
   const overHttp = await createOverHttp(payload);
   expect(overHttp.statusCode, overHttp.body).toBeGreaterThanOrEqual(400);
@@ -172,12 +236,12 @@ describe("matter creation", () => {
         .from(matterTeam)
         .where(and(eq(matterTeam.matterId, one.id), eq(matterTeam.userId, memberId))),
     ).toHaveLength(1);
-    expect(
-      await harness.db
-        .select()
-        .from(activityLog)
-        .where(and(eq(activityLog.entityId, one.id), eq(activityLog.action, "matter.created"))),
-    ).toHaveLength(1);
+    const ordinaryBirth = await harness.db
+      .select({ payload: activityLog.payload })
+      .from(activityLog)
+      .where(and(eq(activityLog.entityId, one.id), eq(activityLog.action, "matter.created")));
+    expect(ordinaryBirth).toHaveLength(1);
+    expect(ordinaryBirth[0]!.payload).not.toHaveProperty("template");
     expect(
       await harness.db
         .select()
@@ -200,6 +264,156 @@ describe("matter creation", () => {
           ),
         ),
     ).toHaveLength(1);
+  });
+
+  it("advertises live templates with seeds and content counts on their type", async () => {
+    const response = await harness.app.inject({
+      method: "GET",
+      url: "/api/v1/matters/options",
+      cookies: memberCookies,
+    });
+    expect(response.statusCode, response.body).toBe(200);
+    const type = response
+      .json()
+      .matterTypes.find((candidate: { id: string }) => candidate.id === templateTypeId);
+    expect(type.templates).toEqual([
+      expect.objectContaining({
+        id: templateId,
+        name: "Employment standard",
+        defaultPriority: "high",
+        defaultRisk: "low",
+        defaultCustomFields: { [templateRequiredSlug]: "Legal" },
+        titlePrefix: "EMP —",
+        taskCount: 2,
+        keyDateCount: 2,
+      }),
+    ]);
+  });
+
+  it("applies a template atomically at both creation seams, with caller values winning", async () => {
+    const overHttp = await createOverHttp({
+      title: "EMP — Transfer",
+      matterTypeId: templateTypeId,
+      templateId,
+      managerId: memberId,
+      priority: "critical",
+      risk: null,
+      customFields: { [templateRequiredSlug]: "People" },
+    });
+    expect(overHttp.statusCode, overHttp.body).toBe(201);
+    const httpMatter = overHttp.json().matter;
+    expect(httpMatter).toMatchObject({
+      title: "EMP — Transfer",
+      priority: "critical",
+      risk: null,
+      customFields: { [templateRequiredSlug]: "People" },
+    });
+
+    const tasks = await harness.db
+      .select()
+      .from(matterTasks)
+      .where(eq(matterTasks.matterId, httpMatter.id))
+      .orderBy(asc(matterTasks.displayOrder));
+    expect(tasks).toMatchObject([
+      {
+        title: "Contact the manager",
+        assigneeId: memberId,
+        dueDate: shiftDays(civilToday(new Date(httpMatter.createdAt)), 2),
+        displayOrder: 0,
+      },
+      {
+        title: "Review the file",
+        assigneeId: null,
+        dueDate: null,
+        displayOrder: 1,
+      },
+    ]);
+    const keyDates = await harness.db
+      .select()
+      .from(matterKeyDates)
+      .where(eq(matterKeyDates.matterId, httpMatter.id))
+      .orderBy(asc(matterKeyDates.date));
+    expect(keyDates).toMatchObject([
+      {
+        label: "Initial review",
+        date: civilToday(new Date(httpMatter.createdAt)),
+        note: null,
+      },
+      {
+        label: "Response target",
+        date: shiftDays(civilToday(new Date(httpMatter.createdAt)), 5),
+        note: "Confirm the forum",
+      },
+    ]);
+    const deadlineSurface = await harness.app.inject({
+      method: "GET",
+      url: `/api/v1/matters/${httpMatter.number}/key-dates`,
+      cookies: memberCookies,
+    });
+    expect(deadlineSurface.statusCode, deadlineSurface.body).toBe(200);
+    expect(deadlineSurface.json().deadlines).toMatchObject([
+      { label: "Initial review", isNext: true },
+      { label: "Response target", isNext: false },
+    ]);
+    const [birth] = await harness.db
+      .select({ payload: activityLog.payload })
+      .from(activityLog)
+      .where(
+        and(eq(activityLog.entityId, httpMatter.id), eq(activityLog.action, "matter.created")),
+      );
+    expect(birth!.payload.template).toBe("Employment standard");
+
+    const callable = await createInCallerTransaction({
+      title: "Callable template",
+      matterTypeId: templateTypeId,
+      templateId,
+    });
+    expect(callable.row).toMatchObject({
+      priority: "high",
+      risk: "low",
+      customFields: { [templateRequiredSlug]: "Legal" },
+    });
+    expect(
+      await harness.db
+        .select({ title: matterTasks.title, assigneeId: matterTasks.assigneeId })
+        .from(matterTasks)
+        .where(eq(matterTasks.matterId, callable.row.id))
+        .orderBy(asc(matterTasks.displayOrder)),
+    ).toEqual([
+      { title: "Contact the manager", assigneeId: null },
+      { title: "Review the file", assigneeId: null },
+    ]);
+    expect(
+      await harness.db
+        .select()
+        .from(matterKeyDates)
+        .where(eq(matterKeyDates.matterId, callable.row.id)),
+    ).toHaveLength(2);
+  });
+
+  it("never validates a template default the caller overrides", async () => {
+    const [stale] = await harness.db
+      .insert(matterTemplates)
+      .values({
+        matterTypeId: templateTypeId,
+        name: "Stale defaults",
+        defaultCustomFields: { [templateRequiredSlug]: 123, "detached-slug": "held" },
+      })
+      .returning();
+    const refused = await createOverHttp({
+      title: "Stale default kept",
+      matterTypeId: templateTypeId,
+      templateId: stale!.id,
+    });
+    expect(refused.statusCode, refused.body).toBe(400);
+    const overridden = await createOverHttp({
+      title: "Stale default overridden",
+      matterTypeId: templateTypeId,
+      templateId: stale!.id,
+      customFields: { [templateRequiredSlug]: "People" },
+    });
+    expect(overridden.statusCode, overridden.body).toBe(201);
+    expect(overridden.json().matter.customFields).toEqual({ [templateRequiredSlug]: "People" });
   });
 
   it("refuses a body-supplied number", async () => {
@@ -252,6 +466,50 @@ describe("callable refusal parity", () => {
         })
       ).status,
     ).toBe(400);
+  });
+
+  it("matches for archived, wrong-type, and required-gap templates", async () => {
+    expect(
+      (
+        await expectMatchingRefusal({
+          title: "Wrong type",
+          matterTypeId: plainTypeId,
+          templateId,
+        })
+      ).detail,
+    ).toContain("live and belong");
+
+    const [archived] = await harness.db
+      .insert(matterTemplates)
+      .values({
+        matterTypeId: plainTypeId,
+        name: "Archived creation template",
+        archivedAt: new Date(),
+      })
+      .returning();
+    expect(
+      (
+        await expectMatchingRefusal({
+          title: "Archived template",
+          matterTypeId: plainTypeId,
+          templateId: archived!.id,
+        })
+      ).status,
+    ).toBe(400);
+
+    const [incomplete] = await harness.db
+      .insert(matterTemplates)
+      .values({ matterTypeId: demandingTypeId, name: "Incomplete defaults" })
+      .returning();
+    expect(
+      (
+        await expectMatchingRefusal({
+          title: "Template gap",
+          matterTypeId: demandingTypeId,
+          templateId: incomplete!.id,
+        })
+      ).detail,
+    ).toContain("Business unit");
   });
 });
 

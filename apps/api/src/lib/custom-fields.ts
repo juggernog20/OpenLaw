@@ -381,7 +381,7 @@ export async function applyCustomFields(
   const prepared = Object.entries(incoming).map(([slug, raw]) => {
     const field = attached.find((candidate) => candidate.slug === slug);
     if (!field) {
-      throw httpError(400, "That field is not on this contract's type.");
+      throw httpError(400, "That field is not on this record's type.");
     }
     const value = coerceCustomFieldValue(field, raw);
     return { slug, field, value };

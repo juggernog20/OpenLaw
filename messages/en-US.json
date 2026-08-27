@@ -300,7 +300,7 @@
     "defaultMessage": "{actor} marked this matter confidential"
   },
   "activity.matter.created": {
-    "defaultMessage": "{actor} created this matter"
+    "defaultMessage": "{templatePresence, select, present {{actor} created this matter from the {template} template} other {{actor} created this matter}}"
   },
   "activity.matter.createdFromRequest": {
     "defaultMessage": "{actor} created this matter from {request}"
@@ -438,25 +438,25 @@
     "defaultMessage": "(untitled)"
   },
   "activity.taxonomy.archived": {
-    "defaultMessage": "{actor} archived the {kind, select, contract_type {contract type} matter_type {matter type} entity_type {entity type} request_type {request type} contract_status {contract status} field {field} approver_group {approver group} other {type}} {name}"
+    "defaultMessage": "{actor} archived the {kind, select, contract_type {contract type} matter_type {matter type} entity_type {entity type} request_type {request type} contract_status {contract status} field {field} approver_group {approver group} matter_template {matter template} other {type}} {name}"
   },
   "activity.taxonomy.created": {
-    "defaultMessage": "{actor} added the {kind, select, contract_type {contract type} matter_type {matter type} entity_type {entity type} request_type {request type} contract_status {contract status} field {field} approver_group {approver group} other {type}} {name}"
+    "defaultMessage": "{actor} added the {kind, select, contract_type {contract type} matter_type {matter type} entity_type {entity type} request_type {request type} contract_status {contract status} field {field} approver_group {approver group} matter_template {matter template} other {type}} {name}"
   },
   "activity.taxonomy.deleted": {
-    "defaultMessage": "{actor} deleted the {kind, select, contract_type {contract type} matter_type {matter type} entity_type {entity type} request_type {request type} contract_status {contract status} field {field} approver_group {approver group} other {type}} {name}"
+    "defaultMessage": "{actor} deleted the {kind, select, contract_type {contract type} matter_type {matter type} entity_type {entity type} request_type {request type} contract_status {contract status} field {field} approver_group {approver group} matter_template {matter template} other {type}} {name}"
   },
   "activity.taxonomy.renamed": {
-    "defaultMessage": "{actor} renamed the {kind, select, contract_type {contract type} matter_type {matter type} entity_type {entity type} request_type {request type} contract_status {contract status} field {field} approver_group {approver group} other {type}} {name}"
+    "defaultMessage": "{actor} renamed the {kind, select, contract_type {contract type} matter_type {matter type} entity_type {entity type} request_type {request type} contract_status {contract status} field {field} approver_group {approver group} matter_template {matter template} other {type}} {name}"
   },
   "activity.taxonomy.reordered": {
-    "defaultMessage": "{actor} reordered the {kind, select, contract_type {contract type} matter_type {matter type} entity_type {entity type} request_type {request type} contract_status {contract status} field {field} approver_group {approver group} other {type}} list"
+    "defaultMessage": "{actor} reordered the {kind, select, contract_type {contract type} matter_type {matter type} entity_type {entity type} request_type {request type} contract_status {contract status} field {field} approver_group {approver group} matter_template {matter template} other {type}} list"
   },
   "activity.taxonomy.restored": {
-    "defaultMessage": "{actor} restored the {kind, select, contract_type {contract type} matter_type {matter type} entity_type {entity type} request_type {request type} contract_status {contract status} field {field} approver_group {approver group} other {type}} {name}"
+    "defaultMessage": "{actor} restored the {kind, select, contract_type {contract type} matter_type {matter type} entity_type {entity type} request_type {request type} contract_status {contract status} field {field} approver_group {approver group} matter_template {matter template} other {type}} {name}"
   },
   "activity.taxonomy.updated": {
-    "defaultMessage": "{actor} changed the {kind, select, contract_type {contract type} matter_type {matter type} entity_type {entity type} request_type {request type} contract_status {contract status} field {field} approver_group {approver group} other {type}} {name}"
+    "defaultMessage": "{actor} changed the {kind, select, contract_type {contract type} matter_type {matter type} entity_type {entity type} request_type {request type} contract_status {contract status} field {field} approver_group {approver group} matter_template {matter template} other {type}} {name}"
   },
   "activity.teamRole": {
     "defaultMessage": "{role, select, member {Member} watcher {Watcher} creator {Creator} contributor {Contributor} other {{role}}}"
@@ -3053,6 +3053,9 @@
   "matters.field.status": {
     "defaultMessage": "Status"
   },
+  "matters.field.template": {
+    "defaultMessage": "Template (optional)"
+  },
   "matters.field.title": {
     "defaultMessage": "Title"
   },
@@ -3292,6 +3295,12 @@
   },
   "matters.team.title": {
     "defaultMessage": "Matter team"
+  },
+  "matters.template.contentHint": {
+    "defaultMessage": "Template adds {taskCount, plural, one {# task} other {# tasks}} and {keyDateCount, plural, one {# key date} other {# key dates}}."
+  },
+  "matters.template.none": {
+    "defaultMessage": "No template"
   },
   "matters.title": {
     "defaultMessage": "Matters"
@@ -4694,6 +4703,237 @@
   "settings.matterStatuses.title": {
     "defaultMessage": "Matter statuses"
   },
+  "settings.matterTemplateEditor.addKeyDate": {
+    "defaultMessage": "Add key date"
+  },
+  "settings.matterTemplateEditor.addTask": {
+    "defaultMessage": "Add task"
+  },
+  "settings.matterTemplateEditor.allTemplates": {
+    "defaultMessage": "All templates"
+  },
+  "settings.matterTemplateEditor.contentInvalid": {
+    "defaultMessage": "Give every row a name and use whole-number offsets from 0 to 3650 days."
+  },
+  "settings.matterTemplateEditor.customFields": {
+    "defaultMessage": "Custom field defaults"
+  },
+  "settings.matterTemplateEditor.dateOffset": {
+    "defaultMessage": "Date offset"
+  },
+  "settings.matterTemplateEditor.defaults": {
+    "defaultMessage": "Matter defaults"
+  },
+  "settings.matterTemplateEditor.description": {
+    "defaultMessage": "Description"
+  },
+  "settings.matterTemplateEditor.details": {
+    "defaultMessage": "Template details"
+  },
+  "settings.matterTemplateEditor.dueOffset": {
+    "defaultMessage": "Due offset"
+  },
+  "settings.matterTemplateEditor.fieldNumberInvalid": {
+    "defaultMessage": "Give {field} a number."
+  },
+  "settings.matterTemplateEditor.fieldsSaveError": {
+    "defaultMessage": "The custom-field defaults could not be saved. Earlier changes may already be saved."
+  },
+  "settings.matterTemplateEditor.keyDateLabelNumber": {
+    "defaultMessage": "Key date {number} label"
+  },
+  "settings.matterTemplateEditor.keyDateNoteNumber": {
+    "defaultMessage": "Key date {number} note"
+  },
+  "settings.matterTemplateEditor.keyDateNumber": {
+    "defaultMessage": "Key date {number}"
+  },
+  "settings.matterTemplateEditor.keyDateOffsetNumber": {
+    "defaultMessage": "Key date {number} offset in days"
+  },
+  "settings.matterTemplateEditor.keyDates": {
+    "defaultMessage": "Key dates"
+  },
+  "settings.matterTemplateEditor.keyDatesHint": {
+    "defaultMessage": "Dates resolve relative to the Matter creation date"
+  },
+  "settings.matterTemplateEditor.keyDatesSaveError": {
+    "defaultMessage": "The template Key dates could not be saved. Earlier changes may already be saved."
+  },
+  "settings.matterTemplateEditor.label": {
+    "defaultMessage": "Label"
+  },
+  "settings.matterTemplateEditor.matterManager": {
+    "defaultMessage": "Matter Manager"
+  },
+  "settings.matterTemplateEditor.name": {
+    "defaultMessage": "Name"
+  },
+  "settings.matterTemplateEditor.nameMissing": {
+    "defaultMessage": "Name the template."
+  },
+  "settings.matterTemplateEditor.noCustomFields": {
+    "defaultMessage": "This Matter type has no custom fields."
+  },
+  "settings.matterTemplateEditor.noDefault": {
+    "defaultMessage": "No default"
+  },
+  "settings.matterTemplateEditor.noKeyDates": {
+    "defaultMessage": "No key dates are included in this template."
+  },
+  "settings.matterTemplateEditor.noTasks": {
+    "defaultMessage": "No tasks are included in this template."
+  },
+  "settings.matterTemplateEditor.note": {
+    "defaultMessage": "Note"
+  },
+  "settings.matterTemplateEditor.order": {
+    "defaultMessage": "Order"
+  },
+  "settings.matterTemplateEditor.priority": {
+    "defaultMessage": "Priority"
+  },
+  "settings.matterTemplateEditor.removeKeyDate": {
+    "defaultMessage": "Remove {name}"
+  },
+  "settings.matterTemplateEditor.removeTask": {
+    "defaultMessage": "Remove {name}"
+  },
+  "settings.matterTemplateEditor.reorder": {
+    "defaultMessage": "Reorder {name}, position {position} of {total}. Use the arrow keys to move it."
+  },
+  "settings.matterTemplateEditor.risk": {
+    "defaultMessage": "Risk"
+  },
+  "settings.matterTemplateEditor.role": {
+    "defaultMessage": "Role"
+  },
+  "settings.matterTemplateEditor.save": {
+    "defaultMessage": "Save template"
+  },
+  "settings.matterTemplateEditor.saveError": {
+    "defaultMessage": "The Matter template could not be saved."
+  },
+  "settings.matterTemplateEditor.staleField": {
+    "defaultMessage": "{field} is no longer attached to this Matter type. Its saved value ({value}) is retained."
+  },
+  "settings.matterTemplateEditor.staleNo": {
+    "defaultMessage": "No"
+  },
+  "settings.matterTemplateEditor.staleYes": {
+    "defaultMessage": "Yes"
+  },
+  "settings.matterTemplateEditor.taskDueNumber": {
+    "defaultMessage": "Task {number} due offset in days"
+  },
+  "settings.matterTemplateEditor.taskNumber": {
+    "defaultMessage": "Task {number}"
+  },
+  "settings.matterTemplateEditor.taskRoleNumber": {
+    "defaultMessage": "Task {number} role"
+  },
+  "settings.matterTemplateEditor.taskTitle": {
+    "defaultMessage": "Title"
+  },
+  "settings.matterTemplateEditor.taskTitleNumber": {
+    "defaultMessage": "Task {number} title"
+  },
+  "settings.matterTemplateEditor.tasks": {
+    "defaultMessage": "Tasks"
+  },
+  "settings.matterTemplateEditor.tasksHint": {
+    "defaultMessage": "Ordered checklist inserted when the Matter is created"
+  },
+  "settings.matterTemplateEditor.tasksSaveError": {
+    "defaultMessage": "The template Tasks could not be saved. Earlier changes may already be saved."
+  },
+  "settings.matterTemplateEditor.titlePrefix": {
+    "defaultMessage": "Title prefix"
+  },
+  "settings.matterTemplateEditor.type": {
+    "defaultMessage": "Matter type: {name}"
+  },
+  "settings.matterTemplateEditor.unassigned": {
+    "defaultMessage": "Unassigned"
+  },
+  "settings.matterTemplates.add": {
+    "defaultMessage": "Add template"
+  },
+  "settings.matterTemplates.archive": {
+    "defaultMessage": "Archive {name}"
+  },
+  "settings.matterTemplates.archiveError": {
+    "defaultMessage": "The Matter template could not be archived."
+  },
+  "settings.matterTemplates.archiveHelp": {
+    "defaultMessage": "The template leaves new Matter creation. Existing Matters are unchanged, and restoring the template brings its full definition back."
+  },
+  "settings.matterTemplates.archiveSubmit": {
+    "defaultMessage": "Archive template"
+  },
+  "settings.matterTemplates.archiveTitle": {
+    "defaultMessage": "Archive {name}?"
+  },
+  "settings.matterTemplates.count": {
+    "defaultMessage": "{count, plural, one {# template} other {# templates}}"
+  },
+  "settings.matterTemplates.createError": {
+    "defaultMessage": "The Matter template could not be created."
+  },
+  "settings.matterTemplates.createSubmit": {
+    "defaultMessage": "Add template"
+  },
+  "settings.matterTemplates.createTitle": {
+    "defaultMessage": "Add Matter template"
+  },
+  "settings.matterTemplates.description": {
+    "defaultMessage": "Description"
+  },
+  "settings.matterTemplates.edit": {
+    "defaultMessage": "Edit {name}"
+  },
+  "settings.matterTemplates.fieldCount": {
+    "defaultMessage": "{count, plural, one {# field} other {# fields}}"
+  },
+  "settings.matterTemplates.help": {
+    "defaultMessage": "Templates pre-fill a new Matter. Editing or archiving one never changes an existing Matter."
+  },
+  "settings.matterTemplates.keyDateCount": {
+    "defaultMessage": "{count, plural, one {# date} other {# dates}}"
+  },
+  "settings.matterTemplates.name": {
+    "defaultMessage": "Name"
+  },
+  "settings.matterTemplates.nameMissing": {
+    "defaultMessage": "Name the template."
+  },
+  "settings.matterTemplates.noTypes": {
+    "defaultMessage": "Add a Matter type before creating a template."
+  },
+  "settings.matterTemplates.pageTitle": {
+    "defaultMessage": "Matter templates"
+  },
+  "settings.matterTemplates.rename": {
+    "defaultMessage": "Rename {name}"
+  },
+  "settings.matterTemplates.renameError": {
+    "defaultMessage": "The Matter template could not be renamed."
+  },
+  "settings.matterTemplates.restore": {
+    "defaultMessage": "Restore {name}"
+  },
+  "settings.matterTemplates.restoreError": {
+    "defaultMessage": "The Matter template could not be restored."
+  },
+  "settings.matterTemplates.taskCount": {
+    "defaultMessage": "{count, plural, one {# task} other {# tasks}}"
+  },
+  "settings.matterTemplates.title": {
+    "defaultMessage": "Matter templates"
+  },
+  "settings.matterTemplates.typeLabel": {
+    "defaultMessage": "Matter type"
+  },
   "settings.matterTypeEditor.allAttached": {
     "defaultMessage": "Every eligible field is attached."
   },
@@ -4825,6 +5065,9 @@
   },
   "settings.matters.tab.statuses": {
     "defaultMessage": "Statuses"
+  },
+  "settings.matters.tab.templates": {
+    "defaultMessage": "Templates"
   },
   "settings.matters.tab.types": {
     "defaultMessage": "Types"
@@ -5311,6 +5554,18 @@
   },
   "settings.users.showArchived": {
     "defaultMessage": "Show archived"
+  },
+  "severity.critical": {
+    "defaultMessage": "Critical"
+  },
+  "severity.high": {
+    "defaultMessage": "High"
+  },
+  "severity.low": {
+    "defaultMessage": "Low"
+  },
+  "severity.medium": {
+    "defaultMessage": "Medium"
   },
   "shell.brand": {
     "defaultMessage": "openlaw"

@@ -917,7 +917,7 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** Live matter types with attached fields, statuses, and assignable people */
+    /** Live matter types with attached fields and creation templates, statuses, and assignable people */
     get: operations["listMatterOptions"];
     put?: never;
     post?: never;
@@ -1184,6 +1184,127 @@ export interface paths {
     /** Replace a reached Matter checklist's complete display order */
     put: operations["reorderMatterTasks"];
     post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/matter-templates": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** List named Matter creation templates in type and name order; optionally filter to one Matter type and include archived rows */
+    get: operations["listMatterTemplates"];
+    put?: never;
+    /** Create a named Matter template for one live Matter type; 409 if a live template of that type already carries the name, compared case-insensitively */
+    post: operations["createMatterTemplate"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/matter-templates/{id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Read one Matter template and its ordered content by id */
+    get: operations["getMatterTemplate"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    /** Update a Matter template's name, description, priority, risk, or title prefix */
+    patch: operations["updateMatterTemplate"];
+    trace?: never;
+  };
+  "/api/v1/matter-templates/{id}/custom-fields": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    /** Replace the defaults for fields currently attached to the template's Matter type; detached defaults remain stored and are reported as stale */
+    put: operations["setMatterTemplateCustomFields"];
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/matter-templates/{id}/tasks": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    /** Replace a Matter template's ordered task list; offsets are whole days from Matter creation and assignment targets are roles, never named users */
+    put: operations["setMatterTemplateTasks"];
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/matter-templates/{id}/key-dates": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    /** Replace a Matter template's ordered relative Key dates; each offset is a whole day from Matter creation */
+    put: operations["setMatterTemplateKeyDates"];
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/matter-templates/{id}/archive": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Archive a Matter template so it leaves the live settings and creation sets */
+    post: operations["archiveMatterTemplate"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/matter-templates/{id}/restore": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Restore an archived Matter template with its definition intact; 409 when a live template of the type has taken its name since */
+    post: operations["restoreMatterTemplate"];
     delete?: never;
     options?: never;
     head?: never;
@@ -1598,7 +1719,7 @@ export interface paths {
     };
     get?: never;
     put?: never;
-    /** Turn a Request into the contract or matter its request type targets (INT-002, DD-018, M22/9). The Request row is locked so racing triagers produce one record; the loser receives 409 with the reachable converted record's module and permanent number. Triage confirms a live bound type, supplies a type for a module-only or archived target, or explicitly Re-targets by naming the other module's type. A body may name a contract type or a matter type, never both. The record is born through its ordinary create callable with the title seeded from the Request summary, urgency carried to priority, risk unset, no manager, one creator row, and no confidential flag. Matching collected values carry server-side; values with no field remain on the Request; missing required fields and dead references are refused by name and can be answered in customFields. Both records narrate the conversion and requestStatusChanged raises the Requester's In progress notification. Attachments become ordinary root documents and the tiered thread moves onto either target while the Request remains the Requester's window. Member+ only */
+    /** Turn a Request into the contract or matter its request type targets (INT-002, DD-018, M22/9). The Request row is locked so racing triagers produce one record; the loser receives 409 with the reachable converted record's module and permanent number. Triage confirms a live bound type, supplies a type for a module-only or archived target, or explicitly Re-targets by naming the other module's type. A body may name a contract type or a matter type, never both. The record is born through its ordinary create callable with the title seeded from the Request summary, urgency carried to priority, risk unset, no manager, one creator row, and no confidential flag. Matching collected values carry server-side; values with no field remain on the Request; missing required fields and dead references are refused by name and can be answered in customFields. Matter conversions may apply a live template for the confirmed type; carried values and triager answers override its defaults. Both records narrate the conversion and requestStatusChanged raises the Requester's In progress notification. Attachments become ordinary root documents and the tiered thread moves onto either target while the Request remains the Requester's window. Member+ only */
     post: operations["convertRequest"];
     delete?: never;
     options?: never;
@@ -6565,6 +6686,7 @@ export interface operations {
           };
           isConfidential?: boolean;
           parentMatterNumber?: number;
+          templateId?: string;
         };
       };
     };
@@ -6669,6 +6791,19 @@ export interface operations {
                 options: string[] | null;
                 displayOrder: number;
                 isRequired: boolean;
+              }[];
+              templates: {
+                id: string;
+                name: string;
+                description: string | null;
+                defaultPriority: ("low" | "medium" | "high" | "critical") | null;
+                defaultRisk: ("low" | "medium" | "high" | "critical") | null;
+                defaultCustomFields: {
+                  [key: string]: string | number | boolean | string[];
+                };
+                titlePrefix: string | null;
+                taskCount: number;
+                keyDateCount: number;
               }[];
             }[];
             matterStatuses: {
@@ -8179,6 +8314,640 @@ export interface operations {
             }[];
             doneCount: number;
             totalCount: number;
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  listMatterTemplates: {
+    parameters: {
+      query?: {
+        matterTypeId?: string;
+        includeArchived?: "true" | "false";
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            matterTemplates: {
+              id: string;
+              matterTypeId: string;
+              matterTypeName: string;
+              name: string;
+              description: string | null;
+              defaultPriority: ("low" | "medium" | "high" | "critical") | null;
+              defaultRisk: ("low" | "medium" | "high" | "critical") | null;
+              titlePrefix: string | null;
+              archivedAt: string | null;
+              tasks: {
+                id: string;
+                title: string;
+                dueOffsetDays: number | null;
+                /** @enum {string} */
+                assigneeRole: "matter_manager" | "none";
+                displayOrder: number;
+              }[];
+              keyDates: {
+                id: string;
+                label: string;
+                offsetDays: number;
+                note: string | null;
+                displayOrder: number;
+              }[];
+              taskCount: number;
+              keyDateCount: number;
+              customFieldCount: number;
+              defaultCustomFields: {
+                [key: string]: string | number | boolean | string[];
+              };
+              staleCustomFieldSlugs: string[];
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  createMatterTemplate: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          matterTypeId: string;
+          name: string;
+          description?: string;
+          defaultPriority?: ("low" | "medium" | "high" | "critical") | null;
+          defaultRisk?: ("low" | "medium" | "high" | "critical") | null;
+          titlePrefix?: string;
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            matterTemplate: {
+              id: string;
+              matterTypeId: string;
+              matterTypeName: string;
+              name: string;
+              description: string | null;
+              defaultPriority: ("low" | "medium" | "high" | "critical") | null;
+              defaultRisk: ("low" | "medium" | "high" | "critical") | null;
+              titlePrefix: string | null;
+              archivedAt: string | null;
+              tasks: {
+                id: string;
+                title: string;
+                dueOffsetDays: number | null;
+                /** @enum {string} */
+                assigneeRole: "matter_manager" | "none";
+                displayOrder: number;
+              }[];
+              keyDates: {
+                id: string;
+                label: string;
+                offsetDays: number;
+                note: string | null;
+                displayOrder: number;
+              }[];
+              taskCount: number;
+              keyDateCount: number;
+              customFieldCount: number;
+              defaultCustomFields: {
+                [key: string]: string | number | boolean | string[];
+              };
+              staleCustomFieldSlugs: string[];
+            };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  getMatterTemplate: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            matterTemplate: {
+              id: string;
+              matterTypeId: string;
+              matterTypeName: string;
+              name: string;
+              description: string | null;
+              defaultPriority: ("low" | "medium" | "high" | "critical") | null;
+              defaultRisk: ("low" | "medium" | "high" | "critical") | null;
+              titlePrefix: string | null;
+              archivedAt: string | null;
+              tasks: {
+                id: string;
+                title: string;
+                dueOffsetDays: number | null;
+                /** @enum {string} */
+                assigneeRole: "matter_manager" | "none";
+                displayOrder: number;
+              }[];
+              keyDates: {
+                id: string;
+                label: string;
+                offsetDays: number;
+                note: string | null;
+                displayOrder: number;
+              }[];
+              taskCount: number;
+              keyDateCount: number;
+              customFieldCount: number;
+              defaultCustomFields: {
+                [key: string]: string | number | boolean | string[];
+              };
+              staleCustomFieldSlugs: string[];
+            };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  updateMatterTemplate: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          name?: string;
+          description?: string | null;
+          defaultPriority?: ("low" | "medium" | "high" | "critical") | null;
+          defaultRisk?: ("low" | "medium" | "high" | "critical") | null;
+          titlePrefix?: string | null;
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            matterTemplate: {
+              id: string;
+              matterTypeId: string;
+              matterTypeName: string;
+              name: string;
+              description: string | null;
+              defaultPriority: ("low" | "medium" | "high" | "critical") | null;
+              defaultRisk: ("low" | "medium" | "high" | "critical") | null;
+              titlePrefix: string | null;
+              archivedAt: string | null;
+              tasks: {
+                id: string;
+                title: string;
+                dueOffsetDays: number | null;
+                /** @enum {string} */
+                assigneeRole: "matter_manager" | "none";
+                displayOrder: number;
+              }[];
+              keyDates: {
+                id: string;
+                label: string;
+                offsetDays: number;
+                note: string | null;
+                displayOrder: number;
+              }[];
+              taskCount: number;
+              keyDateCount: number;
+              customFieldCount: number;
+              defaultCustomFields: {
+                [key: string]: string | number | boolean | string[];
+              };
+              staleCustomFieldSlugs: string[];
+            };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  setMatterTemplateCustomFields: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          defaultCustomFields: {
+            [key: string]: (string | number | boolean | string[]) | null;
+          };
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            matterTemplate: {
+              id: string;
+              matterTypeId: string;
+              matterTypeName: string;
+              name: string;
+              description: string | null;
+              defaultPriority: ("low" | "medium" | "high" | "critical") | null;
+              defaultRisk: ("low" | "medium" | "high" | "critical") | null;
+              titlePrefix: string | null;
+              archivedAt: string | null;
+              tasks: {
+                id: string;
+                title: string;
+                dueOffsetDays: number | null;
+                /** @enum {string} */
+                assigneeRole: "matter_manager" | "none";
+                displayOrder: number;
+              }[];
+              keyDates: {
+                id: string;
+                label: string;
+                offsetDays: number;
+                note: string | null;
+                displayOrder: number;
+              }[];
+              taskCount: number;
+              keyDateCount: number;
+              customFieldCount: number;
+              defaultCustomFields: {
+                [key: string]: string | number | boolean | string[];
+              };
+              staleCustomFieldSlugs: string[];
+            };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  setMatterTemplateTasks: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          tasks: {
+            title: string;
+            dueOffsetDays: number | null;
+            /** @enum {string} */
+            assigneeRole: "matter_manager" | "none";
+          }[];
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            matterTemplate: {
+              id: string;
+              matterTypeId: string;
+              matterTypeName: string;
+              name: string;
+              description: string | null;
+              defaultPriority: ("low" | "medium" | "high" | "critical") | null;
+              defaultRisk: ("low" | "medium" | "high" | "critical") | null;
+              titlePrefix: string | null;
+              archivedAt: string | null;
+              tasks: {
+                id: string;
+                title: string;
+                dueOffsetDays: number | null;
+                /** @enum {string} */
+                assigneeRole: "matter_manager" | "none";
+                displayOrder: number;
+              }[];
+              keyDates: {
+                id: string;
+                label: string;
+                offsetDays: number;
+                note: string | null;
+                displayOrder: number;
+              }[];
+              taskCount: number;
+              keyDateCount: number;
+              customFieldCount: number;
+              defaultCustomFields: {
+                [key: string]: string | number | boolean | string[];
+              };
+              staleCustomFieldSlugs: string[];
+            };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  setMatterTemplateKeyDates: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          keyDates: {
+            label: string;
+            offsetDays: number;
+            note: string | null;
+          }[];
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            matterTemplate: {
+              id: string;
+              matterTypeId: string;
+              matterTypeName: string;
+              name: string;
+              description: string | null;
+              defaultPriority: ("low" | "medium" | "high" | "critical") | null;
+              defaultRisk: ("low" | "medium" | "high" | "critical") | null;
+              titlePrefix: string | null;
+              archivedAt: string | null;
+              tasks: {
+                id: string;
+                title: string;
+                dueOffsetDays: number | null;
+                /** @enum {string} */
+                assigneeRole: "matter_manager" | "none";
+                displayOrder: number;
+              }[];
+              keyDates: {
+                id: string;
+                label: string;
+                offsetDays: number;
+                note: string | null;
+                displayOrder: number;
+              }[];
+              taskCount: number;
+              keyDateCount: number;
+              customFieldCount: number;
+              defaultCustomFields: {
+                [key: string]: string | number | boolean | string[];
+              };
+              staleCustomFieldSlugs: string[];
+            };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  archiveMatterTemplate: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            matterTemplate: {
+              id: string;
+              matterTypeId: string;
+              matterTypeName: string;
+              name: string;
+              description: string | null;
+              defaultPriority: ("low" | "medium" | "high" | "critical") | null;
+              defaultRisk: ("low" | "medium" | "high" | "critical") | null;
+              titlePrefix: string | null;
+              archivedAt: string | null;
+              tasks: {
+                id: string;
+                title: string;
+                dueOffsetDays: number | null;
+                /** @enum {string} */
+                assigneeRole: "matter_manager" | "none";
+                displayOrder: number;
+              }[];
+              keyDates: {
+                id: string;
+                label: string;
+                offsetDays: number;
+                note: string | null;
+                displayOrder: number;
+              }[];
+              taskCount: number;
+              keyDateCount: number;
+              customFieldCount: number;
+              defaultCustomFields: {
+                [key: string]: string | number | boolean | string[];
+              };
+              staleCustomFieldSlugs: string[];
+            };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  restoreMatterTemplate: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            matterTemplate: {
+              id: string;
+              matterTypeId: string;
+              matterTypeName: string;
+              name: string;
+              description: string | null;
+              defaultPriority: ("low" | "medium" | "high" | "critical") | null;
+              defaultRisk: ("low" | "medium" | "high" | "critical") | null;
+              titlePrefix: string | null;
+              archivedAt: string | null;
+              tasks: {
+                id: string;
+                title: string;
+                dueOffsetDays: number | null;
+                /** @enum {string} */
+                assigneeRole: "matter_manager" | "none";
+                displayOrder: number;
+              }[];
+              keyDates: {
+                id: string;
+                label: string;
+                offsetDays: number;
+                note: string | null;
+                displayOrder: number;
+              }[];
+              taskCount: number;
+              keyDateCount: number;
+              customFieldCount: number;
+              defaultCustomFields: {
+                [key: string]: string | number | boolean | string[];
+              };
+              staleCustomFieldSlugs: string[];
+            };
           };
         };
       };
@@ -9968,6 +10737,7 @@ export interface operations {
           title: string;
           contractTypeId?: string;
           matterTypeId?: string;
+          templateId?: string;
           customFields?: {
             [key: string]: (string | number | boolean | string[]) | null;
           };

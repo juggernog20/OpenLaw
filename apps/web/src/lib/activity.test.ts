@@ -263,6 +263,18 @@ const SAMPLE_PAYLOADS: { [A in ActivityAction]: ActivityPayloadMap[A] } = {
     memberName: "Sarah Chen",
   },
 
+  // Matter creation templates
+  "matter_template.created": {
+    displayName: "Employment – Termination",
+    matterTypeName: "Employment",
+  },
+  "matter_template.updated": {
+    displayName: "Employment – Termination",
+    changed: { defaultPriority: { from: null, to: "high" } },
+  },
+  "matter_template.archived": { displayName: "Employment – Termination" },
+  "matter_template.restored": { displayName: "Employment – Termination" },
+
   // Sign-off on one contract
   "approval.requested": {
     ...APPROVER,
@@ -768,6 +780,24 @@ describe("the cross-reference fallbacks between an ask and its record", () => {
     expect(narrate("request.thread_moved", { number: 42, matterNumber: 12 }).sentence).toBe(
       "Nadia Counsel moved this conversation onto M-12",
     );
+  });
+
+  it("names the template a matter was created from, and stays quiet without one", () => {
+    expect(
+      narrate("matter.created", {
+        ...SAMPLE_PAYLOADS["matter.created"],
+        template: "Employment standard",
+      }).sentence,
+    ).toBe("Nadia Counsel created this matter from the Employment standard template");
+    expect(narrate("matter.created", SAMPLE_PAYLOADS["matter.created"]).sentence).toBe(
+      "Nadia Counsel created this matter",
+    );
+    expect(
+      narrate("matter.created", {
+        ...SAMPLE_PAYLOADS["matter.created"],
+        template: "none",
+      }).sentence,
+    ).toBe("Nadia Counsel created this matter from the none template");
   });
 
   it("names a request when the record's own entry carries no number", () => {

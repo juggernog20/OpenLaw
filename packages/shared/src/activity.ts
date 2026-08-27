@@ -322,6 +322,14 @@ type ApproverGroupPayloads = {
   "approver_group.member_removed": { displayName: string; memberId: string; memberName: string };
 };
 
+/** The MTR-013 Matter creation templates managed in Matters Settings. */
+type MatterTemplatePayloads = {
+  "matter_template.created": { displayName: string; matterTypeName: string };
+  "matter_template.updated": { displayName: string; changed: ChangedFields };
+  "matter_template.archived": { displayName: string };
+  "matter_template.restored": { displayName: string };
+};
+
 /**
  * The sign-off on one contract (M14/3, CTR-012). These hang off the
  * contract, not off the request: an approval is a thing that happened to
@@ -665,6 +673,7 @@ type MatterPayloads = {
     matterType: string;
     status: string;
     customFields: string[];
+    template?: string;
   };
   "matter.created_from_request": { number: number; title: string; requestNumber: number };
   "matter.confidentiality_set": { number: number; title: string };
@@ -1001,6 +1010,7 @@ export type ActivityPayloadMap = UserPayloads &
   IntakeLinkPayloads &
   FieldCatalogPayloads &
   ApproverGroupPayloads &
+  MatterTemplatePayloads &
   ApprovalPayloads &
   KeyDatePayloads &
   TaskPayloads &

@@ -6,6 +6,7 @@ import { z } from "zod";
 import {
   and,
   asc,
+  count,
   eq,
   fields,
   inArray,
@@ -17,6 +18,9 @@ import {
   matterTypes,
   MATTER_TEAM_ROLES,
   matterKeyDates,
+  matterTemplateKeyDates,
+  matterTemplateTasks,
+  matterTemplates,
   SEVERITY_LEVELS,
   sql,
   users,
@@ -475,7 +479,8 @@ export const mattersRoutes: FastifyPluginAsyncZod = async (app) => {
       preHandler: requireReader,
       schema: {
         operationId: "listMatterOptions",
-        summary: "Live matter types with attached fields, statuses, and assignable people",
+        summary:
+          "Live matter types with attached fields and creation templates, statuses, and assignable people",
         tags: ["matters"],
         response: {
           200: z.object({
@@ -485,6 +490,19 @@ export const mattersRoutes: FastifyPluginAsyncZod = async (app) => {
                 slug: z.string(),
                 displayName: z.string(),
                 fields: z.array(AttachedCustomFieldSchema),
+                templates: z.array(
+                  z.object({
+                    id: z.string(),
+                    name: z.string(),
+                    description: z.string().nullable(),
+                    defaultPriority: SeveritySchema.nullable(),
+                    defaultRisk: SeveritySchema.nullable(),
+                    defaultCustomFields: CustomFieldsSchema,
+                    titlePrefix: z.string().nullable(),
+                    taskCount: z.number().int(),
+                    keyDateCount: z.number().int(),
+                  }),
+                ),
               }),
             ),
             matterStatuses: z.array(
@@ -501,8 +519,8 @@ export const mattersRoutes: FastifyPluginAsyncZod = async (app) => {
         },
       },
     },
-    async () => {
-      const [types, statuses, people] = await Promise.all([
+    async (request) => {
+      const [types, statuses, people, templates, taskCounts, keyDateCounts] = await Promise.all([
         app.db
           .select({
             id: matterTypes.id,
@@ -533,12 +551,62 @@ export const mattersRoutes: FastifyPluginAsyncZod = async (app) => {
           .from(users)
           .where(isNull(users.archivedAt))
           .orderBy(asc(sql`lower(${users.displayName})`)),
+        app.db
+          .select()
+          .from(matterTemplates)
+          .where(isNull(matterTemplates.archivedAt))
+          .orderBy(asc(matterTemplates.matterTypeId), asc(matterTemplates.name)),
+        app.db
+          .select({ templateId: matterTemplateTasks.matterTemplateId, tally: count() })
+          .from(matterTemplateTasks)
+          .groupBy(matterTemplateTasks.matterTemplateId),
+        app.db
+          .select({ templateId: matterTemplateKeyDates.matterTemplateId, tally: count() })
+          .from(matterTemplateKeyDates)
+          .groupBy(matterTemplateKeyDates.matterTemplateId),
       ]);
       const attached = await Promise.all(
         types.map((type) => selectAttachedFields(app.db, matterTypeFields, type.id)),
       );
+      const taskCountByTemplate = new Map(
+        taskCounts.map((row) => [row.templateId, row.tally] as const),
+      );
+      const keyDateCountByTemplate = new Map(
+        keyDateCounts.map((row) => [row.templateId, row.tally] as const),
+      );
+      const templatesByType = new Map<string, typeof templates>();
+      for (const template of templates) {
+        const rows = templatesByType.get(template.matterTypeId) ?? [];
+        rows.push(template);
+        templatesByType.set(template.matterTypeId, rows);
+      }
       return {
-        matterTypes: types.map((type, index) => ({ ...type, fields: attached[index]! })),
+        matterTypes: types.map((type, index) => {
+          const visibleSlugs = new Set(
+            attached[index]!.filter(
+              (field) => request.user.role !== "contributor" || field.fieldTag === "business",
+            ).map((field) => field.slug),
+          );
+          return {
+            ...type,
+            fields: attached[index]!,
+            templates: (templatesByType.get(type.id) ?? []).map((template) => ({
+              id: template.id,
+              name: template.name,
+              description: template.description,
+              defaultPriority: template.defaultPriority,
+              defaultRisk: template.defaultRisk,
+              defaultCustomFields: Object.fromEntries(
+                Object.entries(template.defaultCustomFields ?? {}).filter(([slug]) =>
+                  visibleSlugs.has(slug),
+                ),
+              ),
+              titlePrefix: template.titlePrefix,
+              taskCount: taskCountByTemplate.get(template.id) ?? 0,
+              keyDateCount: keyDateCountByTemplate.get(template.id) ?? 0,
+            })),
+          };
+        }),
         matterStatuses: statuses,
         users: people.map((person) => ({
           id: person.id,
@@ -684,6 +752,7 @@ export const mattersRoutes: FastifyPluginAsyncZod = async (app) => {
           customFields: CustomFieldsInput.optional(),
           isConfidential: z.boolean().optional(),
           parentMatterNumber: z.coerce.number().int().positive().optional(),
+          templateId: z.string().optional(),
         }),
         response: { 201: MatterEnvelope, default: problemResponse },
       },

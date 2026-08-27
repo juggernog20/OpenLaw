@@ -917,7 +917,7 @@ const TAXONOMY = {
       "matter_type {matter type} entity_type {entity type} " +
       "request_type {request type} " +
       "contract_status {contract status} field {field} " +
-      "approver_group {approver group} other {type}} {name}",
+      "approver_group {approver group} matter_template {matter template} other {type}} {name}",
   }),
   renamed: defineMessage({
     id: "activity.taxonomy.renamed",
@@ -926,7 +926,7 @@ const TAXONOMY = {
       "matter_type {matter type} entity_type {entity type} " +
       "request_type {request type} " +
       "contract_status {contract status} field {field} " +
-      "approver_group {approver group} other {type}} {name}",
+      "approver_group {approver group} matter_template {matter template} other {type}} {name}",
   }),
   updated: defineMessage({
     id: "activity.taxonomy.updated",
@@ -935,7 +935,7 @@ const TAXONOMY = {
       "matter_type {matter type} entity_type {entity type} " +
       "request_type {request type} " +
       "contract_status {contract status} field {field} " +
-      "approver_group {approver group} other {type}} {name}",
+      "approver_group {approver group} matter_template {matter template} other {type}} {name}",
   }),
   reordered: defineMessage({
     id: "activity.taxonomy.reordered",
@@ -944,7 +944,7 @@ const TAXONOMY = {
       "matter_type {matter type} entity_type {entity type} " +
       "request_type {request type} " +
       "contract_status {contract status} field {field} " +
-      "approver_group {approver group} other {type}} list",
+      "approver_group {approver group} matter_template {matter template} other {type}} list",
   }),
   archived: defineMessage({
     id: "activity.taxonomy.archived",
@@ -953,7 +953,7 @@ const TAXONOMY = {
       "matter_type {matter type} entity_type {entity type} " +
       "request_type {request type} " +
       "contract_status {contract status} field {field} " +
-      "approver_group {approver group} other {type}} {name}",
+      "approver_group {approver group} matter_template {matter template} other {type}} {name}",
   }),
   restored: defineMessage({
     id: "activity.taxonomy.restored",
@@ -962,7 +962,7 @@ const TAXONOMY = {
       "matter_type {matter type} entity_type {entity type} " +
       "request_type {request type} " +
       "contract_status {contract status} field {field} " +
-      "approver_group {approver group} other {type}} {name}",
+      "approver_group {approver group} matter_template {matter template} other {type}} {name}",
   }),
   deleted: defineMessage({
     id: "activity.taxonomy.deleted",
@@ -971,7 +971,7 @@ const TAXONOMY = {
       "matter_type {matter type} entity_type {entity type} " +
       "request_type {request type} " +
       "contract_status {contract status} field {field} " +
-      "approver_group {approver group} other {type}} {name}",
+      "approver_group {approver group} matter_template {matter template} other {type}} {name}",
   }),
 } as const;
 
@@ -1265,8 +1265,17 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
     icon: FilePlus2,
     message: defineMessage({
       id: "activity.matter.created",
-      defaultMessage: "{actor} created this matter",
+      defaultMessage:
+        "{templatePresence, select, present {{actor} created this matter from the {template} template} " +
+        "other {{actor} created this matter}}",
     }),
+    values: (_intl, payload) => {
+      const template = text(payload, "template");
+      return {
+        templatePresence: template === null ? "absent" : "present",
+        template: template ?? "",
+      };
+    },
   },
   "matter.created_from_request": {
     icon: ArrowRightLeft,
@@ -2428,6 +2437,7 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
     "archived",
     "restored",
   ]),
+  ...taxonomyArms("matter_template", ListPlus, ["created", "updated", "archived", "restored"]),
   // Who is on a template is its own fact, not an edit of it — the rule
   // the contract team's entries follow (CTR-004).
   "approver_group.member_added": {

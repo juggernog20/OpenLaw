@@ -22,7 +22,7 @@ Queued 2026-08-07 from the matters.pen ↔ decision-record audit — mock drift 
 
 1. ~~**Key-date owner** — M5 mocks an Owner column per key date; **MTR-004** modeled key dates as `date + label + note`.~~ **Resolved by M23/3 (#491):** the Owner column is stripped. A Key date remains date + label + optional note, with no owner and no per-date schedule.
 2. ~~**Close dialog "Resolution" and closing note** — M10 mocks a Resolution select ("Completed") plus an optional closing note; **MTR-002**/**MTR-008** define closing as moving to a closed-category status, with no resolution concept.~~ **Resolved by M23/7 (#495):** the dialog asks only for one live closed-Category Status. Resolution and closing note are out; no field, payload, or control is created for either.
-3. **Template key dates** — M8 mocks "Template adds 4 tasks and 2 key dates"; **MTR-013** template content is pre-fill values + tasks only. Decide: do templates also carry relative key dates (offset-from-creation, like template tasks)?
+3. ~~**Template key dates** — M8 mocks "Template adds 4 tasks and 2 key dates"; **MTR-013** template content is pre-fill values + tasks only.~~ **Resolved by M24/4 (#514):** templates carry ordered relative Key dates with a required day offset, label, and optional note. Applying one resolves each date from the Matter creation date.
 4. **"My matters" / "matters I'm on" affordance** — **MTR-003** defines both views; M1 offers only a Manager filter chip and Saved views. Decide: first-class views, saved-view presets, or filter-chip-only.
 
 > The M18 Time tab surfaced in the same audit is deliberately not queued here per direction 2026-08-07.
@@ -659,6 +659,12 @@ New **`matter_templates`** entity, Admin-managed:
 - Matter creation UI gains an optional template picker (filtered by chosen type).
 - Intake triage (**DD-010**) can apply a template at handoff.
 - If a template's type detaches a custom field the template pre-fills, the template editor flags it (stale value warning).
+
+### Addendum (2026-08-26, M24/4, [#514](https://github.com/juggernog20/OpenLaw/issues/514)) — templates carry relative Key dates
+
+The M8 mock's “4 tasks and 2 key dates” promise is accepted. Alongside its ordered task checklist, a Matter template carries an ordered list of **relative Key dates**: a required label, a whole-number offset from 0 through 3,650 days after Matter creation, and an optional note. Applying the template resolves each row to a civil date from the Matter creation date and copies it into `matter_key_dates`; like every other template value, later edits never reach an existing Matter.
+
+Key-date templates carry no owner, reminder schedule, or named person. They preserve **MTR-004**'s ordinary Key-date shape and use the organization's live **NOT-004** reminder offsets after instantiation. The new `matter_template_key_dates` table sits beside `matter_template_tasks` in `SCHEMA.md`.
 
 ## MTR-014: Custom fields — hard-required per type, enforced at creation; conditional logic deferred
 

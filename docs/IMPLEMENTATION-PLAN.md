@@ -41,7 +41,7 @@ document is the map, not the territory.
 
 ## Where we are
 
-**Arc 4 is complete, and Arc 5 now has a complete Matter workspace: M23 shipped the work surfaces around the M22 record.** Key dates join the active deadline system; Tasks stay a lightweight internal checklist; parent, child, and flat relationships remain navigational; Contracts link without losing their standalone identity; reached Contributors can edit business Fields and supply supporting Documents; and Closing is an advisory signal that leaves the record writable. M24, Matter templates, is the next Matter milestone. Arc 1 is done: the monorepo and CI,
+**Arcs 4 and 5 are complete: M24 adds reusable Matter templates to the complete Matter workspace.** Named templates can pre-fill Matter defaults and custom fields, then create relative Tasks and Key dates through either the direct or Intake creation path. M23 supplied the work surfaces around the M22 record: Key dates join the active deadline system; Tasks stay a lightweight internal checklist; parent, child, and flat relationships remain navigational; Contracts link without losing their standalone identity; reached Contributors can edit business Fields and supply supporting Documents; and Closing is an advisory signal that leaves the record writable. Arc 1 is done: the monorepo and CI,
 the authentication chain, the Compose stack a deployer actually runs, the themed app shell, and the
 `/settings` destination with its Personal and Organization rails. Arc 2 is done too: the
 configurable types and statuses, the Entities registry, the contract record, the conversation on a
@@ -92,7 +92,8 @@ confidential reach, a managed list, an editable detail, and the same comments, h
 document machinery a Contract already wears. The Request door now converts into either record through
 one guarded transaction; its values, paper, thread, watermarks, and requester window all follow the Matter
 arm too. M23 completed the record as a work surface with Key dates, Tasks, relationships, linked
-Contracts, the Contributor grid, and Closing that leaves the record writable. Matter templates remain M24.
+Contracts, the Contributor grid, and Closing that leaves the record writable. M24 completed Arc 5 with
+named Matter templates, direct and Intake application, Matter defaults, and relative Tasks and Key dates.
 
 ---
 
@@ -548,12 +549,14 @@ than racing them — which is the whole reason it sits here and not next to Arc 
   - The close journey proves the complete sentence against fresh Compose images; the retained upgrade gate carries populated M22 Matter records, Fields, teams, Documents, Activity, and lifecycle timestamps through all four M23 migrations
   - _Decisions:_ MTR-004 to MTR-008, MTR-015, DD-014 to DD-017, DOC-008, DOC-012, CTR-018, NOT-001, NOT-002, NOT-004 · _Issues:_ #489–#496
 
-- [ ] **M24 — Matter templates**
+- [x] **M24 — Matter templates**
       _Demo:_ Create an employment matter from a template and find its checklist already populated with
       relative due dates.
   - Named template entities per type; pre-fill of priority, risk, custom fields, title prefix
-  - Template tasks with relative due dates and role targeting
-  - _Decisions:_ MTR-013
+  - Template Tasks with relative due dates and role targeting, plus relative Key dates
+  - Optional application at direct creation and Intake handoff, with carried Request values and triager choices taking precedence
+  - The close journey proves the demo sentence against fresh Compose images; the retained upgrade gate carries populated pre-M24 Matters, Tasks, and Key dates through all three M24 migrations
+  - _Decisions:_ MTR-013, MTR-014, DD-010, INT-002 · _Issues:_ #510–#518
 
 ---
 
