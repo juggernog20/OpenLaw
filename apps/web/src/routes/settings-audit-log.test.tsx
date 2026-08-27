@@ -27,7 +27,7 @@
  */
 
 import { describe, expect, it } from "vitest";
-import { screen, waitFor, within } from "@testing-library/react";
+import { act, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { json, problem, renderAt, stubApi, type StubCall } from "../testing/helpers";
 
@@ -329,6 +329,24 @@ describe("what the pane shows", () => {
 });
 
 describe("the filters", () => {
+  it("keeps / on the page-level search instead of the header box", async () => {
+    const user = userEvent.setup();
+    stubApi({ signedIn: ADMIN, extra: auditApi(newCalls()) });
+    const { router } = renderAt("/settings/audit-log");
+    await screen.findByText("Blair Wentworth created this contract");
+
+    await user.keyboard("/");
+
+    expect(filterBar().getByLabelText("Search")).toHaveFocus();
+    expect(screen.getByRole("combobox", { name: "Search" })).not.toHaveFocus();
+
+    await act(async () => router.navigate("/"));
+    await screen.findByRole("heading", { name: "Home" });
+    await user.keyboard("/");
+
+    expect(screen.getByRole("combobox", { name: "Search" })).toHaveFocus();
+  });
+
   it("narrows by each one, and composes them into a single read", async () => {
     const calls = newCalls();
     const user = userEvent.setup();

@@ -34,7 +34,7 @@ describe("keyboard contract (#45)", () => {
 
     await user.keyboard("/");
 
-    const search = screen.getByRole("searchbox", { name: "Search" });
+    const search = screen.getByRole("combobox", { name: "Search" });
     expect(search).toHaveFocus();
     expect(search).toHaveValue("");
   });
@@ -59,7 +59,7 @@ describe("keyboard contract (#45)", () => {
     const user = userEvent.setup();
     await renderShell();
 
-    const search = screen.getByRole("searchbox", { name: "Search" });
+    const search = screen.getByRole("combobox", { name: "Search" });
     await user.click(search);
     await user.keyboard("?/");
 

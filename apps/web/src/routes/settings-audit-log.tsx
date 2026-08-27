@@ -44,6 +44,7 @@ import { api } from "../lib/api";
 import { narrateActivity } from "../lib/activity";
 import { dayBounds, formatLongDateTime, formatRelativeOrShort } from "../lib/format";
 import { CONTROL_CLASS } from "../lib/form-controls";
+import { registerSearchTarget } from "../lib/keyboard";
 import { currentUser, needsSetup } from "../lib/session";
 import { cn } from "../lib/utils";
 import { PageTitle } from "../components/page-title";
@@ -429,6 +430,7 @@ export function SettingsAuditLogPage() {
             <Input
               id="auditSearch"
               type="search"
+              ref={(element) => (element ? registerSearchTarget(element) : undefined)}
               value={filters.q}
               onChange={(event) => narrow({ q: event.target.value })}
             />
