@@ -2378,7 +2378,10 @@ export function ContractRecordPage() {
             <section
               ref={documentsSection}
               tabIndex={-1}
-              aria-label="Document search landing"
+              aria-label={intl.formatMessage({
+                id: "contracts.record.documents.searchLanding",
+                defaultMessage: "Document search landing",
+              })}
               className="outline-none"
             >
               <DocumentsCard
