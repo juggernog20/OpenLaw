@@ -134,6 +134,9 @@ function contractRow(overrides: Record<string, unknown> = {}) {
 function recordApi(
   options: {
     paper?: readonly Record<string, unknown>[];
+    /** The whole record's paper, used only to resolve a Document landing
+     * target that may live inside a folder. */
+    landingPaper?: readonly Record<string, unknown>[];
     row?: Record<string, unknown>;
     /** What the create answers instead of a record, when the seam
      * refuses one. */
@@ -141,6 +144,7 @@ function recordApi(
   } = {},
 ) {
   const paper = options.paper ?? [PRIMARY];
+  const landingPaper = options.landingPaper ?? paper;
   const row = options.row ?? contractRow();
   const creates: unknown[] = [];
 
@@ -152,7 +156,10 @@ function recordApi(
       return json(200, { entities: [] });
     }
     if (call.url.pathname === "/api/v1/contracts/42/documents" && call.method === "GET") {
-      return json(200, { documents: paper, nextCursor: null });
+      return json(200, {
+        documents: call.url.searchParams.get("folder") === "root" ? paper : landingPaper,
+        nextCursor: null,
+      });
     }
     // Which document is the record's instrument is the record's own
     // answer, not a flag on the page of paper on screen (CTR-014), and
@@ -291,6 +298,36 @@ describe("the amendment vehicle (CTR-007 §2)", () => {
     await userEvent.click(screen.getByRole("link", { name: "Documents" }));
     await screen.findByRole("region", { name: "Documents" });
     expect(screen.queryByRole("heading", { name: "Add version" })).not.toBeInTheDocument();
+  });
+});
+
+describe("a Document search landing", () => {
+  it("opens the requested version from a folder on the Documents tab", async () => {
+    const filed = { ...PRIMARY, folderId: "folder-1" };
+    stubApi({
+      signedIn: MEMBER,
+      extra: recordApi({ paper: [], landingPaper: [filed] }).handler,
+    });
+
+    renderAt("/contracts/42/documents?doc=doc-1&version=ver-1");
+
+    expect(await screen.findByRole("heading", { name: "Documents" })).toBeInTheDocument();
+    expect(
+      await screen.findByRole("complementary", {
+        name: "Acme_MSA_2025.docx, version 1",
+      }),
+    ).toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "Close the document" }));
+    expect(screen.getByRole("region", { name: "Document search landing" })).toHaveFocus();
+  });
+
+  it("leaves the Documents tab open without a panel for a missing target", async () => {
+    stubApi({ signedIn: MEMBER, extra: recordApi({ paper: [], landingPaper: [] }).handler });
+
+    renderAt("/contracts/42/documents?doc=missing&version=missing");
+
+    expect(await screen.findByRole("heading", { name: "Documents" })).toBeInTheDocument();
+    expect(screen.queryByRole("complementary")).not.toBeInTheDocument();
   });
 });
 

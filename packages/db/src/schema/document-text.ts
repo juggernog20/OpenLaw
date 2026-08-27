@@ -91,6 +91,13 @@ export const documentVersionText = pgTable(
     /** NULL until the text is there — a pending or failed row has read
      * nothing, so it can name no source. */
     source: text("source", { enum: TEXT_SOURCES }),
+    /** An uploaded email's subject, stored by the same parse that writes
+     * its body. Search uses it as that Document hit's title without
+     * opening and parsing the stored message a second time (DOC-004).
+     * NULL means this is not email, extraction has not completed, or
+     * the parsed email carried no subject; all three fall back to the
+     * Document title. */
+    emailSubject: text("email_subject"),
     /** The words themselves. NULL for the same reason `source` is. An
      * empty string is a different fact and a legitimate one: a blank
      * scan was read successfully and had nothing on it. */
@@ -133,6 +140,10 @@ export const documentVersionText = pgTable(
     check(
       "document_version_text_ready_check",
       sql`(${table.state} = 'ready') = (${table.text} is not null and ${table.source} is not null)`,
+    ),
+    check(
+      "document_version_text_email_subject_check",
+      sql`${table.emailSubject} is null or ${table.source} = 'email_body'`,
     ),
     index("document_version_text_search_vector_idx").using("gin", table.searchVector),
   ],

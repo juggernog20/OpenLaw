@@ -1490,6 +1490,9 @@
   "contracts.record.documentTitle": {
     "defaultMessage": "{reference} {title}"
   },
+  "contracts.record.documents.searchLanding": {
+    "defaultMessage": "Document search landing"
+  },
   "contracts.record.envelope.declined": {
     "defaultMessage": "Envelope declined"
   },

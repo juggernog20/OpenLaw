@@ -40390,7 +40390,7 @@
     "/api/v1/search": {
       "get": {
         "operationId": "search",
-        "summary": "Ranked full-text search across Contracts, Matters, Entities, Counterparties, and Requests (M25). Omit limit, kind, and cursor for the header's grouped answer of ten per kind. Supplying any of them selects the flat results-page order, which defaults to 25 and pages by rank and id. Document is an accepted empty kind until M25/4",
+        "summary": "Ranked full-text search across Contracts, Matters, Documents, Entities, Counterparties, and Requests (M25). Omit limit, kind, and cursor for the header's grouped answer of ten per kind. Supplying any of them selects the flat results-page order, which defaults to 25 and pages by rank and id. Document hits identify the owning record and matched version",
         "tags": ["search"],
         "parameters": [
           {
@@ -40444,47 +40444,112 @@
                     "results": {
                       "type": "array",
                       "items": {
-                        "type": "object",
-                        "properties": {
-                          "kind": {
-                            "type": "string",
-                            "enum": [
-                              "contract",
-                              "matter",
-                              "document",
-                              "entity",
-                              "counterparty",
-                              "request"
-                            ]
+                        "oneOf": [
+                          {
+                            "type": "object",
+                            "properties": {
+                              "kind": {
+                                "type": "string",
+                                "enum": ["contract", "matter", "entity", "counterparty", "request"]
+                              },
+                              "id": {
+                                "type": "string"
+                              },
+                              "number": {
+                                "anyOf": [
+                                  {
+                                    "type": "integer",
+                                    "minimum": -9007199254740991,
+                                    "maximum": 9007199254740991
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "title": {
+                                "type": "string"
+                              },
+                              "isConfidential": {
+                                "type": "boolean"
+                              },
+                              "rank": {
+                                "type": "number",
+                                "minimum": 0
+                              }
+                            },
+                            "required": ["kind", "id", "number", "title", "isConfidential", "rank"],
+                            "additionalProperties": false
                           },
-                          "id": {
-                            "type": "string"
-                          },
-                          "number": {
-                            "anyOf": [
-                              {
+                          {
+                            "type": "object",
+                            "properties": {
+                              "kind": {
+                                "type": "string",
+                                "enum": ["document"]
+                              },
+                              "id": {
+                                "type": "string"
+                              },
+                              "number": {
+                                "anyOf": [
+                                  {
+                                    "type": "integer",
+                                    "minimum": -9007199254740991,
+                                    "maximum": 9007199254740991
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "title": {
+                                "type": "string"
+                              },
+                              "isConfidential": {
+                                "type": "boolean"
+                              },
+                              "rank": {
+                                "type": "number",
+                                "minimum": 0
+                              },
+                              "ownerKind": {
+                                "type": "string",
+                                "enum": ["contract", "matter"]
+                              },
+                              "ownerNumber": {
                                 "type": "integer",
-                                "minimum": -9007199254740991,
+                                "exclusiveMinimum": 0,
                                 "maximum": 9007199254740991
                               },
-                              {
-                                "type": "null"
+                              "versionId": {
+                                "type": "string"
+                              },
+                              "versionNumber": {
+                                "type": "integer",
+                                "exclusiveMinimum": 0,
+                                "maximum": 9007199254740991
+                              },
+                              "snippet": {
+                                "type": "string"
                               }
-                            ]
-                          },
-                          "title": {
-                            "type": "string"
-                          },
-                          "isConfidential": {
-                            "type": "boolean"
-                          },
-                          "rank": {
-                            "type": "number",
-                            "minimum": 0
+                            },
+                            "required": [
+                              "kind",
+                              "id",
+                              "number",
+                              "title",
+                              "isConfidential",
+                              "rank",
+                              "ownerKind",
+                              "ownerNumber",
+                              "versionId",
+                              "versionNumber",
+                              "snippet"
+                            ],
+                            "additionalProperties": false
                           }
-                        },
-                        "required": ["kind", "id", "number", "title", "isConfidential", "rank"],
-                        "additionalProperties": false
+                        ]
                       }
                     },
                     "nextCursor": {

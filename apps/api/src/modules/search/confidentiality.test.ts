@@ -7,6 +7,8 @@ import {
   contractStatuses,
   contractTeam,
   contractTypes,
+  documents,
+  documentVersions,
   eq,
   matters,
   matterStatuses,
@@ -54,6 +56,9 @@ const cookies = new Map<string, Record<string, string>>();
 let confidentialContractId = "";
 let confidentialMatterId = "";
 let publicContractId = "";
+let confidentialContractDocumentId = "";
+let confidentialMatterDocumentId = "";
+let confidentialDocumentId = "";
 
 beforeAll(async () => {
   harness = await startHarness();
@@ -118,9 +123,60 @@ beforeAll(async () => {
     .returning({ id: contracts.id });
   publicContractId = publicContract!.id;
 
+  const documentRows = await harness.db
+    .insert(documents)
+    .values([
+      {
+        contractId: confidentialContractId,
+        createdBy: adminId,
+        title: "Sealedsearch Contract Document",
+      },
+      {
+        matterId: confidentialMatterId,
+        createdBy: adminId,
+        title: "Sealedsearch Matter Document",
+      },
+      {
+        contractId: publicContractId,
+        createdBy: adminId,
+        title: "Sealedsearch Narrow Document",
+        isConfidential: true,
+      },
+    ])
+    .returning({
+      id: documents.id,
+      contractId: documents.contractId,
+      matterId: documents.matterId,
+    });
+  confidentialContractDocumentId = documentRows.find(
+    (row) => row.contractId === confidentialContractId,
+  )!.id;
+  confidentialMatterDocumentId = documentRows.find(
+    (row) => row.matterId === confidentialMatterId,
+  )!.id;
+  confidentialDocumentId = documentRows.find((row) => row.contractId === publicContractId)!.id;
+  await harness.db.insert(documentVersions).values(
+    documentRows.map((document, index) => ({
+      documentId: document.id,
+      versionNumber: 1,
+      fileRef: `local:search-confidentiality/${index}`,
+      kind: "draft_ours" as const,
+      originalFilename: `sealed-${index}.pdf`,
+      mimeType: "application/pdf",
+      byteSize: 1,
+      checksumSha256: String(index + 1).repeat(64),
+      createdBy: adminId,
+    })),
+  );
+
   for (const userId of [ids.get(PEOPLE.onTeam.email)!, ids.get("contributor")!]) {
     await harness.db.insert(contractTeam).values({
       contractId: confidentialContractId,
+      userId,
+      role: userId === ids.get("contributor") ? "contributor" : "member",
+    });
+    await harness.db.insert(contractTeam).values({
+      contractId: publicContractId,
       userId,
       role: userId === ids.get("contributor") ? "contributor" : "member",
     });
@@ -163,6 +219,9 @@ describe("the DD-014 gate in search", () => {
       const ids = (await search(viewer)).results.map((row) => row.id);
       expect(ids).toContain(confidentialContractId);
       expect(ids).toContain(confidentialMatterId);
+      expect(ids).toContain(confidentialContractDocumentId);
+      expect(ids).toContain(confidentialMatterDocumentId);
+      expect(ids).toContain(confidentialDocumentId);
     }
   });
 
@@ -171,6 +230,7 @@ describe("the DD-014 gate in search", () => {
     expect(answer.results).toEqual([expect.objectContaining({ id: publicContractId })]);
     expect(answer.nextCursor).toBeNull();
     expect((await search(PEOPLE.offTeam.email, "&kind=matter")).results).toEqual([]);
+    expect((await search(PEOPLE.offTeam.email, "&kind=document")).results).toEqual([]);
   });
 
   it("gives a Business User the empty answer through the scope predicates", async () => {

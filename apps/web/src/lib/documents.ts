@@ -570,6 +570,60 @@ export async function readRecordDocuments(
     : { ok: false, detail: problemDetail(error) };
 }
 
+/** A search landing that can seed the doc panel without teaching the
+ * record loader where folders put their Documents. */
+export interface DocumentLanding {
+  document: ContractDocument;
+  versionId: string;
+}
+
+/** The complete search landing address, only meaningful on a Documents tab. */
+export function documentLandingParams(
+  request: Request,
+  tab: string | undefined,
+): { documentId: string; versionId: string } | null {
+  if (tab !== "documents") return null;
+  const query = new URL(request.url).searchParams;
+  const documentId = query.get("doc")?.trim();
+  const versionId = query.get("version")?.trim();
+  return documentId && versionId ? { documentId, versionId } : null;
+}
+
+/**
+ * Resolves one Document and Version from the owning record's whole-paper
+ * listing. Search can point at an older Version and at a Document filed
+ * in any folder, so the root-only page loaded for the Documents tab is
+ * not enough. A missing, hidden, or unreachable target is deliberately
+ * the same quiet absence: the record page itself still opens.
+ */
+export async function readDocumentLanding(
+  record: DocumentRecord,
+  documentId: string,
+  versionId: string,
+): Promise<DocumentLanding | null> {
+  let cursor: string | undefined;
+  const seen = new Set<string>();
+
+  try {
+    for (let page = 0; page < 1000; page += 1) {
+      const result = await readRecordDocuments(record, false, cursor);
+      if (!result.ok) return null;
+      const document = result.documents.find((candidate) => candidate.id === documentId);
+      if (document) {
+        return document.versions.some((version) => version.id === versionId)
+          ? { document, versionId }
+          : null;
+      }
+      if (result.nextCursor === null || seen.has(result.nextCursor)) return null;
+      seen.add(result.nextCursor);
+      cursor = result.nextCursor;
+    }
+  } catch {
+    return null;
+  }
+  return null;
+}
+
 /**
  * Archives a document (DOC-010's soft delete), the answer to the wrong
  * upload.

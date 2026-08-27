@@ -10,22 +10,27 @@ import {
   contractStatuses,
   contractTypes,
   counterparties,
+  documents,
+  documentVersions,
+  documentVersionText,
   entities,
   entityTypes,
   eq,
+  isNotNull,
   isNull,
   matters,
   matterStatuses,
   matterTypes,
   requests,
   requestTypes,
+  or,
   sql,
   users,
   type Db,
   type SQL,
 } from "@openlaw/db";
 import { requireAuth, type AuthenticatedUser } from "../../auth/guards.js";
-import { contractTeamScope } from "../../lib/contract-access.js";
+import { contractTeamScope, documentAudienceScope } from "../../lib/contract-access.js";
 import { matterTeamScope } from "../../lib/matter-access.js";
 import { problemResponse } from "../../lib/problem.js";
 
@@ -51,8 +56,7 @@ const QuerySchema = z.object({
   limit: z.coerce.number().int().min(1).max(MAX_LIMIT).optional(),
 });
 
-const SearchRowSchema = z.object({
-  kind: z.enum(SEARCH_KINDS),
+const SearchRowFields = {
   id: z.string(),
   /** C-, M-, and R-number without its display prefix. Registry rows
    * have no number and answer NULL. */
@@ -60,7 +64,23 @@ const SearchRowSchema = z.object({
   title: z.string(),
   isConfidential: z.boolean(),
   rank: z.number().nonnegative(),
-});
+};
+
+const SearchRowSchema = z.discriminatedUnion("kind", [
+  z.object({
+    kind: z.enum(["contract", "matter", "entity", "counterparty", "request"]),
+    ...SearchRowFields,
+  }),
+  z.object({
+    kind: z.literal("document"),
+    ...SearchRowFields,
+    ownerKind: z.enum(["contract", "matter"]),
+    ownerNumber: z.number().int().positive(),
+    versionId: z.string(),
+    versionNumber: z.number().int().positive(),
+    snippet: z.string(),
+  }),
+]);
 
 interface SearchDbRow extends Record<string, unknown> {
   kind: SearchKind;
@@ -70,6 +90,11 @@ interface SearchDbRow extends Record<string, unknown> {
   is_confidential: boolean;
   rank: number;
   kind_order: number;
+  owner_kind: "contract" | "matter" | null;
+  owner_number: number | null;
+  version_id: string | null;
+  version_number: number | null;
+  snippet: string | null;
 }
 
 interface ExactNumber {
@@ -107,7 +132,7 @@ function memberScope(user: AuthenticatedUser): SQL {
     : sql`false`;
 }
 
-/** The five M25/3 arms. Documents join this union in M25/4. */
+/** M25's six search arms, with every audience predicate ahead of ranking. */
 function searchCtes(db: Db, user: AuthenticatedUser, query: string): SQL {
   const exact = exactNumber(query);
   const contractExact = exactPredicate(exact, "contract");
@@ -146,6 +171,9 @@ function searchCtes(db: Db, user: AuthenticatedUser, query: string): SQL {
     contract_hits as (
       select
         kind, id, number, title, is_confidential, kind_order,
+        null::text as owner_kind, null::integer as owner_number,
+        null::text as version_id, null::integer as version_number,
+        null::text as snippet,
         case when exact_number
           then ${EXACT_NUMBER_RANK}::real
           else ts_rank_cd(array[0.05, 0.1, 0.5, 1.0]::real[], document, search_query.value)
@@ -176,6 +204,9 @@ function searchCtes(db: Db, user: AuthenticatedUser, query: string): SQL {
     matter_hits as (
       select
         kind, id, number, title, is_confidential, kind_order,
+        null::text as owner_kind, null::integer as owner_number,
+        null::text as version_id, null::integer as version_number,
+        null::text as snippet,
         case when exact_number
           then ${EXACT_NUMBER_RANK}::real
           else ts_rank_cd(array[0.05, 0.1, 0.5, 1.0]::real[], document, search_query.value)
@@ -183,6 +214,85 @@ function searchCtes(db: Db, user: AuthenticatedUser, query: string): SQL {
       from matter_candidates
       cross join search_query
       where document @@ search_query.value or exact_number
+    ),
+    document_version_candidates as (
+      select
+        'document'::text as kind,
+        ${documents.id} as id,
+        null::integer as number,
+        coalesce(${documentVersionText.emailSubject}, ${documents.title}) as title,
+        ${documents.isConfidential} as is_confidential,
+        2::integer as kind_order,
+        case when ${documents.contractId} is not null then 'contract'::text else 'matter'::text end
+          as owner_kind,
+        coalesce(${contracts.number}, ${matters.number}) as owner_number,
+        ${documentVersions.id} as version_id,
+        ${documentVersions.versionNumber} as version_number,
+        ${documents.searchVector}
+          || setweight(to_tsvector('english', coalesce(${documentVersions.originalFilename}, '')), 'B')
+          || setweight(to_tsvector('english', regexp_replace(
+            coalesce(${documentVersions.originalFilename}, ''), '[^[:alnum:]]+', ' ', 'g'
+          )), 'B')
+          || setweight(to_tsvector('english', coalesce(${documentVersionText.emailSubject}, '')), 'A')
+          || coalesce(${documentVersionText.searchVector}, ''::tsvector) as document,
+        ${documents.title} as document_title,
+        ${documents.description} as document_description,
+        ${documentVersions.originalFilename} as original_filename,
+        ${documentVersionText.emailSubject} as email_subject,
+        ${documentVersionText.text} as extracted_text,
+        ${documentVersionText.searchVector} as extracted_vector
+      from ${documents}
+      inner join ${documentVersions} on ${documentVersions.documentId} = ${documents.id}
+      left join ${documentVersionText} on ${documentVersionText.versionId} = ${documentVersions.id}
+      left join ${contracts} on ${contracts.id} = ${documents.contractId}
+      left join ${matters} on ${matters.id} = ${documents.matterId}
+      where ${and(
+        isNull(documents.archivedAt),
+        documentAudienceScope(db, user),
+        or(
+          and(
+            isNotNull(documents.contractId),
+            isNull(contracts.archivedAt),
+            contractTeamScope(db, user),
+          ),
+          and(isNotNull(documents.matterId), isNull(matters.archivedAt), matterTeamScope(db, user)),
+        ),
+      )}
+    ),
+    document_version_hits as (
+      select
+        kind, id, number, title, is_confidential, kind_order,
+        owner_kind, owner_number, version_id, version_number,
+        ts_headline(
+          'english',
+          case
+            when coalesce(extracted_vector, ''::tsvector) @@ search_query.value
+              then coalesce(extracted_text, '')
+            when to_tsvector('english', coalesce(email_subject, '')) @@ search_query.value
+              then coalesce(email_subject, '')
+            when (
+              to_tsvector('english', coalesce(original_filename, ''))
+              || to_tsvector('english', regexp_replace(
+                coalesce(original_filename, ''), '[^[:alnum:]]+', ' ', 'g'
+              ))
+            ) @@ search_query.value
+              then original_filename
+            else concat_ws(' ', document_title, document_description)
+          end,
+          search_query.value,
+          'StartSel=<mark>, StopSel=</mark>, MaxWords=24, MinWords=8, ShortWord=2'
+        ) as snippet,
+        ts_rank_cd(array[0.05, 0.1, 0.5, 1.0]::real[], document, search_query.value) as rank
+      from document_version_candidates
+      cross join search_query
+      where document @@ search_query.value
+    ),
+    document_hits as (
+      select distinct on (id)
+        kind, id, number, title, is_confidential, kind_order,
+        owner_kind, owner_number, version_id, version_number, snippet, rank
+      from document_version_hits
+      order by id, version_number desc
     ),
     entity_candidates as (
       select
@@ -201,6 +311,9 @@ function searchCtes(db: Db, user: AuthenticatedUser, query: string): SQL {
     entity_hits as (
       select
         kind, id, number, title, is_confidential, kind_order,
+        null::text as owner_kind, null::integer as owner_number,
+        null::text as version_id, null::integer as version_number,
+        null::text as snippet,
         ts_rank_cd(array[0.05, 0.1, 0.5, 1.0]::real[], document, search_query.value) as rank
       from entity_candidates
       cross join search_query
@@ -221,6 +334,9 @@ function searchCtes(db: Db, user: AuthenticatedUser, query: string): SQL {
     counterparty_hits as (
       select
         kind, id, number, title, is_confidential, kind_order,
+        null::text as owner_kind, null::integer as owner_number,
+        null::text as version_id, null::integer as version_number,
+        null::text as snippet,
         ts_rank_cd(array[0.05, 0.1, 0.5, 1.0]::real[], document, search_query.value) as rank
       from counterparty_candidates
       cross join search_query
@@ -246,6 +362,9 @@ function searchCtes(db: Db, user: AuthenticatedUser, query: string): SQL {
     request_hits as (
       select
         kind, id, number, title, is_confidential, kind_order,
+        null::text as owner_kind, null::integer as owner_number,
+        null::text as version_id, null::integer as version_number,
+        null::text as snippet,
         case when exact_number
           then ${EXACT_NUMBER_RANK}::real
           else ts_rank_cd(array[0.05, 0.1, 0.5, 1.0]::real[], document, search_query.value)
@@ -257,6 +376,7 @@ function searchCtes(db: Db, user: AuthenticatedUser, query: string): SQL {
     all_hits as (
       select * from contract_hits
       union all select * from matter_hits
+      union all select * from document_hits
       union all select * from entity_hits
       union all select * from counterparty_hits
       union all select * from request_hits
@@ -264,14 +384,32 @@ function searchCtes(db: Db, user: AuthenticatedUser, query: string): SQL {
   `;
 }
 
-function toSearchRow(row: SearchDbRow) {
-  return {
-    kind: row.kind,
+function toSearchRow(row: SearchDbRow): z.infer<typeof SearchRowSchema> {
+  const common = {
     id: row.id,
     number: row.number,
     title: row.title,
     isConfidential: row.is_confidential,
     rank: row.rank,
+  };
+  if (row.kind !== "document") return { ...common, kind: row.kind };
+  if (
+    row.owner_kind === null ||
+    row.owner_number === null ||
+    row.version_id === null ||
+    row.version_number === null ||
+    row.snippet === null
+  ) {
+    throw new Error("Document search hit is missing its owning record or matched version");
+  }
+  return {
+    ...common,
+    kind: "document" as const,
+    ownerKind: row.owner_kind,
+    ownerNumber: row.owner_number,
+    versionId: row.version_id,
+    versionNumber: row.version_number,
+    snippet: row.snippet,
   };
 }
 
@@ -284,7 +422,8 @@ async function groupedSearch(db: Db, ctes: SQL): Promise<SearchDbRow[]> {
       ) as kind_position
       from all_hits
     )
-    select kind, id, number, title, is_confidential, rank, kind_order
+    select kind, id, number, title, is_confidential, rank, kind_order,
+      owner_kind, owner_number, version_id, version_number, snippet
     from ranked_hits
     where kind_position <= ${GROUPED_LIMIT}
     order by kind_order, rank desc, id desc
@@ -320,7 +459,8 @@ async function flatSearch(
         and id = ${options.cursor ?? ""}
       limit 1
     )
-    select kind, id, number, title, is_confidential, rank, kind_order
+    select kind, id, number, title, is_confidential, rank, kind_order,
+      owner_kind, owner_number, version_id, version_number, snippet
     from all_hits
     where ${kindScope} and ${cursorScope}
     order by rank desc, id desc
@@ -337,11 +477,11 @@ export const searchRoutes: FastifyPluginAsyncZod = async (app) => {
       schema: {
         operationId: "search",
         summary:
-          "Ranked full-text search across Contracts, Matters, Entities, " +
+          "Ranked full-text search across Contracts, Matters, Documents, Entities, " +
           "Counterparties, and Requests (M25). Omit limit, kind, and cursor " +
           "for the header's grouped answer of ten per kind. Supplying any " +
           "of them selects the flat results-page order, which defaults to 25 " +
-          "and pages by rank and id. Document is an accepted empty kind until M25/4",
+          "and pages by rank and id. Document hits identify the owning record and matched version",
         tags: ["search"],
         querystring: QuerySchema,
         response: {
