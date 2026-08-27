@@ -228,6 +228,13 @@ export function SettingsAuditLogPage() {
   const [cursor, setCursor] = useState<string | null>(null);
   const [loadFailed, setLoadFailed] = useState(false);
   const [busy, setBusy] = useState(false);
+  // Stable across renders so the `/` dispatch keeps mount order: an
+  // inline callback would unregister and re-register on every render
+  // (React 19 reruns a changed ref callback).
+  const searchTargetRef = useCallback(
+    (element: HTMLInputElement | null) => (element ? registerSearchTarget(element) : undefined),
+    [],
+  );
 
   useEffect(() => {
     const timer = setTimeout(() => setTerm(filters.q), SEARCH_DEBOUNCE_MS);
@@ -430,7 +437,7 @@ export function SettingsAuditLogPage() {
             <Input
               id="auditSearch"
               type="search"
-              ref={(element) => (element ? registerSearchTarget(element) : undefined)}
+              ref={searchTargetRef}
               value={filters.q}
               onChange={(event) => narrow({ q: event.target.value })}
             />

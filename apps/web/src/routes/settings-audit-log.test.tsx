@@ -340,6 +340,17 @@ describe("the filters", () => {
     expect(filterBar().getByLabelText("Search")).toHaveFocus();
     expect(screen.getByRole("combobox", { name: "Search" })).not.toHaveFocus();
 
+    // Re-rendering the header box (typing re-renders it) must not move
+    // it past the page-level input in the `/` dispatch order — DES-010
+    // keys precedence to mount order, not last render.
+    await user.type(screen.getByRole("combobox", { name: "Search" }), "te");
+    await user.keyboard("{Escape}");
+    await act(async () => {
+      (document.activeElement as HTMLElement | null)?.blur();
+    });
+    await user.keyboard("/");
+    expect(filterBar().getByLabelText("Search")).toHaveFocus();
+
     await act(async () => router.navigate("/"));
     await screen.findByRole("heading", { name: "Home" });
     await user.keyboard("/");

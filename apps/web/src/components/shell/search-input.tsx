@@ -6,7 +6,7 @@
  * Escape.
  */
 
-import { useEffect, useId, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
 import { ArrowRight, LoaderCircle, SearchX, TriangleAlert } from "lucide-react";
 import { defineMessages, FormattedMessage, useIntl } from "react-intl";
 import { useLocation, useNavigate } from "react-router";
@@ -66,6 +66,14 @@ export function SearchInput() {
   const [activeIndex, setActiveIndex] = useState(0);
   const popoverId = useId();
   const listRef = useRef<HTMLDivElement>(null);
+  // Stable across renders: an inline callback would re-run every render
+  // (React 19 reruns a changed ref callback), pushing this input past a
+  // page-level one in the `/` dispatch order. DES-010 keys precedence
+  // to mount order.
+  const searchTargetRef = useCallback(
+    (element: HTMLInputElement | null) => (element ? registerSearchTarget(element) : undefined),
+    [],
+  );
   const trimmed = query.trim();
   const listOpen = open && trimmed.length >= MIN_QUERY_LENGTH;
 
@@ -117,7 +125,7 @@ export function SearchInput() {
       <input
         type="search"
         role="combobox"
-        ref={(element) => (element ? registerSearchTarget(element) : undefined)}
+        ref={searchTargetRef}
         aria-label={intl.formatMessage(MESSAGES.label)}
         aria-expanded={listOpen}
         aria-controls={popoverId}
