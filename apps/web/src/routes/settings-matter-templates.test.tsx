@@ -222,7 +222,14 @@ interface Calls {
   restores: string[];
 }
 
-function templateApi(calls: Calls) {
+interface TemplateApiOptions {
+  createConflict?: boolean;
+  failCustomFields?: boolean;
+  failRename?: boolean;
+  failRestore?: boolean;
+}
+
+function templateApi(calls: Calls, options: TemplateApiOptions = {}) {
   return (call: StubCall): Response | undefined => {
     const path = call.url.pathname;
     if (path === "/api/v1/matter-types" && call.method === "GET") {
@@ -230,6 +237,18 @@ function templateApi(calls: Calls) {
     }
     if (path === "/api/v1/matter-templates" && call.method === "GET") {
       return json(200, { matterTemplates: TEMPLATES });
+    }
+    const read = /^\/api\/v1\/matter-templates\/([^/]+)$/.exec(path);
+    if (read && call.method === "GET") {
+      const matterTemplate = TEMPLATES.find((template) => template.id === read[1]);
+      return matterTemplate
+        ? json(200, { matterTemplate })
+        : json(404, {
+            type: "about:blank",
+            title: "Not Found",
+            status: 404,
+            detail: "No Matter template exists with this id.",
+          });
     }
     if (path === "/api/v1/matter-types/mt-employment/fields" && call.method === "GET") {
       return json(200, { attachedFields: ATTACHED_FIELDS });
@@ -245,6 +264,14 @@ function templateApi(calls: Calls) {
     }
     if (path === "/api/v1/matter-templates" && call.method === "POST") {
       calls.creates.push(call.body);
+      if (options.createConflict) {
+        return json(409, {
+          type: "about:blank",
+          title: "Conflict",
+          status: 409,
+          detail: "A template of this Matter type is already called that.",
+        });
+      }
       const body = call.body as { matterTypeId: string; name: string; description?: string };
       return json(201, {
         matterTemplate: {
@@ -270,6 +297,9 @@ function templateApi(calls: Calls) {
     const update = /^\/api\/v1\/matter-templates\/([^/]+)$/.exec(path);
     if (update && call.method === "PATCH") {
       calls.updates.push({ id: update[1]!, body: call.body });
+      if (options.failRename) {
+        return json(500, {});
+      }
       const original = TEMPLATES.find((template) => template.id === update[1])!;
       return json(200, { matterTemplate: { ...original, ...(call.body as object) } });
     }
@@ -299,6 +329,9 @@ function templateApi(calls: Calls) {
     const customFields = /^\/api\/v1\/matter-templates\/([^/]+)\/custom-fields$/.exec(path);
     if (customFields && call.method === "PUT") {
       calls.customFieldReplacements.push({ id: customFields[1]!, body: call.body });
+      if (options.failCustomFields) {
+        return json(500, {});
+      }
       const original = TEMPLATES.find((template) => template.id === customFields[1])!;
       const body = call.body as { defaultCustomFields: Record<string, unknown> };
       return json(200, {
@@ -369,6 +402,9 @@ function templateApi(calls: Calls) {
     const restore = /^\/api\/v1\/matter-templates\/([^/]+)\/restore$/.exec(path);
     if (restore && call.method === "POST") {
       calls.restores.push(restore[1]!);
+      if (options.failRestore) {
+        return json(500, {});
+      }
       const original = TEMPLATES.find((template) => template.id === restore[1])!;
       const latestName = calls.updates
         .filter((entry) => entry.id === restore[1])
@@ -473,6 +509,58 @@ describe("the per-type template catalog", () => {
     await user.click(screen.getByRole("button", { name: "Restore Employment investigation" }));
     await waitFor(() => expect(calls.restores).toEqual(["tpl-employment"]));
     expect(screen.getByText("Employment investigation")).toBeInTheDocument();
+  });
+
+  it("keeps the create dialog open when a template name conflicts", async () => {
+    const calls = newCalls();
+    stubApi({ signedIn: ADMIN, extra: templateApi(calls, { createConflict: true }) });
+    renderAt("/settings/matters/templates");
+    const user = userEvent.setup();
+
+    await user.click(await screen.findByRole("button", { name: "Add template" }));
+    const create = screen.getByRole("dialog", { name: "Add Matter template" });
+    await user.type(
+      within(create).getByRole("textbox", { name: "Name" }),
+      "Standard employment dispute",
+    );
+    await user.click(within(create).getByRole("button", { name: "Add template" }));
+
+    expect(await within(create).findByRole("alert")).toHaveTextContent(
+      "A template of this Matter type is already called that.",
+    );
+    expect(create).toBeInTheDocument();
+  });
+
+  it("shows a fallback error when a rename request has no problem detail", async () => {
+    const calls = newCalls();
+    stubApi({ signedIn: ADMIN, extra: templateApi(calls, { failRename: true }) });
+    renderAt("/settings/matters/templates");
+    const user = userEvent.setup();
+
+    await user.click(
+      await screen.findByRole("button", { name: "Rename Standard employment dispute" }),
+    );
+    const rename = screen.getByRole("textbox", { name: "Rename Standard employment dispute" });
+    await user.clear(rename);
+    await user.type(rename, "Employment investigation{Enter}");
+
+    expect(
+      await screen.findByText("The Matter template could not be renamed."),
+    ).toBeInTheDocument();
+  });
+
+  it("shows a fallback error when a restore request has no problem detail", async () => {
+    const calls = newCalls();
+    stubApi({ signedIn: ADMIN, extra: templateApi(calls, { failRestore: true }) });
+    renderAt("/settings/matters/templates");
+    const user = userEvent.setup();
+
+    await user.click(await screen.findByRole("switch", { name: "Show archived" }));
+    await user.click(screen.getByRole("button", { name: "Restore Old employment playbook" }));
+
+    expect(
+      await screen.findByText("The Matter template could not be restored."),
+    ).toBeInTheDocument();
   });
 });
 
@@ -642,6 +730,26 @@ describe("the core template editor", () => {
     ).toBeInTheDocument();
     expect(calls.updates).toEqual([]);
     expect(calls.customFieldReplacements).toEqual([]);
+    expect(calls.taskReplacements).toEqual([]);
+    expect(calls.keyDateReplacements).toEqual([]);
+  });
+
+  it("warns when a later replacement fails after template defaults were saved", async () => {
+    const calls = newCalls();
+    stubApi({ signedIn: ADMIN, extra: templateApi(calls, { failCustomFields: true }) });
+    renderAt("/settings/matters/templates/tpl-employment");
+    const user = userEvent.setup();
+
+    await screen.findByRole("textbox", { name: "Name" });
+    await user.click(screen.getByRole("button", { name: "Save template" }));
+
+    await waitFor(() => expect(calls.updates).toHaveLength(1));
+    expect(calls.customFieldReplacements).toHaveLength(1);
+    expect(
+      await screen.findByText(
+        "The custom-field defaults could not be saved. Earlier changes may already be saved.",
+      ),
+    ).toBeInTheDocument();
     expect(calls.taskReplacements).toEqual([]);
     expect(calls.keyDateReplacements).toEqual([]);
   });

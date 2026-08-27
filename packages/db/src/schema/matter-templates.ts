@@ -45,6 +45,14 @@ export const matterTemplates = pgTable(
   },
   (table) => [
     index("matter_templates_type_idx").on(table.matterTypeId, table.name),
+    check(
+      "matter_templates_default_priority_check",
+      sql`${table.defaultPriority} is null or ${table.defaultPriority} in ('low', 'medium', 'high', 'critical')`,
+    ),
+    check(
+      "matter_templates_default_risk_check",
+      sql`${table.defaultRisk} is null or ${table.defaultRisk} in ('low', 'medium', 'high', 'critical')`,
+    ),
     /**
      * The name is the only identity the creation picker shows inside one
      * type, so two live templates of a type may not share one. Partial on
@@ -86,6 +94,10 @@ export const matterTemplateTasks = pgTable(
     check(
       "matter_template_tasks_due_offset_check",
       sql`${table.dueOffsetDays} is null or ${table.dueOffsetDays} between 0 and 3650`,
+    ),
+    check(
+      "matter_template_tasks_assignee_role_check",
+      sql`${table.assigneeRole} in ('matter_manager', 'none')`,
     ),
     check("matter_template_tasks_order_check", sql`${table.displayOrder} >= 1`),
   ],

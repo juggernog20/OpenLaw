@@ -39,18 +39,19 @@ export async function settingsMatterTemplateEditorLoader({ params }: LoaderFunct
   const user = await currentUser();
   if (!user) return redirect((await needsSetup()) ? "/auth/setup" : "/auth/login");
   if (user.role !== "administrator") return redirect("/settings/profile");
-  const [templates, types] = await Promise.all([
-    api.GET("/api/v1/matter-templates", {
-      params: { query: { includeArchived: "true" } },
+  const [templateResult, types] = await Promise.all([
+    api.GET("/api/v1/matter-templates/{id}", {
+      params: { path: { id: params.templateId ?? "" } },
     }),
     api.GET("/api/v1/matter-types", { params: { query: { includeArchived: "true" } } }),
   ]);
-  if (!templates.data || !types.data) throw new Error("The Matter template could not be read.");
-  const matterTemplate = templates.data.matterTemplates.find(
-    (template) => template.id === params.templateId,
-  );
-  if (!matterTemplate)
+  if (templateResult.response.status === 404) {
     throw new Response("No Matter template exists with this id.", { status: 404 });
+  }
+  if (!templateResult.data || !types.data) {
+    throw new Error("The Matter template could not be read.");
+  }
+  const matterTemplate = templateResult.data.matterTemplate;
   const [attachments, catalog, users, entities] = await Promise.all([
     api.GET("/api/v1/matter-types/{id}/fields", {
       params: { path: { id: matterTemplate.matterTypeId } },
@@ -269,7 +270,8 @@ export function SettingsMatterTemplateEditorPage() {
         problemDetail(fieldResult.error) ??
           intl.formatMessage({
             id: "settings.matterTemplateEditor.fieldsSaveError",
-            defaultMessage: "The custom-field defaults could not be saved.",
+            defaultMessage:
+              "The custom-field defaults could not be saved. Earlier changes may already be saved.",
           }),
       );
       return;
@@ -294,7 +296,8 @@ export function SettingsMatterTemplateEditorPage() {
         problemDetail(taskResult.error) ??
           intl.formatMessage({
             id: "settings.matterTemplateEditor.tasksSaveError",
-            defaultMessage: "The template tasks could not be saved.",
+            defaultMessage:
+              "The template Tasks could not be saved. Earlier changes may already be saved.",
           }),
       );
       return;
@@ -319,7 +322,8 @@ export function SettingsMatterTemplateEditorPage() {
         problemDetail(keyDateResult.error) ??
           intl.formatMessage({
             id: "settings.matterTemplateEditor.keyDatesSaveError",
-            defaultMessage: "The template key dates could not be saved.",
+            defaultMessage:
+              "The template Key dates could not be saved. Earlier changes may already be saved.",
           }),
       );
       return;

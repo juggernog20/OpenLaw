@@ -9,6 +9,8 @@ import {
   eq,
   fields,
   inArray,
+  matterTemplates,
+  matterTemplateTasks,
   matterTypeFields,
   matterTypes,
   users,
@@ -90,6 +92,11 @@ describe("the SET-002 gate", () => {
       harness.app.inject({
         method: "GET",
         url: "/api/v1/matter-templates",
+        cookies: memberCookies,
+      }),
+      harness.app.inject({
+        method: "GET",
+        url: `/api/v1/matter-templates/${template.id}`,
         cookies: memberCookies,
       }),
       harness.app.inject({
@@ -274,6 +281,28 @@ describe("Matter template lifecycle", () => {
       customFieldCount: 0,
     });
 
+    const read = await harness.app.inject({
+      method: "GET",
+      url: `/api/v1/matter-templates/${created.id}`,
+      cookies: adminCookies,
+    });
+    expect(read.statusCode, read.body).toBe(200);
+    expect(read.json().matterTemplate).toMatchObject({
+      id: created.id,
+      matterTypeId: employmentTypeId,
+      name: "Employment – Termination",
+      tasks: [],
+      keyDates: [],
+    });
+
+    const missing = await harness.app.inject({
+      method: "GET",
+      url: "/api/v1/matter-templates/missing-template",
+      cookies: adminCookies,
+    });
+    expect(missing.statusCode, missing.body).toBe(404);
+    expect(missing.headers["content-type"]).toContain("application/problem+json");
+
     await createTemplate({ matterTypeId: litigationTypeId, name: "Litigation standard" });
     const filtered = await harness.app.inject({
       method: "GET",
@@ -416,6 +445,36 @@ describe("Matter template lifecycle", () => {
       payload: { matterTypeId: litigationTypeId, name: "No" },
     });
     expect(archivedType.statusCode).toBe(409);
+  });
+
+  it("enforces severity and assignee roles at the database boundary", async () => {
+    await expect(
+      harness.db.insert(matterTemplates).values({
+        matterTypeId: employmentTypeId,
+        name: "Invalid priority probe",
+        defaultPriority: "urgent" as "low",
+      }),
+    ).rejects.toThrow();
+    await expect(
+      harness.db.insert(matterTemplates).values({
+        matterTypeId: employmentTypeId,
+        name: "Invalid risk probe",
+        defaultRisk: "urgent" as "low",
+      }),
+    ).rejects.toThrow();
+
+    const template = await createTemplate({
+      matterTypeId: employmentTypeId,
+      name: "Invalid assignee probe",
+    });
+    await expect(
+      harness.db.insert(matterTemplateTasks).values({
+        matterTemplateId: template.id,
+        title: "Impossible assignee",
+        assigneeRole: "owner" as "none",
+        displayOrder: 1,
+      }),
+    ).rejects.toThrow();
   });
 });
 

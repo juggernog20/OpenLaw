@@ -792,6 +792,12 @@ describe("the cross-reference fallbacks between an ask and its record", () => {
     expect(narrate("matter.created", SAMPLE_PAYLOADS["matter.created"]).sentence).toBe(
       "Nadia Counsel created this matter",
     );
+    expect(
+      narrate("matter.created", {
+        ...SAMPLE_PAYLOADS["matter.created"],
+        template: "none",
+      }).sentence,
+    ).toBe("Nadia Counsel created this matter from the none template");
   });
 
   it("names a request when the record's own entry carries no number", () => {

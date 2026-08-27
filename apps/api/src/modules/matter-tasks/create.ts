@@ -1,5 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
+/**
+ * Transaction-scoped Matter Task insertion shared by the route and
+ * Matter-template creation. It centralizes MTR-005 assignment and
+ * ordering rules so both write doors create the same checklist rows.
+ */
+
 import {
   and,
   eq,

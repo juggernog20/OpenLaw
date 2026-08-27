@@ -191,7 +191,7 @@ test.describe.serial("M24 deployer journey", () => {
       ]);
 
       await page.goto(`/matters/${matter.number}/tasks`);
-      const main = page.locator("main");
+      const main = page.getByRole("main");
       await expect(main.getByText(FIRST_TASK)).toBeVisible();
       await expect(main.getByText(`Due ${shortDate(expectedTaskDate)}`)).toBeVisible();
       await expect(main.getByText(SECOND_TASK)).toBeVisible();

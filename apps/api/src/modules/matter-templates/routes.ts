@@ -299,6 +299,32 @@ export const matterTemplatesRoutes: FastifyPluginAsyncZod = async (app) => {
     },
   );
 
+  app.get(
+    "/matter-templates/:id",
+    {
+      preHandler: requireRole("administrator"),
+      schema: {
+        operationId: "getMatterTemplate",
+        summary: "Read one Matter template and its ordered content by id",
+        tags: ["matter-templates"],
+        params: z.object({ id: z.string() }),
+        response: { 200: MatterTemplateEnvelope, default: problemResponse },
+      },
+    },
+    async (request) => {
+      const [result] = await app.db
+        .select({ template: matterTemplates, matterTypeName: matterTypes.displayName })
+        .from(matterTemplates)
+        .innerJoin(matterTypes, eq(matterTypes.id, matterTemplates.matterTypeId))
+        .where(eq(matterTemplates.id, request.params.id))
+        .limit(1);
+      if (!result) throw httpError(404, "No Matter template exists with this id.");
+      return {
+        matterTemplate: await rowWithContent(result.template, result.matterTypeName),
+      };
+    },
+  );
+
   app.post(
     "/matter-templates",
     {

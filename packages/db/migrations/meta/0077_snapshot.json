@@ -5099,7 +5099,16 @@
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "policies": {},
-      "checkConstraints": {},
+      "checkConstraints": {
+        "matter_templates_default_priority_check": {
+          "name": "matter_templates_default_priority_check",
+          "value": "\"matter_templates\".\"default_priority\" is null or \"matter_templates\".\"default_priority\" in ('low', 'medium', 'high', 'critical')"
+        },
+        "matter_templates_default_risk_check": {
+          "name": "matter_templates_default_risk_check",
+          "value": "\"matter_templates\".\"default_risk\" is null or \"matter_templates\".\"default_risk\" in ('low', 'medium', 'high', 'critical')"
+        }
+      },
       "isRLSEnabled": false
     },
     "public.matter_type_fields": {

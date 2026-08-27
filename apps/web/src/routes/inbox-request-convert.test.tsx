@@ -535,6 +535,10 @@ describe("the target is confirmed, never classified (DD-018)", () => {
     expect(forum).toHaveValue("Template forum");
     await user.clear(forum);
     await user.type(forum, "DIFC Courts");
+    await user.selectOptions(template, "");
+    expect(forum).toHaveValue("DIFC Courts");
+    await user.selectOptions(template, "tpl-employment");
+    expect(forum).toHaveValue("DIFC Courts");
     await user.click(within(dialog).getByRole("button", { name: "Convert to matter" }));
     await waitFor(() => expect(api.conversions).toHaveLength(1));
     expect(api.conversions[0]).toEqual({

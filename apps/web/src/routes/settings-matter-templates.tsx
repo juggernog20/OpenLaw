@@ -274,7 +274,15 @@ export function SettingsMatterTemplatesPage() {
       setRowStatus((current) => ({ ...current, [row.id]: "saved" }));
     } else {
       setRowStatus((current) => ({ ...current, [row.id]: "error" }));
-      setRowError((current) => ({ ...current, [row.id]: problemDetail(error) }));
+      setRowError((current) => ({
+        ...current,
+        [row.id]:
+          problemDetail(error) ??
+          intl.formatMessage({
+            id: "settings.matterTemplates.renameError",
+            defaultMessage: "The Matter template could not be renamed.",
+          }),
+      }));
     }
   }
 
@@ -290,7 +298,15 @@ export function SettingsMatterTemplatesPage() {
       setRowStatus((current) => ({ ...current, [row.id]: "saved" }));
     } else {
       setRowStatus((current) => ({ ...current, [row.id]: "error" }));
-      setRowError((current) => ({ ...current, [row.id]: problemDetail(error) }));
+      setRowError((current) => ({
+        ...current,
+        [row.id]:
+          problemDetail(error) ??
+          intl.formatMessage({
+            id: "settings.matterTemplates.restoreError",
+            defaultMessage: "The Matter template could not be restored.",
+          }),
+      }));
     }
   }
 

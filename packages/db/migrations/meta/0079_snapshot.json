@@ -5175,6 +5175,10 @@
           "name": "matter_template_tasks_due_offset_check",
           "value": "\"matter_template_tasks\".\"due_offset_days\" is null or \"matter_template_tasks\".\"due_offset_days\" between 0 and 3650"
         },
+        "matter_template_tasks_assignee_role_check": {
+          "name": "matter_template_tasks_assignee_role_check",
+          "value": "\"matter_template_tasks\".\"assignee_role\" in ('matter_manager', 'none')"
+        },
         "matter_template_tasks_order_check": {
           "name": "matter_template_tasks_order_check",
           "value": "\"matter_template_tasks\".\"display_order\" >= 1"
@@ -5314,7 +5318,16 @@
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "policies": {},
-      "checkConstraints": {},
+      "checkConstraints": {
+        "matter_templates_default_priority_check": {
+          "name": "matter_templates_default_priority_check",
+          "value": "\"matter_templates\".\"default_priority\" is null or \"matter_templates\".\"default_priority\" in ('low', 'medium', 'high', 'critical')"
+        },
+        "matter_templates_default_risk_check": {
+          "name": "matter_templates_default_risk_check",
+          "value": "\"matter_templates\".\"default_risk\" is null or \"matter_templates\".\"default_risk\" in ('low', 'medium', 'high', 'critical')"
+        }
+      },
       "isRLSEnabled": false
     },
     "public.matter_type_fields": {

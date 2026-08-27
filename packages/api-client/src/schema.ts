@@ -1215,7 +1215,8 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    get?: never;
+    /** Read one Matter template and its ordered content by id */
+    get: operations["getMatterTemplate"];
     put?: never;
     post?: never;
     delete?: never;
@@ -8415,6 +8416,71 @@ export interface operations {
     responses: {
       /** @description Default Response */
       201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            matterTemplate: {
+              id: string;
+              matterTypeId: string;
+              matterTypeName: string;
+              name: string;
+              description: string | null;
+              defaultPriority: ("low" | "medium" | "high" | "critical") | null;
+              defaultRisk: ("low" | "medium" | "high" | "critical") | null;
+              titlePrefix: string | null;
+              archivedAt: string | null;
+              tasks: {
+                id: string;
+                title: string;
+                dueOffsetDays: number | null;
+                /** @enum {string} */
+                assigneeRole: "matter_manager" | "none";
+                displayOrder: number;
+              }[];
+              keyDates: {
+                id: string;
+                label: string;
+                offsetDays: number;
+                note: string | null;
+                displayOrder: number;
+              }[];
+              taskCount: number;
+              keyDateCount: number;
+              customFieldCount: number;
+              defaultCustomFields: {
+                [key: string]: string | number | boolean | string[];
+              };
+              staleCustomFieldSlugs: string[];
+            };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  getMatterTemplate: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
         headers: {
           [name: string]: unknown;
         };

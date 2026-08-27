@@ -41,7 +41,7 @@ document is the map, not the territory.
 
 ## Where we are
 
-**Arcs 4 and 5 are complete: M24 adds reusable Matter templates to the complete Matter workspace.** Named templates can pre-fill record defaults and custom fields, then create relative Tasks and Key dates through either the direct or Intake creation path. M23 supplied the work surfaces around the M22 record: Key dates join the active deadline system; Tasks stay a lightweight internal checklist; parent, child, and flat relationships remain navigational; Contracts link without losing their standalone identity; reached Contributors can edit business Fields and supply supporting Documents; and Closing is an advisory signal that leaves the record writable. Arc 1 is done: the monorepo and CI,
+**Arcs 4 and 5 are complete: M24 adds reusable Matter templates to the complete Matter workspace.** Named templates can pre-fill Matter defaults and custom fields, then create relative Tasks and Key dates through either the direct or Intake creation path. M23 supplied the work surfaces around the M22 record: Key dates join the active deadline system; Tasks stay a lightweight internal checklist; parent, child, and flat relationships remain navigational; Contracts link without losing their standalone identity; reached Contributors can edit business Fields and supply supporting Documents; and Closing is an advisory signal that leaves the record writable. Arc 1 is done: the monorepo and CI,
 the authentication chain, the Compose stack a deployer actually runs, the themed app shell, and the
 `/settings` destination with its Personal and Organization rails. Arc 2 is done too: the
 configurable types and statuses, the Entities registry, the contract record, the conversation on a
@@ -93,7 +93,7 @@ document machinery a Contract already wears. The Request door now converts into 
 one guarded transaction; its values, paper, thread, watermarks, and requester window all follow the Matter
 arm too. M23 completed the record as a work surface with Key dates, Tasks, relationships, linked
 Contracts, the Contributor grid, and Closing that leaves the record writable. M24 completed Arc 5 with
-named Matter templates, direct and Intake application, record defaults, and relative Tasks and Key dates.
+named Matter templates, direct and Intake application, Matter defaults, and relative Tasks and Key dates.
 
 ---
 

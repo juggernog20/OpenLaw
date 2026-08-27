@@ -673,6 +673,7 @@ type MatterPayloads = {
     matterType: string;
     status: string;
     customFields: string[];
+    template?: string;
   };
   "matter.created_from_request": { number: number; title: string; requestNumber: number };
   "matter.confidentiality_set": { number: number; title: string };

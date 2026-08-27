@@ -1266,10 +1266,16 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
     message: defineMessage({
       id: "activity.matter.created",
       defaultMessage:
-        "{template, select, none {{actor} created this matter} " +
-        "other {{actor} created this matter from the {template} template}}",
+        "{templatePresence, select, present {{actor} created this matter from the {template} template} " +
+        "other {{actor} created this matter}}",
     }),
-    values: (_intl, payload) => ({ template: text(payload, "template") ?? "none" }),
+    values: (_intl, payload) => {
+      const template = text(payload, "template");
+      return {
+        templatePresence: template === null ? "absent" : "present",
+        template: template ?? "",
+      };
+    },
   },
   "matter.created_from_request": {
     icon: ArrowRightLeft,

@@ -57,7 +57,6 @@ import {
 } from "../../lib/contracts";
 import { matterReference, type MatterTypeOption } from "../../lib/matters";
 import {
-  emptyDraft,
   isAnswered,
   unansweredRequired,
   toDraft,
@@ -203,28 +202,11 @@ export function ConvertDialog({
   const selectedTemplate = templates.find((template) => template.id === templateId);
 
   /** Template defaults sit below both carried Request values and what
-   * the triager types. A carried value therefore never gets replaced
-   * in the drafts; an unanswered creation field is seeded (or cleared)
-   * when the template choice changes. The type being left is reseeded
-   * too, so a default the old template put in a shared box does not
-   * outlive the template. */
+   * the triager types. `drafts` holds only the latter, so changing a
+   * Template changes an untouched default without taking back an edit. */
   function seedTemplate(type: MatterTypeOption, nextTemplateId: string) {
     const template = type.templates?.find((candidate) => candidate.id === nextTemplateId);
     setTemplateId(template?.id ?? "");
-    const leaving = (matterTarget?.fields ?? []).filter(
-      (field) => !type.fields.some((attached) => attached.slug === field.slug),
-    );
-    setDrafts((current) => ({
-      ...current,
-      ...Object.fromEntries(
-        [...leaving, ...type.fields].map((field) => [
-          field.slug,
-          isAnswered(request.customFields[field.slug])
-            ? (current[field.slug] ?? emptyDraft(field))
-            : toDraft(field, template?.defaultCustomFields[field.slug]),
-        ]),
-      ),
-    }));
     setError(null);
   }
 

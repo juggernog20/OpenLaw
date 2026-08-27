@@ -1,5 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
+/**
+ * Ordered Matter-template Task and Key date editing for MTR-013. The
+ * shared editor keeps creation-time content and its ordering rules in
+ * one place for both live and archived templates.
+ */
+
 import { useRef, type DragEvent, type KeyboardEvent } from "react";
 import { GripVertical, Plus, X } from "lucide-react";
 import { FormattedMessage, useIntl } from "react-intl";
@@ -222,33 +228,35 @@ export function TemplateTasksEditor({
                         )
                       }
                     />
-                    <Input
-                      type="number"
-                      inputMode="numeric"
-                      min={0}
-                      max={3650}
-                      step={1}
-                      value={row.dueOffsetDays}
-                      disabled={disabled}
-                      placeholder="—"
-                      aria-label={intl.formatMessage(
-                        {
-                          id: "settings.matterTemplateEditor.taskDueNumber",
-                          defaultMessage: "Task {number} due offset in days",
-                        },
-                        { number: index + 1 },
-                      )}
-                      className="mx-1 w-[calc(100%-0.5rem)]"
-                      onChange={(event) =>
-                        onChange(
-                          rows.map((candidate, rowIndex) =>
-                            rowIndex === index
-                              ? { ...candidate, dueOffsetDays: event.target.value }
-                              : candidate,
-                          ),
-                        )
-                      }
-                    />
+                    <div className="px-1">
+                      <Input
+                        type="number"
+                        inputMode="numeric"
+                        min={0}
+                        max={3650}
+                        step={1}
+                        value={row.dueOffsetDays}
+                        disabled={disabled}
+                        placeholder="—"
+                        aria-label={intl.formatMessage(
+                          {
+                            id: "settings.matterTemplateEditor.taskDueNumber",
+                            defaultMessage: "Task {number} due offset in days",
+                          },
+                          { number: index + 1 },
+                        )}
+                        className="w-full"
+                        onChange={(event) =>
+                          onChange(
+                            rows.map((candidate, rowIndex) =>
+                              rowIndex === index
+                                ? { ...candidate, dueOffsetDays: event.target.value }
+                                : candidate,
+                            ),
+                          )
+                        }
+                      />
+                    </div>
                     <select
                       value={row.assigneeRole}
                       disabled={disabled}
@@ -446,54 +454,58 @@ export function TemplateKeyDatesEditor({
                         )
                       }
                     />
-                    <Input
-                      type="number"
-                      inputMode="numeric"
-                      min={0}
-                      max={3650}
-                      step={1}
-                      value={row.offsetDays}
-                      disabled={disabled}
-                      aria-label={intl.formatMessage(
-                        {
-                          id: "settings.matterTemplateEditor.keyDateOffsetNumber",
-                          defaultMessage: "Key date {number} offset in days",
-                        },
-                        { number: index + 1 },
-                      )}
-                      className="mx-1 w-[calc(100%-0.5rem)]"
-                      onChange={(event) =>
-                        onChange(
-                          rows.map((candidate, rowIndex) =>
-                            rowIndex === index
-                              ? { ...candidate, offsetDays: event.target.value }
-                              : candidate,
-                          ),
-                        )
-                      }
-                    />
-                    <Input
-                      value={row.note}
-                      disabled={disabled}
-                      maxLength={2000}
-                      aria-label={intl.formatMessage(
-                        {
-                          id: "settings.matterTemplateEditor.keyDateNoteNumber",
-                          defaultMessage: "Key date {number} note",
-                        },
-                        { number: index + 1 },
-                      )}
-                      className="mx-1 w-[calc(100%-0.5rem)]"
-                      onChange={(event) =>
-                        onChange(
-                          rows.map((candidate, rowIndex) =>
-                            rowIndex === index
-                              ? { ...candidate, note: event.target.value }
-                              : candidate,
-                          ),
-                        )
-                      }
-                    />
+                    <div className="px-1">
+                      <Input
+                        type="number"
+                        inputMode="numeric"
+                        min={0}
+                        max={3650}
+                        step={1}
+                        value={row.offsetDays}
+                        disabled={disabled}
+                        aria-label={intl.formatMessage(
+                          {
+                            id: "settings.matterTemplateEditor.keyDateOffsetNumber",
+                            defaultMessage: "Key date {number} offset in days",
+                          },
+                          { number: index + 1 },
+                        )}
+                        className="w-full"
+                        onChange={(event) =>
+                          onChange(
+                            rows.map((candidate, rowIndex) =>
+                              rowIndex === index
+                                ? { ...candidate, offsetDays: event.target.value }
+                                : candidate,
+                            ),
+                          )
+                        }
+                      />
+                    </div>
+                    <div className="px-1">
+                      <Input
+                        value={row.note}
+                        disabled={disabled}
+                        maxLength={2000}
+                        aria-label={intl.formatMessage(
+                          {
+                            id: "settings.matterTemplateEditor.keyDateNoteNumber",
+                            defaultMessage: "Key date {number} note",
+                          },
+                          { number: index + 1 },
+                        )}
+                        className="w-full"
+                        onChange={(event) =>
+                          onChange(
+                            rows.map((candidate, rowIndex) =>
+                              rowIndex === index
+                                ? { ...candidate, note: event.target.value }
+                                : candidate,
+                            ),
+                          )
+                        }
+                      />
+                    </div>
                     <Button
                       type="button"
                       variant="ghost"
