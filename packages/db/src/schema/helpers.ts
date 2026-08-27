@@ -3,7 +3,14 @@
 /** Column helpers shared by every schema file (SCHEMA.md conventions). */
 
 import type { BuildColumns } from "drizzle-orm";
-import { boolean, integer, text, timestamp, type PgTableWithColumns } from "drizzle-orm/pg-core";
+import {
+  boolean,
+  customType,
+  integer,
+  text,
+  timestamp,
+  type PgTableWithColumns,
+} from "drizzle-orm/pg-core";
 import { uuidv7 } from "uuidv7";
 
 /** UUID v7 primary key (TECH-004). */
@@ -11,6 +18,13 @@ export const uuidPk = () =>
   text("id")
     .primaryKey()
     .$defaultFn(() => uuidv7());
+
+/** PostgreSQL's weighted full-text document type (DOC-009, TECH-014). */
+export const searchVector = customType<{ data: string; driverData: string }>({
+  dataType() {
+    return "tsvector";
+  },
+});
 
 /**
  * The one taxonomy column set (MTR-001, mirrored by CTR-002): every

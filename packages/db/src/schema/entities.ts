@@ -16,7 +16,7 @@
 import { sql } from "drizzle-orm";
 import { check, date, index, pgTable, text, timestamp } from "drizzle-orm/pg-core";
 import { entityTypes } from "./entity-types.js";
-import { uuidPk } from "./helpers.js";
+import { searchVector, uuidPk } from "./helpers.js";
 
 /** The fixed ENT-001 status enum. Code branches on it (pickers filter
  * to `active`, list pills color by it), so it is not admin-configurable. */
@@ -49,11 +49,20 @@ export const entities = pgTable(
     /** SET-003 soft delete: NULL = live; a timestamp = archived, out of
      * the default list and the M8 signing-entity picker, nothing lost. */
     archivedAt: timestamp("archived_at", { withTimezone: true }),
+    /** M25's row-owned registry vector. The configured Entity type name
+     * remains a query-time join rather than a copied label. */
+    searchVector: searchVector("search_vector").generatedAlwaysAs(sql`
+      setweight(to_tsvector('english', coalesce("legal_name", '')), 'A') ||
+      setweight(to_tsvector('english', coalesce("jurisdiction", '')), 'C') ||
+      setweight(to_tsvector('english', coalesce("registration_number", '')), 'C') ||
+      setweight(to_tsvector('english', coalesce("status", '')), 'C')
+    `),
   },
   (table) => [
     // The registry's one read shape: the list (and the M8 picker seam)
     // orders by case-insensitive legal name, then created_at.
     index("entities_legal_name_idx").on(sql`lower(${table.legalName})`, table.createdAt),
+    index("entities_search_vector_idx").using("gin", table.searchVector),
     check(
       "entities_status_check",
       sql`${table.status} in ('active', 'dormant', 'dissolved', 'divested')`,

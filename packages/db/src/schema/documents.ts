@@ -48,7 +48,7 @@ import {
 import { users } from "./auth.js";
 import { contracts } from "./contracts.js";
 import { documentFolders } from "./document-folders.js";
-import { uuidPk } from "./helpers.js";
+import { searchVector, uuidPk } from "./helpers.js";
 import { matters } from "./matters.js";
 
 /**
@@ -233,6 +233,12 @@ export const documents = pgTable(
       .notNull()
       .defaultNow()
       .$onUpdate(() => new Date()),
+    /** M25's own-row metadata vector. Version filenames are joined at
+     * query time; owning-record titles are deliberately never copied. */
+    searchVector: searchVector("search_vector").generatedAlwaysAs(sql`
+      setweight(to_tsvector('english', coalesce("title", '')), 'A') ||
+      setweight(to_tsvector('english', coalesce("description", '')), 'B')
+    `),
   },
   (table) => [
     // The one read the record page makes: this contract's documents,
@@ -258,6 +264,7 @@ export const documents = pgTable(
     // tie-break: one folder's page is the record's page under one more
     // filter, and it walks `(created_at, id)` too.
     index("documents_folder_idx").on(table.folderId, table.createdAt, table.id),
+    index("documents_search_vector_idx").using("gin", table.searchVector),
     check("documents_owner_check", sql`num_nonnulls(${table.matterId}, ${table.contractId}) = 1`),
   ],
 );

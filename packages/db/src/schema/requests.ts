@@ -46,7 +46,7 @@ import {
 import { users } from "./auth.js";
 import { contracts, SEVERITY_LEVELS } from "./contracts.js";
 import type { CustomFieldValue } from "./fields.js";
-import { uuidPk } from "./helpers.js";
+import { searchVector, uuidPk } from "./helpers.js";
 import { matters } from "./matters.js";
 import { requestTypes } from "./request-types.js";
 
@@ -117,6 +117,14 @@ export const requests = pgTable(
       .$onUpdate(() => new Date()),
     /** Soft delete, the house rule everywhere: NULL = live. */
     archivedAt: timestamp("archived_at", { withTimezone: true }),
+    /** M25's row-owned Intake vector. The request type name and
+     * requester name are query-time context, never copied labels. */
+    searchVector: searchVector("search_vector").generatedAlwaysAs(sql`
+      setweight(to_tsvector('english', coalesce("summary", '')), 'A') ||
+      setweight(to_tsvector('english', 'R-' || "number"::text), 'A') ||
+      setweight(to_tsvector('english', coalesce("description", '')), 'B') ||
+      setweight(to_tsvector('english', coalesce("status", '')), 'C')
+    `),
   },
   (table) => [
     // The identity sequence guarantees distinct numbers; the index is
@@ -135,6 +143,7 @@ export const requests = pgTable(
     // Request ever raised, on a table that only grows.
     index("requests_converted_contract_idx").on(table.convertedContractId),
     index("requests_converted_matter_idx").on(table.convertedMatterId),
+    index("requests_search_vector_idx").using("gin", table.searchVector),
     // "A Request becomes one record", stated as a shape rather than
     // left to the conversion route. Two targets would be two answers to
     // one question, and nothing could say which one the thread follows.
