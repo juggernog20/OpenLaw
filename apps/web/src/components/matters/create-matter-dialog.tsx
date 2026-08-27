@@ -268,7 +268,19 @@ export function CreateMatterDialog({
             <div key={field.slug} className="flex flex-col gap-1.5">
               <Label htmlFor={`matter-new-${field.slug}`}>
                 {field.displayName}
-                {field.isRequired ? " *" : ""}
+                {field.isRequired && (
+                  <>
+                    <span aria-hidden="true" className="ms-0.5 text-status-danger-fg">
+                      *
+                    </span>
+                    <span className="sr-only">
+                      <FormattedMessage
+                        id="matters.field.requiredMark"
+                        defaultMessage="(required)"
+                      />
+                    </span>
+                  </>
+                )}
               </Label>
               <CustomFieldControl
                 id={`matter-new-${field.slug}`}

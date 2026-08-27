@@ -1100,7 +1100,16 @@ function MatterCustomField({
     <div className="flex flex-col gap-1.5">
       <Label id={`${id}-label`} htmlFor={id}>
         {field.displayName}
-        {!frozen && field.isRequired ? " *" : ""}
+        {!frozen && field.isRequired && (
+          <>
+            <span aria-hidden="true" className="ms-0.5 text-status-danger-fg">
+              *
+            </span>
+            <span className="sr-only">
+              <FormattedMessage id="matters.field.requiredMark" defaultMessage="(required)" />
+            </span>
+          </>
+        )}
       </Label>
       {frozen ? (
         <span>
@@ -1212,7 +1221,13 @@ function MatterRetypeDialog({
             return (
               <div key={field.fieldId} className="flex flex-col gap-1.5">
                 <Label id={`${id}-label`} htmlFor={id}>
-                  {field.displayName} *
+                  {field.displayName}
+                  <span aria-hidden="true" className="ms-0.5 text-status-danger-fg">
+                    *
+                  </span>
+                  <span className="sr-only">
+                    <FormattedMessage id="matters.field.requiredMark" defaultMessage="(required)" />
+                  </span>
                 </Label>
                 <CustomFieldControl
                   id={id}
