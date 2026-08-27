@@ -14,18 +14,23 @@ ALTER TABLE "counterparties" ADD COLUMN "search_vector" "tsvector" GENERATED ALW
       setweight(to_tsvector('english', coalesce("name", '')), 'A') ||
       setweight(to_tsvector('english', coalesce("jurisdiction", '')), 'C')
     ) STORED;--> statement-breakpoint
-ALTER TABLE "document_version_text" ADD COLUMN "search_vector" "tsvector" GENERATED ALWAYS AS (
-      case
-        when "state" = 'ready' then setweight(
-          to_tsvector(
-            'english',
-            left(coalesce("text", ''), 1000000)
-          ),
-          'D'
-        )
-        else ''::tsvector
-      end
-    ) STORED;--> statement-breakpoint
+-- A tsvector cannot exceed 1 MB. One million characters of prose fits
+-- with room to spare, but the same length of serial numbers, hashes, or
+-- OCR noise does not, and a generated column that raises on the write
+-- would take the extracted text down with the index. The function keeps
+-- the text and leaves that one version unindexed (DOC-009).
+CREATE FUNCTION "document_text_search_vector"("state" text, "body" text) RETURNS "tsvector"
+LANGUAGE plpgsql IMMUTABLE PARALLEL SAFE AS $$
+BEGIN
+  IF "state" <> 'ready' THEN
+    RETURN ''::tsvector;
+  END IF;
+  RETURN setweight(to_tsvector('english', left(coalesce("body", ''), 1000000)), 'D');
+EXCEPTION WHEN program_limit_exceeded THEN
+  RETURN ''::tsvector;
+END
+$$;--> statement-breakpoint
+ALTER TABLE "document_version_text" ADD COLUMN "search_vector" "tsvector" GENERATED ALWAYS AS (document_text_search_vector("state", "text")) STORED;--> statement-breakpoint
 ALTER TABLE "documents" ADD COLUMN "search_vector" "tsvector" GENERATED ALWAYS AS (
       setweight(to_tsvector('english', coalesce("title", '')), 'A') ||
       setweight(to_tsvector('english', coalesce("description", '')), 'B')

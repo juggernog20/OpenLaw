@@ -32,7 +32,9 @@ import { check, index, pgTable, text, timestamp } from "drizzle-orm/pg-core";
 import { documentVersions } from "./documents.js";
 import { searchVector } from "./helpers.js";
 
-/** Maximum extracted source characters admitted to one M25 vector (DOC-009). */
+/** Maximum extracted source characters admitted to one M25 vector (DOC-009).
+ * The live value is baked into `document_text_search_vector` by
+ * migration 0080; change both together. */
 export const DOCUMENT_TEXT_SEARCH_CHARACTER_LIMIT = 1_000_000;
 
 /**
@@ -102,19 +104,17 @@ export const documentVersionText = pgTable(
       .$onUpdate(() => new Date()),
     /** Only completed derivations contribute content. PostgreSQL
      * recomputes this stored value on every state/text write, so the
-     * extraction worker is already the indexing path (TECH-014). */
-    searchVector: searchVector("search_vector").generatedAlwaysAs(sql`
-      case
-        when "state" = 'ready' then setweight(
-          to_tsvector(
-            'english',
-            left(coalesce("text", ''), ${sql.raw(String(DOCUMENT_TEXT_SEARCH_CHARACTER_LIMIT))})
-          ),
-          'D'
-        )
-        else ''::tsvector
-      end
-    `),
+     * extraction worker is already the indexing path (TECH-014).
+     *
+     * The expression lives in `document_text_search_vector`, defined by
+     * migration 0080 next to this column. It applies the `ready` gate
+     * and `DOCUMENT_TEXT_SEARCH_CHARACTER_LIMIT`, and it catches the
+     * 1 MB tsvector limit so a version full of serial numbers or OCR
+     * noise keeps its text and is merely unindexed, rather than failing
+     * the extraction write (DOC-009). */
+    searchVector: searchVector("search_vector").generatedAlwaysAs(
+      sql`document_text_search_vector("state", "text")`,
+    ),
   },
   (table) => [
     check(

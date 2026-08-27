@@ -105,6 +105,23 @@ describe("the M25 search-vector migration", () => {
       expect(cappedText.rows[0]?.length).toBeGreaterThan(DOCUMENT_TEXT_SEARCH_CHARACTER_LIMIT);
       expect(cappedText.rows[0]).toMatchObject({ inside_cap: true, outside_cap: false });
 
+      // Inside the character cap but past PostgreSQL's 1 MB tsvector
+      // limit: a schedule of serial numbers. The write must succeed and
+      // keep the text; only the vector is given up.
+      await db.execute(sql`
+        update document_version_text
+        set text = (
+          select string_agg(md5(i::text), ' ') from generate_series(1, 40000) i
+        )
+        where version_id = 'version-search-oversize'
+      `);
+      const overflow = await db.execute<{ state: string; length: number; empty: boolean }>(sql`
+        select state, length(text)::integer as length, search_vector = ''::tsvector as empty
+        from document_version_text
+        where version_id = 'version-search-oversize'
+      `);
+      expect(overflow.rows).toEqual([{ state: "ready", length: 40000 * 33 - 1, empty: true }]);
+
       await db.execute(sql`
         update document_version_text
         set state = 'failed', source = null, text = null

@@ -3579,7 +3579,7 @@
           "primaryKey": false,
           "notNull": false,
           "generated": {
-            "as": "\n      case\n        when \"state\" = 'ready' then setweight(\n          to_tsvector(\n            'english',\n            left(coalesce(\"text\", ''), 1000000)\n          ),\n          'D'\n        )\n        else ''::tsvector\n      end\n    ",
+            "as": "document_text_search_vector(\"state\", \"text\")",
             "type": "stored"
           }
         }
