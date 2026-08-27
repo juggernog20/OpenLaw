@@ -103549,6 +103549,7 @@
       "name": "C30 — Header search · Results open",
       "clip": true,
       "width": 1440,
+      "height": 1120,
       "fill": "$canvas",
       "layout": "vertical",
       "children": [
@@ -103589,6 +103590,7 @@
               "type": "frame",
               "id": "m250002k",
               "name": "C30 — Header search · Results open SearchInput",
+              "context": "WAI-ARIA combobox: role=combobox, aria-expanded=true, aria-controls=search-results-listbox, aria-autocomplete=list",
               "width": 480,
               "height": 30,
               "fill": "#0D1117",
@@ -103655,8 +103657,7 @@
                     }
                   ]
                 }
-              ],
-              "context": "WAI-ARIA combobox: role=combobox, aria-expanded=true, aria-controls=search-results-listbox, aria-autocomplete=list"
+              ]
             },
             {
               "type": "frame",
@@ -106879,10 +106880,12 @@
         {
           "type": "frame",
           "id": "m250002f",
-          "name": "S30 Search results listbox",
           "layoutPosition": "absolute",
           "x": 410,
           "y": 52,
+          "name": "S30 Search results listbox",
+          "context": "role=listbox; grouped in fixed order Contract, Matter, Document, Entity, Counterparty, Request; aria-live=polite",
+          "clip": true,
           "width": 620,
           "fill": "$raised",
           "cornerRadius": 6,
@@ -106891,16 +106894,14 @@
           "effect": {
             "type": "shadow",
             "shadowType": "outer",
+            "color": "#0D111733",
             "offset": {
               "x": 0,
               "y": 8
             },
-            "blur": 24,
-            "color": "#0D111733"
+            "blur": 24
           },
           "layout": "vertical",
-          "clip": true,
-          "context": "role=listbox; grouped in fixed order Contract, Matter, Document, Entity, Counterparty, Request; aria-live=polite",
           "children": [
             {
               "type": "frame",
@@ -106931,6 +106932,7 @@
               "type": "frame",
               "id": "m250000f",
               "name": "S30 Contract SearchResultRow",
+              "context": "Shared SearchResultRow component; role=option; kind=Contract",
               "width": "fill_container",
               "height": 56,
               "fill": "$status-info-bg",
@@ -106944,7 +106946,6 @@
                 12
               ],
               "alignItems": "center",
-              "context": "Shared SearchResultRow component; role=option; kind=Contract",
               "children": [
                 {
                   "type": "frame",
@@ -106990,12 +106991,12 @@
                           "id": "m2500007",
                           "name": "S30 Contract Reference",
                           "fill": "$text-secondary",
+                          "textGrowth": "fixed-width",
+                          "width": 96,
                           "content": "C-58",
                           "fontFamily": "$font",
                           "fontSize": 11,
-                          "fontWeight": "600",
-                          "width": 96,
-                          "textGrowth": "fixed-width"
+                          "fontWeight": "600"
                         },
                         {
                           "type": "frame",
@@ -107101,6 +107102,7 @@
               "type": "frame",
               "id": "m250000r",
               "name": "S30 Matter SearchResultRow",
+              "context": "Shared SearchResultRow component; role=option; kind=Matter",
               "width": "fill_container",
               "height": 56,
               "fill": "$raised",
@@ -107114,7 +107116,6 @@
                 12
               ],
               "alignItems": "center",
-              "context": "Shared SearchResultRow component; role=option; kind=Matter",
               "children": [
                 {
                   "type": "frame",
@@ -107160,12 +107161,12 @@
                           "id": "m250000j",
                           "name": "S30 Matter Reference",
                           "fill": "$text-secondary",
+                          "textGrowth": "fixed-width",
+                          "width": 96,
                           "content": "M-51",
                           "fontFamily": "$font",
                           "fontSize": 11,
-                          "fontWeight": "600",
-                          "width": 96,
-                          "textGrowth": "fixed-width"
+                          "fontWeight": "600"
                         },
                         {
                           "type": "frame",
@@ -107241,6 +107242,7 @@
               "type": "frame",
               "id": "m250001b",
               "name": "S30 Document SearchResultRow",
+              "context": "Shared SearchResultRow component; role=option; kind=Document",
               "width": "fill_container",
               "height": 88,
               "fill": "$raised",
@@ -107254,7 +107256,6 @@
                 12
               ],
               "alignItems": "center",
-              "context": "Shared SearchResultRow component; role=option; kind=Document",
               "children": [
                 {
                   "type": "frame",
@@ -107300,12 +107301,12 @@
                           "id": "m250000v",
                           "name": "S30 Document Reference",
                           "fill": "$text-secondary",
-                          "content": "v3",
+                          "textGrowth": "fixed-width",
+                          "width": 44,
+                          "content": "v4",
                           "fontFamily": "$font",
                           "fontSize": 11,
-                          "fontWeight": "600",
-                          "width": 44,
-                          "textGrowth": "fixed-width"
+                          "fontWeight": "600"
                         },
                         {
                           "type": "frame",
@@ -107319,7 +107320,7 @@
                               "id": "m250000u",
                               "name": "S30 Document Title",
                               "fill": "$text-primary",
-                              "content": "Orion_MSA_2026_counter_redline.docx",
+                              "content": "Orion_MSA_2026_counter_redline.pdf",
                               "fontFamily": "$font",
                               "fontSize": 13,
                               "fontWeight": "500"
@@ -107371,7 +107372,6 @@
                       "type": "frame",
                       "id": "m2500016",
                       "name": "S30 Document Highlighted snippet",
-                      "gap": 0,
                       "alignItems": "center",
                       "children": [
                         {
@@ -107462,6 +107462,7 @@
               "type": "frame",
               "id": "m250001n",
               "name": "S30 Entity SearchResultRow",
+              "context": "Shared SearchResultRow component; role=option; kind=Entity",
               "width": "fill_container",
               "height": 56,
               "fill": "$raised",
@@ -107475,7 +107476,6 @@
                 12
               ],
               "alignItems": "center",
-              "context": "Shared SearchResultRow component; role=option; kind=Entity",
               "children": [
                 {
                   "type": "frame",
@@ -107521,12 +107521,12 @@
                           "id": "m250001f",
                           "name": "S30 Entity Reference",
                           "fill": "$text-secondary",
-                          "content": "UK · 08249170",
+                          "textGrowth": "fixed-width",
+                          "width": 96,
+                          "content": "DE · 7124590",
                           "fontFamily": "$font",
                           "fontSize": 11,
-                          "fontWeight": "600",
-                          "width": 96,
-                          "textGrowth": "fixed-width"
+                          "fontWeight": "600"
                         },
                         {
                           "type": "frame",
@@ -107602,6 +107602,7 @@
               "type": "frame",
               "id": "m250001z",
               "name": "S30 Counterparty SearchResultRow",
+              "context": "Shared SearchResultRow component; role=option; kind=Counterparty",
               "width": "fill_container",
               "height": 56,
               "fill": "$raised",
@@ -107615,7 +107616,6 @@
                 12
               ],
               "alignItems": "center",
-              "context": "Shared SearchResultRow component; role=option; kind=Counterparty",
               "children": [
                 {
                   "type": "frame",
@@ -107661,12 +107661,12 @@
                           "id": "m250001r",
                           "name": "S30 Counterparty Reference",
                           "fill": "$text-secondary",
+                          "textGrowth": "fixed-width",
+                          "width": 96,
                           "content": "Counterparty",
                           "fontFamily": "$font",
                           "fontSize": 11,
-                          "fontWeight": "600",
-                          "width": 96,
-                          "textGrowth": "fixed-width"
+                          "fontWeight": "600"
                         },
                         {
                           "type": "frame",
@@ -107742,6 +107742,7 @@
               "type": "frame",
               "id": "m250002b",
               "name": "S30 Request SearchResultRow",
+              "context": "Shared SearchResultRow component; role=option; kind=Request",
               "width": "fill_container",
               "height": 56,
               "fill": "$raised",
@@ -107755,7 +107756,6 @@
                 12
               ],
               "alignItems": "center",
-              "context": "Shared SearchResultRow component; role=option; kind=Request",
               "children": [
                 {
                   "type": "frame",
@@ -107801,12 +107801,12 @@
                           "id": "m2500023",
                           "name": "S30 Request Reference",
                           "fill": "$text-secondary",
+                          "textGrowth": "fixed-width",
+                          "width": 96,
                           "content": "R-104",
                           "fontFamily": "$font",
                           "fontSize": 11,
-                          "fontWeight": "600",
-                          "width": 96,
-                          "textGrowth": "fixed-width"
+                          "fontWeight": "600"
                         },
                         {
                           "type": "frame",
@@ -107857,6 +107857,7 @@
               "type": "frame",
               "id": "m250002e",
               "name": "S30 See all results",
+              "context": "Last listbox option; opens /search?q=termination",
               "width": "fill_container",
               "height": 44,
               "fill": "$raised",
@@ -107866,7 +107867,6 @@
               ],
               "justifyContent": "space_between",
               "alignItems": "center",
-              "context": "Last listbox option; opens /search?q=termination",
               "children": [
                 {
                   "type": "text",
@@ -107892,9 +107892,7 @@
             }
           ]
         }
-      ],
-      "height": 1120,
-      "placeholder": false
+      ]
     },
     {
       "type": "frame",
@@ -107904,6 +107902,7 @@
       "name": "C31 — Header search · Loading",
       "clip": true,
       "width": 1440,
+      "height": 1120,
       "fill": "$canvas",
       "layout": "vertical",
       "children": [
@@ -107944,6 +107943,7 @@
               "type": "frame",
               "id": "m25000af",
               "name": "C31 — Header search · Loading SearchInput",
+              "context": "WAI-ARIA combobox: role=combobox, aria-expanded=true, aria-controls=search-results-listbox, aria-autocomplete=list",
               "width": 480,
               "height": 30,
               "fill": "#0D1117",
@@ -108010,8 +108010,7 @@
                     }
                   ]
                 }
-              ],
-              "context": "WAI-ARIA combobox: role=combobox, aria-expanded=true, aria-controls=search-results-listbox, aria-autocomplete=list"
+              ]
             },
             {
               "type": "frame",
@@ -111234,10 +111233,12 @@
         {
           "type": "frame",
           "id": "m25000aa",
-          "name": "S31 Search results loading",
           "layoutPosition": "absolute",
           "x": 410,
           "y": 52,
+          "name": "S31 Search results loading",
+          "context": "aria-busy=true; aria-live=polite",
+          "clip": true,
           "width": 620,
           "fill": "$raised",
           "cornerRadius": 6,
@@ -111246,16 +111247,14 @@
           "effect": {
             "type": "shadow",
             "shadowType": "outer",
+            "color": "#0D111733",
             "offset": {
               "x": 0,
               "y": 8
             },
-            "blur": 24,
-            "color": "#0D111733"
+            "blur": 24
           },
           "layout": "vertical",
-          "clip": true,
-          "context": "aria-busy=true; aria-live=polite",
           "children": [
             {
               "type": "frame",
@@ -111295,21 +111294,19 @@
                   "id": "m25000a8",
                   "name": "S31 loading copy",
                   "fill": "$text-secondary",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
                   "content": "Looking across Contracts, Matters, Documents, Entities, Counterparties, and Requests.",
+                  "textAlign": "center",
                   "fontFamily": "$font",
                   "fontSize": 12,
-                  "fontWeight": "normal",
-                  "width": "fill_container",
-                  "textGrowth": "fixed-width",
-                  "textAlign": "center"
+                  "fontWeight": "normal"
                 }
               ]
             }
           ]
         }
-      ],
-      "height": 1120,
-      "placeholder": false
+      ]
     },
     {
       "type": "frame",
@@ -111319,6 +111316,7 @@
       "name": "C32 — Header search · No matches",
       "clip": true,
       "width": 1440,
+      "height": 1120,
       "fill": "$canvas",
       "layout": "vertical",
       "children": [
@@ -111359,6 +111357,7 @@
               "type": "frame",
               "id": "m25000ia",
               "name": "C32 — Header search · No matches SearchInput",
+              "context": "WAI-ARIA combobox: role=combobox, aria-expanded=true, aria-controls=search-results-listbox, aria-autocomplete=list",
               "width": 480,
               "height": 30,
               "fill": "#0D1117",
@@ -111425,8 +111424,7 @@
                     }
                   ]
                 }
-              ],
-              "context": "WAI-ARIA combobox: role=combobox, aria-expanded=true, aria-controls=search-results-listbox, aria-autocomplete=list"
+              ]
             },
             {
               "type": "frame",
@@ -114649,10 +114647,12 @@
         {
           "type": "frame",
           "id": "m25000i5",
-          "name": "S32 Search results empty",
           "layoutPosition": "absolute",
           "x": 410,
           "y": 52,
+          "name": "S32 Search results empty",
+          "context": "role=status; aria-live=polite",
+          "clip": true,
           "width": 620,
           "fill": "$raised",
           "cornerRadius": 6,
@@ -114661,16 +114661,14 @@
           "effect": {
             "type": "shadow",
             "shadowType": "outer",
+            "color": "#0D111733",
             "offset": {
               "x": 0,
               "y": 8
             },
-            "blur": 24,
-            "color": "#0D111733"
+            "blur": 24
           },
           "layout": "vertical",
-          "clip": true,
-          "context": "role=status; aria-live=polite",
           "children": [
             {
               "type": "frame",
@@ -114710,21 +114708,19 @@
                   "id": "m25000i3",
                   "name": "S32 empty copy",
                   "fill": "$text-secondary",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
                   "content": "No matches for “assignation”. Try another word or record number.",
+                  "textAlign": "center",
                   "fontFamily": "$font",
                   "fontSize": 12,
-                  "fontWeight": "normal",
-                  "width": "fill_container",
-                  "textGrowth": "fixed-width",
-                  "textAlign": "center"
+                  "fontWeight": "normal"
                 }
               ]
             }
           ]
         }
-      ],
-      "height": 1120,
-      "placeholder": false
+      ]
     },
     {
       "type": "frame",
@@ -114734,6 +114730,7 @@
       "name": "C33 — Header search · Server error",
       "clip": true,
       "width": 1440,
+      "height": 1120,
       "fill": "$canvas",
       "layout": "vertical",
       "children": [
@@ -114774,6 +114771,7 @@
               "type": "frame",
               "id": "m25000q7",
               "name": "C33 — Header search · Server error SearchInput",
+              "context": "WAI-ARIA combobox: role=combobox, aria-expanded=true, aria-controls=search-results-listbox, aria-autocomplete=list",
               "width": 480,
               "height": 30,
               "fill": "#0D1117",
@@ -114840,8 +114838,7 @@
                     }
                   ]
                 }
-              ],
-              "context": "WAI-ARIA combobox: role=combobox, aria-expanded=true, aria-controls=search-results-listbox, aria-autocomplete=list"
+              ]
             },
             {
               "type": "frame",
@@ -118064,10 +118061,12 @@
         {
           "type": "frame",
           "id": "m25000q2",
-          "name": "S33 Search results error",
           "layoutPosition": "absolute",
           "x": 410,
           "y": 52,
+          "name": "S33 Search results error",
+          "context": "role=status; aria-live=polite",
+          "clip": true,
           "width": 620,
           "fill": "$raised",
           "cornerRadius": 6,
@@ -118076,16 +118075,14 @@
           "effect": {
             "type": "shadow",
             "shadowType": "outer",
+            "color": "#0D111733",
             "offset": {
               "x": 0,
               "y": 8
             },
-            "blur": 24,
-            "color": "#0D111733"
+            "blur": 24
           },
           "layout": "vertical",
-          "clip": true,
-          "context": "role=status; aria-live=polite",
           "children": [
             {
               "type": "frame",
@@ -118125,13 +118122,13 @@
                   "id": "m25000py",
                   "name": "S33 error copy",
                   "fill": "$text-secondary",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
                   "content": "The server did not answer. Try again in a moment.",
+                  "textAlign": "center",
                   "fontFamily": "$font",
                   "fontSize": 12,
-                  "fontWeight": "normal",
-                  "width": "fill_container",
-                  "textGrowth": "fixed-width",
-                  "textAlign": "center"
+                  "fontWeight": "normal"
                 }
               ]
             },
@@ -118162,22 +118159,19 @@
             }
           ]
         }
-      ],
-      "height": 1120,
-      "placeholder": false
+      ]
     },
     {
       "type": "frame",
       "id": "m25000yx",
-      "name": "C34 — Search results · /search",
       "x": 12160,
       "y": 5860,
+      "name": "C34 — Search results · /search",
+      "clip": true,
       "width": 1440,
       "height": 1120,
       "fill": "$canvas",
       "layout": "vertical",
-      "clip": true,
-      "placeholder": false,
       "children": [
         {
           "type": "frame",
@@ -118216,6 +118210,7 @@
               "type": "frame",
               "id": "m25000xw",
               "name": "C34 — Search results · /search SearchInput",
+              "context": "Global SearchInput; slash shortcut retained",
               "width": 480,
               "height": 30,
               "fill": "#0D1117",
@@ -118282,8 +118277,7 @@
                     }
                   ]
                 }
-              ],
-              "context": "Global SearchInput; slash shortcut retained"
+              ]
             },
             {
               "type": "frame",
@@ -118667,11 +118661,11 @@
             "bottom": 1
           },
           "layout": "vertical",
+          "gap": 12,
           "padding": [
             12,
             24
           ],
-          "gap": 12,
           "justifyContent": "center",
           "children": [
             {
@@ -118727,10 +118721,10 @@
               "type": "frame",
               "id": "m25000zh",
               "name": "S34 Kind filter chip strip",
+              "context": "Kind filter; URL-backed by kind query parameter",
               "width": "fill_container",
               "gap": 8,
               "alignItems": "center",
-              "context": "Kind filter; URL-backed by kind query parameter",
               "children": [
                 {
                   "type": "frame",
@@ -118936,19 +118930,20 @@
               "type": "frame",
               "id": "m2500120",
               "name": "S34 Flat ranked result list",
+              "context": "Flat rank order; uses the same SearchResultRow component as the header listbox",
+              "clip": true,
               "width": "fill_container",
               "fill": "$raised",
               "cornerRadius": 6,
               "stroke": "$border",
               "strokeWidth": 1,
               "layout": "vertical",
-              "clip": true,
-              "context": "Flat rank order; uses the same SearchResultRow component as the header listbox",
               "children": [
                 {
                   "type": "frame",
                   "id": "m2500100",
                   "name": "S34 Rank 1 SearchResultRow",
+                  "context": "Shared SearchResultRow component; role=option; kind=Document",
                   "width": "fill_container",
                   "height": 88,
                   "fill": "$raised",
@@ -118962,7 +118957,6 @@
                     12
                   ],
                   "alignItems": "center",
-                  "context": "Shared SearchResultRow component; role=option; kind=Document",
                   "children": [
                     {
                       "type": "frame",
@@ -119008,12 +119002,12 @@
                               "id": "m25000zk",
                               "name": "S34 Rank 1 Reference",
                               "fill": "$text-secondary",
-                              "content": "v3",
+                              "textGrowth": "fixed-width",
+                              "width": 44,
+                              "content": "v4",
                               "fontFamily": "$font",
                               "fontSize": 11,
-                              "fontWeight": "600",
-                              "width": 44,
-                              "textGrowth": "fixed-width"
+                              "fontWeight": "600"
                             },
                             {
                               "type": "frame",
@@ -119027,7 +119021,7 @@
                                   "id": "m25000zj",
                                   "name": "S34 Rank 1 Title",
                                   "fill": "$text-primary",
-                                  "content": "Orion_MSA_2026_counter_redline.docx",
+                                  "content": "Orion_MSA_2026_counter_redline.pdf",
                                   "fontFamily": "$font",
                                   "fontSize": 13,
                                   "fontWeight": "500"
@@ -119079,7 +119073,6 @@
                           "type": "frame",
                           "id": "m25000zv",
                           "name": "S34 Rank 1 Highlighted snippet",
-                          "gap": 0,
                           "alignItems": "center",
                           "children": [
                             {
@@ -119145,6 +119138,7 @@
                   "type": "frame",
                   "id": "m250010d",
                   "name": "S34 Rank 2 SearchResultRow",
+                  "context": "Shared SearchResultRow component; role=option; kind=Contract",
                   "width": "fill_container",
                   "height": 56,
                   "fill": "$raised",
@@ -119158,7 +119152,6 @@
                     12
                   ],
                   "alignItems": "center",
-                  "context": "Shared SearchResultRow component; role=option; kind=Contract",
                   "children": [
                     {
                       "type": "frame",
@@ -119204,12 +119197,12 @@
                               "id": "m2500105",
                               "name": "S34 Rank 2 Reference",
                               "fill": "$text-secondary",
+                              "textGrowth": "fixed-width",
+                              "width": 96,
                               "content": "C-58",
                               "fontFamily": "$font",
                               "fontSize": 11,
-                              "fontWeight": "600",
-                              "width": 96,
-                              "textGrowth": "fixed-width"
+                              "fontWeight": "600"
                             },
                             {
                               "type": "frame",
@@ -119290,6 +119283,7 @@
                   "type": "frame",
                   "id": "m250010n",
                   "name": "S34 Rank 3 SearchResultRow",
+                  "context": "Shared SearchResultRow component; role=option; kind=Matter",
                   "width": "fill_container",
                   "height": 56,
                   "fill": "$raised",
@@ -119303,7 +119297,6 @@
                     12
                   ],
                   "alignItems": "center",
-                  "context": "Shared SearchResultRow component; role=option; kind=Matter",
                   "children": [
                     {
                       "type": "frame",
@@ -119349,12 +119342,12 @@
                               "id": "m250010f",
                               "name": "S34 Rank 3 Reference",
                               "fill": "$text-secondary",
+                              "textGrowth": "fixed-width",
+                              "width": 96,
                               "content": "M-51",
                               "fontFamily": "$font",
                               "fontSize": 11,
-                              "fontWeight": "600",
-                              "width": 96,
-                              "textGrowth": "fixed-width"
+                              "fontWeight": "600"
                             },
                             {
                               "type": "frame",
@@ -119405,6 +119398,7 @@
                   "type": "frame",
                   "id": "m250010x",
                   "name": "S34 Rank 4 SearchResultRow",
+                  "context": "Shared SearchResultRow component; role=option; kind=Request",
                   "width": "fill_container",
                   "height": 56,
                   "fill": "$raised",
@@ -119418,7 +119412,6 @@
                     12
                   ],
                   "alignItems": "center",
-                  "context": "Shared SearchResultRow component; role=option; kind=Request",
                   "children": [
                     {
                       "type": "frame",
@@ -119464,12 +119457,12 @@
                               "id": "m250010p",
                               "name": "S34 Rank 4 Reference",
                               "fill": "$text-secondary",
+                              "textGrowth": "fixed-width",
+                              "width": 96,
                               "content": "R-104",
                               "fontFamily": "$font",
                               "fontSize": 11,
-                              "fontWeight": "600",
-                              "width": 96,
-                              "textGrowth": "fixed-width"
+                              "fontWeight": "600"
                             },
                             {
                               "type": "frame",
@@ -119520,6 +119513,7 @@
                   "type": "frame",
                   "id": "m250011f",
                   "name": "S34 Rank 5 SearchResultRow",
+                  "context": "Shared SearchResultRow component; role=option; kind=Document",
                   "width": "fill_container",
                   "height": 88,
                   "fill": "$raised",
@@ -119533,7 +119527,6 @@
                     12
                   ],
                   "alignItems": "center",
-                  "context": "Shared SearchResultRow component; role=option; kind=Document",
                   "children": [
                     {
                       "type": "frame",
@@ -119579,12 +119572,12 @@
                               "id": "m250010z",
                               "name": "S34 Rank 5 Reference",
                               "fill": "$text-secondary",
+                              "textGrowth": "fixed-width",
+                              "width": 44,
                               "content": "v3",
                               "fontFamily": "$font",
                               "fontSize": 11,
-                              "fontWeight": "600",
-                              "width": 44,
-                              "textGrowth": "fixed-width"
+                              "fontWeight": "600"
                             },
                             {
                               "type": "frame",
@@ -119650,7 +119643,6 @@
                           "type": "frame",
                           "id": "m250011a",
                           "name": "S34 Rank 5 Highlighted snippet",
-                          "gap": 0,
                           "alignItems": "center",
                           "children": [
                             {
@@ -119716,6 +119708,7 @@
                   "type": "frame",
                   "id": "m250011p",
                   "name": "S34 Rank 6 SearchResultRow",
+                  "context": "Shared SearchResultRow component; role=option; kind=Entity",
                   "width": "fill_container",
                   "height": 56,
                   "fill": "$raised",
@@ -119729,7 +119722,6 @@
                     12
                   ],
                   "alignItems": "center",
-                  "context": "Shared SearchResultRow component; role=option; kind=Entity",
                   "children": [
                     {
                       "type": "frame",
@@ -119775,12 +119767,12 @@
                               "id": "m250011h",
                               "name": "S34 Rank 6 Reference",
                               "fill": "$text-secondary",
-                              "content": "UK · 08249170",
+                              "textGrowth": "fixed-width",
+                              "width": 96,
+                              "content": "DE · 7124590",
                               "fontFamily": "$font",
                               "fontSize": 11,
-                              "fontWeight": "600",
-                              "width": 96,
-                              "textGrowth": "fixed-width"
+                              "fontWeight": "600"
                             },
                             {
                               "type": "frame",
@@ -119831,6 +119823,7 @@
                   "type": "frame",
                   "id": "m250011z",
                   "name": "S34 Rank 7 SearchResultRow",
+                  "context": "Shared SearchResultRow component; role=option; kind=Counterparty",
                   "width": "fill_container",
                   "height": 56,
                   "fill": "$raised",
@@ -119844,7 +119837,6 @@
                     12
                   ],
                   "alignItems": "center",
-                  "context": "Shared SearchResultRow component; role=option; kind=Counterparty",
                   "children": [
                     {
                       "type": "frame",
@@ -119890,12 +119882,12 @@
                               "id": "m250011r",
                               "name": "S34 Rank 7 Reference",
                               "fill": "$text-secondary",
+                              "textGrowth": "fixed-width",
+                              "width": 96,
                               "content": "Counterparty",
                               "fontFamily": "$font",
                               "fontSize": 11,
-                              "fontWeight": "600",
-                              "width": 96,
-                              "textGrowth": "fixed-width"
+                              "fontWeight": "600"
                             },
                             {
                               "type": "frame",
@@ -119957,7 +119949,8 @@
                   "type": "frame",
                   "id": "m2500122",
                   "name": "S34 Page Previous",
-      "height": 30,
+                  "opacity": 0.5,
+                  "height": 30,
                   "fill": "$raised",
                   "cornerRadius": 6,
                   "stroke": "$border",
@@ -119968,7 +119961,6 @@
                   ],
                   "justifyContent": "center",
                   "alignItems": "center",
-                  "opacity": 0.5,
                   "children": [
                     {
                       "type": "text",
@@ -119986,7 +119978,7 @@
                   "type": "frame",
                   "id": "m2500124",
                   "name": "S34 Page 1",
-      "height": 30,
+                  "height": 30,
                   "fill": "$status-info-bg",
                   "cornerRadius": 6,
                   "stroke": "$status-info-fg",
@@ -119997,7 +119989,6 @@
                   ],
                   "justifyContent": "center",
                   "alignItems": "center",
-                  "opacity": 1,
                   "children": [
                     {
                       "type": "text",
@@ -120015,7 +120006,7 @@
                   "type": "frame",
                   "id": "m2500126",
                   "name": "S34 Page 2",
-      "height": 30,
+                  "height": 30,
                   "fill": "$raised",
                   "cornerRadius": 6,
                   "stroke": "$border",
@@ -120026,7 +120017,6 @@
                   ],
                   "justifyContent": "center",
                   "alignItems": "center",
-                  "opacity": 1,
                   "children": [
                     {
                       "type": "text",
@@ -120044,7 +120034,7 @@
                   "type": "frame",
                   "id": "m2500128",
                   "name": "S34 Page 3",
-      "height": 30,
+                  "height": 30,
                   "fill": "$raised",
                   "cornerRadius": 6,
                   "stroke": "$border",
@@ -120055,7 +120045,6 @@
                   ],
                   "justifyContent": "center",
                   "alignItems": "center",
-                  "opacity": 1,
                   "children": [
                     {
                       "type": "text",
@@ -120073,7 +120062,7 @@
                   "type": "frame",
                   "id": "m250012a",
                   "name": "S34 Page Next",
-      "height": 30,
+                  "height": 30,
                   "fill": "$raised",
                   "cornerRadius": 6,
                   "stroke": "$border",
@@ -120084,7 +120073,6 @@
                   ],
                   "justifyContent": "center",
                   "alignItems": "center",
-                  "opacity": 1,
                   "children": [
                     {
                       "type": "text",
@@ -120107,15 +120095,14 @@
     {
       "type": "frame",
       "id": "m25001bs",
-      "name": "C35 — Contract document panel · K.T7 find",
       "x": 0,
       "y": 7140,
+      "name": "C35 — Contract document panel · K.T7 find",
+      "clip": true,
       "width": 1440,
       "height": 1220,
       "fill": "$canvas",
       "layout": "vertical",
-      "clip": true,
-      "placeholder": false,
       "children": [
         {
           "type": "frame",
@@ -120154,6 +120141,7 @@
               "type": "frame",
               "id": "m250012g",
               "name": "C35 — Contract document panel · K.T7 find SearchInput",
+              "context": "Global SearchInput; slash shortcut retained",
               "width": 480,
               "height": 30,
               "fill": "#0D1117",
@@ -120220,8 +120208,7 @@
                     }
                   ]
                 }
-              ],
-              "context": "Global SearchInput; slash shortcut retained"
+              ]
             },
             {
               "type": "frame",
@@ -121449,13 +121436,14 @@
           "name": "S35 Record row",
           "width": "fill_container",
           "height": 760,
-          "layout": "horizontal",
           "children": [
             {
               "type": "frame",
               "id": "m250015p",
               "name": "S4 DocsMain",
+              "clip": true,
               "width": "fill_container",
+              "height": 760,
               "layout": "vertical",
               "gap": 12,
               "padding": [
@@ -121653,7 +121641,7 @@
                           "type": "frame",
                           "id": "m2500166",
                           "name": "TH Kind",
-                          "width": 130,
+                          "width": 120,
                           "height": 36,
                           "padding": [
                             0,
@@ -121699,54 +121687,6 @@
                         },
                         {
                           "type": "frame",
-                          "id": "m250016a",
-                          "name": "TH Size",
-                          "width": 90,
-                          "height": 36,
-                          "padding": [
-                            0,
-                            12
-                          ],
-                          "alignItems": "center",
-                          "children": [
-                            {
-                              "type": "text",
-                              "id": "m250016b",
-                              "name": "THt Size",
-                              "fill": "$text-secondary",
-                              "content": "Size",
-                              "fontFamily": "$font",
-                              "fontSize": 11,
-                              "fontWeight": "600"
-                            }
-                          ]
-                        },
-                        {
-                          "type": "frame",
-                          "id": "m250016c",
-                          "name": "TH Modified",
-                          "width": 120,
-                          "height": 36,
-                          "padding": [
-                            0,
-                            12
-                          ],
-                          "alignItems": "center",
-                          "children": [
-                            {
-                              "type": "text",
-                              "id": "m250016d",
-                              "name": "THt Modified",
-                              "fill": "$text-secondary",
-                              "content": "Modified",
-                              "fontFamily": "$font",
-                              "fontSize": 11,
-                              "fontWeight": "600"
-                            }
-                          ]
-                        },
-                        {
-                          "type": "frame",
                           "id": "m250016e",
                           "name": "TH x",
                           "width": 76,
@@ -121774,6 +121714,7 @@
                           "type": "frame",
                           "id": "m250016g",
                           "name": "Cell",
+                          "clip": true,
                           "width": "fill_container",
                           "height": 44,
                           "gap": 8,
@@ -121836,7 +121777,7 @@
                           "type": "frame",
                           "id": "m250016m",
                           "name": "Cell",
-                          "width": 130,
+                          "width": 120,
                           "height": 44,
                           "gap": 8,
                           "padding": [
@@ -121850,32 +121791,6 @@
                           "id": "m250016n",
                           "name": "Cell",
                           "width": 70,
-                          "height": 44,
-                          "gap": 8,
-                          "padding": [
-                            0,
-                            12
-                          ],
-                          "alignItems": "center"
-                        },
-                        {
-                          "type": "frame",
-                          "id": "m250016o",
-                          "name": "Cell",
-                          "width": 90,
-                          "height": 44,
-                          "gap": 8,
-                          "padding": [
-                            0,
-                            12
-                          ],
-                          "alignItems": "center"
-                        },
-                        {
-                          "type": "frame",
-                          "id": "m250016p",
-                          "name": "Cell",
-                          "width": 120,
                           "height": 44,
                           "gap": 8,
                           "padding": [
@@ -121938,6 +121853,7 @@
                           "type": "frame",
                           "id": "m250016u",
                           "name": "Cell",
+                          "clip": true,
                           "width": "fill_container",
                           "height": 44,
                           "gap": 8,
@@ -122000,7 +121916,7 @@
                           "type": "frame",
                           "id": "m2500170",
                           "name": "Cell",
-                          "width": 130,
+                          "width": 120,
                           "height": 44,
                           "gap": 8,
                           "padding": [
@@ -122014,32 +121930,6 @@
                           "id": "m2500171",
                           "name": "Cell",
                           "width": 70,
-                          "height": 44,
-                          "gap": 8,
-                          "padding": [
-                            0,
-                            12
-                          ],
-                          "alignItems": "center"
-                        },
-                        {
-                          "type": "frame",
-                          "id": "m2500172",
-                          "name": "Cell",
-                          "width": 90,
-                          "height": 44,
-                          "gap": 8,
-                          "padding": [
-                            0,
-                            12
-                          ],
-                          "alignItems": "center"
-                        },
-                        {
-                          "type": "frame",
-                          "id": "m2500173",
-                          "name": "Cell",
-                          "width": 120,
                           "height": 44,
                           "gap": 8,
                           "padding": [
@@ -122102,6 +121992,7 @@
                           "type": "frame",
                           "id": "m2500178",
                           "name": "Cell",
+                          "clip": true,
                           "width": "fill_container",
                           "height": 44,
                           "gap": 8,
@@ -122164,7 +122055,7 @@
                           "type": "frame",
                           "id": "m250017e",
                           "name": "Cell",
-                          "width": 130,
+                          "width": 120,
                           "height": 44,
                           "gap": 8,
                           "padding": [
@@ -122178,32 +122069,6 @@
                           "id": "m250017f",
                           "name": "Cell",
                           "width": 70,
-                          "height": 44,
-                          "gap": 8,
-                          "padding": [
-                            0,
-                            12
-                          ],
-                          "alignItems": "center"
-                        },
-                        {
-                          "type": "frame",
-                          "id": "m250017g",
-                          "name": "Cell",
-                          "width": 90,
-                          "height": 44,
-                          "gap": 8,
-                          "padding": [
-                            0,
-                            12
-                          ],
-                          "alignItems": "center"
-                        },
-                        {
-                          "type": "frame",
-                          "id": "m250017h",
-                          "name": "Cell",
-                          "width": 120,
                           "height": 44,
                           "gap": 8,
                           "padding": [
@@ -122266,6 +122131,7 @@
                           "type": "frame",
                           "id": "m250017m",
                           "name": "Cell",
+                          "clip": true,
                           "width": "fill_container",
                           "height": 44,
                           "gap": 8,
@@ -122328,7 +122194,7 @@
                           "type": "frame",
                           "id": "m250017s",
                           "name": "Cell",
-                          "width": 130,
+                          "width": 120,
                           "height": 44,
                           "gap": 8,
                           "padding": [
@@ -122342,32 +122208,6 @@
                           "id": "m250017t",
                           "name": "Cell",
                           "width": 70,
-                          "height": 44,
-                          "gap": 8,
-                          "padding": [
-                            0,
-                            12
-                          ],
-                          "alignItems": "center"
-                        },
-                        {
-                          "type": "frame",
-                          "id": "m250017u",
-                          "name": "Cell",
-                          "width": 90,
-                          "height": 44,
-                          "gap": 8,
-                          "padding": [
-                            0,
-                            12
-                          ],
-                          "alignItems": "center"
-                        },
-                        {
-                          "type": "frame",
-                          "id": "m250017v",
-                          "name": "Cell",
-                          "width": 120,
                           "height": 44,
                           "gap": 8,
                           "padding": [
@@ -122430,6 +122270,7 @@
                           "type": "frame",
                           "id": "m2500180",
                           "name": "Cell",
+                          "clip": true,
                           "width": "fill_container",
                           "height": 44,
                           "gap": 8,
@@ -122479,7 +122320,7 @@
                           "type": "frame",
                           "id": "m2500185",
                           "name": "Cell",
-                          "width": 130,
+                          "width": 120,
                           "height": 44,
                           "gap": 8,
                           "padding": [
@@ -122554,56 +122395,6 @@
                         },
                         {
                           "type": "frame",
-                          "id": "m250018b",
-                          "name": "Cell",
-                          "width": 90,
-                          "height": 44,
-                          "gap": 8,
-                          "padding": [
-                            0,
-                            12
-                          ],
-                          "alignItems": "center",
-                          "children": [
-                            {
-                              "type": "text",
-                              "id": "m250018c",
-                              "name": "DocS",
-                              "fill": "$text-secondary",
-                              "content": "2.1 MB",
-                              "fontFamily": "$font",
-                              "fontSize": 12,
-                              "fontWeight": "normal"
-                            }
-                          ]
-                        },
-                        {
-                          "type": "frame",
-                          "id": "m250018d",
-                          "name": "Cell",
-                          "width": 120,
-                          "height": 44,
-                          "gap": 8,
-                          "padding": [
-                            0,
-                            12
-                          ],
-                          "alignItems": "center",
-                          "children": [
-                            {
-                              "type": "text",
-                              "id": "m250018e",
-                              "name": "DocM",
-                              "fill": "$text-secondary",
-                              "content": "Aug 12",
-                              "fontFamily": "$font",
-                              "fontSize": 12,
-                              "fontWeight": "normal"
-                            }
-                          ]
-                        },
-                        {
-                          "type": "frame",
                           "id": "m250018f",
                           "name": "Cell",
                           "width": 76,
@@ -122667,7 +122458,7 @@
                     {
                       "type": "frame",
                       "id": "m250018k",
-                      "name": "Doc Orion_MSA_2026_counter_redline.docx",
+                      "name": "Doc Orion_MSA_2026_counter_redline.pdf",
                       "width": "fill_container",
                       "stroke": "$border-muted",
                       "strokeWidth": {
@@ -122679,6 +122470,7 @@
                           "type": "frame",
                           "id": "m250018l",
                           "name": "Cell",
+                          "clip": true,
                           "width": "fill_container",
                           "height": 44,
                           "gap": 8,
@@ -122717,7 +122509,7 @@
                               "id": "m250018p",
                               "name": "DocN",
                               "fill": "$text-primary",
-                              "content": "Orion_MSA_2026_counter_redline.docx",
+                              "content": "Orion_MSA_2026_counter_redline.pdf",
                               "fontFamily": "$font",
                               "fontSize": 13,
                               "fontWeight": "500"
@@ -122728,7 +122520,7 @@
                           "type": "frame",
                           "id": "m250018q",
                           "name": "Cell",
-                          "width": 130,
+                          "width": 120,
                           "height": 44,
                           "gap": 8,
                           "padding": [
@@ -122803,56 +122595,6 @@
                         },
                         {
                           "type": "frame",
-                          "id": "m250018w",
-                          "name": "Cell",
-                          "width": 90,
-                          "height": 44,
-                          "gap": 8,
-                          "padding": [
-                            0,
-                            12
-                          ],
-                          "alignItems": "center",
-                          "children": [
-                            {
-                              "type": "text",
-                              "id": "m250018x",
-                              "name": "DocS",
-                              "fill": "$text-secondary",
-                              "content": "96 KB",
-                              "fontFamily": "$font",
-                              "fontSize": 12,
-                              "fontWeight": "normal"
-                            }
-                          ]
-                        },
-                        {
-                          "type": "frame",
-                          "id": "m250018y",
-                          "name": "Cell",
-                          "width": 120,
-                          "height": 44,
-                          "gap": 8,
-                          "padding": [
-                            0,
-                            12
-                          ],
-                          "alignItems": "center",
-                          "children": [
-                            {
-                              "type": "text",
-                              "id": "m250018z",
-                              "name": "DocM",
-                              "fill": "$text-secondary",
-                              "content": "Aug 5",
-                              "fontFamily": "$font",
-                              "fontSize": 12,
-                              "fontWeight": "normal"
-                            }
-                          ]
-                        },
-                        {
-                          "type": "frame",
                           "id": "m2500190",
                           "name": "Cell",
                           "width": 76,
@@ -122920,6 +122662,7 @@
                           "type": "frame",
                           "id": "m2500195",
                           "name": "Cell",
+                          "clip": true,
                           "width": "fill_container",
                           "height": 44,
                           "gap": 8,
@@ -122982,7 +122725,7 @@
                           "type": "frame",
                           "id": "m250019b",
                           "name": "Cell",
-                          "width": 130,
+                          "width": 120,
                           "height": 44,
                           "gap": 8,
                           "padding": [
@@ -122996,32 +122739,6 @@
                           "id": "m250019c",
                           "name": "Cell",
                           "width": 70,
-                          "height": 44,
-                          "gap": 8,
-                          "padding": [
-                            0,
-                            12
-                          ],
-                          "alignItems": "center"
-                        },
-                        {
-                          "type": "frame",
-                          "id": "m250019d",
-                          "name": "Cell",
-                          "width": 90,
-                          "height": 44,
-                          "gap": 8,
-                          "padding": [
-                            0,
-                            12
-                          ],
-                          "alignItems": "center"
-                        },
-                        {
-                          "type": "frame",
-                          "id": "m250019e",
-                          "name": "Cell",
-                          "width": 120,
                           "height": 44,
                           "gap": 8,
                           "padding": [
@@ -123084,6 +122801,7 @@
                           "type": "frame",
                           "id": "m250019j",
                           "name": "Cell",
+                          "clip": true,
                           "width": "fill_container",
                           "height": 44,
                           "gap": 8,
@@ -123133,7 +122851,7 @@
                           "type": "frame",
                           "id": "m250019o",
                           "name": "Cell",
-                          "width": 130,
+                          "width": 120,
                           "height": 44,
                           "gap": 8,
                           "padding": [
@@ -123203,56 +122921,6 @@
                                   "fontWeight": "600"
                                 }
                               ]
-                            }
-                          ]
-                        },
-                        {
-                          "type": "frame",
-                          "id": "m250019u",
-                          "name": "Cell",
-                          "width": 90,
-                          "height": 44,
-                          "gap": 8,
-                          "padding": [
-                            0,
-                            12
-                          ],
-                          "alignItems": "center",
-                          "children": [
-                            {
-                              "type": "text",
-                              "id": "m250019v",
-                              "name": "DocS",
-                              "fill": "$text-secondary",
-                              "content": "88 KB",
-                              "fontFamily": "$font",
-                              "fontSize": 12,
-                              "fontWeight": "normal"
-                            }
-                          ]
-                        },
-                        {
-                          "type": "frame",
-                          "id": "m250019w",
-                          "name": "Cell",
-                          "width": 120,
-                          "height": 44,
-                          "gap": 8,
-                          "padding": [
-                            0,
-                            12
-                          ],
-                          "alignItems": "center",
-                          "children": [
-                            {
-                              "type": "text",
-                              "id": "m250019x",
-                              "name": "DocM",
-                              "fill": "$text-secondary",
-                              "content": "Aug 4",
-                              "fontFamily": "$font",
-                              "fontSize": 12,
-                              "fontWeight": "normal"
                             }
                           ]
                         },
@@ -123333,6 +123001,7 @@
                           "type": "frame",
                           "id": "m25001a4",
                           "name": "Cell",
+                          "clip": true,
                           "width": "fill_container",
                           "height": 44,
                           "gap": 8,
@@ -123382,7 +123051,7 @@
                           "type": "frame",
                           "id": "m25001a9",
                           "name": "Cell",
-                          "width": 130,
+                          "width": 120,
                           "height": 44,
                           "gap": 8,
                           "padding": [
@@ -123429,56 +123098,6 @@
                             12
                           ],
                           "alignItems": "center"
-                        },
-                        {
-                          "type": "frame",
-                          "id": "m25001ad",
-                          "name": "Cell",
-                          "width": 90,
-                          "height": 44,
-                          "gap": 8,
-                          "padding": [
-                            0,
-                            12
-                          ],
-                          "alignItems": "center",
-                          "children": [
-                            {
-                              "type": "text",
-                              "id": "m25001ae",
-                              "name": "DocS",
-                              "fill": "$text-secondary",
-                              "content": "420 KB",
-                              "fontFamily": "$font",
-                              "fontSize": 12,
-                              "fontWeight": "normal"
-                            }
-                          ]
-                        },
-                        {
-                          "type": "frame",
-                          "id": "m25001af",
-                          "name": "Cell",
-                          "width": 120,
-                          "height": 44,
-                          "gap": 8,
-                          "padding": [
-                            0,
-                            12
-                          ],
-                          "alignItems": "center",
-                          "children": [
-                            {
-                              "type": "text",
-                              "id": "m25001ag",
-                              "name": "DocM",
-                              "fill": "$text-secondary",
-                              "content": "Jul 30",
-                              "fontFamily": "$font",
-                              "fontSize": 12,
-                              "fontWeight": "normal"
-                            }
-                          ]
                         },
                         {
                           "type": "frame",
@@ -123549,6 +123168,7 @@
                           "type": "frame",
                           "id": "m25001am",
                           "name": "Cell",
+                          "clip": true,
                           "width": "fill_container",
                           "height": 44,
                           "gap": 8,
@@ -123598,7 +123218,7 @@
                           "type": "frame",
                           "id": "m25001ar",
                           "name": "Cell",
-                          "width": 130,
+                          "width": 120,
                           "height": 44,
                           "gap": 8,
                           "padding": [
@@ -123645,56 +123265,6 @@
                             12
                           ],
                           "alignItems": "center"
-                        },
-                        {
-                          "type": "frame",
-                          "id": "m25001av",
-                          "name": "Cell",
-                          "width": 90,
-                          "height": 44,
-                          "gap": 8,
-                          "padding": [
-                            0,
-                            12
-                          ],
-                          "alignItems": "center",
-                          "children": [
-                            {
-                              "type": "text",
-                              "id": "m25001aw",
-                              "name": "DocS",
-                              "fill": "$text-secondary",
-                              "content": "210 KB",
-                              "fontFamily": "$font",
-                              "fontSize": 12,
-                              "fontWeight": "normal"
-                            }
-                          ]
-                        },
-                        {
-                          "type": "frame",
-                          "id": "m25001ax",
-                          "name": "Cell",
-                          "width": 120,
-                          "height": 44,
-                          "gap": 8,
-                          "padding": [
-                            0,
-                            12
-                          ],
-                          "alignItems": "center",
-                          "children": [
-                            {
-                              "type": "text",
-                              "id": "m25001ay",
-                              "name": "DocM",
-                              "fill": "$text-secondary",
-                              "content": "Jul 28",
-                              "fontFamily": "$font",
-                              "fontSize": 12,
-                              "fontWeight": "normal"
-                            }
-                          ]
                         },
                         {
                           "type": "frame",
@@ -123888,14 +123458,13 @@
                     }
                   ]
                 }
-              ],
-              "height": 760,
-              "clip": true
+              ]
             },
             {
               "type": "frame",
               "id": "m25001d1",
               "name": "S35 Document panel",
+              "context": "DES-016 wider sibling layer; docked beside record content and ActivityBar",
               "width": 720,
               "height": 760,
               "fill": "$raised",
@@ -123904,7 +123473,6 @@
                 "left": 1
               },
               "layout": "vertical",
-              "context": "DES-016 wider sibling layer; docked beside record content and ActivityBar",
               "children": [
                 {
                   "type": "frame",
@@ -123912,16 +123480,16 @@
                   "name": "S35 Document panel header",
                   "width": "fill_container",
                   "height": 44,
-                  "padding": [
-                    0,
-                    12
-                  ],
-                  "gap": 8,
-                  "alignItems": "center",
                   "stroke": "$border-muted",
                   "strokeWidth": {
                     "bottom": 1
                   },
+                  "gap": 8,
+                  "padding": [
+                    0,
+                    12
+                  ],
+                  "alignItems": "center",
                   "children": [
                     {
                       "type": "icon",
@@ -123938,12 +123506,12 @@
                       "id": "m25001cq",
                       "name": "S35 Document title",
                       "fill": "$text-primary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
                       "content": "Orion MSA — counterparty redline",
                       "fontFamily": "$font",
                       "fontSize": 13,
-                      "fontWeight": "600",
-                      "width": "fill_container",
-                      "textGrowth": "fixed-width"
+                      "fontWeight": "600"
                     },
                     {
                       "type": "frame",
@@ -123961,7 +123529,7 @@
                           "id": "m25001cr",
                           "name": "S35 Version",
                           "fill": "$status-neutral-fg",
-                          "content": "v3",
+                          "content": "v4",
                           "fontFamily": "$font",
                           "fontSize": 11,
                           "fontWeight": "600"
@@ -123987,16 +123555,16 @@
                   "width": "fill_container",
                   "height": 40,
                   "fill": "$section-header",
+                  "stroke": "$border-muted",
+                  "strokeWidth": {
+                    "bottom": 1
+                  },
                   "padding": [
                     0,
                     12
                   ],
                   "justifyContent": "space_between",
                   "alignItems": "center",
-                  "stroke": "$border-muted",
-                  "strokeWidth": {
-                    "bottom": 1
-                  },
                   "children": [
                     {
                       "type": "text",
@@ -124056,31 +123624,31 @@
                           "type": "frame",
                           "id": "m25001c2",
                           "name": "S35 K.T7 Find bar",
+                          "context": "PDF-only find control; Enter=next, Shift+Enter=previous",
                           "width": 430,
                           "height": 36,
                           "fill": "$raised",
                           "cornerRadius": 6,
                           "stroke": "$border",
                           "strokeWidth": 1,
+                          "effect": {
+                            "type": "shadow",
+                            "shadowType": "outer",
+                            "color": "#0D111726",
+                            "offset": {
+                              "x": 0,
+                              "y": 4
+                            },
+                            "blur": 12
+                          },
+                          "gap": 8,
                           "padding": [
                             0,
                             4,
                             0,
                             10
                           ],
-                          "gap": 8,
                           "alignItems": "center",
-                          "effect": {
-                            "type": "shadow",
-                            "shadowType": "outer",
-                            "offset": {
-                              "x": 0,
-                              "y": 4
-                            },
-                            "blur": 12,
-                            "color": "#0D111726"
-                          },
-                          "context": "PDF-only find control; Enter=next, Shift+Enter=previous",
                           "children": [
                             {
                               "type": "icon",
@@ -124097,12 +123665,12 @@
                               "id": "m25001bu",
                               "name": "S35 Find input",
                               "fill": "$text-primary",
+                              "textGrowth": "fixed-width",
+                              "width": "fill_container",
                               "content": "termination",
                               "fontFamily": "$font",
                               "fontSize": 12,
-                              "fontWeight": "normal",
-                              "width": "fill_container",
-                              "textGrowth": "fixed-width"
+                              "fontWeight": "normal"
                             },
                             {
                               "type": "text",
@@ -124204,26 +123772,26 @@
                           "id": "m25001c3",
                           "name": "S35 PDF title",
                           "fill": "#1F2328",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
                           "content": "MASTER SERVICES AGREEMENT",
+                          "textAlign": "center",
                           "fontFamily": "Georgia",
                           "fontSize": 16,
-                          "fontWeight": "600",
-                          "width": "fill_container",
-                          "textGrowth": "fixed-width",
-                          "textAlign": "center"
+                          "fontWeight": "600"
                         },
                         {
                           "type": "text",
                           "id": "m25001c4",
                           "name": "S35 PDF intro",
                           "fill": "#1F2328",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
                           "content": "This Master Services Agreement is entered into as of 8 August 2026 by and between Meridian Bio, Inc. and Orion Cloud Ltd.",
+                          "lineHeight": 1.45,
                           "fontFamily": "Georgia",
                           "fontSize": 12,
-                          "fontWeight": "normal",
-                          "width": "fill_container",
-                          "textGrowth": "fixed-width",
-                          "lineHeight": 1.45
+                          "fontWeight": "normal"
                         },
                         {
                           "type": "text",
@@ -124240,7 +123808,6 @@
                           "id": "m25001ca",
                           "name": "S35 Match 1 PDF line",
                           "width": "fill_container",
-                          "gap": 0,
                           "alignItems": "center",
                           "children": [
                             {
@@ -124259,12 +123826,11 @@
                               "name": "S35 Match 1 Highlight",
                               "fill": "$status-warning-bg",
                               "cornerRadius": 2,
+                              "stroke": "$status-warning-bg",
                               "padding": [
                                 1,
                                 2
                               ],
-                              "stroke": "$status-warning-bg",
-                              "strokeWidth": 0,
                               "children": [
                                 {
                                   "type": "text",
@@ -124295,7 +123861,6 @@
                           "id": "m25001cf",
                           "name": "S35 Match 2 PDF line",
                           "width": "fill_container",
-                          "gap": 0,
                           "alignItems": "center",
                           "children": [
                             {
@@ -124314,12 +123879,12 @@
                               "name": "S35 Match 2 Highlight",
                               "fill": "$status-severe-bg",
                               "cornerRadius": 2,
+                              "stroke": "$status-severe-fg",
+                              "strokeWidth": 1,
                               "padding": [
                                 1,
                                 2
                               ],
-                              "stroke": "$status-severe-fg",
-                              "strokeWidth": 1,
                               "children": [
                                 {
                                   "type": "text",
@@ -124350,7 +123915,6 @@
                           "id": "m25001ck",
                           "name": "S35 Match 3 PDF line",
                           "width": "fill_container",
-                          "gap": 0,
                           "alignItems": "center",
                           "children": [
                             {
@@ -124369,12 +123933,11 @@
                               "name": "S35 Match 3 Highlight",
                               "fill": "$status-warning-bg",
                               "cornerRadius": 2,
+                              "stroke": "$status-warning-bg",
                               "padding": [
                                 1,
                                 2
                               ],
-                              "stroke": "$status-warning-bg",
-                              "strokeWidth": 0,
                               "children": [
                                 {
                                   "type": "text",
@@ -124405,34 +123968,34 @@
                           "id": "m25001cl",
                           "name": "S35 PDF paragraph",
                           "fill": "#1F2328",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
                           "content": "The rights in this clause are cumulative and do not limit any other remedy available at law. Fees accrued before the effective date remain payable.",
+                          "lineHeight": 1.45,
                           "fontFamily": "Georgia",
                           "fontSize": 12,
-                          "fontWeight": "normal",
-                          "width": "fill_container",
-                          "textGrowth": "fixed-width",
-                          "lineHeight": 1.45
+                          "fontWeight": "normal"
                         },
                         {
                           "type": "rectangle",
                           "id": "m25001cm",
                           "name": "S35 PDF footer rule",
+                          "fill": "#D8DEE4",
                           "width": "fill_container",
-                          "height": 1,
-                          "fill": "#D8DEE4"
+                          "height": 1
                         },
                         {
                           "type": "text",
                           "id": "m25001cn",
                           "name": "S35 PDF page number",
                           "fill": "#656D76",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
                           "content": "12",
+                          "textAlign": "center",
                           "fontFamily": "Georgia",
                           "fontSize": 10,
-                          "fontWeight": "normal",
-                          "width": "fill_container",
-                          "textGrowth": "fixed-width",
-                          "textAlign": "center"
+                          "fontWeight": "normal"
                         }
                       ]
                     }
