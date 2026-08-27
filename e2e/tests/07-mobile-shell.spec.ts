@@ -32,7 +32,7 @@ test.describe("mobile shell below 768px", () => {
 
     // The workspace crumb yields to search; the search box survives.
     await expect(page.getByRole("banner").getByText("workspace")).toBeHidden();
-    await expect(page.getByRole("searchbox", { name: "Search" })).toBeVisible();
+    await expect(page.getByRole("combobox", { name: "Search" })).toBeVisible();
 
     expect(await hasNoHorizontalOverflow(page)).toBe(true);
 

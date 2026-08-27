@@ -31,6 +31,7 @@ import { PortalRequestPage, portalRequestLoader } from "./routes/portal-request"
 import { PortalEntryPage, portalEntryLoader } from "./routes/portal-entry";
 import { PortalSettingsPage, portalSettingsLoader } from "./routes/portal-settings";
 import { SetPasswordPage } from "./routes/set-password";
+import { SearchPage, searchLoader } from "./routes/search";
 import { SettingsLayout, settingsIndexLoader, settingsLoader } from "./routes/settings";
 import { SettingsAppearancePage } from "./routes/settings-appearance";
 import {
@@ -212,6 +213,13 @@ export const routes: RouteObject[] = [
         <ContractRecordPage />
       </KeyedByParam>
     ),
+    errorElement: <RouteErrorPage />,
+    hydrateFallbackElement: <></>,
+  },
+  {
+    path: "/search",
+    loader: searchLoader,
+    element: <SearchPage />,
     errorElement: <RouteErrorPage />,
     hydrateFallbackElement: <></>,
   },

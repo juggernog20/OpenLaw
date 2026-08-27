@@ -385,18 +385,23 @@ test.describe.serial("M10 demo path", () => {
       // their world, and nothing else changed in between.
       expect(await listedCount(outsiderPage)).toBe(countBefore - 1);
 
-      // The demo sentence's search leg, as far as the product goes
-      // today: the chip takes the `/` binding (DES-010) and takes the
-      // typing, and nothing answers. M25 builds search against this
-      // same gate.
+      // The demo sentence's search leg, now answered by M25: the chip
+      // takes the `/` binding (DES-010), the typing opens the ranked
+      // listbox, and the walled-off record is not in the answer.
       await outsiderPage.keyboard.press("/");
-      const search = outsiderPage.getByRole("banner").getByRole("searchbox", { name: "Search" });
+      const search = outsiderPage.getByRole("banner").getByRole("combobox", { name: "Search" });
       await expect(search).toBeFocused();
       await search.fill(title);
       await expect(search).toHaveValue(title);
       await expect(outsiderPage).toHaveURL(/\/contracts$/);
-      await expect(outsiderPage.getByRole("listbox")).toHaveCount(0);
+      const searchAnswer = outsiderPage.getByRole("listbox", { name: "Search results" });
+      await expect(searchAnswer.getByText("No matches", { exact: true })).toBeVisible();
+      await expect(searchAnswer.getByRole("option")).toHaveCount(0);
       await expect(outsiderPage.getByRole("dialog")).toHaveCount(0);
+      // Esc closes the box; the only echo of the title left on the
+      // page is the input's own value, which getByText cannot read.
+      await search.press("Escape");
+      await expect(outsiderPage.getByRole("listbox")).toHaveCount(0);
       await expect(outsiderPage.getByText(title)).toHaveCount(0);
 
       // The record URL answers exactly the page a contract nobody ever

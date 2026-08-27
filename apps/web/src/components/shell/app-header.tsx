@@ -13,6 +13,7 @@
 
 import { Scale } from "lucide-react";
 import { FormattedMessage } from "react-intl";
+import { useLocation } from "react-router";
 import { NavDrawer } from "./nav-drawer";
 import { NotificationBell } from "../notification-bell";
 import { SearchInput } from "./search-input";
@@ -22,6 +23,11 @@ export function AppHeader({
   user,
   onSignOut,
 }: Readonly<{ user: ShellUser; onSignOut: () => void }>) {
+  const location = useLocation();
+  // A Counterparty result can move between two `/search` answers
+  // without replacing the route component. Key the header there so its
+  // query mirrors the URL-backed answer instead of keeping the old one.
+  const searchKey = location.pathname === "/search" ? location.search : "staff-search";
   return (
     <header className="flex h-header shrink-0 items-center justify-between gap-4 border-b border-(--chrome-header-border) bg-inverted px-4 text-on-inverted">
       <div className="flex shrink-0 items-center gap-4">
@@ -49,7 +55,7 @@ export function AppHeader({
           </span>
         </span>
       </div>
-      <SearchInput />
+      <SearchInput key={searchKey} />
       {/* 16px between the trailing controls, as the AppHeader frame
           spaces its own cluster. */}
       <div className="flex shrink-0 items-center gap-4">

@@ -44,6 +44,7 @@ import { api } from "../lib/api";
 import { narrateActivity } from "../lib/activity";
 import { dayBounds, formatLongDateTime, formatRelativeOrShort } from "../lib/format";
 import { CONTROL_CLASS } from "../lib/form-controls";
+import { registerSearchTarget } from "../lib/keyboard";
 import { currentUser, needsSetup } from "../lib/session";
 import { cn } from "../lib/utils";
 import { PageTitle } from "../components/page-title";
@@ -227,6 +228,13 @@ export function SettingsAuditLogPage() {
   const [cursor, setCursor] = useState<string | null>(null);
   const [loadFailed, setLoadFailed] = useState(false);
   const [busy, setBusy] = useState(false);
+  // Stable across renders so the `/` dispatch keeps mount order: an
+  // inline callback would unregister and re-register on every render
+  // (React 19 reruns a changed ref callback).
+  const searchTargetRef = useCallback(
+    (element: HTMLInputElement | null) => (element ? registerSearchTarget(element) : undefined),
+    [],
+  );
 
   useEffect(() => {
     const timer = setTimeout(() => setTerm(filters.q), SEARCH_DEBOUNCE_MS);
@@ -429,6 +437,7 @@ export function SettingsAuditLogPage() {
             <Input
               id="auditSearch"
               type="search"
+              ref={searchTargetRef}
               value={filters.q}
               onChange={(event) => narrow({ q: event.target.value })}
             />
