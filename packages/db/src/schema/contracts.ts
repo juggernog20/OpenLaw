@@ -50,7 +50,7 @@ import { contractTypes } from "./contract-types.js";
 import { documents } from "./documents.js";
 import { entities } from "./entities.js";
 import type { CustomFieldValue } from "./fields.js";
-import { uuidPk } from "./helpers.js";
+import { searchVector, uuidPk } from "./helpers.js";
 import { matters } from "./matters.js";
 import { SEVERITY_LEVELS } from "./severity.js";
 
@@ -259,6 +259,13 @@ export const contracts = pgTable(
     /** Soft delete for mistakes and imports (CONTEXT.md: Archiving is
      * never a synonym for Ending, which is CTR-019's own column). */
     archivedAt: timestamp("archived_at", { withTimezone: true }),
+    /** M25's row-owned search document. Type, status, and party names
+     * stay at query-time joins so renaming another row cannot stale it. */
+    searchVector: searchVector("search_vector").generatedAlwaysAs(sql`
+      setweight(to_tsvector('english', coalesce("title", '')), 'A') ||
+      setweight(to_tsvector('english', 'C-' || "number"::text), 'A') ||
+      setweight(to_tsvector('english', coalesce("description", '')), 'B')
+    `),
   },
   (table) => [
     // Identity guarantees distinct numbers; the index is what the
@@ -292,6 +299,7 @@ export const contracts = pgTable(
     // The Matter record's linked-Contracts section reads this side of
     // the one-to-many relationship.
     index("contracts_matter_idx").on(table.matterId),
+    index("contracts_search_vector_idx").using("gin", table.searchVector),
     // `entity_id` carries no index yet: nothing in M8 reads contracts by
     // the entity that signs them. The roll-up that will (ENT-007, M27)
     // brings its own, per the incremental-schema doctrine.

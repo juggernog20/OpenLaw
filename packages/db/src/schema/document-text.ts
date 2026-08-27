@@ -28,8 +28,12 @@
  */
 
 import { sql } from "drizzle-orm";
-import { check, pgTable, text, timestamp } from "drizzle-orm/pg-core";
+import { check, index, pgTable, text, timestamp } from "drizzle-orm/pg-core";
 import { documentVersions } from "./documents.js";
+import { searchVector } from "./helpers.js";
+
+/** Maximum extracted source characters admitted to one M25 vector (DOC-009). */
+export const DOCUMENT_TEXT_SEARCH_CHARACTER_LIMIT = 1_000_000;
 
 /**
  * Where a derivation has got to.
@@ -96,6 +100,21 @@ export const documentVersionText = pgTable(
       .notNull()
       .defaultNow()
       .$onUpdate(() => new Date()),
+    /** Only completed derivations contribute content. PostgreSQL
+     * recomputes this stored value on every state/text write, so the
+     * extraction worker is already the indexing path (TECH-014). */
+    searchVector: searchVector("search_vector").generatedAlwaysAs(sql`
+      case
+        when "state" = 'ready' then setweight(
+          to_tsvector(
+            'english',
+            left(coalesce("text", ''), ${sql.raw(String(DOCUMENT_TEXT_SEARCH_CHARACTER_LIMIT))})
+          ),
+          'D'
+        )
+        else ''::tsvector
+      end
+    `),
   },
   (table) => [
     check(
@@ -115,6 +134,7 @@ export const documentVersionText = pgTable(
       "document_version_text_ready_check",
       sql`(${table.state} = 'ready') = (${table.text} is not null and ${table.source} is not null)`,
     ),
+    index("document_version_text_search_vector_idx").using("gin", table.searchVector),
   ],
 );
 

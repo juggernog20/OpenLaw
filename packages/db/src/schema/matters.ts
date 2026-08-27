@@ -16,7 +16,7 @@ import {
 } from "drizzle-orm/pg-core";
 import { users } from "./auth.js";
 import type { CustomFieldValue } from "./fields.js";
-import { uuidPk } from "./helpers.js";
+import { searchVector, uuidPk } from "./helpers.js";
 import { matterStatuses } from "./matter-statuses.js";
 import { matterTypes } from "./matter-types.js";
 import { SEVERITY_LEVELS } from "./severity.js";
@@ -62,6 +62,13 @@ export const matters = pgTable(
       .$onUpdate(() => new Date()),
     // Null means the matter remains active and appears in collections.
     archivedAt: timestamp("archived_at", { withTimezone: true }),
+    /** M25's row-owned search document; configured type and status
+     * names are joined when a query runs rather than copied here. */
+    searchVector: searchVector("search_vector").generatedAlwaysAs(sql`
+      setweight(to_tsvector('english', coalesce("title", '')), 'A') ||
+      setweight(to_tsvector('english', 'M-' || "number"::text), 'A') ||
+      setweight(to_tsvector('english', coalesce("description", '')), 'B')
+    `),
   },
   (table) => [
     uniqueIndex("matters_number_unique").on(table.number),
@@ -69,6 +76,7 @@ export const matters = pgTable(
     index("matters_status_idx").on(table.statusId),
     index("matters_manager_idx").on(table.managerId),
     index("matters_parent_idx").on(table.parentId),
+    index("matters_search_vector_idx").using("gin", table.searchVector),
     check(
       "matters_parent_self_check",
       sql`${table.parentId} is null or ${table.parentId} <> ${table.id}`,

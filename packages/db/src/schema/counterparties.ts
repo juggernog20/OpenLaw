@@ -22,7 +22,7 @@
 
 import { sql } from "drizzle-orm";
 import { index, pgTable, text, timestamp } from "drizzle-orm/pg-core";
-import { uuidPk } from "./helpers.js";
+import { searchVector, uuidPk } from "./helpers.js";
 
 export const counterparties = pgTable(
   "counterparties",
@@ -45,6 +45,11 @@ export const counterparties = pgTable(
     /** SET-003 soft delete: out of the typeahead, still on every
      * contract it signed. */
     archivedAt: timestamp("archived_at", { withTimezone: true }),
+    /** M25's row-owned party vector. */
+    searchVector: searchVector("search_vector").generatedAlwaysAs(sql`
+      setweight(to_tsvector('english', coalesce("name", '')), 'A') ||
+      setweight(to_tsvector('english', coalesce("jurisdiction", '')), 'C')
+    `),
   },
   (table) => [
     // The typeahead's read: ordered by name, case-insensitively, so
@@ -65,6 +70,7 @@ export const counterparties = pgTable(
     // installation has enough counterparties for a scan to be felt yet.
     // A trigram index arrives with the volume that needs it (TECH-014).
     index("counterparties_name_idx").on(sql`lower(${table.name})`, table.createdAt),
+    index("counterparties_search_vector_idx").using("gin", table.searchVector),
   ],
 );
 
