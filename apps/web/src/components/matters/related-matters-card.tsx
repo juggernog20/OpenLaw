@@ -2,6 +2,7 @@
 
 /** Parent, children, and flat related Matters on the Matter Overview. */
 import { useRef, useState } from "react";
+import { useRecord } from "../record-context";
 import { defineMessage, FormattedMessage, useIntl, type MessageDescriptor } from "react-intl";
 import { Link } from "react-router";
 import {
@@ -76,18 +77,17 @@ function Group({
 }
 
 export function RelatedMattersCard({
-  number,
   relations,
-  editable,
   onChanged,
   onCreateChild,
 }: Readonly<{
-  number: number;
   relations: MatterRelations;
-  editable: boolean;
   onChanged: (relations: MatterRelations) => void;
   onCreateChild: () => void;
 }>) {
+  const { record, frozen } = useRecord();
+  const number = record.number;
+  const editable = !frozen;
   const [dialog, setDialog] = useState<"parent" | "related" | null>(null);
   const [error, setError] = useState(false);
   const inFlight = useRef(false);

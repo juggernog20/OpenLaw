@@ -129,7 +129,8 @@
  * (CTR-022) — so that item is drawn for those three and nobody else.
  */
 
-import { Fragment, useEffect, useRef, useState, type RefObject } from "react";
+import { Fragment, useEffect, useMemo, useRef, useState, type RefObject } from "react";
+import { useRecord } from "../record-context";
 import { defineMessage, FormattedMessage, useIntl, type IntlShape } from "react-intl";
 import {
   Archive,
@@ -174,7 +175,6 @@ import {
   filesFromDrop,
   type DroppedFile,
 } from "../../lib/batch-upload";
-import type { Role } from "../../lib/roles";
 import {
   archiveDocument,
   chainOf,
@@ -378,15 +378,10 @@ interface RowContext {
 }
 
 export function DocumentsCard({
-  record,
   documents,
   folders,
   nextCursor,
-  frozen,
   supportingUploads,
-  role,
-  viewerId,
-  ownerId,
   reading,
   amending,
   onRead,
@@ -395,8 +390,6 @@ export function DocumentsCard({
   onFolders,
   onAmendmentOpened,
 }: Readonly<{
-  /** CTR-003's reference — the address the upload route takes. */
-  record: DocumentRecord;
   documents: readonly ContractDocument[];
   /** The record's folders, whole (M13/2, DOC-006). The tree is drawn
    * from this one set: a record's folders are few, so there is no read
@@ -405,25 +398,10 @@ export function DocumentsCard({
   /** Where the next page starts, or null at the end of the record's
    * paper (CTR-024). */
   nextCursor: string | null;
-  /** General Document administration is frozen: the record is archived,
-   * or this viewer is below Member+. `supportingUploads` is the one
-   * deliberate live-record carve-out. */
-  frozen: boolean;
   /** Whether this viewer may create supporting paper and append to a
    * supporting chain. This is true only for a Contributor on a live
    * reached record; every administration control remains frozen. */
   supportingUploads: boolean;
-  /** The viewer's role. It answers one question the section cannot ask
-   * of the rows: whether to draw DOC-010's erasure, which is the
-   * Administrator's alone. */
-  role: Role;
-  /** Who is reading. The Confidential flag's actor set is a fact about
-   * this person and this document (CTR-022), so the section needs to
-   * know which person it is drawing for. */
-  viewerId: string;
-  /** The contract's Owner (CTR-004), or none. The record holds it, so
-   * it is passed down rather than read again per row. */
-  ownerId: string | null;
   /** The version the doc panel is reading, or none (M12/2). The record
    * holds it, because the panel is a layer beside the record and not
    * part of this section. */
@@ -481,6 +459,22 @@ export function DocumentsCard({
    * request, so it is answered exactly once. */
   onAmendmentOpened: () => void;
 }>) {
+  // The record page says which record this is, who is reading, who the
+  // Owner is, and whether administration is frozen (TECH-024 rule 7).
+  // The viewer's role decides one control here: DOC-010's erasure. The
+  // viewer's id and the Owner's are two of the Confidential flag's three
+  // actors (CTR-022).
+  const { record: reference, viewer, ownerId, frozen } = useRecord();
+  const kind = reference.kind;
+  const number = reference.number;
+  if (kind === "entity") {
+    throw new Error("DocumentsCard is drawn on contract and matter records only.");
+  }
+  /** CTR-003's reference, the address the upload route takes. One
+   * object per record, so nothing keyed on it re-runs every render. */
+  const record = useMemo<DocumentRecord>(() => ({ entityType: kind, number }), [kind, number]);
+  const role = viewer.role;
+  const viewerId = viewer.id;
   const intl = useIntl();
   const [status, setStatus] = useState<FieldStatus>("idle");
   /** The seam's own refusal, when it sent one, so the section says what

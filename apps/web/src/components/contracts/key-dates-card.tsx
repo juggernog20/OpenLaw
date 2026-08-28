@@ -49,6 +49,7 @@
  */
 
 import { useState } from "react";
+import { useRecord } from "../record-context";
 import { FormattedMessage, useIntl, defineMessage, type IntlShape } from "react-intl";
 import { MoreHorizontal, Pencil, Plus, Trash2 } from "lucide-react";
 import { MAX_KEY_DATE_LABEL_LENGTH, MAX_KEY_DATE_NOTE_LENGTH } from "@openlaw/shared";
@@ -115,13 +116,10 @@ type DraftInput = { date: string; label: string; note: string };
 type Editing = { row: null } | { row: ContractDeadline & { keyDateId: string } };
 
 export function KeyDatesCard({
-  contractNumber,
   deadlines,
   noticePeriodDays,
-  frozen,
   onDeadlines,
 }: Readonly<{
-  contractNumber: number;
   /** The CTR-009 union as the seam answered it — ordered, counted, and
    * with the next deadline already marked. */
   deadlines: readonly ContractDeadline[];
@@ -131,9 +129,10 @@ export function KeyDatesCard({
    * which case no notice-deadline row exists to say it. */
   noticePeriodDays: number | null;
   /** An archived record, or a read-only viewer: no control is drawn. */
-  frozen: boolean;
   onDeadlines: (deadlines: ContractDeadline[]) => void;
 }>) {
+  const { record, frozen } = useRecord();
+  const contractNumber = record.number;
   const intl = useIntl();
   const [status, setStatus] = useState<FieldStatus>("idle");
   const [detail, setDetail] = useState<string | null>(null);
