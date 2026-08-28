@@ -259,7 +259,7 @@ export function ContractMatterLinkDialog(
               {error}
             </p>
           )}
-          <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+          <div className="flex flex-col-reverse gap-2 @sm/dialog:flex-row @sm/dialog:justify-end">
             <Button variant="secondary" onClick={props.onClose} disabled={busy}>
               <FormattedMessage id="action.cancel" defaultMessage="Cancel" />
             </Button>

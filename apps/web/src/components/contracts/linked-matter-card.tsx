@@ -71,7 +71,7 @@ export function LinkedMatterCard({
             />
           </p>
         ) : (
-          <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-center">
+          <div className="flex min-w-0 flex-col gap-3 @sm/record:flex-row @sm/record:items-center">
             <Link
               to={`/matters/${matter.number}`}
               className="min-w-0 break-words text-sm text-link hover:underline"
@@ -85,7 +85,7 @@ export function LinkedMatterCard({
             </span>
             {editable && (
               <Button
-                className="sm:ml-auto"
+                className="@sm/record:ml-auto"
                 variant="secondary"
                 disabled={busy}
                 onClick={() => void unlink()}
