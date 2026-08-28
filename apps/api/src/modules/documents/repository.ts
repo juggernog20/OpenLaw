@@ -6,27 +6,73 @@ import { z } from "zod";
 import {
   and,
   contracts,
-  desc,
   documentFolders,
   documents,
   documentVersions,
   documentVersionText,
   eq,
+  gte,
   isNull,
   lt,
   matters,
-  or,
   sql,
   users,
   DOCUMENT_VERSION_KINDS,
   type Db,
+  type SQL,
 } from "@openlaw/db";
+import { SORT_DIRECTIONS, type SortDirection } from "@openlaw/shared";
 import { documentRepositoryScope, requireDocumentReader } from "../../lib/document-access.js";
 import { problemResponse } from "../../lib/problem.js";
+import { renderFamilySql } from "../../lib/render-family.js";
 
 const DEFAULT_LIMIT = 50;
 const MAX_LIMIT = 100;
 const CursorSchema = z.string().min(1).max(64);
+const DOCUMENT_FORMATS = ["pdf", "word", "powerpoint", "image", "email", "other"] as const;
+const DOCUMENT_SORT_KEYS = [
+  "title",
+  "owner",
+  "kind",
+  "format",
+  "size",
+  "uploader",
+  "uploaded",
+] as const;
+type DocumentSortKey = (typeof DOCUMENT_SORT_KEYS)[number];
+interface SortRequest {
+  key: DocumentSortKey;
+  dir: SortDirection;
+}
+
+const RecordReferenceSchema = z
+  .string()
+  .regex(/^[CM]-[1-9]\d*$/, "Record must be a C- or M- reference.")
+  .refine((value) => BigInt(value.slice(2)) <= 2_147_483_647n, "Record reference is too large.");
+
+const RepositoryQuerySchema = z
+  .object({
+    owner: z.enum(["contract", "matter"]).optional(),
+    record: RecordReferenceSchema.optional(),
+    folder: z.string().min(1).max(64).optional(),
+    format: z.enum(DOCUMENT_FORMATS).optional(),
+    kind: z.enum(DOCUMENT_VERSION_KINDS).optional(),
+    uploadedFrom: z.iso.date().optional(),
+    uploadedTo: z.iso.date().optional(),
+    sort: z.enum(DOCUMENT_SORT_KEYS).optional(),
+    dir: z.enum(SORT_DIRECTIONS).optional(),
+    cursor: CursorSchema.optional(),
+    limit: z.coerce.number().int().min(1).max(MAX_LIMIT).optional(),
+  })
+  .superRefine((query, context) => {
+    if (query.folder !== undefined && query.record === undefined) {
+      context.addIssue({
+        code: "custom",
+        path: ["folder"],
+        message: "Folder requires a record filter.",
+      });
+    }
+  });
 
 const PersonSchema = z.object({
   id: z.string(),
@@ -66,6 +112,78 @@ const currentVersion = sql`${documentVersions.versionNumber} = (
   from document_versions current_version
   where current_version.document_id = ${documents.id}
 )`;
+
+const ownerReference = sql<string>`concat(
+  case when ${documents.contractId} is not null then 'C-' else 'M-' end,
+  lpad(coalesce(${contracts.number}, ${matters.number})::text, 10, '0')
+)`;
+const repositoryFormat = sql<string>`replace(
+  ${renderFamilySql(documentVersions.mimeType, documentVersions.originalFilename)},
+  'presentation',
+  'powerpoint'
+)`;
+const repositoryTitle = sql<string>`lower(coalesce(${documentVersionText.emailSubject}, ${documents.title}))`;
+
+const SORTS: Record<DocumentSortKey, SQL> = {
+  title: repositoryTitle,
+  owner: ownerReference,
+  kind: sql`${documentVersions.kind}`,
+  format: repositoryFormat,
+  size: sql`${documentVersions.byteSize}`,
+  uploader: sql`lower(${users.displayName})`,
+  uploaded: sql`${documentVersions.createdAt}`,
+};
+
+function listOrder(sort: SortRequest | null): SQL[] {
+  const primary = sort ? SORTS[sort.key] : sql`${documentVersions.createdAt}`;
+  const direction = sort?.dir ?? "desc";
+  return [
+    sql`${primary} ${sql.raw(direction === "asc" ? "asc" : "desc")}`,
+    sql`${ownerReference} desc`,
+    sql`${documents.id} desc`,
+  ];
+}
+
+function boundaryValue(expression: SQL, cursor: string, scope: SQL | undefined): SQL {
+  return sql`(
+    select ${expression}
+    from ${documents}
+    inner join ${documentVersions}
+      on ${and(eq(documentVersions.documentId, documents.id), currentVersion)}
+    inner join ${users} on ${users.id} = ${documentVersions.createdBy}
+    left join ${documentVersionText} on ${documentVersionText.versionId} = ${documentVersions.id}
+    left join ${contracts} on ${contracts.id} = ${documents.contractId}
+    left join ${matters} on ${matters.id} = ${documents.matterId}
+    where ${and(eq(documents.id, cursor), scope)}
+    limit 1
+  )`;
+}
+
+function furtherDownThan(cursor: string, scope: SQL | undefined, sort: SortRequest | null): SQL {
+  const primary = sort ? SORTS[sort.key] : sql`${documentVersions.createdAt}`;
+  const value = boundaryValue(primary, cursor, scope);
+  const atOwner = boundaryValue(ownerReference, cursor, scope);
+  const atId = boundaryValue(sql`${documents.id}`, cursor, scope);
+  const later = sql.raw((sort?.dir ?? "desc") === "asc" ? ">" : "<");
+  return sql`(
+    ${primary} ${later} ${value}
+    or (
+      ${primary} = ${value}
+      and (
+        ${ownerReference} < ${atOwner}
+        or (${ownerReference} = ${atOwner} and ${documents.id} < ${atId})
+      )
+    )
+  )`;
+}
+
+function recordPredicate(reference: string | undefined): SQL | undefined {
+  if (!reference) return undefined;
+  const number = Number(reference.slice(2));
+  return reference.startsWith("C-")
+    ? and(eq(documents.contractId, contracts.id), eq(contracts.number, number))
+    : and(eq(documents.matterId, matters.id), eq(matters.number, number));
+}
 
 function selectRepository(db: Db) {
   return db
@@ -165,10 +283,7 @@ export const documentRepositoryRoutes: FastifyPluginAsyncZod = async (app) => {
           "Version's upload time. Closed Matters and ended Contracts remain in the list. " +
           "Confidential Documents and records are omitted before paging.",
         tags: ["documents"],
-        querystring: z.object({
-          cursor: CursorSchema.optional(),
-          limit: z.coerce.number().int().min(1).max(MAX_LIMIT).optional(),
-        }),
+        querystring: RepositoryQuerySchema,
         response: {
           200: z.object({
             documents: z.array(RepositoryRowSchema),
@@ -179,48 +294,44 @@ export const documentRepositoryRoutes: FastifyPluginAsyncZod = async (app) => {
       },
     },
     async (request) => {
+      const sort: SortRequest | null = request.query.sort
+        ? { key: request.query.sort, dir: request.query.dir ?? "asc" }
+        : null;
       const scope = and(
         isNull(documents.archivedAt),
         documentRepositoryScope(app.db, request.user),
       );
-      let boundary: { id: string; versionId: string } | null = null;
-      if (request.query.cursor !== undefined) {
-        const [cursor] = await selectRepository(app.db)
-          .where(and(eq(documents.id, request.query.cursor), scope))
-          .limit(1);
-        if (!cursor) return { documents: [], nextCursor: null };
-        boundary = { id: cursor.id, versionId: cursor.versionId };
-      }
-      // The boundary's upload time stays in SQL. A JS Date keeps
-      // milliseconds and Postgres keeps microseconds, so a value that
-      // came back through the driver would sit a fraction before the
-      // real stamp and the next page would skip every row in between.
-      const boundaryCreatedAt =
-        boundary === null
-          ? null
-          : sql`(
-              select boundary_version.created_at
-              from document_versions boundary_version
-              where boundary_version.id = ${boundary.versionId}
-            )`;
 
       const pageSize = request.query.limit ?? DEFAULT_LIMIT;
       const rows = await selectRepository(app.db)
         .where(
           and(
             scope,
-            boundary === null || boundaryCreatedAt === null
-              ? undefined
-              : or(
-                  lt(documentVersions.createdAt, boundaryCreatedAt),
-                  and(
-                    eq(documentVersions.createdAt, boundaryCreatedAt),
-                    lt(documents.id, boundary.id),
-                  ),
-                ),
+            request.query.owner === "contract"
+              ? sql`${documents.contractId} is not null`
+              : undefined,
+            request.query.owner === "matter" ? sql`${documents.matterId} is not null` : undefined,
+            recordPredicate(request.query.record),
+            request.query.folder === "root"
+              ? isNull(documents.folderId)
+              : request.query.folder
+                ? eq(documents.folderId, request.query.folder)
+                : undefined,
+            request.query.format ? eq(repositoryFormat, request.query.format) : undefined,
+            request.query.kind ? eq(documentVersions.kind, request.query.kind) : undefined,
+            request.query.uploadedFrom
+              ? gte(documentVersions.createdAt, sql`${request.query.uploadedFrom}::date`)
+              : undefined,
+            request.query.uploadedTo
+              ? lt(
+                  documentVersions.createdAt,
+                  sql`(${request.query.uploadedTo}::date + interval '1 day')`,
+                )
+              : undefined,
+            request.query.cursor ? furtherDownThan(request.query.cursor, scope, sort) : undefined,
           ),
         )
-        .orderBy(desc(documentVersions.createdAt), desc(documents.id))
+        .orderBy(...listOrder(sort))
         .limit(pageSize + 1);
       const page = rows.slice(0, pageSize);
       return {

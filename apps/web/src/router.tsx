@@ -15,7 +15,7 @@ import { useParams, type RouteObject } from "react-router";
 import { AuthLayout } from "./routes/auth-layout";
 import { ContractRecordPage, contractRecordLoader } from "./routes/contract-record";
 import { ContractsPage, contractsLoader } from "./routes/contracts";
-import { DocumentsPage, documentsLoader } from "./routes/documents";
+import { DocumentsPage, documentsLoader, documentsShouldRevalidate } from "./routes/documents";
 import { MattersPage, mattersLoader } from "./routes/matters";
 import { MatterRecordPage, matterRecordLoader } from "./routes/matter-record";
 import { EntitiesPage, entitiesLoader } from "./routes/entities";
@@ -220,6 +220,7 @@ export const routes: RouteObject[] = [
   {
     path: "/documents",
     loader: documentsLoader,
+    shouldRevalidate: documentsShouldRevalidate,
     element: <DocumentsPage />,
     errorElement: <RouteErrorPage />,
     hydrateFallbackElement: <></>,
