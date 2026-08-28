@@ -96,6 +96,10 @@ export function WelcomePage() {
   const [busy, setBusy] = useState(false);
 
   // Authentication step.
+  // What the server holds right now. Starts from the loader and moves
+  // only when a save lands, so a step revisit compares against the
+  // saved answer and not the loader's stale copy.
+  const [savedMethods, setSavedMethods] = useState(loaded.methods);
   const [mode, setMode] = useState(loaded.methods.mode);
   const [ssoProviderId, setSsoProviderId] = useState(loaded.methods.ssoProviderId);
   const [callbackUrl, setCallbackUrl] = useState<string | null>(null);
@@ -194,7 +198,7 @@ export function WelcomePage() {
       );
       return;
     }
-    if (mode === loaded.methods.mode) {
+    if (mode === savedMethods.mode) {
       goTo("portal");
       return;
     }
@@ -203,7 +207,7 @@ export function WelcomePage() {
     try {
       const { data, error: problem } = await api.PATCH("/api/v1/auth/mode", { body: { mode } });
       if (data) {
-        loaded.methods.mode = data.mode;
+        setSavedMethods((current) => ({ ...current, mode: data.mode }));
         goTo("portal");
         return;
       }
@@ -243,7 +247,7 @@ export function WelcomePage() {
         );
         return;
       }
-      if (magicLinkEnabled !== loaded.methods.magicLinkEnabled) {
+      if (magicLinkEnabled !== savedMethods.magicLinkEnabled) {
         const toggled = await api.PATCH("/api/v1/auth/portal", { body: { magicLinkEnabled } });
         if (!toggled.data) {
           setError(
@@ -255,7 +259,8 @@ export function WelcomePage() {
           );
           return;
         }
-        loaded.methods.magicLinkEnabled = toggled.data.magicLinkEnabled;
+        const saved = toggled.data.magicLinkEnabled;
+        setSavedMethods((current) => ({ ...current, magicLinkEnabled: saved }));
       }
       goTo("email");
     } catch {

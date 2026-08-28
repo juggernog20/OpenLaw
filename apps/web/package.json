@@ -10,7 +10,7 @@
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "lint": "eslint src --max-warnings 19",
+    "lint": "eslint src",
     "i18n:extract": "formatjs extract 'src/**/*.{ts,tsx}' --ignore 'src/**/*.test.tsx' --out-file ../../messages/en-US.json"
   },
   "dependencies": {

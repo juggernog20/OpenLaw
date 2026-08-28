@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 /** M22/5's editable matter record: one commit per field and recoverable lifecycle acts. */
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import { Archive, ArchiveRestore, CheckCircle2, ChevronRight, RotateCcw } from "lucide-react";
 import { FormattedMessage, useIntl, type IntlShape } from "react-intl";
 import {
@@ -426,9 +426,10 @@ export function MatterRecordPage() {
     return document && version ? { document, version } : null;
   })();
 
-  useEffect(() => {
-    if (reading && !open) setReading(null);
-  }, [open, reading]);
+  // A document that left the list takes its panel with it. Dropped
+  // during render, the way React adjusts state when a prop changes, so
+  // a later restore does not reopen a panel nobody asked for.
+  if (reading && !open) setReading(null);
 
   const reference = matterReference(intl, saved.number);
   /** The viewer facts every section card reads (TECH-024 rule 7). One

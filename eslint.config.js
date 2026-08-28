@@ -22,26 +22,24 @@ export default tseslint.config(
     files: ["apps/web/**/*.{ts,tsx}"],
     ...reactHooks.configs.flat.recommended,
     rules: {
-      // Everything the plugin ships, at `warn`, except the one rule
-      // below.
+      // Everything the plugin ships, at `error`.
       //
       // Version 7 of the plugin is two things at once: the two classic
       // hook rules, and a dozen React Compiler rules about purity,
-      // immutability and state written during an effect. The compiler
-      // rules find fifteen real things in this codebase. Fixing fifteen
-      // components inside a hardening change would make it unreviewable,
-      // and each one wants its own judgement about what the component is
-      // for — so they are recorded rather than silenced or rushed. The
-      // `lint` script does not fail on warnings, so nothing that passes
-      // today starts failing.
+      // immutability and state written during an effect. When the
+      // plugin landed (2026-08-16) the compiler rules found fifteen real
+      // things and sat at `warn` so each could be fixed with its own
+      // judgement. Twelve days later there were nineteen, because a
+      // warning that never fails the build is a comment. They were fixed
+      // in one pass (2026-08-28, #554) and the rules went to `error` so
+      // the count stays at zero.
       ...Object.fromEntries(
-        Object.keys(reactHooks.configs.flat.recommended.rules).map((rule) => [rule, "warn"]),
+        Object.keys(reactHooks.configs.flat.recommended.rules).map((rule) => [rule, "error"]),
       ),
-      // The exception, at `error`, because the codebase has no
-      // violations of it and this is what keeps it that way. It is also
-      // the rule with teeth: conditional or looped hook calls make React
-      // read the wrong state slot, and the failure shows up as one
-      // record's data rendering under another rather than as a crash.
+      // Named on its own because it is the rule with teeth: conditional
+      // or looped hook calls make React read the wrong state slot, and
+      // the failure shows up as one record's data rendering under
+      // another rather than as a crash.
       "react-hooks/rules-of-hooks": "error",
     },
   },

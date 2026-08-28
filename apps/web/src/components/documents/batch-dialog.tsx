@@ -248,6 +248,11 @@ export function BatchDialog({
   const queued = rows.filter((row) => row.state === "queued").length;
   const settled = started && inFlight === 0 && queued === 0;
 
+  /** The retry a drawn row offers. Defined once here rather than inside
+   * the row loop, so no function that reads the run refs is built
+   * during render. */
+  const retryRow = (id: string) => void send([id]);
+
   /** One row's state, replaced in place. The pool settles files out of
    * order, so every update is against what is there now rather than
    * against the list the worker started with. */
@@ -520,12 +525,7 @@ export function BatchDialog({
               <SummaryRows lines={summary} />
             ) : (
               drawn.map((row) => (
-                <BatchFileRow
-                  key={row.id}
-                  row={row}
-                  settled={settled}
-                  onRetry={() => void send([row.id])}
-                />
+                <BatchFileRow key={row.id} row={row} settled={settled} onRetry={retryRow} />
               ))
             )}
             {started && hidden > 0 && (
@@ -972,7 +972,9 @@ function BatchFileRow({
    * a control that would start a second pool over rows the first one is
    * still working through is a way to send a file twice. */
   settled: boolean;
-  onRetry: () => void;
+  /** Called with the row id: the row is one of many, and the handler
+   * is shared by all of them. */
+  onRetry: (id: string) => void;
 }>) {
   const intl = useIntl();
   /** What sits between two names of the file's path — a mark a reader
@@ -1035,7 +1037,7 @@ function BatchFileRow({
               { id: "documents.batch.retryFile", defaultMessage: "Retry {name}" },
               { name: row.file.name },
             )}
-            onClick={onRetry}
+            onClick={() => onRetry(row.id)}
           >
             <RotateCcw size={16} aria-hidden="true" />
             <FormattedMessage id="documents.batch.retry" defaultMessage="Retry" />

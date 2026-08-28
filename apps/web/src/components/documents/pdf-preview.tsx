@@ -138,12 +138,6 @@ export function PdfPreview({
   const seededFind = normalizeFindQuery(initialFind);
   const [findOpen, setFindOpen] = useState(allowFind && seededFind.length > 0);
   const [findQuery, setFindQuery] = useState(seededFind);
-  /** The seed, read through a ref by the open effect below. The prop
-   * goes null when a tab change drops the landing from the address
-   * while the docked panel stays open; a dependency on it would tear
-   * the document down and reopen it under the reader. Only a new
-   * document reads the seed again. */
-  const findSeed = useRef(seededFind);
   const [pageTexts, setPageTexts] = useState<readonly string[] | null>(null);
   const [currentFindIndex, setCurrentFindIndex] = useState(0);
   const well = useRef<HTMLDivElement>(null);
@@ -164,26 +158,27 @@ export function PdfPreview({
    * document, same as the page and zoom below. */
   const visibility = useRef(new Map<number, number>());
 
-  // Declared before the open effect so that, on the commit where a new
-  // address lands, the ref already holds that render's seed when the
-  // open effect reads it.
-  useEffect(() => {
-    findSeed.current = seededFind;
-  });
-
-  // Opening the file, and closing it again. Keyed on the address alone:
-  // a new version in the panel is a new document, and the page and the
-  // zoom below reset with it.
-  useEffect(() => {
-    let live = true;
+  // A new address is a new document, and the page, the zoom and the
+  // find below reset with it during render, before the open effect
+  // runs. Keyed on the address alone: the find seed goes null when a
+  // tab change drops the landing from the address while the docked
+  // panel stays open, and only a new document reads the seed again.
+  const [openedSrc, setOpenedSrc] = useState(src);
+  if (openedSrc !== src) {
+    setOpenedSrc(src);
     setStage("loading");
     setPageNumber(1);
     setZoomIndex(DEFAULT_ZOOM_INDEX);
     setOpenDocument(null);
     setPageTexts(null);
-    setFindQuery(findSeed.current);
-    setFindOpen(allowFind && findSeed.current.length > 0);
+    setFindQuery(seededFind);
+    setFindOpen(allowFind && seededFind.length > 0);
     setCurrentFindIndex(0);
+  }
+
+  // Opening the file, and closing it again.
+  useEffect(() => {
+    let live = true;
     visibility.current.clear();
 
     const opening = openPdf(src);
@@ -213,7 +208,7 @@ export function PdfPreview({
       if (open) void close(open);
       else void opening.then(close).catch(() => undefined);
     };
-  }, [allowFind, src]);
+  }, [src]);
 
   useEffect(() => {
     if (findOpen) findInput.current?.focus();

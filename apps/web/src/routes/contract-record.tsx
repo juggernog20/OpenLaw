@@ -975,24 +975,32 @@ export function ContractRecordPage() {
   // A document that stopped resolving is one that left the list —
   // archived out of the live view, or erased. The panel is already
   // gone; this drops what is left of the reference so a later restore
-  // does not reopen a panel nobody asked for — and resets the same
-  // bookkeeping `closeReading` resets, minus the focus restore. Left
-  // stale, `readingDocked` would say a panel still covers the record:
-  // the next tab change would then call `closeReading` with no panel
-  // open, set `readingClosed` with no close for the layout effect
-  // below to consume, and the *next* vanished document would wrongly
-  // take focus back to its trigger. Stale `readingCovers` would mark
-  // the record content covered the moment the next panel opens, before
-  // that panel has measured anything.
+  // does not reopen a panel nobody asked for. Done during render, the
+  // way React adjusts state when a prop changes: React discards this
+  // render and starts over with the reference gone, so nothing below
+  // sees the vanished document as open. Stale `readingCovers` would
+  // mark the record content covered the moment the next panel opens,
+  // before that panel has measured anything.
+  if (reading && !open) {
+    setReading(null);
+    setReadingCovers(false);
+  }
+
+  // The same bookkeeping `closeReading` resets, minus the focus
+  // restore, for a panel that is gone for any reason. Runs after the
+  // layout effect below has had its turn at `readingClosed` and
+  // `readingTrigger`, so an asked-for close still restores focus
+  // first. Left stale, `readingDocked` would say a panel still covers
+  // the record: the next tab change would then call `closeReading`
+  // with no panel open, set `readingClosed` with no close for the
+  // layout effect to consume, and the *next* vanished document would
+  // wrongly take focus back to its trigger.
   useEffect(() => {
-    if (reading && !open) {
-      setReading(null);
-      readingTrigger.current = null;
-      readingClosed.current = false;
-      readingDocked.current = true;
-      setReadingCovers(false);
-    }
-  }, [reading, open]);
+    if (reading !== null) return;
+    readingTrigger.current = null;
+    readingClosed.current = false;
+    readingDocked.current = true;
+  }, [reading]);
 
   // A section-tab change while the panel overlays the record closes it
   // (2026-08-18 fix, second pass): docked, the panel sits beside

@@ -425,7 +425,9 @@ describe("the filters", () => {
     await waitFor(() =>
       expect(screen.queryByText("Blair Wentworth created this contract")).not.toBeInTheDocument(),
     );
-    expect(screen.getByText("Blair Wentworth changed the role of casey@example.com")).toBeVisible();
+    expect(
+      await screen.findByText("Blair Wentworth changed the role of casey@example.com"),
+    ).toBeVisible();
 
     await user.click(screen.getByRole("button", { name: "Clear filters" }));
     expect(await screen.findByText("Blair Wentworth created this contract")).toBeVisible();

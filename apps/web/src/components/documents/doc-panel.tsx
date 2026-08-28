@@ -330,14 +330,12 @@ function EmailSurface({
   documentId,
   version,
 }: Readonly<{ documentId: string; version: DocumentVersion }>) {
-  const [unreadable, setUnreadable] = useState(false);
-
-  // Reset on the way in: the panel can move from one version to another
-  // without unmounting, and a refusal carried over would hide a message
-  // that reads perfectly well.
-  useEffect(() => {
-    setUnreadable(false);
-  }, [documentId, version.id]);
+  // The version a refusal was reported for. The panel can move from one
+  // version to another without unmounting, and a refusal carried over
+  // would hide a message that reads perfectly well, so the refusal is
+  // kept with the version it was about.
+  const [unreadableVersion, setUnreadableVersion] = useState<string | null>(null);
+  const unreadable = unreadableVersion === version.id;
 
   if (unreadable) {
     return <DownloadCard documentId={documentId} version={version} reason="conversionFailed" />;
@@ -354,7 +352,7 @@ function EmailSurface({
         <EmailPreview
           documentId={documentId}
           versionId={version.id}
-          onUnreadable={() => setUnreadable(true)}
+          onUnreadable={() => setUnreadableVersion(version.id)}
         />
       </ChunkBoundary>
     </Suspense>
@@ -433,16 +431,19 @@ function ConvertedSurface({
   previewHref: string;
   initialFind?: string | null;
 }>) {
-  const [state, setState] = useState<RenditionState>("pending");
+  // The last answer, kept with the version it was about. The panel can
+  // move from one version to another without unmounting, and a ready
+  // state carried over would point pdf.js at a rendition that is not
+  // there yet, so another version's answer reads as pending.
+  const [answer, setAnswer] = useState<{ versionId: string; state: RenditionState } | null>(null);
+  const state = answer?.versionId === version.id ? answer.state : "pending";
 
   useEffect(() => {
     let live = true;
     let timer: ReturnType<typeof setTimeout> | undefined;
     let unanswered = 0;
-    // Reset on the way in: the panel can move from one version to
-    // another without unmounting, and a ready state carried over would
-    // point pdf.js at a rendition that is not there yet.
-    setState("pending");
+    const versionId = version.id;
+    const setState = (next: RenditionState) => setAnswer({ versionId, state: next });
 
     const ask = async () => {
       const answer = await readRenditionState(documentId, version.id);

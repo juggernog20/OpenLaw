@@ -626,12 +626,17 @@ export function DocumentsCard({
    * because a request that outlived its page would open a composer the
    * next time somebody walked into this section.
    */
-  useEffect(() => {
-    if (amending === null) return;
-    const primary = documents.find((row) => row.id === amending);
+  // Seeded null, not with the prop: the card can mount with the request
+  // already set, and that first render has to open the composer too.
+  const [amendmentTaken, setAmendmentTaken] = useState<string | null>(null);
+  if (amendmentTaken !== amending) {
+    setAmendmentTaken(amending);
+    const primary = amending === null ? undefined : documents.find((row) => row.id === amending);
     if (primary) setComposer({ document: primary, kind: "amendment" });
-    onAmendmentOpened();
-  }, [amending, documents, onAmendmentOpened]);
+  }
+  useEffect(() => {
+    if (amending !== null) onAmendmentOpened();
+  }, [amending, onAmendmentOpened]);
 
   /** What a listing says when its read did not land. Shared by the
    * record root's foot and every folder's, because it is the same

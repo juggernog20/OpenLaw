@@ -222,10 +222,24 @@ export function SettingsAuditLogPage() {
   const [filters, setFilters] = useState<Filters>(UNFILTERED);
   /** The search term as the reader has stopped typing it. */
   const [term, setTerm] = useState("");
-  /** null until the first page answers. */
-  const [entries, setEntries] = useState<AuditEntry[] | null>(null);
-  const [cursor, setCursor] = useState<string | null>(null);
-  const [loadFailed, setLoadFailed] = useState(false);
+  /**
+   * The pages read so far, tagged with the question they answer. A
+   * changed filter is a new question, so the answer to the old one is
+   * not shown while the new read is in flight: `entries` below derives
+   * from this and is null until the first page for the current key
+   * answers.
+   */
+  const [page, setPage] = useState<{
+    key: string;
+    entries: AuditEntry[];
+    cursor: string | null;
+  } | null>(null);
+  /** Which question's read failed, if the last one did. Derived below
+   * against the current key, so a changed filter clears the alert on
+   * its own. */
+  const [failedKey, setFailedKey] = useState<string | null>(null);
+  /** A "load more" read in flight. The first page needs no flag: while
+   * it is out, `entries` is null and there is nothing to disable. */
   const [busy, setBusy] = useState(false);
   // Stable across renders so the `/` dispatch keeps mount order: an
   // inline callback would unregister and re-register on every render
@@ -252,10 +266,10 @@ export function SettingsAuditLogPage() {
   // when the key moves — so a re-render with the same filters hands
   // `loadPage` the object it already had. The key is the identity here,
   // which is why it is the only dependency.
-  const query = useMemo<Record<string, string>>(
-    () => queryFrom({ ...filters, q: term }),
-    [queryKey],
-  );
+  const query = useMemo<Record<string, string>>(() => JSON.parse(queryKey), [queryKey]);
+  const entries = page?.key === queryKey ? page.entries : null;
+  const cursor = page?.key === queryKey ? page.cursor : null;
+  const loadFailed = failedKey === queryKey;
 
   /**
    * Which question is on screen. A read that is no longer the current
@@ -268,34 +282,39 @@ export function SettingsAuditLogPage() {
   const generation = useRef(0);
 
   const loadPage = useCallback(
-    async (from: string | null) => {
+    (from: string | null) => {
       const mine = (generation.current += 1);
-      setBusy(true);
-      setLoadFailed(false);
-      const { data } = await api
+      // The answer lands in a callback, not after an await: state moves
+      // only once the read is back, never on the render that asked.
+      return api
         .GET("/api/v1/audit-log", {
           params: { query: { ...query, ...(from ? { cursor: from } : {}) } },
         })
-        .catch(() => ({ data: undefined }));
-      if (mine !== generation.current) return;
-      setBusy(false);
-      if (!data) {
-        setLoadFailed(true);
-        return;
-      }
-      setEntries((current) =>
-        from === null ? data.entries : [...(current ?? []), ...data.entries],
-      );
-      setCursor(data.nextCursor);
+        .catch(() => ({ data: undefined }))
+        .then(({ data }) => {
+          if (mine !== generation.current) return;
+          setBusy(false);
+          if (!data) {
+            setFailedKey(queryKey);
+            return;
+          }
+          setFailedKey(null);
+          setPage((current) => ({
+            key: queryKey,
+            entries:
+              from === null || current?.key !== queryKey
+                ? data.entries
+                : [...current.entries, ...data.entries],
+            cursor: data.nextCursor,
+          }));
+        });
     },
-    [query],
+    [query, queryKey],
   );
 
-  // A changed filter is a new question, so it drops the answer to the
-  // old one rather than paging on top of it.
+  // A changed filter is a new question, and the first page of its
+  // answer is read as soon as it is asked.
   useEffect(() => {
-    setEntries(null);
-    setCursor(null);
     void loadPage(null);
   }, [loadPage]);
 
@@ -502,7 +521,14 @@ export function SettingsAuditLogPage() {
 
         {cursor !== null && (
           <div className="px-4 py-3">
-            <Button variant="secondary" disabled={busy} onClick={() => void loadPage(cursor)}>
+            <Button
+              variant="secondary"
+              disabled={busy}
+              onClick={() => {
+                setBusy(true);
+                void loadPage(cursor);
+              }}
+            >
               <FormattedMessage id="audit.older" defaultMessage="Show older" />
             </Button>
           </div>
