@@ -207,6 +207,21 @@ describe("the Documents fixed filter strip", () => {
     await user.click(screen.getByRole("button", { name: "Clear all filters" }));
     expect(await screen.findByRole("link", { name: "Master services agreement" })).toBeVisible();
   });
+
+  it("clears live filters when the active Documents destination clears the URL", async () => {
+    const user = userEvent.setup();
+    const api = surface();
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    const { router } = renderAt("/documents?format=pdf");
+
+    expect(await screen.findByRole("combobox", { name: "Format" })).toHaveValue("pdf");
+    await user.click(screen.getByRole("link", { name: "Documents" }));
+    await expectQuery(api.queries, "format", null);
+    await waitFor(() => {
+      expect(router.state.location.search).toBe("");
+      expect(screen.getByRole("combobox", { name: "Format" })).toHaveValue("");
+    });
+  });
 });
 
 describe("Documents saved-view query state", () => {

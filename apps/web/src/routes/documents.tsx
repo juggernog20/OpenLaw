@@ -7,6 +7,7 @@ import {
   useLoaderData,
   useNavigate,
   type LoaderFunctionArgs,
+  type NavigateFunction,
   type ShouldRevalidateFunctionArgs,
 } from "react-router";
 import { FileText } from "lucide-react";
@@ -60,6 +61,16 @@ const QUERY_KEYS = [
   "sort",
   "dir",
 ] as const;
+
+// A filter commit has already read the exact list it is about to put in
+// the address bar. Only that one navigation skips the loader; an ordinary
+// link to /documents must still reload and clear a filtered page.
+let locallyReadSearch: string | null = null;
+
+function mirrorSearch(navigate: NavigateFunction, search: string) {
+  locallyReadSearch = search;
+  void navigate({ search }, { replace: true });
+}
 
 function listQuery(layout: Layout): DocumentsQuery {
   const filters = documentRepositoryFilters(layout.filters);
@@ -148,6 +159,7 @@ export async function documentsLoader({ request }: LoaderFunctionArgs) {
     layout,
     activeViewId: opensOn?.id ?? null,
     fromUrl,
+    loadedSearch: new URL(request.url).search,
   };
 }
 
@@ -157,12 +169,24 @@ export function documentsShouldRevalidate({
   nextUrl,
   defaultShouldRevalidate,
 }: ShouldRevalidateFunctionArgs): boolean {
-  if (currentUrl.pathname === nextUrl.pathname && currentUrl.search !== nextUrl.search)
+  if (
+    currentUrl.pathname === nextUrl.pathname &&
+    currentUrl.search !== nextUrl.search &&
+    locallyReadSearch === nextUrl.search
+  ) {
+    locallyReadSearch = null;
     return false;
+  }
+  locallyReadSearch = null;
   return defaultShouldRevalidate;
 }
 
 export function DocumentsPage() {
+  const loaded = useLoaderData<typeof documentsLoader>();
+  return <DocumentsPageState key={loaded.loadedSearch} />;
+}
+
+function DocumentsPageState() {
   const loaded = useLoaderData<typeof documentsLoader>();
   const intl = useIntl();
   const navigate = useNavigate();
@@ -188,7 +212,7 @@ export function DocumentsPage() {
   useEffect(() => {
     if (loaded.fromUrl) return;
     const search = querySearch(loaded.layout);
-    if (search) void navigate({ search }, { replace: true });
+    if (search) mirrorSearch(navigate, search);
   }, [loaded.fromUrl, loaded.layout, navigate]);
 
   async function commit(next: Layout, nextActiveId: string | null = activeViewId) {
@@ -219,7 +243,7 @@ export function DocumentsPage() {
     setPageError(false);
     setLayout(next);
     setActiveViewId(nextActiveId);
-    void navigate({ search: querySearch(next) }, { replace: true });
+    mirrorSearch(navigate, querySearch(next));
   }
 
   function setFilter<K extends keyof DocumentRepositoryFilters>(
