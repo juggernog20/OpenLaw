@@ -31,7 +31,10 @@
  *
  * **It has no dependencies and is not built.** It runs on plain `node`
  * against whichever stack is up, which is what lets one copy drive both
- * versions across a `git checkout` in the middle of a CI job.
+ * versions across a `git checkout` in the middle of a CI job. CI copies
+ * the script out of the repository before that checkout, so it must
+ * also carry every fixture it uploads: a path relative to the script
+ * or to the working copy points at the wrong tree, or at no tree.
  *
  * **The seed may only use API surface the baseline already has.** It is
  * the current commit's script talking to the *previous* release's
@@ -156,6 +159,48 @@ async function downloadChecksum(path) {
  * rather than about the moment the seed ran. */
 function fixtureFile(name, contents) {
   return new File([contents], name, { type: "text/plain" });
+}
+
+/**
+ * A one-page PDF with a real text layer, built here rather than read
+ * from the repository (see the header on why). The words are the only
+ * thing the fixture is for: `pdftotext` reads them straight out of the
+ * content stream, so the baseline stores them as `native_layer` text
+ * and the upgraded search must find {@link SEARCH_PHRASE} in that row.
+ */
+function searchSourcePdf() {
+  const lines = [
+    "Deed of assignment, seeded before the upgrade.",
+    "The assignor transfers the whole of the rights in the work to the assignee.",
+  ];
+  const escape = (line) => line.replace(/[\\()]/g, (character) => `\\${character}`);
+  const content = [
+    "BT",
+    "/F1 12 Tf",
+    "72 720 Td",
+    "14 TL",
+    ...lines.map((line) => `(${escape(line)}) Tj T*`),
+    "ET",
+  ].join("\n");
+  const objects = [
+    "<< /Type /Catalog /Pages 2 0 R >>",
+    "<< /Type /Pages /Kids [3 0 R] /Count 1 >>",
+    "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] " +
+      "/Resources << /Font << /F1 4 0 R >> >> /Contents 5 0 R >>",
+    "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>",
+    `<< /Length ${Buffer.byteLength(content, "latin1")} >>\nstream\n${content}\nendstream`,
+  ];
+  let body = "%PDF-1.4\n";
+  const offsets = [];
+  objects.forEach((object, index) => {
+    offsets.push(Buffer.byteLength(body, "latin1"));
+    body += `${index + 1} 0 obj\n${object}\nendobj\n`;
+  });
+  const xref = Buffer.byteLength(body, "latin1");
+  body += `xref\n0 ${objects.length + 1}\n0000000000 65535 f \n`;
+  for (const offset of offsets) body += `${String(offset).padStart(10, "0")} 00000 n \n`;
+  body += `trailer\n<< /Size ${objects.length + 1} /Root 1 0 R >>\nstartxref\n${xref}\n%%EOF\n`;
+  return Buffer.from(body, "latin1");
 }
 
 function check(condition, message) {
@@ -486,18 +531,7 @@ async function seed() {
   const searchablePdf = new FormData();
   searchablePdf.append(
     "file",
-    new File(
-      [
-        await readFile(
-          new URL(
-            "../../apps/api/src/testing/fixtures/doc-engine/native-text.pdf",
-            import.meta.url,
-          ),
-        ),
-      ],
-      "upgrade-search-source.pdf",
-      { type: "application/pdf" },
-    ),
+    new File([searchSourcePdf()], "upgrade-search-source.pdf", { type: "application/pdf" }),
   );
   const searchDocument = (
     await call("POST", `/api/v1/contracts/${docHost.number}/documents`, {
