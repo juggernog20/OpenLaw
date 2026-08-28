@@ -265,6 +265,8 @@ Migrations run automatically when the app container boots (TECH-005); replicas b
 
 **Take a backup first anyway.** See [Backups](#backups); a migration is the one moment a restore is worth having ready.
 
+**Ask people to reload after an upgrade.** A browser tab that was open before the upgrade still runs the old version of the app. Most of it keeps working. The parts that load on demand (the PDF and email previews) can fail, because the files they ask for were replaced with the new release. When that happens the panel shows "This part of OpenLaw was updated. Reload to continue." with a Reload button. Nothing is lost on the server; a reload picks up the new version.
+
 This path is exercised on every commit rather than assumed. CI fills a baseline install with Contracts across the lifecycle, Documents, users in several roles and a signing connector, then brings the new version up against that same database and checks every record still reads back (TECH-018). It is not a promise that no upgrade ever needs care — it is a promise that the ordinary one is tested with rows in the tables, not only against an empty install.
 
 ### A stranded migration journal
