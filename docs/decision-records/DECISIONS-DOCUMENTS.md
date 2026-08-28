@@ -100,6 +100,8 @@ _Settled in M12/5, where email became the last rendered family:_
 - _**An attachment's download never echoes what the message said the file was.** A version's declared type was bounded and shape-checked when it was uploaded; an attachment's came out of the middle of a file nobody checked, so it is answered `application/octet-stream` with the attachment disposition. The attachment **preview** sets a type from the same routing table every other preview uses, so a PDF or a raster image inside a message opens on the panel's own surfaces. There is no conversion path for an attachment — a Word file inside an email downloads._
 - _**A message that cannot be read is a 422, not a 404 and not a 415.** They are three different facts: the reader cannot reach the document, the file is not an email at all, or the bytes are not the email they claim to be. Only the last is worth a download link in the message, and the panel ends it at the same honest card every path with no preview ends at._
 
+_Extended in M25/4: **search never parses stored bytes.** Every Document hit joins its Version to `document_version_text` and reads the text and provenance already written by extraction. The email parse that writes the body now writes the nullable subject beside it, so an email hit can use the subject as its title through that same join. The panel read still parses the immutable message when somebody opens it; the stored subject and body are search derivations, not a cached preview._
+
 ## DOC-005 — OCR on upload for image-only PDFs
 
 - **Status** — Accepted
@@ -179,6 +181,14 @@ A reached Contributor may create a supporting Document on a live or closed Matte
 - **Rationale** — Both choices follow PRODUCT.md's "working install in under an hour from a clean VM" principle: zero extra services in the default path, adapters where deployments differ.
 - **Alternatives considered** — S3-only (hosted assumption — wrong default for self-host); dedicated search engine in v1 (another service to run before the first document is findable).
 - **Consequences** — Tech-stack queue already carries the engine questions; this decision pre-loads the defaults. `document_versions.file_ref` format finalizes with the adapter decision — _settled by **DOC-012**: `<driver>:<key>`_.
+
+### Addendum (2026-08-27, M25/2, [#532](https://github.com/juggernog20/OpenLaw/issues/532)) — row-owned generated vectors and the extracted-text cap
+
+Search uses one stored generated `tsvector` column on each table that owns searchable words: `contracts`, `matters`, `documents`, `entities`, `counterparties`, `requests`, and `document_version_text`. Every vector uses the `english` configuration. Titles and record numbers carry weight A; descriptions carry B; standard properties held by the row — jurisdiction, registration number, and fixed status — carry C; extracted content carries D. A configured type or status label, a version filename, a Counterparty name on a Contract, a Matter Manager, and an owning-record title are not columns of the row being indexed, so they stay query-time joins. No label is copied into another record's vector, and renaming context therefore cannot leave a stale copy.
+
+`document_version_text` indexes `left(text, DOCUMENT_TEXT_SEARCH_CHARACTER_LIMIT)`, where the named schema constant is **1,000,000 characters**. Only `ready` rows contribute text; `pending` and `failed` rows hold an empty vector. This bounds one very large scan without changing or truncating the extracted text itself. A `tsvector` itself cannot exceed 1 MB, and one million characters of serial numbers, hashes, or OCR noise can reach it where prose cannot. The expression is therefore the function `document_text_search_vector`, which catches that limit and returns an empty vector, so the extraction write always keeps the text and the worst case is one version that content search cannot find.
+
+Adding a stored generated column computes it for every existing row, so the M25 migration indexes the installed catalogue in place. The GIN indexes use the exact `<table>_search_vector_idx` names and are created as ordinary indexes in the migration batch.
 
 ## DOC-010 — Deletion: soft delete + Admin hard delete; versions immutable
 

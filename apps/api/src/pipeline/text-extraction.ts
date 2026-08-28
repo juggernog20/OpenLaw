@@ -167,15 +167,27 @@ export function recordTextOwed(tx: Executor, versionId: string): Promise<unknown
 export async function writeTextDerivation(
   deps: DerivationDeps,
   versionId: string,
-  row: { state: "ready" | "failed"; source: TextSource | null; text: string | null },
+  row: {
+    state: "ready" | "failed";
+    source: TextSource | null;
+    text: string | null;
+    emailSubject?: string | null;
+  },
 ): Promise<void> {
+  const emailSubject = row.emailSubject ?? null;
   try {
     await deps.db
       .insert(documentVersionText)
-      .values({ versionId, ...row })
+      .values({ versionId, ...row, emailSubject })
       .onConflictDoUpdate({
         target: documentVersionText.versionId,
-        set: { state: row.state, source: row.source, text: row.text, updatedAt: new Date() },
+        set: {
+          state: row.state,
+          source: row.source,
+          text: row.text,
+          emailSubject,
+          updatedAt: new Date(),
+        },
       });
   } catch (error) {
     if (errorCode(error) !== FOREIGN_KEY_VIOLATION) throw error;
@@ -270,10 +282,10 @@ export async function extractVersionText(deps: DerivationDeps, versionId: string
     return;
   }
 
-  const { text, source } = isEmail(version.mimeType, version.originalFilename)
+  const { text, source, emailSubject } = isEmail(version.mimeType, version.originalFilename)
     ? await readEmailBody(deps, version)
-    : await readPdfText(deps, versionId, version);
-  await writeTextDerivation(deps, versionId, { state: "ready", source, text });
+    : { ...(await readPdfText(deps, versionId, version)), emailSubject: null };
+  await writeTextDerivation(deps, versionId, { state: "ready", source, text, emailSubject });
   deps.log.info(
     { versionId, source, characters: text.length },
     "extracted a document version's text",
@@ -319,11 +331,11 @@ async function readPdfText(
 async function readEmailBody(
   deps: DerivationDeps,
   version: VersionRow,
-): Promise<{ text: string; source: TextSource }> {
+): Promise<{ text: string; source: TextSource; emailSubject: string | null }> {
   const email = await withBlob(deps, version.fileRef, (blob) =>
     parseStoredEmail(blob, version.mimeType, version.originalFilename),
   );
-  return { text: emailBodyText(email), source: "email_body" };
+  return { text: emailBodyText(email), source: "email_body", emailSubject: email.subject };
 }
 
 /**

@@ -215,23 +215,24 @@ Source: **DD-008**, **ENT-001–004**
 
 Internal corporate entities — your subsidiaries, holdings, and related corporate persons. Visible to all Member+ (no per-entity grants); `is_confidential` covers the rare sensitive case (ENT-004).
 
-| Column                                    | Type        | Notes                                                                                                           |
-| ----------------------------------------- | ----------- | --------------------------------------------------------------------------------------------------------------- |
-| `id`                                      | UUID        | PK                                                                                                              |
-| `legal_name`                              | text        | not null                                                                                                        |
-| `entity_type_id`                          | UUID        | FK → `entity_types.id` (configurable list; seeds: corporation, llc, partnership, branch, other) per **ENT-001** |
-| `jurisdiction`                            | text        | formation jurisdiction                                                                                          |
-| `formed_on`                               | date        | nullable                                                                                                        |
-| `registration_number`                     | text        | nullable                                                                                                        |
-| `tax_id`                                  | text        | nullable                                                                                                        |
-| `registered_agent`                        | text        | nullable                                                                                                        |
-| `registered_address`                      | text        | nullable                                                                                                        |
-| `status`                                  | text (enum) | `active` \| `dormant` \| `dissolved` \| `divested` — fixed per **ENT-001**                                      |
-| `shares_authorized`, `shares_issued`      | bigint      | nullable; simple share capital per **ENT-001**                                                                  |
-| `par_value`                               | bigint      | nullable, integer cents                                                                                         |
-| `custom_fields`                           | jsonb       | keyed by slug; `entity`-scoped catalog fields per **ENT-001**/CTR-016                                           |
-| `is_confidential`                         | boolean     | per **DD-014**/ENT-004                                                                                          |
-| `created_at`, `updated_at`, `archived_at` | timestamptz |                                                                                                                 |
+| Column                                    | Type        | Notes                                                                                                                                  |
+| ----------------------------------------- | ----------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| `id`                                      | UUID        | PK                                                                                                                                     |
+| `legal_name`                              | text        | not null                                                                                                                               |
+| `entity_type_id`                          | UUID        | FK → `entity_types.id` (configurable list; seeds: corporation, llc, partnership, branch, other) per **ENT-001**                        |
+| `jurisdiction`                            | text        | formation jurisdiction                                                                                                                 |
+| `formed_on`                               | date        | nullable                                                                                                                               |
+| `registration_number`                     | text        | nullable                                                                                                                               |
+| `tax_id`                                  | text        | nullable                                                                                                                               |
+| `registered_agent`                        | text        | nullable                                                                                                                               |
+| `registered_address`                      | text        | nullable                                                                                                                               |
+| `status`                                  | text (enum) | `active` \| `dormant` \| `dissolved` \| `divested` — fixed per **ENT-001**                                                             |
+| `shares_authorized`, `shares_issued`      | bigint      | nullable; simple share capital per **ENT-001**                                                                                         |
+| `par_value`                               | bigint      | nullable, integer cents                                                                                                                |
+| `custom_fields`                           | jsonb       | keyed by slug; `entity`-scoped catalog fields per **ENT-001**/CTR-016                                                                  |
+| `is_confidential`                         | boolean     | per **DD-014**/ENT-004                                                                                                                 |
+| `created_at`, `updated_at`, `archived_at` | timestamptz |                                                                                                                                        |
+| `search_vector`                           | tsvector    | stored generated English FTS: `legal_name` weight A; jurisdiction, registration number, and fixed status weight C (**DOC-009**, M25/2) |
 
 Support tables per **ENT-001/002/003/006**:
 
@@ -249,17 +250,18 @@ Source: **DD-008**
 
 External organizations on the other side of contracts/matters. Light schema per **DD-008**; resolved in **CTR-011**. Created on the fly (name only) during contract intake; enrichment later and optional.
 
-| Column                     | Type        | Notes                              |
-| -------------------------- | ----------- | ---------------------------------- |
-| `id`                       | UUID        | PK                                 |
-| `name`                     | text        | not null — the only required field |
-| `jurisdiction`             | text        | nullable                           |
-| `primary_contact_name`     | text        | nullable                           |
-| `primary_contact_email`    | text        | nullable                           |
-| `address`                  | text        | nullable                           |
-| `notes`                    | text        | nullable                           |
-| `created_at`, `updated_at` | timestamptz |                                    |
-| `archived_at`              | timestamptz | soft delete                        |
+| Column                     | Type        | Notes                                                                                   |
+| -------------------------- | ----------- | --------------------------------------------------------------------------------------- |
+| `id`                       | UUID        | PK                                                                                      |
+| `name`                     | text        | not null — the only required field                                                      |
+| `jurisdiction`             | text        | nullable                                                                                |
+| `primary_contact_name`     | text        | nullable                                                                                |
+| `primary_contact_email`    | text        | nullable                                                                                |
+| `address`                  | text        | nullable                                                                                |
+| `notes`                    | text        | nullable                                                                                |
+| `created_at`, `updated_at` | timestamptz |                                                                                         |
+| `archived_at`              | timestamptz | soft delete                                                                             |
+| `search_vector`            | tsvector    | stored generated English FTS: name weight A, jurisdiction weight C (**DOC-009**, M25/2) |
 
 ---
 
@@ -304,6 +306,7 @@ Work container for any legal effort. Holds Documents and Contracts; references E
 | `created_by`               | UUID        |             | FK → `users.id`; the matter creator (relevant to **DD-014** team-default)                                                                              |
 | `created_at`, `updated_at` | timestamptz |             |                                                                                                                                                        |
 | `archived_at`              | timestamptz |             | nullable                                                                                                                                               |
+| `search_vector`            | tsvector    | **DOC-009** | stored generated English FTS: title and M-number weight A, description weight B; Type and Status labels remain query-time joins                        |
 
 `parent_id` and the `matter_relations` table landed in M23/5, migration
 `0075_watery_war_machine`. Existing Matters receive `NULL` and are otherwise unchanged.
@@ -569,6 +572,7 @@ Columns:
 - `is_confidential` boolean per **DD-014**; never cascades to/from linked records per **CTR-018**
 - `matter_id` FK → `matters.id`, nullable and indexed per **DD-007** (contracts can stand alone). Landed incrementally in M23/6, migration `0076_thankful_cerebro`, with no backfill: every existing Contract remains null/standalone
 - `primary_document_id` FK → `documents.id`, nullable, `ON DELETE SET NULL` per **CTR-014** — which document is the instrument. One column, so exactly one document holds the designation; the first upload takes it, and from there it moves to another document on the same contract or it stays where it is. That the named document belongs to this contract is enforced at write time. This settles the mechanism the `documents` section below left open (flag there vs FK here).
+- `search_vector` — stored generated English FTS per **DOC-009** M25/2: title and C-number weight A, description weight B. Configured Type and Status labels and Counterparty names remain query-time joins rather than copied context.
 
 Ended behavior per **CTR-019**: signal not lock — record stays writable; drops from default lists, counts, and renewal-calendar surfaces; `archived_at` remains a separate soft-delete (mistakes/imports), not end-of-life.
 
@@ -851,6 +855,7 @@ Logical document record. No workflow. **Every document has exactly one owning re
 | `created_by`               | UUID        | FK → `users.id`, not null                                                                                                                                                                                                                                                                                                                                                        |
 | `created_at`, `updated_at` | timestamptz |                                                                                                                                                                                                                                                                                                                                                                                  |
 | `archived_at`              | timestamptz | soft delete per **DOC-010** — off the record's lists and out of its counts, recoverable, and it destroys nothing. Hard deletion is the Administrator's separate path and leaves no row to hold a time                                                                                                                                                                            |
+| `search_vector`            | tsvector    | stored generated English FTS: title weight A and description weight B (**DOC-009**, M25/2). Version filenames and owning-record context remain query-time joins                                                                                                                                                                                                                  |
 
 Indexes: `documents_contract_idx` on `(contract_id, created_at, id)` and `documents_folder_idx` on `(folder_id, created_at, id)` — the record's paper and one folder's paper, newest first, with `id` as the keyset tie-break the listings walk (CTR-024, #391, migration 0064); and `documents_executed_version_idx` on `(executed_version_id)`, which exists for the referencing side of the executed pin rather than for a read: DOC-010's hard delete of a version makes Postgres check every document for one pointing at it.
 
@@ -929,14 +934,16 @@ One version's extracted text, landed in M12/3. It sits **beside** the version ch
 
 The row is the record of work **owed**, not only of work done. It is written `pending` inside the upload's own transaction, so a rolled-back upload leaves nothing and a committed one always says a derivation is due — the queue send that follows only wakes a worker, and a lost send leaves a row for the M12/6 backfill sweep to find.
 
-| Column       | Type        | Notes                                                                                                                                                                                                                                                                                                                                                                                                                    |
-| ------------ | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `version_id` | UUID        | PK and FK → `document_versions.id`, `ON DELETE CASCADE` — one text row per version, and lawful erasure (DOC-010) takes what the machine read along with what the person uploaded                                                                                                                                                                                                                                         |
-| `state`      | text (enum) | `pending` \| `ready` \| `failed` — code branches on all three, so the set is fixed                                                                                                                                                                                                                                                                                                                                       |
-| `source`     | text (enum) | `native_layer` \| `ocr` \| `rendition` \| `email_body`, nullable — where the text came from. Recorded rather than inferred: OCR text is a machine's reading of a photograph and a rendition's text has been through a converter, and a later feature that weighs a match has to know which it holds. `rendition` landed in M12/4 with the conversion job that writes it; `email_body` (M12/5) joins the set the same way |
-| `text`       | text        | nullable; NULL unless `ready`. An empty string is a different and legitimate fact — a blank page read successfully                                                                                                                                                                                                                                                                                                       |
-| `created_at` | timestamptz |                                                                                                                                                                                                                                                                                                                                                                                                                          |
-| `updated_at` | timestamptz | when the state last moved; the panel polls on it                                                                                                                                                                                                                                                                                                                                                                         |
+| Column          | Type        | Notes                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| --------------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `version_id`    | UUID        | PK and FK → `document_versions.id`, `ON DELETE CASCADE` — one text row per version, and lawful erasure (DOC-010) takes what the machine read along with what the person uploaded                                                                                                                                                                                                                                         |
+| `state`         | text (enum) | `pending` \| `ready` \| `failed` — code branches on all three, so the set is fixed                                                                                                                                                                                                                                                                                                                                       |
+| `source`        | text (enum) | `native_layer` \| `ocr` \| `rendition` \| `email_body`, nullable — where the text came from. Recorded rather than inferred: OCR text is a machine's reading of a photograph and a rendition's text has been through a converter, and a later feature that weighs a match has to know which it holds. `rendition` landed in M12/4 with the conversion job that writes it; `email_body` (M12/5) joins the set the same way |
+| `text`          | text        | nullable; NULL unless `ready`. An empty string is a different and legitimate fact — a blank page read successfully                                                                                                                                                                                                                                                                                                       |
+| `created_at`    | timestamptz |                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| `updated_at`    | timestamptz | when the state last moved; the panel polls on it                                                                                                                                                                                                                                                                                                                                                                         |
+| `email_subject` | text        | nullable; the parsed subject of an `email_body` source, written beside the body by the same extraction (M25/4, **DOC-004**). A Document hit on an email uses it as its title. A check constraint keeps it NULL for every other source                                                                                                                                                                                    |
+| `search_vector` | tsvector    | stored generated English FTS over `left(text, 1_000_000)`, weight D when `state = 'ready'`, otherwise empty (**DOC-009**, M25/2)                                                                                                                                                                                                                                                                                         |
 
 A check constraint holds `state = 'ready'` and "has text from a named source" together, so a `ready` row can never answer a reader with silence and a `pending` row can never sit on an answer it already has.
 
@@ -1023,6 +1030,7 @@ Structured request envelope, created only via portal forms. Not a work container
 | `declined_reason`          | text        | nullable                                                                                                                                                                                                          |
 | `created_at`, `updated_at` | timestamptz |                                                                                                                                                                                                                   |
 | `archived_at`              | timestamptz | soft delete                                                                                                                                                                                                       |
+| `search_vector`            | tsvector    | stored generated English FTS: summary and R-number weight A, description weight B, fixed status weight C; Type and Requester names remain query-time joins (**DOC-009**, M25/2)                                   |
 
 Indexes: `requests_number_unique`, a **unique** index on `(number)` — the identity sequence already hands out distinct numbers, and the index is both what the number-keyed portal read (`/portal/requests/42`) uses and the table's own statement that R-42 names exactly one Request; `requests_requester_idx` on `(requester_id, created_at)`, which is my-requests, the only list a Business User ever sees (DD-013); and `requests_converted_contract_idx` on `(converted_contract_id)`, added by M21/11 (#422, migration 0067) because the CMT-001 re-parent makes every Full Thread comment on a contract ask whether a Request converted into it, and that lookup would otherwise scan a table that only grows.
 
@@ -1166,6 +1174,6 @@ Tracked here so they're not forgotten when the relevant grill begins.
 - ~~**ID type** — UUID v7 vs ULID vs sortable BIGINT; formalized in the tech-stack grill.~~ Resolved per **TECH-004**: UUID v7, held in a `text` column (see Conventions).
 - **ORM and migration framework** — formalized in the tech-stack grill (will affect comment polymorphism strategy and FK naming).
 - **Comments table polymorphism strategy** — single table with `entity_type / entity_id` pair (current proposal), per-host-type sharded tables, or polymorphic via association — depends on ORM ergonomics.
-- **Full-text search column placement** — per-table generated `tsvector` columns vs separate index store (Meilisearch / Typesense) — depends on Documents module decisions and tech-stack picks.
+- ~~**Full-text search column placement** — per-table generated `tsvector` columns vs separate index store.~~ Resolved by **DOC-009** M25/2 and **TECH-014**: stored generated columns on each searchable table, with GIN indexes; no separate store or indexing queue.
 - **Authentication-related columns on `users`** — resolved per **TECH-008**: credential material lives in `accounts`/`verifications`, not on `users`; see the `users`, `sessions`, `accounts`, and `verifications` sections.
 - **Tags table(s)** — resolved: deferred out of v1 per **MTR-010**; see `FUTURE-FEATURES.md`.

@@ -33,8 +33,8 @@ describe("app shell chrome", () => {
     expect(within(header).getByText("openlaw")).toBeInTheDocument();
     expect(within(header).getByText("workspace")).toBeInTheDocument();
 
-    const search = within(header).getByRole("searchbox", { name: "Search" });
-    expect(search).toHaveAttribute("placeholder", "Type / to search");
+    const search = within(header).getByRole("combobox", { name: "Search" });
+    expect(search).toHaveAttribute("placeholder", "Search contracts, matters, documents…");
 
     // The trigger's accessible name is the signed-in user's display
     // name; the visible face is the initials avatar.

@@ -59,7 +59,7 @@ test.describe("M4 demo path", () => {
     await signInAs(page, ADMIN.email, ADMIN.password, ADMIN.displayName);
     const header = page.getByRole("banner");
     await expect(header.getByText("openlaw")).toBeVisible();
-    await expect(header.getByRole("searchbox", { name: "Search" })).toBeVisible();
+    await expect(header.getByRole("combobox", { name: "Search" })).toBeVisible();
     await expect(
       page.getByRole("navigation", { name: "Primary" }).getByRole("link", { name: "Home" }),
     ).toHaveAttribute("aria-current", "page");

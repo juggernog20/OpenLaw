@@ -62,12 +62,13 @@ describe("error envelope (RFC 9457)", () => {
 });
 
 describe("openapi document", () => {
-  it("serves the generated 3.1 document with the meta operation", async () => {
+  it("serves the generated 3.1 document with the named operations", async () => {
     const res = await app.inject({ method: "GET", url: "/api/openapi.json" });
     expect(res.statusCode).toBe(200);
     const doc = res.json();
     expect(doc.openapi).toBe("3.1.0");
     expect(doc.paths["/api/v1/meta"].get.operationId).toBe("getMeta");
+    expect(doc.paths["/api/v1/search"].get.operationId).toBe("search");
     expect(doc.paths["/api/v1/echo"]).toBeUndefined();
   });
 

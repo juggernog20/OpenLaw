@@ -3168,6 +3168,23 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/v1/search": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Ranked full-text search across Contracts, Matters, Documents, Entities, Counterparties, and Requests (M25). Omit limit, kind, and cursor for the header's grouped answer of ten per kind. Supplying any of them selects the flat results-page order, which defaults to 25 and pages by rank and id. A cursor whose row has since been archived, deleted, or walled off ends the page set with an empty answer. Document hits identify the owning record and matched version */
+    get: operations["search"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/v1/fields": {
     parameters: {
       query?: never;
@@ -17976,6 +17993,68 @@ export interface operations {
               /** Format: date-time */
               updatedAt: string;
             };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  search: {
+    parameters: {
+      query: {
+        q: string;
+        kind?: "contract" | "matter" | "document" | "entity" | "counterparty" | "request";
+        cursor?: string;
+        limit?: number;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            results: (
+              | {
+                  /** @enum {string} */
+                  kind: "contract" | "matter" | "entity" | "counterparty" | "request";
+                  id: string;
+                  number: number | null;
+                  title: string;
+                  isConfidential: boolean;
+                  rank: number;
+                }
+              | {
+                  /** @enum {string} */
+                  kind: "document";
+                  id: string;
+                  number: number | null;
+                  title: string;
+                  isConfidential: boolean;
+                  rank: number;
+                  /** @enum {string} */
+                  ownerKind: "contract" | "matter";
+                  ownerNumber: number;
+                  versionId: string;
+                  versionNumber: number;
+                  snippet: string;
+                }
+            )[];
+            nextCursor: string | null;
           };
         };
       };

@@ -15,7 +15,7 @@ export function Input({
   className,
   type,
   ...props
-}: Readonly<React.InputHTMLAttributes<HTMLInputElement>>) {
+}: Readonly<React.ComponentPropsWithRef<"input">>) {
   return (
     <input
       type={type}

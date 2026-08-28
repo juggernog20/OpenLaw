@@ -32,7 +32,7 @@ test.describe("application shell", () => {
     // Header: product mark, search box, user menu.
     const header = page.getByRole("banner");
     await expect(header.getByText("openlaw")).toBeVisible();
-    await expect(header.getByRole("searchbox", { name: "Search" })).toBeVisible();
+    await expect(header.getByRole("combobox", { name: "Search" })).toBeVisible();
 
     // Nav renders from the destination registry — Home in slot one,
     // the M21 Inbox next (INT-006 M21/13), then the M22 Matters, M8

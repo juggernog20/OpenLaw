@@ -15,6 +15,7 @@ export function PageSubBar({
   subtitle,
   primaryAction,
   actions,
+  filters,
 }: Readonly<{
   title: ReactNode;
   subtitle?: ReactNode;
@@ -22,6 +23,8 @@ export function PageSubBar({
   primaryAction?: ReactNode;
   /** Secondary actions; hidden below md. */
   actions?: ReactNode;
+  /** A second sub-bar row for URL-backed list filters. */
+  filters?: ReactNode;
 }>) {
   return (
     // A named region landmark: the bar sits outside <main> (the skip
@@ -29,22 +32,29 @@ export function PageSubBar({
     // content to live inside a landmark. Labeled by its own h1.
     <section
       aria-labelledby="page-title"
-      className="flex h-(--height-subbar) shrink-0 items-center justify-between gap-4 border-b border-(--chrome-subbar-border) bg-canvas px-page-x"
+      className={`shrink-0 border-b border-(--chrome-subbar-border) bg-canvas px-page-x ${
+        filters
+          ? "flex min-h-26 flex-col items-stretch justify-center gap-3 py-3"
+          : "flex h-(--height-subbar) items-center justify-between gap-4"
+      }`}
     >
-      <div className="flex min-w-0 flex-col gap-0.5">
-        <h1 id="page-title" className="truncate text-xl font-semibold">
-          {title}
-        </h1>
-        {subtitle ? (
-          <p className="hidden truncate text-base text-muted md:block">{subtitle}</p>
+      <div className="flex w-full min-w-0 items-center justify-between gap-4">
+        <div className="flex min-w-0 flex-col gap-0.5">
+          <h1 id="page-title" className="truncate text-xl font-semibold">
+            {title}
+          </h1>
+          {subtitle ? (
+            <p className="hidden truncate text-base text-muted md:block">{subtitle}</p>
+          ) : null}
+        </div>
+        {primaryAction || actions ? (
+          <div className="flex shrink-0 items-center gap-2">
+            {actions ? <div className="hidden items-center gap-2 md:flex">{actions}</div> : null}
+            {primaryAction}
+          </div>
         ) : null}
       </div>
-      {primaryAction || actions ? (
-        <div className="flex shrink-0 items-center gap-2">
-          {actions ? <div className="hidden items-center gap-2 md:flex">{actions}</div> : null}
-          {primaryAction}
-        </div>
-      ) : null}
+      {filters}
     </section>
   );
 }

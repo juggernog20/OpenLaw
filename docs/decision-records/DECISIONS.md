@@ -594,6 +594,12 @@ The write actor set extends the original creator rule the same way Contracts ext
 
 Key dates, Tasks, Matter relationships, Contract links, Contributor Field writes, supporting Documents, lifecycle advisories, Activity, and notifications all resolve Matter reach through the same predicate. A reachable relative may be named; an unreachable one is either omitted or represented only as a Restricted Matter. Linking and hierarchy never copy a flag or audience, and Closing never changes either.
 
+### Addendum (2026-08-28, M25 close, [#539](https://github.com/juggernog20/OpenLaw/issues/539)) — search inherits the gate
+
+Global search applies the existing Contract, Matter, and Document audience predicates inside each candidate query, before ranking, limits, and cursors. A Document must pass both its own audience predicate and its owning record's reach predicate before its title, filename, or extracted-text snippet can become a result. Administrators therefore search every live record; Legal Team Members search open records plus confidential records they can reach; Contributors search only records carrying their team row; and Business Users receive the same empty search answer regardless of what exists.
+
+An omitted record contributes no row, snippet, page gap, cursor, or count. The header listbox and results page render only that viewer-scoped answer, and a search landing rechecks ordinary record and Document reach when it opens the owning record. Search is not a parallel access model; it is another read surface over the DD-014 gate.
+
 ---
 
 ## DD-015: Contributor permission grid — read, comment, upload, edit business fields

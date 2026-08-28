@@ -1490,6 +1490,9 @@
   "contracts.record.documentTitle": {
     "defaultMessage": "{reference} {title}"
   },
+  "contracts.record.documents.searchLanding": {
+    "defaultMessage": "Document search landing"
+  },
   "contracts.record.envelope.declined": {
     "defaultMessage": "Envelope declined"
   },
@@ -2053,6 +2056,24 @@
   },
   "docPanel.version": {
     "defaultMessage": "v{number}"
+  },
+  "docpanel.find.close": {
+    "defaultMessage": "Close find"
+  },
+  "docpanel.find.count": {
+    "defaultMessage": "{current} of {total}"
+  },
+  "docpanel.find.input": {
+    "defaultMessage": "Find in document"
+  },
+  "docpanel.find.next": {
+    "defaultMessage": "Next match"
+  },
+  "docpanel.find.open": {
+    "defaultMessage": "Find in document"
+  },
+  "docpanel.find.previous": {
+    "defaultMessage": "Previous match"
   },
   "documents.action.addVersion": {
     "defaultMessage": "Add version"
@@ -3775,6 +3796,78 @@
   },
   "role.legalTeamMember": {
     "defaultMessage": "Legal team member"
+  },
+  "search.error.body": {
+    "defaultMessage": "The server did not answer. Try again in a moment."
+  },
+  "search.error.title": {
+    "defaultMessage": "Search could not load"
+  },
+  "search.filter.label": {
+    "defaultMessage": "Filter search results"
+  },
+  "search.header.label": {
+    "defaultMessage": "Search"
+  },
+  "search.header.listLabel": {
+    "defaultMessage": "Search results"
+  },
+  "search.kind.all": {
+    "defaultMessage": "All"
+  },
+  "search.kind.contract": {
+    "defaultMessage": "Contract"
+  },
+  "search.kind.counterparty": {
+    "defaultMessage": "Counterparty"
+  },
+  "search.kind.document": {
+    "defaultMessage": "Document"
+  },
+  "search.kind.entity": {
+    "defaultMessage": "Entity"
+  },
+  "search.kind.matter": {
+    "defaultMessage": "Matter"
+  },
+  "search.kind.request": {
+    "defaultMessage": "Request"
+  },
+  "search.noMatches": {
+    "defaultMessage": "No matches"
+  },
+  "search.noMatchesBody": {
+    "defaultMessage": "No matches for “{query}”. Try another word or record number."
+  },
+  "search.page.error": {
+    "defaultMessage": "Search could not load. Try again."
+  },
+  "search.page.moreError": {
+    "defaultMessage": "The next results could not be read. Try again."
+  },
+  "search.page.prompt": {
+    "defaultMessage": "Search contracts, matters, documents, entities, counterparties, and requests"
+  },
+  "search.page.resultsFor": {
+    "defaultMessage": "Search results for “{query}”"
+  },
+  "search.page.showMore": {
+    "defaultMessage": "Show more"
+  },
+  "search.result.ownedBy": {
+    "defaultMessage": "Owned by"
+  },
+  "search.result.version": {
+    "defaultMessage": "v{number}"
+  },
+  "search.searching": {
+    "defaultMessage": "Searching…"
+  },
+  "search.searchingBody": {
+    "defaultMessage": "Looking across Contracts, Matters, Documents, Entities, Counterparties, and Requests."
+  },
+  "search.seeAll": {
+    "defaultMessage": "See all results"
   },
   "settings.appearance.caption": {
     "defaultMessage": "Theme is a personal preference — it doesn't affect other users."
@@ -5582,11 +5675,8 @@
   "shell.nav.title": {
     "defaultMessage": "Navigation"
   },
-  "shell.search.label": {
-    "defaultMessage": "Search"
-  },
   "shell.search.placeholder": {
-    "defaultMessage": "Type {key} to search"
+    "defaultMessage": "Search contracts, matters, documents…{key}"
   },
   "shell.userMenu.settings": {
     "defaultMessage": "Settings"

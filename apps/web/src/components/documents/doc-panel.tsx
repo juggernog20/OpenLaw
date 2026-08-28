@@ -122,6 +122,7 @@ export function DocPanel({
   documentId,
   title,
   version,
+  initialFind,
   onClose,
   onDockedChange,
 }: Readonly<{
@@ -131,6 +132,9 @@ export function DocPanel({
   title: string;
   /** The one version being read. Any round in the chain may be it. */
   version: DocumentVersion;
+  /** A global-search landing may carry the words that found this
+   * Version. Only a PDF surface consumes them. */
+  initialFind?: string | null;
   onClose: () => void;
   /** Told whenever the panel crosses the docking threshold. Two things
    * hang off the answer: a section-tab change closes the panel while it
@@ -238,7 +242,12 @@ export function DocPanel({
         </a>
       </div>
       <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-        <Surface documentId={documentId} version={version} previewHref={previewHref} />
+        <Surface
+          documentId={documentId}
+          version={version}
+          previewHref={previewHref}
+          initialFind={initialFind}
+        />
       </div>
     </aside>
   );
@@ -250,17 +259,32 @@ function Surface({
   documentId,
   version,
   previewHref,
+  initialFind,
 }: Readonly<{
   documentId: string;
   version: DocumentVersion;
   previewHref: string;
+  initialFind?: string | null;
 }>) {
   if (isConverted(version)) {
-    return <ConvertedSurface documentId={documentId} version={version} previewHref={previewHref} />;
+    return (
+      <ConvertedSurface
+        documentId={documentId}
+        version={version}
+        previewHref={previewHref}
+        initialFind={initialFind}
+      />
+    );
   }
   switch (version.renderFamily) {
     case "pdf":
-      return <PdfSurface src={previewHref} filename={version.originalFilename} />;
+      return (
+        <PdfSurface
+          src={previewHref}
+          filename={version.originalFilename}
+          initialFind={initialFind}
+        />
+      );
     case "email":
       return <EmailSurface documentId={documentId} version={version} />;
     case "image":
@@ -337,7 +361,11 @@ function EmailSurface({
 /** The PDF surface, and the one line shown while its parser is being
  * fetched. Shared by a stored PDF and by a converted rendition, because
  * a rendition is a PDF and reads exactly like one. */
-function PdfSurface({ src, filename }: Readonly<{ src: string; filename: string }>) {
+function PdfSurface({
+  src,
+  filename,
+  initialFind,
+}: Readonly<{ src: string; filename: string; initialFind?: string | null }>) {
   return (
     <Suspense
       fallback={
@@ -346,7 +374,7 @@ function PdfSurface({ src, filename }: Readonly<{ src: string; filename: string 
         </p>
       }
     >
-      <PdfPreview src={src} filename={filename} />
+      <PdfPreview src={src} filename={filename} allowFind initialFind={initialFind} />
     </Suspense>
   );
 }
@@ -393,7 +421,13 @@ function ConvertedSurface({
   documentId,
   version,
   previewHref,
-}: Readonly<{ documentId: string; version: DocumentVersion; previewHref: string }>) {
+  initialFind,
+}: Readonly<{
+  documentId: string;
+  version: DocumentVersion;
+  previewHref: string;
+  initialFind?: string | null;
+}>) {
   const [state, setState] = useState<RenditionState>("pending");
 
   useEffect(() => {
@@ -436,7 +470,9 @@ function ConvertedSurface({
   }, [documentId, version.id]);
 
   if (state === "ready") {
-    return <PdfSurface src={previewHref} filename={version.originalFilename} />;
+    return (
+      <PdfSurface src={previewHref} filename={version.originalFilename} initialFind={initialFind} />
+    );
   }
   if (state === "pending") {
     return (

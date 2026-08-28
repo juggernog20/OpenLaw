@@ -197,7 +197,12 @@ import { APPROVAL_PILL, isUnresolved, type ContractApproval } from "../lib/appro
 import { readContractKeyDates, type ContractDeadline } from "../lib/key-dates";
 import type { ContractTask } from "../lib/tasks";
 import { confirmContractRenewal, type ConfirmedRenewal } from "../lib/renewals";
-import { FOLDER_ROOT, type ContractDocument } from "../lib/documents";
+import {
+  documentLandingParams,
+  FOLDER_ROOT,
+  readDocumentLanding,
+  type ContractDocument,
+} from "../lib/documents";
 import type { ContractFolder } from "../lib/folders";
 import { CONTROL_CLASS, TEXTAREA_CLASS } from "../lib/form-controls";
 import { problemDetail, problemType } from "../lib/messages";
@@ -246,7 +251,7 @@ type RecordTabName = "overview" | (typeof RECORD_TABS)[number];
 /** A corrupted paging seam must fail closed instead of holding the filing dialog forever. */
 const MAX_FILING_DOCUMENT_PAGES = 1000;
 
-export async function contractRecordLoader({ params }: LoaderFunctionArgs) {
+export async function contractRecordLoader({ params, request }: LoaderFunctionArgs) {
   const user = await currentUser();
   if (!user) return redirect((await needsSetup()) ? "/auth/setup" : "/auth/login");
   // A Business User gets no surface at all. The API's 403 stands
@@ -265,6 +270,7 @@ export async function contractRecordLoader({ params }: LoaderFunctionArgs) {
   // Contributor anyway; the record read alone carries every name the
   // page has to draw.
   const canEdit = isMemberPlus(user.role);
+  const landingTarget = documentLandingParams(request, params.tab);
   const [
     record,
     documents,
@@ -277,6 +283,7 @@ export async function contractRecordLoader({ params }: LoaderFunctionArgs) {
     linkedMatter,
     options,
     registry,
+    documentLanding,
   ] = await Promise.all([
     api.GET("/api/v1/contracts/{number}", { params: { path: { number } } }),
     // The record's paper (M11/2). Read by every viewer who reaches the
@@ -332,6 +339,13 @@ export async function contractRecordLoader({ params }: LoaderFunctionArgs) {
     // archived entities out, so the contracts surface needs no read of
     // its own the way it does for the Administrator-only taxonomies.
     canEdit ? api.GET("/api/v1/entities") : undefined,
+    landingTarget
+      ? readDocumentLanding(
+          { entityType: "contract", number },
+          landingTarget.documentId,
+          landingTarget.versionId,
+        )
+      : Promise.resolve(null),
   ]);
   // The documents read is required, like the record read: every viewer
   // who reaches this page reads the paper on it (DD-015). A failure
@@ -404,6 +418,8 @@ export async function contractRecordLoader({ params }: LoaderFunctionArgs) {
      * card rather than blocking the page. */
     relations: relations?.data ?? null,
     linkedMatter: linkedMatter.data.matter,
+    documentLanding,
+    documentFindQuery: documentLanding ? (landingTarget?.findQuery ?? null) : null,
   };
 }
 
@@ -566,6 +582,8 @@ export function ContractRecordPage() {
     entities,
     relations: loadedRelations,
     linkedMatter: loadedMatter,
+    documentLanding,
+    documentFindQuery,
   } = useLoaderData<typeof contractRecordLoader>();
   const intl = useIntl();
   const navigate = useNavigate();
@@ -604,7 +622,12 @@ export function ContractRecordPage() {
    * screen, and the doc panel below resolves against both. Without it a
    * filed document's name would open nothing.
    */
-  const [filed, setFiled] = useState<ContractDocument[]>([]);
+  const [filed, setFiled] = useState<ContractDocument[]>(() =>
+    documentLanding &&
+    !contractDocuments.some((document) => document.id === documentLanding.document.id)
+      ? [documentLanding.document]
+      : [],
+  );
   /** How the record's paper is filed (M13/2). State rather than loader
    * data because every folder write answers the whole set, and the
    * section replaces what it holds without a page re-read. */
@@ -714,11 +737,18 @@ export function ContractRecordPage() {
    * is open changes the panel's own header, and a document that leaves
    * the listing takes the panel with it.
    */
-  const [reading, setReading] = useState<{ documentId: string; versionId: string } | null>(null);
+  const [reading, setReading] = useState<{ documentId: string; versionId: string } | null>(() =>
+    documentLanding
+      ? { documentId: documentLanding.document.id, versionId: documentLanding.versionId }
+      : null,
+  );
   /** What opened the panel, so closing it puts focus back there —
    * DES-010's restore-to-trigger rule, wired by hand because the panel
    * is a plain aside. */
   const readingTrigger = useRef<HTMLElement | null>(null);
+  /** The deliberate focus fallback for a panel opened from a search
+   * landing, where no row control was pressed in this page. */
+  const documentsSection = useRef<HTMLElement | null>(null);
 
   /** Re-read the paper after comment paper lands, so the Documents
    * section and the filing marker resolve the same chain. The root is
@@ -1008,7 +1038,7 @@ export function ContractRecordPage() {
   useLayoutEffect(() => {
     if (open !== null || !readingClosed.current) return;
     readingClosed.current = false;
-    readingTrigger.current?.focus();
+    (readingTrigger.current ?? documentsSection.current)?.focus();
     readingTrigger.current = null;
   }, [open]);
 
@@ -1734,6 +1764,12 @@ export function ContractRecordPage() {
               documentId={open.document.id}
               title={open.document.title}
               version={open.version}
+              initialFind={
+                documentLanding?.document.id === open.document.id &&
+                documentLanding.versionId === open.version.id
+                  ? documentFindQuery
+                  : null
+              }
               onClose={closeReading}
               onDockedChange={(docked) => {
                 readingDocked.current = docked;
@@ -2347,52 +2383,62 @@ export function ContractRecordPage() {
                   behind (DES-032). The full document panel DES-016
                   places in a wider sibling layer opens from here. */}
           {tab === "documents" && (
-            <DocumentsCard
-              record={{ entityType: "contract", number: saved.number }}
-              documents={paper}
-              folders={tree}
-              nextCursor={paperCursor}
-              frozen={frozen}
-              supportingUploads={contributor && !archived}
-              // DOC-010's erasure is the Administrator's alone, and it
-              // is the one control on this section a role decides.
-              role={user.role}
-              // DD-014's per-document flag has an actor set of three
-              // (CTR-022), and two of them are people rather than a
-              // role: the person who uploaded the document, which the
-              // row states, and the record's Owner, which only the
-              // record holds. The saved row rather than the loader's
-              // copy, so taking the Owner off takes the control with
-              // them on the same page.
-              viewerId={user.id}
-              ownerId={saved.manager?.id ?? null}
-              // Opening a version in the doc panel (M12/2). The
-              // trigger comes with it so closing puts focus back on
-              // the row control that opened it.
-              reading={reading?.versionId ?? null}
-              // CTR-007's amendment vehicle, routed here from the
-              // Renew dialog (M16/5). The section opens its
-              // composer on the record's instrument; the file and
-              // the write are the M11 upload path, unchanged.
-              amending={amending ? (signing.primaryDocument?.id ?? null) : null}
-              onAmendmentOpened={stopAmending}
-              onRead={(document, version, trigger) => {
-                readingTrigger.current = trigger;
-                setReading({ documentId: document.id, versionId: version.id });
-              }}
-              onDocuments={(rows, cursor) => {
-                setPaper(rows);
-                // `undefined` means the write changed rows without
-                // moving the position: a metadata edit is not a page.
-                if (cursor !== undefined) setPaperCursor(cursor);
-              }}
-              // The setter itself rather than a lambda around it:
-              // the section's report watches its own listings and
-              // nothing else, so what it calls has to stay the same
-              // function across a render.
-              onFiled={setFiled}
-              onFolders={setTree}
-            />
+            <section
+              ref={documentsSection}
+              tabIndex={-1}
+              aria-label={intl.formatMessage({
+                id: "contracts.record.documents.searchLanding",
+                defaultMessage: "Document search landing",
+              })}
+              className="outline-none"
+            >
+              <DocumentsCard
+                record={{ entityType: "contract", number: saved.number }}
+                documents={paper}
+                folders={tree}
+                nextCursor={paperCursor}
+                frozen={frozen}
+                supportingUploads={contributor && !archived}
+                // DOC-010's erasure is the Administrator's alone, and it
+                // is the one control on this section a role decides.
+                role={user.role}
+                // DD-014's per-document flag has an actor set of three
+                // (CTR-022), and two of them are people rather than a
+                // role: the person who uploaded the document, which the
+                // row states, and the record's Owner, which only the
+                // record holds. The saved row rather than the loader's
+                // copy, so taking the Owner off takes the control with
+                // them on the same page.
+                viewerId={user.id}
+                ownerId={saved.manager?.id ?? null}
+                // Opening a version in the doc panel (M12/2). The
+                // trigger comes with it so closing puts focus back on
+                // the row control that opened it.
+                reading={reading?.versionId ?? null}
+                // CTR-007's amendment vehicle, routed here from the
+                // Renew dialog (M16/5). The section opens its
+                // composer on the record's instrument; the file and
+                // the write are the M11 upload path, unchanged.
+                amending={amending ? (signing.primaryDocument?.id ?? null) : null}
+                onAmendmentOpened={stopAmending}
+                onRead={(document, version, trigger) => {
+                  readingTrigger.current = trigger;
+                  setReading({ documentId: document.id, versionId: version.id });
+                }}
+                onDocuments={(rows, cursor) => {
+                  setPaper(rows);
+                  // `undefined` means the write changed rows without
+                  // moving the position: a metadata edit is not a page.
+                  if (cursor !== undefined) setPaperCursor(cursor);
+                }}
+                // The setter itself rather than a lambda around it:
+                // the section's report watches its own listings and
+                // nothing else, so what it calls has to stay the same
+                // function across a render.
+                onFiled={setFiled}
+                onFolders={setTree}
+              />
+            </section>
           )}
           {/* Who has been asked to sign the record off (M14/3,
                   CTR-012) and what paper it has sent out (M15/2,

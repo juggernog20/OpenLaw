@@ -704,6 +704,10 @@ Cmd-K is revisited when either: (a) the catalog of distinct commands worth listi
 - Cmd-K is on the queue for revisit; the routing and entity-search layers should be designed to make adding it cheap (one search index, one command registry — natural shape regardless).
 - A11y screen-reader patterns are _not_ covered by this DES; they belong with the WCAG-AA accessibility-floor decision in the open-questions queue.
 
+### Implementation addendum (2026-08-28, M25/5, [#537](https://github.com/juggernog20/OpenLaw/issues/537))
+
+The `/` consequence is complete for global search. The key focuses the header combobox, typing 2 characters opens its ranked results, and a page-level search input still wins while it is mounted. The results list owns Arrow keys, Enter, and `Esc` locally. `Esc` closes only the list, stops propagation, and leaves the query in the input. `KEY_MAP` remains the source of the `Focus search` cheat-sheet entry and the header's `/` chip.
+
 ---
 
 ## DES-011: Accessibility floor — WCAG 2.2 Level AA contract; AAA aspirational on text; no formal audit in v1
@@ -1100,6 +1104,10 @@ The voice register for all component-default and system-generated copy is **ters
 - **The pre-login chrome carve-out** is intentionally narrow; if it expands beyond a one-line tagline, revisit and decide whether marketing-adjacent surfaces deserve their own register decision.
 - **No separate "tone guide" document is produced** for v1; the rules in this DES are the source of truth.
 
+### Addendum list
+
+- **2026-08-28, M25/5, [#537](https://github.com/juggernog20/OpenLaw/issues/537):** the staff header placeholder changes from `Type / to search` to `Search contracts, matters, documents…`. The separate `/` chip remains. The existing `shell.search.placeholder` message keeps its `{key}` interpolation, with the chip rendering the visible key from `SEARCH_KEY`.
+
 ---
 
 ## DES-016: Record-page right side — VS Code-style activity bar with page-scoped applets (amends DES-007's rail)
@@ -1204,6 +1212,12 @@ Below the 1400px docking threshold the doc panel overlays the record's content c
 
 The fix: `DocPanel` watches its own `ResizeObserver`-reported width and tells its caller whether it is currently docked. `ContractRecord` keeps the answer in a ref and, only when its `tab` param actually changes, closes the panel if that ref says it is overlaying. Docked, a tab change leaves the panel open — the same "beside, not instead" behavior point 1 already named, now actually reachable from every section rather than just two of them.
 
+### Addendum (2026-08-28, M25/6, [#538](https://github.com/juggernog20/OpenLaw/issues/538)): K.T7 built
+
+K.T7 now lives with the other PDF reading controls. Its compact button opens C35's find bar; a search landing carrying `?find=` opens that bar already filled. The browser reads pdf.js's text content across the whole file, highlights the matching runs in each rendered text layer, reports the current ordinal and total, and moves through them with the previous/next controls or Enter/Shift+Enter. Moving the current answer scrolls its page into the well.
+
+The control belongs to the PDF surface, so a stored PDF and a converted Word or PowerPoint rendition both have it. A raster image, an email surface (including the message's attachment reader), and a download card do not. No global key joins DES-010's map; the find input owns Enter, Shift+Enter, and its close behavior locally. This supersedes only point 4's statement that K.T7 was not built; K.T9 remains absent.
+
 ## DES-017: Editing model — per-field inline commit, no page edit mode
 
 - **Status:** Accepted
@@ -1292,7 +1306,7 @@ The Light column is exactly what the shell rendered before this record, so Light
 2. Search placeholder, crumb slash, and the `/` key hint stay `--text-subtle` in every theme; Dark renders `#6E7681` where its frame shows `#7D8590`, and Warm's key hint renders `#A8A294` where its frame shows `#7A7264`.
 3. The Dark sub-bar title stays `--text-primary` (`#E6EDF3`) where its frame shows `#F0F6FC`.
 4. Warm's brand chip is 32px (the shell's icon slot) where its frame draws 30px, and the brand glyph stays the 20px Lucide scale in every theme (the Warm frame shows an 18px glyph).
-5. The search placeholder is "Type / to search" in every theme, as the Light and Dark frames draw it. The Warm frame's longer "Type / to search matters, contracts, entities…" copy describes the M25 cross-module search scope, not the M4 shell. (Added during the #49 acceptance comparison.)
+5. The search placeholder is "Type / to search" in every theme, as the Light and Dark frames draw it. The Warm frame's longer "Type / to search matters, contracts, entities…" copy describes the M25 cross-module search scope, not the M4 shell. (Added during the #49 acceptance comparison.) _Superseded for M25 by DES-015's 2026-08-28 addendum: the placeholder now names Contracts, Matters, and Documents while the separate `/` chip keeps the shortcut visible._
 6. The nav is 48px and the sub-bar 64px tall in every theme (the DES-007 contract, drawn by the Light and Dark frames). The Warm frame draws them 46px and 62px — the same 13px-label frame noise as point 1. (Added during the #49 acceptance comparison.)
 
 ### Rationale

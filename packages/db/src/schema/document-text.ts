@@ -28,8 +28,14 @@
  */
 
 import { sql } from "drizzle-orm";
-import { check, pgTable, text, timestamp } from "drizzle-orm/pg-core";
+import { check, index, pgTable, text, timestamp } from "drizzle-orm/pg-core";
 import { documentVersions } from "./documents.js";
+import { searchVector } from "./helpers.js";
+
+/** Maximum extracted source characters admitted to one M25 vector (DOC-009).
+ * The live value is baked into `document_text_search_vector` by
+ * migration 0080; change both together. */
+export const DOCUMENT_TEXT_SEARCH_CHARACTER_LIMIT = 1_000_000;
 
 /**
  * Where a derivation has got to.
@@ -85,6 +91,13 @@ export const documentVersionText = pgTable(
     /** NULL until the text is there — a pending or failed row has read
      * nothing, so it can name no source. */
     source: text("source", { enum: TEXT_SOURCES }),
+    /** An uploaded email's subject, stored by the same parse that writes
+     * its body. Search uses it as that Document hit's title without
+     * opening and parsing the stored message a second time (DOC-004).
+     * NULL means this is not email, extraction has not completed, or
+     * the parsed email carried no subject; all three fall back to the
+     * Document title. */
+    emailSubject: text("email_subject"),
     /** The words themselves. NULL for the same reason `source` is. An
      * empty string is a different fact and a legitimate one: a blank
      * scan was read successfully and had nothing on it. */
@@ -96,6 +109,19 @@ export const documentVersionText = pgTable(
       .notNull()
       .defaultNow()
       .$onUpdate(() => new Date()),
+    /** Only completed derivations contribute content. PostgreSQL
+     * recomputes this stored value on every state/text write, so the
+     * extraction worker is already the indexing path (TECH-014).
+     *
+     * The expression lives in `document_text_search_vector`, defined by
+     * migration 0080 next to this column. It applies the `ready` gate
+     * and `DOCUMENT_TEXT_SEARCH_CHARACTER_LIMIT`, and it catches the
+     * 1 MB tsvector limit so a version full of serial numbers or OCR
+     * noise keeps its text and is merely unindexed, rather than failing
+     * the extraction write (DOC-009). */
+    searchVector: searchVector("search_vector").generatedAlwaysAs(
+      sql`document_text_search_vector("state", "text")`,
+    ),
   },
   (table) => [
     check(
@@ -115,6 +141,11 @@ export const documentVersionText = pgTable(
       "document_version_text_ready_check",
       sql`(${table.state} = 'ready') = (${table.text} is not null and ${table.source} is not null)`,
     ),
+    check(
+      "document_version_text_email_subject_check",
+      sql`${table.emailSubject} is null or ${table.source} = 'email_body'`,
+    ),
+    index("document_version_text_search_vector_idx").using("gin", table.searchVector),
   ],
 );
 
