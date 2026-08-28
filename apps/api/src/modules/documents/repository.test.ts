@@ -15,6 +15,7 @@ import {
   matters,
   matterStatuses,
   matterTypes,
+  sql,
   users,
 } from "@openlaw/db";
 import { provisionUser } from "../../auth/instance.js";
@@ -348,5 +349,61 @@ describe("the Document repository", () => {
       cookies,
     });
     expect(response.statusCode).toBe(400);
+  });
+});
+
+describe("the cursor against Postgres microsecond stamps", () => {
+  /** Uploads through the API take `now()`, which keeps microseconds. A
+   * boundary read back through the driver would keep milliseconds and
+   * sit a fraction before the real stamp. These three sit older than
+   * every row above: two share one stamp and one sits inside the
+   * fraction a millisecond boundary would drop. */
+  const seededTitles = ["Tie A", "Tie B", "Between"];
+
+  beforeAll(async () => {
+    const contractId = (
+      await harness.db
+        .select({ id: contracts.id })
+        .from(contracts)
+        .where(eq(contracts.title, "Meridian services"))
+    )[0]!.id;
+    const seeded = await harness.db
+      .insert(documents)
+      .values(seededTitles.map((title) => ({ contractId, title, createdBy: memberId })))
+      .returning({ id: documents.id, title: documents.title });
+    for (const row of seeded) ids.set(row.title, row.id);
+    const at = (stamp: string) => sql`${stamp}::timestamptz`;
+    await harness.db.insert(documentVersions).values(
+      [
+        ["Tie A", "2026-08-03T09:00:00.000500Z"],
+        ["Tie B", "2026-08-03T09:00:00.000500Z"],
+        ["Between", "2026-08-03T09:00:00.000200Z"],
+      ].map(([title, stamp]) => ({
+        documentId: ids.get(title!)!,
+        versionNumber: 1,
+        fileRef: `local:repository/${ids.get(title!)!}/1`,
+        kind: "draft_ours" as const,
+        originalFilename: `${title!}.pdf`,
+        mimeType: "application/pdf",
+        byteSize: 1_024,
+        checksumSha256: "3".repeat(64),
+        createdBy: memberId,
+        createdAt: at(stamp!),
+      })),
+    );
+  });
+
+  it("walks a shared stamp and the fraction under a millisecond without a gap", async () => {
+    const whole = (await list()).documents.map((row) => row.title);
+    expect(whole.slice(-3).sort()).toEqual([...seededTitles].sort());
+
+    const paged: string[] = [];
+    let cursor: string | null = null;
+    do {
+      const page: RepositoryAnswer = await list(`?limit=2${cursor ? `&cursor=${cursor}` : ""}`);
+      paged.push(...page.documents.map((row) => row.title));
+      cursor = page.nextCursor;
+    } while (cursor !== null);
+    expect(paged).toEqual(whole);
   });
 });

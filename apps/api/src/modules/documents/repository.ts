@@ -183,26 +183,38 @@ export const documentRepositoryRoutes: FastifyPluginAsyncZod = async (app) => {
         isNull(documents.archivedAt),
         documentRepositoryScope(app.db, request.user),
       );
-      let boundary: { id: string; versionCreatedAt: Date } | null = null;
+      let boundary: { id: string; versionId: string } | null = null;
       if (request.query.cursor !== undefined) {
         const [cursor] = await selectRepository(app.db)
           .where(and(eq(documents.id, request.query.cursor), scope))
           .limit(1);
         if (!cursor) return { documents: [], nextCursor: null };
-        boundary = { id: cursor.id, versionCreatedAt: cursor.versionCreatedAt };
+        boundary = { id: cursor.id, versionId: cursor.versionId };
       }
+      // The boundary's upload time stays in SQL. A JS Date keeps
+      // milliseconds and Postgres keeps microseconds, so a value that
+      // came back through the driver would sit a fraction before the
+      // real stamp and the next page would skip every row in between.
+      const boundaryCreatedAt =
+        boundary === null
+          ? null
+          : sql`(
+              select boundary_version.created_at
+              from document_versions boundary_version
+              where boundary_version.id = ${boundary.versionId}
+            )`;
 
       const pageSize = request.query.limit ?? DEFAULT_LIMIT;
       const rows = await selectRepository(app.db)
         .where(
           and(
             scope,
-            boundary === null
+            boundary === null || boundaryCreatedAt === null
               ? undefined
               : or(
-                  lt(documentVersions.createdAt, boundary.versionCreatedAt),
+                  lt(documentVersions.createdAt, boundaryCreatedAt),
                   and(
-                    eq(documentVersions.createdAt, boundary.versionCreatedAt),
+                    eq(documentVersions.createdAt, boundaryCreatedAt),
                     lt(documents.id, boundary.id),
                   ),
                 ),

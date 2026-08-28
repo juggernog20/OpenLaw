@@ -17,7 +17,7 @@ import { ConfidentialMarker } from "../confidential-marker";
 
 function formatName(filename: string, mimeType: string): string {
   const extension = filename.includes(".") ? filename.split(".").at(-1) : undefined;
-  return (extension ?? mimeType.split("/").at(-1) ?? mimeType).toUpperCase();
+  return (extension || mimeType.split("/").at(-1) || mimeType).toUpperCase();
 }
 
 const COLUMNS: ColumnDef<RepositoryDocument>[] = [
