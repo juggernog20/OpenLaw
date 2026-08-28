@@ -498,7 +498,7 @@ Recorded as working defaults without a grill (all convention, no open design con
 - **Observability** — structured JSON logs (pino) with request IDs; `/healthz` (liveness) + `/readyz` (DB/queue checks); metrics/OpenTelemetry deferred until someone asks.
 - **Telemetry** — **none in v1.** No phone-home of any kind — the right default for a self-hosted legal tool; any future opt-in usage stats would be a separate, explicit decision.
 - **File storage** — confirms DOC-009: storage adapter with **local-filesystem driver default** (a Compose volume) and **S3-compatible driver**; `file_ref` = driver-prefixed key.
-- **Search** — confirms DOC-009: **Postgres FTS** (tsvector columns + GIN, indexing jobs on pg-boss); dedicated engine only if relevance/scale ever demands it.
+- **Search** — confirms DOC-009: **Postgres FTS** (tsvector columns + GIN; ~~indexing jobs on pg-boss~~ _superseded 2026-08-27 by the M25/2 addendum below: stored generated columns, no indexing job_); dedicated engine only if relevance/scale ever demands it.
 
 ### Consequences
 
@@ -506,7 +506,7 @@ Repo scaffold order: monorepo shell → Fastify + OpenAPI → auth (brings `pack
 
 ### Addendum (2026-08-27, M25/2, [#532](https://github.com/juggernog20/OpenLaw/issues/532)) — generated search columns replace the indexing queue
 
-The Search bullet above is revised in one respect: **there is no pg-boss search-indexing job**. Each searchable table declares a stored generated `tsvector` column in Drizzle, and PostgreSQL recomputes it in the same write that changes its source columns. The extraction and backfill jobs already write `document_version_text`; that write is therefore the complete indexing path for file content. A title edit and a completed extraction cannot commit while leaving their vectors stale, and there is no queue state to reconcile.
+The Search bullet above is revised in one respect: **there is no pg-boss search-indexing job**. Each searchable table declares a stored generated `tsvector` column in Drizzle, and PostgreSQL recomputes it in the same write that changes its source columns. The extraction and backfill jobs already write `document_version_text`; that write is therefore the complete indexing path for extracted text. A title edit and a completed extraction cannot commit while leaving their vectors stale, and there is no queue state to reconcile.
 
 Migration `0080_calm_cloak` adds all seven generated columns and their GIN indexes in one batch. The `ALTER TABLE` statements compute existing rows in place. Plain `CREATE INDEX` is deliberate: the blessed upgrade runs before the API starts, so nothing needs `CONCURRENTLY`, and the migration keeps the runner's surrounding transaction rather than using the `COMMIT; BEGIN;` preamble. `pg_trgm` remains deferred; M25 adds no extension dependency.
 

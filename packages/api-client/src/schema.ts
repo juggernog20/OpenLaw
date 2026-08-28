@@ -3175,7 +3175,7 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** Ranked full-text search across Contracts, Matters, Documents, Entities, Counterparties, and Requests (M25). Omit limit, kind, and cursor for the header's grouped answer of ten per kind. Supplying any of them selects the flat results-page order, which defaults to 25 and pages by rank and id. Document hits identify the owning record and matched version */
+    /** Ranked full-text search across Contracts, Matters, Documents, Entities, Counterparties, and Requests (M25). Omit limit, kind, and cursor for the header's grouped answer of ten per kind. Supplying any of them selects the flat results-page order, which defaults to 25 and pages by rank and id. A cursor whose row has since been archived, deleted, or walled off ends the page set with an empty answer. Document hits identify the owning record and matched version */
     get: operations["search"];
     put?: never;
     post?: never;

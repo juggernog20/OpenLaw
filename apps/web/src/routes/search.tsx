@@ -1,6 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-/** M25's flat ranked answer, with kind and query held in the URL. */
+/**
+ * M25's flat ranked answer, with kind and query held in the URL so a
+ * reload or a shared link answers the same. Reads the one search
+ * endpoint through the generated client (TECH-003); `/` reaches it per
+ * DES-010.
+ */
 import { useState } from "react";
 import { Search as SearchIcon } from "lucide-react";
 import { defineMessages, FormattedMessage, useIntl } from "react-intl";

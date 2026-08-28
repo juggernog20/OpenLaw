@@ -346,7 +346,8 @@ describe("the filters", () => {
     await user.type(screen.getByRole("combobox", { name: "Search" }), "te");
     await user.keyboard("{Escape}");
     await act(async () => {
-      (document.activeElement as HTMLElement | null)?.blur();
+      const active = document.activeElement;
+      if (active instanceof HTMLElement) active.blur();
     });
     await user.keyboard("/");
     expect(filterBar().getByLabelText("Search")).toHaveFocus();

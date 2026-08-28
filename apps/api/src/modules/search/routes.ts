@@ -263,6 +263,26 @@ function searchCtes(db: Db, user: AuthenticatedUser, query: string): SQL {
       select
         kind, id, number, title, is_confidential, kind_order,
         owner_kind, owner_number, version_id, version_number,
+        document_title, document_description, original_filename,
+        email_subject, extracted_text, extracted_vector,
+        ts_rank_cd(array[0.05, 0.1, 0.5, 1.0]::real[], document, search_query.value) as rank
+      from document_version_candidates
+      cross join search_query
+      where document @@ search_query.value
+    ),
+    document_winners as (
+      select distinct on (id)
+        kind, id, number, title, is_confidential, kind_order,
+        owner_kind, owner_number, version_id, version_number,
+        document_title, document_description, original_filename,
+        email_subject, extracted_text, extracted_vector, rank
+      from document_version_hits
+      order by id, version_number desc
+    ),
+    document_hits as (
+      select
+        kind, id, number, title, is_confidential, kind_order,
+        owner_kind, owner_number, version_id, version_number,
         ts_headline(
           'english',
           case
@@ -282,17 +302,9 @@ function searchCtes(db: Db, user: AuthenticatedUser, query: string): SQL {
           search_query.value,
           'StartSel=<mark>, StopSel=</mark>, MaxWords=24, MinWords=8, ShortWord=2'
         ) as snippet,
-        ts_rank_cd(array[0.05, 0.1, 0.5, 1.0]::real[], document, search_query.value) as rank
-      from document_version_candidates
+        rank
+      from document_winners
       cross join search_query
-      where document @@ search_query.value
-    ),
-    document_hits as (
-      select distinct on (id)
-        kind, id, number, title, is_confidential, kind_order,
-        owner_kind, owner_number, version_id, version_number, snippet, rank
-      from document_version_hits
-      order by id, version_number desc
     ),
     entity_candidates as (
       select
@@ -481,7 +493,9 @@ export const searchRoutes: FastifyPluginAsyncZod = async (app) => {
           "Counterparties, and Requests (M25). Omit limit, kind, and cursor " +
           "for the header's grouped answer of ten per kind. Supplying any " +
           "of them selects the flat results-page order, which defaults to 25 " +
-          "and pages by rank and id. Document hits identify the owning record and matched version",
+          "and pages by rank and id. A cursor whose row has since been archived, deleted, " +
+          "or walled off ends the page set with an empty answer. Document hits identify " +
+          "the owning record and matched version",
         tags: ["search"],
         querystring: QuerySchema,
         response: {

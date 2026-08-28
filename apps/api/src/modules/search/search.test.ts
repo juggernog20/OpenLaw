@@ -418,6 +418,9 @@ describe("GET /search across the indexed records", () => {
       rank: 1000,
     });
 
+    // The three kinds share the same first value only because each
+    // sequence starts fresh in this database: contract, matter, and
+    // request numbers all read the same digits here.
     const bare = await search(`q=${contractNumber}`);
     const exact = bare.results.filter((row) => row.rank === 1000);
     expect(new Set(exact.map((row) => row.kind))).toEqual(

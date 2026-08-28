@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 // SPDX-License-Identifier: AGPL-3.0-only
+/* global Buffer, setTimeout, FormData, File */
 
 /**
  * Upgrade fidelity: fill an install, upgrade it, and check it is still

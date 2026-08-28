@@ -1,6 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-/** The one result row shared by the header listbox and `/search`. */
+/**
+ * The one result row shared by the header listbox and `/search`: the
+ * DES-010 keyboard contract, the DES-029 confidential marker, and copy
+ * wrapped per DES-013.
+ */
 import type { ComponentType, PointerEvent, ReactNode } from "react";
 import {
   ArrowUpRight,

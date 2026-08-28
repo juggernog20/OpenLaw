@@ -1,6 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-/** The settled client adapter for M25's one search endpoint. */
+/**
+ * The settled client adapter for M25's one search endpoint, called
+ * through the generated OpenAPI client (TECH-003). The engine and the
+ * reach rule behind the answer are DOC-009 and DD-014.
+ */
 import type { paths } from "@openlaw/api-client";
 import { api } from "./api";
 import { problemDetail } from "./messages";

@@ -77,7 +77,7 @@ beforeAll(async () => {
   for (const person of Object.values(PEOPLE)) {
     const user = await provisionUser(harness.app.auth, person);
     await harness.db.update(users).set({ role: person.role }).where(eq(users.id, user.id));
-    ids.set(person.role === "contributor" ? "contributor" : person.email, user.id);
+    ids.set(person.email, user.id);
     cookies.set(person.email, await signInCookies(harness.app, person.email, person.password));
   }
 
@@ -169,21 +169,21 @@ beforeAll(async () => {
     })),
   );
 
-  for (const userId of [ids.get(PEOPLE.onTeam.email)!, ids.get("contributor")!]) {
+  for (const userId of [ids.get(PEOPLE.onTeam.email)!, ids.get(PEOPLE.contributor.email)!]) {
     await harness.db.insert(contractTeam).values({
       contractId: confidentialContractId,
       userId,
-      role: userId === ids.get("contributor") ? "contributor" : "member",
+      role: userId === ids.get(PEOPLE.contributor.email) ? "contributor" : "member",
     });
     await harness.db.insert(contractTeam).values({
       contractId: publicContractId,
       userId,
-      role: userId === ids.get("contributor") ? "contributor" : "member",
+      role: userId === ids.get(PEOPLE.contributor.email) ? "contributor" : "member",
     });
     await harness.db.insert(matterTeam).values({
       matterId: confidentialMatterId,
       userId,
-      role: userId === ids.get("contributor") ? "contributor" : "member",
+      role: userId === ids.get(PEOPLE.contributor.email) ? "contributor" : "member",
     });
   }
 }, 180_000);

@@ -388,7 +388,19 @@ export function PdfPreview({
       </div>
       {allowFind && findOpen && (
         <div className="flex shrink-0 justify-end border-b border-border-muted bg-canvas px-4 py-1.5">
-          <div className="flex h-9 w-full max-w-[430px] items-center gap-2 rounded-button border border-border-default bg-raised ps-2.5 pe-1 shadow-sm">
+          <div
+            className="flex h-9 w-full max-w-[430px] items-center gap-2 rounded-button border border-border-default bg-raised ps-2.5 pe-1 shadow-sm"
+            // Escape on any control in the bar closes the bar, not the
+            // panel. The input handles its own; this catches the buttons
+            // before the aside reads the key as "close the document".
+            onKeyDown={(event) => {
+              if (event.key === "Escape" && !event.defaultPrevented) {
+                event.preventDefault();
+                event.stopPropagation();
+                closeFind();
+              }
+            }}
+          >
             <Search size={14} aria-hidden="true" className="shrink-0 text-muted" />
             <input
               ref={findInput}
