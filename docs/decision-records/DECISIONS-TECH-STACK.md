@@ -996,7 +996,7 @@ This record describes the model as built and names the places where a different 
 
 **1. Loaders are the only place server data enters the tree.** A route's loader does the reads its screen needs, in parallel, and throws into `errorElement` on failure. A component does not fetch on mount what a loader could have read.
 
-**2. A screen owns what it shows.** After a write, the screen updates its own copy from the mutation's response. `useState` seeded from loader data is the rule, not a smell. This is the model that keeps every read and write for a screen in one file, which is what makes the file legible to the agents that write most of it.
+**2. A screen owns what it shows.** After a write, the screen updates its own copy from the mutation's response. `useState` seeded from loader data is the rule, not a smell. This is the model that keeps every read and write for a screen in one file, which is what makes the file legible to the agents that write most of it. A per-field write goes through `useFieldCommit` (or `useRowCommit` for row-keyed lists) in `lib/field-commit.ts`, which notes the DES-017 micro-state and hands the response to the screen to adopt (#552).
 
 **3. Staleness is fixed by navigation, by `revalidate()`, or by a keyed remount.** Nothing is cached across routes. A screen that must re-read after its own write calls `useRevalidator`. A parameterised route wraps its screen in `KeyedByParam` so a new record is a fresh screen.
 

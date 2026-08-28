@@ -29,13 +29,14 @@ import {
   type EntityStatus,
   type EntityTypeOption,
 } from "../lib/entities";
+import { useFieldCommit, type FieldStatus, type TextField } from "../lib/field-commit";
 import { CONTROL_CLASS, TEXTAREA_CLASS } from "../lib/form-controls";
 import { problemDetail } from "../lib/messages";
 import { isMemberPlus } from "../lib/roles";
 import { requireUser, useSignOut } from "../lib/session";
 import { AppShell } from "../components/shell/app-shell";
 import { PageTitle } from "../components/page-title";
-import { StatusNote, type FieldStatus } from "../components/status-note";
+import { StatusNote } from "../components/status-note";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
@@ -74,8 +75,7 @@ export function EntityRecordPage() {
   const [saved, setSaved] = useState<EntityRow>(entity);
   const [drafts, setDrafts] = useState<Record<TextFieldKey, string>>(() => textDrafts(entity));
   const [formedOnDraft, setFormedOnDraft] = useState(entity.formedOn ?? "");
-  const [fieldStatus, setFieldStatus] = useState<Partial<Record<FieldKey, FieldStatus>>>({});
-  const [fieldError, setFieldError] = useState<Partial<Record<FieldKey, string | undefined>>>({});
+  const fields = useFieldCommit<FieldKey>();
   const [archiveStatus, setArchiveStatus] = useState<FieldStatus>("idle");
   const [archiveError, setArchiveError] = useState<string | undefined>(undefined);
 
@@ -92,60 +92,47 @@ export function EntityRecordPage() {
     };
   }
 
-  function note(key: FieldKey, status: FieldStatus, detail?: string) {
-    setFieldStatus((current) => ({ ...current, [key]: status }));
-    setFieldError((current) => ({ ...current, [key]: detail }));
-  }
-
   /** One PATCH per committed field (DES-017): success adopts the
    * server's row as saved truth but resets only the committed field's
-   * draft — another field's in-progress edit is not this commit's to
-   * discard. */
-  async function commit(key: FieldKey, body: Record<string, unknown>) {
-    note(key, "saving");
-    const { data, error } = await api
-      .PATCH("/api/v1/entities/{id}", { params: { path: { id: saved.id } }, body })
-      .catch(() => ({ data: undefined, error: undefined }));
-    if (data) {
-      const row = data.entity;
-      setSaved(row);
-      if (key === "formedOn") {
-        setFormedOnDraft(row.formedOn ?? "");
-      } else if (key !== "entityTypeId" && key !== "status") {
-        setDrafts((current) => ({ ...current, [key]: textDrafts(row)[key] }));
-      }
-      note(key, "saved");
-    } else {
-      note(key, "error", problemDetail(error));
-    }
+   * draft. Another field's in-progress edit is not this commit's to
+   * discard. The saving/saved/error note beside the field is the
+   * hook's. */
+  function commit(key: FieldKey, body: Record<string, unknown>) {
+    return fields.commit(
+      key,
+      () => api.PATCH("/api/v1/entities/{id}", { params: { path: { id: saved.id } }, body }),
+      (data) => {
+        const row = data.entity;
+        setSaved(row);
+        if (key === "formedOn") {
+          setFormedOnDraft(row.formedOn ?? "");
+        } else if (key !== "entityTypeId" && key !== "status") {
+          setDrafts((current) => ({ ...current, [key]: textDrafts(row)[key] }));
+        }
+      },
+    );
   }
 
-  function commitText(key: TextFieldKey) {
-    // Enter already committed this draft and the PATCH is in flight —
-    // the blur that follows must not send a duplicate.
-    if (fieldStatus[key] === "saving") return;
-    const draft = drafts[key].trim();
-    const savedValue = key === "legalName" ? saved.legalName : (saved[key] ?? "");
-    if (draft === savedValue || (key === "legalName" && draft === "")) {
-      // Nothing to save (or nothing valid): revert per DES-017.
-      setDrafts((current) => ({ ...current, [key]: savedValue }));
-      return;
-    }
-    void commit(key, { [key]: key === "legalName" ? draft : draft || null });
-  }
-
-  function revertText(key: TextFieldKey) {
-    setDrafts((current) => ({
-      ...current,
-      [key]: key === "legalName" ? saved.legalName : (saved[key] ?? ""),
-    }));
+  /** The hook's view of one text box: its draft, the record's value,
+   * how to write the box, and how to send the trimmed text. The legal
+   * name is required. The other text fields clear to null. */
+  function textField(key: TextFieldKey): TextField {
+    return {
+      draft: drafts[key],
+      saved: key === "legalName" ? saved.legalName : (saved[key] ?? ""),
+      required: key === "legalName",
+      reset: (value) => setDrafts((current) => ({ ...current, [key]: value })),
+      send: (value) => commit(key, { [key]: key === "legalName" ? value : value || null }),
+    };
   }
 
   function commitFormedOn() {
-    if (fieldStatus.formedOn === "saving") return;
-    const draft = formedOnDraft;
-    if (draft === (saved.formedOn ?? "")) return;
-    void commit("formedOn", { formedOn: draft || null });
+    fields.commitText("formedOn", {
+      draft: formedOnDraft,
+      saved: saved.formedOn ?? "",
+      reset: setFormedOnDraft,
+      send: (value) => commit("formedOn", { formedOn: value || null }),
+    });
   }
 
   async function archiveOrRestore() {
@@ -173,7 +160,7 @@ export function EntityRecordPage() {
 
   const signOut = useSignOut("/auth/login");
 
-  const textField = (key: TextFieldKey, controlId: string, label: ReactNode) => (
+  const textInput = (key: TextFieldKey, controlId: string, label: ReactNode) => (
     <div className="flex flex-col gap-1.5">
       <Label htmlFor={controlId}>{label}</Label>
       <div className="flex items-center gap-2">
@@ -182,13 +169,13 @@ export function EntityRecordPage() {
           value={drafts[key]}
           disabled={archived}
           onChange={(event) => setDrafts((current) => ({ ...current, [key]: event.target.value }))}
-          onBlur={() => commitText(key)}
+          onBlur={() => fields.commitText(key, textField(key))}
           onKeyDown={(event) => {
-            if (event.key === "Enter") commitText(key);
-            if (event.key === "Escape") revertText(key);
+            if (event.key === "Enter") fields.commitText(key, textField(key));
+            if (event.key === "Escape") fields.revertText(key, textField(key));
           }}
         />
-        <StatusNote status={fieldStatus[key] ?? "idle"} detail={fieldError[key]} />
+        <StatusNote status={fields.status[key] ?? "idle"} detail={fields.error[key]} />
       </div>
     </div>
   );
@@ -267,7 +254,7 @@ export function EntityRecordPage() {
           </header>
           <div className="grid grid-cols-1 gap-4 p-4 @2xl/page:grid-cols-2">
             <div className="@2xl/page:col-span-2">
-              {textField(
+              {textInput(
                 "legalName",
                 "entity-legal-name",
                 <FormattedMessage id="entities.form.legalName" defaultMessage="Legal name" />,
@@ -299,8 +286,8 @@ export function EntityRecordPage() {
                   ))}
                 </select>
                 <StatusNote
-                  status={fieldStatus.entityTypeId ?? "idle"}
-                  detail={fieldError.entityTypeId}
+                  status={fields.status.entityTypeId ?? "idle"}
+                  detail={fields.error.entityTypeId}
                 />
               </div>
             </div>
@@ -324,10 +311,10 @@ export function EntityRecordPage() {
                     </option>
                   ))}
                 </select>
-                <StatusNote status={fieldStatus.status ?? "idle"} detail={fieldError.status} />
+                <StatusNote status={fields.status.status ?? "idle"} detail={fields.error.status} />
               </div>
             </div>
-            {textField(
+            {textInput(
               "jurisdiction",
               "entity-jurisdiction",
               <FormattedMessage
@@ -352,10 +339,13 @@ export function EntityRecordPage() {
                     if (event.key === "Escape") setFormedOnDraft(saved.formedOn ?? "");
                   }}
                 />
-                <StatusNote status={fieldStatus.formedOn ?? "idle"} detail={fieldError.formedOn} />
+                <StatusNote
+                  status={fields.status.formedOn ?? "idle"}
+                  detail={fields.error.formedOn}
+                />
               </div>
             </div>
-            {textField(
+            {textInput(
               "registrationNumber",
               "entity-registration-number",
               <FormattedMessage
@@ -363,12 +353,12 @@ export function EntityRecordPage() {
                 defaultMessage="Registration no."
               />,
             )}
-            {textField(
+            {textInput(
               "taxId",
               "entity-tax-id",
               <FormattedMessage id="entities.form.taxId" defaultMessage="Tax ID" />,
             )}
-            {textField(
+            {textInput(
               "registeredAgent",
               "entity-registered-agent",
               <FormattedMessage
@@ -392,14 +382,18 @@ export function EntityRecordPage() {
                   onChange={(event) =>
                     setDrafts((current) => ({ ...current, registeredAddress: event.target.value }))
                   }
-                  onBlur={() => commitText("registeredAddress")}
+                  onBlur={() =>
+                    fields.commitText("registeredAddress", textField("registeredAddress"))
+                  }
                   onKeyDown={(event) => {
-                    if (event.key === "Escape") revertText("registeredAddress");
+                    if (event.key === "Escape") {
+                      fields.revertText("registeredAddress", textField("registeredAddress"));
+                    }
                   }}
                 />
                 <StatusNote
-                  status={fieldStatus.registeredAddress ?? "idle"}
-                  detail={fieldError.registeredAddress}
+                  status={fields.status.registeredAddress ?? "idle"}
+                  detail={fields.error.registeredAddress}
                 />
               </div>
             </div>
