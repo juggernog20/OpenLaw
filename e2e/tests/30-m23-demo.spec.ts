@@ -236,7 +236,10 @@ test.describe.serial("M23 deployer journey", () => {
       await businessField.press("Tab");
       expect((await fieldSaved).status()).toBe(200);
 
-      await contributor.getByRole("link", { name: "Documents" }).click();
+      await contributor
+        .getByRole("navigation", { name: "Matter sections" })
+        .getByRole("link", { name: "Documents" })
+        .click();
       await contributor.getByRole("button", { name: "Upload" }).click();
       const upload = contributor.getByRole("dialog", { name: "Upload document" });
       await upload.getByRole("button", { name: "File", exact: true }).setInputFiles({

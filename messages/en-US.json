@@ -2408,6 +2408,51 @@
   "documents.kind": {
     "defaultMessage": "{kind, select, draft_ours {Draft · ours} draft_theirs {Draft · theirs} redline_theirs {Redline · theirs} redline_ours {Redline · ours} executed {Executed} amendment {Amendment} generated_redline {Generated redline} other {Unknown}}"
   },
+  "documents.list.column.format": {
+    "defaultMessage": "Format"
+  },
+  "documents.list.column.kind": {
+    "defaultMessage": "Kind"
+  },
+  "documents.list.column.owner": {
+    "defaultMessage": "Owning record"
+  },
+  "documents.list.column.size": {
+    "defaultMessage": "Size"
+  },
+  "documents.list.column.title": {
+    "defaultMessage": "Title"
+  },
+  "documents.list.column.uploaded": {
+    "defaultMessage": "Uploaded"
+  },
+  "documents.list.column.uploader": {
+    "defaultMessage": "Uploader"
+  },
+  "documents.list.column.versions": {
+    "defaultMessage": "Versions"
+  },
+  "documents.list.countShown": {
+    "defaultMessage": "{count, plural, one {# document shown} other {# documents shown}}"
+  },
+  "documents.list.empty.body": {
+    "defaultMessage": "Upload to a record and it appears here."
+  },
+  "documents.list.empty.title": {
+    "defaultMessage": "Paper lives on Contracts and Matters."
+  },
+  "documents.list.more": {
+    "defaultMessage": "Show more"
+  },
+  "documents.list.moreAdded": {
+    "defaultMessage": "{count, plural, one {# more Document} other {# more Documents}}. {total} shown."
+  },
+  "documents.list.moreError": {
+    "defaultMessage": "The next Documents could not be read. Try again."
+  },
+  "documents.list.owner": {
+    "defaultMessage": "{reference} · {title}"
+  },
   "documents.more": {
     "defaultMessage": "Show more"
   },
@@ -3352,6 +3397,9 @@
   },
   "nav.contracts": {
     "defaultMessage": "Contracts"
+  },
+  "nav.documents": {
+    "defaultMessage": "Documents"
   },
   "nav.entities": {
     "defaultMessage": "Entities"

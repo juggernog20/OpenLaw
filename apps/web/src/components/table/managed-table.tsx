@@ -117,6 +117,7 @@ export function ManagedTable<Row>({
   rowKey,
   onLayoutChange,
   focusRowKey,
+  onRowActivate,
   foot,
   actionsColumn,
 }: Readonly<{
@@ -131,6 +132,10 @@ export function ManagedTable<Row>({
    * was just appended, because that is where the answer starts
    * (DES-031). */
   focusRowKey?: string;
+  /** Optional mouse landing for destination rows. The row's own link
+   * remains the keyboard path, so a long table does not become a long
+   * list of extra tab stops. */
+  onRowActivate?: (row: Row) => void;
   /** The paging foot, under the table's last rule and outside its
    * sideways scroll, so it never slides out of reach (DES-031). */
   foot?: ReactNode;
@@ -276,7 +281,14 @@ export function ManagedTable<Row>({
                   // fifty tab stops nobody asked for is worse than none.
                   ref={key === focusRowKey ? landing : undefined}
                   tabIndex={key === focusRowKey ? -1 : undefined}
-                  className="border-t border-border-default"
+                  className={`border-t border-border-default ${onRowActivate ? "cursor-pointer hover:bg-hover" : ""}`}
+                  onClick={(event) => {
+                    if (!onRowActivate) return;
+                    const target = event.target;
+                    if (target instanceof Element && target.closest("a, button, input, select"))
+                      return;
+                    onRowActivate(row);
+                  }}
                 >
                   {shown.map(({ def }) => (
                     <td
