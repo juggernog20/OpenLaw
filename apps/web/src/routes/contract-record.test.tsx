@@ -32,7 +32,7 @@
  */
 
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { fireEvent, screen, waitFor, within } from "@testing-library/react";
+import { act, fireEvent, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import {
   json,
@@ -6350,6 +6350,33 @@ describe("the doc panel (M12/2)", () => {
       "termination",
     );
     expect(await within(reading).findByText("1 of 3")).toBeVisible();
+  });
+
+  it("keeps the find bar and the open document across a docked tab change", async () => {
+    stubApi({ signedIn: MEMBER, extra: panelApi([document()]) });
+    renderAt("/contracts/42/documents?doc=pdoc-1&version=pv-1&find=termination");
+    const user = userEvent.setup();
+
+    const reading = await panel(/master services agreement, version 1/);
+    expect(await within(reading).findByText("1 of 3")).toBeVisible();
+
+    // jsdom reports no widths, so the panel reads as docked and a
+    // section tab change leaves it open. That navigation drops the
+    // landing's `?find=` from the address; the bar it opened must not
+    // reset with it, and the document must not reload under the
+    // reader. Only a new document reads the seed again.
+    await user.click(screen.getByRole("link", { name: "Fields" }));
+    await screen.findByRole("region", { name: "Fields" });
+
+    // Flushed first, then read: the reset this guards against is
+    // scheduled by an effect during the section swap and lands a tick
+    // after the Fields region resolves. A read before the flush would
+    // pass against the old bar.
+    await act(async () => {});
+    expect(within(reading).getByRole("searchbox", { name: "Find in document" })).toHaveValue(
+      "termination",
+    );
+    expect(within(reading).getByText("1 of 3")).toBeVisible();
   });
 
   it("keeps the panel's header on the record's own words after a rename", async () => {
