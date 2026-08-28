@@ -216,7 +216,7 @@ export function ViewsMenu({
 
       {prompt?.kind === "delete" ? (
         <Dialog open onOpenChange={(next) => !next && setPrompt(null)}>
-          <DialogContent aria-describedby={undefined} className="md:max-w-md">
+          <DialogContent aria-describedby={undefined} width="md">
             <DialogTitle>
               <FormattedMessage id="views.delete.title" defaultMessage="Delete this view?" />
             </DialogTitle>
@@ -272,7 +272,7 @@ function NameDialog({
 }>) {
   return (
     <Dialog open onOpenChange={(next) => !next && onClose()}>
-      <DialogContent aria-describedby={undefined} className="md:max-w-md">
+      <DialogContent aria-describedby={undefined} width="md">
         <DialogTitle>
           {kind === "rename" ? (
             <FormattedMessage id="views.rename.title" defaultMessage="Rename this view" />

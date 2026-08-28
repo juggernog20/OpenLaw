@@ -101,7 +101,7 @@ export function LinkedContractsCard({
               ) : (
                 <li
                   key={contract.number}
-                  className="flex min-w-0 flex-col gap-2 py-3 sm:flex-row sm:items-center"
+                  className="flex min-w-0 flex-col gap-2 py-3 @sm/record:flex-row @sm/record:items-center"
                 >
                   <Link
                     to={`/contracts/${contract.number}`}
@@ -116,7 +116,7 @@ export function LinkedContractsCard({
                   </span>
                   {editable && (
                     <Button
-                      className="sm:ml-auto"
+                      className="@sm/record:ml-auto"
                       variant="secondary"
                       disabled={busyNumber !== null}
                       onClick={() => void unlink(contract.number)}

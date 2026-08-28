@@ -395,7 +395,7 @@ export function BatchDialog({
 
   return (
     <Dialog open onOpenChange={(open) => !open && onClose()}>
-      <DialogContent aria-describedby={undefined} className="md:max-w-xl">
+      <DialogContent aria-describedby={undefined} width="xl">
         <DialogTitle>
           {!started ? (
             <FormattedMessage

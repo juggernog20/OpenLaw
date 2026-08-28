@@ -100,4 +100,49 @@ export default tseslint.config(
       ],
     },
   },
+  // DES-012: content is container-responsive; only chrome and modals
+  // follow the viewport (#553).
+  //
+  // A `sm:` or `lg:` on a card inside the page region reacts to the
+  // window, not to the space the card has. Open the applet panel on a
+  // 1440px window and the record content is 1072px wide, but a
+  // `lg:grid-cols-3` still sees 1440 and keeps three columns. The
+  // container form (`@lg/record:grid-cols-3`) sees 1072. So content uses
+  // `@sm:`, `@md:`, `@lg:` against the nearest named container
+  // (`@container/page`, `/record`, `/dialog`, ...).
+  //
+  // The two selectors below read every string literal and template
+  // chunk under a JSX `className`. A viewport modifier is a word that
+  // starts with `sm:`, `md:`, `lg:`, `xl:` or `2xl:`; `(^|\s)` is what
+  // keeps `@lg:` and `@2xl/form:` clear of the rule. Strings passed to
+  // `cn()` outside a `className` are not covered. That is on purpose,
+  // the rule stays small and readable.
+  //
+  // The three files that own the viewport cliff are exempt: the dialog
+  // (full-screen below md), and the app and portal shells (chrome).
+  {
+    files: ["apps/web/src/**/*.tsx"],
+    ignores: [
+      "apps/web/src/components/ui/dialog.tsx",
+      "apps/web/src/components/shell/**",
+      "apps/web/src/components/portal/portal-shell.tsx",
+    ],
+    rules: {
+      "no-restricted-syntax": [
+        "error",
+        {
+          selector:
+            "JSXAttribute[name.name='className'] Literal[value=/(^|\\s)(sm|md|lg|xl|2xl):/]",
+          message:
+            "Viewport modifiers (sm:, md:, lg:, xl:, 2xl:) belong to chrome and modals only. Content uses container modifiers (@sm:, @md:, @lg:) against the nearest named container (DES-012).",
+        },
+        {
+          selector:
+            "JSXAttribute[name.name='className'] TemplateElement[value.raw=/(^|\\s)(sm|md|lg|xl|2xl):/]",
+          message:
+            "Viewport modifiers (sm:, md:, lg:, xl:, 2xl:) belong to chrome and modals only. Content uses container modifiers (@sm:, @md:, @lg:) against the nearest named container (DES-012).",
+        },
+      ],
+    },
+  },
 );

@@ -665,7 +665,7 @@ export function MatterRecordPage() {
           <div
             className={
               tab === "overview"
-                ? "grid max-w-6xl gap-5 overflow-y-auto px-page-x py-page-y lg:grid-cols-[minmax(0,1fr)_18rem]"
+                ? "grid max-w-6xl gap-5 overflow-y-auto px-page-x py-page-y @lg/record:grid-cols-[minmax(0,1fr)_18rem]"
                 : "hidden"
             }
           >
@@ -691,7 +691,7 @@ export function MatterRecordPage() {
                     />
                   )}
                 </header>
-                <dl className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                <dl className="grid gap-4 @sm/record:grid-cols-2 @lg/record:grid-cols-3">
                   <EditableSelectFact
                     id="matter-type"
                     label={
@@ -852,7 +852,7 @@ export function MatterRecordPage() {
                     <h3 className="mb-4 text-sm font-semibold">
                       <FormattedMessage id="matters.customFields" defaultMessage="Custom fields" />
                     </h3>
-                    <div className="grid gap-4 sm:grid-cols-2">
+                    <div className="grid gap-4 @sm/record:grid-cols-2">
                       {fields.map((field) => (
                         <MatterCustomField
                           // Keyed by slug, so a re-type onto a type that attaches
