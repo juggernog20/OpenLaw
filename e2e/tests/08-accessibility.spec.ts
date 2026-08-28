@@ -38,6 +38,53 @@ test.describe("accessibility floor", () => {
     await reportAxeViolations(page, testInfo, "home");
   });
 
+  test("search results box and results page: axe scans", async ({ page, request }, testInfo) => {
+    await ensureAdminExists(request);
+    await signInAs(page, ADMIN.email, ADMIN.password, ADMIN.displayName);
+
+    const options = await page.request.get("/api/v1/contracts/options");
+    expect(options.status(), await options.text()).toBe(200);
+    const contractType = z
+      .object({
+        contractTypes: z.array(
+          z.object({ id: z.string(), fields: z.array(z.object({ isRequired: z.boolean() })) }),
+        ),
+      })
+      .parse(await options.json())
+      .contractTypes.find((row) => row.fields.every((field) => !field.isRequired));
+    expect(
+      contractType,
+      "the install has no Contract Type without a hard-required Field",
+    ).toBeDefined();
+
+    const query = `axesearch${Date.now()}`;
+    const title = `Axe search result ${query}`;
+    const created = await page.request.post("/api/v1/contracts", {
+      data: { title, contractTypeId: contractType!.id },
+    });
+    expect(created.status(), await created.text()).toBe(201);
+    const contract = z
+      .object({ contract: z.object({ number: z.number().int() }) })
+      .parse(await created.json()).contract;
+
+    try {
+      await page.goto("/");
+      const search = page.getByRole("banner").getByRole("combobox", { name: "Search" });
+      await search.fill(query);
+      const answer = page.getByRole("listbox", { name: "Search results" });
+      await expect(answer.getByRole("option").filter({ hasText: title })).toBeVisible();
+      await reportAxeViolations(page, testInfo, "search-results-box");
+
+      await answer.getByRole("option", { name: "See all results" }).click();
+      await expect(page).toHaveURL(new RegExp(`/search\\?q=${query}$`));
+      await expect(page.getByRole("main").getByText(title)).toBeVisible();
+      await reportAxeViolations(page, testInfo, "search-results-page");
+    } finally {
+      const archived = await page.request.post(`/api/v1/contracts/${contract.number}/archive`);
+      expect(archived.status(), await archived.text()).toBe(200);
+    }
+  });
+
   test("settings page: /settings forwards to Profile; axe scan and title on every pane, plus a seeded archived row", async ({
     page,
     request,

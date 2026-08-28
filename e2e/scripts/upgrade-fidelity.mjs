@@ -90,6 +90,9 @@ const RSA_KEY = [
 
 const CONNECT_SECRET = "openlaw-upgrade-fidelity-connect-secret"; // NOSONAR — inert fixture, not a credential
 
+/** Words carried only by the pre-M25 PDF's extracted-text row. */
+const SEARCH_PHRASE = "assignor transfers the whole of the rights";
+
 /** The session the whole run carries, as a cookie jar. */
 const jar = new Map();
 
@@ -179,6 +182,21 @@ function same(actual, expected, what) {
   const a = JSON.stringify(actual);
   const b = JSON.stringify(expected);
   check(a === b, `${what}: read ${a}, seeded ${b}`);
+}
+
+/** Waits for the baseline worker to populate one pre-M25 text row. */
+async function waitForVersionText(documentId, versionId) {
+  const address = `/api/v1/documents/${documentId}/versions/${versionId}/text`;
+  const deadline = Date.now() + 180_000;
+  while (Date.now() < deadline) {
+    const { text } = await get(address);
+    if (text.state === "ready") return text;
+    if (text.state === "failed" || text.state === "unsupported") {
+      throw new Error(`the baseline extraction at ${address} settled as ${text.state}`);
+    }
+    await new Promise((resolve) => setTimeout(resolve, 1_000));
+  }
+  throw new Error(`the baseline extraction at ${address} never became ready`);
 }
 
 // ---------------------------------------------------------------- seed
@@ -294,6 +312,7 @@ async function seed() {
       })
     ).contract;
     contracts.push({
+      id: updated.id,
       number: updated.number,
       title: updated.title,
       stage: updated.stage,
@@ -460,6 +479,40 @@ async function seed() {
     accept: [201],
   });
 
+  // A real pre-M25 extracted-text row. The current script talks to the
+  // M24 baseline here, so no search endpoint exists yet; after the
+  // upgrade the generated vector must make these words searchable
+  // without another upload or extraction pass.
+  const searchablePdf = new FormData();
+  searchablePdf.append(
+    "file",
+    new File(
+      [
+        await readFile(
+          new URL(
+            "../../apps/api/src/testing/fixtures/doc-engine/native-text.pdf",
+            import.meta.url,
+          ),
+        ),
+      ],
+      "upgrade-search-source.pdf",
+      { type: "application/pdf" },
+    ),
+  );
+  const searchDocument = (
+    await call("POST", `/api/v1/contracts/${docHost.number}/documents`, {
+      form: searchablePdf,
+      accept: [201],
+    })
+  ).document;
+  const searchVersion = searchDocument.versions.find((version) => version.isCurrent);
+  check(searchVersion !== undefined, "the pre-M25 PDF has no current Document Version");
+  const searchText = await waitForVersionText(searchDocument.id, searchVersion.id);
+  check(
+    searchText.text.toLowerCase().includes(SEARCH_PHRASE),
+    "the pre-M25 PDF extraction did not carry the search phrase",
+  );
+
   const documents = (await get(`/api/v1/contracts/${docHost.number}/documents`)).documents.map(
     (document) => ({
       id: document.id,
@@ -476,7 +529,7 @@ async function seed() {
       })),
     }),
   );
-  check(documents.length === 2, `expected two documents, seeded ${documents.length}`);
+  check(documents.length === 3, `expected three documents, seeded ${documents.length}`);
 
   // The signing connector, credentials and all. On a release before
   // TECH-022 these land in the clear, and the upgrade is what seals
@@ -586,6 +639,25 @@ async function seed() {
     folder: { id: folder.id, name: folder.name, contractNumber: docHost.number },
     comment: { contractId: approvalHostId, contractNumber: approvalHost.number, body: commentBody },
     documents: { contractNumber: docHost.number, list: documents },
+    search: {
+      records: [
+        { kind: "contract", query: approvalHost.title, id: approvalHost.id },
+        { kind: "matter", query: closedMatter.title, id: closedMatter.id },
+        { kind: "entity", query: entity.legalName, id: entity.id },
+      ],
+      document: {
+        query: SEARCH_PHRASE,
+        id: searchDocument.id,
+        versionId: searchVersion.id,
+        versionNumber: searchVersion.versionNumber,
+        ownerNumber: docHost.number,
+        text: {
+          state: searchText.state,
+          source: searchText.source,
+          text: searchText.text,
+        },
+      },
+    },
     connector: {
       environment: connector.environment,
       integrationKey: connector.integrationKey,
@@ -764,6 +836,45 @@ async function verify(fingerprint) {
       same(downloaded, version.checksumSha256, `stored bytes of version ${version.id}`);
     }
   }
+
+  // M25's migration must make rows the prior release already held
+  // searchable in place. The source text is compared first, so a search
+  // hit cannot hide a migration that replaced or re-extracted it.
+  const seededSearchDocument = fingerprint.search.document;
+  const { text: upgradedText } = await get(
+    `/api/v1/documents/${seededSearchDocument.id}/versions/${seededSearchDocument.versionId}/text`,
+  );
+  same(upgradedText.state, seededSearchDocument.text.state, "search Document text state");
+  same(upgradedText.source, seededSearchDocument.text.source, "search Document text source");
+  same(upgradedText.text, seededSearchDocument.text.text, "search Document extracted text");
+
+  for (const seeded of fingerprint.search.records) {
+    const answer = await get(
+      `/api/v1/search?q=${encodeURIComponent(seeded.query)}&kind=${seeded.kind}&limit=25`,
+    );
+    check(
+      answer.results.some((row) => row.kind === seeded.kind && row.id === seeded.id),
+      `the seeded ${seeded.kind} is not searchable after the upgrade`,
+    );
+  }
+  const documentAnswer = await get(
+    `/api/v1/search?q=${encodeURIComponent(seededSearchDocument.query)}&kind=document&limit=25`,
+  );
+  const documentHit = documentAnswer.results.find(
+    (row) => row.kind === "document" && row.id === seededSearchDocument.id,
+  );
+  check(documentHit !== undefined, "the seeded Document text is not searchable after the upgrade");
+  same(documentHit.versionId, seededSearchDocument.versionId, "search Document Version");
+  same(
+    documentHit.versionNumber,
+    seededSearchDocument.versionNumber,
+    "search Document Version number",
+  );
+  same(
+    documentHit.ownerNumber,
+    seededSearchDocument.ownerNumber,
+    "search Document owning Contract",
+  );
 
   // The signing connector, which on an upgrade across TECH-022 was
   // written in the clear and is read back through the seal.

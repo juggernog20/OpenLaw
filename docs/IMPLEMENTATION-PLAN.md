@@ -41,7 +41,7 @@ document is the map, not the territory.
 
 ## Where we are
 
-**Arcs 4 and 5 are complete: M24 adds reusable Matter templates to the complete Matter workspace.** Named templates can pre-fill Matter defaults and custom fields, then create relative Tasks and Key dates through either the direct or Intake creation path. M23 supplied the work surfaces around the M22 record: Key dates join the active deadline system; Tasks stay a lightweight internal checklist; parent, child, and flat relationships remain navigational; Contracts link without losing their standalone identity; reached Contributors can edit business Fields and supply supporting Documents; and Closing is an advisory signal that leaves the record writable. Arc 1 is done: the monorepo and CI,
+**M25 opens Arc 6 with one global search across the records and the words inside their paper.** Pressing `/` opens the ranked, viewer-scoped answer; a Document hit names its owning record and opens the matching Version with the PDF find bar already filled. Stored generated vectors keep record edits and extracted text indexed in the same write, while DD-014's existing reach predicates stay ahead of ranking and paging. **Arcs 4 and 5 are complete: M24 adds reusable Matter templates to the complete Matter workspace.** Named templates can pre-fill Matter defaults and custom fields, then create relative Tasks and Key dates through either the direct or Intake creation path. M23 supplied the work surfaces around the M22 record: Key dates join the active deadline system; Tasks stay a lightweight internal checklist; parent, child, and flat relationships remain navigational; Contracts link without losing their standalone identity; reached Contributors can edit business Fields and supply supporting Documents; and Closing is an advisory signal that leaves the record writable. Arc 1 is done: the monorepo and CI,
 the authentication chain, the Compose stack a deployer actually runs, the themed app shell, and the
 `/settings` destination with its Personal and Organization rails. Arc 2 is done too: the
 configurable types and statuses, the Entities registry, the contract record, the conversation on a
@@ -94,6 +94,7 @@ one guarded transaction; its values, paper, thread, watermarks, and requester wi
 arm too. M23 completed the record as a work surface with Key dates, Tasks, relationships, linked
 Contracts, the Contributor grid, and Closing that leaves the record writable. M24 completed Arc 5 with
 named Matter templates, direct and Intake application, Matter defaults, and relative Tasks and Key dates.
+M25 now makes every live, reachable record and every ready Document text row findable from one box.
 
 ---
 
@@ -565,13 +566,14 @@ than racing them — which is the whole reason it sits here and not next to Arc 
 The three surfaces that only make sense once there's real content behind them, plus the search that makes
 all of it findable.
 
-- [ ] **M25 — Search**
+- [x] **M25 — Search**
       _Demo:_ Press `/`, type a phrase that only appears inside an uploaded PDF, and land on the contract that
       owns it.
-  - Postgres FTS with tsvector columns and GIN indexes; indexing jobs on the background pipeline
+  - Postgres FTS with stored generated `tsvector` columns and GIN indexes; the existing extraction and backfill jobs write the text rows those vectors derive from
   - Coverage across titles, descriptions, owning-record context, and extracted document text
   - Cross-module results that respect the M10 confidentiality rules
-  - _Decisions:_ DOC-009, TECH-014, DES-010
+  - The close journey proves the demo sentence against fresh Compose images; the retained upgrade gate carries populated pre-M25 records and a ready extracted-text row through the migration and proves each is searchable without re-upload
+  - _Decisions:_ DOC-009, TECH-014, DES-010, DES-016, DD-014 · _Issues:_ #532–#539
 
 - [ ] **M26 — The Documents destination**
       _Demo:_ Find a file without knowing which record owns it, using filters alone.
