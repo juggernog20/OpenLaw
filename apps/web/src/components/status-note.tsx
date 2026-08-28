@@ -9,7 +9,12 @@
 import { FormattedMessage } from "react-intl";
 import { cn } from "../lib/utils";
 
-export type FieldStatus = "idle" | "saving" | "saved" | "error";
+// The status lives with the state machine that produces it
+// (lib/field-commit.ts, #552). Re-exported here so the panes that only
+// draw the note keep one import.
+import type { FieldStatus } from "../lib/field-commit";
+
+export type { FieldStatus };
 
 export function StatusNote({
   status,
