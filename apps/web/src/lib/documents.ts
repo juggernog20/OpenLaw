@@ -581,12 +581,13 @@ export interface DocumentLanding {
 export function documentLandingParams(
   request: Request,
   tab: string | undefined,
-): { documentId: string; versionId: string } | null {
+): { documentId: string; versionId: string; findQuery: string | null } | null {
   if (tab !== "documents") return null;
   const query = new URL(request.url).searchParams;
   const documentId = query.get("doc")?.trim();
   const versionId = query.get("version")?.trim();
-  return documentId && versionId ? { documentId, versionId } : null;
+  const findQuery = query.get("find")?.trim() || null;
+  return documentId && versionId ? { documentId, versionId, findQuery } : null;
 }
 
 /**

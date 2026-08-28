@@ -419,6 +419,7 @@ export async function contractRecordLoader({ params, request }: LoaderFunctionAr
     relations: relations?.data ?? null,
     linkedMatter: linkedMatter.data.matter,
     documentLanding,
+    documentFindQuery: documentLanding ? (landingTarget?.findQuery ?? null) : null,
   };
 }
 
@@ -582,6 +583,7 @@ export function ContractRecordPage() {
     relations: loadedRelations,
     linkedMatter: loadedMatter,
     documentLanding,
+    documentFindQuery,
   } = useLoaderData<typeof contractRecordLoader>();
   const intl = useIntl();
   const navigate = useNavigate();
@@ -1762,6 +1764,12 @@ export function ContractRecordPage() {
               documentId={open.document.id}
               title={open.document.title}
               version={open.version}
+              initialFind={
+                documentLanding?.document.id === open.document.id &&
+                documentLanding.versionId === open.version.id
+                  ? documentFindQuery
+                  : null
+              }
               onClose={closeReading}
               onDockedChange={(docked) => {
                 readingDocked.current = docked;

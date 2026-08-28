@@ -31,8 +31,8 @@
  * Users are bounced home; unauthenticated visitors land on login.
  */
 
-import { afterEach, describe, expect, it, vi } from "vitest";
-import { fireEvent, screen, waitFor, within } from "@testing-library/react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { act, fireEvent, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import {
   json,
@@ -44,6 +44,85 @@ import {
 } from "../testing/helpers";
 import type { CustomFieldValue, CustomFieldValues } from "../lib/custom-fields";
 import type { Comment } from "../lib/comments";
+
+const PDF_PAGE_TEXT = vi.hoisted(() => [
+  ["The first termination right is on this page."],
+  ["A second termi", "nation right appears here. The final termination right follows."],
+]);
+
+vi.mock("pdfjs-dist", () => ({
+  GlobalWorkerOptions: { workerSrc: "" },
+  getDocument: () => ({
+    promise: Promise.resolve({
+      numPages: PDF_PAGE_TEXT.length,
+      loadingTask: { destroy: () => Promise.resolve() },
+      getPage: (pageNumber: number) => {
+        const items = (PDF_PAGE_TEXT[pageNumber - 1] ?? []).map((str) => ({ str }));
+        return Promise.resolve({
+          getViewport: ({ scale }: { scale: number }) => ({
+            width: 600 * scale,
+            height: 800 * scale,
+          }),
+          getTextContent: () => Promise.resolve({ items }),
+          render: () => ({ promise: Promise.resolve() }),
+        });
+      },
+    }),
+  }),
+  TextLayer: class MockTextLayer {
+    readonly options: {
+      textContentSource: { items: Array<{ str?: string }> };
+      container: HTMLElement;
+    };
+
+    constructor(options: {
+      textContentSource: { items: Array<{ str?: string }> };
+      container: HTMLElement;
+    }) {
+      this.options = options;
+    }
+
+    render() {
+      for (const item of this.options.textContentSource.items) {
+        const span = document.createElement("span");
+        span.textContent = item.str ?? "";
+        this.options.container.append(span);
+      }
+      return Promise.resolve();
+    }
+  },
+}));
+
+beforeEach(() => {
+  vi.stubGlobal(
+    "IntersectionObserver",
+    class MockIntersectionObserver {
+      readonly callback: IntersectionObserverCallback;
+
+      constructor(callback: IntersectionObserverCallback) {
+        this.callback = callback;
+      }
+
+      observe(target: Element) {
+        queueMicrotask(() => {
+          this.callback(
+            [{ target, isIntersecting: true, intersectionRatio: 1 } as IntersectionObserverEntry],
+            this as unknown as IntersectionObserver,
+          );
+        });
+      }
+
+      unobserve() {}
+      disconnect() {}
+      takeRecords() {
+        return [];
+      }
+      readonly root = null;
+      readonly rootMargin = "0px";
+      readonly thresholds = [0];
+    },
+  );
+});
 
 const ADMIN = {
   id: "u1",
@@ -6220,6 +6299,86 @@ describe("the doc panel (M12/2)", () => {
     expect(open).toHaveAttribute("aria-current", "true");
   });
 
+  it("finds and highlights PDF text, then steps with buttons and local Enter keys", async () => {
+    stubApi({ signedIn: MEMBER, extra: panelApi([document()]) });
+    renderAt("/contracts/42/documents");
+    const user = userEvent.setup();
+
+    await user.click(
+      within(await section()).getByRole("button", {
+        name: "Orion Cloud — master services agreement",
+      }),
+    );
+    const reading = await panel(/master services agreement, version 1/);
+    const openFind = await within(reading).findByRole("button", { name: "Find in document" });
+    await user.click(openFind);
+    const find = within(reading).getByRole("searchbox", { name: "Find in document" });
+    await user.type(find, "termination");
+
+    expect(await within(reading).findByText("1 of 3")).toBeVisible();
+    await waitFor(() => {
+      expect(
+        within(reading).getByText("termination", {
+          selector: "mark.bg-status-severe-bg",
+        }),
+      ).toHaveClass("bg-status-severe-bg");
+    });
+
+    const secondPage = reading.querySelector<HTMLElement>('[data-page-number="2"]')!;
+    const secondPageScroll = vi.spyOn(secondPage, "scrollIntoView");
+    await user.click(within(reading).getByRole("button", { name: "Next match" }));
+    expect(within(reading).getByText("2 of 3")).toBeVisible();
+    expect(secondPageScroll).toHaveBeenCalled();
+
+    await user.click(find);
+    await user.keyboard("{Enter}");
+    expect(within(reading).getByText("3 of 3")).toBeVisible();
+    await user.keyboard("{Shift>}{Enter}{/Shift}");
+    expect(within(reading).getByText("2 of 3")).toBeVisible();
+    await user.click(within(reading).getByRole("button", { name: "Previous match" }));
+    expect(within(reading).getByText("1 of 3")).toBeVisible();
+    await user.click(within(reading).getByRole("button", { name: "Close find" }));
+    expect(openFind).toHaveFocus();
+  });
+
+  it("opens the PDF find bar from a search landing, pre-filled at the first match", async () => {
+    stubApi({ signedIn: MEMBER, extra: panelApi([document()]) });
+    renderAt("/contracts/42/documents?doc=pdoc-1&version=pv-1&find=termination");
+
+    const reading = await panel(/master services agreement, version 1/);
+    expect(within(reading).getByRole("searchbox", { name: "Find in document" })).toHaveValue(
+      "termination",
+    );
+    expect(await within(reading).findByText("1 of 3")).toBeVisible();
+  });
+
+  it("keeps the find bar and the open document across a docked tab change", async () => {
+    stubApi({ signedIn: MEMBER, extra: panelApi([document()]) });
+    renderAt("/contracts/42/documents?doc=pdoc-1&version=pv-1&find=termination");
+    const user = userEvent.setup();
+
+    const reading = await panel(/master services agreement, version 1/);
+    expect(await within(reading).findByText("1 of 3")).toBeVisible();
+
+    // jsdom reports no widths, so the panel reads as docked and a
+    // section tab change leaves it open. That navigation drops the
+    // landing's `?find=` from the address; the bar it opened must not
+    // reset with it, and the document must not reload under the
+    // reader. Only a new document reads the seed again.
+    await user.click(screen.getByRole("link", { name: "Fields" }));
+    await screen.findByRole("region", { name: "Fields" });
+
+    // Flushed first, then read: the reset this guards against is
+    // scheduled by an effect during the section swap and lands a tick
+    // after the Fields region resolves. A read before the flush would
+    // pass against the old bar.
+    await act(async () => {});
+    expect(within(reading).getByRole("searchbox", { name: "Find in document" })).toHaveValue(
+      "termination",
+    );
+    expect(within(reading).getByText("1 of 3")).toBeVisible();
+  });
+
   it("keeps the panel's header on the record's own words after a rename", async () => {
     stubApi({ signedIn: MEMBER, extra: editablePanelApi() });
     renderAt("/contracts/42/documents");
@@ -6274,6 +6433,7 @@ describe("the doc panel (M12/2)", () => {
       "src",
       "/api/v1/documents/pdoc-img/versions/pv-img/preview",
     );
+    expect(within(reading).queryByRole("button", { name: "Find in document" })).toBeNull();
   });
 
   it("gives an out-of-set file an honest download card, never a broken preview", async () => {
@@ -6483,6 +6643,7 @@ describe("the doc panel (M12/2)", () => {
     );
     // No download card: the file is being drawn, not offered.
     expect(within(reading).queryByText(/could not be prepared/)).toBeNull();
+    expect(await within(reading).findByRole("button", { name: "Find in document" })).toBeVisible();
   });
 
   it("offers the download when a conversion failed, and says so plainly", async () => {
@@ -6505,6 +6666,7 @@ describe("the doc panel (M12/2)", () => {
       "href",
       "/api/v1/documents/pdoc-w/versions/pv-w/download",
     );
+    expect(within(reading).queryByRole("button", { name: "Find in document" })).toBeNull();
   });
 
   it("stops asking when nothing answers, and ends at the download", async () => {
@@ -6612,6 +6774,7 @@ describe("the doc panel (M12/2)", () => {
     expect(within(reading).queryByText("Bcc")).toBeNull();
     // Never a download card: the message is being drawn, not offered.
     expect(within(reading).queryByText(/could not be prepared/)).toBeNull();
+    expect(within(reading).queryByRole("button", { name: "Find in document" })).toBeNull();
   });
 
   it("shows who a message was blind-copied to, when the file says", async () => {

@@ -45,8 +45,17 @@
  * click away.
  */
 
-import { memo, useCallback, useEffect, useRef, useState, type RefObject } from "react";
-import { ChevronLeft, ChevronRight, ZoomIn, ZoomOut } from "lucide-react";
+import { memo, useCallback, useEffect, useMemo, useRef, useState, type RefObject } from "react";
+import {
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  ChevronUp,
+  Search,
+  X,
+  ZoomIn,
+  ZoomOut,
+} from "lucide-react";
 import { FormattedMessage, useIntl } from "react-intl";
 // pdf.js's own stylesheet, which is what positions the text runs over
 // the canvas. It is imported rather than copied because the rules are
@@ -90,6 +99,13 @@ const DRAW_MARGIN = "200%";
 /** What the surface is doing, for the reader and for the tests. */
 type Stage = "loading" | "ready" | "failed";
 
+interface FindMatch {
+  index: number;
+  pageNumber: number;
+}
+
+const EMPTY_MATCHES: readonly FindMatch[] = [];
+
 /** One open document, as pdf.js hands it back. The type is imported;
  * the module behind it still is not, because a type import carries no
  * code and this file is itself loaded only when a PDF opens. */
@@ -100,7 +116,17 @@ export function PdfPreview({
   /** The file's own name, for the label a screen reader hears on the
    * page canvas. */
   filename,
-}: Readonly<{ src: string; filename: string }>) {
+  /** The panel opts its own PDF surface into K.T7. Email attachments
+   * use this renderer too, but an email remains an email surface and
+   * deliberately has no document find control. */
+  allowFind = false,
+  initialFind,
+}: Readonly<{
+  src: string;
+  filename: string;
+  allowFind?: boolean;
+  initialFind?: string | null;
+}>) {
   const intl = useIntl();
   const [stage, setStage] = useState<Stage>("loading");
   const [pageCount, setPageCount] = useState(0);
@@ -109,7 +135,20 @@ export function PdfPreview({
    * scroll landing that sets this. */
   const [pageNumber, setPageNumber] = useState(1);
   const [zoomIndex, setZoomIndex] = useState<number>(DEFAULT_ZOOM_INDEX);
+  const seededFind = normalizeFindQuery(initialFind);
+  const [findOpen, setFindOpen] = useState(allowFind && seededFind.length > 0);
+  const [findQuery, setFindQuery] = useState(seededFind);
+  /** The seed, read through a ref by the open effect below. The prop
+   * goes null when a tab change drops the landing from the address
+   * while the docked panel stays open; a dependency on it would tear
+   * the document down and reopen it under the reader. Only a new
+   * document reads the seed again. */
+  const findSeed = useRef(seededFind);
+  const [pageTexts, setPageTexts] = useState<readonly string[] | null>(null);
+  const [currentFindIndex, setCurrentFindIndex] = useState(0);
   const well = useRef<HTMLDivElement>(null);
+  const findInput = useRef<HTMLInputElement>(null);
+  const findToggle = useRef<HTMLButtonElement>(null);
   /** The open document, for every page to draw from. State rather than
    * a ref — every page below is read from it during render, and a ref
    * read there is a value React cannot see change. */
@@ -125,6 +164,13 @@ export function PdfPreview({
    * document, same as the page and zoom below. */
   const visibility = useRef(new Map<number, number>());
 
+  // Declared before the open effect so that, on the commit where a new
+  // address lands, the ref already holds that render's seed when the
+  // open effect reads it.
+  useEffect(() => {
+    findSeed.current = seededFind;
+  });
+
   // Opening the file, and closing it again. Keyed on the address alone:
   // a new version in the panel is a new document, and the page and the
   // zoom below reset with it.
@@ -134,6 +180,10 @@ export function PdfPreview({
     setPageNumber(1);
     setZoomIndex(DEFAULT_ZOOM_INDEX);
     setOpenDocument(null);
+    setPageTexts(null);
+    setFindQuery(findSeed.current);
+    setFindOpen(allowFind && findSeed.current.length > 0);
+    setCurrentFindIndex(0);
     visibility.current.clear();
 
     const opening = openPdf(src);
@@ -163,7 +213,39 @@ export function PdfPreview({
       if (open) void close(open);
       else void opening.then(close).catch(() => undefined);
     };
-  }, [src]);
+  }, [allowFind, src]);
+
+  useEffect(() => {
+    if (findOpen) findInput.current?.focus();
+  }, [findOpen]);
+
+  // Count against pdf.js's text content for every page. The drawn text
+  // layers remain virtualized with their canvases, so reading only the
+  // DOM would miss matches on pages outside the well's draw margin.
+  useEffect(() => {
+    if (!allowFind || !findOpen || !openDocument || pageTexts !== null) return;
+    let live = true;
+    void readPageTexts(openDocument).then(
+      (texts) => {
+        if (live) {
+          setPageTexts(texts);
+          setCurrentFindIndex(0);
+        }
+      },
+      () => {
+        if (live) setPageTexts([]);
+      },
+    );
+    return () => {
+      live = false;
+    };
+  }, [allowFind, findOpen, openDocument, pageTexts]);
+
+  const matches = useMemo(
+    () => findTextMatches(pageTexts ?? [], normalizeFindQuery(findQuery)),
+    [findQuery, pageTexts],
+  );
+  const matchesByPage = useMemo(() => groupMatchesByPage(matches), [matches]);
 
   // The current page, from whichever page's own observer last reported
   // the highest ratio. A `Map` rather than one page's callback winning:
@@ -188,6 +270,23 @@ export function PdfPreview({
     target?.scrollIntoView({ block: "start" });
   }
 
+  const currentFind = matches[currentFindIndex];
+  useEffect(() => {
+    if (currentFind) turnTo(currentFind.pageNumber);
+  }, [currentFind]);
+
+  function stepFind(delta: -1 | 1) {
+    if (matches.length === 0) return;
+    setCurrentFindIndex((current) => (current + delta + matches.length) % matches.length);
+  }
+
+  function closeFind() {
+    setFindOpen(false);
+    setFindQuery("");
+    setCurrentFindIndex(0);
+    findToggle.current?.focus();
+  }
+
   if (stage === "failed") {
     return (
       <p role="status" className="px-4 py-6 text-base text-muted">
@@ -207,6 +306,20 @@ export function PdfPreview({
           same panel has none of them. */}
       <div className="flex shrink-0 items-center justify-between gap-2 border-b border-border-muted bg-canvas px-3 py-1.5">
         <div className="flex items-center gap-1">
+          {allowFind && (
+            <Button
+              ref={findToggle}
+              variant="ghost"
+              size="icon"
+              onClick={() => setFindOpen(true)}
+              aria-label={intl.formatMessage({
+                id: "docpanel.find.open",
+                defaultMessage: "Find in document",
+              })}
+            >
+              <Search size={16} aria-hidden="true" />
+            </Button>
+          )}
           <Button
             variant="ghost"
             size="icon"
@@ -273,6 +386,87 @@ export function PdfPreview({
           </Button>
         </div>
       </div>
+      {allowFind && findOpen && (
+        <div className="flex shrink-0 justify-end border-b border-border-muted bg-canvas px-4 py-1.5">
+          <div className="flex h-9 w-full max-w-[430px] items-center gap-2 rounded-button border border-border-default bg-raised ps-2.5 pe-1 shadow-sm">
+            <Search size={14} aria-hidden="true" className="shrink-0 text-muted" />
+            <input
+              ref={findInput}
+              type="search"
+              value={findQuery}
+              onChange={(event) => {
+                setFindQuery(event.target.value);
+                setCurrentFindIndex(0);
+              }}
+              onKeyDown={(event) => {
+                if (event.key === "Enter") {
+                  event.preventDefault();
+                  event.stopPropagation();
+                  stepFind(event.shiftKey ? -1 : 1);
+                } else if (event.key === "Escape") {
+                  event.preventDefault();
+                  event.stopPropagation();
+                  closeFind();
+                }
+              }}
+              aria-label={intl.formatMessage({
+                id: "docpanel.find.input",
+                defaultMessage: "Find in document",
+              })}
+              className="min-w-0 flex-1 bg-transparent text-sm text-primary outline-none [&::-webkit-search-cancel-button]:hidden"
+            />
+            <span
+              role="status"
+              aria-live="polite"
+              className="shrink-0 text-xs font-medium tabular-nums text-muted"
+            >
+              <FormattedMessage
+                id="docpanel.find.count"
+                defaultMessage="{current} of {total}"
+                values={{
+                  current: matches.length === 0 ? 0 : currentFindIndex + 1,
+                  total: matches.length,
+                }}
+              />
+            </span>
+            <Button
+              variant="ghost"
+              size="icon"
+              disabled={matches.length === 0}
+              onClick={() => stepFind(-1)}
+              aria-label={intl.formatMessage({
+                id: "docpanel.find.previous",
+                defaultMessage: "Previous match",
+              })}
+            >
+              <ChevronUp size={16} aria-hidden="true" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              disabled={matches.length === 0}
+              onClick={() => stepFind(1)}
+              aria-label={intl.formatMessage({
+                id: "docpanel.find.next",
+                defaultMessage: "Next match",
+              })}
+            >
+              <ChevronDown size={16} aria-hidden="true" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={closeFind}
+              aria-label={intl.formatMessage({
+                id: "docpanel.find.close",
+                defaultMessage: "Close find",
+              })}
+            >
+              <X size={14} aria-hidden="true" />
+            </Button>
+          </div>
+        </div>
+      )}
       {/* The well, and every page floating on it — the ViewerWell and
           DocPage of the DOC2 mock, stacked rather than swapped. It
           takes focus and a name of its own: a scrolling region whose
@@ -304,6 +498,9 @@ export function PdfPreview({
               scale={zoom}
               root={well}
               onVisible={onPageVisible}
+              findQuery={findOpen ? normalizeFindQuery(findQuery) : ""}
+              findMatches={matchesByPage.get(page) ?? EMPTY_MATCHES}
+              currentFindIndex={currentFind?.pageNumber === page ? currentFind.index : null}
             />
           ))}
       </div>
@@ -345,6 +542,9 @@ const PdfPage = memo(function PdfPage({
   scale,
   root,
   onVisible,
+  findQuery,
+  findMatches,
+  currentFindIndex,
 }: Readonly<{
   document: LoadedDocument;
   pageNumber: number;
@@ -355,6 +555,9 @@ const PdfPage = memo(function PdfPage({
    * scrolled out of a well shorter than it. */
   root: RefObject<HTMLDivElement | null>;
   onVisible: (page: number, ratio: number) => void;
+  findQuery: string;
+  findMatches: readonly FindMatch[];
+  currentFindIndex: number | null;
 }>) {
   const intl = useIntl();
   const container = useRef<HTMLDivElement>(null);
@@ -369,6 +572,7 @@ const PdfPage = memo(function PdfPage({
    * `IntersectionObserver` reports on the first frame after it is
    * given a target, drawn or not. */
   const [near, setNear] = useState(false);
+  const [textLayerRevision, setTextLayerRevision] = useState(0);
   /** The draws, one after another. pdf.js refuses a second `render()`
    * into a canvas whose previous paint is still in flight, so a zoom
    * step pressed mid-paint must queue behind the paint it replaces —
@@ -413,13 +617,16 @@ const PdfPage = memo(function PdfPage({
   useEffect(() => {
     const target = canvas.current;
     if (!target) return;
+    let live = true;
     if (!near) {
       draws.current = draws.current.then(() => {
         releasePage(target, textLayer.current);
+        if (live) setTextLayerRevision((revision) => revision + 1);
       });
-      return;
+      return () => {
+        live = false;
+      };
     }
-    let live = true;
     draws.current = draws.current.then(() =>
       drawPage({
         document,
@@ -428,12 +635,22 @@ const PdfPage = memo(function PdfPage({
         canvas: target,
         textLayer: textLayer.current,
         isLive: () => live,
-      }).catch(() => undefined),
+      })
+        .then(() => {
+          if (live) setTextLayerRevision((revision) => revision + 1);
+        })
+        .catch(() => undefined),
     );
     return () => {
       live = false;
     };
   }, [document, pageNumber, scale, near]);
+
+  useEffect(() => {
+    const layer = textLayer.current;
+    if (!layer) return;
+    highlightTextLayer(layer, findQuery, findMatches, currentFindIndex);
+  }, [currentFindIndex, findMatches, findQuery, textLayerRevision]);
 
   // Reports how much of this page's own container is inside the well —
   // set up once per page and read through the ref above, rather than
@@ -560,6 +777,117 @@ function releasePage(canvas: HTMLCanvasElement, textLayer: HTMLDivElement | null
   canvas.style.removeProperty("width");
   canvas.style.removeProperty("height");
   textLayer?.replaceChildren();
+}
+
+function normalizeFindQuery(query: string | null | undefined): string {
+  return query?.trim() ?? "";
+}
+
+async function readPageTexts(document: LoadedDocument): Promise<readonly string[]> {
+  const texts: string[] = [];
+  for (let pageNumber = 1; pageNumber <= document.numPages; pageNumber += 1) {
+    const page = await document.getPage(pageNumber);
+    const content = await page.getTextContent();
+    texts.push(textContentString(content.items));
+  }
+  return texts;
+}
+
+function textContentString(items: readonly unknown[]): string {
+  return items
+    .map((item) => {
+      if (!item || typeof item !== "object" || !("str" in item)) return "";
+      return typeof item.str === "string" ? item.str : "";
+    })
+    .join("");
+}
+
+function occurrenceStarts(text: string, query: string): number[] {
+  if (query.length === 0) return [];
+  const starts: number[] = [];
+  const haystack = text.toLocaleLowerCase();
+  const needle = query.toLocaleLowerCase();
+  let from = 0;
+  while (from <= haystack.length - needle.length) {
+    const start = haystack.indexOf(needle, from);
+    if (start < 0) break;
+    starts.push(start);
+    from = start + needle.length;
+  }
+  return starts;
+}
+
+function findTextMatches(texts: readonly string[], query: string): FindMatch[] {
+  const matches: FindMatch[] = [];
+  for (const [pageIndex, text] of texts.entries()) {
+    const pageMatchCount = occurrenceStarts(text, query).length;
+    for (let occurrence = 0; occurrence < pageMatchCount; occurrence += 1) {
+      matches.push({ index: matches.length, pageNumber: pageIndex + 1 });
+    }
+  }
+  return matches;
+}
+
+function groupMatchesByPage(
+  matches: readonly FindMatch[],
+): ReadonlyMap<number, readonly FindMatch[]> {
+  const grouped = new Map<number, FindMatch[]>();
+  for (const match of matches) {
+    const page = grouped.get(match.pageNumber) ?? [];
+    page.push(match);
+    grouped.set(match.pageNumber, page);
+  }
+  return grouped;
+}
+
+function highlightTextLayer(
+  layer: HTMLDivElement,
+  query: string,
+  matches: readonly FindMatch[],
+  currentFindIndex: number | null,
+): void {
+  for (const mark of layer.querySelectorAll("[data-pdf-find-match]")) {
+    mark.replaceWith(layer.ownerDocument.createTextNode(mark.textContent ?? ""));
+  }
+  layer.normalize();
+  if (query.length === 0 || matches.length === 0) return;
+
+  const walker = layer.ownerDocument.createTreeWalker(layer, NodeFilter.SHOW_TEXT);
+  const nodes: Array<{ node: Text; start: number; end: number }> = [];
+  let text = "";
+  for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+    if (!(node instanceof Text) || node.data.length === 0) continue;
+    const start = text.length;
+    text += node.data;
+    nodes.push({ node, start, end: text.length });
+  }
+
+  const starts = occurrenceStarts(text, query);
+  for (
+    let occurrence = Math.min(starts.length, matches.length) - 1;
+    occurrence >= 0;
+    occurrence -= 1
+  ) {
+    const start = starts[occurrence]!;
+    const end = start + query.length;
+    const match = matches[occurrence]!;
+    for (let nodeIndex = nodes.length - 1; nodeIndex >= 0; nodeIndex -= 1) {
+      const entry = nodes[nodeIndex]!;
+      if (entry.end <= start || entry.start >= end) continue;
+      const localStart = Math.max(0, start - entry.start);
+      const localEnd = Math.min(entry.node.data.length, end - entry.start);
+      entry.node.splitText(localEnd);
+      const matched = entry.node.splitText(localStart);
+      const mark = layer.ownerDocument.createElement("mark");
+      mark.dataset.pdfFindMatch = String(match.index);
+      mark.className =
+        match.index === currentFindIndex
+          ? "rounded-[2px] bg-status-severe-bg outline outline-1 outline-status-severe-fg"
+          : "rounded-[2px] bg-status-warning-bg";
+      matched.replaceWith(mark);
+      mark.append(matched);
+    }
+  }
 }
 
 /**

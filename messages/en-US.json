@@ -2057,6 +2057,24 @@
   "docPanel.version": {
     "defaultMessage": "v{number}"
   },
+  "docpanel.find.close": {
+    "defaultMessage": "Close find"
+  },
+  "docpanel.find.count": {
+    "defaultMessage": "{current} of {total}"
+  },
+  "docpanel.find.input": {
+    "defaultMessage": "Find in document"
+  },
+  "docpanel.find.next": {
+    "defaultMessage": "Next match"
+  },
+  "docpanel.find.open": {
+    "defaultMessage": "Find in document"
+  },
+  "docpanel.find.previous": {
+    "defaultMessage": "Previous match"
+  },
   "documents.action.addVersion": {
     "defaultMessage": "Add version"
   },
