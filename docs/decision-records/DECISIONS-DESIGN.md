@@ -4116,6 +4116,44 @@ The composer is the door CMT-011 built, so the banner should point at it rather 
 
 `apps/web/src/routes/portal-request.tsx` owns the banner link, and the shared portal composer exposes the in-page target. `apps/web/src/routes/portal-request-form.tsx` reads the named refusal's Request extension and links a raced file to the same target. The catalogue gains `portal.request.paperOnThread` and `portal.form.attachmentsMovedToThread`. No new control, token, or component primitive lands.
 
+## DES-066: The Documents destination is one flat managed list across records (extends DES-046, DES-018, DES-009)
+
+- **Status:** Accepted
+- **Date:** 2026-08-29
+
+### Context
+
+DOC-002 promises one place to find a Document without first knowing its owning record. The original `designs/documents.pen` DOC1 predates the managed-list machinery in DES-046 and the filter row now used by Contracts. It draws useful repository content, but its facet chips, list-local search, upload action, and narrow table no longer describe the destination M26 will build.
+
+### Decision
+
+**1. Documents uses the current S1 destination chrome and DES-046 table controls.** Documents is active in the staff nav between Contracts and Entities. The sub-bar carries the shown count, Saved views, and Columns. It carries no upload action: a Document still begins on its owning record (DOC-008).
+
+**2. Facets use the Contracts filter-row pattern.** Owner is a segmented `All / Contracts / Matters` control. Record is the reached-record picker. Counterparty, format, current Version kind, uploaded range, and uploader are compact filter controls in the same row. Folder joins them only after a record is picked; it is a facet over that record's folders, never a global tree (DOC-006). Active values repeat below as removable chips with one `Clear all` action.
+
+**3. Recent is a five-row list, not a card strip.** One bordered list carries the five most recently uploaded reachable Documents. Each row names the Document, its owning record, uploader, and upload time. The rows share dividers and one list boundary; they are not five independent cards.
+
+**4. The repository answer is one flat managed table.** Title is the flex column. Owning record carries both the `C-` or `M-` reference and the record title in the same cell. The remaining columns are current Version kind, format, size, Version count, uploader, and uploaded time. Headings carry the DES-046 resize affordance, Uploaded shows the default descending sort, text stays on one line, and paging remains in the fixed foot. A Confidential row carries DES-009's inline `CONFI` marker. An email row uses the parsed subject as its title.
+
+**5. Empty and archived answers stay inside the same chrome.** A fresh install says `Paper lives on Contracts and Matters. Upload to a record and it appears here.` A filtered zero says the filters matched nothing and offers `Clear all`. `Show archived` changes the switch in place; an archived row is visually subdued, marked `Archived`, and ends with `Restore`.
+
+**6. The destination uses DES-018's disciplined color roles.** Uploader avatars use the uniform Light-theme avatar pair, Version kinds use the existing semantic or neutral pill pairs, and `CONFI` keeps its confidentiality pair. Color adds state or meaning and never differentiates people.
+
+### Recorded normalization points
+
+1. DOC1's facet chips become the Contracts filter-row pattern plus a separate active-filter chip strip.
+2. DOC1's Recent content remains, but becomes one five-row list rather than cards.
+3. The owning-record cell, not a separate reference column, carries the `C-` or `M-` reference.
+4. DOC4 and DOC5 stay untouched. Their owning-record pickers still belong to those repository upload/import dialogs; this destination redraw does not revise or pre-empt them.
+
+### Rationale
+
+The destination is another reader-owned list, so giving it a bespoke filter grammar or table would make the same operation feel different only because the rows happen to be Documents. Keeping the owning reference with the record title answers where the paper lives without spending another narrow column. A list makes Recent scan like the table below it and avoids promoting five transient rows into five cards.
+
+### Consequences
+
+`designs/documents.pen` redraws DOC1 on the current S1 chrome and adds DOC8–DOC10 for the fresh-install, filtered-empty, and archived states. M26's web work can reuse the existing managed-table, saved-view, column, filter, empty-state, and archived-row primitives without translating an older mock. DOC2–DOC7 remain the references for their existing surfaces.
+
 ## Index of decisions
 
 | #       | Decision                                                                                                                                                             | Status                                                                                                     |
@@ -4185,3 +4223,4 @@ The composer is the door CMT-011 built, so the banner should point at it rather 
 | DES-063 | The version kind pill is a picker for Member+ (extends DES-017)                                                                                                      | Accepted                                                                                                   |
 | DES-064 | Comment paper files through one destination dialog (extends DES-062, DES-023)                                                                                        | Accepted                                                                                                   |
 | DES-065 | A dispositioned Request points paper at its composer (extends DES-062, DES-057)                                                                                      | Accepted                                                                                                   |
+| DES-066 | The Documents destination is one flat managed list across records (extends DES-046, DES-018, DES-009)                                                                | Accepted                                                                                                   |
