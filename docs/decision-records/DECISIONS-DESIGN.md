@@ -4137,7 +4137,7 @@ DOC-002 promises one place to find a Document without first knowing its owning r
 
 **5. Empty and archived answers stay inside the same chrome.** A fresh install says `Paper lives on Contracts and Matters. Upload to a record and it appears here.` A filtered zero says the filters matched nothing and offers `Clear all`. `Show archived` changes the switch in place; an archived row is visually subdued, marked `Archived`, and ends with `Restore`.
 
-**6. The destination uses DES-018's disciplined color roles.** Uploader avatars use the uniform Light-theme avatar pair, Version kinds use the existing semantic or neutral pill pairs, and `CONFI` keeps its confidentiality pair. Color adds state or meaning and never differentiates people.
+**6. The destination uses DES-018's disciplined color roles.** Uploader avatars use the uniform Light-theme avatar pair. Version kind pills use the families the record page already assigns: `theirs` rounds are `warning`, `ours` rounds are `info`, `executed` is `success`, and `amendment` and `generated_redline` are `neutral`. The label is the record page's wording (`Draft · theirs`). `CONFI` keeps its confidentiality pair. Color adds state or meaning and never differentiates people.
 
 ### Recorded normalization points
 
