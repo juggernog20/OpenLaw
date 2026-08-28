@@ -232,4 +232,27 @@ describe("Documents saved-view query state", () => {
     );
     expect(api.queries).toHaveLength(reads);
   });
+
+  it("picks a record from the keyboard on the candidate-picker pattern", async () => {
+    const user = userEvent.setup();
+    const api = surface();
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    const { router } = renderAt("/documents");
+
+    const record = await screen.findByRole("combobox", { name: "Record" });
+    await user.type(record, "Meridian");
+    const option = await screen.findByRole("option", { name: /C-42.*Meridian services/ });
+    expect(record).toHaveAttribute("aria-expanded", "true");
+    await user.keyboard("{ArrowDown}");
+    expect(record).toHaveAttribute("aria-activedescendant", option.id);
+    expect(option).toHaveAttribute("aria-selected", "true");
+    await user.keyboard("{Enter}");
+    await expectQuery(api.queries, "record", "C-42");
+    expect(router.state.location.search).toContain("record=C-42");
+    expect(record).toHaveValue("C-42");
+    expect(screen.queryByRole("listbox")).not.toBeInTheDocument();
+
+    await user.type(record, "x");
+    await expectQuery(api.queries, "record", null);
+  });
 });
