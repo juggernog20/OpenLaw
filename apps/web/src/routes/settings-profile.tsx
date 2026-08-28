@@ -15,7 +15,7 @@
  */
 
 import { useRef, useState, type SubmitEvent as FormSubmitEvent } from "react";
-import { redirect, useLoaderData, useRevalidator } from "react-router";
+import { useLoaderData, useRevalidator } from "react-router";
 import { FormattedMessage, useIntl } from "react-intl";
 import { api } from "../lib/api";
 import { authClient } from "../lib/auth-client";
@@ -23,7 +23,7 @@ import { formatShortDate } from "../lib/format";
 import { field } from "../lib/forms";
 import { networkError } from "../lib/messages";
 import { ROLE_MESSAGES, type Role } from "../lib/roles";
-import { currentUser, needsSetup } from "../lib/session";
+import { requireUser } from "../lib/session";
 import { Avatar } from "../components/avatar";
 import { PageTitle } from "../components/page-title";
 import { SettingsCard } from "../components/settings-card";
@@ -37,8 +37,7 @@ import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
 
 export async function settingsProfileLoader() {
-  const user = await currentUser();
-  if (!user) return redirect((await needsSetup()) ? "/auth/setup" : "/auth/login");
+  const user = await requireUser();
   const [session, accounts] = await Promise.all([
     authClient.getSession(),
     authClient.listAccounts(),

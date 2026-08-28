@@ -9,7 +9,7 @@ import { Pencil } from "lucide-react";
 import type { paths } from "@openlaw/api-client";
 import { api } from "../lib/api";
 import { problemDetail } from "../lib/messages";
-import { currentUser, needsSetup } from "../lib/session";
+import { requireUser } from "../lib/session";
 import { MattersSettingsTabs } from "../components/matters-settings-tabs";
 import { ListEditor, type ListEditorRow } from "../components/list-editor";
 import { PageTitle } from "../components/page-title";
@@ -20,8 +20,7 @@ import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
 
 export async function settingsMatterTemplatesLoader() {
-  const user = await currentUser();
-  if (!user) return redirect((await needsSetup()) ? "/auth/setup" : "/auth/login");
+  const user = await requireUser();
   if (user.role !== "administrator") return redirect("/settings/profile");
   const [types, templates] = await Promise.all([
     api.GET("/api/v1/matter-types", {}),

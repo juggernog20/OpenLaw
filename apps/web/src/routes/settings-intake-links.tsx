@@ -55,7 +55,7 @@ import { Pencil } from "lucide-react";
 import { api } from "../lib/api";
 import { CONTROL_CLASS } from "../lib/form-controls";
 import { networkError, problemDetail } from "../lib/messages";
-import { currentUser, needsSetup } from "../lib/session";
+import { requireUser } from "../lib/session";
 import { IntakeSettingsTabs } from "../components/intake-settings-tabs";
 import { ListEditor, type ListEditorRow } from "../components/list-editor";
 import { PageTitle } from "../components/page-title";
@@ -88,8 +88,7 @@ interface PlacementType {
 }
 
 export async function settingsIntakeLinksLoader() {
-  const user = await currentUser();
-  if (!user) return redirect((await needsSetup()) ? "/auth/setup" : "/auth/login");
+  const user = await requireUser();
   if (user.role !== "administrator") return redirect("/settings/profile");
   const [linksRes, typesRes] = await Promise.all([
     api.GET("/api/v1/intake-links"),

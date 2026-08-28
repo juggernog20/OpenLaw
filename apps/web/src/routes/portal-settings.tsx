@@ -33,12 +33,11 @@
  *    line up with the blocks above it.
  */
 
-import { Link, redirect, useLoaderData, useNavigate } from "react-router";
+import { Link, redirect, useLoaderData } from "react-router";
 import { ChevronLeft } from "lucide-react";
 import { FormattedMessage, defineMessage, useIntl } from "react-intl";
 import { api } from "../lib/api";
-import { authClient } from "../lib/auth-client";
-import { currentUser } from "../lib/session";
+import { currentUser, useSignOut } from "../lib/session";
 import { PageTitle } from "../components/page-title";
 import {
   NotificationSwitchGrid,
@@ -70,13 +69,9 @@ const TITLE = defineMessage({
 export function PortalSettingsPage() {
   const { user, groups } = useLoaderData<typeof portalSettingsLoader>();
   const intl = useIntl();
-  const navigate = useNavigate();
   const state = useNotificationPreferences(groups);
 
-  async function signOut() {
-    await authClient.signOut();
-    void navigate("/portal/enter", { replace: true });
-  }
+  const signOut = useSignOut("/portal/enter");
 
   return (
     <PortalShell user={user} onSignOut={() => void signOut()}>

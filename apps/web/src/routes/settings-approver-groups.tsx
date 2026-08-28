@@ -33,7 +33,7 @@ import type { paths } from "@openlaw/api-client";
 import { api } from "../lib/api";
 import { problemDetail } from "../lib/messages";
 import { MEMBER_PLUS_ROLES } from "../lib/roles";
-import { currentUser, needsSetup } from "../lib/session";
+import { requireUser } from "../lib/session";
 import { ContractsSettingsTabs } from "../components/contracts-settings-tabs";
 import { ListEditor, type ListEditorRow } from "../components/list-editor";
 import { PageTitle } from "../components/page-title";
@@ -45,8 +45,7 @@ import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
 
 export async function settingsApproverGroupsLoader() {
-  const user = await currentUser();
-  if (!user) return redirect((await needsSetup()) ? "/auth/setup" : "/auth/login");
+  const user = await requireUser();
   if (user.role !== "administrator") return redirect("/settings/profile");
   const [groups, people] = await Promise.all([
     api.GET("/api/v1/approver-groups", { params: { query: { includeArchived: "true" } } }),

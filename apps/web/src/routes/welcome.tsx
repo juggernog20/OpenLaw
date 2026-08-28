@@ -18,7 +18,7 @@ import { api } from "../lib/api";
 import { field } from "../lib/forms";
 import { networkError, problemDetail } from "../lib/messages";
 import { ROLE_MESSAGES } from "../lib/roles";
-import { currentUser, needsSetup } from "../lib/session";
+import { requireUser } from "../lib/session";
 import { cn } from "../lib/utils";
 import { PageTitle } from "../components/page-title";
 import { SkipLink } from "../components/skip-link";
@@ -29,8 +29,7 @@ import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
 
 export async function welcomeLoader() {
-  const user = await currentUser();
-  if (!user) return redirect((await needsSetup()) ? "/auth/setup" : "/auth/login");
+  const user = await requireUser();
   if (user.role !== "administrator") return redirect("/");
   // Completion decides the redirect before anything else is fetched —
   // most visits to this loader are bounces off a finished instance.

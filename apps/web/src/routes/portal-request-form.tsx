@@ -73,12 +73,11 @@
  */
 
 import { useEffect, useRef, useState } from "react";
-import { Link, redirect, useLoaderData, useNavigate, type LoaderFunctionArgs } from "react-router";
+import { Link, redirect, useLoaderData, type LoaderFunctionArgs } from "react-router";
 import { defineMessage, FormattedMessage, useIntl } from "react-intl";
 import { ChevronLeft, CircleCheck, FileText, Mail, TriangleAlert, Upload, X } from "lucide-react";
 import type { paths } from "@openlaw/api-client";
 import { api } from "../lib/api";
-import { authClient } from "../lib/auth-client";
 import { SEVERITY_LEVELS, severityLabel } from "../lib/contracts";
 import {
   emptyDraft,
@@ -89,7 +88,7 @@ import {
 import { CONTROL_CLASS, TEXTAREA_CLASS } from "../lib/form-controls";
 import { problemDetail } from "../lib/messages";
 import { attachToRequest, MAX_REQUEST_ATTACHMENTS, requestReference } from "../lib/requests";
-import { currentUser } from "../lib/session";
+import { currentUser, useSignOut } from "../lib/session";
 import { CustomFieldControl } from "../components/custom-field-control";
 import { PageTitle } from "../components/page-title";
 import { DeflectionPanel } from "../components/portal/deflection-panel";
@@ -152,7 +151,6 @@ export function PortalRequestFormPage() {
   const { user, requestType, fields, intakeLinks } =
     useLoaderData<typeof portalRequestFormLoader>();
   const intl = useIntl();
-  const navigate = useNavigate();
 
   const [summary, setSummary] = useState("");
   const [description, setDescription] = useState("");
@@ -174,10 +172,7 @@ export function PortalRequestFormPage() {
    * still going up must have been told the ask landed. */
   const [submitted, setSubmitted] = useState<Submitted | null>(null);
 
-  async function signOut() {
-    await authClient.signOut();
-    void navigate("/portal/enter", { replace: true });
-  }
+  const signOut = useSignOut("/portal/enter");
 
   /** A key stops being marked the moment it is answered, so a refusal
    * clears box by box rather than only on the next press. */

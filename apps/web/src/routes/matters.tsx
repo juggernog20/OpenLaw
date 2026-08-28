@@ -7,7 +7,6 @@ import { MATTER_SORT_KEYS, type MatterSortKey } from "@openlaw/shared";
 import { FormattedMessage, useIntl } from "react-intl";
 import { redirect, useLoaderData, useNavigate } from "react-router";
 import { api } from "../lib/api";
-import { authClient } from "../lib/auth-client";
 import { CONTROL_CLASS } from "../lib/form-controls";
 import {
   builtInLayout,
@@ -28,7 +27,7 @@ import {
   type MatterSeverity,
 } from "../lib/matters";
 import { canReadMatters, isMemberPlus } from "../lib/roles";
-import { currentUser, needsSetup } from "../lib/session";
+import { requireUser, useSignOut } from "../lib/session";
 import { CreateMatterDialog } from "../components/matters/create-matter-dialog";
 import {
   MATTERS_CATALOGUE as CATALOGUE,
@@ -77,8 +76,7 @@ function sameQuery(a: Layout, b: Layout): boolean {
 }
 
 export async function mattersLoader() {
-  const user = await currentUser();
-  if (!user) return redirect((await needsSetup()) ? "/auth/setup" : "/auth/login");
+  const user = await requireUser();
   if (!canReadMatters(user.role)) return redirect("/");
   const canCreate = isMemberPlus(user.role);
   const views = await readViews(CATALOGUE.surface);
@@ -139,10 +137,7 @@ export function MattersPage() {
     filters.manager !== "" ||
     filters.incomplete;
 
-  async function signOut() {
-    await authClient.signOut();
-    void navigate("/auth/login", { replace: true });
-  }
+  const signOut = useSignOut("/auth/login");
 
   async function commit(next: Layout, nextActiveId: string | null = activeViewId) {
     if (sameQuery(layout, next)) {

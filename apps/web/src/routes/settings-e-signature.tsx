@@ -30,7 +30,7 @@ import type { paths } from "@openlaw/api-client";
 import { api } from "../lib/api";
 import { formatShortDate } from "../lib/format";
 import { problemDetail } from "../lib/messages";
-import { currentUser, needsSetup } from "../lib/session";
+import { requireUser } from "../lib/session";
 import { cn } from "../lib/utils";
 import { PageTitle } from "../components/page-title";
 import { SettingsCard } from "../components/settings-card";
@@ -56,8 +56,7 @@ type Connector =
 type Field = "connector" | "test" | "lifecycle";
 
 export async function settingsESignatureLoader() {
-  const user = await currentUser();
-  if (!user) return redirect((await needsSetup()) ? "/auth/setup" : "/auth/login");
+  const user = await requireUser();
   if (user.role !== "administrator") return redirect("/settings/profile");
   const connector = await api.GET("/api/v1/signing-connectors/{provider}", {
     params: { path: { provider: PROVIDER } },

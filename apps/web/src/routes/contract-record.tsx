@@ -148,7 +148,6 @@ import { FormattedMessage, defineMessage, useIntl, type IntlShape } from "react-
 import { ChevronRight, FileText, PenLine, Settings, X } from "lucide-react";
 import { RENEWAL_EXPIRY_MOVED_PROBLEM_TYPE, SOFT_GATE_PROBLEM_TYPE } from "@openlaw/shared";
 import { api } from "../lib/api";
-import { authClient } from "../lib/auth-client";
 import {
   cadenceLabel,
   contractReference,
@@ -208,7 +207,7 @@ import { CONTROL_CLASS, TEXTAREA_CLASS } from "../lib/form-controls";
 import { problemDetail, problemType } from "../lib/messages";
 import { cn } from "../lib/utils";
 import { canReadContracts, isMemberPlus } from "../lib/roles";
-import { currentUser, needsSetup } from "../lib/session";
+import { requireUser, useSignOut } from "../lib/session";
 import { AppShell } from "../components/shell/app-shell";
 import { useActivityApplet } from "../components/activity/activity-applet";
 import { useCommentApplet } from "../components/comments/comment-applet";
@@ -242,6 +241,7 @@ import { Button } from "../components/ui/button";
 import { Dialog, DialogContent, DialogTitle } from "../components/ui/dialog";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
+import { RecordContext, type RecordFacts } from "../components/record-context";
 
 /** The record's sections (DES-032), in the order the strip draws them.
  * The Overview is the bare address, so it has no segment of its own. */
@@ -252,8 +252,7 @@ type RecordTabName = "overview" | (typeof RECORD_TABS)[number];
 const MAX_FILING_DOCUMENT_PAGES = 1000;
 
 export async function contractRecordLoader({ params, request }: LoaderFunctionArgs) {
-  const user = await currentUser();
-  if (!user) return redirect((await needsSetup()) ? "/auth/setup" : "/auth/login");
+  const user = await requireUser();
   // A Business User gets no surface at all. The API's 403 stands
   // behind this.
   if (!canReadContracts(user.role)) return redirect("/");
@@ -1398,10 +1397,7 @@ export function ContractRecordPage() {
     }
   }
 
-  async function signOut() {
-    await authClient.signOut();
-    void navigate("/auth/login", { replace: true });
-  }
+  const signOut = useSignOut("/auth/login");
 
   const reference = contractReference(intl, saved.number);
   const notRecorded = intl.formatMessage(NOT_RECORDED);
@@ -1464,23 +1460,49 @@ export function ContractRecordPage() {
         ...contractStatuses,
       ];
 
+  /** The viewer facts every section card reads (TECH-024 rule 7). One
+   * object per change, so a card keyed on it does not re-run every
+   * render. The saved row rather than the loader's copy: taking the
+   * Owner off takes their controls with them on the same page. */
+  const facts = useMemo<RecordFacts>(
+    () => ({
+      record: { kind: "contract", id: saved.id, number: saved.number },
+      viewer: { id: user.id, role: user.role },
+      ownerId: saved.manager?.id ?? null,
+      confidential: saved.isConfidential,
+      canEdit,
+      frozen,
+    }),
+    [
+      saved.id,
+      saved.number,
+      saved.manager?.id,
+      saved.isConfidential,
+      user.id,
+      user.role,
+      canEdit,
+      frozen,
+    ],
+  );
+
   return (
-    <AppShell
-      user={user}
-      onSignOut={() => void signOut()}
-      flush
-      // DES-009 Tier 2, where the C8 mock stacks it: under the nav,
-      // above the sub-bar. Every viewer who reaches a confidential
-      // record sees it — reaching the page is what makes them an
-      // included viewer — and only the three actors are pointed at the
-      // Team card, which is where the audience is changed.
-      banner={
-        saved.isConfidential || saved.renewalPendingConfirmation ? (
-          <>
-            {saved.isConfidential && (
-              <ConfidentialBanner manageTeamHref={canFlag ? `#${TEAM_CARD_ID}` : undefined} />
-            )}
-            {/* CTR-006's pending state, drawn where the C9 mock stacks
+    <RecordContext.Provider value={facts}>
+      <AppShell
+        user={user}
+        onSignOut={() => void signOut()}
+        flush
+        // DES-009 Tier 2, where the C8 mock stacks it: under the nav,
+        // above the sub-bar. Every viewer who reaches a confidential
+        // record sees it — reaching the page is what makes them an
+        // included viewer — and only the three actors are pointed at the
+        // Team card, which is where the audience is changed.
+        banner={
+          saved.isConfidential || saved.renewalPendingConfirmation ? (
+            <>
+              {saved.isConfidential && (
+                <ConfidentialBanner manageTeamHref={canFlag ? `#${TEAM_CARD_ID}` : undefined} />
+              )}
+              {/* CTR-006's pending state, drawn where the C9 mock stacks
                 it — the same strip DES-009 uses, under the
                 confidentiality statement when a record carries both.
                 Confidentiality leads because it governs who may read
@@ -1488,101 +1510,101 @@ export function ContractRecordPage() {
                 It is a reading of the record's own expiry, so it goes
                 the moment the roll is confirmed, and only a Member+
                 viewer who may write is offered the way in. */}
-            {saved.renewalPendingConfirmation && (
-              <RenewalBanner onReview={canEdit ? () => setRenewing(true) : undefined} />
-            )}
-          </>
-        ) : undefined
-      }
-      subbar={
-        <>
-          <section
-            aria-labelledby="page-title"
-            // Three groups on one 64px row, as the C2 mock draws them:
-            // the breadcrumb, the stage pipeline, and the record
-            // actions (DES-034). Under a 1024px shell they no longer
-            // fit — the title truncates to nothing and the pipeline
-            // slides over the status pill — so the row wraps and the
-            // bar grows by one line. The pipeline is not allowed a
-            // strip of its own (DES-032 closed that door), and it does
-            // not need one: it shares the second line with the record
-            // actions, and on a phone the top nav is hidden anyway, so
-            // the chrome stays shorter than the desktop stack DES-032
-            // already accepted.
-            className={cn(
-              "flex shrink-0 flex-wrap items-center justify-between gap-x-4 gap-y-2",
-              "bg-canvas px-page-x py-2",
-              "@5xl/shell:h-(--height-subbar) @5xl/shell:flex-nowrap @5xl/shell:py-0",
-            )}
-          >
-            {/* The breadcrumb group takes the row's slack on a wide
+              {saved.renewalPendingConfirmation && (
+                <RenewalBanner onReview={canEdit ? () => setRenewing(true) : undefined} />
+              )}
+            </>
+          ) : undefined
+        }
+        subbar={
+          <>
+            <section
+              aria-labelledby="page-title"
+              // Three groups on one 64px row, as the C2 mock draws them:
+              // the breadcrumb, the stage pipeline, and the record
+              // actions (DES-034). Under a 1024px shell they no longer
+              // fit — the title truncates to nothing and the pipeline
+              // slides over the status pill — so the row wraps and the
+              // bar grows by one line. The pipeline is not allowed a
+              // strip of its own (DES-032 closed that door), and it does
+              // not need one: it shares the second line with the record
+              // actions, and on a phone the top nav is hidden anyway, so
+              // the chrome stays shorter than the desktop stack DES-032
+              // already accepted.
+              className={cn(
+                "flex shrink-0 flex-wrap items-center justify-between gap-x-4 gap-y-2",
+                "bg-canvas px-page-x py-2",
+                "@5xl/shell:h-(--height-subbar) @5xl/shell:flex-nowrap @5xl/shell:py-0",
+              )}
+            >
+              {/* The breadcrumb group takes the row's slack on a wide
                 shell (DES-034 clause 9), so the strip beside it is
                 pinned against the record actions instead of floating on
                 the title and the status label. Both of those vary per
                 record — and the label is renameable — so a group sized
                 to its own content moved the strip every time the reader
                 opened a different contract or changed its status. */}
-            <div className="flex w-full min-w-0 items-center gap-2 @5xl/shell:w-auto @5xl/shell:flex-1">
-              <Link
-                to="/contracts"
-                className="shrink-0 rounded-chip text-base text-link hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-link"
-              >
-                <FormattedMessage id="contracts.title" defaultMessage="Contracts" />
-              </Link>
-              <ChevronRight size={16} aria-hidden="true" className="shrink-0 text-subtle" />
-              {/* Parent chain breadcrumb segments (M17/2, CTR-015): each
+              <div className="flex w-full min-w-0 items-center gap-2 @5xl/shell:w-auto @5xl/shell:flex-1">
+                <Link
+                  to="/contracts"
+                  className="shrink-0 rounded-chip text-base text-link hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-link"
+                >
+                  <FormattedMessage id="contracts.title" defaultMessage="Contracts" />
+                </Link>
+                <ChevronRight size={16} aria-hidden="true" className="shrink-0 text-subtle" />
+                {/* Parent chain breadcrumb segments (M17/2, CTR-015): each
                   reachable parent as a link, each restricted one as a
                   muted placeholder. The chain is root-first, so the
                   topmost ancestor comes right after "Contracts". */}
-              {relations?.parentChain.map((entry, i) => (
-                <span
-                  key={entry.restricted ? `restricted-${i}` : entry.number}
-                  className="flex shrink-0 items-center gap-2"
-                >
-                  {entry.restricted ? (
-                    <span className="text-base text-muted">
-                      <span aria-hidden="true">&hellip;</span>
-                      <span className="sr-only">
-                        <FormattedMessage
-                          id="contracts.relations.restricted"
-                          defaultMessage="Restricted contract"
-                        />
+                {relations?.parentChain.map((entry, i) => (
+                  <span
+                    key={entry.restricted ? `restricted-${i}` : entry.number}
+                    className="flex shrink-0 items-center gap-2"
+                  >
+                    {entry.restricted ? (
+                      <span className="text-base text-muted">
+                        <span aria-hidden="true">&hellip;</span>
+                        <span className="sr-only">
+                          <FormattedMessage
+                            id="contracts.relations.restricted"
+                            defaultMessage="Restricted contract"
+                          />
+                        </span>
                       </span>
-                    </span>
-                  ) : (
-                    <Link
-                      to={`/contracts/${entry.number}`}
-                      className="shrink-0 rounded-chip text-base text-link hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-link"
-                    >
-                      {contractReference(intl, entry.number)}
-                    </Link>
-                  )}
-                  <ChevronRight size={16} aria-hidden="true" className="shrink-0 text-subtle" />
+                    ) : (
+                      <Link
+                        to={`/contracts/${entry.number}`}
+                        className="shrink-0 rounded-chip text-base text-link hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-link"
+                      >
+                        {contractReference(intl, entry.number)}
+                      </Link>
+                    )}
+                    <ChevronRight size={16} aria-hidden="true" className="shrink-0 text-subtle" />
+                  </span>
+                ))}
+                <FileText size={16} aria-hidden="true" className="shrink-0 text-muted" />
+                <span className="shrink-0 text-base font-medium text-muted">{reference}</span>
+                <h1 id="page-title" className="truncate text-md font-semibold">
+                  {saved.title}
+                </h1>
+                <span
+                  className={`inline-flex shrink-0 rounded-pill px-2 py-0.5 text-xs font-medium ${STAGE_PILL[saved.stage]}`}
+                >
+                  {saved.statusName}
                 </span>
-              ))}
-              <FileText size={16} aria-hidden="true" className="shrink-0 text-muted" />
-              <span className="shrink-0 text-base font-medium text-muted">{reference}</span>
-              <h1 id="page-title" className="truncate text-md font-semibold">
-                {saved.title}
-              </h1>
-              <span
-                className={`inline-flex shrink-0 rounded-pill px-2 py-0.5 text-xs font-medium ${STAGE_PILL[saved.stage]}`}
-              >
-                {saved.statusName}
-              </span>
-              {archived && (
-                <span className="inline-flex shrink-0 rounded-pill bg-badge-count-bg px-2 py-0.5 text-xs font-medium text-badge-count-fg">
-                  <FormattedMessage id="contracts.archivedPill" defaultMessage="Archived" />
-                </span>
-              )}
-              {/* The envelope chip (grill row E.5, DES-036): drawn when
+                {archived && (
+                  <span className="inline-flex shrink-0 rounded-pill bg-badge-count-bg px-2 py-0.5 text-xs font-medium text-badge-count-fg">
+                    <FormattedMessage id="contracts.archivedPill" defaultMessage="Archived" />
+                  </span>
+                )}
+                {/* The envelope chip (grill row E.5, DES-036): drawn when
                   this record has sent paper out, and absent otherwise,
                   so a contract signed by hand carries no chrome about a
                   feature it never used. It says the newest round, which
                   is the one anybody asking is asking about. */}
-              <EnvelopeChip envelope={signing.envelopes[0] ?? null} />
-            </div>
-            {/* CTR-001's six-stage backbone, beside the pill that names
+                <EnvelopeChip envelope={signing.envelopes[0] ?? null} />
+              </div>
+              {/* CTR-001's six-stage backbone, beside the pill that names
                 the status behind it (grill-plan D.8), and — for a
                 viewer who may write — the control that moves the
                 contract (DES-053). The current stage is the trigger, so
@@ -1592,20 +1614,20 @@ export function ContractRecordPage() {
                 archived record and a Contributor get no trigger at all,
                 because where the contract sits is a fact about it and
                 not an affordance. */}
-            <StagePipeline
-              stage={saved.stage}
-              move={
-                frozen
-                  ? undefined
-                  : {
-                      statuses: statusOptions,
-                      statusId: saved.statusId,
-                      busy: fieldStatus.statusId === "saving",
-                      onPick: (statusId) => void changeStatus(statusId),
-                    }
-              }
-            />
-            {/* DES-017's micro-state, beside the control that raised it
+              <StagePipeline
+                stage={saved.stage}
+                move={
+                  frozen
+                    ? undefined
+                    : {
+                        statuses: statusOptions,
+                        statusId: saved.statusId,
+                        busy: fieldStatus.statusId === "saving",
+                        onPick: (statusId) => void changeStatus(statusId),
+                      }
+                }
+              />
+              {/* DES-017's micro-state, beside the control that raised it
                 rather than in the card the field left. A refusal the
                 soft gate owns is cleared as its dialog opens, so the
                 two never speak at once (DES-035 clause 12).
@@ -1616,13 +1638,13 @@ export function ContractRecordPage() {
                 new stage when the write answers. A word for either
                 would repeat what the reader is already looking at, and
                 on a write this short it would only flash. */}
-            {!frozen && (
-              <StatusNote
-                status={fieldStatus.statusId === "error" ? "error" : "idle"}
-                detail={fieldError.statusId}
-              />
-            )}
-            {/* The record's own acts, behind one trigger (DES-055).
+              {!frozen && (
+                <StatusNote
+                  status={fieldStatus.statusId === "error" ? "error" : "idle"}
+                  detail={fieldError.statusId}
+                />
+              )}
+              {/* The record's own acts, behind one trigger (DES-055).
                 Copying a link is not a change, so every reader gets
                 that row; rename and archive are mutations, so a
                 read-only viewer is offered neither — absent, not
@@ -1637,224 +1659,232 @@ export function ContractRecordPage() {
                 lands in this row, and every field freezes. This is
                 DES-053 clause 7's rule, on the other act that commits
                 from the sub-bar. */}
-            <div className="flex shrink-0 items-center gap-2">
-              {canEdit && (
-                <StatusNote
-                  status={archiveStatus === "error" ? "error" : "idle"}
-                  detail={archiveError}
+              <div className="flex shrink-0 items-center gap-2">
+                {canEdit && (
+                  <StatusNote
+                    status={archiveStatus === "error" ? "error" : "idle"}
+                    detail={archiveError}
+                  />
+                )}
+                <RecordActionsMenu
+                  number={saved.number}
+                  archived={archived}
+                  busy={archiveStatus === "saving"}
+                  onRename={frozen ? undefined : startRename}
+                  onArchive={canEdit ? () => void archiveOrRestore() : undefined}
                 />
-              )}
-              <RecordActionsMenu
-                number={saved.number}
-                archived={archived}
-                busy={archiveStatus === "saving"}
-                onRename={frozen ? undefined : startRename}
-                onArchive={canEdit ? () => void archiveOrRestore() : undefined}
-              />
-            </div>
-          </section>
-          {/* DES-032's section strip, under the breadcrumb and inside
+              </div>
+            </section>
+            {/* DES-032's section strip, under the breadcrumb and inside
               the chrome: a tab strip that scrolled away with the record
               would be no tab strip at all. It carries the sub-bar's own
               bottom border, so the two read as one chrome slab. */}
-          <RecordTabs
-            label={intl.formatMessage({
-              id: "contracts.record.sections",
-              defaultMessage: "Contract sections",
-            })}
-            tabs={[
-              {
-                to: `/contracts/${saved.number}`,
-                end: true,
-                label: (
-                  <FormattedMessage id="contracts.record.tab.overview" defaultMessage="Overview" />
-                ),
-              },
-              {
-                to: `/contracts/${saved.number}/fields`,
-                label: (
-                  <FormattedMessage id="contracts.record.tab.fields" defaultMessage="Fields" />
-                ),
-              },
-              {
-                to: `/contracts/${saved.number}/documents`,
-                label: (
-                  <FormattedMessage
-                    id="contracts.record.tab.documents"
-                    defaultMessage="Documents"
-                  />
-                ),
-              },
-              {
-                to: `/contracts/${saved.number}/approvals`,
-                label: (
-                  <FormattedMessage
-                    id="contracts.record.tab.approvals"
-                    defaultMessage="Approvals"
-                  />
-                ),
-                count: openApprovalCount,
-                countLabel: intl.formatMessage(
-                  {
-                    id: "contracts.record.tab.approvals.open",
-                    defaultMessage:
-                      "{count, plural, one {# open approval} other {# open approvals}}",
-                  },
-                  { count: openApprovalCount },
-                ),
-              },
-              {
-                to: `/contracts/${saved.number}/key-dates`,
-                label: (
-                  <FormattedMessage id="contracts.record.tab.keyDates" defaultMessage="Key dates" />
-                ),
-                count: upcomingDateCount,
-                countLabel: intl.formatMessage(
-                  {
-                    id: "contracts.record.tab.keyDates.upcoming",
-                    defaultMessage:
-                      "{count, plural, one {# upcoming date} other {# upcoming dates}}",
-                  },
-                  { count: upcomingDateCount },
-                ),
-              },
-              {
-                to: `/contracts/${saved.number}/tasks`,
-                label: <FormattedMessage id="contracts.record.tab.tasks" defaultMessage="Tasks" />,
-                count: openTaskCount,
-                countLabel: intl.formatMessage(
-                  {
-                    id: "contracts.record.tab.tasks.open",
-                    defaultMessage: "{count, plural, one {# open task} other {# open tasks}}",
-                  },
-                  { count: openTaskCount },
-                ),
-              },
-            ]}
-          />
-        </>
-      }
-    >
-      {/* Reference then title, composed as one message — the separator
+            <RecordTabs
+              label={intl.formatMessage({
+                id: "contracts.record.sections",
+                defaultMessage: "Contract sections",
+              })}
+              tabs={[
+                {
+                  to: `/contracts/${saved.number}`,
+                  end: true,
+                  label: (
+                    <FormattedMessage
+                      id="contracts.record.tab.overview"
+                      defaultMessage="Overview"
+                    />
+                  ),
+                },
+                {
+                  to: `/contracts/${saved.number}/fields`,
+                  label: (
+                    <FormattedMessage id="contracts.record.tab.fields" defaultMessage="Fields" />
+                  ),
+                },
+                {
+                  to: `/contracts/${saved.number}/documents`,
+                  label: (
+                    <FormattedMessage
+                      id="contracts.record.tab.documents"
+                      defaultMessage="Documents"
+                    />
+                  ),
+                },
+                {
+                  to: `/contracts/${saved.number}/approvals`,
+                  label: (
+                    <FormattedMessage
+                      id="contracts.record.tab.approvals"
+                      defaultMessage="Approvals"
+                    />
+                  ),
+                  count: openApprovalCount,
+                  countLabel: intl.formatMessage(
+                    {
+                      id: "contracts.record.tab.approvals.open",
+                      defaultMessage:
+                        "{count, plural, one {# open approval} other {# open approvals}}",
+                    },
+                    { count: openApprovalCount },
+                  ),
+                },
+                {
+                  to: `/contracts/${saved.number}/key-dates`,
+                  label: (
+                    <FormattedMessage
+                      id="contracts.record.tab.keyDates"
+                      defaultMessage="Key dates"
+                    />
+                  ),
+                  count: upcomingDateCount,
+                  countLabel: intl.formatMessage(
+                    {
+                      id: "contracts.record.tab.keyDates.upcoming",
+                      defaultMessage:
+                        "{count, plural, one {# upcoming date} other {# upcoming dates}}",
+                    },
+                    { count: upcomingDateCount },
+                  ),
+                },
+                {
+                  to: `/contracts/${saved.number}/tasks`,
+                  label: (
+                    <FormattedMessage id="contracts.record.tab.tasks" defaultMessage="Tasks" />
+                  ),
+                  count: openTaskCount,
+                  countLabel: intl.formatMessage(
+                    {
+                      id: "contracts.record.tab.tasks.open",
+                      defaultMessage: "{count, plural, one {# open task} other {# open tasks}}",
+                    },
+                    { count: openTaskCount },
+                  ),
+                },
+              ]}
+            />
+          </>
+        }
+      >
+        {/* Reference then title, composed as one message — the separator
           is locale copy, not code (DES-013). */}
-      <PageTitle
-        title={intl.formatMessage(
-          { id: "contracts.record.documentTitle", defaultMessage: "{reference} {title}" },
-          { reference, title: saved.title },
-        )}
-      />
-      {/* The settings slot is absent for anyone the settings routes
+        <PageTitle
+          title={intl.formatMessage(
+            { id: "contracts.record.documentTitle", defaultMessage: "{reference} {title}" },
+            { reference, title: saved.title },
+          )}
+        />
+        {/* The settings slot is absent for anyone the settings routes
           would bounce (SET-002): every contract-settings loader sends a
           non-Administrator to their profile, and a door that opens on a
           redirect is worse than no door. */}
-      <RecordApplets
-        applets={
-          user.role === "administrator"
-            ? [teamApplet, chatApplet, historyApplet, SETTINGS_APPLET]
-            : [teamApplet, chatApplet, historyApplet]
-        }
-        // DES-016's wider sibling layer (M12/2): the document being
-        // read, beside the record rather than instead of it. Which
-        // section is showing changes nothing here — the panel docks
-        // beside the Documents list the same way it docks beside
-        // Fields, and covers either one when there is no room to dock.
-        layer={
-          open && (
-            <DocPanel
-              documentId={open.document.id}
-              title={open.document.title}
-              version={open.version}
-              initialFind={
-                documentLanding?.document.id === open.document.id &&
-                documentLanding.versionId === open.version.id
-                  ? documentFindQuery
-                  : null
-              }
-              onClose={closeReading}
-              onDockedChange={(docked) => {
-                readingDocked.current = docked;
-                setReadingCovers(!docked);
-              }}
-            />
-          )
-        }
-        // Covered content is unreachable content: while the panel
-        // overlays the section instead of docking beside it, the
-        // controls behind it leave the tab order and the accessibility
-        // tree, so a keyboard cannot land on a button nobody can see.
-        contentCovered={open !== null && readingCovers}
-      >
-        <div className="flex flex-col gap-4 overflow-y-auto px-page-x py-page-y">
-          {archived && (
-            <p className="rounded-card bg-status-warning-bg px-3 py-2 text-md text-status-warning-fg">
-              <FormattedMessage
-                id="contracts.record.archivedNote"
-                defaultMessage="This contract is archived — it is out of the contract list. Restore it to edit."
+        <RecordApplets
+          applets={
+            user.role === "administrator"
+              ? [teamApplet, chatApplet, historyApplet, SETTINGS_APPLET]
+              : [teamApplet, chatApplet, historyApplet]
+          }
+          // DES-016's wider sibling layer (M12/2): the document being
+          // read, beside the record rather than instead of it. Which
+          // section is showing changes nothing here — the panel docks
+          // beside the Documents list the same way it docks beside
+          // Fields, and covers either one when there is no room to dock.
+          layer={
+            open && (
+              <DocPanel
+                documentId={open.document.id}
+                title={open.document.title}
+                version={open.version}
+                initialFind={
+                  documentLanding?.document.id === open.document.id &&
+                  documentLanding.versionId === open.version.id
+                    ? documentFindQuery
+                    : null
+                }
+                onClose={closeReading}
+                onDockedChange={(docked) => {
+                  readingDocked.current = docked;
+                  setReadingCovers(!docked);
+                }}
               />
-            </p>
-          )}
-          {/* A read-only viewer is told why, once, above the cards.
+            )
+          }
+          // Covered content is unreachable content: while the panel
+          // overlays the section instead of docking beside it, the
+          // controls behind it leave the tab order and the accessibility
+          // tree, so a keyboard cannot land on a button nobody can see.
+          contentCovered={open !== null && readingCovers}
+        >
+          <div className="flex flex-col gap-4 overflow-y-auto px-page-x py-page-y">
+            {archived && (
+              <p className="rounded-card bg-status-warning-bg px-3 py-2 text-md text-status-warning-fg">
+                <FormattedMessage
+                  id="contracts.record.archivedNote"
+                  defaultMessage="This contract is archived — it is out of the contract list. Restore it to edit."
+                />
+              </p>
+            )}
+            {/* A read-only viewer is told why, once, above the cards.
               A note is not an affordance: it explains the inert
               controls rather than offering a way around them. */}
-          {!canEdit && !archived && (
-            <p className="rounded-card bg-status-neutral-bg px-3 py-2 text-md text-status-neutral-fg">
-              <FormattedMessage
-                id="contracts.record.readOnlyNote"
-                defaultMessage="Legal-managed details are read-only. You can edit the business Fields available to you."
-              />
-            </p>
-          )}
-          {/* The section tab decides what the main column holds. The
+            {!canEdit && !archived && (
+              <p className="rounded-card bg-status-neutral-bg px-3 py-2 text-md text-status-neutral-fg">
+                <FormattedMessage
+                  id="contracts.record.readOnlyNote"
+                  defaultMessage="Legal-managed details are read-only. You can edit the business Fields available to you."
+                />
+              </p>
+            )}
+            {/* The section tab decides what the main column holds. The
               Team roster is not one of the sections — it lives in the
               activity bar (DES-047), beside all of them, so who is on
               a contract is context for reading any part of it. The
               DES-028 banner's "Manage team" link is a fragment that
               opens that applet from any section. */}
-          {tab === "overview" && (
-            <>
-              <section className="w-full overflow-hidden rounded-card border border-border-default bg-raised">
-                <header className="flex h-section-header items-center rounded-t-card border-b border-border-default bg-section-header px-4">
-                  <h2 className="text-base font-semibold">
-                    <FormattedMessage id="contracts.record.section" defaultMessage="Contract" />
-                  </h2>
-                </header>
-                <div className="grid grid-cols-1 gap-4 p-4 @2xl/page:grid-cols-2">
-                  <div className="@2xl/page:col-span-2">
-                    <div className="flex flex-col gap-1.5">
-                      <Label htmlFor="contract-title">
-                        <FormattedMessage id="contracts.form.titleField" defaultMessage="Title" />
-                      </Label>
-                      <div className="flex items-center gap-2">
-                        <Input
-                          id="contract-title"
-                          value={drafts.title}
-                          disabled={frozen}
-                          onChange={(event) =>
-                            setDrafts((current) => ({ ...current, title: event.target.value }))
-                          }
-                          onBlur={() => commitText("title")}
-                          onKeyDown={(event) => {
-                            if (event.key === "Enter") commitText("title");
-                            if (event.key === "Escape") revertText("title");
-                          }}
-                        />
-                        <StatusNote
-                          status={fieldStatus.title ?? "idle"}
-                          detail={fieldError.title}
-                        />
+            {tab === "overview" && (
+              <>
+                <section className="w-full overflow-hidden rounded-card border border-border-default bg-raised">
+                  <header className="flex h-section-header items-center rounded-t-card border-b border-border-default bg-section-header px-4">
+                    <h2 className="text-base font-semibold">
+                      <FormattedMessage id="contracts.record.section" defaultMessage="Contract" />
+                    </h2>
+                  </header>
+                  <div className="grid grid-cols-1 gap-4 p-4 @2xl/page:grid-cols-2">
+                    <div className="@2xl/page:col-span-2">
+                      <div className="flex flex-col gap-1.5">
+                        <Label htmlFor="contract-title">
+                          <FormattedMessage id="contracts.form.titleField" defaultMessage="Title" />
+                        </Label>
+                        <div className="flex items-center gap-2">
+                          <Input
+                            id="contract-title"
+                            value={drafts.title}
+                            disabled={frozen}
+                            onChange={(event) =>
+                              setDrafts((current) => ({ ...current, title: event.target.value }))
+                            }
+                            onBlur={() => commitText("title")}
+                            onKeyDown={(event) => {
+                              if (event.key === "Enter") commitText("title");
+                              if (event.key === "Escape") revertText("title");
+                            }}
+                          />
+                          <StatusNote
+                            status={fieldStatus.title ?? "idle"}
+                            detail={fieldError.title}
+                          />
+                        </div>
                       </div>
                     </div>
-                  </div>
-                  <ReadOnlyField
-                    label={
-                      <FormattedMessage
-                        id="contracts.column.reference"
-                        defaultMessage="Reference"
-                      />
-                    }
-                    value={reference}
-                  />
-                  {/* The type is a field like any other on the surface,
+                    <ReadOnlyField
+                      label={
+                        <FormattedMessage
+                          id="contracts.column.reference"
+                          defaultMessage="Reference"
+                        />
+                      }
+                      value={reference}
+                    />
+                    {/* The type is a field like any other on the surface,
                       and not like any other underneath: picking one
                       re-checks what that type demands (MTR-014), so a
                       pick with gaps opens a dialog instead of
@@ -1863,207 +1893,207 @@ export function ContractRecordPage() {
                       toggle DES-017 removed, so it lands here with the
                       other scalars — the same move the Owner, our
                       entity, and the value already made. */}
-                  <div className="flex flex-col gap-1.5">
-                    <Label htmlFor="contract-type">
-                      <FormattedMessage id="contracts.form.type" defaultMessage="Contract type" />
-                    </Label>
-                    <div className="flex items-center gap-2">
-                      <select
-                        id="contract-type"
-                        value={saved.contractTypeId}
-                        className={CONTROL_CLASS}
-                        disabled={frozen}
-                        onChange={(event) => pickType(event.target.value)}
-                      >
-                        {typeOptions.map((option) => (
-                          <option key={option.id} value={option.id}>
-                            {option.displayName}
-                          </option>
-                        ))}
-                      </select>
-                      <StatusNote
-                        status={fieldStatus.contractTypeId ?? "idle"}
-                        detail={fieldError.contractTypeId}
-                      />
+                    <div className="flex flex-col gap-1.5">
+                      <Label htmlFor="contract-type">
+                        <FormattedMessage id="contracts.form.type" defaultMessage="Contract type" />
+                      </Label>
+                      <div className="flex items-center gap-2">
+                        <select
+                          id="contract-type"
+                          value={saved.contractTypeId}
+                          className={CONTROL_CLASS}
+                          disabled={frozen}
+                          onChange={(event) => pickType(event.target.value)}
+                        >
+                          {typeOptions.map((option) => (
+                            <option key={option.id} value={option.id}>
+                              {option.displayName}
+                            </option>
+                          ))}
+                        </select>
+                        <StatusNote
+                          status={fieldStatus.contractTypeId ?? "idle"}
+                          detail={fieldError.contractTypeId}
+                        />
+                      </div>
                     </div>
-                  </div>
-                  <div className="flex flex-col gap-1.5">
-                    <Label htmlFor="contract-owner">
-                      <FormattedMessage id="contracts.form.owner" defaultMessage="Owner" />
-                    </Label>
-                    <div className="flex items-center gap-2">
-                      <select
-                        id="contract-owner"
-                        value={saved.manager?.id ?? ""}
-                        className={CONTROL_CLASS}
-                        disabled={frozen}
-                        onChange={(event) =>
-                          void commit("managerId", { managerId: event.target.value || null })
-                        }
-                      >
-                        {/* Empty is a real answer: an unassigned contract
+                    <div className="flex flex-col gap-1.5">
+                      <Label htmlFor="contract-owner">
+                        <FormattedMessage id="contracts.form.owner" defaultMessage="Owner" />
+                      </Label>
+                      <div className="flex items-center gap-2">
+                        <select
+                          id="contract-owner"
+                          value={saved.manager?.id ?? ""}
+                          className={CONTROL_CLASS}
+                          disabled={frozen}
+                          onChange={(event) =>
+                            void commit("managerId", { managerId: event.target.value || null })
+                          }
+                        >
+                          {/* Empty is a real answer: an unassigned contract
                         sits in triage until someone takes it (CTR-004). */}
-                        <option value="">
-                          {intl.formatMessage({
-                            id: "contracts.ownerUnassigned",
-                            defaultMessage: "Unassigned",
-                          })}
-                        </option>
-                        {/* The saved Owner may have been archived since, and
+                          <option value="">
+                            {intl.formatMessage({
+                              id: "contracts.ownerUnassigned",
+                              defaultMessage: "Unassigned",
+                            })}
+                          </option>
+                          {/* The saved Owner may have been archived since, and
                         so be absent from the picker read — keep them
                         selectable as themselves rather than let the
                         select lie about what the record holds. */}
-                        {(saved.manager &&
-                        !ownerOptions.some((person) => person.id === saved.manager!.id)
-                          ? [saved.manager, ...ownerOptions]
-                          : ownerOptions
-                        ).map((person) => (
-                          <option key={person.id} value={person.id}>
-                            {person.displayName}
-                          </option>
-                        ))}
-                      </select>
-                      <StatusNote
-                        status={fieldStatus.managerId ?? "idle"}
-                        detail={fieldError.managerId}
-                      />
+                          {(saved.manager &&
+                          !ownerOptions.some((person) => person.id === saved.manager!.id)
+                            ? [saved.manager, ...ownerOptions]
+                            : ownerOptions
+                          ).map((person) => (
+                            <option key={person.id} value={person.id}>
+                              {person.displayName}
+                            </option>
+                          ))}
+                        </select>
+                        <StatusNote
+                          status={fieldStatus.managerId ?? "idle"}
+                          detail={fieldError.managerId}
+                        />
+                      </div>
                     </div>
-                  </div>
-                  <div className="flex flex-col gap-1.5">
-                    <Label htmlFor="contract-entity">
-                      {/* "Our entity" as the C2 mock labels it: the Entity
+                    <div className="flex flex-col gap-1.5">
+                      <Label htmlFor="contract-entity">
+                        {/* "Our entity" as the C2 mock labels it: the Entity
                         is ours, the Counterparty is theirs, and the
                         record must never blur the two (CONTEXT.md). */}
-                      <FormattedMessage id="contracts.form.entity" defaultMessage="Our entity" />
-                    </Label>
-                    <div className="flex items-center gap-2">
-                      <select
-                        id="contract-entity"
-                        value={saved.entity?.id ?? ""}
-                        className={CONTROL_CLASS}
-                        disabled={frozen}
-                        onChange={(event) =>
-                          void commit("entityId", { entityId: event.target.value || null })
-                        }
-                      >
-                        {/* Empty is a real answer: a contract is often
+                        <FormattedMessage id="contracts.form.entity" defaultMessage="Our entity" />
+                      </Label>
+                      <div className="flex items-center gap-2">
+                        <select
+                          id="contract-entity"
+                          value={saved.entity?.id ?? ""}
+                          className={CONTROL_CLASS}
+                          disabled={frozen}
+                          onChange={(event) =>
+                            void commit("entityId", { entityId: event.target.value || null })
+                          }
+                        >
+                          {/* Empty is a real answer: a contract is often
                         recorded before anyone decides which of ours
                         signs it (CTR-011). */}
-                        <option value="">
-                          {intl.formatMessage({
-                            id: "contracts.entityUnknown",
-                            defaultMessage: "Not known yet",
-                          })}
-                        </option>
-                        {entityOptions.map((entity) => (
-                          <option key={entity.id} value={entity.id}>
-                            {entity.legalName}
+                          <option value="">
+                            {intl.formatMessage({
+                              id: "contracts.entityUnknown",
+                              defaultMessage: "Not known yet",
+                            })}
                           </option>
-                        ))}
-                      </select>
-                      <StatusNote
-                        status={fieldStatus.entityId ?? "idle"}
-                        detail={fieldError.entityId}
-                      />
+                          {entityOptions.map((entity) => (
+                            <option key={entity.id} value={entity.id}>
+                              {entity.legalName}
+                            </option>
+                          ))}
+                        </select>
+                        <StatusNote
+                          status={fieldStatus.entityId ?? "idle"}
+                          detail={fieldError.entityId}
+                        />
+                      </div>
                     </div>
-                  </div>
-                  {/* Their side, next to ours: the two never blur
+                    {/* Their side, next to ours: the two never blur
                     (CONTEXT.md), and the record reads them together. */}
-                  <CounterpartiesField
-                    contractNumber={saved.number}
-                    parties={parties}
-                    frozen={frozen}
-                    status={fieldStatus.counterparties ?? "idle"}
-                    error={fieldError.counterparties}
-                    onStatus={(next, detail) => note("counterparties", next, detail)}
-                    onChange={(row, next) => {
-                      // The primary decides what the list column and the
-                      // record hero show, so the row moves with the party.
-                      setSaved(row);
-                      setParties(next);
-                    }}
-                  />
-                  {/* The status is not a field of this card any more
+                    <CounterpartiesField
+                      contractNumber={saved.number}
+                      parties={parties}
+                      frozen={frozen}
+                      status={fieldStatus.counterparties ?? "idle"}
+                      error={fieldError.counterparties}
+                      onStatus={(next, detail) => note("counterparties", next, detail)}
+                      onChange={(row, next) => {
+                        // The primary decides what the list column and the
+                        // record hero show, so the row moves with the party.
+                        setSaved(row);
+                        setParties(next);
+                      }}
+                    />
+                    {/* The status is not a field of this card any more
                       (DES-053). It commits from the sub-bar's stage
                       strip, which is on screen in every section, and a
                       second control for one datum would be two places
                       to keep in step. What the record holds is still
                       read here — the sub-bar pill says it, two rows
                       up. */}
-                  <div className="flex flex-col gap-1.5">
-                    <Label htmlFor="contract-priority">
-                      <FormattedMessage id="contracts.form.priority" defaultMessage="Priority" />
-                    </Label>
-                    <div className="flex items-center gap-2">
-                      <select
-                        id="contract-priority"
-                        value={saved.priority}
-                        className={CONTROL_CLASS}
-                        disabled={frozen}
-                        onChange={(event) =>
-                          void commit("priority", {
-                            priority: event.target.value as SeverityLevel,
-                          })
-                        }
-                      >
-                        {SEVERITY_LEVELS.map((level) => (
-                          <option key={level} value={level}>
-                            {severityLabel(intl, level)}
-                          </option>
-                        ))}
-                      </select>
-                      <StatusNote
-                        status={fieldStatus.priority ?? "idle"}
-                        detail={fieldError.priority}
-                      />
+                    <div className="flex flex-col gap-1.5">
+                      <Label htmlFor="contract-priority">
+                        <FormattedMessage id="contracts.form.priority" defaultMessage="Priority" />
+                      </Label>
+                      <div className="flex items-center gap-2">
+                        <select
+                          id="contract-priority"
+                          value={saved.priority}
+                          className={CONTROL_CLASS}
+                          disabled={frozen}
+                          onChange={(event) =>
+                            void commit("priority", {
+                              priority: event.target.value as SeverityLevel,
+                            })
+                          }
+                        >
+                          {SEVERITY_LEVELS.map((level) => (
+                            <option key={level} value={level}>
+                              {severityLabel(intl, level)}
+                            </option>
+                          ))}
+                        </select>
+                        <StatusNote
+                          status={fieldStatus.priority ?? "idle"}
+                          detail={fieldError.priority}
+                        />
+                      </div>
                     </div>
-                  </div>
-                  <div className="flex flex-col gap-1.5">
-                    <Label htmlFor="contract-risk">
-                      <FormattedMessage id="contracts.form.risk" defaultMessage="Risk" />
-                    </Label>
-                    <div className="flex items-center gap-2">
-                      <select
-                        id="contract-risk"
-                        value={saved.risk ?? ""}
-                        className={CONTROL_CLASS}
-                        disabled={frozen}
-                        onChange={(event) =>
-                          void commit("risk", {
-                            risk:
-                              event.target.value === ""
-                                ? null
-                                : (event.target.value as SeverityLevel),
-                          })
-                        }
-                      >
-                        {/* Empty is a real answer, not a placeholder: risk
+                    <div className="flex flex-col gap-1.5">
+                      <Label htmlFor="contract-risk">
+                        <FormattedMessage id="contracts.form.risk" defaultMessage="Risk" />
+                      </Label>
+                      <div className="flex items-center gap-2">
+                        <select
+                          id="contract-risk"
+                          value={saved.risk ?? ""}
+                          className={CONTROL_CLASS}
+                          disabled={frozen}
+                          onChange={(event) =>
+                            void commit("risk", {
+                              risk:
+                                event.target.value === ""
+                                  ? null
+                                  : (event.target.value as SeverityLevel),
+                            })
+                          }
+                        >
+                          {/* Empty is a real answer, not a placeholder: risk
                         stays unset until legal assesses it (CTR-005). */}
-                        <option value="">{riskLabel(intl, null)}</option>
-                        {SEVERITY_LEVELS.map((level) => (
-                          <option key={level} value={level}>
-                            {severityLabel(intl, level)}
-                          </option>
-                        ))}
-                      </select>
-                      <StatusNote status={fieldStatus.risk ?? "idle"} detail={fieldError.risk} />
+                          <option value="">{riskLabel(intl, null)}</option>
+                          {SEVERITY_LEVELS.map((level) => (
+                            <option key={level} value={level}>
+                              {severityLabel(intl, level)}
+                            </option>
+                          ))}
+                        </select>
+                        <StatusNote status={fieldStatus.risk ?? "idle"} detail={fieldError.risk} />
+                      </div>
                     </div>
-                  </div>
-                  {/* CTR-010's value: three controls, one field. It sits
+                    {/* CTR-010's value: three controls, one field. It sits
                     with the other scalars the record holds, because the
                     C2 hero meta strip it is drawn in edits through the
                     page-level Edit toggle DES-017 removed — the same
                     move the Owner, our entity, and the counterparties
                     already made. */}
-                  <ValueField
-                    value={saved.value}
-                    frozen={businessFrozen}
-                    status={fieldStatus.value ?? "idle"}
-                    error={fieldError.value}
-                    onStatus={(next, detail) => note("value", next, detail)}
-                    onCommit={(next) => void commit("value", { value: next })}
-                  />
-                  {/* CTR-006's term: five fields, and one rule
+                    <ValueField
+                      value={saved.value}
+                      frozen={businessFrozen}
+                      status={fieldStatus.value ?? "idle"}
+                      error={fieldError.value}
+                      onStatus={(next, detail) => note("value", next, detail)}
+                      onCommit={(next) => void commit("value", { value: next })}
+                    />
+                    {/* CTR-006's term: five fields, and one rule
                           running between them. Each commits on its own
                           (DES-017, no carve-out), and the type is what
                           decides which of the other four this record
@@ -2073,163 +2103,163 @@ export function ContractRecordPage() {
                           typed into. The blank is honest either way: it
                           says the record holds nothing there, which is
                           exactly true. */}
-                  <div className="flex flex-col gap-1.5">
-                    <Label htmlFor="contract-term-type">
-                      <FormattedMessage id="contracts.form.termType" defaultMessage="Term type" />
-                    </Label>
-                    <div className="flex items-center gap-2">
-                      <select
-                        id="contract-term-type"
-                        value={saved.termType}
-                        className={CONTROL_CLASS}
-                        disabled={frozen}
-                        onChange={(event) =>
-                          void commit("termType", {
-                            termType: event.target.value as TermType,
-                          })
-                        }
-                      >
-                        {TERM_TYPES.map((option) => (
-                          <option key={option} value={option}>
-                            {termTypeLabel(intl, option)}
-                          </option>
-                        ))}
-                      </select>
-                      <StatusNote
-                        status={fieldStatus.termType ?? "idle"}
-                        detail={fieldError.termType}
-                      />
-                    </div>
-                  </div>
-                  <TermField
-                    id="contract-effective-date"
-                    type="date"
-                    label={
-                      <FormattedMessage
-                        id="contracts.form.effectiveDate"
-                        defaultMessage="Effective date"
-                      />
-                    }
-                    draft={termFields.effectiveDate}
-                    frozen={businessFrozen}
-                    status={fieldStatus.effectiveDate ?? "idle"}
-                    error={fieldError.effectiveDate}
-                    onDraft={(next) =>
-                      setTermFields((current) => ({ ...current, effectiveDate: next }))
-                    }
-                    onCommit={(next) => commitTerm("effectiveDate", next)}
-                    onRevert={() => revertTerm("effectiveDate")}
-                  />
-                  {/* An evergreen contract has no end, so the record
-                          does not offer to invent one for it. */}
-                  {saved.termType === "evergreen" ? (
-                    <ReadOnlyField
-                      label={
-                        <FormattedMessage
-                          id="contracts.form.expiryDate"
-                          defaultMessage="Expiry date"
+                    <div className="flex flex-col gap-1.5">
+                      <Label htmlFor="contract-term-type">
+                        <FormattedMessage id="contracts.form.termType" defaultMessage="Term type" />
+                      </Label>
+                      <div className="flex items-center gap-2">
+                        <select
+                          id="contract-term-type"
+                          value={saved.termType}
+                          className={CONTROL_CLASS}
+                          disabled={frozen}
+                          onChange={(event) =>
+                            void commit("termType", {
+                              termType: event.target.value as TermType,
+                            })
+                          }
+                        >
+                          {TERM_TYPES.map((option) => (
+                            <option key={option} value={option}>
+                              {termTypeLabel(intl, option)}
+                            </option>
+                          ))}
+                        </select>
+                        <StatusNote
+                          status={fieldStatus.termType ?? "idle"}
+                          detail={fieldError.termType}
                         />
-                      }
-                      value={notRecorded}
-                    />
-                  ) : (
+                      </div>
+                    </div>
                     <TermField
-                      id="contract-expiry-date"
+                      id="contract-effective-date"
                       type="date"
                       label={
                         <FormattedMessage
-                          id="contracts.form.expiryDate"
-                          defaultMessage="Expiry date"
+                          id="contracts.form.effectiveDate"
+                          defaultMessage="Effective date"
                         />
                       }
-                      draft={termFields.expiryDate}
-                      frozen={frozen}
-                      status={fieldStatus.expiryDate ?? "idle"}
-                      error={fieldError.expiryDate}
+                      draft={termFields.effectiveDate}
+                      frozen={businessFrozen}
+                      status={fieldStatus.effectiveDate ?? "idle"}
+                      error={fieldError.effectiveDate}
                       onDraft={(next) =>
-                        setTermFields((current) => ({ ...current, expiryDate: next }))
+                        setTermFields((current) => ({ ...current, effectiveDate: next }))
                       }
-                      onCommit={(next) => commitTerm("expiryDate", next)}
-                      onRevert={() => revertTerm("expiryDate")}
+                      onCommit={(next) => commitTerm("effectiveDate", next)}
+                      onRevert={() => revertTerm("effectiveDate")}
                     />
-                  )}
-                  {/* Nothing rolls but an auto-renewing contract, so
+                    {/* An evergreen contract has no end, so the record
+                          does not offer to invent one for it. */}
+                    {saved.termType === "evergreen" ? (
+                      <ReadOnlyField
+                        label={
+                          <FormattedMessage
+                            id="contracts.form.expiryDate"
+                            defaultMessage="Expiry date"
+                          />
+                        }
+                        value={notRecorded}
+                      />
+                    ) : (
+                      <TermField
+                        id="contract-expiry-date"
+                        type="date"
+                        label={
+                          <FormattedMessage
+                            id="contracts.form.expiryDate"
+                            defaultMessage="Expiry date"
+                          />
+                        }
+                        draft={termFields.expiryDate}
+                        frozen={frozen}
+                        status={fieldStatus.expiryDate ?? "idle"}
+                        error={fieldError.expiryDate}
+                        onDraft={(next) =>
+                          setTermFields((current) => ({ ...current, expiryDate: next }))
+                        }
+                        onCommit={(next) => commitTerm("expiryDate", next)}
+                        onRevert={() => revertTerm("expiryDate")}
+                      />
+                    )}
+                    {/* Nothing rolls but an auto-renewing contract, so
                           nothing else is asked how far a roll goes. */}
-                  {saved.termType === "auto_renew" ? (
-                    <TermField
-                      id="contract-renewal-period"
-                      type="number"
-                      // A roll of zero months would advance an
-                      // expiry to itself, so the stepper cannot
-                      // reach it — the same floor the seam holds.
-                      min={1}
-                      label={
-                        <FormattedMessage
-                          id="contracts.form.renewalPeriod"
-                          defaultMessage="Renewal period (months)"
-                        />
-                      }
-                      draft={termFields.renewalPeriodMonths}
-                      frozen={frozen}
-                      status={fieldStatus.renewalPeriodMonths ?? "idle"}
-                      error={fieldError.renewalPeriodMonths}
-                      onDraft={(next) =>
-                        setTermFields((current) => ({ ...current, renewalPeriodMonths: next }))
-                      }
-                      onCommit={() => commitTerm("renewalPeriodMonths")}
-                      onRevert={() => revertTerm("renewalPeriodMonths")}
-                    />
-                  ) : (
-                    <ReadOnlyField
-                      label={
-                        <FormattedMessage
-                          id="contracts.form.renewalPeriod"
-                          defaultMessage="Renewal period (months)"
-                        />
-                      }
-                      value={notRecorded}
-                    />
-                  )}
-                  {/* A notice obligation sits on any kind of term,
+                    {saved.termType === "auto_renew" ? (
+                      <TermField
+                        id="contract-renewal-period"
+                        type="number"
+                        // A roll of zero months would advance an
+                        // expiry to itself, so the stepper cannot
+                        // reach it — the same floor the seam holds.
+                        min={1}
+                        label={
+                          <FormattedMessage
+                            id="contracts.form.renewalPeriod"
+                            defaultMessage="Renewal period (months)"
+                          />
+                        }
+                        draft={termFields.renewalPeriodMonths}
+                        frozen={frozen}
+                        status={fieldStatus.renewalPeriodMonths ?? "idle"}
+                        error={fieldError.renewalPeriodMonths}
+                        onDraft={(next) =>
+                          setTermFields((current) => ({ ...current, renewalPeriodMonths: next }))
+                        }
+                        onCommit={() => commitTerm("renewalPeriodMonths")}
+                        onRevert={() => revertTerm("renewalPeriodMonths")}
+                      />
+                    ) : (
+                      <ReadOnlyField
+                        label={
+                          <FormattedMessage
+                            id="contracts.form.renewalPeriod"
+                            defaultMessage="Renewal period (months)"
+                          />
+                        }
+                        value={notRecorded}
+                      />
+                    )}
+                    {/* A notice obligation sits on any kind of term,
                           so this box is drawn whatever the type says.
                           The deadline it feeds derives only when there
                           is an expiry to subtract it from. */}
-                  <TermField
-                    id="contract-notice-period"
-                    type="number"
-                    // Zero days' notice is a real term: some
-                    // contracts end on the date and no earlier.
-                    min={0}
-                    label={
-                      <FormattedMessage
-                        id="contracts.form.noticePeriod"
-                        defaultMessage="Notice period (days)"
-                      />
-                    }
-                    draft={termFields.noticePeriodDays}
-                    frozen={frozen}
-                    status={fieldStatus.noticePeriodDays ?? "idle"}
-                    error={fieldError.noticePeriodDays}
-                    onDraft={(next) =>
-                      setTermFields((current) => ({ ...current, noticePeriodDays: next }))
-                    }
-                    onCommit={() => commitTerm("noticePeriodDays")}
-                    onRevert={() => revertTerm("noticePeriodDays")}
-                  />
-                  {/* Derived from the expiry and never stored, so it
+                    <TermField
+                      id="contract-notice-period"
+                      type="number"
+                      // Zero days' notice is a real term: some
+                      // contracts end on the date and no earlier.
+                      min={0}
+                      label={
+                        <FormattedMessage
+                          id="contracts.form.noticePeriod"
+                          defaultMessage="Notice period (days)"
+                        />
+                      }
+                      draft={termFields.noticePeriodDays}
+                      frozen={frozen}
+                      status={fieldStatus.noticePeriodDays ?? "idle"}
+                      error={fieldError.noticePeriodDays}
+                      onDraft={(next) =>
+                        setTermFields((current) => ({ ...current, noticePeriodDays: next }))
+                      }
+                      onCommit={() => commitTerm("noticePeriodDays")}
+                      onRevert={() => revertTerm("noticePeriodDays")}
+                    />
+                    {/* Derived from the expiry and never stored, so it
                           is a fact of the record rather than a field of
                           it — and blank for an evergreen contract,
                           which has no end to count down to. */}
-                  <ReadOnlyField
-                    label={
-                      <FormattedMessage
-                        id="contracts.form.daysRemaining"
-                        defaultMessage="Days remaining"
-                      />
-                    }
-                    value={daysRemainingLabel(intl, saved.daysRemaining) ?? notRecorded}
-                  />
-                  {/* When the term last rolled (grill row G.R5).
+                    <ReadOnlyField
+                      label={
+                        <FormattedMessage
+                          id="contracts.form.daysRemaining"
+                          defaultMessage="Days remaining"
+                        />
+                      }
+                      value={daysRemainingLabel(intl, saved.daysRemaining) ?? notRecorded}
+                    />
+                    {/* When the term last rolled (grill row G.R5).
                           Read from the record's renewal history rather
                           than from a column, because nothing stores a
                           renewal: the confirmed-roll entries are what
@@ -2240,20 +2270,20 @@ export function ContractRecordPage() {
                           (X.6, DES-040 clause 5) — most contracts have
                           never renewed, and that is a fact rather than
                           a gap. */}
-                  <ReadOnlyField
-                    label={
-                      <FormattedMessage
-                        id="contracts.form.lastRenewal"
-                        defaultMessage="Last renewal"
-                      />
-                    }
-                    value={
-                      renewals[0]
-                        ? formatShortDate(renewals[0].confirmedAt, { locale: intl.locale })
-                        : notRecorded
-                    }
-                  />
-                  {/* Who may see the record at all (DD-014). It closes
+                    <ReadOnlyField
+                      label={
+                        <FormattedMessage
+                          id="contracts.form.lastRenewal"
+                          defaultMessage="Last renewal"
+                        />
+                      }
+                      value={
+                        renewals[0]
+                          ? formatShortDate(renewals[0].confirmedAt, { locale: intl.locale })
+                          : notRecorded
+                      }
+                    />
+                    {/* Who may see the record at all (DD-014). It closes
                       the card because it is the record's audience
                       rather than one of its business facts, and it is
                       the one field here that most of the people
@@ -2264,28 +2294,28 @@ export function ContractRecordPage() {
                       the person is done deciding — which for a
                       two-state control is the moment they flip it, the
                       same rule the record's selects already follow. */}
-                  <div className="@2xl/page:col-span-2">
-                    <ConfidentialToggle
-                      id="contract-confidential"
-                      confidential={saved.isConfidential}
-                      // Archived refuses the flag edit like every other
-                      // edit, and only the three actors may ask for
-                      // one. Everyone else reads it inert — a fact
-                      // about the record, not a control they must not
-                      // press.
-                      disabled={frozen || !canFlag || fieldStatus.isConfidential === "saving"}
-                      status={
-                        <StatusNote
-                          status={fieldStatus.isConfidential ?? "idle"}
-                          detail={fieldError.isConfidential}
-                        />
-                      }
-                      onChange={(next) => void commit("isConfidential", { isConfidential: next })}
-                    />
+                    <div className="@2xl/page:col-span-2">
+                      <ConfidentialToggle
+                        id="contract-confidential"
+                        confidential={saved.isConfidential}
+                        // Archived refuses the flag edit like every other
+                        // edit, and only the three actors may ask for
+                        // one. Everyone else reads it inert — a fact
+                        // about the record, not a control they must not
+                        // press.
+                        disabled={frozen || !canFlag || fieldStatus.isConfidential === "saving"}
+                        status={
+                          <StatusNote
+                            status={fieldStatus.isConfidential ?? "idle"}
+                            detail={fieldError.isConfidential}
+                          />
+                        }
+                        onChange={(next) => void commit("isConfidential", { isConfidential: next })}
+                      />
+                    </div>
                   </div>
-                </div>
-              </section>
-              {/* The C2 mock gives the description a card of its own,
+                </section>
+                {/* The C2 mock gives the description a card of its own,
                   and it earns one: it is the only free-form field on
                   the record, and a textarea the width of the card reads
                   as prose rather than as one more entry in a field
@@ -2296,344 +2326,307 @@ export function ContractRecordPage() {
                   The heading names the textarea rather than the card:
                   one accessible name each, carried by the control that
                   answers to it, as the Contract card above does. */}
-              <section className="w-full overflow-hidden rounded-card border border-border-default bg-raised">
-                <header className="flex h-section-header items-center rounded-t-card border-b border-border-default bg-section-header px-4">
-                  <h2 id="contract-description-heading" className="text-base font-semibold">
-                    <FormattedMessage
-                      id="contracts.form.description"
-                      defaultMessage="Description"
+                <section className="w-full overflow-hidden rounded-card border border-border-default bg-raised">
+                  <header className="flex h-section-header items-center rounded-t-card border-b border-border-default bg-section-header px-4">
+                    <h2 id="contract-description-heading" className="text-base font-semibold">
+                      <FormattedMessage
+                        id="contracts.form.description"
+                        defaultMessage="Description"
+                      />
+                    </h2>
+                  </header>
+                  <div className="flex items-start gap-2 p-4">
+                    <textarea
+                      id="contract-description"
+                      // The card's own heading names the field: a second
+                      // label above a full-width textarea would repeat it.
+                      aria-labelledby="contract-description-heading"
+                      value={drafts.description}
+                      className={TEXTAREA_CLASS}
+                      disabled={frozen}
+                      onChange={(event) =>
+                        setDrafts((current) => ({ ...current, description: event.target.value }))
+                      }
+                      onBlur={() => commitText("description")}
+                      onKeyDown={(event) => {
+                        if (event.key === "Escape") revertText("description");
+                      }}
                     />
-                  </h2>
-                </header>
-                <div className="flex items-start gap-2 p-4">
-                  <textarea
-                    id="contract-description"
-                    // The card's own heading names the field: a second
-                    // label above a full-width textarea would repeat it.
-                    aria-labelledby="contract-description-heading"
-                    value={drafts.description}
-                    className={TEXTAREA_CLASS}
-                    disabled={frozen}
-                    onChange={(event) =>
-                      setDrafts((current) => ({ ...current, description: event.target.value }))
-                    }
-                    onBlur={() => commitText("description")}
-                    onKeyDown={(event) => {
-                      if (event.key === "Escape") revertText("description");
-                    }}
-                  />
-                  <StatusNote
-                    status={fieldStatus.description ?? "idle"}
-                    detail={fieldError.description}
-                  />
-                </div>
-              </section>
-              {/* CTR-006's term as a picture (M16/2). It closes the
+                    <StatusNote
+                      status={fieldStatus.description ?? "idle"}
+                      detail={fieldError.description}
+                    />
+                  </div>
+                </section>
+                {/* CTR-006's term as a picture (M16/2). It closes the
                       Overview because it draws facts the two cards
                       above already state — the mock's own order, where
                       the Timeframe card is the section's last — and it
                       holds nothing of its own: every mark on it is one
                       of the record's dates. */}
-              <TermTimelineCard contract={saved} />
-              <LinkedMatterCard
-                contractNumber={saved.number}
-                contractIsConfidential={saved.isConfidential}
-                matter={linkedMatter}
-                editable={canEdit && !archived}
-                onMatter={setLinkedMatter}
-              />
-              {/* The contract's relation surface (M17/2, CTR-015): the
+                <TermTimelineCard contract={saved} />
+                <LinkedMatterCard matter={linkedMatter} onMatter={setLinkedMatter} />
+                {/* The contract's relation surface (M17/2, CTR-015): the
                       parent chain, the children, and the typed links this
                       contract carries. Absent when the read failed — an
                       empty state is a fact about the record, not a
                       fallback for a read that did not happen. */}
-              {relations !== null && (
-                <RelatedContractsCard
-                  contractNumber={saved.number}
-                  contractIsConfidential={saved.isConfidential}
-                  relations={relations}
-                  editable={canEdit && !archived}
-                  onRelationsChanged={setRelations}
-                />
-              )}
-            </>
-          )}
-          {/* CTR-016's fields, in the card the C2 mock draws for
+                {relations !== null && (
+                  <RelatedContractsCard relations={relations} onRelationsChanged={setRelations} />
+                )}
+              </>
+            )}
+            {/* CTR-016's fields, in the card the C2 mock draws for
                   them and in the order the type's attachment join
                   gives. They are the Fields section (DES-032): what
                   this contract's type asks for on top of the record's
                   own columns, and — once CTR-008 lands — where the
                   extraction writes its answers. */}
-          {tab === "fields" && (
-            <FieldsCard
-              fields={attached}
-              values={saved.customFields}
-              people={peopleReferences}
-              entities={entityReferences}
-              frozen={frozen}
-              businessEditable={!archived && contributor}
-              status={fieldStatus}
-              error={fieldError}
-              onStatus={note}
-              onCommit={commitCustomField}
-            />
-          )}
-          {/* The record's paper (M11/2, M11/3), in the section the
+            {tab === "fields" && (
+              <FieldsCard
+                fields={attached}
+                values={saved.customFields}
+                people={peopleReferences}
+                entities={entityReferences}
+                frozen={frozen}
+                businessEditable={!archived && contributor}
+                status={fieldStatus}
+                error={fieldError}
+                onStatus={note}
+                onCommit={commitCustomField}
+              />
+            )}
+            {/* The record's paper (M11/2, M11/3), in the section the
                   C4 mock draws — and behind the tab the mock puts it
                   behind (DES-032). The full document panel DES-016
                   places in a wider sibling layer opens from here. */}
-          {tab === "documents" && (
-            <section
-              ref={documentsSection}
-              tabIndex={-1}
-              aria-label={intl.formatMessage({
-                id: "contracts.record.documents.searchLanding",
-                defaultMessage: "Document search landing",
-              })}
-              className="outline-none"
-            >
-              <DocumentsCard
-                record={{ entityType: "contract", number: saved.number }}
-                documents={paper}
-                folders={tree}
-                nextCursor={paperCursor}
-                frozen={frozen}
-                supportingUploads={contributor && !archived}
-                // DOC-010's erasure is the Administrator's alone, and it
-                // is the one control on this section a role decides.
-                role={user.role}
-                // DD-014's per-document flag has an actor set of three
-                // (CTR-022), and two of them are people rather than a
-                // role: the person who uploaded the document, which the
-                // row states, and the record's Owner, which only the
-                // record holds. The saved row rather than the loader's
-                // copy, so taking the Owner off takes the control with
-                // them on the same page.
-                viewerId={user.id}
-                ownerId={saved.manager?.id ?? null}
-                // Opening a version in the doc panel (M12/2). The
-                // trigger comes with it so closing puts focus back on
-                // the row control that opened it.
-                reading={reading?.versionId ?? null}
-                // CTR-007's amendment vehicle, routed here from the
-                // Renew dialog (M16/5). The section opens its
-                // composer on the record's instrument; the file and
-                // the write are the M11 upload path, unchanged.
-                amending={amending ? (signing.primaryDocument?.id ?? null) : null}
-                onAmendmentOpened={stopAmending}
-                onRead={(document, version, trigger) => {
-                  readingTrigger.current = trigger;
-                  setReading({ documentId: document.id, versionId: version.id });
-                }}
-                onDocuments={(rows, cursor) => {
-                  setPaper(rows);
-                  // `undefined` means the write changed rows without
-                  // moving the position: a metadata edit is not a page.
-                  if (cursor !== undefined) setPaperCursor(cursor);
-                }}
-                // The setter itself rather than a lambda around it:
-                // the section's report watches its own listings and
-                // nothing else, so what it calls has to stay the same
-                // function across a render.
-                onFiled={setFiled}
-                onFolders={setTree}
-              />
-            </section>
-          )}
-          {/* Who has been asked to sign the record off (M14/3,
+            {tab === "documents" && (
+              <section
+                ref={documentsSection}
+                tabIndex={-1}
+                aria-label={intl.formatMessage({
+                  id: "contracts.record.documents.searchLanding",
+                  defaultMessage: "Document search landing",
+                })}
+                className="outline-none"
+              >
+                <DocumentsCard
+                  documents={paper}
+                  folders={tree}
+                  nextCursor={paperCursor}
+                  supportingUploads={contributor && !archived}
+                  // Opening a version in the doc panel (M12/2). The
+                  // trigger comes with it so closing puts focus back on
+                  // the row control that opened it.
+                  reading={reading?.versionId ?? null}
+                  // CTR-007's amendment vehicle, routed here from the
+                  // Renew dialog (M16/5). The section opens its
+                  // composer on the record's instrument; the file and
+                  // the write are the M11 upload path, unchanged.
+                  amending={amending ? (signing.primaryDocument?.id ?? null) : null}
+                  onAmendmentOpened={stopAmending}
+                  onRead={(document, version, trigger) => {
+                    readingTrigger.current = trigger;
+                    setReading({ documentId: document.id, versionId: version.id });
+                  }}
+                  onDocuments={(rows, cursor) => {
+                    setPaper(rows);
+                    // `undefined` means the write changed rows without
+                    // moving the position: a metadata edit is not a page.
+                    if (cursor !== undefined) setPaperCursor(cursor);
+                  }}
+                  // The setter itself rather than a lambda around it:
+                  // the section's report watches its own listings and
+                  // nothing else, so what it calls has to stay the same
+                  // function across a render.
+                  onFiled={setFiled}
+                  onFolders={setTree}
+                />
+              </section>
+            )}
+            {/* Who has been asked to sign the record off (M14/3,
                   CTR-012) and what paper it has sent out (M15/2,
                   CTR-013), in the section the C5 mock draws it in. Both
                   kinds of row are auto-derived: nothing here authors an
                   event, and the request and send affordances are the
                   only writes. */}
-          {/* Every date on the record, in the section the C6 mock
+            {/* Every date on the record, in the section the C6 mock
                   draws it in (M16/3, CTR-009): the key dates the team
                   adds, the contract's expiry, and the notice deadline
                   the record derives — one list, ordered, with the next
                   one named. */}
-          {tab === "key-dates" && (
-            <KeyDatesCard
-              contractNumber={saved.number}
-              deadlines={deadlines}
-              // The saved row, not the loader's copy: editing the
-              // notice period on the Overview changes what the
-              // derived row's own sentence says about itself.
-              noticePeriodDays={saved.noticePeriodDays}
-              frozen={frozen}
-              onDeadlines={setDeadlines}
-            />
-          )}
-          {/* The record's task checklist (M17/1, CTR-017):
+            {tab === "key-dates" && (
+              <KeyDatesCard
+                deadlines={deadlines}
+                // The saved row, not the loader's copy: editing the
+                // notice period on the Overview changes what the
+                // derived row's own sentence says about itself.
+                noticePeriodDays={saved.noticePeriodDays}
+                onDeadlines={setDeadlines}
+              />
+            )}
+            {/* The record's task checklist (M17/1, CTR-017):
                   lightweight items with a done flag, an optional
                   assignee, and an optional due date. */}
-          {tab === "tasks" && (
-            <TasksCard
-              contractNumber={saved.number}
-              tasks={tasks}
-              doneCount={taskDoneCount}
-              totalCount={taskTotalCount}
-              frozen={frozen}
-              onTasksChange={(outcome) => {
-                setTasks(outcome.tasks);
-                setTaskDoneCount(outcome.doneCount);
-                setTaskTotalCount(outcome.totalCount);
-              }}
-            />
-          )}
-          {tab === "approvals" && (
-            <ApprovalsSigningCard
-              contractNumber={saved.number}
-              approvals={approvals}
-              signing={signing}
-              renewals={renewals}
-              // A record rolls when it auto-renews and records an
-              // expiry to advance — the seam's own two conditions,
-              // mirrored here so the head draws no control the
-              // seam would refuse. Whether the term has lapsed is
-              // deliberately not one of them: confirming a roll
-              // before the notice deadline is a normal act, and the
-              // banner is the reminder, not the gate.
-              canRenew={!frozen && saved.termType === "auto_renew" && saved.expiryDate !== null}
-              onRenew={() => setRenewing(true)}
-              users={users}
-              approverGroups={approverGroups}
-              // The live roster and the saved row, not the loader's
-              // copies: putting somebody on the team widens a
-              // confidential record's audience on the same page,
-              // and taking the Owner off takes their cancel with
-              // them.
-              team={roster}
-              viewerId={user.id}
-              viewerRole={user.role}
-              ownerId={saved.manager?.id ?? null}
-              isConfidential={saved.isConfidential}
-              frozen={frozen}
-              onApprovals={setApprovals}
-              onSigning={setSigning}
-            />
-          )}
-        </div>
-      </RecordApplets>
-      {retypeTo && (
-        <RetypeDialog
-          target={retypeTo}
-          values={saved.customFields}
-          people={peopleReferences}
-          entities={entityReferences}
-          onOpenChange={(open) => {
-            if (!open) setRetypeTo(null);
-          }}
-          onConfirm={async (customFields) => {
-            const outcome = await commit("contractTypeId", {
-              contractTypeId: retypeTo.id,
-              customFields,
-            });
-            if (outcome.ok) {
-              setRetypeTo(null);
-              return undefined;
-            }
-            // The seam's own refusal, handed back to the dialog: the
-            // field's micro-state carries it too, but the dialog is
-            // covering the field it would read on.
-            return outcome.detail ?? "";
-          }}
-        />
-      )}
-      {gateTo && (
-        <SoftGateDialog
-          target={gateTo}
-          unresolved={approvals.filter(isUnresolved)}
-          onOpenChange={(open) => {
-            if (!open) setGateTo(null);
-          }}
-          onConfirm={() => changeStatus(gateTo.id, true)}
-        />
-      )}
-      {/* The Renew dialog (M16/4, CTR-007). It lives on the record
+            {tab === "tasks" && (
+              <TasksCard
+                tasks={tasks}
+                doneCount={taskDoneCount}
+                totalCount={taskTotalCount}
+                onTasksChange={(outcome) => {
+                  setTasks(outcome.tasks);
+                  setTaskDoneCount(outcome.doneCount);
+                  setTaskTotalCount(outcome.totalCount);
+                }}
+              />
+            )}
+            {tab === "approvals" && (
+              <ApprovalsSigningCard
+                approvals={approvals}
+                signing={signing}
+                renewals={renewals}
+                // A record rolls when it auto-renews and records an
+                // expiry to advance — the seam's own two conditions,
+                // mirrored here so the head draws no control the
+                // seam would refuse. Whether the term has lapsed is
+                // deliberately not one of them: confirming a roll
+                // before the notice deadline is a normal act, and the
+                // banner is the reminder, not the gate.
+                canRenew={!frozen && saved.termType === "auto_renew" && saved.expiryDate !== null}
+                onRenew={() => setRenewing(true)}
+                users={users}
+                approverGroups={approverGroups}
+                // The live roster, not the loader's copy: putting
+                // somebody on the team widens a confidential record's
+                // audience on the same page.
+                team={roster}
+                onApprovals={setApprovals}
+                onSigning={setSigning}
+              />
+            )}
+          </div>
+        </RecordApplets>
+        {retypeTo && (
+          <RetypeDialog
+            target={retypeTo}
+            values={saved.customFields}
+            people={peopleReferences}
+            entities={entityReferences}
+            onOpenChange={(open) => {
+              if (!open) setRetypeTo(null);
+            }}
+            onConfirm={async (customFields) => {
+              const outcome = await commit("contractTypeId", {
+                contractTypeId: retypeTo.id,
+                customFields,
+              });
+              if (outcome.ok) {
+                setRetypeTo(null);
+                return undefined;
+              }
+              // The seam's own refusal, handed back to the dialog: the
+              // field's micro-state carries it too, but the dialog is
+              // covering the field it would read on.
+              return outcome.detail ?? "";
+            }}
+          />
+        )}
+        {gateTo && (
+          <SoftGateDialog
+            target={gateTo}
+            unresolved={approvals.filter(isUnresolved)}
+            onOpenChange={(open) => {
+              if (!open) setGateTo(null);
+            }}
+            onConfirm={() => changeStatus(gateTo.id, true)}
+          />
+        )}
+        {/* The Renew dialog (M16/4, CTR-007). It lives on the record
           rather than in the card that holds the renewal rows, because
           the pending banner raises it from the page's chrome and the
           chrome is on screen in every section — `SoftGateDialog`'s own
           reason for sitting here. The expiry guard is the same one the
           two triggers are drawn behind, said once more where the write
           is made: a record with no expiry has no term to roll. */}
-      {renewing && saved.expiryDate !== null && (
-        <ConfirmRenewalDialog
-          reference={contractReference(intl, saved.number)}
-          fromExpiry={saved.expiryDate}
-          proposedExpiry={saved.proposedRenewalExpiry}
-          renewalPeriodMonths={saved.renewalPeriodMonths}
-          // A chain to append to, or no amendment option at all: the
-          // record's own primary-document designation is the answer
-          // (CTR-014), and a control for an act that does not exist is
-          // not drawn (DES-035 clause 9). Read from the record's own
-          // answer rather than from the paper on screen, because that
-          // list is paged (CTR-024) and the instrument may not be on
-          // the page the reader is holding.
-          canAmend={signing.primaryDocument !== null}
-          busy={renewalStatus === "saving"}
-          onClose={() => setRenewing(false)}
-          onConfirm={async (toExpiry) => {
-            const refusal = await confirmRoll(toExpiry);
-            if (refusal === null) setRenewing(false);
-            return refusal;
-          }}
-          onRoute={(vehicle) => {
-            setRenewing(false);
-            if (vehicle === "amendment") {
-              // The act happens on the record's own paper, so the
-              // person is taken to the section that holds it and the
-              // composer opens there.
-              setAmending(true);
-              void navigate(`/contracts/${saved.number}/documents`);
-              return;
-            }
-            // One tick, on purpose. Two modal layers swapped inside a
-            // single commit leave the page inert: the outgoing dialog
-            // tears its layer down *after* the incoming one has decided
-            // whether it has to opt itself back in to pointer events, so
-            // the create dialog would mount unclickable. Letting the
-            // Renew dialog finish leaving first is the whole of the
-            // fix, and it costs a frame nobody sees.
-            setTimeout(() => setRoutingTo(vehicle), 0);
-          }}
-        />
-      )}
-      {/* CTR-007's third and fourth vehicles (M16/5). The Contracts
+        {renewing && saved.expiryDate !== null && (
+          <ConfirmRenewalDialog
+            reference={contractReference(intl, saved.number)}
+            fromExpiry={saved.expiryDate}
+            proposedExpiry={saved.proposedRenewalExpiry}
+            renewalPeriodMonths={saved.renewalPeriodMonths}
+            // A chain to append to, or no amendment option at all: the
+            // record's own primary-document designation is the answer
+            // (CTR-014), and a control for an act that does not exist is
+            // not drawn (DES-035 clause 9). Read from the record's own
+            // answer rather than from the paper on screen, because that
+            // list is paged (CTR-024) and the instrument may not be on
+            // the page the reader is holding.
+            canAmend={signing.primaryDocument !== null}
+            busy={renewalStatus === "saving"}
+            onClose={() => setRenewing(false)}
+            onConfirm={async (toExpiry) => {
+              const refusal = await confirmRoll(toExpiry);
+              if (refusal === null) setRenewing(false);
+              return refusal;
+            }}
+            onRoute={(vehicle) => {
+              setRenewing(false);
+              if (vehicle === "amendment") {
+                // The act happens on the record's own paper, so the
+                // person is taken to the section that holds it and the
+                // composer opens there.
+                setAmending(true);
+                void navigate(`/contracts/${saved.number}/documents`);
+                return;
+              }
+              // One tick, on purpose. Two modal layers swapped inside a
+              // single commit leave the page inert: the outgoing dialog
+              // tears its layer down *after* the incoming one has decided
+              // whether it has to opt itself back in to pointer events, so
+              // the create dialog would mount unclickable. Letting the
+              // Renew dialog finish leaving first is the whole of the
+              // fix, and it costs a frame nobody sees.
+              setTimeout(() => setRoutingTo(vehicle), 0);
+            }}
+          />
+        )}
+        {/* CTR-007's third and fourth vehicles (M16/5). The Contracts
           list's own create dialog, opened from the record so the seam
           knows which contract the renewal is a renewal of — and seeded
           with the two fields it draws, both still editable. Only a
           Member+ viewer reaches this: the pickers it needs are loaded
           for `canEdit` alone, and the Renew control that raises it is
           drawn behind the same test. */}
-      {routingTo !== null && canEdit && (
-        <CreateContractDialog
-          // The record's own pickers, unchanged: the create dialog
-          // grows the picked type's required fields, and a `user` or
-          // `entity` field among them offers exactly what it offers on
-          // the record itself.
-          contractTypes={typeOptions}
-          people={peopleReferences}
-          entities={entityReferences}
-          renewalOf={{
-            number: saved.number,
-            vehicle: routingTo,
-            title: saved.title,
-            contractTypeId: saved.contractTypeId,
-          }}
-          onOpenChange={(open) => {
-            if (!open) setRoutingTo(null);
-          }}
-          onCreated={(row) => {
-            setRoutingTo(null);
-            // Straight to the record that was just born: it is where
-            // the person finishes the renewal, and the dates the
-            // prefill brought across are the first thing they will
-            // want to move.
-            void navigate(`/contracts/${row.number}`);
-          }}
-        />
-      )}
-    </AppShell>
+        {routingTo !== null && canEdit && (
+          <CreateContractDialog
+            // The record's own pickers, unchanged: the create dialog
+            // grows the picked type's required fields, and a `user` or
+            // `entity` field among them offers exactly what it offers on
+            // the record itself.
+            contractTypes={typeOptions}
+            people={peopleReferences}
+            entities={entityReferences}
+            renewalOf={{
+              number: saved.number,
+              vehicle: routingTo,
+              title: saved.title,
+              contractTypeId: saved.contractTypeId,
+            }}
+            onOpenChange={(open) => {
+              if (!open) setRoutingTo(null);
+            }}
+            onCreated={(row) => {
+              setRoutingTo(null);
+              // Straight to the record that was just born: it is where
+              // the person finishes the renewal, and the dates the
+              // prefill brought across are the first thing they will
+              // want to move.
+              void navigate(`/contracts/${row.number}`);
+            }}
+          />
+        )}
+      </AppShell>
+    </RecordContext.Provider>
   );
 }
 

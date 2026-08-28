@@ -18,7 +18,7 @@ import { X } from "lucide-react";
 import type { paths } from "@openlaw/api-client";
 import { api } from "../lib/api";
 import { problemDetail } from "../lib/messages";
-import { currentUser, needsSetup } from "../lib/session";
+import { requireUser } from "../lib/session";
 import { cn } from "../lib/utils";
 import { PageTitle } from "../components/page-title";
 import { SettingsCard } from "../components/settings-card";
@@ -29,8 +29,7 @@ import { Label } from "../components/ui/label";
 import { Switch } from "../components/ui/switch";
 
 export async function settingsAuthenticationLoader() {
-  const user = await currentUser();
-  if (!user) return redirect((await needsSetup()) ? "/auth/setup" : "/auth/login");
+  const user = await requireUser();
   if (user.role !== "administrator") return redirect("/settings/profile");
   const [methods, domains, providers] = await Promise.all([
     api.GET("/api/v1/auth/methods"),

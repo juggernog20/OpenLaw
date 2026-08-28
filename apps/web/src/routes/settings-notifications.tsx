@@ -13,10 +13,10 @@
  * the same table over a different row.
  */
 
-import { redirect, useLoaderData } from "react-router";
+import { useLoaderData } from "react-router";
 import { FormattedMessage, useIntl } from "react-intl";
 import { api } from "../lib/api";
-import { currentUser, needsSetup } from "../lib/session";
+import { requireUser } from "../lib/session";
 import { PageTitle } from "../components/page-title";
 import {
   NotificationSwitchGrid,
@@ -27,8 +27,7 @@ import { SettingsCard } from "../components/settings-card";
 import { StatusNote } from "../components/status-note";
 
 export async function settingsNotificationsLoader() {
-  const user = await currentUser();
-  if (!user) return redirect((await needsSetup()) ? "/auth/setup" : "/auth/login");
+  await requireUser();
   const { data } = await api.GET("/api/v1/me/notification-preferences");
   // A failed read must fail the pane. Drawing the catalog's defaults off
   // a network error would show somebody a grid that is not theirs.

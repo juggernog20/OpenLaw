@@ -45,7 +45,7 @@ import { narrateActivity } from "../lib/activity";
 import { dayBounds, formatLongDateTime, formatRelativeOrShort } from "../lib/format";
 import { CONTROL_CLASS } from "../lib/form-controls";
 import { registerSearchTarget } from "../lib/keyboard";
-import { currentUser, needsSetup } from "../lib/session";
+import { requireUser } from "../lib/session";
 import { cn } from "../lib/utils";
 import { PageTitle } from "../components/page-title";
 import { SettingsCard } from "../components/settings-card";
@@ -87,8 +87,7 @@ const SEARCH_DEBOUNCE_MS = 300;
 const LOCK_SIZE = 12;
 
 export async function settingsAuditLogLoader() {
-  const user = await currentUser();
-  if (!user) return redirect((await needsSetup()) ? "/auth/setup" : "/auth/login");
+  const user = await requireUser();
   if (user.role !== "administrator") return redirect("/settings/profile");
   // The two vocabularies the filters offer. Actions come from the table
   // rather than from the code: the log outlives the code that wrote it,

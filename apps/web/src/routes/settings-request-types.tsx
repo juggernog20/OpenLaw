@@ -29,7 +29,7 @@ import { redirect, useLoaderData } from "react-router";
 import { defineMessages, FormattedMessage } from "react-intl";
 import { api } from "../lib/api";
 import { problemDetail } from "../lib/messages";
-import { currentUser, needsSetup } from "../lib/session";
+import { requireUser } from "../lib/session";
 import { IntakeSettingsTabs } from "../components/intake-settings-tabs";
 import {
   TaxonomyTypesPane,
@@ -52,8 +52,7 @@ export function settingsIntakeIndexLoader() {
 }
 
 export async function settingsRequestTypesLoader() {
-  const user = await currentUser();
-  if (!user) return redirect((await needsSetup()) ? "/auth/setup" : "/auth/login");
+  const user = await requireUser();
   if (user.role !== "administrator") return redirect("/settings/profile");
   const [typesRes, matterRes, contractRes] = await Promise.all([
     api.GET("/api/v1/request-types", { params: { query: { includeArchived: "true" } } }),
