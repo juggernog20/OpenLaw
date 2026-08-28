@@ -67,6 +67,10 @@ const QUERY_KEYS = [
 // link to /documents must still reload and clear a filtered page.
 let locallyReadSearch: string | null = null;
 
+// Counts loader runs. The page remounts from loader data on every run, so a
+// skipped revalidation keeps the local state and a real one replaces it.
+let loads = 0;
+
 function mirrorSearch(navigate: NavigateFunction, search: string) {
   locallyReadSearch = search;
   void navigate({ search }, { replace: true });
@@ -159,7 +163,7 @@ export async function documentsLoader({ request }: LoaderFunctionArgs) {
     layout,
     activeViewId: opensOn?.id ?? null,
     fromUrl,
-    loadedSearch: new URL(request.url).search,
+    loadKey: ++loads,
   };
 }
 
@@ -183,7 +187,7 @@ export function documentsShouldRevalidate({
 
 export function DocumentsPage() {
   const loaded = useLoaderData<typeof documentsLoader>();
-  return <DocumentsPageState key={loaded.loadedSearch} />;
+  return <DocumentsPageState key={loaded.loadKey} />;
 }
 
 function DocumentsPageState() {
