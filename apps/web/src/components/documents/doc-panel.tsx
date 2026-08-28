@@ -72,6 +72,7 @@ import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import { Download, FileText, X } from "lucide-react";
 import { FormattedMessage, useIntl } from "react-intl";
 import { formatFileSize } from "../../lib/format";
+import { ChunkBoundary } from "../chunk-boundary";
 import {
   documentDownloadHref,
   documentPreviewHref,
@@ -349,11 +350,13 @@ function EmailSurface({
         </p>
       }
     >
-      <EmailPreview
-        documentId={documentId}
-        versionId={version.id}
-        onUnreadable={() => setUnreadable(true)}
-      />
+      <ChunkBoundary resetKey={version.id}>
+        <EmailPreview
+          documentId={documentId}
+          versionId={version.id}
+          onUnreadable={() => setUnreadable(true)}
+        />
+      </ChunkBoundary>
     </Suspense>
   );
 }
@@ -374,7 +377,9 @@ function PdfSurface({
         </p>
       }
     >
-      <PdfPreview src={src} filename={filename} allowFind initialFind={initialFind} />
+      <ChunkBoundary resetKey={src}>
+        <PdfPreview src={src} filename={filename} allowFind initialFind={initialFind} />
+      </ChunkBoundary>
     </Suspense>
   );
 }

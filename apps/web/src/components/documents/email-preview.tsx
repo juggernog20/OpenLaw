@@ -35,6 +35,7 @@ import { lazy, Suspense, useEffect, useState } from "react";
 import { ArrowLeft, Download, Paperclip } from "lucide-react";
 import { FormattedMessage, useIntl } from "react-intl";
 import { formatFileSize, formatLongDateTime } from "../../lib/format";
+import { ChunkBoundary } from "../chunk-boundary";
 import {
   emailAttachmentDownloadHref,
   emailAttachmentPreviewHref,
@@ -462,7 +463,9 @@ function OpenAttachment({
             </p>
           }
         >
-          <PdfPreview src={src} filename={attachment.filename} />
+          <ChunkBoundary resetKey={src}>
+            <PdfPreview src={src} filename={attachment.filename} />
+          </ChunkBoundary>
         </Suspense>
       )}
     </div>
