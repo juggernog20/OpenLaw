@@ -56,6 +56,7 @@ describe("app shell chrome", () => {
       "Inbox",
       "Matters",
       "Contracts",
+      "Documents",
       "Entities",
     ]);
     expect(links[0]).toHaveAttribute("aria-current", "page");
@@ -77,7 +78,12 @@ describe("app shell chrome", () => {
 
     const nav = await screen.findByRole("navigation");
     const links = within(nav).getAllByRole("link");
-    expect(links.map((link) => link.textContent)).toEqual(["Home", "Matters", "Contracts"]);
+    expect(links.map((link) => link.textContent)).toEqual([
+      "Home",
+      "Matters",
+      "Contracts",
+      "Documents",
+    ]);
   });
 
   it("never draws the shell for a Business User at all (INT-001)", async () => {

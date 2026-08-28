@@ -16,21 +16,20 @@ import {
   entities,
   entityTypes,
   eq,
-  isNotNull,
   isNull,
   matters,
   matterStatuses,
   matterTypes,
   requests,
   requestTypes,
-  or,
   sql,
   users,
   type Db,
   type SQL,
 } from "@openlaw/db";
 import { requireAuth, type AuthenticatedUser } from "../../auth/guards.js";
-import { contractTeamScope, documentAudienceScope } from "../../lib/contract-access.js";
+import { contractTeamScope } from "../../lib/contract-access.js";
+import { documentRepositoryScope } from "../../lib/document-access.js";
 import { matterTeamScope } from "../../lib/matter-access.js";
 import { problemResponse } from "../../lib/problem.js";
 
@@ -246,18 +245,7 @@ function searchCtes(db: Db, user: AuthenticatedUser, query: string): SQL {
       left join ${documentVersionText} on ${documentVersionText.versionId} = ${documentVersions.id}
       left join ${contracts} on ${contracts.id} = ${documents.contractId}
       left join ${matters} on ${matters.id} = ${documents.matterId}
-      where ${and(
-        isNull(documents.archivedAt),
-        documentAudienceScope(db, user),
-        or(
-          and(
-            isNotNull(documents.contractId),
-            isNull(contracts.archivedAt),
-            contractTeamScope(db, user),
-          ),
-          and(isNotNull(documents.matterId), isNull(matters.archivedAt), matterTeamScope(db, user)),
-        ),
-      )}
+      where ${and(isNull(documents.archivedAt), documentRepositoryScope(db, user))}
     ),
     document_version_hits as (
       select

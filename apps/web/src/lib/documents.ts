@@ -18,6 +18,7 @@
  */
 
 import type { paths } from "@openlaw/api-client";
+import type { IntlShape } from "react-intl";
 import { api } from "./api";
 // The separator a folder path is written with on the wire, taken from
 // the module that reads a dropped tree rather than written again here:
@@ -34,6 +35,18 @@ type ListResponse =
 
 /** One document on a record, with its whole version chain. */
 export type ContractDocument = ListResponse["documents"][number];
+
+/** One row in M26's flat repository. */
+type RepositoryResponse =
+  paths["/api/v1/documents"]["get"]["responses"]["200"]["content"]["application/json"];
+export type RepositoryDocument = RepositoryResponse["documents"][number];
+
+/** The M25 landing address reused by repository rows. */
+export function documentLandingPath(document: RepositoryDocument): string {
+  const owner = document.owner;
+  const root = owner.kind === "contract" ? "/contracts" : "/matters";
+  return `${root}/${String(owner.number)}/documents?doc=${encodeURIComponent(document.id)}&version=${encodeURIComponent(document.currentVersion.id)}`;
+}
 
 /** The record whose paper the shared Documents section is drawing. */
 export interface DocumentRecord {
@@ -56,6 +69,32 @@ export type DocumentVersion = ContractDocument["versions"][number];
 
 /** What a version is in the negotiation (CTR-014). */
 export type DocumentVersionKind = DocumentVersion["kind"];
+
+/** DES-066's kind families, shared by record paper and the repository. */
+export const DOCUMENT_KIND_PILL: Record<DocumentVersionKind, string> = {
+  draft_ours: "bg-status-info-bg text-status-info-fg",
+  redline_ours: "bg-status-info-bg text-status-info-fg",
+  draft_theirs: "bg-status-warning-bg text-status-warning-fg",
+  redline_theirs: "bg-status-warning-bg text-status-warning-fg",
+  executed: "bg-status-success-bg text-status-success-fg",
+  amendment: "bg-status-neutral-bg text-status-neutral-fg",
+  generated_redline: "bg-status-neutral-bg text-status-neutral-fg",
+};
+
+/** One Version kind, in the negotiation's own words. */
+export function documentKindLabel(intl: IntlShape, kind: DocumentVersionKind): string {
+  return intl.formatMessage(
+    {
+      id: "documents.kind",
+      defaultMessage:
+        "{kind, select, draft_ours {Draft · ours} draft_theirs {Draft · theirs} " +
+        "redline_theirs {Redline · theirs} redline_ours {Redline · ours} " +
+        "executed {Executed} amendment {Amendment} " +
+        "generated_redline {Generated redline} other {Unknown}}",
+    },
+    { kind },
+  );
+}
 
 /**
  * Which of DOC-004's families a file belongs to, as the API routes it.
