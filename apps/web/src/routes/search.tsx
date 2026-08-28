@@ -9,10 +9,9 @@
 import { useState } from "react";
 import { Search as SearchIcon } from "lucide-react";
 import { defineMessages, FormattedMessage, useIntl } from "react-intl";
-import { Link, redirect, useLoaderData, useNavigate, type LoaderFunctionArgs } from "react-router";
-import { authClient } from "../lib/auth-client";
+import { Link, redirect, useLoaderData, type LoaderFunctionArgs } from "react-router";
 import { search, type SearchKind, type SearchOutcome, type SearchResult } from "../lib/search";
-import { currentUser, needsSetup } from "../lib/session";
+import { requireUser, useSignOut } from "../lib/session";
 import { cn } from "../lib/utils";
 import { PageTitle } from "../components/page-title";
 import {
@@ -56,8 +55,7 @@ function isSearchKind(value: string | null): value is SearchKind {
 }
 
 export async function searchLoader({ request }: LoaderFunctionArgs) {
-  const user = await currentUser();
-  if (!user) return redirect((await needsSetup()) ? "/auth/setup" : "/auth/login");
+  const user = await requireUser();
   if (user.role === "business_user") return redirect("/portal");
 
   const params = new URL(request.url).searchParams;
@@ -186,12 +184,8 @@ function SearchAnswer({
 export function SearchPage() {
   const loaded = useLoaderData<typeof searchLoader>();
   const intl = useIntl();
-  const navigate = useNavigate();
 
-  async function signOut() {
-    await authClient.signOut();
-    void navigate("/auth/login", { replace: true });
-  }
+  const signOut = useSignOut("/auth/login");
 
   const title =
     loaded.query === ""

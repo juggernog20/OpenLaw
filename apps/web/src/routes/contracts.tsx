@@ -41,12 +41,11 @@
  */
 
 import { useState } from "react";
-import { redirect, useLoaderData, useNavigate } from "react-router";
+import { redirect, useLoaderData } from "react-router";
 import { FormattedMessage, useIntl } from "react-intl";
 import { FilePen, Plus } from "lucide-react";
 import type { SortDirection } from "@openlaw/shared";
 import { api } from "../lib/api";
-import { authClient } from "../lib/auth-client";
 import {
   contractReference,
   type ContractRow,
@@ -66,7 +65,7 @@ import {
 } from "../lib/list-views";
 import { problemDetail } from "../lib/messages";
 import { canReadContracts, isMemberPlus } from "../lib/roles";
-import { currentUser, needsSetup } from "../lib/session";
+import { requireUser, useSignOut } from "../lib/session";
 import { AppShell } from "../components/shell/app-shell";
 import { PageSubBar } from "../components/shell/page-subbar";
 import {
@@ -108,8 +107,7 @@ function sameQuery(a: Layout, b: Layout): boolean {
 }
 
 export async function contractsLoader() {
-  const user = await currentUser();
-  if (!user) return redirect((await needsSetup()) ? "/auth/setup" : "/auth/login");
+  const user = await requireUser();
   // A Business User gets no surface at all, not a disabled one. The
   // API's 403 stands behind this.
   if (!canReadContracts(user.role)) return redirect("/");
@@ -160,7 +158,6 @@ export function ContractsPage() {
   const loaded = useLoaderData<typeof contractsLoader>();
   const { user, canEdit, contractTypes, users, entities } = loaded;
   const intl = useIntl();
-  const navigate = useNavigate();
   const [rows, setRows] = useState<ContractRow[]>(loaded.contracts);
   /** Where the next page starts, or null at the end of the list
    * (CTR-024). */
@@ -198,10 +195,7 @@ export function ContractsPage() {
    * showing (they are mistakes, not contracts). */
   const liveCount = rows.filter((row) => row.archivedAt === null).length;
 
-  async function signOut() {
-    await authClient.signOut();
-    void navigate("/auth/login", { replace: true });
-  }
+  const signOut = useSignOut("/auth/login");
 
   /**
    * Every layout change lands here — a width drag, a sort press, a

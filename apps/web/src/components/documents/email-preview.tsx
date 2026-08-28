@@ -35,6 +35,7 @@ import { lazy, Suspense, useEffect, useState } from "react";
 import { ArrowLeft, Download, Paperclip } from "lucide-react";
 import { FormattedMessage, useIntl } from "react-intl";
 import { formatFileSize, formatLongDateTime } from "../../lib/format";
+import { ChunkBoundary } from "../chunk-boundary";
 import {
   emailAttachmentDownloadHref,
   emailAttachmentPreviewHref,
@@ -69,11 +70,19 @@ export function EmailPreview({
   // Which attachment is open, by its position in the message. `null` is
   // the message itself.
   const [open, setOpen] = useState<number | null>(null);
+  // Which message the state above is about. The panel can move from one
+  // version to another without unmounting, so a new address resets both
+  // during render, before the read below starts.
+  const address = `${documentId}/${versionId}`;
+  const [shownAddress, setShownAddress] = useState(address);
+  if (shownAddress !== address) {
+    setShownAddress(address);
+    setLoaded({ state: "loading" });
+    setOpen(null);
+  }
 
   useEffect(() => {
     let live = true;
-    setLoaded({ state: "loading" });
-    setOpen(null);
     void readEmail(documentId, versionId).then((outcome) => {
       // The panel closed, or moved to another version, while the answer
       // was in flight.
@@ -462,7 +471,9 @@ function OpenAttachment({
             </p>
           }
         >
-          <PdfPreview src={src} filename={attachment.filename} />
+          <ChunkBoundary resetKey={src}>
+            <PdfPreview src={src} filename={attachment.filename} />
+          </ChunkBoundary>
         </Suspense>
       )}
     </div>

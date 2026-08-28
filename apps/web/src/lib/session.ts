@@ -6,7 +6,10 @@
  * instance have any user at all (first-run setup).
  */
 
+import { redirect, useNavigate } from "react-router";
+
 import { api } from "./api";
+import { authClient } from "./auth-client";
 import { configureFormatting } from "./format";
 
 export async function currentUser() {
@@ -27,4 +30,29 @@ export async function needsSetup(): Promise<boolean> {
   const { data, response } = await api.GET("/api/v1/auth/setup");
   if (!data) throw new Error(`The setup check failed with status ${response.status}.`);
   return data.needsSetup;
+}
+
+export type SessionUser = NonNullable<Awaited<ReturnType<typeof currentUser>>>;
+
+/**
+ * Loader guard. Returns the signed-in user, or throws a redirect to
+ * setup (no user exists yet) or login. react-router turns the thrown
+ * Response into the navigation, so the loader stops on this line.
+ */
+export async function requireUser(): Promise<SessionUser> {
+  const user = await currentUser();
+  if (!user) throw redirect((await needsSetup()) ? "/auth/setup" : "/auth/login");
+  return user;
+}
+
+/**
+ * Returns a sign-out callback for the shell. Ends the better-auth
+ * session, then replaces the current history entry with `to`.
+ */
+export function useSignOut(to: string): () => Promise<void> {
+  const navigate = useNavigate();
+  return async () => {
+    await authClient.signOut();
+    void navigate(to, { replace: true });
+  };
 }

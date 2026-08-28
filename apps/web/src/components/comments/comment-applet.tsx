@@ -1029,8 +1029,9 @@ function Composer({
   /** The promotion the author has been asked about, or null. */
   const [promotion, setPromotion] = useState<Promotion | null>(null);
   /** Where the caret goes after a pick, applied once the box re-renders
-   * with the inserted name. */
-  const [caret, setCaret] = useState<number | null>(null);
+   * with the inserted name. A fresh object per pick, so two picks that
+   * land the caret at the same offset both move it. */
+  const [caret, setCaret] = useState<{ at: number } | null>(null);
   const box = useRef<HTMLTextAreaElement>(null);
   const listboxId = useId();
   /** One post at a time. A ref, not state: two submits in one tick read
@@ -1040,11 +1041,10 @@ function Composer({
 
   useEffect(() => {
     if (caret === null) return;
-    setCaret(null);
     const element = box.current;
     if (!element) return;
     element.focus();
-    element.setSelectionRange(caret, caret);
+    element.setSelectionRange(caret.at, caret.at);
   }, [caret]);
 
   const matches = query
@@ -1078,7 +1078,7 @@ function Composer({
     );
     setQuery(null);
     setActiveIndex(0);
-    setCaret(before.length + inserted.length);
+    setCaret({ at: before.length + inserted.length });
   }
 
   /** Takes a mention back: out of the list, and out of every place in

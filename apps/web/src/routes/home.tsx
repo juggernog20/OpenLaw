@@ -8,11 +8,10 @@
  * header user menu.
  */
 
-import { redirect, useNavigate, useLoaderData, type LoaderFunctionArgs } from "react-router";
+import { redirect, useLoaderData, type LoaderFunctionArgs } from "react-router";
 import { FormattedMessage, useIntl } from "react-intl";
 import { api } from "../lib/api";
-import { authClient } from "../lib/auth-client";
-import { currentUser, needsSetup } from "../lib/session";
+import { requireUser, useSignOut } from "../lib/session";
 import { AppShell } from "../components/shell/app-shell";
 import { PageSubBar } from "../components/shell/page-subbar";
 import { PageTitle } from "../components/page-title";
@@ -24,10 +23,7 @@ export async function homeLoader({ request }: LoaderFunctionArgs) {
   if (new URL(request.url).searchParams.get("error") !== null) {
     return redirect("/auth/link-expired");
   }
-  const user = await currentUser();
-  if (!user) {
-    return redirect((await needsSetup()) ? "/auth/setup" : "/auth/login");
-  }
+  const user = await requireUser();
   // Role-based landing (INT-001, #376): the portal is a Business User's
   // whole surface, so the staff application's front door forwards them
   // to it. This is also where a redeemed magic link lands — the verify
@@ -51,12 +47,8 @@ export async function homeLoader({ request }: LoaderFunctionArgs) {
 export function HomePage() {
   const { user } = useLoaderData<typeof homeLoader>();
   const intl = useIntl();
-  const navigate = useNavigate();
 
-  async function signOut() {
-    await authClient.signOut();
-    void navigate("/auth/login", { replace: true });
-  }
+  const signOut = useSignOut("/auth/login");
 
   return (
     <AppShell

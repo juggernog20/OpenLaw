@@ -17,11 +17,10 @@
  */
 
 import { useState, type ReactNode } from "react";
-import { Link, redirect, useLoaderData, useNavigate, type LoaderFunctionArgs } from "react-router";
+import { Link, redirect, useLoaderData, type LoaderFunctionArgs } from "react-router";
 import { FormattedMessage, useIntl } from "react-intl";
 import { Archive, ArchiveRestore, Building2, ChevronRight } from "lucide-react";
 import { api } from "../lib/api";
-import { authClient } from "../lib/auth-client";
 import {
   ENTITY_STATUSES,
   STATUS_PILL,
@@ -33,7 +32,7 @@ import {
 import { CONTROL_CLASS, TEXTAREA_CLASS } from "../lib/form-controls";
 import { problemDetail } from "../lib/messages";
 import { isMemberPlus } from "../lib/roles";
-import { currentUser, needsSetup } from "../lib/session";
+import { requireUser, useSignOut } from "../lib/session";
 import { AppShell } from "../components/shell/app-shell";
 import { PageTitle } from "../components/page-title";
 import { StatusNote, type FieldStatus } from "../components/status-note";
@@ -42,8 +41,7 @@ import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
 
 export async function entityRecordLoader({ params }: LoaderFunctionArgs) {
-  const user = await currentUser();
-  if (!user) return redirect((await needsSetup()) ? "/auth/setup" : "/auth/login");
+  const user = await requireUser();
   // ENT-004: Contributors and Business Users get nothing — not a
   // disabled surface, no surface. The API's 403 stands behind this.
   if (!isMemberPlus(user.role)) return redirect("/");
@@ -71,7 +69,6 @@ type FieldKey = TextFieldKey | "entityTypeId" | "status" | "formedOn";
 export function EntityRecordPage() {
   const { user, entity, entityTypes } = useLoaderData<typeof entityRecordLoader>();
   const intl = useIntl();
-  const navigate = useNavigate();
 
   /** The saved record — the server's truth after the last commit. */
   const [saved, setSaved] = useState<EntityRow>(entity);
@@ -174,10 +171,7 @@ export function EntityRecordPage() {
     }
   }
 
-  async function signOut() {
-    await authClient.signOut();
-    void navigate("/auth/login", { replace: true });
-  }
+  const signOut = useSignOut("/auth/login");
 
   const textField = (key: TextFieldKey, controlId: string, label: ReactNode) => (
     <div className="flex flex-col gap-1.5">

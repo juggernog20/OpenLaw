@@ -38,11 +38,10 @@
  */
 
 import { useState } from "react";
-import { Link, redirect, useLoaderData, useNavigate } from "react-router";
+import { Link, redirect, useLoaderData } from "react-router";
 import { FormattedMessage, useIntl } from "react-intl";
 import { Inbox, UserPlus } from "lucide-react";
 import { api } from "../lib/api";
-import { authClient } from "../lib/auth-client";
 import { contractPath, contractReference, SEVERITY_PILL, severityLabel } from "../lib/contracts";
 import { matterPath, matterReference } from "../lib/matters";
 import { formatRelativeOrShort } from "../lib/format";
@@ -54,7 +53,7 @@ import {
   type InboxRow,
 } from "../lib/requests";
 import { isMemberPlus } from "../lib/roles";
-import { currentUser, needsSetup } from "../lib/session";
+import { requireUser, useSignOut } from "../lib/session";
 import { AppShell } from "../components/shell/app-shell";
 import { PageSubBar } from "../components/shell/page-subbar";
 import { PageTitle } from "../components/page-title";
@@ -70,8 +69,7 @@ export function inboxRequestPath(number: number): string {
 }
 
 export async function inboxLoader() {
-  const user = await currentUser();
-  if (!user) return redirect((await needsSetup()) ? "/auth/setup" : "/auth/login");
+  const user = await requireUser();
   // INT-006: triage stays legal's. A Contributor and a Business User get
   // no surface at all, not a disabled one; the API's 403 stands behind
   // this.
@@ -84,7 +82,6 @@ export async function inboxLoader() {
 export function InboxPage() {
   const loaded = useLoaderData<typeof inboxLoader>();
   const intl = useIntl();
-  const navigate = useNavigate();
   const [rows, setRows] = useState<InboxRow[]>(loaded.requests);
   const [cursor, setCursor] = useState<string | null>(loaded.nextCursor);
   const [showTriaged, setShowTriaged] = useState(false);
@@ -96,10 +93,7 @@ export function InboxPage() {
    * when the toggle is drawing it. */
   const awaiting = rows.filter((row) => row.status === "new").length;
 
-  async function signOut() {
-    await authClient.signOut();
-    void navigate("/auth/login", { replace: true });
-  }
+  const signOut = useSignOut("/auth/login");
 
   /** The one query this list asks. The toggle rides on every read,
    * cursor included: a cursor is a position in one ordering, and a page

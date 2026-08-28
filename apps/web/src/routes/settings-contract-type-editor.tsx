@@ -13,13 +13,12 @@ import { redirect, useLoaderData, type LoaderFunctionArgs } from "react-router";
 import { defineMessages } from "react-intl";
 import { api } from "../lib/api";
 import { problemDetail } from "../lib/messages";
-import { currentUser, needsSetup } from "../lib/session";
+import { requireUser } from "../lib/session";
 import { ContractsSettingsTabs } from "../components/contracts-settings-tabs";
 import { TypeEditorScreen, type TypeEditorApi } from "../components/type-editor-screen";
 
 export async function settingsContractTypeEditorLoader({ params }: LoaderFunctionArgs) {
-  const user = await currentUser();
-  if (!user) return redirect((await needsSetup()) ? "/auth/setup" : "/auth/login");
+  const user = await requireUser();
   if (user.role !== "administrator") return redirect("/settings/profile");
   const id = params.typeId!;
   const [typeRes, attachedRes, catalogRes] = await Promise.all([

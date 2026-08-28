@@ -45,7 +45,7 @@ The frontend is built on:
 
 - **React** as the UI framework. Locked as a downstream consequence of selecting shadcn/ui (which is React-only). The specific React meta-framework (Next.js / Remix / Vite + React Router / TanStack Start / plain Vite) is **deferred** until the backend choice is made — if the backend is Node/TypeScript, a server-rendered React framework (Next.js / Remix) is on the table; if the backend is non-JS, the frontend is most naturally a Vite-built SPA served statically from the backend.
 - **Tailwind CSS** as the styling system — utility classes, build-time output, no runtime CSS-in-JS.
-- **shadcn/ui** as the component library — copied into `components/ui/` as owned source code, not consumed as a dependency. Updated by re-copying or by manual diff application against upstream.
+- **shadcn/ui** as the component library — copied into `components/ui/` as owned source code, not consumed as a dependency. Updated by re-copying or by manual diff application against upstream. _(2026-08-28, high-level review: the wrappers in `components/ui/` have since diverged from upstream. They keep shadcn's shape, `cva` variants, `cn`, Radix underneath, but are restyled on our tokens and trimmed to what the app uses. There is no `components.json` and no re-copy path; an upstream fix is read and applied by hand. Shell components may import Radix directly, as this record already allows.)_
 - **Radix UI primitives** as the headless interaction layer for any component requiring focus management, keyboard navigation, or screen-reader correctness. Consumed as a normal versioned npm dependency.
 
 Initial geometry overrides applied to shadcn defaults (border radius 8px → 6px; focus ring tightened) are documented in DES-004.
@@ -504,6 +504,15 @@ Recorded as working defaults without a grill (all convention, no open design con
 
 Repo scaffold order: monorepo shell → Fastify + OpenAPI → auth (brings `packages/db` and its first tables) → Compose. _Revised 2026-08-08: there is no up-front "drizzle schema from SCHEMA.md" phase — the schema grows incrementally; tables land in the same change as the feature that reads and writes them, each with its own drizzle-kit migration, with SCHEMA.md as the naming/relationship reference._ The build phasing itself (which module first — CLM per PRODUCT.md) is unchanged.
 
+### Addendum (2026-08-28, high-level review) — what the web test layer is
+
+The Testing bullet names the tools. This names the rules the web tests actually follow, which until now lived in `apps/web/src/testing/helpers.tsx` and a `vite.config.ts` comment.
+
+- **The unit of web testing is the route.** A test mounts the real route table through `createMemoryRouter` at a path and drives it with user gestures. Route tests are React Testing Library used as intended: what the user sees, not component internals. A component gets its own test when it carries its own state machine or a DES-010 keyboard contract (the date picker, the bell, the shell pieces).
+- **The API seam is a stub, not a proxy.** A global `fetch` stub answers per call and fails loudly on an unstubbed request. Stub payloads import wire constants from `@openlaw/shared` (the TECH-020 #812 rule), and a new fixture is typed with `satisfies` against the generated response type from `@openlaw/api-client` so a literal that no longer matches the schema fails `tsc`. Existing fixtures migrate when touched. MSW was considered and declined: a second matching language for the agents, for no gain over the 40-line stub.
+- **Playwright proves what only the built image can.** One demo spec per milestone, run against the Compose images and a real Postgres, serial, one worker. The demo specs are the milestone acceptance record and are not trimmed.
+- **Budgets.** 20 s per route test on CI (a shared runner is several times slower than a laptop; the bound catches hangs, not slowness). A test file that passes 3,000 lines is split along its sections; `contract-record.test.tsx` is the example of what happens without the rule.
+
 ### Addendum (2026-08-27, M25/2, [#532](https://github.com/juggernog20/OpenLaw/issues/532)) — generated search columns replace the indexing queue
 
 The Search bullet above is revised in one respect: **there is no pg-boss search-indexing job**. Each searchable table declares a stored generated `tsvector` column in Drizzle, and PostgreSQL recomputes it in the same write that changes its source columns. The extraction and backfill jobs already write `document_version_text`; that write is therefore the complete indexing path for extracted text. A title edit and a completed extraction cannot commit while leaving their vectors stale, and there is no queue state to reconcile.
@@ -569,7 +578,7 @@ TECH-003 makes the OpenAPI document a first-class artifact. Fastify needs a sche
 
 ### Decision
 
-**Zod (v4)** via `fastify-type-provider-zod`: every route declares request/response schemas in Zod; the same definitions drive validation, inference, and the OpenAPI 3.1 document (`@fastify/swagger`). Schemas shared with the SPA (form validation, shared types) **will** live in `packages/shared`. _(2026-08-21, [#390](https://github.com/juggernog20/OpenLaw/issues/390): that clause is a destination, not a description. No Zod schema lives in `packages/shared` today. What the package holds is the wire vocabulary both ends must agree on — problem-type strings, bound constants, action slugs, sort keys — and the web app validates its forms in the field controls rather than against a schema. The sentence is written in the future tense because the first shared schema arrives with web form validation, and until then a reader would otherwise go looking for schemas that are not there.)_
+**Zod (v4)** via `fastify-type-provider-zod`: every route declares request/response schemas in Zod; the same definitions drive validation, inference, and the OpenAPI 3.1 document (`@fastify/swagger`). Schemas shared with the SPA (form validation, shared types) **will** live in `packages/shared`. _(2026-08-21, [#390](https://github.com/juggernog20/OpenLaw/issues/390): that clause is a destination, not a description. No Zod schema lives in `packages/shared` today. What the package holds is the wire vocabulary both ends must agree on — problem-type strings, bound constants, action slugs, sort keys — and the web app validates its forms in the field controls rather than against a schema. The sentence is written in the future tense because the first shared schema arrives with web form validation, and until then a reader would otherwise go looking for schemas that are not there.)_ _(2026-08-28, high-level review: that forecast is withdrawn. Fifty-seven forms later, no web form validates against a schema, and M31 reads the same `AttachedCustomField` rows the API already validates in `apps/api/src/lib/custom-fields.ts`. The API is the only validator. A shared schema lands only when a second consumer of one exists.)_
 
 ### Alternatives considered
 
@@ -972,6 +981,56 @@ It needed five. This decision records the real count and says when the count sto
 - The five hooks are covered by the behaviour they produce at each mount, not by tests of the hooks themselves — no test asserts that a factory was configured a certain way.
 - `applyPatch` has the most reach of the five: it runs under the row lock and can refuse. A second mount wanting it is fine; a third that needs it to do something other than validate-and-narrate is the split signal above.
 
+## TECH-024: Web data and state model — loaders read, screens own what they show, live surfaces patch feeds
+
+- **Status:** Accepted
+- **Date:** 2026-08-28
+
+### Context
+
+TECH-003 chose Vite + React Router and a generated typed client, and stopped there. Twenty-five milestones later the web app has a data model that every screen follows and no record states. The 2026-08-28 high-level review found it in the code: 42 route files read through loaders, 685 `useState` hooks hold what the screens show, two files call `useRevalidator`, none use `useFetcher` or route actions, and `KeyedByParam` in `router.tsx` exists because a loader-seeded state went stale when the URL changed (#372). The review's prosecutors argued for a query cache or react-router actions. The skeptics won, narrowly, on one point: the recorded scope of M30's live surfaces (comments, activity, approvals, envelope events; the bell and Inbox counts) is append-only feeds and counters, which the current model handles in one line each. What was missing was the record, so that the next screen follows the rule on purpose.
+
+This record describes the model as built and names the places where a different rule now applies. It does not adopt a cache.
+
+### Decision
+
+**1. Loaders are the only place server data enters the tree.** A route's loader does the reads its screen needs, in parallel, and throws into `errorElement` on failure. A component does not fetch on mount what a loader could have read.
+
+**2. A screen owns what it shows.** After a write, the screen updates its own copy from the mutation's response. `useState` seeded from loader data is the rule, not a smell. This is the model that keeps every read and write for a screen in one file, which is what makes the file legible to the agents that write most of it.
+
+**3. Staleness is fixed by navigation, by `revalidate()`, or by a keyed remount.** Nothing is cached across routes. A screen that must re-read after its own write calls `useRevalidator`. A parameterised route wraps its screen in `KeyedByParam` so a new record is a fresh screen.
+
+**4. Live surfaces (TECH-009, M30) patch append-only feeds and counters in place.** An event for a comment thread, an activity feed, an approval roster, or an envelope row appends to or replaces the row in the screen's own state. An event that would require re-reading a whole record is out of M30's scope; if one appears, it is `revalidate()` plus a sync effect, and the first such surface is where this record gets its next addendum.
+
+**5. Session is read per navigation, in the loader, through `requireUser()`.** Every guarded loader calls it; it returns the user or throws a redirect to setup or login. Role gates stay in the loader beside the data they guard (SET-002's enforcement site). There is no root session loader and no `shouldRevalidate`: a revoked user or a changed role takes effect on the next click, which is the freshness a tool with no push channel owes its Administrators.
+
+**6. Refusals are read through one helper.** `problemDetail()` and `problemType()` in `lib/messages.ts` today; one `problem.ts` helper that also distinguishes network failure before M31 (#550). Most refusals are printed; the few a client branches on carry a TECH-020 type.
+
+**7. Record pages share viewer facts through a context, not props.** A record page provides `RecordContext` (viewer id, role, whether the record is frozen, the record header) and its section cards read it. Sections take domain props only.
+
+**8. Component budget.** A `.tsx` file over 800 lines, or a component with more than a dozen `useState` hooks, is split at its next substantive change. A DES-032 section lives in its own file. The two record pages that predate this rule are the first targets, one section per PR, not a sweep.
+
+**9. One bundle, no code splitting.** The staff app and the portal ship as one Vite bundle (about 310 KB gzipped, served `immutable` for a year). The portal shares most of its heavy dependencies with the staff app, so a split would save one second on a rare first load and add a stale-chunk failure mode on every boundary. Revisit at M33, or the first time a Business User on cellular is observed waiting. The three on-demand previews stay lazy and sit behind a boundary that asks for a reload when their chunk is gone after an upgrade.
+
+### Rationale
+
+- The simplest model an agent can read is one where a screen's reads and writes are in one file. A cache moves the write path into an invalidation vocabulary that is non-local and silent when wrong.
+- Adopting a cache now would leave two data models coexisting for many milestones. That is worse than either model alone.
+- M30's recorded scope fits rule 4. The record is cheap; the migration was not.
+
+### Alternatives considered
+
+- **TanStack Query with loaders as prefetch.** Rejected for now: a second concept (query keys) in a codebase whose stated virtue is that a self-hoster can reason about it, and a half-migrated tree for years. Revisit if a live surface needs cross-route invalidation.
+- **react-router actions and `useFetcher` for every mutation.** Rejected: the record page has dozens of typed JSON mutations; `useFetcher` wants forms, and actions are one per route.
+- **A root layout route with one session loader.** Rejected: the four top-level trees (`/`, `/welcome`, `/portal`, `/auth`) have different session needs, and `shouldRevalidate` would make the session stale until reload.
+
+### Consequences
+
+- `requireUser()` and `useSignOut()` in `lib/session.ts` replace the 34 and 16 copies of those idioms.
+- `RecordContext` lands on the contract and matter records.
+- DES-032's "one loader reads the whole record" clause stands and is the data-loading half of rule 7; the strip's look stays in DES-032.
+- Issues: #550 (refusal helper), #552 (`useFieldCommit`), #551 (web "third mount" doctrine, at M27), #554 (hook warnings).
+
 ## Index of decisions
 
 | #        | Decision                                                                      | Status                 |
@@ -999,3 +1058,4 @@ It needed five. This decision records the real count and says when the count sto
 | TECH-021 | Secrets at rest — plaintext for v1, with one owner and one trigger            | Superseded by TECH-022 |
 | TECH-022 | Credentials at rest — sealed columns, one required key, outside the database  | Accepted               |
 | TECH-023 | Shared machinery grows named per-mount hooks — a third mount is configuration | Accepted               |
+| TECH-024 | Web data and state model — loaders read, screens own what they show           | Accepted               |

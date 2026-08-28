@@ -95,14 +95,12 @@ import {
   redirect,
   Link,
   useLoaderData,
-  useNavigate,
   useRevalidator,
   type LoaderFunctionArgs,
 } from "react-router";
 import { FormattedMessage, useIntl } from "react-intl";
 import { Ban, Check, ChevronRight, FilePen, FileText } from "lucide-react";
 import { api } from "../lib/api";
-import { authClient } from "../lib/auth-client";
 import { useCommentApplet } from "../components/comments/comment-applet";
 import { ConvertDialog } from "../components/intake/convert-dialog";
 import { CustomFieldValueText } from "../components/intake/custom-field-value";
@@ -135,7 +133,7 @@ import {
   type StaffRequestFieldRefs,
 } from "../lib/requests";
 import { isMemberPlus } from "../lib/roles";
-import { currentUser, needsSetup } from "../lib/session";
+import { requireUser, useSignOut } from "../lib/session";
 import { AppShell } from "../components/shell/app-shell";
 import { Button } from "../components/ui/button";
 import { RecordApplets } from "../components/shell/record-applets";
@@ -143,8 +141,7 @@ import { Avatar } from "../components/avatar";
 import { PageTitle } from "../components/page-title";
 
 export async function inboxRequestLoader({ params }: LoaderFunctionArgs) {
-  const user = await currentUser();
-  if (!user) return redirect((await needsSetup()) ? "/auth/setup" : "/auth/login");
+  const user = await requireUser();
   // INT-006: triage stays legal's. A Contributor and a Business User get
   // no surface at all, not a disabled one; the API's 403 stands behind
   // this.
@@ -194,7 +191,6 @@ export function InboxRequestPage() {
     entities,
   } = useLoaderData<typeof inboxRequestLoader>();
   const intl = useIntl();
-  const navigate = useNavigate();
   const revalidator = useRevalidator();
   const reference = requestReference(intl, request.number);
   /** Which disposition dialog is open, if any. Opening one is not an
@@ -219,10 +215,7 @@ export function InboxRequestPage() {
     viewerId: user.id,
   });
 
-  async function signOut() {
-    await authClient.signOut();
-    void navigate("/auth/login", { replace: true });
-  }
+  const signOut = useSignOut("/auth/login");
 
   /**
    * Runs one disposition, and repaints the page from the record.

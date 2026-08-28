@@ -42,17 +42,15 @@ import {
   Users,
   type LucideIcon,
 } from "lucide-react";
-import { NavLink, Outlet, redirect, useLoaderData, useLocation, useNavigate } from "react-router";
+import { NavLink, Outlet, redirect, useLoaderData, useLocation } from "react-router";
 import { FormattedMessage, useIntl, defineMessage, type MessageDescriptor } from "react-intl";
-import { authClient } from "../lib/auth-client";
-import { currentUser, needsSetup } from "../lib/session";
+import { requireUser, useSignOut } from "../lib/session";
 import { cn } from "../lib/utils";
 import { AppShell } from "../components/shell/app-shell";
 import { PageSubBar } from "../components/shell/page-subbar";
 
 export async function settingsLoader() {
-  const user = await currentUser();
-  if (!user) return redirect((await needsSetup()) ? "/auth/setup" : "/auth/login");
+  const user = await requireUser();
   // INT-001 (M20/2 addendum): a signed-in Business User is always at
   // the portal, whatever door they came through. Settings is a staff
   // destination, so it refuses the way the rest do — by bouncing to
@@ -357,12 +355,8 @@ function SettingsRail({ isAdministrator }: { isAdministrator: boolean }) {
 
 export function SettingsLayout() {
   const { user } = useLoaderData<typeof settingsLoader>();
-  const navigate = useNavigate();
 
-  async function signOut() {
-    await authClient.signOut();
-    void navigate("/auth/login", { replace: true });
-  }
+  const signOut = useSignOut("/auth/login");
 
   return (
     <AppShell

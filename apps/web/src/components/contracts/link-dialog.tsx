@@ -223,7 +223,10 @@ function CandidatePicker({
   const [candidates, setCandidates] = useState<LinkCandidate[]>([]);
   const [open, setOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
-  const [searching, setSearching] = useState(false);
+  /** The term `candidates` is the answer to, or null before any answer.
+   * "Searching" is derived from it: the list is open and its term has
+   * no answer yet. */
+  const [answeredFor, setAnsweredFor] = useState<string | null>(null);
   const listboxId = useId();
   const inputRef = useRef<HTMLInputElement>(null);
   const clearRef = useRef<HTMLButtonElement>(null);
@@ -240,18 +243,14 @@ function CandidatePicker({
   // and an empty box has nothing to ask about — the endpoint matches on
   // a term rather than listing every contract the viewer can reach.
   useEffect(() => {
-    if (!open || trimmed.length === 0) {
-      setSearching(false);
-      return;
-    }
+    if (!open || trimmed.length === 0) return;
     let live = true;
-    setSearching(true);
     const timer = setTimeout(() => {
       void searchLinkCandidates(contractNumber, trimmed).then((rows) => {
         // A slower earlier answer must never overwrite a later one.
         if (!live) return;
         setCandidates(rows);
-        setSearching(false);
+        setAnsweredFor(trimmed);
       });
     }, SEARCH_DEBOUNCE_MS);
     return () => {
@@ -271,6 +270,7 @@ function CandidatePicker({
    * Before that it would be an empty box saying nothing was found,
    * about a search nobody ran. */
   const listOpen = open && trimmed.length > 0;
+  const searching = listOpen && answeredFor !== trimmed;
 
   useEffect(() => {
     onListOpenChange(listOpen);
@@ -297,6 +297,7 @@ function CandidatePicker({
     setQuery("");
     setActiveIndex(0);
     setCandidates([]);
+    setAnsweredFor(null);
   }
 
   if (selected) {

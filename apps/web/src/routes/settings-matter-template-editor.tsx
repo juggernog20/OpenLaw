@@ -18,7 +18,7 @@ import {
   type CustomFieldValues,
 } from "../lib/custom-fields";
 import { problemDetail } from "../lib/messages";
-import { currentUser, needsSetup } from "../lib/session";
+import { requireUser } from "../lib/session";
 import { MattersSettingsTabs } from "../components/matters-settings-tabs";
 import { CustomFieldControl, type FieldReference } from "../components/custom-field-control";
 import {
@@ -36,8 +36,7 @@ import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
 
 export async function settingsMatterTemplateEditorLoader({ params }: LoaderFunctionArgs) {
-  const user = await currentUser();
-  if (!user) return redirect((await needsSetup()) ? "/auth/setup" : "/auth/login");
+  const user = await requireUser();
   if (user.role !== "administrator") return redirect("/settings/profile");
   const [templateResult, types] = await Promise.all([
     api.GET("/api/v1/matter-templates/{id}", {

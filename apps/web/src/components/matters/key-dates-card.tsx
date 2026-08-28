@@ -2,6 +2,7 @@
 
 /** The Matter record's named Key dates (MTR-004). */
 import { useState } from "react";
+import { useRecord } from "../record-context";
 import { MoreHorizontal, Pencil, Plus, Trash2 } from "lucide-react";
 import { FormattedMessage, useIntl } from "react-intl";
 import { MAX_KEY_DATE_LABEL_LENGTH, MAX_KEY_DATE_NOTE_LENGTH } from "@openlaw/shared";
@@ -29,16 +30,14 @@ import { Label } from "../ui/label";
 type Editing = MatterDeadline | "new" | null;
 
 export function MatterKeyDatesCard({
-  matterNumber,
   deadlines,
-  frozen,
   onDeadlines,
 }: Readonly<{
-  matterNumber: number;
   deadlines: readonly MatterDeadline[];
-  frozen: boolean;
   onDeadlines: (deadlines: MatterDeadline[]) => void;
 }>) {
+  const { record, frozen } = useRecord();
+  const matterNumber = record.number;
   const intl = useIntl();
   const [editing, setEditing] = useState<Editing>(null);
   const [removing, setRemoving] = useState<MatterDeadline | null>(null);

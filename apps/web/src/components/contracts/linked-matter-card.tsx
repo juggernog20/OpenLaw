@@ -2,6 +2,7 @@
 
 /** The Contract record's MTR-007 linked-Matter context. */
 import { useState } from "react";
+import { useRecord } from "../record-context";
 import { Link } from "react-router";
 import { FormattedMessage, useIntl } from "react-intl";
 import { matterReference, MATTER_STATUS_PILL } from "../../lib/matters";
@@ -10,18 +11,15 @@ import { Button } from "../ui/button";
 import { ContractMatterLinkDialog } from "./contract-matter-link-dialog";
 
 export function LinkedMatterCard({
-  contractNumber,
-  contractIsConfidential,
   matter,
-  editable,
   onMatter,
 }: Readonly<{
-  contractNumber: number;
-  contractIsConfidential: boolean;
   matter: LinkedMatter;
-  editable: boolean;
   onMatter: (matter: LinkedMatter) => void;
 }>) {
+  const { record, confidential: contractIsConfidential, frozen } = useRecord();
+  const contractNumber = record.number;
+  const editable = !frozen;
   const intl = useIntl();
   const [linking, setLinking] = useState(false);
   const [busy, setBusy] = useState(false);

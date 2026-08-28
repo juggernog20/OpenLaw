@@ -102,6 +102,7 @@
  */
 
 import { useRef, useState } from "react";
+import { useRecord } from "../record-context";
 import { FormattedMessage, useIntl, defineMessage, type IntlShape } from "react-intl";
 import {
   Check,
@@ -144,7 +145,6 @@ import {
 } from "../../lib/envelopes";
 import type { ConfirmedRenewal } from "../../lib/renewals";
 import type { ApproverGroupOption, ContractTeamMember, UserOption } from "../../lib/contracts";
-import type { Role } from "../../lib/roles";
 import { documentDownloadHref } from "../../lib/documents";
 import { formatShortDate } from "../../lib/format";
 import { CONTROL_CLASS, TEXTAREA_CLASS } from "../../lib/form-controls";
@@ -198,7 +198,6 @@ interface Candidate {
 }
 
 export function ApprovalsSigningCard({
-  contractNumber,
   approvals,
   signing,
   renewals,
@@ -207,15 +206,9 @@ export function ApprovalsSigningCard({
   users,
   approverGroups,
   team,
-  viewerId,
-  viewerRole,
-  ownerId,
-  isConfidential,
-  frozen,
   onApprovals,
   onSigning,
 }: Readonly<{
-  contractNumber: number;
   approvals: readonly ContractApproval[];
   /** The record's signing state (CTR-013): its envelopes, whether this
    * install has a connector at all, and the primary document a send
@@ -244,15 +237,15 @@ export function ApprovalsSigningCard({
   /** The contract's working group (CTR-004) — half of a confidential
    * record's audience, and the Owner is the other half. */
   team: readonly ContractTeamMember[];
-  viewerId: string;
-  viewerRole: Role;
-  ownerId: string | null;
-  isConfidential: boolean;
-  /** An archived record, or a read-only viewer: no control is drawn. */
-  frozen: boolean;
   onApprovals: (approvals: ContractApproval[]) => void;
   onSigning: (signing: SigningState) => void;
 }>) {
+  // Who is looking, the record's Owner, and whether any control is
+  // drawn at all come from the record page (TECH-024 rule 7).
+  const { record, viewer, ownerId, confidential: isConfidential, frozen } = useRecord();
+  const contractNumber = record.number;
+  const viewerId = viewer.id;
+  const viewerRole = viewer.role;
   const intl = useIntl();
   const [status, setStatus] = useState<FieldStatus>("idle");
   const [detail, setDetail] = useState<string | null>(null);

@@ -66,11 +66,10 @@
  *    Description is a paragraph, not a strip.
  */
 
-import { Link, redirect, useLoaderData, useNavigate, type LoaderFunctionArgs } from "react-router";
+import { Link, redirect, useLoaderData, type LoaderFunctionArgs } from "react-router";
 import { defineMessage, FormattedMessage, useIntl, type IntlShape } from "react-intl";
 import { ChevronLeft, CircleCheck, CircleX, FileText, Info, PackageCheck } from "lucide-react";
 import { api } from "../lib/api";
-import { authClient } from "../lib/auth-client";
 import { severityLabel } from "../lib/contracts";
 import { isAnswered, type CustomFieldValue } from "../lib/custom-fields";
 import { formatFullDate, formatShortDate } from "../lib/format";
@@ -84,7 +83,7 @@ import {
   type MyRequestFieldRefs,
   type RequestStatus,
 } from "../lib/requests";
-import { currentUser } from "../lib/session";
+import { currentUser, useSignOut } from "../lib/session";
 import { PageTitle } from "../components/page-title";
 import { PortalShell } from "../components/portal/portal-shell";
 import { RequestThread } from "../components/portal/request-thread";
@@ -124,13 +123,9 @@ export function PortalRequestPage() {
   const { user, request, fields, customFieldRefs, attachments, thread } =
     useLoaderData<typeof portalRequestLoader>();
   const intl = useIntl();
-  const navigate = useNavigate();
   const reference = requestReference(intl, request.number);
 
-  async function signOut() {
-    await authClient.signOut();
-    void navigate("/portal/enter", { replace: true });
-  }
+  const signOut = useSignOut("/portal/enter");
 
   return (
     <PortalShell user={user} onSignOut={() => void signOut()}>

@@ -148,24 +148,35 @@ export function NotificationBell({ surface }: Readonly<{ surface: BellSurface }>
    * re-rendered under it (the mark-read write does that). */
   const landed = useRef<number | null>(null);
 
-  const readCount = useCallback(async () => {
+  /** Asks for the count. A failed count answers undefined and leaves
+   * the badge where it was: it is a number about somewhere else, and
+   * the last one that answered is a better guess than zero. */
+  const fetchCount = useCallback(async () => {
     const { data } = await (
       surface === "portal"
         ? api.GET("/api/v1/portal/notifications/unread-count")
         : api.GET("/api/v1/notifications/unread-count")
     ).catch(() => ({ data: undefined }));
-    // A failed count leaves the badge where it was. It is a number about
-    // somewhere else, and the last one that answered is a better guess
-    // than zero.
-    if (data) setUnread(data.unread);
+    return data?.unread;
   }, [surface]);
+
+  const readCount = useCallback(async () => {
+    const count = await fetchCount();
+    if (count !== undefined) setUnread(count);
+  }, [fetchCount]);
 
   // Mount, then every navigation. `pathname` rather than the whole
   // location, so a query-string edit on the same page is not a reason to
-  // ask again.
+  // ask again. The badge is written only once the answer is back.
   useEffect(() => {
-    void readCount();
-  }, [readCount, location.pathname]);
+    let live = true;
+    void fetchCount().then((count) => {
+      if (live && count !== undefined) setUnread(count);
+    });
+    return () => {
+      live = false;
+    };
+  }, [fetchCount, location.pathname]);
 
   // And a slow poll under both, for the tab left open on one page.
   useEffect(() => {
@@ -241,10 +252,15 @@ export function NotificationBell({ surface }: Readonly<{ surface: BellSurface }>
 
   // Opening is what draws the centre, so opening is what reads it. Every
   // open re-reads: a panel opened twice in a long session must not show
-  // the first open's answer.
-  useEffect(() => {
-    if (open) void loadPage(null);
-  }, [open, loadPage]);
+  // the first open's answer. The read starts in the open handler, the
+  // one place the panel is opened from.
+  const onOpenChange = useCallback(
+    (next: boolean) => {
+      setOpen(next);
+      if (next) void loadPage(null);
+    },
+    [loadPage],
+  );
 
   // DES-031 clause 4: focus lands on the first row of the page just
   // brought, so a keyboard reader is told the list grew and a screen
@@ -278,7 +294,7 @@ export function NotificationBell({ surface }: Readonly<{ surface: BellSurface }>
   }, [surface]);
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
+    <Popover open={open} onOpenChange={onOpenChange}>
       <PopoverTrigger
         // The count is in the name and it is uncapped: "9+" is how the
         // badge is drawn, and a screen-reader user is owed the number.

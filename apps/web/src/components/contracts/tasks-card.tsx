@@ -26,6 +26,7 @@
  */
 
 import { useState } from "react";
+import { useRecord } from "../record-context";
 import { FormattedMessage, useIntl } from "react-intl";
 import { MoreHorizontal, Pencil, Plus, Trash2 } from "lucide-react";
 import { MAX_TASK_TITLE_LENGTH } from "@openlaw/shared";
@@ -59,24 +60,22 @@ type DraftInput = { title: string; assigneeId: string; dueDate: string };
 type Editing = { row: null } | { row: ContractTask };
 
 export function TasksCard({
-  contractNumber,
   tasks,
   doneCount,
   totalCount,
-  frozen,
   onTasksChange,
 }: Readonly<{
-  contractNumber: number;
   tasks: readonly ContractTask[];
   doneCount: number;
   totalCount: number;
-  frozen: boolean;
   onTasksChange: (outcome: {
     tasks: ContractTask[];
     doneCount: number;
     totalCount: number;
   }) => void;
 }>) {
+  const { record, frozen } = useRecord();
+  const contractNumber = record.number;
   const intl = useIntl();
   const [status, setStatus] = useState<FieldStatus>("idle");
   const [detail, setDetail] = useState<string | null>(null);

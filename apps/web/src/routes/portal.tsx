@@ -36,11 +36,10 @@
  *    of types, and the mock's six is not the count.
  */
 
-import { Link, redirect, useLoaderData, useNavigate } from "react-router";
+import { Link, redirect, useLoaderData } from "react-router";
 import { defineMessage, FormattedMessage, useIntl } from "react-intl";
 import { api } from "../lib/api";
-import { authClient } from "../lib/auth-client";
-import { currentUser } from "../lib/session";
+import { currentUser, useSignOut } from "../lib/session";
 import { PageTitle } from "../components/page-title";
 import { DeflectionPanel } from "../components/portal/deflection-panel";
 import { MyRequests, REQUEST_TYPE_PICKER_ID } from "../components/portal/my-requests";
@@ -77,12 +76,8 @@ export function PortalHomePage() {
   const { user, requestTypes, deflectionLinks, requests } =
     useLoaderData<typeof portalHomeLoader>();
   const intl = useIntl();
-  const navigate = useNavigate();
 
-  async function signOut() {
-    await authClient.signOut();
-    void navigate("/portal/enter", { replace: true });
-  }
+  const signOut = useSignOut("/portal/enter");
 
   return (
     <PortalShell user={user} onSignOut={() => void signOut()}>

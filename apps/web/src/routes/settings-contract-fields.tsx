@@ -22,7 +22,7 @@ import { FormattedMessage, useIntl, type IntlShape } from "react-intl";
 import { History, Pencil, Sparkles, TriangleAlert } from "lucide-react";
 import { api } from "../lib/api";
 import { problemDetail } from "../lib/messages";
-import { currentUser, needsSetup } from "../lib/session";
+import { requireUser } from "../lib/session";
 import { ContractsSettingsTabs } from "../components/contracts-settings-tabs";
 import { MattersSettingsTabs } from "../components/matters-settings-tabs";
 import { ListEditor } from "../components/list-editor";
@@ -34,8 +34,7 @@ import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
 
 async function settingsFieldsLoader(module: ModuleScope) {
-  const user = await currentUser();
-  if (!user) return redirect((await needsSetup()) ? "/auth/setup" : "/auth/login");
+  const user = await requireUser();
   if (user.role !== "administrator") return redirect("/settings/profile");
   const { data } = await api.GET("/api/v1/fields", {
     params: { query: { includeArchived: "true" } },

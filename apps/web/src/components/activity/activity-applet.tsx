@@ -102,6 +102,9 @@ export function useActivityApplet({
   };
 }
 
+/** One page of the feed, as the read answers it. */
+type ActivityPage = { entries: ActivityEntry[]; nextCursor: string | null };
+
 function ActivityFeed({
   entityType,
   entityId,
@@ -113,47 +116,65 @@ function ActivityFeed({
   const [entries, setEntries] = useState<ActivityEntry[] | null>(null);
   const [cursor, setCursor] = useState<string | null>(null);
   const [loadFailed, setLoadFailed] = useState(false);
-  const [busy, setBusy] = useState(false);
+  // Busy from the first render: the first page is in flight as soon as
+  // the panel is on screen.
+  const [busy, setBusy] = useState(true);
   /** Guards the pages against each other: a reopen must not have the
    * previous panel's in-flight page land on top of the new one. */
   const generation = useRef(0);
 
-  const loadPage = useCallback(
+  // A new record is a new feed. The reset happens during render, so
+  // the first page below never draws over the last record's entries.
+  const [shownRecord, setShownRecord] = useState({ entityType, entityId });
+  if (shownRecord.entityType !== entityType || shownRecord.entityId !== entityId) {
+    setShownRecord({ entityType, entityId });
+    setEntries(null);
+    setCursor(null);
+    setLoadFailed(false);
+    setBusy(true);
+  }
+
+  /** Asks for one page. Undefined when the read failed. */
+  const fetchPage = useCallback(
     async (from: string | null) => {
-      const mine = from === null ? (generation.current += 1) : generation.current;
-      setBusy(true);
-      setLoadFailed(false);
-      // A first page drops what the last read answered: a reopen that
-      // fails must not leave the previous feed on screen as current.
-      if (from === null) {
-        setEntries(null);
-        setCursor(null);
-      }
       const { data } = await api
         .GET("/api/v1/activity", {
           params: { query: { entityType, entityId, ...(from ? { cursor: from } : {}) } },
         })
         .catch(() => ({ data: undefined }));
-      if (mine !== generation.current) return;
-      setBusy(false);
-      if (!data) {
-        setLoadFailed(true);
-        return;
-      }
-      setEntries((current) =>
-        from === null ? data.entries : [...(current ?? []), ...data.entries],
-      );
-      setCursor(data.nextCursor);
+      return data;
     },
     [entityType, entityId],
   );
 
+  /** Lands a page's answer, unless a later read has begun since. */
+  const land = useCallback((from: string | null, mine: number, data: ActivityPage | undefined) => {
+    if (mine !== generation.current) return;
+    setBusy(false);
+    if (!data) {
+      setLoadFailed(true);
+      return;
+    }
+    setEntries((current) => (from === null ? data.entries : [...(current ?? []), ...data.entries]));
+    setCursor(data.nextCursor);
+  }, []);
+
+  /** The next page, from the button. */
+  function loadPage(from: string) {
+    const mine = generation.current;
+    setBusy(true);
+    setLoadFailed(false);
+    void fetchPage(from).then((data) => land(from, mine, data));
+  }
+
   // The panel mounts when the bar expands it, so this is where "opened"
   // happens. Re-reading on every open keeps a panel left open in one tab
-  // from going stale in another.
+  // from going stale in another. The state is already reset by the time
+  // this runs; only the answer is written here.
   useEffect(() => {
-    void loadPage(null);
-  }, [loadPage]);
+    const mine = (generation.current += 1);
+    void fetchPage(null).then((data) => land(null, mine, data));
+  }, [fetchPage, land]);
 
   return (
     <div className="flex h-full min-h-0 flex-col">
@@ -204,7 +225,7 @@ function ActivityFeed({
         )}
         {cursor !== null && (
           <div className="px-4 py-3">
-            <Button variant="secondary" disabled={busy} onClick={() => void loadPage(cursor)}>
+            <Button variant="secondary" disabled={busy} onClick={() => loadPage(cursor)}>
               <FormattedMessage id="activity.older" defaultMessage="Show older" />
             </Button>
           </div>

@@ -24,6 +24,7 @@
  */
 
 import { memo, useCallback, useRef, useState } from "react";
+import { useRecord } from "../record-context";
 import { Link } from "react-router";
 import { defineMessages, FormattedMessage, useIntl, type MessageDescriptor } from "react-intl";
 import { Button } from "../ui/button";
@@ -201,21 +202,18 @@ function LinkSubsection({
 }
 
 export const RelatedContractsCard = memo(function RelatedContractsCard({
-  contractNumber,
-  contractIsConfidential,
   relations,
-  editable,
   onRelationsChanged,
 }: Readonly<{
-  contractNumber: number;
-  contractIsConfidential: boolean;
   relations: ContractRelations;
-  editable: boolean;
   /** Fires with the whole surface every write answers. The record holds
    * it, because the breadcrumb draws the parent chain too (#312). Must
    * be stable across renders, or the `memo` above buys nothing. */
   onRelationsChanged: (next: ContractRelations) => void;
 }>) {
+  const { record, confidential: contractIsConfidential, frozen } = useRecord();
+  const contractNumber = record.number;
+  const editable = !frozen;
   const intl = useIntl();
   const [dialog, setDialog] = useState<"link" | "parent" | null>(null);
   const [error, setError] = useState<string | null>(null);

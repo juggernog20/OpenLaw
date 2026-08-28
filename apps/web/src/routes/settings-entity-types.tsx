@@ -15,7 +15,7 @@ import { redirect, useLoaderData } from "react-router";
 import { defineMessages } from "react-intl";
 import { api } from "../lib/api";
 import { problemDetail } from "../lib/messages";
-import { currentUser, needsSetup } from "../lib/session";
+import { requireUser } from "../lib/session";
 import { EntitiesSettingsTabs } from "../components/entities-settings-tabs";
 import { TaxonomyTypesPane, type TaxonomyPaneApi } from "../components/taxonomy-types-pane";
 
@@ -25,8 +25,7 @@ export function settingsEntitiesIndexLoader() {
 }
 
 export async function settingsEntityTypesLoader() {
-  const user = await currentUser();
-  if (!user) return redirect((await needsSetup()) ? "/auth/setup" : "/auth/login");
+  const user = await requireUser();
   if (user.role !== "administrator") return redirect("/settings/profile");
   const { data } = await api.GET("/api/v1/entity-types", {
     params: { query: { includeArchived: "true" } },

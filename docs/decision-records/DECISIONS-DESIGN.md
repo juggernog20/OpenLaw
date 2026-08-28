@@ -216,7 +216,7 @@ The implementation counterpart of this decision is recorded in `DECISIONS-TECH-S
 - The frontend framework is locked to **React** as a downstream consequence — shadcn/ui is React-only. Recorded in `DECISIONS-TECH-STACK.md` TECH-001.
 - Repository layout adds: `components/ui/` (shadcn components, owned source), `components/` (project components), `styles/themes/` (per-theme CSS-variable files: `light.css`, `warm.css`, `dark.css`).
 - `tailwind.config.js` defines a semantic color scale that reads from CSS variables; Tailwind utilities like `bg-canvas` / `text-primary` resolve through the active theme.
-- shadcn updates are pulled by re-copying components or by reading the upstream diff and applying it manually — not by `npm update`. This is the trade-off of owning the source.
+- shadcn updates are pulled by re-copying components or by reading the upstream diff and applying it manually — not by `npm update`. This is the trade-off of owning the source. _(2026-08-28: the re-copy half is no longer available; the wrappers have diverged. See the TECH-001 note of the same date.)_
 - Components must be visually verified across all three themes during build-out (per DES-001). A storybook-style preview surface or equivalent would help; deferred as a separate decision.
 - Status colors (success / warning / danger / info) defined in DES-001 implementation will live in the same theme files; semantic naming (`--status-success`, `--status-danger`) keeps shadcn's default `--destructive` compatible.
 
@@ -882,7 +882,7 @@ Wire ICU MessageFormat-based string wrapping, `Intl.*` browser-native formatting
 1. **Every user-facing string lives in a message catalog** with a stable string ID (`action.save`, `matter.empty.title`, `confidential.banner.body`) — never hard-coded in JSX. Renaming the English copy never breaks the catalog.
 2. **ICU MessageFormat** is the message syntax. Handles plurals, gender, select, and interpolation (`"{count, plural, =0 {No matters} one {1 matter} other {# matters}}"`) without per-locale code branches.
 3. **`Intl.DateTimeFormat`, `Intl.NumberFormat`, `Intl.RelativeTimeFormat` for all date / number / currency formatting.** No `date-fns` / `dayjs` / `moment` / `numeral.js` for formatting. (Date _math_ is a separate concern — a math lib is fine if needed.)
-4. **Locale stored on the user record**, defaulting to `en-US`. Server-rendered into `<html lang>` (which DES-011 already requires) so initial paint formatting is correct without a client-side flicker.
+4. **Locale stored on the user record**, defaulting to `en-US`. Server-rendered into `<html lang>` (which DES-011 already requires) so initial paint formatting is correct without a client-side flicker. _(2026-08-28, high-level review: TECH-003 chose a SPA with no SSR, so nothing server-renders `<html lang>`. `index.html` carries `lang="en"` as the pre-hydration default and the SPA sets `document.documentElement.lang` from the signed-in user's locale on boot. The flicker this item guarded against cannot occur while en-US is the only locale.)_
 5. **Build-time extraction** walks the codebase, harvests message IDs + default English text, emits `messages/en-US.json`. Future locales are sibling files (`messages/de-DE.json` etc.); the JSON is the artifact translators receive.
 6. **No locale switcher in v1 UI** — the mechanism is wired, but only one locale exists to choose. When a second locale ships, the switcher slots into account settings.
 7. **Tailwind logical properties from day one** (`ms-*`, `me-*`, `ps-*`, `pe-*` instead of `ml-*`, `mr-*`, `pl-*`, `pr-*`). RTL is kept open without being promised; physical-property utilities are flagged in PR review.
@@ -1242,6 +1242,8 @@ Explicit edit mode + atomic save: batches log entries, but mode-juggling on ever
 ### Consequences
 
 Field components need saving/saved/error micro-states (design-system addition). C.6/C.7 deleted from mocks. Bulk edits, if ever needed, are a list-surface feature, not a record-page mode.
+
+_(2026-08-28, high-level review, [#552](https://github.com/juggernog20/OpenLaw/issues/552): the micro-states shipped as `StatusNote` plus eleven hand-written copies of the state machine behind it, which have already diverged. The design-system addition this clause promised is one hook, `useFieldCommit`, with `useRowCommit` for row-keyed settings lists. A new per-field surface uses the hook; the copies migrate when touched.)_
 
 ## DES-018: Chromatic discipline — status families kept, one severity ramp for ordinal scales, uniform avatars
 

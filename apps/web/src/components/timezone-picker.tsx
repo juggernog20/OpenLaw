@@ -51,7 +51,7 @@ export function TimezonePicker({
   className?: string;
 }>) {
   const intl = useIntl();
-  const zones = useMemo(timezoneOptions, []);
+  const zones = useMemo(() => timezoneOptions(), []);
   const browserDefaultLabel = intl.formatMessage({
     id: "timezone.browserDefault",
     defaultMessage: "Use browser timezone",

@@ -47,7 +47,7 @@ import { TriangleAlert } from "lucide-react";
 import { api } from "../lib/api";
 import { problemDetail } from "../lib/messages";
 import { CONTROL_CLASS } from "../lib/form-controls";
-import { currentUser, needsSetup } from "../lib/session";
+import { requireUser } from "../lib/session";
 import { IntakeSettingsTabs } from "../components/intake-settings-tabs";
 import { StatusNote, type FieldStatus } from "../components/status-note";
 import { Label } from "../components/ui/label";
@@ -76,8 +76,7 @@ interface Target {
 }
 
 export async function settingsRequestTypeEditorLoader({ params }: LoaderFunctionArgs) {
-  const user = await currentUser();
-  if (!user) return redirect((await needsSetup()) ? "/auth/setup" : "/auth/login");
+  const user = await requireUser();
   if (user.role !== "administrator") return redirect("/settings/profile");
   const id = params.typeId!;
   const [typeRes, matterRes, contractRes, attachedRes, catalogRes] = await Promise.all([

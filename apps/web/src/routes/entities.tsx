@@ -16,11 +16,10 @@
  */
 
 import { useState } from "react";
-import { Link, redirect, useNavigate, useLoaderData } from "react-router";
+import { Link, redirect, useLoaderData } from "react-router";
 import { FormattedMessage, useIntl } from "react-intl";
 import { Building2, Landmark, Plus } from "lucide-react";
 import { api } from "../lib/api";
-import { authClient } from "../lib/auth-client";
 import {
   ENTITY_STATUSES,
   STATUS_PILL,
@@ -32,7 +31,7 @@ import {
 import { CONTROL_CLASS, TEXTAREA_CLASS } from "../lib/form-controls";
 import { problemDetail } from "../lib/messages";
 import { isMemberPlus } from "../lib/roles";
-import { currentUser, needsSetup } from "../lib/session";
+import { requireUser, useSignOut } from "../lib/session";
 import { AppShell } from "../components/shell/app-shell";
 import { PageSubBar } from "../components/shell/page-subbar";
 import { PageTitle } from "../components/page-title";
@@ -43,8 +42,7 @@ import { Label } from "../components/ui/label";
 import { Switch } from "../components/ui/switch";
 
 export async function entitiesLoader() {
-  const user = await currentUser();
-  if (!user) return redirect((await needsSetup()) ? "/auth/setup" : "/auth/login");
+  const user = await requireUser();
   // ENT-004: Contributors and Business Users get nothing — not a
   // disabled surface, no surface. The API's 403 stands behind this.
   if (!isMemberPlus(user.role)) return redirect("/");
@@ -68,7 +66,6 @@ function byLegalName(a: EntityRow, b: EntityRow): number {
 export function EntitiesPage() {
   const { user, entities, entityTypes } = useLoaderData<typeof entitiesLoader>();
   const intl = useIntl();
-  const navigate = useNavigate();
   const [rows, setRows] = useState<EntityRow[]>(entities);
   const [registerOpen, setRegisterOpen] = useState(false);
   const [showArchived, setShowArchived] = useState(false);
@@ -78,10 +75,7 @@ export function EntitiesPage() {
    * mistakes, not entities), whichever view is showing. */
   const liveCount = rows.filter((row) => row.archivedAt === null).length;
 
-  async function signOut() {
-    await authClient.signOut();
-    void navigate("/auth/login", { replace: true });
-  }
+  const signOut = useSignOut("/auth/login");
 
   /** #99's show-archived toggle re-reads the list either way — the
    * archived rows only exist server-side, and coming back should not

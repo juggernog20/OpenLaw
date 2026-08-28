@@ -2,6 +2,7 @@
 
 /** A Matter's lightweight Task checklist (MTR-005, M23/4). */
 import { useState } from "react";
+import { useRecord } from "../record-context";
 import { FormattedMessage, useIntl } from "react-intl";
 import { ArrowDown, ArrowUp, MoreHorizontal, Pencil, Plus, Trash2 } from "lucide-react";
 import { MAX_TASK_TITLE_LENGTH } from "@openlaw/shared";
@@ -38,22 +39,20 @@ export interface MatterTaskPerson {
 type Editing = { row: MatterTask | null };
 
 export function MatterTasksCard({
-  matterNumber,
   tasks,
   doneCount,
   totalCount,
   assignees,
-  frozen,
   onTasksChange,
 }: Readonly<{
-  matterNumber: number;
   tasks: readonly MatterTask[];
   doneCount: number;
   totalCount: number;
   assignees: readonly MatterTaskPerson[];
-  frozen: boolean;
   onTasksChange: (value: { tasks: MatterTask[]; doneCount: number; totalCount: number }) => void;
 }>) {
+  const { record, frozen } = useRecord();
+  const matterNumber = record.number;
   const intl = useIntl();
   const [status, setStatus] = useState<FieldStatus>("idle");
   const [detail, setDetail] = useState<string | null>(null);

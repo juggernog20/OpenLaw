@@ -76,7 +76,10 @@ export function CounterpartyPicker({
   const [open, setOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
   const [matches, setMatches] = useState<CounterpartyOption[]>([]);
-  const [searching, setSearching] = useState(false);
+  /** The term `matches` is the answer to, or null before any answer.
+   * "Searching" is derived from it: the list is open and its term has
+   * no answer yet. */
+  const [answeredFor, setAnsweredFor] = useState<string | null>(null);
   const listboxId = useId();
 
   const trimmed = query.trim();
@@ -84,12 +87,8 @@ export function CounterpartyPicker({
   // The search runs only while the list is open, and only after typing
   // pauses. A closed picker is not a reason to ask the server anything.
   useEffect(() => {
-    if (!open) {
-      setSearching(false);
-      return;
-    }
+    if (!open) return;
     let live = true;
-    setSearching(true);
     const timer = setTimeout(() => {
       void api
         .GET("/api/v1/counterparties", {
@@ -100,7 +99,7 @@ export function CounterpartyPicker({
           // A slower earlier answer must never overwrite a later one.
           if (!live) return;
           setMatches(data?.counterparties ?? []);
-          setSearching(false);
+          setAnsweredFor(trimmed);
         });
     }, SEARCH_DEBOUNCE_MS);
     return () => {
@@ -108,6 +107,8 @@ export function CounterpartyPicker({
       clearTimeout(timer);
     };
   }, [open, trimmed]);
+
+  const searching = open && answeredFor !== trimmed;
 
   /** What the list offers: everything found, less what the record
    * already names. */
@@ -147,6 +148,7 @@ export function CounterpartyPicker({
     setQuery("");
     setActiveIndex(0);
     setMatches([]);
+    setAnsweredFor(null);
   }
 
   const createLabel = intl.formatMessage(
