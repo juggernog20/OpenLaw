@@ -162,8 +162,12 @@ test.describe.serial("M25 deployer journey", () => {
       // Home has no page-level search input, so DES-010 sends `/` to
       // the global header box rather than to a list's local filter.
       await page.goto("/");
-      await page.keyboard.press("/");
       const search = page.getByRole("banner").getByRole("combobox", { name: "Search" });
+      // The `/` binding is attached in a React effect after hydration.
+      // Wait for the header box to render before pressing the key, or
+      // the keystroke can land before anything listens for it.
+      await expect(search).toBeVisible();
+      await page.keyboard.press("/");
       await expect(search).toBeFocused();
       await page.keyboard.type(SEARCH_PHRASE);
 
