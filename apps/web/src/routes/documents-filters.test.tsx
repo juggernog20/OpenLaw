@@ -187,7 +187,9 @@ describe("the Documents fixed filter strip", () => {
     expect(router.state.location.search).not.toContain("format=");
     expect(screen.queryByRole("button", { name: "Remove Format filter" })).not.toBeInTheDocument();
 
+    await user.type(screen.getByRole("combobox", { name: "Record" }), "Al");
     await user.click(screen.getByRole("button", { name: "Clear all filters" }));
+    expect(screen.getByRole("combobox", { name: "Record" })).toHaveValue("");
     await waitFor(() => {
       expect(lastQuery(api.queries).get("owner")).toBeNull();
       expect(lastQuery(api.queries).get("kind")).toBeNull();

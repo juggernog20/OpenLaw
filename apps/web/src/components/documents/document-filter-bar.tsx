@@ -453,7 +453,11 @@ export function DocumentFilterBar({
             aria-label={intl.formatMessage(MESSAGES.clearAllLabel)}
             disabled={busy}
             className="px-1 text-xs font-medium text-link hover:underline disabled:opacity-50"
-            onClick={onClear}
+            onClick={() => {
+              setRecordDraft(null);
+              setSearchOpen(false);
+              onClear();
+            }}
           >
             <FormattedMessage {...MESSAGES.clearAll} />
           </button>
