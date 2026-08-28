@@ -14771,6 +14771,22 @@ export interface operations {
   listDocuments: {
     parameters: {
       query?: {
+        owner?: "contract" | "matter";
+        record?: string;
+        folder?: string;
+        format?: "pdf" | "word" | "powerpoint" | "image" | "email" | "other";
+        kind?:
+          | "draft_ours"
+          | "draft_theirs"
+          | "redline_theirs"
+          | "redline_ours"
+          | "executed"
+          | "amendment"
+          | "generated_redline";
+        uploadedFrom?: string;
+        uploadedTo?: string;
+        sort?: "title" | "owner" | "kind" | "format" | "size" | "uploader" | "uploaded";
+        dir?: "asc" | "desc";
         cursor?: string;
         limit?: number;
       };

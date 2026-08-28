@@ -29,6 +29,7 @@ const COLUMNS: ColumnDef<RepositoryDocument>[] = [
     defaultWidth: 320,
     minWidth: 192,
     required: true,
+    sortKey: "title",
     render: (row) => (
       <span className="flex min-w-0 items-center gap-2.5">
         <FileText size={16} aria-hidden="true" className="shrink-0 text-muted" />
@@ -49,6 +50,7 @@ const COLUMNS: ColumnDef<RepositoryDocument>[] = [
       intl.formatMessage({ id: "documents.list.column.owner", defaultMessage: "Owning record" }),
     defaultWidth: 260,
     minWidth: 152,
+    sortKey: "owner",
     render: (row) => (
       <FormattedMessage
         id="documents.list.owner"
@@ -68,6 +70,7 @@ const COLUMNS: ColumnDef<RepositoryDocument>[] = [
     defaultWidth: 144,
     minWidth: 96,
     clip: true,
+    sortKey: "kind",
     render: (row, intl) => (
       <span
         className={`inline-flex w-max rounded-pill px-2 py-0.5 text-xs font-medium ${DOCUMENT_KIND_PILL[row.currentVersion.kind]}`}
@@ -83,6 +86,7 @@ const COLUMNS: ColumnDef<RepositoryDocument>[] = [
       intl.formatMessage({ id: "documents.list.column.format", defaultMessage: "Format" }),
     defaultWidth: 96,
     minWidth: 72,
+    sortKey: "format",
     render: (row) => (
       <span className="text-muted">
         {formatName(row.currentVersion.originalFilename, row.currentVersion.mimeType)}
@@ -96,6 +100,7 @@ const COLUMNS: ColumnDef<RepositoryDocument>[] = [
       intl.formatMessage({ id: "documents.list.column.size", defaultMessage: "Size" }),
     defaultWidth: 104,
     minWidth: 72,
+    sortKey: "size",
     render: (row) => formatFileSize(row.currentVersion.byteSize),
   },
   {
@@ -114,6 +119,7 @@ const COLUMNS: ColumnDef<RepositoryDocument>[] = [
       intl.formatMessage({ id: "documents.list.column.uploader", defaultMessage: "Uploader" }),
     defaultWidth: 176,
     minWidth: 112,
+    sortKey: "uploader",
     render: (row) => (
       <span
         className={`flex min-w-0 items-center gap-2 ${row.currentVersion.uploadedBy.archived ? "opacity-50" : ""}`}
@@ -134,6 +140,7 @@ const COLUMNS: ColumnDef<RepositoryDocument>[] = [
       intl.formatMessage({ id: "documents.list.column.uploaded", defaultMessage: "Uploaded" }),
     defaultWidth: 136,
     minWidth: 88,
+    sortKey: "uploaded",
     render: (row) => (
       <span className="text-muted">{formatRelativeOrShort(row.currentVersion.createdAt)}</span>
     ),

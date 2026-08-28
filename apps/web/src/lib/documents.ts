@@ -41,6 +41,77 @@ type RepositoryResponse =
   paths["/api/v1/documents"]["get"]["responses"]["200"]["content"]["application/json"];
 export type RepositoryDocument = RepositoryResponse["documents"][number];
 
+export const DOCUMENT_REPOSITORY_FORMATS = [
+  "pdf",
+  "word",
+  "powerpoint",
+  "image",
+  "email",
+  "other",
+] as const;
+export type DocumentRepositoryFormat = (typeof DOCUMENT_REPOSITORY_FORMATS)[number];
+
+export const DOCUMENT_REPOSITORY_KINDS = [
+  "draft_ours",
+  "draft_theirs",
+  "redline_theirs",
+  "redline_ours",
+  "executed",
+  "amendment",
+  "generated_redline",
+] as const;
+
+export const DOCUMENT_REPOSITORY_SORT_KEYS = [
+  "title",
+  "owner",
+  "kind",
+  "format",
+  "size",
+  "uploader",
+  "uploaded",
+] as const;
+
+export interface DocumentRepositoryFilters {
+  owner: "" | "contract" | "matter";
+  record: string;
+  folder: string;
+  format: "" | DocumentRepositoryFormat;
+  kind: "" | DocumentVersionKind;
+  uploadedFrom: string;
+  uploadedTo: string;
+}
+
+export function documentRepositoryFilters(
+  filters: Record<string, boolean | string>,
+): DocumentRepositoryFilters {
+  const owner = filters.owner;
+  const format = filters.format;
+  const kind = filters.kind;
+  return {
+    owner: owner === "contract" || owner === "matter" ? owner : "",
+    record: typeof filters.record === "string" ? filters.record : "",
+    folder: typeof filters.folder === "string" ? filters.folder : "",
+    format: DOCUMENT_REPOSITORY_FORMATS.some((candidate) => candidate === format)
+      ? (format as DocumentRepositoryFormat)
+      : "",
+    kind: DOCUMENT_REPOSITORY_KINDS.some((candidate) => candidate === kind)
+      ? (kind as DocumentVersionKind)
+      : "",
+    uploadedFrom: typeof filters.uploadedFrom === "string" ? filters.uploadedFrom : "",
+    uploadedTo: typeof filters.uploadedTo === "string" ? filters.uploadedTo : "",
+  };
+}
+
+export function documentRecordReference(
+  reference: string,
+): { entityType: "contract" | "matter"; number: number } | null {
+  const match = /^([CM])-([1-9]\d*)$/.exec(reference);
+  if (!match?.[2]) return null;
+  const number = Number(match[2]);
+  if (!Number.isSafeInteger(number) || number > 2_147_483_647) return null;
+  return { entityType: match[1] === "C" ? "contract" : "matter", number };
+}
+
 /** The M25 landing address reused by repository rows. */
 export function documentLandingPath(document: RepositoryDocument): string {
   const owner = document.owner;
