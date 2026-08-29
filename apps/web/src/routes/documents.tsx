@@ -589,10 +589,10 @@ function RecentDocuments({ documents }: Readonly<{ documents: RepositoryDocument
                 },
                 { title: document.title },
               )}
-              className="grid min-h-11 grid-cols-[minmax(12rem,1fr)_minmax(12rem,1fr)_minmax(10rem,auto)_auto] items-center gap-4 px-4 py-2 text-sm hover:bg-hover focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-link"
+              className="flex min-h-11 items-center gap-4 px-4 py-2 text-sm hover:bg-hover focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-link"
             >
-              <span className="truncate font-medium">{document.title}</span>
-              <span className="truncate text-muted">
+              <span className="min-w-0 flex-1 truncate font-medium">{document.title}</span>
+              <span className="min-w-0 flex-1 truncate text-muted">
                 <FormattedMessage
                   id="documents.list.owner"
                   defaultMessage="{reference} · {title}"
@@ -602,7 +602,7 @@ function RecentDocuments({ documents }: Readonly<{ documents: RepositoryDocument
                   }}
                 />
               </span>
-              <span className="flex min-w-0 items-center gap-2 text-muted">
+              <span className="flex min-w-40 shrink-0 items-center gap-2 text-muted">
                 <Avatar
                   name={document.currentVersion.uploadedBy.displayName}
                   image={document.currentVersion.uploadedBy.image}
@@ -610,7 +610,7 @@ function RecentDocuments({ documents }: Readonly<{ documents: RepositoryDocument
                 />
                 <span className="truncate">{document.currentVersion.uploadedBy.displayName}</span>
               </span>
-              <span className="whitespace-nowrap text-muted">
+              <span className="shrink-0 whitespace-nowrap text-muted">
                 {formatRelativeOrShort(document.currentVersion.createdAt)}
               </span>
             </Link>

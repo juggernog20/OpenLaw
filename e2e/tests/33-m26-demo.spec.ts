@@ -13,7 +13,7 @@ test.setTimeout(240_000);
 const RUN = Date.now();
 const CONTRACT_TITLE = `E2E M26 filtered contract ${RUN}`;
 const MATTER_TITLE = `E2E M26 filter decoy ${RUN}`;
-const COUNTERPARTY_NAME = "E2E M26 Northwind";
+const COUNTERPARTY_NAME = `E2E M26 Northwind ${RUN}`;
 const CONTRACT_PDF_NAME = `m26-contract-${RUN}.pdf`;
 const MATTER_PDF_NAME = `m26-matter-${RUN}.pdf`;
 

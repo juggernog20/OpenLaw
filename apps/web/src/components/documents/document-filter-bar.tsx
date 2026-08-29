@@ -1,6 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-/** M26/3's fixed, URL-backed controls for the flat Documents repository. */
+/**
+ * The Documents destination's filter strip: URL-backed controls over the
+ * standard Document properties DOC-007 allows, drawn in the Contracts
+ * filter-row pattern DES-066 records. Built in M26/3 and M26/4.
+ */
 import { useEffect, useId, useRef, useState } from "react";
 import { defineMessages, FormattedMessage, useIntl } from "react-intl";
 import { X } from "lucide-react";
@@ -516,7 +520,7 @@ export function DocumentFilterBar({
             <FormattedMessage {...MESSAGES.clearAll} />
           </button>
           {empty && (
-            <span className="sr-only">
+            <span className="sr-only" role="status">
               <FormattedMessage {...MESSAGES.matchedNone} />
             </span>
           )}

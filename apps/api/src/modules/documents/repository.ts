@@ -1,6 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-/** M26's flat, reached Document repository across Contracts and Matters. */
+/**
+ * The Documents destination's flat, reached repository across Contracts and
+ * Matters (DOC-002), filtered on standard Document properties only (DOC-007)
+ * under the DD-014 reach gate. Built in M26.
+ */
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
 import { z } from "zod";
 import {

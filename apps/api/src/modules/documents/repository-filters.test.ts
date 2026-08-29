@@ -195,8 +195,11 @@ beforeAll(async () => {
     .values([
       version(
         "Alpha PDF",
-        "alpha.pdf",
-        "application/pdf",
+        // No extension and a tab before the parameter: only the MIME arm can
+        // classify this, and only if the SQL trims the same whitespace
+        // {@link mediaType} does.
+        "alpha",
+        "application/pdf\t; charset=binary",
         "executed",
         1_000,
         "2026-06-15T10:00:00.000Z",
@@ -485,7 +488,10 @@ describe("the fixed Document repository filters", () => {
   });
 
   it("refuses folder without record and every unknown enum value", async () => {
-    expect((await request({ folder: "root" })).statusCode).toBe(400);
+    const refused = await request({ folder: "root" });
+    expect(refused.statusCode, refused.body).toBe(400);
+    expect(refused.headers["content-type"]).toContain("application/problem+json");
+    expect(refused.json()).toMatchObject({ status: 400 });
     const invalidQueries: Record<string, string>[] = [
       { owner: "entity" },
       { format: "spreadsheet" },
@@ -494,7 +500,10 @@ describe("the fixed Document repository filters", () => {
       { sort: "title", dir: "sideways" },
     ];
     for (const query of invalidQueries) {
-      expect((await request(query)).statusCode, JSON.stringify(query)).toBe(400);
+      const response = await request(query);
+      expect(response.statusCode, JSON.stringify(query)).toBe(400);
+      expect(response.headers["content-type"]).toContain("application/problem+json");
+      expect(response.json()).toMatchObject({ status: 400 });
     }
   });
 });

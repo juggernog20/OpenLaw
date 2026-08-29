@@ -127,7 +127,7 @@ describe("the /documents destination", () => {
         id: `recent-${String(index + 1)}`,
         title: `Recent document ${String(index + 1)}`,
         currentVersion: {
-          ...(documentRow().currentVersion as Record<string, unknown>),
+          ...documentRow().currentVersion,
           id: `recent-version-${String(index + 1)}`,
         },
       }),
@@ -236,7 +236,7 @@ describe("the /documents destination", () => {
         isConfidential: false,
         owner: { kind: "matter", number: 12, title: "Delivery dispute" },
         currentVersion: {
-          ...(documentRow().currentVersion as Record<string, unknown>),
+          ...documentRow().currentVersion,
           id: "version-1",
           versionNumber: 1,
         },
@@ -270,7 +270,7 @@ describe("the /documents destination", () => {
       isConfidential: false,
       owner: { kind: "matter", number: 12, title: "Delivery dispute" },
       currentVersion: {
-        ...(documentRow().currentVersion as Record<string, unknown>),
+        ...documentRow().currentVersion,
         id: "version-1",
         versionNumber: 1,
       },

@@ -241,7 +241,9 @@ describe("the DD-014 gate in the Document repository", () => {
 
   it("refuses a Business User at requireDocumentReader", async () => {
     const response = await list(PEOPLE.business.email);
-    expect(response.statusCode).toBe(403);
+    expect(response.statusCode, response.body).toBe(403);
+    expect(response.headers["content-type"]).toContain("application/problem+json");
+    expect(response.json()).toMatchObject({ status: 403 });
   });
 
   it("scopes every option to the same live Documents for all five viewers", async () => {
@@ -312,6 +314,9 @@ describe("the DD-014 gate in the Document repository", () => {
       ],
     });
 
-    expect((await options(PEOPLE.business.email)).statusCode).toBe(403);
+    const refused = await options(PEOPLE.business.email);
+    expect(refused.statusCode, refused.body).toBe(403);
+    expect(refused.headers["content-type"]).toContain("application/problem+json");
+    expect(refused.json()).toMatchObject({ status: 403 });
   });
 });

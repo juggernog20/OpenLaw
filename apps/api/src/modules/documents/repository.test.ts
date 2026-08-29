@@ -368,7 +368,9 @@ describe("the Document repository", () => {
       url: "/api/v1/documents?limit=101",
       cookies,
     });
-    expect(response.statusCode).toBe(400);
+    expect(response.statusCode, response.body).toBe(400);
+    expect(response.headers["content-type"]).toContain("application/problem+json");
+    expect(response.json()).toMatchObject({ status: 400 });
   });
 });
 

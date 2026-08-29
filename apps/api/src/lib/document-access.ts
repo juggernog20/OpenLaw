@@ -1,6 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-/** Shared role floor and reach composition for cross-record Document reads. */
+/**
+ * Shared role floor and reach composition for cross-record Document reads.
+ *
+ * Access is inherited from the owning record (DOC-008) and narrowed by the
+ * Document's own audience (DD-014). Search and the repository call this so
+ * the two can never disagree about what a viewer reaches.
+ */
 import {
   and,
   contracts,
@@ -27,8 +33,8 @@ export const requireDocumentReader = requireRole(
  * The complete Document repository gate, shared by search and the flat list.
  *
  * The Document's own audience comes first. The owning-record arm follows,
- * and each arm excludes archived records. Closed Matters and ended Contracts
- * remain ordinary reached records.
+ * and each arm excludes Archiving only. A Matter after Closing and a Contract
+ * after Ending (CTR-019, MTR-008) remain ordinary reached records.
  */
 export function documentRepositoryScope(db: Executor, user: AuthenticatedUser): SQL | undefined {
   return and(

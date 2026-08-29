@@ -240,7 +240,10 @@ export function renderFamilyOf(mimeType: string, filename: string): RenderFamily
  * precedence over the filename that {@link renderFamilyOf} applies.
  */
 export function renderFamilySql(mimeType: AnyPgColumn, filename: AnyPgColumn): SQL {
-  const declared = sql`lower(btrim(split_part(${mimeType}, ';', 1)))`;
+  // The same whitespace set String.prototype.trim strips in {@link mediaType}:
+  // btrim alone strips spaces only, so a tab before the `;` would split
+  // the two classifications.
+  const declared = sql`lower(btrim(split_part(${mimeType}, ';', 1), ' ' || chr(9) || chr(10) || chr(13)))`;
   const basename = sql`regexp_replace(${filename}, '^.*[/\\\\]', '')`;
   const extension = sql`lower(coalesce(substring(${basename} from '^.+\\.([^.]+)$'), ''))`;
   const arms = [
