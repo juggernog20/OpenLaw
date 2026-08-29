@@ -21447,7 +21447,7 @@
                       "type": "frame",
                       "id": "xdJo9",
                       "name": "RegNo0",
-                      "width": 220,
+                      "width": 180,
                       "children": [
                         {
                           "type": "text",
@@ -21475,34 +21475,6 @@
                           "fontFamily": "Inter",
                           "fontSize": 12,
                           "fontWeight": "normal"
-                        }
-                      ]
-                    },
-                    {
-                      "type": "frame",
-                      "id": "nqxEw",
-                      "name": "RegSt0",
-                      "width": "fit_content(50)",
-                      "height": "fit_content(17)",
-                      "fill": "$status-success-bg",
-                      "cornerRadius": 10,
-                      "padding": [
-                        2,
-                        8
-                      ],
-                      "children": [
-                        {
-                          "type": "text",
-                          "id": "D93yvx",
-                          "x": 8,
-                          "y": 2,
-                          "name": "RegSt0Lbl",
-                          "enabled": false,
-                          "fill": "$status-success-fg",
-                          "content": "Active",
-                          "fontFamily": "Inter",
-                          "fontSize": 11,
-                          "fontWeight": "500"
                         }
                       ]
                     }
@@ -21546,7 +21518,7 @@
                       "type": "frame",
                       "id": "speKo",
                       "name": "RegNo1",
-                      "width": 220,
+                      "width": 180,
                       "children": [
                         {
                           "type": "text",
@@ -21574,34 +21546,6 @@
                           "fontFamily": "Inter",
                           "fontSize": 12,
                           "fontWeight": "normal"
-                        }
-                      ]
-                    },
-                    {
-                      "type": "frame",
-                      "id": "DqKvM",
-                      "name": "RegSt1",
-                      "width": "fit_content(50)",
-                      "height": "fit_content(17)",
-                      "fill": "$status-success-bg",
-                      "cornerRadius": 10,
-                      "padding": [
-                        2,
-                        8
-                      ],
-                      "children": [
-                        {
-                          "type": "text",
-                          "id": "HFKFq",
-                          "x": 8,
-                          "y": 2,
-                          "name": "RegSt1Lbl",
-                          "enabled": false,
-                          "fill": "$status-success-fg",
-                          "content": "Active",
-                          "fontFamily": "Inter",
-                          "fontSize": 11,
-                          "fontWeight": "500"
                         }
                       ]
                     }
@@ -21645,7 +21589,7 @@
                       "type": "frame",
                       "id": "YoBMB",
                       "name": "RegNo2",
-                      "width": 220,
+                      "width": 180,
                       "children": [
                         {
                           "type": "text",
@@ -32888,7 +32832,7 @@
                               "id": "rIMMa",
                               "name": "ObMeta",
                               "fill": "$text-muted",
-                              "content": "Only Administrators and these named people can open the entity.",
+                              "content": "Administrators and these named people can open it.",
                               "fontFamily": "Inter",
                               "fontSize": 12,
                               "fontWeight": "normal"
@@ -32933,7 +32877,7 @@
                           "id": "HEeBh",
                           "name": "FiledOnLbl",
                           "fill": "$text-muted",
-                          "content": "Blair Wentworth · Administrator",
+                          "content": "James Okafor · Legal Team Member",
                           "fontFamily": "Inter",
                           "fontSize": 12,
                           "fontWeight": "500"
@@ -32977,7 +32921,7 @@
                                   "id": "r1mqjt",
                                   "name": "FiledOnVal",
                                   "fill": "$text-primary",
-                                  "content": "Permanent access",
+                                  "content": "Granted Aug 12, 2026",
                                   "fontFamily": "Inter",
                                   "fontSize": 13,
                                   "fontWeight": "normal"
@@ -34230,6 +34174,7 @@
                       "id": "FwnxF",
                       "name": "ResSub",
                       "fill": "$text-subtle",
+                      "content": "Admins and granted users only",
                       "fontFamily": "Inter",
                       "fontSize": 10,
                       "fontWeight": "normal"
