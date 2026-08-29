@@ -55,6 +55,12 @@ export type EntityOfficer =
 export type EntityRegistration =
   paths["/api/v1/entities/{id}/registrations"]["get"]["responses"]["200"]["content"]["application/json"]["registrations"][number];
 export type EntityRegistrationStatus = EntityRegistration["status"];
+export type EntityObligation =
+  paths["/api/v1/entities/{id}/obligations"]["get"]["responses"]["200"]["content"]["application/json"]["obligations"][number];
+export type EntityObligationOptions =
+  paths["/api/v1/entities/obligation-options"]["get"]["responses"]["200"]["content"]["application/json"];
+export type CalendarObligation =
+  paths["/api/v1/entities/calendar"]["get"]["responses"]["200"]["content"]["application/json"]["obligations"][number];
 export type EntityHoldings =
   paths["/api/v1/entities/{id}/holdings"]["get"]["responses"]["200"]["content"]["application/json"];
 export type EntityHolding = EntityHoldings["owners"][number];

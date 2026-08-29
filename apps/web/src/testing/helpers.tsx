@@ -334,6 +334,15 @@ export function stubApi(state: ApiState) {
     if (call.url.pathname === "/api/v1/entities" && call.method === "GET") {
       return json(200, { entities: [] });
     }
+    // M27/6's destination opens on the cross-Entity compliance calendar.
+    // Empty is the blank-start state ENT-006 promises; only calendar
+    // route suites replace it through `extra`.
+    if (call.url.pathname === "/api/v1/entities/calendar" && call.method === "GET") {
+      return json(200, { obligations: [] });
+    }
+    if (call.url.pathname === "/api/v1/entities/obligation-options" && call.method === "GET") {
+      return json(200, { users: [], matters: [] });
+    }
     if (call.url.pathname === "/api/v1/entities/officer-roles" && call.method === "GET") {
       return json(200, { officerRoles: [], users: [] });
     }
@@ -348,6 +357,12 @@ export function stubApi(state: ApiState) {
       call.method === "GET"
     ) {
       return json(200, { registrations: [] });
+    }
+    if (
+      /^\/api\/v1\/entities\/[^/]+\/obligations$/.test(call.url.pathname) &&
+      call.method === "GET"
+    ) {
+      return json(200, { obligations: [] });
     }
     if (call.url.pathname === "/api/v1/onboarding" && call.method === "GET") {
       return json(200, state.onboarding ?? { completed: true, emailConfigured: true });

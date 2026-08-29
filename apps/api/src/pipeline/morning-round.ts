@@ -68,6 +68,8 @@ import {
   lt,
   ne,
   notifications,
+  entities,
+  entityObligations,
   matterKeyDates,
   matters,
   matterStatuses,
@@ -81,6 +83,8 @@ import type { MailerResolver } from "../lib/mailer.js";
 import {
   contractRecordAudience,
   CONTRACT_ENTITY,
+  ENTITY_ENTITY,
+  entityReachedBy,
   matterReachedBy,
   matterRecordAudience,
   MATTER_ENTITY,
@@ -233,7 +237,7 @@ interface Served {
 /** One date that has come due for one cohort, before anybody has been
  * told about it. */
 interface DueDateFields {
-  entityType: typeof CONTRACT_ENTITY | typeof MATTER_ENTITY;
+  entityType: typeof CONTRACT_ENTITY | typeof MATTER_ENTITY | typeof ENTITY_ENTITY;
   entityId: string;
   /** The date itself, as a civil date. */
   date: string;
@@ -244,6 +248,7 @@ interface DueDateFields {
 /** One of the two the term derives. Neither has a row or a name of its
  * own, because no person named it (NOT-006 clause 4). */
 interface DueTermDate extends DueDateFields {
+  entityType: typeof CONTRACT_ENTITY;
   eventType: "date.expiry_approaching" | "date.notice_deadline_approaching";
 }
 
@@ -251,9 +256,20 @@ interface DueTermDate extends DueDateFields {
  * `NOT NULL` on the table (CTR-009), so it is a value and never a
  * guess. */
 interface DueKeyDate extends DueDateFields {
+  entityType: typeof CONTRACT_ENTITY | typeof MATTER_ENTITY;
   eventType: "date.key_date_approaching";
   keyDateId: string;
   label: string;
+}
+
+/** One open obligation, already addressed to its assignee or the Administrator fallback. */
+interface DueObligation extends DueDateFields {
+  entityType: typeof ENTITY_ENTITY;
+  eventType: "date.obligation_approaching";
+  obligationId: string;
+  label: string;
+  entityLegalName: string;
+  userIds: readonly string[];
 }
 
 /**
@@ -265,7 +281,7 @@ interface DueKeyDate extends DueDateFields {
  * write `undefined` into the payload, and the digest line would lose its
  * address; this way that producer fails to compile instead.
  */
-type DueDate = DueTermDate | DueKeyDate;
+type DueDate = DueTermDate | DueKeyDate | DueObligation;
 
 /**
  * Runs one round: reminders, briefings, and the re-ask for lost mail.
@@ -409,6 +425,34 @@ async function raiseReminders(
     // The number and the title ride along, so the round never asks for
     // two columns it has already been handed.
     const first = dates[0]!;
+    if (first.entityType === ENTITY_ENTITY) {
+      try {
+        written += await deps.notifier.notifying(async (tx) => {
+          let rows = 0;
+          for (const date of dates) {
+            if (date.entityType !== ENTITY_ENTITY) continue;
+            const userIds = date.userIds.filter((userId) => inCohort.has(userId));
+            if (userIds.length === 0) continue;
+            rows += await deps.notifier.entityObligationApproaching(tx, {
+              entityId: date.entityId,
+              entityLegalName: date.entityLegalName,
+              obligationId: date.obligationId,
+              label: date.label,
+              reminderDate: date.date,
+              offsetDays: date.offsetDays,
+              userIds,
+            });
+          }
+          return rows;
+        });
+      } catch (error) {
+        deps.log.error(
+          { recordKey, reason: reasonOf(error) },
+          "the morning round could not raise an Entity's obligation reminders",
+        );
+      }
+      continue;
+    }
     const audience =
       first.entityType === CONTRACT_ENTITY
         ? await contractRecordAudience(deps.db, first.entityId)
@@ -605,6 +649,45 @@ async function dueDates(db: Db, today: string, offsets: readonly number[]): Prom
       label: row.label,
     });
   }
+  const obligationRows = await db
+    .select({
+      entityId: entityObligations.entityId,
+      entityLegalName: entities.legalName,
+      obligationId: entityObligations.id,
+      label: entityObligations.label,
+      date: entityObligations.nextDueOn,
+      assigneeId: entityObligations.assigneeId,
+    })
+    .from(entityObligations)
+    .innerJoin(entities, eq(entityObligations.entityId, entities.id))
+    .where(
+      and(
+        isNull(entityObligations.completedOn),
+        isNull(entities.archivedAt),
+        inArray(entityObligations.nextDueOn, dates),
+      ),
+    );
+  const administratorIds = obligationRows.some((row) => row.assigneeId === null)
+    ? (
+        await db
+          .select({ id: users.id })
+          .from(users)
+          .where(and(eq(users.role, "administrator"), isNull(users.archivedAt)))
+      ).map((row) => row.id)
+    : [];
+  for (const row of obligationRows) {
+    due.push({
+      entityType: ENTITY_ENTITY,
+      entityId: row.entityId,
+      entityLegalName: row.entityLegalName,
+      eventType: "date.obligation_approaching",
+      obligationId: row.obligationId,
+      label: row.label,
+      date: row.date,
+      offsetDays: offsetOf.get(row.date)!,
+      userIds: row.assigneeId ? [row.assigneeId] : administratorIds,
+    });
+  }
   return due;
 }
 
@@ -692,14 +775,20 @@ async function sendBriefing(
   for (const entityId of new Set(owed.map((row) => row.entityId))) {
     const rows = owed.filter((row) => row.entityId === entityId);
     const entityType = rows[0]!.entityType;
-    if (entityType !== CONTRACT_ENTITY && entityType !== MATTER_ENTITY) {
+    if (
+      entityType !== CONTRACT_ENTITY &&
+      entityType !== MATTER_ENTITY &&
+      entityType !== ENTITY_ENTITY
+    ) {
       unreadable.add(entityId);
       continue;
     }
     const reaches =
       entityType === CONTRACT_ENTITY
         ? await reachedBy(deps.db, entityId, [person.id])
-        : await matterReachedBy(deps.db, entityId, [person.id]);
+        : entityType === MATTER_ENTITY
+          ? await matterReachedBy(deps.db, entityId, [person.id])
+          : await entityReachedBy(deps.db, entityId, [person.id]);
     if (reaches.has(person.id)) reachable.add(entityId);
     else unreadable.add(entityId);
   }
@@ -772,23 +861,27 @@ function digestRow(
   row: {
     eventType: string;
     entityType: string;
+    entityId: string;
     payload: Record<string, unknown>;
     reminderDate: string | null;
   },
   today: string,
 ): DigestRow | null {
   const matter = row.entityType === MATTER_ENTITY;
+  const entity = row.entityType === ENTITY_ENTITY;
   const recordNumber = Number(matter ? row.payload.matterNumber : row.payload.contractNumber);
-  const heldTitle = matter ? row.payload.matterTitle : row.payload.contractTitle;
+  const heldTitle = entity
+    ? row.payload.entityLegalName
+    : matter
+      ? row.payload.matterTitle
+      : row.payload.contractTitle;
   const recordTitle = typeof heldTitle === "string" ? heldTitle : "";
-  if (!Number.isSafeInteger(recordNumber) || recordNumber <= 0) return null;
+  if (!entity && (!Number.isSafeInteger(recordNumber) || recordNumber <= 0)) return null;
   if (recordTitle === "" || row.reminderDate === null) return null;
   const label =
     typeof row.payload.label === "string" && row.payload.label ? row.payload.label : null;
-  return {
+  const common = {
     eventType: row.eventType as NotificationEventType,
-    entityType: matter ? MATTER_ENTITY : CONTRACT_ENTITY,
-    recordNumber,
     recordTitle,
     date: row.reminderDate,
     // Counted against the reader's own today rather than taken from the
@@ -796,6 +889,12 @@ function digestRow(
     // one, and "in 1 day" about yesterday would be a lie.
     daysAway: daysBetween(today, row.reminderDate),
     label,
+  };
+  if (entity) return { ...common, entityType: ENTITY_ENTITY, recordId: row.entityId };
+  return {
+    ...common,
+    entityType: matter ? MATTER_ENTITY : CONTRACT_ENTITY,
+    recordNumber,
   };
 }
 

@@ -398,6 +398,33 @@ const SAMPLE_PAYLOADS: { [A in ActivityAction]: ActivityPayloadMap[A] } = {
     ownedName: "Helix Labs GmbH",
     ownershipPercent: 75,
   },
+  "entity_obligation.created": {
+    legalName: "Helix Labs GmbH",
+    obligationId: "obligation-1",
+    label: "Annual return",
+    nextDueOn: "2026-09-30",
+  },
+  "entity_obligation.updated": {
+    legalName: "Helix Labs GmbH",
+    obligationId: "obligation-1",
+    label: "Annual return",
+    changed: { nextDueOn: { from: "2026-09-30", to: "2026-10-01" } },
+  },
+  "entity_obligation.deleted": {
+    legalName: "Helix Labs GmbH",
+    obligationId: "obligation-1",
+    label: "Annual return",
+    nextDueOn: "2026-10-01",
+  },
+  "entity_obligation.filed": {
+    legalName: "Helix Labs GmbH",
+    obligationId: "obligation-1",
+    label: "Annual return",
+    cycleDate: "2026-09-20",
+    previousDueOn: "2026-09-30",
+    nextDueOn: "2027-09-30",
+    completedOn: null,
+  },
 
   // Contract record
   "contract.created_from_request": {

@@ -230,6 +230,18 @@
   "activity.entityHolding.updated": {
     "defaultMessage": "{actor} changed {owner}'s Holding in {owned} from {from}% to {to}%"
   },
+  "activity.entityObligation.created": {
+    "defaultMessage": "{actor} added the obligation {obligation} to {name}"
+  },
+  "activity.entityObligation.deleted": {
+    "defaultMessage": "{actor} removed the obligation {obligation} from {name}"
+  },
+  "activity.entityObligation.filed": {
+    "defaultMessage": "{actor} marked {obligation} filed on {name}"
+  },
+  "activity.entityObligation.updated": {
+    "defaultMessage": "{actor} changed the obligation {obligation} on {name}"
+  },
   "activity.entityOfficer.created": {
     "defaultMessage": "{actor} appointed {officer} as {role} on {name}"
   },
@@ -264,7 +276,7 @@
     "defaultMessage": "{actor} exported the audit log"
   },
   "activity.field": {
-    "defaultMessage": "{key, select, title {Title} description {Description} owner {Owner} entity {Signing entity} priority {Priority} risk {Risk} matterManager {Matter Manager} matterType {Matter type} contractType {Contract type} value {Value} status {Status} termType {Term type} effectiveDate {Effective date} expiryDate {Expiry date} renewalPeriodMonths {Renewal period (months)} noticePeriodDays {Notice period (days)} date {Date} label {Event} note {Note} kind {Kind} primaryCounterparty {Primary counterparty} primaryDocument {Primary document} displayName {Name} display_name {Display name} name {Name} role {Role} email {Email} stage {Stage} moduleScope {Scope} isRequired {Required} targetModule {Target} targetType {Target type} theme {Theme} timezone {Timezone} avatar {Avatar} logo {Logo} defaultLocale {Default language} defaultTimezone {Default timezone} authMode {Sign-in method} allowedEmailDomains {Allowed email domains} reminderOffsetDays {Reminder lead times} smtpUrl {SMTP server} smtpFrom {From address} issuer {Issuer} domain {Email domain} clientId {Client ID} clientSecret {Client secret} environment {Environment} integrationKey {Integration key} apiUserId {User ID} privateKey {RSA private key} webhookSecret {Connect HMAC secret} legalName {Legal name} entityType {Entity type} jurisdiction {Jurisdiction} formedOn {Formed on} registrationNumber {Registration number} taxId {Tax ID} registeredAgent {Registered agent} registeredAddress {Registered address} sharesAuthorized {Authorized shares} sharesIssued {Issued shares} parValue {Par value} appointedOn {Appointed on} resignedOn {Resigned on} linkedUser {Linked user} other {{key}}}"
+    "defaultMessage": "{key, select, title {Title} description {Description} owner {Owner} entity {Signing entity} priority {Priority} risk {Risk} matterManager {Matter Manager} matterType {Matter type} contractType {Contract type} value {Value} status {Status} termType {Term type} effectiveDate {Effective date} expiryDate {Expiry date} renewalPeriodMonths {Renewal period (months)} noticePeriodDays {Notice period (days)} date {Date} label {Event} note {Note} kind {Kind} primaryCounterparty {Primary counterparty} primaryDocument {Primary document} displayName {Name} display_name {Display name} name {Name} role {Role} email {Email} stage {Stage} moduleScope {Scope} isRequired {Required} targetModule {Target} targetType {Target type} theme {Theme} timezone {Timezone} avatar {Avatar} logo {Logo} defaultLocale {Default language} defaultTimezone {Default timezone} authMode {Sign-in method} allowedEmailDomains {Allowed email domains} reminderOffsetDays {Reminder lead times} smtpUrl {SMTP server} smtpFrom {From address} issuer {Issuer} domain {Email domain} clientId {Client ID} clientSecret {Client secret} environment {Environment} integrationKey {Integration key} apiUserId {User ID} privateKey {RSA private key} webhookSecret {Connect HMAC secret} legalName {Legal name} entityType {Entity type} jurisdiction {Jurisdiction} formedOn {Formed on} registrationNumber {Registration number} taxId {Tax ID} registeredAgent {Registered agent} registeredAddress {Registered address} sharesAuthorized {Authorized shares} sharesIssued {Issued shares} parValue {Par value} appointedOn {Appointed on} resignedOn {Resigned on} linkedUser {Linked user} registrationId {Registration} recurrenceMonths {Repeat every (months)} nextDueOn {Due date} assigneeId {Assignee} matterId {Matter} other {{key}}}"
   },
   "activity.field.narrowed": {
     "defaultMessage": "{actor} narrowed the field {name} to one module"
@@ -2660,6 +2672,90 @@
   "entities.archivedPill": {
     "defaultMessage": "Archived"
   },
+  "entities.calendar.add": {
+    "defaultMessage": "Add obligation"
+  },
+  "entities.calendar.allEntities": {
+    "defaultMessage": "All Entities"
+  },
+  "entities.calendar.apply": {
+    "defaultMessage": "Apply"
+  },
+  "entities.calendar.assignee": {
+    "defaultMessage": "Assignee"
+  },
+  "entities.calendar.clear": {
+    "defaultMessage": "Clear all"
+  },
+  "entities.calendar.display": {
+    "defaultMessage": "Calendar display"
+  },
+  "entities.calendar.dueDate": {
+    "defaultMessage": "Due date"
+  },
+  "entities.calendar.empty": {
+    "defaultMessage": "No obligations yet"
+  },
+  "entities.calendar.emptyHint": {
+    "defaultMessage": "Obligations added to Entity records appear here."
+  },
+  "entities.calendar.entity": {
+    "defaultMessage": "Entity"
+  },
+  "entities.calendar.every": {
+    "defaultMessage": "Every {months, plural, one {month} other {# months}}"
+  },
+  "entities.calendar.everyone": {
+    "defaultMessage": "Everyone"
+  },
+  "entities.calendar.filed": {
+    "defaultMessage": "Filed"
+  },
+  "entities.calendar.from": {
+    "defaultMessage": "From"
+  },
+  "entities.calendar.includeCompleted": {
+    "defaultMessage": "Include completed"
+  },
+  "entities.calendar.listView": {
+    "defaultMessage": "Due-date list"
+  },
+  "entities.calendar.monthView": {
+    "defaultMessage": "Month"
+  },
+  "entities.calendar.nextMonth": {
+    "defaultMessage": "Next month"
+  },
+  "entities.calendar.noMatch": {
+    "defaultMessage": "No obligations match"
+  },
+  "entities.calendar.noMatchHint": {
+    "defaultMessage": "Change or clear the filters to see other due dates."
+  },
+  "entities.calendar.obligation": {
+    "defaultMessage": "Obligation"
+  },
+  "entities.calendar.oneOff": {
+    "defaultMessage": "One-off"
+  },
+  "entities.calendar.previousMonth": {
+    "defaultMessage": "Previous month"
+  },
+  "entities.calendar.repeat": {
+    "defaultMessage": "Repeat"
+  },
+  "entities.calendar.title": {
+    "defaultMessage": "Compliance calendar"
+  },
+  "entities.calendar.to": {
+    "defaultMessage": "To"
+  },
+  "entities.calendar.today": {
+    "defaultMessage": "Today"
+  },
+  "entities.calendar.unassigned": {
+    "defaultMessage": "Unassigned"
+  },
   "entities.chart.description": {
     "defaultMessage": "Majority Holdings form the solid tree. Secondary Holdings use dashed lines."
   },
@@ -2828,6 +2924,78 @@
   "entities.record.notRecorded": {
     "defaultMessage": "Not recorded"
   },
+  "entities.record.obligations.actions": {
+    "defaultMessage": "Actions"
+  },
+  "entities.record.obligations.add": {
+    "defaultMessage": "Add obligation"
+  },
+  "entities.record.obligations.assignee": {
+    "defaultMessage": "Assignee"
+  },
+  "entities.record.obligations.cancel": {
+    "defaultMessage": "Cancel"
+  },
+  "entities.record.obligations.column": {
+    "defaultMessage": "Obligation"
+  },
+  "entities.record.obligations.dueDate": {
+    "defaultMessage": "Due date"
+  },
+  "entities.record.obligations.empty": {
+    "defaultMessage": "No obligations for this Entity."
+  },
+  "entities.record.obligations.emptyHint": {
+    "defaultMessage": "Add the first due date when it is known."
+  },
+  "entities.record.obligations.fileOneOff": {
+    "defaultMessage": "Filing this completes the one-off obligation."
+  },
+  "entities.record.obligations.fileRecurring": {
+    "defaultMessage": "Filing this moves forward {months, plural, one {# month} other {# months}} from the current due date until the next due date is after the filing date."
+  },
+  "entities.record.obligations.filedOn": {
+    "defaultMessage": "Filed {date}"
+  },
+  "entities.record.obligations.filedOnField": {
+    "defaultMessage": "Filed on"
+  },
+  "entities.record.obligations.label": {
+    "defaultMessage": "Label"
+  },
+  "entities.record.obligations.markFiled": {
+    "defaultMessage": "Mark filed"
+  },
+  "entities.record.obligations.markFiledRow": {
+    "defaultMessage": "Mark {label} filed"
+  },
+  "entities.record.obligations.matter": {
+    "defaultMessage": "Matter"
+  },
+  "entities.record.obligations.none": {
+    "defaultMessage": "None"
+  },
+  "entities.record.obligations.note": {
+    "defaultMessage": "Note"
+  },
+  "entities.record.obligations.registration": {
+    "defaultMessage": "Registration"
+  },
+  "entities.record.obligations.remove": {
+    "defaultMessage": "Delete {label}"
+  },
+  "entities.record.obligations.repeat": {
+    "defaultMessage": "Repeat every (months)"
+  },
+  "entities.record.obligations.rowField": {
+    "defaultMessage": "{label} {field}"
+  },
+  "entities.record.obligations.title": {
+    "defaultMessage": "Obligations"
+  },
+  "entities.record.obligations.unassigned": {
+    "defaultMessage": "Unassigned"
+  },
   "entities.record.officers.add": {
     "defaultMessage": "Add officer"
   },
@@ -2882,8 +3050,14 @@
   "entities.record.registrations.jurisdiction": {
     "defaultMessage": "Jurisdiction"
   },
+  "entities.record.registrations.linkedObligations": {
+    "defaultMessage": "Linked obligations"
+  },
   "entities.record.registrations.number": {
     "defaultMessage": "Registration number"
+  },
+  "entities.record.registrations.obligationDue": {
+    "defaultMessage": "due {date}"
   },
   "entities.record.registrations.remove": {
     "defaultMessage": "Remove {jurisdiction} registration"
@@ -2956,6 +3130,9 @@
   },
   "entities.title": {
     "defaultMessage": "Entities"
+  },
+  "entities.view.calendar": {
+    "defaultMessage": "Calendar"
   },
   "entities.view.chart": {
     "defaultMessage": "Chart"
@@ -3811,6 +3988,9 @@
   },
   "notifications.date.noticeDeadline": {
     "defaultMessage": "The notice deadline on {contract} is coming up"
+  },
+  "notifications.date.obligation": {
+    "defaultMessage": "{obligation} on {contract} is coming up"
   },
   "notifications.document.added": {
     "defaultMessage": "{hasActor, select, yes {{actor} added a document to {contract}} other {A document was added to {contract}}}"

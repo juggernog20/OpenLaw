@@ -144,7 +144,7 @@ describe("the /entities/:entityId record page", () => {
     await waitFor(() => expect(api.patches).toContainEqual({ sharesAuthorized: 1_000_000 }));
   });
 
-  it("routes all six DES-032 sections and renders placeholders beyond Overview", async () => {
+  it("routes all six DES-032 sections and renders the shipped Obligations tab", async () => {
     const api = recordApi(entityRow());
     stubApi({ signedIn: MEMBER, extra: api.handler });
     const { router } = renderAt("/entities/e1");
@@ -153,7 +153,11 @@ describe("the /entities/:entityId record page", () => {
     await router.navigate("/entities/e1/ownership");
     expect(await screen.findByRole("heading", { name: "Owners" })).toBeInTheDocument();
 
-    for (const tab of ["obligations", "documents", "contracts", "matters"]) {
+    await router.navigate("/entities/e1/obligations");
+    expect(await screen.findByRole("heading", { name: "Obligations" })).toBeInTheDocument();
+    expect(screen.getByText("No obligations for this Entity.")).toBeInTheDocument();
+
+    for (const tab of ["documents", "contracts", "matters"]) {
       await router.navigate(`/entities/e1/${tab}`);
       expect(
         await screen.findByRole("heading", { name: tab[0]!.toUpperCase() + tab.slice(1) }),

@@ -3256,6 +3256,86 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/v1/entities/calendar": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["listEntityCalendar"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/entities/obligation-options": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["listEntityObligationOptions"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/entities/{id}/obligations": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["listEntityObligations"];
+    put?: never;
+    post: operations["createEntityObligation"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/entities/{id}/obligations/{childId}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    delete: operations["deleteEntityObligation"];
+    options?: never;
+    head?: never;
+    patch: operations["updateEntityObligation"];
+    trace?: never;
+  };
+  "/api/v1/entities/{id}/obligations/{childId}/file": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations["fileEntityObligation"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/v1/entities/chart": {
     parameters: {
       query?: never;
@@ -18670,6 +18750,427 @@ export interface operations {
               isSystemDefault: boolean;
               archivedAt: string | null;
               inUseCount: number;
+            };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  listEntityCalendar: {
+    parameters: {
+      query?: {
+        entity?: string;
+        assignee?: string;
+        from?: string;
+        to?: string;
+        includeCompleted?: "true" | "false";
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            obligations: {
+              id: string;
+              entityId: string;
+              label: string;
+              registration: {
+                id: string;
+                jurisdiction: string;
+                registrationNumber: string | null;
+              } | null;
+              recurrenceMonths: number | null;
+              /** Format: date */
+              nextDueOn: string;
+              assignee: {
+                id: string;
+                displayName: string;
+                image: string | null;
+              } | null;
+              note: string | null;
+              matter: {
+                id: string;
+                number: number;
+                title: string;
+              } | null;
+              completedOn: string | null;
+              /** Format: date-time */
+              createdAt: string;
+              /** Format: date-time */
+              updatedAt: string;
+              entity: {
+                id: string;
+                legalName: string;
+              };
+              overdue: boolean;
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  listEntityObligationOptions: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            users: {
+              id: string;
+              displayName: string;
+              image: string | null;
+            }[];
+            matters: {
+              id: string;
+              number: number;
+              title: string;
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  listEntityObligations: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            obligations: {
+              id: string;
+              entityId: string;
+              label: string;
+              registration: {
+                id: string;
+                jurisdiction: string;
+                registrationNumber: string | null;
+              } | null;
+              recurrenceMonths: number | null;
+              /** Format: date */
+              nextDueOn: string;
+              assignee: {
+                id: string;
+                displayName: string;
+                image: string | null;
+              } | null;
+              note: string | null;
+              matter: {
+                id: string;
+                number: number;
+                title: string;
+              } | null;
+              completedOn: string | null;
+              /** Format: date-time */
+              createdAt: string;
+              /** Format: date-time */
+              updatedAt: string;
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  createEntityObligation: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          label: string;
+          registrationId?: string | null;
+          recurrenceMonths?: number | null;
+          /** Format: date */
+          nextDueOn: string;
+          assigneeId?: string | null;
+          note?: string | null;
+          matterId?: string | null;
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            obligation: {
+              id: string;
+              entityId: string;
+              label: string;
+              registration: {
+                id: string;
+                jurisdiction: string;
+                registrationNumber: string | null;
+              } | null;
+              recurrenceMonths: number | null;
+              /** Format: date */
+              nextDueOn: string;
+              assignee: {
+                id: string;
+                displayName: string;
+                image: string | null;
+              } | null;
+              note: string | null;
+              matter: {
+                id: string;
+                number: number;
+                title: string;
+              } | null;
+              completedOn: string | null;
+              /** Format: date-time */
+              createdAt: string;
+              /** Format: date-time */
+              updatedAt: string;
+            };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  deleteEntityObligation: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+        childId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": unknown;
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  updateEntityObligation: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+        childId: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          label?: string;
+          registrationId?: string | null;
+          recurrenceMonths?: number | null;
+          /** Format: date */
+          nextDueOn?: string;
+          assigneeId?: string | null;
+          note?: string | null;
+          matterId?: string | null;
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            obligation: {
+              id: string;
+              entityId: string;
+              label: string;
+              registration: {
+                id: string;
+                jurisdiction: string;
+                registrationNumber: string | null;
+              } | null;
+              recurrenceMonths: number | null;
+              /** Format: date */
+              nextDueOn: string;
+              assignee: {
+                id: string;
+                displayName: string;
+                image: string | null;
+              } | null;
+              note: string | null;
+              matter: {
+                id: string;
+                number: number;
+                title: string;
+              } | null;
+              completedOn: string | null;
+              /** Format: date-time */
+              createdAt: string;
+              /** Format: date-time */
+              updatedAt: string;
+            };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  fileEntityObligation: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+        childId: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          /** Format: date */
+          filedOn?: string;
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            obligation: {
+              id: string;
+              entityId: string;
+              label: string;
+              registration: {
+                id: string;
+                jurisdiction: string;
+                registrationNumber: string | null;
+              } | null;
+              recurrenceMonths: number | null;
+              /** Format: date */
+              nextDueOn: string;
+              assignee: {
+                id: string;
+                displayName: string;
+                image: string | null;
+              } | null;
+              note: string | null;
+              matter: {
+                id: string;
+                number: number;
+                title: string;
+              } | null;
+              completedOn: string | null;
+              /** Format: date-time */
+              createdAt: string;
+              /** Format: date-time */
+              updatedAt: string;
             };
           };
         };

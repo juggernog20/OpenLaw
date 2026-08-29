@@ -102,6 +102,14 @@ ENT-004's grant list is the `entity_grants` relation: one row names one user gra
 - **Alternatives considered** — One-off key dates (annual re-entry); obligations auto-spawning matters (auto-created work violates the notify-only doctrine).
 - **Consequences** — Table in SCHEMA.md; completion events are activity-logged with the cycle date. A filing that needs real work gets a matter created manually and linked by the human doing it.
 
+### Addendum (2026-08-30, M27/6, [#578](https://github.com/juggernog20/OpenLaw/issues/578)) — Filing advances the held cycle, and only filing advances it
+
+The obligation row is the schedule. Member+ can create, read, edit, and delete it beneath its Entity; the optional Registration, assignee, note, and manually chosen Matter are links on that same row. The Entities destination now opens on the cross-Entity calendar, ordered with overdue open obligations first and then by due date, with Entity, assignee, date-range, and completed-state filters. Its second form is a month grid over the same read.
+
+`Mark filed` takes the filing day, defaulting to the caller's local day. A recurring obligation advances by its `recurrence_months` at least once and keeps advancing until the resulting due day is after the filing day. That catches up a filing made after several missed cycles without inventing several completed rows. A one-off keeps its due day and records `completed_on`. Both write `entity_obligation.filed` with the cycle date and previous due day; recurring rows also carry the new due day. Reading the calendar, opening a new month, and running the morning round never mutate the schedule.
+
+A deleted Registration is not a deleted obligation: its foreign key is set to null and the obligation remains on the calendar. Registration rows on Overview expose the obligations that currently point at them.
+
 ## ENT-007 — Roll-ups: linked-records tabs with query-derived counts
 
 - **Status** — Accepted

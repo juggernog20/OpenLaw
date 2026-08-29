@@ -341,6 +341,8 @@ function changeLabel(intl: IntlShape, key: string, context: NarrationContext): s
         "sharesAuthorized {Authorized shares} sharesIssued {Issued shares} " +
         "parValue {Par value} appointedOn {Appointed on} resignedOn {Resigned on} " +
         "linkedUser {Linked user} " +
+        "registrationId {Registration} recurrenceMonths {Repeat every (months)} " +
+        "nextDueOn {Due date} assigneeId {Assignee} matterId {Matter} " +
         "other {{key}}}",
     },
     { key },
@@ -2651,6 +2653,51 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
       owner: named(intl, payload, "ownerName"),
       owned: named(intl, payload, "ownedName"),
       percent: named(intl, payload, "ownershipPercent"),
+    }),
+  },
+  "entity_obligation.created": {
+    icon: CalendarPlus,
+    message: defineMessage({
+      id: "activity.entityObligation.created",
+      defaultMessage: "{actor} added the obligation {obligation} to {name}",
+    }),
+    values: (intl, payload) => ({
+      name: thingName(intl, payload),
+      obligation: named(intl, payload, "label"),
+    }),
+  },
+  "entity_obligation.updated": {
+    icon: PencilLine,
+    message: defineMessage({
+      id: "activity.entityObligation.updated",
+      defaultMessage: "{actor} changed the obligation {obligation} on {name}",
+    }),
+    values: (intl, payload) => ({
+      name: thingName(intl, payload),
+      obligation: named(intl, payload, "label"),
+    }),
+    changes: changesFrom,
+  },
+  "entity_obligation.deleted": {
+    icon: CalendarX,
+    message: defineMessage({
+      id: "activity.entityObligation.deleted",
+      defaultMessage: "{actor} removed the obligation {obligation} from {name}",
+    }),
+    values: (intl, payload) => ({
+      name: thingName(intl, payload),
+      obligation: named(intl, payload, "label"),
+    }),
+  },
+  "entity_obligation.filed": {
+    icon: Check,
+    message: defineMessage({
+      id: "activity.entityObligation.filed",
+      defaultMessage: "{actor} marked {obligation} filed on {name}",
+    }),
+    values: (intl, payload) => ({
+      name: thingName(intl, payload),
+      obligation: named(intl, payload, "label"),
     }),
   },
 

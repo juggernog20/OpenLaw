@@ -107,6 +107,7 @@ export const NOTIFICATION_EVENT_TYPES = [
   "date.key_date_approaching",
   "date.notice_deadline_approaching",
   "date.expiry_approaching",
+  "date.obligation_approaching",
   // Group 4 — new requests (INT-006).
   /**
    * A Request reached the Inbox — the staff side of a submission

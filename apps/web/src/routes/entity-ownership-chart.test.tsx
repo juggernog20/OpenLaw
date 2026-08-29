@@ -223,7 +223,7 @@ describe("/entities?view=chart", () => {
     );
     expect(within(switcher).getByRole("link", { name: "List" })).toHaveAttribute(
       "href",
-      "/entities",
+      "/entities?view=list",
     );
     expect(document.querySelector('[data-edge-kind="secondary"]')).toBeInTheDocument();
     expect(document.querySelector('[data-unconnected="true"]')).toHaveTextContent(

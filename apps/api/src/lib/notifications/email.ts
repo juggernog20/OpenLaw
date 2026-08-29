@@ -721,12 +721,9 @@ function statusWord(status: string | null): string | null {
 // **The register is DES-051's**: a briefing states, it does not urge.
 // -------------------------------------------------------------------
 
-/** One line of the briefing, as the round hands it over. */
-export interface DigestRow {
-  /** Which of the three tracked dates this is (NOT-002 group 3). */
+interface DigestRowBase {
+  /** Which tracked date this is (NOT-002 group 3). */
   eventType: NotificationEventType;
-  entityType: "matter" | "contract";
-  recordNumber: number;
   recordTitle: string;
   /** The date itself, as a civil date. */
   date: string;
@@ -744,6 +741,13 @@ export interface DigestRow {
   label: string | null;
 }
 
+/** One line of the briefing, as the round hands it over. */
+export type DigestRow = DigestRowBase &
+  (
+    | { entityType: "matter" | "contract"; recordNumber: number }
+    | { entityType: "entity"; recordId: string }
+  );
+
 /** What the round hands the template layer for one person. */
 export interface DigestMail {
   recipientName: string;
@@ -757,6 +761,7 @@ const DIGEST_RANK: Record<string, number> = {
   "date.notice_deadline_approaching": 0,
   "date.expiry_approaching": 1,
   "date.key_date_approaching": 2,
+  "date.obligation_approaching": 3,
 };
 
 /** What each kind of date is called when it has no name of its own. */
@@ -764,6 +769,7 @@ const DIGEST_KIND: Record<string, string> = {
   "date.notice_deadline_approaching": "Notice deadline",
   "date.expiry_approaching": "Expiry",
   "date.key_date_approaching": "Key date",
+  "date.obligation_approaching": "Obligation",
 };
 
 /** One date as a reader reads it: `Mar 12, 2026`. Rendered in UTC
@@ -790,8 +796,22 @@ function whenIs(daysAway: number): string {
 function digestLine(row: DigestRow): string {
   const kind = row.label ?? DIGEST_KIND[row.eventType] ?? "Date";
   const on = DIGEST_DATE.format(civilInstant(row.date));
-  const reference = row.entityType === "matter" ? `M-${row.recordNumber}` : `#${row.recordNumber}`;
-  return `${whenIs(row.daysAway)} (${on}) — ${kind}: ${row.recordTitle} (${reference})`;
+  const reference =
+    row.entityType === "entity"
+      ? row.recordTitle
+      : `${row.recordTitle} (${row.entityType === "matter" ? `M-${row.recordNumber}` : `#${row.recordNumber}`})`;
+  return `${whenIs(row.daysAway)} (${on}) — ${kind}: ${reference}`;
+}
+
+function digestLink(row: DigestRow, baseUrl: string): string {
+  if (row.entityType === "entity") {
+    return `${origin(baseUrl)}/entities/${row.recordId}/obligations`;
+  }
+  const record =
+    row.entityType === "matter"
+      ? matterLink(baseUrl, row.recordNumber)
+      : recordLink(baseUrl, row.recordNumber);
+  return `${record}/key-dates`;
 }
 
 /**
@@ -821,16 +841,37 @@ export function renderDigestMail(
     const byRank = (DIGEST_RANK[left.eventType] ?? 9) - (DIGEST_RANK[right.eventType] ?? 9);
     if (byRank !== 0) return byRank;
     const byTitle = left.recordTitle.localeCompare(right.recordTitle);
-    return byTitle !== 0 ? byTitle : left.recordNumber - right.recordNumber;
+    if (byTitle !== 0) return byTitle;
+    if (left.entityType === "entity" || right.entityType === "entity") {
+      const leftId = left.entityType === "entity" ? left.recordId : String(left.recordNumber);
+      const rightId = right.entityType === "entity" ? right.recordId : String(right.recordNumber);
+      return leftId.localeCompare(rightId);
+    }
+    return left.recordNumber - right.recordNumber;
   });
   const count = rows.length;
   const kinds = new Set(rows.map((row) => row.entityType));
   const destination =
     kinds.size > 1
-      ? "your matters and contracts"
+      ? "your records"
       : kinds.has("matter")
         ? "your matters"
-        : "your contracts";
+        : kinds.has("entity")
+          ? "your entities"
+          : "your contracts";
+  const obligations = rows.filter((row) => row.entityType === "entity");
+  const recordDates = rows.filter((row) => row.entityType !== "entity");
+  const lines = (sectionRows: readonly DigestRow[]) =>
+    sectionRows.flatMap((row) => [digestLine(row), digestLink(row, baseUrl), ""]);
+  const sectionedRows =
+    obligations.length === 0
+      ? lines(rows)
+      : [
+          ...(recordDates.length > 0 ? ["Dates", "", ...lines(recordDates)] : []),
+          "Obligations",
+          "",
+          ...lines(obligations),
+        ];
   return {
     to,
     // Digits, sentence case, no full stop — a subject is a fragment
@@ -845,11 +886,7 @@ export function renderDigestMail(
       // it. The Key dates section is the address (DES-049 clause 9) —
       // landing a reader on the overview and making them find the date
       // they were just told about is one click short of the promise.
-      ...rows.flatMap((row) => [
-        digestLine(row),
-        `${row.entityType === "matter" ? matterLink(baseUrl, row.recordNumber) : recordLink(baseUrl, row.recordNumber)}/key-dates`,
-        "",
-      ]),
+      ...sectionedRows,
       // The way out, on the one channel where the reader is not already
       // in the app. A digest with no way to turn it down is what trains
       // people to filter the sender.

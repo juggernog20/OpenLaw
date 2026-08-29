@@ -15,15 +15,26 @@
  * into the full module.
  */
 
-import { useState } from "react";
-import { Link, redirect, useLoaderData, type LoaderFunctionArgs } from "react-router";
+import { useState, type ReactNode } from "react";
+import { Form, Link, redirect, useLoaderData, type LoaderFunctionArgs } from "react-router";
 import { FormattedMessage, useIntl } from "react-intl";
-import { Building2, Landmark, List, Network, Plus } from "lucide-react";
+import {
+  Building2,
+  CalendarDays,
+  ChevronLeft,
+  ChevronRight,
+  Landmark,
+  List,
+  Network,
+  Plus,
+} from "lucide-react";
 import { api } from "../lib/api";
+import { civilToday, formatFullDate } from "../lib/format";
 import {
   ENTITY_STATUSES,
   STATUS_PILL,
   statusLabel,
+  type CalendarObligation,
   type EntityRow,
   type EntityStatus,
   type EntityTypeOption,
@@ -47,30 +58,62 @@ export async function entitiesLoader({ request }: LoaderFunctionArgs) {
   // ENT-004: Contributors and Business Users get nothing — not a
   // disabled surface, no surface. The API's 403 stands behind this.
   if (!isMemberPlus(user.role)) return redirect("/");
-  const chartView = new URL(request.url).searchParams.get("view") === "chart";
-  const [list, types, chart] = await Promise.all([
+  const url = new URL(request.url);
+  const requestedView = url.searchParams.get("view");
+  const view: "calendar" | "list" | "chart" =
+    requestedView === "chart" ? "chart" : requestedView === "list" ? "list" : "calendar";
+  const query = {
+    entity: url.searchParams.get("entity") ?? undefined,
+    assignee: url.searchParams.get("assignee") ?? undefined,
+    from: url.searchParams.get("from") ?? undefined,
+    to: url.searchParams.get("to") ?? undefined,
+    includeCompleted:
+      url.searchParams.get("includeCompleted") === "true" ? ("true" as const) : undefined,
+  };
+  const [list, types, chart, calendar, obligationOptions] = await Promise.all([
     api.GET("/api/v1/entities"),
     api.GET("/api/v1/entities/types"),
-    chartView ? api.GET("/api/v1/entities/chart") : Promise.resolve(undefined),
+    view === "chart" ? api.GET("/api/v1/entities/chart") : Promise.resolve(undefined),
+    view === "calendar"
+      ? api.GET("/api/v1/entities/calendar", { params: { query } })
+      : Promise.resolve(undefined),
+    view === "calendar"
+      ? api.GET("/api/v1/entities/obligation-options")
+      : Promise.resolve(undefined),
   ]);
   if (!list.data || !types.data) throw new Error("The registry could not be read.");
-  if (chartView && !chart?.data) throw new Error("The Entity chart could not be read.");
+  if (view === "chart" && !chart?.data) throw new Error("The Entity chart could not be read.");
+  if (view === "calendar" && (!calendar?.data || !obligationOptions?.data)) {
+    throw new Error("The compliance calendar could not be read.");
+  }
   return {
     user,
     entities: list.data.entities,
     entityTypes: types.data.entityTypes,
-    view: chartView ? ("chart" as const) : ("list" as const),
+    view,
     chart: chart?.data,
+    calendar: calendar?.data?.obligations ?? [],
+    obligationOptions: obligationOptions?.data ?? { users: [], matters: [] },
+    filters: query,
+    calendarView:
+      url.searchParams.get("calendar") === "month" ? ("month" as const) : ("list" as const),
+    month: url.searchParams.get("month"),
   };
 }
 
-/** List or chart: two links, the current one marked `aria-current`. */
-function ViewSwitch({ view }: Readonly<{ view: "list" | "chart" }>) {
+/** Calendar, registry list, or ownership chart; the current link is marked. */
+function ViewSwitch({ view }: Readonly<{ view: "calendar" | "list" | "chart" }>) {
   const intl = useIntl();
   const options = [
     [
-      "list",
+      "calendar",
       "/entities",
+      CalendarDays,
+      intl.formatMessage({ id: "entities.view.calendar", defaultMessage: "Calendar" }),
+    ],
+    [
+      "list",
+      "/entities?view=list",
       List,
       intl.formatMessage({ id: "entities.view.list", defaultMessage: "List" }),
     ],
@@ -114,7 +157,8 @@ function byLegalName(a: EntityRow, b: EntityRow): number {
 }
 
 export function EntitiesPage() {
-  const { user, entities, entityTypes, view, chart } = useLoaderData<typeof entitiesLoader>();
+  const loaded = useLoaderData<typeof entitiesLoader>();
+  const { user, entities, entityTypes, view, chart } = loaded;
   const intl = useIntl();
   const [rows, setRows] = useState<EntityRow[]>(entities);
   const [registerOpen, setRegisterOpen] = useState(false);
@@ -198,7 +242,16 @@ export function EntitiesPage() {
       }
     >
       <PageTitle title={intl.formatMessage({ id: "entities.title", defaultMessage: "Entities" })} />
-      {view === "chart" && chart ? (
+      {view === "calendar" ? (
+        <ComplianceCalendar
+          rows={loaded.calendar}
+          entities={rows}
+          users={loaded.obligationOptions.users}
+          filters={loaded.filters}
+          initialView={loaded.calendarView}
+          initialMonth={loaded.month}
+        />
+      ) : view === "chart" && chart ? (
         <div className="flex min-h-0 flex-1 flex-col gap-3">
           <div className="flex items-center justify-end gap-2">
             <ViewSwitch view={view} />
@@ -243,6 +296,442 @@ export function EntitiesPage() {
       )}
     </AppShell>
   );
+}
+
+function ComplianceCalendar({
+  rows,
+  entities,
+  users,
+  filters,
+  initialView,
+  initialMonth,
+}: Readonly<{
+  rows: CalendarObligation[];
+  entities: EntityRow[];
+  users: readonly { id: string; displayName: string }[];
+  filters: {
+    entity?: string;
+    assignee?: string;
+    from?: string;
+    to?: string;
+    includeCompleted?: "true";
+  };
+  initialView: "list" | "month";
+  initialMonth: string | null;
+}>) {
+  const intl = useIntl();
+  const filtered = Boolean(
+    filters.entity || filters.assignee || filters.from || filters.to || filters.includeCompleted,
+  );
+  // Switching between the list and the month keeps the filters the
+  // reader has already set; only Clear all drops them.
+  const held = new URLSearchParams();
+  for (const [key, value] of Object.entries(filters)) if (value) held.set(key, value);
+  const listHref = held.size > 0 ? `/entities?${held.toString()}` : "/entities";
+  held.set("calendar", "month");
+  const monthHref = `/entities?${held.toString()}`;
+  const displayClass =
+    "rounded-chip px-2.5 py-1 text-sm aria-[current=page]:bg-accent aria-[current=page]:font-medium";
+  return (
+    <div className="flex min-h-0 flex-1 flex-col gap-3">
+      <div className="flex flex-wrap items-center gap-2">
+        <ViewSwitch view="calendar" />
+        <nav
+          aria-label={intl.formatMessage({
+            id: "entities.calendar.display",
+            defaultMessage: "Calendar display",
+          })}
+          className="inline-flex rounded-button border border-border-default bg-raised p-0.5"
+        >
+          <Link
+            to={listHref}
+            aria-current={initialView === "list" ? "page" : undefined}
+            className={displayClass}
+          >
+            <FormattedMessage id="entities.calendar.listView" defaultMessage="Due-date list" />
+          </Link>
+          <Link
+            to={monthHref}
+            aria-current={initialView === "month" ? "page" : undefined}
+            className={displayClass}
+          >
+            <FormattedMessage id="entities.calendar.monthView" defaultMessage="Month" />
+          </Link>
+        </nav>
+      </div>
+      <section className="rounded-card border border-border-default bg-raised p-4">
+        <h2 className="text-lg font-semibold">
+          <FormattedMessage id="entities.calendar.title" defaultMessage="Compliance calendar" />
+        </h2>
+        <Form
+          method="get"
+          className="mt-3 grid grid-cols-1 gap-3 @xl/page:grid-cols-[1fr_1fr_10rem_10rem_auto_auto]"
+        >
+          {initialView === "month" ? <input type="hidden" name="calendar" value="month" /> : null}
+          <CalendarSelect
+            id="calendar-entity"
+            label={intl.formatMessage({ id: "entities.calendar.entity", defaultMessage: "Entity" })}
+            name="entity"
+            defaultValue={filters.entity}
+          >
+            <option value="">
+              {intl.formatMessage({
+                id: "entities.calendar.allEntities",
+                defaultMessage: "All Entities",
+              })}
+            </option>
+            {entities
+              .filter((row) => row.archivedAt === null)
+              .map((row) => (
+                <option key={row.id} value={row.id}>
+                  {row.legalName}
+                </option>
+              ))}
+          </CalendarSelect>
+          <CalendarSelect
+            id="calendar-assignee"
+            label={intl.formatMessage({
+              id: "entities.calendar.assignee",
+              defaultMessage: "Assignee",
+            })}
+            name="assignee"
+            defaultValue={filters.assignee}
+          >
+            <option value="">
+              {intl.formatMessage({ id: "entities.calendar.everyone", defaultMessage: "Everyone" })}
+            </option>
+            {users.map((row) => (
+              <option key={row.id} value={row.id}>
+                {row.displayName}
+              </option>
+            ))}
+          </CalendarSelect>
+          <FieldLabel
+            id="calendar-from"
+            label={intl.formatMessage({ id: "entities.calendar.from", defaultMessage: "From" })}
+          >
+            <Input id="calendar-from" name="from" type="date" defaultValue={filters.from} />
+          </FieldLabel>
+          <FieldLabel
+            id="calendar-to"
+            label={intl.formatMessage({ id: "entities.calendar.to", defaultMessage: "To" })}
+          >
+            <Input id="calendar-to" name="to" type="date" defaultValue={filters.to} />
+          </FieldLabel>
+          <label className="flex items-center gap-2 self-end pb-2 text-sm">
+            <input
+              type="checkbox"
+              name="includeCompleted"
+              value="true"
+              defaultChecked={filters.includeCompleted === "true"}
+            />
+            <FormattedMessage
+              id="entities.calendar.includeCompleted"
+              defaultMessage="Include completed"
+            />
+          </label>
+          <Button type="submit" variant="secondary" className="self-end">
+            <FormattedMessage id="entities.calendar.apply" defaultMessage="Apply" />
+          </Button>
+        </Form>
+      </section>
+      {rows.length === 0 ? (
+        <CalendarEmpty
+          filtered={filtered}
+          firstEntityId={entities.find((row) => row.archivedAt === null)?.id}
+        />
+      ) : initialView === "month" ? (
+        <MonthCalendar rows={rows} initialMonth={initialMonth} />
+      ) : (
+        <CalendarList rows={rows} />
+      )}
+    </div>
+  );
+}
+
+function CalendarSelect({
+  id,
+  label,
+  name,
+  defaultValue,
+  children,
+}: Readonly<{
+  id: string;
+  label: string;
+  name: string;
+  defaultValue?: string;
+  children: ReactNode;
+}>) {
+  return (
+    <FieldLabel id={id} label={label}>
+      <select id={id} name={name} defaultValue={defaultValue ?? ""} className={CONTROL_CLASS}>
+        {children}
+      </select>
+    </FieldLabel>
+  );
+}
+
+function FieldLabel({
+  id,
+  label,
+  children,
+}: Readonly<{ id: string; label: string; children: ReactNode }>) {
+  return (
+    <div className="flex flex-col gap-1.5">
+      <Label htmlFor={id}>{label}</Label>
+      {children}
+    </div>
+  );
+}
+
+function CalendarEmpty({
+  filtered,
+  firstEntityId,
+}: Readonly<{ filtered: boolean; firstEntityId?: string }>) {
+  return (
+    <div className="flex flex-col items-center gap-3 rounded-card border border-border-default bg-raised px-6 py-14 text-center">
+      <CalendarDays size={24} className="text-subtle" aria-hidden="true" />
+      <div>
+        <h2 className="text-md font-semibold">
+          {filtered ? (
+            <FormattedMessage
+              id="entities.calendar.noMatch"
+              defaultMessage="No obligations match"
+            />
+          ) : (
+            <FormattedMessage id="entities.calendar.empty" defaultMessage="No obligations yet" />
+          )}
+        </h2>
+        <p className="mt-1 text-sm text-muted">
+          {filtered ? (
+            <FormattedMessage
+              id="entities.calendar.noMatchHint"
+              defaultMessage="Change or clear the filters to see other due dates."
+            />
+          ) : (
+            <FormattedMessage
+              id="entities.calendar.emptyHint"
+              defaultMessage="Obligations added to Entity records appear here."
+            />
+          )}
+        </p>
+      </div>
+      {filtered ? (
+        <Link className="text-link hover:underline" to="/entities">
+          <FormattedMessage id="entities.calendar.clear" defaultMessage="Clear all" />
+        </Link>
+      ) : firstEntityId ? (
+        <Link className="text-link hover:underline" to={`/entities/${firstEntityId}/obligations`}>
+          <FormattedMessage id="entities.calendar.add" defaultMessage="Add obligation" />
+        </Link>
+      ) : null}
+    </div>
+  );
+}
+
+/** DES-018: an overdue open obligation reads in the severe family. */
+const OVERDUE_TEXT = "text-status-severe-fg";
+
+function CalendarList({ rows }: Readonly<{ rows: CalendarObligation[] }>) {
+  const intl = useIntl();
+  return (
+    <div className="overflow-x-auto rounded-card border border-border-default bg-raised">
+      <table className="w-full">
+        <thead>
+          <tr className="bg-section-header text-sm text-muted">
+            <CalendarHeader>
+              {intl.formatMessage({ id: "entities.calendar.dueDate", defaultMessage: "Due date" })}
+            </CalendarHeader>
+            <CalendarHeader>
+              {intl.formatMessage({
+                id: "entities.calendar.obligation",
+                defaultMessage: "Obligation",
+              })}
+            </CalendarHeader>
+            <CalendarHeader>
+              {intl.formatMessage({ id: "entities.calendar.entity", defaultMessage: "Entity" })}
+            </CalendarHeader>
+            <CalendarHeader>
+              {intl.formatMessage({ id: "entities.calendar.assignee", defaultMessage: "Assignee" })}
+            </CalendarHeader>
+            <CalendarHeader>
+              {intl.formatMessage({ id: "entities.calendar.repeat", defaultMessage: "Repeat" })}
+            </CalendarHeader>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((row) => (
+            <tr key={row.id} className="border-t border-border-default">
+              <td className={`px-4 py-3 text-sm ${row.overdue ? OVERDUE_TEXT : "text-muted"}`}>
+                {formatFullDate(row.nextDueOn)}
+              </td>
+              <td className="px-4 py-3">
+                <Link
+                  to={`/entities/${row.entityId}/obligations`}
+                  className={`font-medium hover:underline ${row.overdue ? OVERDUE_TEXT : "text-link"}`}
+                >
+                  {row.label}
+                </Link>
+                {row.completedOn ? (
+                  <span className="ms-2 rounded-pill bg-status-success-bg px-2 py-0.5 text-xs text-status-success-fg">
+                    <FormattedMessage id="entities.calendar.filed" defaultMessage="Filed" />
+                  </span>
+                ) : null}
+              </td>
+              <td className="px-4 py-3">
+                <Link className="text-link hover:underline" to={`/entities/${row.entityId}`}>
+                  {row.entity.legalName}
+                </Link>
+              </td>
+              <td className="px-4 py-3 text-sm text-muted">
+                {row.assignee?.displayName ??
+                  intl.formatMessage({
+                    id: "entities.calendar.unassigned",
+                    defaultMessage: "Unassigned",
+                  })}
+              </td>
+              <td className="px-4 py-3 text-sm text-muted">
+                {row.recurrenceMonths
+                  ? intl.formatMessage(
+                      {
+                        id: "entities.calendar.every",
+                        defaultMessage: "Every {months, plural, one {month} other {# months}}",
+                      },
+                      { months: row.recurrenceMonths },
+                    )
+                  : intl.formatMessage({
+                      id: "entities.calendar.oneOff",
+                      defaultMessage: "One-off",
+                    })}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+function CalendarHeader({ children }: Readonly<{ children: string }>) {
+  return (
+    <th scope="col" className="px-4 py-2 text-start font-medium">
+      {children}
+    </th>
+  );
+}
+
+function MonthCalendar({
+  rows,
+  initialMonth,
+}: Readonly<{ rows: CalendarObligation[]; initialMonth: string | null }>) {
+  const intl = useIntl();
+  const [month, setMonth] = useState(() => parseMonth(initialMonth));
+  // A month is a civil span, not an instant, so it is named in UTC the
+  // way a stored civil date is (DES-014).
+  const title = intl.formatDate(month, { month: "long", year: "numeric", timeZone: "UTC" });
+  const year = month.getUTCFullYear();
+  const monthIndex = month.getUTCMonth();
+  const firstWeekday = new Date(Date.UTC(year, monthIndex, 1)).getUTCDay();
+  const start = new Date(Date.UTC(year, monthIndex, 1 - firstWeekday));
+  const days = Array.from({ length: 42 }, (_, offset) => {
+    const day = new Date(start);
+    day.setUTCDate(start.getUTCDate() + offset);
+    return day;
+  });
+  function step(delta: number) {
+    setMonth(new Date(Date.UTC(month.getUTCFullYear(), month.getUTCMonth() + delta, 1)));
+  }
+  return (
+    <section className="overflow-hidden rounded-card border border-border-default bg-raised">
+      <header className="flex items-center justify-between gap-3 border-b border-border-default bg-section-header px-4 py-3">
+        <h2 className="text-lg font-semibold">{title}</h2>
+        <div className="flex items-center gap-1">
+          <Button
+            size="icon"
+            variant="ghost"
+            aria-label={intl.formatMessage({
+              id: "entities.calendar.previousMonth",
+              defaultMessage: "Previous month",
+            })}
+            onClick={() => step(-1)}
+          >
+            <ChevronLeft size={16} />
+          </Button>
+          <Button size="sm" variant="secondary" onClick={() => setMonth(currentMonth())}>
+            <FormattedMessage id="entities.calendar.today" defaultMessage="Today" />
+          </Button>
+          <Button
+            size="icon"
+            variant="ghost"
+            aria-label={intl.formatMessage({
+              id: "entities.calendar.nextMonth",
+              defaultMessage: "Next month",
+            })}
+            onClick={() => step(1)}
+          >
+            <ChevronRight size={16} />
+          </Button>
+        </div>
+      </header>
+      <div role="grid" aria-label={title} className="grid grid-cols-7">
+        {days.slice(0, 7).map((day) => (
+          <div
+            role="columnheader"
+            key={day.getUTCDay()}
+            className="border-b border-e border-border-muted bg-section-header px-2 py-2 text-center text-xs font-medium text-muted"
+          >
+            {intl.formatDate(day, { weekday: "short", timeZone: "UTC" })}
+          </div>
+        ))}
+        {days.map((day) => {
+          const key = isoDay(day);
+          const held = rows.filter((row) => row.nextDueOn === key);
+          const inMonth = day.getUTCMonth() === monthIndex;
+          return (
+            <div
+              role="gridcell"
+              key={key}
+              className="min-h-28 border-b border-e border-border-muted p-2"
+            >
+              <span className={`text-xs ${inMonth ? "text-primary" : "text-subtle"}`}>
+                {day.getUTCDate()}
+              </span>
+              <div className="mt-1 flex flex-col gap-1">
+                {held.map((row) => (
+                  <Link
+                    key={row.id}
+                    to={`/entities/${row.entityId}/obligations`}
+                    className={`rounded-chip px-1.5 py-1 text-xs hover:underline ${row.overdue ? "bg-status-severe-bg text-status-severe-fg" : "bg-accent text-link"}`}
+                  >
+                    {row.label}
+                  </Link>
+                ))}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
+function parseMonth(value: string | null) {
+  const match = value?.match(/^(\d{4})-(\d{2})$/);
+  if (!match) return currentMonth();
+  const month = Number(match[2]);
+  return month >= 1 && month <= 12
+    ? new Date(Date.UTC(Number(match[1]), month - 1, 1))
+    : currentMonth();
+}
+
+/** The first day of the reader's own current month (DES-014). */
+function currentMonth() {
+  const today = civilToday();
+  return new Date(Date.UTC(Number(today.slice(0, 4)), Number(today.slice(5, 7)) - 1, 1));
+}
+
+function isoDay(day: Date) {
+  return day.toISOString().slice(0, 10);
 }
 
 /** ENT-001's pitch, for the first visit (the M7 spec's empty state). */
