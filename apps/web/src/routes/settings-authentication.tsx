@@ -17,7 +17,7 @@ import { FormattedMessage, useIntl } from "react-intl";
 import { X } from "lucide-react";
 import type { paths } from "@openlaw/api-client";
 import { api } from "../lib/api";
-import { problemDetail } from "../lib/messages";
+import { problem } from "../lib/problem";
 import { requireUser } from "../lib/session";
 import { cn } from "../lib/utils";
 import { PageTitle } from "../components/page-title";
@@ -175,10 +175,11 @@ export function SettingsAuthenticationPage() {
   async function commitMode(next: AuthMode): Promise<void> {
     note("mode", "saving");
     try {
-      const { data, error } = await api.PATCH("/api/v1/auth/mode", { body: { mode: next } });
+      const result = await api.PATCH("/api/v1/auth/mode", { body: { mode: next } });
+      const { data } = result;
       if (!data) {
         setModeDraft(null);
-        note("mode", "error", problemDetail(error));
+        note("mode", "error", (await problem(result)).detail);
         return;
       }
       setMode(data.mode);
@@ -218,11 +219,12 @@ export function SettingsAuthenticationPage() {
   async function commitPortal(next: boolean): Promise<void> {
     note("portal", "saving");
     try {
-      const { data, error } = await api.PATCH("/api/v1/auth/portal", {
+      const result = await api.PATCH("/api/v1/auth/portal", {
         body: { magicLinkEnabled: next },
       });
+      const { data } = result;
       if (!data) {
-        note("portal", "error", problemDetail(error));
+        note("portal", "error", (await problem(result)).detail);
         return;
       }
       setMagicLinkEnabled(data.magicLinkEnabled);
@@ -237,11 +239,12 @@ export function SettingsAuthenticationPage() {
   async function commitDomains(next: string[]): Promise<boolean> {
     note("domains", "saving");
     try {
-      const { data, error } = await api.PUT("/api/v1/auth/allowed-domains", {
+      const result = await api.PUT("/api/v1/auth/allowed-domains", {
         body: { domains: next },
       });
+      const { data } = result;
       if (!data) {
-        note("domains", "error", problemDetail(error));
+        note("domains", "error", (await problem(result)).detail);
         return false;
       }
       setDomains(data.domains);
@@ -281,12 +284,13 @@ export function SettingsAuthenticationPage() {
           note("provider", "idle");
           return;
         }
-        const { data, error } = await api.PATCH("/api/v1/auth/sso-providers/{providerId}", {
+        const result = await api.PATCH("/api/v1/auth/sso-providers/{providerId}", {
           params: { path: { providerId: provider.providerId } },
           body,
         });
+        const { data } = result;
         if (!data) {
-          note("provider", "error", problemDetail(error));
+          note("provider", "error", (await problem(result)).detail);
           return;
         }
         setProvider({ ...data.provider, clientId: clientIdDraft });
@@ -295,7 +299,7 @@ export function SettingsAuthenticationPage() {
         note("provider", "saved");
         return;
       }
-      const { data, error } = await api.POST("/api/v1/auth/sso-providers", {
+      const result = await api.POST("/api/v1/auth/sso-providers", {
         body: {
           providerId: providerIdDraft,
           issuer: issuerDraft,
@@ -304,8 +308,9 @@ export function SettingsAuthenticationPage() {
           clientSecret: secretDraft,
         },
       });
+      const { data } = result;
       if (!data) {
-        note("provider", "error", problemDetail(error));
+        note("provider", "error", (await problem(result)).detail);
         return;
       }
       setProvider({ ...data.provider, clientId: clientIdDraft });

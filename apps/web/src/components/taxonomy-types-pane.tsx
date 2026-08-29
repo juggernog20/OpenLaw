@@ -24,7 +24,7 @@ import { useRef, useState, type ReactNode, type SubmitEvent as FormSubmitEvent }
 import { useNavigate } from "react-router";
 import { FormattedMessage, useIntl, type MessageDescriptor } from "react-intl";
 import { History, Pencil, TriangleAlert } from "lucide-react";
-import type { ApiResult } from "../lib/api-result";
+import { problem, type ProblemResult } from "../lib/problem";
 import { field } from "../lib/forms";
 import { ListEditor } from "./list-editor";
 import { PageTitle } from "./page-title";
@@ -57,11 +57,11 @@ export interface TaxonomyPaneRow {
  * mount with nothing extra takes the default and is unchanged.
  */
 export interface TaxonomyPaneApi<Row extends TaxonomyPaneRow = TaxonomyPaneRow> {
-  create(displayName: string): Promise<ApiResult<Row>>;
-  rename(id: string, displayName: string): Promise<ApiResult<Row>>;
-  reorder(ids: string[]): Promise<ApiResult<Row[]>>;
-  archive(id: string, reassignToId?: string): Promise<ApiResult<Row>>;
-  restore(id: string): Promise<ApiResult<Row>>;
+  create(displayName: string): Promise<ProblemResult<Row>>;
+  rename(id: string, displayName: string): Promise<ProblemResult<Row>>;
+  reorder(ids: string[]): Promise<ProblemResult<Row[]>>;
+  archive(id: string, reassignToId?: string): Promise<ProblemResult<Row>>;
+  restore(id: string): Promise<ProblemResult<Row>>;
 }
 
 /**
@@ -346,7 +346,7 @@ export function TaxonomyTypesPane<Row extends TaxonomyPaneRow = TaxonomyPaneRow>
     noteRow(row.id, "saving");
     const { data, detail } = await api
       .rename(row.id, displayName)
-      .catch(() => ({ data: undefined, detail: undefined }));
+      .catch(async () => ({ data: undefined, ...(await problem(undefined)) }));
     if (data) {
       replaceRow(data);
       noteRow(row.id, "saved");
@@ -370,7 +370,7 @@ export function TaxonomyTypesPane<Row extends TaxonomyPaneRow = TaxonomyPaneRow>
     try {
       const { data, detail } = await api
         .create(displayName)
-        .catch(() => ({ data: undefined, detail: undefined }));
+        .catch(async () => ({ data: undefined, ...(await problem(undefined)) }));
       if (data) {
         setRows((current) => [...current, data]);
         setAdding(false);
@@ -391,7 +391,7 @@ export function TaxonomyTypesPane<Row extends TaxonomyPaneRow = TaxonomyPaneRow>
     setOrderError(undefined);
     const { data, detail } = await api
       .reorder(orderedIds)
-      .catch(() => ({ data: undefined, detail: undefined }));
+      .catch(async () => ({ data: undefined, ...(await problem(undefined)) }));
     if (data) {
       const reordered = data;
       setRows((current) => [
@@ -428,7 +428,7 @@ export function TaxonomyTypesPane<Row extends TaxonomyPaneRow = TaxonomyPaneRow>
     noteRow(row.id, "saving");
     const { data, detail } = await api
       .restore(row.id)
-      .catch(() => ({ data: undefined, detail: undefined }));
+      .catch(async () => ({ data: undefined, ...(await problem(undefined)) }));
     if (data) {
       replaceRow(data);
       noteRow(row.id, "saved");

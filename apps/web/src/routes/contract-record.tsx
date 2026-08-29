@@ -204,7 +204,7 @@ import {
 } from "../lib/documents";
 import type { ContractFolder } from "../lib/folders";
 import { CONTROL_CLASS, TEXTAREA_CLASS } from "../lib/form-controls";
-import { problemDetail, problemType } from "../lib/messages";
+import { problem as readProblem } from "../lib/problem";
 import { cn } from "../lib/utils";
 import { canReadContracts, isMemberPlus } from "../lib/roles";
 import { requireUser, useSignOut } from "../lib/session";
@@ -330,7 +330,7 @@ export async function contractRecordLoader({ params, request }: LoaderFunctionAr
     // the page, it only hides the Related contracts card.
     api
       .GET("/api/v1/contracts/{number}/relations", { params: { path: { number } } })
-      .catch(() => ({ data: undefined, error: undefined })),
+      .catch(() => undefined),
     api.GET("/api/v1/contracts/{number}/matter", { params: { path: { number } } }),
     canEdit ? api.GET("/api/v1/contracts/options") : undefined,
     // The registry's own Member+ list is the signing-entity picker's
@@ -1111,17 +1111,18 @@ export function ContractRecordPage() {
    * and whoever asked for the commit decides where to show it. */
   async function commit(key: FieldKey, body: Record<string, unknown>): Promise<CommitOutcome> {
     note(key, "saving");
-    const { data, error } = await api
+    const result = await api
       .PATCH("/api/v1/contracts/{number}", {
         params: { path: { number: saved.number } },
         body,
       })
-      .catch(() => ({ data: undefined, error: undefined }));
-    if (!data) {
-      const detail = problemDetail(error);
-      note(key, "error", detail);
-      return { ok: false, detail, type: problemType(error) };
+      .catch(() => undefined);
+    if (!result?.data) {
+      const failure = await readProblem(result);
+      note(key, "error", failure.detail);
+      return { ok: false, ...failure };
     }
+    const data = result.data;
     const row = data.contract;
     setSaved(row);
     setAttached(data.fields);
@@ -1385,23 +1386,23 @@ export function ContractRecordPage() {
     setArchiveStatus("saving");
     setArchiveError(undefined);
     const path = { params: { path: { number: saved.number } } };
-    const { data, error } = await (
+    const result = await (
       archived
         ? api.POST("/api/v1/contracts/{number}/restore", path)
         : api.POST("/api/v1/contracts/{number}/archive", path)
-    ).catch(() => ({ data: undefined, error: undefined }));
-    if (data) {
+    ).catch(() => undefined);
+    if (result?.data) {
       // A record-level action: the card re-reads as saved truth, so
       // every draft resets — an in-progress edit on a record being
       // archived is deliberately discarded, and a restore starts clean.
-      const row = data.contract;
+      const row = result.data.contract;
       setSaved(row);
       setDrafts(textDrafts(row));
       setTermFields(termDrafts(row));
       setArchiveStatus("idle");
     } else {
       setArchiveStatus("error");
-      setArchiveError(problemDetail(error));
+      setArchiveError((await readProblem(result)).detail);
     }
   }
 
@@ -2722,18 +2723,18 @@ function CounterpartiesField({
     hadRefusal.current = false;
     setBusy(true);
     onStatus("saving");
-    const { data, error: problem } = await call
-      .catch(() => ({ data: undefined, error: undefined }))
+    const result = await call
+      .catch(() => undefined)
       .finally(() => {
         inFlight.current = false;
         setBusy(false);
       });
-    if (!data) {
+    if (!result?.data) {
       hadRefusal.current = true;
-      onStatus("error", problemDetail(problem));
+      onStatus("error", (await readProblem(result)).detail);
       return;
     }
-    onChange(data.contract, data.counterparties);
+    onChange(result.data.contract, result.data.counterparties);
     // Only set "saved" if no refusal occurred.
     if (!hadRefusal.current) {
       onStatus("saved");

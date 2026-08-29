@@ -15,6 +15,7 @@ import { FileText } from "lucide-react";
 import { FormattedMessage, useIntl } from "react-intl";
 import type { paths } from "@openlaw/api-client";
 import { api } from "../lib/api";
+import { problem } from "../lib/problem";
 import {
   DOCUMENT_REPOSITORY_FORMATS,
   DOCUMENT_REPOSITORY_KINDS,
@@ -345,7 +346,7 @@ function DocumentsPageState() {
     setBusy(true);
     setListError(null);
     const outcome = await restoreDocument(row.id)
-      .catch(() => ({ ok: false as const, detail: undefined }))
+      .catch(async () => ({ ok: false as const, ...(await problem(undefined)) }))
       .finally(() => setBusy(false));
     if (!outcome.ok) {
       setListError(

@@ -1004,7 +1004,7 @@ This record describes the model as built and names the places where a different 
 
 **5. Session is read per navigation, in the loader, through `requireUser()`.** Every guarded loader calls it; it returns the user or throws a redirect to setup or login. Role gates stay in the loader beside the data they guard (SET-002's enforcement site). There is no root session loader and no `shouldRevalidate`: a revoked user or a changed role takes effect on the next click, which is the freshness a tool with no push channel owes its Administrators.
 
-**6. Refusals are read through one helper.** `problemDetail()` and `problemType()` in `lib/messages.ts` today; one `problem.ts` helper that also distinguishes network failure before M31 (#550). Most refusals are printed; the few a client branches on carry a TECH-020 type.
+**6. Refusals are read through one helper.** `problem()` in `lib/problem.ts` (#550) takes an openapi-fetch result, a raw `Response`, or nothing, and answers `{ detail, type, status, network }`. `network` is true only when the request got no answer; a refusal with no problem body keeps `network: false` and its `status`. Most refusals are printed; the few a client branches on carry a TECH-020 type.
 
 **7. Record pages share viewer facts through a context, not props.** A record page provides `RecordContext` (viewer id, role, whether the record is frozen, the record header) and its section cards read it. Sections take domain props only.
 

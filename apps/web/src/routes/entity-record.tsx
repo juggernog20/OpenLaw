@@ -31,7 +31,7 @@ import {
 } from "../lib/entities";
 import { useFieldCommit, type FieldStatus, type TextField } from "../lib/field-commit";
 import { CONTROL_CLASS, TEXTAREA_CLASS } from "../lib/form-controls";
-import { problemDetail } from "../lib/messages";
+import { problem } from "../lib/problem";
 import { isMemberPlus } from "../lib/roles";
 import { requireUser, useSignOut } from "../lib/session";
 import { AppShell } from "../components/shell/app-shell";
@@ -138,23 +138,23 @@ export function EntityRecordPage() {
   async function archiveOrRestore() {
     setArchiveStatus("saving");
     setArchiveError(undefined);
-    const { data, error } = await (
+    const result = await (
       archived
         ? api.POST("/api/v1/entities/{id}/restore", { params: { path: { id: saved.id } } })
         : api.POST("/api/v1/entities/{id}/archive", { params: { path: { id: saved.id } } })
-    ).catch(() => ({ data: undefined, error: undefined }));
-    if (data) {
+    ).catch(() => undefined);
+    if (result?.data) {
       // A record-level action: the card re-reads as saved truth, so
       // every draft resets — an in-progress edit on a record being
       // archived is deliberately discarded, and a restore starts clean.
-      const row = data.entity;
+      const row = result.data.entity;
       setSaved(row);
       setDrafts(textDrafts(row));
       setFormedOnDraft(row.formedOn ?? "");
       setArchiveStatus("idle");
     } else {
       setArchiveStatus("error");
-      setArchiveError(problemDetail(error));
+      setArchiveError((await problem(result)).detail);
     }
   }
 

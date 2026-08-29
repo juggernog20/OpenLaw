@@ -16,7 +16,8 @@ import { FormattedMessage, useIntl } from "react-intl";
 import { X } from "lucide-react";
 import { api } from "../lib/api";
 import { field } from "../lib/forms";
-import { networkError, problemDetail } from "../lib/messages";
+import { networkError } from "../lib/messages";
+import { problem as readProblem } from "../lib/problem";
 import { ROLE_MESSAGES } from "../lib/roles";
 import { requireUser } from "../lib/session";
 import { cn } from "../lib/utils";
@@ -158,7 +159,7 @@ export function WelcomePage() {
     setBusy(true);
     setError(null);
     try {
-      const { data, error: problem } = await api.POST("/api/v1/auth/sso-providers", {
+      const result = await api.POST("/api/v1/auth/sso-providers", {
         body: {
           providerId: field(form, "providerId"),
           issuer: field(form, "issuer"),
@@ -167,13 +168,14 @@ export function WelcomePage() {
           clientSecret: field(form, "clientSecret"),
         },
       });
+      const { data } = result;
       if (data) {
         setSsoProviderId(data.provider.providerId);
         setCallbackUrl(data.callbackUrl);
         return;
       }
       setError(
-        problemDetail(problem) ??
+        (await readProblem(result)).detail ??
           intl.formatMessage({
             id: "welcome.auth.error.register",
             defaultMessage: "The identity provider could not be registered.",
@@ -205,14 +207,15 @@ export function WelcomePage() {
     setBusy(true);
     setError(null);
     try {
-      const { data, error: problem } = await api.PATCH("/api/v1/auth/mode", { body: { mode } });
+      const result = await api.PATCH("/api/v1/auth/mode", { body: { mode } });
+      const { data } = result;
       if (data) {
         setSavedMethods((current) => ({ ...current, mode: data.mode }));
         goTo("portal");
         return;
       }
       setError(
-        problemDetail(problem) ??
+        (await readProblem(result)).detail ??
           intl.formatMessage({
             id: "welcome.auth.error.mode",
             defaultMessage: "The authentication mode could not be saved.",
@@ -239,7 +242,7 @@ export function WelcomePage() {
       const domainsPut = await api.PUT("/api/v1/auth/allowed-domains", { body: { domains } });
       if (!domainsPut.data) {
         setError(
-          problemDetail(domainsPut.error) ??
+          (await readProblem(domainsPut)).detail ??
             intl.formatMessage({
               id: "welcome.portal.error.domains",
               defaultMessage: "The domain allowlist could not be saved.",
@@ -251,7 +254,7 @@ export function WelcomePage() {
         const toggled = await api.PATCH("/api/v1/auth/portal", { body: { magicLinkEnabled } });
         if (!toggled.data) {
           setError(
-            problemDetail(toggled.error) ??
+            (await readProblem(toggled)).detail ??
               intl.formatMessage({
                 id: "welcome.portal.error.toggle",
                 defaultMessage: "The magic-link setting could not be saved.",
@@ -277,12 +280,13 @@ export function WelcomePage() {
     setError(null);
     setEmailNotice(null);
     try {
-      const { data, error: problem } = await api.PUT("/api/v1/email-settings", {
+      const result = await api.PUT("/api/v1/email-settings", {
         body: {
           smtpUrl: String(form.get("smtpUrl") ?? ""),
           smtpFrom: String(form.get("smtpFrom") ?? ""),
         },
       });
+      const { data } = result;
       if (data) {
         setEmailState(data);
         setEmailConfigured(data.source !== "unset");
@@ -296,7 +300,7 @@ export function WelcomePage() {
         return;
       }
       setError(
-        problemDetail(problem) ??
+        (await readProblem(result)).detail ??
           intl.formatMessage({
             id: "welcome.email.error.save",
             defaultMessage: "The relay could not be saved.",
@@ -314,9 +318,10 @@ export function WelcomePage() {
     setError(null);
     setEmailNotice(null);
     try {
-      const { data, error: problem } = await api.PUT("/api/v1/email-settings", {
+      const result = await api.PUT("/api/v1/email-settings", {
         body: { smtpUrl: null, smtpFrom: null },
       });
+      const { data } = result;
       if (data) {
         setEmailState(data);
         setEmailConfigured(data.source !== "unset");
@@ -329,7 +334,7 @@ export function WelcomePage() {
         return;
       }
       setError(
-        problemDetail(problem) ??
+        (await readProblem(result)).detail ??
           intl.formatMessage({
             id: "welcome.email.error.clear",
             defaultMessage: "The relay could not be cleared.",
@@ -347,7 +352,8 @@ export function WelcomePage() {
     setError(null);
     setEmailNotice(null);
     try {
-      const { data, error: problem } = await api.POST("/api/v1/email-settings/test");
+      const result = await api.POST("/api/v1/email-settings/test");
+      const { data } = result;
       if (data) {
         setEmailNotice(
           intl.formatMessage(
@@ -361,7 +367,7 @@ export function WelcomePage() {
         return;
       }
       setError(
-        problemDetail(problem) ??
+        (await readProblem(result)).detail ??
           intl.formatMessage({
             id: "welcome.email.error.test",
             defaultMessage: "The test email could not be sent.",
@@ -382,20 +388,21 @@ export function WelcomePage() {
     setBusy(true);
     setError(null);
     try {
-      const { data, error: problem } = await api.POST("/api/v1/auth/invites", {
+      const result = await api.POST("/api/v1/auth/invites", {
         body: {
           email,
           displayName: field(fields, "inviteName"),
           role: inviteRole,
         },
       });
+      const { data } = result;
       if (data) {
         setInvited([...invited, data.user.email]);
         form.reset();
         return;
       }
       setError(
-        problemDetail(problem) ??
+        (await readProblem(result)).detail ??
           intl.formatMessage({
             id: "welcome.invites.error",
             defaultMessage: "The invite could not be sent.",

@@ -23,7 +23,7 @@ import { FormattedMessage, useIntl } from "react-intl";
 import { ChevronDown } from "lucide-react";
 import { MAX_LIST_VIEW_NAME_LENGTH } from "@openlaw/shared";
 import type { SavedView } from "../../lib/list-views";
-import { problemDetail } from "../../lib/messages";
+import { problem } from "../../lib/problem";
 import { Button } from "../ui/button";
 import { Dialog, DialogContent, DialogTitle } from "../ui/dialog";
 import {
@@ -89,7 +89,7 @@ export function ViewsMenu({
       if (close) setPrompt(null);
     } catch (caught) {
       setError(
-        problemDetail(caught) ??
+        (await problem(caught)).detail ??
           intl.formatMessage({
             id: "views.error",
             defaultMessage: "The view could not be saved. Try again.",

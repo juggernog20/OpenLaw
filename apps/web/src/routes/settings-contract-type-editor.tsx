@@ -12,7 +12,7 @@
 import { redirect, useLoaderData, type LoaderFunctionArgs } from "react-router";
 import { defineMessages } from "react-intl";
 import { api } from "../lib/api";
-import { problemDetail } from "../lib/messages";
+import { problem } from "../lib/problem";
 import { requireUser } from "../lib/session";
 import { ContractsSettingsTabs } from "../components/contracts-settings-tabs";
 import { TypeEditorScreen, type TypeEditorApi } from "../components/type-editor-screen";
@@ -99,38 +99,48 @@ const MESSAGES = defineMessages({
 /** The shared editor's API seam over the contract-types routes. */
 const EDITOR_API: TypeEditorApi = {
   async update(id, body) {
-    const { data, error } = await api.PATCH("/api/v1/contract-types/{id}", {
-      params: { path: { id } },
-      body,
-    });
-    return { data: data?.contractType, detail: problemDetail(error) };
+    const result = await api
+      .PATCH("/api/v1/contract-types/{id}", {
+        params: { path: { id } },
+        body,
+      })
+      .catch(() => undefined);
+    return { data: result?.data?.contractType, ...(await problem(result)) };
   },
   async attach(id, fieldId) {
-    const { data, error } = await api.POST("/api/v1/contract-types/{id}/fields", {
-      params: { path: { id } },
-      body: { fieldId },
-    });
-    return { data: data?.attachedField, detail: problemDetail(error) };
+    const result = await api
+      .POST("/api/v1/contract-types/{id}/fields", {
+        params: { path: { id } },
+        body: { fieldId },
+      })
+      .catch(() => undefined);
+    return { data: result?.data?.attachedField, ...(await problem(result)) };
   },
   async detach(id, fieldId) {
-    const { error, response } = await api.DELETE("/api/v1/contract-types/{id}/fields/{fieldId}", {
-      params: { path: { id, fieldId } },
-    });
-    return { ok: response?.ok === true, detail: problemDetail(error) };
+    const result = await api
+      .DELETE("/api/v1/contract-types/{id}/fields/{fieldId}", {
+        params: { path: { id, fieldId } },
+      })
+      .catch(() => undefined);
+    return { ok: result?.response.ok === true, ...(await problem(result)) };
   },
   async setRequired(id, fieldId, isRequired) {
-    const { data, error } = await api.PATCH("/api/v1/contract-types/{id}/fields/{fieldId}", {
-      params: { path: { id, fieldId } },
-      body: { isRequired },
-    });
-    return { data: data?.attachedField, detail: problemDetail(error) };
+    const result = await api
+      .PATCH("/api/v1/contract-types/{id}/fields/{fieldId}", {
+        params: { path: { id, fieldId } },
+        body: { isRequired },
+      })
+      .catch(() => undefined);
+    return { data: result?.data?.attachedField, ...(await problem(result)) };
   },
   async reorder(id, fieldIds) {
-    const { data, error } = await api.PUT("/api/v1/contract-types/{id}/fields/order", {
-      params: { path: { id } },
-      body: { fieldIds },
-    });
-    return { data: data?.attachedFields, detail: problemDetail(error) };
+    const result = await api
+      .PUT("/api/v1/contract-types/{id}/fields/order", {
+        params: { path: { id } },
+        body: { fieldIds },
+      })
+      .catch(() => undefined);
+    return { data: result?.data?.attachedFields, ...(await problem(result)) };
   },
 };
 

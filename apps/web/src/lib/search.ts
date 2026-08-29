@@ -7,7 +7,7 @@
  */
 import type { paths } from "@openlaw/api-client";
 import { api } from "./api";
-import { problemDetail } from "./messages";
+import { problem, type Problem } from "./problem";
 
 type SearchResponse =
   paths["/api/v1/search"]["get"]["responses"]["200"]["content"]["application/json"];
@@ -17,7 +17,7 @@ export type SearchResult = SearchResponse["results"][number];
 export type SearchKind = NonNullable<SearchQuery["kind"]>;
 
 export type SearchOutcome =
-  { ok: true; results: SearchResult[]; nextCursor: string | null } | { ok: false; detail?: string };
+  { ok: true; results: SearchResult[]; nextCursor: string | null } | ({ ok: false } & Problem);
 
 export interface SearchOptions {
   kind?: SearchKind;
@@ -32,7 +32,7 @@ export interface SearchOptions {
  * leaves `detail` unset, so the call site supplies its react-intl
  * fallback copy. One settled union serves both search surfaces. */
 export async function search(query: string, options: SearchOptions = {}): Promise<SearchOutcome> {
-  const { data, error } = await api
+  const result = await api
     .GET("/api/v1/search", {
       params: {
         query: {
@@ -43,8 +43,8 @@ export async function search(query: string, options: SearchOptions = {}): Promis
         },
       },
     })
-    .catch(() => ({ data: undefined, error: undefined }));
-  return data
-    ? { ok: true, results: data.results, nextCursor: data.nextCursor }
-    : { ok: false, detail: problemDetail(error) };
+    .catch(() => undefined);
+  return result?.data
+    ? { ok: true, results: result.data.results, nextCursor: result.data.nextCursor }
+    : { ok: false, ...(await problem(result)) };
 }

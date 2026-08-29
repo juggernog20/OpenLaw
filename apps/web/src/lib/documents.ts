@@ -25,7 +25,7 @@ import { api } from "./api";
 // the string the walk joins on and the string the seam splits on have
 // to be one string.
 import { PATH_SEPARATOR as FOLDER_PATH_SEPARATOR } from "./batch-upload";
-import { problemDetail } from "./messages";
+import { problem, type Problem } from "./problem";
 
 /** The API's answer for one contract's paper, aliased to the generated
  * schema so an API change surfaces as a compile error here rather than
@@ -46,14 +46,12 @@ type RepositoryOptionsResponse =
 export type DocumentRepositoryOptions = RepositoryOptionsResponse;
 
 export async function readDocumentOptions(): Promise<
-  { ok: true; options: DocumentRepositoryOptions } | { ok: false; detail: string | undefined }
+  { ok: true; options: DocumentRepositoryOptions } | ({ ok: false } & Problem)
 > {
-  try {
-    const { data, error } = await api.GET("/api/v1/documents/options");
-    return data ? { ok: true, options: data } : { ok: false, detail: problemDetail(error) };
-  } catch {
-    return { ok: false, detail: undefined };
-  }
+  const result = await api.GET("/api/v1/documents/options").catch(() => undefined);
+  return result?.data
+    ? { ok: true, options: result.data }
+    : { ok: false, ...(await problem(result)) };
 }
 
 export const DOCUMENT_REPOSITORY_FORMATS = [
@@ -474,8 +472,7 @@ export interface DocumentUploadDraft extends UploadDraft {
  * offered no retry, and everything else is (DES-033 §11). A connection
  * that dropped carries no status at all.
  */
-export type UploadOutcome =
-  { ok: true; document: ContractDocument } | { ok: false; status?: number; detail?: string };
+export type UploadOutcome = { ok: true; document: ContractDocument } | ({ ok: false } & Problem);
 
 /**
  * Sends one file to a contract, creating a document with version 1.
@@ -522,11 +519,15 @@ export async function updateDocumentVersionKind(
   versionId: string,
   kind: HandSetDocumentVersionKind,
 ): Promise<UploadOutcome> {
-  const { data, error } = await api.PATCH("/api/v1/documents/{documentId}/versions/{versionId}", {
-    params: { path: { documentId, versionId } },
-    body: { kind },
-  });
-  return data ? { ok: true, document: data.document } : { ok: false, detail: problemDetail(error) };
+  const result = await api
+    .PATCH("/api/v1/documents/{documentId}/versions/{versionId}", {
+      params: { path: { documentId, versionId } },
+      body: { kind },
+    })
+    .catch(() => undefined);
+  return result?.data
+    ? { ok: true, document: result.data.document }
+    : { ok: false, ...(await problem(result)) };
 }
 
 /** The one multipart POST both uploads are. A destination rides with it
@@ -547,16 +548,17 @@ async function send(url: string, draft: DocumentUploadDraft): Promise<UploadOutc
   try {
     const response = await fetch(url, { method: "POST", body: form });
     if (!response.ok) {
-      return { ok: false, status: response.status, detail: await problemDetailOf(response) };
+      return { ok: false, ...(await problem(response)) };
     }
+    const malformed = await problem(response);
     const document = documentIn(await response.json());
     // A 201 whose body is not a document is not a success this caller
     // can render — it would put a row on the list with nothing in it.
-    return document ? { ok: true, document } : { ok: false };
+    return document ? { ok: true, document } : { ok: false, ...malformed };
   } catch {
     // A dropped connection reads as an upload that did not happen,
     // which is what it is. The caller says so in its own words.
-    return { ok: false };
+    return { ok: false, ...(await problem(undefined)) };
   }
 }
 
@@ -583,11 +585,15 @@ export async function updateDocument(
     folderId?: string | null;
   }>,
 ): Promise<UploadOutcome> {
-  const { data, error } = await api.PATCH("/api/v1/documents/{documentId}", {
-    params: { path: { documentId } },
-    body: patch,
-  });
-  return data ? { ok: true, document: data.document } : { ok: false, detail: problemDetail(error) };
+  const result = await api
+    .PATCH("/api/v1/documents/{documentId}", {
+      params: { path: { documentId } },
+      body: patch,
+    })
+    .catch(() => undefined);
+  return result?.data
+    ? { ok: true, document: result.data.document }
+    : { ok: false, ...(await problem(result)) };
 }
 
 /** What a read or a write over the whole record's paper answers: one
@@ -596,7 +602,7 @@ export async function updateDocument(
  * had paged further down starts again from the top. */
 export type PaperOutcome =
   | { ok: true; documents: ContractDocument[]; nextCursor: string | null }
-  | { ok: false; detail?: string };
+  | ({ ok: false } & Problem);
 
 /**
  * Names one document the contract's instrument (CTR-014).
@@ -607,12 +613,18 @@ export type PaperOutcome =
  * instead of working out for itself which other row moved.
  */
 export async function setPrimaryDocument(documentId: string): Promise<PaperOutcome> {
-  const { data, error } = await api.POST("/api/v1/documents/{documentId}/primary", {
-    params: { path: { documentId } },
-  });
-  return data
-    ? { ok: true, documents: data.documents, nextCursor: data.nextCursor }
-    : { ok: false, detail: problemDetail(error) };
+  const result = await api
+    .POST("/api/v1/documents/{documentId}/primary", {
+      params: { path: { documentId } },
+    })
+    .catch(() => undefined);
+  return result?.data
+    ? {
+        ok: true,
+        documents: result.data.documents,
+        nextCursor: result.data.nextCursor,
+      }
+    : { ok: false, ...(await problem(result)) };
 }
 
 /**
@@ -626,21 +638,29 @@ export async function setExecutedVersion(
   documentId: string,
   versionId: string,
 ): Promise<UploadOutcome> {
-  const { data, error } = await api.POST("/api/v1/documents/{documentId}/executed-version", {
-    params: { path: { documentId } },
-    body: { versionId },
-  });
-  return data ? { ok: true, document: data.document } : { ok: false, detail: problemDetail(error) };
+  const result = await api
+    .POST("/api/v1/documents/{documentId}/executed-version", {
+      params: { path: { documentId } },
+      body: { versionId },
+    })
+    .catch(() => undefined);
+  return result?.data
+    ? { ok: true, document: result.data.document }
+    : { ok: false, ...(await problem(result)) };
 }
 
 /** Takes the executed pin off a document. Every version is left as it
  * was — the pin is one column on the document, not a fact about a
  * file. */
 export async function clearExecutedVersion(documentId: string): Promise<UploadOutcome> {
-  const { data, error } = await api.DELETE("/api/v1/documents/{documentId}/executed-version", {
-    params: { path: { documentId } },
-  });
-  return data ? { ok: true, document: data.document } : { ok: false, detail: problemDetail(error) };
+  const result = await api
+    .DELETE("/api/v1/documents/{documentId}/executed-version", {
+      params: { path: { documentId } },
+    })
+    .catch(() => undefined);
+  return result?.data
+    ? { ok: true, document: result.data.document }
+    : { ok: false, ...(await problem(result)) };
 }
 
 /**
@@ -662,19 +682,25 @@ export async function readContractDocuments(
   cursor?: string,
   folder?: string,
 ): Promise<PaperOutcome> {
-  const { data, error } = await api.GET("/api/v1/contracts/{number}/documents", {
-    params: {
-      path: { number: contractNumber },
-      query: {
-        ...(includeArchived ? { includeArchived: "true" as const } : {}),
-        ...(cursor ? { cursor } : {}),
-        ...(folder ? { folder } : {}),
+  const result = await api
+    .GET("/api/v1/contracts/{number}/documents", {
+      params: {
+        path: { number: contractNumber },
+        query: {
+          ...(includeArchived ? { includeArchived: "true" as const } : {}),
+          ...(cursor ? { cursor } : {}),
+          ...(folder ? { folder } : {}),
+        },
       },
-    },
-  });
-  return data
-    ? { ok: true, documents: data.documents, nextCursor: data.nextCursor }
-    : { ok: false, detail: problemDetail(error) };
+    })
+    .catch(() => undefined);
+  return result?.data
+    ? {
+        ok: true,
+        documents: result.data.documents,
+        nextCursor: result.data.nextCursor,
+      }
+    : { ok: false, ...(await problem(result)) };
 }
 
 export async function readRecordDocuments(
@@ -686,19 +712,25 @@ export async function readRecordDocuments(
   if (record.entityType === "contract") {
     return readContractDocuments(record.number, includeArchived, cursor, folder);
   }
-  const { data, error } = await api.GET("/api/v1/matters/{number}/documents", {
-    params: {
-      path: { number: record.number },
-      query: {
-        ...(includeArchived ? { includeArchived: "true" as const } : {}),
-        ...(cursor ? { cursor } : {}),
-        ...(folder ? { folder } : {}),
+  const result = await api
+    .GET("/api/v1/matters/{number}/documents", {
+      params: {
+        path: { number: record.number },
+        query: {
+          ...(includeArchived ? { includeArchived: "true" as const } : {}),
+          ...(cursor ? { cursor } : {}),
+          ...(folder ? { folder } : {}),
+        },
       },
-    },
-  });
-  return data
-    ? { ok: true, documents: data.documents, nextCursor: data.nextCursor }
-    : { ok: false, detail: problemDetail(error) };
+    })
+    .catch(() => undefined);
+  return result?.data
+    ? {
+        ok: true,
+        documents: result.data.documents,
+        nextCursor: result.data.nextCursor,
+      }
+    : { ok: false, ...(await problem(result)) };
 }
 
 /** A search landing that can seed the doc panel without teaching the
@@ -765,19 +797,27 @@ export async function readDocumentLanding(
  * nothing to warn anybody about.
  */
 export async function archiveDocument(documentId: string): Promise<UploadOutcome> {
-  const { data, error } = await api.POST("/api/v1/documents/{documentId}/archive", {
-    params: { path: { documentId } },
-  });
-  return data ? { ok: true, document: data.document } : { ok: false, detail: problemDetail(error) };
+  const result = await api
+    .POST("/api/v1/documents/{documentId}/archive", {
+      params: { path: { documentId } },
+    })
+    .catch(() => undefined);
+  return result?.data
+    ? { ok: true, document: result.data.document }
+    : { ok: false, ...(await problem(result)) };
 }
 
 /** Puts an archived document back on the record's list and in its
  * count, exactly as it was. */
 export async function restoreDocument(documentId: string): Promise<UploadOutcome> {
-  const { data, error } = await api.POST("/api/v1/documents/{documentId}/restore", {
-    params: { path: { documentId } },
-  });
-  return data ? { ok: true, document: data.document } : { ok: false, detail: problemDetail(error) };
+  const result = await api
+    .POST("/api/v1/documents/{documentId}/restore", {
+      params: { path: { documentId } },
+    })
+    .catch(() => undefined);
+  return result?.data
+    ? { ok: true, document: result.data.document }
+    : { ok: false, ...(await problem(result)) };
 }
 
 /**
@@ -793,13 +833,19 @@ export async function hardDeleteDocument(
   documentId: string,
   confirmTitle: string,
 ): Promise<PaperOutcome> {
-  const { data, error } = await api.DELETE("/api/v1/documents/{documentId}", {
-    params: { path: { documentId } },
-    body: { confirmTitle },
-  });
-  return data
-    ? { ok: true, documents: data.documents, nextCursor: data.nextCursor }
-    : { ok: false, detail: problemDetail(error) };
+  const result = await api
+    .DELETE("/api/v1/documents/{documentId}", {
+      params: { path: { documentId } },
+      body: { confirmTitle },
+    })
+    .catch(() => undefined);
+  return result?.data
+    ? {
+        ok: true,
+        documents: result.data.documents,
+        nextCursor: result.data.nextCursor,
+      }
+    : { ok: false, ...(await problem(result)) };
 }
 
 /** One field off a parsed JSON body, without asserting its shape. */
@@ -820,14 +866,4 @@ function field(body: unknown, name: string): unknown {
 function documentIn(body: unknown): ContractDocument | undefined {
   const document = field(body, "document");
   return typeof field(document, "id") === "string" ? (document as ContractDocument) : undefined;
-}
-
-/** The RFC 9457 `detail` off a refusal, when the refusal carried one. */
-async function problemDetailOf(response: Response): Promise<string | undefined> {
-  try {
-    const detail = field(await response.json(), "detail");
-    return typeof detail === "string" && detail.length > 0 ? detail : undefined;
-  } catch {
-    return undefined;
-  }
 }

@@ -21,7 +21,7 @@ import { redirect, useLoaderData } from "react-router";
 import { FormattedMessage, useIntl, type IntlShape } from "react-intl";
 import { History, TriangleAlert } from "lucide-react";
 import { api } from "../lib/api";
-import { problemDetail } from "../lib/messages";
+import { problem as readProblem } from "../lib/problem";
 import { requireUser } from "../lib/session";
 import { ContractsSettingsTabs } from "../components/contracts-settings-tabs";
 import { ListEditor } from "../components/list-editor";
@@ -102,9 +102,10 @@ function ArchiveStatusDialog({
     setBusy(true);
     setError(null);
     try {
-      const { data, error: problem } = await api.POST("/api/v1/contract-statuses/{id}/archive", {
+      const result = await api.POST("/api/v1/contract-statuses/{id}/archive", {
         params: { path: { id: target.id } },
       });
+      const { data } = result;
       if (data) {
         archived.current = true;
         onArchived(data.contractStatus);
@@ -113,7 +114,7 @@ function ArchiveStatusDialog({
         // The API's own refusal (a protected row, the floor, a stale
         // list) is more actionable than any generic line.
         setError(
-          problemDetail(problem) ??
+          (await readProblem(result)).detail ??
             intl.formatMessage({
               id: "settings.contractStatuses.archiveError",
               defaultMessage: "The status could not be archived.",
@@ -253,17 +254,18 @@ export function SettingsContractStatusesPage() {
 
   async function rename(row: StatusRow, displayName: string) {
     noteRow(row.id, "saving");
-    const { data, error } = await api
+    const result = await api
       .PATCH("/api/v1/contract-statuses/{id}", {
         params: { path: { id: row.id } },
         body: { displayName },
       })
-      .catch(() => ({ data: null, error: undefined }));
+      .catch(() => undefined);
+    const { data } = result ?? {};
     if (data) {
       replaceRow(data.contractStatus);
       noteRow(row.id, "saved");
     } else {
-      noteRow(row.id, "error", problemDetail(error));
+      noteRow(row.id, "error", (await readProblem(result)).detail);
     }
   }
 
@@ -292,11 +294,12 @@ export function SettingsContractStatusesPage() {
     setAddStatus("saving");
     setAddError(undefined);
     try {
-      const { data, error } = await api
+      const result = await api
         .POST("/api/v1/contract-statuses", {
           body: { displayName, stage: addDraft.stage },
         })
-        .catch(() => ({ data: null, error: undefined }));
+        .catch(() => undefined);
+      const { data } = result ?? {};
       if (data) {
         setRows((current) => [...current, data.contractStatus]);
         setAdding(false);
@@ -305,7 +308,7 @@ export function SettingsContractStatusesPage() {
       } else {
         // Keep the draft row open so the name is not lost to a refusal.
         setAddStatus("error");
-        setAddError(problemDetail(error));
+        setAddError((await readProblem(result)).detail);
       }
     } finally {
       createInFlight.current = false;
@@ -316,9 +319,10 @@ export function SettingsContractStatusesPage() {
   async function commitOrder(orderedIds: string[]) {
     setOrderStatus("saving");
     setOrderError(undefined);
-    const { data, error } = await api
+    const result = await api
       .PUT("/api/v1/contract-statuses/order", { body: { ids: orderedIds } })
-      .catch(() => ({ data: null, error: undefined }));
+      .catch(() => undefined);
+    const { data } = result ?? {};
     if (data) {
       const reordered: StatusRow[] = data.contractStatuses;
       setRows((current) => [
@@ -329,7 +333,7 @@ export function SettingsContractStatusesPage() {
       return true;
     }
     setOrderStatus("error");
-    setOrderError(problemDetail(error));
+    setOrderError((await readProblem(result)).detail);
     return false;
   }
 
@@ -355,14 +359,15 @@ export function SettingsContractStatusesPage() {
 
   async function restore(row: StatusRow) {
     noteRow(row.id, "saving");
-    const { data, error } = await api
+    const result = await api
       .POST("/api/v1/contract-statuses/{id}/restore", { params: { path: { id: row.id } } })
-      .catch(() => ({ data: null, error: undefined }));
+      .catch(() => undefined);
+    const { data } = result ?? {};
     if (data) {
       replaceRow(data.contractStatus);
       noteRow(row.id, "saved");
     } else {
-      noteRow(row.id, "error", problemDetail(error));
+      noteRow(row.id, "error", (await readProblem(result)).detail);
     }
   }
 

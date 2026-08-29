@@ -19,6 +19,20 @@ describe("the settled search adapter", () => {
     await expect(search("x".repeat(201))).resolves.toEqual({
       ok: false,
       detail: "Search queries must be 200 characters or fewer.",
+      type: "about:blank",
+      status: 400,
+      network: false,
+    });
+  });
+
+  it("keeps a network failure distinct from a refusal", async () => {
+    stubFetch(() => undefined);
+    await expect(search("ordinary query")).resolves.toEqual({
+      ok: false,
+      detail: undefined,
+      type: undefined,
+      status: undefined,
+      network: true,
     });
   });
 

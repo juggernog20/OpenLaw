@@ -44,7 +44,7 @@ import {
   type CustomFieldValue,
 } from "../../lib/custom-fields";
 import { CONTROL_CLASS } from "../../lib/form-controls";
-import { problemDetail } from "../../lib/messages";
+import { problem as readProblem } from "../../lib/problem";
 import { matterReference } from "../../lib/matters";
 import { ConfidentialToggle } from "../confidential-toggle";
 import { CustomFieldControl, type FieldReference } from "../custom-field-control";
@@ -199,7 +199,7 @@ export function CreateContractDialog({
       customFields[field.slug] = parsed.value;
     }
     setBusy(true);
-    const { data, error: problem } = await api
+    const result = await api
       .POST("/api/v1/contracts", {
         body: {
           title: title.trim(),
@@ -216,11 +216,12 @@ export function CreateContractDialog({
             : {}),
         },
       })
-      .catch(() => ({ data: null, error: undefined }));
+      .catch(() => undefined);
+    const { data } = result ?? {};
     setBusy(false);
     if (!data) {
       setError(
-        problemDetail(problem) ??
+        (await readProblem(result)).detail ??
           intl.formatMessage({
             id: "contracts.form.createError",
             defaultMessage: "The contract could not be created.",

@@ -21,7 +21,7 @@
 
 import type { paths } from "@openlaw/api-client";
 import { api } from "./api";
-import { problemDetail } from "./messages";
+import { problem, type Problem } from "./problem";
 
 /** The API's answer for one contract's deadline surface, aliased to the
  * generated schema so an API change surfaces as a compile error here
@@ -45,7 +45,7 @@ export interface KeyDateInput {
 /** What a read or a write over the record's deadlines answers: the union
  * as it now stands, or why not. */
 export type DeadlinesOutcome =
-  { ok: true; deadlines: ContractDeadline[] } | { ok: false; detail?: string };
+  { ok: true; deadlines: ContractDeadline[] } | ({ ok: false } & Problem);
 
 /** A row the section may edit and remove — one the record itself holds,
  * as opposed to the two the term derives. Written as a type guard so a
@@ -65,29 +65,29 @@ export const isKeyDate = (row: ContractDeadline): row is ContractDeadline & { ke
  * rejection ends up printing.
  */
 export async function readContractKeyDates(contractNumber: number): Promise<DeadlinesOutcome> {
-  const { data, error } = await api
+  const result = await api
     .GET("/api/v1/contracts/{number}/key-dates", {
       params: { path: { number: contractNumber } },
     })
-    .catch(() => ({ data: undefined, error: undefined }));
-  return data
-    ? { ok: true, deadlines: data.deadlines }
-    : { ok: false, detail: problemDetail(error) };
+    .catch(() => undefined);
+  return result?.data
+    ? { ok: true, deadlines: result.data.deadlines }
+    : { ok: false, ...(await problem(result)) };
 }
 
 export async function addContractKeyDate(
   contractNumber: number,
   input: KeyDateInput,
 ): Promise<DeadlinesOutcome> {
-  const { data, error } = await api
+  const result = await api
     .POST("/api/v1/contracts/{number}/key-dates", {
       params: { path: { number: contractNumber } },
       body: { date: input.date, label: input.label, note: input.note },
     })
-    .catch(() => ({ data: undefined, error: undefined }));
-  return data
-    ? { ok: true, deadlines: data.deadlines }
-    : { ok: false, detail: problemDetail(error) };
+    .catch(() => undefined);
+  return result?.data
+    ? { ok: true, deadlines: result.data.deadlines }
+    : { ok: false, ...(await problem(result)) };
 }
 
 /**
@@ -102,15 +102,15 @@ export async function updateContractKeyDate(
   keyDateId: string,
   input: KeyDateInput,
 ): Promise<DeadlinesOutcome> {
-  const { data, error } = await api
+  const result = await api
     .PATCH("/api/v1/key-dates/{keyDateId}", {
       params: { path: { keyDateId } },
       body: { date: input.date, label: input.label, note: input.note },
     })
-    .catch(() => ({ data: undefined, error: undefined }));
-  return data
-    ? { ok: true, deadlines: data.deadlines }
-    : { ok: false, detail: problemDetail(error) };
+    .catch(() => undefined);
+  return result?.data
+    ? { ok: true, deadlines: result.data.deadlines }
+    : { ok: false, ...(await problem(result)) };
 }
 
 /**
@@ -121,12 +121,12 @@ export async function updateContractKeyDate(
  * section replaces what it holds rather than working out which row went.
  */
 export async function removeContractKeyDate(keyDateId: string): Promise<DeadlinesOutcome> {
-  const { data, error } = await api
+  const result = await api
     .DELETE("/api/v1/key-dates/{keyDateId}", {
       params: { path: { keyDateId } },
     })
-    .catch(() => ({ data: undefined, error: undefined }));
-  return data
-    ? { ok: true, deadlines: data.deadlines }
-    : { ok: false, detail: problemDetail(error) };
+    .catch(() => undefined);
+  return result?.data
+    ? { ok: true, deadlines: result.data.deadlines }
+    : { ok: false, ...(await problem(result)) };
 }
