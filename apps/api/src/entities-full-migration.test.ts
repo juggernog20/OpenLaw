@@ -75,7 +75,7 @@ describe("the M27 Entities schema migration", () => {
         shares_authorized: string | null;
         shares_issued: string | null;
         par_value: number | null;
-        custom_fields: Record<string, unknown> | null;
+        custom_fields: Record<string, unknown>;
         is_confidential: boolean;
       }>(sql`
         select shares_authorized, shares_issued, par_value, custom_fields, is_confidential
@@ -86,7 +86,7 @@ describe("the M27 Entities schema migration", () => {
           shares_authorized: null,
           shares_issued: null,
           par_value: null,
-          custom_fields: null,
+          custom_fields: {},
           is_confidential: false,
         },
       ]);
@@ -161,6 +161,7 @@ describe("the M27 Entities schema migration", () => {
       await expect(
         db.execute(sql`update entities set custom_fields = '[]'::jsonb`),
       ).rejects.toThrow();
+      await expect(db.execute(sql`update entities set custom_fields = null`)).rejects.toThrow();
       await expect(
         db.execute(sql`
           insert into entity_holdings (owner_entity_id, owned_entity_id, ownership_percent)

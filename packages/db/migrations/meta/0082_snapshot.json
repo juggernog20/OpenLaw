@@ -1,5 +1,5 @@
 {
-  "id": "161e2587-c6bb-4c56-93a4-9cd62163c556",
+  "id": "017b48e4-b40f-4442-9b63-91ec140f4edd",
   "prevId": "f57b27c1-ec61-41eb-a245-e57ff672efdd",
   "version": "7",
   "dialect": "postgresql",
@@ -4240,7 +4240,7 @@
         },
         "par_value": {
           "name": "par_value",
-          "type": "integer",
+          "type": "bigint",
           "primaryKey": false,
           "notNull": false
         },
@@ -4248,7 +4248,8 @@
           "name": "custom_fields",
           "type": "jsonb",
           "primaryKey": false,
-          "notNull": false
+          "notNull": true,
+          "default": "'{}'::jsonb"
         },
         "is_confidential": {
           "name": "is_confidential",

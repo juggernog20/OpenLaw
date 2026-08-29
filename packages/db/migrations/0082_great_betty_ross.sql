@@ -84,8 +84,8 @@ ALTER TABLE "document_folders" ADD COLUMN "entity_id" text;--> statement-breakpo
 ALTER TABLE "documents" ADD COLUMN "entity_id" text;--> statement-breakpoint
 ALTER TABLE "entities" ADD COLUMN "shares_authorized" bigint;--> statement-breakpoint
 ALTER TABLE "entities" ADD COLUMN "shares_issued" bigint;--> statement-breakpoint
-ALTER TABLE "entities" ADD COLUMN "par_value" integer;--> statement-breakpoint
-ALTER TABLE "entities" ADD COLUMN "custom_fields" jsonb;--> statement-breakpoint
+ALTER TABLE "entities" ADD COLUMN "par_value" bigint;--> statement-breakpoint
+ALTER TABLE "entities" ADD COLUMN "custom_fields" jsonb DEFAULT '{}'::jsonb NOT NULL;--> statement-breakpoint
 ALTER TABLE "entities" ADD COLUMN "is_confidential" boolean DEFAULT false NOT NULL;--> statement-breakpoint
 ALTER TABLE "entity_grants" ADD CONSTRAINT "entity_grants_entity_id_entities_id_fk" FOREIGN KEY ("entity_id") REFERENCES "public"."entities"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "entity_grants" ADD CONSTRAINT "entity_grants_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint

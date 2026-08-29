@@ -205,7 +205,6 @@ export const fieldsRoutes: FastifyPluginAsyncZod = async (app) => {
         FROM (
           SELECT jsonb_object_keys(${entities.customFields}) AS slug
           FROM ${entities}
-          WHERE ${entities.customFields} IS NOT NULL
         ) AS keys
         WHERE slug = ANY(${sql.param(slugs)}::text[])
         GROUP BY slug

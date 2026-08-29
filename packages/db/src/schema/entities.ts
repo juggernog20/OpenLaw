@@ -20,7 +20,6 @@ import {
   check,
   date,
   index,
-  integer,
   jsonb,
   pgTable,
   text,
@@ -57,9 +56,14 @@ export const entities = pgTable(
     sharesAuthorized: bigint("shares_authorized", { mode: "number" }),
     sharesIssued: bigint("shares_issued", { mode: "number" }),
     /** Minor currency units, matching Contract value storage. */
-    parValue: integer("par_value"),
-    /** Values keyed by catalog Field slug for this Entity's type. */
-    customFields: jsonb("custom_fields").$type<Record<string, CustomFieldValue>>(),
+    parValue: bigint("par_value", { mode: "number" }),
+    /** Values keyed by catalog Field slug for this Entity's type. Never
+     * NULL: the same `{}` floor `matters` and `contracts` carry, so
+     * readers index the object without a null branch. */
+    customFields: jsonb("custom_fields")
+      .$type<Record<string, CustomFieldValue>>()
+      .notNull()
+      .default({}),
     /** ENT-004's opt-in wall. Existing Entities stay open on upgrade. */
     isConfidential: boolean("is_confidential").notNull().default(false),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),

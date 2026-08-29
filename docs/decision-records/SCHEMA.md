@@ -215,7 +215,7 @@ Source: **DD-008**, **ENT-001–004**
 
 Internal corporate entities — your subsidiaries, holdings, and related corporate persons. Visible to Member+ by default; `is_confidential` switches the rare sensitive Entity to explicit readers in `entity_grants` (ENT-004).
 
-The M27 schema landed together in migration `0082_great_betty_ross`. It adds only nullable columns plus `is_confidential default false`, so populated pre-M27 Entity rows retain their values unchanged.
+The M27 schema landed together in migration `0082_great_betty_ross`. It adds only nullable or defaulted columns (`custom_fields` defaults to `{}`, `is_confidential` to `false`), so populated pre-M27 Entity rows retain their values unchanged.
 
 | Column                                    | Type        | Notes                                                                                                                                  |
 | ----------------------------------------- | ----------- | -------------------------------------------------------------------------------------------------------------------------------------- |
@@ -230,8 +230,8 @@ The M27 schema landed together in migration `0082_great_betty_ross`. It adds onl
 | `registered_address`                      | text        | nullable                                                                                                                               |
 | `status`                                  | text (enum) | `active` \| `dormant` \| `dissolved` \| `divested` — fixed per **ENT-001**                                                             |
 | `shares_authorized`, `shares_issued`      | bigint      | nullable; simple share capital per **ENT-001**                                                                                         |
-| `par_value`                               | integer     | nullable, integer cents                                                                                                                |
-| `custom_fields`                           | jsonb       | nullable object keyed by slug; object shape enforced by CHECK; values retained on detach per **ENT-001**/CTR-016                       |
+| `par_value`                               | bigint      | nullable, integer cents                                                                                                                |
+| `custom_fields`                           | jsonb       | not null, default `{}`, keyed by slug; object shape enforced by CHECK; values retained on detach per **ENT-001**/CTR-016               |
 | `is_confidential`                         | boolean     | not null, default `false`, per **DD-014**/ENT-004                                                                                      |
 | `created_at`, `updated_at`, `archived_at` | timestamptz |                                                                                                                                        |
 | `search_vector`                           | tsvector    | stored generated English FTS: `legal_name` weight A; jurisdiction, registration number, and fixed status weight C (**DOC-009**, M25/2) |
