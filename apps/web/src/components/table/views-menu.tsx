@@ -7,13 +7,13 @@
  * "Default view", opening a menu of this person's views and the acts on
  * them.
  *
- * **Saving is an act, and the button says when there is one to make**
+ * Saving is an act, and the button says when there is one to make
  * (DD-019 clause 5). Dragging a column changes the list and nothing on the
- * server; when the layout on screen differs from what the active view
+ * server. When the layout on screen differs from what the active view
  * stores, the trigger carries a "Modified" line and the menu grows a Save.
  * That is what keeps a curated view safe from a fiddle.
  *
- * **Views are private** (clause 1), so nothing here asks who may see one.
+ * Views are private (clause 1), so nothing here asks who may see one.
  * The menu is one person's list, and its only refusals are a name they
  * already used and the ceiling on how many they keep.
  */
@@ -79,8 +79,8 @@ export function ViewsMenu({
   const label =
     activeView?.name ?? intl.formatMessage({ id: "views.builtIn", defaultMessage: "Default view" });
 
-  /** Run one act, keeping its refusal on the dialog that asked for it —
-   * a name already in use is answered where the name was typed. */
+  /** Run one act, keeping its refusal on the dialog that asked for it.
+   * A name already in use is answered where the name was typed. */
   async function run(act: () => Promise<void>, close: boolean) {
     setError(null);
     setWorking(true);

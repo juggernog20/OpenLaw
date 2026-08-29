@@ -5,15 +5,15 @@
  *
  * The worker is the same application image started with a different
  * command, so it does not carry its own copy of the storage adapter, the
- * doc engine, or the schema — it imports them from here and starts the
+ * doc engine, or the schema. It imports them from here and starts the
  * pipeline with them. Everything a job handler needs is what the API is
  * built from, minus the HTTP.
  *
- * This is the worker's whole surface on purpose. The three dependency
- * builders below are re-exported rather than reached for through a
- * second subpath, because a worker that assembled its dependencies from
- * three different corners of this package would drift from the API that
- * assembles the same three.
+ * This is everything the worker imports, on purpose. The three
+ * dependency builders below are re-exported rather than reached through
+ * a second subpath, because a worker that assembled its dependencies
+ * from three different corners of this package would drift from the API
+ * that assembles the same three.
  */
 
 // The three dependencies a handler needs and the pipeline does not
@@ -34,7 +34,7 @@ export {
 export { createSigningResolver, type SigningResolver } from "../lib/signing/resolver.js";
 export { createStorageFromEnv } from "../lib/storage/config.js";
 // The mailer, for the one job that sends one (M18/1). The worker
-// resolves it exactly as the API does — env-else-database, per send —
+// resolves it exactly as the API does, env-else-database on every send,
 // so a relay saved in the wizard reaches the next notification email
 // without a restart of either process (TECH-011).
 export { createMailerResolver, type MailerResolver } from "../lib/mailer.js";

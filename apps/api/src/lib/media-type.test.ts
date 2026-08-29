@@ -4,19 +4,19 @@
  * The blob-side read of a media type (the INT-002 M20/6 addendum), at
  * the seam the promotion calls.
  *
- * Three rules are asserted here and nowhere else: that the bytes name
- * the type and a filename never overrules them, that a container's name
- * picks only among the members that container admits, and that bytes
- * the table cannot read are `application/octet-stream` — untyped, never
- * an error. The API suite asserts what a promotion *stores*; this suite
- * pins the table itself, edge by edge.
+ * Three rules are asserted here and nowhere else: the bytes name the
+ * type and a filename never overrules them; a container's name picks
+ * only among the members that container admits; bytes the table cannot
+ * read are `application/octet-stream`, untyped and never an error. The
+ * API suite asserts what a promotion stores. This suite pins the table
+ * itself, edge by edge.
  */
 
 import { describe, expect, it } from "vitest";
 import { mediaTypeOfBlob, MEDIA_TYPE_HEAD_BYTES, UNTYPED_MEDIA_TYPE } from "./media-type.js";
 import { renderFamilyOf } from "./render-family.js";
 
-/** An ASCII head, padded with zeros to a plausible length. */
+/** A head from an ASCII marker, followed by any raw bytes given. */
 function head(marker: string, ...tail: number[]): Uint8Array {
   return Uint8Array.from([...[...marker].map((c) => c.charCodeAt(0)), ...tail]);
 }
@@ -115,8 +115,8 @@ describe("mediaTypeOfBlob", () => {
 
   it("names only types the render table routes, so nothing it asserts is unroutable", () => {
     // The module's own invariant, checked over every answer above:
-    // whatever this table names, `render-family.ts` has a family for —
-    // never the catch-all a type it did not know would get.
+    // whatever this table names, `render-family.ts` has a family for.
+    // None may fall to the catch-all an unknown type would get.
     const named: [Uint8Array, string][] = [
       [head("%PDF-1.7"), "draft.pdf"],
       [bytes(0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a), "scan.png"],

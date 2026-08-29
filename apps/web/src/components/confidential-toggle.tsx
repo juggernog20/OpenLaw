@@ -3,19 +3,19 @@
 /**
  * The Confidential flag as a control (DD-014), in the anatomy the C10
  * frame of `designs/contracts.pen` draws: a switch, the DES-009 lock,
- * and the label. The label says what the flag does — "restrict to the
- * contract team" — so the caption the mock draws under it restated the
- * row it hangs off and is gone.
+ * and the label. The label says what the flag does ("restrict to the
+ * contract team"), so the caption the mock draws under it is omitted.
+ * It only restated the row it hangs off.
  *
- * Two surfaces ask the same question and must ask it in the same words
- * — the create dialog, where the flag is set before the record exists,
+ * Two surfaces ask the same question and must ask it in the same words:
+ * the create dialog, where the flag is set before the record exists,
  * and the record's Contract card, where it is set and cleared after.
- * One component is what keeps the second from drifting from the first.
+ * One component keeps the second from drifting from the first.
  *
  * Inert is a real state, and on the record it is the common one: every
- * included viewer reads the audience, and only three of them may change
+ * included viewer reads the audience, and only three actors may change
  * it (CTR-022). The switch and its label stay when the control is
- * inert, so the fact stays legible — a control that vanished would
+ * inert, so the fact stays legible. A control that vanished would
  * leave the reader unable to tell a confidential record from an open
  * one.
  *
@@ -40,8 +40,9 @@ export function ConfidentialToggle({
    * toggles on one page never share an accessible name. */
   id: string;
   confidential: boolean;
-  /** The record is archived, this viewer reads rather than edits, or
-   * they are none of the three actors. All three read the same. */
+  /** Inert when the record is archived, the viewer reads rather than
+   * edits, or the viewer is none of the three CTR-022 actors. All three
+   * cases render the same. */
   disabled?: boolean;
   /** The commit's micro-state, where a surface commits (DES-017). */
   status?: ReactNode;

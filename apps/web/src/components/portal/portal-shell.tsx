@@ -9,12 +9,12 @@
  * What is absent is still the point. There is no top nav, no search, and
  * no activity bar: a Business User sees only their own Requests
  * (DD-013), so every staff destination would open on nothing. Member+
- * staff are welcome here — they submit Requests too — and they reach the
+ * staff are welcome here, they submit Requests too, and they reach the
  * full application the way they always did, so the portal owes them no
  * door back.
  *
- * **The trailing cluster carries the two things a requester's session
- * owns** (M20/9). The bell is NOT-001's second surface, the same
+ * The trailing cluster carries the two things a requester's session
+ * owns (M20/9). The bell is NOT-001's second surface, the same
  * anatomy DES-049 settled for the staff centre, backed by the portal's
  * own four routes; the gear beside it is the lightweight settings
  * surface NOT-001 promised, which is the group-5 toggles and nothing

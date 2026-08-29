@@ -18,12 +18,12 @@ export const PROBLEM_CONTENT_TYPE = "application/problem+json";
  *
  * The status is the contract, so the four kinds are kept apart:
  *
- * - **415** — the engine does not convert that source format. Terminal:
+ * - 415: the engine does not convert that source format. Terminal,
  *   a retry converts the same format again.
- * - **413** — the request body is over the ceiling. Terminal too.
- * - **422** — the bytes are not readable as the format they claim.
- *   Terminal: the file is what it is.
- * - **504** — the tool ran past its bound and was killed. Transient: a
+ * - 413: the request body is over the ceiling. Terminal too.
+ * - 422: the bytes are not readable as the format they claim.
+ *   Terminal, the file is what it is.
+ * - 504: the tool ran past its bound and was killed. Transient, a
  *   hung LibreOffice is exactly the case a retry heals.
  */
 export class OperationError extends Error {

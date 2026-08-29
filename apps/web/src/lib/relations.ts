@@ -41,9 +41,8 @@ export type RelationsOutcome =
  *
  * Every call here settles rather than rejects. A refused answer and a
  * request that never arrived are the same event to the section that
- * awaited it — both mean "this did not happen" — and a rejection that
- * escaped would leave the surface disabled with nothing on screen to
- * say why.
+ * awaited it. Both mean "this did not happen". A rejection that escaped
+ * would leave the section disabled with nothing on screen to say why.
  */
 export async function readContractRelations(number: number): Promise<RelationsOutcome> {
   const result = await api

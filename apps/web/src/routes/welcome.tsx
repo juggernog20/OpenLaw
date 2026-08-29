@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 /**
- * "Welcome to OpenLaw" — the SET-004 first-run onboarding wizard,
+ * "Welcome to OpenLaw", the SET-004 first-run onboarding wizard,
  * scoped to the steps whose features exist (issue #34): authentication
- * mode, the DD-010 portal (magic-link toggle + domain allowlist), SMTP
- * setup (#37: save a relay in the app unless the environment pins one —
- * env always wins), and invites. Every step is skippable; finishing —
- * or skipping out — marks onboarding complete, and a completed wizard
+ * mode, the DD-010 portal (magic-link toggle plus domain allowlist),
+ * SMTP setup (#37: save a relay in the app unless the environment pins
+ * one; env always wins), and invites. Every step is skippable. Finishing
+ * or skipping out marks onboarding complete, and a completed wizard
  * never shows again.
  */
 
@@ -32,8 +32,8 @@ import { Label } from "../components/ui/label";
 export async function welcomeLoader() {
   const user = await requireUser();
   if (user.role !== "administrator") return redirect("/");
-  // Completion decides the redirect before anything else is fetched —
-  // most visits to this loader are bounces off a finished instance.
+  // Completion decides the redirect before anything else is fetched.
+  // Most visits to this loader are bounces off a finished instance.
   const onboarding = await api.GET("/api/v1/onboarding");
   if (!onboarding.data) throw new Error("The onboarding state could not be read.");
   if (onboarding.data.completed) return redirect("/");
@@ -111,9 +111,9 @@ export function WelcomePage() {
   const [domainInput, setDomainInput] = useState("");
 
   // Email step (#37): the resolved SMTP state drives which of the three
-  // faces shows — set by environment (read-only), set in the app, or a
+  // faces shows: set by environment (read-only), set in the app, or a
   // setup form. Saves update it in place, so the step and the invites
-  // warning track what the instance can actually deliver.
+  // warning track what the instance can deliver.
   const [emailState, setEmailState] = useState(loaded.emailSettings);
   const [emailConfigured, setEmailConfigured] = useState(loaded.emailConfigured);
   const [replacingRelay, setReplacingRelay] = useState(false);
@@ -190,7 +190,7 @@ export function WelcomePage() {
 
   async function applyAuthentication() {
     // Switching to OIDC without a registered IdP would leave everyone but
-    // Administrators without a sign-in method — refuse client-side.
+    // Administrators without a sign-in method. Refuse client-side.
     if (mode === "oidc" && !ssoProviderId) {
       setError(
         intl.formatMessage({
@@ -944,8 +944,8 @@ export function WelcomePage() {
                     <FormattedMessage id="welcome.back" defaultMessage="Back" />
                   </Button>
                   <div className="flex items-center gap-2">
-                    {/* Every step defers, none is required (SET-004) —
-                        only the Administrator account is, and that was
+                    {/* Every step defers, none is required (SET-004).
+                        Only the Administrator account is, and that was
                         first-run setup, before this flow. */}
                     {step !== "invites" ? (
                       <>

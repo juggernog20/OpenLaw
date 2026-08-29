@@ -2,12 +2,12 @@
 
 /**
  * Intake · Deflection links (#356, INT-004) at the route seam: the
- * DES-020 list-editor in its value-list variant on the ST13 anatomy —
- * the two-line label-over-address row, the placement chip, the DES-021
- * dialog behind Add and behind the row's pencil, keyboard reorder with
- * its announcement, and outright removal. The API behaviors themselves
- * are covered at the HTTP seam in apps/api — these stubs only shape what
- * this UI must react to.
+ * DES-020 list-editor in its value-list variant on the ST13 anatomy.
+ * That covers the two-line label-over-address row, the placement chip,
+ * the DES-021 dialog behind Add and behind the row's pencil, keyboard
+ * reorder with its announcement, and outright removal. The API
+ * behaviors themselves are covered at the HTTP seam in apps/api. These
+ * stubs only shape what this UI must react to.
  */
 
 import { describe, expect, it } from "vitest";
@@ -69,7 +69,7 @@ function newCalls(): LinkCalls {
   return { creates: [], patches: [], orders: [], deletes: [] };
 }
 
-/** Serves the seeded panel and captures the pane's writes — the pane
+/** Serves the seeded panel and captures the pane's writes. The pane
  * holds its own row state, so the stub never needs to mutate. */
 function linksApi(
   calls: LinkCalls,
@@ -125,9 +125,9 @@ function linksApi(
 
 const linkList = () => screen.getByRole("list");
 
-/** One row's placement chip, read as a reader hears it — the sr-only
- * "Placement:" prefix and the visible name are two text nodes in one
- * chip, and neither says the whole thing alone. */
+/** One row's placement chip, read as a screen reader hears it. The
+ * sr-only "Placement:" prefix and the visible name are two text nodes
+ * in one chip, and neither says the whole thing alone. */
 const chipOf = (scope: HTMLElement): string =>
   within(scope).getByText("Placement:").parentElement?.textContent?.trim() ?? "";
 
@@ -171,8 +171,7 @@ describe("the panel (ST13)", () => {
       "wiki.acme.com/procurement/policy",
       "wiki.acme.com/legal/templates",
     ]);
-    // The scheme is machinery, and it is gone from the row — but only
-    // from the row.
+    // The scheme is machinery, and the row drops it. Only the row does.
     expect(screen.queryByText(/https:\/\//)).not.toBeInTheDocument();
     expect(screen.getByText("3 links")).toBeInTheDocument();
   });
@@ -435,7 +434,7 @@ describe("the DES-021 dialog behind a row's pencil", () => {
     stubApi({ signedIn: ADMIN, extra: linksApi(newCalls(), rows) });
     renderAt("/settings/intake/links");
     const user = userEvent.setup();
-    // The chip reads the archived type by name — a placement picked
+    // The chip reads the archived type by name. A placement picked
     // before the type was archived still has to read as itself.
     await screen.findByText("Standard contract templates");
     expect(chipOf(within(linkList()).getAllByRole("listitem")[2]!)).toBe(

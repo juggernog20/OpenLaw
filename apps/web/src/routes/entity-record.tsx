@@ -5,15 +5,15 @@
  * entities.pen reduced to the M7 registry subset: the breadcrumb
  * sub-bar with the legal name and status pill, and the Registry card
  * carrying the full identity card. Every field edits in place and
- * commits individually per DES-017 — no page edit mode, so EN5's Edit
- * chrome is not built — with the status and type as selects over the
- * fixed enum and the ENT-008 picker read. Archive (soft delete — a
- * data mistake, distinct from the dissolved status, which is corporate
- * reality) and restore live in the sub-bar; an archived record reads
- * as facts until restored. The M27 surfaces the mock also draws (tabs,
- * officers, registrations, the rail) are not built. The loader is the
- * client half of ENT-004's gate — Member+ only; the API's 403 is the
- * real refusal.
+ * commits on its own per DES-017. There is no page edit mode, so EN5's
+ * Edit chrome is not built. The status and type are selects over the
+ * fixed enum and the ENT-008 picker read. Archive and restore live in
+ * the sub-bar. Archive is a soft delete for a data mistake, distinct
+ * from the dissolved status, which is corporate reality. An archived
+ * record reads as facts until restored. The M27 surfaces the mock also
+ * draws (tabs, officers, registrations, the rail) are not built. The
+ * loader is the client half of ENT-004's gate, Member+ only. The API's
+ * 403 is the real refusal.
  */
 
 import { useState, type ReactNode } from "react";
@@ -43,8 +43,8 @@ import { Label } from "../components/ui/label";
 
 export async function entityRecordLoader({ params }: LoaderFunctionArgs) {
   const user = await requireUser();
-  // ENT-004: Contributors and Business Users get nothing — not a
-  // disabled surface, no surface. The API's 403 stands behind this.
+  // ENT-004: Contributors and Business Users get no surface at all, not
+  // a disabled one. The API's 403 stands behind this.
   if (!isMemberPlus(user.role)) return redirect("/");
   const id = params.entityId!;
   const [record, types] = await Promise.all([
@@ -71,7 +71,7 @@ export function EntityRecordPage() {
   const { user, entity, entityTypes } = useLoaderData<typeof entityRecordLoader>();
   const intl = useIntl();
 
-  /** The saved record — the server's truth after the last commit. */
+  /** The saved record: the server's truth after the last commit. */
   const [saved, setSaved] = useState<EntityRow>(entity);
   const [drafts, setDrafts] = useState<Record<TextFieldKey, string>>(() => textDrafts(entity));
   const [formedOnDraft, setFormedOnDraft] = useState(entity.formedOn ?? "");
@@ -145,8 +145,8 @@ export function EntityRecordPage() {
     ).catch(() => undefined);
     if (result?.data) {
       // A record-level action: the card re-reads as saved truth, so
-      // every draft resets — an in-progress edit on a record being
-      // archived is deliberately discarded, and a restore starts clean.
+      // every draft resets. An in-progress edit on a record being
+      // archived is discarded on purpose, and a restore starts clean.
       const row = result.data.entity;
       setSaved(row);
       setDrafts(textDrafts(row));
@@ -275,7 +275,7 @@ export function EntityRecordPage() {
                   }
                 >
                   {/* The saved type may be archived and so absent from the
-                      picker read (ENT-008) — keep it selectable as itself. */}
+                      picker read (ENT-008). Keep it selectable as itself. */}
                   {!entityTypes.some(
                     (option: EntityTypeOption) => option.id === saved.entityTypeId,
                   ) && <option value={saved.entityTypeId}>{saved.entityTypeName}</option>}

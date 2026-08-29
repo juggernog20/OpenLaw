@@ -1,18 +1,17 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 /**
- * The Entities registry (ENT-001/ENT-004, #98/#99), per the EN3 frame
- * of entities.pen reduced to the M7 registry subset: the list (legal
- * name, type, jurisdiction, status — ordered by legal name by the API,
- * each row opening its record page), the register dialog carrying the
- * full identity card, an empty state that says what the registry is,
- * and the show-archived toggle that reveals archived entities with a
- * row-level restore (#99 — archiving is for data mistakes, so the way
- * back sits right where the mistake surfaces). The M27 surfaces the
- * mock also draws (view switcher, filters, obligations column) are not
- * built. The loader is the client half of ENT-004's gate — Member+
- * only; the API's 403 is the real refusal. M27 grows this destination
- * into the full module.
+ * The Entities registry (ENT-001/ENT-004, #98/#99). It builds the M7
+ * registry subset of the EN3 frame in entities.pen: the list (legal
+ * name, type, jurisdiction, status, ordered by legal name by the API,
+ * each row opening its record page), the register dialog with the full
+ * identity card, an empty state that says what the registry is, and
+ * the show-archived toggle with a row-level restore. Archiving is for
+ * data mistakes (#99), so the way back sits where the mistake surfaces.
+ * The M27 surfaces the mock also draws (view switcher, filters,
+ * obligations column) are not built. The loader is the client half of
+ * ENT-004's gate: Member+ only. The API's 403 is the real refusal. M27
+ * grows this destination into the full module.
  */
 
 import { useState } from "react";
@@ -43,8 +42,8 @@ import { Switch } from "../components/ui/switch";
 
 export async function entitiesLoader() {
   const user = await requireUser();
-  // ENT-004: Contributors and Business Users get nothing — not a
-  // disabled surface, no surface. The API's 403 stands behind this.
+  // ENT-004: Contributors and Business Users get no surface at all,
+  // not a disabled one. The API's 403 stands behind this.
   if (!isMemberPlus(user.role)) return redirect("/");
   const [list, types] = await Promise.all([
     api.GET("/api/v1/entities"),
@@ -54,8 +53,7 @@ export async function entitiesLoader() {
   return { user, entities: list.data.entities, entityTypes: types.data.entityTypes };
 }
 
-/** The list's resting order — the API's ordering, mirrored for rows
- * added after load. */
+/** The API's list order, mirrored for rows added after load. */
 function byLegalName(a: EntityRow, b: EntityRow): number {
   return (
     a.legalName.localeCompare(b.legalName, undefined, { sensitivity: "base" }) ||
@@ -71,15 +69,15 @@ export function EntitiesPage() {
   const [showArchived, setShowArchived] = useState(false);
   const [listError, setListError] = useState<string | null>(null);
 
-  /** The working registry — archived rows never count (they are data
-   * mistakes, not entities), whichever view is showing. */
+  /** Archived rows never count, whichever view is showing. They are
+   * data mistakes, not entities. */
   const liveCount = rows.filter((row) => row.archivedAt === null).length;
 
   const signOut = useSignOut("/auth/login");
 
-  /** #99's show-archived toggle re-reads the list either way — the
-   * archived rows only exist server-side, and coming back should not
-   * trust a stale working list either. */
+  /** The show-archived toggle (#99) re-reads the list in both
+   * directions. Archived rows only exist server-side, and switching
+   * back must not trust a stale working list. */
   async function toggleArchived(next: boolean) {
     setListError(null);
     const { data } = await api

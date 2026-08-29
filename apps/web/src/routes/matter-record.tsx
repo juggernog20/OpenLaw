@@ -73,7 +73,7 @@ export async function matterRecordLoader({ params, request }: LoaderFunctionArgs
   if (!canReadMatters(user.role)) return redirect("/");
   const number = Number(params.matterNumber);
   if (!Number.isInteger(number) || number < 1) throw new Error("That is not a matter reference.");
-  // A section this record does not have is not an error — the record
+  // A section this record does not have is not an error. The record
   // exists. It lands on the Overview, which is what the bare address
   // already means (DES-032).
   if (params.tab && !RECORD_TABS.includes(params.tab as (typeof RECORD_TABS)[number])) {

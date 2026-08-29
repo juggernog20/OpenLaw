@@ -6,11 +6,11 @@
  *
  * The sweep walks every version in the install and decides, for each,
  * whether the pipeline still owes it something and which job would
- * deliver it. That is a rule with several boundaries — a family that
- * derives nothing, a derivation that is already there, a derivation that
- * gave up — and a boundary is cheaper to pin with a row than with an
- * upload. What the sweep actually does to an upgrading install is
- * asserted end to end, in the documents module's own suite.
+ * deliver it. That rule has several boundaries: a family that derives
+ * nothing, a derivation that is already there, a derivation that gave
+ * up. A boundary is cheaper to pin with a row than with an upload. What
+ * the sweep does to an upgrading install is asserted end to end in the
+ * documents module's own suite.
  */
 
 import { describe, expect, it } from "vitest";
@@ -42,8 +42,8 @@ describe("what a version is still owed", () => {
   it("asks again when a derivation is still pending", () => {
     // A lost queue send, or a job that expired against a wedged worker
     // on its last attempt. Neither wrote an outcome, and the sweep
-    // cannot tell them apart — both want the same thing, which is to be
-    // asked again.
+    // cannot tell them apart. Both want the same thing: to be asked
+    // again.
     expect(derivationOwedBy(version("application/pdf", "scan.pdf", "pending"))).toBe(
       "text-extraction",
     );

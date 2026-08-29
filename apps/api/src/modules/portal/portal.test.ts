@@ -6,14 +6,15 @@
  * cannot.
  *
  * Two things are asserted here and nowhere else. The first is that the
- * requester-facing reads answer a Business User at all — every M19
- * route refuses that session, which is why these exist. The second is
- * that opening them changed nothing about the Administrator-facing
- * ones: the M19 suites assert their own gate, and this suite asserts
- * that a requester holding a portal session cannot walk through it.
+ * requester-facing reads answer a Business User at all. Every M19
+ * route refuses that session, which is why these reads exist. The
+ * second is that opening them changed nothing about the
+ * Administrator-facing ones. The M19 suites assert their own gate, and
+ * this suite asserts that a requester holding a portal session cannot
+ * walk through it.
  *
- * The taxonomy's own behaviors — ordering, archive, the display-order
- * rewrite — are covered in `request-types.test.ts`, and the deflection
+ * The taxonomy's own behaviors (ordering, archive, the display-order
+ * rewrite) are covered in `request-types.test.ts`, and the deflection
  * links' in `intake-links.test.ts`. What this suite adds is the
  * requester's view of the same rows.
  */
@@ -219,7 +220,7 @@ describe("the deflection links a requester is offered", () => {
   });
 
   it("answers the URL exactly as it was stored", async () => {
-    // INT-004: nothing normalizes the address — no lower-casing, no
+    // INT-004: nothing normalizes the address. No lower-casing, no
     // trailing-slash trimming, no re-encoding. What a requester follows
     // is the string the Administrator pasted.
     const url = "https://Wiki.Acme.com/Legal/NDA?from=Portal#top";

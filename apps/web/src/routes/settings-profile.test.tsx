@@ -144,7 +144,6 @@ describe("the Profile pane (SET-006, #67)", () => {
     });
     renderAt("/settings/profile");
 
-    // Off state: the single enable affordance.
     await user.click(await screen.findByRole("button", { name: "Turn on two-factor" }));
 
     const dialog = await screen.findByRole("dialog");
@@ -156,12 +155,10 @@ describe("the Profile pane (SET-006, #67)", () => {
     await user.type(within(dialog).getByLabelText("Code"), "000000");
     await user.click(within(dialog).getByRole("button", { name: "Confirm" }));
 
-    // Backup codes are shown once; Done dismisses.
     expect(await within(dialog).findByText("AAAAA-11111")).toBeVisible();
     await user.click(within(dialog).getByRole("button", { name: "Done" }));
     await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
 
-    // The card now reads as on, with re-enrol and disable affordances.
     expect(screen.getByRole("button", { name: "Re-enroll" })).toBeVisible();
     expect(screen.getByRole("button", { name: "Turn off two-factor" })).toBeVisible();
   });
@@ -254,7 +251,7 @@ describe("the Profile pane (SET-006, #67)", () => {
     expect(
       await within(dialog).findByText("Wrong code. Scan the QR code again and retry."),
     ).toBeVisible();
-    // Still on the verify step — the secret stays on screen for a rescan.
+    // Still on the verify step. The secret stays on screen for a rescan.
     expect(within(dialog).getByText("JBSWY3DPEHPK3PXP")).toBeVisible();
   });
 
@@ -266,8 +263,8 @@ describe("the Profile pane (SET-006, #67)", () => {
         if (call.url.pathname === "/api/auth/two-factor/enable" && call.method === "POST") {
           // The other factor better-auth 1.7 can answer with. This
           // install configures no sendOTP, so reaching it means the
-          // server is set up differently from what this screen draws —
-          // there is no QR code and no backup codes to show.
+          // server is set up differently from what this screen draws.
+          // There is no QR code and no backup codes to show.
           return json(200, { method: "otp" });
         }
         return undefined;
@@ -304,7 +301,7 @@ describe("the Profile pane (SET-006, #67)", () => {
     });
     await user.upload(screen.getByLabelText("Upload a profile photo"), oversized);
 
-    // The error micro-state, with no update-user call — the stub would
+    // The error micro-state, with no update-user call. The stub would
     // have thrown on an unstubbed POST.
     expect(await screen.findByText("The change could not be saved. Try again.")).toBeVisible();
   });

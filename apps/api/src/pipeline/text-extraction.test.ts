@@ -77,7 +77,7 @@ describe("which files have text to read", () => {
   });
 
   it("reads Word and PowerPoint, out of the rendition they are converted to", () => {
-    // M12/4 converts these to a PDF rendition and reads that — one
+    // M12/4 converts these to a PDF rendition and reads that. One
     // extraction path, over PDF. Their text is owed from the moment they
     // are uploaded, so the read answers `pending` rather than
     // `unsupported`, even though this handler never touches them.

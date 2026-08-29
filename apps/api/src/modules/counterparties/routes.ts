@@ -12,7 +12,7 @@
  *
  * There is no create route here on purpose. A counterparty is born
  * inline, from a name typed into a contract's typeahead, inside the same
- * transaction that puts it on that contract (CTR-011) — so creation is
+ * transaction that puts it on that contract (CTR-011). So creation is
  * the contract route's, and this module only finds what already exists.
  *
  * Access is Member+, the same floor the contract surfaces stand on.
@@ -30,7 +30,7 @@ const requireMember = requireRole("administrator", "legal_team_member");
 
 /**
  * How many matches one search answers. A typeahead is read at a glance,
- * so a long list is not a better answer — it is the same answer with
+ * so a long list is not a better answer. It is the same answer with
  * more scrolling. Someone who cannot see what they want types more.
  */
 const SEARCH_LIMIT = 20;
