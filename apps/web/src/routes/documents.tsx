@@ -299,7 +299,7 @@ function DocumentsPageState() {
     setPageError(false);
     setLayout(allowed);
     setActiveViewId(nextActiveId);
-    mirrorSearch(navigate, querySearch(next));
+    mirrorSearch(navigate, querySearch(allowed));
   }
 
   function setFilter<K extends keyof DocumentRepositoryFilters>(

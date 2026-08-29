@@ -14,6 +14,13 @@ const MEMBER = {
   role: "legal_team_member",
 };
 
+const CONTRIBUTOR = {
+  id: "u3",
+  email: "contributor@example.com",
+  displayName: "Blair Uploader",
+  role: "contributor",
+};
+
 function documentRow() {
   return {
     id: "document-1",
@@ -298,6 +305,23 @@ describe("Documents saved-view query state", () => {
       within(screen.getByRole("menu")).getByRole("menuitemcheckbox", { name: /^Size/ }),
     );
     expect(api.queries).toHaveLength(reads);
+  });
+
+  it("strips includeArchived from a saved view for a Contributor, in the read and the URL", async () => {
+    const user = userEvent.setup();
+    const api = surface({ views: [{ ...storedView(), isDefault: false }] });
+    stubApi({ signedIn: CONTRIBUTOR, extra: api.handler });
+    const { router } = renderAt("/documents");
+
+    await user.click(await screen.findByRole("button", { name: /Default view/ }));
+    await user.click(
+      within(screen.getByRole("menu")).getByRole("menuitemradio", { name: "Executed copies" }),
+    );
+    await expectQuery(api.queries, "kind", "executed");
+    expect(lastQuery(api.queries).get("includeArchived")).toBeNull();
+    await waitFor(() => expect(router.state.location.search).toContain("kind=executed"));
+    expect(router.state.location.search).not.toContain("includeArchived");
+    expect(screen.queryByRole("switch", { name: "Show archived" })).not.toBeInTheDocument();
   });
 
   it("picks a record from the keyboard on the candidate-picker pattern", async () => {
