@@ -29,6 +29,7 @@ import {
   Plus,
 } from "lucide-react";
 import { api } from "../lib/api";
+import { civilToday, formatFullDate } from "../lib/format";
 import {
   ENTITY_STATUSES,
   STATUS_PILL,
@@ -318,35 +319,50 @@ function ComplianceCalendar({
   initialView: "list" | "month";
   initialMonth: string | null;
 }>) {
+  const intl = useIntl();
   const filtered = Boolean(
     filters.entity || filters.assignee || filters.from || filters.to || filters.includeCompleted,
   );
+  // Switching between the list and the month keeps the filters the
+  // reader has already set; only Clear all drops them.
+  const held = new URLSearchParams();
+  for (const [key, value] of Object.entries(filters)) if (value) held.set(key, value);
+  const listHref = held.size > 0 ? `/entities?${held.toString()}` : "/entities";
+  held.set("calendar", "month");
+  const monthHref = `/entities?${held.toString()}`;
+  const displayClass =
+    "rounded-chip px-2.5 py-1 text-sm aria-[current=page]:bg-accent aria-[current=page]:font-medium";
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-3">
       <div className="flex flex-wrap items-center gap-2">
         <ViewSwitch view="calendar" />
         <nav
-          aria-label="Calendar display"
+          aria-label={intl.formatMessage({
+            id: "entities.calendar.display",
+            defaultMessage: "Calendar display",
+          })}
           className="inline-flex rounded-button border border-border-default bg-raised p-0.5"
         >
           <Link
-            to="/entities"
+            to={listHref}
             aria-current={initialView === "list" ? "page" : undefined}
-            className="rounded-chip px-2.5 py-1 text-sm aria-[current=page]:bg-accent aria-[current=page]:font-medium"
+            className={displayClass}
           >
-            Due-date list
+            <FormattedMessage id="entities.calendar.listView" defaultMessage="Due-date list" />
           </Link>
           <Link
-            to="/entities?calendar=month"
+            to={monthHref}
             aria-current={initialView === "month" ? "page" : undefined}
-            className="rounded-chip px-2.5 py-1 text-sm aria-[current=page]:bg-accent aria-[current=page]:font-medium"
+            className={displayClass}
           >
-            Month
+            <FormattedMessage id="entities.calendar.monthView" defaultMessage="Month" />
           </Link>
         </nav>
       </div>
       <section className="rounded-card border border-border-default bg-raised p-4">
-        <h2 className="text-lg font-semibold">Compliance calendar</h2>
+        <h2 className="text-lg font-semibold">
+          <FormattedMessage id="entities.calendar.title" defaultMessage="Compliance calendar" />
+        </h2>
         <Form
           method="get"
           className="mt-3 grid grid-cols-1 gap-3 @xl/page:grid-cols-[1fr_1fr_10rem_10rem_auto_auto]"
@@ -354,11 +370,16 @@ function ComplianceCalendar({
           {initialView === "month" ? <input type="hidden" name="calendar" value="month" /> : null}
           <CalendarSelect
             id="calendar-entity"
-            label="Entity"
+            label={intl.formatMessage({ id: "entities.calendar.entity", defaultMessage: "Entity" })}
             name="entity"
             defaultValue={filters.entity}
           >
-            <option value="">All Entities</option>
+            <option value="">
+              {intl.formatMessage({
+                id: "entities.calendar.allEntities",
+                defaultMessage: "All Entities",
+              })}
+            </option>
             {entities
               .filter((row) => row.archivedAt === null)
               .map((row) => (
@@ -369,21 +390,32 @@ function ComplianceCalendar({
           </CalendarSelect>
           <CalendarSelect
             id="calendar-assignee"
-            label="Assignee"
+            label={intl.formatMessage({
+              id: "entities.calendar.assignee",
+              defaultMessage: "Assignee",
+            })}
             name="assignee"
             defaultValue={filters.assignee}
           >
-            <option value="">Everyone</option>
+            <option value="">
+              {intl.formatMessage({ id: "entities.calendar.everyone", defaultMessage: "Everyone" })}
+            </option>
             {users.map((row) => (
               <option key={row.id} value={row.id}>
                 {row.displayName}
               </option>
             ))}
           </CalendarSelect>
-          <FieldLabel id="calendar-from" label="From">
+          <FieldLabel
+            id="calendar-from"
+            label={intl.formatMessage({ id: "entities.calendar.from", defaultMessage: "From" })}
+          >
             <Input id="calendar-from" name="from" type="date" defaultValue={filters.from} />
           </FieldLabel>
-          <FieldLabel id="calendar-to" label="To">
+          <FieldLabel
+            id="calendar-to"
+            label={intl.formatMessage({ id: "entities.calendar.to", defaultMessage: "To" })}
+          >
             <Input id="calendar-to" name="to" type="date" defaultValue={filters.to} />
           </FieldLabel>
           <label className="flex items-center gap-2 self-end pb-2 text-sm">
@@ -393,10 +425,13 @@ function ComplianceCalendar({
               value="true"
               defaultChecked={filters.includeCompleted === "true"}
             />
-            Include completed
+            <FormattedMessage
+              id="entities.calendar.includeCompleted"
+              defaultMessage="Include completed"
+            />
           </label>
           <Button type="submit" variant="secondary" className="self-end">
-            Apply
+            <FormattedMessage id="entities.calendar.apply" defaultMessage="Apply" />
           </Button>
         </Form>
       </section>
@@ -458,58 +493,88 @@ function CalendarEmpty({
       <CalendarDays size={24} className="text-subtle" aria-hidden="true" />
       <div>
         <h2 className="text-md font-semibold">
-          {filtered ? "No obligations match" : "No obligations yet"}
+          {filtered ? (
+            <FormattedMessage
+              id="entities.calendar.noMatch"
+              defaultMessage="No obligations match"
+            />
+          ) : (
+            <FormattedMessage id="entities.calendar.empty" defaultMessage="No obligations yet" />
+          )}
         </h2>
         <p className="mt-1 text-sm text-muted">
-          {filtered
-            ? "Change or clear the filters to see other due dates."
-            : "Obligations added to Entity records appear here."}
+          {filtered ? (
+            <FormattedMessage
+              id="entities.calendar.noMatchHint"
+              defaultMessage="Change or clear the filters to see other due dates."
+            />
+          ) : (
+            <FormattedMessage
+              id="entities.calendar.emptyHint"
+              defaultMessage="Obligations added to Entity records appear here."
+            />
+          )}
         </p>
       </div>
       {filtered ? (
         <Link className="text-link hover:underline" to="/entities">
-          Clear all
+          <FormattedMessage id="entities.calendar.clear" defaultMessage="Clear all" />
         </Link>
       ) : firstEntityId ? (
         <Link className="text-link hover:underline" to={`/entities/${firstEntityId}/obligations`}>
-          Add obligation
+          <FormattedMessage id="entities.calendar.add" defaultMessage="Add obligation" />
         </Link>
       ) : null}
     </div>
   );
 }
 
+/** DES-018: an overdue open obligation reads in the severe family. */
+const OVERDUE_TEXT = "text-status-severe-fg";
+
 function CalendarList({ rows }: Readonly<{ rows: CalendarObligation[] }>) {
+  const intl = useIntl();
   return (
     <div className="overflow-x-auto rounded-card border border-border-default bg-raised">
       <table className="w-full">
         <thead>
           <tr className="bg-section-header text-sm text-muted">
-            <CalendarHeader>Due date</CalendarHeader>
-            <CalendarHeader>Obligation</CalendarHeader>
-            <CalendarHeader>Entity</CalendarHeader>
-            <CalendarHeader>Assignee</CalendarHeader>
-            <CalendarHeader>Repeat</CalendarHeader>
+            <CalendarHeader>
+              {intl.formatMessage({ id: "entities.calendar.dueDate", defaultMessage: "Due date" })}
+            </CalendarHeader>
+            <CalendarHeader>
+              {intl.formatMessage({
+                id: "entities.calendar.obligation",
+                defaultMessage: "Obligation",
+              })}
+            </CalendarHeader>
+            <CalendarHeader>
+              {intl.formatMessage({ id: "entities.calendar.entity", defaultMessage: "Entity" })}
+            </CalendarHeader>
+            <CalendarHeader>
+              {intl.formatMessage({ id: "entities.calendar.assignee", defaultMessage: "Assignee" })}
+            </CalendarHeader>
+            <CalendarHeader>
+              {intl.formatMessage({ id: "entities.calendar.repeat", defaultMessage: "Repeat" })}
+            </CalendarHeader>
           </tr>
         </thead>
         <tbody>
           {rows.map((row) => (
             <tr key={row.id} className="border-t border-border-default">
-              <td
-                className={`px-4 py-3 text-sm ${row.overdue ? "text-status-danger-fg" : "text-muted"}`}
-              >
-                {formatDay(row.nextDueOn)}
+              <td className={`px-4 py-3 text-sm ${row.overdue ? OVERDUE_TEXT : "text-muted"}`}>
+                {formatFullDate(row.nextDueOn)}
               </td>
               <td className="px-4 py-3">
                 <Link
                   to={`/entities/${row.entityId}/obligations`}
-                  className={`font-medium hover:underline ${row.overdue ? "text-status-danger-fg" : "text-link"}`}
+                  className={`font-medium hover:underline ${row.overdue ? OVERDUE_TEXT : "text-link"}`}
                 >
                   {row.label}
                 </Link>
                 {row.completedOn ? (
                   <span className="ms-2 rounded-pill bg-status-success-bg px-2 py-0.5 text-xs text-status-success-fg">
-                    Filed
+                    <FormattedMessage id="entities.calendar.filed" defaultMessage="Filed" />
                   </span>
                 ) : null}
               </td>
@@ -519,10 +584,25 @@ function CalendarList({ rows }: Readonly<{ rows: CalendarObligation[] }>) {
                 </Link>
               </td>
               <td className="px-4 py-3 text-sm text-muted">
-                {row.assignee?.displayName ?? "Unassigned"}
+                {row.assignee?.displayName ??
+                  intl.formatMessage({
+                    id: "entities.calendar.unassigned",
+                    defaultMessage: "Unassigned",
+                  })}
               </td>
               <td className="px-4 py-3 text-sm text-muted">
-                {row.recurrenceMonths ? `Every ${row.recurrenceMonths} months` : "One-off"}
+                {row.recurrenceMonths
+                  ? intl.formatMessage(
+                      {
+                        id: "entities.calendar.every",
+                        defaultMessage: "Every {months, plural, one {month} other {# months}}",
+                      },
+                      { months: row.recurrenceMonths },
+                    )
+                  : intl.formatMessage({
+                      id: "entities.calendar.oneOff",
+                      defaultMessage: "One-off",
+                    })}
               </td>
             </tr>
           ))}
@@ -544,12 +624,11 @@ function MonthCalendar({
   rows,
   initialMonth,
 }: Readonly<{ rows: CalendarObligation[]; initialMonth: string | null }>) {
+  const intl = useIntl();
   const [month, setMonth] = useState(() => parseMonth(initialMonth));
-  const title = new Intl.DateTimeFormat(undefined, {
-    month: "long",
-    year: "numeric",
-    timeZone: "UTC",
-  }).format(month);
+  // A month is a civil span, not an instant, so it is named in UTC the
+  // way a stored civil date is (DES-014).
+  const title = intl.formatDate(month, { month: "long", year: "numeric", timeZone: "UTC" });
   const year = month.getUTCFullYear();
   const monthIndex = month.getUTCMonth();
   const firstWeekday = new Date(Date.UTC(year, monthIndex, 1)).getUTCDay();
@@ -567,25 +646,41 @@ function MonthCalendar({
       <header className="flex items-center justify-between gap-3 border-b border-border-default bg-section-header px-4 py-3">
         <h2 className="text-lg font-semibold">{title}</h2>
         <div className="flex items-center gap-1">
-          <Button size="icon" variant="ghost" aria-label="Previous month" onClick={() => step(-1)}>
+          <Button
+            size="icon"
+            variant="ghost"
+            aria-label={intl.formatMessage({
+              id: "entities.calendar.previousMonth",
+              defaultMessage: "Previous month",
+            })}
+            onClick={() => step(-1)}
+          >
             <ChevronLeft size={16} />
           </Button>
           <Button size="sm" variant="secondary" onClick={() => setMonth(currentMonth())}>
-            Today
+            <FormattedMessage id="entities.calendar.today" defaultMessage="Today" />
           </Button>
-          <Button size="icon" variant="ghost" aria-label="Next month" onClick={() => step(1)}>
+          <Button
+            size="icon"
+            variant="ghost"
+            aria-label={intl.formatMessage({
+              id: "entities.calendar.nextMonth",
+              defaultMessage: "Next month",
+            })}
+            onClick={() => step(1)}
+          >
             <ChevronRight size={16} />
           </Button>
         </div>
       </header>
       <div role="grid" aria-label={title} className="grid grid-cols-7">
-        {WEEKDAYS.map((weekday) => (
+        {days.slice(0, 7).map((day) => (
           <div
             role="columnheader"
-            key={weekday}
+            key={day.getUTCDay()}
             className="border-b border-e border-border-muted bg-section-header px-2 py-2 text-center text-xs font-medium text-muted"
           >
-            {weekday}
+            {intl.formatDate(day, { weekday: "short", timeZone: "UTC" })}
           </div>
         ))}
         {days.map((day) => {
@@ -606,7 +701,7 @@ function MonthCalendar({
                   <Link
                     key={row.id}
                     to={`/entities/${row.entityId}/obligations`}
-                    className={`rounded-chip px-1.5 py-1 text-xs hover:underline ${row.overdue ? "bg-status-danger-bg text-status-danger-fg" : "bg-accent text-link"}`}
+                    className={`rounded-chip px-1.5 py-1 text-xs hover:underline ${row.overdue ? "bg-status-severe-bg text-status-severe-fg" : "bg-accent text-link"}`}
                   >
                     {row.label}
                   </Link>
@@ -620,8 +715,6 @@ function MonthCalendar({
   );
 }
 
-const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"] as const;
-
 function parseMonth(value: string | null) {
   const match = value?.match(/^(\d{4})-(\d{2})$/);
   if (!match) return currentMonth();
@@ -631,22 +724,14 @@ function parseMonth(value: string | null) {
     : currentMonth();
 }
 
+/** The first day of the reader's own current month (DES-014). */
 function currentMonth() {
-  const now = new Date();
-  return new Date(Date.UTC(now.getFullYear(), now.getMonth(), 1));
+  const today = civilToday();
+  return new Date(Date.UTC(Number(today.slice(0, 4)), Number(today.slice(5, 7)) - 1, 1));
 }
 
 function isoDay(day: Date) {
   return day.toISOString().slice(0, 10);
-}
-
-function formatDay(value: string) {
-  return new Intl.DateTimeFormat(undefined, {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-    timeZone: "UTC",
-  }).format(new Date(`${value}T00:00:00.000Z`));
 }
 
 /** ENT-001's pitch, for the first visit (the M7 spec's empty state). */

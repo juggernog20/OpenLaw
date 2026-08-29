@@ -156,7 +156,7 @@ describe("the Entity Obligations tab", () => {
       nextDueOn: "2026-10-31",
       assigneeId: "u2",
     });
-    expect(screen.getByText("Tax return")).toBeInTheDocument();
+    expect(screen.getByDisplayValue("Tax return")).toBeInTheDocument();
   });
 
   it("opens Mark filed with the cycle date and replaces the recurring row after confirmation", async () => {

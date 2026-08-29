@@ -11,6 +11,7 @@ import {
   type EntityRegistration,
   type EntityRegistrationStatus,
 } from "../../lib/entities";
+import { formatShortDate } from "../../lib/format";
 import { CONTROL_CLASS } from "../../lib/form-controls";
 import { problem } from "../../lib/problem";
 import { StatusNote, type FieldStatus } from "../status-note";
@@ -335,7 +336,10 @@ function RegistrationRow({
       {obligations.length > 0 ? (
         <div className="mt-3 border-t border-border-muted pt-3">
           <p className="text-xs font-medium uppercase tracking-wide text-muted">
-            Linked obligations
+            <FormattedMessage
+              id="entities.record.registrations.linkedObligations"
+              defaultMessage="Linked obligations"
+            />
           </p>
           <ul className="mt-1 flex flex-wrap gap-x-4 gap-y-1">
             {obligations.map((obligation) => (
@@ -346,7 +350,13 @@ function RegistrationRow({
                 >
                   {obligation.label}
                 </Link>
-                <span className="ms-2 text-xs text-muted">due {obligation.nextDueOn}</span>
+                <span className="ms-2 text-xs text-muted">
+                  <FormattedMessage
+                    id="entities.record.registrations.obligationDue"
+                    defaultMessage="due {date}"
+                    values={{ date: formatShortDate(obligation.nextDueOn) }}
+                  />
+                </span>
               </li>
             ))}
           </ul>

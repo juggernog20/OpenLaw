@@ -2,6 +2,7 @@
 
 import { useState, type ReactNode } from "react";
 import { Link } from "react-router";
+import { FormattedMessage, useIntl, type IntlShape } from "react-intl";
 import { Check, Plus, Trash2 } from "lucide-react";
 import { api } from "../../lib/api";
 import type {
@@ -9,6 +10,7 @@ import type {
   EntityObligationOptions,
   EntityRegistration,
 } from "../../lib/entities";
+import { civilToday, formatFullDate } from "../../lib/format";
 import { CONTROL_CLASS, TEXTAREA_CLASS } from "../../lib/form-controls";
 import { problem } from "../../lib/problem";
 import { StatusNote, type FieldStatus } from "../status-note";
@@ -37,6 +39,51 @@ const EMPTY_DRAFT: Draft = {
   note: "",
 };
 
+/** The field names the tab, the dialog, and the row labels share. */
+function fieldLabels(intl: IntlShape) {
+  return {
+    dueDate: intl.formatMessage({
+      id: "entities.record.obligations.dueDate",
+      defaultMessage: "Due date",
+    }),
+    label: intl.formatMessage({ id: "entities.record.obligations.label", defaultMessage: "Label" }),
+    repeat: intl.formatMessage({
+      id: "entities.record.obligations.repeat",
+      defaultMessage: "Repeat every (months)",
+    }),
+    registration: intl.formatMessage({
+      id: "entities.record.obligations.registration",
+      defaultMessage: "Registration",
+    }),
+    assignee: intl.formatMessage({
+      id: "entities.record.obligations.assignee",
+      defaultMessage: "Assignee",
+    }),
+    matter: intl.formatMessage({
+      id: "entities.record.obligations.matter",
+      defaultMessage: "Matter",
+    }),
+    note: intl.formatMessage({ id: "entities.record.obligations.note", defaultMessage: "Note" }),
+    none: intl.formatMessage({ id: "entities.record.obligations.none", defaultMessage: "None" }),
+    unassigned: intl.formatMessage({
+      id: "entities.record.obligations.unassigned",
+      defaultMessage: "Unassigned",
+    }),
+    add: intl.formatMessage({
+      id: "entities.record.obligations.add",
+      defaultMessage: "Add obligation",
+    }),
+    markFiled: intl.formatMessage({
+      id: "entities.record.obligations.markFiled",
+      defaultMessage: "Mark filed",
+    }),
+    cancel: intl.formatMessage({
+      id: "entities.record.obligations.cancel",
+      defaultMessage: "Cancel",
+    }),
+  };
+}
+
 export function ObligationsPanel({
   entityId,
   initial,
@@ -50,6 +97,8 @@ export function ObligationsPanel({
   options: EntityObligationOptions;
   frozen: boolean;
 }>) {
+  const intl = useIntl();
+  const labels = fieldLabels(intl);
   const [rows, setRows] = useState(() => [...initial].sort(byDueDate));
   const [adding, setAdding] = useState(false);
   const [filing, setFiling] = useState<EntityObligation>();
@@ -96,36 +145,58 @@ export function ObligationsPanel({
   return (
     <section className="overflow-hidden rounded-card border border-border-default bg-raised">
       <header className="flex min-h-section-header items-center justify-between gap-3 border-b border-border-default bg-section-header px-4 py-2">
-        <h2 className="text-lg font-semibold">Obligations</h2>
+        <h2 className="text-lg font-semibold">
+          <FormattedMessage id="entities.record.obligations.title" defaultMessage="Obligations" />
+        </h2>
         <div className="flex items-center gap-3">
           <StatusNote status={status} detail={error} />
           {!frozen ? (
             <Button size="sm" onClick={() => setAdding(true)}>
               <Plus size={16} aria-hidden="true" />
-              Add obligation
+              {labels.add}
             </Button>
           ) : null}
         </div>
       </header>
       {rows.length === 0 ? (
         <div className="p-8 text-center">
-          <p className="font-medium">No obligations for this Entity.</p>
-          <p className="mt-1 text-sm text-muted">Add the first due date when it is known.</p>
+          <p className="font-medium">
+            <FormattedMessage
+              id="entities.record.obligations.empty"
+              defaultMessage="No obligations for this Entity."
+            />
+          </p>
+          <p className="mt-1 text-sm text-muted">
+            <FormattedMessage
+              id="entities.record.obligations.emptyHint"
+              defaultMessage="Add the first due date when it is known."
+            />
+          </p>
         </div>
       ) : (
         <div className="overflow-x-auto">
           <table className="w-full min-w-[1050px]">
             <thead>
               <tr className="bg-section-header text-sm text-muted">
-                <Header>Due date</Header>
-                <Header>Obligation</Header>
-                <Header>Repeat</Header>
-                <Header>Registration</Header>
-                <Header>Assignee</Header>
-                <Header>Matter</Header>
-                <Header>Note</Header>
+                <Header>{labels.dueDate}</Header>
+                <Header>
+                  {intl.formatMessage({
+                    id: "entities.record.obligations.column",
+                    defaultMessage: "Obligation",
+                  })}
+                </Header>
+                <Header>{labels.repeat}</Header>
+                <Header>{labels.registration}</Header>
+                <Header>{labels.assignee}</Header>
+                <Header>{labels.matter}</Header>
+                <Header>{labels.note}</Header>
                 <th scope="col" className="px-3 py-2">
-                  <span className="sr-only">Actions</span>
+                  <span className="sr-only">
+                    <FormattedMessage
+                      id="entities.record.obligations.actions"
+                      defaultMessage="Actions"
+                    />
+                  </span>
                 </th>
               </tr>
             </thead>
@@ -198,25 +269,40 @@ function ObligationRow({
   onFile: () => void;
   onRemove: () => void;
 }>) {
+  const intl = useIntl();
+  const labels = fieldLabels(intl);
   const [label, setLabel] = useState(row.label);
   const [note, setNote] = useState(row.note ?? "");
+  const [recurrence, setRecurrence] = useState(
+    row.recurrenceMonths === null ? "" : String(row.recurrenceMonths),
+  );
+  const locked = frozen || row.completedOn !== null;
+  // `{label} due date`, `{label} note`, and the rest: one row's controls
+  // read as that obligation's own, not as seven anonymous fields.
+  const field = (name: string) =>
+    intl.formatMessage(
+      {
+        id: "entities.record.obligations.rowField",
+        defaultMessage: "{label} {field}",
+      },
+      { label: row.label, field: name.toLowerCase() },
+    );
   return (
     <tr className="border-t border-border-default align-top">
       <td className="p-3">
         <Input
-          aria-label={`${row.label} due date`}
+          aria-label={field(labels.dueDate)}
           type="date"
           value={row.nextDueOn}
-          disabled={frozen || row.completedOn !== null}
+          disabled={locked}
           onChange={(event) => onUpdate({ nextDueOn: event.target.value })}
         />
       </td>
       <td className="p-3">
-        <span className="mb-1 block text-sm font-medium">{row.label}</span>
         <Input
-          aria-label={`${row.label} label`}
+          aria-label={field(labels.label)}
           value={label}
-          disabled={frozen || row.completedOn !== null}
+          disabled={locked}
           onChange={(event) => setLabel(event.target.value)}
           onBlur={() =>
             label.trim() && label.trim() !== row.label && onUpdate({ label: label.trim() })
@@ -224,31 +310,37 @@ function ObligationRow({
         />
         {row.completedOn ? (
           <span className="mt-1 inline-flex rounded-pill bg-status-success-bg px-2 py-0.5 text-xs text-status-success-fg">
-            Filed {row.completedOn}
+            <FormattedMessage
+              id="entities.record.obligations.filedOn"
+              defaultMessage="Filed {date}"
+              values={{ date: formatFullDate(row.completedOn) }}
+            />
           </span>
         ) : null}
       </td>
       <td className="p-3">
         <Input
-          aria-label={`${row.label} repeat every months`}
+          aria-label={field(labels.repeat)}
           type="number"
           min={1}
-          value={row.recurrenceMonths ?? ""}
-          disabled={frozen || row.completedOn !== null}
-          onChange={(event) =>
-            onUpdate({ recurrenceMonths: event.target.value ? Number(event.target.value) : null })
-          }
+          value={recurrence}
+          disabled={locked}
+          onChange={(event) => setRecurrence(event.target.value)}
+          onBlur={() => {
+            const next = recurrence ? Number(recurrence) : null;
+            if (next !== row.recurrenceMonths) onUpdate({ recurrenceMonths: next });
+          }}
         />
       </td>
       <td className="p-3">
         <select
-          aria-label={`${row.label} registration`}
+          aria-label={field(labels.registration)}
           className={CONTROL_CLASS}
           value={row.registration?.id ?? ""}
-          disabled={frozen || row.completedOn !== null}
+          disabled={locked}
           onChange={(event) => onUpdate({ registrationId: event.target.value || null })}
         >
-          <option value="">None</option>
+          <option value="">{labels.none}</option>
           {registrations.map((registration) => (
             <option key={registration.id} value={registration.id}>
               {registrationLabel(registration)}
@@ -261,13 +353,13 @@ function ObligationRow({
       </td>
       <td className="p-3">
         <select
-          aria-label={`${row.label} assignee`}
+          aria-label={field(labels.assignee)}
           className={CONTROL_CLASS}
           value={row.assignee?.id ?? ""}
-          disabled={frozen || row.completedOn !== null}
+          disabled={locked}
           onChange={(event) => onUpdate({ assigneeId: event.target.value || null })}
         >
-          <option value="">Unassigned</option>
+          <option value="">{labels.unassigned}</option>
           {options.users.map((user) => (
             <option key={user.id} value={user.id}>
               {user.displayName}
@@ -277,13 +369,13 @@ function ObligationRow({
       </td>
       <td className="p-3">
         <select
-          aria-label={`${row.label} matter`}
+          aria-label={field(labels.matter)}
           className={CONTROL_CLASS}
           value={row.matter?.id ?? ""}
-          disabled={frozen || row.completedOn !== null}
+          disabled={locked}
           onChange={(event) => onUpdate({ matterId: event.target.value || null })}
         >
-          <option value="">None</option>
+          <option value="">{labels.none}</option>
           {options.matters.map((matter) => (
             <option key={matter.id} value={matter.id}>
               {matterLabel(matter)}
@@ -301,20 +393,26 @@ function ObligationRow({
       </td>
       <td className="p-3">
         <Input
-          aria-label={`${row.label} note`}
+          aria-label={field(labels.note)}
           value={note}
-          disabled={frozen || row.completedOn !== null}
+          disabled={locked}
           onChange={(event) => setNote(event.target.value)}
           onBlur={() => note !== (row.note ?? "") && onUpdate({ note: note || null })}
         />
       </td>
       <td className="p-3">
-        {!frozen && row.completedOn === null ? (
+        {!locked ? (
           <div className="flex items-center justify-end gap-1">
             <Button
               size="icon"
               variant="ghost"
-              aria-label={`Mark ${row.label} filed`}
+              aria-label={intl.formatMessage(
+                {
+                  id: "entities.record.obligations.markFiledRow",
+                  defaultMessage: "Mark {label} filed",
+                },
+                { label: row.label },
+              )}
               onClick={onFile}
             >
               <Check size={16} />
@@ -322,7 +420,13 @@ function ObligationRow({
             <Button
               size="icon"
               variant="ghost"
-              aria-label={`Delete ${row.label}`}
+              aria-label={intl.formatMessage(
+                {
+                  id: "entities.record.obligations.remove",
+                  defaultMessage: "Delete {label}",
+                },
+                { label: row.label },
+              )}
               onClick={onRemove}
             >
               <Trash2 size={16} />
@@ -347,6 +451,8 @@ function AddObligationDialog({
   onClose: () => void;
   onCreated: (row: EntityObligation) => void;
 }>) {
+  const intl = useIntl();
+  const labels = fieldLabels(intl);
   const [draft, setDraft] = useState(EMPTY_DRAFT);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string>();
@@ -381,7 +487,7 @@ function AddObligationDialog({
   return (
     <Dialog open onOpenChange={(open) => !open && onClose()}>
       <DialogContent aria-describedby={undefined} width="xl">
-        <DialogTitle>Add obligation</DialogTitle>
+        <DialogTitle>{labels.add}</DialogTitle>
         <form
           className="mt-4 grid grid-cols-1 gap-4 @sm/dialog:grid-cols-2"
           onSubmit={(event) => {
@@ -389,7 +495,7 @@ function AddObligationDialog({
             void submit();
           }}
         >
-          <Field id="obligation-label" label="Label">
+          <Field id="obligation-label" label={labels.label}>
             <Input
               id="obligation-label"
               autoFocus
@@ -398,7 +504,7 @@ function AddObligationDialog({
               onChange={(event) => set("label", event.target.value)}
             />
           </Field>
-          <Field id="obligation-due" label="Due date">
+          <Field id="obligation-due" label={labels.dueDate}>
             <Input
               id="obligation-due"
               type="date"
@@ -407,7 +513,7 @@ function AddObligationDialog({
               onChange={(event) => set("nextDueOn", event.target.value)}
             />
           </Field>
-          <Field id="obligation-recurrence" label="Repeat every (months)">
+          <Field id="obligation-recurrence" label={labels.repeat}>
             <Input
               id="obligation-recurrence"
               type="number"
@@ -418,11 +524,11 @@ function AddObligationDialog({
           </Field>
           <SelectDraft
             id="obligation-registration"
-            label="Registration"
+            label={labels.registration}
             value={draft.registrationId}
             onChange={(value) => set("registrationId", value)}
           >
-            <option value="">None</option>
+            <option value="">{labels.none}</option>
             {registrations.map((row) => (
               <option key={row.id} value={row.id}>
                 {registrationLabel(row)}
@@ -431,11 +537,11 @@ function AddObligationDialog({
           </SelectDraft>
           <SelectDraft
             id="obligation-assignee"
-            label="Assignee"
+            label={labels.assignee}
             value={draft.assigneeId}
             onChange={(value) => set("assigneeId", value)}
           >
-            <option value="">Unassigned</option>
+            <option value="">{labels.unassigned}</option>
             {options.users.map((row) => (
               <option key={row.id} value={row.id}>
                 {row.displayName}
@@ -444,11 +550,11 @@ function AddObligationDialog({
           </SelectDraft>
           <SelectDraft
             id="obligation-matter"
-            label="Matter"
+            label={labels.matter}
             value={draft.matterId}
             onChange={(value) => set("matterId", value)}
           >
-            <option value="">None</option>
+            <option value="">{labels.none}</option>
             {options.matters.map((row) => (
               <option key={row.id} value={row.id}>
                 {matterLabel(row)}
@@ -456,7 +562,7 @@ function AddObligationDialog({
             ))}
           </SelectDraft>
           <div className="flex flex-col gap-1.5 @sm/dialog:col-span-2">
-            <Label htmlFor="obligation-note">Note</Label>
+            <Label htmlFor="obligation-note">{labels.note}</Label>
             <textarea
               id="obligation-note"
               className={TEXTAREA_CLASS}
@@ -471,10 +577,10 @@ function AddObligationDialog({
           ) : null}
           <div className="flex justify-end gap-2 @sm/dialog:col-span-2">
             <Button type="button" variant="ghost" onClick={onClose}>
-              Cancel
+              {labels.cancel}
             </Button>
             <Button type="submit" disabled={busy}>
-              Add obligation
+              {labels.add}
             </Button>
           </div>
         </form>
@@ -494,7 +600,9 @@ function MarkFiledDialog({
   onClose: () => void;
   onFiled: (row: EntityObligation) => void;
 }>) {
-  const [filedOn, setFiledOn] = useState(localDay());
+  const intl = useIntl();
+  const labels = fieldLabels(intl);
+  const [filedOn, setFiledOn] = useState(() => civilToday());
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string>();
   async function submit() {
@@ -516,7 +624,7 @@ function MarkFiledDialog({
   return (
     <Dialog open onOpenChange={(open) => !open && onClose()}>
       <DialogContent aria-describedby="mark-filed-explanation">
-        <DialogTitle>Mark filed</DialogTitle>
+        <DialogTitle>{labels.markFiled}</DialogTitle>
         <form
           className="mt-4 flex flex-col gap-4"
           onSubmit={(event) => {
@@ -525,11 +633,26 @@ function MarkFiledDialog({
           }}
         >
           <p id="mark-filed-explanation" className="text-muted">
-            {obligation.recurrenceMonths
-              ? `Filing this moves forward ${obligation.recurrenceMonths} months from the current due date until the next due date is after the filing date.`
-              : "Filing this completes the one-off obligation."}
+            {obligation.recurrenceMonths ? (
+              <FormattedMessage
+                id="entities.record.obligations.fileRecurring"
+                defaultMessage="Filing this moves forward {months, plural, one {# month} other {# months}} from the current due date until the next due date is after the filing date."
+                values={{ months: obligation.recurrenceMonths }}
+              />
+            ) : (
+              <FormattedMessage
+                id="entities.record.obligations.fileOneOff"
+                defaultMessage="Filing this completes the one-off obligation."
+              />
+            )}
           </p>
-          <Field id="obligation-filed-on" label="Filed on">
+          <Field
+            id="obligation-filed-on"
+            label={intl.formatMessage({
+              id: "entities.record.obligations.filedOnField",
+              defaultMessage: "Filed on",
+            })}
+          >
             <Input
               id="obligation-filed-on"
               type="date"
@@ -545,10 +668,10 @@ function MarkFiledDialog({
           ) : null}
           <div className="flex justify-end gap-2">
             <Button type="button" variant="ghost" onClick={onClose}>
-              Cancel
+              {labels.cancel}
             </Button>
             <Button type="submit" disabled={busy}>
-              Mark filed
+              {labels.markFiled}
             </Button>
           </div>
         </form>
@@ -609,9 +732,4 @@ function matterLabel(row: { number: number; title: string }) {
 
 function byDueDate(a: EntityObligation, b: EntityObligation) {
   return a.nextDueOn.localeCompare(b.nextDueOn) || a.label.localeCompare(b.label);
-}
-
-function localDay() {
-  const now = new Date();
-  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
 }

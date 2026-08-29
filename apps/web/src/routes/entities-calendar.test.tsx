@@ -102,8 +102,9 @@ describe("the Entities compliance calendar", () => {
     expect(screen.getByRole("checkbox", { name: "Include completed" })).toBeInTheDocument();
     const rows = screen.getAllByRole("row").slice(1);
     expect(within(rows[0]!).getByText("Overdue annual return")).toHaveClass(
-      "text-status-danger-fg",
+      "text-status-severe-fg",
     );
+    expect(within(rows[0]!).getByText("Aug 15, 2026")).toHaveClass("text-status-severe-fg");
     expect(within(rows[1]!).getByText("Licence renewal")).toBeInTheDocument();
   });
 
@@ -116,6 +117,7 @@ describe("the Entities compliance calendar", () => {
     expect(grid).toHaveClass("grid");
     expect(within(grid).getAllByRole("columnheader")).toHaveLength(7);
     expect(within(grid).getByText("Licence renewal")).toBeInTheDocument();
+    expect(within(grid).getByText("Licence renewal")).toHaveClass("text-link");
     expect(screen.getByRole("button", { name: "Today" })).toBeInTheDocument();
     const user = userEvent.setup();
     await user.click(screen.getByRole("button", { name: "Next month" }));
@@ -139,5 +141,10 @@ describe("the Entities compliance calendar", () => {
       await screen.findByRole("heading", { name: "No obligations match" }),
     ).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Clear all" })).toHaveAttribute("href", "/entities");
+    // Switching display keeps the filters; only Clear all drops them.
+    expect(screen.getByRole("link", { name: "Month" })).toHaveAttribute(
+      "href",
+      "/entities?entity=e1&calendar=month",
+    );
   });
 });
