@@ -23,11 +23,11 @@ function RelativeRow({
   const intl = useIntl();
   if (relative.restricted) {
     return (
-      <li className="py-1">
-        <RestrictedRecordCell
-          label={{ id: "matters.relations.restricted", defaultMessage: "Restricted Matter" }}
-        />
-      </li>
+      <RestrictedRecordCell
+        as="li"
+        className="py-1"
+        label={{ id: "matters.relations.restricted", defaultMessage: "Restricted Matter" }}
+      />
     );
   }
   return (

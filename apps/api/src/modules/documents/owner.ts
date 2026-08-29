@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 import { contracts, documents, matters, sql, type SQL } from "@openlaw/db";
-import { DOCUMENT_OWNER_KINDS, resolveDocumentOwner, type DocumentOwner } from "@openlaw/shared";
+import { DOCUMENT_OWNER_KINDS, type DocumentOwner } from "@openlaw/shared";
 
 /**
  * The database columns and record reference carried by one Document owner.
@@ -54,19 +54,17 @@ export function documentOwnerReferenceSql(padded: boolean): SQL<string> {
   );
 }
 
-/** Parses a repository record filter through the same owner definition used by its sort key. */
+/**
+ * Parses a repository record filter through the same owner definition its
+ * sort key uses. The route schema has already checked the reference shape,
+ * so an unknown prefix here is a bug, not bad input.
+ */
 export function parseDocumentOwnerReference(reference: string): {
   owner: ReturnType<typeof documentOwnerSql>;
   number: number;
 } {
   const prefix = reference.slice(0, 1);
-  const owner = resolveDocumentOwner(
-    Object.fromEntries(
-      DOCUMENT_OWNER_KINDS.map((kind) => {
-        const candidate = documentOwnerSql(kind);
-        return [kind, candidate.prefix === prefix ? candidate : null];
-      }),
-    ) as Record<DocumentOwner, ReturnType<typeof documentOwnerSql> | null>,
-  ).value;
+  const owner = DOCUMENT_OWNER_KINDS.map(documentOwnerSql).find((o) => o.prefix === prefix);
+  if (!owner) throw new Error(`Record reference "${reference}" names no Document owner.`);
   return { owner, number: Number(reference.slice(2)) };
 }

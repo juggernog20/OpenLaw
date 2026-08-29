@@ -65,14 +65,12 @@ export function LinkedMatterCard({
             />
           </p>
         ) : matter.restricted ? (
-          <p>
-            <RestrictedRecordCell
-              label={{
-                id: "contractMatter.restrictedMatter",
-                defaultMessage: "Restricted matter",
-              }}
-            />
-          </p>
+          <RestrictedRecordCell
+            label={{
+              id: "contractMatter.restrictedMatter",
+              defaultMessage: "Restricted matter",
+            }}
+          />
         ) : (
           <div className="flex min-w-0 flex-col gap-3 @sm/record:flex-row @sm/record:items-center">
             <Link

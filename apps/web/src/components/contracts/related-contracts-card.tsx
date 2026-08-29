@@ -109,14 +109,14 @@ function RelationRow({
   const intl = useIntl();
   if (entry.restricted) {
     return (
-      <li className="py-1">
-        <RestrictedRecordCell
-          label={{
-            id: "contracts.relations.restricted",
-            defaultMessage: "Restricted contract",
-          }}
-        />
-      </li>
+      <RestrictedRecordCell
+        as="li"
+        className="py-1"
+        label={{
+          id: "contracts.relations.restricted",
+          defaultMessage: "Restricted contract",
+        }}
+      />
     );
   }
   const ref = contractReference(intl, entry.number);
