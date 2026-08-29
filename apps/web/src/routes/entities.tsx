@@ -18,7 +18,7 @@
 import { useState } from "react";
 import { Link, redirect, useLoaderData, type LoaderFunctionArgs } from "react-router";
 import { FormattedMessage, useIntl } from "react-intl";
-import { Building2, Landmark, Plus } from "lucide-react";
+import { Building2, Landmark, List, Network, Plus } from "lucide-react";
 import { api } from "../lib/api";
 import {
   ENTITY_STATUSES,
@@ -62,6 +62,46 @@ export async function entitiesLoader({ request }: LoaderFunctionArgs) {
     view: chartView ? ("chart" as const) : ("list" as const),
     chart: chart?.data,
   };
+}
+
+/** List or chart: two links, the current one marked `aria-current`. */
+function ViewSwitch({ view }: Readonly<{ view: "list" | "chart" }>) {
+  const intl = useIntl();
+  const options = [
+    [
+      "list",
+      "/entities",
+      List,
+      intl.formatMessage({ id: "entities.view.list", defaultMessage: "List" }),
+    ],
+    [
+      "chart",
+      "/entities?view=chart",
+      Network,
+      intl.formatMessage({ id: "entities.view.chart", defaultMessage: "Chart" }),
+    ],
+  ] as const;
+  return (
+    <nav
+      aria-label={intl.formatMessage({
+        id: "entities.view.label",
+        defaultMessage: "Registry view",
+      })}
+      className="mr-auto inline-flex h-8 rounded-button border border-border-default bg-raised p-0.5"
+    >
+      {options.map(([key, to, Icon, label]) => (
+        <Link
+          key={key}
+          to={to}
+          aria-current={view === key ? "page" : undefined}
+          className="inline-flex items-center gap-1.5 rounded-chip px-2.5 text-sm aria-[current=page]:bg-accent aria-[current=page]:font-medium"
+        >
+          <Icon size={14} aria-hidden="true" />
+          {label}
+        </Link>
+      ))}
+    </nav>
+  );
 }
 
 /** The list's resting order — the API's ordering, mirrored for rows
@@ -159,10 +199,16 @@ export function EntitiesPage() {
     >
       <PageTitle title={intl.formatMessage({ id: "entities.title", defaultMessage: "Entities" })} />
       {view === "chart" && chart ? (
-        <EntityChart chart={chart} />
+        <div className="flex min-h-0 flex-1 flex-col gap-3">
+          <div className="flex items-center justify-end gap-2">
+            <ViewSwitch view={view} />
+          </div>
+          <EntityChart chart={chart} />
+        </div>
       ) : (
         <div className="flex flex-col gap-3">
           <div className="flex items-center justify-end gap-2">
+            <ViewSwitch view={view} />
             {listError && (
               <p role="alert" className="text-xs text-status-danger-fg">
                 {listError}

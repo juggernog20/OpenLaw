@@ -26,6 +26,8 @@ export interface EntityChartLayout {
  * chooses at most one primary owner per node. Leaves claim horizontal slots;
  * each parent sits over the midpoint of its first and last child. Separate
  * roots continue in the same row, and nodes with no Holding sit in a final row.
+ * The returned nodes follow placement order (root, then its children, depth
+ * first), so DOM and keyboard focus order follow the tree.
  */
 export function layoutEntityChart(chart: EntityChart): EntityChartLayout {
   const byId = new Map(chart.nodes.map((node) => [node.id, node]));
@@ -51,10 +53,12 @@ export function layoutEntityChart(chart: EntityChart): EntityChartLayout {
     )
     .sort((a, b) => a.legalName.localeCompare(b.legalName));
   const positions = new Map<string, { x: number; y: number }>();
+  const order: string[] = [];
   let cursor = PADDING;
   let deepest = 0;
 
   function place(id: string, depth: number): number {
+    order.push(id);
     deepest = Math.max(deepest, depth);
     const held = children.get(id) ?? [];
     let center: number;
@@ -84,14 +88,21 @@ export function layoutEntityChart(chart: EntityChart): EntityChartLayout {
     PADDING + (roots.length > 0 ? deepest + 1 : 0) * (CHART_NODE_HEIGHT + VERTICAL_GAP);
   if (unconnected.length > 0) cursor = PADDING;
   for (const node of unconnected) {
+    order.push(node.id);
     positions.set(node.id, { x: cursor, y: bottomY });
     cursor += CHART_NODE_WIDTH + HORIZONTAL_GAP;
   }
 
-  const nodes = chart.nodes.map((node) => ({
-    ...node,
-    ...(positions.get(node.id) ?? { x: PADDING, y: PADDING }),
-    unconnected: !connected.has(node.id),
+  // Pre-order: each root, then its subtree, then the unconnected row. Nodes
+  // the walk never reached (none, in practice) go last.
+  const ordered = [
+    ...order,
+    ...chart.nodes.map((node) => node.id).filter((id) => !positions.has(id)),
+  ];
+  const nodes = ordered.map((id) => ({
+    ...byId.get(id)!,
+    ...(positions.get(id) ?? { x: PADDING, y: PADDING }),
+    unconnected: !connected.has(id),
   }));
   const right = Math.max(PADDING, ...nodes.map((node) => node.x + CHART_NODE_WIDTH));
   const bottom = Math.max(PADDING, ...nodes.map((node) => node.y + CHART_NODE_HEIGHT));

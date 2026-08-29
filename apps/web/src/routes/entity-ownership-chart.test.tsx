@@ -204,6 +204,27 @@ describe("/entities?view=chart", () => {
       "href",
       "/entities/child",
     );
+    // Focus order follows the tree: root, its child, the next root, then the
+    // unconnected row. Not the API's alphabetical order.
+    expect(
+      within(region)
+        .getAllByRole("link")
+        .map((link) => link.getAttribute("aria-label")),
+    ).toEqual([
+      "Open Delaware Parent",
+      "Open UAE Subsidiary",
+      "Open Minority Owner",
+      "Open Other Candidate",
+    ]);
+    const switcher = screen.getByRole("navigation", { name: "Registry view" });
+    expect(within(switcher).getByRole("link", { name: "Chart" })).toHaveAttribute(
+      "aria-current",
+      "page",
+    );
+    expect(within(switcher).getByRole("link", { name: "List" })).toHaveAttribute(
+      "href",
+      "/entities",
+    );
     expect(document.querySelector('[data-edge-kind="secondary"]')).toBeInTheDocument();
     expect(document.querySelector('[data-unconnected="true"]')).toHaveTextContent(
       "Other Candidate",

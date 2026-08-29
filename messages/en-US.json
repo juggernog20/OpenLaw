@@ -2957,6 +2957,15 @@
   "entities.title": {
     "defaultMessage": "Entities"
   },
+  "entities.view.chart": {
+    "defaultMessage": "Chart"
+  },
+  "entities.view.label": {
+    "defaultMessage": "Registry view"
+  },
+  "entities.view.list": {
+    "defaultMessage": "List"
+  },
   "error.body": {
     "defaultMessage": "The page could not load. Reload to try again."
   },

@@ -22,31 +22,33 @@ export function EntityChart({ chart }: Readonly<{ chart: EntityChartData }>) {
   const layout = useMemo(() => layoutEntityChart(chart), [chart]);
   const positions = useMemo(() => new Map(layout.nodes.map((node) => [node.id, node])), [layout]);
   const regionRef = useRef<HTMLDivElement>(null);
+  const svgRef = useRef<SVGSVGElement>(null);
   const drag = useRef<{ pointerId: number; x: number; y: number } | null>(null);
   const [view, setView] = useState<ViewTransform>({ x: 0, y: 0, scale: 1 });
 
-  const fit = useCallback(() => {
-    const box = regionRef.current?.getBoundingClientRect();
-    if (!box || box.width === 0 || box.height === 0) {
-      setView({ x: 0, y: 0, scale: 1 });
-      return;
-    }
-    const scale = Math.min(box.width / layout.width, box.height / layout.height, 1);
-    setView({
-      scale,
-      x: (layout.width - layout.width * scale) / 2,
-      y: (layout.height - layout.height * scale) / 2,
-    });
-  }, [layout.height, layout.width]);
+  // The viewBox already scales the whole layout into the region, so "fit"
+  // is the identity transform. Pan and zoom are offsets from that.
+  const fit = useCallback(() => setView({ x: 0, y: 0, scale: 1 }), []);
 
-  useEffect(() => fit(), [fit]);
-
-  function zoom(factor: number) {
+  const zoom = useCallback((factor: number) => {
     setView((current) => ({
       ...current,
       scale: Math.min(2.5, Math.max(0.35, current.scale * factor)),
     }));
-  }
+  }, []);
+
+  // React registers `wheel` as passive, so an `onWheel` prop cannot stop the
+  // page from scrolling. A native non-passive listener can.
+  useEffect(() => {
+    const svg = svgRef.current;
+    if (!svg) return;
+    const onWheel = (event: WheelEvent) => {
+      event.preventDefault();
+      zoom(event.deltaY < 0 ? 1.1 : 1 / 1.1);
+    };
+    svg.addEventListener("wheel", onWheel, { passive: false });
+    return () => svg.removeEventListener("wheel", onWheel);
+  }, [zoom]);
 
   return (
     <section className="flex min-h-0 flex-1 flex-col gap-2">
@@ -88,14 +90,11 @@ export function EntityChart({ chart }: Readonly<{ chart: EntityChartData }>) {
         }}
       >
         <svg
+          ref={svgRef}
           width="100%"
           height="100%"
           viewBox={`0 0 ${layout.width} ${layout.height}`}
           aria-labelledby="entity-chart-title entity-chart-description"
-          onWheel={(event) => {
-            event.preventDefault();
-            zoom(event.deltaY < 0 ? 1.1 : 1 / 1.1);
-          }}
           onPointerDown={(event) => {
             if ((event.target as Element).closest("a")) return;
             drag.current = { pointerId: event.pointerId, x: event.clientX, y: event.clientY };
