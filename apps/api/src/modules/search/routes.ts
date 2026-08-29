@@ -27,11 +27,13 @@ import {
   type Db,
   type SQL,
 } from "@openlaw/db";
+import { DOCUMENT_OWNER_KINDS, type DocumentOwner } from "@openlaw/shared";
 import { requireAuth, type AuthenticatedUser } from "../../auth/guards.js";
 import { contractTeamScope } from "../../lib/contract-access.js";
 import { documentRepositoryScope } from "../../lib/document-access.js";
 import { matterTeamScope } from "../../lib/matter-access.js";
 import { problemResponse } from "../../lib/problem.js";
+import { documentOwnerCase } from "../documents/owner.js";
 
 const SEARCH_KINDS = [
   "contract",
@@ -73,7 +75,7 @@ const SearchRowSchema = z.discriminatedUnion("kind", [
   z.object({
     kind: z.literal("document"),
     ...SearchRowFields,
-    ownerKind: z.enum(["contract", "matter"]),
+    ownerKind: z.enum(DOCUMENT_OWNER_KINDS),
     ownerNumber: z.number().int().positive(),
     versionId: z.string(),
     versionNumber: z.number().int().positive(),
@@ -89,7 +91,7 @@ interface SearchDbRow extends Record<string, unknown> {
   is_confidential: boolean;
   rank: number;
   kind_order: number;
-  owner_kind: "contract" | "matter" | null;
+  owner_kind: DocumentOwner | null;
   owner_number: number | null;
   version_id: string | null;
   version_number: number | null;
@@ -222,9 +224,8 @@ function searchCtes(db: Db, user: AuthenticatedUser, query: string): SQL {
         coalesce(${documentVersionText.emailSubject}, ${documents.title}) as title,
         ${documents.isConfidential} as is_confidential,
         2::integer as kind_order,
-        case when ${documents.contractId} is not null then 'contract'::text else 'matter'::text end
-          as owner_kind,
-        coalesce(${contracts.number}, ${matters.number}) as owner_number,
+        ${documentOwnerCase((owner) => owner.kindSql)} as owner_kind,
+        ${documentOwnerCase((owner) => sql<number>`${owner.number}`)} as owner_number,
         ${documentVersions.id} as version_id,
         ${documentVersions.versionNumber} as version_number,
         ${documents.searchVector}
@@ -402,10 +403,19 @@ function toSearchRow(row: SearchDbRow): z.infer<typeof SearchRowSchema> {
   ) {
     throw new Error("Document search hit is missing its owning record or matched version");
   }
+  let ownerKind: DocumentOwner;
+  switch (row.owner_kind) {
+    case "contract":
+      ownerKind = "contract";
+      break;
+    case "matter":
+      ownerKind = "matter";
+      break;
+  }
   return {
     ...common,
     kind: "document" as const,
-    ownerKind: row.owner_kind,
+    ownerKind,
     ownerNumber: row.owner_number,
     versionId: row.version_id,
     versionNumber: row.version_number,

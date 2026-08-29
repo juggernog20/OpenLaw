@@ -16,6 +16,14 @@
  */
 export const OPENLAW_VERSION = "0.0.1";
 
+/** DOC-008's one-of owner vocabulary and resolver. */
+export {
+  DOCUMENT_OWNER_KINDS,
+  resolveDocumentOwner,
+  type DocumentOwner,
+  type ResolvedDocumentOwner,
+} from "./document-owner.js";
+
 /**
  * The Activity vocabulary (DD-017) — the action slugs and the payload
  * each one writes. It is a module of its own because it is long, and it
