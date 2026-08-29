@@ -47,6 +47,7 @@ import { entityReachScope, NO_ENTITY, reachedEntity } from "../../lib/entity-acc
 import { httpError, problemResponse } from "../../lib/problem.js";
 import { resolveStaffRefs, StaffRequestCustomFieldRefsSchema } from "../requests/projection.js";
 import { entityRecordChildRoutes } from "./record-routes.js";
+import { entityHoldingRoutes } from "./holding-routes.js";
 
 /** ENT-004's access floor: the whole registry is Member+. */
 const requireMember = requireRole("administrator", "legal_team_member");
@@ -132,6 +133,7 @@ function toRow(row: Entity, entityTypeName: string) {
 }
 
 export const entitiesRoutes: FastifyPluginAsyncZod = async (app) => {
+  await app.register(entityHoldingRoutes);
   await app.register(entityRecordChildRoutes);
 
   app.get(

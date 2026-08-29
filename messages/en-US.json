@@ -221,6 +221,15 @@
   "activity.entity.updated": {
     "defaultMessage": "{actor} changed {name}"
   },
+  "activity.entityHolding.created": {
+    "defaultMessage": "{actor} recorded {owner} owning {percent}% of {owned}"
+  },
+  "activity.entityHolding.deleted": {
+    "defaultMessage": "{actor} removed {owner}'s {percent}% Holding in {owned}"
+  },
+  "activity.entityHolding.updated": {
+    "defaultMessage": "{actor} changed {owner}'s Holding in {owned} from {from}% to {to}%"
+  },
   "activity.entityOfficer.created": {
     "defaultMessage": "{actor} appointed {officer} as {role} on {name}"
   },
@@ -1150,6 +1159,12 @@
   },
   "comments.tombstone.redacted": {
     "defaultMessage": "Comment removed by an Administrator."
+  },
+  "common.add": {
+    "defaultMessage": "Add"
+  },
+  "common.cancel": {
+    "defaultMessage": "Cancel"
   },
   "confidential.marker": {
     "defaultMessage": "Confidential"
@@ -2645,6 +2660,27 @@
   "entities.archivedPill": {
     "defaultMessage": "Archived"
   },
+  "entities.chart.description": {
+    "defaultMessage": "Majority Holdings form the solid tree. Secondary Holdings use dashed lines."
+  },
+  "entities.chart.fit": {
+    "defaultMessage": "Fit to window"
+  },
+  "entities.chart.instructions": {
+    "defaultMessage": "Use the arrow keys to pan, plus and minus to zoom, and zero to fit the chart."
+  },
+  "entities.chart.label": {
+    "defaultMessage": "Entity ownership chart"
+  },
+  "entities.chart.noJurisdiction": {
+    "defaultMessage": "No jurisdiction"
+  },
+  "entities.chart.open": {
+    "defaultMessage": "Open {name}"
+  },
+  "entities.chart.title": {
+    "defaultMessage": "Entity ownership chart"
+  },
   "entities.column.actions": {
     "defaultMessage": "Actions"
   },
@@ -2716,6 +2752,63 @@
   },
   "entities.listError": {
     "defaultMessage": "The registry could not be read. Try again."
+  },
+  "entities.ownership.addFailed": {
+    "defaultMessage": "The Holding could not be added."
+  },
+  "entities.ownership.addHolding": {
+    "defaultMessage": "Add Holding"
+  },
+  "entities.ownership.dialogTitle": {
+    "defaultMessage": "Add Holding"
+  },
+  "entities.ownership.directionOwned": {
+    "defaultMessage": "This Entity owns"
+  },
+  "entities.ownership.directionOwner": {
+    "defaultMessage": "Owns this Entity"
+  },
+  "entities.ownership.entityLabel": {
+    "defaultMessage": "Entity"
+  },
+  "entities.ownership.matches": {
+    "defaultMessage": "Entity matches"
+  },
+  "entities.ownership.noOwners": {
+    "defaultMessage": "No Entity owns this Entity."
+  },
+  "entities.ownership.noneOwned": {
+    "defaultMessage": "This Entity owns no other Entities."
+  },
+  "entities.ownership.overTotal": {
+    "defaultMessage": "Ownership totals {total}% for {name}."
+  },
+  "entities.ownership.owned": {
+    "defaultMessage": "Owned Entities"
+  },
+  "entities.ownership.owners": {
+    "defaultMessage": "Owners"
+  },
+  "entities.ownership.percentLabel": {
+    "defaultMessage": "Ownership percent"
+  },
+  "entities.ownership.pickEntity": {
+    "defaultMessage": "Pick an Entity."
+  },
+  "entities.ownership.relationship": {
+    "defaultMessage": "Relationship"
+  },
+  "entities.ownership.remove": {
+    "defaultMessage": "Remove {name}"
+  },
+  "entities.ownership.removeError": {
+    "defaultMessage": "The Holding could not be removed."
+  },
+  "entities.ownership.rowPercent": {
+    "defaultMessage": "{name} ownership percent"
+  },
+  "entities.ownership.updateError": {
+    "defaultMessage": "The Holding could not be updated."
   },
   "entities.record.archive": {
     "defaultMessage": "Archive"

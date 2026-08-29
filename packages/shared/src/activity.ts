@@ -473,6 +473,25 @@ type EntityPayloads = {
     jurisdiction: string;
     registrationNumber: string | null;
   };
+  "entity_holding.created": {
+    legalName: string;
+    ownerName: string;
+    ownedName: string;
+    ownershipPercent: number;
+  };
+  "entity_holding.updated": {
+    legalName: string;
+    ownerName: string;
+    ownedName: string;
+    from: number;
+    to: number;
+  };
+  "entity_holding.deleted": {
+    legalName: string;
+    ownerName: string;
+    ownedName: string;
+    ownershipPercent: number;
+  };
 };
 
 /**

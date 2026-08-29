@@ -2616,6 +2616,43 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
       jurisdiction: named(intl, payload, "jurisdiction"),
     }),
   },
+  "entity_holding.created": {
+    icon: Network,
+    message: defineMessage({
+      id: "activity.entityHolding.created",
+      defaultMessage: "{actor} recorded {owner} owning {percent}% of {owned}",
+    }),
+    values: (intl, payload) => ({
+      owner: named(intl, payload, "ownerName"),
+      owned: named(intl, payload, "ownedName"),
+      percent: named(intl, payload, "ownershipPercent"),
+    }),
+  },
+  "entity_holding.updated": {
+    icon: Network,
+    message: defineMessage({
+      id: "activity.entityHolding.updated",
+      defaultMessage: "{actor} changed {owner}'s Holding in {owned} from {from}% to {to}%",
+    }),
+    values: (intl, payload) => ({
+      owner: named(intl, payload, "ownerName"),
+      owned: named(intl, payload, "ownedName"),
+      from: named(intl, payload, "from"),
+      to: named(intl, payload, "to"),
+    }),
+  },
+  "entity_holding.deleted": {
+    icon: Network,
+    message: defineMessage({
+      id: "activity.entityHolding.deleted",
+      defaultMessage: "{actor} removed {owner}'s {percent}% Holding in {owned}",
+    }),
+    values: (intl, payload) => ({
+      owner: named(intl, payload, "ownerName"),
+      owned: named(intl, payload, "ownedName"),
+      percent: named(intl, payload, "ownershipPercent"),
+    }),
+  },
 
   // ---- Data leaving the system ----
   // The one entry the audit log writes about itself (DD-017). The

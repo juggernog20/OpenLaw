@@ -59,6 +59,12 @@ The Entity Overview now lists, creates, edits, and deletes registrations. The AP
 - **Alternatives considered** — parent_id + indented list (recommended); flat list.
 - **Consequences** — Org-chart renderer is a v1 build surface (tech-stack queue: charting approach — likely SVG/D3-class). Majority-spine derivation needed for breadcrumbs/roll-ups. Percent totals per owned entity ≤ 100 validated softly (warn, don't block — data entry precedes completeness).
 
+### Built addendum (2026-08-30, M27/5, #577)
+
+Holdings now read and write from either Entity, with graph-wide transaction locking and a full-path cycle check before each insert. Aggregate ownership above 100 percent returns a warning and still commits. The chart endpoint derives one primary owner per Entity by percent and legal name.
+
+The web chart uses a dependency-free SVG layout. A compact layered forest places leaf nodes in horizontal slots and centers each primary owner over its children. Entities without Holdings occupy a final row. Secondary Holdings use dashed curves. The SVG supports pointer drag, wheel zoom, arrow-key pan, keyboard zoom, and fit-to-window.
+
 ## ENT-004 — Access: global for legal staff; DD-014 confidential flag for the rare case
 
 - **Status** — Accepted

@@ -55,6 +55,12 @@ export type EntityOfficer =
 export type EntityRegistration =
   paths["/api/v1/entities/{id}/registrations"]["get"]["responses"]["200"]["content"]["application/json"]["registrations"][number];
 export type EntityRegistrationStatus = EntityRegistration["status"];
+export type EntityHoldings =
+  paths["/api/v1/entities/{id}/holdings"]["get"]["responses"]["200"]["content"]["application/json"];
+export type EntityHolding = EntityHoldings["owners"][number];
+export type EntityHoldingWarning = EntityHoldings["warnings"][number];
+export type EntityChart =
+  paths["/api/v1/entities/chart"]["get"]["responses"]["200"]["content"]["application/json"];
 
 export const ENTITY_REGISTRATION_STATUSES = [
   "active",
