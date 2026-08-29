@@ -20,7 +20,7 @@
 
 import type { paths } from "@openlaw/api-client";
 import { api } from "./api";
-import { problemDetail, problemType } from "./messages";
+import { problem, type Problem } from "./problem";
 
 /** The record read's answer, aliased to the generated schema so an API
  * change surfaces as a compile error here rather than as a runtime
@@ -39,7 +39,7 @@ export type ConfirmedRenewal = RecordResponse["renewals"][number];
  * renewal history, or why not. */
 export type RenewalOutcome =
   | { ok: true; contract: RecordResponse["contract"]; renewals: ConfirmedRenewal[] }
-  | { ok: false; detail?: string; type?: string };
+  | ({ ok: false } & Problem);
 
 /**
  * Confirms the roll: the same record's term advances (CTR-007).
@@ -63,13 +63,13 @@ export async function confirmContractRenewal(
   // Settled, never rejected: the dialog holds the control at `saving`
   // until this answers, so a request that never arrived has to come back
   // as an ordinary refusal rather than as an escaping rejection.
-  const { data, error } = await api
+  const result = await api
     .POST("/api/v1/contracts/{number}/renewal", {
       params: { path: { number: contractNumber } },
       body: { fromExpiry, toExpiry },
     })
-    .catch(() => ({ data: undefined, error: undefined }));
-  return data
-    ? { ok: true, contract: data.contract, renewals: data.renewals }
-    : { ok: false, detail: problemDetail(error), type: problemType(error) };
+    .catch(() => undefined);
+  return result?.data
+    ? { ok: true, contract: result.data.contract, renewals: result.data.renewals }
+    : { ok: false, ...(await problem(result)) };
 }

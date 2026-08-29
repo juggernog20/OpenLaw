@@ -20,7 +20,7 @@
 import type { paths } from "@openlaw/api-client";
 import { UNRESOLVED_APPROVAL_STATUSES } from "@openlaw/shared";
 import { api } from "./api";
-import { problemDetail } from "./messages";
+import { problem, type Problem } from "./problem";
 
 /** The API's answer for one contract's approvals, aliased to the
  * generated schema so an API change surfaces as a compile error here
@@ -36,7 +36,7 @@ export type ApprovalDecision = Exclude<ApprovalStatus, "pending">;
 /** What a read or a write over the record's approvals answers: the
  * roster as it now stands, or why not. */
 export type ApprovalsOutcome =
-  { ok: true; approvals: ContractApproval[] } | { ok: false; detail?: string };
+  { ok: true; approvals: ContractApproval[] } | ({ ok: false } & Problem);
 
 /**
  * The decision pill's family (DES-005's paired status-pill families,
@@ -67,12 +67,14 @@ export const isUnresolved = (approval: ContractApproval): boolean =>
   (UNRESOLVED_APPROVAL_STATUSES as readonly string[]).includes(approval.status);
 
 export async function readContractApprovals(contractNumber: number): Promise<ApprovalsOutcome> {
-  const { data, error } = await api.GET("/api/v1/contracts/{number}/approvals", {
-    params: { path: { number: contractNumber } },
-  });
-  return data
-    ? { ok: true, approvals: data.approvals }
-    : { ok: false, detail: problemDetail(error) };
+  const result = await api
+    .GET("/api/v1/contracts/{number}/approvals", {
+      params: { path: { number: contractNumber } },
+    })
+    .catch(() => undefined);
+  return result?.data
+    ? { ok: true, approvals: result.data.approvals }
+    : { ok: false, ...(await problem(result)) };
 }
 
 /**
@@ -86,13 +88,15 @@ export async function requestContractApprovals(
   contractNumber: number,
   approverIds: readonly string[],
 ): Promise<ApprovalsOutcome> {
-  const { data, error } = await api.POST("/api/v1/contracts/{number}/approvals", {
-    params: { path: { number: contractNumber } },
-    body: { approverIds: [...approverIds] },
-  });
-  return data
-    ? { ok: true, approvals: data.approvals }
-    : { ok: false, detail: problemDetail(error) };
+  const result = await api
+    .POST("/api/v1/contracts/{number}/approvals", {
+      params: { path: { number: contractNumber } },
+      body: { approverIds: [...approverIds] },
+    })
+    .catch(() => undefined);
+  return result?.data
+    ? { ok: true, approvals: result.data.approvals }
+    : { ok: false, ...(await problem(result)) };
 }
 
 /**
@@ -111,13 +115,15 @@ export async function applyApproverGroup(
   contractNumber: number,
   groupId: string,
 ): Promise<ApprovalsOutcome> {
-  const { data, error } = await api.POST("/api/v1/contracts/{number}/approvals/group", {
-    params: { path: { number: contractNumber } },
-    body: { groupId },
-  });
-  return data
-    ? { ok: true, approvals: data.approvals }
-    : { ok: false, detail: problemDetail(error) };
+  const result = await api
+    .POST("/api/v1/contracts/{number}/approvals/group", {
+      params: { path: { number: contractNumber } },
+      body: { groupId },
+    })
+    .catch(() => undefined);
+  return result?.data
+    ? { ok: true, approvals: result.data.approvals }
+    : { ok: false, ...(await problem(result)) };
 }
 
 /** Approves or rejects one request, with an optional note. Final: the
@@ -127,13 +133,15 @@ export async function decideContractApproval(
   decision: ApprovalDecision,
   note?: string,
 ): Promise<ApprovalsOutcome> {
-  const { data, error } = await api.POST("/api/v1/approvals/{approvalId}/decision", {
-    params: { path: { approvalId } },
-    body: { decision, ...(note ? { note } : {}) },
-  });
-  return data
-    ? { ok: true, approvals: data.approvals }
-    : { ok: false, detail: problemDetail(error) };
+  const result = await api
+    .POST("/api/v1/approvals/{approvalId}/decision", {
+      params: { path: { approvalId } },
+      body: { decision, ...(note ? { note } : {}) },
+    })
+    .catch(() => undefined);
+  return result?.data
+    ? { ok: true, approvals: result.data.approvals }
+    : { ok: false, ...(await problem(result)) };
 }
 
 /**
@@ -144,10 +152,12 @@ export async function decideContractApproval(
  * replaces what it holds rather than working out which row went.
  */
 export async function cancelContractApproval(approvalId: string): Promise<ApprovalsOutcome> {
-  const { data, error } = await api.DELETE("/api/v1/approvals/{approvalId}", {
-    params: { path: { approvalId } },
-  });
-  return data
-    ? { ok: true, approvals: data.approvals }
-    : { ok: false, detail: problemDetail(error) };
+  const result = await api
+    .DELETE("/api/v1/approvals/{approvalId}", {
+      params: { path: { approvalId } },
+    })
+    .catch(() => undefined);
+  return result?.data
+    ? { ok: true, approvals: result.data.approvals }
+    : { ok: false, ...(await problem(result)) };
 }

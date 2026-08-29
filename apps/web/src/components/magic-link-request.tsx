@@ -18,7 +18,8 @@
 import { useState, type ReactNode, type SubmitEvent as FormSubmitEvent } from "react";
 import { defineMessages, FormattedMessage, useIntl, type MessageDescriptor } from "react-intl";
 import { api } from "../lib/api";
-import { networkError, problemDetail } from "../lib/messages";
+import { networkError } from "../lib/messages";
+import { problem as readProblem } from "../lib/problem";
 import { PageTitle } from "./page-title";
 import { Alert } from "./ui/alert";
 import { Button } from "./ui/button";
@@ -53,15 +54,16 @@ export function MagicLinkRequest({
     setBusy(true);
     setError(null);
     try {
-      const { response, error: problem } = await api.POST("/api/v1/auth/magic-link", {
+      const result = await api.POST("/api/v1/auth/magic-link", {
         body: { email },
       });
+      const { response } = result;
       if (response.status === 202) {
         setSent(true);
         return;
       }
       setError(
-        problemDetail(problem) ??
+        (await readProblem(result)).detail ??
           intl.formatMessage({
             id: "auth.login.error.magicLink",
             defaultMessage: "The link could not be sent. Try again.",

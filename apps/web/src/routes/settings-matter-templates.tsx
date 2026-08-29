@@ -8,7 +8,7 @@ import { FormattedMessage, useIntl } from "react-intl";
 import { Pencil } from "lucide-react";
 import type { paths } from "@openlaw/api-client";
 import { api } from "../lib/api";
-import { problemDetail } from "../lib/messages";
+import { problem as readProblem } from "../lib/problem";
 import { requireUser } from "../lib/session";
 import { MattersSettingsTabs } from "../components/matters-settings-tabs";
 import { ListEditor, type ListEditorRow } from "../components/list-editor";
@@ -79,7 +79,7 @@ function CreateTemplateDialog({
     }
     setBusy(true);
     setError(null);
-    const { data, error: problem } = await api
+    const result = await api
       .POST("/api/v1/matter-templates", {
         body: {
           matterTypeId,
@@ -87,11 +87,12 @@ function CreateTemplateDialog({
           description: description.trim() || undefined,
         },
       })
-      .catch(() => ({ data: null, error: undefined }));
+      .catch(() => undefined);
+    const { data } = result ?? {};
     setBusy(false);
     if (!data) {
       setError(
-        problemDetail(problem) ??
+        (await readProblem(result)).detail ??
           intl.formatMessage({
             id: "settings.matterTemplates.createError",
             defaultMessage: "The Matter template could not be created.",
@@ -180,15 +181,16 @@ function ArchiveTemplateDialog({
 
   async function archive() {
     setBusy(true);
-    const { data, error: problem } = await api
+    const result = await api
       .POST("/api/v1/matter-templates/{id}/archive", {
         params: { path: { id: target.id } },
       })
-      .catch(() => ({ data: null, error: undefined }));
+      .catch(() => undefined);
+    const { data } = result ?? {};
     setBusy(false);
     if (!data) {
       setError(
-        problemDetail(problem) ??
+        (await readProblem(result)).detail ??
           intl.formatMessage({
             id: "settings.matterTemplates.archiveError",
             defaultMessage: "The Matter template could not be archived.",
@@ -262,49 +264,53 @@ export function SettingsMatterTemplatesPage() {
 
   async function rename(row: TemplateRow, name: string) {
     setRowStatus((current) => ({ ...current, [row.id]: "saving" }));
-    const { data, error } = await api
+    const result = await api
       .PATCH("/api/v1/matter-templates/{id}", {
         params: { path: { id: row.id } },
         body: { name },
       })
-      .catch(() => ({ data: null, error: undefined }));
+      .catch(() => undefined);
+    const { data } = result ?? {};
     if (data) {
       replaceRow(toRow(data.matterTemplate));
       setRowStatus((current) => ({ ...current, [row.id]: "saved" }));
     } else {
       setRowStatus((current) => ({ ...current, [row.id]: "error" }));
+      const detail =
+        (await readProblem(result)).detail ??
+        intl.formatMessage({
+          id: "settings.matterTemplates.renameError",
+          defaultMessage: "The Matter template could not be renamed.",
+        });
       setRowError((current) => ({
         ...current,
-        [row.id]:
-          problemDetail(error) ??
-          intl.formatMessage({
-            id: "settings.matterTemplates.renameError",
-            defaultMessage: "The Matter template could not be renamed.",
-          }),
+        [row.id]: detail,
       }));
     }
   }
 
   async function restore(row: TemplateRow) {
     setRowStatus((current) => ({ ...current, [row.id]: "saving" }));
-    const { data, error } = await api
+    const result = await api
       .POST("/api/v1/matter-templates/{id}/restore", {
         params: { path: { id: row.id } },
       })
-      .catch(() => ({ data: null, error: undefined }));
+      .catch(() => undefined);
+    const { data } = result ?? {};
     if (data) {
       replaceRow(toRow(data.matterTemplate));
       setRowStatus((current) => ({ ...current, [row.id]: "saved" }));
     } else {
       setRowStatus((current) => ({ ...current, [row.id]: "error" }));
+      const detail =
+        (await readProblem(result)).detail ??
+        intl.formatMessage({
+          id: "settings.matterTemplates.restoreError",
+          defaultMessage: "The Matter template could not be restored.",
+        });
       setRowError((current) => ({
         ...current,
-        [row.id]:
-          problemDetail(error) ??
-          intl.formatMessage({
-            id: "settings.matterTemplates.restoreError",
-            defaultMessage: "The Matter template could not be restored.",
-          }),
+        [row.id]: detail,
       }));
     }
   }

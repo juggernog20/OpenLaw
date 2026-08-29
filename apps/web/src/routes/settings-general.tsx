@@ -14,7 +14,7 @@ import { useRef, useState } from "react";
 import { redirect, useLoaderData } from "react-router";
 import { FormattedMessage, useIntl } from "react-intl";
 import { api } from "../lib/api";
-import { problemDetail } from "../lib/messages";
+import { problem, type ProblemResult } from "../lib/problem";
 import { requireUser } from "../lib/session";
 import { PageTitle } from "../components/page-title";
 import { SettingsCard } from "../components/settings-card";
@@ -47,9 +47,9 @@ async function patchGeneral(body: {
   logo?: string | null;
   defaultLocale?: "en-US";
   defaultTimezone?: string;
-}): Promise<{ general: General | null; detail?: string }> {
-  const { data, error } = await api.PATCH("/api/v1/org/general", { body });
-  return data ? { general: data.general } : { general: null, detail: problemDetail(error) };
+}): Promise<ProblemResult<General>> {
+  const result = await api.PATCH("/api/v1/org/general", { body }).catch(() => undefined);
+  return { data: result?.data?.general, ...(await problem(result)) };
 }
 
 /** ~256 KB of image; matches the API's cap on the encoded data: URI. */
@@ -81,10 +81,7 @@ export function SettingsGeneralPage() {
 
   async function commit(field: keyof General, body: Parameters<typeof patchGeneral>[0]) {
     setStatus((s) => ({ ...s, [field]: "saving" }));
-    const { general: next, detail: message } = await patchGeneral(body).catch(() => ({
-      general: null,
-      detail: undefined,
-    }));
+    const { data: next, detail: message } = await patchGeneral(body);
     if (next) setSaved(next);
     setStatus((s) => ({ ...s, [field]: next ? "saved" : "error" }));
     setDetail((s) => ({ ...s, [field]: next ? undefined : message }));

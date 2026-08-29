@@ -9,7 +9,7 @@ import { MAX_COMMENT_ATTACHMENTS } from "@openlaw/shared";
 import { fileCommentAttachment, type Comment, type CommentEntityType } from "../../lib/comments";
 import { DOCUMENT_VERSION_KINDS, type HandSetDocumentVersionKind } from "../../lib/documents";
 import { CONTROL_CLASS, TEXTAREA_CLASS } from "../../lib/form-controls";
-import { problemDetail } from "../../lib/messages";
+import { problem } from "../../lib/problem";
 import { ConfidentialToggle } from "../confidential-toggle";
 import { Button } from "../ui/button";
 import { Dialog, DialogContent, DialogTitle } from "../ui/dialog";
@@ -305,11 +305,11 @@ function FilingDialog({
       destination === "new_document"
         ? { destination, kind, name, isConfidential }
         : { destination, documentId, kind, ...(note.trim() ? { note } : {}) },
-    ).catch(() => ({ data: undefined, error: undefined }));
-    if (!outcome.data) {
+    ).catch(() => undefined);
+    if (!outcome?.data) {
       setBusy(false);
       setError(
-        problemDetail(outcome.error) ??
+        (await problem(outcome)).detail ??
           intl.formatMessage({
             id: "comments.filing.error",
             defaultMessage: "That attachment could not be filed. Try again.",

@@ -29,7 +29,7 @@ import {
   type EntityTypeOption,
 } from "../lib/entities";
 import { CONTROL_CLASS, TEXTAREA_CLASS } from "../lib/form-controls";
-import { problemDetail } from "../lib/messages";
+import { problem as readProblem } from "../lib/problem";
 import { isMemberPlus } from "../lib/roles";
 import { requireUser, useSignOut } from "../lib/session";
 import { AppShell } from "../components/shell/app-shell";
@@ -104,12 +104,12 @@ export function EntitiesPage() {
   /** Row-level restore, offered in the archived view (#99). */
   async function restoreRow(row: EntityRow) {
     setListError(null);
-    const { data, error } = await api
+    const result = await api
       .POST("/api/v1/entities/{id}/restore", { params: { path: { id: row.id } } })
-      .catch(() => ({ data: undefined, error: undefined }));
-    if (!data) {
+      .catch(() => undefined);
+    if (!result?.data) {
       setListError(
-        problemDetail(error) ??
+        (await readProblem(result)).detail ??
           intl.formatMessage({
             id: "entities.restoreError",
             defaultMessage: "The entity could not be restored.",
@@ -117,6 +117,7 @@ export function EntitiesPage() {
       );
       return;
     }
+    const data = result.data;
     const restored = data.entity;
     setRows((current) => current.map((existing) => (existing.id === row.id ? restored : existing)));
   }
@@ -376,7 +377,7 @@ function RegisterEntityDialog({
       return;
     }
     setBusy(true);
-    const { data, error: problem } = await api
+    const result = await api
       .POST("/api/v1/entities", {
         body: {
           legalName: draft.legalName.trim(),
@@ -390,11 +391,12 @@ function RegisterEntityDialog({
           registeredAddress: draft.registeredAddress.trim() || undefined,
         },
       })
-      .catch(() => ({ data: null, error: undefined }));
+      .catch(() => undefined);
+    const { data } = result ?? {};
     setBusy(false);
     if (!data) {
       setError(
-        problemDetail(problem) ??
+        (await readProblem(result)).detail ??
           intl.formatMessage({
             id: "entities.form.registerError",
             defaultMessage: "The entity could not be registered.",

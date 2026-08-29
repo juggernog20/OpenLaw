@@ -63,7 +63,7 @@ import {
   type Layout,
   type SavedView,
 } from "../lib/list-views";
-import { problemDetail } from "../lib/messages";
+import { problem } from "../lib/problem";
 import { canReadContracts, isMemberPlus } from "../lib/roles";
 import { requireUser, useSignOut } from "../lib/session";
 import { AppShell } from "../components/shell/app-shell";
@@ -291,13 +291,13 @@ export function ContractsPage() {
     if (listBusy) return;
     setListError(null);
     setListBusy(true);
-    const { data, error } = await api
+    const result = await api
       .POST("/api/v1/contracts/{number}/restore", { params: { path: { number: row.number } } })
-      .catch(() => ({ data: undefined, error: undefined }))
+      .catch(() => undefined)
       .finally(() => setListBusy(false));
-    if (!data) {
+    if (!result?.data) {
       setListError(
-        problemDetail(error) ??
+        (await problem(result)).detail ??
           intl.formatMessage(
             {
               id: "contracts.restoreError",
@@ -308,6 +308,7 @@ export function ContractsPage() {
       );
       return;
     }
+    const data = result.data;
     const restored = data.contract;
     setRows((current) => current.map((existing) => (existing.id === row.id ? restored : existing)));
   }

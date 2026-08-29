@@ -3,7 +3,7 @@
 /** Matter Key-date wire calls (MTR-004). */
 import type { paths } from "@openlaw/api-client";
 import { api } from "./api";
-import { problemDetail } from "./messages";
+import { problem, type Problem, type OpenApiResult } from "./problem";
 
 type ListResponse =
   paths["/api/v1/matters/{number}/key-dates"]["get"]["responses"]["200"]["content"]["application/json"];
@@ -15,34 +15,37 @@ export type MatterKeyDatePatch = NonNullable<
   paths["/api/v1/matter-key-dates/{keyDateId}"]["patch"]["requestBody"]
 >["content"]["application/json"];
 export type MatterDeadlinesOutcome =
-  { ok: true; deadlines: MatterDeadline[] } | { ok: false; detail?: string };
+  { ok: true; deadlines: MatterDeadline[] } | ({ ok: false } & Problem);
 
-const outcome = (data: ListResponse | undefined, error: unknown): MatterDeadlinesOutcome =>
-  data ? { ok: true, deadlines: data.deadlines } : { ok: false, detail: problemDetail(error) };
+async function outcome(result: (OpenApiResult & { data?: ListResponse }) | undefined) {
+  return result?.data
+    ? { ok: true as const, deadlines: result.data.deadlines }
+    : { ok: false as const, ...(await problem(result)) };
+}
 
 export async function addMatterKeyDate(number: number, input: MatterKeyDateInput) {
-  const { data, error } = await api
+  const result = await api
     .POST("/api/v1/matters/{number}/key-dates", {
       params: { path: { number } },
       body: input,
     })
-    .catch(() => ({ data: undefined, error: undefined }));
-  return outcome(data, error);
+    .catch(() => undefined);
+  return outcome(result);
 }
 
 export async function updateMatterKeyDate(keyDateId: string, input: MatterKeyDatePatch) {
-  const { data, error } = await api
+  const result = await api
     .PATCH("/api/v1/matter-key-dates/{keyDateId}", {
       params: { path: { keyDateId } },
       body: input,
     })
-    .catch(() => ({ data: undefined, error: undefined }));
-  return outcome(data, error);
+    .catch(() => undefined);
+  return outcome(result);
 }
 
 export async function removeMatterKeyDate(keyDateId: string) {
-  const { data, error } = await api
+  const result = await api
     .DELETE("/api/v1/matter-key-dates/{keyDateId}", { params: { path: { keyDateId } } })
-    .catch(() => ({ data: undefined, error: undefined }));
-  return outcome(data, error);
+    .catch(() => undefined);
+  return outcome(result);
 }

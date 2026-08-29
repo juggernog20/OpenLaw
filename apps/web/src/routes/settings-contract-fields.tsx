@@ -21,7 +21,7 @@ import { redirect, useLoaderData } from "react-router";
 import { FormattedMessage, useIntl, type IntlShape } from "react-intl";
 import { History, Pencil, Sparkles, TriangleAlert } from "lucide-react";
 import { api } from "../lib/api";
-import { problemDetail } from "../lib/messages";
+import { problem as readProblem } from "../lib/problem";
 import { requireUser } from "../lib/session";
 import { ContractsSettingsTabs } from "../components/contracts-settings-tabs";
 import { MattersSettingsTabs } from "../components/matters-settings-tabs";
@@ -214,7 +214,7 @@ function FieldEditorDialog({
 
   async function create() {
     const options = parseOptions(draft.optionsText);
-    const { data, error: problem } = await api
+    const result = await api
       .POST("/api/v1/fields", {
         body: {
           displayName: draft.name.trim(),
@@ -226,10 +226,11 @@ function FieldEditorDialog({
           aiPrompt: promptable && draft.aiPrompt.trim() ? draft.aiPrompt.trim() : undefined,
         },
       })
-      .catch(() => ({ data: null, error: undefined }));
+      .catch(() => undefined);
+    const { data } = result ?? {};
     if (!data) {
       refuse(
-        problemDetail(problem) ??
+        (await readProblem(result)).detail ??
           intl.formatMessage({
             id: "settings.contractFields.createError",
             defaultMessage: "The field could not be created.",
@@ -245,15 +246,16 @@ function FieldEditorDialog({
     let latest = existing;
     // Scope first: the prompt rules follow the scope the field ends on.
     if (draft.scope !== existing.moduleScope) {
-      const { data, error: problem } = await api
+      const result = await api
         .PUT("/api/v1/fields/{id}/scope", {
           params: { path: { id: existing.id } },
           body: { moduleScope: draft.scope },
         })
-        .catch(() => ({ data: null, error: undefined }));
+        .catch(() => undefined);
+      const { data } = result ?? {};
       if (!data) {
         refuse(
-          problemDetail(problem) ??
+          (await readProblem(result)).detail ??
             intl.formatMessage({
               id: "settings.contractFields.editError",
               defaultMessage: "The field could not be saved.",
@@ -281,12 +283,13 @@ function FieldEditorDialog({
     }
     if (Object.keys(body).length === 0) return true;
 
-    const { data, error: problem } = await api
+    const result = await api
       .PATCH("/api/v1/fields/{id}", { params: { path: { id: latest.id } }, body })
-      .catch(() => ({ data: null, error: undefined }));
+      .catch(() => undefined);
+    const { data } = result ?? {};
     if (!data) {
       refuse(
-        problemDetail(problem) ??
+        (await readProblem(result)).detail ??
           intl.formatMessage({
             id: "settings.contractFields.editError",
             defaultMessage: "The field could not be saved.",
@@ -566,9 +569,10 @@ function ArchiveFieldDialog({
     setBusy(true);
     setError(null);
     try {
-      const { data, error: problem } = await api.POST("/api/v1/fields/{id}/archive", {
+      const result = await api.POST("/api/v1/fields/{id}/archive", {
         params: { path: { id: target.id } },
       });
+      const { data } = result;
       if (data) {
         archived.current = true;
         onArchived(fieldRow(data.field, module));
@@ -577,7 +581,7 @@ function ArchiveFieldDialog({
         // The API's own refusal (already archived, a stale list) is
         // more actionable than any generic line.
         setError(
-          problemDetail(problem) ??
+          (await readProblem(result)).detail ??
             intl.formatMessage({
               id: "settings.contractFields.archiveError",
               defaultMessage: "The field could not be archived.",
@@ -695,30 +699,32 @@ function SettingsFieldsPage({
 
   async function rename(row: FieldRow, displayName: string) {
     noteRow(row.id, "saving");
-    const { data, error } = await api
+    const result = await api
       .PATCH("/api/v1/fields/{id}", {
         params: { path: { id: row.id } },
         body: { displayName },
       })
-      .catch(() => ({ data: null, error: undefined }));
+      .catch(() => undefined);
+    const { data } = result ?? {};
     if (data) {
       replaceRow(fieldRow(data.field, module));
       noteRow(row.id, "saved");
     } else {
-      noteRow(row.id, "error", problemDetail(error));
+      noteRow(row.id, "error", (await readProblem(result)).detail);
     }
   }
 
   async function restore(row: FieldRow) {
     noteRow(row.id, "saving");
-    const { data, error } = await api
+    const result = await api
       .POST("/api/v1/fields/{id}/restore", { params: { path: { id: row.id } } })
-      .catch(() => ({ data: null, error: undefined }));
+      .catch(() => undefined);
+    const { data } = result ?? {};
     if (data) {
       replaceRow(fieldRow(data.field, module));
       noteRow(row.id, "saved");
     } else {
-      noteRow(row.id, "error", problemDetail(error));
+      noteRow(row.id, "error", (await readProblem(result)).detail);
     }
   }
 

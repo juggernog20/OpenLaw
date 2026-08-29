@@ -16,7 +16,7 @@
  */
 
 import { useRef, useState } from "react";
-import { problemDetail, problemType } from "./messages";
+import { problem, type Problem } from "./problem";
 
 /** What a field says beside itself while it commits. */
 export type FieldStatus = "idle" | "saving" | "saved" | "error";
@@ -26,7 +26,7 @@ export type FieldStatus = "idle" | "saving" | "saved" | "error";
  * (the printable sentence) and `type` (the refusal's identity, for the
  * few a client branches on per TECH-020).
  */
-export type CommitOutcome = { ok: true } | { ok: false; detail?: string; type?: string };
+export type CommitOutcome = { ok: true } | ({ ok: false } & Problem);
 
 /** What the typed API client resolves with. A 204 has neither `data`
  * nor `error`, so only `error` (or a rejected promise) means failure. */
@@ -81,20 +81,20 @@ export function useFieldCommit<K extends string>() {
   ): Promise<CommitOutcome> {
     inFlight.current.add(key);
     note(key, "saving");
-    let answer: CommitAnswer<T>;
+    let answer: CommitAnswer<T> | undefined;
     try {
       answer = await request();
     } catch {
-      // The request never got an answer. There is no envelope to read,
-      // so the note falls back to its generic line.
-      answer = { error: {} };
+      answer = undefined;
     } finally {
       inFlight.current.delete(key);
     }
-    if (answer.error !== undefined || answer.response?.ok === false) {
-      const detail = problemDetail(answer.error);
-      note(key, "error", detail);
-      return { ok: false, detail, type: problemType(answer.error) };
+    if (!answer || answer.error !== undefined || answer.response?.ok === false) {
+      const failure = await problem(
+        answer?.response ? { error: answer.error, response: answer.response } : undefined,
+      );
+      note(key, "error", failure.detail);
+      return { ok: false, ...failure };
     }
     adopt?.(answer.data as T);
     note(key, "saved");

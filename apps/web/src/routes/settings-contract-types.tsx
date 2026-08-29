@@ -12,7 +12,7 @@
 import { redirect, useLoaderData } from "react-router";
 import { defineMessages } from "react-intl";
 import { api } from "../lib/api";
-import { problemDetail } from "../lib/messages";
+import { problem } from "../lib/problem";
 import { requireUser } from "../lib/session";
 import { ContractsSettingsTabs } from "../components/contracts-settings-tabs";
 import { TaxonomyTypesPane, type TaxonomyPaneApi } from "../components/taxonomy-types-pane";
@@ -103,32 +103,42 @@ const MESSAGES = defineMessages({
 /** The shared pane's API seam over the contract-types routes. */
 const PANE_API: TaxonomyPaneApi = {
   async create(displayName) {
-    const { data, error } = await api.POST("/api/v1/contract-types", { body: { displayName } });
-    return { data: data?.contractType, detail: problemDetail(error) };
+    const result = await api
+      .POST("/api/v1/contract-types", { body: { displayName } })
+      .catch(() => undefined);
+    return { data: result?.data?.contractType, ...(await problem(result)) };
   },
   async rename(id, displayName) {
-    const { data, error } = await api.PATCH("/api/v1/contract-types/{id}", {
-      params: { path: { id } },
-      body: { displayName },
-    });
-    return { data: data?.contractType, detail: problemDetail(error) };
+    const result = await api
+      .PATCH("/api/v1/contract-types/{id}", {
+        params: { path: { id } },
+        body: { displayName },
+      })
+      .catch(() => undefined);
+    return { data: result?.data?.contractType, ...(await problem(result)) };
   },
   async reorder(ids) {
-    const { data, error } = await api.PUT("/api/v1/contract-types/order", { body: { ids } });
-    return { data: data?.contractTypes, detail: problemDetail(error) };
+    const result = await api
+      .PUT("/api/v1/contract-types/order", { body: { ids } })
+      .catch(() => undefined);
+    return { data: result?.data?.contractTypes, ...(await problem(result)) };
   },
   async archive(id, reassignToId) {
-    const { data, error } = await api.POST("/api/v1/contract-types/{id}/archive", {
-      params: { path: { id } },
-      body: reassignToId ? { reassignToId } : {},
-    });
-    return { data: data?.contractType, detail: problemDetail(error) };
+    const result = await api
+      .POST("/api/v1/contract-types/{id}/archive", {
+        params: { path: { id } },
+        body: reassignToId ? { reassignToId } : {},
+      })
+      .catch(() => undefined);
+    return { data: result?.data?.contractType, ...(await problem(result)) };
   },
   async restore(id) {
-    const { data, error } = await api.POST("/api/v1/contract-types/{id}/restore", {
-      params: { path: { id } },
-    });
-    return { data: data?.contractType, detail: problemDetail(error) };
+    const result = await api
+      .POST("/api/v1/contract-types/{id}/restore", {
+        params: { path: { id } },
+      })
+      .catch(() => undefined);
+    return { data: result?.data?.contractType, ...(await problem(result)) };
   },
 };
 

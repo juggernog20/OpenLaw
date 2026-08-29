@@ -26,7 +26,7 @@ import { api } from "./api";
 // The separator the seam splits a folder path on, taken from the module
 // that reads a dropped tree: one string, joined and split in one place.
 import { PATH_SEPARATOR } from "./batch-upload";
-import { problemDetail } from "./messages";
+import { problem, type OpenApiResult, type Problem } from "./problem";
 import type { DocumentRecord } from "./documents";
 
 /** The API's answer for one contract's folders, aliased to the generated
@@ -40,8 +40,15 @@ export type ContractFolder = ListResponse["folders"][number];
 
 /** What a read or a write over the record's folders answers: the set as
  * it now stands, or why not. */
-export type FoldersOutcome =
-  { ok: true; folders: ContractFolder[] } | { ok: false; detail?: string };
+export type FoldersOutcome = { ok: true; folders: ContractFolder[] } | ({ ok: false } & Problem);
+
+async function foldersOutcome(
+  result: (OpenApiResult & { data?: ListResponse }) | undefined,
+): Promise<FoldersOutcome> {
+  return result?.data
+    ? { ok: true, folders: result.data.folders }
+    : { ok: false, ...(await problem(result)) };
+}
 
 /**
  * The folders sitting directly inside one folder, or at the record root
@@ -129,18 +136,22 @@ export function pathOf(
 
 /** Reads one contract's folders, whole. */
 export async function readContractFolders(contractNumber: number): Promise<FoldersOutcome> {
-  const { data, error } = await api.GET("/api/v1/contracts/{number}/folders", {
-    params: { path: { number: contractNumber } },
-  });
-  return data ? { ok: true, folders: data.folders } : { ok: false, detail: problemDetail(error) };
+  const result = await api
+    .GET("/api/v1/contracts/{number}/folders", {
+      params: { path: { number: contractNumber } },
+    })
+    .catch(() => undefined);
+  return foldersOutcome(result);
 }
 
 export async function readRecordFolders(record: DocumentRecord): Promise<FoldersOutcome> {
   if (record.entityType === "contract") return readContractFolders(record.number);
-  const { data, error } = await api.GET("/api/v1/matters/{number}/folders", {
-    params: { path: { number: record.number } },
-  });
-  return data ? { ok: true, folders: data.folders } : { ok: false, detail: problemDetail(error) };
+  const result = await api
+    .GET("/api/v1/matters/{number}/folders", {
+      params: { path: { number: record.number } },
+    })
+    .catch(() => undefined);
+  return foldersOutcome(result);
 }
 
 /** Creates a folder on the record, at the root or inside another one. */
@@ -148,11 +159,13 @@ export async function createContractFolder(
   contractNumber: number,
   folder: Readonly<{ name: string; parentId?: string }>,
 ): Promise<FoldersOutcome> {
-  const { data, error } = await api.POST("/api/v1/contracts/{number}/folders", {
-    params: { path: { number: contractNumber } },
-    body: folder,
-  });
-  return data ? { ok: true, folders: data.folders } : { ok: false, detail: problemDetail(error) };
+  const result = await api
+    .POST("/api/v1/contracts/{number}/folders", {
+      params: { path: { number: contractNumber } },
+      body: folder,
+    })
+    .catch(() => undefined);
+  return foldersOutcome(result);
 }
 
 export async function createRecordFolder(
@@ -160,11 +173,13 @@ export async function createRecordFolder(
   folder: Readonly<{ name: string; parentId?: string }>,
 ): Promise<FoldersOutcome> {
   if (record.entityType === "contract") return createContractFolder(record.number, folder);
-  const { data, error } = await api.POST("/api/v1/matters/{number}/folders", {
-    params: { path: { number: record.number } },
-    body: folder,
-  });
-  return data ? { ok: true, folders: data.folders } : { ok: false, detail: problemDetail(error) };
+  const result = await api
+    .POST("/api/v1/matters/{number}/folders", {
+      params: { path: { number: record.number } },
+      body: folder,
+    })
+    .catch(() => undefined);
+  return foldersOutcome(result);
 }
 
 /**
@@ -189,14 +204,16 @@ export async function recreateContractFolderPath(
   contractNumber: number,
   folder: Readonly<{ path: readonly string[]; parentId?: string }>,
 ): Promise<FoldersOutcome> {
-  const { data, error } = await api.POST("/api/v1/contracts/{number}/folders", {
-    params: { path: { number: contractNumber } },
-    body: {
-      path: folder.path.join(PATH_SEPARATOR),
-      ...(folder.parentId ? { parentId: folder.parentId } : {}),
-    },
-  });
-  return data ? { ok: true, folders: data.folders } : { ok: false, detail: problemDetail(error) };
+  const result = await api
+    .POST("/api/v1/contracts/{number}/folders", {
+      params: { path: { number: contractNumber } },
+      body: {
+        path: folder.path.join(PATH_SEPARATOR),
+        ...(folder.parentId ? { parentId: folder.parentId } : {}),
+      },
+    })
+    .catch(() => undefined);
+  return foldersOutcome(result);
 }
 
 export async function recreateRecordFolderPath(
@@ -206,14 +223,16 @@ export async function recreateRecordFolderPath(
   if (record.entityType === "contract") {
     return recreateContractFolderPath(record.number, folder);
   }
-  const { data, error } = await api.POST("/api/v1/matters/{number}/folders", {
-    params: { path: { number: record.number } },
-    body: {
-      path: folder.path.join(PATH_SEPARATOR),
-      ...(folder.parentId ? { parentId: folder.parentId } : {}),
-    },
-  });
-  return data ? { ok: true, folders: data.folders } : { ok: false, detail: problemDetail(error) };
+  const result = await api
+    .POST("/api/v1/matters/{number}/folders", {
+      params: { path: { number: record.number } },
+      body: {
+        path: folder.path.join(PATH_SEPARATOR),
+        ...(folder.parentId ? { parentId: folder.parentId } : {}),
+      },
+    })
+    .catch(() => undefined);
+  return foldersOutcome(result);
 }
 
 /**
@@ -226,11 +245,13 @@ export async function updateContractFolder(
   folderId: string,
   patch: Readonly<{ name?: string; parentId?: string | null }>,
 ): Promise<FoldersOutcome> {
-  const { data, error } = await api.PATCH("/api/v1/folders/{folderId}", {
-    params: { path: { folderId } },
-    body: patch,
-  });
-  return data ? { ok: true, folders: data.folders } : { ok: false, detail: problemDetail(error) };
+  const result = await api
+    .PATCH("/api/v1/folders/{folderId}", {
+      params: { path: { folderId } },
+      body: patch,
+    })
+    .catch(() => undefined);
+  return foldersOutcome(result);
 }
 
 /**
@@ -241,8 +262,10 @@ export async function updateContractFolder(
  * caller replaces what it holds.
  */
 export async function deleteContractFolder(folderId: string): Promise<FoldersOutcome> {
-  const { data, error } = await api.DELETE("/api/v1/folders/{folderId}", {
-    params: { path: { folderId } },
-  });
-  return data ? { ok: true, folders: data.folders } : { ok: false, detail: problemDetail(error) };
+  const result = await api
+    .DELETE("/api/v1/folders/{folderId}", {
+      params: { path: { folderId } },
+    })
+    .catch(() => undefined);
+  return foldersOutcome(result);
 }

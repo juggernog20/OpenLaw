@@ -32,7 +32,7 @@ import {
   type UserOption,
 } from "../../lib/contracts";
 import { CONTROL_CLASS } from "../../lib/form-controls";
-import { problemDetail } from "../../lib/messages";
+import { problem as readProblem } from "../../lib/problem";
 import { Avatar } from "../avatar";
 import type { Applet } from "../shell/applets";
 import { Button } from "../ui/button";
@@ -153,17 +153,17 @@ function TeamPanel({
     if (inFlight.current) return;
     setError(null);
     inFlight.current = true;
-    const { data, error: problem } = await api
+    const result = await api
       .DELETE("/api/v1/contracts/{number}/team/{userId}/{role}", {
         params: { path: { number: contractNumber, userId: member.id, role: member.role } },
       })
-      .catch(() => ({ data: undefined, error: undefined }))
+      .catch(() => undefined)
       .finally(() => {
         inFlight.current = false;
       });
-    if (!data) {
+    if (!result?.data) {
       setError(
-        problemDetail(problem) ??
+        (await readProblem(result)).detail ??
           intl.formatMessage({
             id: "contracts.team.removeError",
             defaultMessage: "That person could not be taken off the team.",
@@ -171,7 +171,7 @@ function TeamPanel({
       );
       return;
     }
-    onRoster(data.team);
+    onRoster(result.data.team);
     addControl.current?.focus();
   }
 
@@ -320,16 +320,16 @@ function AddTeamMemberDialog({
       return;
     }
     setBusy(true);
-    const { data, error: problem } = await api
+    const result = await api
       .POST("/api/v1/contracts/{number}/team", {
         params: { path: { number: contractNumber } },
         body: { userId, role },
       })
-      .catch(() => ({ data: undefined, error: undefined }))
+      .catch(() => undefined)
       .finally(() => setBusy(false));
-    if (!data) {
+    if (!result?.data) {
       setError(
-        problemDetail(problem) ??
+        (await readProblem(result)).detail ??
           intl.formatMessage({
             id: "contracts.team.addError",
             defaultMessage: "That person could not be added.",
@@ -337,7 +337,7 @@ function AddTeamMemberDialog({
       );
       return;
     }
-    onAdded(data.team);
+    onAdded(result.data.team);
     onOpenChange(false);
   }
 

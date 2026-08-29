@@ -57,6 +57,7 @@ describe("useFieldCommit", () => {
         "title",
         async () => ({
           error: { type: "urn:openlaw:problem:soft-gate", detail: "Two approvals are pending." },
+          response: new Response(null, { status: 409 }),
         }),
         adopt,
       );
@@ -68,6 +69,8 @@ describe("useFieldCommit", () => {
       ok: false,
       detail: "Two approvals are pending.",
       type: "urn:openlaw:problem:soft-gate",
+      status: 409,
+      network: false,
     });
   });
 
@@ -80,7 +83,13 @@ describe("useFieldCommit", () => {
     });
     expect(result.current.status.title).toBe("error");
     expect(result.current.error.title).toBeUndefined();
-    expect(outcome).toEqual({ ok: false, detail: undefined, type: undefined });
+    expect(outcome).toEqual({
+      ok: false,
+      detail: undefined,
+      type: undefined,
+      status: undefined,
+      network: true,
+    });
   });
 
   it("treats an answer with no body and no error (a 204) as saved", async () => {
@@ -95,7 +104,10 @@ describe("useFieldCommit", () => {
     const { result } = renderHook(() => useFieldCommit<Key>());
     await act(async () => {
       await result.current.commit("title", async () => ({ data: {} }));
-      await result.current.commit("description", async () => ({ error: { detail: "No." } }));
+      await result.current.commit("description", async () => ({
+        error: { detail: "No." },
+        response: new Response(null, { status: 400 }),
+      }));
     });
     expect(result.current.status).toEqual({ title: "saved", description: "error" });
     expect(result.current.error).toEqual({ title: undefined, description: "No." });
@@ -210,6 +222,7 @@ describe("useRowCommit", () => {
       await result.current.commit("u1", async () => ({}));
       await result.current.commit("u2", async () => ({
         error: { detail: "The last Administrator cannot be demoted." },
+        response: new Response(null, { status: 409 }),
       }));
     });
     expect(result.current.status).toEqual({ u1: "saved", u2: "error" });

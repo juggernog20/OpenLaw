@@ -20,7 +20,7 @@ import {
   type MatterTypeOption,
   type MatterUserOption,
 } from "../../lib/matters";
-import { problemDetail } from "../../lib/messages";
+import { problem as readProblem } from "../../lib/problem";
 import { ConfidentialToggle } from "../confidential-toggle";
 import { CustomFieldControl, type FieldReference } from "../custom-field-control";
 import { Button } from "../ui/button";
@@ -133,7 +133,7 @@ export function CreateMatterDialog({
       return;
     }
     setBusy(true);
-    const { data, error: problem } = await api
+    const result = await api
       .POST("/api/v1/matters", {
         body: {
           title: title.trim(),
@@ -148,11 +148,11 @@ export function CreateMatterDialog({
           ...(parent ? { parentMatterNumber: parent.number } : {}),
         },
       })
-      .catch(() => ({ data: undefined, error: undefined }));
+      .catch(() => undefined);
     setBusy(false);
-    if (!data) {
+    if (!result?.data) {
       setError(
-        problemDetail(problem) ??
+        (await readProblem(result)).detail ??
           intl.formatMessage({
             id: "matters.createFailed",
             defaultMessage: "The matter could not be created.",
@@ -160,7 +160,7 @@ export function CreateMatterDialog({
       );
       return;
     }
-    onCreated(data.matter);
+    onCreated(result.data.matter);
     onOpenChange(false);
   }
 

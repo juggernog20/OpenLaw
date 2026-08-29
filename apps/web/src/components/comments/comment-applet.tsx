@@ -84,7 +84,7 @@ import {
 } from "../../lib/comments";
 import { formatLongDateTime, formatRelativeOrShort } from "../../lib/format";
 import { TEXTAREA_CLASS } from "../../lib/form-controls";
-import { problemDetail } from "../../lib/messages";
+import { problem as readProblem } from "../../lib/problem";
 import type { Role } from "../../lib/roles";
 import { cn } from "../../lib/utils";
 import { Avatar } from "../avatar";
@@ -548,21 +548,21 @@ function CommentRow({
   ) {
     setBusy(true);
     setError(null);
-    const { data, error: problem } = await call()
-      .catch(() => ({ data: undefined, error: undefined }))
+    const result = await call()
+      .catch(() => undefined)
       .finally(() => setBusy(false));
     // The question has been answered either way, so it closes either
     // way — a refusal belongs on the row it was refused about, where the
     // text that did not change is still on screen.
     setConfirming(null);
-    if (!data) {
-      setError(problemDetail(problem) ?? fallback);
+    if (!result?.data) {
+      setError((await readProblem(result)).detail ?? fallback);
       return;
     }
     // The box stays open on a refusal, so nothing the author typed is
     // lost to a failed save.
     setEditing(false);
-    onChanged(data.comment);
+    onChanged(result.data.comment);
   }
 
   const save = (body: string) =>
@@ -1096,7 +1096,7 @@ function Composer({
     inFlight.current = true;
     setBusy(true);
     setError(null);
-    const { data, error: problem } = await sendComment(
+    const result = await sendComment(
       {
         entityType,
         entityId,
@@ -1106,14 +1106,14 @@ function Composer({
       },
       files,
     )
-      .catch(() => ({ data: undefined, error: undefined }))
+      .catch(() => undefined)
       .finally(() => {
         inFlight.current = false;
         setBusy(false);
       });
-    if (!data) {
+    if (!result?.data) {
       setError(
-        problemDetail(problem) ??
+        (await readProblem(result)).detail ??
           intl.formatMessage({
             id: "comments.postError",
             defaultMessage: "The comment could not be posted. Try again.",
@@ -1121,7 +1121,7 @@ function Composer({
       );
       return;
     }
-    onPosted(data.comment);
+    onPosted(result.data.comment);
     setDraft("");
     setFiles([]);
     setPicked([]);

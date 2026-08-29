@@ -86,7 +86,7 @@ import {
   type CustomFieldValue,
 } from "../lib/custom-fields";
 import { CONTROL_CLASS, TEXTAREA_CLASS } from "../lib/form-controls";
-import { problemDetail } from "../lib/messages";
+import { problem as readProblem } from "../lib/problem";
 import { attachToRequest, MAX_REQUEST_ATTACHMENTS, requestReference } from "../lib/requests";
 import { currentUser, useSignOut } from "../lib/session";
 import { CustomFieldControl } from "../components/custom-field-control";
@@ -247,7 +247,7 @@ export function PortalRequestFormPage() {
     setUnanswered(new Set());
 
     setBusy(true);
-    const { data, error: problem } = await api
+    const result = await api
       .POST("/api/v1/requests", {
         body: {
           requestTypeId: requestType.id,
@@ -257,11 +257,12 @@ export function PortalRequestFormPage() {
           customFields,
         },
       })
-      .catch(() => ({ data: null, error: undefined }));
+      .catch(() => undefined);
+    const { data } = result ?? {};
     if (!data) {
       setBusy(false);
       setError(
-        problemDetail(problem) ??
+        (await readProblem(result)).detail ??
           intl.formatMessage({
             id: "portal.form.submitError",
             defaultMessage: "The request could not be submitted.",

@@ -14,7 +14,7 @@ import {
   type MatterTeamRole,
   type MatterUserOption,
 } from "../../lib/matters";
-import { problemDetail } from "../../lib/messages";
+import { problem as readProblem } from "../../lib/problem";
 import { Avatar } from "../avatar";
 import { Button } from "../ui/button";
 import { Dialog, DialogContent, DialogTitle } from "../ui/dialog";
@@ -50,17 +50,17 @@ export function MatterTeamTray({
     if (busy.current) return;
     busy.current = true;
     setError(null);
-    const { data, error: problem } = await api
+    const result = await api
       .DELETE("/api/v1/matters/{number}/team/{userId}/{role}", {
         params: { path: { number, userId: member.id, role: member.role } },
       })
-      .catch(() => ({ data: undefined, error: undefined }))
+      .catch(() => undefined)
       .finally(() => {
         busy.current = false;
       });
-    if (!data) {
+    if (!result?.data) {
       setError(
-        problemDetail(problem) ??
+        (await readProblem(result)).detail ??
           intl.formatMessage({
             id: "matters.team.removeError",
             defaultMessage: "That person could not be taken off the matter team.",
@@ -68,7 +68,7 @@ export function MatterTeamTray({
       );
       return;
     }
-    onTeam(data.team);
+    onTeam(result.data.team);
   }
 
   return (
@@ -217,16 +217,16 @@ function AddMatterTeamDialog({
     }
     setSaving(true);
     setError(null);
-    const { data, error: problem } = await api
+    const result = await api
       .POST("/api/v1/matters/{number}/team", {
         params: { path: { number } },
         body: { userId, role },
       })
-      .catch(() => ({ data: undefined, error: undefined }))
+      .catch(() => undefined)
       .finally(() => setSaving(false));
-    if (!data) {
+    if (!result?.data) {
       setError(
-        problemDetail(problem) ??
+        (await readProblem(result)).detail ??
           intl.formatMessage({
             id: "matters.team.addError",
             defaultMessage: "That person could not be added to the matter team.",
@@ -234,7 +234,7 @@ function AddMatterTeamDialog({
       );
       return;
     }
-    onAdded(data.team);
+    onAdded(result.data.team);
     onOpenChange(false);
   }
 

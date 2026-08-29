@@ -20,7 +20,7 @@ import { redirect, useLoaderData } from "react-router";
 import { FormattedMessage, useIntl, type IntlShape } from "react-intl";
 import { History, TriangleAlert } from "lucide-react";
 import { api } from "../lib/api";
-import { problemDetail } from "../lib/messages";
+import { problem as readProblem } from "../lib/problem";
 import { requireUser } from "../lib/session";
 import { MattersSettingsTabs } from "../components/matters-settings-tabs";
 import { ListEditor } from "../components/list-editor";
@@ -94,10 +94,11 @@ function ArchiveStatusDialog({
     setBusy(true);
     setError(null);
     try {
-      const { data, error: problem } = await api.POST("/api/v1/matter-statuses/{id}/archive", {
+      const result = await api.POST("/api/v1/matter-statuses/{id}/archive", {
         params: { path: { id: target.id } },
         body: reassignToId ? { reassignToId } : {},
       });
+      const { data } = result;
       if (data) {
         archived.current = true;
         onArchived(data.matterStatus);
@@ -106,7 +107,7 @@ function ArchiveStatusDialog({
         // The API's own refusal (a protected row, the floor, a stale
         // list) is more actionable than any generic line.
         setError(
-          problemDetail(problem) ??
+          (await readProblem(result)).detail ??
             intl.formatMessage({
               id: "settings.matterStatuses.archiveError",
               defaultMessage: "The status could not be archived.",
@@ -283,17 +284,18 @@ export function SettingsMatterStatusesPage() {
 
   async function rename(row: StatusRow, displayName: string) {
     noteRow(row.id, "saving");
-    const { data, error } = await api
+    const result = await api
       .PATCH("/api/v1/matter-statuses/{id}", {
         params: { path: { id: row.id } },
         body: { displayName },
       })
-      .catch(() => ({ data: null, error: undefined }));
+      .catch(() => undefined);
+    const { data } = result ?? {};
     if (data) {
       replaceRow(data.matterStatus);
       noteRow(row.id, "saved");
     } else {
-      noteRow(row.id, "error", problemDetail(error));
+      noteRow(row.id, "error", (await readProblem(result)).detail);
     }
   }
 
@@ -322,11 +324,12 @@ export function SettingsMatterStatusesPage() {
     setAddStatus("saving");
     setAddError(undefined);
     try {
-      const { data, error } = await api
+      const result = await api
         .POST("/api/v1/matter-statuses", {
           body: { displayName, category: addDraft.category },
         })
-        .catch(() => ({ data: null, error: undefined }));
+        .catch(() => undefined);
+      const { data } = result ?? {};
       if (data) {
         setRows((current) => [...current, data.matterStatus]);
         setAdding(false);
@@ -335,7 +338,7 @@ export function SettingsMatterStatusesPage() {
       } else {
         // Keep the draft row open so the name is not lost to a refusal.
         setAddStatus("error");
-        setAddError(problemDetail(error));
+        setAddError((await readProblem(result)).detail);
       }
     } finally {
       createInFlight.current = false;
@@ -346,9 +349,10 @@ export function SettingsMatterStatusesPage() {
   async function commitOrder(orderedIds: string[]) {
     setOrderStatus("saving");
     setOrderError(undefined);
-    const { data, error } = await api
+    const result = await api
       .PUT("/api/v1/matter-statuses/order", { body: { ids: orderedIds } })
-      .catch(() => ({ data: null, error: undefined }));
+      .catch(() => undefined);
+    const { data } = result ?? {};
     if (data) {
       const reordered: StatusRow[] = data.matterStatuses;
       setRows((current) => [
@@ -359,7 +363,7 @@ export function SettingsMatterStatusesPage() {
       return true;
     }
     setOrderStatus("error");
-    setOrderError(problemDetail(error));
+    setOrderError((await readProblem(result)).detail);
     return false;
   }
 
@@ -385,14 +389,15 @@ export function SettingsMatterStatusesPage() {
 
   async function restore(row: StatusRow) {
     noteRow(row.id, "saving");
-    const { data, error } = await api
+    const result = await api
       .POST("/api/v1/matter-statuses/{id}/restore", { params: { path: { id: row.id } } })
-      .catch(() => ({ data: null, error: undefined }));
+      .catch(() => undefined);
+    const { data } = result ?? {};
     if (data) {
       replaceRow(data.matterStatus);
       noteRow(row.id, "saved");
     } else {
-      noteRow(row.id, "error", problemDetail(error));
+      noteRow(row.id, "error", (await readProblem(result)).detail);
     }
   }
 

@@ -20,7 +20,7 @@
 
 import type { paths } from "@openlaw/api-client";
 import { api } from "./api";
-import { problemDetail, problemType } from "./messages";
+import { problem, type Problem } from "./problem";
 
 /** The API's answer for one contract's signing state, aliased to the
  * generated schema so an API change surfaces as a compile error here
@@ -60,8 +60,7 @@ export type SigningState = {
  * branches on the type as TECH-020 requires rather than reaching for
  * the sentence, which is copy and changes.
  */
-export type SigningOutcome =
-  ({ ok: true } & SigningState) | { ok: false; detail?: string; type?: string };
+export type SigningOutcome = ({ ok: true } & SigningState) | ({ ok: false } & Problem);
 
 /**
  * The envelope pill's family (DES-005's paired status-pill families,
@@ -102,17 +101,17 @@ export async function sendContractEnvelope(
   contractNumber: number,
   input: { documentVersionId: string; signers: readonly EnvelopeSigner[]; subject?: string },
 ): Promise<SigningOutcome> {
-  const { data, error } = await api.POST("/api/v1/contracts/{number}/envelopes", {
-    params: { path: { number: contractNumber } },
-    body: {
-      documentVersionId: input.documentVersionId,
-      signers: input.signers.map((signer) => ({ name: signer.name, email: signer.email })),
-      ...(input.subject ? { subject: input.subject } : {}),
-    },
-  });
-  return data
-    ? { ok: true, ...data }
-    : { ok: false, detail: problemDetail(error), type: problemType(error) };
+  const result = await api
+    .POST("/api/v1/contracts/{number}/envelopes", {
+      params: { path: { number: contractNumber } },
+      body: {
+        documentVersionId: input.documentVersionId,
+        signers: input.signers.map((signer) => ({ name: signer.name, email: signer.email })),
+        ...(input.subject ? { subject: input.subject } : {}),
+      },
+    })
+    .catch(() => undefined);
+  return result?.data ? { ok: true, ...result.data } : { ok: false, ...(await problem(result)) };
 }
 
 /**
@@ -132,11 +131,11 @@ export async function voidContractEnvelope(
   envelopeId: string,
   reason: string,
 ): Promise<SigningOutcome> {
-  const { data, error } = await api.POST("/api/v1/envelopes/{envelopeId}/void", {
-    params: { path: { envelopeId } },
-    body: { reason },
-  });
-  return data
-    ? { ok: true, ...data }
-    : { ok: false, detail: problemDetail(error), type: problemType(error) };
+  const result = await api
+    .POST("/api/v1/envelopes/{envelopeId}/void", {
+      params: { path: { envelopeId } },
+      body: { reason },
+    })
+    .catch(() => undefined);
+  return result?.data ? { ok: true, ...result.data } : { ok: false, ...(await problem(result)) };
 }

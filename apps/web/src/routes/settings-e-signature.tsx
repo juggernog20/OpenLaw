@@ -29,7 +29,7 @@ import { FormattedMessage, useIntl } from "react-intl";
 import type { paths } from "@openlaw/api-client";
 import { api } from "../lib/api";
 import { formatShortDate } from "../lib/format";
-import { problemDetail } from "../lib/messages";
+import { problem } from "../lib/problem";
 import { requireUser } from "../lib/session";
 import { cn } from "../lib/utils";
 import { PageTitle } from "../components/page-title";
@@ -150,7 +150,7 @@ export function SettingsESignaturePage() {
     setAccount(null);
     note("test", "idle");
     try {
-      const { data, error } = await api.PUT("/api/v1/signing-connectors/{provider}", {
+      const result = await api.PUT("/api/v1/signing-connectors/{provider}", {
         params: { path: { provider: PROVIDER } },
         body: {
           environment,
@@ -163,8 +163,9 @@ export function SettingsESignaturePage() {
           ...(webhookSecret === "" ? {} : { webhookSecret }),
         },
       });
+      const { data } = result;
       if (!data) {
-        note("connector", "error", problemDetail(error));
+        note("connector", "error", (await problem(result)).detail);
         return;
       }
       setConnector(data.connector);
@@ -184,11 +185,12 @@ export function SettingsESignaturePage() {
     note("test", "saving");
     setAccount(null);
     try {
-      const { data, error } = await api.POST("/api/v1/signing-connectors/{provider}/test", {
+      const result = await api.POST("/api/v1/signing-connectors/{provider}/test", {
         params: { path: { provider: PROVIDER } },
       });
+      const { data } = result;
       if (!data) {
-        note("test", "error", problemDetail(error));
+        note("test", "error", (await problem(result)).detail);
         return;
       }
       setAccount(data.accountName);
@@ -216,14 +218,15 @@ export function SettingsESignaturePage() {
     setAccount(null);
     note("test", "idle");
     try {
-      const { data, error } = await api.POST(
+      const result = await api.POST(
         next
           ? "/api/v1/signing-connectors/{provider}/enable"
           : "/api/v1/signing-connectors/{provider}/disable",
         { params: { path: { provider: PROVIDER } } },
       );
+      const { data } = result;
       if (!data) {
-        note("lifecycle", "error", problemDetail(error));
+        note("lifecycle", "error", (await problem(result)).detail);
         return;
       }
       setConnector(data.connector);
@@ -256,11 +259,12 @@ export function SettingsESignaturePage() {
     setAccount(null);
     note("test", "idle");
     try {
-      const { data, error } = await api.DELETE("/api/v1/signing-connectors/{provider}", {
+      const result = await api.DELETE("/api/v1/signing-connectors/{provider}", {
         params: { path: { provider: PROVIDER } },
       });
+      const { data } = result;
       if (!data) {
-        note("lifecycle", "error", problemDetail(error));
+        note("lifecycle", "error", (await problem(result)).detail);
         return;
       }
       setConnector(data.connector);

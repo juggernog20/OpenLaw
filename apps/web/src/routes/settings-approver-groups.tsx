@@ -31,7 +31,7 @@ import { FormattedMessage, useIntl } from "react-intl";
 import { History, Pencil, TriangleAlert } from "lucide-react";
 import type { paths } from "@openlaw/api-client";
 import { api } from "../lib/api";
-import { problemDetail } from "../lib/messages";
+import { problem as readProblem } from "../lib/problem";
 import { MEMBER_PLUS_ROLES } from "../lib/roles";
 import { requireUser } from "../lib/session";
 import { ContractsSettingsTabs } from "../components/contracts-settings-tabs";
@@ -166,7 +166,7 @@ function GroupEditorDialog({
   }
 
   async function create() {
-    const { data, error: problem } = await api
+    const result = await api
       .POST("/api/v1/approver-groups", {
         body: {
           name: name.trim(),
@@ -174,10 +174,11 @@ function GroupEditorDialog({
           memberIds,
         },
       })
-      .catch(() => ({ data: null, error: undefined }));
+      .catch(() => undefined);
+    const { data } = result ?? {};
     if (!data) {
       refuse(
-        problemDetail(problem) ??
+        (await readProblem(result)).detail ??
           intl.formatMessage({
             id: "settings.approverGroups.createError",
             defaultMessage: "The group could not be created.",
@@ -200,15 +201,16 @@ function GroupEditorDialog({
 
     let latest = existing;
     if (Object.keys(body).length > 0) {
-      const { data, error: problem } = await api
+      const result = await api
         .PATCH("/api/v1/approver-groups/{id}", {
           params: { path: { id: existing.id } },
           body,
         })
-        .catch(() => ({ data: null, error: undefined }));
+        .catch(() => undefined);
+      const { data } = result ?? {};
       if (!data) {
         refuse(
-          problemDetail(problem) ??
+          (await readProblem(result)).detail ??
             intl.formatMessage({
               id: "settings.approverGroups.editError",
               defaultMessage: "The group could not be saved.",
@@ -226,15 +228,16 @@ function GroupEditorDialog({
     const after = [...memberIds].sort((a, b) => a.localeCompare(b));
     if (before.join(",") === after.join(",")) return true;
 
-    const { data, error: problem } = await api
+    const result = await api
       .PUT("/api/v1/approver-groups/{id}/members", {
         params: { path: { id: latest.id } },
         body: { memberIds },
       })
-      .catch(() => ({ data: null, error: undefined }));
+      .catch(() => undefined);
+    const { data } = result ?? {};
     if (!data) {
       refuse(
-        problemDetail(problem) ??
+        (await readProblem(result)).detail ??
           intl.formatMessage({
             id: "settings.approverGroups.membersError",
             defaultMessage: "The member list could not be saved.",
@@ -418,9 +421,10 @@ function ArchiveGroupDialog({
     setBusy(true);
     setError(null);
     try {
-      const { data, error: problem } = await api.POST("/api/v1/approver-groups/{id}/archive", {
+      const result = await api.POST("/api/v1/approver-groups/{id}/archive", {
         params: { path: { id: target.id } },
       });
+      const { data } = result;
       if (data) {
         archived.current = true;
         onArchived(toRow(data.approverGroup));
@@ -429,7 +433,7 @@ function ArchiveGroupDialog({
         // The API's own refusal (already archived, a stale list) is more
         // actionable than any generic line.
         setError(
-          problemDetail(problem) ??
+          (await readProblem(result)).detail ??
             intl.formatMessage({
               id: "settings.approverGroups.archiveError",
               defaultMessage: "The group could not be archived.",
@@ -544,30 +548,32 @@ export function SettingsApproverGroupsPage() {
 
   async function rename(row: GroupRow, displayName: string) {
     noteRow(row.id, "saving");
-    const { data, error } = await api
+    const result = await api
       .PATCH("/api/v1/approver-groups/{id}", {
         params: { path: { id: row.id } },
         body: { name: displayName },
       })
-      .catch(() => ({ data: null, error: undefined }));
+      .catch(() => undefined);
+    const { data } = result ?? {};
     if (data) {
       replaceRow(toRow(data.approverGroup));
       noteRow(row.id, "saved");
     } else {
-      noteRow(row.id, "error", problemDetail(error));
+      noteRow(row.id, "error", (await readProblem(result)).detail);
     }
   }
 
   async function restore(row: GroupRow) {
     noteRow(row.id, "saving");
-    const { data, error } = await api
+    const result = await api
       .POST("/api/v1/approver-groups/{id}/restore", { params: { path: { id: row.id } } })
-      .catch(() => ({ data: null, error: undefined }));
+      .catch(() => undefined);
+    const { data } = result ?? {};
     if (data) {
       replaceRow(toRow(data.approverGroup));
       noteRow(row.id, "saved");
     } else {
-      noteRow(row.id, "error", problemDetail(error));
+      noteRow(row.id, "error", (await readProblem(result)).detail);
     }
   }
 
