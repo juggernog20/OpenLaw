@@ -6,30 +6,30 @@
  *
  * The loader gates on a session and nothing else. A Business User is
  * routed here from the staff application (see `homeLoader`), and Member+
- * staff are admitted rather than turned away — staff ask legal questions
+ * staff are admitted rather than turned away. Staff ask legal questions
  * too, and on this surface they are a Requester like anybody else.
  *
- * The body is the request type picker, the "Before you submit…" panel,
+ * The body is the request type picker, the "Before you submit" panel,
  * and the my-requests list, in the order I5 stacks them.
  *
- * **The picker draws the Administrator's live types in their order.**
+ * The picker draws the Administrator's live types in their order.
  * Both reads come from the portal's own requester-facing routes, not
- * from the Administrator-facing Intake Settings ones — those stay shut
+ * from the Administrator-facing Intake Settings ones. Those stay shut
  * to a Business User, which is why the portal mount exists.
  *
- * **The picker is the only thing the empty state replaces.** An
- * instance whose Administrator has archived every request type says so
- * where the cards would be; the heading above it and the deflection
- * panel below it are unaffected, because a deflection link is still
- * worth following when there is no form to fill in.
+ * The picker is the only thing the empty state replaces. An instance
+ * whose Administrator has archived every request type says so where
+ * the cards would be. The heading above it and the deflection panel
+ * below it are unaffected, because a deflection link is still worth
+ * following when there is no form to fill in.
  *
- * ### Recorded normalization points (I5 deviations accepted)
+ * Recorded normalization points (I5 deviations accepted):
  *
  * 1. I5 draws a per-type lucide glyph beside each name (`file-pen`,
- *    `shield`, `package`, …). A request type carries a slug, a name, a
- *    description, an order, and a target (INT-002) — no icon — so the
- *    card head is the name alone rather than one glyph repeated down
- *    the grid.
+ *    `shield`, `package`, and so on). A request type carries a slug, a
+ *    name, a description, an order, and a target (INT-002), and no
+ *    icon, so the card head is the name alone rather than one glyph
+ *    repeated down the grid.
  * 2. I5 lays the cards out as two hand-built rows of three. They render
  *    as one auto-filling grid, per DES-012's preference for intrinsic
  *    layout over fixed rows: an Administrator may configure any number

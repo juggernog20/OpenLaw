@@ -2,14 +2,14 @@
 
 /**
  * Contracts · Approver groups (#231): the CTR-012 reusable sign-off
- * templates behind the fourth list-editor pane — create with a member
+ * templates behind the fourth list-editor pane. Create with a member
  * list, rename, describe, replace the members, archive, restore. Only
  * Member+ users are accepted as members, and only an Administrator
  * touches the pane at all (SET-002). Archiving carries no guard and no
  * reassignment: applying a group snapshots its members, so an archived
  * group only leaves the apply picker.
  *
- * Asserted at the HTTP seam plus direct activity_log reads — the log has
+ * Asserted at the HTTP seam plus direct activity_log reads. The log has
  * no read routes for these entries outside the M9 audit-log pane.
  */
 
@@ -617,9 +617,9 @@ describe("the name is unique among live groups", () => {
     await createGroup({ name: "Unique probe" });
     const res = await clash({ name: "Unique probe" });
     expect(res.statusCode, res.body).toBe(409);
-    // The whole envelope, because the refusal comes from the index
-    // rather than from a hand-written throw: a raw unique violation
-    // would arrive as a 500 with none of this on it.
+    // The whole envelope, because the refusal comes from the index and
+    // not from a hand-written throw. A raw unique violation would
+    // arrive as a 500 with none of this on it.
     expect(res.headers["content-type"]).toContain("application/problem+json");
     expect(res.json()).toMatchObject({
       status: 409,
@@ -676,8 +676,9 @@ describe("the name is unique among live groups", () => {
     const second = await clash({ name: "Rotating sign-off" });
     expect(second.statusCode, second.body).toBe(201);
 
-    // And the restore is the one clash the partial index can still
-    // raise. It reads as its own sentence: the fix is on the live group.
+    // The restore is the one clash the partial index can still raise.
+    // Its detail points the Administrator at the live group, because
+    // that is where the fix is.
     const restore = await harness.app.inject({
       method: "POST",
       url: `/api/v1/approver-groups/${first.id}/restore`,

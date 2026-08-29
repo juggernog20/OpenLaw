@@ -5,22 +5,22 @@
  * designs/matters.pen (M3 comments, M13 history): a 320px surface
  * hosting whichever applet the activity bar has expanded, one at a
  * time, under a 44px header carrying the applet's title and a close
- * control. The M3 header also shows a count pill — that is applet
+ * control. The M3 header also shows a count pill. That pill is applet
  * content (total comments, not the bar badge's unread count) and lands
  * with the chat applet, not here. Focus lands on the panel container
- * when it opens, not on Close; Esc from inside then closes it
- * (DES-010's overlay rule — Radix does not drive this aside).
+ * when it opens, not on Close. Esc from inside then closes it, which
+ * is DES-010's overlay rule. Radix does not drive this aside.
  *
  * Always a flex sibling: opening it takes a 320px column and the
  * record content shrinks. Overlaying (DES-012's below-threshold rule)
- * is superseded for this panel — see the DES-016 2026-08-17
+ * is superseded for this panel. See the DES-016 2026-08-17
  * clarification. The doc panel is the other case and keeps a threshold
  * of its own, so do not read this as a rule about layers in general.
  * This column is outside the box that panel can cover, which is why
- * the two are open together at any width. The clip
- * that slides the column lives on RecordApplets; this aside is the
- * inner 320px, packed to the trailing edge so the growing clip reads
- * as a drawer coming out of the activity bar.
+ * the two are open together at any width. The clip that slides the
+ * column lives on RecordApplets; this aside is the inner 320px, packed
+ * to the trailing edge so the growing clip reads as a drawer coming
+ * out of the activity bar.
  */
 
 import { useEffect, useRef, type ReactNode } from "react";
@@ -36,7 +36,7 @@ export function AppletPanel({
   children,
 }: Readonly<{
   id: string;
-  /** Accessible name and header title — the active applet's label. */
+  /** Accessible name and header title: the active applet's label. */
   label: string;
   /** The active applet's own header content, beside the title. */
   accessory?: ReactNode;
@@ -62,15 +62,15 @@ export function AppletPanel({
   }, [id, label, inert]);
 
   return (
-    <aside // NOSONAR — the listener serves DES-010's Esc rule, not interactivity
+    <aside // NOSONAR: the listener serves DES-010's Esc rule, not interactivity
       ref={panel}
       id={id}
       tabIndex={-1}
       aria-label={label}
       // DES-010 says Esc closes the topmost overlay. The panel is a
-      // plain aside, so Radix does not handle the key for it; a layer
+      // plain aside, so Radix does not handle the key for it. A layer
       // inside an applet that already consumed the press marks it
-      // defaultPrevented.
+      // defaultPrevented, and the panel stays open.
       onKeyDown={(event) => {
         if (event.key === "Escape" && !event.defaultPrevented) onClose();
       }}

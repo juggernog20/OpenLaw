@@ -4,11 +4,11 @@
  * The DocuSign driver, proved without DocuSign.
  *
  * No test in this file calls DocuSign. Three of the driver's four jobs
- * are arithmetic over their inputs — assembling the JWT assertion,
- * verifying a Connect signature, and mapping payloads — so they are
- * held against known-good fixtures and a decoded assertion. The fourth,
- * the conversation itself, runs against a stub server that speaks
- * DocuSign's shapes: it is what lets the driver take the same shared
+ * are arithmetic over their inputs: assembling the JWT assertion,
+ * verifying a Connect signature, and mapping payloads. Those are held
+ * against known-good fixtures and a decoded assertion. The fourth, the
+ * conversation itself, runs against a stub server that speaks
+ * DocuSign's shapes. The stub lets the driver take the same shared
  * contract suite the deterministic fake takes, which is the only way to
  * know the two agree.
  */
@@ -47,7 +47,8 @@ const API_USER_ID = "99999999-8888-7777-6666-555555555555";
 const WEBHOOK_SECRET = "connect-hmac-secret";
 const ACCOUNT_ID = "acct-0001";
 
-/** The claim set of an assertion, decoded. */
+/** An assertion split into header, claims, the signed input, and the
+ * raw signature, so a test can check each part. */
 function decodeAssertion(assertion: string): {
   header: Record<string, unknown>;
   payload: Record<string, unknown>;
@@ -330,14 +331,12 @@ interface Stub {
   close: () => Promise<void>;
 }
 
-/** Reads a whole request body. */
 async function readBody(request: IncomingMessage): Promise<Buffer> {
   const chunks: Buffer[] = [];
   for await (const chunk of request) chunks.push(Buffer.from(chunk as Buffer));
   return Buffer.concat(chunks);
 }
 
-/** Answers JSON with a status. */
 function sendJson(response: ServerResponse, status: number, body: unknown): void {
   response.writeHead(status, { "content-type": "application/json" });
   response.end(JSON.stringify(body));
@@ -353,9 +352,9 @@ async function startStub(): Promise<Stub> {
   const envelopes = new Map<string, StubEnvelope>();
   let minted = 0;
   const server: Server = createServer((request, response) => {
-    // A throw inside the handler — a body that will not parse, an
-    // assertion that will not decode — must become an answer, not an
-    // unhandled rejection that leaves the driver waiting forever.
+    // A throw inside the handler, such as a body that will not parse or
+    // an assertion that will not decode, must become an answer. An
+    // unhandled rejection would leave the driver waiting forever.
     const answer = (async () => {
       const url = new URL(request.url ?? "/", "http://stub.invalid");
       const path = url.pathname;
@@ -528,8 +527,8 @@ describeSigningContract("the DocuSign driver", async () => {
 
 describe("the DocuSign driver's own answers", () => {
   it("reads an unreachable host as transient, so a caller retries", async () => {
-    // Port 1 on the loopback refuses immediately — an outage, not a
-    // configuration fault, and the split is what decides the retry.
+    // Port 1 on the loopback refuses immediately. That is an outage,
+    // not a configuration fault, and the split is what decides the retry.
     const provider = createDocuSignProvider(
       {
         environment: "demo",

@@ -9,9 +9,9 @@
 #
 # It publishes and does nothing else. compose.yml decides what the
 # services are; compose.dev.yml decides what a dev/E2E run points at.
-# Bring it up with the service list — never bare `up` — or the built app
-# and worker containers start beside the watch processes and both fight
-# for the same port and the same queue.
+# Bring it up with the service list, never bare `up`. Bare `up` also
+# starts the built app and worker containers beside the watch processes,
+# and both fight for the same port and the same queue.
 #
 # Every port binds to 127.0.0.1. These are unauthenticated services
 # holding real local data: Postgres takes a password every reader of
@@ -25,16 +25,16 @@ services:
       # deployment must never gain this line.
       #
       # 55432, not 5432, because a developer machine often already runs
-      # a Postgres of its own on the standard port — and the failure a
-      # clash produces is the confusing kind: the container refuses to
-      # start, or worse, the watch processes migrate the wrong database.
+      # a Postgres of its own on the standard port. A clash fails in the
+      # confusing way: the container refuses to start, or worse, the
+      # watch processes migrate the wrong database.
       - "127.0.0.1:${POSTGRES_PORT:-55432}:5432"
 
   doc-engine:
     ports:
       # DOC_ENGINE_URL for a host process. Without it the app still
-      # runs — a conversion it cannot reach falls back to download-only
-      # (TECH-010) — so a doc engine that will not start is a degraded
+      # runs. A conversion it cannot reach falls back to download-only
+      # (TECH-010), so a doc engine that will not start is a degraded
       # doc panel, not a dead dev loop.
       - "127.0.0.1:${DOC_ENGINE_PORT:-8080}:8080"
     networks:
@@ -43,8 +43,8 @@ services:
       # away from Postgres. An internal network has no route to the host
       # either, so the published port above needs a second, non-internal
       # network to arrive on. It is added here and only here: the
-      # sidecar still resolves nothing else on it, and compose.yml —
-      # what a deployment runs — is untouched.
+      # sidecar still resolves nothing else on it, and compose.yml,
+      # what a deployment runs, is untouched.
       - openlaw-doc-engine
       - openlaw-hostdev
 

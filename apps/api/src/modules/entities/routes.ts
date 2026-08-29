@@ -2,19 +2,17 @@
 
 /**
  * The Entities registry routes (ENT-001/ENT-004, #98): list and create
- * for the registry core, plus the type-picker read and the archive
- * cleanup seam. Everything here is Member+ — Administrators and Legal
- * Team Members equally, read and write — the first Member+ surface in
- * the codebase; Contributors, Business Users, and unauthenticated
- * requests get nothing (ENT-004). The list is the seam the M8
- * signing-entity picker consumes: ordered by legal name, archived rows
- * excluded unless asked for. The record surface (#99) adds the single
- * read behind the record page (archived rows answer too — restore
- * needs to see them), update for correcting any identity-card field —
- * the status only within the fixed ENT-001 enum, the type only to a
- * live one, and never on an archived record — and restore, archive's
- * recovery story. Every mutation appends to the activity log in the
- * same transaction (DD-017).
+ * for the registry core, the type-picker read, and archive. Everything
+ * here is Member+. Administrators and Legal Team Members read and write
+ * equally; Contributors, Business Users, and unauthenticated requests
+ * get nothing (ENT-004). The list is the seam the M8 signing-entity
+ * picker consumes: ordered by legal name, archived rows excluded unless
+ * asked for. The record surface (#99) adds the single read behind the
+ * record page (archived rows answer too, because restore needs to see
+ * them), update for any identity-card field (the status only within
+ * the fixed ENT-001 enum, the type only to a live one, never on an
+ * archived record), and restore. Every mutation appends to the
+ * activity log in the same transaction (DD-017).
  */
 
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
@@ -40,7 +38,7 @@ const EntityRowSchema = z.object({
   id: z.string(),
   legalName: z.string(),
   entityTypeId: z.string(),
-  /** The type's display name, joined in — the list renders it directly. */
+  /** The type's display name, joined in. The list renders it directly. */
   entityTypeName: z.string(),
   jurisdiction: z.string().nullable(),
   formedOn: z.iso.date().nullable(),
@@ -54,9 +52,9 @@ const EntityRowSchema = z.object({
   updatedAt: z.iso.datetime(),
 });
 
-/** The Member+ readable slice of an entity type — the register form's
- * picker source (GET /entity-types itself is Administrator-only per
- * SET-002, so the registry surface carries its own read). */
+/** The Member+ readable slice of an entity type, the register form's
+ * picker source. GET /entity-types itself is Administrator-only per
+ * SET-002, so the registry carries its own read. */
 const EntityTypeOptionSchema = z.object({
   id: z.string(),
   slug: z.string(),
@@ -311,7 +309,7 @@ export const entitiesRoutes: FastifyPluginAsyncZod = async (app) => {
         let typeName = currentType!.displayName;
 
         const patch: Partial<Entity> = {};
-        /** The DD-017 changed map — old and new values per corrected
+        /** The DD-017 changed map: old and new values per corrected
          * field, feeding the M9 viewer's narration. */
         const changed: Record<string, { from: unknown; to: unknown }> = {};
 
@@ -366,7 +364,7 @@ export const entitiesRoutes: FastifyPluginAsyncZod = async (app) => {
         }
 
         // The status keeps its own audit verb (surfaces branch on it,
-        // ENT-001) — it rides the same UPDATE but not the changed map.
+        // ENT-001). It rides the same UPDATE but not the changed map.
         const statusChange =
           body.status !== undefined && body.status !== target.status
             ? { from: target.status, to: body.status }

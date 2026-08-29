@@ -2,7 +2,7 @@
 
 /**
  * Erasing an external signer (CTR-013 M15/7, DD-017,
- * [#280](https://github.com/juggernog20/OpenLaw/issues/280)) — the
+ * [#280](https://github.com/juggernog20/OpenLaw/issues/280)). The
  * Administrator-only route behind a lawful-erasure request from a
  * person who is only ever a signer.
  *
@@ -10,23 +10,23 @@
  * `lib/signer-erasure.ts`. What this file adds is who may ask, what they
  * ask with, and the one refusal.
  *
- * **The request is an address**, because that is what an erasure request
+ * The request is an address, because that is what an erasure request
  * arrives as: somebody writes to the operator and gives the address the
- * invitation reached. It is not an envelope id or a contract number —
- * the person asking has neither, and the request is about them rather
+ * invitation reached. It is not an envelope id or a contract number.
+ * The person asking has neither, and the request is about them rather
  * than about one round of signature.
  *
- * **Administrator-only.** It rewrites the audit log, which is the
+ * Administrator-only. It rewrites the audit log, which is the
  * Administrator's own surface (DD-017 layer 2), and it is not a thing to
  * do on somebody's behalf without being the person accountable for it.
  *
- * **An address that belongs to a user of this install is refused.** That
+ * An address that belongs to a user of this install is refused. That
  * address is in payloads that are about them as a colleague — invited,
  * role changed, added to a team — and those have a different answer
  * (DD-013's archival). Erasing only their signer appearances would
  * half-answer a request in a way nobody could reason about afterwards.
  *
- * **An address that was never a signer's answers 200 with zeros.** The
+ * An address that was never a signer's answers 200 with zeros. The
  * request is satisfied either way: there was nothing to erase. Refusing
  * it would make the seam a way to ask whether an address is in the
  * record.

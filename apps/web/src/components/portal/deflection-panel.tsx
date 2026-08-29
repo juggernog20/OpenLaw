@@ -13,15 +13,15 @@
  * what it is handed, and draws nothing at all when handed nothing.
  *
  * **The label is what a requester reads; the stored URL is where they
- * go.** Nothing normalizes the address — the Administrator pasted it
- * from somewhere that works — and the settings pane's schemeless
- * rendering is a fact about that pane, not about this one, which shows
- * no address at all.
+ * go.** Nothing normalizes the address. The Administrator pasted it
+ * from somewhere that works. The settings pane's schemeless rendering
+ * is a fact about that pane, not about this one, which shows no address
+ * at all.
  *
  * ### Recorded normalization points (I5 deviations accepted)
  *
  * 1. I5 draws a 14px `info` glyph in the head and a 13px glyph on each
- *    row. Both render at 16px, DES-008's inline size — the ramp has no
+ *    row. Both render at 16px, DES-008's inline size. The ramp has no
  *    13 and no 14, and a panel is not the place to open one.
  * 2. I5 varies the per-row glyph (`file-text`, `circle-help`, `link`).
  *    `intake_links` holds a label, a URL, and a placement, and INT-004
@@ -41,13 +41,13 @@ export interface DeflectionLink {
 }
 
 export function DeflectionPanel({ links }: Readonly<{ links: readonly DeflectionLink[] }>) {
-  // Generated rather than written: the portal home draws one panel and
+  // Generated rather than written. The portal home draws one panel and
   // each request type's form draws another, and a hand-picked id would
   // be one edit away from naming both.
   const headingId = useId();
 
   // An instance whose Administrator has configured no links draws no
-  // panel: an empty "Before you submit…" heading deflects nobody.
+  // panel. An empty "Before you submit" heading deflects nobody.
   if (links.length === 0) return null;
 
   return (
@@ -75,7 +75,7 @@ export function DeflectionPanel({ links }: Readonly<{ links: readonly Deflection
             >
               <LinkIcon aria-hidden="true" className="size-4 shrink-0" />
               {link.label}
-              {/* The new tab, said out loud: a sighted requester sees
+              {/* The new tab, said out loud. A sighted requester sees
                   the switch happen and a screen-reader user does not. */}{" "}
               <span className="sr-only">
                 <FormattedMessage

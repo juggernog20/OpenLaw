@@ -6,24 +6,24 @@
  * One rule, asked in two places. An approver group's member list asks
  * it when an Administrator saves a template (#231); a contract's
  * approval request asks it when somebody names a colleague on a record
- * (#233). The two must answer the same, or a template would be able to
- * hold a person the record then refuses — and the Administrator would
- * find that out from a failed request rather than from the pane.
+ * (#233). The two must answer the same, or a template could hold a
+ * person the record then refuses, and the Administrator would find that
+ * out from a failed request rather than from the pane.
  *
- * The rule is short: an approver is a live **Member+** user. A
- * Contributor and a Business User never sign a contract off (DD-013),
- * and an archived person has left (SET-005), so a request addressed to
- * them reaches nobody.
+ * The rule is short: an approver is a live Member+ user. A Contributor
+ * and a Business User never sign a contract off (DD-013), and an
+ * archived person has left (SET-005), so a request addressed to them
+ * reaches nobody.
  *
- * It is application-enforced rather than a database constraint, because
- * a role change cannot be checked by one. Somebody who loses their
- * standing after being named stays on the template and on the request:
- * dropping them silently would edit the record behind the people
- * reading it.
+ * The application enforces it rather than a database constraint,
+ * because a constraint cannot check a role change. Somebody who loses
+ * their standing after being named stays on the template and on the
+ * request: dropping them silently would edit the record behind the
+ * people reading it.
  *
- * The refusal **names the person** rather than counting the offenders.
+ * The refusal names the person rather than counting the offenders.
  * Every picker that leads here offers eligible people only, so a
- * refusal means the list the caller was holding went stale — and which
+ * refusal means the list the caller was holding went stale, and which
  * row went stale is the thing they can act on.
  */
 
@@ -42,7 +42,7 @@ export interface ApproverRow {
 
 /**
  * Checks a whole set at once and answers them in the order the ids
- * arrived — so the activity entries read in the order the caller picked
+ * arrived, so the activity entries read in the order the caller picked
  * rather than in whatever order the database returned.
  *
  * `whenArchived` is the one sentence the two callers say differently: a

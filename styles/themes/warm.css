@@ -1,4 +1,4 @@
-/* OpenLaw — Warm theme.
+/* OpenLaw Warm theme.
  *
  * Brand-character theme per DES-001. Cream-and-terracotta palette that
  * differentiates OpenLaw from clinical SaaS competitors. Same geometry,
@@ -54,7 +54,7 @@
   --cta-primary: #5c7a4a;
   --cta-danger: #a05540;
 
-  /* Status — paired bg + fg */
+  /* Status, paired bg + fg */
   --status-success-bg: #e5eddc;
   --status-success-fg: #527040;
 
@@ -79,25 +79,25 @@
   --status-neutral-bg: #ede8df;
   --status-neutral-fg: #6e675a;
 
-  /* Counter badges — neutral count, and the solid alert badge the
-   * activity-bar applets carry (#47; 5.2:1, warm's red not Primer's). */
+  /* Counter badges: the neutral count, and the solid alert badge the
+   * activity-bar applets carry (#47; 5.2:1, Warm's red not Primer's). */
   --badge-count-bg: #eae5dc;
   --badge-count-fg: #5a5448;
   --badge-alert-bg: #a05540;
   --badge-alert-fg: #fbfaf7;
 
-  /* Confidentiality — terracotta-brown, not purple. See file header.
-   * Banner background is soft tan (per DES-009), not soft purple — Warm
-   * deliberately diverges from the Light/Dark purple semantics. */
+  /* Confidentiality: terracotta-brown, not purple. See the file header.
+   * The banner background is soft tan (DES-009), not soft purple. Warm
+   * diverges from the Light/Dark purple semantics on purpose. */
   --confidential-fg: #7f5d32;
   --confidential-bg: #efe3d0;
 
-  /* The Legal Only comment row's wash (DES-023) — soft tan, one step
+  /* The Legal Only comment row's wash (DES-023): soft tan, one step
    * lighter than the banner, for the reason above. */
   --legal-only-bg: #f6efe3;
 
-  /* Avatar — Warm overrides DES-018's light blue with the terracotta
-   * accent (DES-019): blue is the one hue Warm's palette refuses. */
+  /* Avatar: Warm overrides DES-018's light blue with the terracotta
+   * accent (DES-019). Blue is the one hue Warm's palette refuses. */
   --avatar-bg: #c97b5c;
   --avatar-fg: #fbfaf7;
 

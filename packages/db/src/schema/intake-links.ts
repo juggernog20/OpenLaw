@@ -2,35 +2,35 @@
 
 /**
  * The deflection links (INT-004): the ordered list behind the "Before
- * you submit…" panel, Admin-managed via Intake Settings → Deflection
- * links (ST13). A link is a label over a URL — the label reads as the
- * answer, the URL is where the answer lives — plus the placement that
- * decides who sees it.
+ * you submit..." panel, managed by the Administrator under Intake
+ * Settings, Deflection links (ST13). A link is a label over a URL. The
+ * label reads as the answer, the URL is where the answer lives. The
+ * placement decides who sees it.
  *
- * **A null request type is the portal home.** A link with no request
- * type shows on the portal home panel, so everybody sees it whatever
- * they came to ask; a link naming a request type shows on that form
- * instead. The two placements are one nullable column because they are
- * one decision, and INT-004 wrote it that way.
+ * A null request type is the portal home. A link with no request type
+ * shows on the portal home panel, so everybody sees it whatever they
+ * came to ask. A link naming a request type shows on that form instead.
+ * The two placements are one nullable column because they are one
+ * decision, and INT-004 wrote it that way.
  *
- * **A link is removed, never archived.** Nothing points at a link and
- * there is no history to keep, so the row leaves outright — which is
- * why there is no `archived_at` here and no `slug`: a link has no
- * machine identity anything else refers to.
+ * A link is removed, never archived. Nothing points at a link and there
+ * is no history to keep, so the row leaves outright. That is why there
+ * is no `archived_at` here and no `slug`: a link has no machine identity
+ * anything else refers to.
  *
- * **Deleting the request type takes its links with it (`on delete
- * cascade`).** The sibling target FKs on `request_types` demote with
- * `on delete set null`, and that is the wrong move here: a link's
- * placement is its **audience**, so setting it null would take a link
- * the Administrator put on one form and publish it to every requester
- * on the portal home. Widening an audience is not a demotion. Cascade
- * matches `request_type_fields`, the other child of `request_types` —
- * the type carries its form definition and its deflection panel alike,
+ * Deleting the request type takes its links with it (`on delete
+ * cascade`). The sibling target FKs on `request_types` demote with
+ * `on delete set null`, and that is the wrong move here. A link's
+ * placement is its audience, so setting it null would take a link the
+ * Administrator put on one form and publish it to every requester on
+ * the portal home. Widening an audience is not a demotion. Cascade
+ * matches `request_type_fields`, the other child of `request_types`.
+ * The type carries its form definition and its deflection panel alike,
  * and a hard delete is only reachable for a type nothing has used.
  *
- * The URL is stored exactly as the Administrator entered it (INT-004);
- * the API validates it as an absolute http/https address and normalizes
- * nothing, and the ST13 row renders it without its scheme.
+ * The URL is stored exactly as the Administrator entered it (INT-004).
+ * The API validates it as an absolute http/https address and normalizes
+ * nothing. The ST13 row renders it without its scheme.
  */
 
 import { index, integer, pgTable, text, timestamp } from "drizzle-orm/pg-core";
@@ -41,7 +41,7 @@ export const intakeLinks = pgTable(
   "intake_links",
   {
     id: uuidPk(),
-    /** What the panel reads as — "NDA FAQ — when you don't need legal". */
+    /** What the panel reads as, for example "NDA FAQ — when you don't need legal". */
     label: text("label").notNull(),
     /** The absolute http/https address, as entered. */
     url: text("url").notNull(),
@@ -54,7 +54,7 @@ export const intakeLinks = pgTable(
     displayOrder: integer("display_order").notNull(),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     // Application code owns every write here, so $onUpdate keeps the
-    // audit trail honest for a writer that forgets to set it.
+    // audit trail honest for a writer that forgets to set it (org.ts note).
     updatedAt: timestamp("updated_at", { withTimezone: true })
       .notNull()
       .defaultNow()
