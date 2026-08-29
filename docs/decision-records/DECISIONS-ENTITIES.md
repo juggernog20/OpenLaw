@@ -59,6 +59,10 @@ _None — queue cleared 2026-08-06 (ENT-001 through ENT-007)._
 - **Rationale** — The registry's value is shared truth; per-entity ACL is bookkeeping a small team won't maintain.
 - **Consequences** — `is_confidential` on entities; confidential-grant mechanism reuses the DD-014 pattern.
 
+### Addendum (2026-08-29, M27/1, [#573](https://github.com/juggernog20/OpenLaw/issues/573)) — `entity_grants` is the grant list
+
+ENT-004's grant list is the `entity_grants` relation: one row names one user granted access to one confidential Entity. Administrators remain implicitly entitled and do not need rows in this relation; `entity_grants` carries only the explicit named-user exceptions shown in the Confidential grant list dialog.
+
 ## ENT-005 — Statutory documents: entity-owned documents, no seeded folders
 
 - **Status** — Accepted
