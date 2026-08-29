@@ -2165,7 +2165,8 @@ describe("the contract record's section tabs (DES-032)", () => {
     expect(router.state.location.pathname).toBe("/contracts/42/fields");
     expect(screen.queryByLabelText("Title")).not.toBeInTheDocument();
 
-    await user.click(screen.getByRole("link", { name: "Documents" }));
+    const sections = within(await screen.findByRole("navigation", { name: "Contract sections" }));
+    await user.click(sections.getByRole("link", { name: "Documents" }));
     expect(await screen.findByRole("region", { name: "Documents" })).toBeInTheDocument();
     expect(router.state.location.pathname).toBe("/contracts/42/documents");
     expect(screen.queryByRole("region", { name: "Fields" })).not.toBeInTheDocument();
@@ -7589,7 +7590,8 @@ describe("filing documents into folders (M13/3, DES-033)", () => {
 
     await user.click(screen.getByRole("link", { name: "Overview" }));
     await screen.findByLabelText("Title");
-    await user.click(screen.getByRole("link", { name: "Documents" }));
+    const sections = within(await screen.findByRole("navigation", { name: "Contract sections" }));
+    await user.click(sections.getByRole("link", { name: "Documents" }));
     // Still reading, and the list it was opened from is back beside it.
     expect(await documentsSection()).toBeVisible();
 
@@ -7858,7 +7860,8 @@ describe("filing documents into folders (M13/3, DES-033)", () => {
 
     await user.click(screen.getByRole("link", { name: "Overview" }));
     await screen.findByLabelText("Title");
-    await user.click(screen.getByRole("link", { name: "Documents" }));
+    const sections = within(await screen.findByRole("navigation", { name: "Contract sections" }));
+    await user.click(sections.getByRole("link", { name: "Documents" }));
     const remounted = await documentsSection();
 
     held.arm();

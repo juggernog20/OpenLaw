@@ -1,0 +1,51 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
+/**
+ * Shared role floor and reach composition for cross-record Document reads.
+ *
+ * Access is inherited from the owning record (DOC-008) and narrowed by the
+ * Document's own audience (DD-014). Search and the repository call this so
+ * the two can never disagree about what a viewer reaches.
+ */
+import {
+  and,
+  contracts,
+  documents,
+  isNotNull,
+  isNull,
+  matters,
+  or,
+  type Executor,
+  type SQL,
+} from "@openlaw/db";
+import { requireRole, type AuthenticatedUser } from "../auth/guards.js";
+import { contractTeamScope, documentAudienceScope } from "./contract-access.js";
+import { matterTeamScope } from "./matter-access.js";
+
+/** Documents are readable by Member+ and by Contributors through reached records. */
+export const requireDocumentReader = requireRole(
+  "administrator",
+  "legal_team_member",
+  "contributor",
+);
+
+/**
+ * The complete Document repository gate, shared by search and the flat list.
+ *
+ * The Document's own audience comes first. The owning-record arm follows,
+ * and each arm excludes Archiving only. A Matter after Closing and a Contract
+ * after Ending (CTR-019, MTR-008) remain ordinary reached records.
+ */
+export function documentRepositoryScope(db: Executor, user: AuthenticatedUser): SQL | undefined {
+  return and(
+    documentAudienceScope(db, user),
+    or(
+      and(
+        isNotNull(documents.contractId),
+        isNull(contracts.archivedAt),
+        contractTeamScope(db, user),
+      ),
+      and(isNotNull(documents.matterId), isNull(matters.archivedAt), matterTeamScope(db, user)),
+    ),
+  );
+}

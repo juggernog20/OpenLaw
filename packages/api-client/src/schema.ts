@@ -2457,6 +2457,40 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/v1/documents/options": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** The records, Counterparties, and current-Version uploaders carried by at least one live Document the viewer can reach. */
+    get: operations["listDocumentOptions"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/documents": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Every Document on a reached, live Contract or Matter, ordered by the current Version's upload time. Archived Documents join live ones with includeArchived=true. Closed Matters and ended Contracts remain in the list. Confidential Documents and records are omitted before paging. */
+    get: operations["listDocuments"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/v1/contracts/{number}/documents": {
     parameters: {
       query?: never;
@@ -14751,6 +14785,148 @@ export interface operations {
       };
     };
   };
+  listDocumentOptions: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            counterparties: {
+              id: string;
+              name: string;
+            }[];
+            uploaders: {
+              id: string;
+              displayName: string;
+              image: string | null;
+              archived: boolean;
+            }[];
+            records: {
+              reference: string;
+              /** @enum {string} */
+              kind: "contract" | "matter";
+              number: number;
+              title: string;
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  listDocuments: {
+    parameters: {
+      query?: {
+        owner?: "contract" | "matter";
+        record?: string;
+        folder?: string;
+        counterparty?: string;
+        uploader?: string;
+        format?: "pdf" | "word" | "powerpoint" | "image" | "email" | "other";
+        kind?:
+          | "draft_ours"
+          | "draft_theirs"
+          | "redline_theirs"
+          | "redline_ours"
+          | "executed"
+          | "amendment"
+          | "generated_redline";
+        uploadedFrom?: string;
+        uploadedTo?: string;
+        includeArchived?: "true" | "false";
+        sort?: "title" | "owner" | "kind" | "format" | "size" | "uploader" | "uploaded";
+        dir?: "asc" | "desc";
+        cursor?: string;
+        limit?: number;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            documents: {
+              id: string;
+              title: string;
+              description: string | null;
+              isConfidential: boolean;
+              archivedAt: string | null;
+              owner: {
+                /** @enum {string} */
+                kind: "contract" | "matter";
+                number: number;
+                title: string;
+              };
+              folder: {
+                id: string;
+                name: string;
+              } | null;
+              currentVersion: {
+                id: string;
+                versionNumber: number;
+                /** @enum {string} */
+                kind:
+                  | "draft_ours"
+                  | "draft_theirs"
+                  | "redline_theirs"
+                  | "redline_ours"
+                  | "executed"
+                  | "amendment"
+                  | "generated_redline";
+                originalFilename: string;
+                mimeType: string;
+                byteSize: number;
+                uploadedBy: {
+                  id: string;
+                  displayName: string;
+                  image: string | null;
+                  archived: boolean;
+                };
+                /** Format: date-time */
+                createdAt: string;
+              };
+              versionCount: number;
+            }[];
+            nextCursor: string | null;
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
   listContractDocuments: {
     parameters: {
       query?: {
@@ -18454,7 +18630,7 @@ export interface operations {
   listSavedViews: {
     parameters: {
       query: {
-        surface: "contracts" | "matters";
+        surface: "contracts" | "matters" | "documents";
       };
       header?: never;
       path?: never;
@@ -18472,7 +18648,7 @@ export interface operations {
             views: {
               id: string;
               /** @enum {string} */
-              surface: "contracts" | "matters";
+              surface: "contracts" | "matters" | "documents";
               name: string;
               config: {
                 columns: {
@@ -18516,7 +18692,7 @@ export interface operations {
       content: {
         "application/json": {
           /** @enum {string} */
-          surface: "contracts" | "matters";
+          surface: "contracts" | "matters" | "documents";
           name: string;
           config: {
             columns: {
@@ -18548,7 +18724,7 @@ export interface operations {
             views: {
               id: string;
               /** @enum {string} */
-              surface: "contracts" | "matters";
+              surface: "contracts" | "matters" | "documents";
               name: string;
               config: {
                 columns: {
@@ -18602,7 +18778,7 @@ export interface operations {
             views: {
               id: string;
               /** @enum {string} */
-              surface: "contracts" | "matters";
+              surface: "contracts" | "matters" | "documents";
               name: string;
               config: {
                 columns: {
@@ -18678,7 +18854,7 @@ export interface operations {
             views: {
               id: string;
               /** @enum {string} */
-              surface: "contracts" | "matters";
+              surface: "contracts" | "matters" | "documents";
               name: string;
               config: {
                 columns: {

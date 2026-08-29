@@ -2336,6 +2336,87 @@
   "documents.executed": {
     "defaultMessage": "Executed"
   },
+  "documents.filter.active": {
+    "defaultMessage": "Active filters"
+  },
+  "documents.filter.chip": {
+    "defaultMessage": "{name}: {value}"
+  },
+  "documents.filter.clearAll": {
+    "defaultMessage": "Clear all"
+  },
+  "documents.filter.clearAll.label": {
+    "defaultMessage": "Clear all filters"
+  },
+  "documents.filter.counterparty": {
+    "defaultMessage": "Counterparty"
+  },
+  "documents.filter.counterparty.all": {
+    "defaultMessage": "All counterparties"
+  },
+  "documents.filter.folder": {
+    "defaultMessage": "Folder"
+  },
+  "documents.filter.folder.all": {
+    "defaultMessage": "All folders"
+  },
+  "documents.filter.folder.root": {
+    "defaultMessage": "Record root"
+  },
+  "documents.filter.format": {
+    "defaultMessage": "Format"
+  },
+  "documents.filter.format.all": {
+    "defaultMessage": "All formats"
+  },
+  "documents.filter.kind": {
+    "defaultMessage": "Kind"
+  },
+  "documents.filter.kind.all": {
+    "defaultMessage": "All kinds"
+  },
+  "documents.filter.matchedNone": {
+    "defaultMessage": "The active filters matched no documents."
+  },
+  "documents.filter.owner": {
+    "defaultMessage": "Owner"
+  },
+  "documents.filter.owner.all": {
+    "defaultMessage": "All"
+  },
+  "documents.filter.owner.contracts": {
+    "defaultMessage": "Contracts"
+  },
+  "documents.filter.owner.matters": {
+    "defaultMessage": "Matters"
+  },
+  "documents.filter.record": {
+    "defaultMessage": "Record"
+  },
+  "documents.filter.record.matches": {
+    "defaultMessage": "Record matches"
+  },
+  "documents.filter.record.placeholder": {
+    "defaultMessage": "Reference or title"
+  },
+  "documents.filter.remove": {
+    "defaultMessage": "Remove {name} filter"
+  },
+  "documents.filter.uploadedFrom": {
+    "defaultMessage": "Uploaded from"
+  },
+  "documents.filter.uploadedTo": {
+    "defaultMessage": "Uploaded to"
+  },
+  "documents.filter.uploader": {
+    "defaultMessage": "Uploader"
+  },
+  "documents.filter.uploader.all": {
+    "defaultMessage": "All uploaders"
+  },
+  "documents.filter.uploader.archived": {
+    "defaultMessage": "{name} (archived)"
+  },
   "documents.folder.action.delete": {
     "defaultMessage": "Delete"
   },
@@ -2405,8 +2486,86 @@
   "documents.folder.toggle": {
     "defaultMessage": "{open, select, true {Collapse} other {Expand}} {name}"
   },
+  "documents.format.email": {
+    "defaultMessage": "Email"
+  },
+  "documents.format.image": {
+    "defaultMessage": "Image"
+  },
+  "documents.format.other": {
+    "defaultMessage": "Other"
+  },
+  "documents.format.pdf": {
+    "defaultMessage": "PDF"
+  },
+  "documents.format.powerpoint": {
+    "defaultMessage": "PowerPoint"
+  },
+  "documents.format.word": {
+    "defaultMessage": "Word"
+  },
   "documents.kind": {
     "defaultMessage": "{kind, select, draft_ours {Draft · ours} draft_theirs {Draft · theirs} redline_theirs {Redline · theirs} redline_ours {Redline · ours} executed {Executed} amendment {Amendment} generated_redline {Generated redline} other {Unknown}}"
+  },
+  "documents.list.column.actions": {
+    "defaultMessage": "Actions"
+  },
+  "documents.list.column.format": {
+    "defaultMessage": "Format"
+  },
+  "documents.list.column.kind": {
+    "defaultMessage": "Kind"
+  },
+  "documents.list.column.owner": {
+    "defaultMessage": "Owning record"
+  },
+  "documents.list.column.size": {
+    "defaultMessage": "Size"
+  },
+  "documents.list.column.title": {
+    "defaultMessage": "Title"
+  },
+  "documents.list.column.uploaded": {
+    "defaultMessage": "Uploaded"
+  },
+  "documents.list.column.uploader": {
+    "defaultMessage": "Uploader"
+  },
+  "documents.list.column.versions": {
+    "defaultMessage": "Versions"
+  },
+  "documents.list.countShown": {
+    "defaultMessage": "{count, plural, one {# document shown} other {# documents shown}}"
+  },
+  "documents.list.empty.body": {
+    "defaultMessage": "Upload to a record and it appears here."
+  },
+  "documents.list.empty.title": {
+    "defaultMessage": "Paper lives on Contracts and Matters."
+  },
+  "documents.list.filteredEmpty.body": {
+    "defaultMessage": "Clear filters to return to the whole list."
+  },
+  "documents.list.filteredEmpty.clear": {
+    "defaultMessage": "Clear filters"
+  },
+  "documents.list.filteredEmpty.title": {
+    "defaultMessage": "No documents match these filters."
+  },
+  "documents.list.more": {
+    "defaultMessage": "Show more"
+  },
+  "documents.list.moreAdded": {
+    "defaultMessage": "{count, plural, one {# more Document} other {# more Documents}}. {total} shown."
+  },
+  "documents.list.moreError": {
+    "defaultMessage": "The next Documents could not be read. Try again."
+  },
+  "documents.list.owner": {
+    "defaultMessage": "{reference} · {title}"
+  },
+  "documents.listError": {
+    "defaultMessage": "The Document list could not be read. Try again."
   },
   "documents.more": {
     "defaultMessage": "Show more"
@@ -2434,6 +2593,21 @@
   },
   "documents.primary": {
     "defaultMessage": "Primary"
+  },
+  "documents.recent.open": {
+    "defaultMessage": "Open recent Document {title}"
+  },
+  "documents.recent.region": {
+    "defaultMessage": "Recent documents"
+  },
+  "documents.recent.title": {
+    "defaultMessage": "Recent"
+  },
+  "documents.restoreError": {
+    "defaultMessage": "{title} could not be restored."
+  },
+  "documents.restoreRow": {
+    "defaultMessage": "Restore {title}"
   },
   "documents.section": {
     "defaultMessage": "Documents"
@@ -3352,6 +3526,9 @@
   },
   "nav.contracts": {
     "defaultMessage": "Contracts"
+  },
+  "nav.documents": {
+    "defaultMessage": "Documents"
   },
   "nav.entities": {
     "defaultMessage": "Entities"

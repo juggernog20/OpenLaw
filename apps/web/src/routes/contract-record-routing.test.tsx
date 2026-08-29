@@ -295,7 +295,8 @@ describe("the amendment vehicle (CTR-007 §2)", () => {
     // The request was answered when the composer opened, so walking out
     // of the section and back draws it again and opens nothing.
     await userEvent.click(screen.getByRole("link", { name: "Overview" }));
-    await userEvent.click(screen.getByRole("link", { name: "Documents" }));
+    const sections = within(await screen.findByRole("navigation", { name: "Contract sections" }));
+    await userEvent.click(sections.getByRole("link", { name: "Documents" }));
     await screen.findByRole("region", { name: "Documents" });
     expect(screen.queryByRole("heading", { name: "Add version" })).not.toBeInTheDocument();
   });

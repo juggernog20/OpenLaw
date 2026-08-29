@@ -12,6 +12,7 @@
 
 import {
   BriefcaseBusiness,
+  FileText,
   House,
   Inbox,
   Landmark,
@@ -73,6 +74,13 @@ export const destinations: Destination[] = [
     path: "/contracts",
     icon: Signature,
     label: defineMessage({ id: "nav.contracts", defaultMessage: "Contracts" }),
+    roles: CONTRACT_READER_ROLES,
+  },
+  {
+    id: "documents",
+    path: "/documents",
+    icon: FileText,
+    label: defineMessage({ id: "nav.documents", defaultMessage: "Documents" }),
     roles: CONTRACT_READER_ROLES,
   },
   {

@@ -275,6 +275,16 @@ export function stubApi(state: ApiState) {
     if (call.url.pathname === "/api/v1/search" && call.method === "GET") {
       return json(200, { results: [], nextCursor: null });
     }
+    // M26's flat repository. A fresh install has no Documents, and only
+    // the destination's own suite replaces this answer through `extra`.
+    if (call.url.pathname === "/api/v1/documents" && call.method === "GET") {
+      return json(200, { documents: [], nextCursor: null });
+    }
+    // M26's viewer-scoped filter candidates. Empty by default so route
+    // tests outside the destination do not have to name repository data.
+    if (call.url.pathname === "/api/v1/documents/options" && call.method === "GET") {
+      return json(200, { counterparties: [], uploaders: [], records: [] });
+    }
     // The portal's own bell, which every portal render reads on mount
     // and on every navigation (NOT-001, M20/9). Zero and empty by
     // default, exactly as the staff bell's two reads above; only the

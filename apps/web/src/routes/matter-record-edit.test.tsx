@@ -247,7 +247,11 @@ describe("the editable matter record", () => {
     });
     renderAt("/matters/12/documents");
     expect(await screen.findByRole("heading", { name: "Documents" })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Documents" })).toHaveAttribute("aria-current", "page");
+    const sections = within(await screen.findByRole("navigation", { name: "Matter sections" }));
+    expect(sections.getByRole("link", { name: "Documents" })).toHaveAttribute(
+      "aria-current",
+      "page",
+    );
   });
 
   it("opens the version named by the Document search landing params", async () => {

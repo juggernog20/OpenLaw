@@ -44,6 +44,7 @@
  */
 
 import type { ConvertibleFormat } from "./doc-engine/engine.js";
+import { sql, type AnyPgColumn, type SQL } from "@openlaw/db";
 
 /**
  * DOC-004's families, plus the catch-all.
@@ -231,6 +232,29 @@ function routeOf(mimeType: string, filename: string): Route {
  */
 export function renderFamilyOf(mimeType: string, filename: string): RenderFamily {
   return routeOf(mimeType, filename).family;
+}
+
+/**
+ * The same routing table as a database expression for repository filters
+ * and sorts. MIME arms come first, so a declared family keeps the same
+ * precedence over the filename that {@link renderFamilyOf} applies.
+ */
+export function renderFamilySql(mimeType: AnyPgColumn, filename: AnyPgColumn): SQL {
+  // The same whitespace set String.prototype.trim strips in {@link mediaType}:
+  // btrim alone strips spaces only, so a tab before the `;` would split
+  // the two classifications.
+  const declared = sql`lower(btrim(split_part(${mimeType}, ';', 1), ' ' || chr(9) || chr(10) || chr(13)))`;
+  const basename = sql`regexp_replace(${filename}, '^.*[/\\\\]', '')`;
+  const extension = sql`lower(coalesce(substring(${basename} from '^.+\\.([^.]+)$'), ''))`;
+  const arms = [
+    ...Object.entries(BY_MIME_TYPE).map(
+      ([key, route]) => sql`when ${declared} = ${key} then ${route.family}`,
+    ),
+    ...Object.entries(BY_EXTENSION).map(
+      ([key, route]) => sql`when ${extension} = ${key} then ${route.family}`,
+    ),
+  ];
+  return sql`case ${sql.join(arms, sql` `)} else 'other' end`;
 }
 
 /**
