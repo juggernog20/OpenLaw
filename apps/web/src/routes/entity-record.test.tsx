@@ -150,7 +150,10 @@ describe("the /entities/:entityId record page", () => {
     const { router } = renderAt("/entities/e1");
     expect(await screen.findByRole("navigation", { name: "Entity sections" })).toBeInTheDocument();
 
-    for (const tab of ["ownership", "obligations", "documents", "contracts", "matters"]) {
+    await router.navigate("/entities/e1/ownership");
+    expect(await screen.findByRole("heading", { name: "Owners" })).toBeInTheDocument();
+
+    for (const tab of ["obligations", "documents", "contracts", "matters"]) {
       await router.navigate(`/entities/e1/${tab}`);
       expect(
         await screen.findByRole("heading", { name: tab[0]!.toUpperCase() + tab.slice(1) }),

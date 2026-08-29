@@ -3256,6 +3256,54 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/v1/entities/chart": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["getEntityChart"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/entities/{id}/holdings": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["listEntityHoldings"];
+    put?: never;
+    post: operations["createEntityHolding"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/entities/{id}/holdings/{relatedEntityId}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    delete: operations["deleteEntityHolding"];
+    options?: never;
+    head?: never;
+    patch: operations["updateEntityHolding"];
+    trace?: never;
+  };
   "/api/v1/entities/{id}/officers": {
     parameters: {
       query?: never;
@@ -18623,6 +18671,273 @@ export interface operations {
               archivedAt: string | null;
               inUseCount: number;
             };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  getEntityChart: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            nodes: {
+              id: string;
+              legalName: string;
+              type: string;
+              jurisdiction: string | null;
+              /** @enum {string} */
+              status: "active" | "dormant" | "dissolved" | "divested";
+              primaryOwnerId: string | null;
+            }[];
+            edges: {
+              ownerEntityId: string;
+              ownedEntityId: string;
+              ownershipPercent: number;
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  listEntityHoldings: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            owners: {
+              owner: {
+                id: string;
+                legalName: string;
+              };
+              owned: {
+                id: string;
+                legalName: string;
+              };
+              ownershipPercent: number;
+              /** Format: date-time */
+              createdAt: string;
+              /** Format: date-time */
+              updatedAt: string;
+            }[];
+            owned: {
+              owner: {
+                id: string;
+                legalName: string;
+              };
+              owned: {
+                id: string;
+                legalName: string;
+              };
+              ownershipPercent: number;
+              /** Format: date-time */
+              createdAt: string;
+              /** Format: date-time */
+              updatedAt: string;
+            }[];
+            warnings: {
+              /** @enum {string} */
+              code: "ownership-over-100";
+              ownedEntityId: string;
+              legalName: string;
+              totalPercent: number;
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  createEntityHolding: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          /** @enum {string} */
+          direction: "owner" | "owned";
+          relatedEntityId: string;
+          ownershipPercent: number;
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            holding: {
+              owner: {
+                id: string;
+                legalName: string;
+              };
+              owned: {
+                id: string;
+                legalName: string;
+              };
+              ownershipPercent: number;
+              /** Format: date-time */
+              createdAt: string;
+              /** Format: date-time */
+              updatedAt: string;
+            };
+            warnings: {
+              /** @enum {string} */
+              code: "ownership-over-100";
+              ownedEntityId: string;
+              legalName: string;
+              totalPercent: number;
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  deleteEntityHolding: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+        relatedEntityId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  updateEntityHolding: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+        relatedEntityId: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          ownershipPercent: number;
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            holding: {
+              owner: {
+                id: string;
+                legalName: string;
+              };
+              owned: {
+                id: string;
+                legalName: string;
+              };
+              ownershipPercent: number;
+              /** Format: date-time */
+              createdAt: string;
+              /** Format: date-time */
+              updatedAt: string;
+            };
+            warnings: {
+              /** @enum {string} */
+              code: "ownership-over-100";
+              ownedEntityId: string;
+              legalName: string;
+              totalPercent: number;
+            }[];
           };
         };
       };

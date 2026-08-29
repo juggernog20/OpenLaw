@@ -48,6 +48,60 @@ test.describe("accessibility floor", () => {
     await reportAxeViolations(page, testInfo, "documents");
   });
 
+  test("Entity chart: axe-clean chart region", async ({ page, request }, testInfo) => {
+    await ensureAdminExists(request);
+    await signInAs(page, ADMIN.email, ADMIN.password, ADMIN.displayName);
+    const options = await page.request.get("/api/v1/entities/types");
+    expect(options.status(), await options.text()).toBe(200);
+    const corporationId = z
+      .object({
+        entityTypes: z.array(z.object({ id: z.string(), slug: z.string() })),
+      })
+      .parse(await options.json())
+      .entityTypes.find((row) => row.slug === "corporation")?.id;
+    expect(corporationId).toBeDefined();
+    const suffix = Date.now();
+    const createdIds: string[] = [];
+    try {
+      for (const [legalName, jurisdiction] of [
+        [`Axe Delaware Parent ${suffix}`, "Delaware"],
+        [`Axe UK Subsidiary ${suffix}`, "England & Wales"],
+      ] as const) {
+        const created = await page.request.post("/api/v1/entities", {
+          data: { legalName, jurisdiction, entityTypeId: corporationId },
+        });
+        expect(created.status(), await created.text()).toBe(201);
+        createdIds.push(
+          z.object({ entity: z.object({ id: z.string() }) }).parse(await created.json()).entity.id,
+        );
+      }
+      const held = await page.request.post(`/api/v1/entities/${createdIds[0]}/holdings`, {
+        data: {
+          direction: "owned",
+          relatedEntityId: createdIds[1],
+          ownershipPercent: 100,
+        },
+      });
+      expect(held.status(), await held.text()).toBe(201);
+
+      await page.goto("/entities?view=chart");
+      const chart = page.getByRole("region", { name: "Entity ownership chart" });
+      await expect(chart).toBeVisible();
+      await expect(
+        chart.getByRole("link", { name: `Open Axe UK Subsidiary ${suffix}` }),
+      ).toBeVisible();
+      const violations = await reportAxeViolations(page, testInfo, "entity-chart", {
+        include: '[aria-label="Entity ownership chart"]',
+      });
+      expect(violations).toEqual([]);
+    } finally {
+      for (const id of createdIds.reverse()) {
+        const archived = await page.request.post(`/api/v1/entities/${id}/archive`);
+        expect(archived.status(), await archived.text()).toBe(200);
+      }
+    }
+  });
+
   test("search results box and results page: axe scans", async ({ page, request }, testInfo) => {
     await ensureAdminExists(request);
     await signInAs(page, ADMIN.email, ADMIN.password, ADMIN.displayName);

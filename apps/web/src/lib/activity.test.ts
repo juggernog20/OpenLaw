@@ -379,6 +379,25 @@ const SAMPLE_PAYLOADS: { [A in ActivityAction]: ActivityPayloadMap[A] } = {
     jurisdiction: "Delaware",
     registrationNumber: "DE-44",
   },
+  "entity_holding.created": {
+    legalName: "Helix Labs GmbH",
+    ownerName: "Helix Holdings Inc.",
+    ownedName: "Helix Labs GmbH",
+    ownershipPercent: 60,
+  },
+  "entity_holding.updated": {
+    legalName: "Helix Labs GmbH",
+    ownerName: "Helix Holdings Inc.",
+    ownedName: "Helix Labs GmbH",
+    from: 60,
+    to: 75,
+  },
+  "entity_holding.deleted": {
+    legalName: "Helix Labs GmbH",
+    ownerName: "Helix Holdings Inc.",
+    ownedName: "Helix Labs GmbH",
+    ownershipPercent: 75,
+  },
 
   // Contract record
   "contract.created_from_request": {

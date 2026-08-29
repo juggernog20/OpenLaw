@@ -282,6 +282,9 @@ export const ADVISORY_LOCK = {
   /** Held across MTR-015 hierarchy walks and canonical-pair writes.
    * Taken as `pg_advisory_xact_lock` inside the writing transaction. */
   matterRelations: 4101006,
+  /** Held across an ENT-003 Holding check-and-write. The graph-wide
+   * lock makes the cycle walk and insert one transaction-wide act. */
+  entityHoldings: 4101007,
 } as const;
 
 /**

@@ -24,6 +24,7 @@ import { useActivityApplet } from "../components/activity/activity-applet";
 import type { FieldReference } from "../components/custom-field-control";
 import { EntityFieldsCard } from "../components/entities/entity-fields-card";
 import { OfficersCard } from "../components/entities/officers-card";
+import { OwnershipCard } from "../components/entities/ownership-card";
 import { RegistrationsCard } from "../components/entities/registrations-card";
 import { ShareCapitalCard, type CapitalKey } from "../components/entities/share-capital-card";
 import { PageTitle } from "../components/page-title";
@@ -45,13 +46,14 @@ export async function entityRecordLoader({ params }: LoaderFunctionArgs) {
   if (params.tab && !RECORD_TABS.includes(params.tab as (typeof RECORD_TABS)[number])) {
     return redirect(`/entities/${id}`);
   }
-  const [record, types, options, officers, registrations, registry] = await Promise.all([
+  const [record, types, options, officers, registrations, registry, holdings] = await Promise.all([
     api.GET("/api/v1/entities/{id}", { params: { path: { id } } }),
     api.GET("/api/v1/entities/types"),
     api.GET("/api/v1/entities/officer-roles"),
     api.GET("/api/v1/entities/{id}/officers", { params: { path: { id } } }),
     api.GET("/api/v1/entities/{id}/registrations", { params: { path: { id } } }),
     api.GET("/api/v1/entities"),
+    api.GET("/api/v1/entities/{id}/holdings", { params: { path: { id } } }),
   ]);
   if (
     !record.data ||
@@ -59,7 +61,8 @@ export async function entityRecordLoader({ params }: LoaderFunctionArgs) {
     !options.data ||
     !officers.data ||
     !registrations.data ||
-    !registry.data
+    !registry.data ||
+    !holdings.data
   ) {
     throw new Error("The entity could not be read.");
   }
@@ -75,6 +78,7 @@ export async function entityRecordLoader({ params }: LoaderFunctionArgs) {
     officers: officers.data.officers,
     registrations: registrations.data.registrations,
     entities: registry.data.entities,
+    holdings: holdings.data,
   };
 }
 
@@ -100,6 +104,12 @@ export function EntityRecordPage() {
   const [archiveStatus, setArchiveStatus] = useState<FieldStatus>("idle");
   const [archiveError, setArchiveError] = useState<string>();
   const frozen = saved.archivedAt !== null;
+  const majorityOwner = [...loaded.holdings.owners].sort(
+    (a, b) =>
+      b.ownershipPercent - a.ownershipPercent ||
+      a.owner.legalName.localeCompare(b.owner.legalName, undefined, { sensitivity: "base" }) ||
+      a.owner.id.localeCompare(b.owner.id),
+  )[0]?.owner;
 
   const people: FieldReference[] = mergeReferences(
     loaded.users.map((row) => ({ id: row.id, label: row.displayName })),
@@ -197,6 +207,17 @@ export function EntityRecordPage() {
                 <FormattedMessage id="entities.title" defaultMessage="Entities" />
               </Link>
               <ChevronRight size={16} aria-hidden="true" className="text-subtle" />
+              {majorityOwner ? (
+                <>
+                  <Link
+                    to={`/entities/${majorityOwner.id}`}
+                    className="truncate text-link hover:underline"
+                  >
+                    {majorityOwner.legalName}
+                  </Link>
+                  <ChevronRight size={16} aria-hidden="true" className="text-subtle" />
+                </>
+              ) : null}
               <Building2 size={16} aria-hidden="true" className="text-muted" />
               <h1 id="page-title" className="truncate text-md font-semibold">
                 {saved.legalName}
@@ -419,6 +440,13 @@ export function EntityRecordPage() {
                 frozen={frozen}
               />
             </>
+          ) : loaded.tab === "ownership" ? (
+            <OwnershipCard
+              entity={saved}
+              candidates={loaded.entities}
+              initial={loaded.holdings}
+              frozen={frozen}
+            />
           ) : (
             <section className="rounded-card border border-border-default bg-raised p-6">
               <h2 className="text-lg font-semibold">{TAB_LABELS[loaded.tab]}</h2>

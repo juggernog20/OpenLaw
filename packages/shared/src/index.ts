@@ -229,6 +229,9 @@ export const MATTER_RELATION_EXISTS_PROBLEM_TYPE = "urn:openlaw:problem:matter-r
 export const MATTER_PARENT_CYCLE_PROBLEM_TYPE = "urn:openlaw:problem:matter-parent-cycle";
 export const MATTER_SELF_RELATION_PROBLEM_TYPE = "urn:openlaw:problem:matter-self-relation";
 
+/** ENT-003's stable refusal for a Holding that would close an ownership loop. */
+export const ENTITY_HOLDING_CYCLE_PROBLEM_TYPE = "urn:openlaw:problem:entity-holding-cycle";
+
 /**
  * The two bounds one key date is held to (CTR-009).
  *

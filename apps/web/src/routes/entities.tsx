@@ -16,9 +16,9 @@
  */
 
 import { useState } from "react";
-import { Link, redirect, useLoaderData } from "react-router";
+import { Link, redirect, useLoaderData, type LoaderFunctionArgs } from "react-router";
 import { FormattedMessage, useIntl } from "react-intl";
-import { Building2, Landmark, Plus } from "lucide-react";
+import { Building2, Landmark, List, Network, Plus } from "lucide-react";
 import { api } from "../lib/api";
 import {
   ENTITY_STATUSES,
@@ -33,6 +33,7 @@ import { problem as readProblem } from "../lib/problem";
 import { isMemberPlus } from "../lib/roles";
 import { requireUser, useSignOut } from "../lib/session";
 import { AppShell } from "../components/shell/app-shell";
+import { EntityChart } from "../components/entities/entity-chart";
 import { PageSubBar } from "../components/shell/page-subbar";
 import { PageTitle } from "../components/page-title";
 import { Button } from "../components/ui/button";
@@ -41,17 +42,66 @@ import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
 import { Switch } from "../components/ui/switch";
 
-export async function entitiesLoader() {
+export async function entitiesLoader({ request }: LoaderFunctionArgs) {
   const user = await requireUser();
   // ENT-004: Contributors and Business Users get nothing — not a
   // disabled surface, no surface. The API's 403 stands behind this.
   if (!isMemberPlus(user.role)) return redirect("/");
-  const [list, types] = await Promise.all([
+  const chartView = new URL(request.url).searchParams.get("view") === "chart";
+  const [list, types, chart] = await Promise.all([
     api.GET("/api/v1/entities"),
     api.GET("/api/v1/entities/types"),
+    chartView ? api.GET("/api/v1/entities/chart") : Promise.resolve(undefined),
   ]);
   if (!list.data || !types.data) throw new Error("The registry could not be read.");
-  return { user, entities: list.data.entities, entityTypes: types.data.entityTypes };
+  if (chartView && !chart?.data) throw new Error("The Entity chart could not be read.");
+  return {
+    user,
+    entities: list.data.entities,
+    entityTypes: types.data.entityTypes,
+    view: chartView ? ("chart" as const) : ("list" as const),
+    chart: chart?.data,
+  };
+}
+
+/** List or chart: two links, the current one marked `aria-current`. */
+function ViewSwitch({ view }: Readonly<{ view: "list" | "chart" }>) {
+  const intl = useIntl();
+  const options = [
+    [
+      "list",
+      "/entities",
+      List,
+      intl.formatMessage({ id: "entities.view.list", defaultMessage: "List" }),
+    ],
+    [
+      "chart",
+      "/entities?view=chart",
+      Network,
+      intl.formatMessage({ id: "entities.view.chart", defaultMessage: "Chart" }),
+    ],
+  ] as const;
+  return (
+    <nav
+      aria-label={intl.formatMessage({
+        id: "entities.view.label",
+        defaultMessage: "Registry view",
+      })}
+      className="mr-auto inline-flex h-8 rounded-button border border-border-default bg-raised p-0.5"
+    >
+      {options.map(([key, to, Icon, label]) => (
+        <Link
+          key={key}
+          to={to}
+          aria-current={view === key ? "page" : undefined}
+          className="inline-flex items-center gap-1.5 rounded-chip px-2.5 text-sm aria-[current=page]:bg-accent aria-[current=page]:font-medium"
+        >
+          <Icon size={14} aria-hidden="true" />
+          {label}
+        </Link>
+      ))}
+    </nav>
+  );
 }
 
 /** The list's resting order — the API's ordering, mirrored for rows
@@ -64,7 +114,7 @@ function byLegalName(a: EntityRow, b: EntityRow): number {
 }
 
 export function EntitiesPage() {
-  const { user, entities, entityTypes } = useLoaderData<typeof entitiesLoader>();
+  const { user, entities, entityTypes, view, chart } = useLoaderData<typeof entitiesLoader>();
   const intl = useIntl();
   const [rows, setRows] = useState<EntityRow[]>(entities);
   const [registerOpen, setRegisterOpen] = useState(false);
@@ -148,32 +198,42 @@ export function EntitiesPage() {
       }
     >
       <PageTitle title={intl.formatMessage({ id: "entities.title", defaultMessage: "Entities" })} />
-      <div className="flex flex-col gap-3">
-        <div className="flex items-center justify-end gap-2">
-          {listError && (
-            <p role="alert" className="text-xs text-status-danger-fg">
-              {listError}
-            </p>
-          )}
-          <Label htmlFor="entities-show-archived">
-            <FormattedMessage id="entities.showArchived" defaultMessage="Show archived" />
-          </Label>
-          <Switch
-            id="entities-show-archived"
-            checked={showArchived}
-            onCheckedChange={(next) => void toggleArchived(next)}
-          />
+      {view === "chart" && chart ? (
+        <div className="flex min-h-0 flex-1 flex-col gap-3">
+          <div className="flex items-center justify-end gap-2">
+            <ViewSwitch view={view} />
+          </div>
+          <EntityChart chart={chart} />
         </div>
-        {rows.length === 0 ? (
-          <EmptyRegistry onRegister={() => setRegisterOpen(true)} />
-        ) : (
-          <RegistryTable
-            rows={rows}
-            showArchived={showArchived}
-            onRestore={(row) => void restoreRow(row)}
-          />
-        )}
-      </div>
+      ) : (
+        <div className="flex flex-col gap-3">
+          <div className="flex items-center justify-end gap-2">
+            <ViewSwitch view={view} />
+            {listError && (
+              <p role="alert" className="text-xs text-status-danger-fg">
+                {listError}
+              </p>
+            )}
+            <Label htmlFor="entities-show-archived">
+              <FormattedMessage id="entities.showArchived" defaultMessage="Show archived" />
+            </Label>
+            <Switch
+              id="entities-show-archived"
+              checked={showArchived}
+              onCheckedChange={(next) => void toggleArchived(next)}
+            />
+          </div>
+          {rows.length === 0 ? (
+            <EmptyRegistry onRegister={() => setRegisterOpen(true)} />
+          ) : (
+            <RegistryTable
+              rows={rows}
+              showArchived={showArchived}
+              onRestore={(row) => void restoreRow(row)}
+            />
+          )}
+        </div>
+      )}
       {registerOpen && (
         <RegisterEntityDialog
           entityTypes={entityTypes}
