@@ -33,6 +33,12 @@ import * as documentRenditionSchema from "./schema/document-rendition.js";
 import * as documentTextSchema from "./schema/document-text.js";
 import * as documentsSchema from "./schema/documents.js";
 import * as entitiesSchema from "./schema/entities.js";
+import * as entityGrantsSchema from "./schema/entity-grants.js";
+import * as entityHoldingsSchema from "./schema/entity-holdings.js";
+import * as entityObligationsSchema from "./schema/entity-obligations.js";
+import * as entityOfficersSchema from "./schema/entity-officers.js";
+import * as entityRegistrationsSchema from "./schema/entity-registrations.js";
+import * as entityTypeFieldsSchema from "./schema/entity-type-fields.js";
 import * as entityTypesSchema from "./schema/entity-types.js";
 import * as fieldsSchema from "./schema/fields.js";
 import * as intakeLinksSchema from "./schema/intake-links.js";
@@ -47,6 +53,7 @@ import * as matterStatusesSchema from "./schema/matter-statuses.js";
 import * as mattersSchema from "./schema/matters.js";
 import * as matterTeamSchema from "./schema/matter-team.js";
 import * as notificationsSchema from "./schema/notifications.js";
+import * as officerRolesSchema from "./schema/officer-roles.js";
 import * as orgSchema from "./schema/org.js";
 import * as requestAttachmentsSchema from "./schema/request-attachments.js";
 import * as requestTypeFieldsSchema from "./schema/request-type-fields.js";
@@ -77,6 +84,12 @@ export * from "./schema/document-rendition.js";
 export * from "./schema/document-text.js";
 export * from "./schema/documents.js";
 export * from "./schema/entities.js";
+export * from "./schema/entity-grants.js";
+export * from "./schema/entity-holdings.js";
+export * from "./schema/entity-obligations.js";
+export * from "./schema/entity-officers.js";
+export * from "./schema/entity-registrations.js";
+export * from "./schema/entity-type-fields.js";
 export * from "./schema/entity-types.js";
 export * from "./schema/fields.js";
 export * from "./schema/intake-links.js";
@@ -91,6 +104,7 @@ export * from "./schema/matter-statuses.js";
 export * from "./schema/matters.js";
 export * from "./schema/matter-team.js";
 export * from "./schema/notifications.js";
+export * from "./schema/officer-roles.js";
 export * from "./schema/org.js";
 export * from "./schema/request-attachments.js";
 export * from "./schema/request-type-fields.js";
@@ -123,6 +137,12 @@ export const schema = {
   ...documentTextSchema,
   ...documentsSchema,
   ...entitiesSchema,
+  ...entityGrantsSchema,
+  ...entityHoldingsSchema,
+  ...entityObligationsSchema,
+  ...entityOfficersSchema,
+  ...entityRegistrationsSchema,
+  ...entityTypeFieldsSchema,
   ...entityTypesSchema,
   ...fieldsSchema,
   ...intakeLinksSchema,
@@ -137,6 +157,7 @@ export const schema = {
   ...mattersSchema,
   ...matterTeamSchema,
   ...notificationsSchema,
+  ...officerRolesSchema,
   ...orgSchema,
   ...requestAttachmentsSchema,
   ...requestTypeFieldsSchema,

@@ -46,8 +46,10 @@ import {
 } from "./routes/settings-approver-groups";
 import {
   SettingsContractFieldsPage,
+  SettingsEntityFieldsPage,
   SettingsMatterFieldsPage,
   settingsContractFieldsLoader,
+  settingsEntityFieldsLoader,
   settingsMatterFieldsLoader,
 } from "./routes/settings-contract-fields";
 import {
@@ -72,6 +74,14 @@ import {
   settingsEntitiesIndexLoader,
   settingsEntityTypesLoader,
 } from "./routes/settings-entity-types";
+import {
+  SettingsEntityTypeEditorPage,
+  settingsEntityTypeEditorLoader,
+} from "./routes/settings-entity-type-editor";
+import {
+  SettingsOfficerRolesPage,
+  settingsOfficerRolesLoader,
+} from "./routes/settings-officer-roles";
 import {
   SettingsMatterTypeEditorPage,
   settingsMatterTypeEditorLoader,
@@ -401,11 +411,28 @@ export const routes: RouteObject[] = [
       },
       { path: "entities", loader: settingsEntitiesIndexLoader, element: <></> },
       {
-        // #97: no per-type editor screen — entity-scoped fields render
-        // on every entity (ENT-001), so nothing attaches per type.
         path: "entities/types",
         loader: settingsEntityTypesLoader,
         element: <SettingsEntityTypesPage />,
+      },
+      {
+        path: "entities/types/:typeId",
+        loader: settingsEntityTypeEditorLoader,
+        element: (
+          <KeyedByParam name="typeId">
+            <SettingsEntityTypeEditorPage />
+          </KeyedByParam>
+        ),
+      },
+      {
+        path: "entities/officer-roles",
+        loader: settingsOfficerRolesLoader,
+        element: <SettingsOfficerRolesPage />,
+      },
+      {
+        path: "entities/fields",
+        loader: settingsEntityFieldsLoader,
+        element: <SettingsEntityFieldsPage />,
       },
       {
         // #322: Organization · Notifications — the NOT-004 reminder

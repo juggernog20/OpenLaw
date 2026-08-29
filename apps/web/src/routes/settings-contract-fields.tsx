@@ -24,6 +24,7 @@ import { api } from "../lib/api";
 import { problem as readProblem } from "../lib/problem";
 import { requireUser } from "../lib/session";
 import { ContractsSettingsTabs } from "../components/contracts-settings-tabs";
+import { EntitiesSettingsTabs } from "../components/entities-settings-tabs";
 import { MattersSettingsTabs } from "../components/matters-settings-tabs";
 import { ListEditor } from "../components/list-editor";
 import { PageTitle } from "../components/page-title";
@@ -53,6 +54,10 @@ export function settingsMatterFieldsLoader() {
   return settingsFieldsLoader("matter");
 }
 
+export function settingsEntityFieldsLoader() {
+  return settingsFieldsLoader("entity");
+}
+
 /** The nine CTR-016 field types, immutable after creation. */
 const FIELD_TYPES = [
   "text",
@@ -70,9 +75,8 @@ type FieldType = (typeof FIELD_TYPES)[number];
 /** The select types — the only ones that carry an options list. */
 const SELECT_TYPES = new Set<FieldType>(["single_select", "multi_select"]);
 
-/** The scopes this pane's picker offers (CTR-016): matter and entity
- * join with their milestones. */
-type ModuleScope = "contract" | "matter";
+/** Each settings mount offers its module scope plus global fields. */
+type ModuleScope = "contract" | "matter" | "entity";
 type Scope = ModuleScope | "global";
 
 const TAGS = ["business", "legal"] as const;
@@ -111,7 +115,7 @@ function scopeLabel(intl: IntlShape, scope: Scope): string {
     {
       id: "settings.contractFields.scopeLabel",
       defaultMessage:
-        "{scope, select, contract {Contract} matter {Matter} global {Global} other {Unknown}}",
+        "{scope, select, contract {Contract} matter {Matter} entity {Entity} global {Global} other {Unknown}}",
     },
     { scope },
   );
@@ -813,7 +817,7 @@ function SettingsFieldsPage({
           headerCaption={
             <FormattedMessage
               id="settings.contractFields.scopeCaption"
-              defaultMessage="{module, select, contract {Contract} matter {Matter} other {Module}} and global fields"
+              defaultMessage="{module, select, contract {Contract} matter {Matter} entity {Entity} other {Module}} and global fields"
               values={{ module }}
             />
           }
@@ -952,5 +956,12 @@ export function SettingsMatterFieldsPage() {
   const { fields } = useLoaderData<typeof settingsMatterFieldsLoader>();
   return (
     <SettingsFieldsPage initialFields={fields} module="matter" tabs={<MattersSettingsTabs />} />
+  );
+}
+
+export function SettingsEntityFieldsPage() {
+  const { fields } = useLoaderData<typeof settingsEntityFieldsLoader>();
+  return (
+    <SettingsFieldsPage initialFields={fields} module="entity" tabs={<EntitiesSettingsTabs />} />
   );
 }

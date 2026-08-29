@@ -32,6 +32,7 @@ import { sql } from "drizzle-orm";
 import { check, index, pgTable, text, timestamp, uniqueIndex } from "drizzle-orm/pg-core";
 import type { AnyPgColumn } from "drizzle-orm/pg-core";
 import { contracts } from "./contracts.js";
+import { entities } from "./entities.js";
 import { uuidPk } from "./helpers.js";
 import { matters } from "./matters.js";
 
@@ -54,6 +55,8 @@ export const documentFolders = pgTable(
     /** M22's matter-owned folder arm. Writers keep exactly one owner on
      * a folder, matching the documents filed beneath it. */
     matterId: text("matter_id").references(() => matters.id),
+    /** M27's Entity-owned statutory Document folder arm (ENT-005). */
+    entityId: text("entity_id").references(() => entities.id),
     /**
      * The folder this one sits inside, or NULL at the record root
      * (DOC-011).
@@ -86,6 +89,7 @@ export const documentFolders = pgTable(
     // one read rather than one read per level.
     index("document_folders_contract_idx").on(table.contractId),
     index("document_folders_matter_idx").on(table.matterId),
+    index("document_folders_entity_idx").on(table.entityId),
     // Sibling names are unique within their parent, and the comparison
     // is case-insensitive — the same reading the sort already takes
     // (DES-033). Two siblings that sort as equal and read as the same
@@ -102,6 +106,9 @@ export const documentFolders = pgTable(
     uniqueIndex("document_folders_matter_root_name_idx")
       .on(table.matterId, sql`lower(${table.name})`)
       .where(sql`${table.parentId} is null and ${table.matterId} is not null`),
+    uniqueIndex("document_folders_entity_root_name_idx")
+      .on(table.entityId, sql`lower(${table.name})`)
+      .where(sql`${table.parentId} is null and ${table.entityId} is not null`),
     uniqueIndex("document_folders_sibling_name_idx")
       .on(table.parentId, sql`lower(${table.name})`)
       .where(sql`${table.parentId} is not null`),
@@ -124,7 +131,7 @@ export const documentFolders = pgTable(
     check("document_folders_parent_check", sql`${table.parentId} <> ${table.id}`),
     check(
       "document_folders_owner_check",
-      sql`num_nonnulls(${table.matterId}, ${table.contractId}) = 1`,
+      sql`num_nonnulls(${table.matterId}, ${table.contractId}, ${table.entityId}) = 1`,
     ),
   ],
 );

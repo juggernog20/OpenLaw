@@ -8,8 +8,8 @@
  * are seeded by the migration that creates the table; the `other` row
  * is system-protected in application code — no archive, no hard delete —
  * so a non-null fallback type always exists. Unlike the other type
- * tables there is no per-type field-attachment join: entity-scoped
- * fields render on every entity (ENT-001, M27). The nullable columns
+ * tables, Entity types carry Fields through `entity_type_fields`, the
+ * third mount of the shared attachment machinery (TECH-023). The nullable columns
  * keep the shared `taxonomyColumns` semantics: `description` NULL = no
  * description (the routes normalize an empty string to NULL; with no
  * per-type editor screen it is API-writable only for now), and

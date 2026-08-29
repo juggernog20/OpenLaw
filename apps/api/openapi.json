@@ -39676,6 +39676,1299 @@
         }
       }
     },
+    "/api/v1/entity-types/{id}/fields": {
+      "get": {
+        "operationId": "listEntityTypeFields",
+        "summary": "One entity type's attached fields in per-type order — the type editor's Attached fields card",
+        "tags": ["entity-types"],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "attachedFields": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "fieldId": {
+                            "type": "string"
+                          },
+                          "slug": {
+                            "type": "string"
+                          },
+                          "displayName": {
+                            "type": "string"
+                          },
+                          "fieldType": {
+                            "type": "string",
+                            "enum": [
+                              "text",
+                              "long_text",
+                              "number",
+                              "date",
+                              "boolean",
+                              "single_select",
+                              "multi_select",
+                              "user",
+                              "entity"
+                            ]
+                          },
+                          "moduleScope": {
+                            "type": "string",
+                            "enum": ["entity", "global"]
+                          },
+                          "displayOrder": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          },
+                          "isRequired": {
+                            "type": "boolean"
+                          }
+                        },
+                        "required": [
+                          "fieldId",
+                          "slug",
+                          "displayName",
+                          "fieldType",
+                          "moduleScope",
+                          "displayOrder",
+                          "isRequired"
+                        ],
+                        "additionalProperties": false
+                      }
+                    }
+                  },
+                  "required": ["attachedFields"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "operationId": "attachEntityTypeField",
+        "summary": "Attach a catalog field to a entity type: entity-scoped and global fields (ENT-001), appended to the per-type order, optional from the start unless isRequired says otherwise",
+        "tags": ["entity-types"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "fieldId": {
+                    "type": "string"
+                  },
+                  "isRequired": {
+                    "type": "boolean"
+                  }
+                },
+                "required": ["fieldId"]
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "attachedField": {
+                      "type": "object",
+                      "properties": {
+                        "fieldId": {
+                          "type": "string"
+                        },
+                        "slug": {
+                          "type": "string"
+                        },
+                        "displayName": {
+                          "type": "string"
+                        },
+                        "fieldType": {
+                          "type": "string",
+                          "enum": [
+                            "text",
+                            "long_text",
+                            "number",
+                            "date",
+                            "boolean",
+                            "single_select",
+                            "multi_select",
+                            "user",
+                            "entity"
+                          ]
+                        },
+                        "moduleScope": {
+                          "type": "string",
+                          "enum": ["entity", "global"]
+                        },
+                        "displayOrder": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "isRequired": {
+                          "type": "boolean"
+                        }
+                      },
+                      "required": [
+                        "fieldId",
+                        "slug",
+                        "displayName",
+                        "fieldType",
+                        "moduleScope",
+                        "displayOrder",
+                        "isRequired"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": ["attachedField"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/entity-types/{id}/fields/{fieldId}": {
+      "patch": {
+        "operationId": "setEntityTypeFieldRequired",
+        "summary": "Set an attachment's required flag: per attachment, so a field can be required for one type and optional elsewhere; hard enforcement arrives with the record milestone (M27 record fields)",
+        "tags": ["entity-types"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "isRequired": {
+                    "type": "boolean"
+                  }
+                },
+                "required": ["isRequired"]
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "fieldId",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "attachedField": {
+                      "type": "object",
+                      "properties": {
+                        "fieldId": {
+                          "type": "string"
+                        },
+                        "slug": {
+                          "type": "string"
+                        },
+                        "displayName": {
+                          "type": "string"
+                        },
+                        "fieldType": {
+                          "type": "string",
+                          "enum": [
+                            "text",
+                            "long_text",
+                            "number",
+                            "date",
+                            "boolean",
+                            "single_select",
+                            "multi_select",
+                            "user",
+                            "entity"
+                          ]
+                        },
+                        "moduleScope": {
+                          "type": "string",
+                          "enum": ["entity", "global"]
+                        },
+                        "displayOrder": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "isRequired": {
+                          "type": "boolean"
+                        }
+                      },
+                      "required": [
+                        "fieldId",
+                        "slug",
+                        "displayName",
+                        "fieldType",
+                        "moduleScope",
+                        "displayOrder",
+                        "isRequired"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": ["attachedField"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "operationId": "detachEntityTypeField",
+        "summary": "Detach a field from a entity type: the join row goes, the catalog definition and stored values stay (MTR-014)",
+        "tags": ["entity-types"],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "fieldId",
+            "required": true
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Default Response"
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/entity-types/{id}/fields/order": {
+      "put": {
+        "operationId": "reorderEntityTypeFields",
+        "summary": "Apply a full permutation of one type's attached fields (SET-003 immediate apply); per-type orders renumber from 1",
+        "tags": ["entity-types"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "fieldIds": {
+                    "minItems": 1,
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "required": ["fieldIds"]
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "attachedFields": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "fieldId": {
+                            "type": "string"
+                          },
+                          "slug": {
+                            "type": "string"
+                          },
+                          "displayName": {
+                            "type": "string"
+                          },
+                          "fieldType": {
+                            "type": "string",
+                            "enum": [
+                              "text",
+                              "long_text",
+                              "number",
+                              "date",
+                              "boolean",
+                              "single_select",
+                              "multi_select",
+                              "user",
+                              "entity"
+                            ]
+                          },
+                          "moduleScope": {
+                            "type": "string",
+                            "enum": ["entity", "global"]
+                          },
+                          "displayOrder": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          },
+                          "isRequired": {
+                            "type": "boolean"
+                          }
+                        },
+                        "required": [
+                          "fieldId",
+                          "slug",
+                          "displayName",
+                          "fieldType",
+                          "moduleScope",
+                          "displayOrder",
+                          "isRequired"
+                        ],
+                        "additionalProperties": false
+                      }
+                    }
+                  },
+                  "required": ["attachedFields"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/officer-roles": {
+      "get": {
+        "operationId": "listOfficerRoles",
+        "summary": "The officer role taxonomy in display order (ENT-001); archived rows only with includeArchived=true",
+        "tags": ["officer-roles"],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "enum": ["true", "false"]
+            },
+            "in": "query",
+            "name": "includeArchived",
+            "required": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "officerRoles": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "slug": {
+                            "type": "string"
+                          },
+                          "displayName": {
+                            "type": "string"
+                          },
+                          "description": {
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "displayOrder": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          },
+                          "isSystemDefault": {
+                            "type": "boolean"
+                          },
+                          "archivedAt": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "format": "date-time",
+                                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "inUseCount": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "slug",
+                          "displayName",
+                          "description",
+                          "displayOrder",
+                          "isSystemDefault",
+                          "archivedAt",
+                          "inUseCount"
+                        ],
+                        "additionalProperties": false
+                      }
+                    }
+                  },
+                  "required": ["officerRoles"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "operationId": "createOfficerRole",
+        "summary": "Add an officer role: the slug is derived here, once, and is immutable after creation; the row appends to the display order",
+        "tags": ["officer-roles"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "displayName": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 100
+                  }
+                },
+                "required": ["displayName"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "officerRole": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "slug": {
+                          "type": "string"
+                        },
+                        "displayName": {
+                          "type": "string"
+                        },
+                        "description": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "displayOrder": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "isSystemDefault": {
+                          "type": "boolean"
+                        },
+                        "archivedAt": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "format": "date-time",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "inUseCount": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "slug",
+                        "displayName",
+                        "description",
+                        "displayOrder",
+                        "isSystemDefault",
+                        "archivedAt",
+                        "inUseCount"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": ["officerRole"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/officer-roles/{id}": {
+      "get": {
+        "operationId": "getOfficerRole",
+        "summary": "One officer role — the read behind the type editor",
+        "tags": ["officer-roles"],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "officerRole": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "slug": {
+                          "type": "string"
+                        },
+                        "displayName": {
+                          "type": "string"
+                        },
+                        "description": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "displayOrder": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "isSystemDefault": {
+                          "type": "boolean"
+                        },
+                        "archivedAt": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "format": "date-time",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "inUseCount": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "slug",
+                        "displayName",
+                        "description",
+                        "displayOrder",
+                        "isSystemDefault",
+                        "archivedAt",
+                        "inUseCount"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": ["officerRole"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "operationId": "updateOfficerRole",
+        "summary": "Rename an officer role's display name (DES-017 in-place rename) or edit its description; the slug never changes, and even `other` may rename",
+        "tags": ["officer-roles"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "displayName": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 100
+                  },
+                  "description": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "maxLength": 500
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                },
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "officerRole": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "slug": {
+                          "type": "string"
+                        },
+                        "displayName": {
+                          "type": "string"
+                        },
+                        "description": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "displayOrder": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "isSystemDefault": {
+                          "type": "boolean"
+                        },
+                        "archivedAt": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "format": "date-time",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "inUseCount": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "slug",
+                        "displayName",
+                        "description",
+                        "displayOrder",
+                        "isSystemDefault",
+                        "archivedAt",
+                        "inUseCount"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": ["officerRole"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "operationId": "deleteOfficerRole",
+        "summary": "Hard-delete an officer role; `other` refuses (ENT-001), and so does a type still used by officers",
+        "tags": ["officer-roles"],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Default Response"
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/officer-roles/order": {
+      "put": {
+        "operationId": "reorderOfficerRoles",
+        "summary": "Apply a full permutation of the live rows (SET-003 immediate apply); display orders renumber from 1, archived rows keep theirs",
+        "tags": ["officer-roles"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "ids": {
+                    "minItems": 1,
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "required": ["ids"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "officerRoles": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "slug": {
+                            "type": "string"
+                          },
+                          "displayName": {
+                            "type": "string"
+                          },
+                          "description": {
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "displayOrder": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          },
+                          "isSystemDefault": {
+                            "type": "boolean"
+                          },
+                          "archivedAt": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "format": "date-time",
+                                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "inUseCount": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "slug",
+                          "displayName",
+                          "description",
+                          "displayOrder",
+                          "isSystemDefault",
+                          "archivedAt",
+                          "inUseCount"
+                        ],
+                        "additionalProperties": false
+                      }
+                    }
+                  },
+                  "required": ["officerRoles"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/officer-roles/{id}/archive": {
+      "post": {
+        "operationId": "archiveOfficerRole",
+        "summary": "Archive an officer role (SET-003 guarded): a type still used by officers requires a reassignment target, which takes them; nothing is deleted; `other` refuses",
+        "tags": ["officer-roles"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "reassignToId": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "officerRole": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "slug": {
+                          "type": "string"
+                        },
+                        "displayName": {
+                          "type": "string"
+                        },
+                        "description": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "displayOrder": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "isSystemDefault": {
+                          "type": "boolean"
+                        },
+                        "archivedAt": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "format": "date-time",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "inUseCount": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "slug",
+                        "displayName",
+                        "description",
+                        "displayOrder",
+                        "isSystemDefault",
+                        "archivedAt",
+                        "inUseCount"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": ["officerRole"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/officer-roles/{id}/restore": {
+      "post": {
+        "operationId": "restoreOfficerRole",
+        "summary": "Restore an archived officer role (SET-003's recovery story) to the end of the display order",
+        "tags": ["officer-roles"],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "officerRole": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "slug": {
+                          "type": "string"
+                        },
+                        "displayName": {
+                          "type": "string"
+                        },
+                        "description": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "displayOrder": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "isSystemDefault": {
+                          "type": "boolean"
+                        },
+                        "archivedAt": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "format": "date-time",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "inUseCount": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "slug",
+                        "displayName",
+                        "description",
+                        "displayOrder",
+                        "isSystemDefault",
+                        "archivedAt",
+                        "inUseCount"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": ["officerRole"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/entities": {
       "get": {
         "operationId": "listEntities",
@@ -40082,6 +41375,58 @@
                     }
                   },
                   "required": ["entityTypes"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/entities/officer-roles": {
+      "get": {
+        "operationId": "listOfficerRoleOptions",
+        "summary": "The live officer roles in display order, for Member+ Entity forms; the /officer-roles settings taxonomy stays Administrator-only",
+        "tags": ["entities"],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "officerRoles": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "slug": {
+                            "type": "string"
+                          },
+                          "displayName": {
+                            "type": "string"
+                          }
+                        },
+                        "required": ["id", "slug", "displayName"],
+                        "additionalProperties": false
+                      }
+                    }
+                  },
+                  "required": ["officerRoles"],
                   "additionalProperties": false
                 }
               }
@@ -41095,7 +42440,7 @@
                           },
                           "moduleScope": {
                             "type": "string",
-                            "enum": ["contract", "matter", "global"]
+                            "enum": ["contract", "matter", "entity", "global"]
                           },
                           "fieldType": {
                             "type": "string",
@@ -41213,7 +42558,7 @@
                   },
                   "moduleScope": {
                     "type": "string",
-                    "enum": ["contract", "matter", "global"]
+                    "enum": ["contract", "matter", "entity", "global"]
                   },
                   "fieldType": {
                     "type": "string",
@@ -41285,7 +42630,7 @@
                         },
                         "moduleScope": {
                           "type": "string",
-                          "enum": ["contract", "matter", "global"]
+                          "enum": ["contract", "matter", "entity", "global"]
                         },
                         "fieldType": {
                           "type": "string",
@@ -41482,7 +42827,7 @@
                         },
                         "moduleScope": {
                           "type": "string",
-                          "enum": ["contract", "matter", "global"]
+                          "enum": ["contract", "matter", "entity", "global"]
                         },
                         "fieldType": {
                           "type": "string",
@@ -41592,7 +42937,7 @@
                 "properties": {
                   "moduleScope": {
                     "type": "string",
-                    "enum": ["contract", "matter", "global"]
+                    "enum": ["contract", "matter", "entity", "global"]
                   }
                 },
                 "required": ["moduleScope"]
@@ -41642,7 +42987,7 @@
                         },
                         "moduleScope": {
                           "type": "string",
-                          "enum": ["contract", "matter", "global"]
+                          "enum": ["contract", "matter", "entity", "global"]
                         },
                         "fieldType": {
                           "type": "string",
@@ -41785,7 +43130,7 @@
                         },
                         "moduleScope": {
                           "type": "string",
-                          "enum": ["contract", "matter", "global"]
+                          "enum": ["contract", "matter", "entity", "global"]
                         },
                         "fieldType": {
                           "type": "string",
@@ -41928,7 +43273,7 @@
                         },
                         "moduleScope": {
                           "type": "string",
-                          "enum": ["contract", "matter", "global"]
+                          "enum": ["contract", "matter", "entity", "global"]
                         },
                         "fieldType": {
                           "type": "string",

@@ -5,10 +5,10 @@
  * TaxonomyTypesPane machinery — this file owns the ENT-001 vocabulary
  * and the API adapter over the entity-types routes; the behavior lives
  * in the shared component, which is the point: the Entities pane is
- * configuration, not a copy of the Matters one. There is no per-row
- * editor screen — entity-scoped fields render on every entity (ENT-001),
- * so nothing attaches per type. The loader is the client half of
- * SET-002's gate; the API's 403 is the real refusal.
+ * configuration, not a copy of the Matters one. M27 opens the shared
+ * type editor so Entity-scoped and global Fields attach per type. The
+ * loader is the client half of SET-002's gate; the API's 403 is the
+ * real refusal.
  */
 
 import { redirect, useLoaderData } from "react-router";
@@ -98,6 +98,7 @@ const MESSAGES = defineMessages({
     defaultMessage: "The type could not be archived.",
   },
   archiveSubmit: { id: "settings.entityTypes.archiveSubmit", defaultMessage: "Archive type" },
+  edit: { id: "settings.entityTypes.edit", defaultMessage: "Edit {name}" },
 });
 
 /** The shared pane's API seam over the entity-types routes. */
@@ -151,6 +152,10 @@ export function SettingsEntityTypesPage() {
       protectedRow={{ slug: "other", label: MESSAGES.locked }}
       api={PANE_API}
       messages={MESSAGES}
+      editor={{
+        path: (row) => `/settings/entities/types/${row.id}`,
+        label: MESSAGES.edit,
+      }}
     />
   );
 }

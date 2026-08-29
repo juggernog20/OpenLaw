@@ -1175,12 +1175,6 @@
   "contractMatter.refresh.error": {
     "defaultMessage": "The linked Contracts could not be refreshed."
   },
-  "contractMatter.restrictedContract": {
-    "defaultMessage": "Restricted contract"
-  },
-  "contractMatter.restrictedMatter": {
-    "defaultMessage": "Restricted matter"
-  },
   "contractMatter.search": {
     "defaultMessage": "Search by number or title"
   },
@@ -4338,13 +4332,13 @@
     "defaultMessage": "Restore {name}"
   },
   "settings.contractFields.scopeCaption": {
-    "defaultMessage": "{module, select, contract {Contract} matter {Matter} other {Module}} and global fields"
+    "defaultMessage": "{module, select, contract {Contract} matter {Matter} entity {Entity} other {Module}} and global fields"
   },
   "settings.contractFields.scopeColumn": {
     "defaultMessage": "Scope"
   },
   "settings.contractFields.scopeLabel": {
-    "defaultMessage": "{scope, select, contract {Contract} matter {Matter} global {Global} other {Unknown}}"
+    "defaultMessage": "{scope, select, contract {Contract} matter {Matter} entity {Entity} global {Global} other {Unknown}}"
   },
   "settings.contractFields.scopePrefix": {
     "defaultMessage": "Scope:"
@@ -4691,6 +4685,12 @@
   "settings.eSignature.webhookUrl.hint": {
     "defaultMessage": "Paste this into a DocuSign Connect configuration so envelope status reaches this install."
   },
+  "settings.entities.tab.fields": {
+    "defaultMessage": "Fields"
+  },
+  "settings.entities.tab.officerRoles": {
+    "defaultMessage": "Officer roles"
+  },
   "settings.entities.tab.types": {
     "defaultMessage": "Types"
   },
@@ -4699,6 +4699,66 @@
   },
   "settings.entities.title": {
     "defaultMessage": "Entities"
+  },
+  "settings.entityTypeEditor.allAttached": {
+    "defaultMessage": "Every eligible field is attached."
+  },
+  "settings.entityTypeEditor.allTypes": {
+    "defaultMessage": "All types"
+  },
+  "settings.entityTypeEditor.attach": {
+    "defaultMessage": "Attach field"
+  },
+  "settings.entityTypeEditor.attached": {
+    "defaultMessage": "{name} attached."
+  },
+  "settings.entityTypeEditor.attachedFields": {
+    "defaultMessage": "Attached fields"
+  },
+  "settings.entityTypeEditor.description": {
+    "defaultMessage": "Description"
+  },
+  "settings.entityTypeEditor.detach": {
+    "defaultMessage": "Detach {name}"
+  },
+  "settings.entityTypeEditor.detached": {
+    "defaultMessage": "{name} detached."
+  },
+  "settings.entityTypeEditor.displayName": {
+    "defaultMessage": "Display name"
+  },
+  "settings.entityTypeEditor.empty": {
+    "defaultMessage": "No fields are attached to this type."
+  },
+  "settings.entityTypeEditor.fieldColumn": {
+    "defaultMessage": "Field"
+  },
+  "settings.entityTypeEditor.globalCaption": {
+    "defaultMessage": "{type} · global"
+  },
+  "settings.entityTypeEditor.help": {
+    "defaultMessage": "Drag to reorder. Required fields are enforced at creation and re-type; detaching a field keeps stored values."
+  },
+  "settings.entityTypeEditor.inUse": {
+    "defaultMessage": "{count, plural, one {# entity uses this type.} other {# entities use this type.}}"
+  },
+  "settings.entityTypeEditor.moved": {
+    "defaultMessage": "{name} moved to position {position} of {total}."
+  },
+  "settings.entityTypeEditor.reorder": {
+    "defaultMessage": "Reorder {name}, position {position} of {total}. Use the arrow keys to move it."
+  },
+  "settings.entityTypeEditor.requiredColumn": {
+    "defaultMessage": "Required"
+  },
+  "settings.entityTypeEditor.requiredFor": {
+    "defaultMessage": "{name} required"
+  },
+  "settings.entityTypeEditor.slug": {
+    "defaultMessage": "Slug"
+  },
+  "settings.entityTypeEditor.slugNote": {
+    "defaultMessage": "Slug is immutable — it keys reporting and the API."
   },
   "settings.entityTypes.add": {
     "defaultMessage": "Add type"
@@ -4726,6 +4786,9 @@
   },
   "settings.entityTypes.count": {
     "defaultMessage": "{count, plural, one {# type} other {# types}}"
+  },
+  "settings.entityTypes.edit": {
+    "defaultMessage": "Edit {name}"
   },
   "settings.entityTypes.help": {
     "defaultMessage": "Drag to reorder. Archiving a type in use asks for a replacement; Other can't be archived."
@@ -5401,6 +5464,69 @@
   },
   "settings.notifications.title": {
     "defaultMessage": "Notification preferences"
+  },
+  "settings.officerRoles.add": {
+    "defaultMessage": "Add role"
+  },
+  "settings.officerRoles.addName": {
+    "defaultMessage": "New role name"
+  },
+  "settings.officerRoles.archive": {
+    "defaultMessage": "Archive {name}"
+  },
+  "settings.officerRoles.archiveError": {
+    "defaultMessage": "The role could not be archived."
+  },
+  "settings.officerRoles.archiveSubmit": {
+    "defaultMessage": "Archive role"
+  },
+  "settings.officerRoles.archiveTitle": {
+    "defaultMessage": "Archive {name}"
+  },
+  "settings.officerRoles.archiveWarning": {
+    "defaultMessage": "{count, plural, =0 {{name} is not used by any officers — it can be archived without reassignment.} one {{name} is used by # officer. Pick a replacement role — that officer moves to it when the role is archived.} other {{name} is used by # officers. Pick a replacement role — those officers move to it when the role is archived.}}"
+  },
+  "settings.officerRoles.auditNote": {
+    "defaultMessage": "The change applies immediately and is recorded in the audit log."
+  },
+  "settings.officerRoles.count": {
+    "defaultMessage": "{count, plural, one {# role} other {# roles}}"
+  },
+  "settings.officerRoles.help": {
+    "defaultMessage": "Drag to reorder. Archiving a role in use asks for a replacement; Other can't be archived."
+  },
+  "settings.officerRoles.inUse": {
+    "defaultMessage": "{count, plural, one {# officer} other {# officers}}"
+  },
+  "settings.officerRoles.locked": {
+    "defaultMessage": "{name} is system-protected and can't be archived"
+  },
+  "settings.officerRoles.moved": {
+    "defaultMessage": "{name} moved to position {position} of {total}."
+  },
+  "settings.officerRoles.noCandidates": {
+    "defaultMessage": "No other active role can take its officers. Add or restore another role first."
+  },
+  "settings.officerRoles.pageTitle": {
+    "defaultMessage": "Officer roles"
+  },
+  "settings.officerRoles.reassignLabel": {
+    "defaultMessage": "Reassign {count, plural, =0 {officers} one {# officer} other {# officers}} to"
+  },
+  "settings.officerRoles.reassignNone": {
+    "defaultMessage": "No reassignment"
+  },
+  "settings.officerRoles.renameLabel": {
+    "defaultMessage": "Rename {name}"
+  },
+  "settings.officerRoles.reorder": {
+    "defaultMessage": "Reorder {name}, position {position} of {total}. Use the arrow keys to move it."
+  },
+  "settings.officerRoles.restore": {
+    "defaultMessage": "Restore {name}"
+  },
+  "settings.officerRoles.title": {
+    "defaultMessage": "Officer roles"
   },
   "settings.profile.changePassword": {
     "defaultMessage": "Change password"

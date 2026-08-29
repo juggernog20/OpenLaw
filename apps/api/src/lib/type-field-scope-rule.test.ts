@@ -22,7 +22,7 @@
  */
 
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { eq, fields, matterTypeFields, matterTypes } from "@openlaw/db";
+import { eq, matterTypeFields, matterTypes } from "@openlaw/db";
 import { buildApp } from "../app.js";
 import { testDeps } from "../testing/deps.js";
 import {
@@ -108,7 +108,7 @@ const setTargeted = async (typeId: string, targeted: boolean) => {
 };
 
 /** Defines a catalog field through the Fields pane's own create route. */
-const createField = async (displayName: string, moduleScope: "contract" | "global") => {
+const createField = async (displayName: string, moduleScope: "contract" | "entity" | "global") => {
   const res = await app.inject({
     method: "POST",
     url: "/api/v1/fields",
@@ -177,22 +177,11 @@ describe("a rule that is a function of the type row", () => {
     const targeted = await addProbeType("Speaking probe");
     const untargeted = await addProbeType("Silent probe");
     await setTargeted(targeted, true);
-    // The catalog's create route offers no entity scope, so plant the
-    // row directly — the schema allows what the API gates.
-    const [entityField] = await harness.db
-      .insert(fields)
-      .values({
-        slug: "probe_registered_office",
-        displayName: "Probe registered office",
-        moduleScope: "entity",
-        fieldType: "text",
-        fieldTag: "legal",
-      })
-      .returning();
+    const entityField = await createField("Probe registered office", "entity");
     const contractField = await createField("Probe counterparty name", "contract");
 
     // The targeted arm refuses the entity scope in its own words.
-    const outsideTargeted = await attach(targeted, entityField!.id);
+    const outsideTargeted = await attach(targeted, entityField);
     expect(outsideTargeted.statusCode, outsideTargeted.body).toBe(400);
     expect(outsideTargeted.headers["content-type"]).toContain("application/problem+json");
     expect(outsideTargeted.json()).toMatchObject({ status: 400, detail: TARGETED_REFUSAL });
@@ -233,6 +222,9 @@ describe("the OpenAPI document", () => {
     );
     expect(await attachSummary("matter-types")).toContain(
       "matter-scoped and global fields (MTR-011)",
+    );
+    expect(await attachSummary("entity-types")).toContain(
+      "entity-scoped and global fields (ENT-001)",
     );
   });
 });

@@ -3115,6 +3115,147 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/v1/entity-types/{id}/fields": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** One entity type's attached fields in per-type order — the type editor's Attached fields card */
+    get: operations["listEntityTypeFields"];
+    put?: never;
+    /** Attach a catalog field to a entity type: entity-scoped and global fields (ENT-001), appended to the per-type order, optional from the start unless isRequired says otherwise */
+    post: operations["attachEntityTypeField"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/entity-types/{id}/fields/{fieldId}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    /** Detach a field from a entity type: the join row goes, the catalog definition and stored values stay (MTR-014) */
+    delete: operations["detachEntityTypeField"];
+    options?: never;
+    head?: never;
+    /** Set an attachment's required flag: per attachment, so a field can be required for one type and optional elsewhere; hard enforcement arrives with the record milestone (M27 record fields) */
+    patch: operations["setEntityTypeFieldRequired"];
+    trace?: never;
+  };
+  "/api/v1/entity-types/{id}/fields/order": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    /** Apply a full permutation of one type's attached fields (SET-003 immediate apply); per-type orders renumber from 1 */
+    put: operations["reorderEntityTypeFields"];
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/officer-roles": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** The officer role taxonomy in display order (ENT-001); archived rows only with includeArchived=true */
+    get: operations["listOfficerRoles"];
+    put?: never;
+    /** Add an officer role: the slug is derived here, once, and is immutable after creation; the row appends to the display order */
+    post: operations["createOfficerRole"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/officer-roles/{id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** One officer role — the read behind the type editor */
+    get: operations["getOfficerRole"];
+    put?: never;
+    post?: never;
+    /** Hard-delete an officer role; `other` refuses (ENT-001), and so does a type still used by officers */
+    delete: operations["deleteOfficerRole"];
+    options?: never;
+    head?: never;
+    /** Rename an officer role's display name (DES-017 in-place rename) or edit its description; the slug never changes, and even `other` may rename */
+    patch: operations["updateOfficerRole"];
+    trace?: never;
+  };
+  "/api/v1/officer-roles/order": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    /** Apply a full permutation of the live rows (SET-003 immediate apply); display orders renumber from 1, archived rows keep theirs */
+    put: operations["reorderOfficerRoles"];
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/officer-roles/{id}/archive": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Archive an officer role (SET-003 guarded): a type still used by officers requires a reassignment target, which takes them; nothing is deleted; `other` refuses */
+    post: operations["archiveOfficerRole"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/officer-roles/{id}/restore": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Restore an archived officer role (SET-003's recovery story) to the end of the display order */
+    post: operations["restoreOfficerRole"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/v1/entities": {
     parameters: {
       query?: never;
@@ -3142,6 +3283,23 @@ export interface paths {
     };
     /** The live entity types in display order — the register form's Member+ picker source (the /entity-types settings surface stays Administrator-only per SET-002) */
     get: operations["listEntityTypeOptions"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/entities/officer-roles": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** The live officer roles in display order, for Member+ Entity forms; the /officer-roles settings taxonomy stays Administrator-only */
+    get: operations["listOfficerRoleOptions"];
     put?: never;
     post?: never;
     delete?: never;
@@ -17813,6 +17971,608 @@ export interface operations {
       };
     };
   };
+  listEntityTypeFields: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            attachedFields: {
+              fieldId: string;
+              slug: string;
+              displayName: string;
+              /** @enum {string} */
+              fieldType:
+                | "text"
+                | "long_text"
+                | "number"
+                | "date"
+                | "boolean"
+                | "single_select"
+                | "multi_select"
+                | "user"
+                | "entity";
+              /** @enum {string} */
+              moduleScope: "entity" | "global";
+              displayOrder: number;
+              isRequired: boolean;
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  attachEntityTypeField: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          fieldId: string;
+          isRequired?: boolean;
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            attachedField: {
+              fieldId: string;
+              slug: string;
+              displayName: string;
+              /** @enum {string} */
+              fieldType:
+                | "text"
+                | "long_text"
+                | "number"
+                | "date"
+                | "boolean"
+                | "single_select"
+                | "multi_select"
+                | "user"
+                | "entity";
+              /** @enum {string} */
+              moduleScope: "entity" | "global";
+              displayOrder: number;
+              isRequired: boolean;
+            };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  detachEntityTypeField: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+        fieldId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  setEntityTypeFieldRequired: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+        fieldId: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          isRequired: boolean;
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            attachedField: {
+              fieldId: string;
+              slug: string;
+              displayName: string;
+              /** @enum {string} */
+              fieldType:
+                | "text"
+                | "long_text"
+                | "number"
+                | "date"
+                | "boolean"
+                | "single_select"
+                | "multi_select"
+                | "user"
+                | "entity";
+              /** @enum {string} */
+              moduleScope: "entity" | "global";
+              displayOrder: number;
+              isRequired: boolean;
+            };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  reorderEntityTypeFields: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          fieldIds: string[];
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            attachedFields: {
+              fieldId: string;
+              slug: string;
+              displayName: string;
+              /** @enum {string} */
+              fieldType:
+                | "text"
+                | "long_text"
+                | "number"
+                | "date"
+                | "boolean"
+                | "single_select"
+                | "multi_select"
+                | "user"
+                | "entity";
+              /** @enum {string} */
+              moduleScope: "entity" | "global";
+              displayOrder: number;
+              isRequired: boolean;
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  listOfficerRoles: {
+    parameters: {
+      query?: {
+        includeArchived?: "true" | "false";
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            officerRoles: {
+              id: string;
+              slug: string;
+              displayName: string;
+              description: string | null;
+              displayOrder: number;
+              isSystemDefault: boolean;
+              archivedAt: string | null;
+              inUseCount: number;
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  createOfficerRole: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          displayName: string;
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            officerRole: {
+              id: string;
+              slug: string;
+              displayName: string;
+              description: string | null;
+              displayOrder: number;
+              isSystemDefault: boolean;
+              archivedAt: string | null;
+              inUseCount: number;
+            };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  getOfficerRole: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            officerRole: {
+              id: string;
+              slug: string;
+              displayName: string;
+              description: string | null;
+              displayOrder: number;
+              isSystemDefault: boolean;
+              archivedAt: string | null;
+              inUseCount: number;
+            };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  deleteOfficerRole: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  updateOfficerRole: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          displayName?: string;
+          description?: string | null;
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            officerRole: {
+              id: string;
+              slug: string;
+              displayName: string;
+              description: string | null;
+              displayOrder: number;
+              isSystemDefault: boolean;
+              archivedAt: string | null;
+              inUseCount: number;
+            };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  reorderOfficerRoles: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          ids: string[];
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            officerRoles: {
+              id: string;
+              slug: string;
+              displayName: string;
+              description: string | null;
+              displayOrder: number;
+              isSystemDefault: boolean;
+              archivedAt: string | null;
+              inUseCount: number;
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  archiveOfficerRole: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          reassignToId?: string;
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            officerRole: {
+              id: string;
+              slug: string;
+              displayName: string;
+              description: string | null;
+              displayOrder: number;
+              isSystemDefault: boolean;
+              archivedAt: string | null;
+              inUseCount: number;
+            };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  restoreOfficerRole: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            officerRole: {
+              id: string;
+              slug: string;
+              displayName: string;
+              description: string | null;
+              displayOrder: number;
+              isSystemDefault: boolean;
+              archivedAt: string | null;
+              inUseCount: number;
+            };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
   listEntities: {
     parameters: {
       query?: {
@@ -17946,6 +18706,41 @@ export interface operations {
         content: {
           "application/json": {
             entityTypes: {
+              id: string;
+              slug: string;
+              displayName: string;
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  listOfficerRoleOptions: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            officerRoles: {
               id: string;
               slug: string;
               displayName: string;
@@ -18269,7 +19064,7 @@ export interface operations {
               displayName: string;
               description: string | null;
               /** @enum {string} */
-              moduleScope: "contract" | "matter" | "global";
+              moduleScope: "contract" | "matter" | "entity" | "global";
               /** @enum {string} */
               fieldType:
                 | "text"
@@ -18315,7 +19110,7 @@ export interface operations {
           displayName: string;
           description?: string;
           /** @enum {string} */
-          moduleScope: "contract" | "matter" | "global";
+          moduleScope: "contract" | "matter" | "entity" | "global";
           /** @enum {string} */
           fieldType:
             | "text"
@@ -18348,7 +19143,7 @@ export interface operations {
               displayName: string;
               description: string | null;
               /** @enum {string} */
-              moduleScope: "contract" | "matter" | "global";
+              moduleScope: "contract" | "matter" | "entity" | "global";
               /** @enum {string} */
               fieldType:
                 | "text"
@@ -18416,7 +19211,7 @@ export interface operations {
               displayName: string;
               description: string | null;
               /** @enum {string} */
-              moduleScope: "contract" | "matter" | "global";
+              moduleScope: "contract" | "matter" | "entity" | "global";
               /** @enum {string} */
               fieldType:
                 | "text"
@@ -18462,7 +19257,7 @@ export interface operations {
       content: {
         "application/json": {
           /** @enum {string} */
-          moduleScope: "contract" | "matter" | "global";
+          moduleScope: "contract" | "matter" | "entity" | "global";
         };
       };
     };
@@ -18480,7 +19275,7 @@ export interface operations {
               displayName: string;
               description: string | null;
               /** @enum {string} */
-              moduleScope: "contract" | "matter" | "global";
+              moduleScope: "contract" | "matter" | "entity" | "global";
               /** @enum {string} */
               fieldType:
                 | "text"
@@ -18537,7 +19332,7 @@ export interface operations {
               displayName: string;
               description: string | null;
               /** @enum {string} */
-              moduleScope: "contract" | "matter" | "global";
+              moduleScope: "contract" | "matter" | "entity" | "global";
               /** @enum {string} */
               fieldType:
                 | "text"
@@ -18594,7 +19389,7 @@ export interface operations {
               displayName: string;
               description: string | null;
               /** @enum {string} */
-              moduleScope: "contract" | "matter" | "global";
+              moduleScope: "contract" | "matter" | "entity" | "global";
               /** @enum {string} */
               fieldType:
                 | "text"

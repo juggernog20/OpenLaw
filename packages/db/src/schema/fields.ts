@@ -27,8 +27,8 @@ import { uuidPk } from "./helpers.js";
 
 /**
  * The CTR-016 scope enum: module-scoped fields attach only inside their
- * module; `global` attaches across all of them. M22 opened `matter`;
- * `entity` remains gated until M27.
+ * module; `global` attaches across all of them. M22 opened `matter`,
+ * and M27 opened `entity`.
  */
 export const FIELD_MODULE_SCOPES = ["matter", "contract", "entity", "global"] as const;
 export type FieldModuleScope = (typeof FIELD_MODULE_SCOPES)[number];

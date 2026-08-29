@@ -12,8 +12,7 @@
  * `entity_type` / `entity_id` is the polymorphic pair SCHEMA.md
  * documents as the exception to separate-tables-with-view, so there is
  * no foreign key on the entity. The CHECK admits the documented
- * vocabulary; the API writes `contract` (M18) and `request` (M20/8), and
- * the other two arrive with their modules.
+ * vocabulary; M27 adds `entity` alongside the earlier record kinds.
  *
  * `event_type` carries **no** CHECK, and that is deliberate rather than
  * an oversight. It is `activity_log.action`'s reasoning one table over:
@@ -132,7 +131,13 @@ export type NotificationEventType = (typeof NOTIFICATION_EVENT_TYPES)[number];
 /** What a notification can hang off. `contract` from M18 and `request`
  * from M20/8; the vocabulary is the `comments` and `activity_log`
  * precedent. */
-export const NOTIFICATION_ENTITY_TYPES = ["matter", "contract", "document", "request"] as const;
+export const NOTIFICATION_ENTITY_TYPES = [
+  "matter",
+  "contract",
+  "document",
+  "request",
+  "entity",
+] as const;
 export type NotificationEntityType = (typeof NOTIFICATION_ENTITY_TYPES)[number];
 
 export const notifications = pgTable(
