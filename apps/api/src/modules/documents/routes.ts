@@ -158,6 +158,7 @@ import {
   type Transaction,
 } from "@openlaw/db";
 import { requireRole, type AuthenticatedUser } from "../../auth/guards.js";
+import { requireDocumentReader } from "../../lib/document-access.js";
 import { recordActivity, RECORD_ACTIVITY_TIER } from "../../lib/activity.js";
 import {
   contractTeamScope,
@@ -220,12 +221,6 @@ import {
 } from "../../lib/document-versions.js";
 import { needsDisplayRendition } from "../../pipeline/display-conversion.js";
 import { extractsText } from "../../pipeline/text-extraction.js";
-
-/** The contract read floor (CTR-021), which is the document floor too:
- * a Contributor reads and downloads the paper on a contract they are
- * on. The role alone opens nothing — the reach predicate narrows it to
- * the records they hold a `contract_team` row on. */
-const requireDocumentReader = requireRole("administrator", "legal_team_member", "contributor");
 
 /** Supporting uploads are the one Document write Contributors receive.
  * Reach still comes from the owning record's live team predicate; the

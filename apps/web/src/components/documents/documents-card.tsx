@@ -180,6 +180,8 @@ import {
   chainOf,
   clearExecutedVersion,
   documentDownloadHref,
+  documentKindLabel,
+  DOCUMENT_KIND_PILL,
   DOCUMENT_VERSION_KINDS,
   FOLDER_ROOT,
   hardDeleteDocument,
@@ -194,7 +196,6 @@ import {
   uploadDocumentVersion,
   type ContractDocument,
   type DocumentVersion,
-  type DocumentVersionKind,
   type DocumentRecord,
   type HandSetDocumentVersionKind,
   type UploadDraft,
@@ -247,33 +248,6 @@ const FOLDER_INDENT = 18;
  * the amendment's, and the two red families would call a routine round
  * a problem.
  */
-const KIND_PILL: Record<DocumentVersionKind, string> = {
-  draft_ours: "bg-status-info-bg text-status-info-fg",
-  redline_ours: "bg-status-info-bg text-status-info-fg",
-  draft_theirs: "bg-status-warning-bg text-status-warning-fg",
-  redline_theirs: "bg-status-warning-bg text-status-warning-fg",
-  executed: "bg-status-success-bg text-status-success-fg",
-  amendment: "bg-status-neutral-bg text-status-neutral-fg",
-  generated_redline: "bg-status-neutral-bg text-status-neutral-fg",
-};
-
-/** The six CTR-014 kinds, named as the negotiation names them. The
- * value is selected inside the message rather than pasted in as a
- * translated fragment, so a locale that inflects it has the raw value
- * to work with (DES-013). */
-function kindLabel(intl: IntlShape, kind: DocumentVersionKind): string {
-  return intl.formatMessage(
-    {
-      id: "documents.kind",
-      defaultMessage:
-        "{kind, select, draft_ours {Draft · ours} draft_theirs {Draft · theirs} " +
-        "redline_theirs {Redline · theirs} redline_ours {Redline · ours} " +
-        "executed {Executed} amendment {Amendment} " +
-        "generated_redline {Generated redline} other {Unknown}}",
-    },
-    { kind },
-  );
-}
 
 /**
  * What a composer is opened for: the record's first file on a document
@@ -3230,7 +3204,7 @@ function KindCell({
   version: DocumentVersion;
   rows: RowContext;
 }>) {
-  const pill = `whitespace-nowrap rounded-pill px-2 py-0.5 text-xs font-medium ${KIND_PILL[version.kind]}`;
+  const pill = `whitespace-nowrap rounded-pill px-2 py-0.5 text-xs font-medium ${DOCUMENT_KIND_PILL[version.kind]}`;
   return (
     <td className="px-4 py-2.5">
       {/* The pill sits in a flex line rather than a text line, so it
@@ -3238,7 +3212,7 @@ function KindCell({
           text to share. */}
       <span className="flex items-center">
         {rows.frozen || document.archivedAt !== null || version.kind === "generated_redline" ? (
-          <span className={pill}>{kindLabel(rows.intl, version.kind)}</span>
+          <span className={pill}>{documentKindLabel(rows.intl, version.kind)}</span>
         ) : (
           <select
             aria-label={rows.intl.formatMessage(
@@ -3260,7 +3234,7 @@ function KindCell({
           >
             {DOCUMENT_VERSION_KINDS.map((kind) => (
               <option key={kind} value={kind}>
-                {kindLabel(rows.intl, kind)}
+                {documentKindLabel(rows.intl, kind)}
               </option>
             ))}
           </select>
@@ -3624,7 +3598,7 @@ function UploadDialog({
             >
               {DOCUMENT_VERSION_KINDS.map((option) => (
                 <option key={option} value={option}>
-                  {kindLabel(intl, option)}
+                  {documentKindLabel(intl, option)}
                 </option>
               ))}
             </select>

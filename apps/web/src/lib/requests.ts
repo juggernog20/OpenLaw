@@ -36,7 +36,7 @@ import {
 } from "@openlaw/shared";
 import { api } from "./api";
 import type { CustomFieldValue } from "./custom-fields";
-import { problemDetail, problemType } from "./messages";
+import { problem, type OpenApiResult, type Problem } from "./problem";
 
 /** One row of my-requests, aliased to the generated client schema so a
  * change to what the API answers surfaces here as a compile error. */
@@ -206,15 +206,15 @@ export function requestAttachmentHref(number: number, attachmentId: string): str
  */
 export type DispositionOutcome =
   | { ok: true; request: StaffRequest }
-  | {
+  | ({
       ok: false;
       alreadyDecided: RequestOutcome;
       /** The record the winning conversion made, where this viewer
        * reaches it (DD-014). `null` on every other outcome, so a dialog
        * that names it draws the link only when there is one. */
       convertedRecord: ConvertedRecord | null;
-    }
-  | { ok: false; alreadyDecided?: undefined; detail?: string };
+    } & Problem)
+  | ({ ok: false; alreadyDecided?: undefined } & Problem);
 
 /**
  * Turns a Request down, with a reason (INT-006, INT-007).
@@ -232,14 +232,14 @@ export async function declineRequest(number: number, reason: string): Promise<Di
   // Settled, never rejected: the dialog holds its button busy until this
   // answers, so a request that never arrived has to come back as an
   // ordinary refusal rather than as an escaping rejection.
-  const { data, error } = await api
+  const result = await api
     .POST("/api/v1/requests/{number}/decline", {
       params: { path: { number } },
       body: { reason },
     })
-    .catch(() => ({ data: undefined, error: undefined }));
-  if (data) return { ok: true, request: data.request };
-  return refusal(error);
+    .catch(() => undefined);
+  if (result?.data) return { ok: true, request: result.data.request };
+  return refusal(result);
 }
 
 /**
@@ -261,7 +261,7 @@ export async function resolveRequest(number: number, reply?: string): Promise<Di
   // its button busy until this answers, so a request that never arrived
   // has to come back as an ordinary refusal rather than as an escaping
   // rejection.
-  const { data, error } = await api
+  const result = await api
     .POST("/api/v1/requests/{number}/resolve", {
       params: { path: { number } },
       // Absent rather than empty. The seam refuses a blank reply, and it
@@ -269,9 +269,9 @@ export async function resolveRequest(number: number, reply?: string): Promise<Di
       // said by sending no reply.
       body: reply === undefined ? {} : { reply },
     })
-    .catch(() => ({ data: undefined, error: undefined }));
-  if (data) return { ok: true, request: data.request };
-  return refusal(error);
+    .catch(() => undefined);
+  if (result?.data) return { ok: true, request: result.data.request };
+  return refusal(result);
 }
 
 /**
@@ -302,7 +302,7 @@ export async function convertRequest(
   },
 ): Promise<DispositionOutcome> {
   // Settled, never rejected — `declineRequest`'s rule.
-  const { data, error } = await api
+  const result = await api
     .POST("/api/v1/requests/{number}/convert", {
       params: { path: { number } },
       body: {
@@ -313,9 +313,9 @@ export async function convertRequest(
         ...(input.customFields === undefined ? {} : { customFields: input.customFields }),
       },
     })
-    .catch(() => ({ data: undefined, error: undefined }));
-  if (data) return { ok: true, request: data.request };
-  return refusal(error);
+    .catch(() => undefined);
+  if (result?.data) return { ok: true, request: result.data.request };
+  return refusal(result);
 }
 
 /**
@@ -329,14 +329,21 @@ export async function convertRequest(
  * outcome this build has never heard of reads as an ordinary refusal,
  * because a client cannot state a decision it cannot name.
  */
-function refusal(problem: unknown): DispositionOutcome {
-  if (problemType(problem) === REQUEST_DISPOSITIONED_PROBLEM_TYPE) {
-    const recorded = recordedOutcome(problem);
+async function refusal(result: OpenApiResult | undefined): Promise<DispositionOutcome> {
+  const failure = await problem(result);
+  const body = result?.error;
+  if (failure.type === REQUEST_DISPOSITIONED_PROBLEM_TYPE) {
+    const recorded = recordedOutcome(body);
     if (recorded) {
-      return { ok: false, alreadyDecided: recorded, convertedRecord: recordedRecord(problem) };
+      return {
+        ok: false,
+        alreadyDecided: recorded,
+        convertedRecord: recordedRecord(body),
+        ...failure,
+      };
     }
   }
-  return { ok: false, detail: problemDetail(problem) };
+  return { ok: false, alreadyDecided: undefined, ...failure };
 }
 
 /** The decision on the refusal's own extension member, never out of
@@ -393,7 +400,7 @@ export const MAX_REQUEST_ATTACHMENTS = 20;
  * disposition-raced upload names the Request thread that takes the
  * paper now (INT-002, CMT-011). */
 export type AttachOutcome =
-  { ok: true } | { ok: false; detail?: string; thread?: { requestNumber: number } };
+  { ok: true } | ({ ok: false; thread?: { requestNumber: number } } & Problem);
 
 /**
  * Attaches one file to a Request, and says whether it landed.
@@ -418,25 +425,21 @@ export async function attachToRequest(number: number, file: File): Promise<Attac
   } catch {
     // A dropped connection reads as a file that did not attach, which
     // is what it is. The caller says so in its own words.
-    return { ok: false };
+    return { ok: false, ...(await problem(undefined)) };
   }
 }
 
 /** The seam's sentence, when the body carries one. */
 async function attachmentRefusalIn(response: Response): Promise<AttachOutcome> {
-  try {
-    const problem: unknown = await response.json();
-    const detail = problemDetail(problem);
-    if (problemType(problem) !== REQUEST_DISPOSITIONED_PROBLEM_TYPE) {
-      return { ok: false, detail };
-    }
-    const requestNumber = recordedRequestNumber(problem);
-    return requestNumber === null
-      ? { ok: false, detail }
-      : { ok: false, detail, thread: { requestNumber } };
-  } catch {
-    return { ok: false };
+  const failure = await problem(response);
+  if (failure.type !== REQUEST_DISPOSITIONED_PROBLEM_TYPE) {
+    return { ok: false, ...failure };
   }
+  const body: unknown = await response.json().catch(() => undefined);
+  const requestNumber = recordedRequestNumber(body);
+  return requestNumber === null
+    ? { ok: false, ...failure }
+    : { ok: false, ...failure, thread: { requestNumber } };
 }
 
 /** The Request whose portal detail is the stable address of its thread.

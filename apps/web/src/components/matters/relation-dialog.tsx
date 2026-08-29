@@ -16,7 +16,6 @@ import {
   type MatterRelations,
 } from "../../lib/matter-relations";
 import { matterReference } from "../../lib/matters";
-import { problemType } from "../../lib/messages";
 import { Button } from "../ui/button";
 import { Dialog, DialogContent, DialogTitle } from "../ui/dialog";
 import { Input } from "../ui/input";
@@ -75,7 +74,7 @@ export function MatterRelationDialog({
       onOpenChange(false);
       return;
     }
-    const type = problemType(result.error);
+    const type = result.type;
     setError(
       type === MATTER_RELATION_EXISTS_PROBLEM_TYPE
         ? intl.formatMessage({

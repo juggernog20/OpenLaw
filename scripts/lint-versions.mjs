@@ -1,25 +1,21 @@
-/* OpenLaw — one version, checked (#391).
+/* OpenLaw: one version, checked (#391).
  *
- * The product's version is written down ten times: once in the root
- * `package.json`, once in each of the eight workspace members', and once
- * more as `OPENLAW_VERSION` in `packages/shared/src/index.ts` — the
- * constant `GET /api/v1/meta` answers and the OpenAPI document carries.
- * Nothing kept them in step, so a release bump that missed one would
- * ship an install that reports a version it is not. The root manifest is
- * the source of truth, so this checks the other nine against it.
+ * The product's version is written down in every workspace member's
+ * `package.json`, in the root `package.json`, and once more as
+ * `OPENLAW_VERSION` in `packages/shared/src/index.ts`, the constant
+ * `GET /api/v1/meta` answers and the OpenAPI document carries. Nothing
+ * kept them in step, so a release bump that missed one would ship an
+ * install that reports a version it is not. The root manifest is the
+ * source of truth. This checks every other copy against it.
  *
- * Generating the constant instead was the other option and was declined.
+ * Generating the constant was the other option, and it was declined.
  * `@openlaw/shared` is bundled into the browser, so the value has to be
- * a literal in the source rather than a file read at runtime, and its
+ * a literal in the source rather than a file read at runtime. Its
  * tsconfig has `rootDir: "src"`, so importing the package's own
- * `package.json` would move the whole build's output layout. What is
- * left is a generated file that is committed — and a committed
- * generated file needs a CI check that it is current, which is this
- * check plus a build step. So: keep the literal, and make the drift
- * loud.
- *
- * The root `package.json` is the source of truth. Every other place
- * quotes it.
+ * `package.json` would change the whole build's output layout. What is
+ * left is a committed generated file, and that needs a CI check that it
+ * is current, which is this check plus a build step. So keep the
+ * literal, and make the drift loud.
  *
  * Runs standalone (`pnpm lint:versions`) and inside `pnpm check`.
  */
@@ -48,9 +44,9 @@ function readJson(relativePath) {
 /**
  * The workspace members, read from `pnpm-workspace.yaml` rather than
  * listed here, so a package added later is checked without anybody
- * remembering to. The file is a short fixed-shape list, so it is parsed
- * line by line rather than by pulling in a YAML dependency for it; a
- * shape this does not understand is a failure, never a silent skip.
+ * remembering to. The file is a short fixed-shape list, so this parses
+ * it line by line instead of pulling in a YAML dependency. A shape this
+ * does not understand is a failure, never a silent skip.
  */
 function workspaceMembers() {
   const text = readFileSync(join(repoRoot, "pnpm-workspace.yaml"), "utf8");

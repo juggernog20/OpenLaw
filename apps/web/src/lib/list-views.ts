@@ -292,29 +292,29 @@ export async function createView(
   layout: Layout,
   isDefault = false,
 ): Promise<SavedView[]> {
-  const { data, error } = await api.POST("/api/v1/list-views", {
+  const result = await api.POST("/api/v1/list-views", {
     body: { surface, name, config: layout, isDefault },
   });
-  if (!data) throw error ?? new Error("The view could not be saved.");
-  return data.views.map((row) => toView(row as ViewResponse));
+  if (!result.data) throw result;
+  return result.data.views.map((row) => toView(row as ViewResponse));
 }
 
 export async function updateView(
   viewId: string,
   changes: { name?: string; config?: Layout; isDefault?: boolean },
 ): Promise<SavedView[]> {
-  const { data, error } = await api.PATCH("/api/v1/list-views/{viewId}", {
+  const result = await api.PATCH("/api/v1/list-views/{viewId}", {
     params: { path: { viewId } },
     body: changes,
   });
-  if (!data) throw error ?? new Error("The view could not be changed.");
-  return data.views.map((row) => toView(row as ViewResponse));
+  if (!result.data) throw result;
+  return result.data.views.map((row) => toView(row as ViewResponse));
 }
 
 export async function deleteView(viewId: string): Promise<SavedView[]> {
-  const { data, error } = await api.DELETE("/api/v1/list-views/{viewId}", {
+  const result = await api.DELETE("/api/v1/list-views/{viewId}", {
     params: { path: { viewId } },
   });
-  if (!data) throw error ?? new Error("The view could not be deleted.");
-  return data.views.map((row) => toView(row as ViewResponse));
+  if (!result.data) throw result;
+  return result.data.views.map((row) => toView(row as ViewResponse));
 }

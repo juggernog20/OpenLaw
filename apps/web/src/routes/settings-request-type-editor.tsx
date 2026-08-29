@@ -45,7 +45,7 @@ import { redirect, useLoaderData, type LoaderFunctionArgs } from "react-router";
 import { defineMessages, FormattedMessage, useIntl } from "react-intl";
 import { TriangleAlert } from "lucide-react";
 import { api } from "../lib/api";
-import { problemDetail } from "../lib/messages";
+import { problem } from "../lib/problem";
 import { CONTROL_CLASS } from "../lib/form-controls";
 import { requireUser } from "../lib/session";
 import { IntakeSettingsTabs } from "../components/intake-settings-tabs";
@@ -279,38 +279,48 @@ const TARGET = defineMessages({
 /** The shared editor's API seam over the request-types routes. */
 const EDITOR_API: TypeEditorApi = {
   async update(id, body) {
-    const { data, error } = await api.PATCH("/api/v1/request-types/{id}", {
-      params: { path: { id } },
-      body,
-    });
-    return { data: data?.requestType, detail: problemDetail(error) };
+    const result = await api
+      .PATCH("/api/v1/request-types/{id}", {
+        params: { path: { id } },
+        body,
+      })
+      .catch(() => undefined);
+    return { data: result?.data?.requestType, ...(await problem(result)) };
   },
   async attach(id, fieldId) {
-    const { data, error } = await api.POST("/api/v1/request-types/{id}/fields", {
-      params: { path: { id } },
-      body: { fieldId },
-    });
-    return { data: data?.attachedField, detail: problemDetail(error) };
+    const result = await api
+      .POST("/api/v1/request-types/{id}/fields", {
+        params: { path: { id } },
+        body: { fieldId },
+      })
+      .catch(() => undefined);
+    return { data: result?.data?.attachedField, ...(await problem(result)) };
   },
   async detach(id, fieldId) {
-    const { error, response } = await api.DELETE("/api/v1/request-types/{id}/fields/{fieldId}", {
-      params: { path: { id, fieldId } },
-    });
-    return { ok: response?.ok === true, detail: problemDetail(error) };
+    const result = await api
+      .DELETE("/api/v1/request-types/{id}/fields/{fieldId}", {
+        params: { path: { id, fieldId } },
+      })
+      .catch(() => undefined);
+    return { ok: result?.response.ok === true, ...(await problem(result)) };
   },
   async setRequired(id, fieldId, isRequired) {
-    const { data, error } = await api.PATCH("/api/v1/request-types/{id}/fields/{fieldId}", {
-      params: { path: { id, fieldId } },
-      body: { isRequired },
-    });
-    return { data: data?.attachedField, detail: problemDetail(error) };
+    const result = await api
+      .PATCH("/api/v1/request-types/{id}/fields/{fieldId}", {
+        params: { path: { id, fieldId } },
+        body: { isRequired },
+      })
+      .catch(() => undefined);
+    return { data: result?.data?.attachedField, ...(await problem(result)) };
   },
   async reorder(id, fieldIds) {
-    const { data, error } = await api.PUT("/api/v1/request-types/{id}/fields/order", {
-      params: { path: { id } },
-      body: { fieldIds },
-    });
-    return { data: data?.attachedFields, detail: problemDetail(error) };
+    const result = await api
+      .PUT("/api/v1/request-types/{id}/fields/order", {
+        params: { path: { id } },
+        body: { fieldIds },
+      })
+      .catch(() => undefined);
+    return { data: result?.data?.attachedFields, ...(await problem(result)) };
   },
 };
 
@@ -405,16 +415,16 @@ function TargetControl({
     setTarget(next);
     setStatus("saving");
     setError(undefined);
-    const { data, error: problem } = await api
+    const result = await api
       .PATCH("/api/v1/request-types/{id}", {
         params: { path: { id: typeId } },
         body: { targetModule: next.module, targetTypeId: next.typeId },
       })
-      .catch(() => ({ data: undefined, error: undefined }));
-    if (data) {
+      .catch(() => undefined);
+    if (result?.data) {
       const saved: Target = {
-        module: data.requestType.targetModule ?? null,
-        typeId: data.requestType.targetTypeId,
+        module: result.data.requestType.targetModule ?? null,
+        typeId: result.data.requestType.targetTypeId,
       };
       setTarget(saved);
       onTargetSaved(saved);
@@ -425,7 +435,8 @@ function TargetControl({
       // never landed.
       setTarget(previous);
       setStatus("error");
-      setError(problemDetail(problem) ?? intl.formatMessage(TARGET.error));
+      const failure = await problem(result);
+      setError(failure.detail ?? intl.formatMessage(TARGET.error));
     }
   }
 

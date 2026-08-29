@@ -35,7 +35,7 @@ import {
   type MatterTeamMember,
   type MatterTypeOption,
 } from "../lib/matters";
-import { problemDetail } from "../lib/messages";
+import { problem } from "../lib/problem";
 import { documentLandingParams, readDocumentLanding } from "../lib/documents";
 import { canReadMatters, isMemberPlus } from "../lib/roles";
 import { requireUser, useSignOut } from "../lib/session";
@@ -260,14 +260,14 @@ export function MatterRecordPage() {
 
   async function commit(key: FieldKey, body: Record<string, unknown>) {
     note(key, "saving");
-    const { data, error } = await api
+    const result = await api
       .PATCH("/api/v1/matters/{number}", {
         params: { path: { number: saved.number } },
         body,
       })
-      .catch(() => ({ data: undefined, error: undefined }));
-    if (!data) {
-      const detail = problemDetail(error);
+      .catch(() => undefined);
+    if (!result?.data) {
+      const detail = (await problem(result)).detail;
       note(key, "error", detail);
       return (
         detail ??
@@ -277,6 +277,7 @@ export function MatterRecordPage() {
         })
       );
     }
+    const data = result.data;
     setSaved(data.matter);
     setFields(data.fields);
     setCustomFieldRefs(data.customFieldRefs);
@@ -320,15 +321,15 @@ export function MatterRecordPage() {
             .POST("/api/v1/matters/{number}/archive", {
               params: { path: { number: saved.number } },
             })
-            .catch(() => ({ data: undefined, error: undefined }))
+            .catch(() => undefined)
         : await api
             .POST("/api/v1/matters/{number}/restore", {
               params: { path: { number: saved.number } },
             })
-            .catch(() => ({ data: undefined, error: undefined }));
-    if (!result.data) {
+            .catch(() => undefined);
+    if (!result?.data) {
       setLifecycleStatus("error");
-      setLifecycleError(problemDetail(result.error) ?? null);
+      setLifecycleError((await problem(result)).detail ?? null);
       return;
     }
     setSaved(result.data.matter);
@@ -340,16 +341,17 @@ export function MatterRecordPage() {
     if (matterLifecycleStatus === "saving") return;
     setMatterLifecycleStatus("saving");
     setMatterLifecycleError(null);
-    const { data, error } = await api
+    const result = await api
       .GET("/api/v1/matters/{number}/lifecycle", {
         params: { path: { number: saved.number } },
       })
-      .catch(() => ({ data: undefined, error: undefined }));
-    if (!data) {
+      .catch(() => undefined);
+    if (!result?.data) {
       setMatterLifecycleStatus("error");
-      setMatterLifecycleError(problemDetail(error) ?? null);
+      setMatterLifecycleError((await problem(result)).detail ?? null);
       return;
     }
+    const data = result.data;
     setMatterLifecycle(data);
     setMatterLifecycleStatusId(data.statuses[0]?.id ?? "");
     setMatterLifecycleStatus("idle");

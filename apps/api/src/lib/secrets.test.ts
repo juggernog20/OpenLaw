@@ -7,8 +7,8 @@
  * The claim this suite has to hold up is one sentence: somebody holding
  * a `pg_dump` and nothing else cannot read the DocuSign key, the
  * Connect secret, the SMTP relay URL, or the SSO client secret. So the
- * assertions go past the ORM and read the stored text with raw SQL —
- * asking Drizzle would only ever return what it had already opened.
+ * assertions go past the ORM and read the stored text with raw SQL.
+ * Asking Drizzle would only return what it had already opened.
  *
  * The other half is the upgrade. An install that stored these in the
  * clear must come up sealed, having asked nobody to retype anything,
@@ -92,11 +92,11 @@ afterAll(async () => {
   await harness.stop();
 });
 
-/** The column as Postgres holds it, past the ORM — the dump reader's view. */
+/** The column as Postgres holds it, past the ORM. The dump reader's view. */
 async function storedText(table: string, column: string): Promise<string | null> {
-  // `sql.identifier`, not interpolation into `sql.raw`: every caller
+  // `sql.identifier`, not interpolation into `sql.raw`. Every caller
   // here passes a literal, but a helper shaped like this attracts one
-  // that does not, and quoting the identifier removes the question.
+  // that does not. Quoting the identifier removes the question.
   const read = await db.execute<{ value: string | null }>(
     sql`SELECT ${sql.identifier(column)} AS value FROM ${sql.identifier(table)} LIMIT 1`,
   );

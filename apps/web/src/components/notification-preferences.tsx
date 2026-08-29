@@ -29,7 +29,7 @@ import { useRef, useState } from "react";
 import { FormattedMessage, defineMessage, type MessageDescriptor } from "react-intl";
 import type { paths } from "@openlaw/api-client";
 import { api } from "../lib/api";
-import { problemDetail } from "../lib/messages";
+import { problem } from "../lib/problem";
 import { type FieldStatus } from "./status-note";
 import { Switch } from "./ui/switch";
 
@@ -183,16 +183,17 @@ export function useNotificationPreferences(initial: GroupPreference[]): Preferen
     setStatus("saving");
     setDetail(null);
     try {
-      const { data, error } = await api.PATCH("/api/v1/me/notification-preferences", {
+      const result = await api.PATCH("/api/v1/me/notification-preferences", {
         body: { eventGroup: group, channel: channel.id, enabled },
       });
+      const { data } = result;
       if (!data) {
         // Only this pair goes back, and only to the value this press
         // moved it from. A whole-grid snapshot would also undo whatever
         // was pressed while this request was in the air.
         setPair(group, channel.key, !enabled);
         setStatus("error");
-        setDetail(problemDetail(error) ?? null);
+        setDetail((await problem(result)).detail ?? null);
         return;
       }
       // The write answers the whole grid, so the pane takes the server's

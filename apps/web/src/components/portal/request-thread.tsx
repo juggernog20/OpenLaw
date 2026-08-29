@@ -56,7 +56,7 @@ import { api } from "../../lib/api";
 import { sendComment, type Comment } from "../../lib/comments";
 import { formatLongDateTime, formatRelativeOrShort } from "../../lib/format";
 import { TEXTAREA_CLASS } from "../../lib/form-controls";
-import { problemDetail } from "../../lib/messages";
+import { problem as readProblem } from "../../lib/problem";
 import { cn } from "../../lib/utils";
 import { Avatar } from "../avatar";
 import { CommentAttachmentRows, CommentFilePicker } from "../comments/comment-attachments";
@@ -320,7 +320,7 @@ function Composer({
     inFlight.current = true;
     setBusy(true);
     setError(null);
-    const { data, error: problem } = await sendComment(
+    const result = await sendComment(
       {
         entityType: "request",
         entityId: requestId,
@@ -329,14 +329,14 @@ function Composer({
       },
       files,
     )
-      .catch(() => ({ data: undefined, error: undefined }))
+      .catch(() => undefined)
       .finally(() => {
         inFlight.current = false;
         setBusy(false);
       });
-    if (!data) {
+    if (!result?.data) {
       setError(
-        problemDetail(problem) ??
+        (await readProblem(result)).detail ??
           intl.formatMessage({
             id: "portal.request.replyError",
             defaultMessage: "The reply could not be sent. Try again.",
@@ -344,7 +344,7 @@ function Composer({
       );
       return;
     }
-    onPosted(data.comment);
+    onPosted(result.data.comment);
     // Only once it landed: a refusal leaves the words in the box, where
     // the person who wrote them can send them again.
     setDraft("");

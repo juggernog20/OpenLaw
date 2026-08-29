@@ -54,7 +54,8 @@ import { FormattedMessage, useIntl, type IntlShape } from "react-intl";
 import { Pencil } from "lucide-react";
 import { api } from "../lib/api";
 import { CONTROL_CLASS } from "../lib/form-controls";
-import { networkError, problemDetail } from "../lib/messages";
+import { networkError } from "../lib/messages";
+import { problem as readProblem } from "../lib/problem";
 import { requireUser } from "../lib/session";
 import { IntakeSettingsTabs } from "../components/intake-settings-tabs";
 import { ListEditor, type ListEditorRow } from "../components/list-editor";
@@ -184,14 +185,15 @@ function LinkEditorDialog({
   }
 
   async function create(label: string, url: string) {
-    const { data, error: problem } = await api
+    const result = await api
       .POST("/api/v1/intake-links", {
         body: { label, url, requestTypeId: draft.requestTypeId || null },
       })
-      .catch(() => ({ data: null, error: undefined }));
+      .catch(() => undefined);
+    const { data } = result ?? {};
     if (!data) {
       refuse(
-        problemDetail(problem) ??
+        (await readProblem(result)).detail ??
           intl.formatMessage({
             id: "settings.intakeLinks.createError",
             defaultMessage: "The link could not be added.",
@@ -213,12 +215,13 @@ function LinkEditorDialog({
     // the dialog just closes rather than asking it to.
     if (Object.keys(body).length === 0) return true;
 
-    const { data, error: problem } = await api
+    const result = await api
       .PATCH("/api/v1/intake-links/{id}", { params: { path: { id: existing.id } }, body })
-      .catch(() => ({ data: null, error: undefined }));
+      .catch(() => undefined);
+    const { data } = result ?? {};
     if (!data) {
       refuse(
-        problemDetail(problem) ??
+        (await readProblem(result)).detail ??
           intl.formatMessage({
             id: "settings.intakeLinks.editError",
             defaultMessage: "The link could not be saved.",
@@ -420,11 +423,11 @@ export function SettingsIntakeLinksPage() {
     // — the house reading for a bodyless delete. A rejected promise is
     // a request that never got an answer, and drops through the same
     // arm rather than looking like a success.
-    const { error, response } = await api
+    const result = await api
       .DELETE("/api/v1/intake-links/{id}", { params: { path: { id: row.id } } })
-      .catch(() => ({ error: undefined, response: undefined }));
-    if (response?.ok !== true) {
-      noteRow(row.id, "error", problemDetail(error) ?? networkError(intl));
+      .catch(() => undefined);
+    if (result?.response.ok !== true) {
+      noteRow(row.id, "error", (await readProblem(result)).detail ?? networkError(intl));
       return;
     }
     setLinks((current) => current.filter((candidate) => candidate.id !== row.id));
@@ -449,13 +452,14 @@ export function SettingsIntakeLinksPage() {
     setLinks(next);
     setOrderStatus("saving");
     setOrderError(undefined);
-    const { data, error } = await api
+    const result = await api
       .PUT("/api/v1/intake-links/order", { body: { ids: next.map((row) => row.id) } })
-      .catch(() => ({ data: null, error: undefined }));
+      .catch(() => undefined);
+    const { data } = result ?? {};
     if (!data) {
       setLinks(previous);
       setOrderStatus("error");
-      setOrderError(problemDetail(error));
+      setOrderError((await readProblem(result)).detail);
       return;
     }
     setLinks(data.intakeLinks);

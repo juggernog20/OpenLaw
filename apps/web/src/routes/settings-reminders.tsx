@@ -32,7 +32,7 @@ import { useRef, useState } from "react";
 import { redirect, useLoaderData } from "react-router";
 import { FormattedMessage, useIntl, type IntlShape } from "react-intl";
 import { api } from "../lib/api";
-import { problemDetail } from "../lib/messages";
+import { problem } from "../lib/problem";
 import { requireUser } from "../lib/session";
 import { ListEditor, type ListEditorRow } from "../components/list-editor";
 import { PageTitle } from "../components/page-title";
@@ -110,13 +110,14 @@ export function SettingsRemindersPage() {
     setStatus("saving");
     setDetail(undefined);
     try {
-      const { data, error } = await api
+      const result = await api
         .PUT("/api/v1/org/reminder-offsets", { body: { offsets: next } })
-        .catch(() => ({ data: null, error: undefined }));
+        .catch(() => undefined);
+      const { data } = result ?? {};
       if (!data) {
         setOffsets(previous);
         setStatus("error");
-        setDetail(problemDetail(error));
+        setDetail((await problem(result)).detail);
         return false;
       }
       // The server's own list, not the sent one: it collapses duplicates,

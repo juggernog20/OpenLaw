@@ -3,12 +3,12 @@
 /**
  * Organization · Security · Authentication (#64), from the ST17/ST18
  * frames of settings.pen: the mode cards (built-in vs OIDC), the OIDC
- * provider form, and the Portal access card — the magic-link toggle
- * with its built-in-mode lock (DD-010), plus the allowed-email-domains
- * editor the SET-001 amendment moved onto this pane. Everything fronts
- * the M2 typed routes with SET-003 immediate apply and DES-017
- * micro-states; the API's 403 is the real refusal behind the loader's
- * SET-002 bounce.
+ * provider form, and the Portal access card. That card holds the
+ * magic-link toggle with its built-in-mode lock (DD-010), plus the
+ * allowed-email-domains editor the SET-001 amendment moved onto this
+ * pane. Everything fronts the M2 typed routes with SET-003 immediate
+ * apply and DES-017 micro-states. The API's 403 is the real refusal
+ * behind the loader's SET-002 bounce.
  */
 
 import { useState, type ReactNode, type SubmitEvent as FormSubmitEvent } from "react";
@@ -17,7 +17,7 @@ import { FormattedMessage, useIntl } from "react-intl";
 import { X } from "lucide-react";
 import type { paths } from "@openlaw/api-client";
 import { api } from "../lib/api";
-import { problemDetail } from "../lib/messages";
+import { problem } from "../lib/problem";
 import { requireUser } from "../lib/session";
 import { cn } from "../lib/utils";
 import { PageTitle } from "../components/page-title";
@@ -58,7 +58,7 @@ interface Provider {
   clientId: string | null;
 }
 
-/** A mode card from ST17: radio, title, description — one per mode. */
+/** A mode card from ST17: radio, title, description. One per mode. */
 function ModeOption(
   props: Readonly<{
     mode: AuthMode;
@@ -102,7 +102,7 @@ function ModeOption(
   );
 }
 
-/** The PATCH body as the generated contract types it — a misspelled key
+/** The PATCH body as the generated contract types it. A misspelled key
  * is a compile error, not a field the Zod schema silently strips. */
 type ProviderPatch = NonNullable<
   paths["/api/v1/auth/sso-providers/{providerId}"]["patch"]["requestBody"]
@@ -147,8 +147,8 @@ export function SettingsAuthenticationPage() {
   const [provider, setProvider] = useState<Provider | null>(loaded.provider);
   const [callbackUrl, setCallbackUrl] = useState<string | null>(null);
 
-  // The ST18 provider form drafts; the secret is write-only and starts
-  // blank — an empty field means "keep the stored one".
+  // The ST18 provider form drafts. The secret is write-only and starts
+  // blank; an empty field means "keep the stored one".
   const [providerIdDraft, setProviderIdDraft] = useState("");
   const [issuerDraft, setIssuerDraft] = useState(loaded.provider?.issuer ?? "");
   const [domainDraft, setDomainDraft] = useState(loaded.provider?.domain ?? "");
@@ -175,18 +175,19 @@ export function SettingsAuthenticationPage() {
   async function commitMode(next: AuthMode): Promise<void> {
     note("mode", "saving");
     try {
-      const { data, error } = await api.PATCH("/api/v1/auth/mode", { body: { mode: next } });
+      const result = await api.PATCH("/api/v1/auth/mode", { body: { mode: next } });
+      const { data } = result;
       if (!data) {
         setModeDraft(null);
-        note("mode", "error", problemDetail(error));
+        note("mode", "error", (await problem(result)).detail);
         return;
       }
       setMode(data.mode);
       setModeDraft(null);
       note("mode", "saved");
-      // The DD-010 floor as state, not only a disabled switch: magic
+      // The DD-010 floor as state, not only a disabled switch. Magic
       // links could be off from OIDC mode, and built-in mode locks the
-      // toggle — without this restore the portal would be shut with no
+      // toggle. Without this restore the portal would be shut with no
       // control left to reopen it.
       if (data.mode === "built_in" && !magicLinkEnabled) await commitPortal(true);
     } catch {
@@ -198,7 +199,7 @@ export function SettingsAuthenticationPage() {
   function pickMode(next: AuthMode) {
     if (next === selectedMode) return;
     // Switching to OIDC without a registered IdP would leave everyone
-    // but Administrators without a sign-in method — the switch waits
+    // but Administrators without a sign-in method. The switch waits
     // for the registration below (wizard precedent, #34).
     if (next === "oidc" && !provider) {
       setModeDraft("oidc");
@@ -209,7 +210,7 @@ export function SettingsAuthenticationPage() {
       setModeDraft(null);
       return;
     }
-    // The radio flips optimistically (SET-003 immediate apply); a
+    // The radio flips optimistically (SET-003 immediate apply). A
     // failed PATCH snaps it back with the error micro-state.
     setModeDraft(next);
     void commitMode(next);
@@ -218,11 +219,12 @@ export function SettingsAuthenticationPage() {
   async function commitPortal(next: boolean): Promise<void> {
     note("portal", "saving");
     try {
-      const { data, error } = await api.PATCH("/api/v1/auth/portal", {
+      const result = await api.PATCH("/api/v1/auth/portal", {
         body: { magicLinkEnabled: next },
       });
+      const { data } = result;
       if (!data) {
-        note("portal", "error", problemDetail(error));
+        note("portal", "error", (await problem(result)).detail);
         return;
       }
       setMagicLinkEnabled(data.magicLinkEnabled);
@@ -237,11 +239,12 @@ export function SettingsAuthenticationPage() {
   async function commitDomains(next: string[]): Promise<boolean> {
     note("domains", "saving");
     try {
-      const { data, error } = await api.PUT("/api/v1/auth/allowed-domains", {
+      const result = await api.PUT("/api/v1/auth/allowed-domains", {
         body: { domains: next },
       });
+      const { data } = result;
       if (!data) {
-        note("domains", "error", problemDetail(error));
+        note("domains", "error", (await problem(result)).detail);
         return false;
       }
       setDomains(data.domains);
@@ -259,7 +262,7 @@ export function SettingsAuthenticationPage() {
       setDomainInput("");
       return;
     }
-    // The typed domain survives a failed request — clearing it early
+    // The typed domain survives a failed request. Clearing it early
     // would leave retyping as the only recovery.
     void commitDomains([...domains, domain]).then((saved) => {
       if (saved) setDomainInput("");
@@ -281,12 +284,13 @@ export function SettingsAuthenticationPage() {
           note("provider", "idle");
           return;
         }
-        const { data, error } = await api.PATCH("/api/v1/auth/sso-providers/{providerId}", {
+        const result = await api.PATCH("/api/v1/auth/sso-providers/{providerId}", {
           params: { path: { providerId: provider.providerId } },
           body,
         });
+        const { data } = result;
         if (!data) {
-          note("provider", "error", problemDetail(error));
+          note("provider", "error", (await problem(result)).detail);
           return;
         }
         setProvider({ ...data.provider, clientId: clientIdDraft });
@@ -295,7 +299,7 @@ export function SettingsAuthenticationPage() {
         note("provider", "saved");
         return;
       }
-      const { data, error } = await api.POST("/api/v1/auth/sso-providers", {
+      const result = await api.POST("/api/v1/auth/sso-providers", {
         body: {
           providerId: providerIdDraft,
           issuer: issuerDraft,
@@ -304,8 +308,9 @@ export function SettingsAuthenticationPage() {
           clientSecret: secretDraft,
         },
       });
+      const { data } = result;
       if (!data) {
-        note("provider", "error", problemDetail(error));
+        note("provider", "error", (await problem(result)).detail);
         return;
       }
       setProvider({ ...data.provider, clientId: clientIdDraft });
@@ -403,8 +408,8 @@ export function SettingsAuthenticationPage() {
           required={!provider}
           placeholder={intl.formatMessage({
             id: "settings.auth.secretPlaceholder",
-            // A visual mask, not copy — but it still rides the catalog
-            // so a locale can swap the glyph.
+            // A visual mask, not copy. It still rides the catalog so a
+            // locale can swap the glyph.
             defaultMessage: "••••••••••••••••",
           })}
           value={secretDraft}
@@ -523,7 +528,7 @@ export function SettingsAuthenticationPage() {
             <Switch
               checked={magicLinkEnabled}
               // The DD-010 floor: in built-in mode magic links cannot be
-              // turned off — the API would accept it, the product says no.
+              // turned off. The API would accept it; the product says no.
               disabled={mode === "built_in"}
               onCheckedChange={(next) => void commitPortal(next)}
               aria-labelledby="portal-toggle-label"

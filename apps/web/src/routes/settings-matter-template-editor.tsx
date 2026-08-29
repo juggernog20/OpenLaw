@@ -17,7 +17,7 @@ import {
   type CustomFieldValue,
   type CustomFieldValues,
 } from "../lib/custom-fields";
-import { problemDetail } from "../lib/messages";
+import { problem } from "../lib/problem";
 import { requireUser } from "../lib/session";
 import { MattersSettingsTabs } from "../components/matters-settings-tabs";
 import { CustomFieldControl, type FieldReference } from "../components/custom-field-control";
@@ -232,7 +232,7 @@ export function SettingsMatterTemplateEditorPage() {
     }
     setStatus("saving");
     setDetail(null);
-    const { data, error } = await api
+    const result = await api
       .PATCH("/api/v1/matter-templates/{id}", {
         params: { path: { id: template.id } },
         body: {
@@ -243,11 +243,12 @@ export function SettingsMatterTemplateEditorPage() {
           titlePrefix: titlePrefix.trim() || null,
         },
       })
-      .catch(() => ({ data: null, error: undefined }));
+      .catch(() => undefined);
+    const { data } = result ?? {};
     if (!data) {
       setStatus("error");
       setDetail(
-        problemDetail(error) ??
+        (await problem(result)).detail ??
           intl.formatMessage({
             id: "settings.matterTemplateEditor.saveError",
             defaultMessage: "The Matter template could not be saved.",
@@ -262,11 +263,11 @@ export function SettingsMatterTemplateEditorPage() {
         params: { path: { id: template.id } },
         body: { defaultCustomFields: customFieldValues },
       })
-      .catch(() => ({ data: null, error: undefined }));
-    if (!fieldResult.data) {
+      .catch(() => undefined);
+    if (!fieldResult?.data) {
       setStatus("error");
       setDetail(
-        problemDetail(fieldResult.error) ??
+        (await problem(fieldResult)).detail ??
           intl.formatMessage({
             id: "settings.matterTemplateEditor.fieldsSaveError",
             defaultMessage:
@@ -288,11 +289,11 @@ export function SettingsMatterTemplateEditorPage() {
           })),
         },
       })
-      .catch(() => ({ data: null, error: undefined }));
-    if (!taskResult.data) {
+      .catch(() => undefined);
+    if (!taskResult?.data) {
       setStatus("error");
       setDetail(
-        problemDetail(taskResult.error) ??
+        (await problem(taskResult)).detail ??
           intl.formatMessage({
             id: "settings.matterTemplateEditor.tasksSaveError",
             defaultMessage:
@@ -314,11 +315,11 @@ export function SettingsMatterTemplateEditorPage() {
           })),
         },
       })
-      .catch(() => ({ data: null, error: undefined }));
-    if (!keyDateResult.data) {
+      .catch(() => undefined);
+    if (!keyDateResult?.data) {
       setStatus("error");
       setDetail(
-        problemDetail(keyDateResult.error) ??
+        (await problem(keyDateResult)).detail ??
           intl.formatMessage({
             id: "settings.matterTemplateEditor.keyDatesSaveError",
             defaultMessage:

@@ -1,18 +1,18 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 /**
- * Contracts · Fields (#83), the shared CTR-016 field catalog scoped to
- * contract and global fields, per the ST11 frame of settings.pen: the
- * ListEditor in its DES-021 table variant — column header, no reorder
- * (the catalog is unordered; per-type attachment orders rendering), the
- * scope pill, the type and tag columns, and the sparkle marking fields
- * with an AI extraction prompt (CTR-008). Creation has seven dimensions
- * (two of them immutable), so add and edit go through the field-editor
- * dialog rather than an inline row; the name still renames in place
- * (DES-017). Archive is guarded but never blocked and never reassigns —
- * stored values are retained by rule (MTR-014), which the guard says
- * out loud. The loader is the client half of SET-002's gate; the API's
- * 403 is the real refusal.
+ * Contracts · Fields (#83): the shared CTR-016 field catalog scoped to
+ * one module's fields plus global ones, per the ST11 frame of
+ * settings.pen. It is the ListEditor in its DES-021 table variant: a
+ * column header, no reorder (the catalog is unordered; per-type
+ * attachment orders rendering), the scope pill, the type and tag
+ * columns, and the sparkle marking Fields with an AI extraction prompt
+ * (CTR-008). Creation has seven dimensions (two of them immutable), so
+ * add and edit go through the field-editor dialog rather than an inline
+ * row; the name still renames in place (DES-017). Archive is guarded
+ * but never blocked and never reassigns. Stored values are retained by
+ * rule (MTR-014), which the guard says out loud. The loader is the
+ * client half of SET-002's gate; the API's 403 is the real refusal.
  */
 
 import { useRef, useState, type ReactNode } from "react";
@@ -21,7 +21,7 @@ import { redirect, useLoaderData } from "react-router";
 import { FormattedMessage, useIntl, type IntlShape } from "react-intl";
 import { History, Pencil, Sparkles, TriangleAlert } from "lucide-react";
 import { api } from "../lib/api";
-import { problemDetail } from "../lib/messages";
+import { problem as readProblem } from "../lib/problem";
 import { requireUser } from "../lib/session";
 import { ContractsSettingsTabs } from "../components/contracts-settings-tabs";
 import { MattersSettingsTabs } from "../components/matters-settings-tabs";
@@ -67,11 +67,11 @@ const FIELD_TYPES = [
 ] as const;
 type FieldType = (typeof FIELD_TYPES)[number];
 
-/** The select types — the only ones that carry an options list. */
+/** The select types, the only ones that carry an options list. */
 const SELECT_TYPES = new Set<FieldType>(["single_select", "multi_select"]);
 
-/** The scopes this pane's picker offers (CTR-016): matter and entity
- * join with their milestones. */
+/** The scopes this pane's picker offers (CTR-016). Entity joins with
+ * its milestone. */
 type ModuleScope = "contract" | "matter";
 type Scope = ModuleScope | "global";
 
@@ -214,7 +214,7 @@ function FieldEditorDialog({
 
   async function create() {
     const options = parseOptions(draft.optionsText);
-    const { data, error: problem } = await api
+    const result = await api
       .POST("/api/v1/fields", {
         body: {
           displayName: draft.name.trim(),
@@ -226,10 +226,11 @@ function FieldEditorDialog({
           aiPrompt: promptable && draft.aiPrompt.trim() ? draft.aiPrompt.trim() : undefined,
         },
       })
-      .catch(() => ({ data: null, error: undefined }));
+      .catch(() => undefined);
+    const { data } = result ?? {};
     if (!data) {
       refuse(
-        problemDetail(problem) ??
+        (await readProblem(result)).detail ??
           intl.formatMessage({
             id: "settings.contractFields.createError",
             defaultMessage: "The field could not be created.",
@@ -245,15 +246,16 @@ function FieldEditorDialog({
     let latest = existing;
     // Scope first: the prompt rules follow the scope the field ends on.
     if (draft.scope !== existing.moduleScope) {
-      const { data, error: problem } = await api
+      const result = await api
         .PUT("/api/v1/fields/{id}/scope", {
           params: { path: { id: existing.id } },
           body: { moduleScope: draft.scope },
         })
-        .catch(() => ({ data: null, error: undefined }));
+        .catch(() => undefined);
+      const { data } = result ?? {};
       if (!data) {
         refuse(
-          problemDetail(problem) ??
+          (await readProblem(result)).detail ??
             intl.formatMessage({
               id: "settings.contractFields.editError",
               defaultMessage: "The field could not be saved.",
@@ -281,12 +283,13 @@ function FieldEditorDialog({
     }
     if (Object.keys(body).length === 0) return true;
 
-    const { data, error: problem } = await api
+    const result = await api
       .PATCH("/api/v1/fields/{id}", { params: { path: { id: latest.id } }, body })
-      .catch(() => ({ data: null, error: undefined }));
+      .catch(() => undefined);
+    const { data } = result ?? {};
     if (!data) {
       refuse(
-        problemDetail(problem) ??
+        (await readProblem(result)).detail ??
           intl.formatMessage({
             id: "settings.contractFields.editError",
             defaultMessage: "The field could not be saved.",
@@ -553,7 +556,7 @@ function ArchiveFieldDialog({
   module: ModuleScope;
   onOpenChange: (open: boolean) => void;
   onArchived: (row: FieldRow) => void;
-  /** Where focus lands after a successful archive — the row's archive
+  /** Where focus lands after a successful archive. The row's archive
    * button unmounts with the row, so the default restore has no home. */
   onArchivedCloseFocus: () => void;
 }>) {
@@ -566,9 +569,10 @@ function ArchiveFieldDialog({
     setBusy(true);
     setError(null);
     try {
-      const { data, error: problem } = await api.POST("/api/v1/fields/{id}/archive", {
+      const result = await api.POST("/api/v1/fields/{id}/archive", {
         params: { path: { id: target.id } },
       });
+      const { data } = result;
       if (data) {
         archived.current = true;
         onArchived(fieldRow(data.field, module));
@@ -577,7 +581,7 @@ function ArchiveFieldDialog({
         // The API's own refusal (already archived, a stale list) is
         // more actionable than any generic line.
         setError(
-          problemDetail(problem) ??
+          (await readProblem(result)).detail ??
             intl.formatMessage({
               id: "settings.contractFields.archiveError",
               defaultMessage: "The field could not be archived.",
@@ -619,8 +623,8 @@ function ArchiveFieldDialog({
             <TriangleAlert size={16} aria-hidden="true" className="mt-0.5 shrink-0" />
             {/* Fields never reassign and never block: everything is
                 retained by rule (MTR-014), which is the whole message.
-                M8 and M22 added record values to this same count; the
-                copy deliberately calls every source "uses". */}
+                M8 and M22 added record values to this same count, but
+                the copy still reads it as type attachments. */}
             <p>
               <FormattedMessage
                 id="settings.contractFields.archiveWarning"
@@ -679,8 +683,8 @@ function SettingsFieldsPage({
   const [archiveTarget, setArchiveTarget] = useState<FieldRow | null>(null);
   const listRef = useRef<HTMLUListElement>(null);
 
-  // The catalog is unordered (no display order — attachment order rules
-  // rendering once types attach fields); the list keeps creation order.
+  // The catalog is unordered (no display order; attachment order rules
+  // rendering once types attach fields). The list keeps creation order.
   const live = rows.filter((row) => !row.archivedAt);
   const archived = rows.filter((row) => row.archivedAt);
 
@@ -695,30 +699,32 @@ function SettingsFieldsPage({
 
   async function rename(row: FieldRow, displayName: string) {
     noteRow(row.id, "saving");
-    const { data, error } = await api
+    const result = await api
       .PATCH("/api/v1/fields/{id}", {
         params: { path: { id: row.id } },
         body: { displayName },
       })
-      .catch(() => ({ data: null, error: undefined }));
+      .catch(() => undefined);
+    const { data } = result ?? {};
     if (data) {
       replaceRow(fieldRow(data.field, module));
       noteRow(row.id, "saved");
     } else {
-      noteRow(row.id, "error", problemDetail(error));
+      noteRow(row.id, "error", (await readProblem(result)).detail);
     }
   }
 
   async function restore(row: FieldRow) {
     noteRow(row.id, "saving");
-    const { data, error } = await api
+    const result = await api
       .POST("/api/v1/fields/{id}/restore", { params: { path: { id: row.id } } })
-      .catch(() => ({ data: null, error: undefined }));
+      .catch(() => undefined);
+    const { data } = result ?? {};
     if (data) {
       replaceRow(fieldRow(data.field, module));
       noteRow(row.id, "saved");
     } else {
-      noteRow(row.id, "error", problemDetail(error));
+      noteRow(row.id, "error", (await readProblem(result)).detail);
     }
   }
 

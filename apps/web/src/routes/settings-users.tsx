@@ -1,15 +1,15 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 /**
- * Organization · Users (#65, #66), from the ST5 frame of settings.pen:
- * every user in one table — name, email, role, status, last active —
- * with pending invites as ordinary rows (SET-005), never
- * fire-and-forget. Inviting happens right here through a dialog, and
- * every people-facing action lives on the person's row: invite rows
- * carry resend and revoke; active rows carry the in-place role select,
- * session revocation, and the guarded archive; archived rows sit greyed
- * behind the Show-archived filter with restore. The loader is the
- * client half of SET-002's gate; the API's 403 is the real refusal.
+ * Organization · Users (#65, #66), from the ST5 frame of settings.pen.
+ * Every user sits in one table with name, email, role, status, and last
+ * active. Pending invites are ordinary rows (SET-005), never
+ * fire-and-forget. Inviting happens here through a dialog. Every
+ * people-facing action lives on the person's row: invite rows carry
+ * resend and revoke; active rows carry the in-place role select,
+ * session revocation, and archive; archived rows sit greyed behind the
+ * Show-archived filter with restore. The loader is the client half of
+ * SET-002's gate; the API's 403 is the real refusal.
  */
 
 import { useState, type SubmitEvent as FormSubmitEvent } from "react";
@@ -18,7 +18,7 @@ import { FormattedMessage, useIntl, type IntlShape } from "react-intl";
 import { Archive, ArchiveRestore, ChevronDown, LogOut, Plus, Send, Trash2 } from "lucide-react";
 import { api } from "../lib/api";
 import { field } from "../lib/forms";
-import { problemDetail } from "../lib/messages";
+import { problem as readProblem } from "../lib/problem";
 import { ROLE_MESSAGES } from "../lib/roles";
 import { requireUser } from "../lib/session";
 import { cn } from "../lib/utils";
@@ -60,8 +60,8 @@ interface UserRow {
 const INVITE_ROLES = ["legal_team_member", "contributor", "administrator"] as const;
 type InviteRole = (typeof INVITE_ROLES)[number];
 
-/** Role edits span the whole DD-013 enum (SET-005) — a Business User can
- * be promoted to staff in place, and staff can be moved between roles. */
+/** Role edits span the whole DD-013 enum (SET-005). A Business User can
+ * be promoted to staff in place, and staff can move between roles. */
 const ALL_ROLES = [
   "administrator",
   "legal_team_member",
@@ -96,7 +96,8 @@ function StatusPill({ status }: Readonly<{ status: UserRow["status"] }>) {
   );
 }
 
-/** Mock-style stamps: "3h ago" within the week, then "Jul 28". */
+/** Mock-style stamps: "3h ago" within the week, then "Jul 28", with the
+ * year added once it is not the current one. */
 function lastActiveLabel(intl: IntlShape, iso: string | null): string {
   if (!iso) return intl.formatMessage({ id: "settings.users.neverActive", defaultMessage: "—" });
   const then = new Date(iso);
@@ -137,13 +138,14 @@ function InviteDialog({
     setBusy(true);
     setError(null);
     try {
-      const { data, error: problem } = await api.POST("/api/v1/auth/invites", {
+      const result = await api.POST("/api/v1/auth/invites", {
         body: {
           email: field(fields, "inviteEmail"),
           displayName: field(fields, "inviteName"),
           role,
         },
       });
+      const { data } = result;
       if (data) {
         onInvited({ ...data.user, status: "invited", lastActiveAt: null });
         setRole("legal_team_member");
@@ -152,7 +154,7 @@ function InviteDialog({
         // The API's own refusal (a 409 duplicate, a barred domain) is
         // more actionable than any generic line.
         setError(
-          problemDetail(problem) ??
+          (await readProblem(result)).detail ??
             intl.formatMessage({
               id: "settings.users.inviteError",
               defaultMessage: "The invite could not be sent.",
@@ -196,7 +198,7 @@ function InviteDialog({
               <FormattedMessage id="settings.users.inviteRole" defaultMessage="Role" />
             </legend>
             {/* Real radios, matching the Authentication pane's mode
-                choice: the fieldset/legend promises a single-choice
+                choice. The fieldset/legend promises a single-choice
                 group, and radios deliver its keyboard model for free. */}
             <div className="flex flex-wrap gap-4">
               {INVITE_ROLES.map((option) => (
@@ -257,29 +259,30 @@ export function SettingsUsersPage() {
 
   async function resend(row: UserRow) {
     noteRow(row.id, "saving");
-    const { data, error } = await api
+    const result = await api
       .POST("/api/v1/auth/invites/{userId}/resend", {
         params: { path: { userId: row.id } },
       })
-      .catch(() => ({ data: null, error: undefined }));
+      .catch(() => undefined);
+    const { data } = result ?? {};
     if (data) {
       noteRow(row.id, "saved");
       return;
     }
     // An actionable refusal (an already-accepted invite) beats the
     // generic line, same as every sibling handler.
-    noteRow(row.id, "error", problemDetail(error));
+    noteRow(row.id, "error", (await readProblem(result)).detail);
   }
 
   async function revoke(row: UserRow) {
     noteRow(row.id, "saving");
-    const { error } = await api
+    const result = await api
       .DELETE("/api/v1/auth/invites/{userId}", {
         params: { path: { userId: row.id } },
       })
-      .catch(() => ({ error: true as const }));
-    if (error) {
-      noteRow(row.id, "error", problemDetail(error));
+      .catch(() => undefined);
+    if (!result || result.error) {
+      noteRow(row.id, "error", (await readProblem(result)).detail);
       return;
     }
     setRows((current) => current.filter((user) => user.id !== row.id));
@@ -288,64 +291,72 @@ export function SettingsUsersPage() {
   async function changeRole(row: UserRow, role: UserRow["role"]) {
     if (role === row.role) return;
     noteRow(row.id, "saving");
-    const { data, error } = await api
+    const result = await api
       .PATCH("/api/v1/users/{userId}/role", {
         params: { path: { userId: row.id } },
         body: { role },
       })
-      .catch(() => ({ data: null, error: undefined }));
+      .catch(() => undefined);
+    const { data } = result ?? {};
     if (data) {
       replaceRow(data.user);
       noteRow(row.id, "saved");
     } else {
       // The floor's refusal ("You cannot demote the last Administrator.")
-      // is the answer to "why not?" — show it, not a generic line.
-      noteRow(row.id, "error", problemDetail(error));
+      // answers "why not?". Show it, not a generic line.
+      noteRow(row.id, "error", (await readProblem(result)).detail);
     }
   }
 
   async function archive(row: UserRow) {
     noteRow(row.id, "saving");
-    const { data, error } = await api
+    const result = await api
       .POST("/api/v1/users/{userId}/archive", {
         params: { path: { userId: row.id } },
       })
-      .catch(() => ({ data: null, error: undefined }));
+      .catch(() => undefined);
+    const { data } = result ?? {};
     if (data) {
       replaceRow(data.user);
       noteRow(row.id, "saved");
     } else {
-      noteRow(row.id, "error", problemDetail(error));
+      noteRow(row.id, "error", (await readProblem(result)).detail);
     }
   }
 
   async function unarchive(row: UserRow) {
     noteRow(row.id, "saving");
-    const { data, error } = await api
+    const result = await api
       .POST("/api/v1/users/{userId}/unarchive", {
         params: { path: { userId: row.id } },
       })
-      .catch(() => ({ data: null, error: undefined }));
+      .catch(() => undefined);
+    const { data } = result ?? {};
     if (data) {
       replaceRow(data.user);
       noteRow(row.id, "saved");
     } else {
-      noteRow(row.id, "error", problemDetail(error));
+      noteRow(row.id, "error", (await readProblem(result)).detail);
     }
   }
 
   async function revokeSessions(row: UserRow) {
     noteRow(row.id, "saving");
-    const { error } = await api
+    const result = await api
       .POST("/api/v1/users/{userId}/revoke-sessions", {
         params: { path: { userId: row.id } },
       })
-      .catch(() => ({ error: true as const }));
-    noteRow(row.id, error ? "error" : "saved", error ? problemDetail(error) : undefined);
+      .catch(() => undefined);
+    const failed = !result || result.error !== undefined;
+    noteRow(
+      row.id,
+      failed ? "error" : "saved",
+      failed ? (await readProblem(result)).detail : undefined,
+    );
   }
 
-  /** A ghost icon action on the row; every row's actions share the
-   * saving lock so a double-click cannot race two mutations. */
+  /** A ghost icon action on the row. All actions on one row share that
+   * row's saving lock, so a double-click cannot race two mutations. */
   function rowAction(
     row: UserRow,
     label: string,
@@ -449,7 +460,7 @@ export function SettingsUsersPage() {
                   </td>
                   <td className="px-3 text-sm font-medium whitespace-nowrap">
                     {row.status === "active" ? (
-                      // In-place role edit (SET-005): the row IS the
+                      // In-place role edit (SET-005): the row is the
                       // editor. Invite rows never edit roles, and an
                       // archived row waits for restore first.
                       <DropdownMenu>
@@ -595,7 +606,7 @@ export function SettingsUsersPage() {
         onOpenChange={setInviteOpen}
         onInvited={(user) =>
           // A 200 re-send of an already-pending invite returns the same
-          // user — never append a duplicate row for it.
+          // user. Never append a duplicate row for it.
           setRows((current) =>
             current.some(({ id }) => id === user.id) ? current : [...current, user],
           )

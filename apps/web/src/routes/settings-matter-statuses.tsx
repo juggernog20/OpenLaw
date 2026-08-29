@@ -1,17 +1,17 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 /**
- * Matters · Statuses (#82), the DES-020 list-editor extended per the
- * ST10 frame of settings.pen: the MTR-002 taxonomy with the category badge
- * in the qualifier-pill slot and the `open` and `closed` seeds locked,
- * drag or arrow-key reorder, and an inline draft row whose category is
- * picked at creation and immutable after. The archive guard enforces
- * the MTR-002 category floor and requires a same-category replacement
- * when matters still hold the status. Every
- * mutation applies immediately on save. The shared anatomy lives in the
- * ListEditor component (extracted with #83); this pane owns the MTR-002
- * vocabulary, the API calls, and the guard dialog. The loader is the
- * client half of SET-002's gate; the API's 403 is the real refusal.
+ * Matters · Statuses (#82): the DES-020 list editor on the ST10 frame of
+ * settings.pen. The MTR-002 taxonomy shows its category badge in the
+ * qualifier-pill slot, the `open` and `closed` seeds are locked, rows
+ * reorder by drag or arrow key, and the inline draft row picks a
+ * category at creation that is immutable after. The archive guard
+ * enforces the MTR-002 category floor and requires a same-category
+ * replacement when Matters still hold the status. Every mutation
+ * applies on save. The shared anatomy lives in ListEditor (extracted
+ * with #83); this pane owns the MTR-002 vocabulary, the API calls, and
+ * the guard dialog. The loader is the client half of SET-002's gate;
+ * the API's 403 is the real refusal.
  */
 
 import { useRef, useState } from "react";
@@ -20,7 +20,7 @@ import { redirect, useLoaderData } from "react-router";
 import { FormattedMessage, useIntl, type IntlShape } from "react-intl";
 import { History, TriangleAlert } from "lucide-react";
 import { api } from "../lib/api";
-import { problemDetail } from "../lib/messages";
+import { problem as readProblem } from "../lib/problem";
 import { requireUser } from "../lib/session";
 import { MattersSettingsTabs } from "../components/matters-settings-tabs";
 import { ListEditor } from "../components/list-editor";
@@ -53,7 +53,7 @@ type StatusRow =
 
 const byDisplayOrder = (a: StatusRow, b: StatusRow) => a.displayOrder - b.displayOrder;
 
-/** The fixed category names — never sourced from a status label (MTR-002). */
+/** The fixed category names. Never sourced from a status label (MTR-002). */
 function categoryLabel(intl: IntlShape, category: Category): string {
   return intl.formatMessage(
     {
@@ -74,13 +74,13 @@ function ArchiveStatusDialog({
 }: Readonly<{
   target: StatusRow;
   /** The MTR-002 floor: the target is its category's last unarchived
-   * status. The other block — matters still on the status — rides
+   * status. The other block, Matters still on the status, rides
    * `target.inUseCount`, so the dialog reads it from the row. */
   blocked: boolean;
   candidates: StatusRow[];
   onOpenChange: (open: boolean) => void;
   onArchived: (row: StatusRow) => void;
-  /** Where focus lands after a successful archive — the row's archive
+  /** Where focus lands after a successful archive. The row's archive
    * button unmounts with the row, so the default restore has no home. */
   onArchivedCloseFocus: () => void;
 }>) {
@@ -94,10 +94,11 @@ function ArchiveStatusDialog({
     setBusy(true);
     setError(null);
     try {
-      const { data, error: problem } = await api.POST("/api/v1/matter-statuses/{id}/archive", {
+      const result = await api.POST("/api/v1/matter-statuses/{id}/archive", {
         params: { path: { id: target.id } },
         body: reassignToId ? { reassignToId } : {},
       });
+      const { data } = result;
       if (data) {
         archived.current = true;
         onArchived(data.matterStatus);
@@ -106,7 +107,7 @@ function ArchiveStatusDialog({
         // The API's own refusal (a protected row, the floor, a stale
         // list) is more actionable than any generic line.
         setError(
-          problemDetail(problem) ??
+          (await readProblem(result)).detail ??
             intl.formatMessage({
               id: "settings.matterStatuses.archiveError",
               defaultMessage: "The status could not be archived.",
@@ -283,22 +284,23 @@ export function SettingsMatterStatusesPage() {
 
   async function rename(row: StatusRow, displayName: string) {
     noteRow(row.id, "saving");
-    const { data, error } = await api
+    const result = await api
       .PATCH("/api/v1/matter-statuses/{id}", {
         params: { path: { id: row.id } },
         body: { displayName },
       })
-      .catch(() => ({ data: null, error: undefined }));
+      .catch(() => undefined);
+    const { data } = result ?? {};
     if (data) {
       replaceRow(data.matterStatus);
       noteRow(row.id, "saved");
     } else {
-      noteRow(row.id, "error", problemDetail(error));
+      noteRow(row.id, "error", (await readProblem(result)).detail);
     }
   }
 
   async function create() {
-    // Enter can land while a create is already posting — a ref, set
+    // Enter can land while a create is already posting. A ref, set
     // synchronously, keeps a double-tap from posting the draft twice.
     if (createInFlight.current) return;
     const displayName = addDraft.name.trim();
@@ -322,11 +324,12 @@ export function SettingsMatterStatusesPage() {
     setAddStatus("saving");
     setAddError(undefined);
     try {
-      const { data, error } = await api
+      const result = await api
         .POST("/api/v1/matter-statuses", {
           body: { displayName, category: addDraft.category },
         })
-        .catch(() => ({ data: null, error: undefined }));
+        .catch(() => undefined);
+      const { data } = result ?? {};
       if (data) {
         setRows((current) => [...current, data.matterStatus]);
         setAdding(false);
@@ -335,7 +338,7 @@ export function SettingsMatterStatusesPage() {
       } else {
         // Keep the draft row open so the name is not lost to a refusal.
         setAddStatus("error");
-        setAddError(problemDetail(error));
+        setAddError((await readProblem(result)).detail);
       }
     } finally {
       createInFlight.current = false;
@@ -346,9 +349,10 @@ export function SettingsMatterStatusesPage() {
   async function commitOrder(orderedIds: string[]) {
     setOrderStatus("saving");
     setOrderError(undefined);
-    const { data, error } = await api
+    const result = await api
       .PUT("/api/v1/matter-statuses/order", { body: { ids: orderedIds } })
-      .catch(() => ({ data: null, error: undefined }));
+      .catch(() => undefined);
+    const { data } = result ?? {};
     if (data) {
       const reordered: StatusRow[] = data.matterStatuses;
       setRows((current) => [
@@ -359,11 +363,11 @@ export function SettingsMatterStatusesPage() {
       return true;
     }
     setOrderStatus("error");
-    setOrderError(problemDetail(error));
+    setOrderError((await readProblem(result)).detail);
     return false;
   }
 
-  /** One validated move from the grip (arrow key or drop) — commit the
+  /** One validated move from the grip (arrow key or drop): commit the
    * permutation and announce the landing position (DES-020). */
   async function move(fromIndex: number, toIndex: number) {
     const row = live[fromIndex]!;
@@ -385,14 +389,15 @@ export function SettingsMatterStatusesPage() {
 
   async function restore(row: StatusRow) {
     noteRow(row.id, "saving");
-    const { data, error } = await api
+    const result = await api
       .POST("/api/v1/matter-statuses/{id}/restore", { params: { path: { id: row.id } } })
-      .catch(() => ({ data: null, error: undefined }));
+      .catch(() => undefined);
+    const { data } = result ?? {};
     if (data) {
       replaceRow(data.matterStatus);
       noteRow(row.id, "saved");
     } else {
-      noteRow(row.id, "error", problemDetail(error));
+      noteRow(row.id, "error", (await readProblem(result)).detail);
     }
   }
 
@@ -543,7 +548,7 @@ export function SettingsMatterStatusesPage() {
                   const category = event.target.value as Category | "";
                   setAddDraft((current) => ({ ...current, category }));
                   // Picking a category answers the "pick a category"
-                  // refusal — don't leave it standing.
+                  // refusal, so clear it.
                   if (category !== "" && addStatus === "error") {
                     setAddStatus("idle");
                     setAddError(undefined);

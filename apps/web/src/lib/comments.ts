@@ -96,7 +96,7 @@ export async function sendComment(input: CommentPost, files: readonly File[] = [
     response = await fetch("/api/v1/comments", { method: "POST", body: form });
   } catch {
     // A dropped connection: the composer says so in its own words.
-    return { data: undefined, error: undefined };
+    return undefined;
   }
   // A refusal from in front of the API (a proxy's 413, say) carries no
   // problem JSON. It is still a refusal, not a dropped connection.
@@ -107,10 +107,10 @@ export async function sendComment(input: CommentPost, files: readonly File[] = [
     // reason the document uploads read their answer before trusting it.
     const comment = commentIn(payload);
     return comment
-      ? { data: { comment }, error: undefined }
-      : { data: undefined, error: undefined };
+      ? { data: { comment }, error: undefined, response }
+      : { data: undefined, error: undefined, response };
   }
-  return { data: undefined, error: payload };
+  return { data: undefined, error: payload, response };
 }
 
 /** The envelope POST /comments answers, or nothing when the body is not it. */

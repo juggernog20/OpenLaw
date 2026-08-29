@@ -7,12 +7,12 @@
 #   web     http://localhost:5173   Vite, hot module reload
 #   api     http://localhost:3000   tsx watch, restarts on save
 #   worker  no port                 tsx watch, restarts on save
-#   mail    http://localhost:8025   Mailpit — every sent link lands here
+#   mail    http://localhost:8025   Mailpit, every sent link lands here
 #
 # Browse the app on 5173. Vite proxies /api to the API on 3000, so the
 # session cookie stays same-origin (TECH-008).
 #
-# What this file sets is the host half of the environment — where the
+# What this file sets is the host half of the environment: where the
 # services are, now that they are on 127.0.0.1 instead of a compose
 # network. The secrets stay in .env, which the api and worker watch
 # processes read for themselves (`--env-file-if-exists`). A value
@@ -50,7 +50,7 @@ for _ in $(seq 1 60); do
   sleep 1
 done
 
-# The same database the built stack uses — the containers and these
+# The same database the built stack uses. The containers and these
 # processes share one volume, so the instance's accumulated state is
 # there either way.
 export DATABASE_URL="${DATABASE_URL:-postgres://openlaw:openlaw@127.0.0.1:${POSTGRES_PORT:-55432}/openlaw}"
@@ -67,7 +67,7 @@ export SMTP_FROM="${SMTP_FROM:-OpenLaw <openlaw@localhost>}"
 # app. Never a deployment's setting.
 export AUTH_RATE_LIMIT="${AUTH_RATE_LIMIT:-off}"
 # Loopback only. Fastify's default reaches every interface, and this
-# loop runs with rate limiting off and a mail catcher behind it — not a
+# loop runs with rate limiting off and a mail catcher behind it, not a
 # thing to put on the LAN. Vite proxies from the same host.
 export HOST="${HOST:-127.0.0.1}"
 
@@ -76,5 +76,5 @@ mkdir -p "$STORAGE_PATH"
 echo "==> web http://localhost:5173   api http://localhost:3000   mail http://localhost:8025"
 # The three apps only. @openlaw/doc-engine has a watch script of its
 # own, and running it here would fight the container above for port
-# 8080 — and lose anyway on a host without LibreOffice and OCRmyPDF.
+# 8080, and lose anyway on a host without LibreOffice and OCRmyPDF.
 exec pnpm dev --filter=@openlaw/api --filter=@openlaw/worker --filter=@openlaw/web

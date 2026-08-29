@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 /**
- * Instance email settings (#37) — the API behind the SET-004 wizard's
- * SMTP setup step. Three Administrator-only operations: read the resolved
- * state (source + from-address, never the relay URL — it embeds the
- * credential and is write-only), save or clear the app relay (refused
- * while the environment pins SMTP: env always wins, so app values would
- * never apply), and send a test email to the signed-in Administrator's
- * own address — fixed recipient, so the endpoint cannot be used to send
- * arbitrary mail.
+ * Instance email settings (#37), the API behind the SET-004 wizard's
+ * SMTP setup step. Three Administrator-only operations. Read the
+ * resolved state: source and from-address, never the relay URL, which
+ * embeds the credential and is write-only. Save or clear the app relay,
+ * refused while the environment pins SMTP because env always wins and
+ * app values would never apply. Send a test email to the signed-in
+ * Administrator's own address; the recipient is fixed, so the endpoint
+ * cannot send arbitrary mail.
  */
 
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
@@ -25,7 +25,7 @@ const StateSchema = z.object({
   fromAddress: z.string().nullable(),
 });
 
-/** smtp:// or smtps:// only — same shape the SMTP_URL env variable takes. */
+/** smtp:// or smtps:// only, the same shape the SMTP_URL env variable takes. */
 function assertRelayUrl(url: string): void {
   let parsed: URL;
   try {
@@ -40,12 +40,12 @@ function assertRelayUrl(url: string): void {
 
 /**
  * A send failure the Administrator can act on: the common transport
- * errors in plain language. Everything else gets a fixed generic line —
- * never the error's own message, which can quote the relay's response
- * verbatim, and a relay that was just handed the credential must not
- * have its text echoed into `detail` (the write-only relay-URL posture).
- * The guard on `error` matters too: a null or primitive rejection must
- * still produce the 502 Problem, not a TypeError-turned-500.
+ * errors in plain language. Everything else gets a fixed generic line,
+ * never the error's own message. That message can quote the relay's
+ * response verbatim, and a relay that was just handed the credential
+ * must not have its text echoed into `detail` (the write-only relay-URL
+ * posture). The guard on `error` matters too: a null or primitive
+ * rejection must still produce the 502 Problem, not a TypeError-turned-500.
  */
 function describeSendFailure(error: unknown): string {
   const err =
@@ -100,7 +100,7 @@ export const emailSettingsRoutes: FastifyPluginAsyncZod = async (app) => {
           "pins SMTP — env always wins over app configuration",
         tags: ["email-settings"],
         body: z.object({
-          /** The relay URL, credentials inline — write-only, never echoed. */
+          /** The relay URL, credentials inline. Write-only, never echoed. */
           smtpUrl: z.string().nullable(),
           smtpFrom: z.string().nullable(),
         }),
@@ -110,7 +110,7 @@ export const emailSettingsRoutes: FastifyPluginAsyncZod = async (app) => {
     async (request) => {
       const { source } = await app.resolveMailer();
       if (source === "env") {
-        // Not merely redundant — a database relay under an env pin would
+        // Not merely redundant. A database relay under an env pin would
         // sit inert until the operator unsets the env vars, then start
         // sending through a relay nobody remembers saving. The dev
         // overlay's Mailpit pin depends on this refusal staying loud.
@@ -128,7 +128,7 @@ export const emailSettingsRoutes: FastifyPluginAsyncZod = async (app) => {
       if (smtpUrl !== null) assertRelayUrl(smtpUrl);
       // The singleton row always exists (seeded by the 0000 migration),
       // so an unconditional UPDATE hits exactly one row. Saving nulls is
-      // the documented clear; replacing overwrites — there is no reveal.
+      // the documented clear. Replacing overwrites; there is no reveal.
       await app.db.update(orgSettings).set({ smtpUrl, smtpFrom });
       const { source: saved, from } = await app.resolveMailer();
       return { source: saved, fromAddress: from };

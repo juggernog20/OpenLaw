@@ -2,53 +2,53 @@
 
 /**
  * DES-043: the record page's "renewal pending confirmation" banner,
- * drawn as `S9 RenewBanner` in the C9 frame of `designs/contracts.pen`
- * — the same 36px strip between the top nav and the record sub-bar that
- * DES-009 puts the confidentiality statement in.
+ * drawn as `S9 RenewBanner` in the C9 frame of `designs/contracts.pen`.
+ * It is the same 36px strip between the top nav and the record sub-bar
+ * that DES-009 puts the confidentiality statement in.
  *
- * **It is a reading of the record, not a notification and not a
- * status.** CTR-006's engine is notify-only: nothing advances a term on
- * its own, so an auto-renewing contract that passed its expiry
- * un-actioned says so and waits for a person. The state behind this
- * strip is a predicate over the record's own dates and today — no
- * column, no job, no scheduled sweep — so the banner appears because
- * the record read says so and goes the moment the expiry advances or
- * the term is re-typed. The contract's status and stage are untouched
- * by it, which is why nothing here draws a pill.
+ * It is a reading of the record, not a notification and not a status.
+ * CTR-006's engine is notify-only. Nothing advances a term on its own,
+ * so an auto-renewing contract that passed its expiry un-actioned says
+ * so and waits for a person. The state behind this strip is a predicate
+ * over the record's own dates and today. No column, no job, no
+ * scheduled sweep. The banner appears because the record read says so
+ * and goes the moment the expiry advances or the term is re-typed. The
+ * contract's status and stage are untouched by it, which is why nothing
+ * here draws a pill.
  *
- * **It is chrome, and there is no dismiss.** The component takes no
- * such prop, so a caller cannot add one — the same rule the
- * confidentiality banner is built on, for the same failure: a banner
- * that can be closed is a banner that is closed, and the missed
- * auto-renewal is the failure this whole milestone exists to stop.
+ * It is chrome, and there is no dismiss. The component takes no such
+ * prop, so a caller cannot add one. The confidentiality banner is built
+ * on the same rule, for the same failure: a banner that can be closed
+ * is a banner that is closed, and the missed auto-renewal is the
+ * failure this whole milestone exists to stop.
  *
  * The trailing call to action is the one part that varies. Only a
  * Member+ viewer who may write the record is offered a way to the Renew
  * dialog; everybody else reads the statement and nothing more. The
- * caller decides — it is the page that knows where this viewer stands
- * — and the API is the real guard either way.
+ * caller decides, because the page is what knows where this viewer
+ * stands. The API is the real guard either way.
  */
 
 import { RotateCw } from "lucide-react";
 import { FormattedMessage, useIntl } from "react-intl";
 
-/** The banner's glyph, at DES-008's inline size — the size DES-009
- * already names for this strip, and a 36px strip has the room. */
+/** The banner's glyph, at DES-008's inline size. DES-009 already names
+ * that size for this strip, and a 36px strip has the room. */
 const GLYPH_SIZE = 16;
 
 export function RenewalBanner({
   onReview,
 }: Readonly<{
   /** Opens the Renew dialog, for a viewer who may confirm the roll.
-   * Absent for everyone else, so no control is rendered at all — an
+   * Absent for everyone else, so no control is rendered at all. An
    * affordance nobody may use is worse than none (DES-035 clause 9). */
   onReview?: () => void;
 }>) {
   const intl = useIntl();
   return (
     // A named region, so the statement is reachable from the landmark
-    // list after half an hour inside the record — the same persistence
-    // the strip gives a sighted reader.
+    // list after half an hour inside the record. That is the same
+    // persistence the strip gives a sighted reader.
     <section
       aria-label={intl.formatMessage({
         id: "renewal.bannerRegion",

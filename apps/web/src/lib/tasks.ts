@@ -15,7 +15,7 @@
 
 import type { paths } from "@openlaw/api-client";
 import { api } from "./api";
-import { problemDetail } from "./messages";
+import { problem, type Problem } from "./problem";
 
 type ListResponse =
   paths["/api/v1/contracts/{number}/tasks"]["get"]["responses"]["200"]["content"]["application/json"];
@@ -33,18 +33,23 @@ export interface TaskInput {
 /** What a read or a write over the checklist answers. */
 export type TasksOutcome =
   | { ok: true; tasks: ContractTask[]; doneCount: number; totalCount: number }
-  | { ok: false; detail?: string };
+  | ({ ok: false } & Problem);
 
 /** Reads one contract's task checklist, whole. */
 export async function readContractTasks(contractNumber: number): Promise<TasksOutcome> {
-  const { data, error } = await api
+  const result = await api
     .GET("/api/v1/contracts/{number}/tasks", {
       params: { path: { number: contractNumber } },
     })
-    .catch(() => ({ data: undefined, error: undefined }));
-  return data
-    ? { ok: true, tasks: data.tasks, doneCount: data.doneCount, totalCount: data.totalCount }
-    : { ok: false, detail: problemDetail(error) };
+    .catch(() => undefined);
+  return result?.data
+    ? {
+        ok: true,
+        tasks: result.data.tasks,
+        doneCount: result.data.doneCount,
+        totalCount: result.data.totalCount,
+      }
+    : { ok: false, ...(await problem(result)) };
 }
 
 /** Adds a task to the checklist (CTR-017). */
@@ -52,50 +57,70 @@ export async function addContractTask(
   contractNumber: number,
   input: TaskInput,
 ): Promise<TasksOutcome> {
-  const { data, error } = await api
+  const result = await api
     .POST("/api/v1/contracts/{number}/tasks", {
       params: { path: { number: contractNumber } },
       body: { title: input.title, assigneeId: input.assigneeId, dueDate: input.dueDate },
     })
-    .catch(() => ({ data: undefined, error: undefined }));
-  return data
-    ? { ok: true, tasks: data.tasks, doneCount: data.doneCount, totalCount: data.totalCount }
-    : { ok: false, detail: problemDetail(error) };
+    .catch(() => undefined);
+  return result?.data
+    ? {
+        ok: true,
+        tasks: result.data.tasks,
+        doneCount: result.data.doneCount,
+        totalCount: result.data.totalCount,
+      }
+    : { ok: false, ...(await problem(result)) };
 }
 
 /** Edits a task's title, assignee, or due date. */
 export async function updateContractTask(taskId: string, input: TaskInput): Promise<TasksOutcome> {
-  const { data, error } = await api
+  const result = await api
     .PATCH("/api/v1/tasks/{taskId}", {
       params: { path: { taskId } },
       body: { title: input.title, assigneeId: input.assigneeId, dueDate: input.dueDate },
     })
-    .catch(() => ({ data: undefined, error: undefined }));
-  return data
-    ? { ok: true, tasks: data.tasks, doneCount: data.doneCount, totalCount: data.totalCount }
-    : { ok: false, detail: problemDetail(error) };
+    .catch(() => undefined);
+  return result?.data
+    ? {
+        ok: true,
+        tasks: result.data.tasks,
+        doneCount: result.data.doneCount,
+        totalCount: result.data.totalCount,
+      }
+    : { ok: false, ...(await problem(result)) };
 }
 
 /** Toggles a task between done and not done. */
 export async function toggleContractTask(taskId: string): Promise<TasksOutcome> {
-  const { data, error } = await api
+  const result = await api
     .POST("/api/v1/tasks/{taskId}/toggle", {
       params: { path: { taskId } },
     })
-    .catch(() => ({ data: undefined, error: undefined }));
-  return data
-    ? { ok: true, tasks: data.tasks, doneCount: data.doneCount, totalCount: data.totalCount }
-    : { ok: false, detail: problemDetail(error) };
+    .catch(() => undefined);
+  return result?.data
+    ? {
+        ok: true,
+        tasks: result.data.tasks,
+        doneCount: result.data.doneCount,
+        totalCount: result.data.totalCount,
+      }
+    : { ok: false, ...(await problem(result)) };
 }
 
 /** Takes a task off the checklist. */
 export async function removeContractTask(taskId: string): Promise<TasksOutcome> {
-  const { data, error } = await api
+  const result = await api
     .DELETE("/api/v1/tasks/{taskId}", {
       params: { path: { taskId } },
     })
-    .catch(() => ({ data: undefined, error: undefined }));
-  return data
-    ? { ok: true, tasks: data.tasks, doneCount: data.doneCount, totalCount: data.totalCount }
-    : { ok: false, detail: problemDetail(error) };
+    .catch(() => undefined);
+  return result?.data
+    ? {
+        ok: true,
+        tasks: result.data.tasks,
+        doneCount: result.data.doneCount,
+        totalCount: result.data.totalCount,
+      }
+    : { ok: false, ...(await problem(result)) };
 }

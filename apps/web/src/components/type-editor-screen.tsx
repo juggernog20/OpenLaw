@@ -56,7 +56,7 @@ import {
 } from "./ui/dropdown-menu";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
-import type { ApiResult } from "../lib/api-result";
+import { problem, type ProblemResult } from "../lib/problem";
 
 /** The single-type read behind the editor, as the client sees it. */
 export interface EditorTypeRow {
@@ -147,19 +147,19 @@ export interface TypeEditorIdentityApi {
   update(
     id: string,
     body: { displayName?: string; description?: string | null },
-  ): Promise<ApiResult<EditorTypeRow>>;
+  ): Promise<ProblemResult<EditorTypeRow>>;
 }
 
 /** The attachment half, implemented by a mount that draws the right card. */
 export interface TypeEditorAttachmentsApi {
-  attach(id: string, fieldId: string): Promise<ApiResult<AttachedFieldRow>>;
-  detach(id: string, fieldId: string): Promise<{ ok: boolean; detail?: string }>;
+  attach(id: string, fieldId: string): Promise<ProblemResult<AttachedFieldRow>>;
+  detach(id: string, fieldId: string): Promise<{ ok: boolean } & ProblemResult<never>>;
   setRequired(
     id: string,
     fieldId: string,
     isRequired: boolean,
-  ): Promise<ApiResult<AttachedFieldRow>>;
-  reorder(id: string, fieldIds: string[]): Promise<ApiResult<AttachedFieldRow[]>>;
+  ): Promise<ProblemResult<AttachedFieldRow>>;
+  reorder(id: string, fieldIds: string[]): Promise<ProblemResult<AttachedFieldRow[]>>;
 }
 
 /** Both halves, which is what a mount with a right card implements. */
@@ -320,7 +320,7 @@ function AttachedFieldsCard({
     setAttachError(undefined);
     const { data, detail } = await api
       .attach(typeId, field.id)
-      .catch(() => ({ data: undefined, detail: undefined }));
+      .catch(async () => ({ data: undefined, ...(await problem(undefined)) }));
     if (data) {
       setRows((current) => [...current, data]);
       setAttachStatus("saved");
@@ -337,7 +337,7 @@ function AttachedFieldsCard({
     noteRow(row.fieldId, "saving");
     const { ok, detail } = await api
       .detach(typeId, row.fieldId)
-      .catch(() => ({ ok: false, detail: undefined }));
+      .catch(async () => ({ ok: false, ...(await problem(undefined)) }));
     if (ok) {
       setRows((current) => current.filter((existing) => existing.fieldId !== row.fieldId));
       noteRow(row.fieldId, "idle");
@@ -351,7 +351,7 @@ function AttachedFieldsCard({
     noteRow(row.fieldId, "saving");
     const { data, detail } = await api
       .setRequired(typeId, row.fieldId, isRequired)
-      .catch(() => ({ data: undefined, detail: undefined }));
+      .catch(async () => ({ data: undefined, ...(await problem(undefined)) }));
     if (data) {
       setRows((current) =>
         current.map((existing) => (existing.fieldId === row.fieldId ? data : existing)),
@@ -376,7 +376,7 @@ function AttachedFieldsCard({
     setOrderError(undefined);
     const { data, detail } = await api
       .reorder(typeId, fieldIds)
-      .catch(() => ({ data: undefined, detail: undefined }));
+      .catch(async () => ({ data: undefined, ...(await problem(undefined)) }));
     if (data) {
       setRows(data);
       setOrderStatus("saved");
@@ -678,7 +678,7 @@ export function TypeEditorScreen({
     setTypeStatus((current) => ({ ...current, [key]: "saving" }));
     const { data, detail } = await api
       .update(saved.id, body)
-      .catch(() => ({ data: undefined, detail: undefined }));
+      .catch(async () => ({ data: undefined, ...(await problem(undefined)) }));
     if (data) {
       setSaved(data);
       setNameDraft(data.displayName);

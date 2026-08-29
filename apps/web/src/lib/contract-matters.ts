@@ -3,7 +3,7 @@
 /** Typed client helpers for MTR-007's one Contract-to-Matter link. */
 import type { paths } from "@openlaw/api-client";
 import { api } from "./api";
-import { problemDetail } from "./messages";
+import { problem, type Problem } from "./problem";
 
 type MatterResponse =
   paths["/api/v1/contracts/{number}/matter"]["get"]["responses"]["200"]["content"]["application/json"];
@@ -66,34 +66,34 @@ export type LinkedReachableMatter = Extract<Exclude<LinkedMatter, null>, { restr
 
 export type LinkMatterOutcome =
   | { ok: true; matter: LinkedReachableMatter; confidentialityMismatch: boolean }
-  | { ok: false; detail?: string };
+  | ({ ok: false } & Problem);
 
 export async function linkContractMatter(
   contractNumber: number,
   matterNumber: number,
 ): Promise<LinkMatterOutcome> {
-  const { data, error } = await api
+  const result = await api
     .POST("/api/v1/contracts/{number}/matter", {
       params: { path: { number: contractNumber } },
       body: { matterNumber },
     })
-    .catch(() => ({ data: undefined, error: undefined }));
-  return data?.matter && !data.matter.restricted
+    .catch(() => undefined);
+  return result?.data?.matter && !result.data.matter.restricted
     ? {
         ok: true,
-        matter: data.matter,
-        confidentialityMismatch: data.confidentialityMismatch,
+        matter: result.data.matter,
+        confidentialityMismatch: result.data.confidentialityMismatch,
       }
-    : { ok: false, detail: problemDetail(error) };
+    : { ok: false, ...(await problem(result)) };
 }
 
 export async function unlinkContractMatter(
   contractNumber: number,
-): Promise<{ ok: true } | { ok: false; detail?: string }> {
-  const { data, error } = await api
+): Promise<{ ok: true } | ({ ok: false } & Problem)> {
+  const result = await api
     .DELETE("/api/v1/contracts/{number}/matter", {
       params: { path: { number: contractNumber } },
     })
-    .catch(() => ({ data: undefined, error: undefined }));
-  return data ? { ok: true } : { ok: false, detail: problemDetail(error) };
+    .catch(() => undefined);
+  return result?.data ? { ok: true } : { ok: false, ...(await problem(result)) };
 }

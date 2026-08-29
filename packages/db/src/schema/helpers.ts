@@ -27,11 +27,11 @@ export const searchVector = customType<{ data: string; driverData: string }>({
 });
 
 /**
- * The one taxonomy column set (MTR-001, mirrored by CTR-002): every
- * configurable-taxonomy table — matter types, contract types — is this
+ * The one taxonomy column set (MTR-001, mirrored by CTR-002). Every
+ * configurable-taxonomy table (matter types, contract types) is this
  * exact shape, which is what lets one machinery serve them all. Slugs
- * are derived at creation and immutable; display names are
- * presentation; the `other` row of each table is system-protected in
+ * are derived at creation and immutable. Display names are
+ * presentation. The `other` row of each table is system-protected in
  * application code.
  */
 export const taxonomyColumns = () => ({
@@ -58,11 +58,11 @@ export const taxonomyColumns = () => ({
 });
 
 /**
- * Any table built on {@link taxonomyColumns} — the shape the one
+ * Any table built on {@link taxonomyColumns}, the shape the one
  * taxonomy machinery serves (#85).
  *
  * Structural rather than a union of the type tables, because a mount
- * may carry columns of its own beside the shared ones: the machinery
+ * may carry columns of its own beside the shared ones. The machinery
  * reads and writes the shared set and knows nothing of the rest, which
  * is what lets a per-mount extras hook project and patch them. Declared
  * here because the shape is declared here, and exported so the API's
@@ -83,7 +83,7 @@ type Assert<T extends true> = T;
  * hook rests on: a table that carries a column of its own beside the
  * shared set is still a {@link TaxonomyTable}. Every type table is that
  * exact set today, so nothing else here would say if the property were
- * lost — request types bring the first table that widens it (#350).
+ * lost. Request types bring the first table that widens it (#350).
  */
 // Referenced by nothing: it exists so `tsc` checks the property. Kept
 // module-local so it stays out of the package's surface, which is why

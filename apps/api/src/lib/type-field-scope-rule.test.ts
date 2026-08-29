@@ -3,22 +3,22 @@
 /**
  * The attachment machinery's per-mount scope rule (#352), at the HTTP
  * seam of a mount whose rule is a function of the type row. Request
- * types (#350) are the mount that will need it — their target decides
- * which catalog fields may attach (INT-002) — and this suite proves the
+ * types (#350) are the mount that will need it. Their target decides
+ * which catalog fields may attach (INT-002). This suite proves the
  * machinery serves such a rule before that mount exists.
  *
  * The probe mount below is the factory with a function rule, over the
  * `matter_type_fields` join table and beside the ordinary matter-types
  * mount in the same app. Two mounts over one table is the point:
  * everything the probe does that the plain mount does not is the rule,
- * not the table. The row state the rule reads — `is_system_default`, a
- * real column the machinery never writes — and the rule it encodes are
- * this suite's, not the product's. No schema lands for a test
- * (TECH-014's incremental rule), and no assertion here reaches past
- * the routes.
+ * not the table. The row state the rule reads is `is_system_default`,
+ * a real column the machinery never writes. That state and the rule it
+ * encodes are this suite's, not the product's. No schema lands for a
+ * test (TECH-014's incremental rule), and no assertion here reaches
+ * past the routes.
  *
- * That the two constant-rule mounts are unchanged is asserted where it
- * belongs: their own suites, unedited.
+ * The two constant-rule mounts prove they are unchanged in their own
+ * suites, which this change does not edit.
  */
 
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
@@ -63,7 +63,7 @@ const probeAttachedFieldsRoutes = typeFieldRoutes({
 });
 
 let harness: TestHarness;
-/** The harness's database, with the probe mount beside the plain one. */
+/** The app under test, with the probe mount registered beside the plain one. */
 let app: Awaited<ReturnType<typeof buildApp>>;
 let adminCookies: Record<string, string>;
 
@@ -178,7 +178,7 @@ describe("a rule that is a function of the type row", () => {
     const untargeted = await addProbeType("Silent probe");
     await setTargeted(targeted, true);
     // The catalog's create route offers no entity scope, so plant the
-    // row directly — the schema allows what the API gates.
+    // row directly. The schema allows what the API gates.
     const [entityField] = await harness.db
       .insert(fields)
       .values({
@@ -198,7 +198,7 @@ describe("a rule that is a function of the type row", () => {
     expect(outsideTargeted.json()).toMatchObject({ status: 400, detail: TARGETED_REFUSAL });
 
     // The untargeted arm refuses a scope the targeted arm allows, and
-    // says something else — the line belongs to the rule, not the mount.
+    // says something else. The line belongs to the rule, not the mount.
     const outsideUntargeted = await attach(untargeted, contractField);
     expect(outsideUntargeted.statusCode, outsideUntargeted.body).toBe(400);
     expect(outsideUntargeted.headers["content-type"]).toContain("application/problem+json");

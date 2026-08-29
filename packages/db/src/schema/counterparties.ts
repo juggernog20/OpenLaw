@@ -6,8 +6,8 @@
  * An entity is one of ours and carries a rich identity card; a
  * counterparty is theirs and carries a name. DD-008 split the two
  * because about seventy percent of the columns differ, the lifecycles
- * differ — we incorporate an entity, we meet a counterparty — and the
- * counts differ by two orders of magnitude.
+ * differ, since we incorporate an entity but meet a counterparty, and
+ * the counts differ by two orders of magnitude.
  *
  * The schema is the light DD-008 shape CTR-011 resolved: `name` is the
  * only required column, and everything else is enrichment that arrives
@@ -31,7 +31,7 @@ export const counterparties = pgTable(
     /** The only required column (CTR-011): inline creation writes this
      * and nothing else. */
     name: text("name").notNull(),
-    /** Enrichment, all nullable — no screen writes these in M8. */
+    /** Enrichment, all nullable. No screen writes these in M8. */
     jurisdiction: text("jurisdiction"),
     primaryContactName: text("primary_contact_name"),
     primaryContactEmail: text("primary_contact_email"),
@@ -58,8 +58,8 @@ export const counterparties = pgTable(
     // inline creation making a second row for a name we already hold.
     //
     // Deliberately not unique. Making it unique would rule, once and
-    // permanently, that two organizations may never share a name — and
-    // they do, in different jurisdictions, which is what the
+    // permanently, that two organizations may never share a name. They
+    // do, in different jurisdictions, which is what the
     // `jurisdiction` column is for. The no-duplicates guarantee the
     // typeahead needs is narrower than that: it is about not creating a
     // second row for a name someone just searched, and the add route
