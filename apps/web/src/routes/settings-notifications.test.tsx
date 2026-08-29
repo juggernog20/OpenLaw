@@ -6,9 +6,9 @@
  * with the defaults rendered as switch state, and a flip saves
  * immediately (SET-003).
  *
- * Nothing here asserts how the fan-out is wired — that is
- * `preferences.test.ts`'s, over the real engine. What this suite pins is
- * what a person sees and what the pane sends.
+ * Nothing here asserts how the fan-out is wired. That belongs to
+ * `preferences.test.ts`, over the real engine. This suite pins what a
+ * person sees and what the pane sends.
  */
 
 import { describe, expect, it } from "vitest";
@@ -33,7 +33,7 @@ const DEFAULTS = [
 ];
 
 /** Answers the pane's read and captures its writes, the way the real
- * endpoint does — every save answers the whole grid back. */
+ * endpoint does. Every save answers the whole grid back. */
 function capturePreferenceWrites(writes: unknown[], failWith?: Response) {
   let groups = DEFAULTS.map((row) => ({ ...row }));
   return (call: StubCall) => {
@@ -121,7 +121,7 @@ describe("Personal · Notifications (#320)", () => {
     );
     expect(await screen.findByText("Saved")).toBeVisible();
     expect(screen.getByRole("switch", { name: "Assigned to you Email" })).not.toBeChecked();
-    // The bell for the same group is untouched — opting out of
+    // The bell for the same group is untouched. Opting out of
     // interruption is not opting out of information.
     expect(screen.getByRole("switch", { name: "Assigned to you In-app" })).toBeChecked();
   });
@@ -144,7 +144,7 @@ describe("Personal · Notifications (#320)", () => {
             : row,
         );
         // Every reply is held open, so the test decides when each one
-        // lands — and can look at the pane in the gap between them.
+        // lands and can look at the pane in the gap between them.
         const answer = json(200, { groups });
         return new Promise<Response>((resolve) => {
           releases.push(() => {
@@ -170,15 +170,15 @@ describe("Personal · Notifications (#320)", () => {
       { eventGroup: "dates_approaching", channel: "email", enabled: false },
     ]);
     // The second write is still in the air, and the first reply's grid
-    // predates the second press. The pane must not have drawn that
-    // snapshot over the switch that already moved — not even for the
-    // round trip the queued write takes.
+    // predates the second press. The pane must not draw that snapshot
+    // over the switch that already moved, not even for the round trip
+    // the queued write takes.
     expect(screen.getByRole("switch", { name: "Dates approaching Email" })).not.toBeChecked();
     expect(screen.getByRole("switch", { name: "Assigned to you Email" })).not.toBeChecked();
 
     releases[1]!();
-    // And once the last reply lands, its grid is the state: the last
-    // reply is the last press.
+    // Once the last reply lands, its grid is the state. The last reply
+    // is the last press.
     expect(await screen.findByText("Saved")).toBeVisible();
     expect(screen.getByRole("switch", { name: "Dates approaching Email" })).not.toBeChecked();
     expect(screen.getByRole("switch", { name: "Assigned to you Email" })).not.toBeChecked();

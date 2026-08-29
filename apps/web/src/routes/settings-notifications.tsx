@@ -5,9 +5,9 @@
  * of settings.pen and DES-050: one row per event group, one switch per
  * channel, saved the moment it is flipped (SET-003 immediate apply).
  *
- * **The pane is the card; the grid is shared** (M20/9). What this file
- * owns is the settings-surface chrome — the page title, the settings
- * card, and the one status note in its header strip — and which of
+ * The pane is the card; the grid is shared (M20/9). This file owns the
+ * settings chrome (the page title, the settings card, and the one
+ * status note in its header strip) and the choice of which of
  * NOT-002's five groups a staff reader is shown. The table itself is
  * `components/notification-preferences.tsx`, because the portal draws
  * the same table over a different row.
@@ -39,8 +39,8 @@ export async function settingsNotificationsLoader() {
  * The groups this pane draws, in NOT-002's order.
  *
  * Four of the five. `requester_events` is the portal audience's own
- * group (NOT-001) — a business user tunes it in the portal's own
- * settings surface, and it has no meaning on a staff surface. It stays
+ * group (NOT-001). A Business User tunes it in the portal's own
+ * settings page, and it has no meaning on a staff page. It stays
  * in the model, and the API answers it, so the portal renders it where
  * it belongs.
  *

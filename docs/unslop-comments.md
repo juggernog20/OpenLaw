@@ -369,6 +369,56 @@ a long way since, it is worth another pass.
 | `scripts/lint-versions.mjs` | 2026-08-29 | 39fe0a1 | 2 | 0 | 0 | |
 | `apps/web/src/components/confidential-banner.tsx` | 2026-08-29 | 39fe0a1 | 5 | 0 | 0 | |
 | `apps/web/src/lib/roles.ts` | 2026-08-29 | 39fe0a1 | 6 | 0 | 0 | |
+| `packages/db/src/schema/contract-counterparties.ts` | 2026-08-29 | fa9a663 | 3 | 0 | 0 | |
+| `apps/web/src/components/contracts/tasks-card.tsx` | 2026-08-29 | fa9a663 | 1 | 0 | 0 | |
+| `styles/themes/dark.css` | 2026-08-29 | fa9a663 | 6 | 0 | 0 | Token-group banners kept. |
+| `apps/api/src/pipeline/backfill.test.ts` | 2026-08-29 | fa9a663 | 2 | 0 | 0 | |
+| `apps/api/src/lib/storage/config.test.ts` | 2026-08-29 | fa9a663 | 3 | 0 | 0 | `NOSONAR` markers left as is. |
+| `apps/web/src/routes/settings-notifications.test.tsx` | 2026-08-29 | fa9a663 | 6 | 0 | 0 | |
+| `apps/web/src/routes/matter-record.tsx` | 2026-08-29 | fa9a663 | 1 | 0 | 0 | |
+| `apps/web/src/lib/relations.ts` | 2026-08-29 | fa9a663 | 1 | 0 | 0 | Section banners kept, used consistently. |
+| `scripts/lint-migration-journal.mjs` | 2026-08-29 | fa9a663 | 4 | 0 | 0 | |
+| `apps/api/src/modules/counterparties/routes.ts` | 2026-08-29 | fa9a663 | 2 | 0 | 0 | |
+| `apps/web/src/routes/entities.tsx` | 2026-08-29 | fa9a663 | 5 | 0 | 0 | |
+| `e2e/tests/03-invite-activation-totp.spec.ts` | 2026-08-29 | fa9a663 | 5 | 0 | 0 | |
+| `apps/web/src/lib/keyboard.ts` | 2026-08-29 | fa9a663 | 6 | 0 | 0 | |
+| `e2e/tests/05-app-shell.spec.ts` | 2026-08-29 | fa9a663 | 4 | 0 | 0 | |
+| `e2e/tests/mailpit.ts` | 2026-08-29 | fa9a663 | 3 | 0 | 0 | |
+| `packages/db/src/schema/activity.ts` | 2026-08-29 | fa9a663 | 5 | 0 | 0 | |
+| `apps/web/src/components/shell/record-tabs.tsx` | 2026-08-29 | fa9a663 | 4 | 0 | 0 | |
+| `apps/api/src/modules/request-types/attached-fields.ts` | 2026-08-29 | fa9a663 | 2 | 0 | 0 | |
+| `apps/web/src/routes/settings-intake-links.test.tsx` | 2026-08-29 | fa9a663 | 5 | 0 | 0 | |
+| `apps/web/src/routes/entity-record.tsx` | 2026-08-29 | fa9a663 | 5 | 0 | 0 | |
+| `apps/web/src/routes/settings-e-signature.test.tsx` | 2026-08-29 | fa9a663 | 3 | 0 | 0 | |
+| `apps/web/src/routes/settings-profile.test.tsx` | 2026-08-29 | fa9a663 | 3 | 3 | 0 | Three restatements of the assertions below them. |
+| `apps/web/src/routes/settings-reminders.test.tsx` | 2026-08-29 | fa9a663 | 3 | 0 | 0 | |
+| `apps/web/src/components/contracts/record-actions-menu.tsx` | 2026-08-29 | fa9a663 | 2 | 0 | 0 | |
+| `apps/web/src/components/portal/portal-shell.tsx` | 2026-08-29 | fa9a663 | 2 | 0 | 0 | |
+| `apps/web/src/routes/settings-profile.tsx` | 2026-08-29 | fa9a663 | 6 | 0 | 0 | |
+| `apps/api/src/lib/render-family.test.ts` | 2026-08-29 | fa9a663 | 0 | 0 | 0 | Already clean. |
+| `apps/api/src/pipeline/index.ts` | 2026-08-29 | fa9a663 | 2 | 0 | 0 | |
+| `apps/api/src/pipeline/text-extraction.test.ts` | 2026-08-29 | fa9a663 | 1 | 0 | 0 | |
+| `apps/web/src/routes/settings-notifications.tsx` | 2026-08-29 | fa9a663 | 2 | 0 | 0 | |
+| `apps/api/src/modules/contract-types/contract-types.test.ts` | 2026-08-29 | fa9a663 | 3 | 0 | 0 | |
+| `packages/db/src/schema/request-type-fields.ts` | 2026-08-29 | fa9a663 | 2 | 0 | 0 | |
+| `e2e/tests/04-magic-link.spec.ts` | 2026-08-29 | fa9a663 | 3 | 0 | 0 | |
+| `services/doc-engine/src/problem.ts` | 2026-08-29 | fa9a663 | 1 | 0 | 0 | |
+| `apps/web/src/routes/inbox.test.tsx` | 2026-08-29 | fa9a663 | 3 | 0 | 0 | |
+| `apps/api/src/lib/media-type.test.ts` | 2026-08-29 | fa9a663 | 3 | 0 | 0 | `head()` doc said zero-padded; the code appends the given tail bytes. Fixed. |
+| `apps/web/src/routes/welcome.tsx` | 2026-08-29 | fa9a663 | 5 | 0 | 0 | |
+| `e2e/scripts/upgrade-fidelity.sh` | 2026-08-29 | fa9a663 | 1 | 0 | 0 | |
+| `apps/web/src/components/confidential-toggle.tsx` | 2026-08-29 | fa9a663 | 2 | 0 | 0 | |
+| `packages/db/src/schema/contract-statuses.ts` | 2026-08-29 | fa9a663 | 2 | 0 | 0 | |
+| `apps/api/src/modules/portal/portal.test.ts` | 2026-08-29 | fa9a663 | 2 | 0 | 0 | |
+| `apps/web/src/components/shell/activity-bar.tsx` | 2026-08-29 | fa9a663 | 4 | 0 | 0 | |
+| `styles/themes/light.css` | 2026-08-29 | fa9a663 | 6 | 0 | 0 | Frame name "Theme 1 — Light" kept, it names a .pen frame. |
+| `apps/api/src/auth/guards.ts` | 2026-08-29 | fa9a663 | 5 | 0 | 0 | |
+| `apps/web/src/components/settings-card.tsx` | 2026-08-29 | fa9a663 | 1 | 0 | 0 | |
+| `apps/api/src/modules/contract-types/attached-fields.test.ts` | 2026-08-29 | fa9a663 | 4 | 0 | 0 | |
+| `apps/web/src/components/record-context.ts` | 2026-08-29 | fa9a663 | 0 | 0 | 0 | Already clean. |
+| `apps/web/src/routes/settings-contract-statuses.test.tsx` | 2026-08-29 | fa9a663 | 7 | 0 | 0 | |
+| `apps/web/src/components/table/views-menu.tsx` | 2026-08-29 | fa9a663 | 2 | 0 | 0 | |
+| `apps/api/src/lib/doc-engine/config.test.ts` | 2026-08-29 | fa9a663 | 0 | 0 | 0 | Already clean. |
 
 ## Skipped
 

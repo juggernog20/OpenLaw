@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 /**
- * Contracts · Types (#81): the CTR-002 taxonomy behind the first
- * list-editor pane — add / rename / reorder / archive / restore, the
- * protected `other` row, and the SET-003 guard semantics — behind
- * SET-002's one role gate, with every mutation appending to the
- * activity log (DD-017). Asserted at the HTTP seam plus direct
- * activity_log reads — the log has no read routes until M9.
+ * Contracts > Types (#81): the CTR-002 taxonomy behind the first
+ * list-editor pane. Add, rename, reorder, archive, restore, the
+ * protected `other` row, and the SET-003 guard, all behind SET-002's
+ * one role gate, with every mutation appended to the activity log
+ * (DD-017). Asserted at the HTTP seam plus direct activity_log reads,
+ * because the log has no read routes until M9.
  *
  * The guard is armed from #113: the counts are real, and archiving an
  * in-use type moves its contracts to a target type. The reassignment is
@@ -171,7 +171,7 @@ describe("GET /contract-types", () => {
       expect(row.isSystemDefault).toBe(true);
       expect(row.archivedAt).toBeNull();
       // Nothing has been created on these seeds yet, so the SET-003
-      // count is zero — a real query since #113, not a placeholder.
+      // count is zero. It is a real query since #113, not a placeholder.
       expect(row.inUseCount).toBe(0);
     }
     expect(rows.find((row) => row.slug === "nda")!.displayName).toBe("NDA");
@@ -633,8 +633,8 @@ describe("the SET-003 archive guard over the contract record (#113)", () => {
   });
 
   it("moves a contract that has no value for the target type's required field", async () => {
-    // The move landed above with the gap open — proof the guard never
-    // calls the hard-required rule. The gap is real, not papered over.
+    // The move landed above with the gap open, so the guard never
+    // called the hard-required rule. The gap is real, not papered over.
     const moved = (await contractRows()).find((row) => row.id === apac.id)!;
     expect(moved.customFields[distributionFieldSlug]).toBeUndefined();
   });

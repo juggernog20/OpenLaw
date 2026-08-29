@@ -4,7 +4,7 @@
  * Choosing the driver from the environment (DOC-009).
  *
  * These assertions are about what an operator's `.env` means, so they
- * read the configuration rather than the store behind it — the driver
+ * read the configuration rather than the store behind it. The driver
  * behaviour itself is the shared contract suite's job, once per driver.
  */
 
@@ -208,8 +208,8 @@ describe("the Azure Blob driver's environment", () => {
     expect(() =>
       readStorageConfig({ ...AZURE_ENV, AZURE_BLOB_ENDPOINT: "http://azurite:10000/openlaw" }),
     ).toThrow(StorageConfigError);
-    // With a key the same endpoint is fine — that is exactly how
-    // Azurite is reached.
+    // With a key the same endpoint is fine. That is how Azurite is
+    // reached.
     expect(
       readStorageConfig({
         ...AZURE_ENV,
@@ -336,8 +336,8 @@ describe("the read router (DOC-014)", () => {
 });
 
 // The router is what the app factory is handed, so it must be a storage
-// adapter in full — the same shared contract every driver passes,
-// proving the routing layer adds nothing and takes nothing away.
+// adapter in full. It runs the same shared contract every driver passes,
+// which proves the routing layer adds nothing and takes nothing away.
 describeStorageAdapterContract(LOCAL_DRIVER, async () => {
   const root = await mkdtemp(join(tmpdir(), "openlaw-router-contract-"));
   return {

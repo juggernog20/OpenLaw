@@ -3,10 +3,11 @@
 /**
  * The full staff-onboarding journey (#24, TECH-018): the Administrator
  * invites a Legal Team Member through the invites API (no invite UI
- * exists yet — the API is the legitimate front door), the set-password
+ * exists yet, so the API is the legitimate front door), the set-password
  * email arrives via the stack's real SMTP into Mailpit, its link
  * activates the account, and the new member enrols in TOTP and signs
- * back in through the challenge — with a live code, then a backup code.
+ * back in through the challenge, first with a live code, then with a
+ * backup code.
  *
  * One journey, serial by construction: each test hands state (secret,
  * backup codes) to the next, and the per-run unique invitee keeps
@@ -35,7 +36,7 @@ const MEMBER = {
 
 /**
  * Fills a code field and submits, retrying once with a freshly computed
- * code if the server rejects it — a code computed astride a 30-second
+ * code if the server rejects it. A code computed across a 30-second
  * TOTP window boundary is stale by the time it arrives, and one retry
  * inside the new window settles it.
  */
@@ -67,7 +68,7 @@ test.describe.serial("invite → activation → TOTP", () => {
     await signInAs(page, ADMIN.email, ADMIN.password, ADMIN.displayName);
 
     // page.request rides the browser session's cookie jar, so this is
-    // the Administrator making the call — not an anonymous API client.
+    // the Administrator making the call, not an anonymous API client.
     const invited = await page.request.post("/api/v1/auth/invites", {
       data: {
         email: MEMBER.email,
@@ -85,7 +86,7 @@ test.describe.serial("invite → activation → TOTP", () => {
     // browser over before following it.
     await signOut(page, ADMIN.displayName);
 
-    // Redeem exactly the link the email carries — a wrong BASE_URL on
+    // Redeem exactly the link the email carries. A wrong BASE_URL on
     // the stack must fail here, not be papered over by rewriting it.
     await page.goto(link);
     await page.getByLabel("New password").fill(MEMBER.password);
@@ -120,8 +121,8 @@ test.describe.serial("invite → activation → TOTP", () => {
       page.getByText("Wrong code. Scan the QR code again"),
     );
 
-    // Backup codes are shown this once and never again — capture them
-    // now; the last test spends one.
+    // Backup codes are shown once and never again. Capture them now;
+    // the last test spends one.
     backupCodes = await page.getByRole("listitem").allInnerTexts();
     expect(backupCodes.length).toBeGreaterThan(0);
 

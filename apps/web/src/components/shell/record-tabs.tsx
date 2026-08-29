@@ -2,19 +2,18 @@
 
 /**
  * The record-page tab strip (DES-032): the horizontal strip of section
- * tabs that sits in the shell's sub-bar slot, directly under the
- * breadcrumb, and splits a long record into the few sections a reader
- * actually asks for one at a time.
+ * tabs in the shell's sub-bar slot, directly under the breadcrumb. It
+ * splits a long record into sections a reader opens one at a time.
  *
- * Tabs are routed links, not stateful tabs — each section is its own
+ * Tabs are routed links, not stateful tabs. Each section is its own
  * URL, so a reader can quote "the Documents tab of C-42" and land on
- * it. That is the same choice `SettingsSectionTabs` makes for settings
- * panes, and it is why this is a `nav` of links rather than a Radix
- * `Tabs`: an ARIA tablist promises keyboard semantics that a set of
- * links does not have, and links promise a URL that a tablist does not.
+ * it. `SettingsSectionTabs` makes the same choice for settings panes,
+ * and it is why this is a `nav` of links rather than a Radix `Tabs`:
+ * an ARIA tablist promises keyboard semantics that a set of links does
+ * not have, and links promise a URL that a tablist does not.
  *
- * It draws the settings strip's treatment verbatim — one tab look in
- * the app — over the sub-bar's own chrome border, so the strip reads as
+ * It draws the settings strip's treatment verbatim (one tab look in
+ * the app) over the sub-bar's own chrome border, so the strip reads as
  * the bottom edge of the chrome rather than as the top of the record.
  */
 
@@ -24,10 +23,10 @@ import { formatCount } from "../../lib/format";
 import { cn } from "../../lib/utils";
 
 export interface RecordTab {
-  /** The tab's address. Absolute, because the record's own sections are
+  /** The tab's address. Absolute, because the record's sections are
    * siblings under one route and a relative link would stack them. */
   to: string;
-  /** True for the tab the bare record URL lands on — without it, that
+  /** True for the tab the bare record URL lands on. Without it, that
    * tab reads as active on every sibling section. */
   end?: boolean;
   label: ReactNode;
@@ -38,7 +37,7 @@ export interface RecordTab {
    */
   count?: number;
   /**
-   * The chip's accessible name — a whole phrase, because a lone "3"
+   * The chip's accessible name. A whole phrase, because a lone "3"
    * after a tab label says nothing. Required for the chip to render.
    */
   countLabel?: string;

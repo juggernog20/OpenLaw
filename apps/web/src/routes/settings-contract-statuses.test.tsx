@@ -3,9 +3,9 @@
 /**
  * Contracts · Statuses (#82) at the route seam: the DES-020 list-editor
  * extended with the ST10 stage badges, the creation-time stage picker,
- * the three system-protected rows, and the blocking archive guard — no
- * reassignment, ever (SET-003 structural minimums). The API behaviors
- * themselves are covered at the HTTP seam in apps/api — these stubs
+ * the three system-protected rows, and the blocking archive guard. A
+ * status is never reassigned (SET-003 structural minimums). The API
+ * behaviors are covered at the HTTP seam in apps/api. The stubs here
  * only shape what this UI must react to.
  */
 
@@ -61,7 +61,7 @@ function newCalls(): StatusCalls {
   return { creates: [], renames: [], orders: [], archives: [], restores: [] };
 }
 
-/** Serves the seeded list and captures the pane's writes — the pane
+/** Serves the seeded list and captures the pane's writes. The pane
  * holds its own row state, so the stub never needs to mutate. */
 function statusesApi(calls: StatusCalls, rows = seededStatuses()) {
   const byId = (id: string) => rows.find((row) => row.id === id)!;
@@ -121,9 +121,9 @@ function statusesApi(calls: StatusCalls, rows = seededStatuses()) {
 
 const statusList = () => screen.getByRole("list");
 
-/** Matches the stage badge by its full accessible text ("Stage: Draft"),
- * which spans the sr-only prefix and the visible label — no single text
- * node carries it, so the default matcher can't. */
+/** Matches the stage badge by its full accessible text ("Stage: Draft").
+ * That text spans the sr-only prefix and the visible label. No single
+ * text node carries it, so the default matcher can't. */
 const stageBadge = (text: string) => (_: string, element: Element | null) =>
   element?.textContent === text;
 
@@ -182,7 +182,7 @@ describe("the seeded list (CTR-001)", () => {
     ];
     for (const [index, badge] of badges.entries()) {
       // The sr-only "Stage:" prefix is what keeps a Draft/Draft row
-      // unambiguous — to a reader and to this query alike.
+      // unambiguous, to a reader and to this query alike.
       expect(
         within(items[index]!).getByText(stageBadge(`Stage: ${badge}`)),
         `row ${index}`,
@@ -402,7 +402,7 @@ describe("the archive guard (SET-003: block, never reassign)", () => {
 });
 
 describe("the SET-003 in-use block with live counts (#113)", () => {
-  /** Terminated carries a real contract count — the guard is armed. */
+  /** Terminated carries a real contract count, so the guard is armed. */
   function statusesInUse() {
     return seededStatuses().map((row) =>
       row.slug === "terminated" ? { ...row, inUseCount: 5 } : row,
@@ -431,7 +431,7 @@ describe("the SET-003 in-use block with live counts (#113)", () => {
         "Terminated is the status of 5 contracts. Move them to another status first.",
       ),
     ).toBeInTheDocument();
-    // Statuses never reassign (CTR-020) — no select, even in use.
+    // Statuses never reassign (CTR-020). No select, even in use.
     expect(within(dialog).queryByRole("combobox")).not.toBeInTheDocument();
     expect(within(dialog).getByRole("button", { name: "Archive status" })).toBeDisabled();
     expect(calls.archives).toEqual([]);

@@ -1,4 +1,4 @@
-/* OpenLaw — migration journal gate (#330).
+/* OpenLaw migration journal gate (#330).
  *
  * Drizzle applies a migration only when its journal stamp is later than
  * the newest stamp already recorded in the database. That makes the
@@ -15,9 +15,9 @@
  *   - every entry has a migration file on disk;
  *   - every migration file on disk has an entry.
  *
- * Failures are fixed by correcting the journal — but note that a
- * correction only helps installs that have not applied the bad stamp
- * yet. See guardMigrationJournal in @openlaw/db for the repair side.
+ * Fix a failure by correcting the journal. A correction only helps
+ * installs that have not applied the bad stamp yet. See
+ * guardMigrationJournal in @openlaw/db for the repair side.
  *
  * Runs standalone (`pnpm lint:migrations`) and inside `pnpm check`.
  */
@@ -63,7 +63,7 @@ function fail(message) {
   process.exit(1);
 }
 
-/** Sha256 of a migration's text — the digest recorded in the database. */
+/** Sha256 of a migration's text, the digest recorded in the database. */
 function hashOf(tag) {
   return createHash("sha256")
     .update(readFileSync(join(migrationsDir, `${tag}.sql`), "utf8"))
@@ -73,7 +73,7 @@ function hashOf(tag) {
 // `--hashes` prints the tag/stamp/hash table an operator needs to read a
 // `drizzle.__drizzle_migrations` row back to the migration it stands for.
 // Repairing a stranded install means editing one bookkeeping row, and the
-// row only carries a hash — without this mapping, identifying the right
+// row only carries a hash. Without this mapping, identifying the right
 // one is guesswork. See docs/DEPLOYMENT.md.
 if (process.argv.includes("--hashes")) {
   console.log("tag\twhen\thash");

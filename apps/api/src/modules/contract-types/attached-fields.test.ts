@@ -3,12 +3,14 @@
 /**
  * The contract type editor (#84) at the HTTP seam: the single-type read
  * behind the editor, the description edit, and the CTR-016 attachment
- * machinery — attach and detach for contract-scoped and global fields
- * with other scopes refused, per-type reordering, the per-attachment
- * required flag, and detach never touching the catalog definition —
- * behind SET-002's one role gate, with every attachment mutation
- * appending to the activity log (DD-017). Asserted at the HTTP seam
- * plus direct activity_log reads — the log has no read routes until M9.
+ * rules. Attach and detach accept contract-scoped and global fields and
+ * refuse other scopes. Order and the required flag live on the
+ * attachment, per type. Detach never touches the catalog definition.
+ * Every route sits behind SET-002's one role gate, and every attachment
+ * mutation appends to the activity log (DD-017).
+ *
+ * The log has no read routes until M9, so those asserts read
+ * activity_log directly.
  */
 
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
@@ -358,7 +360,7 @@ describe("attach and detach (CTR-016 scopes)", () => {
     expect(res.statusCode, res.body).toBe(204);
     expect((await listAttached(nda.id)).map((row) => row.slug)).not.toContain("our_position");
 
-    // The catalog definition is untouched — detach is never delete.
+    // The catalog definition is untouched. Detach is never delete.
     const catalog = await harness.app.inject({
       method: "GET",
       url: "/api/v1/fields",
@@ -469,7 +471,7 @@ describe("attachments whose field is archived", () => {
       expect(res.statusCode, res.body).toBe(201);
     }
 
-    // Archiving the field hides its attachment — but detaches nothing.
+    // Archiving the field hides its attachment but detaches nothing.
     const archived = await harness.app.inject({
       method: "POST",
       url: `/api/v1/fields/${early}/archive`,
@@ -494,8 +496,8 @@ describe("attachments whose field is archived", () => {
       cookies: adminCookies,
     });
     expect(restored.statusCode, restored.body).toBe(200);
-    // The restored field rejoins its attachments at the end — the
-    // DES-020 restore position, not the front of the list.
+    // The restored field rejoins its attachments at the end, the DES-020
+    // restore position, not at the front of the list.
     expect((await listAttached(employment.id)).map((row) => row.slug)).toEqual([
       "third",
       "second",
