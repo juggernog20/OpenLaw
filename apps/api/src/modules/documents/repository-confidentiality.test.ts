@@ -3,7 +3,9 @@
 /** DD-014 repository reach, compared across five viewers of one install. */
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import {
+  counterparties,
   contracts,
+  contractCounterparties,
   contractStatuses,
   contractTeam,
   contractTypes,
@@ -55,6 +57,13 @@ let harness: TestHarness;
 const cookies = new Map<string, Record<string, string>>();
 const hiddenIds: string[] = [];
 let publicId = "";
+let confidentialCounterpartyId = "";
+let publicCounterpartyId = "";
+let confidentialContractNumber = 0;
+let publicContractNumber = 0;
+let confidentialMatterNumber = 0;
+let walledUploaderId = "";
+let publicUploaderId = "";
 
 beforeAll(async () => {
   harness = await startHarness();
@@ -75,6 +84,8 @@ beforeAll(async () => {
     peopleIds.set(person.email, user.id);
     cookies.set(person.email, await signInCookies(harness.app, person.email, person.password));
   }
+  walledUploaderId = peopleIds.get(PEOPLE.onTeam.email)!;
+  publicUploaderId = peopleIds.get(PEOPLE.offTeam.email)!;
 
   const contractTypeId = (await harness.db.select({ id: contractTypes.id }).from(contractTypes))[0]!
     .id;
@@ -96,7 +107,27 @@ beforeAll(async () => {
       },
       { title: "Public Contract", contractTypeId, statusId: contractStatusId },
     ])
-    .returning({ id: contracts.id });
+    .returning({ id: contracts.id, number: contracts.number });
+  confidentialContractNumber = confidentialContract!.number;
+  publicContractNumber = publicContract!.number;
+  const [confidentialCounterparty, publicCounterparty] = await harness.db
+    .insert(counterparties)
+    .values([{ name: "Walled Counterparty" }, { name: "Public Counterparty" }])
+    .returning({ id: counterparties.id });
+  confidentialCounterpartyId = confidentialCounterparty!.id;
+  publicCounterpartyId = publicCounterparty!.id;
+  await harness.db.insert(contractCounterparties).values([
+    {
+      contractId: confidentialContract!.id,
+      counterpartyId: confidentialCounterpartyId,
+      isPrimary: true,
+    },
+    {
+      contractId: publicContract!.id,
+      counterpartyId: publicCounterpartyId,
+      isPrimary: true,
+    },
+  ]);
   const [confidentialMatter] = await harness.db
     .insert(matters)
     .values({
@@ -106,7 +137,8 @@ beforeAll(async () => {
       createdBy: adminId,
       isConfidential: true,
     })
-    .returning({ id: matters.id });
+    .returning({ id: matters.id, number: matters.number });
+  confidentialMatterNumber = confidentialMatter!.number;
   const documentRows = await harness.db
     .insert(documents)
     .values([
@@ -135,7 +167,7 @@ beforeAll(async () => {
       mimeType: "application/pdf",
       byteSize: 1,
       checksumSha256: String(index + 1).repeat(64),
-      createdBy: adminId,
+      createdBy: document.title === "Public paper" ? publicUploaderId : walledUploaderId,
       createdAt: new Date(`2026-08-${String(20 - index).padStart(2, "0")}T09:00:00.000Z`),
     })),
   );
@@ -161,6 +193,14 @@ async function list(as: string, query = "") {
   return harness.app.inject({
     method: "GET",
     url: `/api/v1/documents${query}`,
+    cookies: cookies.get(as)!,
+  });
+}
+
+async function options(as: string) {
+  return harness.app.inject({
+    method: "GET",
+    url: "/api/v1/documents/options",
     cookies: cookies.get(as)!,
   });
 }
@@ -193,5 +233,76 @@ describe("the DD-014 gate in the Document repository", () => {
   it("refuses a Business User at requireDocumentReader", async () => {
     const response = await list(PEOPLE.business.email);
     expect(response.statusCode).toBe(403);
+  });
+
+  it("scopes every option to the same live Documents for all five viewers", async () => {
+    for (const viewer of ["administrator", PEOPLE.onTeam.email, PEOPLE.contributor.email]) {
+      const response = await options(viewer);
+      expect(response.statusCode, response.body).toBe(200);
+      expect(response.json()).toEqual({
+        counterparties: [
+          { id: publicCounterpartyId, name: "Public Counterparty" },
+          { id: confidentialCounterpartyId, name: "Walled Counterparty" },
+        ],
+        uploaders: [
+          {
+            id: publicUploaderId,
+            displayName: PEOPLE.offTeam.displayName,
+            image: null,
+            archived: false,
+          },
+          {
+            id: walledUploaderId,
+            displayName: PEOPLE.onTeam.displayName,
+            image: null,
+            archived: false,
+          },
+        ],
+        records: [
+          {
+            reference: `C-${confidentialContractNumber}`,
+            kind: "contract",
+            number: confidentialContractNumber,
+            title: "Confidential Contract",
+          },
+          {
+            reference: `C-${publicContractNumber}`,
+            kind: "contract",
+            number: publicContractNumber,
+            title: "Public Contract",
+          },
+          {
+            reference: `M-${confidentialMatterNumber}`,
+            kind: "matter",
+            number: confidentialMatterNumber,
+            title: "Confidential Matter",
+          },
+        ],
+      });
+    }
+
+    const outside = await options(PEOPLE.offTeam.email);
+    expect(outside.statusCode, outside.body).toBe(200);
+    expect(outside.json()).toEqual({
+      counterparties: [{ id: publicCounterpartyId, name: "Public Counterparty" }],
+      uploaders: [
+        {
+          id: publicUploaderId,
+          displayName: PEOPLE.offTeam.displayName,
+          image: null,
+          archived: false,
+        },
+      ],
+      records: [
+        {
+          reference: `C-${publicContractNumber}`,
+          kind: "contract",
+          number: publicContractNumber,
+          title: "Public Contract",
+        },
+      ],
+    });
+
+    expect((await options(PEOPLE.business.email)).statusCode).toBe(403);
   });
 });

@@ -21,6 +21,7 @@ import {
   documentLandingPath,
   documentRecordReference,
   documentRepositoryFilters,
+  readDocumentOptions,
   type DocumentRepositoryFilters,
   type RepositoryDocument,
 } from "../lib/documents";
@@ -56,6 +57,8 @@ const QUERY_KEYS = [
   "folder",
   "format",
   "kind",
+  "counterparty",
+  "uploader",
   "uploadedFrom",
   "uploadedTo",
   "sort",
@@ -87,6 +90,8 @@ function listQuery(layout: Layout): DocumentsQuery {
     ...(record && filters.folder ? { folder: filters.folder } : {}),
     ...(filters.format ? { format: filters.format } : {}),
     ...(filters.kind ? { kind: filters.kind } : {}),
+    ...(filters.counterparty ? { counterparty: filters.counterparty } : {}),
+    ...(filters.uploader ? { uploader: filters.uploader } : {}),
     ...(uploadedFrom ? { uploadedFrom } : {}),
     ...(uploadedTo ? { uploadedTo } : {}),
     ...(layout.sort
@@ -128,6 +133,10 @@ function layoutFromSearch(base: Layout, search: string): { layout: Layout; fromU
   }
   const kind = params.get("kind");
   if (DOCUMENT_REPOSITORY_KINDS.some((candidate) => candidate === kind)) filters.kind = kind!;
+  const counterparty = params.get("counterparty");
+  if (counterparty) filters.counterparty = counterparty;
+  const uploader = params.get("uploader");
+  if (uploader) filters.uploader = uploader;
   for (const key of ["uploadedFrom", "uploadedTo"] as const) {
     const value = params.get(key) ?? "";
     if (civilToLocalDate(value)) filters[key] = value;
@@ -149,7 +158,11 @@ function layoutFromSearch(base: Layout, search: string): { layout: Layout; fromU
 export async function documentsLoader({ request }: LoaderFunctionArgs) {
   const user = await requireUser();
   if (!canReadContracts(user.role)) return redirect("/");
-  const views = await readViews(CATALOGUE.surface);
+  const [views, optionsAnswer] = await Promise.all([
+    readViews(CATALOGUE.surface),
+    readDocumentOptions(),
+  ]);
+  if (!optionsAnswer.ok) throw new Error("The Document filter options could not be read.");
   const opensOn = views.find((view) => view.isDefault) ?? null;
   const stored = opensOn ? resolveLayout(CATALOGUE, opensOn.layout) : builtInLayout(CATALOGUE);
   const { layout, fromUrl } = layoutFromSearch(stored, new URL(request.url).search);
@@ -160,6 +173,7 @@ export async function documentsLoader({ request }: LoaderFunctionArgs) {
     documents: data.documents,
     nextCursor: data.nextCursor,
     views,
+    options: optionsAnswer.options,
     layout,
     activeViewId: opensOn?.id ?? null,
     fromUrl,
@@ -355,6 +369,7 @@ function DocumentsPageState() {
           filters={
             <DocumentFilterBar
               filters={filters}
+              options={loaded.options}
               busy={busy}
               empty={rows.length === 0}
               error={listError}

@@ -2457,6 +2457,23 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/v1/documents/options": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** The records, Counterparties, and current-Version uploaders carried by at least one live Document the viewer can reach. */
+    get: operations["listDocumentOptions"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/v1/documents": {
     parameters: {
       query?: never;
@@ -14768,12 +14785,61 @@ export interface operations {
       };
     };
   };
+  listDocumentOptions: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            counterparties: {
+              id: string;
+              name: string;
+            }[];
+            uploaders: {
+              id: string;
+              displayName: string;
+              image: string | null;
+              archived: boolean;
+            }[];
+            records: {
+              reference: string;
+              /** @enum {string} */
+              kind: "contract" | "matter";
+              number: number;
+              title: string;
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
   listDocuments: {
     parameters: {
       query?: {
         owner?: "contract" | "matter";
         record?: string;
         folder?: string;
+        counterparty?: string;
+        uploader?: string;
         format?: "pdf" | "word" | "powerpoint" | "image" | "email" | "other";
         kind?:
           | "draft_ours"

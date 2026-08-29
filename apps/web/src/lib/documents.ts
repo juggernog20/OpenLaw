@@ -41,6 +41,21 @@ type RepositoryResponse =
   paths["/api/v1/documents"]["get"]["responses"]["200"]["content"]["application/json"];
 export type RepositoryDocument = RepositoryResponse["documents"][number];
 
+type RepositoryOptionsResponse =
+  paths["/api/v1/documents/options"]["get"]["responses"]["200"]["content"]["application/json"];
+export type DocumentRepositoryOptions = RepositoryOptionsResponse;
+
+export async function readDocumentOptions(): Promise<
+  { ok: true; options: DocumentRepositoryOptions } | { ok: false; detail: string | undefined }
+> {
+  try {
+    const { data, error } = await api.GET("/api/v1/documents/options");
+    return data ? { ok: true, options: data } : { ok: false, detail: problemDetail(error) };
+  } catch {
+    return { ok: false, detail: undefined };
+  }
+}
+
 export const DOCUMENT_REPOSITORY_FORMATS = [
   "pdf",
   "word",
@@ -77,6 +92,8 @@ export interface DocumentRepositoryFilters {
   folder: string;
   format: "" | DocumentRepositoryFormat;
   kind: "" | DocumentVersionKind;
+  counterparty: string;
+  uploader: string;
   uploadedFrom: string;
   uploadedTo: string;
 }
@@ -97,6 +114,8 @@ export function documentRepositoryFilters(
     kind: DOCUMENT_REPOSITORY_KINDS.some((candidate) => candidate === kind)
       ? (kind as DocumentVersionKind)
       : "",
+    counterparty: typeof filters.counterparty === "string" ? filters.counterparty : "",
+    uploader: typeof filters.uploader === "string" ? filters.uploader : "",
     uploadedFrom: typeof filters.uploadedFrom === "string" ? filters.uploadedFrom : "",
     uploadedTo: typeof filters.uploadedTo === "string" ? filters.uploadedTo : "",
   };

@@ -3,7 +3,9 @@
 /** M26/3's fixed repository filters and reproducible sorted cursors. */
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import {
+  counterparties,
   contracts,
+  contractCounterparties,
   contractStatuses,
   contractTypes,
   documentFolders,
@@ -30,6 +32,12 @@ const MEMBER = {
   password: "correct-horse-battery",
 } as const;
 
+const OTHER_UPLOADER = {
+  email: "repository-other-uploader@example.com",
+  displayName: "Blair Uploader",
+  password: "correct-horse-battery",
+} as const;
+
 interface Row {
   id: string;
   title: string;
@@ -53,11 +61,14 @@ interface Answer {
 let harness: TestHarness;
 let cookies: Record<string, string>;
 let memberId = "";
+let otherUploaderId = "";
 let contractA = { id: "", number: 0 };
 let contractB = { id: "", number: 0 };
 let matterA = { id: "", number: 0 };
 let contractFolderId = "";
 let matterFolderId = "";
+let counterpartyAId = "";
+let counterpartyBId = "";
 const ids = new Map<string, string>();
 const tieTitles = ["Tie on A", "Tie on B", "Tie on C", "Tie on D"];
 
@@ -72,7 +83,16 @@ beforeAll(async () => {
   const member = await provisionUser(harness.app.auth, MEMBER);
   memberId = member.id;
   await harness.db.update(users).set({ role: "legal_team_member" }).where(eq(users.id, member.id));
+  const otherUploader = await provisionUser(harness.app.auth, OTHER_UPLOADER);
+  otherUploaderId = otherUploader.id;
+  await harness.db
+    .update(users)
+    .set({ role: "legal_team_member" })
+    .where(eq(users.id, otherUploader.id));
   cookies = await signInCookies(harness.app, MEMBER.email, MEMBER.password);
+  const adminId = (
+    await harness.db.select({ id: users.id }).from(users).where(eq(users.email, ADMIN.email))
+  )[0]!.id;
 
   const contractTypeId = (await harness.db.select({ id: contractTypes.id }).from(contractTypes))[0]!
     .id;
@@ -89,10 +109,42 @@ beforeAll(async () => {
     .values([
       { title: "Alpha owner", contractTypeId, statusId: contractStatusId },
       { title: "Beta owner", contractTypeId, statusId: contractStatusId },
+      { title: "Archived document owner", contractTypeId, statusId: contractStatusId },
+      {
+        title: "Archived owner",
+        contractTypeId,
+        statusId: contractStatusId,
+        archivedAt: new Date("2026-08-01T00:00:00.000Z"),
+      },
     ])
     .returning({ id: contracts.id, number: contracts.number });
   contractA = insertedContracts[0]!;
   contractB = insertedContracts[1]!;
+  const insertedCounterparties = await harness.db
+    .insert(counterparties)
+    .values([
+      { name: "Northwind" },
+      { name: "Contoso" },
+      { name: "Archived Document Party" },
+      { name: "Archived Owner Party" },
+    ])
+    .returning({ id: counterparties.id });
+  counterpartyAId = insertedCounterparties[0]!.id;
+  counterpartyBId = insertedCounterparties[1]!.id;
+  await harness.db.insert(contractCounterparties).values([
+    { contractId: contractA.id, counterpartyId: counterpartyAId, isPrimary: true },
+    { contractId: contractB.id, counterpartyId: counterpartyBId, isPrimary: true },
+    {
+      contractId: insertedContracts[2]!.id,
+      counterpartyId: insertedCounterparties[2]!.id,
+      isPrimary: true,
+    },
+    {
+      contractId: insertedContracts[3]!.id,
+      counterpartyId: insertedCounterparties[3]!.id,
+      isPrimary: true,
+    },
+  ]);
   const insertedMatters = await harness.db
     .insert(matters)
     .values({
@@ -126,6 +178,11 @@ beforeAll(async () => {
     doc(tieTitles[1]!, { contractId: contractB.id }),
     doc(tieTitles[2]!, { matterId: matterA.id }),
     doc(tieTitles[3]!, { contractId: contractA.id }),
+    {
+      ...doc("Archived document only", { contractId: insertedContracts[2]!.id }),
+      archivedAt: new Date("2026-08-01T00:00:00.000Z"),
+    },
+    doc("Archived owner only", { contractId: insertedContracts[3]!.id }),
   ];
   const inserted = await harness.db
     .insert(documents)
@@ -151,6 +208,7 @@ beforeAll(async () => {
         "draft_ours",
         2_000,
         "2026-06-20T23:59:59.999Z",
+        otherUploaderId,
       ),
       version(
         "Gamma Deck",
@@ -194,6 +252,24 @@ beforeAll(async () => {
           "2026-08-01T12:00:00.000Z",
         ),
       ),
+      version(
+        "Archived document only",
+        "archived-document.pdf",
+        "application/pdf",
+        "executed",
+        8_000,
+        "2026-08-02T12:00:00.000Z",
+        adminId,
+      ),
+      version(
+        "Archived owner only",
+        "archived-owner.pdf",
+        "application/pdf",
+        "executed",
+        9_000,
+        "2026-08-03T12:00:00.000Z",
+        adminId,
+      ),
     ])
     .returning({ id: documentVersions.id, documentId: documentVersions.documentId });
   await harness.db.insert(documentVersionText).values(
@@ -223,6 +299,7 @@ beforeAll(async () => {
       "draft_ours" | "draft_theirs" | "redline_theirs" | "redline_ours" | "executed" | "amendment",
     byteSize: number,
     createdAt: string,
+    createdBy = memberId,
   ) {
     return {
       documentId: ids.get(title)!,
@@ -233,7 +310,7 @@ beforeAll(async () => {
       kind,
       byteSize,
       checksumSha256: String(byteSize % 10).repeat(64),
-      createdBy: memberId,
+      createdBy,
       createdAt: new Date(createdAt),
     };
   }
@@ -302,6 +379,95 @@ describe("the fixed Document repository filters", () => {
         }),
       ),
     ).toEqual(["Beta Word"]);
+  });
+
+  it("filters by a Contract Counterparty and never matches Matter-owned Documents", async () => {
+    const answer = await list({ counterparty: counterpartyAId });
+    expect(titles(answer)).toEqual(
+      expect.arrayContaining(["Alpha PDF", "Delta Image", "Same title"]),
+    );
+    expect(answer.documents.every((row) => row.owner.kind === "contract")).toBe(true);
+    expect(answer.documents.every((row) => row.owner.number === contractA.number)).toBe(true);
+  });
+
+  it("filters by the current Version uploader", async () => {
+    expect(titles(await list({ uploader: otherUploaderId }))).toEqual(["Beta Word"]);
+  });
+
+  it("composes Counterparty and uploader with the fixed filters", async () => {
+    expect(
+      titles(
+        await list({
+          owner: "contract",
+          record: `C-${contractB.number}`,
+          folder: "root",
+          format: "word",
+          kind: "draft_ours",
+          uploadedFrom: "2026-06-20",
+          uploadedTo: "2026-06-20",
+          counterparty: counterpartyBId,
+          uploader: otherUploaderId,
+        }),
+      ),
+    ).toEqual(["Beta Word"]);
+    expect(
+      titles(
+        await list({
+          record: `C-${contractB.number}`,
+          counterparty: counterpartyAId,
+          uploader: otherUploaderId,
+        }),
+      ),
+    ).toEqual([]);
+  });
+
+  it("answers the records, Counterparties, and uploaders carried by live Documents", async () => {
+    const response = await harness.app.inject({
+      method: "GET",
+      url: "/api/v1/documents/options",
+      cookies,
+    });
+    expect(response.statusCode, response.body).toBe(200);
+    expect(response.json()).toEqual({
+      counterparties: [
+        { id: counterpartyBId, name: "Contoso" },
+        { id: counterpartyAId, name: "Northwind" },
+      ],
+      uploaders: [
+        {
+          id: memberId,
+          displayName: MEMBER.displayName,
+          image: null,
+          archived: false,
+        },
+        {
+          id: otherUploaderId,
+          displayName: OTHER_UPLOADER.displayName,
+          image: null,
+          archived: false,
+        },
+      ],
+      records: [
+        {
+          reference: `C-${contractA.number}`,
+          kind: "contract",
+          number: contractA.number,
+          title: "Alpha owner",
+        },
+        {
+          reference: `C-${contractB.number}`,
+          kind: "contract",
+          number: contractB.number,
+          title: "Beta owner",
+        },
+        {
+          reference: `M-${matterA.number}`,
+          kind: "matter",
+          number: matterA.number,
+          title: "Matter owner",
+        },
+      ],
+    });
   });
 
   it("uses the doc-panel render family for every MIME family", async () => {
