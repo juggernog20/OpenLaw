@@ -981,6 +981,12 @@ It needed five. This decision records the real count and says when the count sto
 - The five hooks are covered by the behaviour they produce at each mount, not by tests of the hooks themselves — no test asserts that a factory was configured a certain way.
 - `applyPatch` has the most reach of the five: it runs under the row lock and can refuse. A second mount wanting it is fine; a third that needs it to do something other than validate-and-narrate is the split signal above.
 
+### M27 addendum (2026-08-29) — fifth taxonomy, third record-type attachment
+
+Officer roles is the **fifth `taxonomyRoutes` mount** (after Contract, Matter, Entity, and Request types), supplied entirely as configuration. Its usage adapter counts and reassigns the same full set of `entity_officers` rows, including resigned officers, while `protectedSlug: "other"` carries the fallback lock.
+
+Entity type Fields is the **third record-type `typeFieldRoutes` mount**, after Contract and Matter type Fields. Request-type form attachment also uses the factory, so it is the fourth configured mount in total; “third” here names the record-type sequence from TECH-023's original context. The Entity mount adds no hook: it supplies the constant `entity|global` scope rule and the `entity_type_fields` table.
+
 ## TECH-024: Web data and state model — loaders read, screens own what they show, live surfaces patch feeds
 
 - **Status:** Accepted

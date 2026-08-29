@@ -48,6 +48,7 @@ import {
 import { users } from "./auth.js";
 import { contracts } from "./contracts.js";
 import { documentFolders } from "./document-folders.js";
+import { entities } from "./entities.js";
 import { searchVector, uuidPk } from "./helpers.js";
 import { matters } from "./matters.js";
 
@@ -142,6 +143,8 @@ export const documents = pgTable(
      * `contract_id` is present; the table check below is the floor under
      * every application write (DOC-008). */
     matterId: text("matter_id").references(() => matters.id),
+    /** M27's Entity-owned statutory Document arm (ENT-005). */
+    entityId: text("entity_id").references(() => entities.id),
     /**
      * CTR-014's executed pin: which version of this document is the
      * signed one (M11/4). It is the file previews, exports, and AI
@@ -247,6 +250,7 @@ export const documents = pgTable(
     // answers the order (CTR-024, #391).
     index("documents_contract_idx").on(table.contractId, table.createdAt, table.id),
     index("documents_matter_idx").on(table.matterId, table.createdAt, table.id),
+    index("documents_entity_idx").on(table.entityId, table.createdAt, table.id),
     // The executed pin's own column — the referencing side of the
     // foreign key into `document_versions` (M11/5). No read filters on
     // it, so it carried no index until now: what needs one is DOC-010's
@@ -265,7 +269,10 @@ export const documents = pgTable(
     // filter, and it walks `(created_at, id)` too.
     index("documents_folder_idx").on(table.folderId, table.createdAt, table.id),
     index("documents_search_vector_idx").using("gin", table.searchVector),
-    check("documents_owner_check", sql`num_nonnulls(${table.matterId}, ${table.contractId}) = 1`),
+    check(
+      "documents_owner_check",
+      sql`num_nonnulls(${table.matterId}, ${table.contractId}, ${table.entityId}) = 1`,
+    ),
   ],
 );
 

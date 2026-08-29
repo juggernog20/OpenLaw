@@ -2357,6 +2357,7 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
   ...taxonomyArms("contract_type", Tag, TAXONOMY_VERBS),
   ...taxonomyArms("matter_type", Tag, TAXONOMY_VERBS),
   ...taxonomyArms("entity_type", Tag, TAXONOMY_VERBS),
+  ...taxonomyArms("officer_role", Tag, TAXONOMY_VERBS),
   ...taxonomyArms("request_type", Tag, TAXONOMY_VERBS),
   // A status has a stage rather than a description, so it never writes
   // the `updated` verb.
@@ -2485,6 +2486,7 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
 
   // ---- Fields attached to a type ----
   ...typeFieldArms("contract_type_field"),
+  ...typeFieldArms("entity_type_field"),
   ...typeFieldArms("matter_type_field"),
   ...typeFieldArms("request_type_field"),
 

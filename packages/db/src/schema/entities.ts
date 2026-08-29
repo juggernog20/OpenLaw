@@ -14,7 +14,18 @@
  */
 
 import { sql } from "drizzle-orm";
-import { check, date, index, pgTable, text, timestamp } from "drizzle-orm/pg-core";
+import {
+  bigint,
+  boolean,
+  check,
+  date,
+  index,
+  jsonb,
+  pgTable,
+  text,
+  timestamp,
+} from "drizzle-orm/pg-core";
+import type { CustomFieldValue } from "./fields.js";
 import { entityTypes } from "./entity-types.js";
 import { searchVector, uuidPk } from "./helpers.js";
 
@@ -41,6 +52,20 @@ export const entities = pgTable(
     registeredAgent: text("registered_agent"),
     registeredAddress: text("registered_address"),
     status: text("status", { enum: ENTITY_STATUSES }).notNull().default("active"),
+    /** Simple share capital only. Share classes and registers stay deferred (ENT-001). */
+    sharesAuthorized: bigint("shares_authorized", { mode: "number" }),
+    sharesIssued: bigint("shares_issued", { mode: "number" }),
+    /** Minor currency units, matching Contract value storage. */
+    parValue: bigint("par_value", { mode: "number" }),
+    /** Values keyed by catalog Field slug for this Entity's type. Never
+     * NULL: the same `{}` floor `matters` and `contracts` carry, so
+     * readers index the object without a null branch. */
+    customFields: jsonb("custom_fields")
+      .$type<Record<string, CustomFieldValue>>()
+      .notNull()
+      .default({}),
+    /** ENT-004's opt-in wall. Existing Entities stay open on upgrade. */
+    isConfidential: boolean("is_confidential").notNull().default(false),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true })
       .notNull()
@@ -67,6 +92,7 @@ export const entities = pgTable(
       "entities_status_check",
       sql`${table.status} in ('active', 'dormant', 'dissolved', 'divested')`,
     ),
+    check("entities_custom_fields_object", sql`jsonb_typeof(${table.customFields}) = 'object'`),
   ],
 );
 

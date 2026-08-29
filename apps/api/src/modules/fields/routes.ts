@@ -3,7 +3,7 @@
 /**
  * The Fields catalog routes (CTR-016, #83): the shared custom-field
  * catalog behind the module list-editor panes — list scoped to Contract,
- * Matter, and global fields, create across the nine field types, rename and
+ * Matter, Entity, and global fields, create across the nine field types, rename and
  * describe, the options list on select types, the contract-scope-only
  * AI prompt (CTR-008), scope moves (promotion to global; narrowing back
  * only while no other module attaches the field), archive and restore.
@@ -25,6 +25,8 @@ import {
   contractTypeFields,
   count,
   eq,
+  entities,
+  entityTypeFields,
   fields,
   FIELD_TAGS,
   FIELD_TYPES,
@@ -46,7 +48,7 @@ import { freeSlug } from "../../lib/slug.js";
  * The scopes this pane's catalog holds and its picker offers (CTR-016):
  * M22 added `matter`; `entity` joins with M27 and its module view.
  */
-const OPEN_SCOPES = ["contract", "matter", "global"] as const;
+const OPEN_SCOPES = ["contract", "matter", "entity", "global"] as const;
 
 const ScopeSchema = z.enum(OPEN_SCOPES);
 const FieldTypeSchema = z.enum(FIELD_TYPES);
@@ -66,7 +68,7 @@ const FieldSchema = z.object({
   /** Records holding a value plus type attachments — the SET-003 guard
    * number. Contract-type attachments count since #84 and matter-type
    * attachments since #85; Contract values count since #112 and Matter
-   * values since M22. */
+   * values since M22; Entity attachments and values join in M27. */
   inUseCount: z.number().int(),
 });
 
@@ -129,6 +131,7 @@ export const fieldsRoutes: FastifyPluginAsyncZod = async (app) => {
   const MODULE_JOINS = [
     { moduleScope: "contract", joinTable: contractTypeFields },
     { moduleScope: "matter", joinTable: matterTypeFields },
+    { moduleScope: "entity", joinTable: entityTypeFields },
   ] as const;
 
   /**
@@ -193,6 +196,21 @@ export const fieldsRoutes: FastifyPluginAsyncZod = async (app) => {
       `,
     );
     for (const row of matterHeld.rows) {
+      const fieldId = slugToId.get(row.slug);
+      if (fieldId) tally.set(fieldId, (tally.get(fieldId) ?? 0) + Number(row.tally));
+    }
+    const entityHeld = await db.execute<{ slug: string; tally: string }>(
+      sql`
+        SELECT slug, COUNT(*) AS tally
+        FROM (
+          SELECT jsonb_object_keys(${entities.customFields}) AS slug
+          FROM ${entities}
+        ) AS keys
+        WHERE slug = ANY(${sql.param(slugs)}::text[])
+        GROUP BY slug
+      `,
+    );
+    for (const row of entityHeld.rows) {
       const fieldId = slugToId.get(row.slug);
       if (fieldId) tally.set(fieldId, (tally.get(fieldId) ?? 0) + Number(row.tally));
     }

@@ -247,6 +247,17 @@ async function sourceRows(
   const withoutDerivedSearch = migrated
     ? sql.raw(" - 'search_vector' - 'email_subject'")
     : sql.raw("");
+  // Later milestones add nullable/defaulted source columns. This M25
+  // rehearsal compares the pre-M25 source shape, so omit those later
+  // additions beside M25's own generated vector.
+  const withoutLaterEntityColumns = migrated
+    ? sql.raw(
+        " - 'search_vector' - 'shares_authorized' - 'shares_issued' - 'par_value' - 'custom_fields' - 'is_confidential'",
+      )
+    : sql.raw("");
+  const withoutLaterDocumentColumns = migrated
+    ? sql.raw(" - 'search_vector' - 'entity_id'")
+    : sql.raw("");
   const tableNames = SEARCH_TABLE_NAMES.map((name) => sql`${name}`);
   const result = await db.execute<{ table_name: string; rows: unknown[] }>(sql`
     select table_name, rows
@@ -261,10 +272,10 @@ async function sourceRows(
         jsonb_agg(to_jsonb(row)${withoutDerivedSearch} order by row.version_id) from document_version_text row
       union all
       select 'documents',
-        jsonb_agg(to_jsonb(row)${withoutDerivedSearch} order by row.id) from documents row
+        jsonb_agg(to_jsonb(row)${withoutLaterDocumentColumns} order by row.id) from documents row
       union all
       select 'entities',
-        jsonb_agg(to_jsonb(row)${withoutDerivedSearch} order by row.id) from entities row
+        jsonb_agg(to_jsonb(row)${withoutLaterEntityColumns} order by row.id) from entities row
       union all
       select 'matters',
         jsonb_agg(to_jsonb(row)${withoutDerivedSearch} order by row.id) from matters row

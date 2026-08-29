@@ -38,6 +38,7 @@ import {
   and,
   asc,
   contractTypeFields,
+  entityTypeFields,
   eq,
   fields,
   FIELD_MODULE_SCOPES,
@@ -59,7 +60,10 @@ import type { TaxonomyRow, TaxonomyTable } from "./taxonomy-routes.js";
 
 /** The join tables are one shape by construction (`typeFieldColumns`). */
 export type TypeFieldsTable =
-  typeof contractTypeFields | typeof matterTypeFields | typeof requestTypeFields;
+  | typeof contractTypeFields
+  | typeof entityTypeFields
+  | typeof matterTypeFields
+  | typeof requestTypeFields;
 export type TypeFieldRow = TypeFieldsTable["$inferSelect"];
 
 /**

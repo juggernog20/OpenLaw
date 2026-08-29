@@ -62,7 +62,9 @@ import { documentFoldersRoutes } from "./modules/documents/folders.js";
 import { counterpartiesRoutes } from "./modules/counterparties/routes.js";
 import { entitiesRoutes } from "./modules/entities/routes.js";
 import { entityTypesRoutes } from "./modules/entity-types/routes.js";
+import { entityAttachedFieldsRoutes } from "./modules/entity-types/attached-fields.js";
 import { matterTypesRoutes } from "./modules/matter-types/routes.js";
+import { officerRolesRoutes } from "./modules/officer-roles/routes.js";
 import { matterAttachedFieldsRoutes } from "./modules/matter-types/attached-fields.js";
 import { matterStatusesRoutes } from "./modules/matter-statuses/routes.js";
 import { matterKeyDatesRoutes } from "./modules/matter-key-dates/routes.js";
@@ -457,6 +459,8 @@ export async function buildApp(deps: AppDeps, opts: FastifyServerOptions = {}) {
   await app.register(activityRoutes, { prefix: "/api/v1" });
   await app.register(auditLogRoutes, { prefix: "/api/v1" });
   await app.register(entityTypesRoutes, { prefix: "/api/v1" });
+  await app.register(entityAttachedFieldsRoutes, { prefix: "/api/v1" });
+  await app.register(officerRolesRoutes, { prefix: "/api/v1" });
   await app.register(entitiesRoutes, { prefix: "/api/v1" });
   await app.register(searchRoutes, { prefix: "/api/v1" });
   await app.register(fieldsRoutes, { prefix: "/api/v1" });

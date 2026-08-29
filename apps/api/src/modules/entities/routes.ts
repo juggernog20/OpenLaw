@@ -27,6 +27,7 @@ import {
   isNull,
   sql,
   ENTITY_STATUSES,
+  officerRoles,
   type Entity,
 } from "@openlaw/db";
 import { requireRole } from "../../auth/guards.js";
@@ -58,6 +59,13 @@ const EntityRowSchema = z.object({
  * picker source (GET /entity-types itself is Administrator-only per
  * SET-002, so the registry surface carries its own read). */
 const EntityTypeOptionSchema = z.object({
+  id: z.string(),
+  slug: z.string(),
+  displayName: z.string(),
+});
+
+/** The Member+ picker projection for ENT-001 officer roles. */
+const OfficerRoleOptionSchema = z.object({
   id: z.string(),
   slug: z.string(),
   displayName: z.string(),
@@ -147,6 +155,36 @@ export const entitiesRoutes: FastifyPluginAsyncZod = async (app) => {
         .where(isNull(entityTypes.archivedAt))
         .orderBy(asc(entityTypes.displayOrder), asc(entityTypes.createdAt));
       return { entityTypes: rows };
+    },
+  );
+
+  app.get(
+    "/entities/officer-roles",
+    {
+      preHandler: requireMember,
+      schema: {
+        operationId: "listOfficerRoleOptions",
+        summary:
+          "The live officer roles in display order, for Member+ Entity forms; " +
+          "the /officer-roles settings taxonomy stays Administrator-only",
+        tags: ["entities"],
+        response: {
+          200: z.object({ officerRoles: z.array(OfficerRoleOptionSchema) }),
+          default: problemResponse,
+        },
+      },
+    },
+    async () => {
+      const rows = await app.db
+        .select({
+          id: officerRoles.id,
+          slug: officerRoles.slug,
+          displayName: officerRoles.displayName,
+        })
+        .from(officerRoles)
+        .where(isNull(officerRoles.archivedAt))
+        .orderBy(asc(officerRoles.displayOrder), asc(officerRoles.createdAt));
+      return { officerRoles: rows };
     },
   );
 
