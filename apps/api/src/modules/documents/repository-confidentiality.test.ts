@@ -224,6 +224,15 @@ describe("the DD-014 gate in the Document repository", () => {
     });
   });
 
+  it("uses the same reached answer for the Recent strip's limit=5 read", async () => {
+    const response = await list(PEOPLE.offTeam.email, "?limit=5");
+    expect(response.statusCode, response.body).toBe(200);
+    expect(response.json()).toEqual({
+      documents: [expect.objectContaining({ id: publicId })],
+      nextCursor: null,
+    });
+  });
+
   it("answers an empty page when the cursor names a walled Document", async () => {
     const response = await list(PEOPLE.offTeam.email, `?cursor=${hiddenIds[0]!}`);
     expect(response.statusCode, response.body).toBe(200);

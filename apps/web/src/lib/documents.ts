@@ -96,6 +96,7 @@ export interface DocumentRepositoryFilters {
   uploader: string;
   uploadedFrom: string;
   uploadedTo: string;
+  includeArchived: boolean;
 }
 
 export function documentRepositoryFilters(
@@ -118,6 +119,7 @@ export function documentRepositoryFilters(
     uploader: typeof filters.uploader === "string" ? filters.uploader : "",
     uploadedFrom: typeof filters.uploadedFrom === "string" ? filters.uploadedFrom : "",
     uploadedTo: typeof filters.uploadedTo === "string" ? filters.uploadedTo : "",
+    includeArchived: filters.includeArchived === true,
   };
 }
 
