@@ -3256,6 +3256,70 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/v1/entities/{id}/officers": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["listEntityOfficers"];
+    put?: never;
+    post: operations["createEntityOfficer"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/entities/{id}/officers/{childId}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    delete: operations["deleteEntityOfficer"];
+    options?: never;
+    head?: never;
+    patch: operations["updateEntityOfficer"];
+    trace?: never;
+  };
+  "/api/v1/entities/{id}/registrations": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["listEntityRegistrations"];
+    put?: never;
+    post: operations["createEntityRegistration"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/entities/{id}/registrations/{childId}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    delete: operations["deleteEntityRegistration"];
+    options?: never;
+    head?: never;
+    patch: operations["updateEntityRegistration"];
+    trace?: never;
+  };
   "/api/v1/entities": {
     parameters: {
       query?: never;
@@ -17460,7 +17524,7 @@ export interface operations {
   listActivity: {
     parameters: {
       query: {
-        entityType: "matter" | "contract";
+        entityType: "matter" | "contract" | "entity";
         entityId: string;
         cursor?: string;
       };
@@ -18573,6 +18637,402 @@ export interface operations {
       };
     };
   };
+  listEntityOfficers: {
+    parameters: {
+      query?: {
+        includeFormer?: "true" | "false";
+      };
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            officers: {
+              id: string;
+              entityId: string;
+              name: string;
+              officerRoleId: string;
+              officerRoleName: string;
+              appointedOn: string | null;
+              resignedOn: string | null;
+              user: {
+                id: string;
+                displayName: string;
+                image: string | null;
+                archived: boolean;
+              } | null;
+              /** Format: date-time */
+              createdAt: string;
+              /** Format: date-time */
+              updatedAt: string;
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  createEntityOfficer: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          name: string;
+          officerRoleId: string;
+          appointedOn?: string | null;
+          resignedOn?: string | null;
+          userId?: string | null;
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            officer: {
+              id: string;
+              entityId: string;
+              name: string;
+              officerRoleId: string;
+              officerRoleName: string;
+              appointedOn: string | null;
+              resignedOn: string | null;
+              user: {
+                id: string;
+                displayName: string;
+                image: string | null;
+                archived: boolean;
+              } | null;
+              /** Format: date-time */
+              createdAt: string;
+              /** Format: date-time */
+              updatedAt: string;
+            };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  deleteEntityOfficer: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+        childId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": unknown;
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  updateEntityOfficer: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+        childId: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          name?: string;
+          officerRoleId?: string;
+          appointedOn?: string | null;
+          resignedOn?: string | null;
+          userId?: string | null;
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            officer: {
+              id: string;
+              entityId: string;
+              name: string;
+              officerRoleId: string;
+              officerRoleName: string;
+              appointedOn: string | null;
+              resignedOn: string | null;
+              user: {
+                id: string;
+                displayName: string;
+                image: string | null;
+                archived: boolean;
+              } | null;
+              /** Format: date-time */
+              createdAt: string;
+              /** Format: date-time */
+              updatedAt: string;
+            };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  listEntityRegistrations: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            registrations: {
+              id: string;
+              entityId: string;
+              jurisdiction: string;
+              registrationNumber: string | null;
+              registeredAgent: string | null;
+              /** @enum {string} */
+              status: "active" | "lapsed" | "withdrawn";
+              /** Format: date-time */
+              createdAt: string;
+              /** Format: date-time */
+              updatedAt: string;
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  createEntityRegistration: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          jurisdiction: string;
+          registrationNumber?: string | null;
+          registeredAgent?: string | null;
+          /** @enum {string} */
+          status?: "active" | "lapsed" | "withdrawn";
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            registration: {
+              id: string;
+              entityId: string;
+              jurisdiction: string;
+              registrationNumber: string | null;
+              registeredAgent: string | null;
+              /** @enum {string} */
+              status: "active" | "lapsed" | "withdrawn";
+              /** Format: date-time */
+              createdAt: string;
+              /** Format: date-time */
+              updatedAt: string;
+            };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  deleteEntityRegistration: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+        childId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": unknown;
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  updateEntityRegistration: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+        childId: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          jurisdiction?: string;
+          registrationNumber?: string | null;
+          registeredAgent?: string | null;
+          /** @enum {string} */
+          status?: "active" | "lapsed" | "withdrawn";
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            registration: {
+              id: string;
+              entityId: string;
+              jurisdiction: string;
+              registrationNumber: string | null;
+              registeredAgent: string | null;
+              /** @enum {string} */
+              status: "active" | "lapsed" | "withdrawn";
+              /** Format: date-time */
+              createdAt: string;
+              /** Format: date-time */
+              updatedAt: string;
+            };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
   listEntities: {
     parameters: {
       query?: {
@@ -18604,6 +19064,12 @@ export interface operations {
               registeredAddress: string | null;
               /** @enum {string} */
               status: "active" | "dormant" | "dissolved" | "divested";
+              sharesAuthorized: number | null;
+              sharesIssued: number | null;
+              parValue: number | null;
+              customFields: {
+                [key: string]: string | number | boolean | string[];
+              };
               archivedAt: string | null;
               /** Format: date-time */
               createdAt: string;
@@ -18669,6 +19135,12 @@ export interface operations {
               registeredAddress: string | null;
               /** @enum {string} */
               status: "active" | "dormant" | "dissolved" | "divested";
+              sharesAuthorized: number | null;
+              sharesIssued: number | null;
+              parValue: number | null;
+              customFields: {
+                [key: string]: string | number | boolean | string[];
+              };
               archivedAt: string | null;
               /** Format: date-time */
               createdAt: string;
@@ -18745,6 +19217,12 @@ export interface operations {
               slug: string;
               displayName: string;
             }[];
+            users: {
+              id: string;
+              displayName: string;
+              image: string | null;
+              role: string;
+            }[];
           };
         };
       };
@@ -18790,11 +19268,51 @@ export interface operations {
               registeredAddress: string | null;
               /** @enum {string} */
               status: "active" | "dormant" | "dissolved" | "divested";
+              sharesAuthorized: number | null;
+              sharesIssued: number | null;
+              parValue: number | null;
+              customFields: {
+                [key: string]: string | number | boolean | string[];
+              };
               archivedAt: string | null;
               /** Format: date-time */
               createdAt: string;
               /** Format: date-time */
               updatedAt: string;
+            };
+            fields: {
+              fieldId: string;
+              slug: string;
+              displayName: string;
+              description: string | null;
+              /** @enum {string} */
+              fieldType:
+                | "text"
+                | "long_text"
+                | "number"
+                | "date"
+                | "boolean"
+                | "single_select"
+                | "multi_select"
+                | "user"
+                | "entity";
+              /** @enum {string} */
+              fieldTag: "business" | "legal";
+              options: string[] | null;
+              displayOrder: number;
+              isRequired: boolean;
+            }[];
+            customFieldRefs: {
+              users: {
+                id: string;
+                displayName: string;
+                archived: boolean;
+              }[];
+              entities: {
+                id: string;
+                legalName: string;
+                archived: boolean;
+              }[];
             };
           };
         };
@@ -18832,6 +19350,12 @@ export interface operations {
           registeredAddress?: string | null;
           /** @enum {string} */
           status?: "active" | "dormant" | "dissolved" | "divested";
+          sharesAuthorized?: number | null;
+          sharesIssued?: number | null;
+          parValue?: number | null;
+          customFields?: {
+            [key: string]: (string | number | boolean | string[]) | null;
+          };
         };
       };
     };
@@ -18856,11 +19380,51 @@ export interface operations {
               registeredAddress: string | null;
               /** @enum {string} */
               status: "active" | "dormant" | "dissolved" | "divested";
+              sharesAuthorized: number | null;
+              sharesIssued: number | null;
+              parValue: number | null;
+              customFields: {
+                [key: string]: string | number | boolean | string[];
+              };
               archivedAt: string | null;
               /** Format: date-time */
               createdAt: string;
               /** Format: date-time */
               updatedAt: string;
+            };
+            fields: {
+              fieldId: string;
+              slug: string;
+              displayName: string;
+              description: string | null;
+              /** @enum {string} */
+              fieldType:
+                | "text"
+                | "long_text"
+                | "number"
+                | "date"
+                | "boolean"
+                | "single_select"
+                | "multi_select"
+                | "user"
+                | "entity";
+              /** @enum {string} */
+              fieldTag: "business" | "legal";
+              options: string[] | null;
+              displayOrder: number;
+              isRequired: boolean;
+            }[];
+            customFieldRefs: {
+              users: {
+                id: string;
+                displayName: string;
+                archived: boolean;
+              }[];
+              entities: {
+                id: string;
+                legalName: string;
+                archived: boolean;
+              }[];
             };
           };
         };
@@ -18907,6 +19471,12 @@ export interface operations {
               registeredAddress: string | null;
               /** @enum {string} */
               status: "active" | "dormant" | "dissolved" | "divested";
+              sharesAuthorized: number | null;
+              sharesIssued: number | null;
+              parValue: number | null;
+              customFields: {
+                [key: string]: string | number | boolean | string[];
+              };
               archivedAt: string | null;
               /** Format: date-time */
               createdAt: string;
@@ -18958,6 +19528,12 @@ export interface operations {
               registeredAddress: string | null;
               /** @enum {string} */
               status: "active" | "dormant" | "dissolved" | "divested";
+              sharesAuthorized: number | null;
+              sharesIssued: number | null;
+              parValue: number | null;
+              customFields: {
+                [key: string]: string | number | boolean | string[];
+              };
               archivedAt: string | null;
               /** Format: date-time */
               createdAt: string;

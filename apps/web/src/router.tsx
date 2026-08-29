@@ -254,7 +254,7 @@ export const routes: RouteObject[] = [
   {
     // #99: one entity's record page — the identity card with DES-017
     // per-field edits, archive, and restore. Member+ only (ENT-004).
-    path: "/entities/:entityId",
+    path: "/entities/:entityId/:tab?",
     loader: entityRecordLoader,
     element: (
       <KeyedByParam name="entityId">

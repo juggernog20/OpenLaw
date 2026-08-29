@@ -442,6 +442,37 @@ type EntityPayloads = {
   "entity.type_reassigned": { legalName: string; from: string; to: string };
   "entity.archived": { legalName: string };
   "entity.restored": { legalName: string };
+  "entity_officer.created": {
+    legalName: string;
+    officerName: string;
+    role: string;
+    appointedOn: string | null;
+    resignedOn: string | null;
+    userName: string | null;
+  };
+  "entity_officer.updated": {
+    legalName: string;
+    officerName: string;
+    changed: ChangedFields;
+  };
+  "entity_officer.deleted": { legalName: string; officerName: string; role: string };
+  "entity_registration.created": {
+    legalName: string;
+    jurisdiction: string;
+    registrationNumber: string | null;
+    registeredAgent: string | null;
+    status: string;
+  };
+  "entity_registration.updated": {
+    legalName: string;
+    jurisdiction: string;
+    changed: ChangedFields;
+  };
+  "entity_registration.deleted": {
+    legalName: string;
+    jurisdiction: string;
+    registrationNumber: string | null;
+  };
 };
 
 /**

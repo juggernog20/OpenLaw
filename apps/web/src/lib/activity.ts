@@ -338,6 +338,9 @@ function changeLabel(intl: IntlShape, key: string, context: NarrationContext): s
         "jurisdiction {Jurisdiction} formedOn {Formed on} " +
         "registrationNumber {Registration number} taxId {Tax ID} " +
         "registeredAgent {Registered agent} registeredAddress {Registered address} " +
+        "sharesAuthorized {Authorized shares} sharesIssued {Issued shares} " +
+        "parValue {Par value} appointedOn {Appointed on} resignedOn {Resigned on} " +
+        "linkedUser {Linked user} " +
         "other {{key}}}",
     },
     { key },
@@ -2543,6 +2546,75 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
       defaultMessage: "{actor} restored {name}",
     }),
     values: (intl, payload) => ({ name: thingName(intl, payload) }),
+  },
+  "entity_officer.created": {
+    icon: UserPlus,
+    message: defineMessage({
+      id: "activity.entityOfficer.created",
+      defaultMessage: "{actor} appointed {officer} as {role} on {name}",
+    }),
+    values: (intl, payload) => ({
+      name: thingName(intl, payload),
+      officer: named(intl, payload, "officerName"),
+      role: named(intl, payload, "role"),
+    }),
+  },
+  "entity_officer.updated": {
+    icon: UserCog,
+    message: defineMessage({
+      id: "activity.entityOfficer.updated",
+      defaultMessage: "{actor} changed officer {officer} on {name}",
+    }),
+    values: (intl, payload) => ({
+      name: thingName(intl, payload),
+      officer: named(intl, payload, "officerName"),
+    }),
+    changes: changesFrom,
+  },
+  "entity_officer.deleted": {
+    icon: UserMinus,
+    message: defineMessage({
+      id: "activity.entityOfficer.deleted",
+      defaultMessage: "{actor} removed officer {officer} from {name}",
+    }),
+    values: (intl, payload) => ({
+      name: thingName(intl, payload),
+      officer: named(intl, payload, "officerName"),
+    }),
+  },
+  "entity_registration.created": {
+    icon: Globe,
+    message: defineMessage({
+      id: "activity.entityRegistration.created",
+      defaultMessage: "{actor} added the {jurisdiction} registration to {name}",
+    }),
+    values: (intl, payload) => ({
+      name: thingName(intl, payload),
+      jurisdiction: named(intl, payload, "jurisdiction"),
+    }),
+  },
+  "entity_registration.updated": {
+    icon: PencilLine,
+    message: defineMessage({
+      id: "activity.entityRegistration.updated",
+      defaultMessage: "{actor} changed the {jurisdiction} registration on {name}",
+    }),
+    values: (intl, payload) => ({
+      name: thingName(intl, payload),
+      jurisdiction: named(intl, payload, "jurisdiction"),
+    }),
+    changes: changesFrom,
+  },
+  "entity_registration.deleted": {
+    icon: Trash2,
+    message: defineMessage({
+      id: "activity.entityRegistration.deleted",
+      defaultMessage: "{actor} removed the {jurisdiction} registration from {name}",
+    }),
+    values: (intl, payload) => ({
+      name: thingName(intl, payload),
+      jurisdiction: named(intl, payload, "jurisdiction"),
+    }),
   },
 
   // ---- Data leaving the system ----
