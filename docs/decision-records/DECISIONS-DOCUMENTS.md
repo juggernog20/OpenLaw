@@ -53,6 +53,12 @@ _Queue cleared 2026-08-04 (DOC-001 through DOC-011). Templates/precedents routed
 - **Alternatives considered** — Full DMS (workspaces/folders/check-out): months of build, entrenched competition, filing discipline a small team won't keep. Attachment-store-only: contradicts PRODUCT.md and DD-007; orphan documents homeless.
 - **Consequences** — This decision is the lens for the rest of the queue: versioning/preview/search serve the repository view; the folders question (Q8) starts from "links + metadata are primary"; templates (Q12) route to Knowledge; bulk import (Q13) matters because legacy files must get _into_ the layer. **Reorders DOC-001 conceptually** — DOC-002 is the module's root decision; DOC-001 stands as its record model.
 
+### Addendum (2026-08-29, M26 close, [#560](https://github.com/juggernog20/OpenLaw/issues/560)): the destination is built, and Recent means recently uploaded
+
+M26 adds the staff `/documents` destination over one reached, flat list of Contract-owned and Matter-owned Documents. `GET /api/v1/documents` answers the repository rows, and `GET /api/v1/documents/options` answers only filter choices represented by that same reached set. A row names its owning record and opens the current Version in that record's Documents tab. The destination adds no global folder tree and no upload door.
+
+Recent is the first five rows from the repository's default order. It means the five reachable Documents whose current Version was uploaded most recently. It does not mean recently opened, and it adds no per-user tracking. The list is hidden while filters are active, so the page answers one question at a time.
+
 ## DOC-003 — Redline compare: Workshare-style in-app view + Word track-changes export
 
 - **Status** — Accepted
@@ -126,6 +132,10 @@ _Extended in M12/5: **an email's body is its text**, and it is the one extractio
 - **Alternatives considered** — No folders anywhere: heavy matters become flat 60-row lists. Global tree: two competing sources of truth for "where" a file is.
 - **Consequences** — `document_folders` (scoped to one owning record) + `documents.folder_id` in SCHEMA.md. Folder skeletons added to the matter-templates FUTURE-FEATURES scope. Entities/Knowledge queues annotated. _Settled in #227, where what a folder may be called became **one rule shared by every route that names one**: the manual create, the rename, and each segment of a dropped path all ask the same question. They did not before — `.` and `..` were refused only as path segments, so a folder called `..` could be typed into existence and then addressed by no `folderPath` at all, which is a folder the drop route could never file into. The pair is now refused as **names**, everywhere, rather than resolved as navigation: no folder name reaches a filesystem (a storage key is minted from two ids, DOC-012), so they were never an escape — they are the two names a path is written with, and a folder cannot be one. The rule is the two exact names after trimming and nothing wider: `...`, `.hidden`, and `Q1.2026` stay legal, because narrowing past what the disagreement asked for would strand names people use. The path parser keeps its own sentence above the shared rule, because a client walking a dropped tree needs to be told which **segment** is wrong. **Narrowing a name rule is only safe while installs are young, and this one was made on that footing** — so it owes no migration and performs none: a row that predates it keeps reading, keeps moving (an edit that names no name never re-judges the name it is keeping), keeps renaming out to a legal name, and keeps dissolving. Widening later is safe; this was the last moment narrowing was._
 
+### Addendum (2026-08-29, M26 close, [#560](https://github.com/juggernog20/OpenLaw/issues/560)): folder ships as a record-scoped facet
+
+The repository stays flat. Folder appears only after a reader picks one owning Contract or Matter, then reads that record's existing folder tree and narrows the repository list by folder id or record root. The options read never offers a global folder list. This completes the repository consequence without creating a second filing hierarchy.
+
 ## DOC-007 — Metadata: standard document properties only; no custom fields; tags deferred
 
 - **Status** — Accepted
@@ -135,6 +145,10 @@ _Extended in M12/5: **an email's body is its text**, and it is the one extractio
 - **Rationale** — The repository's findability comes from search (incl. OCR text), links, and standard facets; a metadata schema nobody fills is DMS-profile theater.
 - **Alternatives considered** — Tags + catalog scope (recommended, declined). Tags only: not affirmed; keeps one deferral story for tags platform-wide.
 - **Consequences** — SCHEMA.md documents table stays lean. Repository filters: kind, format, owning record/module, date, uploader, folder. FUTURE-FEATURES tags entry extended.
+
+### Addendum (2026-08-29, M26 close, [#560](https://github.com/juggernog20/OpenLaw/issues/560)): the standard-property filters are live
+
+M26 ships filters for owning module, one reached owning record, Counterparty, format family, current Version kind, inclusive upload date range, uploader, and record-scoped folder. They compose with `AND`, live in the URL, and ride saved views. The row carries title, owner, current Version filename and kind, format, size, Version count, uploader, and upload time. No Document Field scope or tag table was added.
 
 ## DOC-008 — No standalone documents: every document has an owning record; access is inherited
 

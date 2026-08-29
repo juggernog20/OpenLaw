@@ -600,6 +600,12 @@ Global search applies the existing Contract, Matter, and Document audience predi
 
 An omitted record contributes no row, snippet, page gap, cursor, or count. The header listbox and results page render only that viewer-scoped answer, and a search landing rechecks ordinary record and Document reach when it opens the owning record. Search is not a parallel access model; it is another read surface over the DD-014 gate.
 
+### Addendum (2026-08-29, M26 close, [#560](https://github.com/juggernog20/OpenLaw/issues/560)): the repository inherits the gate
+
+The Documents repository composes the Document audience predicate with the owning Contract or Matter reach predicate before filters, ordering, cursor resolution, and limits. Its options read starts from the same scoped set. An unreachable Document therefore contributes no table row, Recent row, filter option, page gap, or shown count. Closed Matters and ended Contracts remain reachable; archived owning records do not.
+
+Administrators read every live Document. Legal Team Members read non-confidential records and the confidential records whose audience they join. Contributors read only Documents on records carrying their team row. Business Users receive no Documents navigation and cannot open the destination. A repository row still rechecks ordinary record and Document reach when it opens the current Version on the owning record.
+
 ---
 
 ## DD-015: Contributor permission grid — read, comment, upload, edit business fields
@@ -923,6 +929,10 @@ Clause 2 forces the list APIs to accept a sort. The contracts list keysets on th
 Clause 7 means every surface reading a view validates its config against the column catalogue the build actually has, and every surface's catalogue is therefore a first-class thing rather than a JSX ordering.
 
 MTR-003's open item is answered by adoption: matters take this machinery rather than deciding views again. The parked "first-class My matters view" is now a saved view with a filter in it.
+
+### Addendum (2026-08-29, M26 close, [#560](https://github.com/juggernog20/OpenLaw/issues/560)): Documents is the third saved-view surface
+
+The Documents destination adopts `list_views` under the `documents` surface slug. Its catalogue, column widths and order, filters, sort, and Member+ archived toggle use the same whole-config write as Contracts and Matters. Unknown column keys are still read past, and no table, column, seed, sharing rule, or Administrator default was added.
 
 ## Index of decisions
 

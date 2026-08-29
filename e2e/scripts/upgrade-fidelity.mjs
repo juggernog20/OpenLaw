@@ -872,6 +872,21 @@ async function verify(fingerprint) {
     }
   }
 
+  // M26 adds no backfill: the repository must list the Documents the
+  // prior release already held as soon as the upgraded API starts.
+  const repositoryDocuments = (await get("/api/v1/documents")).documents;
+  const repositoryIds = new Set(repositoryDocuments.map((document) => document.id));
+  const seededDocumentIds = [
+    fingerprint.matterDocument.id,
+    ...fingerprint.documents.list.map((document) => document.id),
+  ];
+  for (const documentId of seededDocumentIds) {
+    check(
+      repositoryIds.has(documentId),
+      `the seeded Document ${documentId} is not listed by the repository after the upgrade`,
+    );
+  }
+
   // M25's migration must make rows the prior release already held
   // searchable in place. The source text is compared first, so a search
   // hit cannot hide a migration that replaced or re-extracted it.

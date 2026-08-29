@@ -38,6 +38,16 @@ test.describe("accessibility floor", () => {
     await reportAxeViolations(page, testInfo, "home");
   });
 
+  test("Documents page: axe scan and title", async ({ page, request }, testInfo) => {
+    await ensureAdminExists(request);
+    await signInAs(page, ADMIN.email, ADMIN.password, ADMIN.displayName);
+    await page.goto("/documents");
+
+    await expect(page).toHaveTitle("Documents · OpenLaw");
+    await expect(page.getByRole("region", { name: "Documents" })).toBeVisible();
+    await reportAxeViolations(page, testInfo, "documents");
+  });
+
   test("search results box and results page: axe scans", async ({ page, request }, testInfo) => {
     await ensureAdminExists(request);
     await signInAs(page, ADMIN.email, ADMIN.password, ADMIN.displayName);
