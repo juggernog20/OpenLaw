@@ -5,7 +5,9 @@ import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
 import { z } from "zod";
 import {
   and,
+  counterparties,
   contracts,
+  contractCounterparties,
   documentFolders,
   documents,
   documentVersions,
@@ -55,6 +57,8 @@ const RepositoryQuerySchema = z
     owner: z.enum(["contract", "matter"]).optional(),
     record: RecordReferenceSchema.optional(),
     folder: z.string().min(1).max(64).optional(),
+    counterparty: z.string().min(1).max(64).optional(),
+    uploader: z.string().min(1).max(64).optional(),
     format: z.enum(DOCUMENT_FORMATS).optional(),
     kind: z.enum(DOCUMENT_VERSION_KINDS).optional(),
     uploadedFrom: z.iso.date().optional(),
@@ -106,6 +110,19 @@ const RepositoryRowSchema = z.object({
   versionCount: z.int().positive(),
 });
 
+const CounterpartyOptionSchema = z.object({ id: z.string(), name: z.string() });
+const RecordOptionSchema = z.object({
+  reference: RecordReferenceSchema,
+  kind: z.enum(["contract", "matter"]),
+  number: z.int().positive(),
+  title: z.string(),
+});
+const RepositoryOptionsSchema = z.object({
+  counterparties: z.array(CounterpartyOptionSchema),
+  uploaders: z.array(PersonSchema),
+  records: z.array(RecordOptionSchema),
+});
+
 /** The highest numbered Version is current, independent of upload timestamps. */
 const currentVersion = sql`${documentVersions.versionNumber} = (
   select max(current_version.version_number)
@@ -123,6 +140,16 @@ const repositoryFormat = sql<string>`replace(
   'powerpoint'
 )`;
 const repositoryTitle = sql<string>`lower(coalesce(${documentVersionText.emailSubject}, ${documents.title}))`;
+const recordKind = sql<"contract" | "matter">`case
+  when ${documents.contractId} is not null then 'contract'
+  else 'matter'
+end`;
+const recordNumber = sql<number>`coalesce(${contracts.number}, ${matters.number})`;
+const recordTitle = sql<string>`coalesce(${contracts.title}, ${matters.title})`;
+const recordReference = sql<string>`concat(
+  case when ${documents.contractId} is not null then 'C-' else 'M-' end,
+  coalesce(${contracts.number}, ${matters.number})::text
+)`;
 
 const SORTS: Record<DocumentSortKey, SQL> = {
   title: repositoryTitle,
@@ -183,6 +210,20 @@ function recordPredicate(reference: string | undefined): SQL | undefined {
   return reference.startsWith("C-")
     ? and(eq(documents.contractId, contracts.id), eq(contracts.number, number))
     : and(eq(documents.matterId, matters.id), eq(matters.number, number));
+}
+
+function counterpartyPredicate(counterpartyId: string | undefined): SQL | undefined {
+  if (!counterpartyId) return undefined;
+  return sql`exists (
+    select 1
+    from ${contractCounterparties}
+    where ${contractCounterparties.contractId} = ${documents.contractId}
+      and ${contractCounterparties.counterpartyId} = ${counterpartyId}
+  )`;
+}
+
+function liveRepositoryScope(db: Db, user: Parameters<typeof documentRepositoryScope>[1]): SQL {
+  return and(isNull(documents.archivedAt), documentRepositoryScope(db, user))!;
 }
 
 function selectRepository(db: Db) {
@@ -273,6 +314,92 @@ function toRepositoryRow(row: RepositoryDbRow): z.infer<typeof RepositoryRowSche
 
 export const documentRepositoryRoutes: FastifyPluginAsyncZod = async (app) => {
   app.get(
+    "/documents/options",
+    {
+      preHandler: requireDocumentReader,
+      schema: {
+        operationId: "listDocumentOptions",
+        summary:
+          "The records, Counterparties, and current-Version uploaders carried by at least one " +
+          "live Document the viewer can reach.",
+        tags: ["documents"],
+        response: { 200: RepositoryOptionsSchema, default: problemResponse },
+      },
+    },
+    async (request) => {
+      const scope = liveRepositoryScope(app.db, request.user);
+      const repositoryOwners = () =>
+        app.db
+          .selectDistinct({
+            reference: recordReference,
+            kind: recordKind,
+            number: recordNumber,
+            title: recordTitle,
+          })
+          .from(documents)
+          .innerJoin(
+            documentVersions,
+            and(eq(documentVersions.documentId, documents.id), currentVersion),
+          )
+          .leftJoin(contracts, eq(contracts.id, documents.contractId))
+          .leftJoin(matters, eq(matters.id, documents.matterId))
+          .where(scope)
+          .orderBy(recordKind, recordNumber);
+      const repositoryCounterparties = () =>
+        app.db
+          .selectDistinct({ id: counterparties.id, name: counterparties.name })
+          .from(documents)
+          .innerJoin(
+            documentVersions,
+            and(eq(documentVersions.documentId, documents.id), currentVersion),
+          )
+          .innerJoin(
+            contractCounterparties,
+            eq(contractCounterparties.contractId, documents.contractId),
+          )
+          .innerJoin(counterparties, eq(counterparties.id, contractCounterparties.counterpartyId))
+          .leftJoin(contracts, eq(contracts.id, documents.contractId))
+          .leftJoin(matters, eq(matters.id, documents.matterId))
+          .where(scope)
+          .orderBy(counterparties.name, counterparties.id);
+      const repositoryUploaders = () =>
+        app.db
+          .selectDistinct({
+            id: users.id,
+            displayName: users.displayName,
+            image: users.image,
+            archivedAt: users.archivedAt,
+          })
+          .from(documents)
+          .innerJoin(
+            documentVersions,
+            and(eq(documentVersions.documentId, documents.id), currentVersion),
+          )
+          .innerJoin(users, eq(users.id, documentVersions.createdBy))
+          .leftJoin(contracts, eq(contracts.id, documents.contractId))
+          .leftJoin(matters, eq(matters.id, documents.matterId))
+          .where(scope)
+          .orderBy(users.displayName, users.id);
+
+      const [partyRows, uploaderRows, records] = await Promise.all([
+        repositoryCounterparties(),
+        repositoryUploaders(),
+        repositoryOwners(),
+      ]);
+      return {
+        counterparties: partyRows,
+        uploaders: uploaderRows.map((uploader) => ({
+          id: uploader.id,
+          displayName: uploader.displayName,
+          image: uploader.image,
+          archived: uploader.archivedAt !== null,
+        })),
+        records,
+      };
+    },
+  );
+
+  app.get(
     "/documents",
     {
       preHandler: requireDocumentReader,
@@ -297,10 +424,7 @@ export const documentRepositoryRoutes: FastifyPluginAsyncZod = async (app) => {
       const sort: SortRequest | null = request.query.sort
         ? { key: request.query.sort, dir: request.query.dir ?? "asc" }
         : null;
-      const scope = and(
-        isNull(documents.archivedAt),
-        documentRepositoryScope(app.db, request.user),
-      );
+      const scope = liveRepositoryScope(app.db, request.user);
 
       const pageSize = request.query.limit ?? DEFAULT_LIMIT;
       const rows = await selectRepository(app.db)
@@ -312,6 +436,10 @@ export const documentRepositoryRoutes: FastifyPluginAsyncZod = async (app) => {
               : undefined,
             request.query.owner === "matter" ? sql`${documents.matterId} is not null` : undefined,
             recordPredicate(request.query.record),
+            counterpartyPredicate(request.query.counterparty),
+            request.query.uploader
+              ? eq(documentVersions.createdBy, request.query.uploader)
+              : undefined,
             request.query.folder === "root"
               ? isNull(documents.folderId)
               : request.query.folder

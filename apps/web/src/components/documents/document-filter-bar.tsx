@@ -13,10 +13,10 @@ import {
   documentRecordReference,
   FOLDER_ROOT,
   type DocumentRepositoryFilters,
+  type DocumentRepositoryOptions,
   type DocumentVersionKind,
 } from "../../lib/documents";
 import { pathOf, readRecordFolders, type ContractFolder } from "../../lib/folders";
-import { search, type SearchResult } from "../../lib/search";
 import { cn } from "../../lib/utils";
 
 type FilterKey = keyof DocumentRepositoryFilters;
@@ -39,6 +39,17 @@ const MESSAGES = defineMessages({
   formatAll: { id: "documents.filter.format.all", defaultMessage: "All formats" },
   kind: { id: "documents.filter.kind", defaultMessage: "Kind" },
   kindAll: { id: "documents.filter.kind.all", defaultMessage: "All kinds" },
+  counterparty: { id: "documents.filter.counterparty", defaultMessage: "Counterparty" },
+  counterpartyAll: {
+    id: "documents.filter.counterparty.all",
+    defaultMessage: "All counterparties",
+  },
+  uploader: { id: "documents.filter.uploader", defaultMessage: "Uploader" },
+  uploaderAll: { id: "documents.filter.uploader.all", defaultMessage: "All uploaders" },
+  uploaderArchived: {
+    id: "documents.filter.uploader.archived",
+    defaultMessage: "{name} (archived)",
+  },
   uploadedFrom: { id: "documents.filter.uploadedFrom", defaultMessage: "Uploaded from" },
   uploadedTo: { id: "documents.filter.uploadedTo", defaultMessage: "Uploaded to" },
   activeFilters: { id: "documents.filter.active", defaultMessage: "Active filters" },
@@ -61,14 +72,9 @@ const FORMAT_MESSAGES = defineMessages({
   other: { id: "documents.format.other", defaultMessage: "Other" },
 });
 
-function referenceOf(result: SearchResult): string | null {
-  if (result.kind === "contract") return `C-${result.number}`;
-  if (result.kind === "matter") return `M-${result.number}`;
-  return null;
-}
-
 export function DocumentFilterBar({
   filters,
+  options,
   busy,
   empty,
   error,
@@ -76,6 +82,7 @@ export function DocumentFilterBar({
   onClear,
 }: Readonly<{
   filters: DocumentRepositoryFilters;
+  options: DocumentRepositoryOptions;
   busy: boolean;
   empty: boolean;
   error: string | null;
@@ -85,13 +92,8 @@ export function DocumentFilterBar({
   const intl = useIntl();
   const listboxId = useId();
   const listRef = useRef<HTMLUListElement>(null);
-  const focused = useRef(false);
   const [recordDraft, setRecordDraft] = useState<string | null>(null);
   const recordText = recordDraft ?? filters.record;
-  const [matchAnswer, setMatchAnswer] = useState<{ query: string; rows: SearchResult[] }>({
-    query: "",
-    rows: [],
-  });
   const [searchOpen, setSearchOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
   const [folderAnswer, setFolderAnswer] = useState<{
@@ -99,7 +101,16 @@ export function DocumentFilterBar({
     rows: ContractFolder[];
   }>({ reference: "", rows: [] });
   const folders = folderAnswer.reference === filters.record ? folderAnswer.rows : [];
-  const matches = matchAnswer.query === recordText.trim() ? matchAnswer.rows : [];
+  const query = recordDraft?.trim().toLocaleLowerCase() ?? "";
+  const matches =
+    query.length < 2
+      ? []
+      : options.records
+          .filter((record) => filters.owner === "" || record.kind === filters.owner)
+          .filter((record) =>
+            `${record.reference} ${record.title}`.toLocaleLowerCase().includes(query),
+          )
+          .slice(0, 10);
   const listOpen = searchOpen && matches.length > 0;
   const active = Math.min(activeIndex, Math.max(matches.length - 1, 0));
   const rowId = (index: number) => `${listboxId}-row-${index}`;
@@ -118,31 +129,6 @@ export function DocumentFilterBar({
     };
   }, [filters.record]);
 
-  useEffect(() => {
-    const query = recordText.trim();
-    let cancelled = false;
-    if (query.length < 2 || query === filters.record) return () => undefined;
-    const timer = window.setTimeout(() => {
-      const kinds = filters.owner === "" ? (["contract", "matter"] as const) : [filters.owner];
-      void Promise.all(kinds.map((kind) => search(query, { kind, limit: 10 }))).then((answers) => {
-        if (cancelled) return;
-        const next = answers.flatMap((answer) => (answer.ok ? answer.results : []));
-        setMatchAnswer({
-          query,
-          rows: next.filter((result) => referenceOf(result) !== null).slice(0, 10),
-        });
-        setActiveIndex(0);
-        // An answer that lands after the field lost focus stays closed,
-        // or the list would open under nothing.
-        if (focused.current) setSearchOpen(true);
-      });
-    }, 200);
-    return () => {
-      cancelled = true;
-      window.clearTimeout(timer);
-    };
-  }, [filters.owner, filters.record, recordText]);
-
   // The arrow keys can walk past the list's foot; the named row has to
   // be in view for a sighted keyboard user, as in the contract picker.
   useEffect(() => {
@@ -152,12 +138,11 @@ export function DocumentFilterBar({
 
   function pickMatch(index: number) {
     const match = matches[index];
-    const reference = match ? referenceOf(match) : null;
-    if (!reference) return;
+    if (!match) return;
     setRecordDraft(null);
     setSearchOpen(false);
     setActiveIndex(0);
-    onFilter("record", reference);
+    onFilter("record", match.reference);
   }
 
   const chips: { key: FilterKey; name: string; value: string }[] = [];
@@ -198,6 +183,24 @@ export function DocumentFilterBar({
       key: "kind",
       name: intl.formatMessage(MESSAGES.kind),
       value: documentKindLabel(intl, filters.kind),
+    });
+  }
+  if (filters.counterparty) {
+    const counterparty = options.counterparties.find(
+      (candidate) => candidate.id === filters.counterparty,
+    );
+    chips.push({
+      key: "counterparty",
+      name: intl.formatMessage(MESSAGES.counterparty),
+      value: counterparty?.name ?? filters.counterparty,
+    });
+  }
+  if (filters.uploader) {
+    const uploader = options.uploaders.find((candidate) => candidate.id === filters.uploader);
+    chips.push({
+      key: "uploader",
+      name: intl.formatMessage(MESSAGES.uploader),
+      value: uploader?.displayName ?? filters.uploader,
     });
   }
   if (filters.uploadedFrom) {
@@ -261,19 +264,13 @@ export function DocumentFilterBar({
             placeholder={intl.formatMessage(MESSAGES.recordPlaceholder)}
             onChange={(event) => {
               setRecordDraft(event.target.value);
-              setSearchOpen(false);
+              setSearchOpen(event.target.value.trim().length >= 2);
               setActiveIndex(0);
               if (filters.record) onFilter("record", "");
             }}
-            onFocus={() => {
-              focused.current = true;
-              setSearchOpen(matches.length > 0);
-            }}
+            onFocus={() => setSearchOpen(matches.length > 0)}
             // Rows commit on pointerdown, ahead of this blur.
-            onBlur={() => {
-              focused.current = false;
-              setSearchOpen(false);
-            }}
+            onBlur={() => setSearchOpen(false)}
             onKeyDown={(event) => {
               if (event.key === "ArrowDown" || event.key === "ArrowUp") {
                 event.preventDefault();
@@ -308,7 +305,7 @@ export function DocumentFilterBar({
             >
               {matches.map((match, index) => (
                 <li
-                  key={`${match.kind}-${match.id}`}
+                  key={match.reference}
                   id={rowId(index)}
                   role="option"
                   aria-selected={index === active}
@@ -322,7 +319,7 @@ export function DocumentFilterBar({
                   }}
                   onMouseMove={() => setActiveIndex(index)}
                 >
-                  {referenceOf(match)} · {match.title}
+                  {match.reference} · {match.title}
                 </li>
               ))}
             </ul>
@@ -365,6 +362,44 @@ export function DocumentFilterBar({
             {DOCUMENT_REPOSITORY_FORMATS.map((format) => (
               <option key={format} value={format}>
                 {intl.formatMessage(FORMAT_MESSAGES[format])}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        <label className="flex flex-col gap-1 text-xs font-medium text-muted">
+          <FormattedMessage {...MESSAGES.counterparty} />
+          <select
+            aria-label={intl.formatMessage(MESSAGES.counterparty)}
+            className={selectClass}
+            value={filters.counterparty}
+            disabled={busy}
+            onChange={(event) => onFilter("counterparty", event.target.value)}
+          >
+            <option value="">{intl.formatMessage(MESSAGES.counterpartyAll)}</option>
+            {options.counterparties.map((counterparty) => (
+              <option key={counterparty.id} value={counterparty.id}>
+                {counterparty.name}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        <label className="flex flex-col gap-1 text-xs font-medium text-muted">
+          <FormattedMessage {...MESSAGES.uploader} />
+          <select
+            aria-label={intl.formatMessage(MESSAGES.uploader)}
+            className={selectClass}
+            value={filters.uploader}
+            disabled={busy}
+            onChange={(event) => onFilter("uploader", event.target.value)}
+          >
+            <option value="">{intl.formatMessage(MESSAGES.uploaderAll)}</option>
+            {options.uploaders.map((uploader) => (
+              <option key={uploader.id} value={uploader.id}>
+                {uploader.archived
+                  ? intl.formatMessage(MESSAGES.uploaderArchived, { name: uploader.displayName })
+                  : uploader.displayName}
               </option>
             ))}
           </select>

@@ -55,7 +55,7 @@ function storedView() {
       ],
       flexKey: "title",
       sort: { key: "uploaded", dir: "desc" },
-      filters: { kind: "executed" },
+      filters: { kind: "executed", counterparty: "counterparty-1", uploader: "u2" },
     },
   };
 }
@@ -68,6 +68,7 @@ function surface({
   emptyWhenFiltered?: boolean;
 } = {}) {
   const queries: URLSearchParams[] = [];
+  let optionReads = 0;
   const handler = (call: StubCall): Response | undefined => {
     if (call.url.pathname === "/api/v1/documents" && call.method === "GET") {
       const query = new URLSearchParams(call.url.search);
@@ -80,23 +81,22 @@ function surface({
     if (call.url.pathname === "/api/v1/list-views" && call.method === "GET") {
       return json(200, { views });
     }
-    if (call.url.pathname === "/api/v1/search" && call.method === "GET") {
-      const kind = call.url.searchParams.get("kind");
+    if (call.url.pathname === "/api/v1/documents/options" && call.method === "GET") {
+      optionReads += 1;
       return json(200, {
-        results:
-          kind === "matter"
-            ? []
-            : [
-                {
-                  kind: "contract",
-                  id: "contract-42",
-                  number: 42,
-                  title: "Meridian services",
-                  isConfidential: false,
-                  rank: 1,
-                },
-              ],
-        nextCursor: null,
+        counterparties: [{ id: "counterparty-1", name: "Northwind" }],
+        uploaders: [
+          { id: "u2", displayName: "Nadia Counsel", image: null, archived: false },
+          { id: "u3", displayName: "Blair Uploader", image: null, archived: false },
+        ],
+        records: [
+          {
+            reference: "C-42",
+            kind: "contract",
+            number: 42,
+            title: "Meridian services",
+          },
+        ],
       });
     }
     if (call.url.pathname === "/api/v1/contracts/42/folders" && call.method === "GET") {
@@ -106,7 +106,7 @@ function surface({
     }
     return undefined;
   };
-  return { handler, queries };
+  return { handler, queries, optionReads: () => optionReads };
 }
 
 const lastQuery = (queries: URLSearchParams[]) => queries[queries.length - 1]!;
@@ -150,6 +150,19 @@ describe("the Documents fixed filter strip", () => {
     await expectQuery(api.queries, "kind", "executed");
     expect(router.state.location.search).toContain("kind=executed");
 
+    await user.selectOptions(
+      screen.getByRole("combobox", { name: "Counterparty" }),
+      "counterparty-1",
+    );
+    await expectQuery(api.queries, "counterparty", "counterparty-1");
+    expect(router.state.location.search).toContain("counterparty=counterparty-1");
+    expect(screen.getByRole("button", { name: "Remove Counterparty filter" })).toBeVisible();
+
+    await user.selectOptions(screen.getByRole("combobox", { name: "Uploader" }), "u3");
+    await expectQuery(api.queries, "uploader", "u3");
+    expect(router.state.location.search).toContain("uploader=u3");
+    expect(screen.getByRole("button", { name: "Remove Uploader filter" })).toBeVisible();
+
     await pickDate(user, "Uploaded from", "2026-06-01");
     await expectQuery(api.queries, "uploadedFrom", "2026-06-01");
     expect(router.state.location.search).toContain("uploadedFrom=2026-06-01");
@@ -170,7 +183,7 @@ describe("the Documents fixed filter strip", () => {
     const api = surface();
     stubApi({ signedIn: MEMBER, extra: api.handler });
     const { router } = renderAt(
-      "/documents?owner=contract&format=pdf&kind=executed&uploadedFrom=2026-06-01",
+      "/documents?owner=contract&format=pdf&kind=executed&counterparty=counterparty-1&uploader=u2&uploadedFrom=2026-06-01",
     );
 
     await expectQuery(api.queries, "owner", "contract");
@@ -180,6 +193,8 @@ describe("the Documents fixed filter strip", () => {
     );
     expect(screen.getByRole("combobox", { name: "Format" })).toHaveValue("pdf");
     expect(screen.getByRole("combobox", { name: "Kind" })).toHaveValue("executed");
+    expect(screen.getByRole("combobox", { name: "Counterparty" })).toHaveValue("counterparty-1");
+    expect(screen.getByRole("combobox", { name: "Uploader" })).toHaveValue("u2");
     expect(screen.getByLabelText("Uploaded from")).toHaveTextContent("Jun 1, 2026");
 
     await user.click(screen.getByRole("button", { name: "Remove Format filter" }));
@@ -193,6 +208,8 @@ describe("the Documents fixed filter strip", () => {
     await waitFor(() => {
       expect(lastQuery(api.queries).get("owner")).toBeNull();
       expect(lastQuery(api.queries).get("kind")).toBeNull();
+      expect(lastQuery(api.queries).get("counterparty")).toBeNull();
+      expect(lastQuery(api.queries).get("uploader")).toBeNull();
       expect(lastQuery(api.queries).get("uploadedFrom")).toBeNull();
     });
     expect(router.state.location.search).toBe("");
@@ -253,6 +270,8 @@ describe("Documents saved-view query state", () => {
 
     expect(await screen.findByRole("button", { name: /Executed copies/ })).toBeVisible();
     expect(lastQuery(api.queries).get("kind")).toBe("executed");
+    expect(lastQuery(api.queries).get("counterparty")).toBe("counterparty-1");
+    expect(lastQuery(api.queries).get("uploader")).toBe("u2");
     expect(lastQuery(api.queries).get("sort")).toBe("uploaded");
     await waitFor(() => expect(router.state.location.search).toContain("kind=executed"));
 
@@ -284,6 +303,7 @@ describe("Documents saved-view query state", () => {
     await user.keyboard("{Enter}");
     await expectQuery(api.queries, "record", "C-42");
     expect(router.state.location.search).toContain("record=C-42");
+    expect(api.optionReads()).toBe(1);
     expect(record).toHaveValue("C-42");
     expect(screen.queryByRole("listbox")).not.toBeInTheDocument();
 
