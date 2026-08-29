@@ -116,6 +116,7 @@ export function OfficersCard({
           <FormattedMessage id="entities.record.officers.title" defaultMessage="Officers" />
         </h2>
         <div className="flex items-center gap-3">
+          {!adding ? <StatusNote status={status} detail={error} /> : null}
           <label className="flex items-center gap-2 text-sm text-muted">
             <Checkbox
               checked={showFormer}
@@ -249,13 +250,27 @@ function OfficerRow({
   onUpdate: (body: Record<string, unknown>) => void;
   onRemove: () => void;
 }>) {
+  const intl = useIntl();
   const [name, setName] = useState(officer.name);
+  const label = (field: string) =>
+    intl.formatMessage(
+      {
+        id: "entities.record.officers.rowField",
+        defaultMessage: "{officer} {field}",
+      },
+      { officer: officer.name, field },
+    );
   const [appointedOn, setAppointedOn] = useState(officer.appointedOn ?? "");
   const [resignedOn, setResignedOn] = useState(officer.resignedOn ?? "");
   return (
     <div className="grid grid-cols-1 gap-3 p-4 @2xl/page:grid-cols-[1.4fr_1fr_1fr_1fr_1fr_auto]">
       <Input
-        aria-label={`${officer.name} name`}
+        aria-label={label(
+          intl.formatMessage({
+            id: "entities.record.officers.name",
+            defaultMessage: "Officer name",
+          }),
+        )}
         value={name}
         disabled={frozen}
         onChange={(event) => setName(event.target.value)}
@@ -264,7 +279,9 @@ function OfficerRow({
         }
       />
       <select
-        aria-label={`${officer.name} role`}
+        aria-label={label(
+          intl.formatMessage({ id: "entities.record.officers.role", defaultMessage: "Role" }),
+        )}
         className={CONTROL_CLASS}
         value={officer.officerRoleId}
         disabled={frozen}
@@ -280,7 +297,12 @@ function OfficerRow({
         ))}
       </select>
       <Input
-        aria-label={`${officer.name} appointed on`}
+        aria-label={label(
+          intl.formatMessage({
+            id: "entities.record.officers.appointedOn",
+            defaultMessage: "Appointed on",
+          }),
+        )}
         type="date"
         value={appointedOn}
         disabled={frozen}
@@ -291,7 +313,12 @@ function OfficerRow({
         }
       />
       <Input
-        aria-label={`${officer.name} resigned on`}
+        aria-label={label(
+          intl.formatMessage({
+            id: "entities.record.officers.resignedOn",
+            defaultMessage: "Resigned on",
+          }),
+        )}
         type="date"
         value={resignedOn}
         disabled={frozen}
@@ -301,13 +328,20 @@ function OfficerRow({
         }
       />
       <select
-        aria-label={`${officer.name} linked user`}
+        aria-label={label(
+          intl.formatMessage({
+            id: "entities.record.officers.user",
+            defaultMessage: "Linked user",
+          }),
+        )}
         className={CONTROL_CLASS}
         value={officer.user?.id ?? ""}
         disabled={frozen}
         onChange={(event) => onUpdate({ userId: event.target.value || null })}
       >
-        <option value="">None</option>
+        <option value="">
+          {intl.formatMessage({ id: "entities.record.none", defaultMessage: "None" })}
+        </option>
         {officer.user && !users.some((person) => person.id === officer.user!.id) ? (
           <option value={officer.user.id}>{officer.user.displayName}</option>
         ) : null}
@@ -321,7 +355,10 @@ function OfficerRow({
         <Button
           size="icon"
           variant="ghost"
-          aria-label={`Remove ${officer.name}`}
+          aria-label={intl.formatMessage(
+            { id: "entities.record.officers.remove", defaultMessage: "Remove {officer}" },
+            { officer: officer.name },
+          )}
           onClick={onRemove}
         >
           <Trash2 size={16} />

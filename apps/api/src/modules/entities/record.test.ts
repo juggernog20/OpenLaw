@@ -305,18 +305,33 @@ describe("Entity officers", () => {
     expect(resigned.statusCode, resigned.body).toBe(200);
     expect(resigned.json().officer.resignedOn).toBe("2026-08-29");
 
+    // The link is a person, so the audit map narrates names, not ids.
+    const unlinked = await harness.app.inject({
+      method: "PATCH",
+      url: `/api/v1/entities/${entity.id}/officers/${current.json().officer.id}`,
+      cookies: memberCookies,
+      payload: { userId: null },
+    });
+    expect(unlinked.statusCode, unlinked.body).toBe(200);
+    expect(unlinked.json().officer.user).toBeNull();
+
     const deleted = await harness.app.inject({
       method: "DELETE",
       url: `/api/v1/entities/${entity.id}/officers/${former.json().officer.id}`,
       cookies: memberCookies,
     });
     expect(deleted.statusCode, deleted.body).toBe(204);
-    expect((await entityActivity(entity.id)).map((row) => row.action)).toEqual([
+    const rows = await entityActivity(entity.id);
+    expect(rows.map((row) => row.action)).toEqual([
       "entity_officer.created",
       "entity_officer.created",
       "entity_officer.updated",
+      "entity_officer.updated",
       "entity_officer.deleted",
     ]);
+    expect(rows[3]!.payload).toMatchObject({
+      changed: { linkedUser: { from: MEMBER.displayName, to: null } },
+    });
   });
 
   it("rejects an unknown role and a missing child under this Entity", async () => {

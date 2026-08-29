@@ -178,6 +178,203 @@ describe("the /entities/:entityId record page", () => {
     await waitFor(() => expect(activityCalls).toEqual(["?entityType=entity&entityId=e1"]));
   });
 
+  it("commits an attached Field through the Fields card as one PATCH", async () => {
+    const api = recordApi(entityRow());
+    const field = {
+      fieldId: "f1",
+      slug: "reporting_code",
+      displayName: "Reporting code",
+      description: null,
+      fieldType: "text",
+      fieldTag: "legal",
+      options: null,
+      displayOrder: 1,
+      isRequired: false,
+    };
+    stubApi({
+      signedIn: MEMBER,
+      extra: (call) => {
+        const answer = api.handler(call);
+        if (call.url.pathname === "/api/v1/entities/e1" && answer) {
+          return json(200, {
+            entity: entityRow(),
+            fields: [field],
+            customFieldRefs: { users: [], entities: [] },
+          });
+        }
+        return answer;
+      },
+    });
+    renderAt("/entities/e1");
+    const user = userEvent.setup();
+    const control = await screen.findByLabelText("Reporting code");
+    await user.type(control, "ENT-44");
+    await user.tab();
+    await waitFor(() =>
+      expect(api.patches).toContainEqual({ customFields: { reporting_code: "ENT-44" } }),
+    );
+  });
+
+  it("adds, resigns, and removes an officer through the Officers card", async () => {
+    const api = recordApi(entityRow());
+    const officer = (overrides: Record<string, unknown>) => ({
+      id: "o1",
+      entityId: "e1",
+      name: "Dana Director",
+      officerRoleId: "r-director",
+      officerRoleName: "Director",
+      appointedOn: "2025-02-03",
+      resignedOn: null,
+      user: null,
+      createdAt: "2026-08-01T00:00:00.000Z",
+      updatedAt: "2026-08-01T00:00:00.000Z",
+      ...overrides,
+    });
+    const writes: { method: string; path: string; body: unknown }[] = [];
+    let held: Record<string, unknown> | null = null;
+    stubApi({
+      signedIn: MEMBER,
+      extra: (call) => {
+        if (call.url.pathname === "/api/v1/entities/e1/officers" && call.method === "GET") {
+          const former = call.url.searchParams.get("includeFormer") === "true";
+          return json(200, {
+            officers: held && (former || held.resignedOn === null) ? [held] : [],
+          });
+        }
+        if (call.url.pathname === "/api/v1/entities/officer-roles") {
+          return json(200, {
+            officerRoles: [{ id: "r-director", slug: "director", displayName: "Director" }],
+            users: [
+              { id: "u2", displayName: "Nadia Counsel", image: null, role: "legal_team_member" },
+            ],
+          });
+        }
+        if (call.url.pathname === "/api/v1/entities/e1/officers" && call.method === "POST") {
+          writes.push({ method: "POST", path: call.url.pathname, body: call.body });
+          held = officer(call.body as Record<string, unknown>);
+          return json(201, { officer: held });
+        }
+        if (call.url.pathname === "/api/v1/entities/e1/officers/o1") {
+          writes.push({ method: call.method, path: call.url.pathname, body: call.body });
+          if (call.method === "DELETE") {
+            held = null;
+            return new Response(null, { status: 204 });
+          }
+          held = { ...held, ...(call.body as Record<string, unknown>) };
+          return json(200, { officer: held });
+        }
+        return api.handler(call);
+      },
+    });
+    renderAt("/entities/e1");
+    const user = userEvent.setup();
+
+    expect(await screen.findByText("No current officers.")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Add officer" }));
+    await user.type(screen.getByLabelText("Officer name"), "Dana Director");
+    await user.type(screen.getByLabelText("Appointed on"), "2025-02-03");
+    await user.selectOptions(screen.getByLabelText("Linked user"), "u2");
+    await user.click(screen.getByRole("button", { name: "Add" }));
+    expect(await screen.findByLabelText("Dana Director Officer name")).toHaveValue("Dana Director");
+    expect(writes).toEqual([
+      {
+        method: "POST",
+        path: "/api/v1/entities/e1/officers",
+        body: {
+          name: "Dana Director",
+          officerRoleId: "r-director",
+          appointedOn: "2025-02-03",
+          userId: "u2",
+        },
+      },
+    ]);
+
+    // Resigning moves the row out of the current list.
+    await user.type(screen.getByLabelText("Dana Director Resigned on"), "2026-08-29");
+    await user.tab();
+    await waitFor(() =>
+      expect(writes[1]).toEqual({
+        method: "PATCH",
+        path: "/api/v1/entities/e1/officers/o1",
+        body: { resignedOn: "2026-08-29" },
+      }),
+    );
+    expect(await screen.findByText("No current officers.")).toBeInTheDocument();
+
+    // The former toggle reads the row back; remove deletes it.
+    await user.click(screen.getByRole("checkbox", { name: "Show former" }));
+    await user.click(await screen.findByRole("button", { name: "Remove Dana Director" }));
+    await waitFor(() =>
+      expect(writes.at(-1)).toMatchObject({
+        method: "DELETE",
+        path: "/api/v1/entities/e1/officers/o1",
+      }),
+    );
+    expect(await screen.findByText("No current officers.")).toBeInTheDocument();
+  });
+
+  it("adds a registration, changes its status, and shows a refused row edit", async () => {
+    const api = recordApi(entityRow());
+    const registration = (overrides: Record<string, unknown>) => ({
+      id: "g1",
+      entityId: "e1",
+      jurisdiction: "Delaware",
+      registrationNumber: "DE-88412",
+      registeredAgent: null,
+      status: "active",
+      createdAt: "2026-08-01T00:00:00.000Z",
+      updatedAt: "2026-08-01T00:00:00.000Z",
+      ...overrides,
+    });
+    const writes: { method: string; body: unknown }[] = [];
+    stubApi({
+      signedIn: MEMBER,
+      extra: (call) => {
+        if (call.url.pathname === "/api/v1/entities/e1/registrations" && call.method === "POST") {
+          writes.push({ method: "POST", body: call.body });
+          return json(201, { registration: registration(call.body as Record<string, unknown>) });
+        }
+        if (call.url.pathname === "/api/v1/entities/e1/registrations/g1") {
+          writes.push({ method: call.method, body: call.body });
+          const body = call.body as Record<string, unknown>;
+          if (body.registeredAgent === "Nobody") {
+            return problem(400, "The registered agent is not on file.");
+          }
+          return json(200, { registration: registration(body) });
+        }
+        return api.handler(call);
+      },
+    });
+    renderAt("/entities/e1");
+    const user = userEvent.setup();
+
+    expect(await screen.findByText("No additional registrations.")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Add registration" }));
+    await user.type(screen.getByLabelText("Jurisdiction"), "Delaware");
+    await user.type(screen.getByLabelText("Registration number"), "DE-88412");
+    await user.click(screen.getByRole("button", { name: "Add" }));
+    const status = await screen.findByLabelText("Delaware Status");
+    expect(status).toHaveValue("active");
+    expect(writes[0]).toEqual({
+      method: "POST",
+      body: {
+        jurisdiction: "Delaware",
+        registrationNumber: "DE-88412",
+        registeredAgent: null,
+        status: "active",
+      },
+    });
+
+    await user.selectOptions(status, "lapsed");
+    await waitFor(() => expect(writes[1]).toEqual({ method: "PATCH", body: { status: "lapsed" } }));
+    expect(screen.getByLabelText("Delaware Status")).toHaveValue("lapsed");
+
+    // A refused row edit is visible with the add form closed.
+    await user.type(screen.getByLabelText("Delaware Registered agent"), "Nobody");
+    await user.tab();
+    expect(await screen.findByText("The registered agent is not on file.")).toBeInTheDocument();
+  });
+
   it("commits a corrected field on blur as one PATCH (DES-017) and notes Saved", async () => {
     const api = recordApi(entityRow());
     stubApi({ signedIn: MEMBER, extra: api.handler });

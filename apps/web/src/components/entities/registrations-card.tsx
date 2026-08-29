@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 import { useState } from "react";
-import { FormattedMessage } from "react-intl";
+import { FormattedMessage, useIntl, type IntlShape } from "react-intl";
 import { Plus, Trash2 } from "lucide-react";
 import { api } from "../../lib/api";
 import {
@@ -25,6 +25,7 @@ export function RegistrationsCard({
   initial: readonly EntityRegistration[];
   frozen: boolean;
 }>) {
+  const intl = useIntl();
   const [registrations, setRegistrations] = useState([...initial]);
   const [adding, setAdding] = useState(false);
   const [jurisdiction, setJurisdiction] = useState("");
@@ -103,15 +104,18 @@ export function RegistrationsCard({
             defaultMessage="Registrations"
           />
         </h2>
-        {!frozen ? (
-          <Button size="sm" variant="secondary" onClick={() => setAdding((current) => !current)}>
-            <Plus size={16} aria-hidden="true" />
-            <FormattedMessage
-              id="entities.record.registrations.add"
-              defaultMessage="Add registration"
-            />
-          </Button>
-        ) : null}
+        <div className="flex items-center gap-3">
+          {!adding ? <StatusNote status={status} detail={error} /> : null}
+          {!frozen ? (
+            <Button size="sm" variant="secondary" onClick={() => setAdding((current) => !current)}>
+              <Plus size={16} aria-hidden="true" />
+              <FormattedMessage
+                id="entities.record.registrations.add"
+                defaultMessage="Add registration"
+              />
+            </Button>
+          ) : null}
+        </div>
       </header>
       {adding ? (
         <div className="grid grid-cols-1 gap-3 border-b border-border-muted bg-canvas p-4 @2xl/page:grid-cols-4">
@@ -168,7 +172,7 @@ export function RegistrationsCard({
             >
               {ENTITY_REGISTRATION_STATUSES.map((value) => (
                 <option key={value} value={value}>
-                  {registrationStatusLabel(value)}
+                  {registrationStatusLabel(intl, value)}
                 </option>
               ))}
             </select>
@@ -222,13 +226,27 @@ function RegistrationRow({
   onUpdate: (body: Record<string, unknown>) => void;
   onRemove: () => void;
 }>) {
+  const intl = useIntl();
   const [jurisdiction, setJurisdiction] = useState(registration.jurisdiction);
+  const label = (field: string) =>
+    intl.formatMessage(
+      {
+        id: "entities.record.registrations.rowField",
+        defaultMessage: "{jurisdiction} {field}",
+      },
+      { jurisdiction: registration.jurisdiction, field },
+    );
   const [number, setNumber] = useState(registration.registrationNumber ?? "");
   const [agent, setAgent] = useState(registration.registeredAgent ?? "");
   return (
     <div className="grid grid-cols-1 gap-3 p-4 @2xl/page:grid-cols-[1.2fr_1fr_1.4fr_1fr_auto]">
       <Input
-        aria-label={`${registration.jurisdiction} jurisdiction`}
+        aria-label={label(
+          intl.formatMessage({
+            id: "entities.record.registrations.jurisdiction",
+            defaultMessage: "Jurisdiction",
+          }),
+        )}
         value={jurisdiction}
         disabled={frozen}
         onChange={(event) => setJurisdiction(event.target.value)}
@@ -239,7 +257,12 @@ function RegistrationRow({
         }
       />
       <Input
-        aria-label={`${registration.jurisdiction} registration number`}
+        aria-label={label(
+          intl.formatMessage({
+            id: "entities.record.registrations.number",
+            defaultMessage: "Registration number",
+          }),
+        )}
         value={number}
         disabled={frozen}
         onChange={(event) => setNumber(event.target.value)}
@@ -249,7 +272,12 @@ function RegistrationRow({
         }
       />
       <Input
-        aria-label={`${registration.jurisdiction} registered agent`}
+        aria-label={label(
+          intl.formatMessage({
+            id: "entities.record.registrations.agent",
+            defaultMessage: "Registered agent",
+          }),
+        )}
         value={agent}
         disabled={frozen}
         onChange={(event) => setAgent(event.target.value)}
@@ -259,7 +287,12 @@ function RegistrationRow({
         }
       />
       <select
-        aria-label={`${registration.jurisdiction} status`}
+        aria-label={label(
+          intl.formatMessage({
+            id: "entities.record.registrations.status",
+            defaultMessage: "Status",
+          }),
+        )}
         className={CONTROL_CLASS}
         value={registration.status}
         disabled={frozen}
@@ -267,7 +300,7 @@ function RegistrationRow({
       >
         {ENTITY_REGISTRATION_STATUSES.map((value) => (
           <option key={value} value={value}>
-            {registrationStatusLabel(value)}
+            {registrationStatusLabel(intl, value)}
           </option>
         ))}
       </select>
@@ -275,7 +308,13 @@ function RegistrationRow({
         <Button
           size="icon"
           variant="ghost"
-          aria-label={`Remove ${registration.jurisdiction} registration`}
+          aria-label={intl.formatMessage(
+            {
+              id: "entities.record.registrations.remove",
+              defaultMessage: "Remove {jurisdiction} registration",
+            },
+            { jurisdiction: registration.jurisdiction },
+          )}
           onClick={onRemove}
         >
           <Trash2 size={16} />
@@ -285,6 +324,13 @@ function RegistrationRow({
   );
 }
 
-function registrationStatusLabel(status: EntityRegistrationStatus) {
-  return status === "active" ? "Active" : status === "lapsed" ? "Lapsed" : "Withdrawn";
+function registrationStatusLabel(intl: IntlShape, status: EntityRegistrationStatus) {
+  return intl.formatMessage(
+    {
+      id: "entities.record.registrations.statusLabel",
+      defaultMessage:
+        "{status, select, active {Active} lapsed {Lapsed} withdrawn {Withdrawn} other {{status}}}",
+    },
+    { status },
+  );
 }

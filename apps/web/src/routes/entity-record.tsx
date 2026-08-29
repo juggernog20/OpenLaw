@@ -421,7 +421,7 @@ export function EntityRecordPage() {
             </>
           ) : (
             <section className="rounded-card border border-border-default bg-raised p-6">
-              <h2 className="text-lg font-semibold">{tabLabel(loaded.tab)}</h2>
+              <h2 className="text-lg font-semibold">{TAB_LABELS[loaded.tab]}</h2>
               <p className="mt-2 text-base text-muted">
                 <FormattedMessage
                   id="entities.record.placeholder"
@@ -483,33 +483,21 @@ function SelectField({
   );
 }
 
+const TAB_LABELS: Readonly<Record<EntityTab, ReactNode>> = {
+  overview: <FormattedMessage id="entities.record.tab.overview" defaultMessage="Overview" />,
+  ownership: <FormattedMessage id="entities.record.tab.ownership" defaultMessage="Ownership" />,
+  obligations: (
+    <FormattedMessage id="entities.record.tab.obligations" defaultMessage="Obligations" />
+  ),
+  documents: <FormattedMessage id="entities.record.tab.documents" defaultMessage="Documents" />,
+  contracts: <FormattedMessage id="entities.record.tab.contracts" defaultMessage="Contracts" />,
+  matters: <FormattedMessage id="entities.record.tab.matters" defaultMessage="Matters" />,
+};
+
 function recordTabs(id: string) {
   return [
-    {
-      to: `/entities/${id}`,
-      end: true,
-      label: <FormattedMessage id="entities.record.tab.overview" defaultMessage="Overview" />,
-    },
-    {
-      to: `/entities/${id}/ownership`,
-      label: <FormattedMessage id="entities.record.tab.ownership" defaultMessage="Ownership" />,
-    },
-    {
-      to: `/entities/${id}/obligations`,
-      label: <FormattedMessage id="entities.record.tab.obligations" defaultMessage="Obligations" />,
-    },
-    {
-      to: `/entities/${id}/documents`,
-      label: <FormattedMessage id="entities.record.tab.documents" defaultMessage="Documents" />,
-    },
-    {
-      to: `/entities/${id}/contracts`,
-      label: <FormattedMessage id="entities.record.tab.contracts" defaultMessage="Contracts" />,
-    },
-    {
-      to: `/entities/${id}/matters`,
-      label: <FormattedMessage id="entities.record.tab.matters" defaultMessage="Matters" />,
-    },
+    { to: `/entities/${id}`, end: true, label: TAB_LABELS.overview },
+    ...RECORD_TABS.map((tab) => ({ to: `/entities/${id}/${tab}`, label: TAB_LABELS[tab] })),
   ];
 }
 
@@ -535,7 +523,4 @@ function isTextKey(key: FieldKey): key is TextFieldKey {
 }
 function mergeReferences(first: FieldReference[], second: FieldReference[]) {
   return [...first, ...second.filter((row) => !first.some((held) => held.id === row.id))];
-}
-function tabLabel(tab: Exclude<EntityTab, "overview">) {
-  return tab[0]!.toUpperCase() + tab.slice(1);
 }

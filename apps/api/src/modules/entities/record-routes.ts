@@ -156,6 +156,17 @@ async function liveUser(tx: Transaction, id: string | null) {
   return person;
 }
 
+/** The current link's name for the audit map; null when unlinked. */
+async function userDisplayName(tx: Transaction, id: string | null) {
+  if (id === null) return null;
+  const [person] = await tx
+    .select({ displayName: users.displayName })
+    .from(users)
+    .where(eq(users.id, id))
+    .limit(1);
+  return person?.displayName ?? null;
+}
+
 function assertOfficerDates(appointedOn: string | null, resignedOn: string | null) {
   if (appointedOn && resignedOn && resignedOn < appointedOn) {
     throw httpError(400, "The resignation date cannot be before the appointment date.");
@@ -327,9 +338,14 @@ export const entityRecordChildRoutes: FastifyPluginAsyncZod = async (app) => {
           changed.resignedOn = { from: target.resignedOn, to: request.body.resignedOn };
         }
         if (request.body.userId !== undefined && request.body.userId !== target.userId) {
+          // The link is a person, so the audit map carries names, not
+          // ids: the feed narrates "Linked user changed from X to Y".
           const next = await liveUser(tx, request.body.userId);
           patch.userId = next?.id ?? null;
-          changed.user = { from: target.userId, to: next?.id ?? null };
+          changed.linkedUser = {
+            from: await userDisplayName(tx, target.userId),
+            to: next?.displayName ?? null,
+          };
         }
         assertOfficerDates(
           patch.appointedOn === undefined ? target.appointedOn : patch.appointedOn,

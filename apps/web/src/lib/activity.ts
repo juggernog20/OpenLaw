@@ -338,6 +338,9 @@ function changeLabel(intl: IntlShape, key: string, context: NarrationContext): s
         "jurisdiction {Jurisdiction} formedOn {Formed on} " +
         "registrationNumber {Registration number} taxId {Tax ID} " +
         "registeredAgent {Registered agent} registeredAddress {Registered address} " +
+        "sharesAuthorized {Authorized shares} sharesIssued {Issued shares} " +
+        "parValue {Par value} appointedOn {Appointed on} resignedOn {Resigned on} " +
+        "linkedUser {Linked user} " +
         "other {{key}}}",
     },
     { key },
