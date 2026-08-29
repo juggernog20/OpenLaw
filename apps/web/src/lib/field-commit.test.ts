@@ -92,6 +92,25 @@ describe("useFieldCommit", () => {
     });
   });
 
+  it("reads a refusal that arrived without its Response as a refusal, not a network failure", async () => {
+    const { result } = renderHook(() => useFieldCommit<Key>());
+
+    let outcome: unknown;
+    await act(async () => {
+      outcome = await result.current.commit("title", async () => ({
+        error: { detail: "No.", type: "about:blank" },
+      }));
+    });
+    expect(result.current.error.title).toBe("No.");
+    expect(outcome).toEqual({
+      ok: false,
+      detail: "No.",
+      type: "about:blank",
+      status: undefined,
+      network: false,
+    });
+  });
+
   it("treats an answer with no body and no error (a 204) as saved", async () => {
     const { result } = renderHook(() => useFieldCommit<Key>());
     await act(async () => {

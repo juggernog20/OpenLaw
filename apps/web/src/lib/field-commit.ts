@@ -90,9 +90,10 @@ export function useFieldCommit<K extends string>() {
       inFlight.current.delete(key);
     }
     if (!answer || answer.error !== undefined || answer.response?.ok === false) {
-      const failure = await problem(
-        answer?.response ? { error: answer.error, response: answer.response } : undefined,
-      );
+      // A refusal that arrived without its Response still carries a
+      // problem body. Only a request that got no answer at all is the
+      // network arm.
+      const failure = await problem(!answer ? undefined : answer.response ? answer : answer.error);
       note(key, "error", failure.detail);
       return { ok: false, ...failure };
     }
