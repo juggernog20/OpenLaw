@@ -3130,6 +3130,10 @@ The mobile floor is untouched and not improved: DES-012 already parks a stacked-
 
 The Matters destination is DES-046's second catalogue and the first proof that the primitive is not contract-shaped. Its required columns are M-### and Title; Type, Status, Priority, Risk, Matter Manager, and Opened complete the built-in layout, each with a server sort key. Status, type, priority, Manager (including `me`), and Incomplete join the layout's saved filters; closed and archived are explicit toggles. The team-scope predicate sits in the paged query, and the sub-bar states only the loaded open/on-hold counts, so hidden confidential rows cannot leak through a total. Column widths, resize, ordering, sorting, saved views, keyset foot, and row truncation are the shared components unchanged.
 
+### Addendum (2026-08-29, M26 close, [#560](https://github.com/juggernog20/OpenLaw/issues/560)): Documents is the third managed-list catalogue
+
+The Documents destination adopts the managed table whole. Title is its required flex column. Owning record, current Version kind, format, size, Version count, uploader, and uploaded time complete the built-in layout. The filter state joins the saved layout config, and Uploaded descending is the natural order. Resize, reorder, show and hide, sort, saved views, row truncation, horizontal escape, and the paging foot use the shared components unchanged.
+
 ## DES-047: The Team roster is an activity-bar applet (amends DES-016, DES-032, DES-028)
 
 - **Status:** Accepted
