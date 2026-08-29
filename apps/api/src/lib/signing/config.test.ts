@@ -10,7 +10,7 @@
  * overlay alone, and an operator who mistypes it is stopped rather than
  * quietly connected to DocuSign.
  *
- * The second rule is that it takes **two** variables to move an install
+ * The second rule is that it takes two variables to move an install
  * off DocuSign, and that either one alone stops the boot. Every case
  * below that names a host names the flag beside it, because a case that
  * did not would now be testing the refusal rather than the parse.
@@ -87,7 +87,7 @@ describe("signing host configuration", () => {
 
   it("refuses credentials in the URL", () => {
     // `URL#origin` would drop them silently, and the driver carries its
-    // own credentials — the same dropped-not-honoured rule as a path.
+    // own credentials. Same dropped-not-honoured rule as a path.
     for (const value of [
       "http://operator:hunter2@stand-in.invalid:8129",
       "http://operator@stand-in.invalid:8129",
@@ -147,8 +147,8 @@ describe("signing host configuration", () => {
     // Proved by where it dials rather than by reading the instance: the
     // factory's whole job is the host, and the host is what shows up in
     // the requests. The grant answers, so the account discovery after it
-    // is dialled too — both calls the driver makes on its own before it
-    // follows the account's `base_uri` anywhere else.
+    // is dialled too. Those are the two calls the driver makes on its
+    // own before it follows the account's `base_uri` anywhere else.
     const asked: string[] = [];
     vi.stubGlobal("fetch", (input: Parameters<typeof fetch>[0]) => {
       const url = String(input);

@@ -2,21 +2,21 @@
 
 /**
  * Intake · Request types (#85, INT-002) at the route seam: the shared
- * TaxonomyTypesPane on the request mount — the three seeds at their own
- * URL with the Intake vocabulary, in-place rename against the
+ * TaxonomyTypesPane on the request mount. The three seeds sit at their
+ * own URL with the Intake vocabulary, with in-place rename against the
  * request-types routes, the inline add row, the archive-guard modal,
  * keyboard reorder, and the rail entry the M5 close left out. The
- * machinery itself is covered by the Contracts reference suite and at
- * the HTTP seam in apps/api — these tests pin the wiring: the Intake
- * URL, the request endpoints, and the Intake copy.
+ * Contracts reference suite and the HTTP seam in apps/api cover the
+ * machinery itself. These tests pin the wiring: the Intake URL, the
+ * request endpoints, and the Intake copy.
  *
  * Two absences are asserted rather than assumed: no row is
  * system-protected here, and no in-use caption is drawn, because
  * `requests` land in M20.
  *
- * The **Target** column and the two-line row are this mount's own
- * (#354): the three states read as ST12 draws them, and the per-row
- * Edit affordance opens the editor screen. The target type's name comes
+ * The Target column and the two-line row are this mount's own (#354):
+ * the three states read as ST12 draws them, and the per-row Edit
+ * affordance opens the editor screen. The target type's name comes
  * from the taxonomy it points at, so the loader reads those two lists
  * beside the request types.
  */
@@ -116,7 +116,7 @@ function newCalls(): TypesCalls {
   return { creates: [], renames: [], archives: [], orders: [] };
 }
 
-/** Serves the seeded list and captures the pane's writes — the pane
+/** Serves the seeded list and captures the pane's writes. The pane
  * holds its own row state, so the stub never needs to mutate. */
 function typesApi(calls: TypesCalls, rows: StubRow[] = seededTypes()) {
   const byId = (id: string) => rows.find((row) => row.id === id)!;
@@ -159,8 +159,8 @@ function typesApi(calls: TypesCalls, rows: StubRow[] = seededTypes()) {
         requestTypes: ids.map((id, index) => ({ ...byId(id), displayOrder: index + 1 })),
       });
     }
-    // The rest of the editor's own reads, for the row the Edit
-    // affordance opens — its form definition and the catalog behind it.
+    // The editor's other reads, for the row the Edit affordance opens:
+    // its form definition and the catalog behind it.
     if (/^\/api\/v1\/request-types\/[^/]+\/fields$/.test(path) && call.method === "GET") {
       return json(200, { attachedFields: [] });
     }
@@ -194,9 +194,9 @@ describe("the SET-002 gate on the pane", () => {
   it("hides the Intake rail entry from a Legal Team Member and bounces the URL", async () => {
     stubApi({ signedIn: MEMBER });
     renderAt("/settings/intake/request-types");
-    // The refusal lands on the member's own settings home…
+    // The refusal lands on the member's own settings home.
     expect(await screen.findByRole("heading", { name: "Profile" })).toBeInTheDocument();
-    // …and the rail never teases the section.
+    // The rail never shows the section.
     const rail = screen.getByRole("navigation", { name: "Settings sections" });
     expect(within(rail).queryByText("Intake")).not.toBeInTheDocument();
   });

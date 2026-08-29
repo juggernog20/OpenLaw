@@ -3,12 +3,12 @@
 /**
  * Organization · Security · Authentication (#64), from the ST17/ST18
  * frames of settings.pen: the mode cards (built-in vs OIDC), the OIDC
- * provider form, and the Portal access card — the magic-link toggle
- * with its built-in-mode lock (DD-010), plus the allowed-email-domains
- * editor the SET-001 amendment moved onto this pane. Everything fronts
- * the M2 typed routes with SET-003 immediate apply and DES-017
- * micro-states; the API's 403 is the real refusal behind the loader's
- * SET-002 bounce.
+ * provider form, and the Portal access card. That card holds the
+ * magic-link toggle with its built-in-mode lock (DD-010), plus the
+ * allowed-email-domains editor the SET-001 amendment moved onto this
+ * pane. Everything fronts the M2 typed routes with SET-003 immediate
+ * apply and DES-017 micro-states. The API's 403 is the real refusal
+ * behind the loader's SET-002 bounce.
  */
 
 import { useState, type ReactNode, type SubmitEvent as FormSubmitEvent } from "react";
@@ -58,7 +58,7 @@ interface Provider {
   clientId: string | null;
 }
 
-/** A mode card from ST17: radio, title, description — one per mode. */
+/** A mode card from ST17: radio, title, description. One per mode. */
 function ModeOption(
   props: Readonly<{
     mode: AuthMode;
@@ -102,7 +102,7 @@ function ModeOption(
   );
 }
 
-/** The PATCH body as the generated contract types it — a misspelled key
+/** The PATCH body as the generated contract types it. A misspelled key
  * is a compile error, not a field the Zod schema silently strips. */
 type ProviderPatch = NonNullable<
   paths["/api/v1/auth/sso-providers/{providerId}"]["patch"]["requestBody"]
@@ -147,8 +147,8 @@ export function SettingsAuthenticationPage() {
   const [provider, setProvider] = useState<Provider | null>(loaded.provider);
   const [callbackUrl, setCallbackUrl] = useState<string | null>(null);
 
-  // The ST18 provider form drafts; the secret is write-only and starts
-  // blank — an empty field means "keep the stored one".
+  // The ST18 provider form drafts. The secret is write-only and starts
+  // blank; an empty field means "keep the stored one".
   const [providerIdDraft, setProviderIdDraft] = useState("");
   const [issuerDraft, setIssuerDraft] = useState(loaded.provider?.issuer ?? "");
   const [domainDraft, setDomainDraft] = useState(loaded.provider?.domain ?? "");
@@ -185,9 +185,9 @@ export function SettingsAuthenticationPage() {
       setMode(data.mode);
       setModeDraft(null);
       note("mode", "saved");
-      // The DD-010 floor as state, not only a disabled switch: magic
+      // The DD-010 floor as state, not only a disabled switch. Magic
       // links could be off from OIDC mode, and built-in mode locks the
-      // toggle — without this restore the portal would be shut with no
+      // toggle. Without this restore the portal would be shut with no
       // control left to reopen it.
       if (data.mode === "built_in" && !magicLinkEnabled) await commitPortal(true);
     } catch {
@@ -199,7 +199,7 @@ export function SettingsAuthenticationPage() {
   function pickMode(next: AuthMode) {
     if (next === selectedMode) return;
     // Switching to OIDC without a registered IdP would leave everyone
-    // but Administrators without a sign-in method — the switch waits
+    // but Administrators without a sign-in method. The switch waits
     // for the registration below (wizard precedent, #34).
     if (next === "oidc" && !provider) {
       setModeDraft("oidc");
@@ -210,7 +210,7 @@ export function SettingsAuthenticationPage() {
       setModeDraft(null);
       return;
     }
-    // The radio flips optimistically (SET-003 immediate apply); a
+    // The radio flips optimistically (SET-003 immediate apply). A
     // failed PATCH snaps it back with the error micro-state.
     setModeDraft(next);
     void commitMode(next);
@@ -262,7 +262,7 @@ export function SettingsAuthenticationPage() {
       setDomainInput("");
       return;
     }
-    // The typed domain survives a failed request — clearing it early
+    // The typed domain survives a failed request. Clearing it early
     // would leave retyping as the only recovery.
     void commitDomains([...domains, domain]).then((saved) => {
       if (saved) setDomainInput("");
@@ -408,8 +408,8 @@ export function SettingsAuthenticationPage() {
           required={!provider}
           placeholder={intl.formatMessage({
             id: "settings.auth.secretPlaceholder",
-            // A visual mask, not copy — but it still rides the catalog
-            // so a locale can swap the glyph.
+            // A visual mask, not copy. It still rides the catalog so a
+            // locale can swap the glyph.
             defaultMessage: "••••••••••••••••",
           })}
           value={secretDraft}
@@ -528,7 +528,7 @@ export function SettingsAuthenticationPage() {
             <Switch
               checked={magicLinkEnabled}
               // The DD-010 floor: in built-in mode magic links cannot be
-              // turned off — the API would accept it, the product says no.
+              // turned off. The API would accept it; the product says no.
               disabled={mode === "built_in"}
               onCheckedChange={(next) => void commitPortal(next)}
               aria-labelledby="portal-toggle-label"

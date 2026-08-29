@@ -2,27 +2,27 @@
 
 /**
  * Intake · Request types (#85), from the ST12 frame of settings.pen:
- * the INT-002 taxonomy on the shared TaxonomyTypesPane machinery — this
+ * the INT-002 taxonomy on the shared TaxonomyTypesPane machinery. This
  * file owns the INT-002 vocabulary and the API adapter over the
- * request-types routes; the behavior lives in the shared component,
+ * request-types routes. The behavior lives in the shared component,
  * which is the point: the Intake pane is configuration, not a copy of
  * the Matters one. The loader is the client half of SET-002's gate; the
  * API's 403 is the real refusal.
  *
- * **The Target column and the two-line row are this mount's own.** They
- * take the place ST6 gives the in-use caption — which is why this mount
+ * The Target column and the two-line row are this mount's own. They
+ * take the place ST6 gives the in-use caption, which is why this mount
  * draws no caption: `requests` land in M20, so the count would read
  * "0 requests" on every row. The column reads the three states plainly:
- * "Contract · NDA", "Contract", "No target" — a request type whose
+ * "Contract · NDA", "Contract", "No target". A request type whose
  * targeted type was hard-deleted has demoted to the module alone, and
- * the column says so without ceremony. ST12's **Form fields** column
+ * the column says so without ceremony. ST12's Form fields column
  * beside it counts the catalog fields on that type's portal form
- * (#355) — never the four basics, which are on every form and would
+ * (#355), never the four basics, which are on every form and would
  * say the same thing on every row.
  *
  * Nothing here is system-protected. There is no fallback request type,
  * so a row an Administrator names "Other" archives and deletes like any
- * other — hence no `protectedRow`.
+ * other. Hence no `protectedRow`.
  */
 
 import { redirect, useLoaderData } from "react-router";
@@ -221,7 +221,7 @@ export function SettingsRequestTypesPage() {
             width: "w-40",
             cell: (row) => {
               const name = row.targetTypeId ? targetTypeNames[row.targetTypeId] : undefined;
-              // No name means the module alone — either it was never
+              // No name means the module alone. Either it was never
               // given a type, or the type it named was hard-deleted and
               // the FK demoted the row rather than stranding it.
               return name === undefined ? (

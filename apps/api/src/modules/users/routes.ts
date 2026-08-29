@@ -2,9 +2,9 @@
 
 /**
  * User management (SET-005): the list behind the Users pane, and the
- * people-management mutations — in-place role edits, guarded archive,
- * unarchive, and per-user session revocation — as our own typed Admin
- * routes (better-auth's admin surface stays closed per TECH-008).
+ * people-management mutations (in-place role edits, guarded archive,
+ * unarchive, and per-user session revocation) as our own typed Admin
+ * routes. better-auth's admin routes stay closed per TECH-008.
  * Invite mutations stay with the auth module.
  */
 
@@ -35,7 +35,7 @@ const UserRowSchema = z.object({
   displayName: z.string(),
   role: z.enum(USER_ROLES),
   status: z.enum(USER_STATUSES),
-  /** NULL = has never signed in — which for staff means a pending invite. */
+  /** NULL = has never signed in, which for staff means a pending invite. */
   lastActiveAt: z.iso.datetime().nullable(),
 });
 
@@ -61,7 +61,7 @@ interface UserRecord {
 }
 
 /**
- * "Invited" is reserved for staff without an account row — activation
+ * "Invited" is reserved for staff without an account row; activation
  * writes one (credential or SSO subject). Business Users also lack
  * account rows (magic-link JIT provisioning never creates one), but they
  * were never invited: they exist because they signed in.
@@ -98,12 +98,12 @@ export const usersRoutes: FastifyPluginAsyncZod = async (app) => {
   /**
    * Locks every non-archived Administrator row (in id order, so two
    * guarded mutations always queue on the same first row) and returns
-   * them — the last-Administrator floor counts against this set while
+   * them. The last-Administrator floor counts against this set while
    * holding it, so two concurrent demotions cannot both slip past the
    * check. A demotion racing an archive of the other Administrator can
    * still deadlock on the target-vs-set lock order; Postgres resolves it
-   * by aborting one, which at a 2–10 person scale is a rarity worth less
-   * than the extra machinery of a two-phase read.
+   * by aborting one, which at a 2 to 10 person scale is a rarity worth
+   * less than the extra machinery of a two-phase read.
    */
   function lockedAdmins(tx: Transaction) {
     return tx
@@ -169,7 +169,7 @@ export const usersRoutes: FastifyPluginAsyncZod = async (app) => {
           .limit(1)
           .for("update");
         if (!target) throw httpError(404, "No user exists with this id.");
-        // Setting the role a user already has changes nothing — answer
+        // Setting the role a user already has changes nothing. Answer
         // with the row and write no misleading from==to audit entry.
         if (target.role === role) return target;
         // The floor only counts Administrators who could act: an archived
@@ -319,7 +319,7 @@ export const usersRoutes: FastifyPluginAsyncZod = async (app) => {
     async (request, reply) => {
       // Deliberately no self guard: an Administrator whose own laptop is
       // the lost one revokes their own sessions and is signed out
-      // everywhere — including the device they asked from. That is the
+      // everywhere, including the device they asked from. That is the
       // operation doing its job, not a mistake to prevent.
       await app.db.transaction(async (tx) => {
         const [target] = await tx

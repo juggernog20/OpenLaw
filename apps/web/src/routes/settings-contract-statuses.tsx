@@ -6,7 +6,7 @@
  * in the qualifier-pill slot, `draft`, `active`, and `expired` locked,
  * drag or arrow-key reorder, and an inline draft row whose stage is
  * picked at creation and immutable after. The archive guard blocks
- * instead of offering reassignment — SET-003's structural-minimum rule,
+ * instead of offering reassignment, SET-003's structural-minimum rule,
  * recorded for statuses as CTR-020. It blocks on two things: the CTR-001
  * floor (every stage keeps one unarchived status), and contracts that
  * still hold the status, which the Administrator moves. Every
@@ -62,7 +62,7 @@ interface StatusRow {
 
 const byDisplayOrder = (a: StatusRow, b: StatusRow) => a.displayOrder - b.displayOrder;
 
-/** The fixed stage names — never sourced from a status label (CTR-001). */
+/** The fixed stage names, never sourced from a status label (CTR-001). */
 function stageLabel(intl: IntlShape, stage: Stage): string {
   return intl.formatMessage(
     {
@@ -84,12 +84,12 @@ function ArchiveStatusDialog({
 }: Readonly<{
   target: StatusRow;
   /** The CTR-001 floor: the target is its stage's last unarchived
-   * status. The other block — contracts still on the status — rides
+   * status. The other block, contracts still on the status, rides
    * `target.inUseCount`, so the dialog reads it from the row. */
   blocked: boolean;
   onOpenChange: (open: boolean) => void;
   onArchived: (row: StatusRow) => void;
-  /** Where focus lands after a successful archive — the row's archive
+  /** Where focus lands after a successful archive. The row's archive
    * button unmounts with the row, so the default restore has no home. */
   onArchivedCloseFocus: () => void;
 }>) {
@@ -155,7 +155,7 @@ function ArchiveStatusDialog({
           <div className="flex items-start gap-2 rounded-card bg-status-warning-bg p-3 text-sm text-status-warning-fg">
             <TriangleAlert size={16} aria-hidden="true" className="mt-0.5 shrink-0" />
             {/* Statuses block at structural minimums instead of offering
-                reassignment (SET-003, CTR-020) — no select here, ever.
+                reassignment (SET-003, CTR-020). No select here, ever.
                 The floor reads first, in the order the API checks. */}
             <p id="archive-status-warning">
               {blocked ? (
@@ -270,7 +270,7 @@ export function SettingsContractStatusesPage() {
   }
 
   async function create() {
-    // Enter can land while a create is already posting — a ref, set
+    // Enter can land while a create is already posting. A ref, set
     // synchronously, keeps a double-tap from posting the draft twice.
     if (createInFlight.current) return;
     const displayName = addDraft.name.trim();
@@ -337,7 +337,7 @@ export function SettingsContractStatusesPage() {
     return false;
   }
 
-  /** One validated move from the grip (arrow key or drop) — commit the
+  /** One validated move from the grip (arrow key or drop): commit the
    * permutation and announce the landing position (DES-020). */
   async function move(fromIndex: number, toIndex: number) {
     const row = live[fromIndex]!;
@@ -521,7 +521,7 @@ export function SettingsContractStatusesPage() {
                   const stage = event.target.value as Stage | "";
                   setAddDraft((current) => ({ ...current, stage }));
                   // Picking a stage answers the "pick a stage"
-                  // refusal — don't leave it standing.
+                  // refusal, so clear it.
                   if (stage !== "" && addStatus === "error") {
                     setAddStatus("idle");
                     setAddError(undefined);

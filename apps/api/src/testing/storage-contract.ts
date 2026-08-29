@@ -6,7 +6,7 @@
  * There is one suite, and every driver behind {@link StorageAdapter}
  * must pass it: the local filesystem driver against a temporary
  * directory, and the S3-compatible driver against a MinIO container.
- * A behaviour that only one driver has is not in here — this file is
+ * A behaviour that only one driver has is not in here. This file is
  * the definition of what "a storage driver" means in OpenLaw, so
  * application code can hold one mental model of storage and be right on
  * every deployment.
@@ -30,7 +30,7 @@ import {
 
 export interface StorageContractHarness {
   adapter: StorageAdapter;
-  /** Tears the backing store down — a temporary directory, a container. */
+  /** Tears the backing store down: a temporary directory, a container. */
   stop?: () => Promise<void>;
 }
 
@@ -59,7 +59,7 @@ function newKey(prefix = "contract"): string {
   return `${prefix}-${randomUUID()}`;
 }
 
-/** Keys no driver may accept — each one either escapes a root or breaks a reference. */
+/** Keys no driver may accept. Each one either escapes a root or breaks a reference. */
 const MALFORMED_KEYS = [
   "", // empty
   "/leading-slash",
@@ -109,10 +109,10 @@ export function describeStorageAdapterContract(
     }, options.startTimeoutMs);
 
     afterAll(async () => {
-      // Optional on the harness too, not only on `stop`: if `start`
+      // Optional on the harness too, not only on `stop`. If `start`
       // rejected, `harness` was never assigned, and reaching through it
-      // here would make a TypeError the thing the run reports — burying
-      // the container or directory failure that actually happened.
+      // here would make a TypeError the thing the run reports, burying
+      // the container or directory failure that happened.
       await harness?.stop?.();
     });
 
@@ -156,7 +156,7 @@ export function describeStorageAdapterContract(
 
       it("leaves no blob behind when the source stream fails", async () => {
         const key = newKey();
-        // Bytes first, then the failure: a stream that dies before it
+        // Bytes first, then the failure. A stream that dies before it
         // yields anything would not prove that a half-written blob is
         // cleaned up.
         const failing = Readable.from(

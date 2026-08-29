@@ -4,8 +4,8 @@
  * Decline on the staff request detail (#418), through the real route
  * table with the standard fetch stub.
  *
- * The screen's own subjects — the envelope, the values, the paper, the
- * thread — are `inbox-request.test.tsx`'s. This suite is INT-007's
+ * The envelope, the values, the paper, and the thread are
+ * `inbox-request.test.tsx`'s subjects. This suite is INT-007's
  * disposition surface: that the sub-bar offers Decline while a Request is
  * undecided and offers nothing once it is not, that the reason is
  * required before the seam is asked, that cancelling writes nothing, and
@@ -34,8 +34,8 @@ import {
 
 /**
  * The Request seam behind the screen, with Decline's own outcome on it.
- * Everything else — the detail read, the thread, the counters — is the
- * shared scaffold's.
+ * The detail read, the thread, and the counters are the shared
+ * scaffold's.
  */
 function requestApi(
   initial = request(),
@@ -162,8 +162,8 @@ describe("the reason (INT-006)", () => {
 
   it("prints the seam's own refusal when it gives one", async () => {
     // A refusal the seam gave is about the write rather than about the
-    // box, so it prints in the dialog's own words — the seam's sentence,
-    // which is the one somebody can act on.
+    // box, so the dialog prints the seam's sentence. That is the one
+    // somebody can act on.
     const user = userEvent.setup();
     const api = requestApi(request(), () =>
       problem(400, "That request type is not taking writes."),

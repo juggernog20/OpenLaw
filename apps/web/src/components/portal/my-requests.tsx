@@ -15,26 +15,26 @@
  * away (INT-001, DD-018), so the row stays and still opens.
  *
  * **The empty state points at the type picker**, which is on the same
- * screen above it — a first visit should teach the loop rather than
+ * screen above it. A first visit should teach the loop rather than
  * state a fact about zero. When the Administrator has configured no
- * live types either, the pointer is dropped: there is nothing above to
+ * live types either, the pointer is dropped. There is nothing above to
  * point at.
  *
  * ### Recorded normalization points (I5 deviations accepted)
  *
- * 1. I5's row draws four facts — the reference, the summary, the status
- *    pill, and the age. The row draws five: the request type joins
+ * 1. I5's row draws four facts: the reference, the summary, the status
+ *    pill, and the age. The row draws five. The request type joins
  *    them, under the summary. A requester who has submitted through
  *    three different doors cannot tell an NDA request from a contract
  *    review by the summary alone, and the front door is what decides
  *    what Legal collected.
  * 2. I5 abbreviates the age ("5h ago", "Jul 28"). It renders through
  *    DES-014's `formatRelativeOrShort`, which spells the unit out
- *    ("5 hours ago") — the one date vocabulary every list in the
+ *    ("5 hours ago"). That is the one date vocabulary every list in the
  *    product shares, and not a place to open a second one.
  * 3. I5 draws each row as a 44px strip with the summary on one line.
  *    The row is intrinsically tall and the summary truncates, per
- *    DES-012: a requester writes the summary, and a fixed height that
+ *    DES-012. A requester writes the summary, and a fixed height that
  *    fits the mock's copy is not a fact about anybody else's.
  */
 
@@ -61,7 +61,7 @@ export function MyRequests({
       aria-labelledby="portal-my-requests-heading"
       className="w-full overflow-hidden rounded-card border border-border-default bg-raised"
     >
-      {/* A `div` rather than a `header`: the portal draws one banner,
+      {/* A `div` rather than a `header`. The portal draws one banner,
           and a card strip that also claimed the role would make
           "the page header" mean two things. */}
       <div className="flex h-section-header items-center justify-between gap-2 rounded-t-card border-b border-border-default bg-section-header px-4">

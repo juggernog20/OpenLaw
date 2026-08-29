@@ -1,15 +1,15 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 /**
- * Intake · Deflection links (#356): the INT-004 panel's configuration —
- * create, update, reorder, and remove, with the two placements (the
+ * Intake · Deflection links (#356): the INT-004 panel's configuration.
+ * Create, update, reorder, and remove, with the two placements (the
  * portal home and one request type), the absolute-http(s) URL rule, and
  * SET-002's one role gate. Every mutation appends to the activity log
  * (DD-017), asserted at the HTTP seam plus direct `activity_log` reads,
  * the way the contract-statuses suite this one is modeled on does.
  *
  * A link has no archive and no guard: nothing points at one, so removal
- * is outright. What the suite does check on the way out is the FK —
+ * is outright. What the suite does check on the way out is the FK:
  * hard-deleting a request type takes its links with it rather than
  * setting them loose on the portal home, which is a wider audience than
  * the Administrator chose.
@@ -159,7 +159,7 @@ const auditRows = () =>
     )
     .orderBy(asc(activityLog.createdAt));
 
-/** The panel starts empty each time: no link is seeded (INT-004 — there
+/** The panel starts empty each time: no link is seeded (INT-004, there
  * is no sensible default URL), and a suite that shared rows between
  * tests would be asserting on the order the tests happen to run in. */
 beforeEach(async () => {
@@ -389,7 +389,7 @@ describe("PATCH /intake-links/:id", () => {
   /**
    * The live rule cuts one way: a move must land on a live request
    * type, but a link placed while the type was live stays put when the
-   * type is archived afterwards — an edit of its label, with the
+   * type is archived afterwards. An edit of its label, with the
    * placement re-sent unchanged as the dialog sends it, must not
    * refuse. The ST13 picker keeps the archived type on offer for
    * exactly that row.
@@ -453,7 +453,7 @@ describe("PATCH /intake-links/:id", () => {
         label: { from: "Templates", to: "Contract templates" },
         url: { from: "https://example.com/t", to: "https://example.com/templates" },
         // The placement reads as a name on both sides, and null is the
-        // portal home — an id would say nothing to a later reader.
+        // portal home. An id would say nothing to a later reader.
         placement: { from: "Contract review", to: null },
       },
     });
@@ -541,8 +541,8 @@ describe("DELETE /intake-links/:id", () => {
 describe("the request-type FK", () => {
   /**
    * Hard-deleting a request type takes its links with it, rather than
-   * setting them loose on the portal home. `on delete set null` — the
-   * rule the sibling target FKs on `request_types` follow — would
+   * setting them loose on the portal home. `on delete set null`, the
+   * rule the sibling target FKs on `request_types` follow, would
    * publish a link the Administrator scoped to one form to every
    * requester who opens the portal, and widening an audience is not a
    * demotion.

@@ -1,18 +1,18 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 /**
- * Contracts · Fields (#83), the shared CTR-016 field catalog scoped to
- * contract and global fields, per the ST11 frame of settings.pen: the
- * ListEditor in its DES-021 table variant — column header, no reorder
- * (the catalog is unordered; per-type attachment orders rendering), the
- * scope pill, the type and tag columns, and the sparkle marking fields
- * with an AI extraction prompt (CTR-008). Creation has seven dimensions
- * (two of them immutable), so add and edit go through the field-editor
- * dialog rather than an inline row; the name still renames in place
- * (DES-017). Archive is guarded but never blocked and never reassigns —
- * stored values are retained by rule (MTR-014), which the guard says
- * out loud. The loader is the client half of SET-002's gate; the API's
- * 403 is the real refusal.
+ * Contracts · Fields (#83): the shared CTR-016 field catalog scoped to
+ * one module's fields plus global ones, per the ST11 frame of
+ * settings.pen. It is the ListEditor in its DES-021 table variant: a
+ * column header, no reorder (the catalog is unordered; per-type
+ * attachment orders rendering), the scope pill, the type and tag
+ * columns, and the sparkle marking Fields with an AI extraction prompt
+ * (CTR-008). Creation has seven dimensions (two of them immutable), so
+ * add and edit go through the field-editor dialog rather than an inline
+ * row; the name still renames in place (DES-017). Archive is guarded
+ * but never blocked and never reassigns. Stored values are retained by
+ * rule (MTR-014), which the guard says out loud. The loader is the
+ * client half of SET-002's gate; the API's 403 is the real refusal.
  */
 
 import { useRef, useState, type ReactNode } from "react";
@@ -67,11 +67,11 @@ const FIELD_TYPES = [
 ] as const;
 type FieldType = (typeof FIELD_TYPES)[number];
 
-/** The select types — the only ones that carry an options list. */
+/** The select types, the only ones that carry an options list. */
 const SELECT_TYPES = new Set<FieldType>(["single_select", "multi_select"]);
 
-/** The scopes this pane's picker offers (CTR-016): matter and entity
- * join with their milestones. */
+/** The scopes this pane's picker offers (CTR-016). Entity joins with
+ * its milestone. */
 type ModuleScope = "contract" | "matter";
 type Scope = ModuleScope | "global";
 
@@ -556,7 +556,7 @@ function ArchiveFieldDialog({
   module: ModuleScope;
   onOpenChange: (open: boolean) => void;
   onArchived: (row: FieldRow) => void;
-  /** Where focus lands after a successful archive — the row's archive
+  /** Where focus lands after a successful archive. The row's archive
    * button unmounts with the row, so the default restore has no home. */
   onArchivedCloseFocus: () => void;
 }>) {
@@ -623,8 +623,8 @@ function ArchiveFieldDialog({
             <TriangleAlert size={16} aria-hidden="true" className="mt-0.5 shrink-0" />
             {/* Fields never reassign and never block: everything is
                 retained by rule (MTR-014), which is the whole message.
-                M8 and M22 added record values to this same count; the
-                copy deliberately calls every source "uses". */}
+                M8 and M22 added record values to this same count, but
+                the copy still reads it as type attachments. */}
             <p>
               <FormattedMessage
                 id="settings.contractFields.archiveWarning"
@@ -683,8 +683,8 @@ function SettingsFieldsPage({
   const [archiveTarget, setArchiveTarget] = useState<FieldRow | null>(null);
   const listRef = useRef<HTMLUListElement>(null);
 
-  // The catalog is unordered (no display order — attachment order rules
-  // rendering once types attach fields); the list keeps creation order.
+  // The catalog is unordered (no display order; attachment order rules
+  // rendering once types attach fields). The list keeps creation order.
   const live = rows.filter((row) => !row.archivedAt);
   const archived = rows.filter((row) => row.archivedAt);
 
