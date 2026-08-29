@@ -21,6 +21,7 @@ import {
   DOCUMENT_REPOSITORY_KINDS,
   DOCUMENT_REPOSITORY_SORT_KEYS,
   documentLandingPath,
+  documentOwnerReference,
   documentRecordReference,
   documentRepositoryFilters,
   readDocumentOptions,
@@ -598,7 +599,7 @@ function RecentDocuments({ documents }: Readonly<{ documents: RepositoryDocument
                   id="documents.list.owner"
                   defaultMessage="{reference} · {title}"
                   values={{
-                    reference: `${document.owner.kind === "contract" ? "C" : "M"}-${String(document.owner.number)}`,
+                    reference: documentOwnerReference(document.owner),
                     title: document.owner.title,
                   }}
                 />

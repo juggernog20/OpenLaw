@@ -351,6 +351,15 @@ interface RowContext {
   onDelete: (document: ContractDocument) => void;
 }
 
+function supportsDesignations(owner: DocumentRecord["entityType"]): boolean {
+  switch (owner) {
+    case "contract":
+      return true;
+    case "matter":
+      return false;
+  }
+}
+
 export function DocumentsCard({
   documents,
   folders,
@@ -1321,7 +1330,7 @@ export function DocumentsCard({
   /** Everything a document row draws from, built once and handed to
    * every listing — the record root's and each open folder's. */
   const rowContext: RowContext = {
-    designations: record.entityType === "contract",
+    designations: supportsDesignations(record.entityType),
     frozen,
     supportingUploads,
     showActionColumn,

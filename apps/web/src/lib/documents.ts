@@ -18,6 +18,7 @@
  */
 
 import type { paths } from "@openlaw/api-client";
+import { resolveDocumentOwner, type DocumentOwner } from "@openlaw/shared";
 import type { IntlShape } from "react-intl";
 import { api } from "./api";
 // The separator a folder path is written with on the wire, taken from
@@ -85,7 +86,7 @@ export const DOCUMENT_REPOSITORY_SORT_KEYS = [
 ] as const;
 
 export interface DocumentRepositoryFilters {
-  owner: "" | "contract" | "matter";
+  owner: "" | DocumentOwner;
   record: string;
   folder: string;
   format: "" | DocumentRepositoryFormat;
@@ -123,24 +124,45 @@ export function documentRepositoryFilters(
 
 export function documentRecordReference(
   reference: string,
-): { entityType: "contract" | "matter"; number: number } | null {
+): { entityType: DocumentOwner; number: number } | null {
   const match = /^([CM])-([1-9]\d*)$/.exec(reference);
   if (!match?.[2]) return null;
   const number = Number(match[2]);
   if (!Number.isSafeInteger(number) || number > 2_147_483_647) return null;
-  return { entityType: match[1] === "C" ? "contract" : "matter", number };
+  const owner = resolveDocumentOwner({
+    contract: match[1] === "C" ? number : null,
+    matter: match[1] === "M" ? number : null,
+  });
+  return { entityType: owner.kind, number: owner.value };
+}
+
+export function documentOwnerReference(owner: { kind: DocumentOwner; number: number }): string {
+  switch (owner.kind) {
+    case "contract":
+      return `C-${String(owner.number)}`;
+    case "matter":
+      return `M-${String(owner.number)}`;
+  }
 }
 
 /** The M25 landing address reused by repository rows. */
 export function documentLandingPath(document: RepositoryDocument): string {
   const owner = document.owner;
-  const root = owner.kind === "contract" ? "/contracts" : "/matters";
+  let root: string;
+  switch (owner.kind) {
+    case "contract":
+      root = "/contracts";
+      break;
+    case "matter":
+      root = "/matters";
+      break;
+  }
   return `${root}/${String(owner.number)}/documents?doc=${encodeURIComponent(document.id)}&version=${encodeURIComponent(document.currentVersion.id)}`;
 }
 
 /** The record whose paper the shared Documents section is drawing. */
 export interface DocumentRecord {
-  entityType: "contract" | "matter";
+  entityType: DocumentOwner;
   number: number;
 }
 
@@ -493,7 +515,12 @@ export function uploadRecordDocument(
   record: DocumentRecord,
   draft: DocumentUploadDraft,
 ): Promise<UploadOutcome> {
-  return send(`/api/v1/${record.entityType}s/${record.number}/documents`, draft);
+  switch (record.entityType) {
+    case "contract":
+      return uploadContractDocument(record.number, draft);
+    case "matter":
+      return send(`/api/v1/matters/${record.number}/documents`, draft);
+  }
 }
 
 /**
@@ -709,28 +736,31 @@ export async function readRecordDocuments(
   cursor?: string,
   folder?: string,
 ): Promise<PaperOutcome> {
-  if (record.entityType === "contract") {
-    return readContractDocuments(record.number, includeArchived, cursor, folder);
+  switch (record.entityType) {
+    case "contract":
+      return readContractDocuments(record.number, includeArchived, cursor, folder);
+    case "matter": {
+      const result = await api
+        .GET("/api/v1/matters/{number}/documents", {
+          params: {
+            path: { number: record.number },
+            query: {
+              ...(includeArchived ? { includeArchived: "true" as const } : {}),
+              ...(cursor ? { cursor } : {}),
+              ...(folder ? { folder } : {}),
+            },
+          },
+        })
+        .catch(() => undefined);
+      return result?.data
+        ? {
+            ok: true,
+            documents: result.data.documents,
+            nextCursor: result.data.nextCursor,
+          }
+        : { ok: false, ...(await problem(result)) };
+    }
   }
-  const result = await api
-    .GET("/api/v1/matters/{number}/documents", {
-      params: {
-        path: { number: record.number },
-        query: {
-          ...(includeArchived ? { includeArchived: "true" as const } : {}),
-          ...(cursor ? { cursor } : {}),
-          ...(folder ? { folder } : {}),
-        },
-      },
-    })
-    .catch(() => undefined);
-  return result?.data
-    ? {
-        ok: true,
-        documents: result.data.documents,
-        nextCursor: result.data.nextCursor,
-      }
-    : { ok: false, ...(await problem(result)) };
 }
 
 /** A search landing that can seed the doc panel without teaching the

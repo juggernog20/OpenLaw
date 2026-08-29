@@ -18,6 +18,7 @@ import {
   documentVersionText,
   eq,
   gte,
+  isNotNull,
   isNull,
   lt,
   matters,
@@ -27,10 +28,22 @@ import {
   type Db,
   type SQL,
 } from "@openlaw/db";
-import { SORT_DIRECTIONS, type SortDirection } from "@openlaw/shared";
+import {
+  DOCUMENT_OWNER_KINDS,
+  SORT_DIRECTIONS,
+  resolveDocumentOwner,
+  type DocumentOwner,
+  type SortDirection,
+} from "@openlaw/shared";
 import { documentRepositoryScope, requireDocumentReader } from "../../lib/document-access.js";
 import { problemResponse } from "../../lib/problem.js";
 import { renderFamilySql } from "../../lib/render-family.js";
+import {
+  documentOwnerCase,
+  documentOwnerReferenceSql,
+  documentOwnerSql,
+  parseDocumentOwnerReference,
+} from "./owner.js";
 
 const DEFAULT_LIMIT = 50;
 const MAX_LIMIT = 100;
@@ -58,7 +71,7 @@ const RecordReferenceSchema = z
 
 const RepositoryQuerySchema = z
   .object({
-    owner: z.enum(["contract", "matter"]).optional(),
+    owner: z.enum(DOCUMENT_OWNER_KINDS).optional(),
     record: RecordReferenceSchema.optional(),
     folder: z.string().min(1).max(64).optional(),
     counterparty: z.string().min(1).max(64).optional(),
@@ -97,7 +110,7 @@ const RepositoryRowSchema = z.object({
   isConfidential: z.boolean(),
   archivedAt: z.iso.datetime({ offset: true }).nullable(),
   owner: z.object({
-    kind: z.enum(["contract", "matter"]),
+    kind: z.enum(DOCUMENT_OWNER_KINDS),
     number: z.int().positive(),
     title: z.string(),
   }),
@@ -118,7 +131,7 @@ const RepositoryRowSchema = z.object({
 const CounterpartyOptionSchema = z.object({ id: z.string(), name: z.string() });
 const RecordOptionSchema = z.object({
   reference: RecordReferenceSchema,
-  kind: z.enum(["contract", "matter"]),
+  kind: z.enum(DOCUMENT_OWNER_KINDS),
   number: z.int().positive(),
   title: z.string(),
 });
@@ -135,26 +148,17 @@ const currentVersion = sql`${documentVersions.versionNumber} = (
   where current_version.document_id = ${documents.id}
 )`;
 
-const ownerReference = sql<string>`concat(
-  case when ${documents.contractId} is not null then 'C-' else 'M-' end,
-  lpad(coalesce(${contracts.number}, ${matters.number})::text, 10, '0')
-)`;
+const ownerReference = documentOwnerReferenceSql(true);
 const repositoryFormat = sql<string>`replace(
   ${renderFamilySql(documentVersions.mimeType, documentVersions.originalFilename)},
   'presentation',
   'powerpoint'
 )`;
 const repositoryTitle = sql<string>`lower(coalesce(${documentVersionText.emailSubject}, ${documents.title}))`;
-const recordKind = sql<"contract" | "matter">`case
-  when ${documents.contractId} is not null then 'contract'
-  else 'matter'
-end`;
-const recordNumber = sql<number>`coalesce(${contracts.number}, ${matters.number})`;
-const recordTitle = sql<string>`coalesce(${contracts.title}, ${matters.title})`;
-const recordReference = sql<string>`concat(
-  case when ${documents.contractId} is not null then 'C-' else 'M-' end,
-  coalesce(${contracts.number}, ${matters.number})::text
-)`;
+const recordKind = documentOwnerCase<DocumentOwner>((owner) => owner.kindSql);
+const recordNumber = documentOwnerCase((owner) => sql<number>`${owner.number}`);
+const recordTitle = documentOwnerCase((owner) => sql<string>`${owner.title}`);
+const recordReference = documentOwnerReferenceSql(false);
 
 const SORTS: Record<DocumentSortKey, SQL> = {
   title: repositoryTitle,
@@ -211,10 +215,8 @@ function furtherDownThan(cursor: string, scope: SQL | undefined, sort: SortReque
 
 function recordPredicate(reference: string | undefined): SQL | undefined {
   if (!reference) return undefined;
-  const number = Number(reference.slice(2));
-  return reference.startsWith("C-")
-    ? and(eq(documents.contractId, contracts.id), eq(contracts.number, number))
-    : and(eq(documents.matterId, matters.id), eq(matters.number, number));
+  const { owner, number } = parseDocumentOwnerReference(reference);
+  return and(eq(owner.documentOwnerId, owner.recordId), eq(owner.number, number));
 }
 
 function counterpartyPredicate(counterpartyId: string | undefined): SQL | undefined {
@@ -284,9 +286,19 @@ function selectRepository(db: Db) {
 type RepositoryDbRow = Awaited<ReturnType<typeof selectRepository>>[number];
 
 function toRepositoryRow(row: RepositoryDbRow): z.infer<typeof RepositoryRowSchema> {
-  const contractOwned = row.contractId !== null;
-  const ownerNumber = contractOwned ? row.contractNumber : row.matterNumber;
-  const ownerTitle = contractOwned ? row.contractTitle : row.matterTitle;
+  const owner = resolveDocumentOwner({ contract: row.contractId, matter: row.matterId });
+  let ownerNumber: number | null;
+  let ownerTitle: string | null;
+  switch (owner.kind) {
+    case "contract":
+      ownerNumber = row.contractNumber;
+      ownerTitle = row.contractTitle;
+      break;
+    case "matter":
+      ownerNumber = row.matterNumber;
+      ownerTitle = row.matterTitle;
+      break;
+  }
   if (ownerNumber === null || ownerTitle === null) {
     throw new Error(`Document ${row.id} has no readable owning record.`);
   }
@@ -297,7 +309,7 @@ function toRepositoryRow(row: RepositoryDbRow): z.infer<typeof RepositoryRowSche
     isConfidential: row.isConfidential,
     archivedAt: row.archivedAt?.toISOString() ?? null,
     owner: {
-      kind: contractOwned ? "contract" : "matter",
+      kind: owner.kind,
       number: ownerNumber,
       title: ownerTitle,
     },
@@ -444,10 +456,9 @@ export const documentRepositoryRoutes: FastifyPluginAsyncZod = async (app) => {
         .where(
           and(
             scope,
-            request.query.owner === "contract"
-              ? sql`${documents.contractId} is not null`
-              : undefined,
-            request.query.owner === "matter" ? sql`${documents.matterId} is not null` : undefined,
+            request.query.owner === undefined
+              ? undefined
+              : isNotNull(documentOwnerSql(request.query.owner).documentOwnerId),
             recordPredicate(request.query.record),
             counterpartyPredicate(request.query.counterparty),
             request.query.uploader

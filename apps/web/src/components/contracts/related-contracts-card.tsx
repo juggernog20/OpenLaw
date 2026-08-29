@@ -28,6 +28,7 @@ import { useRecord } from "../record-context";
 import { Link } from "react-router";
 import { defineMessages, FormattedMessage, useIntl, type MessageDescriptor } from "react-intl";
 import { Button } from "../ui/button";
+import { RestrictedRecordCell } from "../restricted-record-cell";
 import { contractReference, STAGE_PILL } from "../../lib/contracts";
 import {
   removeRelation,
@@ -108,10 +109,12 @@ function RelationRow({
   const intl = useIntl();
   if (entry.restricted) {
     return (
-      <li className="py-1 text-sm text-muted">
-        <FormattedMessage
-          id="contracts.relations.restricted"
-          defaultMessage="Restricted contract"
+      <li className="py-1">
+        <RestrictedRecordCell
+          label={{
+            id: "contracts.relations.restricted",
+            defaultMessage: "Restricted contract",
+          }}
         />
       </li>
     );

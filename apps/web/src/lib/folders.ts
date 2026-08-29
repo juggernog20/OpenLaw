@@ -145,13 +145,18 @@ export async function readContractFolders(contractNumber: number): Promise<Folde
 }
 
 export async function readRecordFolders(record: DocumentRecord): Promise<FoldersOutcome> {
-  if (record.entityType === "contract") return readContractFolders(record.number);
-  const result = await api
-    .GET("/api/v1/matters/{number}/folders", {
-      params: { path: { number: record.number } },
-    })
-    .catch(() => undefined);
-  return foldersOutcome(result);
+  switch (record.entityType) {
+    case "contract":
+      return readContractFolders(record.number);
+    case "matter": {
+      const result = await api
+        .GET("/api/v1/matters/{number}/folders", {
+          params: { path: { number: record.number } },
+        })
+        .catch(() => undefined);
+      return foldersOutcome(result);
+    }
+  }
 }
 
 /** Creates a folder on the record, at the root or inside another one. */
@@ -172,14 +177,19 @@ export async function createRecordFolder(
   record: DocumentRecord,
   folder: Readonly<{ name: string; parentId?: string }>,
 ): Promise<FoldersOutcome> {
-  if (record.entityType === "contract") return createContractFolder(record.number, folder);
-  const result = await api
-    .POST("/api/v1/matters/{number}/folders", {
-      params: { path: { number: record.number } },
-      body: folder,
-    })
-    .catch(() => undefined);
-  return foldersOutcome(result);
+  switch (record.entityType) {
+    case "contract":
+      return createContractFolder(record.number, folder);
+    case "matter": {
+      const result = await api
+        .POST("/api/v1/matters/{number}/folders", {
+          params: { path: { number: record.number } },
+          body: folder,
+        })
+        .catch(() => undefined);
+      return foldersOutcome(result);
+    }
+  }
 }
 
 /**
@@ -220,19 +230,22 @@ export async function recreateRecordFolderPath(
   record: DocumentRecord,
   folder: Readonly<{ path: readonly string[]; parentId?: string }>,
 ): Promise<FoldersOutcome> {
-  if (record.entityType === "contract") {
-    return recreateContractFolderPath(record.number, folder);
+  switch (record.entityType) {
+    case "contract":
+      return recreateContractFolderPath(record.number, folder);
+    case "matter": {
+      const result = await api
+        .POST("/api/v1/matters/{number}/folders", {
+          params: { path: { number: record.number } },
+          body: {
+            path: folder.path.join(PATH_SEPARATOR),
+            ...(folder.parentId ? { parentId: folder.parentId } : {}),
+          },
+        })
+        .catch(() => undefined);
+      return foldersOutcome(result);
+    }
   }
-  const result = await api
-    .POST("/api/v1/matters/{number}/folders", {
-      params: { path: { number: record.number } },
-      body: {
-        path: folder.path.join(PATH_SEPARATOR),
-        ...(folder.parentId ? { parentId: folder.parentId } : {}),
-      },
-    })
-    .catch(() => undefined);
-  return foldersOutcome(result);
 }
 
 /**

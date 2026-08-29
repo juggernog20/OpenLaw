@@ -115,6 +115,12 @@ import {
   type Matter,
   type Transaction,
 } from "@openlaw/db";
+import {
+  DOCUMENT_OWNER_KINDS,
+  resolveDocumentOwner,
+  type DocumentOwner,
+  type ResolvedDocumentOwner,
+} from "@openlaw/shared";
 import { requireRole, type AuthenticatedUser } from "../../auth/guards.js";
 import { recordActivity, RECORD_ACTIVITY_TIER } from "../../lib/activity.js";
 import {
@@ -198,13 +204,46 @@ interface FolderRow {
   updatedAt: Date;
 }
 
-export interface FolderOwner {
-  type: "contract" | "matter";
-  id: string;
-}
+export type FolderOwner = ResolvedDocumentOwner<string>;
 
 function folderOwner(owner: string | FolderOwner): FolderOwner {
-  return typeof owner === "string" ? { type: "contract", id: owner } : owner;
+  return typeof owner === "string" ? { kind: "contract", value: owner } : owner;
+}
+
+function folderScope(owner: FolderOwner): ReturnType<typeof eq> {
+  switch (owner.kind) {
+    case "contract":
+      return eq(documentFolders.contractId, owner.value);
+    case "matter":
+      return eq(documentFolders.matterId, owner.value);
+  }
+}
+
+function documentScope(owner: FolderOwner): ReturnType<typeof eq> {
+  switch (owner.kind) {
+    case "contract":
+      return eq(documents.contractId, owner.value);
+    case "matter":
+      return eq(documents.matterId, owner.value);
+  }
+}
+
+function folderOwnerValues(owner: FolderOwner) {
+  switch (owner.kind) {
+    case "contract":
+      return { contractId: owner.value } as const;
+    case "matter":
+      return { matterId: owner.value } as const;
+  }
+}
+
+function folderReachScope(owner: DocumentOwner, db: Executor, user: AuthenticatedUser) {
+  switch (owner) {
+    case "contract":
+      return and(isNotNull(documentFolders.contractId), contractTeamScope(db, user));
+    case "matter":
+      return and(isNotNull(documentFolders.matterId), matterTeamScope(db, user));
+  }
 }
 
 /**
@@ -230,11 +269,7 @@ async function foldersOf(db: Executor, owner: string | FolderOwner): Promise<Fol
       updatedAt: documentFolders.updatedAt,
     })
     .from(documentFolders)
-    .where(
-      record.type === "contract"
-        ? eq(documentFolders.contractId, record.id)
-        : eq(documentFolders.matterId, record.id),
-    )
+    .where(folderScope(record))
     .orderBy(asc(sql`lower(${documentFolders.name})`), asc(documentFolders.id));
 }
 
@@ -577,8 +612,8 @@ export async function findOrCreateFolderPath(
 ): Promise<ResolvedFolder | null> {
   const owner: FolderOwner =
     "matterTypeId" in contract
-      ? { type: "matter", id: contract.id }
-      : { type: "contract", id: contract.id };
+      ? { kind: "matter", value: contract.id }
+      : { kind: "contract", value: contract.id };
   const tree = treeOf(await foldersOf(tx, owner));
   let at = folderIn(tree, destination.folderId);
   // Asked once, of the whole chain, before anything is written: a path
@@ -597,7 +632,7 @@ export async function findOrCreateFolderPath(
     const [created] = await tx
       .insert(documentFolders)
       .values({
-        ...(owner.type === "contract" ? { contractId: owner.id } : { matterId: owner.id }),
+        ...folderOwnerValues(owner),
         parentId: at?.id ?? null,
         name: segment,
       })
@@ -771,10 +806,7 @@ export const documentFoldersRoutes: FastifyPluginAsyncZod = async (app) => {
       .where(
         and(
           eq(documentFolders.id, folderId),
-          or(
-            and(isNotNull(documentFolders.contractId), contractTeamScope(db, user)),
-            and(isNotNull(documentFolders.matterId), matterTeamScope(db, user)),
-          ),
+          or(...DOCUMENT_OWNER_KINDS.map((owner) => folderReachScope(owner, db, user))),
         ),
       )
       .limit(1);
@@ -797,16 +829,22 @@ export const documentFoldersRoutes: FastifyPluginAsyncZod = async (app) => {
       [row] = await query;
       if (!row) return null;
     }
-    const contractOwned = row.contractId !== null;
+    const owner = resolveDocumentOwner({ contract: row.contractId, matter: row.matterId });
+    let ownerArchivedAt: Date | null;
+    switch (owner.kind) {
+      case "contract":
+        ownerArchivedAt = row.contractArchivedAt;
+        break;
+      case "matter":
+        ownerArchivedAt = row.matterArchivedAt;
+        break;
+    }
     return {
       id: row.id,
       name: row.name,
       parentId: row.parentId,
-      owner: {
-        type: contractOwned ? "contract" : "matter",
-        id: (row.contractId ?? row.matterId)!,
-      },
-      ownerArchivedAt: contractOwned ? row.contractArchivedAt : row.matterArchivedAt,
+      owner,
+      ownerArchivedAt,
     };
   }
 
@@ -840,9 +878,7 @@ export const documentFoldersRoutes: FastifyPluginAsyncZod = async (app) => {
       .from(documents)
       .where(
         and(
-          record.type === "contract"
-            ? eq(documents.contractId, record.id)
-            : eq(documents.matterId, record.id),
+          documentScope(record),
           isNotNull(documents.folderId),
           isNull(documents.archivedAt),
           documentAudienceScope(db, user),
@@ -911,7 +947,7 @@ export const documentFoldersRoutes: FastifyPluginAsyncZod = async (app) => {
     if (folder.ownerArchivedAt) {
       throw httpError(
         409,
-        `This ${folder.owner.type} is archived. Restore it before changing its folders.`,
+        `This ${folder.owner.kind} is archived. Restore it before changing its folders.`,
       );
     }
   }
@@ -1087,7 +1123,7 @@ export const documentFoldersRoutes: FastifyPluginAsyncZod = async (app) => {
     async (request) => {
       const matter = await reachedMatter(app.db, request.user, request.params.number);
       if (!matter) throw httpError(404, NO_MATTER);
-      return foldersEnvelope(app.db, request.user, { type: "matter", id: matter.id });
+      return foldersEnvelope(app.db, request.user, { kind: "matter", value: matter.id });
     },
   );
 
@@ -1119,7 +1155,7 @@ export const documentFoldersRoutes: FastifyPluginAsyncZod = async (app) => {
           });
           assertOpenMatter(matter);
           await findOrCreateFolderPath(tx, matter, { folderId: parentId ?? null, path });
-          return foldersEnvelope(tx, request.user, { type: "matter", id: matter.id });
+          return foldersEnvelope(tx, request.user, { kind: "matter", value: matter.id });
         });
         return reply.status(201).send(recreated);
       }
@@ -1128,7 +1164,7 @@ export const documentFoldersRoutes: FastifyPluginAsyncZod = async (app) => {
         const matter = await reachedMatter(tx, request.user, request.params.number, { lock: true });
         assertOpenMatter(matter);
         const name = folderName(rawName!);
-        const owner = { type: "matter", id: matter.id } as const;
+        const owner = { kind: "matter", value: matter.id } as const;
         const tree = treeOf(await foldersOf(tx, owner));
         const parent = folderIn(tree, parentId ?? null);
         assertNameFree(tree, parent?.id ?? null, name);
@@ -1234,8 +1270,8 @@ export const documentFoldersRoutes: FastifyPluginAsyncZod = async (app) => {
         // writes no misleading from==to entry.
         if (renamed) {
           await recordActivity(tx, {
-            entityType: target.owner.type,
-            entityId: target.owner.id,
+            entityType: target.owner.kind,
+            entityId: target.owner.value,
             actorId: request.user.id,
             action: "folder.renamed",
             visibility: RECORD_ACTIVITY_TIER,
@@ -1244,8 +1280,8 @@ export const documentFoldersRoutes: FastifyPluginAsyncZod = async (app) => {
         }
         if (moved) {
           await recordActivity(tx, {
-            entityType: target.owner.type,
-            entityId: target.owner.id,
+            entityType: target.owner.kind,
+            entityId: target.owner.value,
             actorId: request.user.id,
             action: "folder.moved",
             visibility: RECORD_ACTIVITY_TIER,
@@ -1332,8 +1368,8 @@ export const documentFoldersRoutes: FastifyPluginAsyncZod = async (app) => {
           .where(eq(documents.folderId, target.id));
         await tx.delete(documentFolders).where(eq(documentFolders.id, target.id));
         await recordActivity(tx, {
-          entityType: target.owner.type,
-          entityId: target.owner.id,
+          entityType: target.owner.kind,
+          entityId: target.owner.value,
           actorId: request.user.id,
           action: "folder.deleted",
           visibility: RECORD_ACTIVITY_TIER,
