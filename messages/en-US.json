@@ -2507,6 +2507,9 @@
   "documents.kind": {
     "defaultMessage": "{kind, select, draft_ours {Draft · ours} draft_theirs {Draft · theirs} redline_theirs {Redline · theirs} redline_ours {Redline · ours} executed {Executed} amendment {Amendment} generated_redline {Generated redline} other {Unknown}}"
   },
+  "documents.list.column.actions": {
+    "defaultMessage": "Actions"
+  },
   "documents.list.column.format": {
     "defaultMessage": "Format"
   },
@@ -2590,6 +2593,21 @@
   },
   "documents.primary": {
     "defaultMessage": "Primary"
+  },
+  "documents.recent.open": {
+    "defaultMessage": "Open recent Document {title}"
+  },
+  "documents.recent.region": {
+    "defaultMessage": "Recent documents"
+  },
+  "documents.recent.title": {
+    "defaultMessage": "Recent"
+  },
+  "documents.restoreError": {
+    "defaultMessage": "{title} could not be restored."
+  },
+  "documents.restoreRow": {
+    "defaultMessage": "Restore {title}"
   },
   "documents.section": {
     "defaultMessage": "Documents"

@@ -14,6 +14,13 @@ const MEMBER = {
   role: "legal_team_member",
 };
 
+const CONTRIBUTOR = {
+  id: "u3",
+  email: "contributor@example.com",
+  displayName: "Blair Uploader",
+  role: "contributor",
+};
+
 function documentRow() {
   return {
     id: "document-1",
@@ -55,7 +62,12 @@ function storedView() {
       ],
       flexKey: "title",
       sort: { key: "uploaded", dir: "desc" },
-      filters: { kind: "executed", counterparty: "counterparty-1", uploader: "u2" },
+      filters: {
+        kind: "executed",
+        counterparty: "counterparty-1",
+        uploader: "u2",
+        includeArchived: true,
+      },
     },
   };
 }
@@ -72,6 +84,9 @@ function surface({
   const handler = (call: StubCall): Response | undefined => {
     if (call.url.pathname === "/api/v1/documents" && call.method === "GET") {
       const query = new URLSearchParams(call.url.search);
+      if (query.get("limit") === "5") {
+        return json(200, { documents: [documentRow()], nextCursor: null });
+      }
       queries.push(query);
       return json(200, {
         documents: emptyWhenFiltered && query.size > 0 ? [] : [documentRow()],
@@ -272,7 +287,12 @@ describe("Documents saved-view query state", () => {
     expect(lastQuery(api.queries).get("kind")).toBe("executed");
     expect(lastQuery(api.queries).get("counterparty")).toBe("counterparty-1");
     expect(lastQuery(api.queries).get("uploader")).toBe("u2");
+    expect(lastQuery(api.queries).get("includeArchived")).toBe("true");
     expect(lastQuery(api.queries).get("sort")).toBe("uploaded");
+    expect(screen.getByRole("switch", { name: "Show archived" })).toHaveAttribute(
+      "aria-checked",
+      "true",
+    );
     await waitFor(() => expect(router.state.location.search).toContain("kind=executed"));
 
     await user.selectOptions(screen.getByRole("combobox", { name: "Format" }), "pdf");
@@ -285,6 +305,23 @@ describe("Documents saved-view query state", () => {
       within(screen.getByRole("menu")).getByRole("menuitemcheckbox", { name: /^Size/ }),
     );
     expect(api.queries).toHaveLength(reads);
+  });
+
+  it("strips includeArchived from a saved view for a Contributor, in the read and the URL", async () => {
+    const user = userEvent.setup();
+    const api = surface({ views: [{ ...storedView(), isDefault: false }] });
+    stubApi({ signedIn: CONTRIBUTOR, extra: api.handler });
+    const { router } = renderAt("/documents");
+
+    await user.click(await screen.findByRole("button", { name: /Default view/ }));
+    await user.click(
+      within(screen.getByRole("menu")).getByRole("menuitemradio", { name: "Executed copies" }),
+    );
+    await expectQuery(api.queries, "kind", "executed");
+    expect(lastQuery(api.queries).get("includeArchived")).toBeNull();
+    await waitFor(() => expect(router.state.location.search).toContain("kind=executed"));
+    expect(router.state.location.search).not.toContain("includeArchived");
+    expect(screen.queryByRole("switch", { name: "Show archived" })).not.toBeInTheDocument();
   });
 
   it("picks a record from the keyboard on the candidate-picker pattern", async () => {

@@ -2481,7 +2481,7 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** Every live Document on a reached, live Contract or Matter, ordered by the current Version's upload time. Closed Matters and ended Contracts remain in the list. Confidential Documents and records are omitted before paging. */
+    /** Every Document on a reached, live Contract or Matter, ordered by the current Version's upload time. Archived Documents join live ones with includeArchived=true. Closed Matters and ended Contracts remain in the list. Confidential Documents and records are omitted before paging. */
     get: operations["listDocuments"];
     put?: never;
     post?: never;
@@ -14851,6 +14851,7 @@ export interface operations {
           | "generated_redline";
         uploadedFrom?: string;
         uploadedTo?: string;
+        includeArchived?: "true" | "false";
         sort?: "title" | "owner" | "kind" | "format" | "size" | "uploader" | "uploaded";
         dir?: "asc" | "desc";
         cursor?: string;

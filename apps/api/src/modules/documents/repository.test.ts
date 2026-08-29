@@ -342,6 +342,26 @@ describe("the Document repository", () => {
     expect(titles).not.toContain("Paper on archived matter");
   });
 
+  it("draws archived Documents beside live ones only when includeArchived is true", async () => {
+    const defaultTitles = (await list()).documents.map((row) => row.title);
+    const withArchived = await list("?includeArchived=true");
+    const archived = withArchived.documents.find((row) => row.title === "Archived document");
+
+    expect(defaultTitles).not.toContain("Archived document");
+    expect(archived).toEqual(
+      expect.objectContaining({
+        id: ids.get("Archived document"),
+        archivedAt: "2026-08-20T00:00:00.000Z",
+      }),
+    );
+    expect(withArchived.documents.map((row) => row.title)).not.toContain(
+      "Paper on archived contract",
+    );
+    expect(withArchived.documents.map((row) => row.title)).not.toContain(
+      "Paper on archived matter",
+    );
+  });
+
   it("rejects a limit above 100", async () => {
     const response = await harness.app.inject({
       method: "GET",

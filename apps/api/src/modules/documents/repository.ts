@@ -63,6 +63,7 @@ const RepositoryQuerySchema = z
     kind: z.enum(DOCUMENT_VERSION_KINDS).optional(),
     uploadedFrom: z.iso.date().optional(),
     uploadedTo: z.iso.date().optional(),
+    includeArchived: z.enum(["true", "false"]).optional(),
     sort: z.enum(DOCUMENT_SORT_KEYS).optional(),
     dir: z.enum(SORT_DIRECTIONS).optional(),
     cursor: CursorSchema.optional(),
@@ -222,8 +223,15 @@ function counterpartyPredicate(counterpartyId: string | undefined): SQL | undefi
   )`;
 }
 
-function liveRepositoryScope(db: Db, user: Parameters<typeof documentRepositoryScope>[1]): SQL {
-  return and(isNull(documents.archivedAt), documentRepositoryScope(db, user))!;
+function repositoryScope(
+  db: Db,
+  user: Parameters<typeof documentRepositoryScope>[1],
+  includeArchived = false,
+): SQL {
+  return and(
+    includeArchived ? undefined : isNull(documents.archivedAt),
+    documentRepositoryScope(db, user),
+  )!;
 }
 
 function selectRepository(db: Db) {
@@ -327,7 +335,7 @@ export const documentRepositoryRoutes: FastifyPluginAsyncZod = async (app) => {
       },
     },
     async (request) => {
-      const scope = liveRepositoryScope(app.db, request.user);
+      const scope = repositoryScope(app.db, request.user);
       const repositoryOwners = () =>
         app.db
           .selectDistinct({
@@ -406,9 +414,10 @@ export const documentRepositoryRoutes: FastifyPluginAsyncZod = async (app) => {
       schema: {
         operationId: "listDocuments",
         summary:
-          "Every live Document on a reached, live Contract or Matter, ordered by the current " +
-          "Version's upload time. Closed Matters and ended Contracts remain in the list. " +
-          "Confidential Documents and records are omitted before paging.",
+          "Every Document on a reached, live Contract or Matter, ordered by the current " +
+          "Version's upload time. Archived Documents join live ones with includeArchived=true. " +
+          "Closed Matters and ended Contracts remain in the list. Confidential Documents and " +
+          "records are omitted before paging.",
         tags: ["documents"],
         querystring: RepositoryQuerySchema,
         response: {
@@ -424,7 +433,7 @@ export const documentRepositoryRoutes: FastifyPluginAsyncZod = async (app) => {
       const sort: SortRequest | null = request.query.sort
         ? { key: request.query.sort, dir: request.query.dir ?? "asc" }
         : null;
-      const scope = liveRepositoryScope(app.db, request.user);
+      const scope = repositoryScope(app.db, request.user, request.query.includeArchived === "true");
 
       const pageSize = request.query.limit ?? DEFAULT_LIMIT;
       const rows = await selectRepository(app.db)

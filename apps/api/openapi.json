@@ -31204,7 +31204,7 @@
     "/api/v1/documents": {
       "get": {
         "operationId": "listDocuments",
-        "summary": "Every live Document on a reached, live Contract or Matter, ordered by the current Version's upload time. Closed Matters and ended Contracts remain in the list. Confidential Documents and records are omitted before paging.",
+        "summary": "Every Document on a reached, live Contract or Matter, ordered by the current Version's upload time. Archived Documents join live ones with includeArchived=true. Closed Matters and ended Contracts remain in the list. Confidential Documents and records are omitted before paging.",
         "tags": ["documents"],
         "parameters": [
           {
@@ -31299,6 +31299,15 @@
             },
             "in": "query",
             "name": "uploadedTo",
+            "required": false
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": ["true", "false"]
+            },
+            "in": "query",
+            "name": "includeArchived",
             "required": false
           },
           {

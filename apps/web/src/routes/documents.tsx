@@ -4,6 +4,7 @@
 import { useEffect, useState } from "react";
 import {
   redirect,
+  Link,
   useLoaderData,
   useNavigate,
   type LoaderFunctionArgs,
@@ -22,6 +23,7 @@ import {
   documentRecordReference,
   documentRepositoryFilters,
   readDocumentOptions,
+  restoreDocument,
   type DocumentRepositoryFilters,
   type RepositoryDocument,
 } from "../lib/documents";
@@ -36,7 +38,8 @@ import {
   type Layout,
   type SavedView,
 } from "../lib/list-views";
-import { canReadContracts } from "../lib/roles";
+import { formatRelativeOrShort } from "../lib/format";
+import { canReadContracts, isMemberPlus } from "../lib/roles";
 import { requireUser, useSignOut } from "../lib/session";
 import { AppShell } from "../components/shell/app-shell";
 import { PageSubBar } from "../components/shell/page-subbar";
@@ -48,6 +51,7 @@ import { ManagedTable } from "../components/table/managed-table";
 import { ViewsMenu } from "../components/table/views-menu";
 import { Button } from "../components/ui/button";
 import { civilToLocalDate } from "../components/date-picker";
+import { Avatar } from "../components/avatar";
 
 type DocumentsQuery = NonNullable<paths["/api/v1/documents"]["get"]["parameters"]["query"]>;
 
@@ -61,6 +65,7 @@ const QUERY_KEYS = [
   "uploader",
   "uploadedFrom",
   "uploadedTo",
+  "includeArchived",
   "sort",
   "dir",
 ] as const;
@@ -94,6 +99,7 @@ function listQuery(layout: Layout): DocumentsQuery {
     ...(filters.uploader ? { uploader: filters.uploader } : {}),
     ...(uploadedFrom ? { uploadedFrom } : {}),
     ...(uploadedTo ? { uploadedTo } : {}),
+    ...(filters.includeArchived ? { includeArchived: "true" as const } : {}),
     ...(layout.sort
       ? { sort: layout.sort.key as DocumentsQuery["sort"], dir: layout.sort.dir }
       : {}),
@@ -102,6 +108,14 @@ function listQuery(layout: Layout): DocumentsQuery {
 
 function sameQuery(a: Layout, b: Layout): boolean {
   return JSON.stringify(listQuery(a)) === JSON.stringify(listQuery(b));
+}
+
+function hasActiveFilters(layout: Layout): boolean {
+  return Object.values(documentRepositoryFilters(layout.filters)).some(Boolean);
+}
+
+function layoutForViewer(layout: Layout, canManage: boolean): Layout {
+  return canManage ? layout : { ...layout, filters: { ...layout.filters, includeArchived: false } };
 }
 
 function querySearch(layout: Layout): string {
@@ -141,6 +155,7 @@ function layoutFromSearch(base: Layout, search: string): { layout: Layout; fromU
     const value = params.get(key) ?? "";
     if (civilToLocalDate(value)) filters[key] = value;
   }
+  if (params.get("includeArchived") === "true") filters.includeArchived = true;
   const sort = params.get("sort");
   const dir = params.get("dir");
   return {
@@ -158,6 +173,7 @@ function layoutFromSearch(base: Layout, search: string): { layout: Layout; fromU
 export async function documentsLoader({ request }: LoaderFunctionArgs) {
   const user = await requireUser();
   if (!canReadContracts(user.role)) return redirect("/");
+  const canManage = isMemberPlus(user.role);
   const [views, optionsAnswer] = await Promise.all([
     readViews(CATALOGUE.surface),
     readDocumentOptions(),
@@ -165,18 +181,28 @@ export async function documentsLoader({ request }: LoaderFunctionArgs) {
   if (!optionsAnswer.ok) throw new Error("The Document filter options could not be read.");
   const opensOn = views.find((view) => view.isDefault) ?? null;
   const stored = opensOn ? resolveLayout(CATALOGUE, opensOn.layout) : builtInLayout(CATALOGUE);
-  const { layout, fromUrl } = layoutFromSearch(stored, new URL(request.url).search);
-  const { data } = await api.GET("/api/v1/documents", { params: { query: listQuery(layout) } });
-  if (!data) throw new Error("The Document list could not be read.");
+  const parsed = layoutFromSearch(stored, new URL(request.url).search);
+  const layout = layoutForViewer(parsed.layout, canManage);
+  const [listAnswer, recentAnswer] = await Promise.all([
+    api.GET("/api/v1/documents", { params: { query: listQuery(layout) } }),
+    hasActiveFilters(layout)
+      ? Promise.resolve(null)
+      : api.GET("/api/v1/documents", { params: { query: { limit: 5 } } }),
+  ]);
+  if (!listAnswer.data || (!hasActiveFilters(layout) && !recentAnswer?.data)) {
+    throw new Error("The Document list could not be read.");
+  }
   return {
     user,
-    documents: data.documents,
-    nextCursor: data.nextCursor,
+    canManage,
+    documents: listAnswer.data.documents,
+    nextCursor: listAnswer.data.nextCursor,
+    recent: recentAnswer?.data?.documents ?? [],
     views,
     options: optionsAnswer.options,
     layout,
     activeViewId: opensOn?.id ?? null,
-    fromUrl,
+    fromUrl: parsed.fromUrl,
     loadKey: ++loads,
   };
 }
@@ -210,6 +236,7 @@ function DocumentsPageState() {
   const navigate = useNavigate();
   const signOut = useSignOut("/auth/login");
   const [rows, setRows] = useState<RepositoryDocument[]>(loaded.documents);
+  const [recent, setRecent] = useState<RepositoryDocument[]>(loaded.recent);
   const [cursor, setCursor] = useState<string | null>(loaded.nextCursor);
   const [layout, setLayout] = useState<Layout>(loaded.layout);
   const [views, setViews] = useState<SavedView[]>(loaded.views);
@@ -220,12 +247,14 @@ function DocumentsPageState() {
   const [appended, setAppended] = useState<{ count: number; from: string } | null>(null);
 
   const activeView = views.find((view) => view.id === activeViewId) ?? null;
-  const storedLayout = activeView
-    ? resolveLayout(CATALOGUE, activeView.layout)
-    : builtInLayout(CATALOGUE);
+  const storedLayout = layoutForViewer(
+    activeView ? resolveLayout(CATALOGUE, activeView.layout) : builtInLayout(CATALOGUE),
+    loaded.canManage,
+  );
   const modified = !sameLayout(layout, storedLayout);
   const filters = documentRepositoryFilters(layout.filters);
   const narrowed = Object.values(filters).some(Boolean);
+  const hasArchivedRow = rows.some((row) => row.archivedAt !== null);
 
   useEffect(() => {
     if (loaded.fromUrl) return;
@@ -234,19 +263,27 @@ function DocumentsPageState() {
   }, [loaded.fromUrl, loaded.layout, navigate]);
 
   async function commit(next: Layout, nextActiveId: string | null = activeViewId) {
-    if (sameQuery(layout, next)) {
-      setLayout(next);
+    const allowed = layoutForViewer(next, loaded.canManage);
+    if (sameQuery(layout, allowed)) {
+      setLayout(allowed);
       setActiveViewId(nextActiveId);
       return;
     }
     if (busy) return;
     setBusy(true);
     setListError(null);
-    const { data } = await api
-      .GET("/api/v1/documents", { params: { query: listQuery(next) } })
-      .catch(() => ({ data: undefined }))
-      .finally(() => setBusy(false));
-    if (!data) {
+    const nextNarrowed = hasActiveFilters(allowed);
+    const [listAnswer, recentAnswer] = await Promise.all([
+      api
+        .GET("/api/v1/documents", { params: { query: listQuery(allowed) } })
+        .catch(() => ({ data: undefined })),
+      nextNarrowed
+        ? Promise.resolve(null)
+        : api
+            .GET("/api/v1/documents", { params: { query: { limit: 5 } } })
+            .catch(() => ({ data: undefined })),
+    ]).finally(() => setBusy(false));
+    if (!listAnswer.data || (!nextNarrowed && !recentAnswer?.data)) {
       setListError(
         intl.formatMessage({
           id: "documents.listError",
@@ -255,13 +292,14 @@ function DocumentsPageState() {
       );
       return;
     }
-    setRows(data.documents);
-    setCursor(data.nextCursor);
+    setRows(listAnswer.data.documents);
+    setCursor(listAnswer.data.nextCursor);
+    setRecent(recentAnswer?.data?.documents ?? []);
     setAppended(null);
     setPageError(false);
-    setLayout(next);
+    setLayout(allowed);
     setActiveViewId(nextActiveId);
-    mirrorSearch(navigate, querySearch(next));
+    mirrorSearch(navigate, querySearch(allowed));
   }
 
   function setFilter<K extends keyof DocumentRepositoryFilters>(
@@ -300,6 +338,33 @@ function DocumentsPageState() {
     setRows((current) => [...current, ...data.documents]);
     setCursor(data.nextCursor);
     setAppended(first ? { count: data.documents.length, from: first.id } : null);
+  }
+
+  async function restoreRow(row: RepositoryDocument) {
+    if (busy) return;
+    setBusy(true);
+    setListError(null);
+    const outcome = await restoreDocument(row.id)
+      .catch(() => ({ ok: false as const, detail: undefined }))
+      .finally(() => setBusy(false));
+    if (!outcome.ok) {
+      setListError(
+        outcome.detail ??
+          intl.formatMessage(
+            {
+              id: "documents.restoreError",
+              defaultMessage: "{title} could not be restored.",
+            },
+            { title: row.title },
+          ),
+      );
+      return;
+    }
+    setRows((current) =>
+      current.map((candidate) =>
+        candidate.id === row.id ? { ...candidate, archivedAt: null } : candidate,
+      ),
+    );
   }
 
   function adopt(next: SavedView[], activeId: string | null) {
@@ -373,6 +438,7 @@ function DocumentsPageState() {
               busy={busy}
               empty={rows.length === 0}
               error={listError}
+              canManage={loaded.canManage}
               onFilter={setFilter}
               onClear={clearFilters}
             />
@@ -381,74 +447,107 @@ function DocumentsPageState() {
       }
     >
       <PageTitle title={intl.formatMessage({ id: "nav.documents", defaultMessage: "Documents" })} />
-      {rows.length === 0 ? (
-        <div className="flex flex-col items-center gap-4 rounded-card border border-border-default bg-raised px-6 py-16 text-center">
-          <FileText size={24} aria-hidden="true" className="text-subtle" />
-          <div className="flex flex-col gap-1">
-            <h2 className="text-md font-semibold">
-              {narrowed ? (
-                <FormattedMessage
-                  id="documents.list.filteredEmpty.title"
-                  defaultMessage="No documents match these filters."
-                />
-              ) : (
-                <FormattedMessage
-                  id="documents.list.empty.title"
-                  defaultMessage="Paper lives on Contracts and Matters."
-                />
-              )}
-            </h2>
-            <p className="text-base text-muted">
-              {narrowed ? (
-                <FormattedMessage
-                  id="documents.list.filteredEmpty.body"
-                  defaultMessage="Clear filters to return to the whole list."
-                />
-              ) : (
-                <FormattedMessage
-                  id="documents.list.empty.body"
-                  defaultMessage="Upload to a record and it appears here."
-                />
-              )}
-            </p>
-          </div>
-          {narrowed && (
-            <Button variant="secondary" onClick={clearFilters} disabled={busy}>
-              <FormattedMessage
-                id="documents.list.filteredEmpty.clear"
-                defaultMessage="Clear filters"
-              />
-            </Button>
-          )}
-        </div>
-      ) : (
-        <ManagedTable
-          catalogue={CATALOGUE}
-          layout={layout}
-          rows={rows}
-          rowKey={(row) => row.id}
-          onLayoutChange={(next) => void commit(next)}
-          onRowActivate={(row) => void navigate(documentLandingPath(row))}
-          focusRowKey={appended?.from}
-          foot={
-            cursor === null ? undefined : (
-              <>
-                {pageError && (
-                  <p role="alert" className="text-xs text-status-danger-fg">
-                    <FormattedMessage
-                      id="documents.list.moreError"
-                      defaultMessage="The next Documents could not be read. Try again."
-                    />
-                  </p>
+      <div className="flex flex-col gap-4">
+        {!narrowed && recent.length > 0 && <RecentDocuments documents={recent} />}
+        {rows.length === 0 ? (
+          <div className="flex flex-col items-center gap-4 rounded-card border border-border-default bg-raised px-6 py-16 text-center">
+            <FileText size={24} aria-hidden="true" className="text-subtle" />
+            <div className="flex flex-col gap-1">
+              <h2 className="text-md font-semibold">
+                {narrowed ? (
+                  <FormattedMessage
+                    id="documents.list.filteredEmpty.title"
+                    defaultMessage="No documents match these filters."
+                  />
+                ) : (
+                  <FormattedMessage
+                    id="documents.list.empty.title"
+                    defaultMessage="Paper lives on Contracts and Matters."
+                  />
                 )}
-                <Button variant="secondary" disabled={busy} onClick={() => void showMore()}>
-                  <FormattedMessage id="documents.list.more" defaultMessage="Show more" />
-                </Button>
-              </>
-            )
-          }
-        />
-      )}
+              </h2>
+              <p className="text-base text-muted">
+                {narrowed ? (
+                  <FormattedMessage
+                    id="documents.list.filteredEmpty.body"
+                    defaultMessage="Clear filters to return to the whole list."
+                  />
+                ) : (
+                  <FormattedMessage
+                    id="documents.list.empty.body"
+                    defaultMessage="Upload to a record and it appears here."
+                  />
+                )}
+              </p>
+            </div>
+            {narrowed && (
+              <Button variant="secondary" onClick={clearFilters} disabled={busy}>
+                <FormattedMessage
+                  id="documents.list.filteredEmpty.clear"
+                  defaultMessage="Clear filters"
+                />
+              </Button>
+            )}
+          </div>
+        ) : (
+          <ManagedTable
+            catalogue={CATALOGUE}
+            layout={layout}
+            rows={rows}
+            rowKey={(row) => row.id}
+            onLayoutChange={(next) => void commit(next)}
+            onRowActivate={(row) => void navigate(documentLandingPath(row))}
+            rowClassName={(row) => (row.archivedAt === null ? undefined : "opacity-60")}
+            focusRowKey={appended?.from}
+            actionsColumn={
+              hasArchivedRow && loaded.canManage
+                ? {
+                    label: intl.formatMessage({
+                      id: "documents.list.column.actions",
+                      defaultMessage: "Actions",
+                    }),
+                    width: 108,
+                    render: (row) =>
+                      row.archivedAt === null ? null : (
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          disabled={busy}
+                          aria-label={intl.formatMessage(
+                            { id: "documents.restoreRow", defaultMessage: "Restore {title}" },
+                            { title: row.title },
+                          )}
+                          onClick={() => void restoreRow(row)}
+                        >
+                          <FormattedMessage
+                            id="documents.action.restore"
+                            defaultMessage="Restore"
+                          />
+                        </Button>
+                      ),
+                  }
+                : undefined
+            }
+            foot={
+              cursor === null ? undefined : (
+                <>
+                  {pageError && (
+                    <p role="alert" className="text-xs text-status-danger-fg">
+                      <FormattedMessage
+                        id="documents.list.moreError"
+                        defaultMessage="The next Documents could not be read. Try again."
+                      />
+                    </p>
+                  )}
+                  <Button variant="secondary" disabled={busy} onClick={() => void showMore()}>
+                    <FormattedMessage id="documents.list.more" defaultMessage="Show more" />
+                  </Button>
+                </>
+              )
+            }
+          />
+        )}
+      </div>
       <p aria-live="polite" className="sr-only">
         {appended && (
           <FormattedMessage
@@ -459,5 +558,65 @@ function DocumentsPageState() {
         )}
       </p>
     </AppShell>
+  );
+}
+
+function RecentDocuments({ documents }: Readonly<{ documents: RepositoryDocument[] }>) {
+  const intl = useIntl();
+  return (
+    <section
+      aria-label={intl.formatMessage({
+        id: "documents.recent.region",
+        defaultMessage: "Recent documents",
+      })}
+      className="flex flex-col gap-2"
+    >
+      <h2 className="text-sm font-semibold text-primary">
+        <FormattedMessage id="documents.recent.title" defaultMessage="Recent" />
+      </h2>
+      <ul className="rounded-card border border-border-default bg-raised">
+        {documents.map((document, index) => (
+          <li
+            key={document.id}
+            className={index === 0 ? undefined : "border-t border-border-default"}
+          >
+            <Link
+              to={documentLandingPath(document)}
+              aria-label={intl.formatMessage(
+                {
+                  id: "documents.recent.open",
+                  defaultMessage: "Open recent Document {title}",
+                },
+                { title: document.title },
+              )}
+              className="grid min-h-11 grid-cols-[minmax(12rem,1fr)_minmax(12rem,1fr)_minmax(10rem,auto)_auto] items-center gap-4 px-4 py-2 text-sm hover:bg-hover focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-link"
+            >
+              <span className="truncate font-medium">{document.title}</span>
+              <span className="truncate text-muted">
+                <FormattedMessage
+                  id="documents.list.owner"
+                  defaultMessage="{reference} · {title}"
+                  values={{
+                    reference: `${document.owner.kind === "contract" ? "C" : "M"}-${String(document.owner.number)}`,
+                    title: document.owner.title,
+                  }}
+                />
+              </span>
+              <span className="flex min-w-0 items-center gap-2 text-muted">
+                <Avatar
+                  name={document.currentVersion.uploadedBy.displayName}
+                  image={document.currentVersion.uploadedBy.image}
+                  className="size-6"
+                />
+                <span className="truncate">{document.currentVersion.uploadedBy.displayName}</span>
+              </span>
+              <span className="whitespace-nowrap text-muted">
+                {formatRelativeOrShort(document.currentVersion.createdAt)}
+              </span>
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </section>
   );
 }

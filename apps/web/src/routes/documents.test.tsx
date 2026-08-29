@@ -62,8 +62,13 @@ function documentRow(overrides: Partial<Record<string, unknown>> = {}) {
 
 function repositoryApi(pages: Record<string, unknown>[][]) {
   let reads = 0;
+  let recentReads = 0;
   const handler = (call: StubCall): Response | undefined => {
     if (call.url.pathname !== "/api/v1/documents" || call.method !== "GET") return undefined;
+    if (call.url.searchParams.get("limit") === "5") {
+      recentReads += 1;
+      return json(200, { documents: (pages[0] ?? []).slice(0, 5), nextCursor: null });
+    }
     const page = pages[Math.min(reads, pages.length - 1)] ?? [];
     reads += 1;
     return json(200, {
@@ -71,7 +76,7 @@ function repositoryApi(pages: Record<string, unknown>[][]) {
       nextCursor: reads < pages.length ? String(page.at(-1)?.id ?? "cursor") : null,
     });
   };
-  return { handler, reads: () => reads };
+  return { handler, reads: () => reads, recentReads: () => recentReads };
 }
 
 describe("the /documents destination", () => {
@@ -114,6 +119,112 @@ describe("the /documents destination", () => {
     expect(within(row).getByText("1.4 MB")).toBeVisible();
     expect(within(row).getByText("4")).toBeVisible();
     expect(within(row).getByLabelText("Confidential")).toBeVisible();
+  });
+
+  it("renders the five-row Recent strip from the default limit=5 read", async () => {
+    const recent = Array.from({ length: 5 }, (_, index) =>
+      documentRow({
+        id: `recent-${String(index + 1)}`,
+        title: `Recent document ${String(index + 1)}`,
+        currentVersion: {
+          ...(documentRow().currentVersion as Record<string, unknown>),
+          id: `recent-version-${String(index + 1)}`,
+        },
+      }),
+    );
+    const api = repositoryApi([recent]);
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/documents");
+
+    const strip = await screen.findByRole("region", { name: "Recent documents" });
+    expect(within(strip).getAllByRole("listitem")).toHaveLength(5);
+    expect(
+      within(strip).getByRole("link", { name: "Open recent Document Recent document 1" }),
+    ).toHaveAttribute("href", "/contracts/42/documents?doc=recent-1&version=recent-version-1");
+    expect(api.recentReads()).toBe(1);
+  });
+
+  it("hides Recent and skips its read while any filter is active", async () => {
+    const api = repositoryApi([[documentRow()]]);
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/documents?format=pdf");
+
+    expect(await screen.findByRole("link", { name: "Master services agreement" })).toBeVisible();
+    expect(screen.queryByRole("region", { name: "Recent documents" })).not.toBeInTheDocument();
+    expect(api.recentReads()).toBe(0);
+  });
+
+  it("lets a Member show archived Documents and restore a row in place", async () => {
+    const archived = documentRow({
+      id: "archived-document",
+      title: "Wrong upload",
+      archivedAt: "2026-08-29T09:00:00.000Z",
+    });
+    const calls: StubCall[] = [];
+    const handler = (call: StubCall): Response | undefined => {
+      calls.push(call);
+      if (call.url.pathname === "/api/v1/documents" && call.method === "GET") {
+        if (call.url.searchParams.get("limit") === "5") {
+          return json(200, { documents: [documentRow()], nextCursor: null });
+        }
+        return json(200, {
+          documents: call.url.searchParams.get("includeArchived") === "true" ? [archived] : [],
+          nextCursor: null,
+        });
+      }
+      if (
+        call.url.pathname === "/api/v1/documents/archived-document/restore" &&
+        call.method === "POST"
+      ) {
+        return json(200, { document: archived });
+      }
+      return undefined;
+    };
+    stubApi({ signedIn: MEMBER, extra: handler });
+    renderAt("/documents");
+    const user = userEvent.setup();
+
+    const toggle = await screen.findByRole("switch", { name: "Show archived" });
+    await user.click(toggle);
+    await waitFor(() => expect(toggle).toHaveAttribute("aria-checked", "true"));
+    expect(
+      calls.some(
+        (call) =>
+          call.url.pathname === "/api/v1/documents" &&
+          call.url.searchParams.get("includeArchived") === "true",
+      ),
+    ).toBe(true);
+    expect(await screen.findByText("Archived")).toBeVisible();
+
+    await user.click(screen.getByRole("button", { name: "Restore Wrong upload" }));
+    await waitFor(() => {
+      expect(
+        screen.queryByRole("button", { name: "Restore Wrong upload" }),
+      ).not.toBeInTheDocument();
+      expect(screen.queryByText("Archived")).not.toBeInTheDocument();
+    });
+    expect(
+      calls.some(
+        (call) =>
+          call.url.pathname === "/api/v1/documents/archived-document/restore" &&
+          call.method === "POST",
+      ),
+    ).toBe(true);
+  });
+
+  it("shows Recent but no archived switch or Restore to a Contributor", async () => {
+    const archived = documentRow({
+      id: "archived-document",
+      title: "Wrong upload",
+      archivedAt: "2026-08-29T09:00:00.000Z",
+    });
+    const api = repositoryApi([[archived]]);
+    stubApi({ signedIn: CONTRIBUTOR, extra: api.handler });
+    renderAt("/documents");
+
+    expect(await screen.findByRole("region", { name: "Recent documents" })).toBeVisible();
+    expect(screen.queryByRole("switch", { name: "Show archived" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Restore Wrong upload" })).not.toBeInTheDocument();
   });
 
   it("lands Contract and Matter rows on the owning Documents tab with the current Version", async () => {

@@ -5,6 +5,8 @@ import { useEffect, useId, useRef, useState } from "react";
 import { defineMessages, FormattedMessage, useIntl } from "react-intl";
 import { X } from "lucide-react";
 import { DatePicker } from "../date-picker";
+import { Label } from "../ui/label";
+import { Switch } from "../ui/switch";
 import { CONTROL_CLASS } from "../../lib/form-controls";
 import {
   DOCUMENT_REPOSITORY_FORMATS,
@@ -20,6 +22,7 @@ import { pathOf, readRecordFolders, type ContractFolder } from "../../lib/folder
 import { cn } from "../../lib/utils";
 
 type FilterKey = keyof DocumentRepositoryFilters;
+type ChipFilterKey = Exclude<FilterKey, "includeArchived">;
 
 const MESSAGES = defineMessages({
   owner: { id: "documents.filter.owner", defaultMessage: "Owner" },
@@ -61,6 +64,7 @@ const MESSAGES = defineMessages({
     id: "documents.filter.matchedNone",
     defaultMessage: "The active filters matched no documents.",
   },
+  showArchived: { id: "documents.showArchived", defaultMessage: "Show archived" },
 });
 
 const FORMAT_MESSAGES = defineMessages({
@@ -78,6 +82,7 @@ export function DocumentFilterBar({
   busy,
   empty,
   error,
+  canManage,
   onFilter,
   onClear,
 }: Readonly<{
@@ -86,6 +91,7 @@ export function DocumentFilterBar({
   busy: boolean;
   empty: boolean;
   error: string | null;
+  canManage: boolean;
   onFilter: <K extends FilterKey>(key: K, value: DocumentRepositoryFilters[K]) => void;
   onClear: () => void;
 }>) {
@@ -145,7 +151,7 @@ export function DocumentFilterBar({
     onFilter("record", match.reference);
   }
 
-  const chips: { key: FilterKey; name: string; value: string }[] = [];
+  const chips: { key: ChipFilterKey; name: string; value: string }[] = [];
   if (filters.owner) {
     chips.push({
       key: "owner",
@@ -449,6 +455,19 @@ export function DocumentFilterBar({
             onChange={(value) => onFilter("uploadedTo", value)}
           />
         </label>
+        {canManage && (
+          <span className="flex h-8 items-center gap-2">
+            <Label htmlFor="documents-show-archived">
+              <FormattedMessage {...MESSAGES.showArchived} />
+            </Label>
+            <Switch
+              id="documents-show-archived"
+              checked={filters.includeArchived}
+              disabled={busy}
+              onCheckedChange={(next) => onFilter("includeArchived", next)}
+            />
+          </span>
+        )}
         {error && (
           <p role="alert" className="text-xs text-status-danger-fg">
             {error}
