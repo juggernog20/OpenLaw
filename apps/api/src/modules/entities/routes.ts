@@ -20,19 +20,33 @@
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
 import { z } from "zod";
 import {
+  and,
   asc,
   entities,
+  entityTypeFields,
   entityTypes,
   eq,
   isNull,
   sql,
   ENTITY_STATUSES,
   officerRoles,
+  users,
   type Entity,
 } from "@openlaw/db";
 import { requireRole } from "../../auth/guards.js";
 import { recordActivity } from "../../lib/activity.js";
+import {
+  applyCustomFields,
+  assertRequiredCustomFields,
+  AttachedCustomFieldSchema,
+  CustomFieldsInput,
+  CustomFieldsSchema,
+  selectAttachedFields,
+} from "../../lib/custom-fields.js";
+import { entityReachScope, NO_ENTITY, reachedEntity } from "../../lib/entity-access.js";
 import { httpError, problemResponse } from "../../lib/problem.js";
+import { resolveStaffRefs, StaffRequestCustomFieldRefsSchema } from "../requests/projection.js";
+import { entityRecordChildRoutes } from "./record-routes.js";
 
 /** ENT-004's access floor: the whole registry is Member+. */
 const requireMember = requireRole("administrator", "legal_team_member");
@@ -50,6 +64,10 @@ const EntityRowSchema = z.object({
   registeredAgent: z.string().nullable(),
   registeredAddress: z.string().nullable(),
   status: z.enum(ENTITY_STATUSES),
+  sharesAuthorized: z.number().int().nullable(),
+  sharesIssued: z.number().int().nullable(),
+  parValue: z.number().int().nullable(),
+  customFields: CustomFieldsSchema,
   archivedAt: z.iso.datetime().nullable(),
   createdAt: z.iso.datetime(),
   updatedAt: z.iso.datetime(),
@@ -71,10 +89,24 @@ const OfficerRoleOptionSchema = z.object({
   displayName: z.string(),
 });
 
+const PersonOptionSchema = z.object({
+  id: z.string(),
+  displayName: z.string(),
+  image: z.string().nullable(),
+  role: z.string(),
+});
+
+const EntityRecordEnvelope = z.object({
+  entity: EntityRowSchema,
+  fields: z.array(AttachedCustomFieldSchema),
+  customFieldRefs: StaffRequestCustomFieldRefsSchema,
+});
+
 const LegalNameSchema = z.string().trim().min(1).max(200);
 /** Free-text card scalars; empty strings normalize to NULL on write. */
 const CardTextSchema = z.string().trim().max(200);
 const AddressSchema = z.string().trim().max(500);
+const ShareCapitalSchema = z.number().int().nonnegative();
 
 function toRow(row: Entity, entityTypeName: string) {
   return {
@@ -89,6 +121,10 @@ function toRow(row: Entity, entityTypeName: string) {
     registeredAgent: row.registeredAgent,
     registeredAddress: row.registeredAddress,
     status: row.status,
+    sharesAuthorized: row.sharesAuthorized,
+    sharesIssued: row.sharesIssued,
+    parValue: row.parValue,
+    customFields: row.customFields ?? {},
     archivedAt: row.archivedAt?.toISOString() ?? null,
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
@@ -96,6 +132,8 @@ function toRow(row: Entity, entityTypeName: string) {
 }
 
 export const entitiesRoutes: FastifyPluginAsyncZod = async (app) => {
+  await app.register(entityRecordChildRoutes);
+
   app.get(
     "/entities",
     {
@@ -119,7 +157,12 @@ export const entitiesRoutes: FastifyPluginAsyncZod = async (app) => {
         .select({ entity: entities, entityTypeName: entityTypes.displayName })
         .from(entities)
         .innerJoin(entityTypes, eq(entities.entityTypeId, entityTypes.id))
-        .where(request.query.includeArchived === "true" ? undefined : isNull(entities.archivedAt))
+        .where(
+          and(
+            request.query.includeArchived === "true" ? undefined : isNull(entities.archivedAt),
+            entityReachScope(request.user),
+          ),
+        )
         // Case-insensitive: "iMobile Ltd" files under I, wherever the
         // default collation would put it. Creation order breaks ties.
         .orderBy(asc(sql`lower(${entities.legalName})`), asc(entities.createdAt));
@@ -169,7 +212,10 @@ export const entitiesRoutes: FastifyPluginAsyncZod = async (app) => {
           "the /officer-roles settings taxonomy stays Administrator-only",
         tags: ["entities"],
         response: {
-          200: z.object({ officerRoles: z.array(OfficerRoleOptionSchema) }),
+          200: z.object({
+            officerRoles: z.array(OfficerRoleOptionSchema),
+            users: z.array(PersonOptionSchema),
+          }),
           default: problemResponse,
         },
       },
@@ -184,7 +230,17 @@ export const entitiesRoutes: FastifyPluginAsyncZod = async (app) => {
         .from(officerRoles)
         .where(isNull(officerRoles.archivedAt))
         .orderBy(asc(officerRoles.displayOrder), asc(officerRoles.createdAt));
-      return { officerRoles: rows };
+      const people = await app.db
+        .select({
+          id: users.id,
+          displayName: users.displayName,
+          image: users.image,
+          role: users.role,
+        })
+        .from(users)
+        .where(isNull(users.archivedAt))
+        .orderBy(asc(sql`lower(${users.displayName})`), asc(users.id));
+      return { officerRoles: rows, users: people };
     },
   );
 
@@ -200,7 +256,7 @@ export const entitiesRoutes: FastifyPluginAsyncZod = async (app) => {
         tags: ["entities"],
         params: z.object({ id: z.string() }),
         response: {
-          200: z.object({ entity: EntityRowSchema }),
+          200: EntityRecordEnvelope,
           default: problemResponse,
         },
       },
@@ -210,10 +266,19 @@ export const entitiesRoutes: FastifyPluginAsyncZod = async (app) => {
         .select({ entity: entities, entityTypeName: entityTypes.displayName })
         .from(entities)
         .innerJoin(entityTypes, eq(entities.entityTypeId, entityTypes.id))
-        .where(eq(entities.id, request.params.id))
+        .where(and(eq(entities.id, request.params.id), entityReachScope(request.user)))
         .limit(1);
-      if (!row) throw httpError(404, "No entity exists with this id.");
-      return { entity: toRow(row.entity, row.entityTypeName) };
+      if (!row) throw httpError(404, NO_ENTITY);
+      const attached = await selectAttachedFields(
+        app.db,
+        entityTypeFields,
+        row.entity.entityTypeId,
+      );
+      return {
+        entity: toRow(row.entity, row.entityTypeName),
+        fields: attached,
+        customFieldRefs: await resolveStaffRefs(app.db, attached, row.entity.customFields ?? {}),
+      };
     },
   );
 
@@ -320,23 +385,22 @@ export const entitiesRoutes: FastifyPluginAsyncZod = async (app) => {
           registeredAgent: CardTextSchema.nullable().optional(),
           registeredAddress: AddressSchema.nullable().optional(),
           status: z.enum(ENTITY_STATUSES).optional(),
+          sharesAuthorized: ShareCapitalSchema.nullable().optional(),
+          sharesIssued: ShareCapitalSchema.nullable().optional(),
+          parValue: ShareCapitalSchema.nullable().optional(),
+          customFields: CustomFieldsInput.optional(),
         }),
         response: {
-          200: z.object({ entity: EntityRowSchema }),
+          200: EntityRecordEnvelope,
           default: problemResponse,
         },
       },
     },
     async (request) => {
       const body = request.body;
-      const { row, entityTypeName } = await app.db.transaction(async (tx) => {
-        const [target] = await tx
-          .select()
-          .from(entities)
-          .where(eq(entities.id, request.params.id))
-          .limit(1)
-          .for("update");
-        if (!target) throw httpError(404, "No entity exists with this id.");
+      const { row, entityTypeName, attached } = await app.db.transaction(async (tx) => {
+        const target = await reachedEntity(tx, request.user, request.params.id, { lock: true });
+        if (!target) throw httpError(404, NO_ENTITY);
         if (target.archivedAt) {
           throw httpError(409, "This entity is archived. Restore it before editing.");
         }
@@ -403,6 +467,41 @@ export const entitiesRoutes: FastifyPluginAsyncZod = async (app) => {
           changed.formedOn = { from: target.formedOn, to: body.formedOn };
         }
 
+        for (const key of ["sharesAuthorized", "sharesIssued", "parValue"] as const) {
+          const next = body[key];
+          if (next !== undefined && next !== target[key]) {
+            patch[key] = next;
+            changed[key] = { from: target[key], to: next };
+          }
+        }
+
+        const fields = await selectAttachedFields(
+          tx,
+          entityTypeFields,
+          patch.entityTypeId ?? target.entityTypeId,
+        );
+        const retyped = patch.entityTypeId !== undefined;
+        if (body.customFields !== undefined || retyped) {
+          const applied = await applyCustomFields(
+            tx,
+            fields,
+            target.customFields ?? {},
+            body.customFields ?? {},
+          );
+          if (retyped) {
+            assertRequiredCustomFields(fields, applied.values);
+          } else if (body.customFields !== undefined) {
+            assertRequiredCustomFields(
+              fields.filter((field) => field.slug in body.customFields!),
+              applied.values,
+            );
+          }
+          if (Object.keys(applied.changed).length > 0) {
+            patch.customFields = applied.values;
+            Object.assign(changed, applied.changed);
+          }
+        }
+
         // The status keeps its own audit verb (surfaces branch on it,
         // ENT-001) — it rides the same UPDATE but not the changed map.
         const statusChange =
@@ -413,7 +512,9 @@ export const entitiesRoutes: FastifyPluginAsyncZod = async (app) => {
 
         // Nothing changed: answer with the row and write no misleading
         // from==to audit entry.
-        if (Object.keys(patch).length === 0) return { row: target, entityTypeName: typeName };
+        if (Object.keys(patch).length === 0) {
+          return { row: target, entityTypeName: typeName, attached: fields };
+        }
 
         const [updated] = await tx
           .update(entities)
@@ -441,9 +542,13 @@ export const entitiesRoutes: FastifyPluginAsyncZod = async (app) => {
             payload: { legalName: legalNameNow, ...statusChange },
           });
         }
-        return { row: updated!, entityTypeName: typeName };
+        return { row: updated!, entityTypeName: typeName, attached: fields };
       });
-      return { entity: toRow(row, entityTypeName) };
+      return {
+        entity: toRow(row, entityTypeName),
+        fields: attached,
+        customFieldRefs: await resolveStaffRefs(app.db, attached, row.customFields ?? {}),
+      };
     },
   );
 
@@ -467,13 +572,8 @@ export const entitiesRoutes: FastifyPluginAsyncZod = async (app) => {
     },
     async (request) => {
       const { row, entityTypeName } = await app.db.transaction(async (tx) => {
-        const [target] = await tx
-          .select()
-          .from(entities)
-          .where(eq(entities.id, request.params.id))
-          .limit(1)
-          .for("update");
-        if (!target) throw httpError(404, "No entity exists with this id.");
+        const target = await reachedEntity(tx, request.user, request.params.id, { lock: true });
+        if (!target) throw httpError(404, NO_ENTITY);
         if (target.archivedAt) throw httpError(409, "This entity is already archived.");
 
         const [updated] = await tx
@@ -519,13 +619,8 @@ export const entitiesRoutes: FastifyPluginAsyncZod = async (app) => {
     },
     async (request) => {
       const { row, entityTypeName } = await app.db.transaction(async (tx) => {
-        const [target] = await tx
-          .select()
-          .from(entities)
-          .where(eq(entities.id, request.params.id))
-          .limit(1)
-          .for("update");
-        if (!target) throw httpError(404, "No entity exists with this id.");
+        const target = await reachedEntity(tx, request.user, request.params.id, { lock: true });
+        if (!target) throw httpError(404, NO_ENTITY);
         if (!target.archivedAt) throw httpError(409, "This entity is not archived.");
 
         const [updated] = await tx

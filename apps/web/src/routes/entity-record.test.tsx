@@ -47,6 +47,10 @@ function entityRow(overrides: Partial<Record<string, unknown>> = {}) {
     registeredAgent: "Aldgate Corporate Services Ltd",
     registeredAddress: "1 Gresham Street, London EC2V 7BX, United Kingdom",
     status: "active",
+    sharesAuthorized: null,
+    sharesIssued: null,
+    parValue: null,
+    customFields: {},
     archivedAt: null,
     createdAt: "2026-08-01T00:00:00.000Z",
     updatedAt: "2026-08-01T00:00:00.000Z",
@@ -63,7 +67,7 @@ function recordApi(initial: Record<string, unknown>) {
   const posts: string[] = [];
   const handler = (call: StubCall): Response | undefined => {
     if (call.url.pathname === "/api/v1/entities/e1" && call.method === "GET") {
-      return json(200, { entity: row });
+      return json(200, { entity: row, fields: [], customFieldRefs: { users: [], entities: [] } });
     }
     if (call.url.pathname === "/api/v1/entities/types" && call.method === "GET") {
       return json(200, { entityTypes: TYPE_OPTIONS });
@@ -76,7 +80,7 @@ function recordApi(initial: Record<string, unknown>) {
         ...body,
         ...(body.entityTypeId === "t-llc" ? { entityTypeName: "LLC" } : {}),
       };
-      return json(200, { entity: row });
+      return json(200, { entity: row, fields: [], customFieldRefs: { users: [], entities: [] } });
     }
     if (call.url.pathname === "/api/v1/entities/e1/archive" && call.method === "POST") {
       posts.push("archive");
@@ -123,6 +127,55 @@ describe("the /entities/:entityId record page", () => {
     expect(screen.getByLabelText("Registered address")).toHaveValue(
       "1 Gresham Street, London EC2V 7BX, United Kingdom",
     );
+  });
+
+  it("renders every Overview section and commits share capital per field", async () => {
+    const api = recordApi(entityRow());
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/entities/e1");
+    const user = userEvent.setup();
+
+    for (const heading of ["Registry", "Share capital", "Fields", "Officers", "Registrations"]) {
+      expect(await screen.findByRole("heading", { name: heading })).toBeInTheDocument();
+    }
+    const authorized = screen.getByLabelText("Authorized shares");
+    await user.type(authorized, "1000000");
+    await user.tab();
+    await waitFor(() => expect(api.patches).toContainEqual({ sharesAuthorized: 1_000_000 }));
+  });
+
+  it("routes all six DES-032 sections and renders placeholders beyond Overview", async () => {
+    const api = recordApi(entityRow());
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    const { router } = renderAt("/entities/e1");
+    expect(await screen.findByRole("navigation", { name: "Entity sections" })).toBeInTheDocument();
+
+    for (const tab of ["ownership", "obligations", "documents", "contracts", "matters"]) {
+      await router.navigate(`/entities/e1/${tab}`);
+      expect(
+        await screen.findByRole("heading", { name: tab[0]!.toUpperCase() + tab.slice(1) }),
+      ).toBeInTheDocument();
+      expect(screen.getByText(/later M27 ticket/)).toBeInTheDocument();
+    }
+  });
+
+  it("mounts the Activity applet with the Entity reference", async () => {
+    const api = recordApi(entityRow());
+    const activityCalls: string[] = [];
+    stubApi({
+      signedIn: MEMBER,
+      extra: (call) => {
+        if (call.url.pathname === "/api/v1/activity") {
+          activityCalls.push(call.url.search);
+          return json(200, { entries: [], nextCursor: null });
+        }
+        return api.handler(call);
+      },
+    });
+    renderAt("/entities/e1");
+    const user = userEvent.setup();
+    await user.click(await screen.findByRole("button", { name: "History" }));
+    await waitFor(() => expect(activityCalls).toEqual(["?entityType=entity&entityId=e1"]));
   });
 
   it("commits a corrected field on blur as one PATCH (DES-017) and notes Saved", async () => {
@@ -197,7 +250,11 @@ describe("the /entities/:entityId record page", () => {
       signedIn: MEMBER,
       extra: (call) => {
         if (call.url.pathname === "/api/v1/entities/e1" && call.method === "GET") {
-          return json(200, { entity: entityRow() });
+          return json(200, {
+            entity: entityRow(),
+            fields: [],
+            customFieldRefs: { users: [], entities: [] },
+          });
         }
         if (call.url.pathname === "/api/v1/entities/types" && call.method === "GET") {
           return json(200, { entityTypes: TYPE_OPTIONS });
@@ -288,7 +345,11 @@ describe("the /entities/:entityId record page", () => {
       signedIn: MEMBER,
       extra: (call) => {
         if (call.url.pathname === "/api/v1/entities/e2" && call.method === "GET") {
-          return json(200, { entity: second });
+          return json(200, {
+            entity: second,
+            fields: [],
+            customFieldRefs: { users: [], entities: [] },
+          });
         }
         return first.handler(call);
       },

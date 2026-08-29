@@ -42,6 +42,26 @@ export const ENTITY_STATUSES = exhaustiveStatusList([
 export type EntityTypeOption =
   paths["/api/v1/entities/types"]["get"]["responses"]["200"]["content"]["application/json"]["entityTypes"][number];
 
+export type EntityRecordEnvelope =
+  paths["/api/v1/entities/{id}"]["get"]["responses"]["200"]["content"]["application/json"];
+export type EntityField = EntityRecordEnvelope["fields"][number];
+export type EntityCustomFieldRefs = EntityRecordEnvelope["customFieldRefs"];
+export type OfficerOptions =
+  paths["/api/v1/entities/officer-roles"]["get"]["responses"]["200"]["content"]["application/json"];
+export type OfficerRoleOption = OfficerOptions["officerRoles"][number];
+export type EntityPersonOption = OfficerOptions["users"][number];
+export type EntityOfficer =
+  paths["/api/v1/entities/{id}/officers"]["get"]["responses"]["200"]["content"]["application/json"]["officers"][number];
+export type EntityRegistration =
+  paths["/api/v1/entities/{id}/registrations"]["get"]["responses"]["200"]["content"]["application/json"]["registrations"][number];
+export type EntityRegistrationStatus = EntityRegistration["status"];
+
+export const ENTITY_REGISTRATION_STATUSES = [
+  "active",
+  "lapsed",
+  "withdrawn",
+] as const satisfies readonly EntityRegistrationStatus[];
+
 /** EN3/EN5's status pills: active=success, dormant=warning, divested=
  * neutral (the mock's three); dissolved takes the danger pair — the
  * one terminal-negative state the mock has no row for. */

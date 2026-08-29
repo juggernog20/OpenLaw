@@ -334,6 +334,18 @@ export function stubApi(state: ApiState) {
     if (call.url.pathname === "/api/v1/entities" && call.method === "GET") {
       return json(200, { entities: [] });
     }
+    if (call.url.pathname === "/api/v1/entities/officer-roles" && call.method === "GET") {
+      return json(200, { officerRoles: [], users: [] });
+    }
+    if (/^\/api\/v1\/entities\/[^/]+\/officers$/.test(call.url.pathname) && call.method === "GET") {
+      return json(200, { officers: [] });
+    }
+    if (
+      /^\/api\/v1\/entities\/[^/]+\/registrations$/.test(call.url.pathname) &&
+      call.method === "GET"
+    ) {
+      return json(200, { registrations: [] });
+    }
     if (call.url.pathname === "/api/v1/onboarding" && call.method === "GET") {
       return json(200, state.onboarding ?? { completed: true, emailConfigured: true });
     }

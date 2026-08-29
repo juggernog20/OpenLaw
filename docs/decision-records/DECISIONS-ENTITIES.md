@@ -33,6 +33,10 @@ _None — queue cleared 2026-08-06 (ENT-001 through ENT-007)._
 - **Alternatives considered** — Deep registry now; light card + jsonb (calendar can't key off a blob).
 - **Consequences** — SCHEMA.md entities section resolved; two configurable lists (types, officer roles) join the settings inventory; `fields.module_scope` enum gains `entity` (CTR-016 revision note).
 
+### Built addendum (2026-08-29, M27/4, #576)
+
+The Entity record now reads and writes the three share-capital columns and its type-attached Fields through `PATCH /entities/:id`. Each Field commit uses the shared coercion and required-value checks, including live `user` and `entity` references. Officers now have Member+ list, create, inline update, resignation, and delete routes. Each write appends its own `entity_officer.*` Activity entry in the same transaction.
+
 ## ENT-002 — Multi-jurisdiction: registrations table
 
 - **Status** — Accepted
@@ -40,6 +44,10 @@ _None — queue cleared 2026-08-06 (ENT-001 through ENT-007)._
 - **Decision** — `entity_registrations`: one row per jurisdiction of registration/qualification — `jurisdiction`, `registration_number`, `registered_agent`, `status` (`active | lapsed | withdrawn`), timestamps. Formation jurisdiction stays on the entity; registrations cover everywhere it must stay in good standing. Renewal obligations per registration feed the compliance calendar (ENT-006).
 - **Rationale** — Per-state registration numbers, agents, and renewal dates are exactly the data a jurisdiction multi-select can't hold.
 - **Consequences** — Table in SCHEMA.md; the compliance calendar (ENT-006) references registrations.
+
+### Built addendum (2026-08-29, M27/4, #576)
+
+The Entity Overview now lists, creates, edits, and deletes registrations. The API and database both enforce `active | lapsed | withdrawn`. Each write appends its matching `entity_registration.*` Activity entry in the same transaction.
 
 ## ENT-003 — Corporate structure: full ownership graph + org chart in v1
 

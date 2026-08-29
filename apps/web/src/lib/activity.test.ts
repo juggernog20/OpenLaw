@@ -344,6 +344,41 @@ const SAMPLE_PAYLOADS: { [A in ActivityAction]: ActivityPayloadMap[A] } = {
   "entity.type_reassigned": { legalName: "Helix Labs GmbH", from: "GmbH", to: "AG" },
   "entity.archived": { legalName: "Helix Labs GmbH" },
   "entity.restored": { legalName: "Helix Labs GmbH" },
+  "entity_officer.created": {
+    legalName: "Helix Labs GmbH",
+    officerName: "Nadia Counsel",
+    role: "Director",
+    appointedOn: "2026-08-29",
+    resignedOn: null,
+    userName: "Nadia Counsel",
+  },
+  "entity_officer.updated": {
+    legalName: "Helix Labs GmbH",
+    officerName: "Nadia Counsel",
+    changed: { resignedOn: { from: null, to: "2027-08-29" } },
+  },
+  "entity_officer.deleted": {
+    legalName: "Helix Labs GmbH",
+    officerName: "Nadia Counsel",
+    role: "Director",
+  },
+  "entity_registration.created": {
+    legalName: "Helix Labs GmbH",
+    jurisdiction: "Delaware",
+    registrationNumber: "DE-44",
+    registeredAgent: "CSC",
+    status: "active",
+  },
+  "entity_registration.updated": {
+    legalName: "Helix Labs GmbH",
+    jurisdiction: "Delaware",
+    changed: { status: { from: "active", to: "lapsed" } },
+  },
+  "entity_registration.deleted": {
+    legalName: "Helix Labs GmbH",
+    jurisdiction: "Delaware",
+    registrationNumber: "DE-44",
+  },
 
   // Contract record
   "contract.created_from_request": {

@@ -221,6 +221,24 @@
   "activity.entity.updated": {
     "defaultMessage": "{actor} changed {name}"
   },
+  "activity.entityOfficer.created": {
+    "defaultMessage": "{actor} appointed {officer} as {role} on {name}"
+  },
+  "activity.entityOfficer.deleted": {
+    "defaultMessage": "{actor} removed officer {officer} from {name}"
+  },
+  "activity.entityOfficer.updated": {
+    "defaultMessage": "{actor} changed officer {officer} on {name}"
+  },
+  "activity.entityRegistration.created": {
+    "defaultMessage": "{actor} added the {jurisdiction} registration to {name}"
+  },
+  "activity.entityRegistration.deleted": {
+    "defaultMessage": "{actor} removed the {jurisdiction} registration from {name}"
+  },
+  "activity.entityRegistration.updated": {
+    "defaultMessage": "{actor} changed the {jurisdiction} registration on {name}"
+  },
   "activity.envelope.declined": {
     "defaultMessage": "This contract's envelope was declined{hasReason, select, yes { — {reason}} other {}}"
   },
@@ -2703,13 +2721,112 @@
     "defaultMessage": "Archive"
   },
   "entities.record.archivedNote": {
-    "defaultMessage": "This entity is archived — it is out of the registry list. Restore it to edit."
+    "defaultMessage": "This entity is archived. Restore it to edit."
+  },
+  "entities.record.fields.empty": {
+    "defaultMessage": "This Entity type has no Fields."
+  },
+  "entities.record.fields.title": {
+    "defaultMessage": "Fields"
+  },
+  "entities.record.none": {
+    "defaultMessage": "None"
+  },
+  "entities.record.notRecorded": {
+    "defaultMessage": "Not recorded"
+  },
+  "entities.record.officers.add": {
+    "defaultMessage": "Add officer"
+  },
+  "entities.record.officers.addConfirm": {
+    "defaultMessage": "Add"
+  },
+  "entities.record.officers.appointedOn": {
+    "defaultMessage": "Appointed on"
+  },
+  "entities.record.officers.empty": {
+    "defaultMessage": "No current officers."
+  },
+  "entities.record.officers.name": {
+    "defaultMessage": "Officer name"
+  },
+  "entities.record.officers.role": {
+    "defaultMessage": "Role"
+  },
+  "entities.record.officers.showFormer": {
+    "defaultMessage": "Show former"
+  },
+  "entities.record.officers.title": {
+    "defaultMessage": "Officers"
+  },
+  "entities.record.officers.user": {
+    "defaultMessage": "Linked user"
+  },
+  "entities.record.placeholder": {
+    "defaultMessage": "This section will arrive in a later M27 ticket."
+  },
+  "entities.record.registrations.add": {
+    "defaultMessage": "Add registration"
+  },
+  "entities.record.registrations.addConfirm": {
+    "defaultMessage": "Add"
+  },
+  "entities.record.registrations.agent": {
+    "defaultMessage": "Registered agent"
+  },
+  "entities.record.registrations.empty": {
+    "defaultMessage": "No additional registrations."
+  },
+  "entities.record.registrations.jurisdiction": {
+    "defaultMessage": "Jurisdiction"
+  },
+  "entities.record.registrations.number": {
+    "defaultMessage": "Registration number"
+  },
+  "entities.record.registrations.status": {
+    "defaultMessage": "Status"
+  },
+  "entities.record.registrations.title": {
+    "defaultMessage": "Registrations"
   },
   "entities.record.registry": {
     "defaultMessage": "Registry"
   },
   "entities.record.restore": {
     "defaultMessage": "Restore"
+  },
+  "entities.record.sections": {
+    "defaultMessage": "Entity sections"
+  },
+  "entities.record.shareCapital.authorized": {
+    "defaultMessage": "Authorized shares"
+  },
+  "entities.record.shareCapital.issued": {
+    "defaultMessage": "Issued shares"
+  },
+  "entities.record.shareCapital.parValue": {
+    "defaultMessage": "Par value (minor units)"
+  },
+  "entities.record.shareCapital.title": {
+    "defaultMessage": "Share capital"
+  },
+  "entities.record.tab.contracts": {
+    "defaultMessage": "Contracts"
+  },
+  "entities.record.tab.documents": {
+    "defaultMessage": "Documents"
+  },
+  "entities.record.tab.matters": {
+    "defaultMessage": "Matters"
+  },
+  "entities.record.tab.obligations": {
+    "defaultMessage": "Obligations"
+  },
+  "entities.record.tab.overview": {
+    "defaultMessage": "Overview"
+  },
+  "entities.record.tab.ownership": {
+    "defaultMessage": "Ownership"
   },
   "entities.register": {
     "defaultMessage": "Register entity"

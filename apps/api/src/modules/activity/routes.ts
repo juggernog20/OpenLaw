@@ -73,6 +73,7 @@ import {
 import { requireRole } from "../../auth/guards.js";
 import { confidentialDocumentEntryScope, contractAudience } from "../../lib/contract-access.js";
 import { matterAudience, matterTeamScope } from "../../lib/matter-access.js";
+import { entityAudience } from "../../lib/entity-access.js";
 import { httpError, problemResponse } from "../../lib/problem.js";
 
 /**
@@ -98,7 +99,7 @@ const PAGE_SIZE = 25;
  * so far, and each answers the reach question through its own audience
  * rule below.
  */
-const ActivityEntityType = z.enum(["matter", "contract"]);
+const ActivityEntityType = z.enum(["matter", "contract", "entity"]);
 
 /** The record's id. Bounded rather than shaped, as every id in this API
  * is: an opaque text primary key, with no UUID pattern asserted
@@ -193,10 +194,16 @@ export const activityRoutes: FastifyPluginAsyncZod = async (app) => {
       const audience =
         entityType === "contract"
           ? await contractAudience(app.db, request.user, entityId)
-          : await matterAudience(app.db, request.user, entityId);
+          : entityType === "matter"
+            ? await matterAudience(app.db, request.user, entityId)
+            : await entityAudience(app.db, request.user, entityId);
       if (!audience) throw httpError(404, NO_RECORD);
       const reachedId =
-        audience.entityType === "contract" ? audience.contractId : audience.matterId;
+        audience.entityType === "contract"
+          ? audience.contractId
+          : audience.entityType === "matter"
+            ? audience.matterId
+            : audience.entityId;
 
       // Keyset, on the pair the feed is ordered by. The cursor row's own
       // position comes from the table rather than from the client, so a
