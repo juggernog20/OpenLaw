@@ -132,6 +132,7 @@ export const EVENT_GROUP: Record<NotificationEventType, NotificationEventGroup> 
   "date.key_date_approaching": "dates_approaching",
   "date.notice_deadline_approaching": "dates_approaching",
   "date.expiry_approaching": "dates_approaching",
+  "date.obligation_approaching": "dates_approaching",
   // Group 4 — new requests. One act, two audiences: this is the staff
   // side of a submission (INT-006), and `request.created` below is the
   // Requester's own receipt for the same moment. They are two events

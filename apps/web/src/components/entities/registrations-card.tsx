@@ -1,11 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 import { useState } from "react";
+import { Link } from "react-router";
 import { FormattedMessage, useIntl, type IntlShape } from "react-intl";
 import { Plus, Trash2 } from "lucide-react";
 import { api } from "../../lib/api";
 import {
   ENTITY_REGISTRATION_STATUSES,
+  type EntityObligation,
   type EntityRegistration,
   type EntityRegistrationStatus,
 } from "../../lib/entities";
@@ -19,10 +21,12 @@ import { Label } from "../ui/label";
 export function RegistrationsCard({
   entityId,
   initial,
+  obligations = [],
   frozen,
 }: Readonly<{
   entityId: string;
   initial: readonly EntityRegistration[];
+  obligations?: readonly EntityObligation[];
   frozen: boolean;
 }>) {
   const intl = useIntl();
@@ -204,6 +208,8 @@ export function RegistrationsCard({
             <RegistrationRow
               key={registration.id}
               registration={registration}
+              entityId={entityId}
+              obligations={obligations.filter((row) => row.registration?.id === registration.id)}
               frozen={frozen}
               onUpdate={(body) => void updateRegistration(registration.id, body)}
               onRemove={() => void removeRegistration(registration.id)}
@@ -217,11 +223,15 @@ export function RegistrationsCard({
 
 function RegistrationRow({
   registration,
+  entityId,
+  obligations,
   frozen,
   onUpdate,
   onRemove,
 }: Readonly<{
   registration: EntityRegistration;
+  entityId: string;
+  obligations: readonly EntityObligation[];
   frozen: boolean;
   onUpdate: (body: Record<string, unknown>) => void;
   onRemove: () => void;
@@ -239,86 +249,108 @@ function RegistrationRow({
   const [number, setNumber] = useState(registration.registrationNumber ?? "");
   const [agent, setAgent] = useState(registration.registeredAgent ?? "");
   return (
-    <div className="grid grid-cols-1 gap-3 p-4 @2xl/page:grid-cols-[1.2fr_1fr_1.4fr_1fr_auto]">
-      <Input
-        aria-label={label(
-          intl.formatMessage({
-            id: "entities.record.registrations.jurisdiction",
-            defaultMessage: "Jurisdiction",
-          }),
-        )}
-        value={jurisdiction}
-        disabled={frozen}
-        onChange={(event) => setJurisdiction(event.target.value)}
-        onBlur={() =>
-          jurisdiction.trim() &&
-          jurisdiction.trim() !== registration.jurisdiction &&
-          onUpdate({ jurisdiction: jurisdiction.trim() })
-        }
-      />
-      <Input
-        aria-label={label(
-          intl.formatMessage({
-            id: "entities.record.registrations.number",
-            defaultMessage: "Registration number",
-          }),
-        )}
-        value={number}
-        disabled={frozen}
-        onChange={(event) => setNumber(event.target.value)}
-        onBlur={() =>
-          number !== (registration.registrationNumber ?? "") &&
-          onUpdate({ registrationNumber: number || null })
-        }
-      />
-      <Input
-        aria-label={label(
-          intl.formatMessage({
-            id: "entities.record.registrations.agent",
-            defaultMessage: "Registered agent",
-          }),
-        )}
-        value={agent}
-        disabled={frozen}
-        onChange={(event) => setAgent(event.target.value)}
-        onBlur={() =>
-          agent !== (registration.registeredAgent ?? "") &&
-          onUpdate({ registeredAgent: agent || null })
-        }
-      />
-      <select
-        aria-label={label(
-          intl.formatMessage({
-            id: "entities.record.registrations.status",
-            defaultMessage: "Status",
-          }),
-        )}
-        className={CONTROL_CLASS}
-        value={registration.status}
-        disabled={frozen}
-        onChange={(event) => onUpdate({ status: event.target.value as EntityRegistrationStatus })}
-      >
-        {ENTITY_REGISTRATION_STATUSES.map((value) => (
-          <option key={value} value={value}>
-            {registrationStatusLabel(intl, value)}
-          </option>
-        ))}
-      </select>
-      {!frozen ? (
-        <Button
-          size="icon"
-          variant="ghost"
-          aria-label={intl.formatMessage(
-            {
-              id: "entities.record.registrations.remove",
-              defaultMessage: "Remove {jurisdiction} registration",
-            },
-            { jurisdiction: registration.jurisdiction },
+    <div className="p-4">
+      <div className="grid grid-cols-1 gap-3 @2xl/page:grid-cols-[1.2fr_1fr_1.4fr_1fr_auto]">
+        <Input
+          aria-label={label(
+            intl.formatMessage({
+              id: "entities.record.registrations.jurisdiction",
+              defaultMessage: "Jurisdiction",
+            }),
           )}
-          onClick={onRemove}
+          value={jurisdiction}
+          disabled={frozen}
+          onChange={(event) => setJurisdiction(event.target.value)}
+          onBlur={() =>
+            jurisdiction.trim() &&
+            jurisdiction.trim() !== registration.jurisdiction &&
+            onUpdate({ jurisdiction: jurisdiction.trim() })
+          }
+        />
+        <Input
+          aria-label={label(
+            intl.formatMessage({
+              id: "entities.record.registrations.number",
+              defaultMessage: "Registration number",
+            }),
+          )}
+          value={number}
+          disabled={frozen}
+          onChange={(event) => setNumber(event.target.value)}
+          onBlur={() =>
+            number !== (registration.registrationNumber ?? "") &&
+            onUpdate({ registrationNumber: number || null })
+          }
+        />
+        <Input
+          aria-label={label(
+            intl.formatMessage({
+              id: "entities.record.registrations.agent",
+              defaultMessage: "Registered agent",
+            }),
+          )}
+          value={agent}
+          disabled={frozen}
+          onChange={(event) => setAgent(event.target.value)}
+          onBlur={() =>
+            agent !== (registration.registeredAgent ?? "") &&
+            onUpdate({ registeredAgent: agent || null })
+          }
+        />
+        <select
+          aria-label={label(
+            intl.formatMessage({
+              id: "entities.record.registrations.status",
+              defaultMessage: "Status",
+            }),
+          )}
+          className={CONTROL_CLASS}
+          value={registration.status}
+          disabled={frozen}
+          onChange={(event) => onUpdate({ status: event.target.value as EntityRegistrationStatus })}
         >
-          <Trash2 size={16} />
-        </Button>
+          {ENTITY_REGISTRATION_STATUSES.map((value) => (
+            <option key={value} value={value}>
+              {registrationStatusLabel(intl, value)}
+            </option>
+          ))}
+        </select>
+        {!frozen ? (
+          <Button
+            size="icon"
+            variant="ghost"
+            aria-label={intl.formatMessage(
+              {
+                id: "entities.record.registrations.remove",
+                defaultMessage: "Remove {jurisdiction} registration",
+              },
+              { jurisdiction: registration.jurisdiction },
+            )}
+            onClick={onRemove}
+          >
+            <Trash2 size={16} />
+          </Button>
+        ) : null}
+      </div>
+      {obligations.length > 0 ? (
+        <div className="mt-3 border-t border-border-muted pt-3">
+          <p className="text-xs font-medium uppercase tracking-wide text-muted">
+            Linked obligations
+          </p>
+          <ul className="mt-1 flex flex-wrap gap-x-4 gap-y-1">
+            {obligations.map((obligation) => (
+              <li key={obligation.id}>
+                <Link
+                  className="text-sm text-link hover:underline"
+                  to={`/entities/${entityId}/obligations`}
+                >
+                  {obligation.label}
+                </Link>
+                <span className="ms-2 text-xs text-muted">due {obligation.nextDueOn}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
       ) : null}
     </div>
   );

@@ -213,6 +213,12 @@ _None — queue cleared 2026-08-05 (NOT-001 through NOT-005)._
 
 - **Addendum (2026-08-24, M23 close, [#496](https://github.com/juggernog20/OpenLaw/issues/496))** — **The Matter catalog arms are complete.** A new Matter Manager and a newly assigned Matter Task use Assigned to you; Matter Status, comment, supporting-Document, and Version events use Activity on your records; Matter Key dates use Dates approaching. Task due dates remain outside group 3. Actors are excluded as usual, assignment is independently reachable, and archived Matters are omitted; Closing raises its Status event but does not silence later record Activity.
 
+- **Addendum (2026-08-30, M27/6, [#578](https://github.com/juggernog20/OpenLaw/issues/578))** — **Entity obligations join Dates approaching as `date.obligation_approaching`.** The morning round reads open obligation `next_due_on` values through the same NOT-004 offsets as contract and Matter dates. An assigned obligation addresses that one live assignee; an unassigned obligation addresses every live Administrator. Entity reach is re-applied at fan-out and bell read, so the event cannot make an Entity visible to somebody who cannot reach it.
+
+  **The reminder identity does not grow.** It remains user, event type, Entity id, reminder date, and offset. Re-running the round is therefore a no-op for a reminder already written, while filing a recurring obligation changes its reminder date and permits the next cycle. The obligation id remains rendering data rather than part of dedup identity, matching the existing one-reminder-per-record/date/offset grain.
+
+  **The morning email gains an Obligations section.** Its lines name the obligation and Entity and deep-link to that Entity's Obligations tab. Empty sections remain absent. Obligations use the existing group-3 channel defaults; this is a fourth source in the round, not another cadence or another message.
+
 ## NOT-003 — Timing: direct events immediate; date reminders in a daily digest
 
 - **Status** — Accepted; **amended by NOT-008** (the daily briefing subsumes the date-only digest)

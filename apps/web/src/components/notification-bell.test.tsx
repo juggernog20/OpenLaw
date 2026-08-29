@@ -208,6 +208,40 @@ describe("the notification centre", () => {
     expect(link).toHaveAttribute("href", "/contracts/41/approvals");
   });
 
+  it("narrates an Entity obligation and opens its Obligations tab", async () => {
+    const user = userEvent.setup();
+    bellApi({
+      unread: 1,
+      pages: {
+        first: {
+          notifications: [
+            item(1, {
+              eventType: "date.obligation_approaching",
+              entityType: "entity",
+              entityId: "e1",
+              payload: {
+                entityLegalName: "Aldgate UK Ltd",
+                obligationId: "o1",
+                label: "Annual return",
+                reminderDate: "2026-09-30",
+                offsetDays: 7,
+              },
+            }),
+          ],
+          nextCursor: null,
+        },
+      },
+    });
+    renderAt("/");
+
+    await user.click(await bell("1 unread"));
+    const centre = await screen.findByRole("dialog", { name: "Notifications" });
+    const link = within(centre).getByRole("link", {
+      name: /Annual return on Aldgate UK Ltd is coming up/,
+    });
+    expect(link).toHaveAttribute("href", "/entities/e1/obligations");
+  });
+
   it("deep-links the Inbox's arrival to the staff request detail", async () => {
     // Group 4 is the one Request event on this bell (INT-006, M21/4),
     // and it addresses the staff detail rather than the portal one: the

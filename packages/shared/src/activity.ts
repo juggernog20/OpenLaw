@@ -492,6 +492,33 @@ type EntityPayloads = {
     ownedName: string;
     ownershipPercent: number;
   };
+  "entity_obligation.created": {
+    legalName: string;
+    obligationId: string;
+    label: string;
+    nextDueOn: string;
+  };
+  "entity_obligation.updated": {
+    legalName: string;
+    obligationId: string;
+    label: string;
+    changed: ChangedFields;
+  };
+  "entity_obligation.deleted": {
+    legalName: string;
+    obligationId: string;
+    label: string;
+    nextDueOn: string;
+  };
+  "entity_obligation.filed": {
+    legalName: string;
+    obligationId: string;
+    label: string;
+    cycleDate: string;
+    previousDueOn: string;
+    nextDueOn: string | null;
+    completedOn: string | null;
+  };
 };
 
 /**

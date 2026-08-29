@@ -24,6 +24,7 @@ import { useActivityApplet } from "../components/activity/activity-applet";
 import type { FieldReference } from "../components/custom-field-control";
 import { EntityFieldsCard } from "../components/entities/entity-fields-card";
 import { OfficersCard } from "../components/entities/officers-card";
+import { ObligationsPanel } from "../components/entities/obligations-panel";
 import { OwnershipCard } from "../components/entities/ownership-card";
 import { RegistrationsCard } from "../components/entities/registrations-card";
 import { ShareCapitalCard, type CapitalKey } from "../components/entities/share-capital-card";
@@ -46,7 +47,17 @@ export async function entityRecordLoader({ params }: LoaderFunctionArgs) {
   if (params.tab && !RECORD_TABS.includes(params.tab as (typeof RECORD_TABS)[number])) {
     return redirect(`/entities/${id}`);
   }
-  const [record, types, options, officers, registrations, registry, holdings] = await Promise.all([
+  const [
+    record,
+    types,
+    options,
+    officers,
+    registrations,
+    registry,
+    holdings,
+    obligations,
+    obligationOptions,
+  ] = await Promise.all([
     api.GET("/api/v1/entities/{id}", { params: { path: { id } } }),
     api.GET("/api/v1/entities/types"),
     api.GET("/api/v1/entities/officer-roles"),
@@ -54,6 +65,8 @@ export async function entityRecordLoader({ params }: LoaderFunctionArgs) {
     api.GET("/api/v1/entities/{id}/registrations", { params: { path: { id } } }),
     api.GET("/api/v1/entities"),
     api.GET("/api/v1/entities/{id}/holdings", { params: { path: { id } } }),
+    api.GET("/api/v1/entities/{id}/obligations", { params: { path: { id } } }),
+    api.GET("/api/v1/entities/obligation-options"),
   ]);
   if (
     !record.data ||
@@ -62,7 +75,9 @@ export async function entityRecordLoader({ params }: LoaderFunctionArgs) {
     !officers.data ||
     !registrations.data ||
     !registry.data ||
-    !holdings.data
+    !holdings.data ||
+    !obligations.data ||
+    !obligationOptions.data
   ) {
     throw new Error("The entity could not be read.");
   }
@@ -79,6 +94,8 @@ export async function entityRecordLoader({ params }: LoaderFunctionArgs) {
     registrations: registrations.data.registrations,
     entities: registry.data.entities,
     holdings: holdings.data,
+    obligations: obligations.data.obligations,
+    obligationOptions: obligationOptions.data,
   };
 }
 
@@ -437,6 +454,7 @@ export function EntityRecordPage() {
               <RegistrationsCard
                 entityId={saved.id}
                 initial={loaded.registrations}
+                obligations={loaded.obligations}
                 frozen={frozen}
               />
             </>
@@ -445,6 +463,14 @@ export function EntityRecordPage() {
               entity={saved}
               candidates={loaded.entities}
               initial={loaded.holdings}
+              frozen={frozen}
+            />
+          ) : loaded.tab === "obligations" ? (
+            <ObligationsPanel
+              entityId={saved.id}
+              initial={loaded.obligations}
+              registrations={loaded.registrations}
+              options={loaded.obligationOptions}
               frozen={frozen}
             />
           ) : (

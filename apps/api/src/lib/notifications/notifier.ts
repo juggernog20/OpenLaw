@@ -74,6 +74,8 @@ import { boundedQueueAsk, type JobQueue } from "../../pipeline/jobs.js";
 import {
   contractRecordAudience,
   CONTRACT_ENTITY,
+  ENTITY_ENTITY,
+  entityReachedBy,
   inboxAudience,
   matterReachedBy,
   matterRecordAudience,
@@ -178,6 +180,17 @@ export interface MatterTaskAssignedEvent {
   taskId: string;
   taskTitle: string;
   assigneeId: string;
+}
+
+/** One Entity obligation at a NOT-004 offset (ENT-006). */
+export interface EntityObligationReminderEvent {
+  entityId: string;
+  entityLegalName: string;
+  obligationId: string;
+  label: string;
+  reminderDate: string;
+  offsetDays: number;
+  userIds: readonly string[];
 }
 
 /** What every mention carries, whichever record it happened on. */
@@ -630,6 +643,12 @@ export interface Notifier {
    */
   expiryApproaching(tx: NotifyingTransaction, event: DateReminderEvent): Promise<number>;
 
+  /** An open Entity obligation is approaching, addressed by ENT-006. */
+  entityObligationApproaching(
+    tx: NotifyingTransaction,
+    event: EntityObligationReminderEvent,
+  ): Promise<number>;
+
   /**
    * A Request has reached the Inbox (INT-006) — group 4, bell on and
    * email opt-in (NOT-002).
@@ -748,6 +767,7 @@ interface PendingNotification {
 type NotificationEntity =
   | { type: typeof MATTER_ENTITY; id: string }
   | { type: typeof CONTRACT_ENTITY; id: string }
+  | { type: typeof ENTITY_ENTITY; id: string }
   | { type: typeof REQUEST_ENTITY; id: string };
 
 /** Everything one event may ask of the fan-out beyond its people. */
@@ -819,14 +839,16 @@ async function fanOut(
       ? await reachedBy(tx, entity.id, [...byUser.keys()], narrowing)
       : entity.type === MATTER_ENTITY
         ? await matterReachedBy(tx, entity.id, [...byUser.keys()], narrowing)
-        : await requestReachedBy(tx, entity.id, [...byUser.keys()], {
-            ...narrowing,
-            // Which standing this event addressed (M21/4, M21/5). It is
-            // read from the catalog rather than passed by the method, so
-            // an event added to a group later inherits that group's side
-            // and cannot be the one that forgets to ask for it.
-            side: requestSideOf(eventType),
-          });
+        : entity.type === ENTITY_ENTITY
+          ? await entityReachedBy(tx, entity.id, [...byUser.keys()])
+          : await requestReachedBy(tx, entity.id, [...byUser.keys()], {
+              ...narrowing,
+              // Which standing this event addressed (M21/4, M21/5). It is
+              // read from the catalog rather than passed by the method, so
+              // an event added to a group later inherits that group's side
+              // and cannot be the one that forgets to ask for it.
+              side: requestSideOf(eventType),
+            });
 
   // 3. The preferences, over the group's defaults (NOT-001/002).
   const recipients = [...byUser.keys()].filter((id) => reachable.has(id));
@@ -1560,6 +1582,31 @@ export function createNotifier(deps: NotifierDeps): Notifier {
 
     expiryApproaching(tx: NotifyingTransaction, event: DateReminderEvent): Promise<number> {
       return dateReminder(tx, "date.expiry_approaching", event, {});
+    },
+
+    entityObligationApproaching(
+      tx: NotifyingTransaction,
+      event: EntityObligationReminderEvent,
+    ): Promise<number> {
+      return fanOut(
+        tx,
+        "date.obligation_approaching",
+        { type: ENTITY_ENTITY, id: event.entityId },
+        null,
+        event.userIds.map((userId) => ({
+          userId,
+          payload: {
+            entityLegalName: event.entityLegalName,
+            obligationId: event.obligationId,
+            label: event.label,
+            actorId: null,
+            actorName: null,
+            reminderDate: event.reminderDate,
+            offsetDays: event.offsetDays,
+          },
+        })),
+        { reminder: { date: event.reminderDate, offsetDays: event.offsetDays } },
+      );
     },
 
     async requestSubmitted(tx: NotifyingTransaction, event: RequestSubmittedEvent): Promise<void> {
