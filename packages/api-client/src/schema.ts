@@ -3688,6 +3688,111 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/v1/knowledge/types": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** The knowledge type taxonomy in display order (KNW-001); archived rows only with includeArchived=true */
+    get: operations["listKnowledgeTypes"];
+    put?: never;
+    /** Add a knowledge type: the slug is derived here, once, and is immutable after creation; the row appends to the display order */
+    post: operations["createKnowledgeType"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/knowledge/types/{id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** One knowledge type — the read behind the type editor */
+    get: operations["getKnowledgeType"];
+    put?: never;
+    post?: never;
+    /** Hard-delete a knowledge type (KNW-001); a type still used by knowledge items refuses */
+    delete: operations["deleteKnowledgeType"];
+    options?: never;
+    head?: never;
+    /** Rename a knowledge type's display name (DES-017 in-place rename) or edit its description; the slug never changes */
+    patch: operations["updateKnowledgeType"];
+    trace?: never;
+  };
+  "/api/v1/knowledge/types/order": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    /** Apply a full permutation of the live rows (SET-003 immediate apply); display orders renumber from 1, archived rows keep theirs */
+    put: operations["reorderKnowledgeTypes"];
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/knowledge/types/{id}/archive": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Archive a knowledge type (SET-003 guarded): a type still used by knowledge items requires a reassignment target, which takes them; nothing is deleted */
+    post: operations["archiveKnowledgeType"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/knowledge/types/{id}/restore": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Restore an archived knowledge type (SET-003's recovery story) to the end of the display order */
+    post: operations["restoreKnowledgeType"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/knowledge/type-options": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** The live Knowledge types in display order for Member+ authoring; the /knowledge/types settings taxonomy remains Administrator-only */
+    get: operations["listKnowledgeTypeOptions"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/v1/search": {
     parameters: {
       query?: never;
@@ -18275,7 +18380,15 @@ export interface operations {
       query?: {
         actorId?: string;
         action?: string;
-        entityType?: "matter" | "contract" | "document" | "request" | "user" | "entity" | "system";
+        entityType?:
+          | "matter"
+          | "contract"
+          | "document"
+          | "request"
+          | "user"
+          | "entity"
+          | "knowledge_item"
+          | "system";
         from?: string;
         to?: string;
         q?: string;
@@ -18299,7 +18412,14 @@ export interface operations {
               action: string;
               /** @enum {string} */
               entityType:
-                "matter" | "contract" | "document" | "request" | "user" | "entity" | "system";
+                | "matter"
+                | "contract"
+                | "document"
+                | "request"
+                | "user"
+                | "entity"
+                | "knowledge_item"
+                | "system";
               /** @enum {string} */
               visibility: "legal_only" | "working_team" | "full_thread" | "admin_only";
               entityId: string | null;
@@ -18366,7 +18486,15 @@ export interface operations {
       query?: {
         actorId?: string;
         action?: string;
-        entityType?: "matter" | "contract" | "document" | "request" | "user" | "entity" | "system";
+        entityType?:
+          | "matter"
+          | "contract"
+          | "document"
+          | "request"
+          | "user"
+          | "entity"
+          | "knowledge_item"
+          | "system";
         from?: string;
         to?: string;
         q?: string;
@@ -21322,6 +21450,385 @@ export interface operations {
       };
     };
   };
+  listKnowledgeTypes: {
+    parameters: {
+      query?: {
+        includeArchived?: "true" | "false";
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            knowledgeTypes: {
+              id: string;
+              slug: string;
+              displayName: string;
+              description: string | null;
+              displayOrder: number;
+              isSystemDefault: boolean;
+              archivedAt: string | null;
+              inUseCount: number;
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  createKnowledgeType: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          displayName: string;
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            knowledgeType: {
+              id: string;
+              slug: string;
+              displayName: string;
+              description: string | null;
+              displayOrder: number;
+              isSystemDefault: boolean;
+              archivedAt: string | null;
+              inUseCount: number;
+            };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  getKnowledgeType: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            knowledgeType: {
+              id: string;
+              slug: string;
+              displayName: string;
+              description: string | null;
+              displayOrder: number;
+              isSystemDefault: boolean;
+              archivedAt: string | null;
+              inUseCount: number;
+            };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  deleteKnowledgeType: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  updateKnowledgeType: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          displayName?: string;
+          description?: string | null;
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            knowledgeType: {
+              id: string;
+              slug: string;
+              displayName: string;
+              description: string | null;
+              displayOrder: number;
+              isSystemDefault: boolean;
+              archivedAt: string | null;
+              inUseCount: number;
+            };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  reorderKnowledgeTypes: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          ids: string[];
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            knowledgeTypes: {
+              id: string;
+              slug: string;
+              displayName: string;
+              description: string | null;
+              displayOrder: number;
+              isSystemDefault: boolean;
+              archivedAt: string | null;
+              inUseCount: number;
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  archiveKnowledgeType: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          reassignToId?: string;
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            knowledgeType: {
+              id: string;
+              slug: string;
+              displayName: string;
+              description: string | null;
+              displayOrder: number;
+              isSystemDefault: boolean;
+              archivedAt: string | null;
+              inUseCount: number;
+            };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  restoreKnowledgeType: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            knowledgeType: {
+              id: string;
+              slug: string;
+              displayName: string;
+              description: string | null;
+              displayOrder: number;
+              isSystemDefault: boolean;
+              archivedAt: string | null;
+              inUseCount: number;
+            };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  listKnowledgeTypeOptions: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            knowledgeTypes: {
+              id: string;
+              slug: string;
+              displayName: string;
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
   search: {
     parameters: {
       query: {
@@ -22194,6 +22701,7 @@ export interface operations {
                 | "activity_on_your_records"
                 | "dates_approaching"
                 | "new_requests"
+                | "knowledge"
                 | "requester_events";
               inApp: boolean;
               email: boolean;
@@ -22228,6 +22736,7 @@ export interface operations {
             | "activity_on_your_records"
             | "dates_approaching"
             | "new_requests"
+            | "knowledge"
             | "requester_events";
           /** @enum {string} */
           channel: "in_app" | "email";
@@ -22250,6 +22759,7 @@ export interface operations {
                 | "activity_on_your_records"
                 | "dates_approaching"
                 | "new_requests"
+                | "knowledge"
                 | "requester_events";
               inApp: boolean;
               email: boolean;

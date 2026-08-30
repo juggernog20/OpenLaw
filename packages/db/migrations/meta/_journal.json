@@ -582,6 +582,13 @@
       "when": 1788031978333,
       "tag": "0082_great_betty_ross",
       "breakpoints": true
+    },
+    {
+      "idx": 83,
+      "version": "7",
+      "when": 1788096935030,
+      "tag": "0083_wide_inhumans",
+      "breakpoints": true
     }
   ]
 }

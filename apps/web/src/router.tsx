@@ -75,6 +75,11 @@ import {
   settingsEntityTypesLoader,
 } from "./routes/settings-entity-types";
 import {
+  SettingsKnowledgeTypesPage,
+  settingsKnowledgeIndexLoader,
+  settingsKnowledgeTypesLoader,
+} from "./routes/settings-knowledge-types";
+import {
   SettingsEntityTypeEditorPage,
   settingsEntityTypeEditorLoader,
 } from "./routes/settings-entity-type-editor";
@@ -434,6 +439,12 @@ export const routes: RouteObject[] = [
         path: "entities/fields",
         loader: settingsEntityFieldsLoader,
         element: <SettingsEntityFieldsPage />,
+      },
+      { path: "knowledge", loader: settingsKnowledgeIndexLoader, element: <></> },
+      {
+        path: "knowledge/types",
+        loader: settingsKnowledgeTypesLoader,
+        element: <SettingsKnowledgeTypesPage />,
       },
       {
         // #322: Organization · Notifications — the NOT-004 reminder

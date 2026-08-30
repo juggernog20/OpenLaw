@@ -987,6 +987,10 @@ Officer roles is the **fifth `taxonomyRoutes` mount** (after Contract, Matter, E
 
 Entity type Fields is the **third record-type `typeFieldRoutes` mount**, after Contract and Matter type Fields. Request-type form attachment also uses the factory, so it is the fourth configured mount in total; “third” here names the record-type sequence from TECH-023's original context. The Entity mount adds no hook: it supplies the constant `entity|global` scope rule and the `entity_type_fields` table.
 
+### M28 addendum (2026-08-30) — sixth taxonomy
+
+Knowledge types is the **sixth `taxonomyRoutes` mount**, at `/api/v1/knowledge/types`, supplied entirely as configuration. It has no protected slug. Its SET-003 usage adapter counts and reassigns the full set of referencing `knowledge_items`, including archived items, so the ENT-009 archive rule carries across rather than becoming a Knowledge-only exception. ENT-008's consuming-surface rule is a separate Member+ live-options read; it does not loosen the Administrator gate on the Settings taxonomy.
+
 ## TECH-024: Web data and state model — loaders read, screens own what they show, live surfaces patch feeds
 
 - **Status:** Accepted

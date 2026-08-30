@@ -101,6 +101,16 @@ export const GROUP_COPY: Record<
       defaultMessage: "New intake requests arriving in the Inbox.",
     }),
   },
+  knowledge: {
+    label: defineMessage({
+      id: "settings.notifications.group.knowledge",
+      defaultMessage: "Knowledge items",
+    }),
+    detail: defineMessage({
+      id: "settings.notifications.group.knowledge.detail",
+      defaultMessage: "Knowledge items included in your daily briefing.",
+    }),
+  },
   // Group 5, drawn on the portal alone (NOT-001). The sentence names
   // the four events INT-003 promised, in the words a requester would
   // use for them. "Request updates" rather than "Your requests":

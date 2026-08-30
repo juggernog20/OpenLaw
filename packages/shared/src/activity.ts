@@ -58,7 +58,12 @@ type Prefixed<P extends string, M> = { [K in keyof M & string as `${P}.${K}`]: M
 
 /** The taxonomy tables' audit namespaces. */
 export type TaxonomyActionPrefix =
-  "contract_type" | "matter_type" | "entity_type" | "officer_role" | "request_type";
+  | "contract_type"
+  | "matter_type"
+  | "entity_type"
+  | "officer_role"
+  | "request_type"
+  | "knowledge_type";
 /** The catalogs of fields attached to a type — two type editors, and
  * the request type's form definition (INT-002), which is the same
  * machinery over the same catalog. */
@@ -1079,6 +1084,11 @@ type ExportPayloads = {
   };
 };
 
+/** A Knowledge Item moved because its configured type was archived (SET-003). */
+type KnowledgePayloads = {
+  "knowledge_item.type_reassigned": { title: string; from: string; to: string };
+};
+
 /**
  * The closed audit vocabulary (DD-017), slug by slug, each paired with
  * what its writer puts in the payload.
@@ -1094,6 +1104,7 @@ export type ActivityPayloadMap = UserPayloads &
   Prefixed<"entity_type", TaxonomyPayloads> &
   Prefixed<"officer_role", TaxonomyPayloads> &
   Prefixed<"request_type", TaxonomyPayloads> &
+  Prefixed<"knowledge_type", TaxonomyPayloads> &
   Prefixed<"contract_type_field", TypeFieldPayloads> &
   Prefixed<"entity_type_field", TypeFieldPayloads> &
   Prefixed<"matter_type_field", TypeFieldPayloads> &
@@ -1118,6 +1129,7 @@ export type ActivityPayloadMap = UserPayloads &
   SigningConnectorPayloads &
   EnvelopePayloads &
   SignerErasurePayloads &
+  KnowledgePayloads &
   ExportPayloads;
 
 /** Every slug this build writes. */

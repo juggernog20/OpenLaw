@@ -302,7 +302,7 @@ async function mailArrives(fixture: { email: string }, contract: ContractRow) {
 }
 
 describe("the grid the pane draws", () => {
-  it("answers all five groups with NOT-002's defaults before anybody has an opinion", async () => {
+  it("answers every group with its defaults before anybody has an opinion", async () => {
     const groups = await preferences(BYSTANDER);
     // The table holds overrides, so a person who has never opened the
     // pane has no rows at all — and still gets a complete answer.
@@ -311,6 +311,7 @@ describe("the grid the pane draws", () => {
       "activity_on_your_records",
       "dates_approaching",
       "new_requests",
+      "knowledge",
       "requester_events",
     ]);
     // Defaults follow interruptiveness: things done *to* you interrupt,
@@ -322,6 +323,7 @@ describe("the grid the pane draws", () => {
     });
     expect(groupIn(groups, "dates_approaching")).toMatchObject({ inApp: true, email: true });
     expect(groupIn(groups, "new_requests")).toMatchObject({ inApp: true, email: false });
+    expect(groupIn(groups, "knowledge")).toMatchObject({ inApp: true, email: true });
   });
 
   it("answers the whole grid back from a save, so the pane cannot drift", async () => {
@@ -346,7 +348,12 @@ describe("the grid the pane draws", () => {
       groupIn(before, "activity_on_your_records").inApp,
     );
     // And so is every other group.
-    for (const group of ["assigned_to_you", "dates_approaching", "new_requests"] as const) {
+    for (const group of [
+      "assigned_to_you",
+      "dates_approaching",
+      "new_requests",
+      "knowledge",
+    ] as const) {
       expect(groupIn(after, group)).toEqual(groupIn(before, group));
     }
     await toggle(BYSTANDER, "activity_on_your_records", "email", false);
