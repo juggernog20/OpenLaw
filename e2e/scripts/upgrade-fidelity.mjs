@@ -50,10 +50,10 @@
  * and byte count; a user's role; whether the signing connector still
  * holds its credentials.
  *
- * Matters, their Tasks and Key dates, Contracts, Fields, teams,
- * Documents, Activity, and lifecycle timestamps all ride the
- * fingerprint. The baseline API creates every row; the script never
- * writes the database directly.
+ * Matters, their Tasks and Key dates, Entities, Entity-referencing
+ * Contracts, Fields, teams, Documents, Activity, and lifecycle timestamps
+ * all ride the fingerprint. The baseline API creates every row; the
+ * script never writes the database directly.
  */
 
 import { createHash, randomUUID } from "node:crypto";
@@ -756,6 +756,32 @@ async function verify(fingerprint) {
 
   const entity = (await get(`/api/v1/entities/${fingerprint.entity.id}`)).entity;
   same(entity.legalName, fingerprint.entity.legalName, "entity legal name");
+  const listedEntities = (await get("/api/v1/entities?sort=name&direction=asc")).entities;
+  check(
+    listedEntities.some((row) => row.id === fingerprint.entity.id),
+    "the seeded Entity is absent from the M27 registry",
+  );
+
+  const officers = (await get(`/api/v1/entities/${fingerprint.entity.id}/officers`)).officers;
+  same(officers, [], "pre-M27 Entity Officers");
+  const registrations = (await get(`/api/v1/entities/${fingerprint.entity.id}/registrations`))
+    .registrations;
+  same(registrations, [], "pre-M27 Entity Registrations");
+  const holdings = await get(`/api/v1/entities/${fingerprint.entity.id}/holdings`);
+  same(holdings.owners, [], "pre-M27 Entity owners");
+  same(holdings.owned, [], "pre-M27 Entity owned Entities");
+  same(holdings.warnings, [], "pre-M27 Entity Holding warnings");
+  const obligations = (await get(`/api/v1/entities/${fingerprint.entity.id}/obligations`))
+    .obligations;
+  same(obligations, [], "pre-M27 Entity Obligations");
+
+  const listedContracts = (await get("/api/v1/contracts")).contracts;
+  for (const seeded of fingerprint.contracts.filter((row) => !row.archived)) {
+    check(
+      listedContracts.some((row) => row.number === seeded.number),
+      `Entity-referencing Contract ${seeded.number} is absent from the list after the upgrade`,
+    );
+  }
 
   for (const seeded of fingerprint.contracts) {
     const read = (await get(`/api/v1/contracts/${seeded.number}`)).contract;
