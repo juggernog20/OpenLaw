@@ -4211,6 +4211,35 @@ Entities combines a destination catalogue, a record, a calendar, and a graph, bu
 
 The Entities destination ships the Calendar, List, and Chart switch, with Calendar as its default. The List view is DES-046's fourth catalogue. The Entity record ships all six routed tabs and its Activity applet. Confidential banners, Grant maintenance, Restricted Entity rows and chart nodes, calendar empty states, overdue severity, and the ownership warning use the shared patterns named above. The M27 close journey and axe sweep cover the three destination views and every record tab on fresh Compose images.
 
+## DES-068: Knowledge is a file-first managed library (extends DES-046, DES-032, DES-016, DES-055, DES-052)
+
+- **Status:** Accepted
+- **Date:** 2026-08-30
+
+### Context
+
+KNW-001 makes a Knowledge Item a governed set of files with an optional guidance body, not a body-first article with attachments. The original KN1–KN6 frames predate the managed-list destination, the record strip rule, the record overflow menu, and the current portal and Settings chrome. M28 needs one visual answer before those surfaces are built.
+
+### Decision
+
+The Knowledge destination and its record, portal, and Settings surfaces reuse the current shared chrome. The library is a managed table beside its folder tree. A Knowledge Item has one record section because its identity, primary paper, other Documents, and optional guidance are one reading sequence. Portal readers meet the same content in file-first order, while deflection links distinguish internal Knowledge targets from external URLs.
+
+### Recorded normalization points
+
+1. **Managed list.** The destination mounts DES-046 with `Default view`, `Columns`, and a `New` menu whose actions are `New from files` and `New knowledge item`. The left column remains the folder tree. The filter row is Type, State, Audience, Author, and Format, and Format is a table column.
+2. **One-section record with no tab strip.** DES-032's strip appears only when a record has multiple named sections, so the Knowledge record has none. Its one section carries the identity card, Documents, optional guidance, DES-055 overflow, and the DES-016 activity bar.
+3. **Primary document row.** Identity names the title, type, folder, state, audience, and optional replacement, then gives the primary Document its own `Open preview` row. The Documents card marks that row and offers `Set as primary` on every other Document.
+4. **Portal article chrome.** The article opens under `Your requests`; the primary file is first, other files follow, and the optional guidance body is last. A file-first item therefore remains useful when no guidance body exists.
+5. **Internal link rendering.** ST13 names a Knowledge target as `Knowledge item · opens in this portal`, with a book glyph instead of a URL. The portal panel renders that target as an internal article row without an external-link glyph or domain; external targets keep both.
+
+### Rationale
+
+Knowledge contains governed paper, so its destination should scan like the other managed catalogues and its reading order should privilege the file the organization designated as primary. Omitting a one-item tab strip keeps the record hierarchy honest. Distinct internal-link treatment tells a requester whether navigation stays inside the portal before they activate it.
+
+### Consequences
+
+`designs/knowledge.pen` carries KN1–KN10 on the current S1 chrome: the managed library, both record-body states, creation flows, archive dialog, portal article and deflection panel, and both library zeroes. `designs/settings.pen` amends ST13 with an internal Knowledge row and adds ST22 for the four Knowledge types. M28 can reuse the managed-list, record card, activity bar, overflow, empty-state, taxonomy, and portal-link primitives without translating the older Knowledge-only patterns.
+
 ## Index of decisions
 
 | #       | Decision                                                                                                                                                             | Status                                                                                                     |
@@ -4282,3 +4311,4 @@ The Entities destination ships the Calendar, List, and Chart switch, with Calend
 | DES-065 | A dispositioned Request points paper at its composer (extends DES-062, DES-057)                                                                                      | Accepted                                                                                                   |
 | DES-066 | The Documents destination is one flat managed list across records (extends DES-046, DES-018, DES-009)                                                                | Accepted                                                                                                   |
 | DES-067 | The Entities destination uses the managed-list and record-shell patterns (extends DES-046, DES-032, DES-016, DES-018)                                                | Accepted                                                                                                   |
+| DES-068 | Knowledge is a file-first managed library (extends DES-046, DES-032, DES-016, DES-055, DES-052)                                                                      | Accepted                                                                                                   |
