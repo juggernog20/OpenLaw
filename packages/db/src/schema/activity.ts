@@ -5,7 +5,7 @@
  * per-entity activity feed and the Administrator-only audit log (both
  * read surfaces arrive in M9). The application layer emits every row
  * through the API's activity helper and never issues UPDATE or DELETE
- * here — corrections are appended as new entries (SCHEMA.md).
+ * here. Corrections are appended as new entries (SCHEMA.md).
  */
 
 import { sql } from "drizzle-orm";
@@ -19,7 +19,7 @@ export const ACTIVITY_ENTITY_TYPES = [
   "document",
   "request",
   "user",
-  /** A corporate Entity (the registry record, M7) — not the generic
+  /** A corporate Entity (the registry record, M7), not the generic
    * polymorphic sense of this column pair (see CONTEXT.md). */
   "entity",
   "system",
@@ -50,7 +50,7 @@ export const activityLog = pgTable(
     /** Slug like `user.theme_changed` or `org_settings.updated`. */
     action: text("action").notNull(),
     visibility: text("visibility", { enum: ACTIVITY_VISIBILITIES }).notNull(),
-    /** Action-specific data — old/new values for edits, etc. */
+    /** Action-specific data, such as old and new values for an edit. */
     payload: jsonb("payload").$type<Record<string, unknown>>().notNull().default({}),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
@@ -60,9 +60,9 @@ export const activityLog = pgTable(
     //
     // The per-entity feed carries `id` as its fourth column, because
     // that feed is paged and its keyset walks `(created_at, id)`
-    // (CTR-024) — the same pair `activity_log_created_at_idx` below
-    // already indexes for the audit log. The other two answer filters
-    // rather than a cursor, so neither needs the tie-break (#391).
+    // (CTR-024), the same pair `activity_log_created_at_idx` below
+    // indexes for the audit log. The other two answer filters rather
+    // than a cursor, so neither needs the tie-break (#391).
     index("activity_log_entity_idx").on(
       table.entityType,
       table.entityId,
@@ -73,10 +73,10 @@ export const activityLog = pgTable(
     index("activity_log_action_idx").on(table.action, table.createdAt),
     // The fourth shape, added with the surface that reads it (M9/7):
     // the Administrator's audit log, which has no entity scope and no
-    // actor to key on. It orders the whole table by `(created_at, id)`
-    // — the pair its keyset cursor walks — and this is the largest
-    // table in the system, so without this index every page and every
-    // export sorts all of it.
+    // actor to key on. It orders the whole table by `(created_at, id)`,
+    // the pair its keyset cursor walks. This is the largest table in
+    // the system, so without this index every page and every export
+    // sorts all of it.
     index("activity_log_created_at_idx").on(table.createdAt, table.id),
     check(
       "activity_log_entity_type_check",

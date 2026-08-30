@@ -6,8 +6,8 @@
  * value-list anatomy, and adding, removing, and rearranging each save
  * the moment they are made (SET-003).
  *
- * Nothing here asserts what the round then fires on — that is
- * `reminder-offsets.test.ts`'s, over the real handler. What this suite
+ * Nothing here asserts what the round then fires on. That belongs to
+ * `reminder-offsets.test.ts`, over the real handler. What this suite
  * pins is what an Administrator sees and what the pane sends.
  */
 
@@ -35,7 +35,7 @@ const SEEDED = [7, 1, 0];
 
 /**
  * Answers the pane's read and captures its writes, the way the real
- * endpoint does — every save sends the whole list and answers the stored
+ * endpoint does. Every save sends the whole list and gets the stored
  * one back.
  */
 function captureOffsetWrites(writes: number[][], failWith?: Response) {
@@ -258,8 +258,8 @@ describe("Organization · Notifications (#322)", () => {
 
     await user.click(await screen.findByRole("button", { name: "Remove 1 day before" }));
     // The list moved at once and the write is out. Every trailing action
-    // stands down until it lands, so the second press cannot be made —
-    // two whole-list writes racing would let the slower reply land last.
+    // stands down until it lands, so the second press cannot be made.
+    // Two whole-list writes racing would let the slower reply land last.
     expect(drawnRows()).toEqual(["7 days before", "On the day"]);
     expect(screen.getByRole("button", { name: "Remove 7 days before" })).toBeDisabled();
     expect(screen.getByRole("button", { name: "Add lead time" })).toBeDisabled();

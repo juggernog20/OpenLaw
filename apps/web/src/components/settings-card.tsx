@@ -3,7 +3,7 @@
 /**
  * The card chrome every settings pane shares (ST1/ST4 mocks): a Card
  * with the section-header strip on top. One definition, so the header
- * height and pane width stay identical across panes — both dimensions
+ * height and pane width stay identical across panes. Both dimensions
  * come from the chrome-dimension tokens in globals.css.
  *
  * A card can be a disclosure (DES-054). Opt in with `collapsible`, and

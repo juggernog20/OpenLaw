@@ -98,9 +98,9 @@ const EntityListRowSchema = EntityRowSchema.extend({
   nextObligation: NextObligationSchema.nullable(),
 });
 
-/** The Member+ readable slice of an entity type — the register form's
- * picker source (GET /entity-types itself is Administrator-only per
- * SET-002, so the registry surface carries its own read). */
+/** The Member+ readable slice of an entity type, the register form's
+ * picker source. GET /entity-types itself is Administrator-only per
+ * SET-002, so the registry carries its own read. */
 const EntityTypeOptionSchema = z.object({
   id: z.string(),
   slug: z.string(),

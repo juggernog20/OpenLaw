@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 /**
- * Auth guards (TECH-008) — the preHandler primitives every protected
+ * Auth guards (TECH-008), the preHandler building blocks every protected
  * route composes. The role is read live from users on every request
  * (never trusted from a cookie), so demotion and archival take effect
  * immediately (DD-013).
@@ -14,8 +14,9 @@ import { httpError } from "../lib/problem.js";
 import type { AuthenticatedSession, AuthenticatedUser } from "./user.js";
 
 /** Re-exported so every importer keeps asking the guard module for the
- * shape it guards. The declarations live one file over, where a process
- * with no Fastify instance can reach them — see `auth/user.ts`. */
+ * shape it guards. The declarations live one file over, in
+ * `auth/user.ts`, where a process with no Fastify instance can reach
+ * them. */
 export type { AuthenticatedSession, AuthenticatedUser } from "./user.js";
 
 declare module "fastify" {
@@ -29,7 +30,7 @@ declare module "fastify" {
 
 /** The users columns the guard loads on every request. The avatar is
  * deliberately absent: it can be a data: URI of up to ~1.4 MB, and only
- * /me returns it — every other guarded request would haul it out of the
+ * /me returns it. Every other guarded request would haul it out of the
  * database for nothing. */
 const guardColumns = {
   id: users.id,
@@ -40,7 +41,7 @@ const guardColumns = {
   timezone: users.timezone,
 } as const;
 
-/** The users columns behind the API-facing user shape — one projection
+/** The users columns behind the API-facing user shape. One projection
  * shared by every query that returns a user to a client. */
 export const userColumns = {
   ...guardColumns,
@@ -76,7 +77,7 @@ export async function requireAuth(request: FastifyRequest): Promise<void> {
 }
 
 /**
- * **The one sentence a role refusal is worded in.**
+ * The one sentence a role refusal is worded in.
  *
  * It is exported because a guard is not the only place a role can refuse:
  * a route mounted for several kinds of record answers the role question

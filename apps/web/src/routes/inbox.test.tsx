@@ -7,7 +7,7 @@
  * to the record it became, the empty state, and the next page.
  *
  * A Contributor and a Business User never see the destination and never
- * reach the screen — the API's 403 is the real refusal, and the loader
+ * reach the screen. The API's 403 is the real refusal, and the loader
  * is its client half.
  */
 
@@ -88,8 +88,8 @@ describe("the Inbox destination", () => {
     expect(
       within(row).getByRole("link", { name: "Injunction threat — Meridian dispute letter" }),
     ).toHaveAttribute("href", "/inbox/48");
-    // The front door, and the routing the Administrator bound to it —
-    // triage confirms the target, so the row states it (DD-018).
+    // The front door, and the routing the Administrator bound to it.
+    // Triage confirms the target, so the row states it (DD-018).
     expect(within(row).getByText("NDA request")).toBeInTheDocument();
     expect(within(row).getByText("Contract · NDA")).toBeInTheDocument();
     expect(within(row).getByText("Dana Reyes")).toBeInTheDocument();
@@ -359,7 +359,7 @@ describe("who the Inbox is for (INT-006, DD-013)", () => {
     const { router } = renderAt("/inbox");
 
     // Bounced home, and home for a Business User is the portal
-    // (INT-001) — the staff shell is somewhere they never arrive.
+    // (INT-001). The staff shell is somewhere they never arrive.
     await waitFor(() => expect(router.state.location.pathname).toBe("/portal"));
     expect(screen.queryByRole("navigation")).not.toBeInTheDocument();
   });

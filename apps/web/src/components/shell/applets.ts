@@ -11,7 +11,7 @@
  * deep-link (SET-001) grouped below the divider.
  *
  * A slot either opens the side panel (`render`) or navigates away
- * (`href`) — the settings slot is a deep link, not a panel.
+ * (`href`). The settings slot is a deep link, not a panel.
  */
 
 import type { LucideIcon } from "lucide-react";
@@ -31,9 +31,9 @@ interface AppletBase {
    */
   badge?: number;
   /** Places the slot in the group below the bar's divider. The group
-   * flows right after the leading slots — it is not pinned to the
-   * bar's bottom edge (that was the superseded V12/V13 treatment; see
-   * the DES-016 implementation clarification). */
+   * flows right after the leading slots. It is not pinned to the bar's
+   * bottom edge; that was the superseded V12/V13 treatment. See the
+   * DES-016 implementation clarification. */
   group?: "below-divider";
 }
 
@@ -42,7 +42,7 @@ export interface PanelApplet extends AppletBase {
   render: () => ReactNode;
   /**
    * Rendered beside the panel's title while the applet is open. The
-   * panel header is chrome, but what sits in it is the applet's — the
+   * panel header is chrome, but what sits in it is the applet's. The
    * M3 count pill is the first user (DES-016's implementation
    * clarification, point 5). Omit for a plain title.
    */

@@ -4,13 +4,13 @@
  * Personal · Profile (SET-006, #67), from the ST1 frame of settings.pen
  * as amended by SETTINGS-INVENTORY.md delta 4: display name, avatar,
  * change password, TOTP management, sign-out-my-other-devices, and the
- * DES-014 timezone picker. Email and role render read-only — email
- * change is deferred (FUTURE-FEATURES), roles are managed in
- * Organization → Users (SET-005). Self-service mutations ride
- * better-auth's mounted routes; the timezone rides the widened
- * /me/preferences endpoint. The password & two-factor card only
- * renders for accounts with a password credential — TOTP gates password
- * sign-in alone (TECH-008), so neither surface means anything to an
+ * DES-014 timezone picker. Email and role render read-only. Email
+ * change is deferred (FUTURE-FEATURES), and roles are managed in
+ * Organization > Users (SET-005). Self-service mutations go through
+ * better-auth's mounted routes; the timezone goes through the widened
+ * /me/preferences endpoint. The password and two-factor card only
+ * renders for accounts with a password credential. TOTP gates password
+ * sign-in alone (TECH-008), so neither control means anything to an
  * SSO- or magic-link-only account.
  */
 
@@ -42,8 +42,8 @@ export async function settingsProfileLoader() {
     authClient.getSession(),
     authClient.listAccounts(),
   ]);
-  // A failed read must fail the pane — rendering "no password" chrome
-  // off a network error would silently hide the credential surfaces.
+  // A failed read must fail the pane. Rendering "no password" chrome
+  // off a network error would silently hide the credential controls.
   if (session.error || !session.data) throw new Error("The session could not be read.");
   if (accounts.error || !accounts.data) throw new Error("The linked accounts could not be read.");
   const credential = accounts.data.find((account) => account.providerId === "credential");
@@ -97,7 +97,7 @@ export function SettingsProfilePage() {
   function commitName() {
     const name = nameDraft.trim();
     if (name === saved.displayName || name === "") {
-      // Nothing to save (or nothing valid): revert per DES-017.
+      // Nothing to save, or nothing valid. Revert per DES-017.
       setNameDraft(saved.displayName);
       return;
     }
@@ -171,8 +171,8 @@ export function SettingsProfilePage() {
     setDialogBusy(true);
     setDialogError(null);
     try {
-      // A password change is often a response to a leak — every other
-      // session dies with the old password, this one stays.
+      // A password change is often a response to a leak. Every other
+      // session dies with the old password. This one stays.
       const res = await authClient.changePassword({
         currentPassword,
         newPassword,
@@ -230,10 +230,10 @@ export function SettingsProfilePage() {
         return;
       }
       // From better-auth 1.7 the answer says which second factor it
-      // enrolled. TOTP is the only one this install can return — the
-      // e-mail OTP fallback is deliberately not configured (no sendOTP,
-      // TECH-008) — so anything else is a misconfiguration, not a state
-      // this dialog can walk the user through.
+      // enrolled. TOTP is the only one this install can return, because
+      // the e-mail OTP fallback is not configured on purpose (no sendOTP,
+      // TECH-008). Anything else is a misconfiguration, not a state this
+      // dialog can walk the user through.
       if (res.data.method !== "totp") {
         setDialogError(
           intl.formatMessage({
@@ -317,7 +317,7 @@ export function SettingsProfilePage() {
               type="file"
               accept={AVATAR_TYPES.join(",")}
               // Visually hidden but still in the accessibility tree, so
-              // it carries its own name (the Upload button drives it).
+              // it carries its own name. The Upload button drives it.
               aria-label={intl.formatMessage({
                 id: "settings.profile.uploadPhoto",
                 defaultMessage: "Upload a profile photo",

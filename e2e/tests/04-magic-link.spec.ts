@@ -5,7 +5,7 @@
  * auth epic's acceptance: the Administrator allowlists a per-run unique
  * domain through the API front door (#22), a requester on that domain
  * asks the login screen for a magic link, the mail arrives through real
- * SMTP, and redemption JIT-provisions a Business User — while an
+ * SMTP, and redemption JIT-provisions a Business User, while an
  * ineligible address gets the identical 202 and no mail. The remaining
  * route guards close it out: a signed-in visit to the login route
  * bounces home, and a dead link lands on the link-expired page.
@@ -90,13 +90,13 @@ test.describe.serial("magic link → JIT provisioning → route guards", () => {
   test("redeeming the link JIT-provisions a Business User", async ({ page }) => {
     await page.goto(magicLink);
     // The verify endpoint's callback is "/", and the root guard forwards
-    // a Business User from there to the portal — the surface that is
+    // a Business User from there to the portal, the screen that is
     // theirs (INT-001, #376).
     await expect(page).toHaveURL(/\/portal$/);
     await expect(page.getByRole("heading", { name: "What do you need from Legal?" })).toBeVisible();
 
     // DD-010: an unknown identity on an allowed domain is admitted as
-    // exactly a Business User — the me endpoint carries the live role.
+    // exactly a Business User. The me endpoint carries the live role.
     const me = await page.request.get("/api/v1/me");
     expect(me.status()).toBe(200);
     const { user } = z

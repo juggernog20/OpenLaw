@@ -4,26 +4,26 @@
  * Saved list views (DD-019) at the HTTP seam through the real-Postgres
  * harness.
  *
- * Four subjects, in the order they matter:
+ * Four subjects, in the order they matter.
  *
- * **Privacy is the first one.** A view is one person's (DD-019 clause 1),
- * and the seam holds that by answering 404 for somebody else's view id —
- * the same body as an id that was never issued, never a 403. A named test
- * asserts the refusal cannot be told apart from absence, because a 403
- * here would confirm that a view exists and who has one.
+ * Privacy first. A view is one person's (DD-019 clause 1), and the seam
+ * holds that by answering 404 for somebody else's view id, with the same
+ * body as an id that was never issued, never a 403. A named test asserts
+ * the refusal cannot be told apart from absence, because a 403 here
+ * would confirm that a view exists and who has one.
  *
- * **The default is exclusive.** At most one view per person per surface
- * opens the list, and the partial unique index behind it means a second
- * one is a constraint violation rather than a row that quietly wins. The
- * tests drive the flag through create, patch, re-point, and delete.
+ * The default is exclusive. At most one view per person per surface
+ * opens the list. The partial unique index behind it makes a second one
+ * a constraint violation rather than a row that quietly wins. The tests
+ * drive the flag through create, patch, re-point, and delete.
  *
- * **Names are unique per person, case-insensitively**, and two people may
+ * Names are unique per person, case-insensitively, and two people may
  * both have a "My contracts".
  *
- * **The config is held, not interpreted.** A view naming a column this
- * build does not draw is stored and returned intact — DD-019 clause 7
- * makes reading past it the page's job, so a seam that rejected it would
- * make an unshippable view out of a droppable column.
+ * The config is held, not interpreted. A view naming a column this build
+ * does not draw is stored and returned intact. DD-019 clause 7 makes
+ * reading past it the page's job, so a seam that rejected it would make
+ * an unshippable view out of a droppable column.
  */
 
 import { afterAll, beforeAll, describe, expect, it } from "vitest";

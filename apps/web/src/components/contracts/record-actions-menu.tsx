@@ -7,7 +7,7 @@
  *
  * It is deliberately short. An act that belongs to one field commits
  * from that field (DES-017), an act that belongs to one section commits
- * from that section's card, and neither is repeated here — a second
+ * from that section's card, and neither is repeated here. A second
  * control for one datum is what DES-053 refused for the status. What
  * is left is the record: copy a link to it, rename it, archive it.
  *
@@ -72,7 +72,7 @@ export function RecordActionsMenu({
       copiedTimer.current = setTimeout(() => setCopied(false), COPIED_MS);
     } catch {
       // A browser that refuses the clipboard leaves the address bar as
-      // the way to copy a link — there is nothing to report.
+      // the way to copy a link. There is nothing to report.
       setCopied(false);
     }
   }

@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 /**
- * The application shell (#41): sign-in lands in the real chrome —
- * header, top nav from the destination registry, page sub-bar — at the
- * DES-007 normalized geometry, rendered in self-hosted Inter with no
- * outbound font request.
+ * The application shell (#41): sign-in lands in the real chrome at the
+ * DES-007 normalized geometry. That chrome is the header, the top nav
+ * from the destination registry, and the page sub-bar, rendered in
+ * self-hosted Inter with no outbound font request.
  *
  * The second test is the scroll model (DES-030, #158). It belongs here
  * because it is a fact about the shell rather than about any page, and
- * because layout is the only way to prove it — a class name on a `div`
+ * because layout is the only way to prove it. A class name on a `div`
  * says nothing about what actually moves.
  */
 
@@ -34,10 +34,10 @@ test.describe("application shell", () => {
     await expect(header.getByText("openlaw")).toBeVisible();
     await expect(header.getByRole("combobox", { name: "Search" })).toBeVisible();
 
-    // Nav renders from the destination registry — Home in slot one,
-    // the M21 Inbox next (INT-006 M21/13), then the M22 Matters, M8
-    // Contracts, M26 Documents, and M7 Entities destinations — with
-    // the current one marked.
+    // Nav renders from the destination registry, with the current
+    // destination marked: Home in slot one, the M21 Inbox next (INT-006
+    // M21/13), then the M22 Matters, M8 Contracts, M26 Documents, and
+    // M7 Entities destinations.
     const nav = page.getByRole("navigation");
     const links = nav.getByRole("link");
     await expect(links).toHaveCount(6);
@@ -80,7 +80,7 @@ test.describe("application shell", () => {
 
     // The overflow is made rather than waited for. Home is shorter than
     // the viewport on a fresh install, and the model has to hold for the
-    // tallest surface the product will ever draw — not for whatever rows
+    // tallest surface the product will ever draw, not for whatever rows
     // this instance happens to be carrying today.
     await main.evaluate((region) => {
       const filler = document.createElement("div");
@@ -106,7 +106,7 @@ test.describe("application shell", () => {
     await main.evaluate((region) => region.scrollTo(0, region.scrollHeight));
 
     // The region moved, the window did not, and the three strips are
-    // exactly where they were — DES-009 Tier 2 and DES-028 both promise
+    // exactly where they were. DES-009 Tier 2 and DES-028 both promise
     // a statement that survives a long record.
     expect(await main.evaluate((region) => region.scrollTop)).toBeGreaterThan(0);
     expect(await page.evaluate(() => window.scrollY)).toBe(0);

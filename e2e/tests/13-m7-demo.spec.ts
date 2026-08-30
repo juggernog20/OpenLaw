@@ -3,18 +3,19 @@
 /**
  * M7 milestone acceptance (#98): the demo, end to end, in one browser
  * session. An Administrator opens the new Entities destination and
- * registers the company's UK subsidiary with its full identity card;
- * it appears in the registry, ordered by legal name, showing name,
+ * registers the company's UK subsidiary with its full identity card.
+ * It appears in the registry, ordered by legal name, showing name,
  * type, jurisdiction, and status. A second journey proves ENT-004: a
  * Contributor's nav carries no Entities item, the URL bounces them
- * home, and the API's 403 stands behind the bounce. (A Business User
- * is refused the same way, but cannot exist yet — portal accounts
- * arrive with intake, and invites stop at Contributor.) ("Selectable as
- * the signing entity on a contract" — the demo sentence's other half —
- * is asserted in M8's spec, when a contract form exists to select it
- * on.) Per-run entities are archived afterwards, so the never-reset
- * instance (TECH-018) stays clean — archived rows are the suite's
- * resting state, like fields; #99 ships restore and the archive UI.
+ * home, and the API's 403 stands behind the bounce. A Business User
+ * is refused the same way, but cannot exist yet. Portal accounts
+ * arrive with intake, and invites stop at Contributor. The demo
+ * sentence's other half, "selectable as the signing entity on a
+ * contract", is asserted in M8's spec, when a contract form exists to
+ * select it on. Per-run entities are archived afterwards, so the
+ * never-reset instance (TECH-018) stays clean. Archived rows are the
+ * suite's resting state, like fields. #99 ships restore and the
+ * archive UI.
  */
 
 import { test, expect, type APIRequestContext } from "@playwright/test";
@@ -54,7 +55,7 @@ async function listEntities(request: APIRequestContext, includeArchived = false)
   return EntityRows.parse(await listed.json()).entities;
 }
 
-/** Archives every live per-run entity — the soft-delete resting state
+/** Archives every live per-run entity, the soft-delete resting state
  * (TECH-018 cleanup; hard delete does not exist on the registry). */
 async function ensureDemoEntitiesInert(request: APIRequestContext) {
   const rows = await listEntities(request);
@@ -134,7 +135,7 @@ test.describe.serial("M7 demo path", () => {
       await expect(row).toContainText("England & Wales");
       await expect(row).toContainText("Active");
 
-      // Ordered by legal name — the API's answer is sorted, and the
+      // Ordered by legal name. The API's answer is sorted, and the
       // new row sits exactly where that order puts it.
       const listed = await listEntities(page.request);
       const names = listed.map((entity) => entity.legalName);
@@ -202,7 +203,7 @@ test.describe.serial("M7 demo path", () => {
       });
       const contributorPage = member.page;
 
-      // No Entities nav item — absent, not disabled.
+      // No Entities nav item. Absent, not disabled.
       await contributorPage.goto("/");
       const nav = contributorPage.getByRole("navigation", { name: "Primary" });
       await expect(nav.getByRole("link", { name: "Home" })).toBeVisible();
@@ -212,7 +213,7 @@ test.describe.serial("M7 demo path", () => {
       await contributorPage.goto("/entities");
       await expect(contributorPage).toHaveURL(/\/$/);
 
-      // The client bounce is convenience; the API's refusal is real —
+      // The client bounce is convenience; the API's refusal is real,
       // on the list, the picker read, and the write. The write carries
       // a shape-valid body: validation answers before the role guard,
       // and the refusal under test is the guard's.

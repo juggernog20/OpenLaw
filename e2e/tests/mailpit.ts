@@ -2,10 +2,10 @@
 
 /**
  * Mailpit access for suites that exercise real email delivery (invites,
- * magic links). The dev overlay publishes Mailpit's REST API on :8025;
- * discovery is by polling that API — never by sleeping — and always
- * scoped to a per-run unique address, so the accumulated inbox of a
- * persistent instance (TECH-018) can never produce a false match.
+ * magic links). The dev overlay publishes Mailpit's REST API on :8025.
+ * Discovery polls that API, never sleeps, and always scopes to a
+ * per-run unique address, so the accumulated inbox of a persistent
+ * instance (TECH-018) can never produce a false match.
  */
 
 import { expect, type APIRequestContext } from "@playwright/test";
@@ -31,10 +31,10 @@ async function searchMailTo(
 }
 
 /**
- * How many messages Mailpit holds for `address`, right now — the
- * anti-enumeration suites' proof that an ineligible request delivered
- * nothing (always sequenced after some later delivery has confirmed
- * the pipeline flushed).
+ * How many messages Mailpit holds for `address` right now. The
+ * anti-enumeration suites use it to prove an ineligible request
+ * delivered nothing. Always sequence it after some later delivery has
+ * confirmed the pipeline flushed.
  */
 export async function mailCountTo(request: APIRequestContext, address: string): Promise<number> {
   return (await searchMailTo(request, address)).messages.length;
@@ -45,12 +45,11 @@ export async function mailCountTo(request: APIRequestContext, address: string): 
  * returns the newest one's subject and plain-text body.
  *
  * `subject` narrows the wait to the message actually being waited for.
- * An address that has already received something — anybody who was
- * invited, which is every per-run person — already satisfies "a message
- * exists", so a bare wait would answer with the invite the moment it is
- * asked. A suite expecting the *next* message names it (M18's demo waits
- * for an approval request and for a morning briefing on addresses whose
- * set-password mail arrived minutes earlier).
+ * Every per-run person was invited, so their address already satisfies
+ * "a message exists". A bare wait would answer with the invite the
+ * moment it is asked. A suite expecting the next message names it
+ * (M18's demo waits for an approval request and for a morning briefing
+ * on addresses whose set-password mail arrived minutes earlier).
  */
 export async function waitForMailTo(
   request: APIRequestContext,

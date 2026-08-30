@@ -3,7 +3,7 @@
 /**
  * Where the doc engine is, read from the environment (TECH-010).
  *
- * The choice is made once, at startup, and the engine is injected — no
+ * The choice is made once, at startup, and the engine is injected. No
  * module below this one reads the environment for it, and no module
  * below this one knows there is a sidecar at all.
  *
@@ -79,7 +79,7 @@ export function readDocEngineConfig(env: DocEngineEnvironment): HttpDocEngineOpt
     throw new DocEngineConfigError("DOC_ENGINE_TIMEOUT_MS must be a whole number of milliseconds.");
   }
   // A bound the queue cannot hold is refused rather than accepted and
-  // then broken — see MAX_DOC_ENGINE_TIMEOUT_MS for the arithmetic. An
+  // then broken. See MAX_DOC_ENGINE_TIMEOUT_MS for the arithmetic. An
   // install that took it would have jobs expire mid-conversion and get
   // handed to a second worker.
   if (timeoutMs > MAX_DOC_ENGINE_TIMEOUT_MS) {

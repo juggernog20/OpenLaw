@@ -5,24 +5,24 @@
  * lightweight checklist with a done count, a toggle per row, and an
  * empty state.
  *
- * **The section draws the checklist, and nothing more.** No comments, no
- * statuses beyond done/not-done, no sub-tasks, no detail page —
- * discussion happens in the record's comment thread (CTR-017).
+ * The section draws the checklist, and nothing more. No comments, no
+ * statuses beyond done/not-done, no sub-tasks, no detail page.
+ * Discussion happens in the record's comment thread (CTR-017).
  *
- * **Adding and editing are dialogs.** A task is a title and an optional
- * due date that commit together — the compound edit DES-017 carves out
- * of the inline rule. The assignee field exists on the model but is not
- * yet collected from this surface. Toggling and removing are
- * one click each: toggling flips a boolean, and removing destroys
- * nothing that matters — the row goes, the activity entry keeps it
- * (DD-017), and adding it back is one dialog away.
+ * Adding and editing are dialogs. A task is a title and an optional
+ * due date that commit together, the compound edit DES-017 carves out
+ * of the inline rule. The assignee field exists on the model but this
+ * dialog does not collect it yet. Toggling and removing are one click
+ * each: toggling flips a boolean, and removing destroys nothing that
+ * matters. The row goes, the activity entry keeps it (DD-017), and
+ * adding it back is one dialog away.
  *
- * **Order is the seam's.** The display order is set on add and adjusted
- * on reorder; the read surface orders by it.
+ * Display order belongs to the tasks seam. It is set on add and
+ * adjusted on reorder; the read side orders by it.
  *
- * **Task due dates never join the deadline union** (CTR-017). A task due
- * date is a team intention, not a contractual obligation. The code
- * enforces this by simply never routing them to the key-dates surface.
+ * Task due dates never join the deadline union (CTR-017). A task due
+ * date is a team intention, not a contractual obligation. Nothing here
+ * routes them to the key-dates section.
  */
 
 import { useState } from "react";

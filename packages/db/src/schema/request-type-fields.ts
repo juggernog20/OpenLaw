@@ -1,21 +1,21 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 /**
- * The per-type field attachment join for request types (INT-002,
- * mirroring CTR-016's `contract_type_fields` and MTR-011's
- * `matter_type_fields` — the shared columns live in `typeFieldColumns`):
- * which catalog fields a request type's portal form collects, in what
- * order, and whether each is required on that form.
+ * The per-type field attachment join for request types (INT-002). It
+ * mirrors CTR-016's `contract_type_fields` and MTR-011's
+ * `matter_type_fields`; the shared columns live in `typeFieldColumns`.
+ * It records which catalog fields a request type's portal form
+ * collects, in what order, and whether each is required on that form.
  *
- * **What may attach follows the type's target**, not this table: a
+ * What may attach follows the type's target, not this table: a
  * contract-targeting type takes contract-scoped and global fields, a
  * matter-targeting type takes matter-scoped and global fields, and a
  * type with no target takes global fields only. The rule is
  * application-enforced, as CTR-016's is, because it reads a column on
  * the owning row rather than a constant.
  *
- * The four basics every form collects — Summary, Description,
- * Attachments, and Urgency — are not rows here. They are fixed by
+ * The four basics every form collects (Summary, Description,
+ * Attachments, and Urgency) are not rows here. They are fixed by
  * INT-002, so nothing configures them and nothing needs a join row to
  * record that they are on.
  *

@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 /**
- * The contract-type live-usage machinery (#113): the contract record
+ * The contract-type live-usage machinery (#113). The contract record
  * arms the SET-003 archive guard for CTR-002's taxonomy, so the factory's
- * placeholder zero becomes a genuine query over `contracts.contract_type_id`.
+ * placeholder zero becomes a real query over `contracts.contract_type_id`.
  * Entity types got here first (#100) and this is the same shape, with the
  * same counting rule: archived contracts count and move too (ENT-009,
  * inherited by the contract taxonomy with this milestone). The counted
@@ -15,7 +15,7 @@
  *
  * - **The hard-required rule does not run.** `assertRequiredCustomFields`
  *   (CTR-016, MTR-014) is the one entry point for that refusal and this
- *   path deliberately does not call it: a refusal here would strand every
+ *   path does not call it on purpose. A refusal here would strand every
  *   contract on a type an Administrator is archiving. The target type's
  *   required fields become gaps to fill on each record.
  * - **Values are retained.** `custom_fields` is keyed by field slug, so
@@ -25,8 +25,8 @@
  *   value).
  *
  * Each moved contract gets its own DD-017 feed entry under a dedicated
- * verb, `contract.type_reassigned` — `contract.updated` would claim a
- * person edited the record. Everything runs on the caller's executor: the
+ * verb, `contract.type_reassigned`. `contract.updated` would claim a
+ * person edited the record. Everything runs on the caller's executor. The
  * archive route passes its transaction, with the type rows already
  * locked, so the move serializes against concurrent creates and re-types,
  * which lock the same row before they write.
@@ -58,7 +58,7 @@ export const contractTypeUsage: TaxonomyUsage = {
     // write rather than let the archive transaction abort on a 500.
     if (moved.length === 0) return 0;
     // Working Team, like every other contract-record entry (DD-017,
-    // M9/6): the record's working group reads its own narrative. The
+    // M9/6). The record's working group reads its own narrative. The
     // Administrator-side story is the system-level
     // `contract_type.archived` entry the archive route writes.
     await recordActivity(

@@ -1,17 +1,17 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 /**
- * Matters · Statuses (#82), the DES-020 list-editor extended per the
- * ST10 frame of settings.pen: the MTR-002 taxonomy with the category badge
- * in the qualifier-pill slot and the `open` and `closed` seeds locked,
- * drag or arrow-key reorder, and an inline draft row whose category is
- * picked at creation and immutable after. The archive guard enforces
- * the MTR-002 category floor and requires a same-category replacement
- * when matters still hold the status. Every
- * mutation applies immediately on save. The shared anatomy lives in the
- * ListEditor component (extracted with #83); this pane owns the MTR-002
- * vocabulary, the API calls, and the guard dialog. The loader is the
- * client half of SET-002's gate; the API's 403 is the real refusal.
+ * Matters · Statuses (#82): the DES-020 list editor on the ST10 frame of
+ * settings.pen. The MTR-002 taxonomy shows its category badge in the
+ * qualifier-pill slot, the `open` and `closed` seeds are locked, rows
+ * reorder by drag or arrow key, and the inline draft row picks a
+ * category at creation that is immutable after. The archive guard
+ * enforces the MTR-002 category floor and requires a same-category
+ * replacement when Matters still hold the status. Every mutation
+ * applies on save. The shared anatomy lives in ListEditor (extracted
+ * with #83); this pane owns the MTR-002 vocabulary, the API calls, and
+ * the guard dialog. The loader is the client half of SET-002's gate;
+ * the API's 403 is the real refusal.
  */
 
 import { useRef, useState } from "react";
@@ -53,7 +53,7 @@ type StatusRow =
 
 const byDisplayOrder = (a: StatusRow, b: StatusRow) => a.displayOrder - b.displayOrder;
 
-/** The fixed category names — never sourced from a status label (MTR-002). */
+/** The fixed category names. Never sourced from a status label (MTR-002). */
 function categoryLabel(intl: IntlShape, category: Category): string {
   return intl.formatMessage(
     {
@@ -74,13 +74,13 @@ function ArchiveStatusDialog({
 }: Readonly<{
   target: StatusRow;
   /** The MTR-002 floor: the target is its category's last unarchived
-   * status. The other block — matters still on the status — rides
+   * status. The other block, Matters still on the status, rides
    * `target.inUseCount`, so the dialog reads it from the row. */
   blocked: boolean;
   candidates: StatusRow[];
   onOpenChange: (open: boolean) => void;
   onArchived: (row: StatusRow) => void;
-  /** Where focus lands after a successful archive — the row's archive
+  /** Where focus lands after a successful archive. The row's archive
    * button unmounts with the row, so the default restore has no home. */
   onArchivedCloseFocus: () => void;
 }>) {
@@ -300,7 +300,7 @@ export function SettingsMatterStatusesPage() {
   }
 
   async function create() {
-    // Enter can land while a create is already posting — a ref, set
+    // Enter can land while a create is already posting. A ref, set
     // synchronously, keeps a double-tap from posting the draft twice.
     if (createInFlight.current) return;
     const displayName = addDraft.name.trim();
@@ -367,7 +367,7 @@ export function SettingsMatterStatusesPage() {
     return false;
   }
 
-  /** One validated move from the grip (arrow key or drop) — commit the
+  /** One validated move from the grip (arrow key or drop): commit the
    * permutation and announce the landing position (DES-020). */
   async function move(fromIndex: number, toIndex: number) {
     const row = live[fromIndex]!;
@@ -548,7 +548,7 @@ export function SettingsMatterStatusesPage() {
                   const category = event.target.value as Category | "";
                   setAddDraft((current) => ({ ...current, category }));
                   // Picking a category answers the "pick a category"
-                  // refusal — don't leave it standing.
+                  // refusal, so clear it.
                   if (category !== "" && addStatus === "error") {
                     setAddStatus("idle");
                     setAddError(undefined);

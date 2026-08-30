@@ -3,25 +3,25 @@
 /**
  * The authenticated application shell (M4 spec, #40): skip link,
  * header, top nav, then the page's sub-bar and main content. Two
- * container contexts are established here — `shell` on the shell
- * column and `page` on the main region — so content components query
- * their container, never the viewport (DES-012).
+ * container contexts start here, `shell` on the shell column and `page`
+ * on the main region, so content components query their container,
+ * never the viewport (DES-012).
  *
  * One slot sits between the nav and the sub-bar: the record banner
  * (DES-009 Tier 2). It is a slot on the shell rather than the first
- * thing a page draws because it is chrome — it belongs with the nav
+ * thing a page draws because it is chrome. It belongs with the nav
  * above it and the sub-bar below it, and the C8 mock stacks the three
  * in exactly that order.
  *
- * **The shell owns the scroll, and gives it to `main` alone** (DES-030).
- * The column is exactly one viewport tall and never scrolls itself; the
+ * The shell owns the scroll, and gives it to `main` alone (DES-030).
+ * The column is exactly one viewport tall and never scrolls itself. The
  * four strips above `main` each hold their own height and cannot be
- * pushed off it. This is what DES-009 Tier 2 and DES-028 already claim
- * — a statement that stays put through a long record — and what the
- * document-scrolling shell they were written against never delivered.
- * A page that wants a finer split says `flush` and builds its own
- * containers inside a `main` that is already bounded, which is how the
- * record body scrolls under a fixed activity bar (DES-016).
+ * pushed off it. DES-009 Tier 2 and DES-028 already claim this, a
+ * statement that stays put through a long record. The document-scrolling
+ * shell they were written against never delivered it. A page that wants
+ * a finer split says `flush` and builds its own containers inside a
+ * `main` that is already bounded. That is how the record body scrolls
+ * under a fixed activity bar (DES-016).
  */
 
 import { useCallback, useLayoutEffect, useMemo, useState, type ReactNode } from "react";
@@ -47,7 +47,7 @@ export function AppShell({
 }: Readonly<{
   user: ShellUser;
   onSignOut: () => void;
-  /** Chrome between the nav and the sub-bar — DES-009's confidentiality
+  /** Chrome between the nav and the sub-bar. DES-009's confidentiality
    * banner today, and nothing else. It is persistent by contract: the
    * shell renders whatever it is given and offers no way to close it. */
   banner?: ReactNode;
@@ -71,10 +71,10 @@ export function AppShell({
 
   const [themeStatus, setThemeStatus] = useState<FieldStatus>("idle");
   const changeTheme = useCallback((next: Theme) => {
-    // The state change applies the attribute instantly via the effect;
-    // persistence rides behind it. A failed write is deliberately not
-    // reverted — the server value simply wins again on the next load —
-    // but it is reported, so the user knows the choice did not stick.
+    // The state change applies the attribute at once via the effect;
+    // persistence rides behind it. A failed write is not reverted on
+    // purpose. The server value wins again on the next load. The failure
+    // is reported, so the user knows the choice did not stick.
     setTheme(next);
     setThemeStatus("saving");
     api
@@ -92,7 +92,7 @@ export function AppShell({
       {/* `h-dvh`, not `h-screen`: on a phone the viewport is the one the
           browser's own bars leave behind, and `vh` measures the one
           before they arrive. `overflow-hidden` is what makes the chrome
-          fixed — there is no document scroll left for it to ride. */}
+          fixed. There is no document scroll left for it to ride. */}
       <div className="@container/shell flex h-dvh flex-col overflow-hidden bg-canvas text-primary">
         <SkipLink />
         <AppHeader user={user} onSignOut={onSignOut} />
@@ -101,7 +101,7 @@ export function AppShell({
         {subbar}
         {/* tabIndex={-1} makes the skip-link target programmatically
             focusable, so activating the link moves keyboard focus here in
-            every browser — not only the ones that reset the sequential
+            every browser, not only the ones that reset the sequential
             focus start point on fragment navigation. */}
         {/* `min-h-0` is what lets it shrink: a flex item's floor is its
             content, so without this the region grows past the column and

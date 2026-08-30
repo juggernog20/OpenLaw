@@ -6,8 +6,8 @@
  * round trip (blank keeps, paste rotates), the read-only webhook URL,
  * and the Test connection button answering both ways.
  *
- * The API behaviours themselves — the refusals, the audit entries, the
- * stored secrets — are covered at the HTTP seam in apps/api. These
+ * The API behaviours themselves, the refusals, the audit entries, and
+ * the stored secrets, are covered at the HTTP seam in apps/api. These
  * stubs only shape what this pane must react to.
  */
 
@@ -34,7 +34,7 @@ const MEMBER = {
 
 const WEBHOOK_URL = "http://localhost:3000/api/v1/signing/docusign/webhook";
 
-/** The connector as the API answers it — never carrying either secret. */
+/** The connector as the API answers it. It never carries either secret. */
 function connector(overrides: Record<string, unknown> = {}) {
   return {
     provider: "docusign",
@@ -214,7 +214,7 @@ describe("the E-signature pane (#245)", () => {
     expect(screen.getByLabelText("User ID")).toHaveValue("the-user-id");
     expect(screen.getByLabelText("Environment")).toHaveValue("demo");
     // Write-only: the pane never received either secret, so it shows
-    // neither — and says what blank means.
+    // neither, and it says what blank means.
     expect(screen.getByLabelText("RSA private key")).toHaveValue("");
     expect(screen.getByLabelText("Connect HMAC secret")).toHaveValue("");
     expect(

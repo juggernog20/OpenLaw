@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 /**
- * The counterparty search (CTR-011, M8/4) at the HTTP seam — the one
+ * The counterparty search (CTR-011, M8/4) at the HTTP seam, the one
  * read behind the shared typeahead, which contract intake reuses in
  * M20/M21. It finds by a fragment of the name, case-insensitively,
  * treats LIKE wildcards as literal characters, orders alphabetically,
@@ -9,7 +9,7 @@
  * is Member+; Contributors and Business Users are refused.
  *
  * Counterparties are born inline on a contract, so the fixtures here go
- * in through the contract route that creates them — the same door a
+ * in through the contract route that creates them, the same door a
  * Legal Team Member uses.
  */
 
@@ -75,8 +75,8 @@ beforeAll(async () => {
   adminCookies = await signInCookies(harness.app, ADMIN.email, ADMIN.password);
   memberCookies = await signInCookies(harness.app, MEMBER.email, MEMBER.password);
 
-  // One contract, and every fixture counterparty put on it by name —
-  // inline creation is the only way a counterparty is born in M8.
+  // One contract, and every fixture counterparty put on it by name.
+  // Inline creation is the only way a counterparty is born in M8.
   const options = await harness.app.inject({
     method: "GET",
     url: "/api/v1/contracts/options",
@@ -173,7 +173,7 @@ describe("GET /counterparties — the shared typeahead's read", () => {
     expect((await search(memberCookies)).map((row) => row.name)).toEqual(
       [...FIXTURES].sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase())),
     );
-    // A query nothing matches is an empty list, not a refusal — that is
+    // A query nothing matches is an empty list, not a refusal. That is
     // what tells the typeahead to offer creating the name instead.
     expect(await search(memberCookies, "nobody by that name")).toEqual([]);
   });

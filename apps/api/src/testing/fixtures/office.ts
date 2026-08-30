@@ -4,13 +4,12 @@
  * Word documents and PowerPoint decks to upload in a test (M12/4).
  *
  * A DOCX and a PPTX are ZIP packages, and both the doc engine and the
- * fake that stands in for it refuse a package that is not whole — a
+ * fake that stands in for it refuse a package that is not whole. A
  * truncated upload has the header and no central directory. So the
  * fixture is a real archive, written out by hand: exact, dependency
- * free, and the same bytes for the same label. It is the compound file
- * the email fixtures burn, one format down.
+ * free, and the same bytes for the same label.
  *
- * **The archive is whole, not furnished.** It carries one stored entry
+ * The archive is whole, not furnished. It carries one stored entry
  * and a correct central directory, so any reader opens it. It does not
  * carry the parts a real Office package carries, and it does not need
  * to: nothing on the path under test opens the archive. The family is
@@ -25,8 +24,8 @@
  * this file cannot keep. */
 const ENTRY_NAME = "openlaw-fixture.xml";
 
-/** ZIP's CRC-32, written out because a fixture with a wrong checksum is
- * not the whole archive this file promises. */
+/** ZIP's CRC-32, written out by hand so the fixture has no dependency. A
+ * wrong checksum would make the archive not whole. */
 function crc32(bytes: Buffer): number {
   let crc = 0xffffffff;
   for (const byte of bytes) {
@@ -61,7 +60,7 @@ export function officePackage(label: string): Buffer {
   local.writeUInt32LE(body.byteLength, 22); // uncompressed size
   local.writeUInt16LE(name.byteLength, 26);
 
-  // And the central directory's entry is forty-six.
+  // The central directory entry is forty-six bytes.
   const central = Buffer.alloc(46);
   central.writeUInt32LE(0x02014b50, 0);
   central.writeUInt16LE(20, 4); // the version that wrote it
@@ -89,6 +88,6 @@ export function officePackage(label: string): Buffer {
 export const DOCX_MIME_TYPE =
   "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
 
-/** And for a .pptx. */
+/** The declared type a browser sends for a .pptx. */
 export const PPTX_MIME_TYPE =
   "application/vnd.openxmlformats-officedocument.presentationml.presentation";

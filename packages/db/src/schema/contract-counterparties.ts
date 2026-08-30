@@ -7,18 +7,18 @@
  * DD-008 is why this points at `counterparties` and not at a shared
  * party table: our entities and their organizations are separate tables,
  * so "a party" is never one foreign key. TECH-014 is why the table lands
- * here and not earlier — it arrives with the feature that reads it.
+ * here and not earlier. It arrives with the feature that reads it.
  *
  * A contract has more than one other side more often than the mocks
- * admit — assignments, novations, and tripartite agreements are ordinary
- * legal work — so this is a join and not a `counterparty_id` column.
+ * admit. Assignments, novations, and tripartite agreements are ordinary
+ * legal work, so this is a join and not a `counterparty_id` column.
  * The primary is the one the list column and the record name first,
  * because a list needs one name per row.
  *
  * The one-primary rule is the application's to keep (CTR-011): the
  * routes decide which row is promoted when the primary leaves, and they
  * do it under the contract row's lock. The partial unique index below is
- * a backstop, not the rule — it can refuse a second primary, but it
+ * a backstop, not the rule. It can refuse a second primary, but it
  * cannot choose the replacement.
  */
 
@@ -41,7 +41,7 @@ export const contractCounterparties = pgTable(
     /** Exactly one true per contract, kept by the routes (CTR-011). */
     isPrimary: boolean("is_primary").notNull().default(false),
     /** When this party joined the contract. A row is written, promoted,
-     * or deleted — the promotion is audited, so there is no
+     * or deleted. The promotion is audited, so there is no
      * `updated_at` here to read it from. */
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
@@ -57,9 +57,9 @@ export const contractCounterparties = pgTable(
       .on(table.contractId)
       .where(sql`${table.isPrimary}`),
     // `counterparty_id` carries no index of its own yet: nothing in M8
-    // reads the join from that side. The enrichment surface that will —
-    // "which contracts is this counterparty on" — brings its own, per
-    // the incremental-schema doctrine (TECH-014).
+    // reads the join from that side. The feature that will, "which
+    // contracts is this counterparty on", brings its own index, per
+    // the incremental-schema rule (TECH-014).
   ],
 );
 

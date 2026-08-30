@@ -3,7 +3,7 @@
 /**
  * The contract-status taxonomy (CTR-001): configurable, renameable
  * lifecycle labels, each mapped to exactly one of the six fixed stages.
- * Code branches on `stage`, never on the label — the stage is picked at
+ * Code branches on `stage`, never on the label. The stage is picked at
  * creation and is immutable afterward. Eight rows are seeded by the
  * migration that creates the table. Application code enforces the
  * guardrails: every stage keeps at least one unarchived status, and the
@@ -27,7 +27,7 @@ import { uuidPk } from "./helpers.js";
 /**
  * The fixed six-stage backbone (CTR-001), in canonical forward order.
  * An immutable enum: approvals, e-sign, renewals, and surfaces branch
- * on these — never on status labels.
+ * on these, never on status labels.
  *
  * Defined in `@openlaw/shared` and re-exported here, because the record's
  * stage pipeline reads the same order in the browser and the web app

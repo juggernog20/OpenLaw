@@ -12,10 +12,10 @@
 #   pnpm upgrade-fidelity              # baseline = origin/dev
 #   BASELINE=v0.3.0 pnpm upgrade-fidelity
 #
-# It runs in its OWN compose project (`openlaw-upgrade`) on its own
+# It runs in its own compose project (`openlaw-upgrade`) on its own
 # ports and volumes, so the instance you develop against on 3000 and the
 # E2E suite's on 3100 are never touched. Volumes are destroyed at the
-# end: unlike the E2E suite, accumulated state would defeat the point —
+# end. Unlike the E2E suite, accumulated state would defeat the point:
 # every run has to start from a fresh baseline install.
 #
 # AUTH_SECRET and OPENLAW_SECRET_KEY come from .env. The key in

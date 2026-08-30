@@ -5,21 +5,21 @@
  * source of truth: the cheat-sheet renders from it and useGlobalKeys
  * registers handlers from it, so the displayed shortcuts cannot drift
  * from real behavior. Entries without an action document behavior
- * owned elsewhere — Radix closes overlays on Esc and restores focus
+ * owned elsewhere. Radix closes overlays on Esc and restores focus
  * to the trigger; the browser owns Tab, Enter, and Space.
  */
 
 import { useEffect, useRef } from "react";
 import { defineMessage, type MessageDescriptor } from "react-intl";
 
-/** The key that focuses search — also shown by the search input's
- * keycap chip, so the affordance can't drift from the binding. */
+/** The key that focuses search. The search input's keycap chip shows
+ * it too, so the affordance can't drift from the binding. */
 export const SEARCH_KEY = "/";
 
 /** Actions useGlobalKeys runs itself. */
 type KeyAction = "focus-search" | "open-cheat-sheet";
 
-/** KEY_MAP descriptors always carry a defaultMessage string — the
+/** KEY_MAP descriptors always carry a defaultMessage string. The
  * cheat-sheet and its drift-guard test read it without narrowing. */
 type KeyMessage = MessageDescriptor & { defaultMessage: string };
 
@@ -103,13 +103,13 @@ export const KEY_MAP: readonly KeySection[] = [
 
 /**
  * The `/` dispatch from DES-010: search inputs register here, and the
- * global handler focuses the most recently mounted one — a page-level
+ * global handler focuses the most recently mounted one. A page-level
  * input layered over the shell header wins while it is mounted.
  */
 const searchTargets: HTMLElement[] = [];
 
 /** Registers a search input as the `/` focus target. Returns the
- * unregister cleanup — hand it straight back from a React 19 ref
+ * unregister cleanup. Hand it straight back from a React 19 ref
  * callback. */
 export function registerSearchTarget(element: HTMLElement): () => void {
   searchTargets.push(element);
@@ -142,7 +142,7 @@ export function useGlobalKeys(options: { onOpenCheatSheet: () => void }): void {
 
     function onKeyDown(event: KeyboardEvent) {
       if (event.defaultPrevented || event.isComposing) return;
-      // Shift stays allowed — typing ? needs it.
+      // Shift stays allowed. Typing ? needs it.
       if (event.ctrlKey || event.metaKey || event.altKey) return;
       const binding = bound.find((candidate) => candidate.action?.key === event.key);
       if (!binding?.action) return;

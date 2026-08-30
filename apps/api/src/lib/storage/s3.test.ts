@@ -7,7 +7,7 @@
  * reference for another bucket's driver does).
  *
  * MinIO is a real S3-compatible store, run the way TECH-014 runs
- * Postgres — a container, never a mock — so the driver under test is the
+ * Postgres: a container, never a mock. So the driver under test is the
  * one a deployment runs and the API it is held to is the real one.
  */
 
@@ -166,7 +166,7 @@ describe("S3-compatible driver", () => {
     const rejected = results.filter((result) => result.status === "rejected");
     expect(rejected).toHaveLength(1);
     expect(rejected[0]?.reason).toBeInstanceOf(BlobExistsError);
-    // The winner's bytes are what is stored, whole — never a mix.
+    // The winner's bytes are what is stored, whole, never a mix.
     const object = await store.client.send(
       new GetObjectCommand({ Bucket: store.bucket, Key: key }),
     );
@@ -175,7 +175,7 @@ describe("S3-compatible driver", () => {
 
   it("round-trips a blob larger than one upload part", async () => {
     // Over the 5 MiB minimum part size, so the SDK takes its multipart
-    // path — the one an uploaded hundred-page scan takes.
+    // path, the one an uploaded hundred-page scan takes.
     const large = Buffer.alloc(6 * 1024 * 1024, "x");
     const ref = await storage.put(randomUUID(), Readable.from([large]));
 
