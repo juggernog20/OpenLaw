@@ -9,6 +9,7 @@
 
 import type { IntlShape } from "react-intl";
 import type { paths } from "@openlaw/api-client";
+import { api } from "./api";
 
 /** One row of the entities API, aliased to the generated client schema
  * so a contract change surfaces as a compile error here, not as a
@@ -20,6 +21,31 @@ export type EntityRow =
  * open Obligation. */
 export type RegistryEntityRow =
   paths["/api/v1/entities"]["get"]["responses"]["200"]["content"]["application/json"]["entities"][number];
+
+type RegistryQuery = NonNullable<paths["/api/v1/entities"]["get"]["parameters"]["query"]>;
+
+/** The whole reachable registry, read page by page to the end of GET
+ * /entities' keyset cursor. The pickers (the M8 signing entity, matter
+ * and request Entity links, the template editor) and the Calendar and
+ * Chart views need every row, not the List view's first page. Answers
+ * in the client's `{ data }` shape so a loader treats it as one read. */
+export async function readRegistry(
+  query: Omit<RegistryQuery, "cursor"> = {},
+): Promise<{ data: { entities: RegistryEntityRow[] } | undefined }> {
+  const entities: RegistryEntityRow[] = [];
+  const seen = new Set<string>();
+  let cursor: string | undefined;
+  for (;;) {
+    const { data } = await api.GET("/api/v1/entities", {
+      params: { query: cursor === undefined ? query : { ...query, cursor } },
+    });
+    if (!data) return { data: undefined };
+    entities.push(...data.entities);
+    if (!data.nextCursor || seen.has(data.nextCursor)) return { data: { entities } };
+    seen.add(data.nextCursor);
+    cursor = data.nextCursor;
+  }
+}
 
 export type EntityRegistryOptions =
   paths["/api/v1/entities/list-options"]["get"]["responses"]["200"]["content"]["application/json"];

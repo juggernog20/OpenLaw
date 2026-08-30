@@ -29,6 +29,7 @@ import { api } from "../lib/api";
 import { civilToday, formatFullDate } from "../lib/format";
 import {
   ENTITY_STATUSES,
+  readRegistry,
   statusLabel,
   type CalendarObligation,
   type EntityRegistryOptions,
@@ -171,9 +172,11 @@ export async function entitiesLoader({ request }: LoaderFunctionArgs) {
   const stored = opensOn ? resolveLayout(CATALOGUE, opensOn.layout) : builtInLayout(CATALOGUE);
   const parsed = layoutFromSearch(stored, url.search);
   const [list, types, chart, calendar, obligationOptions, listOptions] = await Promise.all([
-    api.GET("/api/v1/entities", {
-      params: { query: view === "list" ? listQuery(parsed.layout) : {} },
-    }),
+    // The List view pages; the Calendar's Entity picker and the count
+    // under the title need the whole reachable registry.
+    view === "list"
+      ? api.GET("/api/v1/entities", { params: { query: listQuery(parsed.layout) } })
+      : readRegistry(),
     api.GET("/api/v1/entities/types"),
     view === "chart" ? api.GET("/api/v1/entities/chart") : Promise.resolve(undefined),
     view === "calendar"
@@ -195,7 +198,7 @@ export async function entitiesLoader({ request }: LoaderFunctionArgs) {
   return {
     user,
     entities: list.data.entities,
-    nextCursor: list.data.nextCursor ?? null,
+    nextCursor: "nextCursor" in list.data ? list.data.nextCursor : null,
     entityTypes: types.data.entityTypes,
     view,
     chart: chart?.data,
@@ -476,11 +479,19 @@ function EntitiesPageState() {
         <PageSubBar
           title={<FormattedMessage id="entities.title" defaultMessage="Entities" />}
           subtitle={
-            <FormattedMessage
-              id="entities.count"
-              defaultMessage="{count, plural, one {# entity} other {# entities}}"
-              values={{ count: liveCount }}
-            />
+            view === "list" ? (
+              <FormattedMessage
+                id="entities.list.countShown"
+                defaultMessage="{count, plural, one {# entity shown} other {# entities shown}}"
+                values={{ count: rows.length }}
+              />
+            ) : (
+              <FormattedMessage
+                id="entities.count"
+                defaultMessage="{count, plural, one {# entity} other {# entities}}"
+                values={{ count: liveCount }}
+              />
+            )
           }
           actions={
             <>

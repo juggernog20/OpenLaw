@@ -101,6 +101,7 @@ import {
 import { FormattedMessage, useIntl } from "react-intl";
 import { Ban, Check, ChevronRight, FilePen, FileText } from "lucide-react";
 import { api } from "../lib/api";
+import { readRegistry } from "../lib/entities";
 import { useCommentApplet } from "../components/comments/comment-applet";
 import { ConvertDialog } from "../components/intake/convert-dialog";
 import { CustomFieldValueText } from "../components/intake/custom-field-value";
@@ -162,7 +163,7 @@ export async function inboxRequestLoader({ params }: LoaderFunctionArgs) {
     api.GET("/api/v1/requests/{number}", { params: { path: { number } } }),
     api.GET("/api/v1/contracts/options"),
     api.GET("/api/v1/matters/options"),
-    api.GET("/api/v1/entities"),
+    readRegistry(),
   ]);
   if (res.response.status === 404) return redirect("/inbox");
   if (!res.data || !options.data || !matterOptions.data || !registry.data) {

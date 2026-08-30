@@ -2930,6 +2930,9 @@
   "entities.list.column.type": {
     "defaultMessage": "Type"
   },
+  "entities.list.countShown": {
+    "defaultMessage": "{count, plural, one {# entity shown} other {# entities shown}}"
+  },
   "entities.list.empty.body": {
     "defaultMessage": "The registry holds your own corporate entities — subsidiaries, holding companies, and branches. Register them with their legal details, and contracts pick the signing entity from this list."
   },

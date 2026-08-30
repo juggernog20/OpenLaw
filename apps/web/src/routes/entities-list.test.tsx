@@ -240,6 +240,22 @@ describe("the Entity registry managed list", () => {
     expect(await screen.findByRole("heading", { name: "No entities yet" })).toBeVisible();
   });
 
+  it("reads the whole registry, cursor by cursor, behind the Calendar", async () => {
+    const calendar = surface({ nextPage: true });
+    stubApi({ signedIn: MEMBER, extra: calendar.handler });
+    renderAt("/entities");
+    await screen.findByText("2 entities", undefined, { timeout: 10_000 });
+    expect(calendar.queries.map((query) => query.get("cursor"))).toEqual([null, "entity-1"]);
+  });
+
+  it("counts only the List's shown rows under the title", async () => {
+    const list = surface({ nextPage: true });
+    stubApi({ signedIn: MEMBER, extra: list.handler });
+    renderAt("/entities?view=list");
+    await screen.findByText("1 entity shown", undefined, { timeout: 10_000 });
+    expect(list.queries.map((query) => query.get("cursor"))).toEqual([null]);
+  });
+
   it("appends the next keyset page from the Show more foot", async () => {
     const user = userEvent.setup();
     const api = surface({ nextPage: true });

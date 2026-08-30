@@ -148,6 +148,7 @@ import { FormattedMessage, defineMessage, useIntl, type IntlShape } from "react-
 import { ChevronRight, FileText, PenLine, Settings, X } from "lucide-react";
 import { RENEWAL_EXPIRY_MOVED_PROBLEM_TYPE, SOFT_GATE_PROBLEM_TYPE } from "@openlaw/shared";
 import { api } from "../lib/api";
+import { readRegistry } from "../lib/entities";
 import {
   cadenceLabel,
   contractReference,
@@ -338,7 +339,7 @@ export async function contractRecordLoader({ params, request }: LoaderFunctionAr
     // source (CTR-011): it is ordered by legal name and already leaves
     // archived entities out, so the contracts surface needs no read of
     // its own the way it does for the Administrator-only taxonomies.
-    canEdit ? api.GET("/api/v1/entities") : undefined,
+    canEdit ? readRegistry() : undefined,
     landingTarget
       ? readDocumentLanding(
           { entityType: "contract", number },
