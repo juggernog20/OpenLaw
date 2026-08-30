@@ -987,7 +987,7 @@ Officer roles is the **fifth `taxonomyRoutes` mount** (after Contract, Matter, E
 
 Entity type Fields is the **third record-type `typeFieldRoutes` mount**, after Contract and Matter type Fields. Request-type form attachment also uses the factory, so it is the fourth configured mount in total; “third” here names the record-type sequence from TECH-023's original context. The Entity mount adds no hook: it supplies the constant `entity|global` scope rule and the `entity_type_fields` table.
 
-### M28 addendum (2026-08-30) — sixth taxonomy
+### M28 built addendum (2026-08-30, [#598](https://github.com/juggernog20/OpenLaw/issues/598)) — sixth taxonomy
 
 Knowledge types is the **sixth `taxonomyRoutes` mount**, at `/api/v1/knowledge/types`, supplied entirely as configuration. It has no protected slug. Its SET-003 usage adapter counts and reassigns the full set of referencing `knowledge_items`, including archived items, so the ENT-009 archive rule carries across rather than becoming a Knowledge-only exception. ENT-008's consuming-surface rule is a separate Member+ live-options read; it does not loosen the Administrator gate on the Settings taxonomy.
 
@@ -1056,6 +1056,10 @@ The Entity Contracts and Matters tabs are the first application: one `LinkedReco
 ### Built addendum (2026-08-30, M27/7, [#579](https://github.com/juggernog20/OpenLaw/issues/579))
 
 `LinkedRecordsList` and its typed seam configuration now serve both Entity roll-up tabs. The Contract and Matter mounts differ only in the record kind, endpoint, response key, empty copy, and link target supplied by `ENTITY_LINKED_RECORD_SEAMS`. The route loader reads the tab counts; the mounted list reads its own rows. No Entity-specific linked-record component was added.
+
+### Built addendum (2026-08-30, M28 close, [#598](https://github.com/juggernog20/OpenLaw/issues/598)) — the Documents card is a configured mount
+
+The Knowledge record is the third web mount of the Documents card. One `DocumentsCard` receives the Knowledge owner reference, routes, permissions, vocabulary, primary-pin capability, and `folders: false` as configuration. Upload, batch progress, Version history, preview, rendition polling, download, archive, and primary designation stay in the shared component. No Knowledge-specific Document card or Version list was added. Contract and Matter retain their existing mounts; this change configures the shared card rather than migrating unrelated record pages.
 
 ### Rationale
 

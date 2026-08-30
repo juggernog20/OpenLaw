@@ -18,6 +18,11 @@ import { test, expect } from "@playwright/test";
 import { z } from "zod";
 import { ADMIN, ensureAdminExists, reportAxeViolations, signInAs, sweepOrSay } from "./helpers.js";
 
+const KnowledgeTypesEnvelope = z.object({
+  knowledgeTypes: z.array(z.object({ id: z.string(), slug: z.string() })),
+});
+const CreatedKnowledgeItem = z.object({ knowledgeItem: z.object({ id: z.string() }) });
+
 test.describe("accessibility floor", () => {
   test("login page: axe scan, title, and document language", async ({ page }, testInfo) => {
     await page.goto("/auth/login");
@@ -47,6 +52,69 @@ test.describe("accessibility floor", () => {
     await expect(page).toHaveTitle("Documents · OpenLaw");
     await expect(page.getByRole("region", { name: "Documents" })).toBeVisible();
     await reportAxeViolations(page, testInfo, "documents");
+  });
+
+  test("Knowledge destination, record, and portal article: axe scans", async ({
+    page,
+    request,
+  }, testInfo) => {
+    await ensureAdminExists(request);
+    await signInAs(page, ADMIN.email, ADMIN.password, ADMIN.displayName);
+
+    const types = await page.request.get("/api/v1/knowledge/types");
+    expect(types.status(), await types.text()).toBe(200);
+    const playbookId = KnowledgeTypesEnvelope.parse(await types.json()).knowledgeTypes.find(
+      (row) => row.slug === "playbook",
+    )?.id;
+    expect(playbookId, "the install has no Playbook Knowledge type").toBeDefined();
+
+    const title = `Axe Knowledge playbook ${Date.now()}`;
+    const created = await page.request.post("/api/v1/knowledge", {
+      data: { title, knowledgeTypeId: playbookId },
+    });
+    expect(created.status(), await created.text()).toBe(201);
+    const itemId = CreatedKnowledgeItem.parse(await created.json()).knowledgeItem.id;
+
+    const cleanup = async () => {
+      const archived = await page.request.post(`/api/v1/knowledge/${itemId}/archive`, {
+        data: {},
+      });
+      expect(archived.status(), await archived.text()).toBe(200);
+    };
+
+    try {
+      const updated = await page.request.patch(`/api/v1/knowledge/${itemId}`, {
+        data: {
+          audience: "everyone",
+          body: "# Before you start\n\nRead the playbook before you submit a Request.",
+        },
+      });
+      expect(updated.status(), await updated.text()).toBe(200);
+      const published = await page.request.post(`/api/v1/knowledge/${itemId}/publish`, {
+        data: {},
+      });
+      expect(published.status(), await published.text()).toBe(200);
+
+      await page.goto("/knowledge");
+      await expect(page).toHaveTitle("Knowledge · OpenLaw");
+      await expect(page.getByRole("link", { name: title })).toBeVisible();
+      await reportAxeViolations(page, testInfo, "knowledge-destination");
+
+      await page.goto(`/knowledge/${itemId}`);
+      await expect(page).toHaveTitle(`${title} · OpenLaw`);
+      await expect(page.getByRole("region", { name: "Knowledge item" })).toBeVisible();
+      await reportAxeViolations(page, testInfo, "knowledge-record");
+
+      await page.goto(`/portal/knowledge/${itemId}`);
+      await expect(page).toHaveTitle(`${title} · OpenLaw`);
+      await expect(page.getByRole("heading", { name: title })).toBeVisible();
+      await expect(page.getByRole("region", { name: "Guidance" })).toBeVisible();
+      await reportAxeViolations(page, testInfo, "portal-knowledge-article");
+    } catch (error) {
+      await sweepOrSay("the Knowledge axe scan", cleanup);
+      throw error;
+    }
+    await cleanup();
   });
 
   test("Entities views and record tabs: axe scans", async ({ page, request }, testInfo) => {

@@ -418,7 +418,7 @@ M19/6 built the configuration; M20/3 built the panel a requester sees. Three thi
 
 **No links means no panel.** An instance whose Administrator has configured none draws nothing rather than an empty "Before you submit…" heading — a heading over nothing deflects nobody. The panel is independent of the picker in both directions: it renders when the picker is empty, because a link may be the answer the requester came for.
 
-### Addendum (2026-08-30, [#603](https://github.com/juggernog20/OpenLaw/issues/603)) — a deflection target is exactly one external address or Knowledge item
+### Built addendum (2026-08-30, [#603](https://github.com/juggernog20/OpenLaw/issues/603)) — a deflection target is exactly one external address or Knowledge item
 
 An intake link has exactly one target kind: its existing absolute `http`/`https` URL or a Knowledge item id. The Knowledge picker offers only live, published, `everyone` items, and choosing one defaults the editable label to the item's title. The DES-052 row shows that title for an internal target and keeps showing the scheme-less address for an external one.
 

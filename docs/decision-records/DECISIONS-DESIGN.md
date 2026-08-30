@@ -4211,6 +4211,10 @@ Entities combines a destination catalogue, a record, a calendar, and a graph, bu
 
 The Entities destination ships the Calendar, List, and Chart switch, with Calendar as its default. The List view is DES-046's fourth catalogue. The Entity record ships all six routed tabs and its Activity applet. Confidential banners, Grant maintenance, Restricted Entity rows and chart nodes, calendar empty states, overdue severity, and the ownership warning use the shared patterns named above. The M27 close journey and axe sweep cover the three destination views and every record tab on fresh Compose images.
 
+### Built addendum (2026-08-30, M28 close, [#598](https://github.com/juggernog20/OpenLaw/issues/598)) — Knowledge is the fifth managed-list catalogue
+
+The Knowledge destination supplies the fifth catalogue and the `knowledge` saved-view surface. Title is the required flex column. Type, State, Audience, Folder, primary format, file count, creator, and updated time complete the catalogue. Type, State, Audience, Author, Format, and folder scope ride the URL and saved config. The left Knowledge Folder tree composes with those filters instead of replacing them. Resize, reorder, show and hide, sorting, saved views, paging, empty-library and filtered-zero states use the shared managed-list components unchanged. The M28 close journey and axe sweep cover the destination, one Knowledge record, and the portal article on fresh Compose images.
+
 ## DES-068: Knowledge is a file-first managed library (extends DES-046, DES-032, DES-016, DES-055, DES-020)
 
 - **Status:** Accepted
@@ -4239,6 +4243,10 @@ Knowledge contains governed paper, so its destination should scan like the other
 ### Consequences
 
 `designs/knowledge.pen` carries KN1–KN10 on the current S1 chrome: the managed library, both record-body states, creation flows, archive dialog, portal article and deflection panel, and both library zeroes. `designs/settings.pen` amends ST13 with an internal Knowledge row and adds ST22, which mounts the DES-020 taxonomy anatomy for the four Knowledge types. M28 can reuse the managed-list, record card, activity bar, overflow, empty-state, taxonomy, and portal-link primitives without translating the older Knowledge-only patterns.
+
+### Built addendum (2026-08-30, M28 close, [#598](https://github.com/juggernog20/OpenLaw/issues/598))
+
+The destination, one-section record, file-first portal article, archive dialog, internal deflection row, two creation paths, and both zero states ship on the recorded chrome. The record omits the tab strip, carries the Activity applet, and opens its primary Document through the shared doc panel. Internal deflection links stay in the portal tab; external links keep their announced new-tab treatment.
 
 ## Index of decisions
 

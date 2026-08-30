@@ -51,9 +51,10 @@
  * holds its credentials.
  *
  * Matters, their Tasks and Key dates, Entities, Entity-referencing
- * Contracts, Fields, teams, Documents, Activity, and lifecycle timestamps
- * all ride the fingerprint. The baseline API creates every row; the
- * script never writes the database directly.
+ * Contracts, Fields, teams, Documents, external deflection links,
+ * Activity, and lifecycle timestamps all ride the fingerprint. The
+ * baseline API creates every row; the script never writes the database
+ * directly.
  */
 
 import { createHash, randomUUID } from "node:crypto";
@@ -315,6 +316,44 @@ async function seed() {
   const customStatus = (
     await post("/api/v1/contract-statuses", { displayName: "Upgrade hold", stage: "review" })
   ).contractStatus;
+
+  // External deflection links created before M28 widens the target to
+  // either an address or a Knowledge Item. One lives on the portal home
+  // and one on a form, so both portal projections cross the migration.
+  const requestTypes = (await get("/api/v1/request-types")).requestTypes;
+  const contractReview = requestTypes.find((row) => row.slug === "contract_review");
+  check(contractReview !== undefined, "the baseline has no contract_review Request Type");
+  const externalLinks = [];
+  for (const fixture of [
+    {
+      label: "Upgrade portal policy",
+      url: "https://Wiki.Example.com/Legal/Policy?from=Upgrade#top",
+      requestTypeId: null,
+      placementSlug: null,
+    },
+    {
+      label: "Upgrade contract review guide",
+      url: "http://intranet.example.com/legal/review?keep=ThisCase",
+      requestTypeId: contractReview.id,
+      placementSlug: contractReview.slug,
+    },
+  ]) {
+    const created = (
+      await post("/api/v1/intake-links", {
+        label: fixture.label,
+        url: fixture.url,
+        requestTypeId: fixture.requestTypeId,
+      })
+    ).intakeLink;
+    externalLinks.push({
+      id: created.id,
+      label: created.label,
+      url: created.url,
+      requestTypeId: created.requestTypeId,
+      displayOrder: created.displayOrder,
+      placementSlug: fixture.placementSlug,
+    });
+  }
 
   const entity = (
     await post("/api/v1/entities", {
@@ -600,6 +639,7 @@ async function seed() {
       matterFieldSlug: matterField.slug,
       customStatusName: customStatus.displayName,
     },
+    externalLinks,
     entity: { id: entity.id, legalName: entity.legalName },
     contracts,
     matters: [
@@ -753,6 +793,40 @@ async function verify(fingerprint) {
     fields.some((row) => row.slug === fingerprint.taxonomy.matterFieldSlug),
     "the seeded Matter Field is gone after the upgrade",
   );
+
+  // M28 changes one external URL column into an exactly-one target pair.
+  // The old rows must still list in Settings and render from their old
+  // portal placement with the address byte-for-byte unchanged.
+  const externalLinks = (await get("/api/v1/intake-links")).intakeLinks;
+  for (const seeded of fingerprint.externalLinks) {
+    const listed = externalLinks.find((row) => row.id === seeded.id);
+    check(listed !== undefined, `external deflection link ${seeded.id} is gone after the upgrade`);
+    same(listed.label, seeded.label, `external deflection link ${seeded.id} label`);
+    same(listed.url, seeded.url, `external deflection link ${seeded.id} address`);
+    same(
+      listed.requestTypeId,
+      seeded.requestTypeId,
+      `external deflection link ${seeded.id} placement`,
+    );
+    same(listed.displayOrder, seeded.displayOrder, `external deflection link ${seeded.id} order`);
+    same(listed.knowledgeItemId, null, `external deflection link ${seeded.id} Knowledge target`);
+
+    const portalAnswer = seeded.placementSlug
+      ? await get(`/api/v1/portal/request-types/${seeded.placementSlug}`)
+      : await get("/api/v1/portal/intake-links");
+    const rendered = portalAnswer.intakeLinks.find((row) => row.id === seeded.id);
+    check(
+      rendered !== undefined,
+      `external deflection link ${seeded.id} no longer renders on its portal placement`,
+    );
+    same(rendered.label, seeded.label, `rendered deflection link ${seeded.id} label`);
+    same(rendered.url, seeded.url, `rendered deflection link ${seeded.id} address`);
+    same(rendered.displayOrder, seeded.displayOrder, `rendered deflection link ${seeded.id} order`);
+    check(
+      rendered.knowledgeItemId === undefined,
+      `rendered external deflection link ${seeded.id} gained a Knowledge target`,
+    );
+  }
 
   const entity = (await get(`/api/v1/entities/${fingerprint.entity.id}`)).entity;
   same(entity.legalName, fingerprint.entity.legalName, "entity legal name");
@@ -1004,6 +1078,7 @@ if (command === "seed") {
   console.log(
     `seeded ${fingerprint.contracts.length} Contracts, ${fingerprint.matters.length} Matters, ` +
       `${fingerprint.documents.list.length + 1} Documents, ` +
+      `${fingerprint.externalLinks.length} external deflection links, ` +
       `${fingerprint.users.length} invited users and one signing connector; fingerprint written to ${out}`,
   );
 } else if (command === "verify") {
