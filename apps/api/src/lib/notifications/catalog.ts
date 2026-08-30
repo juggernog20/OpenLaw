@@ -55,7 +55,7 @@ export interface EventGroupPolicy {
 }
 
 /**
- * The five groups' defaults, in NOT-002's own words.
+ * The event groups' defaults, in NOT-002's own words.
  *
  * The map is total over the group union, so a group added to the schema
  * stops compiling here until somebody has decided what it does by
@@ -93,6 +93,13 @@ export const EVENT_GROUP_POLICY: Record<NotificationEventGroup, EventGroupPolicy
    * addendum, taking M18/5's shape).
    */
   new_requests: { inApp: true, email: false, emailTiming: "immediate" },
+  /**
+   * Knowledge is reserved for M28's daily-briefing section. No event
+   * fires it yet, so it stays off every visible preference surface in
+   * this schema-only slice; when the briefing writer lands, its email
+   * follows the existing morning round.
+   */
+  knowledge: { inApp: true, email: true, emailTiming: "digest" },
   /**
    * Group 5 — the portal audience's own events (INT-001/003).
    *
@@ -229,6 +236,8 @@ const REQUEST_SIDE_BY_GROUP: Record<NotificationEventGroup, RequestSide | null> 
   dates_approaching: null,
   /** Group 4 — the Inbox's own arrival (INT-006). */
   new_requests: "inbox",
+  /** Knowledge has no Request event. */
+  knowledge: null,
   /** Group 5 — the portal audience's own events (DD-013). */
   requester_events: "requester",
 };

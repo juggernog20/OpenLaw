@@ -33,6 +33,7 @@ import {
   FilePen,
   Inbox,
   KeyRound,
+  LibraryBig,
   Landmark,
   Palette,
   Plug,
@@ -179,7 +180,7 @@ const ORGANIZATION_GROUP: SettingsGroup = {
     },
     // Each module section points at its first pane; more panes join as
     // tabs inside the section as their tickets land. The SET-001 rail
-    // order runs Matters, Contracts, Intake, Entities.
+    // order runs Matters, Contracts, Intake, Entities, Knowledge.
     {
       id: "matters",
       path: "/settings/matters/types",
@@ -205,6 +206,12 @@ const ORGANIZATION_GROUP: SettingsGroup = {
       path: "/settings/entities/types",
       icon: Landmark,
       label: defineMessage({ id: "settings.section.entities", defaultMessage: "Entities" }),
+    },
+    {
+      id: "knowledge",
+      path: "/settings/knowledge/types",
+      icon: LibraryBig,
+      label: defineMessage({ id: "settings.section.knowledge", defaultMessage: "Knowledge" }),
     },
     // The Organization half of Notifications (#322, NOT-004): the one
     // reminder-offset list, which is org policy rather than anybody's

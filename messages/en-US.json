@@ -288,7 +288,7 @@
     "defaultMessage": "{actor} exported the audit log"
   },
   "activity.field": {
-    "defaultMessage": "{key, select, title {Title} description {Description} owner {Owner} entity {Signing entity} priority {Priority} risk {Risk} matterManager {Matter Manager} matterType {Matter type} contractType {Contract type} value {Value} status {Status} termType {Term type} effectiveDate {Effective date} expiryDate {Expiry date} renewalPeriodMonths {Renewal period (months)} noticePeriodDays {Notice period (days)} date {Date} label {Event} note {Note} kind {Kind} primaryCounterparty {Primary counterparty} primaryDocument {Primary document} displayName {Name} display_name {Display name} name {Name} role {Role} email {Email} stage {Stage} moduleScope {Scope} isRequired {Required} targetModule {Target} targetType {Target type} theme {Theme} timezone {Timezone} avatar {Avatar} logo {Logo} defaultLocale {Default language} defaultTimezone {Default timezone} authMode {Sign-in method} allowedEmailDomains {Allowed email domains} reminderOffsetDays {Reminder lead times} smtpUrl {SMTP server} smtpFrom {From address} issuer {Issuer} domain {Email domain} clientId {Client ID} clientSecret {Client secret} environment {Environment} integrationKey {Integration key} apiUserId {User ID} privateKey {RSA private key} webhookSecret {Connect HMAC secret} legalName {Legal name} entityType {Entity type} jurisdiction {Jurisdiction} formedOn {Formed on} registrationNumber {Registration number} taxId {Tax ID} registeredAgent {Registered agent} registeredAddress {Registered address} sharesAuthorized {Authorized shares} sharesIssued {Issued shares} parValue {Par value} appointedOn {Appointed on} resignedOn {Resigned on} linkedUser {Linked user} registrationId {Registration} recurrenceMonths {Repeat every (months)} nextDueOn {Due date} assigneeId {Assignee} matterId {Matter} other {{key}}}"
+    "defaultMessage": "{key, select, title {Title} description {Description} owner {Owner} entity {Signing entity} priority {Priority} risk {Risk} matterManager {Matter Manager} matterType {Matter type} contractType {Contract type} value {Value} status {Status} termType {Term type} effectiveDate {Effective date} expiryDate {Expiry date} renewalPeriodMonths {Renewal period (months)} noticePeriodDays {Notice period (days)} date {Date} label {Event} note {Note} kind {Kind} primaryCounterparty {Primary counterparty} primaryDocument {Primary document} displayName {Name} display_name {Display name} name {Name} role {Role} email {Email} stage {Stage} moduleScope {Scope} isRequired {Required} targetModule {Target} targetType {Target type} theme {Theme} timezone {Timezone} avatar {Avatar} logo {Logo} defaultLocale {Default language} defaultTimezone {Default timezone} authMode {Sign-in method} allowedEmailDomains {Allowed email domains} reminderOffsetDays {Reminder lead times} smtpUrl {SMTP server} smtpFrom {From address} issuer {Issuer} domain {Email domain} clientId {Client ID} clientSecret {Client secret} environment {Environment} integrationKey {Integration key} apiUserId {User ID} privateKey {RSA private key} webhookSecret {Connect HMAC secret} legalName {Legal name} entityType {Entity type} knowledgeType {Knowledge type} jurisdiction {Jurisdiction} formedOn {Formed on} registrationNumber {Registration number} taxId {Tax ID} registeredAgent {Registered agent} registeredAddress {Registered address} sharesAuthorized {Authorized shares} sharesIssued {Issued shares} parValue {Par value} appointedOn {Appointed on} resignedOn {Resigned on} linkedUser {Linked user} registrationId {Registration} recurrenceMonths {Repeat every (months)} nextDueOn {Due date} assigneeId {Assignee} matterId {Matter} other {{key}}}"
   },
   "activity.field.narrowed": {
     "defaultMessage": "{actor} narrowed the field {name} to one module"
@@ -337,6 +337,9 @@
   },
   "activity.keyDate.removed": {
     "defaultMessage": "{actor} removed the key date {label} on {date}"
+  },
+  "activity.knowledgeItem.typeReassigned": {
+    "defaultMessage": "{actor} re-typed {name}"
   },
   "activity.loadError": {
     "defaultMessage": "The history could not be read. Reopen the panel to try again."
@@ -489,25 +492,25 @@
     "defaultMessage": "(untitled)"
   },
   "activity.taxonomy.archived": {
-    "defaultMessage": "{actor} archived the {kind, select, contract_type {contract type} matter_type {matter type} entity_type {entity type} request_type {request type} contract_status {contract status} field {field} approver_group {approver group} matter_template {matter template} other {type}} {name}"
+    "defaultMessage": "{actor} archived the {kind, select, contract_type {contract type} matter_type {matter type} entity_type {entity type} knowledge_type {knowledge type} request_type {request type} contract_status {contract status} field {field} approver_group {approver group} matter_template {matter template} other {type}} {name}"
   },
   "activity.taxonomy.created": {
-    "defaultMessage": "{actor} added the {kind, select, contract_type {contract type} matter_type {matter type} entity_type {entity type} request_type {request type} contract_status {contract status} field {field} approver_group {approver group} matter_template {matter template} other {type}} {name}"
+    "defaultMessage": "{actor} added the {kind, select, contract_type {contract type} matter_type {matter type} entity_type {entity type} knowledge_type {knowledge type} request_type {request type} contract_status {contract status} field {field} approver_group {approver group} matter_template {matter template} other {type}} {name}"
   },
   "activity.taxonomy.deleted": {
-    "defaultMessage": "{actor} deleted the {kind, select, contract_type {contract type} matter_type {matter type} entity_type {entity type} request_type {request type} contract_status {contract status} field {field} approver_group {approver group} matter_template {matter template} other {type}} {name}"
+    "defaultMessage": "{actor} deleted the {kind, select, contract_type {contract type} matter_type {matter type} entity_type {entity type} knowledge_type {knowledge type} request_type {request type} contract_status {contract status} field {field} approver_group {approver group} matter_template {matter template} other {type}} {name}"
   },
   "activity.taxonomy.renamed": {
-    "defaultMessage": "{actor} renamed the {kind, select, contract_type {contract type} matter_type {matter type} entity_type {entity type} request_type {request type} contract_status {contract status} field {field} approver_group {approver group} matter_template {matter template} other {type}} {name}"
+    "defaultMessage": "{actor} renamed the {kind, select, contract_type {contract type} matter_type {matter type} entity_type {entity type} knowledge_type {knowledge type} request_type {request type} contract_status {contract status} field {field} approver_group {approver group} matter_template {matter template} other {type}} {name}"
   },
   "activity.taxonomy.reordered": {
-    "defaultMessage": "{actor} reordered the {kind, select, contract_type {contract type} matter_type {matter type} entity_type {entity type} request_type {request type} contract_status {contract status} field {field} approver_group {approver group} matter_template {matter template} other {type}} list"
+    "defaultMessage": "{actor} reordered the {kind, select, contract_type {contract type} matter_type {matter type} entity_type {entity type} knowledge_type {knowledge type} request_type {request type} contract_status {contract status} field {field} approver_group {approver group} matter_template {matter template} other {type}} list"
   },
   "activity.taxonomy.restored": {
-    "defaultMessage": "{actor} restored the {kind, select, contract_type {contract type} matter_type {matter type} entity_type {entity type} request_type {request type} contract_status {contract status} field {field} approver_group {approver group} matter_template {matter template} other {type}} {name}"
+    "defaultMessage": "{actor} restored the {kind, select, contract_type {contract type} matter_type {matter type} entity_type {entity type} knowledge_type {knowledge type} request_type {request type} contract_status {contract status} field {field} approver_group {approver group} matter_template {matter template} other {type}} {name}"
   },
   "activity.taxonomy.updated": {
-    "defaultMessage": "{actor} changed the {kind, select, contract_type {contract type} matter_type {matter type} entity_type {entity type} request_type {request type} contract_status {contract status} field {field} approver_group {approver group} matter_template {matter template} other {type}} {name}"
+    "defaultMessage": "{actor} changed the {kind, select, contract_type {contract type} matter_type {matter type} entity_type {entity type} knowledge_type {knowledge type} request_type {request type} contract_status {contract status} field {field} approver_group {approver group} matter_template {matter template} other {type}} {name}"
   },
   "activity.teamRole": {
     "defaultMessage": "{role, select, member {Member} watcher {Watcher} creator {Creator} contributor {Contributor} other {{role}}}"
@@ -549,7 +552,7 @@
     "defaultMessage": "{actor} invited {email} as {role}"
   },
   "activity.user.notificationPreferenceChanged": {
-    "defaultMessage": "{actor} turned {channel, select, in_app {bell items} email {emails} other {{channel}}} {state, select, on {on} off {off} other {{state}}} for {group, select, assigned_to_you {direct asks} activity_on_your_records {activity on their records} dates_approaching {approaching dates} new_requests {new requests} requester_events {requester events} other {{group}}}"
+    "defaultMessage": "{actor} turned {channel, select, in_app {bell items} email {emails} other {{channel}}} {state, select, on {on} off {off} other {{state}}} for {group, select, assigned_to_you {direct asks} activity_on_your_records {activity on their records} dates_approaching {approaching dates} new_requests {new requests} knowledge {knowledge items} requester_events {requester events} other {{group}}}"
   },
   "activity.user.otherSessionsRevoked": {
     "defaultMessage": "{actor} signed out their other sessions"
@@ -5561,6 +5564,75 @@
   "settings.intakeLinks.urlLabel": {
     "defaultMessage": "Address"
   },
+  "settings.knowledge.tab.types": {
+    "defaultMessage": "Types"
+  },
+  "settings.knowledge.tabsLabel": {
+    "defaultMessage": "Knowledge panes"
+  },
+  "settings.knowledge.title": {
+    "defaultMessage": "Knowledge"
+  },
+  "settings.knowledgeTypes.add": {
+    "defaultMessage": "Add type"
+  },
+  "settings.knowledgeTypes.addName": {
+    "defaultMessage": "New type name"
+  },
+  "settings.knowledgeTypes.archive": {
+    "defaultMessage": "Archive {name}"
+  },
+  "settings.knowledgeTypes.archiveError": {
+    "defaultMessage": "The type could not be archived."
+  },
+  "settings.knowledgeTypes.archiveSubmit": {
+    "defaultMessage": "Archive type"
+  },
+  "settings.knowledgeTypes.archiveTitle": {
+    "defaultMessage": "Archive {name}"
+  },
+  "settings.knowledgeTypes.archiveWarning": {
+    "defaultMessage": "{count, plural, =0 {{name} is not used by any knowledge items — it can be archived without reassignment.} one {{name} is used by # knowledge item. Pick a replacement type — that item moves to it when the type is archived.} other {{name} is used by # knowledge items. Pick a replacement type — those items move to it when the type is archived.}}"
+  },
+  "settings.knowledgeTypes.auditNote": {
+    "defaultMessage": "The change applies immediately and is recorded in the audit log."
+  },
+  "settings.knowledgeTypes.count": {
+    "defaultMessage": "{count, plural, one {# type} other {# types}}"
+  },
+  "settings.knowledgeTypes.help": {
+    "defaultMessage": "Drag to reorder. Archiving a type in use asks for a replacement."
+  },
+  "settings.knowledgeTypes.inUse": {
+    "defaultMessage": "{count, plural, one {# knowledge item} other {# knowledge items}}"
+  },
+  "settings.knowledgeTypes.moved": {
+    "defaultMessage": "{name} moved to position {position} of {total}."
+  },
+  "settings.knowledgeTypes.noCandidates": {
+    "defaultMessage": "No other active type can take its knowledge items. Add or restore another type first."
+  },
+  "settings.knowledgeTypes.pageTitle": {
+    "defaultMessage": "Knowledge types"
+  },
+  "settings.knowledgeTypes.reassignLabel": {
+    "defaultMessage": "Reassign {count, plural, =0 {knowledge items} one {# knowledge item} other {# knowledge items}} to"
+  },
+  "settings.knowledgeTypes.reassignNone": {
+    "defaultMessage": "No reassignment"
+  },
+  "settings.knowledgeTypes.renameLabel": {
+    "defaultMessage": "Rename {name}"
+  },
+  "settings.knowledgeTypes.reorder": {
+    "defaultMessage": "Reorder {name}, position {position} of {total}. Use the arrow keys to move it."
+  },
+  "settings.knowledgeTypes.restore": {
+    "defaultMessage": "Restore {name}"
+  },
+  "settings.knowledgeTypes.title": {
+    "defaultMessage": "Knowledge types"
+  },
   "settings.matterStatuses.add": {
     "defaultMessage": "Add status"
   },
@@ -6047,6 +6119,12 @@
   "settings.notifications.group.dates.detail": {
     "defaultMessage": "Key dates, notice deadlines, and expiries — emailed as one daily digest."
   },
+  "settings.notifications.group.knowledge": {
+    "defaultMessage": "Knowledge items"
+  },
+  "settings.notifications.group.knowledge.detail": {
+    "defaultMessage": "Knowledge items included in your daily briefing."
+  },
   "settings.notifications.group.requesterEvents": {
     "defaultMessage": "Request updates"
   },
@@ -6472,6 +6550,9 @@
   },
   "settings.section.integrations": {
     "defaultMessage": "Integrations"
+  },
+  "settings.section.knowledge": {
+    "defaultMessage": "Knowledge"
   },
   "settings.section.matters": {
     "defaultMessage": "Matters"

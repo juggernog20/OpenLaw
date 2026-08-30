@@ -16,7 +16,16 @@
  */
 
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
-import { activityLog, asc, eq, inArray, intakeLinks, users } from "@openlaw/db";
+import {
+  activityLog,
+  asc,
+  eq,
+  inArray,
+  intakeLinks,
+  knowledgeItems,
+  knowledgeTypes,
+  users,
+} from "@openlaw/db";
 import { provisionUser } from "../../auth/instance.js";
 import {
   signInCookies as harnessSignInCookies,
@@ -574,5 +583,56 @@ describe("the request-type FK", () => {
     const rows = await listLinks();
     expect(rows.map((row) => row.id)).toEqual([onHome.id]);
     expect(rows.some((row) => row.id === onType.id)).toBe(false);
+  });
+});
+
+describe("a Knowledge deflection link (M28)", () => {
+  /**
+   * `intake_links.knowledge_item_id` lands with the M28 schema, ahead of
+   * any route that writes it. The Settings and portal routes above are
+   * the external-link surface, so a row pointing at Knowledge is
+   * invisible to them: not listed, not editable, not removable, and not
+   * counted by the reorder, which walks the external set alone.
+   */
+  it("stays out of the external-link routes until its own surface lands", async () => {
+    const [admin] = await harness.db
+      .select({ id: users.id })
+      .from(users)
+      .where(eq(users.email, ADMIN.email))
+      .limit(1);
+    const [playbook] = await harness.db
+      .select({ id: knowledgeTypes.id })
+      .from(knowledgeTypes)
+      .where(eq(knowledgeTypes.slug, "playbook"))
+      .limit(1);
+    const [item] = await harness.db
+      .insert(knowledgeItems)
+      .values({
+        title: "When you do not need an NDA",
+        knowledgeTypeId: playbook!.id,
+        createdBy: admin!.id,
+        updatedBy: admin!.id,
+      })
+      .returning({ id: knowledgeItems.id });
+    const [internal] = await harness.db
+      .insert(intakeLinks)
+      .values({ label: "Read this first", knowledgeItemId: item!.id, displayOrder: 1 })
+      .returning({ id: intakeLinks.id });
+
+    const external = await addLink({ label: "External", url: "https://example.com/faq" });
+
+    expect((await listLinks()).map((row) => row.id)).toEqual([external.id]);
+    expect((await patchLink(internal!.id, { label: "Renamed" })).statusCode).toBe(404);
+    expect((await removeLink(internal!.id)).statusCode).toBe(404);
+    expect((await reorder([external.id])).statusCode).toBe(200);
+    expect((await reorder([external.id, internal!.id])).statusCode).toBe(400);
+
+    const portal = await harness.app.inject({
+      method: "GET",
+      url: "/api/v1/portal/intake-links",
+      cookies: adminCookies,
+    });
+    expect(portal.statusCode, portal.body).toBe(200);
+    expect(portal.json().intakeLinks.map((row: LinkRow) => row.id)).toEqual([external.id]);
   });
 });

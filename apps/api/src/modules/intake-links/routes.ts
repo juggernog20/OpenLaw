@@ -35,9 +35,11 @@
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
 import { z } from "zod";
 import {
+  and,
   asc,
   eq,
   intakeLinks,
+  isNull,
   requestTypes,
   type Executor,
   type IntakeLink,
@@ -66,6 +68,12 @@ const LabelSchema = z.string().trim().min(1).max(200);
 const UrlSchema = z.string().trim().min(1).max(2048);
 
 function toRow(row: IntakeLink) {
+  // Existing Settings and portal routes remain the external-link
+  // surface. Their queries exclude Knowledge targets, and the database
+  // target CHECK makes URL non-null for every row they can return.
+  if (row.url === null) {
+    throw new Error("An external intake link has no URL.");
+  }
   return {
     id: row.id,
     label: row.label,
@@ -105,6 +113,7 @@ export const intakeLinksRoutes: FastifyPluginAsyncZod = async (app) => {
     const rows = await db
       .select()
       .from(intakeLinks)
+      .where(isNull(intakeLinks.knowledgeItemId))
       .orderBy(asc(intakeLinks.displayOrder), asc(intakeLinks.createdAt));
     return rows.map(toRow);
   }
@@ -115,7 +124,7 @@ export const intakeLinksRoutes: FastifyPluginAsyncZod = async (app) => {
     const [row] = await tx
       .select()
       .from(intakeLinks)
-      .where(eq(intakeLinks.id, id))
+      .where(and(eq(intakeLinks.id, id), isNull(intakeLinks.knowledgeItemId)))
       .limit(1)
       .for("update");
     if (!row) throw httpError(404, "No deflection link exists with this id.");
@@ -339,6 +348,7 @@ export const intakeLinksRoutes: FastifyPluginAsyncZod = async (app) => {
         const current = await tx
           .select()
           .from(intakeLinks)
+          .where(isNull(intakeLinks.knowledgeItemId))
           .orderBy(asc(intakeLinks.displayOrder), asc(intakeLinks.createdAt))
           .for("update");
         const byId = new Map(current.map((row) => [row.id, row]));
@@ -406,7 +416,7 @@ export const intakeLinksRoutes: FastifyPluginAsyncZod = async (app) => {
           actorId: request.user.id,
           action: "intake_link.deleted",
           visibility: "admin_only",
-          payload: { label: target.label, url: target.url, placement },
+          payload: { label: target.label, url: toRow(target).url, placement },
         });
       });
       return reply.status(204).send();

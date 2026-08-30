@@ -334,7 +334,7 @@ function changeLabel(intl: IntlShape, key: string, context: NarrationContext): s
         "environment {Environment} integrationKey {Integration key} " +
         "apiUserId {User ID} privateKey {RSA private key} " +
         "webhookSecret {Connect HMAC secret} " +
-        "legalName {Legal name} entityType {Entity type} " +
+        "legalName {Legal name} entityType {Entity type} knowledgeType {Knowledge type} " +
         "jurisdiction {Jurisdiction} formedOn {Formed on} " +
         "registrationNumber {Registration number} taxId {Tax ID} " +
         "registeredAgent {Registered agent} registeredAddress {Registered address} " +
@@ -919,7 +919,7 @@ const TAXONOMY = {
     id: "activity.taxonomy.created",
     defaultMessage:
       "{actor} added the {kind, select, contract_type {contract type} " +
-      "matter_type {matter type} entity_type {entity type} " +
+      "matter_type {matter type} entity_type {entity type} knowledge_type {knowledge type} " +
       "request_type {request type} " +
       "contract_status {contract status} field {field} " +
       "approver_group {approver group} matter_template {matter template} other {type}} {name}",
@@ -928,7 +928,7 @@ const TAXONOMY = {
     id: "activity.taxonomy.renamed",
     defaultMessage:
       "{actor} renamed the {kind, select, contract_type {contract type} " +
-      "matter_type {matter type} entity_type {entity type} " +
+      "matter_type {matter type} entity_type {entity type} knowledge_type {knowledge type} " +
       "request_type {request type} " +
       "contract_status {contract status} field {field} " +
       "approver_group {approver group} matter_template {matter template} other {type}} {name}",
@@ -937,7 +937,7 @@ const TAXONOMY = {
     id: "activity.taxonomy.updated",
     defaultMessage:
       "{actor} changed the {kind, select, contract_type {contract type} " +
-      "matter_type {matter type} entity_type {entity type} " +
+      "matter_type {matter type} entity_type {entity type} knowledge_type {knowledge type} " +
       "request_type {request type} " +
       "contract_status {contract status} field {field} " +
       "approver_group {approver group} matter_template {matter template} other {type}} {name}",
@@ -946,7 +946,7 @@ const TAXONOMY = {
     id: "activity.taxonomy.reordered",
     defaultMessage:
       "{actor} reordered the {kind, select, contract_type {contract type} " +
-      "matter_type {matter type} entity_type {entity type} " +
+      "matter_type {matter type} entity_type {entity type} knowledge_type {knowledge type} " +
       "request_type {request type} " +
       "contract_status {contract status} field {field} " +
       "approver_group {approver group} matter_template {matter template} other {type}} list",
@@ -955,7 +955,7 @@ const TAXONOMY = {
     id: "activity.taxonomy.archived",
     defaultMessage:
       "{actor} archived the {kind, select, contract_type {contract type} " +
-      "matter_type {matter type} entity_type {entity type} " +
+      "matter_type {matter type} entity_type {entity type} knowledge_type {knowledge type} " +
       "request_type {request type} " +
       "contract_status {contract status} field {field} " +
       "approver_group {approver group} matter_template {matter template} other {type}} {name}",
@@ -964,7 +964,7 @@ const TAXONOMY = {
     id: "activity.taxonomy.restored",
     defaultMessage:
       "{actor} restored the {kind, select, contract_type {contract type} " +
-      "matter_type {matter type} entity_type {entity type} " +
+      "matter_type {matter type} entity_type {entity type} knowledge_type {knowledge type} " +
       "request_type {request type} " +
       "contract_status {contract status} field {field} " +
       "approver_group {approver group} matter_template {matter template} other {type}} {name}",
@@ -973,7 +973,7 @@ const TAXONOMY = {
     id: "activity.taxonomy.deleted",
     defaultMessage:
       "{actor} deleted the {kind, select, contract_type {contract type} " +
-      "matter_type {matter type} entity_type {entity type} " +
+      "matter_type {matter type} entity_type {entity type} knowledge_type {knowledge type} " +
       "request_type {request type} " +
       "contract_status {contract status} field {field} " +
       "approver_group {approver group} matter_template {matter template} other {type}} {name}",
@@ -2188,6 +2188,7 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
         "{group, select, assigned_to_you {direct asks} " +
         "activity_on_your_records {activity on their records} " +
         "dates_approaching {approaching dates} new_requests {new requests} " +
+        "knowledge {knowledge items} " +
         "requester_events {requester events} other {{group}}}",
     }),
     values: (intl, payload) => ({
@@ -2364,6 +2365,7 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
   ...taxonomyArms("entity_type", Tag, TAXONOMY_VERBS),
   ...taxonomyArms("officer_role", Tag, TAXONOMY_VERBS),
   ...taxonomyArms("request_type", Tag, TAXONOMY_VERBS),
+  ...taxonomyArms("knowledge_type", Tag, TAXONOMY_VERBS),
   // A status has a stage rather than a description, so it never writes
   // the `updated` verb.
   ...taxonomyArms("contract_status", GitCommitHorizontal, [
@@ -2532,6 +2534,15 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
     }),
     values: (intl, payload) => ({ name: thingName(intl, payload) }),
     changes: (intl, payload, context) => directChange(intl, payload, "entityType", context),
+  },
+  "knowledge_item.type_reassigned": {
+    icon: Tag,
+    message: defineMessage({
+      id: "activity.knowledgeItem.typeReassigned",
+      defaultMessage: "{actor} re-typed {name}",
+    }),
+    values: (intl, payload) => ({ name: named(intl, payload, "title") }),
+    changes: (intl, payload, context) => directChange(intl, payload, "knowledgeType", context),
   },
   "entity.confidentiality_set": {
     icon: Lock,

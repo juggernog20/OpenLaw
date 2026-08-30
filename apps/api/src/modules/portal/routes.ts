@@ -133,9 +133,9 @@ export const portalRoutes: FastifyPluginAsyncZod = async (app) => {
           displayOrder: intakeLinks.displayOrder,
         })
         .from(intakeLinks)
-        .where(isNull(intakeLinks.requestTypeId))
+        .where(and(isNull(intakeLinks.requestTypeId), isNull(intakeLinks.knowledgeItemId)))
         .orderBy(asc(intakeLinks.displayOrder), asc(intakeLinks.createdAt));
-      return { intakeLinks: rows };
+      return { intakeLinks: rows.map((row) => ({ ...row, url: row.url! })) };
     },
   );
 
@@ -198,10 +198,14 @@ export const portalRoutes: FastifyPluginAsyncZod = async (app) => {
             displayOrder: intakeLinks.displayOrder,
           })
           .from(intakeLinks)
-          .where(eq(intakeLinks.requestTypeId, type.id))
+          .where(and(eq(intakeLinks.requestTypeId, type.id), isNull(intakeLinks.knowledgeItemId)))
           .orderBy(asc(intakeLinks.displayOrder), asc(intakeLinks.createdAt)),
       ]);
-      return { requestType: type, fields, intakeLinks: links };
+      return {
+        requestType: type,
+        fields,
+        intakeLinks: links.map((link) => ({ ...link, url: link.url! })),
+      };
     },
   );
 };

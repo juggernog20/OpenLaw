@@ -64,6 +64,8 @@ export const NOTIFICATION_EVENT_GROUPS = [
   "dates_approaching",
   /** Inbox arrivals (INT-006) — `request.submitted`, from M21/4. */
   "new_requests",
+  /** Knowledge publishing and briefing entries (M28). */
+  "knowledge",
   /** The portal audience's own events (INT-001/003/006). */
   "requester_events",
 ] as const;
@@ -138,6 +140,7 @@ export const NOTIFICATION_ENTITY_TYPES = [
   "document",
   "request",
   "entity",
+  "knowledge_item",
 ] as const;
 export type NotificationEntityType = (typeof NOTIFICATION_ENTITY_TYPES)[number];
 

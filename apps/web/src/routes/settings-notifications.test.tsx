@@ -29,6 +29,7 @@ const DEFAULTS = [
   { eventGroup: "activity_on_your_records", inApp: true, email: false },
   { eventGroup: "dates_approaching", inApp: true, email: true },
   { eventGroup: "new_requests", inApp: true, email: false },
+  { eventGroup: "knowledge", inApp: true, email: true },
   { eventGroup: "requester_events", inApp: true, email: true },
 ];
 
