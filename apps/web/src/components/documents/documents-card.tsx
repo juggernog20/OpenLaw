@@ -356,6 +356,7 @@ function supportsDesignations(owner: DocumentRecord["entityType"]): boolean {
     case "contract":
       return true;
     case "matter":
+    case "entity":
       return false;
   }
 }
@@ -448,14 +449,15 @@ export function DocumentsCard({
   // viewer's id and the Owner's are two of the Confidential flag's three
   // actors (CTR-022).
   const { record: reference, viewer, ownerId, frozen } = useRecord();
-  const kind = reference.kind;
-  const number = reference.number;
-  if (kind === "entity") {
-    throw new Error("DocumentsCard is drawn on contract and matter records only.");
-  }
   /** CTR-003's reference, the address the upload route takes. One
    * object per record, so nothing keyed on it re-runs every render. */
-  const record = useMemo<DocumentRecord>(() => ({ entityType: kind, number }), [kind, number]);
+  const record = useMemo<DocumentRecord>(
+    () =>
+      reference.kind === "entity"
+        ? { entityType: "entity", id: reference.id }
+        : { entityType: reference.kind, number: reference.number },
+    [reference],
+  );
   const role = viewer.role;
   const viewerId = viewer.id;
   const intl = useIntl();
@@ -2869,6 +2871,20 @@ const RECORD_COPY = {
     deleteIntoRoot: defineMessage({
       id: "matters.documents.folder.deleteIntoRoot",
       defaultMessage: "Anything in it moves onto the matter itself. Nothing is deleted.",
+    }),
+  },
+  entity: {
+    empty: defineMessage({
+      id: "entities.documents.empty",
+      defaultMessage: "No documents on this Entity yet.",
+    }),
+    recordRoot: defineMessage({
+      id: "entities.documents.folder.recordRoot",
+      defaultMessage: "The Entity itself",
+    }),
+    deleteIntoRoot: defineMessage({
+      id: "entities.documents.folder.deleteIntoRoot",
+      defaultMessage: "Anything in it moves onto the Entity itself. Nothing is deleted.",
     }),
   },
 } as const;

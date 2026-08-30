@@ -105,6 +105,7 @@ import {
   documentFolders,
   documents,
   eq,
+  entities,
   isNotNull,
   isNull,
   matters,
@@ -131,6 +132,12 @@ import {
   type LockedContract,
   type ReachedContract,
 } from "../../lib/contract-access.js";
+import {
+  entityReachScope,
+  NO_ENTITY,
+  reachedEntity,
+  type LockedEntity,
+} from "../../lib/entity-access.js";
 import {
   matterTeamScope,
   NO_MATTER,
@@ -216,6 +223,8 @@ function folderScope(owner: FolderOwner): ReturnType<typeof eq> {
       return eq(documentFolders.contractId, owner.value);
     case "matter":
       return eq(documentFolders.matterId, owner.value);
+    case "entity":
+      return eq(documentFolders.entityId, owner.value);
   }
 }
 
@@ -225,6 +234,8 @@ function documentScope(owner: FolderOwner): ReturnType<typeof eq> {
       return eq(documents.contractId, owner.value);
     case "matter":
       return eq(documents.matterId, owner.value);
+    case "entity":
+      return eq(documents.entityId, owner.value);
   }
 }
 
@@ -234,6 +245,8 @@ function folderOwnerValues(owner: FolderOwner) {
       return { contractId: owner.value } as const;
     case "matter":
       return { matterId: owner.value } as const;
+    case "entity":
+      return { entityId: owner.value } as const;
   }
 }
 
@@ -243,6 +256,8 @@ function folderReachScope(owner: DocumentOwner, db: Executor, user: Authenticate
       return and(isNotNull(documentFolders.contractId), contractTeamScope(db, user));
     case "matter":
       return and(isNotNull(documentFolders.matterId), matterTeamScope(db, user));
+    case "entity":
+      return and(isNotNull(documentFolders.entityId), entityReachScope(user));
   }
 }
 
@@ -607,13 +622,15 @@ export async function findOrCreateFolderPath(
   // inserts on the connection that holds it. On a pooled handle they
   // would run outside the lock the brand vouches for.
   tx: Transaction,
-  contract: LockedContract | LockedMatter,
+  contract: LockedContract | LockedMatter | LockedEntity,
   destination: FolderDestination,
 ): Promise<ResolvedFolder | null> {
   const owner: FolderOwner =
     "matterTypeId" in contract
       ? { kind: "matter", value: contract.id }
-      : { kind: "contract", value: contract.id };
+      : "entityTypeId" in contract
+        ? { kind: "entity", value: contract.id }
+        : { kind: "contract", value: contract.id };
   const tree = treeOf(await foldersOf(tx, owner));
   let at = folderIn(tree, destination.folderId);
   // Asked once, of the whole chain, before anything is written: a path
@@ -797,12 +814,15 @@ export const documentFoldersRoutes: FastifyPluginAsyncZod = async (app) => {
         parentId: documentFolders.parentId,
         contractId: documentFolders.contractId,
         matterId: documentFolders.matterId,
+        entityId: documentFolders.entityId,
         contractArchivedAt: contracts.archivedAt,
         matterArchivedAt: matters.archivedAt,
+        entityArchivedAt: entities.archivedAt,
       })
       .from(documentFolders)
       .leftJoin(contracts, eq(documentFolders.contractId, contracts.id))
       .leftJoin(matters, eq(documentFolders.matterId, matters.id))
+      .leftJoin(entities, eq(documentFolders.entityId, entities.id))
       .where(
         and(
           eq(documentFolders.id, folderId),
@@ -825,11 +845,21 @@ export const documentFoldersRoutes: FastifyPluginAsyncZod = async (app) => {
           .from(matters)
           .where(eq(matters.id, row.matterId))
           .for("update", { of: matters });
+      } else if (row.entityId) {
+        await db
+          .select({ id: entities.id })
+          .from(entities)
+          .where(eq(entities.id, row.entityId))
+          .for("update", { of: entities });
       }
       [row] = await query;
       if (!row) return null;
     }
-    const owner = resolveDocumentOwner({ contract: row.contractId, matter: row.matterId });
+    const owner = resolveDocumentOwner({
+      contract: row.contractId,
+      matter: row.matterId,
+      entity: row.entityId,
+    });
     let ownerArchivedAt: Date | null;
     switch (owner.kind) {
       case "contract":
@@ -837,6 +867,9 @@ export const documentFoldersRoutes: FastifyPluginAsyncZod = async (app) => {
         break;
       case "matter":
         ownerArchivedAt = row.matterArchivedAt;
+        break;
+      case "entity":
+        ownerArchivedAt = row.entityArchivedAt;
         break;
     }
     return {
@@ -937,6 +970,13 @@ export const documentFoldersRoutes: FastifyPluginAsyncZod = async (app) => {
     if (!matter) throw httpError(404, NO_MATTER);
     if (matter.archivedAt) {
       throw httpError(409, "This matter is archived. Restore it before changing its folders.");
+    }
+  }
+
+  function assertOpenEntity(entity: LockedEntity | null): asserts entity is LockedEntity {
+    if (!entity) throw httpError(404, NO_ENTITY);
+    if (entity.archivedAt) {
+      throw httpError(409, "This Entity is archived. Restore it before changing its folders.");
     }
   }
 
@@ -1181,6 +1221,77 @@ export const documentFoldersRoutes: FastifyPluginAsyncZod = async (app) => {
           visibility: RECORD_ACTIVITY_TIER,
           payload: { folderId: created!.id, name, parentName: parent?.name ?? null },
         });
+        return foldersEnvelope(tx, request.user, owner);
+      });
+      return reply.status(201).send(folders);
+    },
+  );
+
+  app.get(
+    "/entities/:id/folders",
+    {
+      preHandler: requireFolderReader,
+      schema: {
+        operationId: "listEntityFolders",
+        summary: "The complete folder tree on one Entity, with viewer-scoped live document counts.",
+        tags: ["documents"],
+        params: z.object({ id: RecordIdSchema }),
+        response: { 200: FoldersEnvelope, default: problemResponse },
+      },
+    },
+    async (request) => {
+      const entity = await reachedEntity(app.db, request.user, request.params.id);
+      if (!entity) throw httpError(404, NO_ENTITY);
+      return foldersEnvelope(app.db, request.user, { kind: "entity", value: entity.id });
+    },
+  );
+
+  app.post(
+    "/entities/:id/folders",
+    {
+      preHandler: requireMember,
+      schema: {
+        operationId: "createEntityFolder",
+        summary:
+          "Create a folder on an Entity, or recreate a dropped folder path beneath an optional parent.",
+        tags: ["documents"],
+        params: z.object({ id: RecordIdSchema }),
+        body: CreateFolderBody,
+        response: { 201: FoldersEnvelope, default: problemResponse },
+      },
+    },
+    async (request, reply) => {
+      const { name: rawName, path: rawPath, parentId } = request.body;
+      if ((rawName === undefined) === (rawPath === undefined)) {
+        throw httpError(400, "Give the folder a name, or a path to recreate.");
+      }
+      const folders = await app.db.transaction(async (tx) => {
+        const entity = await reachedEntity(tx, request.user, request.params.id, { lock: true });
+        assertOpenEntity(entity);
+        const owner = { kind: "entity", value: entity.id } as const;
+        if (rawPath !== undefined) {
+          const path = folderPathSegments(rawPath);
+          if (path.length === 0) throw httpError(400, "Give the folder a path to recreate.");
+          await findOrCreateFolderPath(tx, entity, { folderId: parentId ?? null, path });
+        } else {
+          const name = folderName(rawName!);
+          const tree = treeOf(await foldersOf(tx, owner));
+          const parent = folderIn(tree, parentId ?? null);
+          assertNameFree(tree, parent?.id ?? null, name);
+          assertDepth(tree, parent, 0);
+          const [created] = await tx
+            .insert(documentFolders)
+            .values({ entityId: entity.id, parentId: parent?.id ?? null, name })
+            .returning({ id: documentFolders.id });
+          await recordActivity(tx, {
+            entityType: "entity",
+            entityId: entity.id,
+            actorId: request.user.id,
+            action: "folder.created",
+            visibility: RECORD_ACTIVITY_TIER,
+            payload: { folderId: created!.id, name, parentName: parent?.name ?? null },
+          });
+        }
         return foldersEnvelope(tx, request.user, owner);
       });
       return reply.status(201).send(folders);

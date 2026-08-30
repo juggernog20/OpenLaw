@@ -84,9 +84,11 @@ function reference(intl: IntlShape, result: SearchResult): string {
 function ownerReference(intl: IntlShape, result: Extract<SearchResult, { kind: "document" }>) {
   switch (result.ownerKind) {
     case "contract":
-      return contractReference(intl, result.ownerNumber);
+      return contractReference(intl, result.ownerNumber!);
     case "matter":
-      return matterReference(intl, result.ownerNumber);
+      return matterReference(intl, result.ownerNumber!);
+    case "entity":
+      return searchKindLabel(intl, "entity");
   }
 }
 
@@ -96,6 +98,8 @@ function ownerRoute(owner: DocumentOwner): string {
       return "contracts";
     case "matter":
       return "matters";
+    case "entity":
+      return "entities";
   }
 }
 
@@ -105,6 +109,8 @@ function OwnerIcon({ owner }: Readonly<{ owner: DocumentOwner }>) {
       return <FileSignature size={16} aria-hidden="true" />;
     case "matter":
       return <BriefcaseBusiness size={16} aria-hidden="true" />;
+    case "entity":
+      return <Landmark size={16} aria-hidden="true" />;
   }
 }
 
@@ -129,13 +135,14 @@ export function searchResultPath(result: SearchResult, query: string): string {
     case "counterparty":
       return searchPagePath(result.title, "contract");
     case "document": {
-      const owner = ownerRoute(result.ownerKind);
       const params = new URLSearchParams({
         doc: result.id,
         version: result.versionId,
         find: query,
       });
-      return `/${owner}/${String(result.ownerNumber)}/documents?${params.toString()}`;
+      return result.ownerKind === "entity"
+        ? `/entities/${encodeURIComponent(result.ownerId)}/documents?${params.toString()}`
+        : `/${ownerRoute(result.ownerKind)}/${String(result.ownerNumber)}/documents?${params.toString()}`;
     }
   }
 }

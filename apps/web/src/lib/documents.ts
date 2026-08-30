@@ -18,7 +18,7 @@
  */
 
 import type { paths } from "@openlaw/api-client";
-import { resolveDocumentOwner, type DocumentOwner } from "@openlaw/shared";
+import type { DocumentOwner } from "@openlaw/shared";
 import type { IntlShape } from "react-intl";
 import { api } from "./api";
 // The separator a folder path is written with on the wire, taken from
@@ -105,7 +105,7 @@ export function documentRepositoryFilters(
   const format = filters.format;
   const kind = filters.kind;
   return {
-    owner: owner === "contract" || owner === "matter" ? owner : "",
+    owner: owner === "contract" || owner === "matter" || owner === "entity" ? owner : "",
     record: typeof filters.record === "string" ? filters.record : "",
     folder: typeof filters.folder === "string" ? filters.folder : "",
     format: DOCUMENT_REPOSITORY_FORMATS.some((candidate) => candidate === format)
@@ -122,26 +122,32 @@ export function documentRepositoryFilters(
   };
 }
 
-export function documentRecordReference(
-  reference: string,
-): { entityType: DocumentOwner; number: number } | null {
+export function documentRecordReference(reference: string): DocumentRecord | null {
   const match = /^([CM])-([1-9]\d*)$/.exec(reference);
-  if (!match?.[2]) return null;
+  if (!match?.[2]) {
+    // The API's rule: a value shaped like a numbered reference must be one;
+    // anything else is an opaque Entity id.
+    return reference.length > 0 && reference.length <= 64 && !/^[CM]-/.test(reference)
+      ? { entityType: "entity", id: reference }
+      : null;
+  }
   const number = Number(match[2]);
   if (!Number.isSafeInteger(number) || number > 2_147_483_647) return null;
-  const owner = resolveDocumentOwner({
-    contract: match[1] === "C" ? number : null,
-    matter: match[1] === "M" ? number : null,
-  });
-  return { entityType: owner.kind, number: owner.value };
+  return { entityType: match[1] === "C" ? "contract" : "matter", number };
 }
 
-export function documentOwnerReference(owner: { kind: DocumentOwner; number: number }): string {
+export function documentOwnerReference(owner: {
+  kind: DocumentOwner;
+  number: number | null;
+  reference: string;
+}): string {
   switch (owner.kind) {
     case "contract":
-      return `C-${String(owner.number)}`;
+      return `C-${String(owner.number!)}`;
     case "matter":
-      return `M-${String(owner.number)}`;
+      return `M-${String(owner.number!)}`;
+    case "entity":
+      return owner.reference;
   }
 }
 
@@ -156,15 +162,15 @@ export function documentLandingPath(document: RepositoryDocument): string {
     case "matter":
       root = "/matters";
       break;
+    case "entity":
+      return `/entities/${encodeURIComponent(owner.id)}/documents?doc=${encodeURIComponent(document.id)}&version=${encodeURIComponent(document.currentVersion.id)}`;
   }
   return `${root}/${String(owner.number)}/documents?doc=${encodeURIComponent(document.id)}&version=${encodeURIComponent(document.currentVersion.id)}`;
 }
 
 /** The record whose paper the shared Documents section is drawing. */
-export interface DocumentRecord {
-  entityType: DocumentOwner;
-  number: number;
-}
+export type DocumentRecord =
+  { entityType: "contract" | "matter"; number: number } | { entityType: "entity"; id: string };
 
 /**
  * The listing context that is the record root — the documents filed in
@@ -520,6 +526,8 @@ export function uploadRecordDocument(
       return uploadContractDocument(record.number, draft);
     case "matter":
       return send(`/api/v1/matters/${record.number}/documents`, draft);
+    case "entity":
+      return send(`/api/v1/entities/${encodeURIComponent(record.id)}/documents`, draft);
   }
 }
 
@@ -758,6 +766,23 @@ export async function readRecordDocuments(
             documents: result.data.documents,
             nextCursor: result.data.nextCursor,
           }
+        : { ok: false, ...(await problem(result)) };
+    }
+    case "entity": {
+      const result = await api
+        .GET("/api/v1/entities/{id}/documents", {
+          params: {
+            path: { id: record.id },
+            query: {
+              ...(includeArchived ? { includeArchived: "true" as const } : {}),
+              ...(cursor ? { cursor } : {}),
+              ...(folder ? { folder } : {}),
+            },
+          },
+        })
+        .catch(() => undefined);
+      return result?.data
+        ? { ok: true, documents: result.data.documents, nextCursor: result.data.nextCursor }
         : { ok: false, ...(await problem(result)) };
     }
   }

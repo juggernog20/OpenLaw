@@ -1037,6 +1037,28 @@ This record describes the model as built and names the places where a different 
 - DES-032's "one loader reads the whole record" clause stands and is the data-loading half of rule 7; the strip's look stays in DES-032.
 - Issues: #550 (refusal helper), #552 (`useFieldCommit`), #551 (web "third mount" doctrine, at M27), #554 (hook warnings).
 
+## TECH-025: A record applet's third web mount becomes configuration
+
+- **Status:** Accepted
+- **Date:** 2026-08-30
+- **Trigger:** M27/7 mounts the linked-record row pattern for a third record kind. Contract and Matter already carry paired linked-record cards; copying one more pair would make a shared interaction depend on which page happened to implement it.
+
+### Decision
+
+At the third web mount, a record applet is one generic component keyed by `{record reference, api seam}`. The component owns the repeated presentation and interaction, including navigation and the shared restricted-record cell. It reads its rows through the seam when it mounts, the way the Activity applet does, so the route loader carries only what the page needs before the tab opens (here, the tab-label counts). A module-specific wrapper may supply vocabulary or its typed API seam, but it may not fork the list behaviour.
+
+The Entity Contracts and Matters tabs are the first application: one `LinkedRecordsList` receives the Entity reference and the selected Contract-or-Matter seam. Query-derived Entity roll-ups silently omit walled targets before rows and counts; the component retains the restricted branch for link seams whose domain rule preserves a known relationship.
+
+### Scheduled migration
+
+After M27, migrate the existing Contract and Matter link-card pairs to this configuration seam, **one pair per PR**. Each migration keeps its existing access and placeholder doctrine and removes only the duplicated web mount. No sweep lands inside M27, and no PR mixes two pairs.
+
+### Consequences
+
+- A fourth record mount supplies configuration rather than copying JSX, state, and navigation.
+- TECH-024 remains the data rule for the page. A lazy applet reads once per mount through its seam and holds nothing across tabs; it does not become a client cache.
+- The incremental migration is reviewable and preserves per-link access doctrine while converging the presentation.
+
 ## Index of decisions
 
 | #        | Decision                                                                      | Status                 |
@@ -1065,3 +1087,4 @@ This record describes the model as built and names the places where a different 
 | TECH-022 | Credentials at rest — sealed columns, one required key, outside the database  | Accepted               |
 | TECH-023 | Shared machinery grows named per-mount hooks — a third mount is configuration | Accepted               |
 | TECH-024 | Web data and state model — loaders read, screens own what they show           | Accepted               |
+| TECH-025 | A record applet's third web mount becomes configuration                       | Accepted               |

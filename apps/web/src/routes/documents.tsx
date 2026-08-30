@@ -136,7 +136,7 @@ function layoutFromSearch(base: Layout, search: string): { layout: Layout; fromU
 
   const filters: Layout["filters"] = {};
   const owner = params.get("owner");
-  if (owner === "contract" || owner === "matter") filters.owner = owner;
+  if (owner === "contract" || owner === "matter" || owner === "entity") filters.owner = owner;
   const record = params.get("record") ?? "";
   if (documentRecordReference(record)) {
     filters.record = record;
@@ -464,7 +464,7 @@ function DocumentsPageState() {
                 ) : (
                   <FormattedMessage
                     id="documents.list.empty.title"
-                    defaultMessage="Paper lives on Contracts and Matters."
+                    defaultMessage="Paper lives on Contracts, Matters, and Entities."
                   />
                 )}
               </h2>

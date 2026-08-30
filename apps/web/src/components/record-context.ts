@@ -24,7 +24,6 @@ export type RecordKind = "contract" | "matter" | "entity";
 export interface RecordReference {
   kind: RecordKind;
   id: string;
-  /** The human-facing number the seam addresses the record by. */
   number: number;
 }
 

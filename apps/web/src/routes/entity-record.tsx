@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 /** The Entity record shell and M27/4 Overview (ENT-001/ENT-002). */
-import { useState, type ReactNode } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import { Link, redirect, useLoaderData, type LoaderFunctionArgs } from "react-router";
-import { FormattedMessage, useIntl } from "react-intl";
+import { defineMessage, FormattedMessage, useIntl, type IntlShape } from "react-intl";
 import { Archive, ArchiveRestore, Building2, ChevronRight } from "lucide-react";
 import { api } from "../lib/api";
 import {
@@ -36,11 +36,23 @@ import { StatusNote } from "../components/status-note";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
+import { DocumentsCard } from "../components/documents/documents-card";
+import { DocPanel } from "../components/documents/doc-panel";
+import { RecordContext } from "../components/record-context";
+import { LinkedRecordsList } from "../components/linked-records-list";
+import {
+  documentLandingParams,
+  readDocumentLanding,
+  readRecordDocuments,
+  type ContractDocument,
+} from "../lib/documents";
+import { readRecordFolders } from "../lib/folders";
+import { ENTITY_LINKED_RECORD_SEAMS } from "../lib/linked-records";
 
 const RECORD_TABS = ["ownership", "obligations", "documents", "contracts", "matters"] as const;
 type EntityTab = "overview" | (typeof RECORD_TABS)[number];
 
-export async function entityRecordLoader({ params }: LoaderFunctionArgs) {
+export async function entityRecordLoader({ params, request }: LoaderFunctionArgs) {
   const user = await requireUser();
   if (!isMemberPlus(user.role)) return redirect("/");
   const id = params.entityId!;
@@ -57,6 +69,7 @@ export async function entityRecordLoader({ params }: LoaderFunctionArgs) {
     holdings,
     obligations,
     obligationOptions,
+    counts,
   ] = await Promise.all([
     api.GET("/api/v1/entities/{id}", { params: { path: { id } } }),
     api.GET("/api/v1/entities/types"),
@@ -67,6 +80,7 @@ export async function entityRecordLoader({ params }: LoaderFunctionArgs) {
     api.GET("/api/v1/entities/{id}/holdings", { params: { path: { id } } }),
     api.GET("/api/v1/entities/{id}/obligations", { params: { path: { id } } }),
     api.GET("/api/v1/entities/obligation-options"),
+    api.GET("/api/v1/entities/{id}/linked-record-counts", { params: { path: { id } } }),
   ]);
   if (
     !record.data ||
@@ -81,6 +95,22 @@ export async function entityRecordLoader({ params }: LoaderFunctionArgs) {
   ) {
     throw new Error("The entity could not be read.");
   }
+  const documentRecord = { entityType: "entity" as const, id };
+  const [paper, folders] =
+    params.tab === "documents"
+      ? await Promise.all([
+          readRecordDocuments(documentRecord, false, undefined, "root"),
+          readRecordFolders(documentRecord),
+        ])
+      : [
+          { ok: true as const, documents: [], nextCursor: null },
+          { ok: true as const, folders: [] },
+        ];
+  if (!paper.ok || !folders.ok) throw new Error("The Entity paper could not be read.");
+  const landingParams = documentLandingParams(request, params.tab);
+  const documentLanding = landingParams
+    ? await readDocumentLanding(documentRecord, landingParams.documentId, landingParams.versionId)
+    : null;
   return {
     user,
     tab: (params.tab ?? "overview") as EntityTab,
@@ -96,6 +126,12 @@ export async function entityRecordLoader({ params }: LoaderFunctionArgs) {
     holdings: holdings.data,
     obligations: obligations.data.obligations,
     obligationOptions: obligationOptions.data,
+    documents: paper.documents,
+    documentCursor: paper.nextCursor,
+    folders: folders.folders,
+    documentLanding,
+    documentFindQuery: landingParams?.findQuery ?? null,
+    linkedCounts: counts.data ?? { contracts: 0, matters: 0 },
   };
 }
 
@@ -120,6 +156,18 @@ export function EntityRecordPage() {
   const commits = useFieldCommit<FieldKey>();
   const [archiveStatus, setArchiveStatus] = useState<FieldStatus>("idle");
   const [archiveError, setArchiveError] = useState<string>();
+  const [paper, setPaper] = useState(loaded.documents);
+  const [paperCursor, setPaperCursor] = useState(loaded.documentCursor);
+  const [folders, setFolders] = useState(loaded.folders);
+  const [filed, setFiled] = useState<ContractDocument[]>([]);
+  const [reading, setReading] = useState<{ documentId: string; versionId: string } | null>(() =>
+    loaded.documentLanding
+      ? {
+          documentId: loaded.documentLanding.document.id,
+          versionId: loaded.documentLanding.versionId,
+        }
+      : null,
+  );
   const frozen = saved.archivedAt !== null;
   const majorityOwner = [...loaded.holdings.owners].sort(
     (a, b) =>
@@ -144,6 +192,27 @@ export function EntityRecordPage() {
       [...people, ...entityRefs].map((row) => [row.id, row.label]),
     ),
   });
+  const open = (() => {
+    if (!reading) return null;
+    const document = [
+      ...paper,
+      ...filed,
+      ...(loaded.documentLanding ? [loaded.documentLanding.document] : []),
+    ].find((row) => row.id === reading.documentId);
+    const version = document?.versions.find((row) => row.id === reading.versionId);
+    return document && version ? { document, version } : null;
+  })();
+  const recordFacts = useMemo(
+    () => ({
+      record: { kind: "entity" as const, id: saved.id, number: 0 },
+      viewer: { id: loaded.user.id, role: loaded.user.role },
+      ownerId: null,
+      confidential: false,
+      canEdit: true,
+      frozen,
+    }),
+    [saved.id, loaded.user.id, loaded.user.role, frozen],
+  );
 
   function commit(key: FieldKey, body: Record<string, unknown>) {
     return commits.commit(
@@ -210,283 +279,325 @@ export function EntityRecordPage() {
 
   const signOut = useSignOut("/auth/login");
   return (
-    <AppShell
-      user={loaded.user}
-      onSignOut={() => void signOut()}
-      subbar={
-        <>
-          <section
-            aria-labelledby="page-title"
-            className="flex h-(--height-subbar) items-center justify-between gap-4 border-b border-(--chrome-subbar-border) bg-canvas px-page-x"
-          >
-            <div className="flex min-w-0 items-center gap-2">
-              <Link to="/entities" className="text-link hover:underline">
-                <FormattedMessage id="entities.title" defaultMessage="Entities" />
-              </Link>
-              <ChevronRight size={16} aria-hidden="true" className="text-subtle" />
-              {majorityOwner ? (
-                <>
-                  <Link
-                    to={`/entities/${majorityOwner.id}`}
-                    className="truncate text-link hover:underline"
-                  >
-                    {majorityOwner.legalName}
-                  </Link>
-                  <ChevronRight size={16} aria-hidden="true" className="text-subtle" />
-                </>
-              ) : null}
-              <Building2 size={16} aria-hidden="true" className="text-muted" />
-              <h1 id="page-title" className="truncate text-md font-semibold">
-                {saved.legalName}
-              </h1>
-              <span
-                className={`rounded-pill px-2 py-0.5 text-xs font-medium ${STATUS_PILL[saved.status]}`}
-              >
-                {statusLabel(intl, saved.status)}
-              </span>
-              {frozen ? (
-                <span className="rounded-pill bg-badge-count-bg px-2 py-0.5 text-xs">
-                  <FormattedMessage id="entities.archivedPill" defaultMessage="Archived" />
+    <RecordContext.Provider value={recordFacts}>
+      <AppShell
+        user={loaded.user}
+        onSignOut={() => void signOut()}
+        subbar={
+          <>
+            <section
+              aria-labelledby="page-title"
+              className="flex h-(--height-subbar) items-center justify-between gap-4 border-b border-(--chrome-subbar-border) bg-canvas px-page-x"
+            >
+              <div className="flex min-w-0 items-center gap-2">
+                <Link to="/entities" className="text-link hover:underline">
+                  <FormattedMessage id="entities.title" defaultMessage="Entities" />
+                </Link>
+                <ChevronRight size={16} aria-hidden="true" className="text-subtle" />
+                {majorityOwner ? (
+                  <>
+                    <Link
+                      to={`/entities/${majorityOwner.id}`}
+                      className="truncate text-link hover:underline"
+                    >
+                      {majorityOwner.legalName}
+                    </Link>
+                    <ChevronRight size={16} aria-hidden="true" className="text-subtle" />
+                  </>
+                ) : null}
+                <Building2 size={16} aria-hidden="true" className="text-muted" />
+                <h1 id="page-title" className="truncate text-md font-semibold">
+                  {saved.legalName}
+                </h1>
+                <span
+                  className={`rounded-pill px-2 py-0.5 text-xs font-medium ${STATUS_PILL[saved.status]}`}
+                >
+                  {statusLabel(intl, saved.status)}
                 </span>
-              ) : null}
-            </div>
-            <div className="flex items-center gap-2">
-              <StatusNote status={archiveStatus} detail={archiveError} />
-              <Button variant="secondary" onClick={() => void archiveOrRestore()}>
                 {frozen ? (
-                  <>
-                    <ArchiveRestore size={16} />
-                    <FormattedMessage id="entities.record.restore" defaultMessage="Restore" />
-                  </>
-                ) : (
-                  <>
-                    <Archive size={16} />
-                    <FormattedMessage id="entities.record.archive" defaultMessage="Archive" />
-                  </>
-                )}
-              </Button>
-            </div>
-          </section>
-          <RecordTabs
-            label={intl.formatMessage({
-              id: "entities.record.sections",
-              defaultMessage: "Entity sections",
-            })}
-            tabs={recordTabs(saved.id)}
-          />
-        </>
-      }
-    >
-      <PageTitle title={saved.legalName} />
-      <RecordApplets applets={[history]}>
-        <div className="flex flex-col gap-4 overflow-y-auto px-page-x py-page-y">
-          {loaded.tab === "overview" ? (
-            <>
-              {frozen ? (
-                <p className="rounded-card bg-status-warning-bg px-3 py-2 text-md text-status-warning-fg">
-                  <FormattedMessage
-                    id="entities.record.archivedNote"
-                    defaultMessage="This entity is archived. Restore it to edit."
-                  />
-                </p>
-              ) : null}
-              <section className="overflow-hidden rounded-card border border-border-default bg-raised">
-                <header className="flex h-section-header items-center border-b border-border-default bg-section-header px-4">
-                  <h2 className="text-base font-semibold">
-                    <FormattedMessage id="entities.record.registry" defaultMessage="Registry" />
-                  </h2>
-                </header>
-                <div className="grid grid-cols-1 gap-4 p-4 @2xl/page:grid-cols-2">
-                  <div className="@2xl/page:col-span-2">
-                    {textInput(
-                      "legalName",
-                      "entity-legal-name",
-                      <FormattedMessage id="entities.form.legalName" defaultMessage="Legal name" />,
-                    )}
-                  </div>
-                  <SelectField
-                    id="entity-type"
-                    label={
-                      <FormattedMessage id="entities.form.type" defaultMessage="Entity type" />
-                    }
-                    value={saved.entityTypeId}
-                    disabled={frozen}
-                    status={commits.status.entityTypeId}
-                    error={commits.error.entityTypeId}
-                    onChange={(value) => void commit("entityTypeId", { entityTypeId: value })}
-                    options={loaded.entityTypes.map((row) => ({
-                      value: row.id,
-                      label: row.displayName,
-                    }))}
-                    fallback={{ value: saved.entityTypeId, label: saved.entityTypeName }}
-                  />
-                  <SelectField
-                    id="entity-status"
-                    label={<FormattedMessage id="entities.form.status" defaultMessage="Status" />}
-                    value={saved.status}
-                    disabled={frozen}
-                    status={commits.status.status}
-                    error={commits.error.status}
-                    onChange={(value) => void commit("status", { status: value as EntityStatus })}
-                    options={ENTITY_STATUSES.map((value) => ({
-                      value,
-                      label: statusLabel(intl, value),
-                    }))}
-                  />
-                  {textInput(
-                    "jurisdiction",
-                    "entity-jurisdiction",
+                  <span className="rounded-pill bg-badge-count-bg px-2 py-0.5 text-xs">
+                    <FormattedMessage id="entities.archivedPill" defaultMessage="Archived" />
+                  </span>
+                ) : null}
+              </div>
+              <div className="flex items-center gap-2">
+                <StatusNote status={archiveStatus} detail={archiveError} />
+                <Button variant="secondary" onClick={() => void archiveOrRestore()}>
+                  {frozen ? (
+                    <>
+                      <ArchiveRestore size={16} />
+                      <FormattedMessage id="entities.record.restore" defaultMessage="Restore" />
+                    </>
+                  ) : (
+                    <>
+                      <Archive size={16} />
+                      <FormattedMessage id="entities.record.archive" defaultMessage="Archive" />
+                    </>
+                  )}
+                </Button>
+              </div>
+            </section>
+            <RecordTabs
+              label={intl.formatMessage({
+                id: "entities.record.sections",
+                defaultMessage: "Entity sections",
+              })}
+              tabs={recordTabs(intl, saved.id, loaded.linkedCounts)}
+            />
+          </>
+        }
+      >
+        <PageTitle title={saved.legalName} />
+        <RecordApplets
+          applets={[history]}
+          layer={
+            open ? (
+              <DocPanel
+                documentId={open.document.id}
+                title={open.document.title}
+                version={open.version}
+                initialFind={loaded.documentFindQuery}
+                onClose={() => setReading(null)}
+              />
+            ) : undefined
+          }
+        >
+          <div className="flex flex-col gap-4 overflow-y-auto px-page-x py-page-y">
+            {loaded.tab === "overview" ? (
+              <>
+                {frozen ? (
+                  <p className="rounded-card bg-status-warning-bg px-3 py-2 text-md text-status-warning-fg">
                     <FormattedMessage
-                      id="entities.form.jurisdiction"
-                      defaultMessage="Formation jurisdiction"
-                    />,
-                  )}
-                  <div className="flex flex-col gap-1.5">
-                    <Label htmlFor="entity-formed-on">
-                      <FormattedMessage id="entities.form.formedOn" defaultMessage="Formed on" />
-                    </Label>
-                    <div className="flex items-center gap-2">
-                      <Input
-                        id="entity-formed-on"
-                        type="date"
-                        value={formedOn}
-                        disabled={frozen}
-                        onChange={(event) => setFormedOn(event.target.value)}
-                        onBlur={() => void commit("formedOn", { formedOn: formedOn || null })}
-                        onKeyDown={(event) => {
-                          if (event.key === "Escape") setFormedOn(saved.formedOn ?? "");
-                        }}
-                      />
-                      <StatusNote
-                        status={commits.status.formedOn ?? "idle"}
-                        detail={commits.error.formedOn}
-                      />
-                    </div>
-                  </div>
-                  {textInput(
-                    "registrationNumber",
-                    "entity-registration-number",
-                    <FormattedMessage
-                      id="entities.form.registrationNumber"
-                      defaultMessage="Registration no."
-                    />,
-                  )}
-                  {textInput(
-                    "taxId",
-                    "entity-tax-id",
-                    <FormattedMessage id="entities.form.taxId" defaultMessage="Tax ID" />,
-                  )}
-                  {textInput(
-                    "registeredAgent",
-                    "entity-registered-agent",
-                    <FormattedMessage
-                      id="entities.form.registeredAgent"
-                      defaultMessage="Registered agent"
-                    />,
-                  )}
-                  <div className="@2xl/page:col-span-2">
-                    <div className="flex flex-col gap-1.5">
-                      <Label htmlFor="entity-registered-address">
+                      id="entities.record.archivedNote"
+                      defaultMessage="This entity is archived. Restore it to edit."
+                    />
+                  </p>
+                ) : null}
+                <section className="overflow-hidden rounded-card border border-border-default bg-raised">
+                  <header className="flex h-section-header items-center border-b border-border-default bg-section-header px-4">
+                    <h2 className="text-base font-semibold">
+                      <FormattedMessage id="entities.record.registry" defaultMessage="Registry" />
+                    </h2>
+                  </header>
+                  <div className="grid grid-cols-1 gap-4 p-4 @2xl/page:grid-cols-2">
+                    <div className="@2xl/page:col-span-2">
+                      {textInput(
+                        "legalName",
+                        "entity-legal-name",
                         <FormattedMessage
-                          id="entities.form.registeredAddress"
-                          defaultMessage="Registered address"
-                        />
+                          id="entities.form.legalName"
+                          defaultMessage="Legal name"
+                        />,
+                      )}
+                    </div>
+                    <SelectField
+                      id="entity-type"
+                      label={
+                        <FormattedMessage id="entities.form.type" defaultMessage="Entity type" />
+                      }
+                      value={saved.entityTypeId}
+                      disabled={frozen}
+                      status={commits.status.entityTypeId}
+                      error={commits.error.entityTypeId}
+                      onChange={(value) => void commit("entityTypeId", { entityTypeId: value })}
+                      options={loaded.entityTypes.map((row) => ({
+                        value: row.id,
+                        label: row.displayName,
+                      }))}
+                      fallback={{ value: saved.entityTypeId, label: saved.entityTypeName }}
+                    />
+                    <SelectField
+                      id="entity-status"
+                      label={<FormattedMessage id="entities.form.status" defaultMessage="Status" />}
+                      value={saved.status}
+                      disabled={frozen}
+                      status={commits.status.status}
+                      error={commits.error.status}
+                      onChange={(value) => void commit("status", { status: value as EntityStatus })}
+                      options={ENTITY_STATUSES.map((value) => ({
+                        value,
+                        label: statusLabel(intl, value),
+                      }))}
+                    />
+                    {textInput(
+                      "jurisdiction",
+                      "entity-jurisdiction",
+                      <FormattedMessage
+                        id="entities.form.jurisdiction"
+                        defaultMessage="Formation jurisdiction"
+                      />,
+                    )}
+                    <div className="flex flex-col gap-1.5">
+                      <Label htmlFor="entity-formed-on">
+                        <FormattedMessage id="entities.form.formedOn" defaultMessage="Formed on" />
                       </Label>
                       <div className="flex items-center gap-2">
-                        <textarea
-                          id="entity-registered-address"
-                          value={drafts.registeredAddress}
-                          className={TEXTAREA_CLASS}
+                        <Input
+                          id="entity-formed-on"
+                          type="date"
+                          value={formedOn}
                           disabled={frozen}
-                          onChange={(event) =>
-                            setDrafts((current) => ({
-                              ...current,
-                              registeredAddress: event.target.value,
-                            }))
-                          }
-                          onBlur={() =>
-                            commits.commitText("registeredAddress", textField("registeredAddress"))
-                          }
+                          onChange={(event) => setFormedOn(event.target.value)}
+                          onBlur={() => void commit("formedOn", { formedOn: formedOn || null })}
                           onKeyDown={(event) => {
-                            if (event.key === "Escape") {
-                              commits.revertText(
-                                "registeredAddress",
-                                textField("registeredAddress"),
-                              );
-                            }
+                            if (event.key === "Escape") setFormedOn(saved.formedOn ?? "");
                           }}
                         />
                         <StatusNote
-                          status={commits.status.registeredAddress ?? "idle"}
-                          detail={commits.error.registeredAddress}
+                          status={commits.status.formedOn ?? "idle"}
+                          detail={commits.error.formedOn}
                         />
                       </div>
                     </div>
+                    {textInput(
+                      "registrationNumber",
+                      "entity-registration-number",
+                      <FormattedMessage
+                        id="entities.form.registrationNumber"
+                        defaultMessage="Registration no."
+                      />,
+                    )}
+                    {textInput(
+                      "taxId",
+                      "entity-tax-id",
+                      <FormattedMessage id="entities.form.taxId" defaultMessage="Tax ID" />,
+                    )}
+                    {textInput(
+                      "registeredAgent",
+                      "entity-registered-agent",
+                      <FormattedMessage
+                        id="entities.form.registeredAgent"
+                        defaultMessage="Registered agent"
+                      />,
+                    )}
+                    <div className="@2xl/page:col-span-2">
+                      <div className="flex flex-col gap-1.5">
+                        <Label htmlFor="entity-registered-address">
+                          <FormattedMessage
+                            id="entities.form.registeredAddress"
+                            defaultMessage="Registered address"
+                          />
+                        </Label>
+                        <div className="flex items-center gap-2">
+                          <textarea
+                            id="entity-registered-address"
+                            value={drafts.registeredAddress}
+                            className={TEXTAREA_CLASS}
+                            disabled={frozen}
+                            onChange={(event) =>
+                              setDrafts((current) => ({
+                                ...current,
+                                registeredAddress: event.target.value,
+                              }))
+                            }
+                            onBlur={() =>
+                              commits.commitText(
+                                "registeredAddress",
+                                textField("registeredAddress"),
+                              )
+                            }
+                            onKeyDown={(event) => {
+                              if (event.key === "Escape") {
+                                commits.revertText(
+                                  "registeredAddress",
+                                  textField("registeredAddress"),
+                                );
+                              }
+                            }}
+                          />
+                          <StatusNote
+                            status={commits.status.registeredAddress ?? "idle"}
+                            detail={commits.error.registeredAddress}
+                          />
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                </div>
-              </section>
-              <ShareCapitalCard
-                entity={saved}
-                frozen={frozen}
-                status={commits.status}
-                error={commits.error}
-                onCommit={(key, value) => void commit(key, { [key]: value })}
-              />
-              <EntityFieldsCard
-                entity={saved}
-                fields={attachedFields}
-                people={people}
-                entities={entityRefs}
-                frozen={frozen}
-                status={commits.status}
-                error={commits.error}
-                onCommit={(slug, value) =>
-                  void commit(`field:${slug}`, { customFields: { [slug]: value } })
-                }
-              />
-              <OfficersCard
-                entityId={saved.id}
-                initial={loaded.officers}
-                roles={loaded.officerRoles}
-                users={loaded.users}
-                frozen={frozen}
-              />
-              <RegistrationsCard
-                entityId={saved.id}
-                initial={loaded.registrations}
-                obligations={loaded.obligations}
-                frozen={frozen}
-              />
-            </>
-          ) : loaded.tab === "ownership" ? (
-            <OwnershipCard
-              entity={saved}
-              candidates={loaded.entities}
-              initial={loaded.holdings}
-              frozen={frozen}
-            />
-          ) : loaded.tab === "obligations" ? (
-            <ObligationsPanel
-              entityId={saved.id}
-              initial={loaded.obligations}
-              registrations={loaded.registrations}
-              options={loaded.obligationOptions}
-              frozen={frozen}
-            />
-          ) : (
-            <section className="rounded-card border border-border-default bg-raised p-6">
-              <h2 className="text-lg font-semibold">{TAB_LABELS[loaded.tab]}</h2>
-              <p className="mt-2 text-base text-muted">
-                <FormattedMessage
-                  id="entities.record.placeholder"
-                  defaultMessage="This section will arrive in a later M27 ticket."
+                </section>
+                <ShareCapitalCard
+                  entity={saved}
+                  frozen={frozen}
+                  status={commits.status}
+                  error={commits.error}
+                  onCommit={(key, value) => void commit(key, { [key]: value })}
                 />
-              </p>
-            </section>
-          )}
-        </div>
-      </RecordApplets>
-    </AppShell>
+                <EntityFieldsCard
+                  entity={saved}
+                  fields={attachedFields}
+                  people={people}
+                  entities={entityRefs}
+                  frozen={frozen}
+                  status={commits.status}
+                  error={commits.error}
+                  onCommit={(slug, value) =>
+                    void commit(`field:${slug}`, { customFields: { [slug]: value } })
+                  }
+                />
+                <OfficersCard
+                  entityId={saved.id}
+                  initial={loaded.officers}
+                  roles={loaded.officerRoles}
+                  users={loaded.users}
+                  frozen={frozen}
+                />
+                <RegistrationsCard
+                  entityId={saved.id}
+                  initial={loaded.registrations}
+                  obligations={loaded.obligations}
+                  frozen={frozen}
+                />
+              </>
+            ) : loaded.tab === "ownership" ? (
+              <OwnershipCard
+                entity={saved}
+                candidates={loaded.entities}
+                initial={loaded.holdings}
+                frozen={frozen}
+              />
+            ) : loaded.tab === "obligations" ? (
+              <ObligationsPanel
+                entityId={saved.id}
+                initial={loaded.obligations}
+                registrations={loaded.registrations}
+                options={loaded.obligationOptions}
+                frozen={frozen}
+              />
+            ) : loaded.tab === "documents" ? (
+              <DocumentsCard
+                documents={paper}
+                folders={folders}
+                nextCursor={paperCursor}
+                supportingUploads={false}
+                reading={reading?.versionId ?? null}
+                amending={null}
+                onAmendmentOpened={() => undefined}
+                onRead={(document, version) =>
+                  setReading({ documentId: document.id, versionId: version.id })
+                }
+                onDocuments={(documents, cursor) => {
+                  setPaper(documents);
+                  if (cursor !== undefined) setPaperCursor(cursor);
+                }}
+                onFiled={setFiled}
+                onFolders={setFolders}
+              />
+            ) : loaded.tab === "contracts" ? (
+              <LinkedRecordsList
+                key={`${saved.id}:contracts`}
+                record={recordFacts.record}
+                seam={ENTITY_LINKED_RECORD_SEAMS.contract}
+              />
+            ) : (
+              <LinkedRecordsList
+                key={`${saved.id}:matters`}
+                record={recordFacts.record}
+                seam={ENTITY_LINKED_RECORD_SEAMS.matter}
+              />
+            )}
+          </div>
+        </RecordApplets>
+      </AppShell>
+    </RecordContext.Provider>
   );
 }
 
@@ -548,10 +659,31 @@ const TAB_LABELS: Readonly<Record<EntityTab, ReactNode>> = {
   matters: <FormattedMessage id="entities.record.tab.matters" defaultMessage="Matters" />,
 };
 
-function recordTabs(id: string) {
+const COUNT_LABELS = {
+  contracts: defineMessage({
+    id: "entities.record.tab.contracts.count",
+    defaultMessage: "{count, plural, one {# linked Contract} other {# linked Contracts}}",
+  }),
+  matters: defineMessage({
+    id: "entities.record.tab.matters.count",
+    defaultMessage: "{count, plural, one {# linked Matter} other {# linked Matters}}",
+  }),
+} as const;
+
+function recordTabs(intl: IntlShape, id: string, counts: { contracts: number; matters: number }) {
   return [
     { to: `/entities/${id}`, end: true, label: TAB_LABELS.overview },
-    ...RECORD_TABS.map((tab) => ({ to: `/entities/${id}/${tab}`, label: TAB_LABELS[tab] })),
+    ...RECORD_TABS.map((tab) => {
+      const counted = tab === "contracts" || tab === "matters";
+      return {
+        to: `/entities/${id}/${tab}`,
+        label: TAB_LABELS[tab],
+        count: counted ? counts[tab] : undefined,
+        countLabel: counted
+          ? intl.formatMessage(COUNT_LABELS[tab], { count: counts[tab] })
+          : undefined,
+      };
+    }),
   ];
 }
 

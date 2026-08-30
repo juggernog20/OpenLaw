@@ -61,6 +61,7 @@ import { documentRepositoryRoutes } from "./modules/documents/repository.js";
 import { documentFoldersRoutes } from "./modules/documents/folders.js";
 import { counterpartiesRoutes } from "./modules/counterparties/routes.js";
 import { entitiesRoutes } from "./modules/entities/routes.js";
+import { entityLinkedRecordsRoutes } from "./modules/entities/linked-records.js";
 import { entityTypesRoutes } from "./modules/entity-types/routes.js";
 import { entityAttachedFieldsRoutes } from "./modules/entity-types/attached-fields.js";
 import { matterTypesRoutes } from "./modules/matter-types/routes.js";
@@ -462,6 +463,7 @@ export async function buildApp(deps: AppDeps, opts: FastifyServerOptions = {}) {
   await app.register(entityAttachedFieldsRoutes, { prefix: "/api/v1" });
   await app.register(officerRolesRoutes, { prefix: "/api/v1" });
   await app.register(entitiesRoutes, { prefix: "/api/v1" });
+  await app.register(entityLinkedRecordsRoutes, { prefix: "/api/v1" });
   await app.register(searchRoutes, { prefix: "/api/v1" });
   await app.register(fieldsRoutes, { prefix: "/api/v1" });
   await app.register(listViewsRoutes, { prefix: "/api/v1" });

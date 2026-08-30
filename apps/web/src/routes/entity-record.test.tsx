@@ -61,7 +61,14 @@ function entityRow(overrides: Partial<Record<string, unknown>> = {}) {
 /** The record loader's two reads plus the mutations under test, over
  * the standard stub. The record is stateful: mutations answer with the
  * row they produce, and later GETs answer the latest row. */
-function recordApi(initial: Record<string, unknown>) {
+function recordApi(
+  initial: Record<string, unknown>,
+  linked: {
+    counts?: { contracts: number; matters: number };
+    contracts?: unknown[];
+    matters?: unknown[];
+  } = {},
+) {
   let row = initial;
   const patches: unknown[] = [];
   const posts: string[] = [];
@@ -71,6 +78,21 @@ function recordApi(initial: Record<string, unknown>) {
     }
     if (call.url.pathname === "/api/v1/entities/types" && call.method === "GET") {
       return json(200, { entityTypes: TYPE_OPTIONS });
+    }
+    if (call.url.pathname === "/api/v1/entities/e1/linked-record-counts" && call.method === "GET") {
+      return json(200, linked.counts ?? { contracts: 0, matters: 0 });
+    }
+    if (call.url.pathname === "/api/v1/entities/e1/contracts" && call.method === "GET") {
+      return json(200, { records: linked.contracts ?? [] });
+    }
+    if (call.url.pathname === "/api/v1/entities/e1/matters" && call.method === "GET") {
+      return json(200, { records: linked.matters ?? [] });
+    }
+    if (call.url.pathname === "/api/v1/entities/e1/documents" && call.method === "GET") {
+      return json(200, { documents: [], nextCursor: null });
+    }
+    if (call.url.pathname === "/api/v1/entities/e1/folders" && call.method === "GET") {
+      return json(200, { folders: [] });
     }
     if (call.url.pathname === "/api/v1/entities/e1" && call.method === "PATCH") {
       patches.push(call.body);
@@ -162,8 +184,53 @@ describe("the /entities/:entityId record page", () => {
       expect(
         await screen.findByRole("heading", { name: tab[0]!.toUpperCase() + tab.slice(1) }),
       ).toBeInTheDocument();
-      expect(screen.getByText(/later M27 ticket/)).toBeInTheDocument();
+      expect(screen.queryByText(/later M27 ticket/)).not.toBeInTheDocument();
     }
+  });
+
+  it("shows scoped counts and opens rows from both generic roll-up tabs", async () => {
+    const api = recordApi(entityRow(), {
+      counts: { contracts: 1, matters: 1 },
+      contracts: [
+        {
+          restricted: false,
+          kind: "contract",
+          id: "c1",
+          number: 7,
+          title: "Lease",
+          statusName: "Active",
+          statusCategory: "active",
+          isConfidential: false,
+          archived: false,
+        },
+      ],
+      matters: [
+        {
+          restricted: false,
+          kind: "matter",
+          id: "m1",
+          number: 8,
+          title: "Dispute",
+          statusName: "Open",
+          statusCategory: "open",
+          isConfidential: false,
+          archived: false,
+        },
+      ],
+    });
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    const { router } = renderAt("/entities/e1/contracts");
+    expect(await screen.findByRole("link", { name: /C-7.*Lease/ })).toHaveAttribute(
+      "href",
+      "/contracts/7",
+    );
+    expect(screen.getByRole("img", { name: "1 linked Contract" })).toBeInTheDocument();
+    await router.navigate("/entities/e1/matters");
+    expect(await screen.findByRole("link", { name: /M-8.*Dispute/ })).toHaveAttribute(
+      "href",
+      "/matters/8",
+    );
+    expect(screen.getByRole("img", { name: "1 linked Matter" })).toBeInTheDocument();
   });
 
   it("mounts the Activity applet with the Entity reference", async () => {

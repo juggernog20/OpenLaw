@@ -364,6 +364,27 @@ export function stubApi(state: ApiState) {
     ) {
       return json(200, { obligations: [] });
     }
+    if (
+      /^\/api\/v1\/entities\/[^/]+\/linked-record-counts$/.test(call.url.pathname) &&
+      call.method === "GET"
+    ) {
+      return json(200, { contracts: 0, matters: 0 });
+    }
+    if (
+      /^\/api\/v1\/entities\/[^/]+\/(contracts|matters)$/.test(call.url.pathname) &&
+      call.method === "GET"
+    ) {
+      return json(200, { records: [] });
+    }
+    if (
+      /^\/api\/v1\/entities\/[^/]+\/documents$/.test(call.url.pathname) &&
+      call.method === "GET"
+    ) {
+      return json(200, { documents: [], nextCursor: null });
+    }
+    if (/^\/api\/v1\/entities\/[^/]+\/folders$/.test(call.url.pathname) && call.method === "GET") {
+      return json(200, { folders: [] });
+    }
     if (call.url.pathname === "/api/v1/onboarding" && call.method === "GET") {
       return json(200, state.onboarding ?? { completed: true, emailConfigured: true });
     }
