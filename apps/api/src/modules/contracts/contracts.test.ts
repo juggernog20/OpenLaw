@@ -1546,6 +1546,55 @@ describe("the signing entity (CTR-011)", () => {
     });
   });
 
+  it("sorts a restricted signing Entity with the unrecorded ones, not by its hidden name", async () => {
+    const visible = await newContract("Sort visible signing Entity");
+    const hidden = await newContract("Sort hidden signing Entity");
+    const open = await newEntity("Sort Bravo Open Ltd");
+    const vehicle = await newEntity("Sort Alpha Hidden Vehicle Ltd");
+    expect(
+      (await patchContract(adminCookies, visible.number, { entityId: open.id })).statusCode,
+    ).toBe(200);
+    expect(
+      (await patchContract(adminCookies, hidden.number, { entityId: vehicle.id })).statusCode,
+    ).toBe(200);
+    const sealed = await harness.app.inject({
+      method: "PATCH",
+      url: `/api/v1/entities/${vehicle.id}`,
+      cookies: adminCookies,
+      payload: { isConfidential: true },
+    });
+    expect(sealed.statusCode, sealed.body).toBe(200);
+
+    const sortedByEntity = async (cookies: Record<string, string>) => {
+      const all: ContractRow[] = [];
+      let cursor: string | null = null;
+      do {
+        const query = new URLSearchParams({
+          sort: "entity",
+          dir: "asc",
+          ...(cursor === null ? {} : { cursor }),
+        });
+        const res = await harness.app.inject({
+          method: "GET",
+          url: `/api/v1/contracts?${query.toString()}`,
+          cookies,
+        });
+        expect(res.statusCode, res.body).toBe(200);
+        all.push(...(res.json().contracts as ContractRow[]));
+        cursor = res.json().nextCursor as string | null;
+      } while (cursor !== null);
+      return all.map((row) => row.id);
+    };
+    // "Alpha" files before "Bravo" for the Administrator who reads the
+    // name. The Member reads "Restricted Entity", so the row files with
+    // the unrecorded ones after every named Entity.
+    const adminOrder = await sortedByEntity(adminCookies);
+    expect(adminOrder.indexOf(hidden.id)).toBeLessThan(adminOrder.indexOf(visible.id));
+    const memberOrder = await sortedByEntity(memberCookies);
+    expect(memberOrder.indexOf(visible.id)).toBeGreaterThanOrEqual(0);
+    expect(memberOrder.indexOf(visible.id)).toBeLessThan(memberOrder.indexOf(hidden.id));
+  });
+
   it("writes the change with before and after legal names, and nothing when it repeats", async () => {
     const contract = await newContract("Entity audit");
     const parent = await newEntity("Audit Parent Corp");

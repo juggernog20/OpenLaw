@@ -203,7 +203,14 @@ function ownershipPath(
   return null;
 }
 
-async function assertNoCycle(tx: Transaction, ownerId: string, ownedId: string) {
+/** The loop may pass through an Entity the writer cannot reach. That
+ * link still names it only as Restricted Entity (ENT-004). */
+async function assertNoCycle(
+  tx: Transaction,
+  user: Parameters<typeof entityReachScope>[1],
+  ownerId: string,
+  ownedId: string,
+) {
   const rows = await tx
     .select({
       ownerEntityId: entityHoldings.ownerEntityId,
@@ -216,9 +223,9 @@ async function assertNoCycle(tx: Transaction, ownerId: string, ownedId: string) 
   const names = await tx
     .select({ id: entities.id, legalName: entities.legalName })
     .from(entities)
-    .where(inArray(entities.id, [...new Set(loopIds)]));
+    .where(and(inArray(entities.id, [...new Set(loopIds)]), entityReachScope(tx, user)));
   const byId = new Map(names.map((row) => [row.id, row.legalName]));
-  const loop = loopIds.map((id) => byId.get(id) ?? id).join(" → ");
+  const loop = loopIds.map((id) => byId.get(id) ?? "Restricted Entity").join(" → ");
   throw httpError(409, `This holding would create a loop: ${loop}.`, {
     type: ENTITY_HOLDING_CYCLE_PROBLEM_TYPE,
   });
@@ -318,8 +325,11 @@ export const entityHoldingRoutes: FastifyPluginAsyncZod = async (app) => {
         }
       }
       const nodes = allNodes.filter((node) => included.has(node.id));
+      // An edge is drawn only when the viewer reaches one of its ends. A
+      // link between two walled Entities is topology the viewer may not
+      // learn, even when each end touches something they can see.
       const projected = allHoldings.filter(
-        (row) => included.has(row.ownerId) && included.has(row.ownedId),
+        (row) => visible.has(row.ownerId) || visible.has(row.ownedId),
       );
       const ownerName = new Map(
         nodes.filter((node) => visible.has(node.id)).map((node) => [node.id, node.legalName]),
@@ -431,7 +441,7 @@ export const entityHoldingRoutes: FastifyPluginAsyncZod = async (app) => {
         if (await holdingByPair(tx, owner.id, owned.id)) {
           throw httpError(409, "These Entities already have this Holding.");
         }
-        await assertNoCycle(tx, owner.id, owned.id);
+        await assertNoCycle(tx, request.user, owner.id, owned.id);
         await tx.insert(entityHoldings).values({
           ownerEntityId: owner.id,
           ownedEntityId: owned.id,

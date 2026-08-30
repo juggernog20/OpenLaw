@@ -903,6 +903,19 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
     updatedAt: { expr: sql`${contracts.updatedAt}`, joined: false },
   };
 
+  /** The sort expression as this viewer may see it. The signing Entity
+   * renders as "Restricted Entity" when ENT-004 walls it, so its sort
+   * key is NULL for that viewer and the row files with the unrecorded
+   * ones. Ordering by the hidden name would tell the viewer where it
+   * sits in the alphabet. */
+  function sortSpec(key: ContractSortKey, user: AuthenticatedUser) {
+    const spec = SORTS[key];
+    if (key !== "entity") return spec;
+    const entityScope = entityReachScope(app.db, user);
+    if (entityScope === undefined) return spec;
+    return { expr: sql`case when ${entityScope} then ${spec.expr} else null end`, joined: true };
+  }
+
   /**
    * The order the page reads in.
    *
@@ -917,9 +930,9 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
    * ascending and the latest descending; it is the one the reader did
    * not ask about, and it belongs under the ones they did.
    */
-  function listOrder(sort: SortRequest | null): SQL[] {
+  function listOrder(sort: SortRequest | null, user: AuthenticatedUser): SQL[] {
     if (!sort) return [sql`${contracts.number} desc`];
-    const { expr } = SORTS[sort.key];
+    const { expr } = sortSpec(sort.key, user);
     return [
       sql`${expr} ${sql.raw(sort.dir === "asc" ? "asc" : "desc")} nulls last`,
       sql`${contracts.number} desc`,
@@ -962,7 +975,7 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
     )`;
     if (!sort) return sql`${contracts.number} < ${at}`;
 
-    const { expr, joined } = SORTS[sort.key];
+    const { expr, joined } = sortSpec(sort.key, user);
     /**
      * The boundary row's sorted value, through the same joins the page
      * reads so the value is the one the ordering will compare against.
@@ -1569,7 +1582,7 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
         // The sorted column, then the reference. Unsorted that is the
         // reference alone: it is monotonic, so newest-first can tie with
         // nothing.
-        .orderBy(...listOrder(sort))
+        .orderBy(...listOrder(sort, request.user))
         // One past the page, which is how the answer knows whether there
         // is more without counting anything.
         .limit(PAGE_SIZE + 1);
