@@ -18,6 +18,7 @@ import { Button } from "../ui/button";
 import { Dialog, DialogContent, DialogTitle } from "../ui/dialog";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
+import { RestrictedRecordCell } from "../restricted-record-cell";
 
 export function OwnershipCard({
   entity,
@@ -47,6 +48,7 @@ export function OwnershipCard({
 
   async function update(row: EntityHolding, ownershipPercent: number) {
     setError(null);
+    if (row.owner.restricted || row.owned.restricted) return;
     const relatedEntityId = row.owner.id === entity.id ? row.owned.id : row.owner.id;
     const result = await api
       .PATCH("/api/v1/entities/{id}/holdings/{relatedEntityId}", {
@@ -65,16 +67,24 @@ export function OwnershipCard({
       return;
     }
     const next = result.data.holding;
+    if (next.owner.restricted || next.owned.restricted) return;
+    const nextOwnerId = next.owner.id;
+    const nextOwnedId = next.owned.id;
     setHoldings((current) => ({
       ...current,
-      owners: current.owners.map((held) => (held.owner.id === next.owner.id ? next : held)),
-      owned: current.owned.map((held) => (held.owned.id === next.owned.id ? next : held)),
+      owners: current.owners.map((held) =>
+        !held.owner.restricted && held.owner.id === nextOwnerId ? next : held,
+      ),
+      owned: current.owned.map((held) =>
+        !held.owned.restricted && held.owned.id === nextOwnedId ? next : held,
+      ),
     }));
     replaceWarning(next.owned.id, result.data.warnings);
   }
 
   async function remove(row: EntityHolding) {
     setError(null);
+    if (row.owner.restricted || row.owned.restricted) return;
     const relatedEntityId = row.owner.id === entity.id ? row.owned.id : row.owner.id;
     const removed = await api
       .DELETE("/api/v1/entities/{id}/holdings/{relatedEntityId}", {
@@ -98,10 +108,13 @@ export function OwnershipCard({
   }
 
   function added(holding: EntityHolding, warnings: EntityHoldingWarning[]) {
+    if (holding.owner.restricted || holding.owned.restricted) return;
+    const heldByAnchor = holding.owned.id === entity.id;
+    const anchorOwns = holding.owner.id === entity.id;
     setHoldings((current) => ({
       ...current,
-      owners: holding.owned.id === entity.id ? [...current.owners, holding] : current.owners,
-      owned: holding.owner.id === entity.id ? [...current.owned, holding] : current.owned,
+      owners: heldByAnchor ? [...current.owners, holding] : current.owners,
+      owned: anchorOwns ? [...current.owned, holding] : current.owned,
     }));
     replaceWarning(holding.owned.id, warnings);
     setDialogOpen(false);
@@ -109,8 +122,8 @@ export function OwnershipCard({
 
   const relatedIds = new Set([
     entity.id,
-    ...holdings.owners.map((row) => row.owner.id),
-    ...holdings.owned.map((row) => row.owned.id),
+    ...holdings.owners.flatMap((row) => (row.owner.restricted ? [] : [row.owner.id])),
+    ...holdings.owned.flatMap((row) => (row.owned.restricted ? [] : [row.owned.id])),
   ]);
 
   return (
@@ -203,11 +216,12 @@ function HoldingList({
         <p className="p-4 text-sm text-muted">{empty}</p>
       ) : (
         <ul className="divide-y divide-border-default">
-          {rows.map((row) => {
-            const related = row.owner.id === entityId ? row.owned : row.owner;
+          {rows.map((row, index) => {
+            const related =
+              !row.owner.restricted && row.owner.id === entityId ? row.owned : row.owner;
             return (
               <HoldingRow
-                key={`${row.owner.id}:${row.owned.id}`}
+                key={related.restricted ? `restricted-${index}` : related.id}
                 row={row}
                 related={related}
                 frozen={frozen}
@@ -237,6 +251,15 @@ function HoldingRow({
 }>) {
   const intl = useIntl();
   const [draft, setDraft] = useState(String(row.ownershipPercent));
+  if (related.restricted) {
+    return (
+      <RestrictedRecordCell
+        as="li"
+        className="px-4 py-3"
+        label={{ id: "entities.restricted", defaultMessage: "Restricted Entity" }}
+      />
+    );
+  }
   return (
     <li className="flex items-center gap-3 px-4 py-3">
       <Link

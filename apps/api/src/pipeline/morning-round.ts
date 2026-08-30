@@ -667,15 +667,19 @@ async function dueDates(db: Db, today: string, offsets: readonly number[]): Prom
         inArray(entityObligations.nextDueOn, dates),
       ),
     );
-  const administratorIds = obligationRows.some((row) => row.assigneeId === null)
-    ? (
-        await db
-          .select({ id: users.id })
-          .from(users)
-          .where(and(eq(users.role, "administrator"), isNull(users.archivedAt)))
-      ).map((row) => row.id)
-    : [];
+  const administratorIds =
+    obligationRows.length === 0
+      ? []
+      : (
+          await db
+            .select({ id: users.id })
+            .from(users)
+            .where(and(eq(users.role, "administrator"), isNull(users.archivedAt)))
+        ).map((row) => row.id);
   for (const row of obligationRows) {
+    const assignedAudience = row.assigneeId
+      ? await entityReachedBy(db, row.entityId, [row.assigneeId])
+      : new Set<string>();
     due.push({
       entityType: ENTITY_ENTITY,
       entityId: row.entityId,
@@ -685,7 +689,10 @@ async function dueDates(db: Db, today: string, offsets: readonly number[]): Prom
       label: row.label,
       date: row.date,
       offsetDays: offsetOf.get(row.date)!,
-      userIds: row.assigneeId ? [row.assigneeId] : administratorIds,
+      userIds:
+        row.assigneeId && assignedAudience.has(row.assigneeId)
+          ? [row.assigneeId]
+          : administratorIds,
     });
   }
   return due;

@@ -218,6 +218,7 @@ import { ApprovalsSigningCard } from "../components/approvals/approvals-signing-
 import { Avatar } from "../components/avatar";
 import { ConfidentialBanner } from "../components/confidential-banner";
 import { ConfidentialToggle } from "../components/confidential-toggle";
+import { RestrictedRecordCell } from "../components/restricted-record-cell";
 import { ConfirmRenewalDialog } from "../components/contracts/confirm-renewal-dialog";
 import { CreateContractDialog } from "../components/contracts/create-contract-dialog";
 import { KeyDatesCard } from "../components/contracts/key-dates-card";
@@ -893,9 +894,20 @@ export function ContractRecordPage() {
           ...users.map((person) => [person.id, person.displayName] as const),
           ...refs.users.map((person) => [person.id, person.displayName] as const),
           ...entities.map((entity) => [entity.id, entity.legalName] as const),
-          ...refs.entities.map((entity) => [entity.id, entity.legalName] as const),
+          ...refs.entities.map(
+            (entity) =>
+              [
+                entity.id,
+                entity.restricted
+                  ? intl.formatMessage({
+                      id: "entities.restricted",
+                      defaultMessage: "Restricted Entity",
+                    })
+                  : entity.legalName,
+              ] as const,
+          ),
         ]),
-      [users, entities, refs],
+      [users, entities, refs, intl],
     ),
   });
 
@@ -1434,7 +1446,18 @@ export function ContractRecordPage() {
    * Entity a stored value already names. */
   const entityReferences = mergeReferences(
     entityOptions.map((entity) => ({ id: entity.id, label: entity.legalName })),
-    refs.entities.map((entity) => ({ id: entity.id, label: entity.legalName })),
+    refs.entities.map((entity) =>
+      entity.restricted
+        ? {
+            id: entity.id,
+            label: intl.formatMessage({
+              id: "entities.restricted",
+              defaultMessage: "Restricted Entity",
+            }),
+            restricted: true,
+          }
+        : { id: entity.id, label: entity.legalName },
+    ),
   );
   /** The saved type may have been archived since, and so be absent from
    * the picker read — keep it selectable as itself rather than let the
@@ -1976,30 +1999,39 @@ export function ContractRecordPage() {
                         <FormattedMessage id="contracts.form.entity" defaultMessage="Our entity" />
                       </Label>
                       <div className="flex items-center gap-2">
-                        <select
-                          id="contract-entity"
-                          value={saved.entity?.id ?? ""}
-                          className={CONTROL_CLASS}
-                          disabled={frozen}
-                          onChange={(event) =>
-                            void commit("entityId", { entityId: event.target.value || null })
-                          }
-                        >
-                          {/* Empty is a real answer: a contract is often
+                        {saved.entity?.restricted ? (
+                          <RestrictedRecordCell
+                            label={{
+                              id: "entities.restricted",
+                              defaultMessage: "Restricted Entity",
+                            }}
+                          />
+                        ) : (
+                          <select
+                            id="contract-entity"
+                            value={saved.entity?.id ?? ""}
+                            className={CONTROL_CLASS}
+                            disabled={frozen}
+                            onChange={(event) =>
+                              void commit("entityId", { entityId: event.target.value || null })
+                            }
+                          >
+                            {/* Empty is a real answer: a contract is often
                         recorded before anyone decides which of ours
                         signs it (CTR-011). */}
-                          <option value="">
-                            {intl.formatMessage({
-                              id: "contracts.entityUnknown",
-                              defaultMessage: "Not known yet",
-                            })}
-                          </option>
-                          {entityOptions.map((entity) => (
-                            <option key={entity.id} value={entity.id}>
-                              {entity.legalName}
+                            <option value="">
+                              {intl.formatMessage({
+                                id: "contracts.entityUnknown",
+                                defaultMessage: "Not known yet",
+                              })}
                             </option>
-                          ))}
-                        </select>
+                            {entityOptions.map((entity) => (
+                              <option key={entity.id} value={entity.id}>
+                                {entity.legalName}
+                              </option>
+                            ))}
+                          </select>
+                        )}
                         <StatusNote
                           status={fieldStatus.entityId ?? "idle"}
                           detail={fieldError.entityId}

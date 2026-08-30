@@ -65,7 +65,10 @@ export type ApproverGroupOption = OptionsResponse["approverGroups"][number];
  * and the legal name it shows. It is the record's own saved shape, so
  * an entity already on a contract is offered back without translation.
  */
-export type SigningEntityOption = NonNullable<ContractRow["entity"]>;
+export type SigningEntityOption = Extract<
+  NonNullable<ContractRow["entity"]>,
+  { restricted: false }
+>;
 
 /** The M7 registry's Member+ list — the picker's source. It answers
  * full identity cards, ordered by legal name, with archived entities
@@ -84,8 +87,14 @@ export function signingEntityOptions(
   registry: readonly RegistryEntity[],
   saved: ContractRow["entity"],
 ): SigningEntityOption[] {
-  const live = registry.map((entity) => ({ id: entity.id, legalName: entity.legalName }));
-  return saved && !live.some((option) => option.id === saved.id) ? [saved, ...live] : live;
+  const live = registry.map((entity) => ({
+    restricted: false as const,
+    id: entity.id,
+    legalName: entity.legalName,
+  }));
+  return saved && !saved.restricted && !live.some((option) => option.id === saved.id)
+    ? [saved, ...live]
+    : live;
 }
 
 /** Generic factory for exhaustive enum lists: guards a literal so it can't

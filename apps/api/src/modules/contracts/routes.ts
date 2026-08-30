@@ -180,6 +180,7 @@ import {
   NO_CONTRACT,
   reachesLockedContract,
 } from "../../lib/contract-access.js";
+import { entityReachScope } from "../../lib/entity-access.js";
 import { NO_MATTER, reachedMatter } from "../../lib/matter-access.js";
 import {
   daysRemaining,
@@ -385,10 +386,10 @@ const TeamMemberSchema = PersonSchema.extend({ role: z.enum(CONTRACT_TEAM_ROLES)
  * keeps naming who signed it, and the registry is where its standing is
  * read. Nothing more of the identity card is joined in: the record
  * renders a name, not a card. */
-const SigningEntitySchema = z.object({
-  id: z.string(),
-  legalName: z.string(),
-});
+const SigningEntitySchema = z.discriminatedUnion("restricted", [
+  z.object({ restricted: z.literal(false), id: z.string(), legalName: z.string() }),
+  z.object({ restricted: z.literal(true) }),
+]);
 
 /** Their side, as a list needs it (CTR-011): one name per contract. The
  * primary is the party the contracts list column and the record name
@@ -564,7 +565,12 @@ const ConfirmedRenewalSchema = z.object({
  */
 const CustomFieldRefsSchema = z.object({
   users: z.array(PersonSchema),
-  entities: z.array(SigningEntitySchema),
+  entities: z.array(
+    z.discriminatedUnion("restricted", [
+      z.object({ restricted: z.literal(false), id: z.string(), legalName: z.string() }),
+      z.object({ restricted: z.literal(true), id: z.string() }),
+    ]),
+  ),
 });
 
 /** The contract plus the fields its type attaches (CTR-016). Every
@@ -686,7 +692,7 @@ function toPersonOrNull(person: JoinedPerson | null) {
  * real answer (CTR-011). */
 interface JoinedEntity {
   id: string;
-  legalName: string;
+  legalName: string | null;
 }
 
 /** The primary counterparty as the outer join answers it, where nobody
@@ -712,6 +718,7 @@ interface ContractContext {
   stage: (typeof CONTRACT_STAGES)[number];
   manager: JoinedPerson | null;
   entity: JoinedEntity | null;
+  entityRestricted: boolean;
   primaryCounterparty: JoinedCounterparty | null;
 }
 
@@ -757,7 +764,16 @@ function toRow(
     statusName: context.statusName,
     stage: context.stage,
     manager: toPersonOrNull(context.manager),
-    entity: context.entity,
+    entity:
+      context.entity === null
+        ? null
+        : context.entityRestricted
+          ? { restricted: true as const }
+          : {
+              restricted: false as const,
+              id: context.entity.id,
+              legalName: context.entity.legalName!,
+            },
     primaryCounterparty: context.primaryCounterparty,
     priority: row.priority,
     risk: row.risk,
@@ -798,8 +814,9 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
    * keyed on the flag as well as the contract, so at most one party row
    * can meet each contract row: that is the one-primary invariant read
    * back out. */
-  const selectContracts = (db: Executor) =>
-    db
+  const selectContracts = (db: Executor, user: AuthenticatedUser) => {
+    const entityScope = entityReachScope(db, user);
+    return db
       .select({
         row: contracts,
         contractTypeName: contractTypes.displayName,
@@ -813,8 +830,17 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
         },
         entity: {
           id: entities.id,
-          legalName: entities.legalName,
+          legalName:
+            entityScope === undefined
+              ? entities.legalName
+              : sql<
+                  string | null
+                >`case when ${entityScope} then ${entities.legalName} else null end`,
         },
+        entityRestricted:
+          entityScope === undefined
+            ? sql<boolean>`false`
+            : sql<boolean>`${entities.id} is not null and not (${entityScope})`,
         primaryCounterparty: {
           id: counterparties.id,
           name: counterparties.name,
@@ -833,6 +859,7 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
         ),
       )
       .leftJoin(counterparties, eq(contractCounterparties.counterpartyId, counterparties.id));
+  };
 
   /** How far this viewer sees across the contract table (CTR-021) —
    * the shared predicate, so the list, the record read, and the comment
@@ -876,6 +903,19 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
     updatedAt: { expr: sql`${contracts.updatedAt}`, joined: false },
   };
 
+  /** The sort expression as this viewer may see it. The signing Entity
+   * renders as "Restricted Entity" when ENT-004 walls it, so its sort
+   * key is NULL for that viewer and the row files with the unrecorded
+   * ones. Ordering by the hidden name would tell the viewer where it
+   * sits in the alphabet. */
+  function sortSpec(key: ContractSortKey, user: AuthenticatedUser) {
+    const spec = SORTS[key];
+    if (key !== "entity") return spec;
+    const entityScope = entityReachScope(app.db, user);
+    if (entityScope === undefined) return spec;
+    return { expr: sql`case when ${entityScope} then ${spec.expr} else null end`, joined: true };
+  }
+
   /**
    * The order the page reads in.
    *
@@ -890,9 +930,9 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
    * ascending and the latest descending; it is the one the reader did
    * not ask about, and it belongs under the ones they did.
    */
-  function listOrder(sort: SortRequest | null): SQL[] {
+  function listOrder(sort: SortRequest | null, user: AuthenticatedUser): SQL[] {
     if (!sort) return [sql`${contracts.number} desc`];
-    const { expr } = SORTS[sort.key];
+    const { expr } = sortSpec(sort.key, user);
     return [
       sql`${expr} ${sql.raw(sort.dir === "asc" ? "asc" : "desc")} nulls last`,
       sql`${contracts.number} desc`,
@@ -935,7 +975,7 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
     )`;
     if (!sort) return sql`${contracts.number} < ${at}`;
 
-    const { expr, joined } = SORTS[sort.key];
+    const { expr, joined } = sortSpec(sort.key, user);
     /**
      * The boundary row's sorted value, through the same joins the page
      * reads so the value is the one the ordering will compare against.
@@ -1274,7 +1314,7 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
     // answer for "the contract is not there" has one home, and a caller
     // that trusted the row to exist would be one schema change away from
     // a crash instead of a refusal.
-    const [target] = await selectContracts(tx).where(eq(contracts.id, locked.id)).limit(1);
+    const [target] = await selectContracts(tx, user).where(eq(contracts.id, locked.id)).limit(1);
     if (!target) throw httpError(404, NO_CONTRACT);
     if (!(await reachesLockedContract(tx, user, target.row))) {
       throw httpError(404, NO_CONTRACT);
@@ -1397,6 +1437,7 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
     db: Executor,
     attached: readonly AttachedCustomField[],
     values: Readonly<Record<string, CustomFieldValue>>,
+    user: AuthenticatedUser,
   ) {
     const idsOfType = (fieldType: "user" | "entity") =>
       attached
@@ -1422,9 +1463,18 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
         : db
             .select({ id: entities.id, legalName: entities.legalName })
             .from(entities)
-            .where(inArray(entities.id, entityIds)),
+            .where(and(inArray(entities.id, entityIds), entityReachScope(db, user))),
     ]);
-    return { users: people.map(toPerson), entities: signatories };
+    const named = new Map(signatories.map((entity) => [entity.id, entity.legalName]));
+    return {
+      users: people.map(toPerson),
+      entities: entityIds.map((id) => {
+        const legalName = named.get(id);
+        return legalName === undefined
+          ? { restricted: true as const, id }
+          : { restricted: false as const, id, legalName };
+      }),
+    };
   }
 
   /** The whole custom-field half of an answer: the type's attachments
@@ -1438,7 +1488,7 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
     const projection = projectCustomFields(user.role, attached, context.row.customFields);
     return {
       ...projection,
-      customFieldRefs: await customFieldRefs(db, projection.fields, projection.customFields),
+      customFieldRefs: await customFieldRefs(db, projection.fields, projection.customFields, user),
     };
   }
 
@@ -1503,7 +1553,7 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
         request.query.sort === undefined
           ? null
           : { key: request.query.sort, dir: request.query.dir ?? "asc" };
-      const rows = await selectContracts(app.db)
+      const rows = await selectContracts(app.db, request.user)
         .where(
           and(
             request.query.includeArchived === "true" ? undefined : isNull(contracts.archivedAt),
@@ -1532,7 +1582,7 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
         // The sorted column, then the reference. Unsorted that is the
         // reference alone: it is monotonic, so newest-first can tie with
         // nothing.
-        .orderBy(...listOrder(sort))
+        .orderBy(...listOrder(sort, request.user))
         // One past the page, which is how the answer knows whether there
         // is more without counting anything.
         .limit(PAGE_SIZE + 1);
@@ -1712,7 +1762,7 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
       },
     },
     async (request) => {
-      const [row] = await selectContracts(app.db)
+      const [row] = await selectContracts(app.db, request.user)
         // The scope rides beside the number, so a contract a
         // Contributor is not on reads as one that does not exist. A
         // locked page would tell them it is there.
@@ -1847,6 +1897,7 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
             // three are set on the record afterwards.
             manager: null,
             entity: null,
+            entityRestricted: false,
             primaryCounterparty: null,
           };
         }
@@ -1855,7 +1906,9 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
         // rather than off the predecessor's context: the entity and the
         // primary party the answer names have to be the ones this record
         // was born with, and one joined read is what guarantees it.
-        const [read] = await selectContracts(tx).where(eq(contracts.id, born.row.id)).limit(1);
+        const [read] = await selectContracts(tx, request.user)
+          .where(eq(contracts.id, born.row.id))
+          .limit(1);
         return read!;
       });
       return reply.status(201).send({ contract: toRow(created) });
@@ -2055,6 +2108,7 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
         // new gets signed by an entity that has left the registry. An
         // entity archived after the fact stays on the record untouched.
         let entity = current.entity;
+        let entityRestricted = current.entityRestricted;
         if (body.entityId !== undefined && body.entityId !== target.entityId) {
           if (body.entityId === null) {
             entity = null;
@@ -2068,7 +2122,7 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
                 archivedAt: entities.archivedAt,
               })
               .from(entities)
-              .where(eq(entities.id, body.entityId))
+              .where(and(eq(entities.id, body.entityId), entityReachScope(tx, request.user)))
               .limit(1)
               .for("update");
             if (!signatory || signatory.archivedAt) {
@@ -2076,11 +2130,14 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
             }
             entity = { id: signatory.id, legalName: signatory.legalName };
           }
+          entityRestricted = false;
           patch.entityId = entity?.id ?? null;
           // The audit map carries legal names, not ids — the M9 viewer
           // narrates "Entity changed from X to Y".
           changed.entity = {
-            from: current.entity?.legalName ?? null,
+            from: current.entityRestricted
+              ? "Restricted Entity"
+              : (current.entity?.legalName ?? null),
             to: entity?.legalName ?? null,
           };
         }
@@ -2466,6 +2523,7 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
           stage,
           manager,
           entity,
+          entityRestricted,
           // No field of this PATCH touches the other side — the
           // counterparties have their own routes.
           primaryCounterparty: current.primaryCounterparty,
@@ -2480,7 +2538,12 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
       return {
         contract: toRow(context, projection.customFields),
         fields: projection.fields,
-        customFieldRefs: await customFieldRefs(app.db, projection.fields, projection.customFields),
+        customFieldRefs: await customFieldRefs(
+          app.db,
+          projection.fields,
+          projection.customFields,
+          request.user,
+        ),
       };
     },
   );

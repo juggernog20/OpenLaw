@@ -2533,6 +2533,44 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
     values: (intl, payload) => ({ name: thingName(intl, payload) }),
     changes: (intl, payload, context) => directChange(intl, payload, "entityType", context),
   },
+  "entity.confidentiality_set": {
+    icon: Lock,
+    message: defineMessage({
+      id: "activity.entity.confidentialitySet",
+      defaultMessage: "{actor} marked {name} confidential",
+    }),
+    values: (intl, payload) => ({ name: thingName(intl, payload) }),
+  },
+  "entity.confidentiality_cleared": {
+    icon: Lock,
+    message: defineMessage({
+      id: "activity.entity.confidentialityCleared",
+      defaultMessage: "{actor} cleared {name}'s confidential mark",
+    }),
+    values: (intl, payload) => ({ name: thingName(intl, payload) }),
+  },
+  "entity_grant.added": {
+    icon: UserPlus,
+    message: defineMessage({
+      id: "activity.entityGrant.added",
+      defaultMessage: "{actor} granted {person} access to {name}",
+    }),
+    values: (intl, payload) => ({
+      name: thingName(intl, payload),
+      person: named(intl, payload, "userName"),
+    }),
+  },
+  "entity_grant.removed": {
+    icon: UserMinus,
+    message: defineMessage({
+      id: "activity.entityGrant.removed",
+      defaultMessage: "{actor} removed {person}'s access to {name}",
+    }),
+    values: (intl, payload) => ({
+      name: thingName(intl, payload),
+      person: named(intl, payload, "userName"),
+    }),
+  },
   "entity.archived": {
     icon: Archive,
     message: defineMessage({

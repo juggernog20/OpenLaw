@@ -30,7 +30,10 @@ const IdParams = z.object({ id: z.string().min(1).max(64) });
 const RelatedParams = IdParams.extend({ relatedEntityId: z.string().min(1).max(64) });
 const PercentSchema = z.number().min(0).max(100);
 
-const HoldingEntitySchema = z.object({ id: z.string(), legalName: z.string() });
+const HoldingEntitySchema = z.discriminatedUnion("restricted", [
+  z.object({ restricted: z.literal(false), id: z.string(), legalName: z.string() }),
+  z.object({ restricted: z.literal(true) }),
+]);
 const HoldingSchema = z.object({
   owner: HoldingEntitySchema,
   owned: HoldingEntitySchema,
@@ -54,14 +57,22 @@ const HoldingWriteEnvelope = z.object({
   warnings: z.array(HoldingWarningSchema),
 });
 
-const ChartNodeSchema = z.object({
-  id: z.string(),
-  legalName: z.string(),
-  type: z.string(),
-  jurisdiction: z.string().nullable(),
-  status: z.enum(ENTITY_STATUSES),
-  primaryOwnerId: z.string().nullable(),
-});
+const ChartNodeSchema = z.discriminatedUnion("restricted", [
+  z.object({
+    restricted: z.literal(false),
+    id: z.string(),
+    legalName: z.string(),
+    type: z.string(),
+    jurisdiction: z.string().nullable(),
+    status: z.enum(ENTITY_STATUSES),
+    primaryOwnerId: z.string().nullable(),
+  }),
+  z.object({
+    restricted: z.literal(true),
+    id: z.string(),
+    primaryOwnerId: z.string().nullable(),
+  }),
+]);
 const ChartEdgeSchema = z.object({
   ownerEntityId: z.string(),
   ownedEntityId: z.string(),
@@ -93,18 +104,25 @@ async function holdingRows(db: Executor) {
   return holdingProjection(db);
 }
 
-function toHolding(row: HoldingProjection) {
+function toHolding(row: HoldingProjection, visible?: ReadonlySet<string>) {
+  const entity = (id: string, legalName: string) =>
+    visible && !visible.has(id)
+      ? ({ restricted: true } as const)
+      : ({ restricted: false, id, legalName } as const);
   return {
-    owner: { id: row.ownerId, legalName: row.ownerName },
-    owned: { id: row.ownedId, legalName: row.ownedName },
+    owner: entity(row.ownerId, row.ownerName),
+    owned: entity(row.ownedId, row.ownedName),
     ownershipPercent: Number(row.ownershipPercent),
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
   };
 }
 
-async function reachableIds(db: Executor, user: Parameters<typeof entityReachScope>[0]) {
-  const rows = await db.select({ id: entities.id }).from(entities).where(entityReachScope(user));
+async function reachableIds(db: Executor, user: Parameters<typeof entityReachScope>[1]) {
+  const rows = await db
+    .select({ id: entities.id })
+    .from(entities)
+    .where(entityReachScope(db, user));
   return new Set(rows.map((row) => row.id));
 }
 
@@ -185,7 +203,14 @@ function ownershipPath(
   return null;
 }
 
-async function assertNoCycle(tx: Transaction, ownerId: string, ownedId: string) {
+/** The loop may pass through an Entity the writer cannot reach. That
+ * link still names it only as Restricted Entity (ENT-004). */
+async function assertNoCycle(
+  tx: Transaction,
+  user: Parameters<typeof entityReachScope>[1],
+  ownerId: string,
+  ownedId: string,
+) {
   const rows = await tx
     .select({
       ownerEntityId: entityHoldings.ownerEntityId,
@@ -198,9 +223,9 @@ async function assertNoCycle(tx: Transaction, ownerId: string, ownedId: string) 
   const names = await tx
     .select({ id: entities.id, legalName: entities.legalName })
     .from(entities)
-    .where(inArray(entities.id, [...new Set(loopIds)]));
+    .where(and(inArray(entities.id, [...new Set(loopIds)]), entityReachScope(tx, user)));
   const byId = new Map(names.map((row) => [row.id, row.legalName]));
-  const loop = loopIds.map((id) => byId.get(id) ?? id).join(" → ");
+  const loop = loopIds.map((id) => byId.get(id) ?? "Restricted Entity").join(" → ");
   throw httpError(409, `This holding would create a loop: ${loop}.`, {
     type: ENTITY_HOLDING_CYCLE_PROBLEM_TYPE,
   });
@@ -279,7 +304,7 @@ export const entityHoldingRoutes: FastifyPluginAsyncZod = async (app) => {
       },
     },
     async (request) => {
-      const nodes = await app.db
+      const allNodes = await app.db
         .select({
           id: entities.id,
           legalName: entities.legalName,
@@ -289,13 +314,26 @@ export const entityHoldingRoutes: FastifyPluginAsyncZod = async (app) => {
         })
         .from(entities)
         .innerJoin(entityTypes, eq(entities.entityTypeId, entityTypes.id))
-        .where(entityReachScope(request.user))
         .orderBy(asc(sql`lower(${entities.legalName})`), asc(entities.id));
-      const nodeIds = new Set(nodes.map((node) => node.id));
-      const projected = (await holdingRows(app.db)).filter(
-        (row) => nodeIds.has(row.ownerId) && nodeIds.has(row.ownedId),
+      const visible = await reachableIds(app.db, request.user);
+      const allHoldings = await holdingRows(app.db);
+      const included = new Set(visible);
+      for (const row of allHoldings) {
+        if (visible.has(row.ownerId) || visible.has(row.ownedId)) {
+          included.add(row.ownerId);
+          included.add(row.ownedId);
+        }
+      }
+      const nodes = allNodes.filter((node) => included.has(node.id));
+      // An edge is drawn only when the viewer reaches one of its ends. A
+      // link between two walled Entities is topology the viewer may not
+      // learn, even when each end touches something they can see.
+      const projected = allHoldings.filter(
+        (row) => visible.has(row.ownerId) || visible.has(row.ownedId),
       );
-      const ownerName = new Map(nodes.map((node) => [node.id, node.legalName]));
+      const ownerName = new Map(
+        nodes.filter((node) => visible.has(node.id)).map((node) => [node.id, node.legalName]),
+      );
       const byOwned = new Map<string, HoldingProjection[]>();
       for (const row of projected) {
         const held = byOwned.get(row.ownedId) ?? [];
@@ -317,7 +355,10 @@ export const entityHoldingRoutes: FastifyPluginAsyncZod = async (app) => {
               ) ||
               a.ownerId.localeCompare(b.ownerId),
           );
-          return { ...node, primaryOwnerId: owners[0]?.ownerId ?? null };
+          const primaryOwnerId = owners[0]?.ownerId ?? null;
+          return visible.has(node.id)
+            ? { restricted: false as const, ...node, primaryOwnerId }
+            : { restricted: true as const, id: node.id, primaryOwnerId };
         }),
         edges: projected.map((row) => ({
           ownerEntityId: row.ownerId,
@@ -344,23 +385,23 @@ export const entityHoldingRoutes: FastifyPluginAsyncZod = async (app) => {
       if (!entity) throw httpError(404, NO_ENTITY);
       const visible = await reachableIds(app.db, request.user);
       const rows = (await holdingRows(app.db)).filter(
-        (row) =>
-          visible.has(row.ownerId) &&
-          visible.has(row.ownedId) &&
-          (row.ownerId === entity.id || row.ownedId === entity.id),
+        (row) => row.ownerId === entity.id || row.ownedId === entity.id,
       );
       const owners = rows
         .filter((row) => row.ownedId === entity.id)
         .sort((a, b) => a.ownerName.localeCompare(b.ownerName))
-        .map(toHolding);
+        .map((row) => toHolding(row, visible));
       const owned = rows
         .filter((row) => row.ownerId === entity.id)
         .sort((a, b) => a.ownedName.localeCompare(b.ownedName))
-        .map(toHolding);
+        .map((row) => toHolding(row, visible));
       return {
         owners,
         owned,
-        warnings: await warningsFor(app.db, [entity.id, ...owned.map((row) => row.owned.id)]),
+        warnings: await warningsFor(app.db, [
+          entity.id,
+          ...owned.flatMap((row) => (row.owned.restricted ? [] : [row.owned.id])),
+        ]),
       };
     },
   );
@@ -400,7 +441,7 @@ export const entityHoldingRoutes: FastifyPluginAsyncZod = async (app) => {
         if (await holdingByPair(tx, owner.id, owned.id)) {
           throw httpError(409, "These Entities already have this Holding.");
         }
-        await assertNoCycle(tx, owner.id, owned.id);
+        await assertNoCycle(tx, request.user, owner.id, owned.id);
         await tx.insert(entityHoldings).values({
           ownerEntityId: owner.id,
           ownedEntityId: owned.id,

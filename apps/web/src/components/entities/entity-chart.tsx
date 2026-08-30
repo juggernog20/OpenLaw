@@ -158,49 +158,73 @@ export function EntityChart({ chart }: Readonly<{ chart: EntityChartData }>) {
               );
             })}
             {layout.nodes.map((node) => (
-              <g key={node.id} data-unconnected={node.unconnected ? "true" : undefined}>
-                <Link
-                  to={`/entities/${node.id}`}
-                  aria-label={intl.formatMessage(
-                    { id: "entities.chart.open", defaultMessage: "Open {name}" },
-                    { name: node.legalName },
-                  )}
-                  className="group outline-none"
-                >
+              <g
+                key={node.id}
+                data-unconnected={node.unconnected ? "true" : undefined}
+                data-restricted={node.restricted ? "true" : undefined}
+                aria-label={
+                  node.restricted
+                    ? intl.formatMessage({
+                        id: "entities.restricted",
+                        defaultMessage: "Restricted Entity",
+                      })
+                    : undefined
+                }
+              >
+                {node.restricted ? (
                   <rect
                     x={node.x}
                     y={node.y}
                     width={CHART_NODE_WIDTH}
                     height={CHART_NODE_HEIGHT}
                     rx={8}
-                    className="fill-canvas stroke-border-default group-hover:stroke-link group-focus-visible:stroke-link"
+                    className="fill-badge-count-bg stroke-border-default"
                     strokeWidth={2}
                   />
-                  <text
-                    x={node.x + 14}
-                    y={node.y + 25}
-                    className="fill-primary text-sm font-semibold"
+                ) : (
+                  <Link
+                    to={`/entities/${node.id}`}
+                    aria-label={intl.formatMessage(
+                      { id: "entities.chart.open", defaultMessage: "Open {name}" },
+                      { name: node.legalName },
+                    )}
+                    className="group outline-none"
                   >
-                    {node.legalName}
-                  </text>
-                  <text x={node.x + 14} y={node.y + 49} className="fill-muted text-xs">
-                    {node.type}
-                  </text>
-                  <text x={node.x + 14} y={node.y + 69} className="fill-muted text-xs">
-                    {node.jurisdiction ??
-                      intl.formatMessage({
-                        id: "entities.chart.noJurisdiction",
-                        defaultMessage: "No jurisdiction",
-                      })}
-                  </text>
-                  <text
-                    x={node.x + 14}
-                    y={node.y + 92}
-                    className="fill-primary text-xs font-medium"
-                  >
-                    {statusLabel(intl, node.status)}
-                  </text>
-                </Link>
+                    <rect
+                      x={node.x}
+                      y={node.y}
+                      width={CHART_NODE_WIDTH}
+                      height={CHART_NODE_HEIGHT}
+                      rx={8}
+                      className="fill-canvas stroke-border-default group-hover:stroke-link group-focus-visible:stroke-link"
+                      strokeWidth={2}
+                    />
+                    <text
+                      x={node.x + 14}
+                      y={node.y + 25}
+                      className="fill-primary text-sm font-semibold"
+                    >
+                      {node.legalName}
+                    </text>
+                    <text x={node.x + 14} y={node.y + 49} className="fill-muted text-xs">
+                      {node.type}
+                    </text>
+                    <text x={node.x + 14} y={node.y + 69} className="fill-muted text-xs">
+                      {node.jurisdiction ??
+                        intl.formatMessage({
+                          id: "entities.chart.noJurisdiction",
+                          defaultMessage: "No jurisdiction",
+                        })}
+                    </text>
+                    <text
+                      x={node.x + 14}
+                      y={node.y + 92}
+                      className="fill-primary text-xs font-medium"
+                    >
+                      {statusLabel(intl, node.status)}
+                    </text>
+                  </Link>
+                )}
               </g>
             ))}
           </g>

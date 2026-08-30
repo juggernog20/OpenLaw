@@ -3372,6 +3372,38 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/v1/entities/{id}/grants": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["listEntityGrants"];
+    put?: never;
+    post: operations["addEntityGrant"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/entities/{id}/grants/{userId}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    delete: operations["removeEntityGrant"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/v1/entities/chart": {
     parameters: {
       query?: never;
@@ -7407,11 +7439,20 @@ export interface operations {
                 displayName: string;
                 archived: boolean;
               }[];
-              entities: {
-                id: string;
-                legalName: string;
-                archived: boolean;
-              }[];
+              entities: (
+                | {
+                    /** @enum {boolean} */
+                    restricted: false;
+                    id: string;
+                    legalName: string;
+                    archived: boolean;
+                  }
+                | {
+                    /** @enum {boolean} */
+                    restricted: true;
+                    id: string;
+                  }
+              )[];
             };
             team: {
               id: string;
@@ -7536,11 +7577,20 @@ export interface operations {
                 displayName: string;
                 archived: boolean;
               }[];
-              entities: {
-                id: string;
-                legalName: string;
-                archived: boolean;
-              }[];
+              entities: (
+                | {
+                    /** @enum {boolean} */
+                    restricted: false;
+                    id: string;
+                    legalName: string;
+                    archived: boolean;
+                  }
+                | {
+                    /** @enum {boolean} */
+                    restricted: true;
+                    id: string;
+                  }
+              )[];
             };
             team: {
               id: string;
@@ -10893,11 +10943,20 @@ export interface operations {
                 displayName: string;
                 archived: boolean;
               }[];
-              entities: {
-                id: string;
-                legalName: string;
-                archived: boolean;
-              }[];
+              entities: (
+                | {
+                    /** @enum {boolean} */
+                    restricted: false;
+                    id: string;
+                    legalName: string;
+                    archived: boolean;
+                  }
+                | {
+                    /** @enum {boolean} */
+                    restricted: true;
+                    id: string;
+                  }
+              )[];
             };
             attachments: {
               id: string;
@@ -11983,10 +12042,20 @@ export interface operations {
                 image: string | null;
                 archived: boolean;
               } | null;
-              entity: {
-                id: string;
-                legalName: string;
-              } | null;
+              entity:
+                | (
+                    | {
+                        /** @enum {boolean} */
+                        restricted: false;
+                        id: string;
+                        legalName: string;
+                      }
+                    | {
+                        /** @enum {boolean} */
+                        restricted: true;
+                      }
+                  )
+                | null;
               primaryCounterparty: {
                 id: string;
                 name: string;
@@ -12086,10 +12155,20 @@ export interface operations {
                 image: string | null;
                 archived: boolean;
               } | null;
-              entity: {
-                id: string;
-                legalName: string;
-              } | null;
+              entity:
+                | (
+                    | {
+                        /** @enum {boolean} */
+                        restricted: false;
+                        id: string;
+                        legalName: string;
+                      }
+                    | {
+                        /** @enum {boolean} */
+                        restricted: true;
+                      }
+                  )
+                | null;
               primaryCounterparty: {
                 id: string;
                 name: string;
@@ -12277,10 +12356,20 @@ export interface operations {
                 image: string | null;
                 archived: boolean;
               } | null;
-              entity: {
-                id: string;
-                legalName: string;
-              } | null;
+              entity:
+                | (
+                    | {
+                        /** @enum {boolean} */
+                        restricted: false;
+                        id: string;
+                        legalName: string;
+                      }
+                    | {
+                        /** @enum {boolean} */
+                        restricted: true;
+                      }
+                  )
+                | null;
               primaryCounterparty: {
                 id: string;
                 name: string;
@@ -12345,10 +12434,19 @@ export interface operations {
                 image: string | null;
                 archived: boolean;
               }[];
-              entities: {
-                id: string;
-                legalName: string;
-              }[];
+              entities: (
+                | {
+                    /** @enum {boolean} */
+                    restricted: false;
+                    id: string;
+                    legalName: string;
+                  }
+                | {
+                    /** @enum {boolean} */
+                    restricted: true;
+                    id: string;
+                  }
+              )[];
             };
             team: {
               id: string;
@@ -12458,10 +12556,20 @@ export interface operations {
                 image: string | null;
                 archived: boolean;
               } | null;
-              entity: {
-                id: string;
-                legalName: string;
-              } | null;
+              entity:
+                | (
+                    | {
+                        /** @enum {boolean} */
+                        restricted: false;
+                        id: string;
+                        legalName: string;
+                      }
+                    | {
+                        /** @enum {boolean} */
+                        restricted: true;
+                      }
+                  )
+                | null;
               primaryCounterparty: {
                 id: string;
                 name: string;
@@ -12526,10 +12634,19 @@ export interface operations {
                 image: string | null;
                 archived: boolean;
               }[];
-              entities: {
-                id: string;
-                legalName: string;
-              }[];
+              entities: (
+                | {
+                    /** @enum {boolean} */
+                    restricted: false;
+                    id: string;
+                    legalName: string;
+                  }
+                | {
+                    /** @enum {boolean} */
+                    restricted: true;
+                    id: string;
+                  }
+              )[];
             };
           };
         };
@@ -12637,10 +12754,20 @@ export interface operations {
                 image: string | null;
                 archived: boolean;
               } | null;
-              entity: {
-                id: string;
-                legalName: string;
-              } | null;
+              entity:
+                | (
+                    | {
+                        /** @enum {boolean} */
+                        restricted: false;
+                        id: string;
+                        legalName: string;
+                      }
+                    | {
+                        /** @enum {boolean} */
+                        restricted: true;
+                      }
+                  )
+                | null;
               primaryCounterparty: {
                 id: string;
                 name: string;
@@ -12859,10 +12986,20 @@ export interface operations {
                 image: string | null;
                 archived: boolean;
               } | null;
-              entity: {
-                id: string;
-                legalName: string;
-              } | null;
+              entity:
+                | (
+                    | {
+                        /** @enum {boolean} */
+                        restricted: false;
+                        id: string;
+                        legalName: string;
+                      }
+                    | {
+                        /** @enum {boolean} */
+                        restricted: true;
+                      }
+                  )
+                | null;
               primaryCounterparty: {
                 id: string;
                 name: string;
@@ -12953,10 +13090,20 @@ export interface operations {
                 image: string | null;
                 archived: boolean;
               } | null;
-              entity: {
-                id: string;
-                legalName: string;
-              } | null;
+              entity:
+                | (
+                    | {
+                        /** @enum {boolean} */
+                        restricted: false;
+                        id: string;
+                        legalName: string;
+                      }
+                    | {
+                        /** @enum {boolean} */
+                        restricted: true;
+                      }
+                  )
+                | null;
               primaryCounterparty: {
                 id: string;
                 name: string;
@@ -13047,10 +13194,20 @@ export interface operations {
                 image: string | null;
                 archived: boolean;
               } | null;
-              entity: {
-                id: string;
-                legalName: string;
-              } | null;
+              entity:
+                | (
+                    | {
+                        /** @enum {boolean} */
+                        restricted: false;
+                        id: string;
+                        legalName: string;
+                      }
+                    | {
+                        /** @enum {boolean} */
+                        restricted: true;
+                      }
+                  )
+                | null;
               primaryCounterparty: {
                 id: string;
                 name: string;
@@ -13140,10 +13297,20 @@ export interface operations {
                 image: string | null;
                 archived: boolean;
               } | null;
-              entity: {
-                id: string;
-                legalName: string;
-              } | null;
+              entity:
+                | (
+                    | {
+                        /** @enum {boolean} */
+                        restricted: false;
+                        id: string;
+                        legalName: string;
+                      }
+                    | {
+                        /** @enum {boolean} */
+                        restricted: true;
+                      }
+                  )
+                | null;
               primaryCounterparty: {
                 id: string;
                 name: string;
@@ -13227,10 +13394,20 @@ export interface operations {
                 image: string | null;
                 archived: boolean;
               } | null;
-              entity: {
-                id: string;
-                legalName: string;
-              } | null;
+              entity:
+                | (
+                    | {
+                        /** @enum {boolean} */
+                        restricted: false;
+                        id: string;
+                        legalName: string;
+                      }
+                    | {
+                        /** @enum {boolean} */
+                        restricted: true;
+                      }
+                  )
+                | null;
               primaryCounterparty: {
                 id: string;
                 name: string;
@@ -19561,6 +19738,124 @@ export interface operations {
       };
     };
   };
+  listEntityGrants: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            grants: {
+              id: string;
+              displayName: string;
+              image: string | null;
+              archived: boolean;
+            }[];
+            candidates: {
+              id: string;
+              displayName: string;
+              image: string | null;
+              archived: boolean;
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  addEntityGrant: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          userId: string;
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            grant: {
+              id: string;
+              displayName: string;
+              image: string | null;
+              archived: boolean;
+            };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  removeEntityGrant: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+        userId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
   getEntityChart: {
     parameters: {
       query?: never;
@@ -19577,15 +19872,25 @@ export interface operations {
         };
         content: {
           "application/json": {
-            nodes: {
-              id: string;
-              legalName: string;
-              type: string;
-              jurisdiction: string | null;
-              /** @enum {string} */
-              status: "active" | "dormant" | "dissolved" | "divested";
-              primaryOwnerId: string | null;
-            }[];
+            nodes: (
+              | {
+                  /** @enum {boolean} */
+                  restricted: false;
+                  id: string;
+                  legalName: string;
+                  type: string;
+                  jurisdiction: string | null;
+                  /** @enum {string} */
+                  status: "active" | "dormant" | "dissolved" | "divested";
+                  primaryOwnerId: string | null;
+                }
+              | {
+                  /** @enum {boolean} */
+                  restricted: true;
+                  id: string;
+                  primaryOwnerId: string | null;
+                }
+            )[];
             edges: {
               ownerEntityId: string;
               ownedEntityId: string;
@@ -19624,14 +19929,28 @@ export interface operations {
         content: {
           "application/json": {
             owners: {
-              owner: {
-                id: string;
-                legalName: string;
-              };
-              owned: {
-                id: string;
-                legalName: string;
-              };
+              owner:
+                | {
+                    /** @enum {boolean} */
+                    restricted: false;
+                    id: string;
+                    legalName: string;
+                  }
+                | {
+                    /** @enum {boolean} */
+                    restricted: true;
+                  };
+              owned:
+                | {
+                    /** @enum {boolean} */
+                    restricted: false;
+                    id: string;
+                    legalName: string;
+                  }
+                | {
+                    /** @enum {boolean} */
+                    restricted: true;
+                  };
               ownershipPercent: number;
               /** Format: date-time */
               createdAt: string;
@@ -19639,14 +19958,28 @@ export interface operations {
               updatedAt: string;
             }[];
             owned: {
-              owner: {
-                id: string;
-                legalName: string;
-              };
-              owned: {
-                id: string;
-                legalName: string;
-              };
+              owner:
+                | {
+                    /** @enum {boolean} */
+                    restricted: false;
+                    id: string;
+                    legalName: string;
+                  }
+                | {
+                    /** @enum {boolean} */
+                    restricted: true;
+                  };
+              owned:
+                | {
+                    /** @enum {boolean} */
+                    restricted: false;
+                    id: string;
+                    legalName: string;
+                  }
+                | {
+                    /** @enum {boolean} */
+                    restricted: true;
+                  };
               ownershipPercent: number;
               /** Format: date-time */
               createdAt: string;
@@ -19702,14 +20035,28 @@ export interface operations {
         content: {
           "application/json": {
             holding: {
-              owner: {
-                id: string;
-                legalName: string;
-              };
-              owned: {
-                id: string;
-                legalName: string;
-              };
+              owner:
+                | {
+                    /** @enum {boolean} */
+                    restricted: false;
+                    id: string;
+                    legalName: string;
+                  }
+                | {
+                    /** @enum {boolean} */
+                    restricted: true;
+                  };
+              owned:
+                | {
+                    /** @enum {boolean} */
+                    restricted: false;
+                    id: string;
+                    legalName: string;
+                  }
+                | {
+                    /** @enum {boolean} */
+                    restricted: true;
+                  };
               ownershipPercent: number;
               /** Format: date-time */
               createdAt: string;
@@ -19793,14 +20140,28 @@ export interface operations {
         content: {
           "application/json": {
             holding: {
-              owner: {
-                id: string;
-                legalName: string;
-              };
-              owned: {
-                id: string;
-                legalName: string;
-              };
+              owner:
+                | {
+                    /** @enum {boolean} */
+                    restricted: false;
+                    id: string;
+                    legalName: string;
+                  }
+                | {
+                    /** @enum {boolean} */
+                    restricted: true;
+                  };
+              owned:
+                | {
+                    /** @enum {boolean} */
+                    restricted: false;
+                    id: string;
+                    legalName: string;
+                  }
+                | {
+                    /** @enum {boolean} */
+                    restricted: true;
+                  };
               ownershipPercent: number;
               /** Format: date-time */
               createdAt: string;
@@ -20261,6 +20622,7 @@ export interface operations {
               customFields: {
                 [key: string]: string | number | boolean | string[];
               };
+              isConfidential: boolean;
               archivedAt: string | null;
               /** Format: date-time */
               createdAt: string;
@@ -20332,6 +20694,7 @@ export interface operations {
               customFields: {
                 [key: string]: string | number | boolean | string[];
               };
+              isConfidential: boolean;
               archivedAt: string | null;
               /** Format: date-time */
               createdAt: string;
@@ -20465,6 +20828,7 @@ export interface operations {
               customFields: {
                 [key: string]: string | number | boolean | string[];
               };
+              isConfidential: boolean;
               archivedAt: string | null;
               /** Format: date-time */
               createdAt: string;
@@ -20499,11 +20863,20 @@ export interface operations {
                 displayName: string;
                 archived: boolean;
               }[];
-              entities: {
-                id: string;
-                legalName: string;
-                archived: boolean;
-              }[];
+              entities: (
+                | {
+                    /** @enum {boolean} */
+                    restricted: false;
+                    id: string;
+                    legalName: string;
+                    archived: boolean;
+                  }
+                | {
+                    /** @enum {boolean} */
+                    restricted: true;
+                    id: string;
+                  }
+              )[];
             };
           };
         };
@@ -20547,6 +20920,7 @@ export interface operations {
           customFields?: {
             [key: string]: (string | number | boolean | string[]) | null;
           };
+          isConfidential?: boolean;
         };
       };
     };
@@ -20577,6 +20951,7 @@ export interface operations {
               customFields: {
                 [key: string]: string | number | boolean | string[];
               };
+              isConfidential: boolean;
               archivedAt: string | null;
               /** Format: date-time */
               createdAt: string;
@@ -20611,11 +20986,20 @@ export interface operations {
                 displayName: string;
                 archived: boolean;
               }[];
-              entities: {
-                id: string;
-                legalName: string;
-                archived: boolean;
-              }[];
+              entities: (
+                | {
+                    /** @enum {boolean} */
+                    restricted: false;
+                    id: string;
+                    legalName: string;
+                    archived: boolean;
+                  }
+                | {
+                    /** @enum {boolean} */
+                    restricted: true;
+                    id: string;
+                  }
+              )[];
             };
           };
         };
@@ -20668,6 +21052,7 @@ export interface operations {
               customFields: {
                 [key: string]: string | number | boolean | string[];
               };
+              isConfidential: boolean;
               archivedAt: string | null;
               /** Format: date-time */
               createdAt: string;
@@ -20725,6 +21110,7 @@ export interface operations {
               customFields: {
                 [key: string]: string | number | boolean | string[];
               };
+              isConfidential: boolean;
               archivedAt: string | null;
               /** Format: date-time */
               createdAt: string;

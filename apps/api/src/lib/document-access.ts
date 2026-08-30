@@ -54,7 +54,7 @@ function owningRecordScope(
       return and(
         isNotNull(documents.entityId),
         isNull(entities.archivedAt),
-        entityReachScope(user),
+        entityReachScope(db, user),
       );
   }
 }

@@ -137,7 +137,7 @@ export const requestDetailRoutes: FastifyPluginAsyncZod = async (app) => {
       return {
         request: toStaffRequest(row),
         fields: attached,
-        customFieldRefs: await resolveStaffRefs(app.db, attached, row.customFields),
+        customFieldRefs: await resolveStaffRefs(app.db, attached, row.customFields, request.user),
         attachments,
       };
     },

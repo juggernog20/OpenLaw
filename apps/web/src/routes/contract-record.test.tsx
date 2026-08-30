@@ -495,6 +495,10 @@ function recordApi(
   initial: Record<string, unknown>,
   initialTeam: Record<string, unknown>[] = [person("u1", "creator")],
   initialParties: ReturnType<typeof party>[] = [],
+  initialRefs: {
+    users: Record<string, unknown>[];
+    entities: Record<string, unknown>[];
+  } = { users: [], entities: [] },
 ) {
   let row = initial;
   /** The attached fields follow the row's type, exactly as the API
@@ -505,7 +509,7 @@ function recordApi(
     fields: fieldsOf(row),
     // Nothing in these suites stores a `user` or `entity` value, so no
     // row is named that the pickers do not already offer.
-    customFieldRefs: { users: [], entities: [] },
+    customFieldRefs: initialRefs,
   });
   let team = initialTeam;
   let parties = initialParties;
@@ -1081,6 +1085,37 @@ describe("the /contracts/:number record page", () => {
     await user.selectOptions(entity, "");
     await waitFor(() => expect(api.patches).toEqual([{ entityId: "e-uk" }, { entityId: null }]));
     expect(entity).toHaveValue("");
+  });
+
+  it("uses the shared Restricted Entity cell when the signing Entity is walled", async () => {
+    stubApi({
+      signedIn: MEMBER,
+      extra: recordApi(contractRow({ entity: { restricted: true } })).handler,
+    });
+    renderAt("/contracts/42");
+
+    expect(await screen.findByText("Restricted Entity")).toBeInTheDocument();
+    expect(screen.queryByRole("combobox", { name: "Our entity" })).not.toBeInTheDocument();
+  });
+
+  it("uses the shared Restricted Entity cell for an Entity-valued custom Field", async () => {
+    stubApi({
+      signedIn: MEMBER,
+      extra: recordApi(
+        contractRow({
+          contractTypeId: "t-full",
+          contractTypeName: "Every field",
+          customFields: { field_8: "e-secret" },
+        }),
+        [person("u1", "creator")],
+        [],
+        { users: [], entities: [{ restricted: true, id: "e-secret" }] },
+      ).handler,
+    });
+    renderAt("/contracts/42/fields");
+
+    expect(await screen.findByText("Booking entity")).toBeInTheDocument();
+    expect(screen.getByText("Restricted Entity")).toBeInTheDocument();
   });
 
   it("offers the live registry only — an archived entity is never on the list", async () => {

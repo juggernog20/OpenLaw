@@ -30,6 +30,8 @@ export interface EntityChartLayout {
  * first), so DOM and keyboard focus order follow the tree.
  */
 export function layoutEntityChart(chart: EntityChart): EntityChartLayout {
+  const nameOf = (node: EntityChart["nodes"][number]) =>
+    node.restricted ? node.id : node.legalName;
   const byId = new Map(chart.nodes.map((node) => [node.id, node]));
   const connected = new Set<string>();
   for (const edge of chart.edges) {
@@ -44,14 +46,14 @@ export function layoutEntityChart(chart: EntityChart): EntityChartLayout {
     children.set(node.primaryOwnerId, held);
   }
   for (const held of children.values()) {
-    held.sort((a, b) => byId.get(a)!.legalName.localeCompare(byId.get(b)!.legalName));
+    held.sort((a, b) => nameOf(byId.get(a)!).localeCompare(nameOf(byId.get(b)!)));
   }
 
   const roots = chart.nodes
     .filter(
       (node) => connected.has(node.id) && (!node.primaryOwnerId || !byId.has(node.primaryOwnerId)),
     )
-    .sort((a, b) => a.legalName.localeCompare(b.legalName));
+    .sort((a, b) => nameOf(a).localeCompare(nameOf(b)));
   const positions = new Map<string, { x: number; y: number }>();
   const order: string[] = [];
   let cursor = PADDING;
@@ -83,7 +85,7 @@ export function layoutEntityChart(chart: EntityChart): EntityChartLayout {
 
   const unconnected = chart.nodes
     .filter((node) => !connected.has(node.id))
-    .sort((a, b) => a.legalName.localeCompare(b.legalName));
+    .sort((a, b) => nameOf(a).localeCompare(nameOf(b)));
   const bottomY =
     PADDING + (roots.length > 0 ? deepest + 1 : 0) * (CHART_NODE_HEIGHT + VERTICAL_GAP);
   if (unconnected.length > 0) cursor = PADDING;
