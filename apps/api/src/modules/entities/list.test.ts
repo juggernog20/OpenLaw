@@ -88,6 +88,13 @@ beforeAll(async () => {
       createdAt: tiedCreatedAt,
     },
     {
+      id: "entity-list-owner-minor",
+      legalName: "Minority Holder",
+      entityTypeId: corporationId,
+      jurisdiction: "England & Wales",
+      createdAt: tiedCreatedAt,
+    },
+    {
       id: "entity-list-archived",
       legalName: "Archived Registry Row",
       entityTypeId: corporationId,
@@ -102,8 +109,13 @@ beforeAll(async () => {
     })),
   ]);
   await harness.db.insert(entityHoldings).values([
-    { ownerEntityId: ownerIds[0], ownedEntityId: targetIds[0], ownershipPercent: "60" },
-    { ownerEntityId: ownerIds[1], ownedEntityId: targetIds[0], ownershipPercent: "40" },
+    { ownerEntityId: ownerIds[0], ownedEntityId: targetIds[0], ownershipPercent: "55" },
+    { ownerEntityId: ownerIds[1], ownedEntityId: targetIds[0], ownershipPercent: "35" },
+    {
+      ownerEntityId: "entity-list-owner-minor",
+      ownedEntityId: targetIds[0],
+      ownershipPercent: "10",
+    },
     { ownerEntityId: ownerIds[0], ownedEntityId: targetIds[1], ownershipPercent: "40" },
     { ownerEntityId: ownerIds[1], ownedEntityId: targetIds[1], ownershipPercent: "60" },
   ]);
@@ -220,7 +232,7 @@ describe("the managed Entity registry", () => {
     expect(first.nextCursor).not.toBeNull();
     const second = await list({ sort: "created", dir: "asc", cursor: first.nextCursor! });
     const ids = [...first.entities, ...second.entities].map((row) => row.id);
-    expect(ids).toHaveLength(53);
+    expect(ids).toHaveLength(54);
     expect(new Set(ids).size).toBe(ids.length);
     expect(second.nextCursor).toBeNull();
   });
@@ -243,6 +255,25 @@ describe("the managed Entity registry", () => {
         (row) => row.id === "entity-list-archived",
       ),
     ).toBe(true);
+  });
+
+  it("offers only jurisdictions in use and Entities that are some row's top holder", async () => {
+    const response = await harness.app.inject({
+      method: "GET",
+      url: "/api/v1/entities/list-options",
+      cookies: memberCookies,
+    });
+    expect(response.statusCode, response.body).toBe(200);
+    const answer = response.json() as {
+      jurisdictions: string[];
+      majorityOwners: { id: string; legalName: string }[];
+    };
+    expect(answer.jurisdictions).toEqual([
+      "England & Wales",
+      "Paging Jurisdiction",
+      "United Arab Emirates",
+    ]);
+    expect(answer.majorityOwners.map((row) => row.id)).toEqual([...ownerIds]);
   });
 
   it("rejects unsupported sort and status values at the HTTP boundary", async () => {

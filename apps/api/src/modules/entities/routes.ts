@@ -171,6 +171,29 @@ const majorityOwnerId = sql<string | null>`(
   limit 1
 )`;
 
+/** Every reachable, unarchived Entity's top holder, one row per owned
+ * side. The same first-by-percent pick as majorityOwnerId, taken over
+ * the whole registry at once, so the filter only offers owners that a
+ * row can answer to. */
+function primaryOwnerIds(
+  db: Parameters<typeof entityReachScope>[0],
+  user: Parameters<typeof entityReachScope>[1],
+): SQL {
+  return sql`(
+    select distinct on (${entityHoldings.ownedEntityId}) ${entityHoldings.ownerEntityId}
+    from ${entityHoldings}
+    inner join ${entities} on ${entities.id} = ${entityHoldings.ownedEntityId}
+    inner join ${sql.raw('"entities" as "majority_owner_entities"')}
+      on ${majorityOwnerEntities.id} = ${entityHoldings.ownerEntityId}
+    where ${and(isNull(entities.archivedAt), entityReachScope(db, user))}
+    order by
+      ${entityHoldings.ownedEntityId},
+      ${entityHoldings.ownershipPercent} desc,
+      lower(${majorityOwnerEntities.legalName}) asc,
+      ${majorityOwnerEntities.id} asc
+  )`;
+}
+
 const nextObligationDueOn = sql<string | null>`(
   select ${entityObligations.nextDueOn}
   from ${entityObligations}
@@ -349,8 +372,10 @@ export const entitiesRoutes: FastifyPluginAsyncZod = async (app) => {
     },
     async (request) => {
       const [jurisdictionRows, ownerRows] = await Promise.all([
+        // GROUP BY, not DISTINCT: Postgres refuses to order a DISTINCT
+        // read by an expression that is not in its select list.
         app.db
-          .selectDistinct({ jurisdiction: entities.jurisdiction })
+          .select({ jurisdiction: entities.jurisdiction })
           .from(entities)
           .where(
             and(
@@ -359,12 +384,18 @@ export const entitiesRoutes: FastifyPluginAsyncZod = async (app) => {
               entityReachScope(app.db, request.user),
             ),
           )
+          .groupBy(entities.jurisdiction)
           .orderBy(asc(sql`lower(${entities.jurisdiction})`)),
         app.db
-          .selectDistinct({ id: entities.id, legalName: entities.legalName })
+          .select({ id: entities.id, legalName: entities.legalName })
           .from(entities)
-          .innerJoin(entityHoldings, eq(entityHoldings.ownerEntityId, entities.id))
-          .where(and(isNull(entities.archivedAt), entityReachScope(app.db, request.user)))
+          .where(
+            and(
+              isNull(entities.archivedAt),
+              entityReachScope(app.db, request.user),
+              sql`${entities.id} in ${primaryOwnerIds(app.db, request.user)}`,
+            ),
+          )
           .orderBy(asc(sql`lower(${entities.legalName})`), asc(entities.id)),
       ]);
       return {
