@@ -320,8 +320,20 @@ export const MAX_ENVELOPE_REASON_LENGTH = 1000;
  * app names it on every read. One typo in either copy would silently
  * save views nobody's list ever asks for.
  */
-export const LIST_VIEW_SURFACES = ["contracts", "matters", "documents"] as const;
+export const LIST_VIEW_SURFACES = ["contracts", "matters", "documents", "entities"] as const;
 export type ListViewSurface = (typeof LIST_VIEW_SURFACES)[number];
+
+/** M27/9's sortable Entity registry columns, shared across the HTTP
+ * contract and the managed-table catalogue. */
+export const ENTITY_LIST_SORT_KEYS = [
+  "name",
+  "type",
+  "jurisdiction",
+  "status",
+  "nextObligation",
+  "created",
+] as const;
+export type EntityListSortKey = (typeof ENTITY_LIST_SORT_KEYS)[number];
 
 /**
  * The ceiling on a saved view's name (DD-019).

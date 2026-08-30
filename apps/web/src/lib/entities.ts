@@ -16,6 +16,14 @@ import type { paths } from "@openlaw/api-client";
 export type EntityRow =
   paths["/api/v1/entities/{id}"]["get"]["responses"]["200"]["content"]["application/json"]["entity"];
 
+/** One row of M27/9's managed registry, including its derived next
+ * open Obligation. */
+export type RegistryEntityRow =
+  paths["/api/v1/entities"]["get"]["responses"]["200"]["content"]["application/json"]["entities"][number];
+
+export type EntityRegistryOptions =
+  paths["/api/v1/entities/list-options"]["get"]["responses"]["200"]["content"]["application/json"];
+
 export type EntityStatus = EntityRow["status"];
 
 /** Guards a status list literal so it can't drift from the API's enum:

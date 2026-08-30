@@ -1,25 +1,22 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-/**
- * The Entities registry (ENT-001/ENT-004, #98/#99), per the EN3 frame
- * of entities.pen reduced to the M7 registry subset: the list (legal
- * name, type, jurisdiction, status — ordered by legal name by the API,
- * each row opening its record page), the register dialog carrying the
- * full identity card, an empty state that says what the registry is,
- * and the show-archived toggle that reveals archived entities with a
- * row-level restore (#99 — archiving is for data mistakes, so the way
- * back sits right where the mistake surfaces). The M27 surfaces the
- * mock also draws (view switcher, filters, obligations column) are not
- * built. The loader is the client half of ENT-004's gate — Member+
- * only; the API's 403 is the real refusal. M27 grows this destination
- * into the full module.
- */
+/** M27's routed Calendar, managed registry List, and ownership Chart destination. */
 
-import { useState, type ReactNode } from "react";
-import { Form, Link, redirect, useLoaderData, type LoaderFunctionArgs } from "react-router";
-import { FormattedMessage, useIntl } from "react-intl";
+import { useEffect, useState, type ReactNode } from "react";
 import {
-  Building2,
+  Form,
+  Link,
+  redirect,
+  useLoaderData,
+  useNavigate,
+  type LoaderFunctionArgs,
+  type NavigateFunction,
+  type ShouldRevalidateFunctionArgs,
+} from "react-router";
+import { FormattedMessage, useIntl } from "react-intl";
+import { ENTITY_LIST_SORT_KEYS, type EntityListSortKey } from "@openlaw/shared";
+import type { paths } from "@openlaw/api-client";
+import {
   CalendarDays,
   ChevronLeft,
   ChevronRight,
@@ -32,26 +29,125 @@ import { api } from "../lib/api";
 import { civilToday, formatFullDate } from "../lib/format";
 import {
   ENTITY_STATUSES,
-  STATUS_PILL,
   statusLabel,
   type CalendarObligation,
+  type EntityRegistryOptions,
   type EntityRow,
   type EntityStatus,
   type EntityTypeOption,
+  type RegistryEntityRow,
 } from "../lib/entities";
+import {
+  builtInLayout,
+  createView,
+  deleteView,
+  readViews,
+  resolveLayout,
+  sameLayout,
+  updateView,
+  type Layout,
+  type SavedView,
+} from "../lib/list-views";
 import { CONTROL_CLASS, TEXTAREA_CLASS } from "../lib/form-controls";
 import { problem as readProblem } from "../lib/problem";
 import { isMemberPlus } from "../lib/roles";
 import { requireUser, useSignOut } from "../lib/session";
 import { AppShell } from "../components/shell/app-shell";
 import { EntityChart } from "../components/entities/entity-chart";
+import {
+  ENTITIES_CATALOGUE as CATALOGUE,
+  entityListFilters,
+  type EntityListFilters,
+} from "../components/entities/entities-columns";
+import { EntityListFilterBar } from "../components/entities/entity-list-filter-bar";
 import { PageSubBar } from "../components/shell/page-subbar";
 import { PageTitle } from "../components/page-title";
+import { ColumnMenu } from "../components/table/column-menu";
+import { ManagedTable } from "../components/table/managed-table";
+import { ViewsMenu } from "../components/table/views-menu";
 import { Button } from "../components/ui/button";
 import { Dialog, DialogContent, DialogTitle } from "../components/ui/dialog";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
-import { Switch } from "../components/ui/switch";
+
+type EntitiesQuery = NonNullable<paths["/api/v1/entities"]["get"]["parameters"]["query"]>;
+
+const LIST_QUERY_KEYS = [
+  "type",
+  "status",
+  "jurisdiction",
+  "majorityOwner",
+  "includeArchived",
+  "sort",
+  "dir",
+] as const;
+
+let locallyReadSearch: string | null = null;
+let loads = 0;
+
+function isEntityStatus(value: string): value is EntityStatus {
+  return (ENTITY_STATUSES as readonly string[]).includes(value);
+}
+
+function isEntitySortKey(value: string): value is EntityListSortKey {
+  return (ENTITY_LIST_SORT_KEYS as readonly string[]).includes(value);
+}
+
+function listQuery(layout: Layout): EntitiesQuery {
+  const filters = entityListFilters(layout.filters);
+  const sort =
+    layout.sort && isEntitySortKey(layout.sort.key)
+      ? { key: layout.sort.key, dir: layout.sort.dir }
+      : null;
+  return {
+    ...(filters.type ? { type: filters.type } : {}),
+    ...(isEntityStatus(filters.status) ? { status: filters.status } : {}),
+    ...(filters.jurisdiction ? { jurisdiction: filters.jurisdiction } : {}),
+    ...(filters.majorityOwner ? { majorityOwner: filters.majorityOwner } : {}),
+    ...(filters.includeArchived ? { includeArchived: "true" as const } : {}),
+    ...(sort ? { sort: sort.key, dir: sort.dir } : {}),
+  };
+}
+
+function sameQuery(a: Layout, b: Layout): boolean {
+  return JSON.stringify(listQuery(a)) === JSON.stringify(listQuery(b));
+}
+
+function querySearch(layout: Layout): string {
+  const params = new URLSearchParams({ view: "list" });
+  for (const [key, value] of Object.entries(listQuery(layout))) params.set(key, String(value));
+  return `?${params.toString()}`;
+}
+
+function layoutFromSearch(base: Layout, search: string): { layout: Layout; fromUrl: boolean } {
+  const params = new URLSearchParams(search);
+  const fromUrl = LIST_QUERY_KEYS.some((key) => params.has(key));
+  if (!fromUrl) return { layout: base, fromUrl: false };
+  const filters: Layout["filters"] = {};
+  for (const key of ["type", "jurisdiction", "majorityOwner"] as const) {
+    const value = params.get(key);
+    if (value) filters[key] = value;
+  }
+  const status = params.get("status") ?? "";
+  if (isEntityStatus(status)) filters.status = status;
+  if (params.get("includeArchived") === "true") filters.includeArchived = true;
+  const sort = params.get("sort") ?? "";
+  return {
+    fromUrl: true,
+    layout: {
+      ...base,
+      filters,
+      sort: isEntitySortKey(sort)
+        ? { key: sort, dir: params.get("dir") === "desc" ? "desc" : "asc" }
+        : null,
+    },
+  };
+}
+
+function mirrorSearch(navigate: NavigateFunction, search: string) {
+  locallyReadSearch = search;
+  void navigate({ search }, { replace: true });
+}
 
 export async function entitiesLoader({ request }: LoaderFunctionArgs) {
   const user = await requireUser();
@@ -70,8 +166,14 @@ export async function entitiesLoader({ request }: LoaderFunctionArgs) {
     includeCompleted:
       url.searchParams.get("includeCompleted") === "true" ? ("true" as const) : undefined,
   };
-  const [list, types, chart, calendar, obligationOptions] = await Promise.all([
-    api.GET("/api/v1/entities"),
+  const views = view === "list" ? await readViews(CATALOGUE.surface) : [];
+  const opensOn = views.find((candidate) => candidate.isDefault) ?? null;
+  const stored = opensOn ? resolveLayout(CATALOGUE, opensOn.layout) : builtInLayout(CATALOGUE);
+  const parsed = layoutFromSearch(stored, url.search);
+  const [list, types, chart, calendar, obligationOptions, listOptions] = await Promise.all([
+    api.GET("/api/v1/entities", {
+      params: { query: view === "list" ? listQuery(parsed.layout) : {} },
+    }),
     api.GET("/api/v1/entities/types"),
     view === "chart" ? api.GET("/api/v1/entities/chart") : Promise.resolve(undefined),
     view === "calendar"
@@ -80,15 +182,20 @@ export async function entitiesLoader({ request }: LoaderFunctionArgs) {
     view === "calendar"
       ? api.GET("/api/v1/entities/obligation-options")
       : Promise.resolve(undefined),
+    view === "list" ? api.GET("/api/v1/entities/list-options") : Promise.resolve(undefined),
   ]);
   if (!list.data || !types.data) throw new Error("The registry could not be read.");
   if (view === "chart" && !chart?.data) throw new Error("The Entity chart could not be read.");
   if (view === "calendar" && (!calendar?.data || !obligationOptions?.data)) {
     throw new Error("The compliance calendar could not be read.");
   }
+  if (view === "list" && !listOptions?.data) {
+    throw new Error("The Entity filter options could not be read.");
+  }
   return {
     user,
     entities: list.data.entities,
+    nextCursor: list.data.nextCursor ?? null,
     entityTypes: types.data.entityTypes,
     view,
     chart: chart?.data,
@@ -98,7 +205,31 @@ export async function entitiesLoader({ request }: LoaderFunctionArgs) {
     calendarView:
       url.searchParams.get("calendar") === "month" ? ("month" as const) : ("list" as const),
     month: url.searchParams.get("month"),
+    views,
+    layout: parsed.layout,
+    activeViewId: opensOn?.id ?? null,
+    fromUrl: parsed.fromUrl,
+    search: url.search,
+    listOptions: listOptions?.data ?? { jurisdictions: [], majorityOwners: [] },
+    loadKey: ++loads,
   };
+}
+
+export function entitiesShouldRevalidate({
+  currentUrl,
+  nextUrl,
+  defaultShouldRevalidate,
+}: ShouldRevalidateFunctionArgs): boolean {
+  if (
+    currentUrl.pathname === nextUrl.pathname &&
+    currentUrl.search !== nextUrl.search &&
+    locallyReadSearch === nextUrl.search
+  ) {
+    locallyReadSearch = null;
+    return false;
+  }
+  locallyReadSearch = null;
+  return defaultShouldRevalidate;
 }
 
 /** Calendar, registry list, or ownership chart; the current link is marked. */
@@ -149,7 +280,7 @@ function ViewSwitch({ view }: Readonly<{ view: "calendar" | "list" | "chart" }>)
 
 /** The list's resting order — the API's ordering, mirrored for rows
  * added after load. */
-function byLegalName(a: EntityRow, b: EntityRow): number {
+function byLegalName(a: RegistryEntityRow, b: RegistryEntityRow): number {
   return (
     a.legalName.localeCompare(b.legalName, undefined, { sensitivity: "base" }) ||
     a.legalName.localeCompare(b.legalName)
@@ -158,12 +289,33 @@ function byLegalName(a: EntityRow, b: EntityRow): number {
 
 export function EntitiesPage() {
   const loaded = useLoaderData<typeof entitiesLoader>();
-  const { user, entities, entityTypes, view, chart } = loaded;
+  return <EntitiesPageState key={loaded.loadKey} />;
+}
+
+function EntitiesPageState() {
+  const loaded = useLoaderData<typeof entitiesLoader>();
+  const { user, entityTypes, view, chart } = loaded;
   const intl = useIntl();
-  const [rows, setRows] = useState<EntityRow[]>(entities);
+  const navigate = useNavigate();
+  const [rows, setRows] = useState<RegistryEntityRow[]>(loaded.entities);
+  const [cursor, setCursor] = useState<string | null>(loaded.nextCursor);
+  const [layout, setLayout] = useState<Layout>(loaded.layout);
+  const [views, setViews] = useState<SavedView[]>(loaded.views);
+  const [activeViewId, setActiveViewId] = useState<string | null>(loaded.activeViewId);
   const [registerOpen, setRegisterOpen] = useState(false);
-  const [showArchived, setShowArchived] = useState(false);
+  const [busy, setBusy] = useState(false);
   const [listError, setListError] = useState<string | null>(null);
+  const [pageError, setPageError] = useState(false);
+  const [appended, setAppended] = useState<{ count: number; from: string } | null>(null);
+
+  const activeView = views.find((candidate) => candidate.id === activeViewId) ?? null;
+  const storedLayout = activeView
+    ? resolveLayout(CATALOGUE, activeView.layout)
+    : builtInLayout(CATALOGUE);
+  const modified = !sameLayout(layout, storedLayout);
+  const filters = entityListFilters(layout.filters);
+  const narrowed = Object.values(filters).some(Boolean);
+  const hasArchivedRow = rows.some((row) => row.archivedAt !== null);
 
   /** The working registry — archived rows never count (they are data
    * mistakes, not entities), whichever view is showing. */
@@ -171,49 +323,99 @@ export function EntitiesPage() {
 
   const signOut = useSignOut("/auth/login");
 
-  /** #99's show-archived toggle re-reads the list either way — the
-   * archived rows only exist server-side, and coming back should not
-   * trust a stale working list either. */
-  async function toggleArchived(next: boolean) {
+  useEffect(() => {
+    if (view !== "list" || loaded.fromUrl) return;
+    const search = querySearch(loaded.layout);
+    if (search !== loaded.search) mirrorSearch(navigate, search);
+  }, [loaded.fromUrl, loaded.layout, loaded.search, navigate, view]);
+
+  async function commit(next: Layout, nextActiveId: string | null = activeViewId) {
+    if (sameQuery(layout, next)) {
+      setLayout(next);
+      setActiveViewId(nextActiveId);
+      return;
+    }
+    if (busy) return;
+    setBusy(true);
     setListError(null);
     const { data } = await api
-      .GET(
-        "/api/v1/entities",
-        next ? { params: { query: { includeArchived: "true" as const } } } : {},
-      )
+      .GET("/api/v1/entities", { params: { query: listQuery(next) } })
       .catch(() => ({ data: undefined }));
+    setBusy(false);
     if (!data) {
       setListError(
         intl.formatMessage({
-          id: "entities.listError",
+          id: "entities.list.error",
           defaultMessage: "The registry could not be read. Try again.",
         }),
       );
       return;
     }
     setRows(data.entities);
-    setShowArchived(next);
+    setCursor(data.nextCursor);
+    setLayout(next);
+    setActiveViewId(nextActiveId);
+    setAppended(null);
+    setPageError(false);
+    mirrorSearch(navigate, querySearch(next));
+  }
+
+  function setFilter<K extends keyof EntityListFilters>(key: K, value: EntityListFilters[K]) {
+    void commit({ ...layout, filters: { ...layout.filters, [key]: value } });
+  }
+
+  function clearFilters() {
+    void commit({ ...layout, filters: {} });
+  }
+
+  async function showMore() {
+    if (busy || cursor === null) return;
+    setBusy(true);
+    setPageError(false);
+    const { data } = await api
+      .GET("/api/v1/entities", { params: { query: { ...listQuery(layout), cursor } } })
+      .catch(() => ({ data: undefined }));
+    setBusy(false);
+    if (!data) {
+      setPageError(true);
+      return;
+    }
+    const first = data.entities[0];
+    setRows((current) => [...current, ...data.entities]);
+    setCursor(data.nextCursor);
+    setAppended(first ? { count: data.entities.length, from: first.id } : null);
   }
 
   /** Row-level restore, offered in the archived view (#99). */
-  async function restoreRow(row: EntityRow) {
+  async function restoreRow(row: RegistryEntityRow) {
+    if (busy) return;
+    setBusy(true);
     setListError(null);
     const result = await api
       .POST("/api/v1/entities/{id}/restore", { params: { path: { id: row.id } } })
       .catch(() => undefined);
+    setBusy(false);
     if (!result?.data) {
       setListError(
         (await readProblem(result)).detail ??
           intl.formatMessage({
-            id: "entities.restoreError",
+            id: "entities.list.restoreError",
             defaultMessage: "The entity could not be restored.",
           }),
       );
       return;
     }
     const data = result.data;
-    const restored = data.entity;
-    setRows((current) => current.map((existing) => (existing.id === row.id ? restored : existing)));
+    setRows((current) =>
+      current.map((existing) =>
+        existing.id === row.id ? { ...existing, ...data.entity } : existing,
+      ),
+    );
+  }
+
+  function adopt(next: SavedView[], activeId: string | null) {
+    setViews(next);
+    setActiveViewId(activeId);
   }
 
   const registerButton = (
@@ -222,6 +424,49 @@ export function EntitiesPage() {
       <FormattedMessage id="entities.register" defaultMessage="Register entity" />
     </Button>
   );
+
+  const listControls =
+    view !== "list" || (rows.length === 0 && !narrowed) ? undefined : (
+      <>
+        <ViewsMenu
+          views={views}
+          activeView={activeView}
+          modified={modified}
+          busy={busy}
+          onSelect={(selected) =>
+            void commit(
+              selected ? resolveLayout(CATALOGUE, selected.layout) : builtInLayout(CATALOGUE),
+              selected?.id ?? null,
+            )
+          }
+          onSave={async () => {
+            if (activeView)
+              adopt(await updateView(activeView.id, { config: layout }), activeView.id);
+          }}
+          onSaveAs={async (name) => {
+            const next = await createView(CATALOGUE.surface, name, layout);
+            adopt(next, next.find((candidate) => candidate.name === name)?.id ?? null);
+          }}
+          onRename={async (name) => {
+            if (activeView) adopt(await updateView(activeView.id, { name }), activeView.id);
+          }}
+          onSetDefault={async () => {
+            if (activeView)
+              adopt(await updateView(activeView.id, { isDefault: true }), activeView.id);
+          }}
+          onDelete={async (selected) => {
+            setViews(await deleteView(selected.id));
+            await commit(builtInLayout(CATALOGUE), null);
+          }}
+          onReset={() => void commit(storedLayout)}
+        />
+        <ColumnMenu
+          catalogue={CATALOGUE}
+          layout={layout}
+          onLayoutChange={(next) => void commit(next)}
+        />
+      </>
+    );
 
   return (
     <AppShell
@@ -237,7 +482,27 @@ export function EntitiesPage() {
               values={{ count: liveCount }}
             />
           }
+          actions={
+            <>
+              <ViewSwitch view={view} />
+              {listControls}
+            </>
+          }
           primaryAction={registerButton}
+          filters={
+            view === "list" ? (
+              <EntityListFilterBar
+                filters={filters}
+                types={entityTypes}
+                options={loaded.listOptions as EntityRegistryOptions}
+                busy={busy}
+                empty={rows.length === 0}
+                error={listError}
+                onFilter={setFilter}
+                onClear={clearFilters}
+              />
+            ) : undefined
+          }
         />
       }
     >
@@ -252,38 +517,82 @@ export function EntitiesPage() {
           initialMonth={loaded.month}
         />
       ) : view === "chart" && chart ? (
-        <div className="flex min-h-0 flex-1 flex-col gap-3">
-          <div className="flex items-center justify-end gap-2">
-            <ViewSwitch view={view} />
-          </div>
-          <EntityChart chart={chart} />
-        </div>
+        <EntityChart chart={chart} />
       ) : (
-        <div className="flex flex-col gap-3">
-          <div className="flex items-center justify-end gap-2">
-            <ViewSwitch view={view} />
-            {listError && (
-              <p role="alert" className="text-xs text-status-danger-fg">
-                {listError}
-              </p>
-            )}
-            <Label htmlFor="entities-show-archived">
-              <FormattedMessage id="entities.showArchived" defaultMessage="Show archived" />
-            </Label>
-            <Switch
-              id="entities-show-archived"
-              checked={showArchived}
-              onCheckedChange={(next) => void toggleArchived(next)}
-            />
-          </div>
+        <div className="flex flex-col gap-4">
           {rows.length === 0 ? (
-            <EmptyRegistry onRegister={() => setRegisterOpen(true)} />
-          ) : (
-            <RegistryTable
-              rows={rows}
-              showArchived={showArchived}
-              onRestore={(row) => void restoreRow(row)}
+            <EmptyRegistry
+              narrowed={narrowed}
+              busy={busy}
+              onClear={clearFilters}
+              onRegister={() => setRegisterOpen(true)}
             />
+          ) : (
+            <ManagedTable
+              catalogue={CATALOGUE}
+              layout={layout}
+              rows={rows}
+              rowKey={(row) => row.id}
+              onLayoutChange={(next) => void commit(next)}
+              onRowActivate={(row) => void navigate(`/entities/${row.id}`)}
+              rowClassName={(row) => (row.archivedAt === null ? undefined : "opacity-60")}
+              focusRowKey={appended?.from}
+              actionsColumn={
+                hasArchivedRow
+                  ? {
+                      label: intl.formatMessage({
+                        id: "entities.list.column.actions",
+                        defaultMessage: "Actions",
+                      }),
+                      width: 108,
+                      render: (row) =>
+                        row.archivedAt === null ? null : (
+                          <Button
+                            variant="secondary"
+                            size="sm"
+                            disabled={busy}
+                            aria-label={intl.formatMessage(
+                              {
+                                id: "entities.list.restoreRow",
+                                defaultMessage: "Restore {name}",
+                              },
+                              { name: row.legalName },
+                            )}
+                            onClick={() => void restoreRow(row)}
+                          >
+                            <FormattedMessage id="entities.list.restore" defaultMessage="Restore" />
+                          </Button>
+                        ),
+                    }
+                  : undefined
+              }
+              foot={
+                cursor === null ? undefined : (
+                  <>
+                    {pageError && (
+                      <p role="alert" className="text-xs text-status-danger-fg">
+                        <FormattedMessage
+                          id="entities.list.moreError"
+                          defaultMessage="The next Entities could not be read. Try again."
+                        />
+                      </p>
+                    )}
+                    <Button variant="secondary" disabled={busy} onClick={() => void showMore()}>
+                      <FormattedMessage id="entities.list.more" defaultMessage="Show more" />
+                    </Button>
+                  </>
+                )
+              }
+            />
+          )}
+          {appended && (
+            <p className="sr-only" aria-live="polite">
+              <FormattedMessage
+                id="entities.list.loadedMore"
+                defaultMessage="{count, plural, one {# more Entity loaded} other {# more Entities loaded}}"
+                values={{ count: appended.count }}
+              />
+            </p>
           )}
         </div>
       )}
@@ -291,7 +600,9 @@ export function EntitiesPage() {
         <RegisterEntityDialog
           entityTypes={entityTypes}
           onOpenChange={setRegisterOpen}
-          onRegistered={(row) => setRows((current) => [...current, row].sort(byLegalName))}
+          onRegistered={(row) =>
+            setRows((current) => [...current, { ...row, nextObligation: null }].sort(byLegalName))
+          }
         />
       )}
     </AppShell>
@@ -335,7 +646,6 @@ function ComplianceCalendar({
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-3">
       <div className="flex flex-wrap items-center gap-2">
-        <ViewSwitch view="calendar" />
         <nav
           aria-label={intl.formatMessage({
             id: "entities.calendar.display",
@@ -734,129 +1044,59 @@ function isoDay(day: Date) {
   return day.toISOString().slice(0, 10);
 }
 
-/** ENT-001's pitch, for the first visit (the M7 spec's empty state). */
-function EmptyRegistry({ onRegister }: Readonly<{ onRegister: () => void }>) {
+function EmptyRegistry({
+  narrowed,
+  busy,
+  onClear,
+  onRegister,
+}: Readonly<{
+  narrowed: boolean;
+  busy: boolean;
+  onClear: () => void;
+  onRegister: () => void;
+}>) {
   return (
     <div className="flex flex-col items-center gap-4 rounded-card border border-border-default bg-raised px-6 py-16 text-center">
       <Landmark size={24} aria-hidden="true" className="text-subtle" />
       <div className="flex flex-col gap-1">
         <h2 className="text-md font-semibold">
-          <FormattedMessage id="entities.empty.title" defaultMessage="No entities yet" />
+          {narrowed ? (
+            <FormattedMessage
+              id="entities.list.filteredEmpty.title"
+              defaultMessage="No Entities match these filters."
+            />
+          ) : (
+            <FormattedMessage id="entities.list.empty.title" defaultMessage="No entities yet" />
+          )}
         </h2>
         <p className="max-w-md text-base text-muted">
-          <FormattedMessage
-            id="entities.empty.body"
-            defaultMessage={
-              "The registry holds your own corporate entities — subsidiaries, " +
-              "holding companies, and branches. Register them with their legal " +
-              "details, and contracts pick the signing entity from this list."
-            }
-          />
+          {narrowed ? (
+            <FormattedMessage
+              id="entities.list.filteredEmpty.body"
+              defaultMessage="Clear filters to return to the whole registry."
+            />
+          ) : (
+            <FormattedMessage
+              id="entities.list.empty.body"
+              defaultMessage={
+                "The registry holds your own corporate entities — subsidiaries, " +
+                "holding companies, and branches. Register them with their legal " +
+                "details, and contracts pick the signing entity from this list."
+              }
+            />
+          )}
         </p>
       </div>
-      <Button onClick={onRegister}>
-        <Plus size={16} aria-hidden="true" />
-        <FormattedMessage id="entities.register" defaultMessage="Register entity" />
-      </Button>
-    </div>
-  );
-}
-
-/** EN3's table, reduced to the M7 columns: name (opening the record
- * page, #99), type, jurisdiction, status. The API orders the rows;
- * this renders them. The archived view adds an Archived pill and a
- * row-level restore. */
-function RegistryTable({
-  rows,
-  showArchived,
-  onRestore,
-}: Readonly<{
-  rows: EntityRow[];
-  showArchived: boolean;
-  onRestore: (row: EntityRow) => void;
-}>) {
-  const intl = useIntl();
-  return (
-    <div className="overflow-x-auto rounded-card border border-border-default bg-raised">
-      <table className="w-full">
-        <thead>
-          <tr className="bg-section-header text-start text-sm font-medium text-muted">
-            <th scope="col" className="px-4 py-2 text-start font-medium">
-              <FormattedMessage id="entities.column.legalName" defaultMessage="Legal name" />
-            </th>
-            <th scope="col" className="w-32 px-4 py-2 text-start font-medium">
-              <FormattedMessage id="entities.column.type" defaultMessage="Type" />
-            </th>
-            <th scope="col" className="w-44 px-4 py-2 text-start font-medium">
-              <FormattedMessage id="entities.column.jurisdiction" defaultMessage="Jurisdiction" />
-            </th>
-            <th scope="col" className="w-28 px-4 py-2 text-start font-medium">
-              <FormattedMessage id="entities.column.status" defaultMessage="Status" />
-            </th>
-            {showArchived && (
-              <th scope="col" className="w-24 px-4 py-2 text-end font-medium">
-                <span className="sr-only">
-                  <FormattedMessage id="entities.column.actions" defaultMessage="Actions" />
-                </span>
-              </th>
-            )}
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map((row) => (
-            <tr key={row.id} className="border-t border-border-default">
-              <td className="px-4 py-2.5">
-                <span className="flex items-center gap-2.5">
-                  <Building2 size={16} aria-hidden="true" className="shrink-0 text-muted" />
-                  <Link
-                    to={`/entities/${row.id}`}
-                    className="rounded-chip font-medium text-primary hover:text-link hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-link"
-                  >
-                    {row.legalName}
-                  </Link>
-                  {row.archivedAt !== null && (
-                    <span className="inline-flex rounded-pill bg-badge-count-bg px-2 py-0.5 text-xs font-medium text-badge-count-fg">
-                      <FormattedMessage id="entities.archivedPill" defaultMessage="Archived" />
-                    </span>
-                  )}
-                </span>
-              </td>
-              <td className="px-4 py-2.5 text-sm text-muted">{row.entityTypeName}</td>
-              <td className="px-4 py-2.5 text-sm text-muted">
-                {row.jurisdiction ?? (
-                  <span aria-hidden="true" className="text-subtle">
-                    —
-                  </span>
-                )}
-              </td>
-              <td className="px-4 py-2.5">
-                <span
-                  className={`inline-flex rounded-pill px-2 py-0.5 text-xs font-medium ${STATUS_PILL[row.status]}`}
-                >
-                  {statusLabel(intl, row.status)}
-                </span>
-              </td>
-              {showArchived && (
-                <td className="px-4 py-2.5 text-end">
-                  {row.archivedAt !== null && (
-                    <Button
-                      variant="secondary"
-                      size="sm"
-                      aria-label={intl.formatMessage(
-                        { id: "entities.restoreRow", defaultMessage: "Restore {name}" },
-                        { name: row.legalName },
-                      )}
-                      onClick={() => onRestore(row)}
-                    >
-                      <FormattedMessage id="entities.record.restore" defaultMessage="Restore" />
-                    </Button>
-                  )}
-                </td>
-              )}
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      {narrowed ? (
+        <Button variant="secondary" disabled={busy} onClick={onClear}>
+          <FormattedMessage id="entities.list.filteredEmpty.clear" defaultMessage="Clear filters" />
+        </Button>
+      ) : (
+        <Button onClick={onRegister}>
+          <Plus size={16} aria-hidden="true" />
+          <FormattedMessage id="entities.register" defaultMessage="Register entity" />
+        </Button>
+      )}
     </div>
   );
 }

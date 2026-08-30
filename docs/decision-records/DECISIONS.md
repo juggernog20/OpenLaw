@@ -940,6 +940,10 @@ MTR-003's open item is answered by adoption: matters take this machinery rather 
 
 The Documents destination adopts `list_views` under the `documents` surface slug. Its catalogue, column widths and order, filters, sort, and Member+ archived toggle use the same whole-config write as Contracts and Matters. Unknown column keys are still read past, and no table, column, seed, sharing rule, or Administrator default was added.
 
+### Addendum (2026-08-30, M27/9, [#581](https://github.com/juggernog20/OpenLaw/issues/581)): Entities is the fourth saved-view surface
+
+The Entity registry adopts `list_views` under the `entities` surface slug. Its chosen columns, Type, Status, Jurisdiction, Majority owner, and archived filters, and sort are one whole config under clauses 2 and 4. The fourth adopter adds no schema, sharing, or default-view exception; unknown catalogue keys remain a read-past.
+
 ## Index of decisions
 
 | #      | Decision                                                                                  | Status   |

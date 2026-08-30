@@ -20,9 +20,12 @@
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
 import { z } from "zod";
 import {
+  alias,
   and,
   asc,
   entities,
+  entityHoldings,
+  entityObligations,
   entityTypeFields,
   entityTypes,
   eq,
@@ -32,7 +35,14 @@ import {
   officerRoles,
   users,
   type Entity,
+  type SQL,
 } from "@openlaw/db";
+import {
+  ENTITY_LIST_SORT_KEYS,
+  SORT_DIRECTIONS,
+  type EntityListSortKey,
+  type SortDirection,
+} from "@openlaw/shared";
 import { requireRole } from "../../auth/guards.js";
 import { recordActivity } from "../../lib/activity.js";
 import {
@@ -53,6 +63,8 @@ import { entityGrantRoutes } from "./grant-routes.js";
 
 /** ENT-004's access floor: the whole registry is Member+. */
 const requireMember = requireRole("administrator", "legal_team_member");
+const PAGE_SIZE = 50;
+const CursorSchema = z.string().min(1).max(64);
 
 const EntityRowSchema = z.object({
   id: z.string(),
@@ -75,6 +87,15 @@ const EntityRowSchema = z.object({
   archivedAt: z.iso.datetime().nullable(),
   createdAt: z.iso.datetime(),
   updatedAt: z.iso.datetime(),
+});
+
+const NextObligationSchema = z.object({
+  label: z.string(),
+  dueOn: z.iso.date(),
+});
+
+const EntityListRowSchema = EntityRowSchema.extend({
+  nextObligation: NextObligationSchema.nullable(),
 });
 
 /** The Member+ readable slice of an entity type — the register form's
@@ -136,6 +157,93 @@ function toRow(row: Entity, entityTypeName: string) {
   };
 }
 
+const majorityOwnerEntities = alias(entities, "majority_owner_entities");
+const majorityOwnerId = sql<string | null>`(
+  select ${entityHoldings.ownerEntityId}
+  from ${entityHoldings}
+  inner join ${sql.raw('"entities" as "majority_owner_entities"')}
+    on ${majorityOwnerEntities.id} = ${entityHoldings.ownerEntityId}
+  where ${entityHoldings.ownedEntityId} = ${entities.id}
+  order by
+    ${entityHoldings.ownershipPercent} desc,
+    lower(${majorityOwnerEntities.legalName}) asc,
+    ${majorityOwnerEntities.id} asc
+  limit 1
+)`;
+
+const nextObligationDueOn = sql<string | null>`(
+  select ${entityObligations.nextDueOn}
+  from ${entityObligations}
+  where ${entityObligations.entityId} = ${entities.id}
+    and ${entityObligations.completedOn} is null
+  order by ${entityObligations.nextDueOn} asc, ${entityObligations.id} asc
+  limit 1
+)`;
+
+const nextObligationLabel = sql<string | null>`(
+  select ${entityObligations.label}
+  from ${entityObligations}
+  where ${entityObligations.entityId} = ${entities.id}
+    and ${entityObligations.completedOn} is null
+  order by ${entityObligations.nextDueOn} asc, ${entityObligations.id} asc
+  limit 1
+)`;
+
+interface EntitySortRequest {
+  key: EntityListSortKey;
+  dir: SortDirection;
+}
+
+const ENTITY_SORTS: Record<EntityListSortKey, SQL> = {
+  name: sql`lower(${entities.legalName})`,
+  type: sql`lower(${entityTypes.displayName})`,
+  jurisdiction: sql`lower(${entities.jurisdiction})`,
+  status: sql`${entities.status}`,
+  nextObligation: nextObligationDueOn,
+  created: sql`${entities.createdAt}`,
+};
+
+function entityListOrder(sort: EntitySortRequest | null): SQL[] {
+  const expression = sort ? ENTITY_SORTS[sort.key] : ENTITY_SORTS.name;
+  const direction = sort?.dir ?? "asc";
+  return [sql`${expression} ${sql.raw(direction)} nulls last`, sql`${entities.id} asc`];
+}
+
+/** The cursor remains an opaque Entity id. Its sort value is recovered
+ * under the same reach predicate, then the id is the stable tie-break. */
+function furtherDownThan(
+  db: Parameters<typeof entityReachScope>[0],
+  cursor: string,
+  user: Parameters<typeof entityReachScope>[1],
+  sort: EntitySortRequest | null,
+): SQL {
+  const expression = sort ? ENTITY_SORTS[sort.key] : ENTITY_SORTS.name;
+  const direction = sort?.dir ?? "asc";
+  const cursorId = sql`(
+    select ${entities.id}
+    from ${entities}
+    where ${and(eq(entities.id, cursor), entityReachScope(db, user))}
+    limit 1
+  )`;
+  const cursorValue = sql`(
+    select ${expression}
+    from ${entities}
+    inner join ${entityTypes} on ${entityTypes.id} = ${entities.entityTypeId}
+    where ${and(eq(entities.id, cursor), entityReachScope(db, user))}
+    limit 1
+  )`;
+  const later = sql.raw(direction === "asc" ? ">" : "<");
+  return sql`case
+    when ${cursorValue} is null
+      then (${expression} is null and ${entities.id} > ${cursorId})
+    else (
+      ${expression} is null
+      or ${expression} ${later} ${cursorValue}
+      or (${expression} = ${cursorValue} and ${entities.id} > ${cursorId})
+    )
+  end`;
+}
+
 export const entitiesRoutes: FastifyPluginAsyncZod = async (app) => {
   await app.register(entityObligationRoutes);
   await app.register(entityGrantRoutes);
@@ -149,32 +257,122 @@ export const entitiesRoutes: FastifyPluginAsyncZod = async (app) => {
       schema: {
         operationId: "listEntities",
         summary:
-          "The registry, ordered by legal name (ENT-001) — the seam the " +
-          "M8 signing-entity picker consumes; archived rows only with " +
-          "includeArchived=true",
+          "The filtered, sorted, keyset-paged Entity registry with its " +
+          "soonest open obligation; the entities array remains the M8 " +
+          "signing-entity picker seam",
         tags: ["entities"],
-        querystring: z.object({ includeArchived: z.enum(["true", "false"]).optional() }),
+        querystring: z.object({
+          includeArchived: z.enum(["true", "false"]).optional(),
+          type: z.string().min(1).max(64).optional(),
+          status: z.enum(ENTITY_STATUSES).optional(),
+          jurisdiction: z.string().min(1).max(200).optional(),
+          majorityOwner: z.string().min(1).max(64).optional(),
+          sort: z.enum(ENTITY_LIST_SORT_KEYS).optional(),
+          dir: z.enum(SORT_DIRECTIONS).optional(),
+          cursor: CursorSchema.optional(),
+        }),
         response: {
-          200: z.object({ entities: z.array(EntityRowSchema) }),
+          200: z.object({
+            entities: z.array(EntityListRowSchema),
+            nextCursor: z.string().nullable(),
+          }),
           default: problemResponse,
         },
       },
     },
     async (request) => {
+      if (request.query.majorityOwner) {
+        const owner = await reachedEntity(app.db, request.user, request.query.majorityOwner);
+        if (!owner || owner.archivedAt) return { entities: [], nextCursor: null };
+      }
+      const sort: EntitySortRequest | null = request.query.sort
+        ? { key: request.query.sort, dir: request.query.dir ?? "asc" }
+        : null;
       const rows = await app.db
-        .select({ entity: entities, entityTypeName: entityTypes.displayName })
+        .select({
+          entity: entities,
+          entityTypeName: entityTypes.displayName,
+          nextObligationLabel,
+          nextObligationDueOn,
+        })
         .from(entities)
         .innerJoin(entityTypes, eq(entities.entityTypeId, entityTypes.id))
         .where(
           and(
             request.query.includeArchived === "true" ? undefined : isNull(entities.archivedAt),
+            request.query.type ? eq(entities.entityTypeId, request.query.type) : undefined,
+            request.query.status ? eq(entities.status, request.query.status) : undefined,
+            request.query.jurisdiction
+              ? eq(entities.jurisdiction, request.query.jurisdiction)
+              : undefined,
+            request.query.majorityOwner
+              ? eq(majorityOwnerId, request.query.majorityOwner)
+              : undefined,
             entityReachScope(app.db, request.user),
+            request.query.cursor
+              ? furtherDownThan(app.db, request.query.cursor, request.user, sort)
+              : undefined,
           ),
         )
-        // Case-insensitive: "iMobile Ltd" files under I, wherever the
-        // default collation would put it. Creation order breaks ties.
-        .orderBy(asc(sql`lower(${entities.legalName})`), asc(entities.createdAt));
-      return { entities: rows.map((row) => toRow(row.entity, row.entityTypeName)) };
+        .orderBy(...entityListOrder(sort))
+        .limit(PAGE_SIZE + 1);
+      const page = rows.slice(0, PAGE_SIZE);
+      return {
+        entities: page.map((row) => ({
+          ...toRow(row.entity, row.entityTypeName),
+          nextObligation:
+            row.nextObligationLabel && row.nextObligationDueOn
+              ? { label: row.nextObligationLabel, dueOn: row.nextObligationDueOn }
+              : null,
+        })),
+        nextCursor: rows.length > PAGE_SIZE ? (page.at(-1)?.entity.id ?? null) : null,
+      };
+    },
+  );
+
+  app.get(
+    "/entities/list-options",
+    {
+      preHandler: requireMember,
+      schema: {
+        operationId: "listEntityRegistryOptions",
+        summary: "Reach-scoped Jurisdiction and Majority owner options for the Entity registry",
+        tags: ["entities"],
+        response: {
+          200: z.object({
+            jurisdictions: z.array(z.string()),
+            majorityOwners: z.array(z.object({ id: z.string(), legalName: z.string() })),
+          }),
+          default: problemResponse,
+        },
+      },
+    },
+    async (request) => {
+      const [jurisdictionRows, ownerRows] = await Promise.all([
+        app.db
+          .selectDistinct({ jurisdiction: entities.jurisdiction })
+          .from(entities)
+          .where(
+            and(
+              isNull(entities.archivedAt),
+              sql`trim(${entities.jurisdiction}) <> ''`,
+              entityReachScope(app.db, request.user),
+            ),
+          )
+          .orderBy(asc(sql`lower(${entities.jurisdiction})`)),
+        app.db
+          .selectDistinct({ id: entities.id, legalName: entities.legalName })
+          .from(entities)
+          .innerJoin(entityHoldings, eq(entityHoldings.ownerEntityId, entities.id))
+          .where(and(isNull(entities.archivedAt), entityReachScope(app.db, request.user)))
+          .orderBy(asc(sql`lower(${entities.legalName})`), asc(entities.id)),
+      ]);
+      return {
+        jurisdictions: jurisdictionRows.flatMap((row) =>
+          row.jurisdiction ? [row.jurisdiction] : [],
+        ),
+        majorityOwners: ownerRows,
+      };
     },
   );
 

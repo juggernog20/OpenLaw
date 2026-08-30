@@ -18,7 +18,7 @@ import { ContractsPage, contractsLoader } from "./routes/contracts";
 import { DocumentsPage, documentsLoader, documentsShouldRevalidate } from "./routes/documents";
 import { MattersPage, mattersLoader } from "./routes/matters";
 import { MatterRecordPage, matterRecordLoader } from "./routes/matter-record";
-import { EntitiesPage, entitiesLoader } from "./routes/entities";
+import { EntitiesPage, entitiesLoader, entitiesShouldRevalidate } from "./routes/entities";
 import { EntityRecordPage, entityRecordLoader } from "./routes/entity-record";
 import { RouteErrorPage } from "./routes/error-page";
 import { HomePage, homeLoader } from "./routes/home";
@@ -247,6 +247,7 @@ export const routes: RouteObject[] = [
     // only (ENT-004) and bounces everyone else home.
     path: "/entities",
     loader: entitiesLoader,
+    shouldRevalidate: entitiesShouldRevalidate,
     element: <EntitiesPage />,
     errorElement: <RouteErrorPage />,
     hydrateFallbackElement: <></>,
