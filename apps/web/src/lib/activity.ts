@@ -2092,6 +2092,13 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
   // These name the person acted on by their email, because that is what
   // the payload carries — a display name would need a lookup, and an
   // email is what an Administrator searched for anyway.
+  "user.briefing_sent": {
+    icon: Send,
+    message: defineMessage({
+      id: "activity.user.briefingSent",
+      defaultMessage: "The morning round sent a daily briefing",
+    }),
+  },
   "user.invited": {
     icon: UserPlus,
     message: defineMessage({

@@ -8,7 +8,7 @@
  * The pane is the card; the grid is shared (M20/9). This file owns the
  * settings chrome (the page title, the settings card, and the one
  * status note in its header strip) and the choice of which of
- * NOT-002's five groups a staff reader is shown. The table itself is
+ * notification groups a staff reader is shown. The table itself is
  * `components/notification-preferences.tsx`, because the portal draws
  * the same table over a different row.
  */
@@ -38,7 +38,7 @@ export async function settingsNotificationsLoader() {
 /**
  * The groups this pane draws, in NOT-002's order.
  *
- * Four of the five. `requester_events` is the portal audience's own
+ * Five of the six. `requester_events` is the portal audience's own
  * group (NOT-001). A Business User tunes it in the portal's own
  * settings page, and it has no meaning on a staff page. It stays
  * in the model, and the API answers it, so the portal renders it where
@@ -55,6 +55,7 @@ const STAFF_GROUPS: readonly EventGroup[] = [
   "activity_on_your_records",
   "dates_approaching",
   "new_requests",
+  "knowledge",
 ];
 
 export function SettingsNotificationsPage() {
@@ -80,7 +81,11 @@ export function SettingsNotificationsPage() {
         actions={<StatusNote status={state.status} detail={state.detail} />}
         flush
       >
-        <NotificationSwitchGrid order={STAFF_GROUPS} state={state} />
+        <NotificationSwitchGrid
+          order={STAFF_GROUPS}
+          state={state}
+          emailOnlyGroups={["knowledge"]}
+        />
       </SettingsCard>
     </>
   );
