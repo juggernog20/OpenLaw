@@ -21,8 +21,10 @@ import {
   gte,
   isNotNull,
   isNull,
+  knowledgeItems,
   lt,
   matters,
+  or,
   sql,
   users,
   DOCUMENT_VERSION_KINDS,
@@ -80,7 +82,7 @@ const RecordReferenceSchema = z
     (value) =>
       !/^[CM]-/.test(value) ||
       (/^[CM]-[1-9]\d*$/.test(value) && BigInt(value.slice(2)) <= 2_147_483_647n),
-    "Record must be a C- or M- reference within range, or an Entity id.",
+    "Record must be a C- or M- reference within range, or an Entity or Knowledge item id.",
   );
 
 const RepositoryQuerySchema = z
@@ -106,6 +108,13 @@ const RepositoryQuerySchema = z
         code: "custom",
         path: ["folder"],
         message: "Folder requires a record filter.",
+      });
+    }
+    if (query.folder !== undefined && query.owner === "knowledge_item") {
+      context.addIssue({
+        code: "custom",
+        path: ["folder"],
+        message: "Knowledge item Documents do not have Document folders.",
       });
     }
   });
@@ -207,6 +216,7 @@ function boundaryValue(expression: SQL, cursor: string, scope: SQL | undefined):
     left join ${contracts} on ${contracts.id} = ${documents.contractId}
     left join ${matters} on ${matters.id} = ${documents.matterId}
     left join ${entities} on ${entities.id} = ${documents.entityId}
+    left join ${knowledgeItems} on ${knowledgeItems.id} = ${documents.knowledgeItemId}
     where ${and(eq(documents.id, cursor), scope)}
     limit 1
   )`;
@@ -230,9 +240,15 @@ function furtherDownThan(cursor: string, scope: SQL | undefined, sort: SortReque
   )`;
 }
 
-function recordPredicate(reference: string | undefined): SQL | undefined {
+function recordPredicate(reference: string | undefined, owner?: DocumentOwner): SQL | undefined {
   if (!reference) return undefined;
-  const parsed = parseDocumentOwnerReference(reference);
+  const parsed = parseDocumentOwnerReference(reference, owner);
+  if ("id" in parsed && owner === undefined) {
+    return or(
+      sql`${documentOwnerSql("entity").documentOwnerId} = ${parsed.id}`,
+      sql`${documentOwnerSql("knowledge_item").documentOwnerId} = ${parsed.id}`,
+    );
+  }
   return "id" in parsed
     ? sql`${parsed.owner.documentOwnerId} = ${parsed.id}`
     : and(
@@ -279,6 +295,8 @@ function selectRepository(db: Db) {
       matterTitle: matters.title,
       entityId: documents.entityId,
       entityTitle: entities.legalName,
+      knowledgeItemId: documents.knowledgeItemId,
+      knowledgeItemTitle: knowledgeItems.title,
       folderId: documentFolders.id,
       folderName: documentFolders.name,
       versionId: documentVersions.id,
@@ -305,7 +323,8 @@ function selectRepository(db: Db) {
     .leftJoin(documentFolders, eq(documentFolders.id, documents.folderId))
     .leftJoin(contracts, eq(contracts.id, documents.contractId))
     .leftJoin(matters, eq(matters.id, documents.matterId))
-    .leftJoin(entities, eq(entities.id, documents.entityId));
+    .leftJoin(entities, eq(entities.id, documents.entityId))
+    .leftJoin(knowledgeItems, eq(knowledgeItems.id, documents.knowledgeItemId));
 }
 
 type RepositoryDbRow = Awaited<ReturnType<typeof selectRepository>>[number];
@@ -315,6 +334,7 @@ function toRepositoryRow(row: RepositoryDbRow): z.infer<typeof RepositoryRowSche
     contract: row.contractId,
     matter: row.matterId,
     entity: row.entityId,
+    knowledge_item: row.knowledgeItemId,
   });
   let ownerNumber: number | null;
   let ownerTitle: string | null;
@@ -331,6 +351,10 @@ function toRepositoryRow(row: RepositoryDbRow): z.infer<typeof RepositoryRowSche
       ownerNumber = null;
       ownerTitle = row.entityTitle;
       break;
+    case "knowledge_item":
+      ownerNumber = null;
+      ownerTitle = row.knowledgeItemTitle;
+      break;
   }
   if (ownerTitle === null) {
     throw new Error(`Document ${row.id} has no readable owning record.`);
@@ -346,7 +370,7 @@ function toRepositoryRow(row: RepositoryDbRow): z.infer<typeof RepositoryRowSche
       id: owner.value,
       number: ownerNumber,
       reference:
-        owner.kind === "entity"
+        ownerNumber === null
           ? ownerTitle
           : `${owner.kind === "contract" ? "C" : "M"}-${ownerNumber}`,
       title: ownerTitle,
@@ -406,6 +430,7 @@ export const documentRepositoryRoutes: FastifyPluginAsyncZod = async (app) => {
           .leftJoin(contracts, eq(contracts.id, documents.contractId))
           .leftJoin(matters, eq(matters.id, documents.matterId))
           .leftJoin(entities, eq(entities.id, documents.entityId))
+          .leftJoin(knowledgeItems, eq(knowledgeItems.id, documents.knowledgeItemId))
           .where(scope)
           .orderBy(recordKind, recordNumber);
       const repositoryCounterparties = () =>
@@ -424,6 +449,7 @@ export const documentRepositoryRoutes: FastifyPluginAsyncZod = async (app) => {
           .leftJoin(contracts, eq(contracts.id, documents.contractId))
           .leftJoin(matters, eq(matters.id, documents.matterId))
           .leftJoin(entities, eq(entities.id, documents.entityId))
+          .leftJoin(knowledgeItems, eq(knowledgeItems.id, documents.knowledgeItemId))
           .where(scope)
           .orderBy(counterparties.name, counterparties.id);
       const repositoryUploaders = () =>
@@ -443,6 +469,7 @@ export const documentRepositoryRoutes: FastifyPluginAsyncZod = async (app) => {
           .leftJoin(contracts, eq(contracts.id, documents.contractId))
           .leftJoin(matters, eq(matters.id, documents.matterId))
           .leftJoin(entities, eq(entities.id, documents.entityId))
+          .leftJoin(knowledgeItems, eq(knowledgeItems.id, documents.knowledgeItemId))
           .where(scope)
           .orderBy(users.displayName, users.id);
 
@@ -500,7 +527,7 @@ export const documentRepositoryRoutes: FastifyPluginAsyncZod = async (app) => {
             request.query.owner === undefined
               ? undefined
               : isNotNull(documentOwnerSql(request.query.owner).documentOwnerId),
-            recordPredicate(request.query.record),
+            recordPredicate(request.query.record, request.query.owner),
             counterpartyPredicate(request.query.counterparty),
             request.query.uploader
               ? eq(documentVersions.createdBy, request.query.uploader)

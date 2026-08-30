@@ -140,6 +140,10 @@ The repository stays flat. Folder appears only after a reader picks one owning C
 
 The record-scoped facet now includes Entity. Nested creation, rename, move, dissolve, empty-directory recreation, and folder-drop path import all use the existing folder machinery with one Entity owner arm. The repository still exposes no global tree; choosing an Entity record reads only that Entity's reachable folder set.
 
+### Addendum (2026-08-30, M28/4, [#598](https://github.com/juggernog20/OpenLaw/issues/598)): Knowledge organization does not widen Document folders
+
+Knowledge Items own Documents, but their Documents do not gain a fourth folder mount. The Knowledge folder tree organizes the owning items under KNW-003; the shared Documents card therefore mounts without its folder tree, and repository requests that combine a Knowledge owner with a Document-folder filter are refused. This keeps one organizational answer instead of nesting a private Document tree inside a library item.
+
 ## DOC-007 — Metadata: standard document properties only; no custom fields; tags deferred
 
 - **Status** — Accepted
@@ -183,6 +187,10 @@ M26 ships filters for owning module, one reached owning record, Counterparty, fo
 ### Addendum (2026-08-30, M27/7, [#579](https://github.com/juggernog20/OpenLaw/issues/579)) — Entity is a live owner arm
 
 The exactly-one-owner constraint now includes `entity_id`, and every owner-dependent switch has an Entity arm: upload, folder and version locking, list and landing, repository scope, and search. Entity access composes before the Document audience predicate. Search carries the opaque owner id so a hit lands on `/entities/:id/documents`; the repository carries legal name as the human-facing owner reference.
+
+### Addendum (2026-08-30, M28/4, [#598](https://github.com/juggernog20/OpenLaw/issues/598)) — Knowledge Item is the fourth live owner arm
+
+The exactly-one-owner constraint now includes `knowledge_item_id`. The shared owner configuration drives upload, version locking, list and landing, preview and rendition reach, activity ownership, repository filtering, and search without a copied Knowledge document stack. Knowledge Documents inherit the Member+ boundary of their item, carry the item title as their repository owner reference, and land search and repository opens on `/knowledge/:id`. A Knowledge Item's explicit `primary_document_id` may be null, and when set must name a live Document owned by that same item.
 
 ### Addendum (2026-08-23, M22 close, [#474](https://github.com/juggernog20/OpenLaw/issues/474)) — the second owner widens the constraint
 

@@ -105,7 +105,10 @@ export function documentRepositoryFilters(
   const format = filters.format;
   const kind = filters.kind;
   return {
-    owner: owner === "contract" || owner === "matter" || owner === "entity" ? owner : "",
+    owner:
+      owner === "contract" || owner === "matter" || owner === "entity" || owner === "knowledge_item"
+        ? owner
+        : "",
     record: typeof filters.record === "string" ? filters.record : "",
     folder: typeof filters.folder === "string" ? filters.folder : "",
     format: DOCUMENT_REPOSITORY_FORMATS.some((candidate) => candidate === format)
@@ -122,13 +125,16 @@ export function documentRepositoryFilters(
   };
 }
 
-export function documentRecordReference(reference: string): DocumentRecord | null {
+export function documentRecordReference(
+  reference: string,
+  owner?: DocumentOwner,
+): DocumentRecord | null {
   const match = /^([CM])-([1-9]\d*)$/.exec(reference);
   if (!match?.[2]) {
     // The API's rule: a value shaped like a numbered reference must be one;
     // anything else is an opaque Entity id.
     return reference.length > 0 && reference.length <= 64 && !/^[CM]-/.test(reference)
-      ? { entityType: "entity", id: reference }
+      ? { entityType: owner === "knowledge_item" ? "knowledge_item" : "entity", id: reference }
       : null;
   }
   const number = Number(match[2]);
@@ -147,6 +153,7 @@ export function documentOwnerReference(owner: {
     case "matter":
       return `M-${String(owner.number!)}`;
     case "entity":
+    case "knowledge_item":
       return owner.reference;
   }
 }
@@ -164,13 +171,16 @@ export function documentLandingPath(document: RepositoryDocument): string {
       break;
     case "entity":
       return `/entities/${encodeURIComponent(owner.id)}/documents?doc=${encodeURIComponent(document.id)}&version=${encodeURIComponent(document.currentVersion.id)}`;
+    case "knowledge_item":
+      return `/knowledge/${encodeURIComponent(owner.id)}?doc=${encodeURIComponent(document.id)}&version=${encodeURIComponent(document.currentVersion.id)}`;
   }
   return `${root}/${String(owner.number)}/documents?doc=${encodeURIComponent(document.id)}&version=${encodeURIComponent(document.currentVersion.id)}`;
 }
 
 /** The record whose paper the shared Documents section is drawing. */
 export type DocumentRecord =
-  { entityType: "contract" | "matter"; number: number } | { entityType: "entity"; id: string };
+  | { entityType: "contract" | "matter"; number: number }
+  | { entityType: "entity" | "knowledge_item"; id: string };
 
 /**
  * The listing context that is the record root — the documents filed in
@@ -528,6 +538,8 @@ export function uploadRecordDocument(
       return send(`/api/v1/matters/${record.number}/documents`, draft);
     case "entity":
       return send(`/api/v1/entities/${encodeURIComponent(record.id)}/documents`, draft);
+    case "knowledge_item":
+      return send(`/api/v1/knowledge/${encodeURIComponent(record.id)}/documents`, draft);
   }
 }
 
@@ -777,6 +789,22 @@ export async function readRecordDocuments(
               ...(includeArchived ? { includeArchived: "true" as const } : {}),
               ...(cursor ? { cursor } : {}),
               ...(folder ? { folder } : {}),
+            },
+          },
+        })
+        .catch(() => undefined);
+      return result?.data
+        ? { ok: true, documents: result.data.documents, nextCursor: result.data.nextCursor }
+        : { ok: false, ...(await problem(result)) };
+    }
+    case "knowledge_item": {
+      const result = await api
+        .GET("/api/v1/knowledge/{id}/documents", {
+          params: {
+            path: { id: record.id },
+            query: {
+              ...(includeArchived ? { includeArchived: "true" as const } : {}),
+              ...(cursor ? { cursor } : {}),
             },
           },
         })

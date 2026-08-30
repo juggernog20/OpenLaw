@@ -42,6 +42,16 @@ export type ContractFolder = ListResponse["folders"][number];
  * it now stands, or why not. */
 export type FoldersOutcome = { ok: true; folders: ContractFolder[] } | ({ ok: false } & Problem);
 
+function knowledgeFoldersRefused(): FoldersOutcome {
+  return {
+    ok: false,
+    detail: "Knowledge item Documents do not have Document folders.",
+    type: "about:blank",
+    status: 400,
+    network: false,
+  };
+}
+
 async function foldersOutcome(
   result: (OpenApiResult & { data?: ListResponse }) | undefined,
 ): Promise<FoldersOutcome> {
@@ -162,6 +172,8 @@ export async function readRecordFolders(record: DocumentRecord): Promise<Folders
         .catch(() => undefined);
       return foldersOutcome(result);
     }
+    case "knowledge_item":
+      return knowledgeFoldersRefused();
   }
 }
 
@@ -204,6 +216,8 @@ export async function createRecordFolder(
         .catch(() => undefined);
       return foldersOutcome(result);
     }
+    case "knowledge_item":
+      return knowledgeFoldersRefused();
   }
 }
 
@@ -272,6 +286,8 @@ export async function recreateRecordFolderPath(
         .catch(() => undefined);
       return foldersOutcome(result);
     }
+    case "knowledge_item":
+      return knowledgeFoldersRefused();
   }
 }
 

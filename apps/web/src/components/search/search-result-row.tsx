@@ -15,6 +15,7 @@ import {
   FileText,
   Inbox,
   Landmark,
+  BookOpen,
   type LucideProps,
 } from "lucide-react";
 import { defineMessages, type IntlShape, useIntl } from "react-intl";
@@ -33,6 +34,7 @@ export const SEARCH_KIND_ORDER = [
   "entity",
   "counterparty",
   "request",
+  "knowledge_item",
 ] as const satisfies readonly SearchKind[];
 
 const MESSAGES = defineMessages({
@@ -42,8 +44,13 @@ const MESSAGES = defineMessages({
   entity: { id: "search.kind.entity", defaultMessage: "Entity" },
   counterparty: { id: "search.kind.counterparty", defaultMessage: "Counterparty" },
   request: { id: "search.kind.request", defaultMessage: "Request" },
+  knowledge_item: { id: "search.kind.knowledge", defaultMessage: "Knowledge item" },
   version: { id: "search.result.version", defaultMessage: "v{number}" },
   ownedBy: { id: "search.result.ownedBy", defaultMessage: "Owned by" },
+  draftKnowledge: {
+    id: "search.result.knowledgeDraft",
+    defaultMessage: "Draft · Knowledge item",
+  },
 });
 
 const KIND_ICON: Record<SearchKind, ComponentType<LucideProps>> = {
@@ -53,6 +60,7 @@ const KIND_ICON: Record<SearchKind, ComponentType<LucideProps>> = {
   entity: Landmark,
   counterparty: Building2,
   request: Inbox,
+  knowledge_item: BookOpen,
 };
 
 export function searchKindLabel(intl: IntlShape, kind: SearchKind): string {
@@ -78,6 +86,10 @@ function reference(intl: IntlShape, result: SearchResult): string {
     case "entity":
     case "counterparty":
       return searchKindLabel(intl, result.kind);
+    case "knowledge_item":
+      return result.state === "draft"
+        ? intl.formatMessage(MESSAGES.draftKnowledge)
+        : searchKindLabel(intl, result.kind);
   }
 }
 
@@ -89,6 +101,8 @@ function ownerReference(intl: IntlShape, result: Extract<SearchResult, { kind: "
       return matterReference(intl, result.ownerNumber!);
     case "entity":
       return searchKindLabel(intl, "entity");
+    case "knowledge_item":
+      return searchKindLabel(intl, "knowledge_item");
   }
 }
 
@@ -100,6 +114,8 @@ function ownerRoute(owner: DocumentOwner): string {
       return "matters";
     case "entity":
       return "entities";
+    case "knowledge_item":
+      return "knowledge";
   }
 }
 
@@ -111,6 +127,8 @@ function OwnerIcon({ owner }: Readonly<{ owner: DocumentOwner }>) {
       return <BriefcaseBusiness size={16} aria-hidden="true" />;
     case "entity":
       return <Landmark size={16} aria-hidden="true" />;
+    case "knowledge_item":
+      return <BookOpen size={16} aria-hidden="true" />;
   }
 }
 
@@ -132,6 +150,8 @@ export function searchResultPath(result: SearchResult, query: string): string {
         : `/inbox/${String(result.number)}`;
     case "entity":
       return `/entities/${encodeURIComponent(result.id)}`;
+    case "knowledge_item":
+      return `/knowledge/${encodeURIComponent(result.id)}`;
     case "counterparty":
       return searchPagePath(result.title, "contract");
     case "document": {
@@ -142,7 +162,9 @@ export function searchResultPath(result: SearchResult, query: string): string {
       });
       return result.ownerKind === "entity"
         ? `/entities/${encodeURIComponent(result.ownerId)}/documents?${params.toString()}`
-        : `/${ownerRoute(result.ownerKind)}/${String(result.ownerNumber)}/documents?${params.toString()}`;
+        : result.ownerKind === "knowledge_item"
+          ? `/knowledge/${encodeURIComponent(result.ownerId)}?${params.toString()}`
+          : `/${ownerRoute(result.ownerKind)}/${String(result.ownerNumber)}/documents?${params.toString()}`;
     }
   }
 }

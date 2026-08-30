@@ -310,6 +310,9 @@ const FOLDER_SKELETON_ROWS = 3;
  */
 interface RowContext {
   designations: boolean;
+  executedDesignations: boolean;
+  folders: boolean;
+  setPrimaryCopy: boolean;
   frozen: boolean;
   /** The narrow live-record write mode DD-015 grants a Contributor. */
   supportingUploads: boolean;
@@ -354,6 +357,7 @@ interface RowContext {
 function supportsDesignations(owner: DocumentRecord["entityType"]): boolean {
   switch (owner) {
     case "contract":
+    case "knowledge_item":
       return true;
     case "matter":
     case "entity":
@@ -453,8 +457,8 @@ export function DocumentsCard({
    * object per record, so nothing keyed on it re-runs every render. */
   const record = useMemo<DocumentRecord>(
     () =>
-      reference.kind === "entity"
-        ? { entityType: "entity", id: reference.id }
+      reference.kind === "entity" || reference.kind === "knowledge_item"
+        ? { entityType: reference.kind, id: reference.id }
         : { entityType: reference.kind, number: reference.number },
     [reference],
   );
@@ -1336,6 +1340,9 @@ export function DocumentsCard({
    * every listing — the record root's and each open folder's. */
   const rowContext: RowContext = {
     designations: supportsDesignations(record.entityType),
+    executedDesignations: record.entityType === "contract",
+    folders: record.entityType !== "knowledge_item",
+    setPrimaryCopy: record.entityType === "knowledge_item",
     frozen,
     supportingUploads,
     showActionColumn,
@@ -1449,13 +1456,15 @@ export function DocumentsCard({
                 {/* The keyboard twin of every organizing gesture the drop
                 will add in M13/4 (DES-033): a folder is made from a
                 control, never only by dropping one. */}
-                <Button
-                  variant="secondary"
-                  onClick={() => setFolderDialog({ mode: "create", parent: null })}
-                >
-                  <FolderPlus size={16} aria-hidden="true" />
-                  <FormattedMessage id="documents.newFolder" defaultMessage="New folder" />
-                </Button>
+                {record.entityType !== "knowledge_item" && (
+                  <Button
+                    variant="secondary"
+                    onClick={() => setFolderDialog({ mode: "create", parent: null })}
+                  >
+                    <FolderPlus size={16} aria-hidden="true" />
+                    <FormattedMessage id="documents.newFolder" defaultMessage="New folder" />
+                  </Button>
+                )}
               </>
             )}
             <Button variant="secondary" onClick={() => setComposer({ document: undefined })}>
@@ -1517,24 +1526,26 @@ export function DocumentsCard({
                 mixes the two exactly as a file manager does. Each folder
                 brings its own row groups, because the documents inside
                 one are row groups too. */}
-            <FolderRows
-              folders={folders}
-              parentId={null}
-              depth={0}
-              open={openFolders}
-              listings={listings}
-              rows={rowContext}
-              dragOver={dragFolder}
-              onToggle={toggleFolder}
-              onShowMore={(folderId, cursor) => void loadFolder(folderId, cursor)}
-              onDialog={setFolderDialog}
-              onDragFolder={setDragFolder}
-              onDropOnFolder={(folder, transfer) => {
-                setDragging(false);
-                setDragFolder(null);
-                void openDrop(transfer, { id: folder.id, name: folder.name });
-              }}
-            />
+            {record.entityType !== "knowledge_item" && (
+              <FolderRows
+                folders={folders}
+                parentId={null}
+                depth={0}
+                open={openFolders}
+                listings={listings}
+                rows={rowContext}
+                dragOver={dragFolder}
+                onToggle={toggleFolder}
+                onShowMore={(folderId, cursor) => void loadFolder(folderId, cursor)}
+                onDialog={setFolderDialog}
+                onDragFolder={setDragFolder}
+                onDropOnFolder={(folder, transfer) => {
+                  setDragging(false);
+                  setDragFolder(null);
+                  void openDrop(transfer, { id: folder.id, name: folder.name });
+                }}
+              />
+            )}
             {/* The record's own loose paper — the documents filed in no
                 folder at all (DES-033). A folder's documents are drawn
                 inside the folder, by the tree above. */}
@@ -1634,7 +1645,7 @@ export function DocumentsCard({
           }}
         />
       )}
-      {filing && (
+      {filing && record.entityType !== "knowledge_item" && (
         <MoveDocumentDialog
           recordType={record.entityType}
           document={filing}
@@ -1893,6 +1904,9 @@ function DocumentRows({
                         document={document}
                         version={chain.current}
                         designations={rows.designations}
+                        executedDesignations={rows.executedDesignations}
+                        folders={rows.folders}
+                        setPrimaryCopy={rows.setPrimaryCopy}
                         supportingOnly={rows.frozen}
                         busy={rows.busy}
                         canErase={rows.canErase}
@@ -1964,15 +1978,17 @@ function DocumentRows({
                           from the document row and never administers an
                           existing round. */}
                       <span className="flex items-center justify-end gap-1">
-                        {!rows.frozen && rows.designations && document.archivedAt === null && (
-                          <VersionPinMenu
-                            document={document}
-                            version={version}
-                            busy={rows.busy}
-                            intl={rows.intl}
-                            onToggle={rows.onPin}
-                          />
-                        )}
+                        {!rows.frozen &&
+                          rows.executedDesignations &&
+                          document.archivedAt === null && (
+                            <VersionPinMenu
+                              document={document}
+                              version={version}
+                              busy={rows.busy}
+                              intl={rows.intl}
+                              onToggle={rows.onPin}
+                            />
+                          )}
                       </span>
                     </td>
                   )}
@@ -2890,6 +2906,20 @@ const RECORD_COPY = {
       defaultMessage: "Anything in it moves onto the Entity itself. Nothing is deleted.",
     }),
   },
+  knowledge_item: {
+    empty: defineMessage({
+      id: "knowledge.documents.empty",
+      defaultMessage: "No documents on this Knowledge item yet.",
+    }),
+    recordRoot: defineMessage({
+      id: "knowledge.documents.recordRoot",
+      defaultMessage: "The Knowledge item itself",
+    }),
+    deleteIntoRoot: defineMessage({
+      id: "knowledge.documents.deleteIntoRoot",
+      defaultMessage: "Nothing is deleted.",
+    }),
+  },
 } as const;
 
 const ACTION_LABEL = {
@@ -2959,6 +2989,9 @@ function DocumentActions({
   document,
   version,
   designations,
+  executedDesignations,
+  folders,
+  setPrimaryCopy,
   supportingOnly,
   busy,
   canErase,
@@ -2981,6 +3014,9 @@ function DocumentActions({
    * beside. */
   version: DocumentVersion;
   designations: boolean;
+  executedDesignations: boolean;
+  folders: boolean;
+  setPrimaryCopy: boolean;
   /** Draw only DD-015's append action; every designation and
    * administration act remains absent. */
   supportingOnly: boolean;
@@ -3034,14 +3070,21 @@ function DocumentActions({
                 {designations && !document.isPrimary && (
                   <DropdownMenuItem onSelect={onMakePrimary}>
                     <Star size={16} aria-hidden="true" />
-                    <FormattedMessage {...ACTION_LABEL.makePrimary} />
+                    {setPrimaryCopy ? (
+                      <FormattedMessage
+                        id="knowledge.documents.action.setPrimary"
+                        defaultMessage="Set as primary"
+                      />
+                    ) : (
+                      <FormattedMessage {...ACTION_LABEL.makePrimary} />
+                    )}
                   </DropdownMenuItem>
                 )}
                 {/* The other of CTR-014's two designations: which version
                 is the signed copy, as opposed to which document is the
                 instrument. A distinct verb from Make primary, so the
                 two never read as one choice. */}
-                {designations && (
+                {executedDesignations && (
                   <DropdownMenuItem onSelect={onToggleExecuted}>
                     <Pin size={16} aria-hidden="true" />
                     <FormattedMessage
@@ -3063,10 +3106,12 @@ function DocumentActions({
                 (DES-033): a document is filed from a control, never only
                 by dragging it. Offered on every document, because moving
                 one back out to the record root is the same act. */}
-                <DropdownMenuItem onSelect={onMoveToFolder}>
-                  <FolderInput size={16} aria-hidden="true" />
-                  <FormattedMessage {...ACTION_LABEL.moveToFolder} />
-                </DropdownMenuItem>
+                {folders && (
+                  <DropdownMenuItem onSelect={onMoveToFolder}>
+                    <FolderInput size={16} aria-hidden="true" />
+                    <FormattedMessage {...ACTION_LABEL.moveToFolder} />
+                  </DropdownMenuItem>
+                )}
                 {/* DD-014's flag, one item that says which way it goes
                 (CTR-022). One glyph for confidentiality everywhere, as
                 DES-009 asks: the words are what tell the set from the

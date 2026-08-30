@@ -2465,6 +2465,9 @@
   "documents.filter.owner.entities": {
     "defaultMessage": "Entities"
   },
+  "documents.filter.owner.knowledge": {
+    "defaultMessage": "Knowledge"
+  },
   "documents.filter.owner.matters": {
     "defaultMessage": "Matters"
   },
@@ -3587,6 +3590,9 @@
   "keys.title": {
     "defaultMessage": "Keyboard shortcuts"
   },
+  "knowledge.action.openPreview": {
+    "defaultMessage": "Open preview"
+  },
   "knowledge.audience.everyone": {
     "defaultMessage": "Everyone"
   },
@@ -3611,6 +3617,9 @@
   "knowledge.body.preview": {
     "defaultMessage": "Preview"
   },
+  "knowledge.column.actions": {
+    "defaultMessage": "Actions"
+  },
   "knowledge.column.audience": {
     "defaultMessage": "Audience"
   },
@@ -3622,6 +3631,9 @@
   },
   "knowledge.column.folder": {
     "defaultMessage": "Folder"
+  },
+  "knowledge.column.format": {
+    "defaultMessage": "Format"
   },
   "knowledge.column.state": {
     "defaultMessage": "State"
@@ -3647,6 +3659,24 @@
   "knowledge.creating": {
     "defaultMessage": "Creating…"
   },
+  "knowledge.documents.action.setPrimary": {
+    "defaultMessage": "Set as primary"
+  },
+  "knowledge.documents.batch.failures": {
+    "defaultMessage": "{failed, plural, one {# file failed} other {# files failed}}. {landed, plural, =0 {Nothing was added to the Knowledge item.} one {The other # is on the Knowledge item.} other {The other # are on the Knowledge item.}}"
+  },
+  "knowledge.documents.batch.onRecord": {
+    "defaultMessage": "{count, plural, =0 {Nothing was added to the Knowledge item.} one {# file is already on the Knowledge item.} other {# files are already on the Knowledge item.}}"
+  },
+  "knowledge.documents.deleteIntoRoot": {
+    "defaultMessage": "Nothing is deleted."
+  },
+  "knowledge.documents.empty": {
+    "defaultMessage": "No documents on this Knowledge item yet."
+  },
+  "knowledge.documents.recordRoot": {
+    "defaultMessage": "The Knowledge item itself"
+  },
   "knowledge.draftMarker": {
     "defaultMessage": "Draft"
   },
@@ -3670,6 +3700,9 @@
   },
   "knowledge.filter.author": {
     "defaultMessage": "Author"
+  },
+  "knowledge.filter.format": {
+    "defaultMessage": "Format"
   },
   "knowledge.filter.state": {
     "defaultMessage": "State"
@@ -3752,6 +3785,18 @@
   "knowledge.form.type": {
     "defaultMessage": "Type"
   },
+  "knowledge.fromFiles.count": {
+    "defaultMessage": "{count, plural, =0 {No files selected} one {# file selected} other {# files selected}}"
+  },
+  "knowledge.fromFiles.drop": {
+    "defaultMessage": "Drop files here or choose files"
+  },
+  "knowledge.fromFiles.submit": {
+    "defaultMessage": "Create drafts"
+  },
+  "knowledge.fromFiles.title": {
+    "defaultMessage": "New from files"
+  },
   "knowledge.list.count": {
     "defaultMessage": "{count, plural, one {# item shown} other {# items shown}}"
   },
@@ -3767,11 +3812,26 @@
   "knowledge.list.region": {
     "defaultMessage": "Knowledge items"
   },
+  "knowledge.new.action": {
+    "defaultMessage": "New"
+  },
+  "knowledge.new.fromFiles": {
+    "defaultMessage": "New from files"
+  },
+  "knowledge.new.item": {
+    "defaultMessage": "New knowledge item"
+  },
   "knowledge.record.guidance": {
     "defaultMessage": "Guidance"
   },
   "knowledge.record.identity": {
     "defaultMessage": "Knowledge item"
+  },
+  "knowledge.record.noPrimary": {
+    "defaultMessage": "None"
+  },
+  "knowledge.record.primaryDocument": {
+    "defaultMessage": "Primary document"
   },
   "knowledge.state.draft": {
     "defaultMessage": "Draft"
@@ -4823,6 +4883,9 @@
   "search.kind.entity": {
     "defaultMessage": "Entity"
   },
+  "search.kind.knowledge": {
+    "defaultMessage": "Knowledge item"
+  },
   "search.kind.matter": {
     "defaultMessage": "Matter"
   },
@@ -4849,6 +4912,9 @@
   },
   "search.page.showMore": {
     "defaultMessage": "Show more"
+  },
+  "search.result.knowledgeDraft": {
+    "defaultMessage": "Draft · Knowledge item"
   },
   "search.result.ownedBy": {
     "defaultMessage": "Owned by"

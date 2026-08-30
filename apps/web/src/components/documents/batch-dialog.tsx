@@ -189,6 +189,18 @@ const BATCH_COPY = {
         "{count, plural, =0 {Nothing was added to the Entity.} one {# file is already on the Entity.} other {# files are already on the Entity.}}",
     }),
   },
+  knowledge_item: {
+    failures: defineMessage({
+      id: "knowledge.documents.batch.failures",
+      defaultMessage:
+        "{failed, plural, one {# file failed} other {# files failed}}. {landed, plural, =0 {Nothing was added to the Knowledge item.} one {The other # is on the Knowledge item.} other {The other # are on the Knowledge item.}}",
+    }),
+    onRecord: defineMessage({
+      id: "knowledge.documents.batch.onRecord",
+      defaultMessage:
+        "{count, plural, =0 {Nothing was added to the Knowledge item.} one {# file is already on the Knowledge item.} other {# files are already on the Knowledge item.}}",
+    }),
+  },
 } as const;
 
 export function BatchDialog({
