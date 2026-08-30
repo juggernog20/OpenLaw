@@ -399,6 +399,9 @@ export function documentAudienceScope(db: Executor, user: AuthenticatedUser): SQ
         eq(documents.isConfidential, false),
         namedOnTheOwningContract(db, user),
         namedOnTheOwningMatter(db, user),
+        // Entity paper has no audience narrowing yet: Entity confidentiality
+        // is schema, not policy, until M27/8 arms the grant list. Every
+        // reached Entity's documents pass here, confidential or not.
         isNotNull(documents.entityId),
       );
     case "business_user":

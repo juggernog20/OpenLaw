@@ -493,6 +493,8 @@ describe("the fixed Document repository filters", () => {
     expect(refused.headers["content-type"]).toContain("application/problem+json");
     expect(refused.json()).toMatchObject({ status: 400 });
     const invalidQueries: Record<string, string>[] = [
+      { record: "M-abc" },
+      { record: "C-99999999999" },
       { format: "spreadsheet" },
       { kind: "final" },
       { sort: "versions" },

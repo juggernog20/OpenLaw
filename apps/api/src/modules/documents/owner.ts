@@ -77,16 +77,19 @@ export function documentOwnerFilterValueSql(): SQL<string> {
 
 /**
  * Parses a repository record filter through the same owner definition its
- * sort key uses. The route schema has already checked the reference shape,
- * so an unknown prefix here is a bug, not bad input.
+ * sort key uses. A C- or M- reference names a numbered record; anything
+ * else is an Entity id. The route schema has already checked that a value
+ * with a numbered prefix carries a valid number.
  */
 export function parseDocumentOwnerReference(
   reference: string,
 ):
   | { owner: ReturnType<typeof documentOwnerSql>; number: number; id?: never }
   | { owner: ReturnType<typeof documentOwnerSql>; id: string; number?: never } {
-  const prefix = reference.slice(0, 1);
-  const owner = DOCUMENT_OWNER_KINDS.map(documentOwnerSql).find((o) => o.prefix === prefix);
+  const match = /^([CM])-([1-9]\d*)$/.exec(reference);
+  const owner = match
+    ? DOCUMENT_OWNER_KINDS.map(documentOwnerSql).find((o) => o.prefix === match[1])
+    : undefined;
   if (!owner) return { owner: documentOwnerSql("entity"), id: reference };
-  return { owner, number: Number(reference.slice(2)) };
+  return { owner, number: Number(match![2]) };
 }

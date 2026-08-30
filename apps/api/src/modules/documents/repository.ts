@@ -66,7 +66,22 @@ interface SortRequest {
   dir: SortDirection;
 }
 
-const RecordReferenceSchema = z.string().min(1).max(64);
+/**
+ * One owning record. A C- or M- reference names a Contract or Matter by
+ * number; anything else is an opaque Entity id. A value that starts like a
+ * numbered reference but is not one is refused rather than tried as an id,
+ * so a bad number never reaches the query as NaN.
+ */
+const RecordReferenceSchema = z
+  .string()
+  .min(1)
+  .max(64)
+  .refine(
+    (value) =>
+      !/^[CM]-/.test(value) ||
+      (/^[CM]-[1-9]\d*$/.test(value) && BigInt(value.slice(2)) <= 2_147_483_647n),
+    "Record must be a C- or M- reference within range, or an Entity id.",
+  );
 
 const RepositoryQuerySchema = z
   .object({

@@ -42,9 +42,12 @@ describe("parseDocumentOwnerReference", () => {
     expect(matter.owner.recordId).toBe(matters.id);
   });
 
-  it("rejects a prefix no owner claims", () => {
+  it("reads anything that is not a numbered reference as an Entity id", () => {
     const entity = parseDocumentOwnerReference("019c6ec6-1cb4-7f25-a000-100000000001");
     expect(entity.owner.kind).toBe("entity");
     expect(entity.id).toBe("019c6ec6-1cb4-7f25-a000-100000000001");
+    // An id that merely starts with an owner letter is still an id.
+    expect(parseDocumentOwnerReference("Cabinet").owner.kind).toBe("entity");
+    expect(parseDocumentOwnerReference("M-").owner.kind).toBe("entity");
   });
 });

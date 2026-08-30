@@ -125,7 +125,9 @@ export function documentRepositoryFilters(
 export function documentRecordReference(reference: string): DocumentRecord | null {
   const match = /^([CM])-([1-9]\d*)$/.exec(reference);
   if (!match?.[2]) {
-    return reference.length > 0 && reference.length <= 64
+    // The API's rule: a value shaped like a numbered reference must be one;
+    // anything else is an opaque Entity id.
+    return reference.length > 0 && reference.length <= 64 && !/^[CM]-/.test(reference)
       ? { entityType: "entity", id: reference }
       : null;
   }
