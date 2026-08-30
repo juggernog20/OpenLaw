@@ -33,6 +33,7 @@ const MESSAGES = defineMessages({
   ownerAll: { id: "documents.filter.owner.all", defaultMessage: "All" },
   ownerContracts: { id: "documents.filter.owner.contracts", defaultMessage: "Contracts" },
   ownerMatters: { id: "documents.filter.owner.matters", defaultMessage: "Matters" },
+  ownerEntities: { id: "documents.filter.owner.entities", defaultMessage: "Entities" },
   record: { id: "documents.filter.record", defaultMessage: "Record" },
   recordPlaceholder: {
     id: "documents.filter.record.placeholder",
@@ -103,7 +104,10 @@ export function DocumentFilterBar({
   const listboxId = useId();
   const listRef = useRef<HTMLUListElement>(null);
   const [recordDraft, setRecordDraft] = useState<string | null>(null);
-  const recordText = recordDraft ?? filters.record;
+  const selectedRecord = options.records.find((record) => record.reference === filters.record);
+  const selectedLabel =
+    selectedRecord?.kind === "entity" ? selectedRecord.title : selectedRecord?.reference;
+  const recordText = recordDraft ?? selectedLabel ?? filters.record;
   const [searchOpen, setSearchOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
   const [folderAnswer, setFolderAnswer] = useState<{
@@ -118,7 +122,9 @@ export function DocumentFilterBar({
       : options.records
           .filter((record) => filters.owner === "" || record.kind === filters.owner)
           .filter((record) =>
-            `${record.reference} ${record.title}`.toLocaleLowerCase().includes(query),
+            `${record.kind === "entity" ? record.title : record.reference} ${record.title}`
+              .toLocaleLowerCase()
+              .includes(query),
           )
           .slice(0, 10);
   const listOpen = searchOpen && matches.length > 0;
@@ -161,12 +167,20 @@ export function DocumentFilterBar({
       key: "owner",
       name: intl.formatMessage(MESSAGES.owner),
       value: intl.formatMessage(
-        filters.owner === "contract" ? MESSAGES.ownerContracts : MESSAGES.ownerMatters,
+        filters.owner === "contract"
+          ? MESSAGES.ownerContracts
+          : filters.owner === "matter"
+            ? MESSAGES.ownerMatters
+            : MESSAGES.ownerEntities,
       ),
     });
   }
   if (filters.record) {
-    chips.push({ key: "record", name: intl.formatMessage(MESSAGES.record), value: filters.record });
+    chips.push({
+      key: "record",
+      name: intl.formatMessage(MESSAGES.record),
+      value: selectedLabel ?? filters.record,
+    });
   }
   if (filters.folder) {
     const folder = folders.find((candidate) => candidate.id === filters.folder);
@@ -233,6 +247,7 @@ export function DocumentFilterBar({
     ["", MESSAGES.ownerAll],
     ["contract", MESSAGES.ownerContracts],
     ["matter", MESSAGES.ownerMatters],
+    ["entity", MESSAGES.ownerEntities],
   ] as const;
   return (
     <div className="flex flex-col gap-2">
@@ -329,7 +344,10 @@ export function DocumentFilterBar({
                   }}
                   onMouseMove={() => setActiveIndex(index)}
                 >
-                  {match.reference} · {match.title}
+                  {match.kind === "entity" ? match.title : match.reference}
+                  {match.kind === "entity" || match.reference === match.title
+                    ? null
+                    : ` · ${match.title}`}
                 </li>
               ))}
             </ul>

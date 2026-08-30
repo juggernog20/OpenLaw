@@ -111,6 +111,12 @@ function surface({
             number: 42,
             title: "Meridian services",
           },
+          {
+            reference: "entity-1",
+            kind: "entity",
+            number: null,
+            title: "UK Subsidiary Ltd",
+          },
         ],
       });
     }
@@ -118,6 +124,9 @@ function surface({
       return json(200, {
         folders: [{ id: "folder-1", name: "Executed", parentId: null }],
       });
+    }
+    if (call.url.pathname === "/api/v1/entities/entity-1/folders" && call.method === "GET") {
+      return json(200, { folders: [] });
     }
     return undefined;
   };
@@ -133,6 +142,20 @@ async function expectQuery(queries: URLSearchParams[], key: string, value: strin
 }
 
 describe("the Documents fixed filter strip", () => {
+  it("filters by Entity owner and sends the opaque Entity record id", async () => {
+    const user = userEvent.setup();
+    const api = surface();
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/documents");
+    await user.click(await screen.findByRole("button", { name: "Entities" }));
+    await expectQuery(api.queries, "owner", "entity");
+    const record = screen.getByRole("combobox", { name: "Record" });
+    await user.type(record, "UK Subsidiary");
+    await user.click(await screen.findByRole("option", { name: "UK Subsidiary Ltd" }));
+    await expectQuery(api.queries, "record", "entity-1");
+    expect(record).toHaveValue("UK Subsidiary Ltd");
+  });
+
   it("writes every control and sort to both the server query and the URL", async () => {
     const user = userEvent.setup();
     const api = surface();

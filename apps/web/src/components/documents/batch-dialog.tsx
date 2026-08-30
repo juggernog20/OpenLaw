@@ -177,6 +177,18 @@ const BATCH_COPY = {
         "{count, plural, =0 {Nothing was added to the matter.} one {# file is already on the matter.} other {# files are already on the matter.}}",
     }),
   },
+  entity: {
+    failures: defineMessage({
+      id: "entities.documents.batch.failures",
+      defaultMessage:
+        "{failed, plural, one {# file failed} other {# files failed}}. {landed, plural, =0 {Nothing was added to the Entity.} one {The other # is on the Entity.} other {The other # are on the Entity.}}",
+    }),
+    onRecord: defineMessage({
+      id: "entities.documents.batch.onRecord",
+      defaultMessage:
+        "{count, plural, =0 {Nothing was added to the Entity.} one {# file is already on the Entity.} other {# files are already on the Entity.}}",
+    }),
+  },
 } as const;
 
 export function BatchDialog({

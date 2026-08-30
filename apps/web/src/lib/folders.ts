@@ -156,6 +156,12 @@ export async function readRecordFolders(record: DocumentRecord): Promise<Folders
         .catch(() => undefined);
       return foldersOutcome(result);
     }
+    case "entity": {
+      const result = await api
+        .GET("/api/v1/entities/{id}/folders", { params: { path: { id: record.id } } })
+        .catch(() => undefined);
+      return foldersOutcome(result);
+    }
   }
 }
 
@@ -184,6 +190,15 @@ export async function createRecordFolder(
       const result = await api
         .POST("/api/v1/matters/{number}/folders", {
           params: { path: { number: record.number } },
+          body: folder,
+        })
+        .catch(() => undefined);
+      return foldersOutcome(result);
+    }
+    case "entity": {
+      const result = await api
+        .POST("/api/v1/entities/{id}/folders", {
+          params: { path: { id: record.id } },
           body: folder,
         })
         .catch(() => undefined);
@@ -237,6 +252,18 @@ export async function recreateRecordFolderPath(
       const result = await api
         .POST("/api/v1/matters/{number}/folders", {
           params: { path: { number: record.number } },
+          body: {
+            path: folder.path.join(PATH_SEPARATOR),
+            ...(folder.parentId ? { parentId: folder.parentId } : {}),
+          },
+        })
+        .catch(() => undefined);
+      return foldersOutcome(result);
+    }
+    case "entity": {
+      const result = await api
+        .POST("/api/v1/entities/{id}/folders", {
+          params: { path: { id: record.id } },
           body: {
             path: folder.path.join(PATH_SEPARATOR),
             ...(folder.parentId ? { parentId: folder.parentId } : {}),

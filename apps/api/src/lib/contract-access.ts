@@ -61,6 +61,7 @@ import {
   documents,
   eq,
   inArray,
+  isNotNull,
   isNull,
   matters,
   matterTeam,
@@ -398,6 +399,7 @@ export function documentAudienceScope(db: Executor, user: AuthenticatedUser): SQ
         eq(documents.isConfidential, false),
         namedOnTheOwningContract(db, user),
         namedOnTheOwningMatter(db, user),
+        isNotNull(documents.entityId),
       );
     case "business_user":
       return sql`false`;

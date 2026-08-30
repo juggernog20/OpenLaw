@@ -11,6 +11,7 @@ import {
   and,
   contracts,
   documents,
+  entities,
   isNotNull,
   isNull,
   matters,
@@ -21,6 +22,7 @@ import {
 import { DOCUMENT_OWNER_KINDS, type DocumentOwner } from "@openlaw/shared";
 import { requireRole, type AuthenticatedUser } from "../auth/guards.js";
 import { contractTeamScope, documentAudienceScope } from "./contract-access.js";
+import { entityReachScope } from "./entity-access.js";
 import { matterTeamScope } from "./matter-access.js";
 
 /** Documents are readable by Member+ and by Contributors through reached records. */
@@ -47,6 +49,12 @@ function owningRecordScope(
         isNotNull(documents.matterId),
         isNull(matters.archivedAt),
         matterTeamScope(db, user),
+      );
+    case "entity":
+      return and(
+        isNotNull(documents.entityId),
+        isNull(entities.archivedAt),
+        entityReachScope(user),
       );
   }
 }

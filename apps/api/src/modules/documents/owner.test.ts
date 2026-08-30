@@ -7,21 +7,21 @@ import { parseDocumentOwnerReference } from "./owner.js";
 
 describe("resolveDocumentOwner", () => {
   it("names the one owner a document has", () => {
-    expect(resolveDocumentOwner({ contract: "c1", matter: null })).toEqual({
+    expect(resolveDocumentOwner({ contract: "c1", matter: null, entity: null })).toEqual({
       kind: "contract",
       value: "c1",
     });
-    expect(resolveDocumentOwner({ contract: undefined, matter: "m1" })).toEqual({
+    expect(resolveDocumentOwner({ contract: undefined, matter: "m1", entity: null })).toEqual({
       kind: "matter",
       value: "m1",
     });
   });
 
   it("refuses a row with no owner or more than one", () => {
-    expect(() => resolveDocumentOwner({ contract: null, matter: null })).toThrow(
+    expect(() => resolveDocumentOwner({ contract: null, matter: null, entity: null })).toThrow(
       /exactly one owning record/,
     );
-    expect(() => resolveDocumentOwner({ contract: "c1", matter: "m1" })).toThrow(
+    expect(() => resolveDocumentOwner({ contract: "c1", matter: "m1", entity: null })).toThrow(
       /exactly one owning record/,
     );
   });
@@ -43,6 +43,8 @@ describe("parseDocumentOwnerReference", () => {
   });
 
   it("rejects a prefix no owner claims", () => {
-    expect(() => parseDocumentOwnerReference("X-1")).toThrow(/names no Document owner/);
+    const entity = parseDocumentOwnerReference("019c6ec6-1cb4-7f25-a000-100000000001");
+    expect(entity.owner.kind).toBe("entity");
+    expect(entity.id).toBe("019c6ec6-1cb4-7f25-a000-100000000001");
   });
 });

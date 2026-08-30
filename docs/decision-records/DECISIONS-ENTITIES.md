@@ -87,6 +87,10 @@ ENT-004's grant list is the `entity_grants` relation: one row names one user gra
 - **Alternatives considered** — Seeded folder template (recommended, declined).
 - **Consequences** — SCHEMA.md: `entity_id` added to `documents` and `document_folders` owner sets. No settings surface for a folder template.
 
+### Addendum (2026-08-30, M27/7, [#579](https://github.com/juggernog20/OpenLaw/issues/579)) — Entity paper uses the shared record machinery
+
+Entity is the third live `DocumentOwner` arm. Its Documents tab mounts the same Documents card, folder tree, folder-drop importer, version chain, panel, and landing route as Contract and Matter paper. The repository addresses an Entity filter by opaque id but names the owner by legal name; no statutory folders are seeded.
+
 ## ENT-006 — Compliance calendar: recurring obligations, blank-start, human-confirmed roll-forward
 
 - **Status** — Accepted
@@ -116,6 +120,10 @@ A deleted Registration is not a deleted obligation: its foreign key is set to nu
 - **Date** — 2026-08-06
 - **Decision** — The entity page shows Contracts and Matters tabs listing referencing records (`contracts.entity_id` per CTR-011; matters via `entity`-scoped fields), counts in tab labels — pure queries, no stored counters. Restricted records render per the MTR-015 convention. Per-entity analytics belong to the dashboards capability (DD-005) later.
 - **Consequences** — None schema-side.
+
+### Addendum (2026-08-30, M27/7, [#579](https://github.com/juggernog20/OpenLaw/issues/579)) — roll-ups are reach-scoped at the target
+
+Contracts are derived from `contracts.entity_id`; Matters are derived when an Entity-typed Field attached to the Matter's type has the Entity id in `custom_fields`. Both the rows and tab-label counts compose the target record's own reach predicate, so a walled target contributes neither a placeholder nor a count. The list component can render the shared restricted cell for seams whose doctrine retains a known link, but these query-derived roll-ups silently omit inaccessible targets.
 
 ## ENT-008 — The registry surface owns a Member+ entity-type read
 

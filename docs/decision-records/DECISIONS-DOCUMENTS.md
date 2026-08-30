@@ -136,6 +136,10 @@ _Extended in M12/5: **an email's body is its text**, and it is the one extractio
 
 The repository stays flat. Folder appears only after a reader picks one owning Contract or Matter, then reads that record's existing folder tree and narrows the repository list by folder id or record root. The options read never offers a global folder list. This completes the repository consequence without creating a second filing hierarchy.
 
+### Addendum (2026-08-30, M27/7, [#579](https://github.com/juggernog20/OpenLaw/issues/579)): Entity is the third folder mount
+
+The record-scoped facet now includes Entity. Nested creation, rename, move, dissolve, empty-directory recreation, and folder-drop path import all use the existing folder machinery with one Entity owner arm. The repository still exposes no global tree; choosing an Entity record reads only that Entity's reachable folder set.
+
 ## DOC-007 — Metadata: standard document properties only; no custom fields; tags deferred
 
 - **Status** — Accepted
@@ -175,6 +179,10 @@ M26 ships filters for owning module, one reached owning record, Counterparty, fo
   Today one owner column exists and it is `NOT NULL`, which is the same rule stated exactly for a set of one — so nothing is owed until the second one arrives. The application check stays beside the constraint: it is what turns a violation into a refusal somebody can act on instead of a 500. The constraint is the floor under it, and the reason to want one is that a two-owner row and an ownerless row are both unreachable by every access path in the product — access is inherited from the owner, so a row with no owner or two has no answer to "who may read this"._
 
 - _An activity entry that names a document is hidden from a viewer outside that document's audience. **Every** document the entry names must pass — a pin move names two, by `documentId` and `fromDocumentId`, and each carries a title. An entry is also hidden once a document it names is hard-deleted. The row is gone, so nothing is left to ask whether the file was confidential, and every entry still carries its title. This over-hides an erased **open** document's story from a viewer the contract does not name. The Administrator's audit log is untouched, which is where DOC-010 puts the accountability._
+
+### Addendum (2026-08-30, M27/7, [#579](https://github.com/juggernog20/OpenLaw/issues/579)) — Entity is a live owner arm
+
+The exactly-one-owner constraint now includes `entity_id`, and every owner-dependent switch has an Entity arm: upload, folder and version locking, list and landing, repository scope, and search. Entity access composes before the Document audience predicate. Search carries the opaque owner id so a hit lands on `/entities/:id/documents`; the repository carries legal name as the human-facing owner reference.
 
 ### Addendum (2026-08-23, M22 close, [#474](https://github.com/juggernog20/OpenLaw/issues/474)) — the second owner widens the constraint
 

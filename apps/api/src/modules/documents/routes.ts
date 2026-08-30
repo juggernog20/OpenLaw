@@ -144,6 +144,7 @@ import {
   DOCUMENT_VERSION_KINDS,
   HAND_SET_DOCUMENT_VERSION_KINDS,
   eq,
+  entities,
   inArray,
   isNotNull,
   isNull,
@@ -174,6 +175,7 @@ import {
   type ReachedContract,
 } from "../../lib/contract-access.js";
 import { matterTeamScope, NO_MATTER, reachedMatter } from "../../lib/matter-access.js";
+import { entityReachScope, NO_ENTITY, reachedEntity } from "../../lib/entity-access.js";
 import {
   EmailUnreadableError,
   isEmail,
@@ -257,6 +259,7 @@ const NumberParams = z.object({ number: z.coerce.number().int().positive() });
 const MAX_RECORD_ID_LENGTH = 64;
 
 const RecordIdSchema = z.string().min(1).max(MAX_RECORD_ID_LENGTH);
+const EntityParams = z.object({ id: RecordIdSchema });
 
 const DocumentParams = z.object({ documentId: RecordIdSchema });
 
@@ -811,6 +814,8 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
         return and(isNotNull(documents.contractId), contractTeamScope(db, user));
       case "matter":
         return and(isNotNull(documents.matterId), matterTeamScope(db, user));
+      case "entity":
+        return and(isNotNull(documents.entityId), entityReachScope(user));
     }
   }
 
@@ -820,6 +825,8 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
         return { contractId: owner.value } as const;
       case "matter":
         return { matterId: owner.value } as const;
+      case "entity":
+        return { entityId: owner.value } as const;
     }
   }
 
@@ -830,6 +837,7 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
     description: string | null;
     contractId: string | null;
     matterId: string | null;
+    entityId: string | null;
     owner: ResolvedDocumentOwner<string>;
     /** The owning contract's SET-003 soft delete (CTR-021). */
     ownerArchivedAt: Date | null;
@@ -887,8 +895,10 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
         description: documents.description,
         contractId: documents.contractId,
         matterId: documents.matterId,
+        entityId: documents.entityId,
         contractArchivedAt: contracts.archivedAt,
         matterArchivedAt: matters.archivedAt,
+        entityArchivedAt: entities.archivedAt,
         archivedAt: documents.archivedAt,
         executedVersionId: documents.executedVersionId,
         primaryDocumentId: contracts.primaryDocumentId,
@@ -902,6 +912,7 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
       .from(documents)
       .leftJoin(contracts, eq(documents.contractId, contracts.id))
       .leftJoin(matters, eq(documents.matterId, matters.id))
+      .leftJoin(entities, eq(documents.entityId, entities.id))
       // Left, because most documents sit at the record root and an inner
       // join would answer none of them.
       .leftJoin(documentFolders, eq(documents.folderId, documentFolders.id))
@@ -916,7 +927,11 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
     let [row] = await query;
     if (!row) return null;
     if (lock) {
-      const owner = resolveDocumentOwner({ contract: row.contractId, matter: row.matterId });
+      const owner = resolveDocumentOwner({
+        contract: row.contractId,
+        matter: row.matterId,
+        entity: row.entityId,
+      });
       switch (owner.kind) {
         case "contract":
           await db
@@ -932,11 +947,22 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
             .where(eq(matters.id, owner.value))
             .for("update", { of: matters });
           break;
+        case "entity":
+          await db
+            .select({ id: entities.id })
+            .from(entities)
+            .where(eq(entities.id, owner.value))
+            .for("update", { of: entities });
+          break;
       }
       [row] = await query;
       if (!row) return null;
     }
-    const owner = resolveDocumentOwner({ contract: row.contractId, matter: row.matterId });
+    const owner = resolveDocumentOwner({
+      contract: row.contractId,
+      matter: row.matterId,
+      entity: row.entityId,
+    });
     let ownerArchivedAt: Date | null;
     let primaryDocumentId: string | null;
     let ownerManagerId: string | null;
@@ -951,6 +977,11 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
         primaryDocumentId = null;
         ownerManagerId = row.matterManagerId;
         break;
+      case "entity":
+        ownerArchivedAt = row.entityArchivedAt;
+        primaryDocumentId = null;
+        ownerManagerId = null;
+        break;
     }
     return {
       id: row.id,
@@ -958,6 +989,7 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
       description: row.description,
       contractId: row.contractId,
       matterId: row.matterId,
+      entityId: row.entityId,
       owner,
       ownerArchivedAt,
       archivedAt: row.archivedAt,
@@ -981,6 +1013,7 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
         description: documents.description,
         contractId: documents.contractId,
         matterId: documents.matterId,
+        entityId: documents.entityId,
         /** CTR-014's pin, read here so the chain below can mark the row
          * it names without a second query. */
         executedVersionId: documents.executedVersionId,
@@ -1194,6 +1227,9 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
       case "matter":
         owningRecord = eq(documents.matterId, owner.id);
         break;
+      case "entity":
+        owningRecord = eq(documents.entityId, owner.id);
+        break;
     }
     const scope = and(
       owningRecord,
@@ -1366,6 +1402,42 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
     },
   );
 
+  app.get(
+    "/entities/:id/documents",
+    {
+      preHandler: requireDocumentReader,
+      schema: {
+        operationId: "listEntityDocuments",
+        summary:
+          "The paper on one Entity, newest first, with each document's complete version chain.",
+        tags: ["documents"],
+        params: EntityParams,
+        querystring: ArchivedQuery.extend(FolderQuery.shape).extend({
+          cursor: CursorSchema.optional(),
+        }),
+        response: { 200: DocumentsEnvelope, default: problemResponse },
+      },
+    },
+    async (request) => {
+      const entity = await reachedEntity(app.db, request.user, request.params.id);
+      if (!entity) throw httpError(404, NO_ENTITY);
+      const { folder } = request.query;
+      const owner = { kind: "entity", value: entity.id } as const;
+      if (folder !== undefined && folder !== ROOT_FOLDER) {
+        await folderOnRecord(app.db, owner, folder);
+      }
+      return paperOf(
+        app.db,
+        request.user,
+        { id: entity.id, primaryDocumentId: null },
+        "entity",
+        request.query.includeArchived === "true",
+        request.query.cursor,
+        folder,
+      );
+    },
+  );
+
   app.post(
     "/contracts/:number/documents",
     {
@@ -1452,7 +1524,7 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
             lock: true,
           });
           assertOpen(locked);
-          const owner = resolveDocumentOwner({ contract: locked.id, matter: null });
+          const owner = resolveDocumentOwner({ contract: locked.id, matter: null, entity: null });
 
           // Under that same lock, which is what makes a folder drop
           // converge (DOC-011): a chain the form named is found or made
@@ -1597,7 +1669,7 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
             lock: true,
           });
           assertOpenMatter(locked);
-          const owner = resolveDocumentOwner({ contract: null, matter: locked.id });
+          const owner = resolveDocumentOwner({ contract: null, matter: locked.id, entity: null });
           const folder = file.destination
             ? await findOrCreateFolderPath(tx, locked, file.destination)
             : null;
@@ -1634,6 +1706,69 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
         }),
       );
 
+      await askForDerivations(versionId, file);
+      return reply.status(201).send({ document: created });
+    },
+  );
+
+  app.post(
+    "/entities/:id/documents",
+    {
+      preHandler: requireMember,
+      schema: {
+        operationId: "uploadEntityDocument",
+        summary:
+          "Upload a file to an Entity, creating a document with version 1 and optionally recreating its folder path.",
+        tags: ["documents"],
+        consumes: ["multipart/form-data"],
+        params: EntityParams,
+        body: CreateUploadForm,
+        response: { 201: DocumentEnvelope, default: problemResponse },
+      },
+    },
+    async (request, reply) => {
+      assertOpenEntity(await reachedEntity(app.db, request.user, request.params.id));
+      const documentId = uuidv7();
+      const versionId = uuidv7();
+      const file = await receiveUpload(request, versionStorageKey(documentId, versionId), true);
+      const created = await withStoredFile(request, file, () =>
+        app.db.transaction(async (tx) => {
+          const locked = await reachedEntity(tx, request.user, request.params.id, { lock: true });
+          assertOpenEntity(locked);
+          const owner = resolveDocumentOwner({ contract: null, matter: null, entity: locked.id });
+          const folder = file.destination
+            ? await findOrCreateFolderPath(tx, locked, file.destination)
+            : null;
+          await tx.insert(documents).values({
+            id: documentId,
+            folderId: folder?.id ?? null,
+            title: file.filename,
+            ...ownerValues(owner),
+            createdBy: request.user.id,
+          });
+          await insertVersion(tx, {
+            documentId,
+            versionId,
+            versionNumber: 1,
+            file,
+            by: request.user,
+          });
+          await recordActivity(tx, {
+            entityType: "entity",
+            entityId: locked.id,
+            actorId: request.user.id,
+            action: "document.created",
+            visibility: RECORD_ACTIVITY_TIER,
+            payload: {
+              documentId,
+              versionId,
+              title: file.filename,
+              folderName: folder?.name ?? null,
+            },
+          });
+          return documentWithChain(tx, documentId, null);
+        }),
+      );
       await askForDerivations(versionId, file);
       return reply.status(201).send({ document: created });
     },
@@ -3491,6 +3626,15 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
     }
   }
 
+  function assertOpenEntity<T extends Awaited<ReturnType<typeof reachedEntity>>>(
+    entity: T | null,
+  ): asserts entity is T {
+    if (!entity) throw httpError(404, NO_ENTITY);
+    if (entity.archivedAt) {
+      throw httpError(409, "This Entity is archived. Restore it before uploading.");
+    }
+  }
+
   /**
    * The refusals a write addressed at a document shares, in the order
    * they have to be asked in.
@@ -3554,6 +3698,8 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
         return { manager: "contract's Owner", noun: "contract" };
       case "matter":
         return { manager: "Matter Manager", noun: "matter" };
+      case "entity":
+        return { manager: "Entity owner", noun: "entity" };
     }
   }
 
