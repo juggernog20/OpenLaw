@@ -418,6 +418,12 @@ M19/6 built the configuration; M20/3 built the panel a requester sees. Three thi
 
 **No links means no panel.** An instance whose Administrator has configured none draws nothing rather than an empty "Before you submit…" heading — a heading over nothing deflects nobody. The panel is independent of the picker in both directions: it renders when the picker is empty, because a link may be the answer the requester came for.
 
+### Addendum (2026-08-30, [#603](https://github.com/juggernog20/OpenLaw/issues/603)) — a deflection target is exactly one external address or Knowledge item
+
+An intake link has exactly one target kind: its existing absolute `http`/`https` URL or a Knowledge item id. The Knowledge picker offers only live, published, `everyone` items, and choosing one defaults the editable label to the item's title. The DES-052 row shows that title for an internal target and keeps showing the scheme-less address for an external one.
+
+Reach is evaluated when the requester reads the panel, on both the portal home and a request-type form. An internal link whose item later becomes draft, Legal only, or archived is omitted. Its Settings row is not removed: it retains the item id and last-known joined title so an Administrator can move, relabel, or remove it. This is the same preservation rule as an archived placement, now applied to the target side. Internal links open the portal article in the same tab; external links keep the M20/3 new-tab and `noreferrer` behavior.
+
 ## INT-005 — No auto-classification: the form is the classification
 
 - **Status** — Accepted

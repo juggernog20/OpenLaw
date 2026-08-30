@@ -1092,6 +1092,10 @@ type KnowledgePayloads = {
     folder: string | null;
   };
   "knowledge_item.updated": { title: string; changed: ChangedFields };
+  "knowledge_item.published": { title: string };
+  "knowledge_item.unpublished": { title: string };
+  "knowledge_item.archived": { title: string; replacedBy: string | null };
+  "knowledge_item.restored": { title: string };
   "knowledge_item.type_reassigned": { title: string; from: string; to: string };
   "knowledge_folder.created": {
     folderId: string;

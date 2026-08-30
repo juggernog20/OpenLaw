@@ -49,7 +49,8 @@ interface HomeType {
 interface HomeLink {
   id: string;
   label: string;
-  url: string;
+  url?: string;
+  knowledgeItemId?: string;
   displayOrder: number;
 }
 
@@ -375,6 +376,29 @@ describe("the deflection panel", () => {
       expect(anchor).toHaveAttribute("target", "_blank");
       expect(anchor).toHaveAttribute("rel", "noreferrer");
     }
+  });
+
+  it("opens a Knowledge Item in the same tab while external links keep their new-tab behavior", async () => {
+    const internal: HomeLink = {
+      id: "dl-internal",
+      label: "When an NDA is not needed",
+      knowledgeItemId: "knowledge-1",
+      displayOrder: 1,
+    };
+    stubApi({
+      signedIn: REQUESTER,
+      extra: portalHome({ requestTypes: SEED_TYPES, intakeLinks: [internal, LINKS[0]!] }),
+    });
+    renderAt("/portal");
+
+    const panel = await screen.findByRole("region", { name: "Before you submit" });
+    const knowledge = within(panel).getByRole("link", { name: internal.label });
+    expect(knowledge).toHaveAttribute("href", "/portal/knowledge/knowledge-1");
+    expect(knowledge).not.toHaveAttribute("target");
+    expect(within(panel).getByRole("link", { name: named(LINKS[0]!.label) })).toHaveAttribute(
+      "target",
+      "_blank",
+    );
   });
 
   it("draws no panel when the Administrator has placed no link on the home", async () => {

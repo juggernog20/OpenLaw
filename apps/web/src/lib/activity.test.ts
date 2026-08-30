@@ -363,6 +363,13 @@ const SAMPLE_PAYLOADS: { [A in ActivityAction]: ActivityPayloadMap[A] } = {
     title: "Contract review playbook",
     changed: { folder: { from: "Commercial", to: "Corporate" } },
   },
+  "knowledge_item.published": { title: "Contract review playbook" },
+  "knowledge_item.unpublished": { title: "Contract review playbook" },
+  "knowledge_item.archived": {
+    title: "Contract review playbook",
+    replacedBy: "Current contract review playbook",
+  },
+  "knowledge_item.restored": { title: "Contract review playbook" },
   "knowledge_folder.created": {
     folderId: "folder-1",
     name: "Commercial",

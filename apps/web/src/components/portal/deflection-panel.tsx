@@ -30,14 +30,16 @@
 
 import { useId } from "react";
 import { FormattedMessage } from "react-intl";
+import { Link } from "react-router";
 import { Info, Link as LinkIcon } from "lucide-react";
 
 /** One deflection link, as GET /portal/intake-links answers it. */
 export interface DeflectionLink {
   id: string;
   label: string;
-  /** Absolute http/https, exactly as stored (INT-004). */
-  url: string;
+  /** Exactly one target is present. */
+  url?: string;
+  knowledgeItemId?: string;
 }
 
 export function DeflectionPanel({ links }: Readonly<{ links: readonly DeflectionLink[] }>) {
@@ -62,28 +64,38 @@ export function DeflectionPanel({ links }: Readonly<{ links: readonly Deflection
       <ul className="flex flex-col gap-1.5">
         {links.map((link) => (
           <li key={link.id}>
-            <a
-              href={link.url}
-              // A deflection link leaves OpenLaw for a wiki or a policy
-              // page. It opens beside the portal rather than over it, so
-              // that reading the answer never costs a requester the form
-              // they were part-way through; `noreferrer` keeps the
-              // portal's address out of the destination's logs.
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex items-center gap-1.5 rounded-chip text-sm font-medium hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-current"
-            >
-              <LinkIcon aria-hidden="true" className="size-4 shrink-0" />
-              {link.label}
-              {/* The new tab, said out loud. A sighted requester sees
+            {link.knowledgeItemId ? (
+              <Link
+                to={`/portal/knowledge/${link.knowledgeItemId}`}
+                className="inline-flex items-center gap-1.5 rounded-chip text-sm font-medium hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-current"
+              >
+                <LinkIcon aria-hidden="true" className="size-4 shrink-0" />
+                {link.label}
+              </Link>
+            ) : (
+              <a
+                href={link.url!}
+                // A deflection link leaves OpenLaw for a wiki or a policy
+                // page. It opens beside the portal rather than over it, so
+                // that reading the answer never costs a requester the form
+                // they were part-way through; `noreferrer` keeps the
+                // portal's address out of the destination's logs.
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-1.5 rounded-chip text-sm font-medium hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-current"
+              >
+                <LinkIcon aria-hidden="true" className="size-4 shrink-0" />
+                {link.label}
+                {/* The new tab, said out loud. A sighted requester sees
                   the switch happen and a screen-reader user does not. */}{" "}
-              <span className="sr-only">
-                <FormattedMessage
-                  id="portal.deflection.newTab"
-                  defaultMessage="(opens in a new tab)"
-                />
-              </span>
-            </a>
+                <span className="sr-only">
+                  <FormattedMessage
+                    id="portal.deflection.newTab"
+                    defaultMessage="(opens in a new tab)"
+                  />
+                </span>
+              </a>
+            )}
           </li>
         ))}
       </ul>

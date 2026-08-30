@@ -52,6 +52,9 @@ function item(overrides: Record<string, unknown> = {}) {
     folderName: "Contracts",
     state: "draft",
     audience: "legal_only",
+    publishedAt: null,
+    archivedAt: null,
+    deflectionLinkCount: 0,
     replacedBy: null,
     primaryDocument: {
       id: "document-1",
@@ -94,11 +97,23 @@ function libraryApi(rows = [item()]) {
   };
 }
 
-function recordApi(patches: unknown[]) {
-  let current: Record<string, unknown> = item();
+function recordApi(patches: unknown[], initial: Record<string, unknown> = {}) {
+  let current: Record<string, unknown> = item(initial);
   return (call: StubCall): Response | undefined => {
     if (call.url.pathname === "/api/v1/knowledge/knowledge-1" && call.method === "GET")
       return json(200, { knowledgeItem: current });
+    if (call.url.pathname === "/api/v1/knowledge" && call.method === "GET") {
+      // Two pages, so the replaced-by picker is seen to walk the cursor.
+      if (call.url.searchParams.get("cursor") === "knowledge-2")
+        return json(200, {
+          knowledgeItems: [item({ id: "knowledge-3", title: "Second-page playbook" })],
+          nextCursor: null,
+        });
+      return json(200, {
+        knowledgeItems: [item({ id: "knowledge-2", title: "Current contract review playbook" })],
+        nextCursor: "knowledge-2",
+      });
+    }
     if (call.url.pathname === "/api/v1/knowledge/knowledge-1/documents" && call.method === "GET")
       return json(200, {
         documents: [
@@ -132,6 +147,27 @@ function recordApi(patches: unknown[]) {
             }
           : {}),
       };
+      return json(200, { knowledgeItem: current });
+    }
+    const lifecycle = call.url.pathname.match(
+      /^\/api\/v1\/knowledge\/knowledge-1\/(publish|unpublish|archive|restore)$/,
+    )?.[1];
+    if (lifecycle && call.method === "POST") {
+      if (lifecycle === "publish")
+        current = { ...current, state: "published", publishedAt: "2026-08-30T12:00:00.000Z" };
+      if (lifecycle === "unpublish") current = { ...current, state: "draft", publishedAt: null };
+      if (lifecycle === "archive") {
+        const replacedById = (call.body as { replacedById?: string }).replacedById;
+        current = {
+          ...current,
+          archivedAt: "2026-08-30T12:00:00.000Z",
+          replacedBy: replacedById
+            ? { id: replacedById, title: "Current contract review playbook" }
+            : null,
+        };
+      }
+      if (lifecycle === "restore") current = { ...current, archivedAt: null };
+      patches.push({ action: lifecycle, body: call.body });
       return json(200, { knowledgeItem: current });
     }
     if (call.url.pathname === "/api/v1/knowledge/folders" && call.method === "GET")
@@ -456,5 +492,73 @@ describe("a Knowledge record", () => {
         "Nothing has happened to this record yet. Every change to it shows up here.",
       ),
     ).toBeInTheDocument();
+  });
+
+  it("publishes from the overflow and warns with the deflection-link count before unpublishing", async () => {
+    const writes: unknown[] = [];
+    stubApi({
+      signedIn: MEMBER,
+      extra: recordApi(writes, { deflectionLinkCount: 2 }),
+    });
+    renderAt("/knowledge/knowledge-1");
+    const user = userEvent.setup();
+
+    await user.click(await screen.findByRole("button", { name: "Knowledge Item actions" }));
+    await user.click(screen.getByRole("menuitem", { name: "Publish" }));
+    await waitFor(() => expect(writes).toContainEqual({ action: "publish", body: {} }));
+    await user.click(screen.getByRole("button", { name: "Knowledge Item actions" }));
+    await user.click(screen.getByRole("menuitem", { name: "Unpublish" }));
+    const warning = await screen.findByRole("dialog", { name: "Remove this from the portal?" });
+    expect(within(warning).getByText(/2 deflection links point/)).toBeInTheDocument();
+    await user.click(within(warning).getByRole("button", { name: "Continue" }));
+    await waitFor(() => expect(writes).toContainEqual({ action: "unpublish", body: {} }));
+  });
+
+  it("archives with an optional replacement and restores from the overflow", async () => {
+    const writes: unknown[] = [];
+    stubApi({ signedIn: MEMBER, extra: recordApi(writes) });
+    renderAt("/knowledge/knowledge-1");
+    const user = userEvent.setup();
+
+    await user.click(await screen.findByRole("button", { name: "Knowledge Item actions" }));
+    await user.click(screen.getByRole("menuitem", { name: "Archive" }));
+    const archive = await screen.findByRole("dialog", { name: "Archive Knowledge Item" });
+    expect(
+      within(archive).getByRole("option", { name: "Second-page playbook" }),
+    ).toBeInTheDocument();
+    await user.selectOptions(within(archive).getByLabelText("Replaced by"), "knowledge-2");
+    await user.click(within(archive).getByRole("button", { name: "Archive" }));
+    await waitFor(() =>
+      expect(writes).toContainEqual({
+        action: "archive",
+        body: { replacedById: "knowledge-2" },
+      }),
+    );
+    expect(screen.getByText("Archived")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Knowledge Item actions" }));
+    await user.click(screen.getByRole("menuitem", { name: "Restore" }));
+    await waitFor(() => expect(writes).toContainEqual({ action: "restore", body: {} }));
+  });
+
+  it("marks an Everyone audience on the portal and confirms before making linked guidance Legal Only", async () => {
+    const writes: unknown[] = [];
+    stubApi({
+      signedIn: MEMBER,
+      extra: recordApi(writes, {
+        state: "published",
+        audience: "everyone",
+        publishedAt: "2026-08-30T12:00:00.000Z",
+        deflectionLinkCount: 1,
+      }),
+    });
+    renderAt("/knowledge/knowledge-1");
+    const user = userEvent.setup();
+
+    expect(await screen.findByText("On the portal")).toBeInTheDocument();
+    await user.selectOptions(screen.getByLabelText("Audience"), "legal_only");
+    const warning = await screen.findByRole("dialog", { name: "Remove this from the portal?" });
+    expect(within(warning).getByText(/1 deflection link points/)).toBeInTheDocument();
+    await user.click(within(warning).getByRole("button", { name: "Continue" }));
+    await waitFor(() => expect(writes).toContainEqual({ audience: "legal_only" }));
   });
 });

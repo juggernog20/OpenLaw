@@ -79,7 +79,9 @@ afterAll(async () => {
 interface LinkRow {
   id: string;
   label: string;
-  url: string;
+  url: string | null;
+  knowledgeItemId: string | null;
+  knowledgeItemTitle: string | null;
   requestTypeId: string | null;
   displayOrder: number;
 }
@@ -196,6 +198,11 @@ describe("the SET-002 role gate", () => {
     const cookies = await harnessSignInCookies(harness.app, MEMBER.email, MEMBER.password);
     const attempts = [
       harness.app.inject({ method: "GET", url: "/api/v1/intake-links", cookies }),
+      harness.app.inject({
+        method: "GET",
+        url: "/api/v1/intake-links/knowledge-options",
+        cookies,
+      }),
       harness.app.inject({
         method: "POST",
         url: "/api/v1/intake-links",
@@ -587,14 +594,10 @@ describe("the request-type FK", () => {
 });
 
 describe("a Knowledge deflection link (M28)", () => {
-  /**
-   * `intake_links.knowledge_item_id` lands with the M28 schema, ahead of
-   * any route that writes it. The Settings and portal routes above are
-   * the external-link surface, so a row pointing at Knowledge is
-   * invisible to them: not listed, not editable, not removable, and not
-   * counted by the reorder, which walks the external set alone.
-   */
-  it("stays out of the external-link routes until its own surface lands", async () => {
+  async function addKnowledgeItem(
+    title: string,
+    options: { state?: "draft" | "published"; audience?: "legal_only" | "everyone" } = {},
+  ) {
     const [admin] = await harness.db
       .select({ id: users.id })
       .from(users)
@@ -608,31 +611,117 @@ describe("a Knowledge deflection link (M28)", () => {
     const [item] = await harness.db
       .insert(knowledgeItems)
       .values({
-        title: "When you do not need an NDA",
+        title,
         knowledgeTypeId: playbook!.id,
+        state: options.state ?? "published",
+        audience: options.audience ?? "everyone",
+        publishedAt: options.state === "draft" ? null : new Date(),
         createdBy: admin!.id,
         updatedBy: admin!.id,
       })
       .returning({ id: knowledgeItems.id });
-    const [internal] = await harness.db
-      .insert(intakeLinks)
-      .values({ label: "Read this first", knowledgeItemId: item!.id, displayOrder: 1 })
-      .returning({ id: intakeLinks.id });
+    return item!.id;
+  }
+
+  it("accepts exactly one target and defaults an internal label to the item title", async () => {
+    const itemId = await addKnowledgeItem("When you do not need an NDA");
+    for (const payload of [
+      { label: "Neither" },
+      { label: "Both", url: "https://example.com", knowledgeItemId: itemId },
+    ]) {
+      const refused = await createLink(payload);
+      expect(refused.statusCode, refused.body).toBe(400);
+    }
+
+    const created = await createLink({ knowledgeItemId: itemId });
+    expect(created.statusCode, created.body).toBe(201);
+    expect(created.json().intakeLink).toMatchObject({
+      label: "When you do not need an NDA",
+      url: null,
+      knowledgeItemId: itemId,
+      knowledgeItemTitle: "When you do not need an NDA",
+    });
 
     const external = await addLink({ label: "External", url: "https://example.com/faq" });
+    expect(external).toMatchObject({ knowledgeItemId: null, knowledgeItemTitle: null });
+    expect((await listLinks()).map((row) => row.id)).toEqual([
+      created.json().intakeLink.id,
+      external.id,
+    ]);
+  });
 
-    expect((await listLinks()).map((row) => row.id)).toEqual([external.id]);
-    expect((await patchLink(internal!.id, { label: "Renamed" })).statusCode).toBe(404);
-    expect((await removeLink(internal!.id)).statusCode).toBe(404);
-    expect((await reorder([external.id])).statusCode).toBe(200);
-    expect((await reorder([external.id, internal!.id])).statusCode).toBe(400);
+  it("offers only published Everyone items in the picker", async () => {
+    const reachable = await addKnowledgeItem("Reachable answer");
+    await addKnowledgeItem("Draft answer", { state: "draft" });
+    await addKnowledgeItem("Legal answer", { audience: "legal_only" });
+    const archived = await addKnowledgeItem("Archived answer");
+    await harness.db
+      .update(knowledgeItems)
+      .set({ archivedAt: new Date() })
+      .where(eq(knowledgeItems.id, archived));
 
-    const portal = await harness.app.inject({
+    const response = await harness.app.inject({
       method: "GET",
-      url: "/api/v1/portal/intake-links",
+      url: "/api/v1/intake-links/knowledge-options",
       cookies: adminCookies,
     });
-    expect(portal.statusCode, portal.body).toBe(200);
-    expect(portal.json().intakeLinks.map((row: LinkRow) => row.id)).toEqual([external.id]);
+    expect(response.statusCode, response.body).toBe(200);
+    expect(response.json().knowledgeItems).toEqual(
+      expect.arrayContaining([{ id: reachable, title: "Reachable answer" }]),
+    );
+    expect(response.json().knowledgeItems.map((row: { title: string }) => row.title)).not.toEqual(
+      expect.arrayContaining(["Draft answer", "Legal answer", "Archived answer"]),
+    );
+  });
+
+  it("switches targets, keeps an internal row when it loses reach, and lets it be repaired", async () => {
+    const firstId = await addKnowledgeItem("First answer");
+    const secondId = await addKnowledgeItem("Second answer");
+    const internal = await addLink({ label: "Editable label", knowledgeItemId: firstId });
+
+    const external = await patchLink(internal.id, { url: "https://example.com/replacement" });
+    expect(external.statusCode, external.body).toBe(200);
+    expect(external.json().intakeLink).toMatchObject({
+      url: "https://example.com/replacement",
+      knowledgeItemId: null,
+    });
+    const internalAgain = await patchLink(internal.id, { knowledgeItemId: firstId });
+    expect(internalAgain.statusCode, internalAgain.body).toBe(200);
+    expect(internalAgain.json().intakeLink).toMatchObject({
+      url: null,
+      knowledgeItemId: firstId,
+      label: "Editable label",
+    });
+
+    await harness.db
+      .update(knowledgeItems)
+      .set({ state: "draft", publishedAt: null })
+      .where(eq(knowledgeItems.id, firstId));
+    expect((await listLinks())[0]).toMatchObject({ knowledgeItemId: firstId });
+    const relabel = await patchLink(internal.id, { label: "Still configured" });
+    expect(relabel.statusCode, relabel.body).toBe(200);
+    const repaired = await patchLink(internal.id, { knowledgeItemId: secondId });
+    expect(repaired.statusCode, repaired.body).toBe(200);
+    expect(repaired.json().intakeLink.knowledgeItemTitle).toBe("Second answer");
+  });
+
+  it("rejects an internal target that cannot pass the portal gate", async () => {
+    const draft = await addKnowledgeItem("Draft target", { state: "draft" });
+    const legalOnly = await addKnowledgeItem("Legal target", { audience: "legal_only" });
+    for (const knowledgeItemId of [draft, legalOnly, "00000000-0000-7000-8000-000000000000"]) {
+      const refused = await createLink({ label: "Unavailable", knowledgeItemId });
+      expect(refused.statusCode, refused.body).toBe(400);
+    }
+  });
+
+  it("reorders and removes internal and external rows as one list", async () => {
+    const itemId = await addKnowledgeItem("Internal answer");
+    const internal = await addLink({ label: "Internal", knowledgeItemId: itemId });
+
+    const external = await addLink({ label: "External", url: "https://example.com/faq" });
+    expect((await reorder([external.id, internal.id])).statusCode).toBe(200);
+    expect((await listLinks()).map((row) => row.id)).toEqual([external.id, internal.id]);
+    expect((await removeLink(internal.id)).statusCode).toBe(204);
+    expect((await listLinks()).map((row) => row.id)).toEqual([external.id]);
   });
 });

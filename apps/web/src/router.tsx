@@ -31,6 +31,7 @@ import { LoginPage, loginLoader } from "./routes/login";
 import { PortalHomePage, portalHomeLoader } from "./routes/portal";
 import { PortalRequestFormPage, portalRequestFormLoader } from "./routes/portal-request-form";
 import { PortalRequestPage, portalRequestLoader } from "./routes/portal-request";
+import { PortalKnowledgePage, portalKnowledgeLoader } from "./routes/portal-knowledge";
 import { PortalEntryPage, portalEntryLoader } from "./routes/portal-entry";
 import { PortalSettingsPage, portalSettingsLoader } from "./routes/portal-settings";
 import { SetPasswordPage } from "./routes/set-password";
@@ -517,6 +518,15 @@ export const routes: RouteObject[] = [
       // user (M20/9): NOT-002's group 5 and nothing else, reached from
       // the gear in the portal header.
       { path: "settings", loader: portalSettingsLoader, element: <PortalSettingsPage /> },
+      {
+        path: "knowledge/:id",
+        loader: portalKnowledgeLoader,
+        element: (
+          <KeyedByParam name="id">
+            <PortalKnowledgePage />
+          </KeyedByParam>
+        ),
+      },
       // One request type's form, addressed by the slug the picker
       // links on (INT-002). A slug that names nothing, or names an
       // archived type, lands back on the home — see the loader.

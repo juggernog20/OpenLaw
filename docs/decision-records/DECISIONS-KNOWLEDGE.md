@@ -39,6 +39,12 @@ _None — queue cleared 2026-08-06 (KNW-001 through KNW-005)._
 - **Rationale** — At 2–10 people a review queue between the team and its own know-how mostly guarantees an empty library.
 - **Consequences** — `state`, `replaced_by_id` columns. Curator workflow, if ever needed, layers on later.
 
+### Addendum (2026-08-30, [#603](https://github.com/juggernog20/OpenLaw/issues/603)) — lifecycle acts are named, audited routes
+
+Publishing, unpublishing, archiving, and restoring are actions rather than generic field edits. Each has its own Member+ route and activity verb. The first publish stamps `published_at`; publishing an already-published item does not replace that date. Unpublish returns the item to draft and clears the stamp. Archive accepts an optional live replacement and restore removes the archive stamp. Audience remains an ordinary field write because it describes who may read a published item rather than changing the item's lifecycle.
+
+A change that removes portal reach is allowed even when intake links point at the item. The record UI names the number of affected links before unpublishing or choosing Legal only, but the settings rows remain intact. This preserves the Administrator's configuration for repair instead of silently deleting it as a side effect of an author's lifecycle decision.
+
 ## KNW-003 — Organization: nested folders, blank-start
 
 - **Status** — Accepted
@@ -53,6 +59,12 @@ _None — queue cleared 2026-08-06 (KNW-001 through KNW-005)._
 - **Decision** — `audience`: `legal_only` (default) | `everyone` — published `everyone` items render read-only in the portal (magic-link, no login), which lets INT-004 deflection links point at real knowledge articles. v1 surfacing is the Knowledge destination + deflection links only; in-workflow surfacing (template picker at contract creation, clause suggestions in review) goes to FUTURE-FEATURES.
 - **Rationale** — The deflection layer needs a home for the FAQ content it links; in-workflow surfacing needs a populated corpus before it's more than an empty dropdown.
 - **Consequences** — Portal gains a read-only knowledge-article view. INT-004's links can be internal (knowledge item) or external (URL).
+
+### Addendum (2026-08-30, [#603](https://github.com/juggernog20/OpenLaw/issues/603)) — one portal-reach gate governs the article, its files, and deflection
+
+A Knowledge item exists on the portal only while it is live, published, and `everyone`. The article read and every document download apply that same gate. Draft, Legal only, archived, and unknown items answer the same 404 body, so refusal does not disclose which condition failed. The portal routes require the existing session and no additional credential; a Member+ session may use them in the same requester capacity.
+
+The portal article is read-only: its title, current-version downloads, and body, with the primary file first and the body last. It carries no author, folder, type, or edit affordance. Internal deflection links open that route in the same tab. External links retain the existing new-tab behavior.
 
 ## KNW-005 — Deferred set: search intelligence, usage tracking, staleness, AI, external ingestion
 
