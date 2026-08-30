@@ -76,6 +76,7 @@ const ENVELOPE_ENDING = {
  */
 const SAMPLE_PAYLOADS: { [A in ActivityAction]: ActivityPayloadMap[A] } = {
   // Profile and user administration
+  "user.briefing_sent": { dateCount: 2, knowledgeCount: 1 },
   "user.theme_changed": { field: "theme", old: "light", new: "dark" },
   "user.timezone_changed": { field: "timezone", old: "UTC", new: "Asia/Dubai" },
   "user.notification_preference_changed": {

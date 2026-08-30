@@ -108,6 +108,9 @@ type TypeFieldPayloads = {
  * searched for.
  */
 type UserPayloads = {
+  /** A successful daily briefing send. The counts make the system
+   * marker useful in the audit log without copying briefing contents. */
+  "user.briefing_sent": { dateCount: number; knowledgeCount: number };
   "user.theme_changed": FieldChangePayload;
   "user.timezone_changed": FieldChangePayload;
   /**
@@ -122,7 +125,7 @@ type UserPayloads = {
    * not a stored fact this writer could report.
    */
   "user.notification_preference_changed": {
-    /** One of NOT-002's five groups. */
+    /** One of the notification preference groups. */
     eventGroup: string;
     /** `in_app` or `email` (NOT-001's two channels). */
     channel: string;

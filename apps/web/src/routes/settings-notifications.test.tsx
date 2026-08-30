@@ -71,13 +71,14 @@ describe("Personal · Notifications (#320)", () => {
 
     expect(await screen.findByRole("heading", { name: "Notification preferences" })).toBeVisible();
 
-    // The four staff groups. Group 2 is one row and not the frame's four
+    // The five staff groups. Group 2 is one row and not the frame's four
     // sub-rows: NOT-002 keys a preference on the group (DES-050).
     for (const label of [
       "Assigned to you",
       "Activity on your records",
       "Dates approaching",
       "New requests",
+      "Knowledge items",
     ]) {
       expect(screen.getByText(label)).toBeVisible();
     }
@@ -92,6 +93,7 @@ describe("Personal · Notifications (#320)", () => {
     ).not.toBeChecked();
     expect(screen.getByRole("switch", { name: "Dates approaching Email" })).toBeChecked();
     expect(screen.getByRole("switch", { name: "New requests Email" })).not.toBeChecked();
+    expect(screen.getByRole("switch", { name: "Knowledge items Email" })).toBeChecked();
   });
 
   it("does not draw the portal audience's own group", async () => {
@@ -104,8 +106,9 @@ describe("Personal · Notifications (#320)", () => {
     // Named by its visible label — M20/9 gave the row real copy, and a
     // regex on the model's name would go on passing if the pane drew it.
     expect(screen.queryByText("Request updates")).not.toBeInTheDocument();
-    // Four groups, two channels, and not a switch more.
-    expect(screen.getAllByRole("switch")).toHaveLength(8);
+    // Four event groups have two channels. Knowledge has one briefing
+    // switch because publishing never makes a bell event.
+    expect(screen.getAllByRole("switch")).toHaveLength(9);
   });
 
   it("saves a flip immediately and leaves the other channel alone", async () => {

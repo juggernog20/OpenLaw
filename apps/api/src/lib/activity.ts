@@ -56,6 +56,9 @@ export type ActivityEntry = {
     actorId?: string;
     action: A;
     visibility: ActivityVisibility;
+    /** The source event's own instant when it is controlled by a
+     * scheduler. Ordinary request actions use the database clock. */
+    createdAt?: Date;
   } & PayloadField<ActivityPayloadMap[A]>;
 }[ActivityAction];
 
@@ -130,6 +133,7 @@ export async function recordActivity(
         actorId: entry.actorId ?? null,
         action: entry.action,
         visibility: entry.visibility,
+        createdAt: entry.createdAt,
         // The column is `Record<string, unknown>` and stays that way: a
         // row is read back long after the shape that wrote it was
         // typed, so the reader gets what is there rather than what the

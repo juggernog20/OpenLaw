@@ -94,10 +94,9 @@ export const EVENT_GROUP_POLICY: Record<NotificationEventGroup, EventGroupPolicy
    */
   new_requests: { inApp: true, email: false, emailTiming: "immediate" },
   /**
-   * Knowledge is reserved for M28's daily-briefing section. No event
-   * fires it yet, so it stays off every visible preference surface in
-   * this schema-only slice; when the briefing writer lands, its email
-   * follows the existing morning round.
+   * Knowledge publication is ambient: it writes no event or bell item.
+   * The email choice controls the Knowledge section read directly by
+   * the morning round.
    */
   knowledge: { inApp: true, email: true, emailTiming: "digest" },
   /**

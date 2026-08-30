@@ -58,13 +58,16 @@
 import {
   and,
   asc,
+  activityLog,
   contractKeyDates,
   contracts,
   desc,
   eq,
+  gt,
   inArray,
   isNotNull,
   isNull,
+  knowledgeItems,
   lt,
   ne,
   notifications,
@@ -77,9 +80,11 @@ import {
   users,
   type Db,
   type NotificationEventType,
+  type UserRole,
 } from "@openlaw/db";
 import { civilDate, civilInstant, daysBetween } from "../lib/contract-term.js";
 import type { MailerResolver } from "../lib/mailer.js";
+import { recordActivity } from "../lib/activity.js";
 import {
   contractRecordAudience,
   CONTRACT_ENTITY,
@@ -90,10 +95,15 @@ import {
   MATTER_ENTITY,
   reachedBy,
 } from "../lib/notifications/audience.js";
-import { renderDigestMail, type DigestRow } from "../lib/notifications/email.js";
+import {
+  renderBriefingMail,
+  type DigestRow,
+  type KnowledgeBriefingItem,
+} from "../lib/notifications/briefing-template.js";
 import { localMoment, morningHasArrived } from "../lib/notifications/local-day.js";
 import type { Notifier } from "../lib/notifications/notifier.js";
 import { reminderOffsets } from "../lib/notifications/offsets.js";
+import { channelChoices } from "../lib/notifications/preferences.js";
 import { reasonOf } from "./derivations.js";
 import { boundedQueueAsk, type JobQueue } from "./jobs.js";
 import type { PipelineLogger } from "./logger.js";
@@ -225,6 +235,7 @@ interface Served {
   id: string;
   email: string;
   displayName: string;
+  role: UserRole;
   /** Their profile zone, or null where they never set one (SET-006).
    * Carried past the gate because the once-a-day rule has to read an
    * earlier briefing's instant on **their** calendar, not on UTC's. */
@@ -375,6 +386,7 @@ async function whoseMorningItIs(deps: MorningRoundDeps, now: Date): Promise<Serv
       id: users.id,
       email: users.email,
       displayName: users.displayName,
+      role: users.role,
       timezone: users.timezone,
     })
     .from(users)
@@ -720,6 +732,76 @@ interface BriefingOutcome {
 const NOTHING: BriefingOutcome = { sent: false, skipped: 0 };
 
 /**
+ * The last successful briefing boundary for one reader.
+ *
+ * New sends write an activity marker because a Knowledge-only briefing
+ * has no reminder row to stamp. The reminder fallback preserves the
+ * boundary established by date-only briefings sent before that marker
+ * existed.
+ */
+async function previousBriefingAt(deps: MorningRoundDeps, userId: string): Promise<Date | null> {
+  const [marker] = await deps.db
+    .select({ at: activityLog.createdAt })
+    .from(activityLog)
+    .where(
+      and(
+        eq(activityLog.entityType, "user"),
+        eq(activityLog.entityId, userId),
+        eq(activityLog.action, "user.briefing_sent"),
+      ),
+    )
+    .orderBy(desc(activityLog.createdAt))
+    .limit(1);
+  if (marker) return marker.at;
+
+  const [legacy] = await deps.db
+    .select({ at: notifications.emailedAt })
+    .from(notifications)
+    .where(
+      and(
+        eq(notifications.userId, userId),
+        isNotNull(notifications.reminderDate),
+        isNotNull(notifications.emailedAt),
+      ),
+    )
+    .orderBy(desc(notifications.emailedAt))
+    .limit(1);
+  return legacy?.at ?? null;
+}
+
+/** The live Knowledge slice for this reader and this send boundary. */
+async function briefingKnowledge(
+  deps: MorningRoundDeps,
+  person: Served,
+  previous: Date | null,
+  now: Date,
+): Promise<KnowledgeBriefingItem[]> {
+  if (person.role !== "administrator" && person.role !== "legal_team_member") return [];
+  const choices = await channelChoices(deps.db, [person.id], "knowledge");
+  if (!choices.get(person.id)?.email) return [];
+
+  const rows = await deps.db
+    .select({
+      id: knowledgeItems.id,
+      title: knowledgeItems.title,
+      publishedAt: knowledgeItems.publishedAt,
+    })
+    .from(knowledgeItems)
+    .where(
+      and(
+        eq(knowledgeItems.state, "published"),
+        isNull(knowledgeItems.archivedAt),
+        isNotNull(knowledgeItems.publishedAt),
+        ne(knowledgeItems.createdBy, person.id),
+        previous ? gt(knowledgeItems.publishedAt, previous) : undefined,
+        lt(knowledgeItems.publishedAt, now),
+      ),
+    )
+    .orderBy(asc(knowledgeItems.publishedAt), asc(knowledgeItems.id));
+  return rows.map((row) => ({ ...row, publishedAt: row.publishedAt! }));
+}
+
+/**
  * Sends one person the briefing they are owed, or answers why none went.
  *
  * **What is owed is read from the rows, not from what this round just
@@ -730,11 +812,10 @@ const NOTHING: BriefingOutcome = { sent: false, skipped: 0 };
  * the record of the work, and a lost send costs a delay rather than the
  * message.
  *
- * **At most one a day** (NOT-003). The proof is the rows again: the
- * newest briefing this person has ever been sent is the newest
- * `emailed_at` on their reminder rows, and if that instant falls on
- * their own today then today's briefing has gone. Read as a **local**
- * date rather than as an elapsed number of hours, so a 25-hour day at a
+ * **At most one a day** (NOT-003). A successful send writes one activity
+ * marker even when Knowledge is its only section. If that instant falls
+ * on the reader's own today, today's briefing has gone. Read as a
+ * **local** date rather than as elapsed hours, so a 25-hour day at a
  * daylight-saving boundary is still one day.
  */
 async function sendBriefing(
@@ -765,25 +846,14 @@ async function sendBriefing(
     )
     .orderBy(asc(notifications.reminderDate), asc(notifications.id))
     .limit(DIGEST_ROW_LIMIT);
-  if (owed.length === 0) return NOTHING;
-
-  const [lastSent] = await deps.db
-    .select({ at: notifications.emailedAt })
-    .from(notifications)
-    .where(
-      and(
-        eq(notifications.userId, person.id),
-        isNotNull(notifications.reminderDate),
-        isNotNull(notifications.emailedAt),
-      ),
-    )
-    .orderBy(desc(notifications.emailedAt))
-    .limit(1);
-  if (lastSent?.at && localMoment(lastSent.at, person.timezone).date === person.today) {
+  const previous = await previousBriefingAt(deps, person.id);
+  if (previous && localMoment(previous, person.timezone).date === person.today) {
     // Their briefing has gone today. These rows are not lost — they stay
     // owed, and the next day's briefing carries them.
     return NOTHING;
   }
+  const knowledge = await briefingKnowledge(deps, person, previous, now);
+  if (owed.length === 0 && knowledge.length === 0) return NOTHING;
 
   // The wall, live and per record (M10, DD-014). A row about a record
   // this reader can no longer open is settled rather than sent: a
@@ -830,7 +900,7 @@ async function sendBriefing(
     sending.push(row.id);
   }
 
-  if (rows.length === 0) {
+  if (rows.length === 0 && knowledge.length === 0) {
     await settle(deps, skipping, "skipped", now);
     if (unreadable.size > 0) {
       deps.log.warn(
@@ -856,8 +926,8 @@ async function sendBriefing(
     return { sent: false, skipped: sending.length + skipping.length };
   }
 
-  const message = renderDigestMail(
-    { recipientName: person.displayName, rows },
+  const message = renderBriefingMail(
+    { recipientName: person.displayName, rows, knowledgeItems: knowledge },
     person.email,
     deps.baseUrl,
   );
@@ -865,6 +935,14 @@ async function sendBriefing(
   // renderer refuses on. Loud rather than silent if that ever changes.
   if (!message) return NOTHING;
   await mailer.send(message);
+  await recordActivity(deps.db, {
+    entityType: "user",
+    entityId: person.id,
+    action: "user.briefing_sent",
+    visibility: "admin_only",
+    payload: { dateCount: rows.length, knowledgeCount: knowledge.length },
+    createdAt: now,
+  });
   // Only after the relay took it. A send that threw leaves every row
   // owed, and the next round sends them — the whole point of the column.
   await settle(deps, sending, "sent", now);

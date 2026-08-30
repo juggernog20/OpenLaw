@@ -444,6 +444,14 @@ The in-app daily summary view is a new screen behind the bell notification. Its 
 
 Sequencing this after M28 would make the briefing complete on arrival. Building it at three sections (approvals, tasks, dates) and extending it as modules land would make it useful sooner — and means the section contract (what a section provides, how it queries, how it renders in both parts) has to be right early.
 
+#### M28/6 addendum: section 5, Knowledge items
+
+[M28/6](https://github.com/juggernog20/OpenLaw/issues/604) adds the fifth briefing section. For each live Member+, the morning round reads live Knowledge items whose `published_at` is strictly after that reader's previous successful briefing and strictly before the current round. The item must still be published and not archived when the round reads it. The reader's own items are excluded.
+
+Knowledge publication is ambient. It creates no notification row and no per-publication bell item. The briefing is its channel. A successful send writes an append-only `user.briefing_sent` activity marker, including section counts but no briefing content, so a Knowledge-only email establishes the next window and a repeated round does not send it again. Existing date-reminder send stamps remain the fallback boundary for briefings sent before this marker existed.
+
+The Knowledge row in Personal → Notifications exposes its email section toggle only. It does not expose an in-app switch, and changing it does not change another briefing section or notification group. The section is omitted from both the HTML and text parts when its window is empty. A Knowledge-only briefing still leaves when the section has items.
+
 ---
 
 ## Index of decisions

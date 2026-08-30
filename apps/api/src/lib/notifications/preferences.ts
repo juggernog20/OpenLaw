@@ -90,11 +90,10 @@ export interface GroupChoice extends ChannelChoice {
 /**
  * What one person gets on **every** group — the pane's whole read.
  *
- * All five groups, in NOT-002's own order, including the two that are
- * still slots: a person may express an opinion about a group before
- * anything in it has ever fired, and the portal (M20) reads group 5
- * from this same answer. Which of them a **surface** draws is the
- * surface's business, not this function's.
+ * All six groups, in model order. Knowledge is the briefing section's
+ * email preference, while the portal (M20) reads `requester_events`
+ * from this same answer. Which groups and channels a **surface** draws
+ * is the surface's business, not this function's.
  */
 export async function myChannelChoices(db: Executor, userId: string): Promise<GroupChoice[]> {
   const choices = new Map<NotificationEventGroup, ChannelChoice>(
