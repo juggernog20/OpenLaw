@@ -16,6 +16,6 @@
     "@playwright/test": "^1.62.1",
     "@types/node": "^26.4.0",
     "typescript": "npm:@typescript/typescript6@^6.0.2",
-    "zod": "^4.5.2"
+    "zod": "^4.5.4"
   }
 }
