@@ -6,10 +6,15 @@ import type { IntlShape } from "react-intl";
 
 type ListAnswer =
   paths["/api/v1/knowledge"]["get"]["responses"][200]["content"]["application/json"];
+type RecordAnswer =
+  paths["/api/v1/knowledge/{id}"]["get"]["responses"][200]["content"]["application/json"];
 type FolderAnswer =
   paths["/api/v1/knowledge/folders"]["get"]["responses"][200]["content"]["application/json"];
 
+/** One managed-list row. The list leaves the guidance body out. */
 export type KnowledgeItem = ListAnswer["knowledgeItems"][number];
+/** The record page's item, body included. */
+export type KnowledgeRecord = RecordAnswer["knowledgeItem"];
 export type KnowledgeFolder = FolderAnswer["folders"][number];
 export type KnowledgeState = KnowledgeItem["state"];
 export type KnowledgeAudience = KnowledgeItem["audience"];

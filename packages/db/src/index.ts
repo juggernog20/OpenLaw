@@ -183,6 +183,7 @@ export {
   count,
   desc,
   eq,
+  getTableColumns,
   gte,
   ilike,
   inArray,

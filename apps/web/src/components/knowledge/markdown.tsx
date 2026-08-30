@@ -88,7 +88,9 @@ export function KnowledgeMarkdown({ source }: Readonly<{ source: string }>) {
     }
     const heading = /^(#{1,3})\s+(.+)$/.exec(line);
     if (heading) {
-      const Tag = `h${String(heading[1]!.length)}` as "h1" | "h2" | "h3";
+      // The record page owns h1 and its Guidance section owns h2, so
+      // `#` starts at h3 and the outline stays in order.
+      const Tag = `h${String(heading[1]!.length + 2)}` as "h3" | "h4" | "h5";
       blocks.push(
         <Tag key={blocks.length} className="font-semibold">
           {inline(heading[2]!)}

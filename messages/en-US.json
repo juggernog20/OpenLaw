@@ -3611,9 +3611,6 @@
   "knowledge.body.preview": {
     "defaultMessage": "Preview"
   },
-  "knowledge.cancel": {
-    "defaultMessage": "Cancel"
-  },
   "knowledge.column.audience": {
     "defaultMessage": "Audience"
   },
@@ -3698,11 +3695,17 @@
   "knowledge.folder.delete": {
     "defaultMessage": "Delete selected folder"
   },
-  "knowledge.folder.deleteConfirm": {
-    "defaultMessage": "Delete {name}? Its folders and items move to the parent folder."
+  "knowledge.folder.deleteBody": {
+    "defaultMessage": "Its folders and items move to the parent folder. Nothing is deleted."
   },
   "knowledge.folder.deleteError": {
     "defaultMessage": "The folder could not be deleted."
+  },
+  "knowledge.folder.deleteSubmit": {
+    "defaultMessage": "Delete folder"
+  },
+  "knowledge.folder.deleteTitle": {
+    "defaultMessage": "Delete the {name} folder?"
   },
   "knowledge.folder.edit": {
     "defaultMessage": "Rename or move selected folder"

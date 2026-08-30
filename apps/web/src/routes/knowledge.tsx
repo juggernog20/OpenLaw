@@ -130,6 +130,8 @@ export function KnowledgePage() {
   const [folderEditOpen, setFolderEditOpen] = useState(false);
   const [folderEditName, setFolderEditName] = useState("");
   const [folderEditParent, setFolderEditParent] = useState("");
+  const [folderDeleteOpen, setFolderDeleteOpen] = useState(false);
+  const [folderDeleteError, setFolderDeleteError] = useState<string | null>(null);
   const activeView = views.find((view) => view.id === activeViewId) ?? null;
   const stored = activeView
     ? resolveLayout(CATALOGUE, activeView.layout)
@@ -212,33 +214,24 @@ export function KnowledgePage() {
   }
 
   async function deleteFolder() {
-    if (!selectedFolder || busy) return;
     const target = folders.find((row) => row.id === selectedFolder);
-    if (
-      !target ||
-      !window.confirm(
-        intl.formatMessage(
-          {
-            id: "knowledge.folder.deleteConfirm",
-            defaultMessage: "Delete {name}? Its folders and items move to the parent folder.",
-          },
-          { name: target.name },
-        ),
-      )
-    )
-      return;
+    if (!target || busy) return;
     setBusy(true);
     const answer = await api
       .DELETE("/api/v1/knowledge/folders/{folderId}", { params: { path: { folderId: target.id } } })
-      .catch(() => ({ data: undefined }));
+      .catch(() => ({ data: undefined, error: undefined }));
     setBusy(false);
-    if (!answer.data)
-      return setError(
-        intl.formatMessage({
-          id: "knowledge.folder.deleteError",
-          defaultMessage: "The folder could not be deleted.",
-        }),
+    if (!answer.data) {
+      setFolderDeleteError(
+        (await problem(answer)).detail ??
+          intl.formatMessage({
+            id: "knowledge.folder.deleteError",
+            defaultMessage: "The folder could not be deleted.",
+          }),
       );
+      return;
+    }
+    setFolderDeleteOpen(false);
     setFolders(answer.data.folders);
     await commit({ ...layout, filters: { ...layout.filters, folder: target.parentId ?? "" } });
   }
@@ -268,14 +261,15 @@ export function KnowledgePage() {
         params: { path: { folderId: target.id } },
         body,
       })
-      .catch(() => ({ data: undefined }));
+      .catch(() => ({ data: undefined, error: undefined }));
     setBusy(false);
     if (!answer.data) {
       setError(
-        intl.formatMessage({
-          id: "knowledge.folder.updateError",
-          defaultMessage: "The folder could not be updated.",
-        }),
+        (await problem(answer)).detail ??
+          intl.formatMessage({
+            id: "knowledge.folder.updateError",
+            defaultMessage: "The folder could not be updated.",
+          }),
       );
       return;
     }
@@ -300,15 +294,16 @@ export function KnowledgePage() {
     setBusy(true);
     const answer = await api
       .PUT("/api/v1/knowledge/folders/order", { body: { parentId: folder.parentId, ids } })
-      .catch(() => ({ data: undefined }));
+      .catch(() => ({ data: undefined, error: undefined }));
     setBusy(false);
     if (answer.data) setFolders(answer.data.folders);
     else
       setError(
-        intl.formatMessage({
-          id: "knowledge.folder.reorderError",
-          defaultMessage: "The folder could not be reordered.",
-        }),
+        (await problem(answer)).detail ??
+          intl.formatMessage({
+            id: "knowledge.folder.reorderError",
+            defaultMessage: "The folder could not be reordered.",
+          }),
       );
   }
 
@@ -476,7 +471,10 @@ export function KnowledgePage() {
                     id: "knowledge.folder.delete",
                     defaultMessage: "Delete selected folder",
                   })}
-                  onClick={() => void deleteFolder()}
+                  onClick={() => {
+                    setFolderDeleteError(null);
+                    setFolderDeleteOpen(true);
+                  }}
                 >
                   <Trash2 size={16} />
                 </Button>
@@ -525,6 +523,7 @@ export function KnowledgePage() {
         </section>
       </div>
       <CreateItemDialog
+        key={createOpen ? `open:${selectedFolder}` : "closed"}
         open={createOpen}
         onOpenChange={setCreateOpen}
         types={loaded.types}
@@ -549,7 +548,7 @@ export function KnowledgePage() {
           </div>
           <div className="mt-5 flex justify-end gap-2">
             <Button variant="secondary" onClick={() => setFolderOpen(false)}>
-              <FormattedMessage id="knowledge.cancel" defaultMessage="Cancel" />
+              <FormattedMessage id="action.cancel" defaultMessage="Cancel" />
             </Button>
             <Button disabled={!folderNameDraft.trim() || busy} onClick={() => void createFolder()}>
               <FormattedMessage id="knowledge.folder.add" defaultMessage="Add folder" />
@@ -604,10 +603,40 @@ export function KnowledgePage() {
           </div>
           <div className="mt-5 flex justify-end gap-2">
             <Button variant="secondary" onClick={() => setFolderEditOpen(false)}>
-              <FormattedMessage id="knowledge.cancel" defaultMessage="Cancel" />
+              <FormattedMessage id="action.cancel" defaultMessage="Cancel" />
             </Button>
             <Button disabled={!folderEditName.trim() || busy} onClick={() => void updateFolder()}>
               <FormattedMessage id="knowledge.folder.save" defaultMessage="Save folder" />
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+      <Dialog open={folderDeleteOpen} onOpenChange={setFolderDeleteOpen}>
+        <DialogContent aria-describedby={undefined}>
+          <DialogTitle>
+            <FormattedMessage
+              id="knowledge.folder.deleteTitle"
+              defaultMessage="Delete the {name} folder?"
+              values={{ name: folders.find((row) => row.id === selectedFolder)?.name ?? "" }}
+            />
+          </DialogTitle>
+          <p className="mt-4 text-base text-primary">
+            <FormattedMessage
+              id="knowledge.folder.deleteBody"
+              defaultMessage="Its folders and items move to the parent folder. Nothing is deleted."
+            />
+          </p>
+          {folderDeleteError ? (
+            <p role="alert" className="mt-2.5 text-xs text-status-danger-fg">
+              {folderDeleteError}
+            </p>
+          ) : null}
+          <div className="mt-5 flex justify-end gap-2">
+            <Button variant="secondary" onClick={() => setFolderDeleteOpen(false)}>
+              <FormattedMessage id="action.cancel" defaultMessage="Cancel" />
+            </Button>
+            <Button variant="danger" disabled={busy} onClick={() => void deleteFolder()}>
+              <FormattedMessage id="knowledge.folder.deleteSubmit" defaultMessage="Delete folder" />
             </Button>
           </div>
         </DialogContent>
@@ -907,7 +936,7 @@ function CreateItemDialog({
         </div>
         <div className="mt-5 flex justify-end gap-2">
           <Button variant="secondary" onClick={() => onOpenChange(false)}>
-            <FormattedMessage id="knowledge.cancel" defaultMessage="Cancel" />
+            <FormattedMessage id="action.cancel" defaultMessage="Cancel" />
           </Button>
           <Button disabled={busy || !title.trim() || !typeId} onClick={() => void create()}>
             {busy

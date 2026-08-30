@@ -45779,9 +45779,6 @@
                           "knowledgeTypeName": {
                             "type": "string"
                           },
-                          "body": {
-                            "type": ["string", "null"]
-                          },
                           "folderId": {
                             "type": ["string", "null"]
                           },
@@ -45870,7 +45867,6 @@
                           "title",
                           "knowledgeTypeId",
                           "knowledgeTypeName",
-                          "body",
                           "folderId",
                           "folderName",
                           "state",

@@ -9,6 +9,7 @@ import {
   asc,
   count,
   eq,
+  getTableColumns,
   isNull,
   knowledgeFolders,
   knowledgeItems,
@@ -69,8 +70,12 @@ const KnowledgeItemSchema = z.object({
   updatedAt: z.iso.datetime({ offset: true }),
 });
 
+/** A list row is the record without its guidance: a page of fifty rows
+ * must not carry fifty bodies of up to 100,000 characters each. */
+const KnowledgeItemSummarySchema = KnowledgeItemSchema.omit({ body: true });
+
 const KnowledgeItemsEnvelope = z.object({
-  knowledgeItems: z.array(KnowledgeItemSchema),
+  knowledgeItems: z.array(KnowledgeItemSummarySchema),
   nextCursor: z.string().nullable(),
 });
 
@@ -89,28 +94,41 @@ const creators = alias(users, "knowledge_item_creators");
 const editors = alias(users, "knowledge_item_editors");
 const replacements = alias(knowledgeItems, "knowledge_item_replacements");
 
-const itemProjection = {
-  item: knowledgeItems,
-  knowledgeTypeName: knowledgeTypes.displayName,
-  folderName: knowledgeFolders.name,
-  replacementId: replacements.id,
-  replacementTitle: replacements.title,
-  createdBy: {
-    id: creators.id,
-    displayName: creators.displayName,
-    image: creators.image,
-    archivedAt: creators.archivedAt,
-  },
-  updatedBy: {
-    id: editors.id,
-    displayName: editors.displayName,
-    image: editors.image,
-    archivedAt: editors.archivedAt,
-  },
+function withoutBody<T extends { body: unknown }>({ body: _body, ...rest }: T): Omit<T, "body"> {
+  void _body;
+  return rest;
+}
+
+/** The record's own columns, with or without the guidance body. */
+const itemColumns = {
+  full: getTableColumns(knowledgeItems),
+  summary: withoutBody(getTableColumns(knowledgeItems)),
 } as const;
 
+function itemProjection(shape: keyof typeof itemColumns) {
+  return {
+    item: itemColumns[shape],
+    knowledgeTypeName: knowledgeTypes.displayName,
+    folderName: knowledgeFolders.name,
+    replacementId: replacements.id,
+    replacementTitle: replacements.title,
+    createdBy: {
+      id: creators.id,
+      displayName: creators.displayName,
+      image: creators.image,
+      archivedAt: creators.archivedAt,
+    },
+    updatedBy: {
+      id: editors.id,
+      displayName: editors.displayName,
+      image: editors.image,
+      archivedAt: editors.archivedAt,
+    },
+  } as const;
+}
+
 type ProjectedItem = {
-  item: KnowledgeItem;
+  item: Omit<KnowledgeItem, "body"> & { body?: string | null };
   knowledgeTypeName: string;
   folderName: string | null;
   replacementId: string | null;
@@ -119,13 +137,12 @@ type ProjectedItem = {
   updatedBy: { id: string; displayName: string; image: string | null; archivedAt: Date | null };
 };
 
-function project(row: ProjectedItem) {
+function summarize(row: ProjectedItem) {
   return {
     id: row.item.id,
     title: row.item.title,
     knowledgeTypeId: row.item.knowledgeTypeId,
     knowledgeTypeName: row.knowledgeTypeName,
-    body: row.item.body,
     folderId: row.item.folderId,
     folderName: row.folderName,
     state: row.item.state,
@@ -151,9 +168,13 @@ function project(row: ProjectedItem) {
   };
 }
 
-function itemSelect(db: Executor) {
+function project(row: ProjectedItem) {
+  return { ...summarize(row), body: row.item.body ?? null };
+}
+
+function itemSelect(db: Executor, shape: keyof typeof itemColumns = "full") {
   return db
-    .select(itemProjection)
+    .select(itemProjection(shape))
     .from(knowledgeItems)
     .innerJoin(knowledgeTypes, eq(knowledgeItems.knowledgeTypeId, knowledgeTypes.id))
     .leftJoin(knowledgeFolders, eq(knowledgeItems.folderId, knowledgeFolders.id))
@@ -165,6 +186,17 @@ function itemSelect(db: Executor) {
 async function readItem(db: Executor, id: string): Promise<ProjectedItem | null> {
   const [row] = await itemSelect(db).where(eq(knowledgeItems.id, id)).limit(1);
   return (row as ProjectedItem | undefined) ?? null;
+}
+
+/** The type's name as the log names it. No liveness check: the item's
+ * current type is a fact to narrate, not a choice to validate. */
+async function typeName(db: Executor, id: string): Promise<string> {
+  const [row] = await db
+    .select({ displayName: knowledgeTypes.displayName })
+    .from(knowledgeTypes)
+    .where(eq(knowledgeTypes.id, id))
+    .limit(1);
+  return row?.displayName ?? id;
 }
 
 async function liveType(db: Executor, id: string) {
@@ -443,19 +475,19 @@ export const knowledgeRoutes: FastifyPluginAsyncZod = async (app) => {
       };
       let cursorRow: ProjectedItem | null = null;
       if (request.query.cursor) {
-        const [row] = await itemSelect(app.db)
+        const [row] = await itemSelect(app.db, "summary")
           .where(and(eq(knowledgeItems.id, request.query.cursor), listScope(filters)))
           .limit(1);
         if (!row) return { knowledgeItems: [], nextCursor: null };
         cursorRow = row as ProjectedItem;
       }
-      const rows = await itemSelect(app.db)
+      const rows = await itemSelect(app.db, "summary")
         .where(and(listScope(filters), cursorRow ? afterCursor(sort, cursorRow) : undefined))
         .orderBy(...orderFor(sort))
         .limit(PAGE_SIZE + 1);
       const page = rows.slice(0, PAGE_SIZE) as ProjectedItem[];
       return {
-        knowledgeItems: page.map(project),
+        knowledgeItems: page.map(summarize),
         nextCursor: rows.length > PAGE_SIZE ? (page.at(-1)?.item.id ?? null) : null,
       };
     },
@@ -615,10 +647,10 @@ export const knowledgeRoutes: FastifyPluginAsyncZod = async (app) => {
           request.body.knowledgeTypeId !== undefined &&
           request.body.knowledgeTypeId !== target.knowledgeTypeId
         ) {
-          const from = await liveType(tx, target.knowledgeTypeId);
+          const from = await typeName(tx, target.knowledgeTypeId);
           const to = await liveType(tx, request.body.knowledgeTypeId);
           patch.knowledgeTypeId = to.id;
-          changed.knowledgeType = { from: from.displayName, to: to.displayName };
+          changed.knowledgeType = { from, to: to.displayName };
         }
         if (request.body.body !== undefined) {
           const body = request.body.body?.trim() || null;

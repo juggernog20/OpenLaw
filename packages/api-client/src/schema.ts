@@ -21957,7 +21957,6 @@ export interface operations {
               title: string;
               knowledgeTypeId: string;
               knowledgeTypeName: string;
-              body: string | null;
               folderId: string | null;
               folderName: string | null;
               /** @enum {string} */

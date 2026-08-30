@@ -196,6 +196,80 @@ describe("the Knowledge library", () => {
     );
   });
 
+  it("files a new item in the folder the tree has selected", async () => {
+    let posted: unknown;
+    const base = libraryApi([]);
+    stubApi({
+      signedIn: MEMBER,
+      extra: (call) => {
+        if (call.url.pathname === "/api/v1/knowledge" && call.method === "POST") {
+          posted = call.body;
+          return json(201, { knowledgeItem: item({ id: "knowledge-new" }) });
+        }
+        if (call.url.pathname === "/api/v1/knowledge/knowledge-new" && call.method === "GET") {
+          return json(200, { knowledgeItem: item({ id: "knowledge-new" }) });
+        }
+        return base(call);
+      },
+    });
+    renderAt("/knowledge");
+    const user = userEvent.setup();
+    await user.click(await screen.findByRole("button", { name: /Contracts/ }));
+    await user.click((await screen.findAllByRole("button", { name: "New item" }))[0]!);
+    const dialog = await screen.findByRole("dialog", { name: "New Knowledge item" });
+    expect(within(dialog).getByLabelText("Folder")).toHaveValue("contracts");
+    await user.type(within(dialog).getByLabelText("Title"), "Filed guide");
+    await user.click(within(dialog).getByRole("button", { name: "Create item" }));
+    await waitFor(() =>
+      expect(posted).toEqual({
+        title: "Filed guide",
+        knowledgeTypeId: "type-playbook",
+        folderId: "contracts",
+      }),
+    );
+  });
+
+  it("confirms a folder delete in a dialog and reports the server's refusal", async () => {
+    let deleted = 0;
+    const base = libraryApi([]);
+    stubApi({
+      signedIn: MEMBER,
+      extra: (call) => {
+        if (
+          call.url.pathname === "/api/v1/knowledge/folders/contracts" &&
+          call.method === "DELETE"
+        ) {
+          deleted += 1;
+          return json(409, {
+            type: "about:blank",
+            title: "Conflict",
+            status: 409,
+            detail: "A folder with that name already exists here.",
+          });
+        }
+        return base(call);
+      },
+    });
+    renderAt("/knowledge");
+    const user = userEvent.setup();
+    await user.click(await screen.findByRole("button", { name: /Contracts/ }));
+    await user.click(screen.getByRole("button", { name: "Delete selected folder" }));
+    const dialog = await screen.findByRole("dialog", { name: "Delete the Contracts folder?" });
+    await user.click(within(dialog).getByRole("button", { name: "Cancel" }));
+    expect(deleted).toBe(0);
+    await user.click(screen.getByRole("button", { name: "Delete selected folder" }));
+    await user.click(
+      within(await screen.findByRole("dialog", { name: "Delete the Contracts folder?" })).getByRole(
+        "button",
+        { name: "Delete folder" },
+      ),
+    );
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "A folder with that name already exists here.",
+    );
+    expect(deleted).toBe(1);
+  });
+
   it("shows the blank-library state and keeps Contributors out of the destination", async () => {
     stubApi({ signedIn: MEMBER, extra: libraryApi([]) });
     const blank = renderAt("/knowledge");

@@ -9,7 +9,7 @@ import type { paths } from "@openlaw/api-client";
 import { api } from "../lib/api";
 import { useFieldCommit, type TextField } from "../lib/field-commit";
 import { CONTROL_CLASS, TEXTAREA_CLASS } from "../lib/form-controls";
-import { folderLabel, type KnowledgeItem } from "../lib/knowledge";
+import { folderLabel, type KnowledgeRecord } from "../lib/knowledge";
 import { isMemberPlus } from "../lib/roles";
 import { requireUser, useSignOut } from "../lib/session";
 import { useActivityApplet } from "../components/activity/activity-applet";
@@ -50,7 +50,7 @@ export function KnowledgeRecordPage() {
   const loaded = useLoaderData<typeof knowledgeRecordLoader>();
   const intl = useIntl();
   const signOut = useSignOut("/auth/login");
-  const [saved, setSaved] = useState<KnowledgeItem>(loaded.item);
+  const [saved, setSaved] = useState<KnowledgeRecord>(loaded.item);
   const [title, setTitle] = useState(saved.title);
   const [body, setBody] = useState(saved.body ?? "");
   const [editingBody, setEditingBody] = useState(Boolean(saved.body));
@@ -224,14 +224,13 @@ export function KnowledgeRecordPage() {
               {editingBody ? (
                 <div className="flex items-center gap-2">
                   <StatusNote status={commits.status.body ?? "idle"} detail={commits.error.body} />
+                  {/* The textarea's blur has already committed the draft by
+                      the time this click lands, so the toggle only flips. */}
                   <Button
                     size="sm"
                     variant="secondary"
                     aria-pressed={preview}
-                    onClick={() => {
-                      if (!preview) commitBody();
-                      setPreview((value) => !value);
-                    }}
+                    onClick={() => setPreview((value) => !value)}
                   >
                     {preview ? (
                       <>
