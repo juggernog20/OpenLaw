@@ -77,6 +77,12 @@ The web chart uses a dependency-free SVG layout. A compact layered forest places
 
 ENT-004's grant list is the `entity_grants` relation: one row names one user granted access to one confidential Entity. Administrators remain implicitly entitled and do not need rows in this relation; `entity_grants` carries only the explicit named-user exceptions shown in the Confidential grant list dialog.
 
+### Built addendum (2026-08-30, M27/8, #580) — one Entity predicate reaches every surface
+
+The Entity reach predicate is now armed. Administrators reach every Entity; Legal Team Members reach open Entities and Confidential Entities carrying their `entity_grants` row; Contributors and Business Users reach none. Only Administrators set or clear the flag and maintain grants, and all four acts are audited.
+
+List, record, picker, calendar, search, Documents, roll-up, and notification queries compose that predicate before limits and counts. A known Holding, chart edge, Contract signing field, or Entity-valued custom Field may retain its relationship while naming the unreachable side only as Restricted Entity; every other surface omits the Entity without a row, name, count, notification, cursor gap, or page gap.
+
 ## ENT-005 — Statutory documents: entity-owned documents, no seeded folders
 
 - **Status** — Accepted

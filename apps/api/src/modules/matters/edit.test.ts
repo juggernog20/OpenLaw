@@ -137,6 +137,25 @@ async function attachText(
 const attachRequiredText = (typeId: string, displayName: string) =>
   attachText(typeId, displayName, "legal", true);
 
+async function attachEntity(typeId: string, displayName: string): Promise<string> {
+  const fieldResponse = await harness.app.inject({
+    method: "POST",
+    url: "/api/v1/fields",
+    cookies: adminCookies,
+    payload: { moduleScope: "matter", fieldTag: "legal", displayName, fieldType: "entity" },
+  });
+  expect(fieldResponse.statusCode, fieldResponse.body).toBe(201);
+  const field = fieldResponse.json().field as { id: string; slug: string };
+  const attached = await harness.app.inject({
+    method: "POST",
+    url: `/api/v1/matter-types/${typeId}/fields`,
+    cookies: adminCookies,
+    payload: { fieldId: field.id },
+  });
+  expect(attached.statusCode, attached.body).toBe(201);
+  return field.slug;
+}
+
 async function create(payload: Record<string, unknown> = {}) {
   const response = await harness.app.inject({
     method: "POST",
@@ -157,6 +176,49 @@ const patchMatter = (number: number, payload: Record<string, unknown>, cookies =
   });
 
 describe("per-field matter PATCH", () => {
+  it("resolves an unreachable Entity-valued Field only as Restricted Entity", async () => {
+    const typeId = await newType("Restricted Entity matter");
+    const entitySlug = await attachEntity(typeId, "Acquisition vehicle");
+    const entityTypes = await harness.app.inject({
+      method: "GET",
+      url: "/api/v1/entities/types",
+      cookies: adminCookies,
+    });
+    expect(entityTypes.statusCode, entityTypes.body).toBe(200);
+    const corporationId = entityTypes
+      .json()
+      .entityTypes.find((row: { slug: string }) => row.slug === "corporation").id as string;
+    const entity = await harness.app.inject({
+      method: "POST",
+      url: "/api/v1/entities",
+      cookies: adminCookies,
+      payload: { legalName: "Secret Matter Vehicle Ltd", entityTypeId: corporationId },
+    });
+    expect(entity.statusCode, entity.body).toBe(201);
+    const entityId = entity.json().entity.id as string;
+    const matter = await create({
+      matterTypeId: typeId,
+      managerId: outsiderId,
+      customFields: { [entitySlug]: entityId },
+    });
+    const sealed = await harness.app.inject({
+      method: "PATCH",
+      url: `/api/v1/entities/${entityId}`,
+      cookies: adminCookies,
+      payload: { isConfidential: true },
+    });
+    expect(sealed.statusCode, sealed.body).toBe(200);
+
+    const read = await harness.app.inject({
+      method: "GET",
+      url: `/api/v1/matters/${matter.number}`,
+      cookies: outsiderCookies,
+    });
+    expect(read.statusCode, read.body).toBe(200);
+    expect(read.body).not.toContain("Secret Matter Vehicle Ltd");
+    expect(read.json().customFieldRefs.entities).toEqual([{ restricted: true, id: entityId }]);
+  });
+
   it("projects only business Fields and values to a Contributor on the team", async () => {
     const projectionTypeId = await newType("Contributor projection");
     const businessSlug = await attachText(projectionTypeId, "Business context", "business");

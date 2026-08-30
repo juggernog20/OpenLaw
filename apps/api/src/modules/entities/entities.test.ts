@@ -46,6 +46,7 @@ const BUSINESS = {
 let harness: TestHarness;
 let adminCookies: Record<string, string>;
 let memberCookies: Record<string, string>;
+let memberId: string;
 
 beforeAll(async () => {
   harness = await startHarness();
@@ -63,6 +64,7 @@ beforeAll(async () => {
   ] as const) {
     const user = await provisionUser(harness.app.auth, fixture);
     await harness.db.update(users).set({ role }).where(eq(users.id, user.id));
+    if (fixture === MEMBER) memberId = user.id;
   }
   adminCookies = await signInCookies(harness.app, ADMIN.email, ADMIN.password);
   memberCookies = await signInCookies(harness.app, MEMBER.email, MEMBER.password);
@@ -84,6 +86,7 @@ interface EntityRow {
   registeredAgent: string | null;
   registeredAddress: string | null;
   status: string;
+  isConfidential: boolean;
   archivedAt: string | null;
 }
 
@@ -142,6 +145,71 @@ const patchEntity = (
 ) => harness.app.inject({ method: "PATCH", url: `/api/v1/entities/${id}`, cookies, payload });
 
 describe("the ENT-004 access floor", () => {
+  it("walls a Confidential Entity until an Administrator grants the Legal Team Member", async () => {
+    const corporation = await typeOptionBySlug("corporation");
+    const created = await register(adminCookies, {
+      legalName: "Sealed Acquisition Vehicle",
+      entityTypeId: corporation.id,
+    });
+    expect(created.statusCode, created.body).toBe(201);
+    const id = created.json().entity.id as string;
+
+    const refusedSet = await patchEntity(memberCookies, id, { isConfidential: true });
+    expect(refusedSet.statusCode, refusedSet.body).toBe(403);
+
+    const set = await patchEntity(adminCookies, id, { isConfidential: true });
+    expect(set.statusCode, set.body).toBe(200);
+    expect(set.json().entity.isConfidential).toBe(true);
+    expect((await getEntity(memberCookies, id)).statusCode).toBe(404);
+    expect((await listEntities(memberCookies)).some((row) => row.id === id)).toBe(false);
+    expect((await listEntities(adminCookies)).find((row) => row.id === id)?.isConfidential).toBe(
+      true,
+    );
+
+    const memberGrantRead = await harness.app.inject({
+      method: "GET",
+      url: `/api/v1/entities/${id}/grants`,
+      cookies: memberCookies,
+    });
+    expect(memberGrantRead.statusCode, memberGrantRead.body).toBe(403);
+    const added = await harness.app.inject({
+      method: "POST",
+      url: `/api/v1/entities/${id}/grants`,
+      cookies: adminCookies,
+      payload: { userId: memberId },
+    });
+    expect(added.statusCode, added.body).toBe(201);
+    expect((await getEntity(memberCookies, id)).json().entity).toMatchObject({
+      id,
+      legalName: "Sealed Acquisition Vehicle",
+      isConfidential: true,
+    });
+
+    const removed = await harness.app.inject({
+      method: "DELETE",
+      url: `/api/v1/entities/${id}/grants/${memberId}`,
+      cookies: adminCookies,
+    });
+    expect(removed.statusCode, removed.body).toBe(204);
+    expect((await getEntity(memberCookies, id)).statusCode).toBe(404);
+
+    const cleared = await patchEntity(adminCookies, id, { isConfidential: false });
+    expect(cleared.statusCode, cleared.body).toBe(200);
+    expect((await getEntity(memberCookies, id)).statusCode).toBe(200);
+    const actions = await harness.db
+      .select({ action: activityLog.action })
+      .from(activityLog)
+      .where(eq(activityLog.entityId, id));
+    expect(actions.map((row) => row.action)).toEqual(
+      expect.arrayContaining([
+        "entity.confidentiality_set",
+        "entity_grant.added",
+        "entity_grant.removed",
+        "entity.confidentiality_cleared",
+      ]),
+    );
+  });
+
   it("refuses an unauthenticated request as 401 on every route", async () => {
     const attempts = [
       harness.app.inject({ method: "GET", url: "/api/v1/entities" }),

@@ -449,7 +449,12 @@ describe("the values, labelled through the type's live fields (INT-002)", () => 
       { id: requesterId, displayName: REQUESTER.displayName, archived: false },
     ]);
     expect(detail.customFieldRefs.entities).toEqual([
-      { id: entityId, legalName: "Orion Cloud Holdings LLC", archived: false },
+      {
+        restricted: false,
+        id: entityId,
+        legalName: "Orion Cloud Holdings LLC",
+        archived: false,
+      },
     ]);
   });
 
@@ -484,7 +489,7 @@ describe("the values, labelled through the type's live fields (INT-002)", () => 
         { id: requesterId, displayName: REQUESTER.displayName, archived: true },
       ]);
       expect(detail.customFieldRefs.entities).toEqual([
-        { id: entityId, legalName: "Wound Down GmbH", archived: true },
+        { restricted: false, id: entityId, legalName: "Wound Down GmbH", archived: true },
       ]);
     } finally {
       await harness.db.update(users).set({ archivedAt: null }).where(eq(users.id, requesterId));

@@ -42,6 +42,7 @@ import {
 import type { ColumnCatalogue, ColumnDef } from "../../lib/list-views";
 import { Avatar } from "../avatar";
 import { ConfidentialMarker } from "../confidential-marker";
+import { RestrictedRecordCell } from "../restricted-record-cell";
 
 /** Nothing recorded, said the same way in every cell that can be empty.
  * A blank cell reads as a rendering fault; a named absence reads as a
@@ -326,7 +327,16 @@ const COLUMNS: ColumnDef<ContractRow>[] = [
     // CTR-011's our side, ordered by legal name with case folded — the
     // same shape as the other three name sorts.
     sortKey: "entity",
-    render: (row) => row.entity?.legalName ?? <NotRecorded />,
+    render: (row) =>
+      row.entity === null ? (
+        <NotRecorded />
+      ) : row.entity.restricted ? (
+        <RestrictedRecordCell
+          label={{ id: "entities.restricted", defaultMessage: "Restricted Entity" }}
+        />
+      ) : (
+        row.entity.legalName
+      ),
   },
   {
     key: "createdAt",

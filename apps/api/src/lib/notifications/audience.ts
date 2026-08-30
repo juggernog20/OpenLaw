@@ -51,8 +51,10 @@ import {
   contracts,
   contractTeam,
   entities,
+  entityGrants,
   eq,
   inArray,
+  isNotNull,
   isNull,
   matters,
   matterTeam,
@@ -185,12 +187,22 @@ export async function entityReachedBy(
     .select({ id: users.id })
     .from(users)
     .innerJoin(entities, eq(entities.id, entityId))
+    .leftJoin(
+      entityGrants,
+      and(eq(entityGrants.entityId, entities.id), eq(entityGrants.userId, users.id)),
+    )
     .where(
       and(
         inArray(users.id, [...userIds]),
-        inArray(users.role, [...MEMBER_PLUS]),
         isNull(users.archivedAt),
         isNull(entities.archivedAt),
+        or(
+          eq(users.role, "administrator"),
+          and(
+            eq(users.role, "legal_team_member"),
+            or(eq(entities.isConfidential, false), isNotNull(entityGrants.userId)),
+          ),
+        ),
       ),
     );
   return new Set(rows.map((row) => row.id));
@@ -569,7 +581,7 @@ export function notificationScope(
 function staffScope(db: Executor, user: AuthenticatedUser): SQL | undefined {
   const scope = contractTeamScope(db, user);
   const matterScope = matterTeamScope(db, user);
-  const entityScope = entityReachScope(user);
+  const entityScope = entityReachScope(db, user);
   return or(
     and(
       eq(notifications.entityType, CONTRACT_ENTITY),

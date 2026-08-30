@@ -67,6 +67,9 @@ export type EntityHolding = EntityHoldings["owners"][number];
 export type EntityHoldingWarning = EntityHoldings["warnings"][number];
 export type EntityChart =
   paths["/api/v1/entities/chart"]["get"]["responses"]["200"]["content"]["application/json"];
+export type EntityGrantEnvelope =
+  paths["/api/v1/entities/{id}/grants"]["get"]["responses"]["200"]["content"]["application/json"];
+export type EntityGrantPerson = EntityGrantEnvelope["grants"][number];
 
 export const ENTITY_REGISTRATION_STATUSES = [
   "active",

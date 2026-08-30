@@ -457,7 +457,14 @@ describe("the values, labelled by the form that collected them", () => {
             ],
             customFieldRefs: {
               users: [{ id: "u7", displayName: "Tom Iwu", archived: false }],
-              entities: [{ id: "e1", legalName: "Orion Holdings GmbH", archived: false }],
+              entities: [
+                {
+                  restricted: false,
+                  id: "e1",
+                  legalName: "Orion Holdings GmbH",
+                  archived: false,
+                },
+              ],
             },
           }),
         ),
@@ -494,7 +501,14 @@ describe("the values, labelled by the form that collected them", () => {
             ],
             customFieldRefs: {
               users: [{ id: "u7", displayName: "Tom Iwu", archived: true }],
-              entities: [{ id: "e1", legalName: "Wound Down GmbH", archived: true }],
+              entities: [
+                {
+                  restricted: false,
+                  id: "e1",
+                  legalName: "Wound Down GmbH",
+                  archived: true,
+                },
+              ],
             },
           }),
         ),

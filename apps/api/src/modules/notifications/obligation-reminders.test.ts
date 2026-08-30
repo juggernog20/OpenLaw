@@ -35,6 +35,7 @@ let assigneeCookies: Record<string, string>;
 let otherCookies: Record<string, string>;
 let assigneeId: string;
 let entityId: string;
+let corporationId: string;
 
 const quietLog: PipelineLogger = {
   info: () => undefined,
@@ -67,7 +68,7 @@ beforeAll(async () => {
     url: "/api/v1/entities/types",
     cookies: adminCookies,
   });
-  const corporationId = types.json().entityTypes[0].id as string;
+  corporationId = types.json().entityTypes[0].id as string;
   const entity = await harness.app.inject({
     method: "POST",
     url: "/api/v1/entities",
@@ -120,6 +121,59 @@ async function bell(cookies: Record<string, string>) {
 }
 
 describe("Entity obligation reminders", () => {
+  it("falls back to Administrators instead of naming a walled Entity to its assignee", async () => {
+    const entity = await harness.app.inject({
+      method: "POST",
+      url: "/api/v1/entities",
+      cookies: adminCookies,
+      payload: {
+        legalName: "Walled Reminder Vehicle",
+        entityTypeId: corporationId,
+      },
+    });
+    expect(entity.statusCode, entity.body).toBe(201);
+    const walledId = entity.json().entity.id as string;
+    expect(
+      (
+        await harness.app.inject({
+          method: "PATCH",
+          url: `/api/v1/entities/${walledId}`,
+          cookies: adminCookies,
+          payload: { isConfidential: true },
+        })
+      ).statusCode,
+    ).toBe(200);
+    const obligation = await harness.app.inject({
+      method: "POST",
+      url: `/api/v1/entities/${walledId}/obligations`,
+      cookies: adminCookies,
+      payload: {
+        label: "Walled filing",
+        nextDueOn: "2027-03-08",
+        assigneeId,
+      },
+    });
+    expect(obligation.statusCode, obligation.body).toBe(201);
+    await runMorningRound(
+      {
+        db: harness.db,
+        log: quietLog,
+        notifier: harness.notifier,
+        resolveMailer: harness.resolveMailer,
+        baseUrl: "http://localhost",
+      },
+      harness.pipeline,
+      { now: new Date("2027-03-01T08:00:00Z") },
+    );
+    expect((await bell(assigneeCookies)).filter((row) => row.entityId === walledId)).toEqual([]);
+    const fallback = (await bell(adminCookies)).filter((row) => row.entityId === walledId);
+    expect(fallback).toHaveLength(1);
+    expect(fallback[0]!.payload).toMatchObject({
+      entityLegalName: "Walled Reminder Vehicle",
+      label: "Walled filing",
+    });
+  });
+
   it("writes one notification per offset to the assignee and every Administrator fallback", async () => {
     const assigned = (await bell(assigneeCookies)).filter((row) => row.entityId === entityId);
     expect(assigned).toHaveLength(3);
@@ -193,7 +247,10 @@ describe("Entity obligation reminders", () => {
     expect(assigneeMail.text).toContain("Obligations");
     expect(assigneeMail.text).toContain("Assigned annual return");
     expect(assigneeMail.text).toContain(`http://localhost/entities/${entityId}/obligations`);
-    const adminMail = harness.mailer.messagesTo(ADMIN.email).at(-1)!;
-    expect(adminMail.text).toContain("Unassigned licence renewal");
+    expect(
+      harness.mailer
+        .messagesTo(ADMIN.email)
+        .some((message) => message.text.includes("Unassigned licence renewal")),
+    ).toBe(true);
   });
 });

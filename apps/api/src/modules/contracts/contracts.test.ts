@@ -1459,6 +1459,7 @@ describe("the signing entity (CTR-011)", () => {
     const signed = await patchContract(memberCookies, contract.number, { entityId: meridian.id });
     expect(signed.statusCode, signed.body).toBe(200);
     expect(signed.json().contract.entity).toEqual({
+      restricted: false,
       id: meridian.id,
       legalName: "Meridian Bio, Inc.",
     });
@@ -1510,8 +1511,38 @@ describe("the signing entity (CTR-011)", () => {
     // registry is where an entity's standing is read, not the contract.
     const read = await getContract(adminCookies, contract.number);
     expect(read.json().contract.entity).toEqual({
+      restricted: false,
       id: closing.id,
       legalName: "Closing Branch GmbH",
+    });
+  });
+
+  it("renders Restricted Entity when the contract reader cannot reach its signing Entity", async () => {
+    const contract = await newContract("Restricted signing Entity");
+    const vehicle = await newEntity("Hidden Signing Vehicle Ltd");
+    expect(
+      (await patchContract(adminCookies, contract.number, { entityId: vehicle.id })).statusCode,
+    ).toBe(200);
+    const sealed = await harness.app.inject({
+      method: "PATCH",
+      url: `/api/v1/entities/${vehicle.id}`,
+      cookies: adminCookies,
+      payload: { isConfidential: true },
+    });
+    expect(sealed.statusCode, sealed.body).toBe(200);
+
+    const memberRead = await getContract(memberCookies, contract.number);
+    expect(memberRead.statusCode, memberRead.body).toBe(200);
+    expect(memberRead.body).not.toContain("Hidden Signing Vehicle Ltd");
+    expect(memberRead.json().contract.entity).toEqual({ restricted: true });
+    const edited = await patchContract(memberCookies, contract.number, { priority: "high" });
+    expect(edited.statusCode, edited.body).toBe(200);
+    expect(edited.body).not.toContain("Hidden Signing Vehicle Ltd");
+    expect(edited.json().contract.entity).toEqual({ restricted: true });
+    expect((await getContract(adminCookies, contract.number)).json().contract.entity).toEqual({
+      restricted: false,
+      id: vehicle.id,
+      legalName: "Hidden Signing Vehicle Ltd",
     });
   });
 

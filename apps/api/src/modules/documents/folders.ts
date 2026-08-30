@@ -257,7 +257,7 @@ function folderReachScope(owner: DocumentOwner, db: Executor, user: Authenticate
     case "matter":
       return and(isNotNull(documentFolders.matterId), matterTeamScope(db, user));
     case "entity":
-      return and(isNotNull(documentFolders.entityId), entityReachScope(user));
+      return and(isNotNull(documentFolders.entityId), entityReachScope(db, user));
   }
 }
 

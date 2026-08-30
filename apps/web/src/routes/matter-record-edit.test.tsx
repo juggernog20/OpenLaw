@@ -36,9 +36,21 @@ const FIELD = {
   displayOrder: 1,
   isRequired: true,
 };
+const ENTITY_FIELD = {
+  fieldId: "f-entity",
+  slug: "acquisition-vehicle",
+  displayName: "Acquisition vehicle",
+  description: null,
+  fieldType: "entity",
+  fieldTag: "legal",
+  options: null,
+  displayOrder: 1,
+  isRequired: false,
+};
 const TYPES = [
   { id: "t-general", slug: "general", displayName: "General", fields: [] },
   { id: "t-employment", slug: "employment", displayName: "Employment", fields: [FIELD] },
+  { id: "t-acquisition", slug: "acquisition", displayName: "Acquisition", fields: [ENTITY_FIELD] },
 ];
 const STATUSES = [
   { id: "s-open", slug: "open", displayName: "Open", category: "open" },
@@ -106,12 +118,16 @@ function row(overrides: Record<string, unknown> = {}) {
   };
 }
 
-function record(matter: ReturnType<typeof row>, team: unknown[] = []) {
+function record(
+  matter: ReturnType<typeof row>,
+  team: unknown[] = [],
+  customFieldRefs: Record<string, unknown> = { users: [], entities: [] },
+) {
   const type = TYPES.find((candidate) => candidate.id === matter.matterTypeId)!;
   return {
     matter,
     fields: type.fields,
-    customFieldRefs: { users: [], entities: [] },
+    customFieldRefs,
     team,
   };
 }
@@ -121,6 +137,38 @@ function options() {
 }
 
 describe("the editable matter record", () => {
+  it("uses the shared Restricted Entity cell for an Entity-valued custom Field", async () => {
+    const saved = row({
+      matterTypeId: "t-acquisition",
+      matterTypeName: "Acquisition",
+      customFields: { "acquisition-vehicle": "e-secret" },
+    });
+    stubApi({
+      signedIn: ADMIN,
+      extra: (call) => {
+        if (call.url.pathname === "/api/v1/matters/12" && call.method === "GET") {
+          return json(
+            200,
+            record(saved, [], {
+              users: [],
+              entities: [{ restricted: true, id: "e-secret" }],
+            }),
+          );
+        }
+        if (call.url.pathname === "/api/v1/matters/options" && call.method === "GET") {
+          return options();
+        }
+        if (call.url.pathname === "/api/v1/comments/unread") return json(200, { unread: 0 });
+        return undefined;
+      },
+    });
+    renderAt("/matters/12");
+
+    expect(await screen.findByText("Acquisition vehicle")).toBeInTheDocument();
+    expect(screen.getByText("Restricted Entity")).toBeInTheDocument();
+    expect(screen.queryByRole("combobox", { name: /Acquisition vehicle/ })).not.toBeInTheDocument();
+  });
+
   it("mounts the shared Documents section on the matter Documents tab", async () => {
     stubApi({
       signedIn: ADMIN,

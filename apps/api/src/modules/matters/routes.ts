@@ -650,7 +650,12 @@ export const mattersRoutes: FastifyPluginAsyncZod = async (app) => {
       return {
         matter: toRow(context, projection.customFields),
         fields: projection.fields,
-        customFieldRefs: await resolveStaffRefs(app.db, projection.fields, projection.customFields),
+        customFieldRefs: await resolveStaffRefs(
+          app.db,
+          projection.fields,
+          projection.customFields,
+          request.user,
+        ),
         team: await selectTeam(app.db, context.row.id),
       };
     },
@@ -1051,7 +1056,12 @@ export const mattersRoutes: FastifyPluginAsyncZod = async (app) => {
       return {
         matter: toRow(updated, projection.customFields),
         fields: projection.fields,
-        customFieldRefs: await resolveStaffRefs(app.db, projection.fields, projection.customFields),
+        customFieldRefs: await resolveStaffRefs(
+          app.db,
+          projection.fields,
+          projection.customFields,
+          request.user,
+        ),
         team: await selectTeam(app.db, updated.row.id),
       };
     },

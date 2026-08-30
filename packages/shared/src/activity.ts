@@ -442,6 +442,10 @@ type EntityPayloads = {
   "entity.type_reassigned": { legalName: string; from: string; to: string };
   "entity.archived": { legalName: string };
   "entity.restored": { legalName: string };
+  "entity.confidentiality_set": { legalName: string };
+  "entity.confidentiality_cleared": { legalName: string };
+  "entity_grant.added": { legalName: string; userId: string; userName: string };
+  "entity_grant.removed": { legalName: string; userId: string; userName: string };
   "entity_officer.created": {
     legalName: string;
     officerName: string;

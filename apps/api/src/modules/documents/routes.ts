@@ -815,7 +815,7 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
       case "matter":
         return and(isNotNull(documents.matterId), matterTeamScope(db, user));
       case "entity":
-        return and(isNotNull(documents.entityId), entityReachScope(user));
+        return and(isNotNull(documents.entityId), entityReachScope(db, user));
     }
   }
 

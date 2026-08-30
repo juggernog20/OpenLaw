@@ -24,6 +24,8 @@ const COLLEAGUE = {
 
 let harness: TestHarness;
 let memberCookies: Record<string, string>;
+let adminCookies: Record<string, string>;
+let memberId: string;
 let corporationId: string;
 let colleagueId: string;
 
@@ -35,6 +37,7 @@ beforeAll(async () => {
     payload: ADMIN,
   });
   expect(setup.statusCode, setup.body).toBe(201);
+  adminCookies = await signInCookies(harness.app, ADMIN.email, ADMIN.password);
   for (const fixture of [MEMBER, COLLEAGUE]) {
     const person = await provisionUser(harness.app.auth, fixture);
     await harness.db
@@ -42,6 +45,7 @@ beforeAll(async () => {
       .set({ role: "legal_team_member", timezone: fixture === MEMBER ? "Asia/Dubai" : null })
       .where(eq(users.id, person.id));
     if (fixture === COLLEAGUE) colleagueId = person.id;
+    if (fixture === MEMBER) memberId = person.id;
   }
   memberCookies = await signInCookies(harness.app, MEMBER.email, MEMBER.password);
   const types = await harness.app.inject({
@@ -303,6 +307,53 @@ describe("Mark filed", () => {
 });
 
 describe("the unified compliance calendar", () => {
+  it("omits a Confidential Entity until the viewer has an Entity grant", async () => {
+    const entity = await newEntity("Hidden Calendar Vehicle");
+    expect(
+      (
+        await createObligation(entity.id, {
+          label: "Hidden annual filing",
+          nextDueOn: "2026-10-30",
+        })
+      ).statusCode,
+    ).toBe(201);
+    expect(
+      (
+        await harness.app.inject({
+          method: "PATCH",
+          url: `/api/v1/entities/${entity.id}`,
+          cookies: adminCookies,
+          payload: { isConfidential: true },
+        })
+      ).statusCode,
+    ).toBe(200);
+    const walled = await harness.app.inject({
+      method: "GET",
+      url: "/api/v1/entities/calendar",
+      cookies: memberCookies,
+    });
+    expect(walled.body).not.toContain("Hidden Calendar Vehicle");
+    expect(walled.body).not.toContain("Hidden annual filing");
+
+    expect(
+      (
+        await harness.app.inject({
+          method: "POST",
+          url: `/api/v1/entities/${entity.id}/grants`,
+          cookies: adminCookies,
+          payload: { userId: memberId },
+        })
+      ).statusCode,
+    ).toBe(201);
+    const reached = await harness.app.inject({
+      method: "GET",
+      url: "/api/v1/entities/calendar",
+      cookies: memberCookies,
+    });
+    expect(reached.body).toContain("Hidden Calendar Vehicle");
+    expect(reached.body).toContain("Hidden annual filing");
+  });
+
   it("puts overdue obligations first, then due-date order, and applies every filter", async () => {
     const firstEntity = await newEntity("Calendar Alpha Ltd");
     const secondEntity = await newEntity("Calendar Beta Ltd");

@@ -279,7 +279,7 @@ export const entityObligationRoutes: FastifyPluginAsyncZod = async (app) => {
         .where(
           and(
             isNull(entities.archivedAt),
-            entityReachScope(request.user),
+            entityReachScope(app.db, request.user),
             request.query.entity ? eq(entityObligations.entityId, request.query.entity) : undefined,
             request.query.assignee === "unassigned"
               ? isNull(entityObligations.assigneeId)

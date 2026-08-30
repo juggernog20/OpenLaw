@@ -31,6 +31,7 @@ import { DOCUMENT_OWNER_KINDS, type DocumentOwner } from "@openlaw/shared";
 import { requireAuth, type AuthenticatedUser } from "../../auth/guards.js";
 import { contractTeamScope } from "../../lib/contract-access.js";
 import { documentRepositoryScope } from "../../lib/document-access.js";
+import { entityReachScope } from "../../lib/entity-access.js";
 import { matterTeamScope } from "../../lib/matter-access.js";
 import { problemResponse } from "../../lib/problem.js";
 import { documentOwnerCase } from "../documents/owner.js";
@@ -305,13 +306,13 @@ function searchCtes(db: Db, user: AuthenticatedUser, query: string): SQL {
         ${entities.id} as id,
         null::integer as number,
         ${entities.legalName} as title,
-        false as is_confidential,
+        ${entities.isConfidential} as is_confidential,
         3::integer as kind_order,
         ${entities.searchVector}
           || setweight(to_tsvector('english', coalesce(${entityTypes.displayName}, '')), 'C') as document
       from ${entities}
       inner join ${entityTypes} on ${entityTypes.id} = ${entities.entityTypeId}
-      where ${and(isNull(entities.archivedAt), staff)}
+      where ${and(isNull(entities.archivedAt), entityReachScope(db, user))}
     ),
     entity_hits as (
       select

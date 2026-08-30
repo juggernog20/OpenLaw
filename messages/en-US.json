@@ -206,6 +206,12 @@
   "activity.entity.archived": {
     "defaultMessage": "{actor} archived {name}"
   },
+  "activity.entity.confidentialityCleared": {
+    "defaultMessage": "{actor} cleared {name}'s confidential mark"
+  },
+  "activity.entity.confidentialitySet": {
+    "defaultMessage": "{actor} marked {name} confidential"
+  },
   "activity.entity.created": {
     "defaultMessage": "{actor} registered {name}"
   },
@@ -220,6 +226,12 @@
   },
   "activity.entity.updated": {
     "defaultMessage": "{actor} changed {name}"
+  },
+  "activity.entityGrant.added": {
+    "defaultMessage": "{actor} granted {person} access to {name}"
+  },
+  "activity.entityGrant.removed": {
+    "defaultMessage": "{actor} removed {person}'s access to {name}"
   },
   "activity.entityHolding.created": {
     "defaultMessage": "{actor} recorded {owner} owning {percent}% of {owned}"
@@ -2795,6 +2807,18 @@
   "entities.column.type": {
     "defaultMessage": "Type"
   },
+  "entities.confidential.banner": {
+    "defaultMessage": "Confidential Entity — Administrators and granted Legal Team Members see it."
+  },
+  "entities.confidential.bannerRegion": {
+    "defaultMessage": "Confidential Entity"
+  },
+  "entities.confidential.field": {
+    "defaultMessage": "Confidential — restrict to the grant list"
+  },
+  "entities.confidential.manage": {
+    "defaultMessage": "Manage access"
+  },
   "entities.count": {
     "defaultMessage": "{count, plural, one {# entity} other {# entities}}"
   },
@@ -2863,6 +2887,27 @@
   },
   "entities.form.typePlaceholder": {
     "defaultMessage": "Type…"
+  },
+  "entities.grants.add": {
+    "defaultMessage": "Grant access"
+  },
+  "entities.grants.description": {
+    "defaultMessage": "Administrators always have access. Grant Legal Team Members access here."
+  },
+  "entities.grants.empty": {
+    "defaultMessage": "No grants yet."
+  },
+  "entities.grants.person": {
+    "defaultMessage": "Legal Team Member"
+  },
+  "entities.grants.pick": {
+    "defaultMessage": "Pick a person"
+  },
+  "entities.grants.remove": {
+    "defaultMessage": "Remove {name}"
+  },
+  "entities.grants.title": {
+    "defaultMessage": "Confidential access"
   },
   "entities.linked.contracts": {
     "defaultMessage": "Contracts"
@@ -2944,6 +2989,9 @@
   },
   "entities.record.archivedNote": {
     "defaultMessage": "This entity is archived. Restore it to edit."
+  },
+  "entities.record.confidentiality": {
+    "defaultMessage": "Confidentiality"
   },
   "entities.record.fields.empty": {
     "defaultMessage": "This Entity type has no Fields."
@@ -3157,6 +3205,9 @@
   },
   "entities.restoreRow": {
     "defaultMessage": "Restore {name}"
+  },
+  "entities.restricted": {
+    "defaultMessage": "Restricted Entity"
   },
   "entities.showArchived": {
     "defaultMessage": "Show archived"

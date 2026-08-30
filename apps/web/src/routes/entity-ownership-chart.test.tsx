@@ -38,6 +38,7 @@ function entity(id: string, legalName: string, jurisdiction: string) {
     sharesIssued: null,
     parValue: null,
     customFields: {},
+    isConfidential: false,
     archivedAt: null,
     createdAt: "2026-08-01T00:00:00.000Z",
     updatedAt: "2026-08-01T00:00:00.000Z",
@@ -46,8 +47,8 @@ function entity(id: string, legalName: string, jurisdiction: string) {
 
 function holding(owner: keyof typeof rows, owned: keyof typeof rows, ownershipPercent: number) {
   return {
-    owner: { id: rows[owner].id, legalName: rows[owner].legalName },
-    owned: { id: rows[owned].id, legalName: rows[owned].legalName },
+    owner: { restricted: false, id: rows[owner].id, legalName: rows[owner].legalName },
+    owned: { restricted: false, id: rows[owned].id, legalName: rows[owned].legalName },
     ownershipPercent,
     createdAt: "2026-08-01T00:00:00.000Z",
     updatedAt: "2026-08-01T00:00:00.000Z",
@@ -81,6 +82,39 @@ function recordReads(call: StubCall): Response | undefined {
 }
 
 describe("the Entity Ownership tab", () => {
+  it("uses the shared Restricted Entity cell for an unreachable side", async () => {
+    stubApi({
+      signedIn: MEMBER,
+      extra: (call) => {
+        const record = recordReads(call);
+        if (record) return record;
+        if (call.url.pathname === "/api/v1/entities/current/holdings") {
+          return json(200, {
+            owners: [],
+            owned: [
+              {
+                owner: {
+                  restricted: false,
+                  id: "current",
+                  legalName: "UK Subsidiary",
+                },
+                owned: { restricted: true },
+                ownershipPercent: 100,
+                createdAt: "2026-08-01T00:00:00.000Z",
+                updatedAt: "2026-08-01T00:00:00.000Z",
+              },
+            ],
+            warnings: [],
+          });
+        }
+        return undefined;
+      },
+    });
+    renderAt("/entities/current/ownership");
+    expect(await screen.findByText("Restricted Entity")).toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: /Restricted Entity/ })).not.toBeInTheDocument();
+  });
+
   it("shows both directions, edits and removes inline, adds through the combobox, and warns", async () => {
     const originalOwner = holding("parent", "current", 60);
     const originalChild = holding("current", "child", 100);
@@ -174,6 +208,27 @@ describe("the Entity Ownership tab", () => {
 });
 
 describe("/entities?view=chart", () => {
+  it("draws a muted nameless node for an unreachable Entity", async () => {
+    const chart = {
+      nodes: [
+        { ...node(rows.parent), primaryOwnerId: null },
+        { restricted: true, id: "secret", primaryOwnerId: "parent" },
+      ],
+      edges: [{ ownerEntityId: "parent", ownedEntityId: "secret", ownershipPercent: 100 }],
+    };
+    stubApi({
+      signedIn: MEMBER,
+      extra: (call) =>
+        call.url.pathname === "/api/v1/entities/chart" ? json(200, chart) : recordReads(call),
+    });
+    renderAt("/entities?view=chart");
+    expect(await screen.findByLabelText("Restricted Entity")).toHaveAttribute(
+      "data-restricted",
+      "true",
+    );
+    expect(screen.queryByText("Invisible Acquisition Vehicle")).not.toBeInTheDocument();
+  });
+
   it("renders the majority tree, secondary edge, unconnected row, click-through, and keyboard pan", async () => {
     const chart = {
       nodes: [
@@ -244,6 +299,7 @@ describe("/entities?view=chart", () => {
 
 function node(row: ReturnType<typeof entity>) {
   return {
+    restricted: false as const,
     id: row.id,
     legalName: row.legalName,
     type: row.entityTypeName,

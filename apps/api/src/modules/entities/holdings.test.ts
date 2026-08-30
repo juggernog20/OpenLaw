@@ -23,6 +23,7 @@ const CONTRIBUTOR = {
 } as const;
 
 let harness: TestHarness;
+let adminCookies: Record<string, string>;
 let memberCookies: Record<string, string>;
 let contributorCookies: Record<string, string>;
 let corporationId: string;
@@ -35,6 +36,7 @@ beforeAll(async () => {
     payload: ADMIN,
   });
   expect(setup.statusCode, setup.body).toBe(201);
+  adminCookies = await signInCookies(harness.app, ADMIN.email, ADMIN.password);
 
   for (const [fixture, role] of [
     [MEMBER, "legal_team_member"],
@@ -88,6 +90,44 @@ function createHolding(
 }
 
 describe("Entity Holdings", () => {
+  it("keeps topology while rendering an unreachable side as restricted and nameless", async () => {
+    const parent = await newEntity("Visible Chart Parent");
+    const secret = await newEntity("Invisible Acquisition Vehicle");
+    expect((await createHolding(parent.id, "owned", secret.id, 100)).statusCode).toBe(201);
+    const sealed = await harness.app.inject({
+      method: "PATCH",
+      url: `/api/v1/entities/${secret.id}`,
+      cookies: adminCookies,
+      payload: { isConfidential: true },
+    });
+    expect(sealed.statusCode, sealed.body).toBe(200);
+
+    const holdings = await harness.app.inject({
+      method: "GET",
+      url: `/api/v1/entities/${parent.id}/holdings`,
+      cookies: memberCookies,
+    });
+    expect(holdings.statusCode, holdings.body).toBe(200);
+    expect(holdings.body).not.toContain("Invisible Acquisition Vehicle");
+    expect(holdings.json().owned).toEqual([
+      expect.objectContaining({ owned: { restricted: true }, ownershipPercent: 100 }),
+    ]);
+
+    const chart = await harness.app.inject({
+      method: "GET",
+      url: "/api/v1/entities/chart",
+      cookies: memberCookies,
+    });
+    expect(chart.statusCode, chart.body).toBe(200);
+    expect(chart.body).not.toContain("Invisible Acquisition Vehicle");
+    expect(chart.json().nodes).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ id: parent.id, restricted: false }),
+        expect.objectContaining({ id: secret.id, restricted: true }),
+      ]),
+    );
+  });
+
   it("creates from either side and reads the same row in both directions", async () => {
     const parent = await newEntity("Holdings Delaware Parent", "Delaware");
     const uk = await newEntity("Holdings UK Subsidiary", "England & Wales");

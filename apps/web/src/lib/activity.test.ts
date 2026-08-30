@@ -342,6 +342,18 @@ const SAMPLE_PAYLOADS: { [A in ActivityAction]: ActivityPayloadMap[A] } = {
   },
   "entity.status_changed": { legalName: "Helix Labs GmbH", from: "active", to: "dormant" },
   "entity.type_reassigned": { legalName: "Helix Labs GmbH", from: "GmbH", to: "AG" },
+  "entity.confidentiality_set": { legalName: "Helix Labs GmbH" },
+  "entity.confidentiality_cleared": { legalName: "Helix Labs GmbH" },
+  "entity_grant.added": {
+    legalName: "Helix Labs GmbH",
+    userId: "usr-2",
+    userName: "Nadia Counsel",
+  },
+  "entity_grant.removed": {
+    legalName: "Helix Labs GmbH",
+    userId: "usr-2",
+    userName: "Nadia Counsel",
+  },
   "entity.archived": { legalName: "Helix Labs GmbH" },
   "entity.restored": { legalName: "Helix Labs GmbH" },
   "entity_officer.created": {

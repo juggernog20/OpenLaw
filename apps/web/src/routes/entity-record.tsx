@@ -23,6 +23,7 @@ import { requireUser, useSignOut } from "../lib/session";
 import { useActivityApplet } from "../components/activity/activity-applet";
 import type { FieldReference } from "../components/custom-field-control";
 import { EntityFieldsCard } from "../components/entities/entity-fields-card";
+import { EntityGrantsDialog } from "../components/entities/entity-grants-dialog";
 import { OfficersCard } from "../components/entities/officers-card";
 import { ObligationsPanel } from "../components/entities/obligations-panel";
 import { OwnershipCard } from "../components/entities/ownership-card";
@@ -39,6 +40,9 @@ import { Label } from "../components/ui/label";
 import { DocumentsCard } from "../components/documents/documents-card";
 import { DocPanel } from "../components/documents/doc-panel";
 import { RecordContext } from "../components/record-context";
+import { ConfidentialBanner } from "../components/confidential-banner";
+import { ConfidentialMarker } from "../components/confidential-marker";
+import { ConfidentialToggle } from "../components/confidential-toggle";
 import { LinkedRecordsList } from "../components/linked-records-list";
 import {
   documentLandingParams,
@@ -143,7 +147,13 @@ type TextFieldKey =
   | "registeredAgent"
   | "registeredAddress";
 type FieldKey =
-  TextFieldKey | CapitalKey | `field:${string}` | "entityTypeId" | "status" | "formedOn";
+  | TextFieldKey
+  | CapitalKey
+  | `field:${string}`
+  | "entityTypeId"
+  | "status"
+  | "formedOn"
+  | "isConfidential";
 
 export function EntityRecordPage() {
   const loaded = useLoaderData<typeof entityRecordLoader>();
@@ -156,6 +166,7 @@ export function EntityRecordPage() {
   const commits = useFieldCommit<FieldKey>();
   const [archiveStatus, setArchiveStatus] = useState<FieldStatus>("idle");
   const [archiveError, setArchiveError] = useState<string>();
+  const [grantsOpen, setGrantsOpen] = useState(false);
   const [paper, setPaper] = useState(loaded.documents);
   const [paperCursor, setPaperCursor] = useState(loaded.documentCursor);
   const [folders, setFolders] = useState(loaded.folders);
@@ -169,12 +180,17 @@ export function EntityRecordPage() {
       : null,
   );
   const frozen = saved.archivedAt !== null;
-  const majorityOwner = [...loaded.holdings.owners].sort(
-    (a, b) =>
-      b.ownershipPercent - a.ownershipPercent ||
-      a.owner.legalName.localeCompare(b.owner.legalName, undefined, { sensitivity: "base" }) ||
-      a.owner.id.localeCompare(b.owner.id),
-  )[0]?.owner;
+  const majorityOwner = loaded.holdings.owners
+    .filter((holding) => !holding.owner.restricted)
+    .sort(
+      (a, b) =>
+        b.ownershipPercent - a.ownershipPercent ||
+        (!a.owner.restricted && !b.owner.restricted
+          ? a.owner.legalName.localeCompare(b.owner.legalName, undefined, {
+              sensitivity: "base",
+            }) || a.owner.id.localeCompare(b.owner.id)
+          : 0),
+    )[0]?.owner;
 
   const people: FieldReference[] = mergeReferences(
     loaded.users.map((row) => ({ id: row.id, label: row.displayName })),
@@ -182,7 +198,18 @@ export function EntityRecordPage() {
   );
   const entityRefs: FieldReference[] = mergeReferences(
     loaded.entities.map((row) => ({ id: row.id, label: row.legalName })),
-    refs.entities.map((row) => ({ id: row.id, label: row.legalName, archived: row.archived })),
+    refs.entities.map((row) =>
+      row.restricted
+        ? {
+            id: row.id,
+            label: intl.formatMessage({
+              id: "entities.restricted",
+              defaultMessage: "Restricted Entity",
+            }),
+            restricted: true,
+          }
+        : { id: row.id, label: row.legalName, archived: row.archived },
+    ),
   );
   const history = useActivityApplet({
     entityType: "entity",
@@ -207,11 +234,11 @@ export function EntityRecordPage() {
       record: { kind: "entity" as const, id: saved.id, number: 0 },
       viewer: { id: loaded.user.id, role: loaded.user.role },
       ownerId: null,
-      confidential: false,
+      confidential: saved.isConfidential,
       canEdit: true,
       frozen,
     }),
-    [saved.id, loaded.user.id, loaded.user.role, frozen],
+    [saved.id, saved.isConfidential, loaded.user.id, loaded.user.role, frozen],
   );
 
   function commit(key: FieldKey, body: Record<string, unknown>) {
@@ -283,6 +310,14 @@ export function EntityRecordPage() {
       <AppShell
         user={loaded.user}
         onSignOut={() => void signOut()}
+        banner={
+          saved.isConfidential ? (
+            <ConfidentialBanner
+              record="entity"
+              manageTeamHref={loaded.user.role === "administrator" ? "#entity-access" : undefined}
+            />
+          ) : undefined
+        }
         subbar={
           <>
             <section
@@ -294,7 +329,7 @@ export function EntityRecordPage() {
                   <FormattedMessage id="entities.title" defaultMessage="Entities" />
                 </Link>
                 <ChevronRight size={16} aria-hidden="true" className="text-subtle" />
-                {majorityOwner ? (
+                {majorityOwner && !majorityOwner.restricted ? (
                   <>
                     <Link
                       to={`/entities/${majorityOwner.id}`}
@@ -309,6 +344,7 @@ export function EntityRecordPage() {
                 <h1 id="page-title" className="truncate text-md font-semibold">
                   {saved.legalName}
                 </h1>
+                {saved.isConfidential ? <ConfidentialMarker /> : null}
                 <span
                   className={`rounded-pill px-2 py-0.5 text-xs font-medium ${STATUS_PILL[saved.status]}`}
                 >
@@ -514,6 +550,44 @@ export function EntityRecordPage() {
                     </div>
                   </div>
                 </section>
+                <section
+                  id="entity-access"
+                  className="overflow-hidden rounded-card border border-border-default bg-raised"
+                >
+                  <header className="flex h-section-header items-center border-b border-border-default bg-section-header px-4">
+                    <h2 className="text-base font-semibold">
+                      <FormattedMessage
+                        id="entities.record.confidentiality"
+                        defaultMessage="Confidentiality"
+                      />
+                    </h2>
+                  </header>
+                  <div className="flex flex-wrap items-center justify-between gap-3 p-4">
+                    <ConfidentialToggle
+                      id="entity-confidential"
+                      record="entity"
+                      confidential={saved.isConfidential}
+                      disabled={frozen || loaded.user.role !== "administrator"}
+                      status={
+                        <StatusNote
+                          status={commits.status.isConfidential ?? "idle"}
+                          detail={commits.error.isConfidential}
+                        />
+                      }
+                      onChange={(isConfidential) =>
+                        void commit("isConfidential", { isConfidential })
+                      }
+                    />
+                    {loaded.user.role === "administrator" ? (
+                      <Button variant="secondary" onClick={() => setGrantsOpen(true)}>
+                        <FormattedMessage
+                          id="entities.confidential.manage"
+                          defaultMessage="Manage access"
+                        />
+                      </Button>
+                    ) : null}
+                  </div>
+                </section>
                 <ShareCapitalCard
                   entity={saved}
                   frozen={frozen}
@@ -596,6 +670,7 @@ export function EntityRecordPage() {
             )}
           </div>
         </RecordApplets>
+        <EntityGrantsDialog entityId={saved.id} open={grantsOpen} onOpenChange={setGrantsOpen} />
       </AppShell>
     </RecordContext.Provider>
   );

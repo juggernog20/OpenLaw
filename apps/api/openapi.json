@@ -7745,20 +7745,42 @@
                         "entities": {
                           "type": "array",
                           "items": {
-                            "type": "object",
-                            "properties": {
-                              "id": {
-                                "type": "string"
+                            "oneOf": [
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "restricted": {
+                                    "type": "boolean",
+                                    "enum": [false]
+                                  },
+                                  "id": {
+                                    "type": "string"
+                                  },
+                                  "legalName": {
+                                    "type": "string"
+                                  },
+                                  "archived": {
+                                    "type": "boolean"
+                                  }
+                                },
+                                "required": ["restricted", "id", "legalName", "archived"],
+                                "additionalProperties": false
                               },
-                              "legalName": {
-                                "type": "string"
-                              },
-                              "archived": {
-                                "type": "boolean"
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "restricted": {
+                                    "type": "boolean",
+                                    "enum": [true]
+                                  },
+                                  "id": {
+                                    "type": "string"
+                                  }
+                                },
+                                "required": ["restricted", "id"],
+                                "additionalProperties": false
                               }
-                            },
-                            "required": ["id", "legalName", "archived"],
-                            "additionalProperties": false
+                            ]
                           }
                         }
                       },
@@ -8241,20 +8263,42 @@
                         "entities": {
                           "type": "array",
                           "items": {
-                            "type": "object",
-                            "properties": {
-                              "id": {
-                                "type": "string"
+                            "oneOf": [
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "restricted": {
+                                    "type": "boolean",
+                                    "enum": [false]
+                                  },
+                                  "id": {
+                                    "type": "string"
+                                  },
+                                  "legalName": {
+                                    "type": "string"
+                                  },
+                                  "archived": {
+                                    "type": "boolean"
+                                  }
+                                },
+                                "required": ["restricted", "id", "legalName", "archived"],
+                                "additionalProperties": false
                               },
-                              "legalName": {
-                                "type": "string"
-                              },
-                              "archived": {
-                                "type": "boolean"
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "restricted": {
+                                    "type": "boolean",
+                                    "enum": [true]
+                                  },
+                                  "id": {
+                                    "type": "string"
+                                  }
+                                },
+                                "required": ["restricted", "id"],
+                                "additionalProperties": false
                               }
-                            },
-                            "required": ["id", "legalName", "archived"],
-                            "additionalProperties": false
+                            ]
                           }
                         }
                       },
@@ -17757,20 +17801,42 @@
                         "entities": {
                           "type": "array",
                           "items": {
-                            "type": "object",
-                            "properties": {
-                              "id": {
-                                "type": "string"
+                            "oneOf": [
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "restricted": {
+                                    "type": "boolean",
+                                    "enum": [false]
+                                  },
+                                  "id": {
+                                    "type": "string"
+                                  },
+                                  "legalName": {
+                                    "type": "string"
+                                  },
+                                  "archived": {
+                                    "type": "boolean"
+                                  }
+                                },
+                                "required": ["restricted", "id", "legalName", "archived"],
+                                "additionalProperties": false
                               },
-                              "legalName": {
-                                "type": "string"
-                              },
-                              "archived": {
-                                "type": "boolean"
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "restricted": {
+                                    "type": "boolean",
+                                    "enum": [true]
+                                  },
+                                  "id": {
+                                    "type": "string"
+                                  }
+                                },
+                                "required": ["restricted", "id"],
+                                "additionalProperties": false
                               }
-                            },
-                            "required": ["id", "legalName", "archived"],
-                            "additionalProperties": false
+                            ]
                           }
                         }
                       },
@@ -20658,17 +20724,36 @@
                           "entity": {
                             "anyOf": [
                               {
-                                "type": "object",
-                                "properties": {
-                                  "id": {
-                                    "type": "string"
+                                "oneOf": [
+                                  {
+                                    "type": "object",
+                                    "properties": {
+                                      "restricted": {
+                                        "type": "boolean",
+                                        "enum": [false]
+                                      },
+                                      "id": {
+                                        "type": "string"
+                                      },
+                                      "legalName": {
+                                        "type": "string"
+                                      }
+                                    },
+                                    "required": ["restricted", "id", "legalName"],
+                                    "additionalProperties": false
                                   },
-                                  "legalName": {
-                                    "type": "string"
+                                  {
+                                    "type": "object",
+                                    "properties": {
+                                      "restricted": {
+                                        "type": "boolean",
+                                        "enum": [true]
+                                      }
+                                    },
+                                    "required": ["restricted"],
+                                    "additionalProperties": false
                                   }
-                                },
-                                "required": ["id", "legalName"],
-                                "additionalProperties": false
+                                ]
                               },
                               {
                                 "type": "null"
@@ -21120,17 +21205,36 @@
                         "entity": {
                           "anyOf": [
                             {
-                              "type": "object",
-                              "properties": {
-                                "id": {
-                                  "type": "string"
+                              "oneOf": [
+                                {
+                                  "type": "object",
+                                  "properties": {
+                                    "restricted": {
+                                      "type": "boolean",
+                                      "enum": [false]
+                                    },
+                                    "id": {
+                                      "type": "string"
+                                    },
+                                    "legalName": {
+                                      "type": "string"
+                                    }
+                                  },
+                                  "required": ["restricted", "id", "legalName"],
+                                  "additionalProperties": false
                                 },
-                                "legalName": {
-                                  "type": "string"
+                                {
+                                  "type": "object",
+                                  "properties": {
+                                    "restricted": {
+                                      "type": "boolean",
+                                      "enum": [true]
+                                    }
+                                  },
+                                  "required": ["restricted"],
+                                  "additionalProperties": false
                                 }
-                              },
-                              "required": ["id", "legalName"],
-                              "additionalProperties": false
+                              ]
                             },
                             {
                               "type": "null"
@@ -21775,17 +21879,36 @@
                         "entity": {
                           "anyOf": [
                             {
-                              "type": "object",
-                              "properties": {
-                                "id": {
-                                  "type": "string"
+                              "oneOf": [
+                                {
+                                  "type": "object",
+                                  "properties": {
+                                    "restricted": {
+                                      "type": "boolean",
+                                      "enum": [false]
+                                    },
+                                    "id": {
+                                      "type": "string"
+                                    },
+                                    "legalName": {
+                                      "type": "string"
+                                    }
+                                  },
+                                  "required": ["restricted", "id", "legalName"],
+                                  "additionalProperties": false
                                 },
-                                "legalName": {
-                                  "type": "string"
+                                {
+                                  "type": "object",
+                                  "properties": {
+                                    "restricted": {
+                                      "type": "boolean",
+                                      "enum": [true]
+                                    }
+                                  },
+                                  "required": ["restricted"],
+                                  "additionalProperties": false
                                 }
-                              },
-                              "required": ["id", "legalName"],
-                              "additionalProperties": false
+                              ]
                             },
                             {
                               "type": "null"
@@ -22164,17 +22287,39 @@
                         "entities": {
                           "type": "array",
                           "items": {
-                            "type": "object",
-                            "properties": {
-                              "id": {
-                                "type": "string"
+                            "oneOf": [
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "restricted": {
+                                    "type": "boolean",
+                                    "enum": [false]
+                                  },
+                                  "id": {
+                                    "type": "string"
+                                  },
+                                  "legalName": {
+                                    "type": "string"
+                                  }
+                                },
+                                "required": ["restricted", "id", "legalName"],
+                                "additionalProperties": false
                               },
-                              "legalName": {
-                                "type": "string"
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "restricted": {
+                                    "type": "boolean",
+                                    "enum": [true]
+                                  },
+                                  "id": {
+                                    "type": "string"
+                                  }
+                                },
+                                "required": ["restricted", "id"],
+                                "additionalProperties": false
                               }
-                            },
-                            "required": ["id", "legalName"],
-                            "additionalProperties": false
+                            ]
                           }
                         }
                       },
@@ -22606,17 +22751,36 @@
                         "entity": {
                           "anyOf": [
                             {
-                              "type": "object",
-                              "properties": {
-                                "id": {
-                                  "type": "string"
+                              "oneOf": [
+                                {
+                                  "type": "object",
+                                  "properties": {
+                                    "restricted": {
+                                      "type": "boolean",
+                                      "enum": [false]
+                                    },
+                                    "id": {
+                                      "type": "string"
+                                    },
+                                    "legalName": {
+                                      "type": "string"
+                                    }
+                                  },
+                                  "required": ["restricted", "id", "legalName"],
+                                  "additionalProperties": false
                                 },
-                                "legalName": {
-                                  "type": "string"
+                                {
+                                  "type": "object",
+                                  "properties": {
+                                    "restricted": {
+                                      "type": "boolean",
+                                      "enum": [true]
+                                    }
+                                  },
+                                  "required": ["restricted"],
+                                  "additionalProperties": false
                                 }
-                              },
-                              "required": ["id", "legalName"],
-                              "additionalProperties": false
+                              ]
                             },
                             {
                               "type": "null"
@@ -22995,17 +23159,39 @@
                         "entities": {
                           "type": "array",
                           "items": {
-                            "type": "object",
-                            "properties": {
-                              "id": {
-                                "type": "string"
+                            "oneOf": [
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "restricted": {
+                                    "type": "boolean",
+                                    "enum": [false]
+                                  },
+                                  "id": {
+                                    "type": "string"
+                                  },
+                                  "legalName": {
+                                    "type": "string"
+                                  }
+                                },
+                                "required": ["restricted", "id", "legalName"],
+                                "additionalProperties": false
                               },
-                              "legalName": {
-                                "type": "string"
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "restricted": {
+                                    "type": "boolean",
+                                    "enum": [true]
+                                  },
+                                  "id": {
+                                    "type": "string"
+                                  }
+                                },
+                                "required": ["restricted", "id"],
+                                "additionalProperties": false
                               }
-                            },
-                            "required": ["id", "legalName"],
-                            "additionalProperties": false
+                            ]
                           }
                         }
                       },
@@ -23251,17 +23437,36 @@
                         "entity": {
                           "anyOf": [
                             {
-                              "type": "object",
-                              "properties": {
-                                "id": {
-                                  "type": "string"
+                              "oneOf": [
+                                {
+                                  "type": "object",
+                                  "properties": {
+                                    "restricted": {
+                                      "type": "boolean",
+                                      "enum": [false]
+                                    },
+                                    "id": {
+                                      "type": "string"
+                                    },
+                                    "legalName": {
+                                      "type": "string"
+                                    }
+                                  },
+                                  "required": ["restricted", "id", "legalName"],
+                                  "additionalProperties": false
                                 },
-                                "legalName": {
-                                  "type": "string"
+                                {
+                                  "type": "object",
+                                  "properties": {
+                                    "restricted": {
+                                      "type": "boolean",
+                                      "enum": [true]
+                                    }
+                                  },
+                                  "required": ["restricted"],
+                                  "additionalProperties": false
                                 }
-                              },
-                              "required": ["id", "legalName"],
-                              "additionalProperties": false
+                              ]
                             },
                             {
                               "type": "null"
@@ -23964,17 +24169,36 @@
                         "entity": {
                           "anyOf": [
                             {
-                              "type": "object",
-                              "properties": {
-                                "id": {
-                                  "type": "string"
+                              "oneOf": [
+                                {
+                                  "type": "object",
+                                  "properties": {
+                                    "restricted": {
+                                      "type": "boolean",
+                                      "enum": [false]
+                                    },
+                                    "id": {
+                                      "type": "string"
+                                    },
+                                    "legalName": {
+                                      "type": "string"
+                                    }
+                                  },
+                                  "required": ["restricted", "id", "legalName"],
+                                  "additionalProperties": false
                                 },
-                                "legalName": {
-                                  "type": "string"
+                                {
+                                  "type": "object",
+                                  "properties": {
+                                    "restricted": {
+                                      "type": "boolean",
+                                      "enum": [true]
+                                    }
+                                  },
+                                  "required": ["restricted"],
+                                  "additionalProperties": false
                                 }
-                              },
-                              "required": ["id", "legalName"],
-                              "additionalProperties": false
+                              ]
                             },
                             {
                               "type": "null"
@@ -24388,17 +24612,36 @@
                         "entity": {
                           "anyOf": [
                             {
-                              "type": "object",
-                              "properties": {
-                                "id": {
-                                  "type": "string"
+                              "oneOf": [
+                                {
+                                  "type": "object",
+                                  "properties": {
+                                    "restricted": {
+                                      "type": "boolean",
+                                      "enum": [false]
+                                    },
+                                    "id": {
+                                      "type": "string"
+                                    },
+                                    "legalName": {
+                                      "type": "string"
+                                    }
+                                  },
+                                  "required": ["restricted", "id", "legalName"],
+                                  "additionalProperties": false
                                 },
-                                "legalName": {
-                                  "type": "string"
+                                {
+                                  "type": "object",
+                                  "properties": {
+                                    "restricted": {
+                                      "type": "boolean",
+                                      "enum": [true]
+                                    }
+                                  },
+                                  "required": ["restricted"],
+                                  "additionalProperties": false
                                 }
-                              },
-                              "required": ["id", "legalName"],
-                              "additionalProperties": false
+                              ]
                             },
                             {
                               "type": "null"
@@ -24812,17 +25055,36 @@
                         "entity": {
                           "anyOf": [
                             {
-                              "type": "object",
-                              "properties": {
-                                "id": {
-                                  "type": "string"
+                              "oneOf": [
+                                {
+                                  "type": "object",
+                                  "properties": {
+                                    "restricted": {
+                                      "type": "boolean",
+                                      "enum": [false]
+                                    },
+                                    "id": {
+                                      "type": "string"
+                                    },
+                                    "legalName": {
+                                      "type": "string"
+                                    }
+                                  },
+                                  "required": ["restricted", "id", "legalName"],
+                                  "additionalProperties": false
                                 },
-                                "legalName": {
-                                  "type": "string"
+                                {
+                                  "type": "object",
+                                  "properties": {
+                                    "restricted": {
+                                      "type": "boolean",
+                                      "enum": [true]
+                                    }
+                                  },
+                                  "required": ["restricted"],
+                                  "additionalProperties": false
                                 }
-                              },
-                              "required": ["id", "legalName"],
-                              "additionalProperties": false
+                              ]
                             },
                             {
                               "type": "null"
@@ -25228,17 +25490,36 @@
                         "entity": {
                           "anyOf": [
                             {
-                              "type": "object",
-                              "properties": {
-                                "id": {
-                                  "type": "string"
+                              "oneOf": [
+                                {
+                                  "type": "object",
+                                  "properties": {
+                                    "restricted": {
+                                      "type": "boolean",
+                                      "enum": [false]
+                                    },
+                                    "id": {
+                                      "type": "string"
+                                    },
+                                    "legalName": {
+                                      "type": "string"
+                                    }
+                                  },
+                                  "required": ["restricted", "id", "legalName"],
+                                  "additionalProperties": false
                                 },
-                                "legalName": {
-                                  "type": "string"
+                                {
+                                  "type": "object",
+                                  "properties": {
+                                    "restricted": {
+                                      "type": "boolean",
+                                      "enum": [true]
+                                    }
+                                  },
+                                  "required": ["restricted"],
+                                  "additionalProperties": false
                                 }
-                              },
-                              "required": ["id", "legalName"],
-                              "additionalProperties": false
+                              ]
                             },
                             {
                               "type": "null"
@@ -25615,17 +25896,36 @@
                         "entity": {
                           "anyOf": [
                             {
-                              "type": "object",
-                              "properties": {
-                                "id": {
-                                  "type": "string"
+                              "oneOf": [
+                                {
+                                  "type": "object",
+                                  "properties": {
+                                    "restricted": {
+                                      "type": "boolean",
+                                      "enum": [false]
+                                    },
+                                    "id": {
+                                      "type": "string"
+                                    },
+                                    "legalName": {
+                                      "type": "string"
+                                    }
+                                  },
+                                  "required": ["restricted", "id", "legalName"],
+                                  "additionalProperties": false
                                 },
-                                "legalName": {
-                                  "type": "string"
+                                {
+                                  "type": "object",
+                                  "properties": {
+                                    "restricted": {
+                                      "type": "boolean",
+                                      "enum": [true]
+                                    }
+                                  },
+                                  "required": ["restricted"],
+                                  "additionalProperties": false
                                 }
-                              },
-                              "required": ["id", "legalName"],
-                              "additionalProperties": false
+                              ]
                             },
                             {
                               "type": "null"
@@ -43222,6 +43522,238 @@
         }
       }
     },
+    "/api/v1/entities/{id}/grants": {
+      "get": {
+        "operationId": "listEntityGrants",
+        "tags": ["entities"],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 64
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "grants": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "displayName": {
+                            "type": "string"
+                          },
+                          "image": {
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "archived": {
+                            "type": "boolean"
+                          }
+                        },
+                        "required": ["id", "displayName", "image", "archived"],
+                        "additionalProperties": false
+                      }
+                    },
+                    "candidates": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "displayName": {
+                            "type": "string"
+                          },
+                          "image": {
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "archived": {
+                            "type": "boolean"
+                          }
+                        },
+                        "required": ["id", "displayName", "image", "archived"],
+                        "additionalProperties": false
+                      }
+                    }
+                  },
+                  "required": ["grants", "candidates"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "operationId": "addEntityGrant",
+        "tags": ["entities"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "userId": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 64
+                  }
+                },
+                "required": ["userId"],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 64
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "grant": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "displayName": {
+                          "type": "string"
+                        },
+                        "image": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "archived": {
+                          "type": "boolean"
+                        }
+                      },
+                      "required": ["id", "displayName", "image", "archived"],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": ["grant"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/entities/{id}/grants/{userId}": {
+      "delete": {
+        "operationId": "removeEntityGrant",
+        "tags": ["entities"],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 64
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          },
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 64
+            },
+            "in": "path",
+            "name": "userId",
+            "required": true
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Default Response"
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/entities/chart": {
       "get": {
         "operationId": "getEntityChart",
@@ -43237,51 +43769,84 @@
                     "nodes": {
                       "type": "array",
                       "items": {
-                        "type": "object",
-                        "properties": {
-                          "id": {
-                            "type": "string"
-                          },
-                          "legalName": {
-                            "type": "string"
-                          },
-                          "type": {
-                            "type": "string"
-                          },
-                          "jurisdiction": {
-                            "anyOf": [
-                              {
+                        "oneOf": [
+                          {
+                            "type": "object",
+                            "properties": {
+                              "restricted": {
+                                "type": "boolean",
+                                "enum": [false]
+                              },
+                              "id": {
                                 "type": "string"
                               },
-                              {
-                                "type": "null"
-                              }
-                            ]
-                          },
-                          "status": {
-                            "type": "string",
-                            "enum": ["active", "dormant", "dissolved", "divested"]
-                          },
-                          "primaryOwnerId": {
-                            "anyOf": [
-                              {
+                              "legalName": {
                                 "type": "string"
                               },
-                              {
-                                "type": "null"
+                              "type": {
+                                "type": "string"
+                              },
+                              "jurisdiction": {
+                                "anyOf": [
+                                  {
+                                    "type": "string"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "status": {
+                                "type": "string",
+                                "enum": ["active", "dormant", "dissolved", "divested"]
+                              },
+                              "primaryOwnerId": {
+                                "anyOf": [
+                                  {
+                                    "type": "string"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
                               }
-                            ]
+                            },
+                            "required": [
+                              "restricted",
+                              "id",
+                              "legalName",
+                              "type",
+                              "jurisdiction",
+                              "status",
+                              "primaryOwnerId"
+                            ],
+                            "additionalProperties": false
+                          },
+                          {
+                            "type": "object",
+                            "properties": {
+                              "restricted": {
+                                "type": "boolean",
+                                "enum": [true]
+                              },
+                              "id": {
+                                "type": "string"
+                              },
+                              "primaryOwnerId": {
+                                "anyOf": [
+                                  {
+                                    "type": "string"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              }
+                            },
+                            "required": ["restricted", "id", "primaryOwnerId"],
+                            "additionalProperties": false
                           }
-                        },
-                        "required": [
-                          "id",
-                          "legalName",
-                          "type",
-                          "jurisdiction",
-                          "status",
-                          "primaryOwnerId"
-                        ],
-                        "additionalProperties": false
+                        ]
                       }
                     },
                     "edges": {
@@ -43353,30 +43918,68 @@
                         "type": "object",
                         "properties": {
                           "owner": {
-                            "type": "object",
-                            "properties": {
-                              "id": {
-                                "type": "string"
+                            "oneOf": [
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "restricted": {
+                                    "type": "boolean",
+                                    "enum": [false]
+                                  },
+                                  "id": {
+                                    "type": "string"
+                                  },
+                                  "legalName": {
+                                    "type": "string"
+                                  }
+                                },
+                                "required": ["restricted", "id", "legalName"],
+                                "additionalProperties": false
                               },
-                              "legalName": {
-                                "type": "string"
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "restricted": {
+                                    "type": "boolean",
+                                    "enum": [true]
+                                  }
+                                },
+                                "required": ["restricted"],
+                                "additionalProperties": false
                               }
-                            },
-                            "required": ["id", "legalName"],
-                            "additionalProperties": false
+                            ]
                           },
                           "owned": {
-                            "type": "object",
-                            "properties": {
-                              "id": {
-                                "type": "string"
+                            "oneOf": [
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "restricted": {
+                                    "type": "boolean",
+                                    "enum": [false]
+                                  },
+                                  "id": {
+                                    "type": "string"
+                                  },
+                                  "legalName": {
+                                    "type": "string"
+                                  }
+                                },
+                                "required": ["restricted", "id", "legalName"],
+                                "additionalProperties": false
                               },
-                              "legalName": {
-                                "type": "string"
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "restricted": {
+                                    "type": "boolean",
+                                    "enum": [true]
+                                  }
+                                },
+                                "required": ["restricted"],
+                                "additionalProperties": false
                               }
-                            },
-                            "required": ["id", "legalName"],
-                            "additionalProperties": false
+                            ]
                           },
                           "ownershipPercent": {
                             "type": "number"
@@ -43408,30 +44011,68 @@
                         "type": "object",
                         "properties": {
                           "owner": {
-                            "type": "object",
-                            "properties": {
-                              "id": {
-                                "type": "string"
+                            "oneOf": [
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "restricted": {
+                                    "type": "boolean",
+                                    "enum": [false]
+                                  },
+                                  "id": {
+                                    "type": "string"
+                                  },
+                                  "legalName": {
+                                    "type": "string"
+                                  }
+                                },
+                                "required": ["restricted", "id", "legalName"],
+                                "additionalProperties": false
                               },
-                              "legalName": {
-                                "type": "string"
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "restricted": {
+                                    "type": "boolean",
+                                    "enum": [true]
+                                  }
+                                },
+                                "required": ["restricted"],
+                                "additionalProperties": false
                               }
-                            },
-                            "required": ["id", "legalName"],
-                            "additionalProperties": false
+                            ]
                           },
                           "owned": {
-                            "type": "object",
-                            "properties": {
-                              "id": {
-                                "type": "string"
+                            "oneOf": [
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "restricted": {
+                                    "type": "boolean",
+                                    "enum": [false]
+                                  },
+                                  "id": {
+                                    "type": "string"
+                                  },
+                                  "legalName": {
+                                    "type": "string"
+                                  }
+                                },
+                                "required": ["restricted", "id", "legalName"],
+                                "additionalProperties": false
                               },
-                              "legalName": {
-                                "type": "string"
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "restricted": {
+                                    "type": "boolean",
+                                    "enum": [true]
+                                  }
+                                },
+                                "required": ["restricted"],
+                                "additionalProperties": false
                               }
-                            },
-                            "required": ["id", "legalName"],
-                            "additionalProperties": false
+                            ]
                           },
                           "ownershipPercent": {
                             "type": "number"
@@ -43554,30 +44195,68 @@
                       "type": "object",
                       "properties": {
                         "owner": {
-                          "type": "object",
-                          "properties": {
-                            "id": {
-                              "type": "string"
+                          "oneOf": [
+                            {
+                              "type": "object",
+                              "properties": {
+                                "restricted": {
+                                  "type": "boolean",
+                                  "enum": [false]
+                                },
+                                "id": {
+                                  "type": "string"
+                                },
+                                "legalName": {
+                                  "type": "string"
+                                }
+                              },
+                              "required": ["restricted", "id", "legalName"],
+                              "additionalProperties": false
                             },
-                            "legalName": {
-                              "type": "string"
+                            {
+                              "type": "object",
+                              "properties": {
+                                "restricted": {
+                                  "type": "boolean",
+                                  "enum": [true]
+                                }
+                              },
+                              "required": ["restricted"],
+                              "additionalProperties": false
                             }
-                          },
-                          "required": ["id", "legalName"],
-                          "additionalProperties": false
+                          ]
                         },
                         "owned": {
-                          "type": "object",
-                          "properties": {
-                            "id": {
-                              "type": "string"
+                          "oneOf": [
+                            {
+                              "type": "object",
+                              "properties": {
+                                "restricted": {
+                                  "type": "boolean",
+                                  "enum": [false]
+                                },
+                                "id": {
+                                  "type": "string"
+                                },
+                                "legalName": {
+                                  "type": "string"
+                                }
+                              },
+                              "required": ["restricted", "id", "legalName"],
+                              "additionalProperties": false
                             },
-                            "legalName": {
-                              "type": "string"
+                            {
+                              "type": "object",
+                              "properties": {
+                                "restricted": {
+                                  "type": "boolean",
+                                  "enum": [true]
+                                }
+                              },
+                              "required": ["restricted"],
+                              "additionalProperties": false
                             }
-                          },
-                          "required": ["id", "legalName"],
-                          "additionalProperties": false
+                          ]
                         },
                         "ownershipPercent": {
                           "type": "number"
@@ -43696,30 +44375,68 @@
                       "type": "object",
                       "properties": {
                         "owner": {
-                          "type": "object",
-                          "properties": {
-                            "id": {
-                              "type": "string"
+                          "oneOf": [
+                            {
+                              "type": "object",
+                              "properties": {
+                                "restricted": {
+                                  "type": "boolean",
+                                  "enum": [false]
+                                },
+                                "id": {
+                                  "type": "string"
+                                },
+                                "legalName": {
+                                  "type": "string"
+                                }
+                              },
+                              "required": ["restricted", "id", "legalName"],
+                              "additionalProperties": false
                             },
-                            "legalName": {
-                              "type": "string"
+                            {
+                              "type": "object",
+                              "properties": {
+                                "restricted": {
+                                  "type": "boolean",
+                                  "enum": [true]
+                                }
+                              },
+                              "required": ["restricted"],
+                              "additionalProperties": false
                             }
-                          },
-                          "required": ["id", "legalName"],
-                          "additionalProperties": false
+                          ]
                         },
                         "owned": {
-                          "type": "object",
-                          "properties": {
-                            "id": {
-                              "type": "string"
+                          "oneOf": [
+                            {
+                              "type": "object",
+                              "properties": {
+                                "restricted": {
+                                  "type": "boolean",
+                                  "enum": [false]
+                                },
+                                "id": {
+                                  "type": "string"
+                                },
+                                "legalName": {
+                                  "type": "string"
+                                }
+                              },
+                              "required": ["restricted", "id", "legalName"],
+                              "additionalProperties": false
                             },
-                            "legalName": {
-                              "type": "string"
+                            {
+                              "type": "object",
+                              "properties": {
+                                "restricted": {
+                                  "type": "boolean",
+                                  "enum": [true]
+                                }
+                              },
+                              "required": ["restricted"],
+                              "additionalProperties": false
                             }
-                          },
-                          "required": ["id", "legalName"],
-                          "additionalProperties": false
+                          ]
                         },
                         "ownershipPercent": {
                           "type": "number"
@@ -45054,6 +45771,9 @@
                               ]
                             }
                           },
+                          "isConfidential": {
+                            "type": "boolean"
+                          },
                           "archivedAt": {
                             "anyOf": [
                               {
@@ -45093,6 +45813,7 @@
                           "sharesIssued",
                           "parValue",
                           "customFields",
+                          "isConfidential",
                           "archivedAt",
                           "createdAt",
                           "updatedAt"
@@ -45323,6 +46044,9 @@
                             ]
                           }
                         },
+                        "isConfidential": {
+                          "type": "boolean"
+                        },
                         "archivedAt": {
                           "anyOf": [
                             {
@@ -45362,6 +46086,7 @@
                         "sharesIssued",
                         "parValue",
                         "customFields",
+                        "isConfidential",
                         "archivedAt",
                         "createdAt",
                         "updatedAt"
@@ -45686,6 +46411,9 @@
                             ]
                           }
                         },
+                        "isConfidential": {
+                          "type": "boolean"
+                        },
                         "archivedAt": {
                           "anyOf": [
                             {
@@ -45725,6 +46453,7 @@
                         "sharesIssued",
                         "parValue",
                         "customFields",
+                        "isConfidential",
                         "archivedAt",
                         "createdAt",
                         "updatedAt"
@@ -45834,20 +46563,42 @@
                         "entities": {
                           "type": "array",
                           "items": {
-                            "type": "object",
-                            "properties": {
-                              "id": {
-                                "type": "string"
+                            "oneOf": [
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "restricted": {
+                                    "type": "boolean",
+                                    "enum": [false]
+                                  },
+                                  "id": {
+                                    "type": "string"
+                                  },
+                                  "legalName": {
+                                    "type": "string"
+                                  },
+                                  "archived": {
+                                    "type": "boolean"
+                                  }
+                                },
+                                "required": ["restricted", "id", "legalName", "archived"],
+                                "additionalProperties": false
                               },
-                              "legalName": {
-                                "type": "string"
-                              },
-                              "archived": {
-                                "type": "boolean"
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "restricted": {
+                                    "type": "boolean",
+                                    "enum": [true]
+                                  },
+                                  "id": {
+                                    "type": "string"
+                                  }
+                                },
+                                "required": ["restricted", "id"],
+                                "additionalProperties": false
                               }
-                            },
-                            "required": ["id", "legalName", "archived"],
-                            "additionalProperties": false
+                            ]
                           }
                         }
                       },
@@ -46030,6 +46781,9 @@
                         }
                       ]
                     }
+                  },
+                  "isConfidential": {
+                    "type": "boolean"
                   }
                 },
                 "additionalProperties": false
@@ -46197,6 +46951,9 @@
                             ]
                           }
                         },
+                        "isConfidential": {
+                          "type": "boolean"
+                        },
                         "archivedAt": {
                           "anyOf": [
                             {
@@ -46236,6 +46993,7 @@
                         "sharesIssued",
                         "parValue",
                         "customFields",
+                        "isConfidential",
                         "archivedAt",
                         "createdAt",
                         "updatedAt"
@@ -46345,20 +47103,42 @@
                         "entities": {
                           "type": "array",
                           "items": {
-                            "type": "object",
-                            "properties": {
-                              "id": {
-                                "type": "string"
+                            "oneOf": [
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "restricted": {
+                                    "type": "boolean",
+                                    "enum": [false]
+                                  },
+                                  "id": {
+                                    "type": "string"
+                                  },
+                                  "legalName": {
+                                    "type": "string"
+                                  },
+                                  "archived": {
+                                    "type": "boolean"
+                                  }
+                                },
+                                "required": ["restricted", "id", "legalName", "archived"],
+                                "additionalProperties": false
                               },
-                              "legalName": {
-                                "type": "string"
-                              },
-                              "archived": {
-                                "type": "boolean"
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "restricted": {
+                                    "type": "boolean",
+                                    "enum": [true]
+                                  },
+                                  "id": {
+                                    "type": "string"
+                                  }
+                                },
+                                "required": ["restricted", "id"],
+                                "additionalProperties": false
                               }
-                            },
-                            "required": ["id", "legalName", "archived"],
-                            "additionalProperties": false
+                            ]
                           }
                         }
                       },
@@ -46550,6 +47330,9 @@
                             ]
                           }
                         },
+                        "isConfidential": {
+                          "type": "boolean"
+                        },
                         "archivedAt": {
                           "anyOf": [
                             {
@@ -46589,6 +47372,7 @@
                         "sharesIssued",
                         "parValue",
                         "customFields",
+                        "isConfidential",
                         "archivedAt",
                         "createdAt",
                         "updatedAt"
@@ -46780,6 +47564,9 @@
                             ]
                           }
                         },
+                        "isConfidential": {
+                          "type": "boolean"
+                        },
                         "archivedAt": {
                           "anyOf": [
                             {
@@ -46819,6 +47606,7 @@
                         "sharesIssued",
                         "parValue",
                         "customFields",
+                        "isConfidential",
                         "archivedAt",
                         "createdAt",
                         "updatedAt"

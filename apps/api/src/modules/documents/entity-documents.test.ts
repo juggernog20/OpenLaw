@@ -18,6 +18,8 @@ const MEMBER = {
 const BOUNDARY = "entity-paper-boundary";
 let harness: TestHarness;
 let cookies: Record<string, string>;
+let adminCookies: Record<string, string>;
+let memberId: string;
 let entityId: string;
 
 function form(filename: string, folderPath?: string) {
@@ -41,8 +43,10 @@ beforeAll(async () => {
   harness = await startHarness();
   await harness.app.inject({ method: "POST", url: "/api/v1/auth/setup", payload: TEST_ADMIN });
   const member = await provisionUser(harness.app.auth, MEMBER);
+  memberId = member.id;
   await harness.db.update(users).set({ role: "legal_team_member" }).where(eq(users.id, member.id));
   cookies = await signInCookies(harness.app, MEMBER.email, MEMBER.password);
+  adminCookies = await signInCookies(harness.app, TEST_ADMIN.email, TEST_ADMIN.password);
   const [type] = await harness.db.select({ id: entityTypes.id }).from(entityTypes).limit(1);
   const [entity] = await harness.db
     .insert(entities)
@@ -103,5 +107,41 @@ describe("Entity-owned Documents", () => {
     });
     const hit = search.json().results.find((row: { kind: string }) => row.kind === "document");
     expect(hit).toMatchObject({ kind: "document", ownerKind: "entity", ownerId: entityId });
+
+    const sealed = await harness.app.inject({
+      method: "PATCH",
+      url: `/api/v1/entities/${entityId}`,
+      cookies: adminCookies,
+      payload: { isConfidential: true },
+    });
+    expect(sealed.statusCode, sealed.body).toBe(200);
+    const walledRepository = await harness.app.inject({
+      method: "GET",
+      url: "/api/v1/documents",
+      cookies,
+    });
+    expect(walledRepository.body).not.toContain("Entity Paper Ltd");
+    expect(walledRepository.json().documents).toEqual([]);
+    const walledOptions = await harness.app.inject({
+      method: "GET",
+      url: "/api/v1/documents/options",
+      cookies,
+    });
+    expect(walledOptions.body).not.toContain("Entity Paper Ltd");
+    expect(walledOptions.json().records).toEqual([]);
+
+    const granted = await harness.app.inject({
+      method: "POST",
+      url: `/api/v1/entities/${entityId}/grants`,
+      cookies: adminCookies,
+      payload: { userId: memberId },
+    });
+    expect(granted.statusCode, granted.body).toBe(201);
+    const reachedAgain = await harness.app.inject({
+      method: "GET",
+      url: "/api/v1/documents",
+      cookies,
+    });
+    expect(reachedAgain.json().documents[0].owner.reference).toBe("Entity Paper Ltd");
   });
 });

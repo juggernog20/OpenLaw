@@ -22,6 +22,12 @@ const MEMBER = {
   displayName: "Nadia Counsel",
   role: "legal_team_member",
 };
+const ADMIN = {
+  id: "u1",
+  email: "admin@example.com",
+  displayName: "Blair Wentworth",
+  role: "administrator",
+};
 const CONTRIBUTOR = {
   id: "u3",
   email: "contributor@example.com",
@@ -51,6 +57,7 @@ function entityRow(overrides: Partial<Record<string, unknown>> = {}) {
     sharesIssued: null,
     parValue: null,
     customFields: {},
+    isConfidential: false,
     archivedAt: null,
     createdAt: "2026-08-01T00:00:00.000Z",
     updatedAt: "2026-08-01T00:00:00.000Z",
@@ -120,6 +127,45 @@ function recordApi(
 }
 
 describe("the /entities/:entityId record page", () => {
+  it("draws the DD-014 banner and CONFI marker and opens the Administrator grant dialog", async () => {
+    const api = recordApi(entityRow({ isConfidential: true }));
+    const writes: unknown[] = [];
+    stubApi({
+      signedIn: ADMIN,
+      extra: (call) => {
+        if (call.url.pathname === "/api/v1/entities/e1/grants" && call.method === "GET") {
+          return json(200, {
+            grants: [{ id: "u2", displayName: "Nadia Counsel", image: null, archived: false }],
+            candidates: [
+              { id: "u2", displayName: "Nadia Counsel", image: null, archived: false },
+              { id: "u4", displayName: "Sarah Chen", image: null, archived: false },
+            ],
+          });
+        }
+        if (call.url.pathname === "/api/v1/entities/e1/grants" && call.method === "POST") {
+          writes.push(call.body);
+          return json(201, {
+            grant: { id: "u4", displayName: "Sarah Chen", image: null, archived: false },
+          });
+        }
+        return api.handler(call);
+      },
+    });
+    renderAt("/entities/e1");
+    const user = userEvent.setup();
+
+    expect(await screen.findByRole("region", { name: "Confidential Entity" })).toHaveTextContent(
+      "Administrators and granted Legal Team Members see it",
+    );
+    expect(screen.getByText("CONFI")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Manage access" }));
+    expect(await screen.findByRole("dialog", { name: "Confidential access" })).toBeInTheDocument();
+    expect(screen.getByText("Nadia Counsel")).toBeInTheDocument();
+    await user.selectOptions(screen.getByRole("combobox", { name: "Legal Team Member" }), "u4");
+    await user.click(screen.getByRole("button", { name: "Grant access" }));
+    await waitFor(() => expect(writes).toEqual([{ userId: "u4" }]));
+  });
+
   it("shows a Legal Team Member the full identity card", async () => {
     stubApi({ signedIn: MEMBER, extra: recordApi(entityRow()).handler });
     renderAt("/entities/e1");

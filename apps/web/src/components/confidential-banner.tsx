@@ -36,7 +36,7 @@ export function ConfidentialBanner({
    * audience. Absent for everyone else, so the link is not rendered at
    * all — an affordance nobody may use is worse than none. */
   manageTeamHref?: string;
-  record?: "contract" | "matter";
+  record?: "contract" | "matter" | "entity";
 }>) {
   const intl = useIntl();
   return (
@@ -50,10 +50,15 @@ export function ConfidentialBanner({
               id: "matters.confidential.bannerRegion",
               defaultMessage: "Confidential matter",
             })
-          : intl.formatMessage({
-              id: "contracts.confidential.bannerRegion",
-              defaultMessage: "Confidential contract",
-            })
+          : record === "entity"
+            ? intl.formatMessage({
+                id: "entities.confidential.bannerRegion",
+                defaultMessage: "Confidential Entity",
+              })
+            : intl.formatMessage({
+                id: "contracts.confidential.bannerRegion",
+                defaultMessage: "Confidential contract",
+              })
       }
       className="flex h-(--height-record-banner) shrink-0 items-center justify-between gap-4 border-b border-border-default bg-confidential-bg px-page-x text-confidential"
     >
@@ -64,6 +69,11 @@ export function ConfidentialBanner({
             <FormattedMessage
               id="matters.confidential.banner"
               defaultMessage="Confidential matter — the matter team, the Matter Manager, and Administrators see it."
+            />
+          ) : record === "entity" ? (
+            <FormattedMessage
+              id="entities.confidential.banner"
+              defaultMessage="Confidential Entity — Administrators and granted Legal Team Members see it."
             />
           ) : (
             <FormattedMessage
@@ -86,6 +96,8 @@ export function ConfidentialBanner({
         >
           {record === "matter" ? (
             <FormattedMessage id="matters.confidential.manageTeam" defaultMessage="Manage team" />
+          ) : record === "entity" ? (
+            <FormattedMessage id="entities.confidential.manage" defaultMessage="Manage access" />
           ) : (
             <FormattedMessage id="contracts.confidential.manageTeam" defaultMessage="Manage team" />
           )}

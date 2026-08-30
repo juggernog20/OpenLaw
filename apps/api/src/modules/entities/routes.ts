@@ -49,6 +49,7 @@ import { resolveStaffRefs, StaffRequestCustomFieldRefsSchema } from "../requests
 import { entityRecordChildRoutes } from "./record-routes.js";
 import { entityHoldingRoutes } from "./holding-routes.js";
 import { entityObligationRoutes } from "./obligation-routes.js";
+import { entityGrantRoutes } from "./grant-routes.js";
 
 /** ENT-004's access floor: the whole registry is Member+. */
 const requireMember = requireRole("administrator", "legal_team_member");
@@ -70,6 +71,7 @@ const EntityRowSchema = z.object({
   sharesIssued: z.number().int().nullable(),
   parValue: z.number().int().nullable(),
   customFields: CustomFieldsSchema,
+  isConfidential: z.boolean(),
   archivedAt: z.iso.datetime().nullable(),
   createdAt: z.iso.datetime(),
   updatedAt: z.iso.datetime(),
@@ -127,6 +129,7 @@ function toRow(row: Entity, entityTypeName: string) {
     sharesIssued: row.sharesIssued,
     parValue: row.parValue,
     customFields: row.customFields ?? {},
+    isConfidential: row.isConfidential,
     archivedAt: row.archivedAt?.toISOString() ?? null,
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
@@ -135,6 +138,7 @@ function toRow(row: Entity, entityTypeName: string) {
 
 export const entitiesRoutes: FastifyPluginAsyncZod = async (app) => {
   await app.register(entityObligationRoutes);
+  await app.register(entityGrantRoutes);
   await app.register(entityHoldingRoutes);
   await app.register(entityRecordChildRoutes);
 
@@ -164,7 +168,7 @@ export const entitiesRoutes: FastifyPluginAsyncZod = async (app) => {
         .where(
           and(
             request.query.includeArchived === "true" ? undefined : isNull(entities.archivedAt),
-            entityReachScope(request.user),
+            entityReachScope(app.db, request.user),
           ),
         )
         // Case-insensitive: "iMobile Ltd" files under I, wherever the
@@ -270,7 +274,7 @@ export const entitiesRoutes: FastifyPluginAsyncZod = async (app) => {
         .select({ entity: entities, entityTypeName: entityTypes.displayName })
         .from(entities)
         .innerJoin(entityTypes, eq(entities.entityTypeId, entityTypes.id))
-        .where(and(eq(entities.id, request.params.id), entityReachScope(request.user)))
+        .where(and(eq(entities.id, request.params.id), entityReachScope(app.db, request.user)))
         .limit(1);
       if (!row) throw httpError(404, NO_ENTITY);
       const attached = await selectAttachedFields(
@@ -281,7 +285,12 @@ export const entitiesRoutes: FastifyPluginAsyncZod = async (app) => {
       return {
         entity: toRow(row.entity, row.entityTypeName),
         fields: attached,
-        customFieldRefs: await resolveStaffRefs(app.db, attached, row.entity.customFields ?? {}),
+        customFieldRefs: await resolveStaffRefs(
+          app.db,
+          attached,
+          row.entity.customFields ?? {},
+          request.user,
+        ),
       };
     },
   );
@@ -393,6 +402,7 @@ export const entitiesRoutes: FastifyPluginAsyncZod = async (app) => {
           sharesIssued: ShareCapitalSchema.nullable().optional(),
           parValue: ShareCapitalSchema.nullable().optional(),
           customFields: CustomFieldsInput.optional(),
+          isConfidential: z.boolean().optional(),
         }),
         response: {
           200: EntityRecordEnvelope,
@@ -420,6 +430,17 @@ export const entitiesRoutes: FastifyPluginAsyncZod = async (app) => {
         /** The DD-017 changed map — old and new values per corrected
          * field, feeding the M9 viewer's narration. */
         const changed: Record<string, { from: unknown; to: unknown }> = {};
+
+        const confidentialityChange =
+          body.isConfidential !== undefined && body.isConfidential !== target.isConfidential
+            ? body.isConfidential
+            : undefined;
+        if (confidentialityChange !== undefined) {
+          if (request.user.role !== "administrator") {
+            throw httpError(403, "Only an Administrator can change Entity confidentiality.");
+          }
+          patch.isConfidential = confidentialityChange;
+        }
 
         const legalName = body.legalName?.trim();
         if (legalName !== undefined && legalName !== target.legalName) {
@@ -546,12 +567,29 @@ export const entitiesRoutes: FastifyPluginAsyncZod = async (app) => {
             payload: { legalName: legalNameNow, ...statusChange },
           });
         }
+        if (confidentialityChange !== undefined) {
+          await recordActivity(tx, {
+            entityType: "entity",
+            entityId: target.id,
+            actorId: request.user.id,
+            action: confidentialityChange
+              ? "entity.confidentiality_set"
+              : "entity.confidentiality_cleared",
+            visibility: "legal_only",
+            payload: { legalName: legalNameNow },
+          });
+        }
         return { row: updated!, entityTypeName: typeName, attached: fields };
       });
       return {
         entity: toRow(row, entityTypeName),
         fields: attached,
-        customFieldRefs: await resolveStaffRefs(app.db, attached, row.customFields ?? {}),
+        customFieldRefs: await resolveStaffRefs(
+          app.db,
+          attached,
+          row.customFields ?? {},
+          request.user,
+        ),
       };
     },
   );
