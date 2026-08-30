@@ -69,6 +69,7 @@ import {
   isNull,
   knowledgeItems,
   lt,
+  lte,
   ne,
   notifications,
   entities,
@@ -769,7 +770,23 @@ async function previousBriefingAt(deps: MorningRoundDeps, userId: string): Promi
   return legacy?.at ?? null;
 }
 
-/** The live Knowledge slice for this reader and this send boundary. */
+/**
+ * The live Knowledge slice for this reader and this send boundary.
+ *
+ * **The window is half-open: after the previous send, up to and
+ * including this one.** Consecutive briefings then partition the clock
+ * with no seam between them: an item published on the exact instant a
+ * round took as `now` is in that round's briefing, and the next round's
+ * strict lower bound is what keeps it out of the following one.
+ *
+ * **A first briefing looks back one day.** With no send on record there
+ * is no "since your previous briefing", and reading it as "since the
+ * beginning of time" would hand a new Member every item ever published
+ * on their first morning. One day is what a steady-state window covers.
+ *
+ * Member+ only (M28/6): a Contributor still gets the date sections, but
+ * Knowledge is the legal team's own library.
+ */
 async function briefingKnowledge(
   deps: MorningRoundDeps,
   person: Served,
@@ -779,6 +796,7 @@ async function briefingKnowledge(
   if (person.role !== "administrator" && person.role !== "legal_team_member") return [];
   const choices = await channelChoices(deps.db, [person.id], "knowledge");
   if (!choices.get(person.id)?.email) return [];
+  const since = previous ?? new Date(now.getTime() - DAY_MS);
 
   const rows = await deps.db
     .select({
@@ -793,8 +811,8 @@ async function briefingKnowledge(
         isNull(knowledgeItems.archivedAt),
         isNotNull(knowledgeItems.publishedAt),
         ne(knowledgeItems.createdBy, person.id),
-        previous ? gt(knowledgeItems.publishedAt, previous) : undefined,
-        lt(knowledgeItems.publishedAt, now),
+        gt(knowledgeItems.publishedAt, since),
+        lte(knowledgeItems.publishedAt, now),
       ),
     )
     .orderBy(asc(knowledgeItems.publishedAt), asc(knowledgeItems.id));

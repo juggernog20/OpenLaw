@@ -117,6 +117,9 @@ beforeAll(async () => {
   bellCountBeforeKnowledgeRound = (
     await harness.db.select({ id: notifications.id }).from(notifications)
   ).length;
+  // A first briefing has no previous send to start from, so it reaches
+  // back one day and no further.
+  await item("Stale playbook", adminId, "2027-03-31T07:00:00Z");
   await item("Baseline playbook", adminId, "2027-04-01T07:00:00Z");
   await round("2027-04-01T08:00:00Z");
   firstMail = harness.mailer.messagesTo(MEMBER.email).at(-1)!;
@@ -204,15 +207,19 @@ describe("Knowledge in the morning briefing", () => {
     expect(firstMail.text).toContain("Knowledge");
     expect(firstMail.text).toContain("Baseline playbook");
     expect(firstMail.html).toContain("Baseline playbook");
+    expect(firstMail.text).not.toContain("Stale playbook");
     expect(harness.mailer.messagesTo(CONTRIBUTOR.email)).toEqual([]);
     expect(bellCountAfterKnowledgeRound).toBe(bellCountBeforeKnowledgeRound);
   });
 
-  it("uses the previous send as an exclusive lower bound and this send as an exclusive upper bound", () => {
+  it("uses the previous send as an exclusive lower bound and this send as an inclusive upper bound", () => {
     expect(secondMemberMail.text).toContain("Fresh admin playbook");
+    // Both were published on or before the first send's instant, so the
+    // first briefing was their only chance and a later insert missed it.
     expect(secondMemberMail.text).not.toContain("Backdated note");
     expect(secondMemberMail.text).not.toContain("Lower-bound note");
-    expect(secondMemberMail.text).not.toContain("Upper-bound note");
+    // Published on this round's own instant: this briefing, not the next.
+    expect(secondMemberMail.text).toContain("Upper-bound note");
     expect(secondMemberMail.text).not.toContain("Tomorrow's item");
     expect(secondMemberMail.text).not.toContain("Draft guidance");
     expect(secondMemberMail.text).not.toContain("Archived guidance");

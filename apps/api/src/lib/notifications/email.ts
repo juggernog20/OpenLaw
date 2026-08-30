@@ -85,19 +85,22 @@ export interface NotificationMail {
  * on an address that is mostly slashes. `BASE_URL` is an operator's own
  * setting and not a caller's, so nobody can reach this from outside —
  * but a scan cannot know that, and the loop is plainer than the argument
- * for keeping the regex would have been. */
-function origin(baseUrl: string): string {
+ * for keeping the regex would have been.
+ *
+ * Shared with the briefing template, which builds its links the same
+ * way from the same setting. */
+export function origin(baseUrl: string): string {
   let end = baseUrl.length;
   while (end > 0 && baseUrl[end - 1] === "/") end -= 1;
   return baseUrl.slice(0, end);
 }
 
 /** The deep link one notification points at: the record itself. */
-function recordLink(baseUrl: string, contractNumber: number): string {
+export function recordLink(baseUrl: string, contractNumber: number): string {
   return `${origin(baseUrl)}/contracts/${contractNumber}`;
 }
 
-function matterLink(baseUrl: string, matterNumber: number): string {
+export function matterLink(baseUrl: string, matterNumber: number): string {
   return `${origin(baseUrl)}/matters/${matterNumber}`;
 }
 

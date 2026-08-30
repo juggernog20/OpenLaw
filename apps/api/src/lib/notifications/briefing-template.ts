@@ -1,21 +1,51 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 /**
- * The daily briefing template (NOT-008): one first-class text part and
- * one first-class HTML part assembled from independently optional
- * sections. The round decides what belongs in each section; this file
- * decides how those sections read.
+ * The morning briefing (NOT-003, NOT-004, NOT-008) — anatomy in NOT-006,
+ * register in DES-051. The round decides what belongs in each section;
+ * this file decides how those sections read, in one text part and one
+ * HTML part that carry the same sections in the same order.
+ *
+ * **One message a day, not one per date.** NOT-003's whole argument is
+ * that date noise is the likeliest unsubscribe trigger, so the renewal
+ * calendar arrives as a briefing: the reader scans a list, and the nine
+ * separate mails the naive design would have sent are the thing this
+ * layer exists to prevent. Knowledge (M28/6) rides the same message for
+ * the same reason: a publication is ambient, and the briefing is its
+ * only channel.
+ *
+ * **Every section is optional on its own.** A section with nothing in
+ * it is left out of both parts, and a briefing with no section at all
+ * is not sent (`null` below). The date order is the deadline union's
+ * (CTR-009, M16/3): outward from today, ahead nearest first, then gone
+ * by most recently first. Knowledge is oldest first, so a reader who
+ * follows the list reads in the order things were published.
+ *
+ * **The register is DES-051's**: a briefing states, it does not urge.
  */
 
 import type { NotificationEventType } from "@openlaw/db";
 import { civilInstant } from "../contract-term.js";
 import type { MailMessage } from "../mailer.js";
+import { matterLink, origin, recordLink } from "./email.js";
 
 interface DigestRowBase {
+  /** Which tracked date this is (NOT-002 group 3). */
   eventType: NotificationEventType;
   recordTitle: string;
+  /** The date itself, as a civil date. */
   date: string;
+  /**
+   * Whole days from the **reader's own** today, negative once the date
+   * has gone by.
+   *
+   * Counted at send time rather than taken from the row's offset: a row
+   * whose digest was missed rides the next one, and a briefing that said
+   * "in 1 day" about yesterday would be worse than no briefing.
+   */
   daysAway: number;
+  /** What somebody called this date (CTR-009), or null on the two the
+   * term derives — they are named by their kind, not by a person. */
   label: string | null;
 }
 
@@ -40,6 +70,9 @@ export interface BriefingMail {
   knowledgeItems: readonly KnowledgeBriefingItem[];
 }
 
+/** Which of the three sources leads when two dates fall on one day —
+ * the deadline union's own rank (M16/3): the deadline that warns of the
+ * expiry, then the expiry, then the record's own dates. */
 const DIGEST_RANK: Record<string, number> = {
   "date.notice_deadline_approaching": 0,
   "date.expiry_approaching": 1,
@@ -47,6 +80,7 @@ const DIGEST_RANK: Record<string, number> = {
   "date.obligation_approaching": 3,
 };
 
+/** What each kind of date is called when it has no name of its own. */
 const DIGEST_KIND: Record<string, string> = {
   "date.notice_deadline_approaching": "Notice deadline",
   "date.expiry_approaching": "Expiry",
@@ -54,6 +88,9 @@ const DIGEST_KIND: Record<string, string> = {
   "date.obligation_approaching": "Obligation",
 };
 
+/** One date as a reader reads it: `Mar 12, 2026`. Rendered in UTC
+ * because the value is a civil date and not a moment — shifting it into
+ * a zone is what would move it a day. */
 const DIGEST_DATE = new Intl.DateTimeFormat("en-US", {
   timeZone: "UTC",
   year: "numeric",
@@ -61,12 +98,9 @@ const DIGEST_DATE = new Intl.DateTimeFormat("en-US", {
   day: "numeric",
 });
 
-function origin(baseUrl: string): string {
-  let end = baseUrl.length;
-  while (end > 0 && baseUrl[end - 1] === "/") end -= 1;
-  return baseUrl.slice(0, end);
-}
-
+/** How far away one date is, in the words a briefing uses. Digits rather
+ * than words (DES-015 rule 9), and the two days either side of today are
+ * named because that is how people say them. */
 function whenIs(daysAway: number): string {
   if (daysAway === 0) return "Today";
   if (daysAway === 1) return "Tomorrow";
@@ -74,6 +108,7 @@ function whenIs(daysAway: number): string {
   return daysAway > 0 ? `In ${daysAway} days` : `${-daysAway} days ago`;
 }
 
+/** One row's own headline: when, what kind of date, and which record. */
 function digestLine(row: DigestRow): string {
   const kind = row.label ?? DIGEST_KIND[row.eventType] ?? "Date";
   const on = DIGEST_DATE.format(civilInstant(row.date));
@@ -88,10 +123,13 @@ function digestLink(row: DigestRow, baseUrl: string): string {
   if (row.entityType === "entity") {
     return `${origin(baseUrl)}/entities/${row.recordId}/obligations`;
   }
+  // The Key dates section is the address (DES-049 clause 9) — landing a
+  // reader on the overview and making them find the date they were just
+  // told about is one click short of the promise.
   const record =
     row.entityType === "matter"
-      ? `${origin(baseUrl)}/matters/${row.recordNumber}`
-      : `${origin(baseUrl)}/contracts/${row.recordNumber}`;
+      ? matterLink(baseUrl, row.recordNumber)
+      : recordLink(baseUrl, row.recordNumber);
   return `${record}/key-dates`;
 }
 
@@ -144,7 +182,20 @@ function dateSections(rows: readonly DigestRow[]) {
   ].filter((section) => section.rows.length > 0);
 }
 
-/** Renders no message when every section is empty. */
+/**
+ * The morning briefing one person is owed, or `null` when they are owed
+ * none.
+ *
+ * `null` for an empty briefing is what lets the round call this
+ * unconditionally: "nothing is due" and "a message went" are then one
+ * branch at the caller rather than two, and no empty briefing can ever
+ * leave — a daily email that says nothing happened is the noise NOT-003
+ * exists to avoid.
+ *
+ * The HTML part escapes every value it did not write itself. Titles are
+ * typed by people, and a Knowledge title is the one string here that a
+ * non-administrator can put in front of every Member's mail client.
+ */
 export function renderBriefingMail(
   briefing: BriefingMail,
   to: string,
@@ -164,6 +215,9 @@ export function renderBriefingMail(
         : kinds.has("entity")
           ? "your entities"
           : "your contracts";
+  // Digits, sentence case, no full stop — a subject is a fragment
+  // (DES-015 rules 6, 7, 9). The one-section subjects say what the
+  // section holds; a briefing with both is just the briefing.
   const subject =
     knowledgeItems.length === 0
       ? `${dateCount} ${dateCount === 1 ? "date" : "dates"} on ${destination}`
@@ -221,6 +275,9 @@ export function renderBriefingMail(
       introduction,
       "",
       ...textSections,
+      // The way out, on the one channel where the reader is not already
+      // in the app. A digest with no way to turn it down is what trains
+      // people to filter the sender.
       "Change what reaches you in your notification settings:",
       settingsLink,
     ].join("\n"),
