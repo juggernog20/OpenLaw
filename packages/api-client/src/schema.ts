@@ -2491,6 +2491,41 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/v1/knowledge/from-files": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Create one draft Knowledge Item with a primary Document for every uploaded file */
+    post: operations["createKnowledgeItemsFromFiles"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/knowledge/{id}/documents": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** The Documents owned by one live Knowledge Item, newest first, with each version chain */
+    get: operations["listKnowledgeItemDocuments"];
+    put?: never;
+    /** Upload a file as a Document owned by a Knowledge Item */
+    post: operations["uploadKnowledgeItemDocument"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/v1/contracts/{number}/documents": {
     parameters: {
       query?: never;
@@ -15647,7 +15682,7 @@ export interface operations {
             records: {
               reference: string;
               /** @enum {string} */
-              kind: "contract" | "matter" | "entity";
+              kind: "contract" | "matter" | "entity" | "knowledge_item";
               number: number | null;
               title: string;
             }[];
@@ -15668,7 +15703,7 @@ export interface operations {
   listDocuments: {
     parameters: {
       query?: {
-        owner?: "contract" | "matter" | "entity";
+        owner?: "contract" | "matter" | "entity" | "knowledge_item";
         record?: string;
         folder?: string;
         counterparty?: string;
@@ -15711,7 +15746,7 @@ export interface operations {
               archivedAt: string | null;
               owner: {
                 /** @enum {string} */
-                kind: "contract" | "matter" | "entity";
+                kind: "contract" | "matter" | "entity" | "knowledge_item";
                 id: string;
                 number: number | null;
                 reference: string;
@@ -15748,6 +15783,238 @@ export interface operations {
               versionCount: number;
             }[];
             nextCursor: string | null;
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  createKnowledgeItemsFromFiles: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "multipart/form-data": {
+          knowledgeTypeId: string;
+          folderId?: string;
+          file: string[];
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            knowledgeItems: {
+              id: string;
+              title: string;
+              primaryDocumentId: string;
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  listKnowledgeItemDocuments: {
+    parameters: {
+      query?: {
+        includeArchived?: "true" | "false";
+        cursor?: string;
+      };
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            documents: {
+              id: string;
+              title: string;
+              description: string | null;
+              isPrimary: boolean;
+              versions: {
+                id: string;
+                versionNumber: number;
+                /** @enum {string} */
+                kind:
+                  | "draft_ours"
+                  | "draft_theirs"
+                  | "redline_theirs"
+                  | "redline_ours"
+                  | "executed"
+                  | "amendment"
+                  | "generated_redline";
+                note: string | null;
+                originalFilename: string;
+                mimeType: string;
+                /** @enum {string} */
+                renderFamily: "pdf" | "image" | "word" | "presentation" | "email" | "other";
+                byteSize: number;
+                checksumSha256: string;
+                uploadedBy: {
+                  id: string;
+                  displayName: string;
+                  image: string | null;
+                  archived: boolean;
+                };
+                /** Format: date-time */
+                createdAt: string;
+                isCurrent: boolean;
+                isExecuted: boolean;
+              }[];
+              archivedAt: string | null;
+              isConfidential: boolean;
+              folderId: string | null;
+              createdBy: {
+                id: string;
+                displayName: string;
+                image: string | null;
+                archived: boolean;
+              };
+              /** Format: date-time */
+              createdAt: string;
+              /** Format: date-time */
+              updatedAt: string;
+            }[];
+            nextCursor: string | null;
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  uploadKnowledgeItemDocument: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "multipart/form-data": {
+          /**
+           * Format: binary
+           * @description The file itself. Any type is accepted (DOC-004).
+           */
+          file: string;
+          /**
+           * @description What this version is in the negotiation (CTR-014). Defaults to `draft_ours`. Must be sent before the file part.
+           * @enum {string}
+           */
+          kind?:
+            | "draft_ours"
+            | "draft_theirs"
+            | "redline_theirs"
+            | "redline_ours"
+            | "executed"
+            | "amendment";
+          /** @description What changed in this round, kept beside the file. Must be sent before the file part. */
+          note?: string;
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            document: {
+              id: string;
+              title: string;
+              description: string | null;
+              isPrimary: boolean;
+              versions: {
+                id: string;
+                versionNumber: number;
+                /** @enum {string} */
+                kind:
+                  | "draft_ours"
+                  | "draft_theirs"
+                  | "redline_theirs"
+                  | "redline_ours"
+                  | "executed"
+                  | "amendment"
+                  | "generated_redline";
+                note: string | null;
+                originalFilename: string;
+                mimeType: string;
+                /** @enum {string} */
+                renderFamily: "pdf" | "image" | "word" | "presentation" | "email" | "other";
+                byteSize: number;
+                checksumSha256: string;
+                uploadedBy: {
+                  id: string;
+                  displayName: string;
+                  image: string | null;
+                  archived: boolean;
+                };
+                /** Format: date-time */
+                createdAt: string;
+                isCurrent: boolean;
+                isExecuted: boolean;
+              }[];
+              archivedAt: string | null;
+              isConfidential: boolean;
+              folderId: string | null;
+              createdBy: {
+                id: string;
+                displayName: string;
+                image: string | null;
+                archived: boolean;
+              };
+              /** Format: date-time */
+              createdAt: string;
+              /** Format: date-time */
+              updatedAt: string;
+            };
           };
         };
       };
@@ -21934,6 +22201,7 @@ export interface operations {
         audience?: "legal_only" | "everyone";
         folder?: string;
         author?: string;
+        format?: "pdf" | "word" | "powerpoint" | "image" | "email" | "other";
         sort?:
           "title" | "type" | "state" | "audience" | "folder" | "author" | "created" | "updated";
         dir?: "asc" | "desc";
@@ -21967,6 +22235,18 @@ export interface operations {
                 id: string;
                 title: string;
               } | null;
+              primaryDocument: {
+                id: string;
+                title: string;
+                currentVersion: {
+                  id: string;
+                  originalFilename: string;
+                  mimeType: string;
+                  /** @enum {string} */
+                  renderFamily: "pdf" | "image" | "word" | "presentation" | "email" | "other";
+                };
+              } | null;
+              documentCount: number;
               createdBy: {
                 id: string;
                 displayName: string;
@@ -22039,6 +22319,18 @@ export interface operations {
                 id: string;
                 title: string;
               } | null;
+              primaryDocument: {
+                id: string;
+                title: string;
+                currentVersion: {
+                  id: string;
+                  originalFilename: string;
+                  mimeType: string;
+                  /** @enum {string} */
+                  renderFamily: "pdf" | "image" | "word" | "presentation" | "email" | "other";
+                };
+              } | null;
+              documentCount: number;
               createdBy: {
                 id: string;
                 displayName: string;
@@ -22140,6 +22432,18 @@ export interface operations {
                 id: string;
                 title: string;
               } | null;
+              primaryDocument: {
+                id: string;
+                title: string;
+                currentVersion: {
+                  id: string;
+                  originalFilename: string;
+                  mimeType: string;
+                  /** @enum {string} */
+                  renderFamily: "pdf" | "image" | "word" | "presentation" | "email" | "other";
+                };
+              } | null;
+              documentCount: number;
               createdBy: {
                 id: string;
                 displayName: string;
@@ -22188,6 +22492,7 @@ export interface operations {
           body?: string | null;
           folderId?: string | null;
           replacedById?: string | null;
+          primaryDocumentId?: string | null;
         };
       };
     };
@@ -22215,6 +22520,18 @@ export interface operations {
                 id: string;
                 title: string;
               } | null;
+              primaryDocument: {
+                id: string;
+                title: string;
+                currentVersion: {
+                  id: string;
+                  originalFilename: string;
+                  mimeType: string;
+                  /** @enum {string} */
+                  renderFamily: "pdf" | "image" | "word" | "presentation" | "email" | "other";
+                };
+              } | null;
+              documentCount: number;
               createdBy: {
                 id: string;
                 displayName: string;
@@ -22480,7 +22797,14 @@ export interface operations {
     parameters: {
       query: {
         q: string;
-        kind?: "contract" | "matter" | "document" | "entity" | "counterparty" | "request";
+        kind?:
+          | "contract"
+          | "matter"
+          | "document"
+          | "entity"
+          | "counterparty"
+          | "request"
+          | "knowledge_item";
         cursor?: string;
         limit?: number;
       };
@@ -22509,6 +22833,17 @@ export interface operations {
                 }
               | {
                   /** @enum {string} */
+                  kind: "knowledge_item";
+                  id: string;
+                  number: number | null;
+                  title: string;
+                  isConfidential: boolean;
+                  rank: number;
+                  /** @enum {string} */
+                  state: "draft" | "published";
+                }
+              | {
+                  /** @enum {string} */
                   kind: "document";
                   id: string;
                   number: number | null;
@@ -22516,7 +22851,7 @@ export interface operations {
                   isConfidential: boolean;
                   rank: number;
                   /** @enum {string} */
-                  ownerKind: "contract" | "matter" | "entity";
+                  ownerKind: "contract" | "matter" | "entity" | "knowledge_item";
                   ownerId: string;
                   ownerNumber: number | null;
                   versionId: string;

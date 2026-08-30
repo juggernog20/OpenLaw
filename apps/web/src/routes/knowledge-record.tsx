@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 /** M28's one-section Knowledge record with DES-017 field commits. */
-import { useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { BookOpen, ChevronRight, Eye, Pencil } from "lucide-react";
 import { FormattedMessage, useIntl } from "react-intl";
 import { Link, redirect, useLoaderData, type LoaderFunctionArgs } from "react-router";
@@ -21,26 +21,41 @@ import { StatusNote } from "../components/status-note";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
+import { DocumentsCard } from "../components/documents/documents-card";
+import { DocPanel } from "../components/documents/doc-panel";
+import { RecordContext } from "../components/record-context";
+import { readDocumentLanding, readRecordDocuments, type ContractDocument } from "../lib/documents";
 
 type PatchBody =
   paths["/api/v1/knowledge/{id}"]["patch"]["requestBody"]["content"]["application/json"];
 
-export async function knowledgeRecordLoader({ params }: LoaderFunctionArgs) {
+export async function knowledgeRecordLoader({ params, request }: LoaderFunctionArgs) {
   const user = await requireUser();
   if (!isMemberPlus(user.role)) return redirect("/");
   const id = params.id!;
-  const [item, types, folders] = await Promise.all([
+  const landingQuery = new URL(request.url).searchParams;
+  const documentId = landingQuery.get("doc")?.trim();
+  const versionId = landingQuery.get("version")?.trim();
+  const [item, types, folders, paper, landing] = await Promise.all([
     api.GET("/api/v1/knowledge/{id}", { params: { path: { id } } }),
     api.GET("/api/v1/knowledge/type-options"),
     api.GET("/api/v1/knowledge/folders"),
+    readRecordDocuments({ entityType: "knowledge_item", id }, false),
+    documentId && versionId
+      ? readDocumentLanding({ entityType: "knowledge_item", id }, documentId, versionId)
+      : null,
   ]);
-  if (!item.data || !types.data || !folders.data)
+  if (!item.data || !types.data || !folders.data || !paper.ok)
     throw new Error("The Knowledge item could not be read.");
   return {
     user,
     item: item.data.knowledgeItem,
     types: types.data.knowledgeTypes,
     folders: folders.data.folders,
+    documents: paper.documents,
+    documentCursor: paper.nextCursor,
+    landing,
+    documentFindQuery: landingQuery.get("find")?.trim() || null,
   };
 }
 
@@ -55,9 +70,34 @@ export function KnowledgeRecordPage() {
   const [body, setBody] = useState(saved.body ?? "");
   const [editingBody, setEditingBody] = useState(Boolean(saved.body));
   const [preview, setPreview] = useState(false);
+  const [paper, setPaper] = useState<ContractDocument[]>(loaded.documents);
+  const [paperCursor, setPaperCursor] = useState<string | null>(loaded.documentCursor);
+  const [filed, setFiled] = useState<ContractDocument[]>([]);
+  const [reading, setReading] = useState<{ documentId: string; versionId: string } | null>(
+    loaded.landing
+      ? { documentId: loaded.landing.document.id, versionId: loaded.landing.versionId }
+      : null,
+  );
   const textarea = useRef<HTMLTextAreaElement>(null);
   const commits = useFieldCommit<FieldKey>();
   const history = useActivityApplet({ entityType: "knowledge_item", entityId: saved.id });
+  const recordFacts = useMemo(
+    () => ({
+      record: { kind: "knowledge_item" as const, id: saved.id, number: 0 },
+      viewer: { id: loaded.user.id, role: loaded.user.role },
+      ownerId: null,
+      confidential: false,
+      canEdit: true,
+      frozen: false,
+    }),
+    [loaded.user.id, loaded.user.role, saved.id],
+  );
+  const open = useMemo(() => {
+    if (!reading) return null;
+    const document = [...paper, ...filed].find((row) => row.id === reading.documentId);
+    const version = document?.versions.find((row) => row.id === reading.versionId);
+    return document && version ? { document, version } : null;
+  }, [filed, paper, reading]);
 
   function commit(key: FieldKey, changes: PatchBody) {
     return commits.commit(
@@ -92,203 +132,306 @@ export function KnowledgeRecordPage() {
   }
 
   return (
-    <AppShell
-      user={loaded.user}
-      onSignOut={() => void signOut()}
-      flush
-      subbar={
-        <section
-          aria-labelledby="page-title"
-          className="flex h-(--height-subbar) items-center gap-2 border-b border-(--chrome-subbar-border) bg-canvas px-page-x"
+    <RecordContext.Provider value={recordFacts}>
+      <AppShell
+        user={loaded.user}
+        onSignOut={() => void signOut()}
+        flush
+        subbar={
+          <section
+            aria-labelledby="page-title"
+            className="flex h-(--height-subbar) items-center gap-2 border-b border-(--chrome-subbar-border) bg-canvas px-page-x"
+          >
+            <Link to="/knowledge" className="text-link hover:underline">
+              <FormattedMessage id="nav.knowledge" defaultMessage="Knowledge" />
+            </Link>
+            <ChevronRight size={16} aria-hidden="true" className="text-subtle" />
+            <BookOpen size={16} aria-hidden="true" className="text-muted" />
+            <h1 id="page-title" className="truncate text-md font-semibold">
+              {saved.title}
+            </h1>
+            {saved.state === "draft" ? (
+              <span className="rounded-pill bg-badge-count-bg px-2 py-0.5 text-xs font-medium text-badge-count-fg">
+                <FormattedMessage id="knowledge.draftMarker" defaultMessage="Draft" />
+              </span>
+            ) : null}
+          </section>
+        }
+      >
+        <PageTitle title={saved.title} />
+        <RecordApplets
+          applets={[history]}
+          layer={
+            open ? (
+              <DocPanel
+                documentId={open.document.id}
+                title={open.document.title}
+                version={open.version}
+                initialFind={loaded.documentFindQuery}
+                onClose={() => setReading(null)}
+              />
+            ) : undefined
+          }
         >
-          <Link to="/knowledge" className="text-link hover:underline">
-            <FormattedMessage id="nav.knowledge" defaultMessage="Knowledge" />
-          </Link>
-          <ChevronRight size={16} aria-hidden="true" className="text-subtle" />
-          <BookOpen size={16} aria-hidden="true" className="text-muted" />
-          <h1 id="page-title" className="truncate text-md font-semibold">
-            {saved.title}
-          </h1>
-          {saved.state === "draft" ? (
-            <span className="rounded-pill bg-badge-count-bg px-2 py-0.5 text-xs font-medium text-badge-count-fg">
-              <FormattedMessage id="knowledge.draftMarker" defaultMessage="Draft" />
-            </span>
-          ) : null}
-        </section>
-      }
-    >
-      <PageTitle title={saved.title} />
-      <RecordApplets applets={[history]}>
-        <div className="flex flex-col gap-4 overflow-y-auto px-page-x py-page-y">
-          <section
-            aria-labelledby="knowledge-identity-heading"
-            className="overflow-hidden rounded-card border border-border-default bg-raised"
-          >
-            <header className="flex h-section-header items-center border-b border-border-default bg-section-header px-4">
-              <h2 id="knowledge-identity-heading" className="text-base font-semibold">
-                <FormattedMessage id="knowledge.record.identity" defaultMessage="Knowledge item" />
-              </h2>
-            </header>
-            <div className="grid grid-cols-1 gap-4 p-4 @2xl/page:grid-cols-2">
-              <div className="flex flex-col gap-1.5 @2xl/page:col-span-2">
-                <Label htmlFor="knowledge-record-title">
-                  <FormattedMessage id="knowledge.form.title" defaultMessage="Title" />
-                </Label>
-                <div className="flex items-center gap-2">
-                  <Input
-                    id="knowledge-record-title"
-                    value={title}
-                    onChange={(event) => setTitle(event.target.value)}
-                    onBlur={() => commits.commitText("title", titleField)}
-                    onKeyDown={(event) => {
-                      if (event.key === "Enter") commits.commitText("title", titleField);
-                      if (event.key === "Escape") commits.revertText("title", titleField);
-                    }}
+          <div className="flex flex-col gap-4 overflow-y-auto px-page-x py-page-y">
+            <section
+              aria-labelledby="knowledge-identity-heading"
+              className="overflow-hidden rounded-card border border-border-default bg-raised"
+            >
+              <header className="flex h-section-header items-center border-b border-border-default bg-section-header px-4">
+                <h2 id="knowledge-identity-heading" className="text-base font-semibold">
+                  <FormattedMessage
+                    id="knowledge.record.identity"
+                    defaultMessage="Knowledge item"
                   />
-                  <StatusNote
-                    status={commits.status.title ?? "idle"}
-                    detail={commits.error.title}
-                  />
-                </div>
-              </div>
-              <div className="flex flex-col gap-1.5">
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="knowledge-record-type">
-                    <FormattedMessage id="knowledge.form.type" defaultMessage="Type" />
+                </h2>
+              </header>
+              <div className="grid grid-cols-1 gap-4 p-4 @2xl/page:grid-cols-2">
+                <div className="flex flex-col gap-1.5 @2xl/page:col-span-2">
+                  <Label htmlFor="knowledge-record-title">
+                    <FormattedMessage id="knowledge.form.title" defaultMessage="Title" />
                   </Label>
-                  {loaded.user.role === "administrator" ? (
-                    <Link
-                      to="/settings/knowledge/types"
-                      className="text-sm text-link hover:underline"
+                  <div className="flex items-center gap-2">
+                    <Input
+                      id="knowledge-record-title"
+                      value={title}
+                      onChange={(event) => setTitle(event.target.value)}
+                      onBlur={() => commits.commitText("title", titleField)}
+                      onKeyDown={(event) => {
+                        if (event.key === "Enter") commits.commitText("title", titleField);
+                        if (event.key === "Escape") commits.revertText("title", titleField);
+                      }}
+                    />
+                    <StatusNote
+                      status={commits.status.title ?? "idle"}
+                      detail={commits.error.title}
+                    />
+                  </div>
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="knowledge-record-type">
+                      <FormattedMessage id="knowledge.form.type" defaultMessage="Type" />
+                    </Label>
+                    {loaded.user.role === "administrator" ? (
+                      <Link
+                        to="/settings/knowledge/types"
+                        className="text-sm text-link hover:underline"
+                      >
+                        <FormattedMessage
+                          id="knowledge.type.manage"
+                          defaultMessage="Manage types…"
+                        />
+                      </Link>
+                    ) : null}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <select
+                      id="knowledge-record-type"
+                      className={CONTROL_CLASS}
+                      value={saved.knowledgeTypeId}
+                      onChange={(event) =>
+                        void commit("type", { knowledgeTypeId: event.target.value })
+                      }
                     >
-                      <FormattedMessage id="knowledge.type.manage" defaultMessage="Manage types…" />
-                    </Link>
-                  ) : null}
+                      {loaded.types.map((row) => (
+                        <option key={row.id} value={row.id}>
+                          {row.displayName}
+                        </option>
+                      ))}
+                    </select>
+                    <StatusNote
+                      status={commits.status.type ?? "idle"}
+                      detail={commits.error.type}
+                    />
+                  </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <select
-                    id="knowledge-record-type"
-                    className={CONTROL_CLASS}
-                    value={saved.knowledgeTypeId}
-                    onChange={(event) =>
-                      void commit("type", { knowledgeTypeId: event.target.value })
-                    }
-                  >
-                    {loaded.types.map((row) => (
-                      <option key={row.id} value={row.id}>
-                        {row.displayName}
+                <div className="flex flex-col gap-1.5">
+                  <Label htmlFor="knowledge-record-folder">
+                    <FormattedMessage id="knowledge.form.folder" defaultMessage="Folder" />
+                  </Label>
+                  <div className="flex items-center gap-2">
+                    <select
+                      id="knowledge-record-folder"
+                      className={CONTROL_CLASS}
+                      value={saved.folderId ?? ""}
+                      onChange={(event) =>
+                        void commit("folder", { folderId: event.target.value || null })
+                      }
+                    >
+                      <option value="">
+                        <FormattedMessage id="knowledge.folder.root" defaultMessage="Library" />
                       </option>
-                    ))}
-                  </select>
-                  <StatusNote status={commits.status.type ?? "idle"} detail={commits.error.type} />
+                      {loaded.folders.map((row) => (
+                        <option key={row.id} value={row.id}>
+                          {folderLabel(loaded.folders, row.id)}
+                        </option>
+                      ))}
+                    </select>
+                    <StatusNote
+                      status={commits.status.folder ?? "idle"}
+                      detail={commits.error.folder}
+                    />
+                  </div>
                 </div>
-              </div>
-              <div className="flex flex-col gap-1.5">
-                <Label htmlFor="knowledge-record-folder">
-                  <FormattedMessage id="knowledge.form.folder" defaultMessage="Folder" />
-                </Label>
-                <div className="flex items-center gap-2">
-                  <select
-                    id="knowledge-record-folder"
-                    className={CONTROL_CLASS}
-                    value={saved.folderId ?? ""}
-                    onChange={(event) =>
-                      void commit("folder", { folderId: event.target.value || null })
-                    }
-                  >
-                    <option value="">
-                      <FormattedMessage id="knowledge.folder.root" defaultMessage="Library" />
-                    </option>
-                    {loaded.folders.map((row) => (
-                      <option key={row.id} value={row.id}>
-                        {folderLabel(loaded.folders, row.id)}
-                      </option>
-                    ))}
-                  </select>
-                  <StatusNote
-                    status={commits.status.folder ?? "idle"}
-                    detail={commits.error.folder}
-                  />
-                </div>
-              </div>
-            </div>
-          </section>
-          <section
-            aria-labelledby="knowledge-guidance-heading"
-            className="overflow-hidden rounded-card border border-border-default bg-raised"
-          >
-            <header className="flex min-h-section-header items-center justify-between gap-3 border-b border-border-default bg-section-header px-4">
-              <h2 id="knowledge-guidance-heading" className="text-base font-semibold">
-                <FormattedMessage id="knowledge.record.guidance" defaultMessage="Guidance" />
-              </h2>
-              {editingBody ? (
-                <div className="flex items-center gap-2">
-                  <StatusNote status={commits.status.body ?? "idle"} detail={commits.error.body} />
-                  {/* The textarea's blur has already committed the draft by
-                      the time this click lands, so the toggle only flips. */}
-                  <Button
-                    size="sm"
-                    variant="secondary"
-                    aria-pressed={preview}
-                    onClick={() => setPreview((value) => !value)}
-                  >
-                    {preview ? (
-                      <>
-                        <Pencil size={16} />
-                        <FormattedMessage id="knowledge.body.edit" defaultMessage="Edit" />
-                      </>
-                    ) : (
-                      <>
-                        <Eye size={16} />
-                        <FormattedMessage id="knowledge.body.preview" defaultMessage="Preview" />
-                      </>
-                    )}
-                  </Button>
-                </div>
-              ) : null}
-            </header>
-            <div className="min-h-48 p-4">
-              {!editingBody ? (
-                <div className="flex min-h-40 items-center justify-center">
-                  <Button variant="secondary" onClick={showEditor}>
-                    <Pencil size={16} />
-                    <FormattedMessage id="knowledge.body.add" defaultMessage="Add guidance" />
-                  </Button>
-                </div>
-              ) : preview ? (
-                <KnowledgeMarkdown source={body} />
-              ) : (
-                <div className="flex flex-col gap-2">
-                  <Label htmlFor="knowledge-body" className="sr-only">
+                <div className="flex flex-col gap-1.5 @2xl/page:col-span-2">
+                  <Label>
                     <FormattedMessage
-                      id="knowledge.body.markdown"
-                      defaultMessage="Guidance in Markdown"
+                      id="knowledge.record.primaryDocument"
+                      defaultMessage="Primary document"
                     />
                   </Label>
-                  <textarea
-                    ref={textarea}
-                    id="knowledge-body"
-                    className={`${TEXTAREA_CLASS} min-h-64 font-mono`}
-                    value={body}
-                    placeholder={intl.formatMessage({
-                      id: "knowledge.body.placeholder",
-                      defaultMessage: "Write guidance in Markdown…",
-                    })}
-                    onChange={(event) => setBody(event.target.value)}
-                    onBlur={commitBody}
-                  />
-                  <p className="text-xs text-muted">
-                    <FormattedMessage
-                      id="knowledge.body.help"
-                      defaultMessage="Markdown headings, lists, emphasis, code, and links are supported."
-                    />
-                  </p>
+                  {saved.primaryDocument ? (
+                    <button
+                      type="button"
+                      aria-label={intl.formatMessage({
+                        id: "knowledge.action.openPreview",
+                        defaultMessage: "Open preview",
+                      })}
+                      className="flex items-center justify-between rounded-button border border-border-default px-3 py-2 text-start hover:bg-hover"
+                      onClick={() =>
+                        setReading({
+                          documentId: saved.primaryDocument!.id,
+                          versionId: saved.primaryDocument!.currentVersion.id,
+                        })
+                      }
+                    >
+                      <span>{saved.primaryDocument.title}</span>
+                      <span className="text-sm text-link">
+                        <FormattedMessage
+                          id="knowledge.action.openPreview"
+                          defaultMessage="Open preview"
+                        />
+                      </span>
+                    </button>
+                  ) : (
+                    <span className="text-muted">
+                      <FormattedMessage id="knowledge.record.noPrimary" defaultMessage="None" />
+                    </span>
+                  )}
                 </div>
-              )}
-            </div>
-          </section>
-        </div>
-      </RecordApplets>
-    </AppShell>
+              </div>
+            </section>
+            <DocumentsCard
+              documents={paper}
+              folders={[]}
+              nextCursor={paperCursor}
+              supportingUploads={false}
+              reading={reading?.versionId ?? null}
+              amending={null}
+              onAmendmentOpened={() => undefined}
+              onRead={(document, version) =>
+                setReading({ documentId: document.id, versionId: version.id })
+              }
+              onDocuments={(documents, cursor) => {
+                setPaper(documents);
+                if (cursor !== undefined) setPaperCursor(cursor);
+                // The card's listing is the newer truth for the identity
+                // row: a designation moved, or the primary was erased.
+                const primary = documents.find((document) => document.isPrimary);
+                const current = primary?.versions.find((version) => version.isCurrent);
+                setSaved((item) => ({
+                  ...item,
+                  primaryDocument:
+                    primary && current
+                      ? {
+                          id: primary.id,
+                          title: primary.title,
+                          currentVersion: {
+                            id: current.id,
+                            originalFilename: current.originalFilename,
+                            mimeType: current.mimeType,
+                            renderFamily: current.renderFamily,
+                          },
+                        }
+                      : null,
+                  documentCount: documents.filter((document) => document.archivedAt === null)
+                    .length,
+                }));
+              }}
+              onFiled={setFiled}
+              onFolders={() => undefined}
+            />
+            <section
+              aria-labelledby="knowledge-guidance-heading"
+              className="overflow-hidden rounded-card border border-border-default bg-raised"
+            >
+              <header className="flex min-h-section-header items-center justify-between gap-3 border-b border-border-default bg-section-header px-4">
+                <h2 id="knowledge-guidance-heading" className="text-base font-semibold">
+                  <FormattedMessage id="knowledge.record.guidance" defaultMessage="Guidance" />
+                </h2>
+                {editingBody ? (
+                  <div className="flex items-center gap-2">
+                    <StatusNote
+                      status={commits.status.body ?? "idle"}
+                      detail={commits.error.body}
+                    />
+                    {/* The textarea's blur has already committed the draft by
+                      the time this click lands, so the toggle only flips. */}
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      aria-pressed={preview}
+                      onClick={() => setPreview((value) => !value)}
+                    >
+                      {preview ? (
+                        <>
+                          <Pencil size={16} />
+                          <FormattedMessage id="knowledge.body.edit" defaultMessage="Edit" />
+                        </>
+                      ) : (
+                        <>
+                          <Eye size={16} />
+                          <FormattedMessage id="knowledge.body.preview" defaultMessage="Preview" />
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                ) : null}
+              </header>
+              <div className="min-h-48 p-4">
+                {!editingBody ? (
+                  <div className="flex min-h-40 items-center justify-center">
+                    <Button variant="secondary" onClick={showEditor}>
+                      <Pencil size={16} />
+                      <FormattedMessage id="knowledge.body.add" defaultMessage="Add guidance" />
+                    </Button>
+                  </div>
+                ) : preview ? (
+                  <KnowledgeMarkdown source={body} />
+                ) : (
+                  <div className="flex flex-col gap-2">
+                    <Label htmlFor="knowledge-body" className="sr-only">
+                      <FormattedMessage
+                        id="knowledge.body.markdown"
+                        defaultMessage="Guidance in Markdown"
+                      />
+                    </Label>
+                    <textarea
+                      ref={textarea}
+                      id="knowledge-body"
+                      className={`${TEXTAREA_CLASS} min-h-64 font-mono`}
+                      value={body}
+                      placeholder={intl.formatMessage({
+                        id: "knowledge.body.placeholder",
+                        defaultMessage: "Write guidance in Markdown…",
+                      })}
+                      onChange={(event) => setBody(event.target.value)}
+                      onBlur={commitBody}
+                    />
+                    <p className="text-xs text-muted">
+                      <FormattedMessage
+                        id="knowledge.body.help"
+                        defaultMessage="Markdown headings, lists, emphasis, code, and links are supported."
+                      />
+                    </p>
+                  </div>
+                )}
+              </div>
+            </section>
+          </div>
+        </RecordApplets>
+      </AppShell>
+    </RecordContext.Provider>
   );
 }

@@ -7,7 +7,7 @@
  * each owner-specific read and write name its new arm before the build can
  * pass.
  */
-export const DOCUMENT_OWNER_KINDS = ["contract", "matter", "entity"] as const;
+export const DOCUMENT_OWNER_KINDS = ["contract", "matter", "entity", "knowledge_item"] as const;
 export type DocumentOwner = (typeof DOCUMENT_OWNER_KINDS)[number];
 
 export interface ResolvedDocumentOwner<T> {

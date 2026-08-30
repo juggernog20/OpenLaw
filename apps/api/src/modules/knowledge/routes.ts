@@ -8,8 +8,11 @@ import {
   and,
   asc,
   count,
+  documents,
+  documentVersions,
   eq,
   getTableColumns,
+  isNotNull,
   isNull,
   knowledgeFolders,
   knowledgeItems,
@@ -36,6 +39,7 @@ import { requireRole } from "../../auth/guards.js";
 import { recordActivity } from "../../lib/activity.js";
 import { httpError, problemResponse } from "../../lib/problem.js";
 import { folderName } from "../documents/folders.js";
+import { RENDER_FAMILIES, renderFamilySql, type RenderFamily } from "../../lib/render-family.js";
 
 const requireMember = requireRole("administrator", "legal_team_member");
 const PAGE_SIZE = 50;
@@ -52,6 +56,16 @@ const PersonSchema = z.object({
 });
 
 const ReferenceSchema = z.object({ id: z.string(), title: z.string() });
+const PrimaryDocumentSchema = z.object({
+  id: z.string(),
+  title: z.string(),
+  currentVersion: z.object({
+    id: z.string(),
+    originalFilename: z.string(),
+    mimeType: z.string(),
+    renderFamily: z.enum(RENDER_FAMILIES),
+  }),
+});
 
 const KnowledgeItemSchema = z.object({
   id: z.string(),
@@ -64,6 +78,8 @@ const KnowledgeItemSchema = z.object({
   state: z.enum(KNOWLEDGE_ITEM_STATES),
   audience: z.enum(KNOWLEDGE_ITEM_AUDIENCES),
   replacedBy: ReferenceSchema.nullable(),
+  primaryDocument: PrimaryDocumentSchema.nullable(),
+  documentCount: z.number().int().nonnegative(),
   createdBy: PersonSchema,
   updatedBy: PersonSchema,
   createdAt: z.iso.datetime({ offset: true }),
@@ -93,6 +109,13 @@ const FoldersEnvelope = z.object({ folders: z.array(FolderSchema) });
 const creators = alias(users, "knowledge_item_creators");
 const editors = alias(users, "knowledge_item_editors");
 const replacements = alias(knowledgeItems, "knowledge_item_replacements");
+const primaryDocuments = alias(documents, "knowledge_item_primary_documents");
+const primaryVersions = alias(documentVersions, "knowledge_item_primary_versions");
+const primaryVersionIsCurrent = sql`${primaryVersions.versionNumber} = (
+  select max(current_primary_version.version_number)
+  from document_versions current_primary_version
+  where current_primary_version.document_id = ${primaryDocuments.id}
+)`;
 
 function withoutBody<T extends { body: unknown }>({ body: _body, ...rest }: T): Omit<T, "body"> {
   void _body;
@@ -112,6 +135,20 @@ function itemProjection(shape: keyof typeof itemColumns) {
     folderName: knowledgeFolders.name,
     replacementId: replacements.id,
     replacementTitle: replacements.title,
+    primaryDocumentId: primaryDocuments.id,
+    primaryDocumentTitle: primaryDocuments.title,
+    primaryVersionId: primaryVersions.id,
+    primaryOriginalFilename: primaryVersions.originalFilename,
+    primaryMimeType: primaryVersions.mimeType,
+    primaryRenderFamily: renderFamilySql(
+      primaryVersions.mimeType,
+      primaryVersions.originalFilename,
+    ),
+    documentCount: sql<number>`(
+      select count(*)::int from documents counted_document
+      where counted_document.knowledge_item_id = ${knowledgeItems.id}
+        and counted_document.archived_at is null
+    )`,
     createdBy: {
       id: creators.id,
       displayName: creators.displayName,
@@ -133,6 +170,13 @@ type ProjectedItem = {
   folderName: string | null;
   replacementId: string | null;
   replacementTitle: string | null;
+  primaryDocumentId: string | null;
+  primaryDocumentTitle: string | null;
+  primaryVersionId: string | null;
+  primaryOriginalFilename: string | null;
+  primaryMimeType: string | null;
+  primaryRenderFamily: RenderFamily;
+  documentCount: number;
   createdBy: { id: string; displayName: string; image: string | null; archivedAt: Date | null };
   updatedBy: { id: string; displayName: string; image: string | null; archivedAt: Date | null };
 };
@@ -151,6 +195,24 @@ function summarize(row: ProjectedItem) {
       row.replacementId && row.replacementTitle
         ? { id: row.replacementId, title: row.replacementTitle }
         : null,
+    primaryDocument:
+      row.primaryDocumentId &&
+      row.primaryDocumentTitle &&
+      row.primaryVersionId &&
+      row.primaryOriginalFilename &&
+      row.primaryMimeType
+        ? {
+            id: row.primaryDocumentId,
+            title: row.primaryDocumentTitle,
+            currentVersion: {
+              id: row.primaryVersionId,
+              originalFilename: row.primaryOriginalFilename,
+              mimeType: row.primaryMimeType,
+              renderFamily: row.primaryRenderFamily,
+            },
+          }
+        : null,
+    documentCount: row.documentCount,
     createdBy: {
       id: row.createdBy.id,
       displayName: row.createdBy.displayName,
@@ -180,7 +242,12 @@ function itemSelect(db: Executor, shape: keyof typeof itemColumns = "full") {
     .leftJoin(knowledgeFolders, eq(knowledgeItems.folderId, knowledgeFolders.id))
     .innerJoin(creators, eq(knowledgeItems.createdBy, creators.id))
     .innerJoin(editors, eq(knowledgeItems.updatedBy, editors.id))
-    .leftJoin(replacements, eq(knowledgeItems.replacedById, replacements.id));
+    .leftJoin(replacements, eq(knowledgeItems.replacedById, replacements.id))
+    .leftJoin(primaryDocuments, eq(knowledgeItems.primaryDocumentId, primaryDocuments.id))
+    .leftJoin(
+      primaryVersions,
+      and(eq(primaryVersions.documentId, primaryDocuments.id), primaryVersionIsCurrent),
+    );
 }
 
 async function readItem(db: Executor, id: string): Promise<ProjectedItem | null> {
@@ -226,6 +293,7 @@ interface ListFilters {
   audience?: (typeof KNOWLEDGE_ITEM_AUDIENCES)[number];
   folder?: string;
   author?: string;
+  format?: "pdf" | "word" | "powerpoint" | "image" | "email" | "other";
 }
 
 function listScope(filters: ListFilters): SQL | undefined {
@@ -235,6 +303,20 @@ function listScope(filters: ListFilters): SQL | undefined {
     filters.state ? eq(knowledgeItems.state, filters.state) : undefined,
     filters.audience ? eq(knowledgeItems.audience, filters.audience) : undefined,
     filters.author ? eq(knowledgeItems.createdBy, filters.author) : undefined,
+    // An item with no primary Document has no format: `other` names a
+    // primary the table does not preview, not the absence of one.
+    filters.format
+      ? and(
+          isNotNull(primaryVersions.id),
+          eq(
+            sql<string>`replace(${renderFamilySql(
+              primaryVersions.mimeType,
+              primaryVersions.originalFilename,
+            )}, 'presentation', 'powerpoint')`,
+            filters.format,
+          ),
+        )
+      : undefined,
     filters.folder
       ? sql`${knowledgeItems.folderId} in (
           with recursive knowledge_folder_tree(id) as (
@@ -460,6 +542,7 @@ export const knowledgeRoutes: FastifyPluginAsyncZod = async (app) => {
           audience: z.enum(KNOWLEDGE_ITEM_AUDIENCES).optional(),
           folder: IdSchema.optional(),
           author: IdSchema.optional(),
+          format: z.enum(["pdf", "word", "powerpoint", "image", "email", "other"]).optional(),
           sort: z.enum(KNOWLEDGE_LIST_SORT_KEYS).optional(),
           dir: z.enum(SORT_DIRECTIONS).optional(),
           cursor: IdSchema.optional(),
@@ -615,6 +698,7 @@ export const knowledgeRoutes: FastifyPluginAsyncZod = async (app) => {
             body: BodySchema.optional(),
             folderId: IdSchema.nullable().optional(),
             replacedById: IdSchema.nullable().optional(),
+            primaryDocumentId: IdSchema.nullable().optional(),
           })
           .refine((body) => Object.keys(body).length > 0, {
             message: "Name at least one field to change.",
@@ -701,6 +785,38 @@ export const knowledgeRoutes: FastifyPluginAsyncZod = async (app) => {
             : [];
           patch.replacedById = to?.id ?? null;
           changed.replacedBy = { from: from[0]?.title ?? null, to: to?.title ?? null };
+        }
+        if (
+          request.body.primaryDocumentId !== undefined &&
+          request.body.primaryDocumentId !== target.primaryDocumentId
+        ) {
+          let next: { id: string; title: string } | null = null;
+          if (request.body.primaryDocumentId !== null) {
+            const [owned] = await tx
+              .select({ id: documents.id, title: documents.title })
+              .from(documents)
+              .where(
+                and(
+                  eq(documents.id, request.body.primaryDocumentId),
+                  eq(documents.knowledgeItemId, target.id),
+                  isNull(documents.archivedAt),
+                ),
+              )
+              .limit(1);
+            if (!owned) {
+              throw httpError(400, "The primary Document must be a live Document this item owns.");
+            }
+            next = owned;
+          }
+          const previous = target.primaryDocumentId
+            ? await tx
+                .select({ title: documents.title })
+                .from(documents)
+                .where(eq(documents.id, target.primaryDocumentId))
+                .limit(1)
+            : [];
+          patch.primaryDocumentId = next?.id ?? null;
+          changed.primaryDocument = { from: previous[0]?.title ?? null, to: next?.title ?? null };
         }
 
         if (Object.keys(patch).length === 0) return;

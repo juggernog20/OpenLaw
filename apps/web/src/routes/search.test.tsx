@@ -5,6 +5,7 @@ import { act, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { json, problem, renderAt, stubApi, type StubCall } from "../testing/helpers";
+import { searchResultPath } from "../components/search/search-result-row";
 
 const MEMBER = {
   id: "u2",
@@ -50,6 +51,24 @@ const DOCUMENT = {
   versionId: "version-4",
   versionNumber: 4,
   snippet: "…either party may <mark>terminate for convenience</mark> on sixty days' notice…",
+} as const;
+
+const KNOWLEDGE = {
+  kind: "knowledge_item",
+  id: "knowledge-7",
+  number: null,
+  title: "Acquisition template",
+  isConfidential: false,
+  rank: 5,
+  state: "draft",
+} as const;
+
+const KNOWLEDGE_DOCUMENT = {
+  ...DOCUMENT,
+  id: "knowledge-document-7",
+  ownerKind: "knowledge_item",
+  ownerId: "knowledge-7",
+  ownerNumber: null,
 } as const;
 
 function searchAnswer(results: readonly object[], nextCursor: string | null = null) {
@@ -137,6 +156,25 @@ describe("the header search box", () => {
 
     await user.keyboard("{ArrowDown}{Enter}");
     await waitFor(() => expect(router.state.location.pathname).toBe("/matters/51"));
+  });
+
+  it("opens Knowledge items and their matching Documents on the item record", async () => {
+    stubApi({
+      signedIn: MEMBER,
+      extra: (call) =>
+        searchCall(call) ? searchAnswer([KNOWLEDGE, KNOWLEDGE_DOCUMENT]) : undefined,
+    });
+    renderAt("/");
+    const input = await headerSearch();
+    await userEvent.setup().type(input, "indemnity");
+    expect(
+      await screen.findByRole("option", { name: /Draft.*Acquisition template/i }),
+    ).toBeVisible();
+    expect(screen.getByRole("option", { name: /v4.*counter_redline/i })).toBeVisible();
+    expect(searchResultPath(KNOWLEDGE, "indemnity")).toBe("/knowledge/knowledge-7");
+    expect(searchResultPath(KNOWLEDGE_DOCUMENT, "indemnity")).toBe(
+      "/knowledge/knowledge-7?doc=knowledge-document-7&version=version-4&find=indemnity",
+    );
   });
 
   it("keeps the answer when a keystroke changes only whitespace", async () => {
@@ -277,7 +315,7 @@ describe("the results page", () => {
       await screen.findByRole("heading", { name: "Search results for “termination”" }),
     ).toBeVisible();
     const filters = screen.getByRole("navigation", { name: "Filter search results" });
-    expect(within(filters).getAllByRole("link")).toHaveLength(7);
+    expect(within(filters).getAllByRole("link")).toHaveLength(8);
     expect(within(filters).getByRole("link", { name: "Document" })).toHaveAttribute(
       "aria-current",
       "page",

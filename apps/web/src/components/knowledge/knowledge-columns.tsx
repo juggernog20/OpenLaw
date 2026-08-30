@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 /** DES-046 column catalogue for the Knowledge library. */
-import { BookOpen } from "lucide-react";
+import { BookOpen, MoreHorizontal } from "lucide-react";
 import { FormattedMessage } from "react-intl";
 import { Link } from "react-router";
 import { formatShortDate } from "../../lib/format";
@@ -12,6 +12,13 @@ import {
 } from "../../lib/knowledge";
 import type { ColumnCatalogue, ColumnDef } from "../../lib/list-views";
 import { Avatar } from "../avatar";
+import { Button } from "../ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "../ui/dropdown-menu";
 
 const COLUMNS: ColumnDef<KnowledgeItem>[] = [
   {
@@ -38,6 +45,34 @@ const COLUMNS: ColumnDef<KnowledgeItem>[] = [
         ) : null}
       </span>
     ),
+  },
+  {
+    key: "format",
+    header: <FormattedMessage id="knowledge.column.format" defaultMessage="Format" />,
+    label: (intl) =>
+      intl.formatMessage({ id: "knowledge.column.format", defaultMessage: "Format" }),
+    defaultWidth: 120,
+    minWidth: 88,
+    render: (row) => {
+      const family = row.primaryDocument?.currentVersion.renderFamily;
+      const label =
+        family === "pdf"
+          ? "PDF"
+          : family === "presentation"
+            ? "PowerPoint"
+            : family === "other"
+              ? "Other"
+              : family
+                ? family[0]!.toUpperCase() + family.slice(1)
+                : "—";
+      return family ? (
+        <span className="rounded-pill bg-status-neutral-bg px-2 py-0.5 text-xs font-medium text-status-neutral-fg">
+          {label}
+        </span>
+      ) : (
+        <span className="text-muted">{label}</span>
+      );
+    },
   },
   {
     key: "type",
@@ -120,11 +155,54 @@ const COLUMNS: ColumnDef<KnowledgeItem>[] = [
     sortKey: "updated",
     render: (row) => <span className="text-muted">{formatShortDate(row.updatedAt)}</span>,
   },
+  {
+    key: "actions",
+    header: <span className="sr-only">Actions</span>,
+    label: (intl) =>
+      intl.formatMessage({ id: "knowledge.column.actions", defaultMessage: "Actions" }),
+    defaultWidth: 56,
+    minWidth: 48,
+    required: true,
+    render: (row) =>
+      row.primaryDocument ? (
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              aria-label={`Actions for ${row.title}`}
+            >
+              <MoreHorizontal size={16} aria-hidden="true" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem asChild>
+              <Link
+                to={`/knowledge/${row.id}?doc=${encodeURIComponent(row.primaryDocument.id)}&version=${encodeURIComponent(row.primaryDocument.currentVersion.id)}`}
+              >
+                <FormattedMessage id="knowledge.action.openPreview" defaultMessage="Open preview" />
+              </Link>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      ) : null,
+  },
 ];
 
 export const KNOWLEDGE_CATALOGUE: ColumnCatalogue<KnowledgeItem> = {
   surface: "knowledge",
   columns: COLUMNS,
-  defaultColumnKeys: ["title", "type", "state", "audience", "folder", "author", "updated"],
+  defaultColumnKeys: [
+    "title",
+    "type",
+    "format",
+    "state",
+    "audience",
+    "folder",
+    "author",
+    "updated",
+    "actions",
+  ],
   flexColumnKey: "title",
 };

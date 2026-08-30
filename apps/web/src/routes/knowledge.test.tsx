@@ -53,6 +53,17 @@ function item(overrides: Record<string, unknown> = {}) {
     state: "draft",
     audience: "legal_only",
     replacedBy: null,
+    primaryDocument: {
+      id: "document-1",
+      title: "Contract review playbook.pdf",
+      currentVersion: {
+        id: "version-1",
+        originalFilename: "Contract review playbook.pdf",
+        mimeType: "application/pdf",
+        renderFamily: "pdf",
+      },
+    },
+    documentCount: 1,
     createdBy: { id: MEMBER.id, displayName: MEMBER.displayName, image: null, archived: false },
     updatedBy: { id: MEMBER.id, displayName: MEMBER.displayName, image: null, archived: false },
     createdAt: "2026-08-01T00:00:00.000Z",
@@ -88,6 +99,22 @@ function recordApi(patches: unknown[]) {
   return (call: StubCall): Response | undefined => {
     if (call.url.pathname === "/api/v1/knowledge/knowledge-1" && call.method === "GET")
       return json(200, { knowledgeItem: current });
+    if (call.url.pathname === "/api/v1/knowledge/knowledge-1/documents" && call.method === "GET")
+      return json(200, {
+        documents: [
+          document(),
+          document({ id: "document-2", title: "alternate.docx", isPrimary: false }),
+        ],
+        nextCursor: null,
+      });
+    if (call.url.pathname === "/api/v1/documents/document-2/primary" && call.method === "POST")
+      return json(200, {
+        documents: [
+          document({ isPrimary: false }),
+          document({ id: "document-2", title: "alternate.docx", isPrimary: true }),
+        ],
+        nextCursor: null,
+      });
     if (call.url.pathname === "/api/v1/knowledge/knowledge-1" && call.method === "PATCH") {
       patches.push(call.body);
       const body = call.body as Record<string, unknown>;
@@ -114,6 +141,44 @@ function recordApi(patches: unknown[]) {
     if (call.url.pathname === "/api/v1/activity" && call.method === "GET")
       return json(200, { entries: [], nextCursor: null });
     return undefined;
+  };
+}
+
+function document(overrides: Record<string, unknown> = {}) {
+  return {
+    id: "document-1",
+    title: "Contract review playbook.pdf",
+    description: null,
+    isPrimary: true,
+    archivedAt: null,
+    isConfidential: false,
+    folderId: null,
+    createdBy: { id: MEMBER.id, displayName: MEMBER.displayName, image: null, archived: false },
+    createdAt: "2026-08-01T00:00:00.000Z",
+    updatedAt: "2026-08-01T00:00:00.000Z",
+    versions: [
+      {
+        id: "version-1",
+        versionNumber: 1,
+        kind: "draft_ours",
+        note: null,
+        originalFilename: "Contract review playbook.pdf",
+        mimeType: "application/pdf",
+        renderFamily: "pdf",
+        byteSize: 120,
+        checksumSha256: "abc",
+        uploadedBy: {
+          id: MEMBER.id,
+          displayName: MEMBER.displayName,
+          image: null,
+          archived: false,
+        },
+        createdAt: "2026-08-01T00:00:00.000Z",
+        isCurrent: true,
+        isExecuted: false,
+      },
+    ],
+    ...overrides,
   };
 }
 
@@ -145,6 +210,47 @@ describe("the Knowledge library", () => {
       "/knowledge/knowledge-1",
     );
     expect(within(table).getAllByText("Draft")).toHaveLength(2);
+    expect(within(table).getByText("PDF")).toBeInTheDocument();
+    const user = userEvent.setup();
+    await user.click(
+      within(table).getByRole("button", { name: "Actions for Contract review playbook" }),
+    );
+    expect(await screen.findByRole("menuitem", { name: "Open preview" })).toHaveAttribute(
+      "href",
+      "/knowledge/knowledge-1?doc=document-1&version=version-1",
+    );
+  });
+
+  it("offers both New paths and sends every selected file in one from-files request", async () => {
+    let form: FormData | undefined;
+    const base = libraryApi([]);
+    stubApi({
+      signedIn: MEMBER,
+      extra: (call) => {
+        if (call.url.pathname === "/api/v1/knowledge/from-files" && call.method === "POST") {
+          form = call.body as FormData;
+          return json(201, { knowledgeItems: [] });
+        }
+        return base(call);
+      },
+    });
+    renderAt("/knowledge");
+    const user = userEvent.setup();
+    await user.click((await screen.findAllByRole("button", { name: "New" }))[0]!);
+    expect(screen.getByRole("menuitem", { name: "New knowledge item" })).toBeInTheDocument();
+    await user.click(screen.getByRole("menuitem", { name: "New from files" }));
+    const dialog = await screen.findByRole("dialog", { name: "New from files" });
+    await user.upload(within(dialog).getByLabelText("Choose Knowledge files"), [
+      new File(["one"], "one.docx"),
+      new File(["two"], "two.pdf"),
+    ]);
+    await user.selectOptions(within(dialog).getByLabelText("Type"), "type-article");
+    await user.selectOptions(within(dialog).getByLabelText("Folder"), "contracts");
+    await user.click(within(dialog).getByRole("button", { name: "Create drafts" }));
+    await waitFor(() => expect(form).toBeDefined());
+    expect(form!.get("knowledgeTypeId")).toBe("type-article");
+    expect(form!.get("folderId")).toBe("contracts");
+    expect(form!.getAll("file")).toHaveLength(2);
   });
 
   it("scopes the list from the nested folder tree and distinguishes a filtered zero", async () => {
@@ -181,7 +287,8 @@ describe("the Knowledge library", () => {
     });
     renderAt("/knowledge");
     const user = userEvent.setup();
-    await user.click((await screen.findAllByRole("button", { name: "New item" }))[0]!);
+    await user.click((await screen.findAllByRole("button", { name: "New" }))[0]!);
+    await user.click(await screen.findByRole("menuitem", { name: "New knowledge item" }));
     const dialog = await screen.findByRole("dialog", { name: "New Knowledge item" });
     await user.type(within(dialog).getByLabelText("Title"), "Review guide");
     await user.selectOptions(within(dialog).getByLabelText("Type"), "type-article");
@@ -215,7 +322,8 @@ describe("the Knowledge library", () => {
     renderAt("/knowledge");
     const user = userEvent.setup();
     await user.click(await screen.findByRole("button", { name: /Contracts/ }));
-    await user.click((await screen.findAllByRole("button", { name: "New item" }))[0]!);
+    await user.click((await screen.findAllByRole("button", { name: "New" }))[0]!);
+    await user.click(await screen.findByRole("menuitem", { name: "New knowledge item" }));
     const dialog = await screen.findByRole("dialog", { name: "New Knowledge item" });
     expect(within(dialog).getByLabelText("Folder")).toHaveValue("contracts");
     await user.type(within(dialog).getByLabelText("Title"), "Filed guide");
@@ -290,6 +398,24 @@ describe("the Knowledge library", () => {
 });
 
 describe("a Knowledge record", () => {
+  it("opens the primary row in the doc panel and reuses the Documents card primary action without folders", async () => {
+    stubApi({ signedIn: MEMBER, extra: recordApi([]) });
+    renderAt("/knowledge/knowledge-1");
+    const user = userEvent.setup();
+    expect(await screen.findByRole("heading", { name: "Documents" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "New folder" })).not.toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Open preview" }));
+    expect(
+      await screen.findByRole("complementary", {
+        name: "Contract review playbook.pdf, version 1",
+      }),
+    ).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Close the document" }));
+    await user.click(screen.getByRole("button", { name: "Actions for alternate.docx" }));
+    await user.click(await screen.findByRole("menuitem", { name: "Set as primary" }));
+    await waitFor(() => expect(screen.getByText("Saved")).toBeInTheDocument());
+  });
+
   it("commits identity fields inline and offers the type settings deep link only to an Administrator", async () => {
     const patches: unknown[] = [];
     stubApi({ signedIn: ADMIN, extra: recordApi(patches) });

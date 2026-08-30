@@ -11,6 +11,7 @@ import {
   Pencil,
   Plus,
   Trash2,
+  Upload,
 } from "lucide-react";
 import { FormattedMessage, useIntl } from "react-intl";
 import { redirect, useLoaderData, useNavigate } from "react-router";
@@ -49,6 +50,12 @@ import { Button } from "../components/ui/button";
 import { Dialog, DialogContent, DialogTitle } from "../components/ui/dialog";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "../components/ui/dropdown-menu";
 
 type KnowledgeQuery = NonNullable<paths["/api/v1/knowledge"]["get"]["parameters"]["query"]>;
 type KnowledgeType = { id: string; slug: string; displayName: string };
@@ -75,6 +82,7 @@ function listQuery(layout: Layout): KnowledgeQuery {
     ...(audience === "legal_only" || audience === "everyone" ? { audience } : {}),
     ...(value("folder") ? { folder: value("folder") } : {}),
     ...(value("author") ? { author: value("author") } : {}),
+    ...(value("format") ? { format: value("format") as KnowledgeQuery["format"] } : {}),
     ...(sort ? { sort: sort.key, dir: sort.dir } : {}),
   };
 }
@@ -125,6 +133,7 @@ export function KnowledgePage() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
+  const [filesOpen, setFilesOpen] = useState(false);
   const [folderOpen, setFolderOpen] = useState(false);
   const [folderNameDraft, setFolderNameDraft] = useState("");
   const [folderEditOpen, setFolderEditOpen] = useState(false);
@@ -364,10 +373,24 @@ export function KnowledgePage() {
             />
           }
           primaryAction={
-            <Button onClick={() => setCreateOpen(true)}>
-              <Plus size={16} aria-hidden="true" />
-              <FormattedMessage id="knowledge.create.action" defaultMessage="New item" />
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button>
+                  <Plus size={16} aria-hidden="true" />
+                  <FormattedMessage id="knowledge.new.action" defaultMessage="New" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onSelect={() => setFilesOpen(true)}>
+                  <Upload size={16} aria-hidden="true" />
+                  <FormattedMessage id="knowledge.new.fromFiles" defaultMessage="New from files" />
+                </DropdownMenuItem>
+                <DropdownMenuItem onSelect={() => setCreateOpen(true)}>
+                  <BookOpen size={16} aria-hidden="true" />
+                  <FormattedMessage id="knowledge.new.item" defaultMessage="New knowledge item" />
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           }
           actions={controls}
           filters={
@@ -523,13 +546,22 @@ export function KnowledgePage() {
         </section>
       </div>
       <CreateItemDialog
-        key={createOpen ? `open:${selectedFolder}` : "closed"}
+        key={createOpen ? `create-open:${selectedFolder}` : "create-closed"}
         open={createOpen}
         onOpenChange={setCreateOpen}
         types={loaded.types}
         folders={folders}
         initialFolder={selectedFolder}
         onCreated={(item) => void navigate(`/knowledge/${item.id}`)}
+      />
+      <CreateFromFilesDialog
+        key={filesOpen ? `files-open:${selectedFolder}` : "files-closed"}
+        open={filesOpen}
+        onOpenChange={setFilesOpen}
+        types={loaded.types}
+        folders={folders}
+        initialFolder={selectedFolder}
+        onCreated={(id) => void navigate(`/knowledge/${id}`)}
       />
       <Dialog open={folderOpen} onOpenChange={setFolderOpen}>
         <DialogContent>
@@ -732,6 +764,20 @@ function KnowledgeFilters({
         disabled={busy}
         onChange={(value) => onFilter("author", value)}
         options={authors.map((row) => [row.id, row.displayName])}
+      />
+      <Filter
+        label={intl.formatMessage({ id: "knowledge.filter.format", defaultMessage: "Format" })}
+        value={String(filters.format ?? "")}
+        disabled={busy}
+        onChange={(value) => onFilter("format", value)}
+        options={[
+          ["pdf", "PDF"],
+          ["word", "Word"],
+          ["powerpoint", "PowerPoint"],
+          ["image", "Image"],
+          ["email", "Email"],
+          ["other", "Other"],
+        ]}
       />
       <Button
         variant="ghost"
@@ -945,6 +991,154 @@ function CreateItemDialog({
                   id: "knowledge.create.submit",
                   defaultMessage: "Create item",
                 })}
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function CreateFromFilesDialog({
+  open,
+  onOpenChange,
+  types,
+  folders,
+  initialFolder,
+  onCreated,
+}: Readonly<{
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  types: KnowledgeType[];
+  folders: KnowledgeFolder[];
+  initialFolder: string;
+  onCreated: (id: string) => void;
+}>) {
+  const [files, setFiles] = useState<File[]>([]);
+  const [typeId, setTypeId] = useState(types[0]?.id ?? "");
+  const [folderId, setFolderId] = useState(initialFolder);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string>();
+  const intl = useIntl();
+  const refused = intl.formatMessage({
+    id: "knowledge.fromFiles.failed",
+    defaultMessage: "The files could not be added.",
+  });
+
+  async function create() {
+    if (files.length === 0 || !typeId || busy) return;
+    setBusy(true);
+    setError(undefined);
+    const body = new FormData();
+    body.append("knowledgeTypeId", typeId);
+    if (folderId) body.append("folderId", folderId);
+    for (const file of files) body.append("file", file, file.name);
+    const response = await fetch("/api/v1/knowledge/from-files", { method: "POST", body }).catch(
+      () => undefined,
+    );
+    setBusy(false);
+    if (!response?.ok) {
+      setError((await problem(response)).detail ?? refused);
+      return;
+    }
+    const answer = (await response.json()) as { knowledgeItems?: Array<{ id: string }> };
+    const first = answer.knowledgeItems?.[0];
+    if (!first) {
+      setError(refused);
+      return;
+    }
+    onOpenChange(false);
+    onCreated(first.id);
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent>
+        <DialogTitle>
+          <FormattedMessage id="knowledge.fromFiles.title" defaultMessage="New from files" />
+        </DialogTitle>
+        <div className="mt-4 flex flex-col gap-4">
+          <label
+            className="flex min-h-28 cursor-pointer flex-col items-center justify-center rounded-card border border-dashed border-border-strong bg-subtle px-4 text-center"
+            onDragOver={(event) => event.preventDefault()}
+            onDrop={(event) => {
+              event.preventDefault();
+              setFiles(Array.from(event.dataTransfer.files));
+            }}
+          >
+            <Upload size={24} aria-hidden="true" className="mb-2 text-muted" />
+            <span className="font-medium">
+              <FormattedMessage
+                id="knowledge.fromFiles.drop"
+                defaultMessage="Drop files here or choose files"
+              />
+            </span>
+            <span className="mt-1 text-sm text-muted">
+              <FormattedMessage
+                id="knowledge.fromFiles.count"
+                defaultMessage="{count, plural, =0 {No files selected} one {# file selected} other {# files selected}}"
+                values={{ count: files.length }}
+              />
+            </span>
+            <input
+              className="sr-only"
+              type="file"
+              multiple
+              aria-label={intl.formatMessage({
+                id: "knowledge.fromFiles.choose",
+                defaultMessage: "Choose Knowledge files",
+              })}
+              onChange={(event) => setFiles(Array.from(event.target.files ?? []))}
+            />
+          </label>
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="knowledge-files-type">
+              <FormattedMessage id="knowledge.form.type" defaultMessage="Type" />
+            </Label>
+            <select
+              id="knowledge-files-type"
+              className={CONTROL_CLASS}
+              value={typeId}
+              onChange={(event) => setTypeId(event.target.value)}
+            >
+              {types.map((row) => (
+                <option key={row.id} value={row.id}>
+                  {row.displayName}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="knowledge-files-folder">
+              <FormattedMessage id="knowledge.form.folder" defaultMessage="Folder" />
+            </Label>
+            <select
+              id="knowledge-files-folder"
+              className={CONTROL_CLASS}
+              value={folderId}
+              onChange={(event) => setFolderId(event.target.value)}
+            >
+              <option value="">
+                <FormattedMessage id="knowledge.folder.root" defaultMessage="Library" />
+              </option>
+              {folders.map((row) => (
+                <option key={row.id} value={row.id}>
+                  {folderLabel(folders, row.id)}
+                </option>
+              ))}
+            </select>
+          </div>
+          {error ? (
+            <p role="alert" className="text-sm text-status-danger-fg">
+              {error}
+            </p>
+          ) : null}
+        </div>
+        <div className="mt-5 flex justify-end gap-2">
+          <Button variant="secondary" onClick={() => onOpenChange(false)}>
+            <FormattedMessage id="action.cancel" defaultMessage="Cancel" />
+          </Button>
+          <Button disabled={busy || files.length === 0 || !typeId} onClick={() => void create()}>
+            <FormattedMessage id="knowledge.fromFiles.submit" defaultMessage="Create drafts" />
           </Button>
         </div>
       </DialogContent>

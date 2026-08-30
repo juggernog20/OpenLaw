@@ -29633,7 +29633,7 @@
                           },
                           "kind": {
                             "type": "string",
-                            "enum": ["contract", "matter", "entity"]
+                            "enum": ["contract", "matter", "entity", "knowledge_item"]
                           },
                           "number": {
                             "anyOf": [
@@ -29684,7 +29684,7 @@
           {
             "schema": {
               "type": "string",
-              "enum": ["contract", "matter", "entity"]
+              "enum": ["contract", "matter", "entity", "knowledge_item"]
             },
             "in": "query",
             "name": "owner",
@@ -29866,7 +29866,7 @@
                             "properties": {
                               "kind": {
                                 "type": "string",
-                                "enum": ["contract", "matter", "entity"]
+                                "enum": ["contract", "matter", "entity", "knowledge_item"]
                               },
                               "id": {
                                 "type": "string"
@@ -30009,6 +30009,578 @@
                     }
                   },
                   "required": ["documents", "nextCursor"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/knowledge/from-files": {
+      "post": {
+        "operationId": "createKnowledgeItemsFromFiles",
+        "summary": "Create one draft Knowledge Item with a primary Document for every uploaded file",
+        "tags": ["knowledge", "documents"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "knowledgeTypeId": {
+                    "type": "string"
+                  },
+                  "folderId": {
+                    "type": "string"
+                  },
+                  "file": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "format": "binary"
+                    }
+                  }
+                },
+                "required": ["knowledgeTypeId", "file"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "knowledgeItems": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "title": {
+                            "type": "string"
+                          },
+                          "primaryDocumentId": {
+                            "type": "string"
+                          }
+                        },
+                        "required": ["id", "title", "primaryDocumentId"],
+                        "additionalProperties": false
+                      }
+                    }
+                  },
+                  "required": ["knowledgeItems"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/knowledge/{id}/documents": {
+      "get": {
+        "operationId": "listKnowledgeItemDocuments",
+        "summary": "The Documents owned by one live Knowledge Item, newest first, with each version chain",
+        "tags": ["documents"],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "enum": ["true", "false"]
+            },
+            "in": "query",
+            "name": "includeArchived",
+            "required": false
+          },
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 64
+            },
+            "in": "query",
+            "name": "cursor",
+            "required": false
+          },
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 64
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "documents": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "title": {
+                            "type": "string"
+                          },
+                          "description": {
+                            "type": ["string", "null"]
+                          },
+                          "isPrimary": {
+                            "type": "boolean"
+                          },
+                          "versions": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "id": {
+                                  "type": "string"
+                                },
+                                "versionNumber": {
+                                  "type": "integer",
+                                  "exclusiveMinimum": 0,
+                                  "maximum": 9007199254740991
+                                },
+                                "kind": {
+                                  "type": "string",
+                                  "enum": [
+                                    "draft_ours",
+                                    "draft_theirs",
+                                    "redline_theirs",
+                                    "redline_ours",
+                                    "executed",
+                                    "amendment",
+                                    "generated_redline"
+                                  ]
+                                },
+                                "note": {
+                                  "type": ["string", "null"]
+                                },
+                                "originalFilename": {
+                                  "type": "string"
+                                },
+                                "mimeType": {
+                                  "type": "string"
+                                },
+                                "renderFamily": {
+                                  "type": "string",
+                                  "enum": ["pdf", "image", "word", "presentation", "email", "other"]
+                                },
+                                "byteSize": {
+                                  "type": "integer",
+                                  "minimum": 0,
+                                  "maximum": 9007199254740991
+                                },
+                                "checksumSha256": {
+                                  "type": "string"
+                                },
+                                "uploadedBy": {
+                                  "type": "object",
+                                  "properties": {
+                                    "id": {
+                                      "type": "string"
+                                    },
+                                    "displayName": {
+                                      "type": "string"
+                                    },
+                                    "image": {
+                                      "type": ["string", "null"]
+                                    },
+                                    "archived": {
+                                      "type": "boolean"
+                                    }
+                                  },
+                                  "required": ["id", "displayName", "image", "archived"],
+                                  "additionalProperties": false
+                                },
+                                "createdAt": {
+                                  "type": "string",
+                                  "format": "date-time",
+                                  "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+                                },
+                                "isCurrent": {
+                                  "type": "boolean"
+                                },
+                                "isExecuted": {
+                                  "type": "boolean"
+                                }
+                              },
+                              "required": [
+                                "id",
+                                "versionNumber",
+                                "kind",
+                                "note",
+                                "originalFilename",
+                                "mimeType",
+                                "renderFamily",
+                                "byteSize",
+                                "checksumSha256",
+                                "uploadedBy",
+                                "createdAt",
+                                "isCurrent",
+                                "isExecuted"
+                              ],
+                              "additionalProperties": false
+                            }
+                          },
+                          "archivedAt": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "format": "date-time",
+                                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "isConfidential": {
+                            "type": "boolean"
+                          },
+                          "folderId": {
+                            "type": ["string", "null"]
+                          },
+                          "createdBy": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "string"
+                              },
+                              "displayName": {
+                                "type": "string"
+                              },
+                              "image": {
+                                "type": ["string", "null"]
+                              },
+                              "archived": {
+                                "type": "boolean"
+                              }
+                            },
+                            "required": ["id", "displayName", "image", "archived"],
+                            "additionalProperties": false
+                          },
+                          "createdAt": {
+                            "type": "string",
+                            "format": "date-time",
+                            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+                          },
+                          "updatedAt": {
+                            "type": "string",
+                            "format": "date-time",
+                            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "title",
+                          "description",
+                          "isPrimary",
+                          "versions",
+                          "archivedAt",
+                          "isConfidential",
+                          "folderId",
+                          "createdBy",
+                          "createdAt",
+                          "updatedAt"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "nextCursor": {
+                      "type": ["string", "null"]
+                    }
+                  },
+                  "required": ["documents", "nextCursor"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "operationId": "uploadKnowledgeItemDocument",
+        "summary": "Upload a file as a Document owned by a Knowledge Item",
+        "tags": ["documents"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary",
+                    "description": "The file itself. Any type is accepted (DOC-004)."
+                  },
+                  "kind": {
+                    "type": "string",
+                    "enum": [
+                      "draft_ours",
+                      "draft_theirs",
+                      "redline_theirs",
+                      "redline_ours",
+                      "executed",
+                      "amendment"
+                    ],
+                    "description": "What this version is in the negotiation (CTR-014). Defaults to `draft_ours`. Must be sent before the file part."
+                  },
+                  "note": {
+                    "type": "string",
+                    "maxLength": 2000,
+                    "description": "What changed in this round, kept beside the file. Must be sent before the file part."
+                  }
+                },
+                "required": ["file"]
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 64
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "document": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "title": {
+                          "type": "string"
+                        },
+                        "description": {
+                          "type": ["string", "null"]
+                        },
+                        "isPrimary": {
+                          "type": "boolean"
+                        },
+                        "versions": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "string"
+                              },
+                              "versionNumber": {
+                                "type": "integer",
+                                "exclusiveMinimum": 0,
+                                "maximum": 9007199254740991
+                              },
+                              "kind": {
+                                "type": "string",
+                                "enum": [
+                                  "draft_ours",
+                                  "draft_theirs",
+                                  "redline_theirs",
+                                  "redline_ours",
+                                  "executed",
+                                  "amendment",
+                                  "generated_redline"
+                                ]
+                              },
+                              "note": {
+                                "type": ["string", "null"]
+                              },
+                              "originalFilename": {
+                                "type": "string"
+                              },
+                              "mimeType": {
+                                "type": "string"
+                              },
+                              "renderFamily": {
+                                "type": "string",
+                                "enum": ["pdf", "image", "word", "presentation", "email", "other"]
+                              },
+                              "byteSize": {
+                                "type": "integer",
+                                "minimum": 0,
+                                "maximum": 9007199254740991
+                              },
+                              "checksumSha256": {
+                                "type": "string"
+                              },
+                              "uploadedBy": {
+                                "type": "object",
+                                "properties": {
+                                  "id": {
+                                    "type": "string"
+                                  },
+                                  "displayName": {
+                                    "type": "string"
+                                  },
+                                  "image": {
+                                    "type": ["string", "null"]
+                                  },
+                                  "archived": {
+                                    "type": "boolean"
+                                  }
+                                },
+                                "required": ["id", "displayName", "image", "archived"],
+                                "additionalProperties": false
+                              },
+                              "createdAt": {
+                                "type": "string",
+                                "format": "date-time",
+                                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+                              },
+                              "isCurrent": {
+                                "type": "boolean"
+                              },
+                              "isExecuted": {
+                                "type": "boolean"
+                              }
+                            },
+                            "required": [
+                              "id",
+                              "versionNumber",
+                              "kind",
+                              "note",
+                              "originalFilename",
+                              "mimeType",
+                              "renderFamily",
+                              "byteSize",
+                              "checksumSha256",
+                              "uploadedBy",
+                              "createdAt",
+                              "isCurrent",
+                              "isExecuted"
+                            ],
+                            "additionalProperties": false
+                          }
+                        },
+                        "archivedAt": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "format": "date-time",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "isConfidential": {
+                          "type": "boolean"
+                        },
+                        "folderId": {
+                          "type": ["string", "null"]
+                        },
+                        "createdBy": {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string"
+                            },
+                            "displayName": {
+                              "type": "string"
+                            },
+                            "image": {
+                              "type": ["string", "null"]
+                            },
+                            "archived": {
+                              "type": "boolean"
+                            }
+                          },
+                          "required": ["id", "displayName", "image", "archived"],
+                          "additionalProperties": false
+                        },
+                        "createdAt": {
+                          "type": "string",
+                          "format": "date-time",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+                        },
+                        "updatedAt": {
+                          "type": "string",
+                          "format": "date-time",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "title",
+                        "description",
+                        "isPrimary",
+                        "versions",
+                        "archivedAt",
+                        "isConfidential",
+                        "folderId",
+                        "createdBy",
+                        "createdAt",
+                        "updatedAt"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": ["document"],
                   "additionalProperties": false
                 }
               }
@@ -45719,6 +46291,15 @@
           {
             "schema": {
               "type": "string",
+              "enum": ["pdf", "word", "powerpoint", "image", "email", "other"]
+            },
+            "in": "query",
+            "name": "format",
+            "required": false
+          },
+          {
+            "schema": {
+              "type": "string",
               "enum": [
                 "title",
                 "type",
@@ -45813,6 +46394,63 @@
                               }
                             ]
                           },
+                          "primaryDocument": {
+                            "anyOf": [
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "id": {
+                                    "type": "string"
+                                  },
+                                  "title": {
+                                    "type": "string"
+                                  },
+                                  "currentVersion": {
+                                    "type": "object",
+                                    "properties": {
+                                      "id": {
+                                        "type": "string"
+                                      },
+                                      "originalFilename": {
+                                        "type": "string"
+                                      },
+                                      "mimeType": {
+                                        "type": "string"
+                                      },
+                                      "renderFamily": {
+                                        "type": "string",
+                                        "enum": [
+                                          "pdf",
+                                          "image",
+                                          "word",
+                                          "presentation",
+                                          "email",
+                                          "other"
+                                        ]
+                                      }
+                                    },
+                                    "required": [
+                                      "id",
+                                      "originalFilename",
+                                      "mimeType",
+                                      "renderFamily"
+                                    ],
+                                    "additionalProperties": false
+                                  }
+                                },
+                                "required": ["id", "title", "currentVersion"],
+                                "additionalProperties": false
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "documentCount": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 9007199254740991
+                          },
                           "createdBy": {
                             "type": "object",
                             "properties": {
@@ -45872,6 +46510,8 @@
                           "state",
                           "audience",
                           "replacedBy",
+                          "primaryDocument",
+                          "documentCount",
                           "createdBy",
                           "updatedBy",
                           "createdAt",
@@ -45994,6 +46634,63 @@
                             }
                           ]
                         },
+                        "primaryDocument": {
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "properties": {
+                                "id": {
+                                  "type": "string"
+                                },
+                                "title": {
+                                  "type": "string"
+                                },
+                                "currentVersion": {
+                                  "type": "object",
+                                  "properties": {
+                                    "id": {
+                                      "type": "string"
+                                    },
+                                    "originalFilename": {
+                                      "type": "string"
+                                    },
+                                    "mimeType": {
+                                      "type": "string"
+                                    },
+                                    "renderFamily": {
+                                      "type": "string",
+                                      "enum": [
+                                        "pdf",
+                                        "image",
+                                        "word",
+                                        "presentation",
+                                        "email",
+                                        "other"
+                                      ]
+                                    }
+                                  },
+                                  "required": [
+                                    "id",
+                                    "originalFilename",
+                                    "mimeType",
+                                    "renderFamily"
+                                  ],
+                                  "additionalProperties": false
+                                }
+                              },
+                              "required": ["id", "title", "currentVersion"],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "documentCount": {
+                          "type": "integer",
+                          "minimum": 0,
+                          "maximum": 9007199254740991
+                        },
                         "createdBy": {
                           "type": "object",
                           "properties": {
@@ -46054,6 +46751,8 @@
                         "state",
                         "audience",
                         "replacedBy",
+                        "primaryDocument",
+                        "documentCount",
                         "createdBy",
                         "updatedBy",
                         "createdAt",
@@ -46211,6 +46910,63 @@
                             }
                           ]
                         },
+                        "primaryDocument": {
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "properties": {
+                                "id": {
+                                  "type": "string"
+                                },
+                                "title": {
+                                  "type": "string"
+                                },
+                                "currentVersion": {
+                                  "type": "object",
+                                  "properties": {
+                                    "id": {
+                                      "type": "string"
+                                    },
+                                    "originalFilename": {
+                                      "type": "string"
+                                    },
+                                    "mimeType": {
+                                      "type": "string"
+                                    },
+                                    "renderFamily": {
+                                      "type": "string",
+                                      "enum": [
+                                        "pdf",
+                                        "image",
+                                        "word",
+                                        "presentation",
+                                        "email",
+                                        "other"
+                                      ]
+                                    }
+                                  },
+                                  "required": [
+                                    "id",
+                                    "originalFilename",
+                                    "mimeType",
+                                    "renderFamily"
+                                  ],
+                                  "additionalProperties": false
+                                }
+                              },
+                              "required": ["id", "title", "currentVersion"],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "documentCount": {
+                          "type": "integer",
+                          "minimum": 0,
+                          "maximum": 9007199254740991
+                        },
                         "createdBy": {
                           "type": "object",
                           "properties": {
@@ -46271,6 +47027,8 @@
                         "state",
                         "audience",
                         "replacedBy",
+                        "primaryDocument",
+                        "documentCount",
                         "createdBy",
                         "updatedBy",
                         "createdAt",
@@ -46341,6 +47099,18 @@
                     ]
                   },
                   "replacedById": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 64
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "primaryDocumentId": {
                     "anyOf": [
                       {
                         "type": "string",
@@ -46430,6 +47200,63 @@
                             }
                           ]
                         },
+                        "primaryDocument": {
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "properties": {
+                                "id": {
+                                  "type": "string"
+                                },
+                                "title": {
+                                  "type": "string"
+                                },
+                                "currentVersion": {
+                                  "type": "object",
+                                  "properties": {
+                                    "id": {
+                                      "type": "string"
+                                    },
+                                    "originalFilename": {
+                                      "type": "string"
+                                    },
+                                    "mimeType": {
+                                      "type": "string"
+                                    },
+                                    "renderFamily": {
+                                      "type": "string",
+                                      "enum": [
+                                        "pdf",
+                                        "image",
+                                        "word",
+                                        "presentation",
+                                        "email",
+                                        "other"
+                                      ]
+                                    }
+                                  },
+                                  "required": [
+                                    "id",
+                                    "originalFilename",
+                                    "mimeType",
+                                    "renderFamily"
+                                  ],
+                                  "additionalProperties": false
+                                }
+                              },
+                              "required": ["id", "title", "currentVersion"],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "documentCount": {
+                          "type": "integer",
+                          "minimum": 0,
+                          "maximum": 9007199254740991
+                        },
                         "createdBy": {
                           "type": "object",
                           "properties": {
@@ -46490,6 +47317,8 @@
                         "state",
                         "audience",
                         "replacedBy",
+                        "primaryDocument",
+                        "documentCount",
                         "createdBy",
                         "updatedBy",
                         "createdAt",
@@ -47038,7 +47867,15 @@
           {
             "schema": {
               "type": "string",
-              "enum": ["contract", "matter", "document", "entity", "counterparty", "request"]
+              "enum": [
+                "contract",
+                "matter",
+                "document",
+                "entity",
+                "counterparty",
+                "request",
+                "knowledge_item"
+              ]
             },
             "in": "query",
             "name": "kind",
@@ -47118,6 +47955,54 @@
                             "properties": {
                               "kind": {
                                 "type": "string",
+                                "enum": ["knowledge_item"]
+                              },
+                              "id": {
+                                "type": "string"
+                              },
+                              "number": {
+                                "anyOf": [
+                                  {
+                                    "type": "integer",
+                                    "minimum": -9007199254740991,
+                                    "maximum": 9007199254740991
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "title": {
+                                "type": "string"
+                              },
+                              "isConfidential": {
+                                "type": "boolean"
+                              },
+                              "rank": {
+                                "type": "number",
+                                "minimum": 0
+                              },
+                              "state": {
+                                "type": "string",
+                                "enum": ["draft", "published"]
+                              }
+                            },
+                            "required": [
+                              "kind",
+                              "id",
+                              "number",
+                              "title",
+                              "isConfidential",
+                              "rank",
+                              "state"
+                            ],
+                            "additionalProperties": false
+                          },
+                          {
+                            "type": "object",
+                            "properties": {
+                              "kind": {
+                                "type": "string",
                                 "enum": ["document"]
                               },
                               "id": {
@@ -47147,7 +48032,7 @@
                               },
                               "ownerKind": {
                                 "type": "string",
-                                "enum": ["contract", "matter", "entity"]
+                                "enum": ["contract", "matter", "entity", "knowledge_item"]
                               },
                               "ownerId": {
                                 "type": "string"

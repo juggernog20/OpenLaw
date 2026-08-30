@@ -148,6 +148,9 @@ import {
   inArray,
   isNotNull,
   isNull,
+  knowledgeFolders,
+  knowledgeItems,
+  knowledgeTypes,
   matters,
   or,
   sql,
@@ -816,6 +819,14 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
         return and(isNotNull(documents.matterId), matterTeamScope(db, user));
       case "entity":
         return and(isNotNull(documents.entityId), entityReachScope(db, user));
+      case "knowledge_item":
+        return and(
+          isNotNull(documents.knowledgeItemId),
+          isNull(knowledgeItems.archivedAt),
+          user.role === "administrator" || user.role === "legal_team_member"
+            ? undefined
+            : sql`false`,
+        );
     }
   }
 
@@ -827,6 +838,8 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
         return { matterId: owner.value } as const;
       case "entity":
         return { entityId: owner.value } as const;
+      case "knowledge_item":
+        return { knowledgeItemId: owner.value } as const;
     }
   }
 
@@ -838,6 +851,7 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
     contractId: string | null;
     matterId: string | null;
     entityId: string | null;
+    knowledgeItemId: string | null;
     owner: ResolvedDocumentOwner<string>;
     /** The owning contract's SET-003 soft delete (CTR-021). */
     ownerArchivedAt: Date | null;
@@ -888,6 +902,14 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
     documentId: string,
     lock = false,
   ): Promise<ReachedDocument | null> {
+    if (user.role === "contributor") {
+      const [knowledgeOwned] = await db
+        .select({ id: documents.id })
+        .from(documents)
+        .where(and(eq(documents.id, documentId), isNotNull(documents.knowledgeItemId)))
+        .limit(1);
+      if (knowledgeOwned) throw httpError(403, "Knowledge Documents require a Legal Team Member.");
+    }
     const query = db
       .select({
         id: documents.id,
@@ -896,12 +918,15 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
         contractId: documents.contractId,
         matterId: documents.matterId,
         entityId: documents.entityId,
+        knowledgeItemId: documents.knowledgeItemId,
         contractArchivedAt: contracts.archivedAt,
         matterArchivedAt: matters.archivedAt,
         entityArchivedAt: entities.archivedAt,
+        knowledgeItemArchivedAt: knowledgeItems.archivedAt,
         archivedAt: documents.archivedAt,
         executedVersionId: documents.executedVersionId,
-        primaryDocumentId: contracts.primaryDocumentId,
+        contractPrimaryDocumentId: contracts.primaryDocumentId,
+        knowledgePrimaryDocumentId: knowledgeItems.primaryDocumentId,
         isConfidential: documents.isConfidential,
         folderId: documents.folderId,
         folderName: documentFolders.name,
@@ -913,6 +938,7 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
       .leftJoin(contracts, eq(documents.contractId, contracts.id))
       .leftJoin(matters, eq(documents.matterId, matters.id))
       .leftJoin(entities, eq(documents.entityId, entities.id))
+      .leftJoin(knowledgeItems, eq(documents.knowledgeItemId, knowledgeItems.id))
       // Left, because most documents sit at the record root and an inner
       // join would answer none of them.
       .leftJoin(documentFolders, eq(documents.folderId, documentFolders.id))
@@ -931,6 +957,7 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
         contract: row.contractId,
         matter: row.matterId,
         entity: row.entityId,
+        knowledge_item: row.knowledgeItemId,
       });
       switch (owner.kind) {
         case "contract":
@@ -954,6 +981,13 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
             .where(eq(entities.id, owner.value))
             .for("update", { of: entities });
           break;
+        case "knowledge_item":
+          await db
+            .select({ id: knowledgeItems.id })
+            .from(knowledgeItems)
+            .where(eq(knowledgeItems.id, owner.value))
+            .for("update", { of: knowledgeItems });
+          break;
       }
       [row] = await query;
       if (!row) return null;
@@ -962,6 +996,7 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
       contract: row.contractId,
       matter: row.matterId,
       entity: row.entityId,
+      knowledge_item: row.knowledgeItemId,
     });
     let ownerArchivedAt: Date | null;
     let primaryDocumentId: string | null;
@@ -969,7 +1004,7 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
     switch (owner.kind) {
       case "contract":
         ownerArchivedAt = row.contractArchivedAt;
-        primaryDocumentId = row.primaryDocumentId;
+        primaryDocumentId = row.contractPrimaryDocumentId;
         ownerManagerId = row.contractManagerId;
         break;
       case "matter":
@@ -982,6 +1017,11 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
         primaryDocumentId = null;
         ownerManagerId = null;
         break;
+      case "knowledge_item":
+        ownerArchivedAt = row.knowledgeItemArchivedAt;
+        primaryDocumentId = row.knowledgePrimaryDocumentId;
+        ownerManagerId = null;
+        break;
     }
     return {
       id: row.id,
@@ -990,6 +1030,7 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
       contractId: row.contractId,
       matterId: row.matterId,
       entityId: row.entityId,
+      knowledgeItemId: row.knowledgeItemId,
       owner,
       ownerArchivedAt,
       archivedAt: row.archivedAt,
@@ -1014,6 +1055,7 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
         contractId: documents.contractId,
         matterId: documents.matterId,
         entityId: documents.entityId,
+        knowledgeItemId: documents.knowledgeItemId,
         /** CTR-014's pin, read here so the chain below can mark the row
          * it names without a second query. */
         executedVersionId: documents.executedVersionId,
@@ -1230,6 +1272,9 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
       case "entity":
         owningRecord = eq(documents.entityId, owner.id);
         break;
+      case "knowledge_item":
+        owningRecord = eq(documents.knowledgeItemId, owner.id);
+        break;
     }
     const scope = and(
       owningRecord,
@@ -1296,6 +1341,232 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
       where ${and(eq(documents.id, documentId), scope)}
     )`;
   }
+
+  app.post(
+    "/knowledge/from-files",
+    {
+      preHandler: requireMember,
+      schema: {
+        operationId: "createKnowledgeItemsFromFiles",
+        summary: "Create one draft Knowledge Item with a primary Document for every uploaded file",
+        tags: ["knowledge", "documents"],
+        consumes: ["multipart/form-data"],
+        body: z.any().meta({
+          type: "object",
+          properties: {
+            knowledgeTypeId: { type: "string" },
+            folderId: { type: "string" },
+            file: { type: "array", items: { type: "string", format: "binary" } },
+          },
+          required: ["knowledgeTypeId", "file"],
+        }),
+        response: {
+          201: z.object({
+            knowledgeItems: z.array(
+              z.object({
+                id: z.string(),
+                title: z.string(),
+                primaryDocumentId: z.string(),
+              }),
+            ),
+          }),
+          default: problemResponse,
+        },
+      },
+    },
+    async (request, reply) => {
+      const stored: Array<{
+        itemId: string;
+        documentId: string;
+        versionId: string;
+        file: StoredUpload;
+      }> = [];
+      let committed = false;
+      let knowledgeTypeId: string | undefined;
+      let folderId: string | undefined;
+      /** The names the activity feed shows, read once with the choices. */
+      let choices: { knowledgeType: string; folder: string | null } | undefined;
+      try {
+        const parts = request.parts({
+          limits: { files: 50, fields: 4, parts: 54, fileSize: app.maxUploadBytes },
+        });
+        for await (const part of parts) {
+          if (part.type === "field") {
+            if (part.fieldname === "knowledgeTypeId") knowledgeTypeId = String(part.value);
+            else if (part.fieldname === "folderId") folderId = String(part.value) || undefined;
+            else throw httpError(400, `The ${part.fieldname} field is not accepted here.`);
+            continue;
+          }
+          if (part.fieldname !== "file") {
+            throw httpError(400, "Attach Knowledge files using the `file` field.");
+          }
+          if (!knowledgeTypeId) {
+            throw httpError(400, "Choose a Knowledge type before the files.");
+          }
+          if (!choices) {
+            const [type] = await app.db
+              .select({ id: knowledgeTypes.id, displayName: knowledgeTypes.displayName })
+              .from(knowledgeTypes)
+              .where(and(eq(knowledgeTypes.id, knowledgeTypeId), isNull(knowledgeTypes.archivedAt)))
+              .limit(1);
+            if (!type) throw httpError(400, "The Knowledge type must be a live Knowledge type.");
+            let folderName: string | null = null;
+            if (folderId) {
+              const [folder] = await app.db
+                .select({ id: knowledgeFolders.id, name: knowledgeFolders.name })
+                .from(knowledgeFolders)
+                .where(eq(knowledgeFolders.id, folderId))
+                .limit(1);
+              if (!folder) throw httpError(400, "The folder must be a Knowledge folder.");
+              folderName = folder.name;
+            }
+            choices = { knowledgeType: type.displayName, folder: folderName };
+          }
+          const itemId = uuidv7();
+          const documentId = uuidv7();
+          const versionId = uuidv7();
+          const file = await storeUploadPart(
+            request,
+            part,
+            versionStorageKey(documentId, versionId),
+          );
+          stored.push({ itemId, documentId, versionId, file });
+        }
+        if (stored.length === 0) throw httpError(400, "Attach at least one file to upload.");
+
+        const created = await app.db.transaction(async (tx) => {
+          const answer: Array<{ id: string; title: string; primaryDocumentId: string }> = [];
+          for (const upload of stored) {
+            await tx.insert(knowledgeItems).values({
+              id: upload.itemId,
+              title: upload.file.filename,
+              knowledgeTypeId: knowledgeTypeId!,
+              folderId: folderId ?? null,
+              createdBy: request.user.id,
+              updatedBy: request.user.id,
+            });
+            await tx.insert(documents).values({
+              id: upload.documentId,
+              knowledgeItemId: upload.itemId,
+              title: upload.file.filename,
+              createdBy: request.user.id,
+            });
+            await insertVersion(tx, {
+              documentId: upload.documentId,
+              versionId: upload.versionId,
+              versionNumber: 1,
+              file: upload.file,
+              by: request.user,
+            });
+            await tx
+              .update(knowledgeItems)
+              .set({ primaryDocumentId: upload.documentId })
+              .where(eq(knowledgeItems.id, upload.itemId));
+            await recordActivity(tx, {
+              entityType: "knowledge_item",
+              entityId: upload.itemId,
+              actorId: request.user.id,
+              action: "knowledge_item.created",
+              // The same tier and payload shape the JSON create route
+              // writes, so one feed entry reads the same either way.
+              visibility: "legal_only",
+              payload: {
+                title: upload.file.filename,
+                knowledgeType: choices!.knowledgeType,
+                folder: choices!.folder,
+              },
+            });
+            await recordActivity(tx, {
+              entityType: "knowledge_item",
+              entityId: upload.itemId,
+              actorId: request.user.id,
+              action: "document.primary_set",
+              visibility: RECORD_ACTIVITY_TIER,
+              payload: {
+                documentId: upload.documentId,
+                title: upload.file.filename,
+                fromDocumentId: null,
+                from: null,
+                to: upload.file.filename,
+              },
+            });
+            await recordActivity(tx, {
+              entityType: "knowledge_item",
+              entityId: upload.itemId,
+              actorId: request.user.id,
+              action: "document.created",
+              visibility: RECORD_ACTIVITY_TIER,
+              payload: {
+                documentId: upload.documentId,
+                versionId: upload.versionId,
+                title: upload.file.filename,
+                folderName: null,
+              },
+            });
+            answer.push({
+              id: upload.itemId,
+              title: upload.file.filename,
+              primaryDocumentId: upload.documentId,
+            });
+          }
+          return answer;
+        });
+        committed = true;
+        await Promise.all(stored.map((upload) => askForDerivations(upload.versionId, upload.file)));
+        return reply.status(201).send({ knowledgeItems: created });
+      } catch (error) {
+        if (!committed) {
+          await Promise.all(
+            stored.map((upload) =>
+              app.storage.delete(upload.file.fileRef).catch((cleanupError: unknown) => {
+                request.log.warn(
+                  { err: cleanupError, fileRef: upload.file.fileRef },
+                  "could not remove a refused Knowledge upload",
+                );
+              }),
+            ),
+          );
+        }
+        throw error;
+      }
+    },
+  );
+
+  app.get(
+    "/knowledge/:id/documents",
+    {
+      preHandler: requireMember,
+      schema: {
+        operationId: "listKnowledgeItemDocuments",
+        summary:
+          "The Documents owned by one live Knowledge Item, newest first, with each version chain",
+        tags: ["documents"],
+        params: EntityParams,
+        querystring: ArchivedQuery.extend({ cursor: CursorSchema.optional() }),
+        response: { 200: DocumentsEnvelope, default: problemResponse },
+      },
+    },
+    async (request) => {
+      const [item] = await app.db
+        .select({
+          id: knowledgeItems.id,
+          primaryDocumentId: knowledgeItems.primaryDocumentId,
+          archivedAt: knowledgeItems.archivedAt,
+        })
+        .from(knowledgeItems)
+        .where(eq(knowledgeItems.id, request.params.id))
+        .limit(1);
+      if (!item || item.archivedAt) throw httpError(404, "No Knowledge Item exists with this id.");
+      return paperOf(
+        app.db,
+        request.user,
+        item,
+        "knowledge_item",
+        request.query.includeArchived === "true",
+        request.query.cursor,
+      );
+    },
+  );
 
   app.get(
     "/contracts/:number/documents",
@@ -1526,7 +1797,12 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
             lock: true,
           });
           assertOpen(locked);
-          const owner = resolveDocumentOwner({ contract: locked.id, matter: null, entity: null });
+          const owner = resolveDocumentOwner({
+            contract: locked.id,
+            matter: null,
+            entity: null,
+            knowledge_item: null,
+          });
 
           // Under that same lock, which is what makes a folder drop
           // converge (DOC-011): a chain the form named is found or made
@@ -1671,7 +1947,12 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
             lock: true,
           });
           assertOpenMatter(locked);
-          const owner = resolveDocumentOwner({ contract: null, matter: locked.id, entity: null });
+          const owner = resolveDocumentOwner({
+            contract: null,
+            matter: locked.id,
+            entity: null,
+            knowledge_item: null,
+          });
           const folder = file.destination
             ? await findOrCreateFolderPath(tx, locked, file.destination)
             : null;
@@ -1737,7 +2018,12 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
         app.db.transaction(async (tx) => {
           const locked = await reachedEntity(tx, request.user, request.params.id, { lock: true });
           assertOpenEntity(locked);
-          const owner = resolveDocumentOwner({ contract: null, matter: null, entity: locked.id });
+          const owner = resolveDocumentOwner({
+            contract: null,
+            matter: null,
+            entity: locked.id,
+            knowledge_item: null,
+          });
           const folder = file.destination
             ? await findOrCreateFolderPath(tx, locked, file.destination)
             : null;
@@ -1769,6 +2055,99 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
             },
           });
           return documentWithChain(tx, documentId, null);
+        }),
+      );
+      await askForDerivations(versionId, file);
+      return reply.status(201).send({ document: created });
+    },
+  );
+
+  app.post(
+    "/knowledge/:id/documents",
+    {
+      preHandler: requireMember,
+      schema: {
+        operationId: "uploadKnowledgeItemDocument",
+        summary: "Upload a file as a Document owned by a Knowledge Item",
+        tags: ["documents"],
+        consumes: ["multipart/form-data"],
+        params: EntityParams,
+        body: VersionUploadForm,
+        response: { 201: DocumentEnvelope, default: problemResponse },
+      },
+    },
+    async (request, reply) => {
+      const [reachable] = await app.db
+        .select({ id: knowledgeItems.id, archivedAt: knowledgeItems.archivedAt })
+        .from(knowledgeItems)
+        .where(eq(knowledgeItems.id, request.params.id))
+        .limit(1);
+      if (!reachable) throw httpError(404, "No Knowledge Item exists with this id.");
+      if (reachable.archivedAt) {
+        throw httpError(409, "Restore this Knowledge Item before adding Documents.");
+      }
+      const documentId = uuidv7();
+      const versionId = uuidv7();
+      const file = await receiveUpload(request, versionStorageKey(documentId, versionId));
+      const created = await withStoredFile(request, file, () =>
+        app.db.transaction(async (tx) => {
+          const [item] = await tx
+            .select({
+              id: knowledgeItems.id,
+              primaryDocumentId: knowledgeItems.primaryDocumentId,
+              archivedAt: knowledgeItems.archivedAt,
+            })
+            .from(knowledgeItems)
+            .where(eq(knowledgeItems.id, request.params.id))
+            .limit(1)
+            .for("update");
+          if (!item) throw httpError(404, "No Knowledge Item exists with this id.");
+          if (item.archivedAt) {
+            throw httpError(409, "Restore this Knowledge Item before adding Documents.");
+          }
+          await tx.insert(documents).values({
+            id: documentId,
+            knowledgeItemId: item.id,
+            title: file.filename,
+            createdBy: request.user.id,
+          });
+          await insertVersion(tx, {
+            documentId,
+            versionId,
+            versionNumber: 1,
+            file,
+            by: request.user,
+          });
+          await recordActivity(tx, {
+            entityType: "knowledge_item",
+            entityId: item.id,
+            actorId: request.user.id,
+            action: "document.created",
+            visibility: RECORD_ACTIVITY_TIER,
+            payload: { documentId, versionId, title: file.filename, folderName: null },
+          });
+          const primaryDocumentId = item.primaryDocumentId ?? documentId;
+          if (item.primaryDocumentId === null) {
+            await tx
+              .update(knowledgeItems)
+              .set({ primaryDocumentId: documentId, updatedBy: request.user.id })
+              .where(eq(knowledgeItems.id, item.id));
+            await recordActivity(tx, {
+              entityType: "knowledge_item",
+              entityId: item.id,
+              actorId: request.user.id,
+              action: "document.primary_set",
+              visibility: RECORD_ACTIVITY_TIER,
+              payload: {
+                documentId,
+                title: file.filename,
+                fromDocumentId: null,
+                from: null,
+                to: file.filename,
+              },
+            });
+          }
+          return documentWithChain(tx, documentId, primaryDocumentId);
         }),
       );
       await askForDerivations(versionId, file);
@@ -2198,9 +2577,9 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
         // and then writes over what the first left.
         const target = await reachedDocument(tx, request.user, documentId, true);
         assertOpenDocument(target);
-        assertContractDocument(target);
+        assertPrimaryDocument(target);
         if (target.primaryDocumentId === documentId) {
-          throw httpError(409, "That document is already the contract's primary document.");
+          throw httpError(409, "That document is already the owning record's primary document.");
         }
 
         // The document the designation is leaving, named for the
@@ -2217,13 +2596,20 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
             )[0] ?? null)
           : null;
 
-        await tx
-          .update(contracts)
-          .set({ primaryDocumentId: documentId })
-          .where(eq(contracts.id, target.contractId));
+        if (target.owner.kind === "contract") {
+          await tx
+            .update(contracts)
+            .set({ primaryDocumentId: documentId })
+            .where(eq(contracts.id, target.owner.value));
+        } else {
+          await tx
+            .update(knowledgeItems)
+            .set({ primaryDocumentId: documentId, updatedBy: request.user.id })
+            .where(eq(knowledgeItems.id, target.owner.value));
+        }
         await recordActivity(tx, {
-          entityType: "contract",
-          entityId: target.contractId,
+          entityType: target.owner.kind,
+          entityId: target.owner.value,
           actorId: request.user.id,
           action: "document.primary_set",
           visibility: RECORD_ACTIVITY_TIER,
@@ -2242,8 +2628,8 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
         return paperOf(
           tx,
           request.user,
-          { id: target.contractId, primaryDocumentId: documentId },
-          "contract",
+          { id: target.owner.value, primaryDocumentId: documentId },
+          target.owner.kind,
         );
       });
     },
@@ -3320,6 +3706,21 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
     user: AuthenticatedUser,
     params: Readonly<{ documentId: string; versionId: string }>,
   ): Promise<ReachedVersion> {
+    if (user.role === "contributor") {
+      const [knowledgeOwned] = await app.db
+        .select({ id: documentVersions.id })
+        .from(documentVersions)
+        .innerJoin(documents, eq(documentVersions.documentId, documents.id))
+        .where(
+          and(
+            eq(documentVersions.id, params.versionId),
+            eq(documentVersions.documentId, params.documentId),
+            isNotNull(documents.knowledgeItemId),
+          ),
+        )
+        .limit(1);
+      if (knowledgeOwned) throw httpError(403, "Knowledge Documents require a Legal Team Member.");
+    }
     const [row] = await app.db
       .select({
         fileRef: documentVersions.fileRef,
@@ -3331,14 +3732,13 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
       .innerJoin(documents, eq(documentVersions.documentId, documents.id))
       .leftJoin(contracts, eq(documents.contractId, contracts.id))
       .leftJoin(matters, eq(documents.matterId, matters.id))
+      .leftJoin(entities, eq(documents.entityId, entities.id))
+      .leftJoin(knowledgeItems, eq(documents.knowledgeItemId, knowledgeItems.id))
       .where(
         and(
           eq(documentVersions.id, params.versionId),
           eq(documentVersions.documentId, params.documentId),
-          or(
-            and(isNotNull(documents.contractId), contractTeamScope(app.db, user)),
-            and(isNotNull(documents.matterId), matterTeamScope(app.db, user)),
-          ),
+          or(...DOCUMENT_OWNER_KINDS.map((owner) => ownerReachScope(owner, app.db, user))),
           documentAudienceScope(app.db, user),
         ),
       )
@@ -3396,7 +3796,15 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
       throw asSharedUploadRefusal(error, app.maxUploadBytes);
     });
     if (!part) throw httpError(400, "Attach a file to upload.");
+    return storeUploadPart(request, part, key, filed);
+  }
 
+  async function storeUploadPart(
+    request: FastifyRequest,
+    part: NonNullable<Awaited<ReturnType<FastifyRequest["file"]>>>,
+    key: string,
+    filed = false,
+  ): Promise<StoredUpload> {
     // Read before the file is consumed. The parser reports the fields
     // it has already seen, and the file part ends the ones it can
     // report — which is why the form has to put them first.
@@ -3708,6 +4116,8 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
         return { manager: "Matter Manager", noun: "matter" };
       case "entity":
         return { manager: null, noun: "Entity" };
+      case "knowledge_item":
+        return { manager: null, noun: "Knowledge item" };
     }
   }
 
@@ -3734,6 +4144,14 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
         409,
         "Matter paper has no primary document or executed copy. Those are contract designations.",
       );
+    }
+  }
+
+  function assertPrimaryDocument(document: ReachedDocument): asserts document is ReachedDocument & {
+    owner: ResolvedDocumentOwner<string> & { kind: "contract" | "knowledge_item" };
+  } {
+    if (document.owner.kind !== "contract" && document.owner.kind !== "knowledge_item") {
+      throw httpError(409, "Matter and Entity paper has no primary document designation.");
     }
   }
 
