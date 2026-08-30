@@ -338,8 +338,29 @@
   "activity.keyDate.removed": {
     "defaultMessage": "{actor} removed the key date {label} on {date}"
   },
+  "activity.knowledgeFolder.created": {
+    "defaultMessage": "{actor} created the Knowledge folder {name}"
+  },
+  "activity.knowledgeFolder.deleted": {
+    "defaultMessage": "{actor} removed the Knowledge folder {name}"
+  },
+  "activity.knowledgeFolder.moved": {
+    "defaultMessage": "{actor} moved the Knowledge folder {name}"
+  },
+  "activity.knowledgeFolder.renamed": {
+    "defaultMessage": "{actor} renamed a Knowledge folder to {name}"
+  },
+  "activity.knowledgeFolder.reordered": {
+    "defaultMessage": "{actor} reordered Knowledge folders"
+  },
+  "activity.knowledgeItem.created": {
+    "defaultMessage": "{actor} created {name}"
+  },
   "activity.knowledgeItem.typeReassigned": {
     "defaultMessage": "{actor} re-typed {name}"
+  },
+  "activity.knowledgeItem.updated": {
+    "defaultMessage": "{actor} changed {name}"
   },
   "activity.loadError": {
     "defaultMessage": "The history could not be read. Reopen the panel to try again."
@@ -3566,6 +3587,198 @@
   "keys.title": {
     "defaultMessage": "Keyboard shortcuts"
   },
+  "knowledge.audience.everyone": {
+    "defaultMessage": "Everyone"
+  },
+  "knowledge.audience.legalOnly": {
+    "defaultMessage": "Legal Only"
+  },
+  "knowledge.body.add": {
+    "defaultMessage": "Add guidance"
+  },
+  "knowledge.body.edit": {
+    "defaultMessage": "Edit"
+  },
+  "knowledge.body.help": {
+    "defaultMessage": "Markdown headings, lists, emphasis, code, and links are supported."
+  },
+  "knowledge.body.markdown": {
+    "defaultMessage": "Guidance in Markdown"
+  },
+  "knowledge.body.placeholder": {
+    "defaultMessage": "Write guidance in Markdown…"
+  },
+  "knowledge.body.preview": {
+    "defaultMessage": "Preview"
+  },
+  "knowledge.cancel": {
+    "defaultMessage": "Cancel"
+  },
+  "knowledge.column.audience": {
+    "defaultMessage": "Audience"
+  },
+  "knowledge.column.author": {
+    "defaultMessage": "Author"
+  },
+  "knowledge.column.created": {
+    "defaultMessage": "Created"
+  },
+  "knowledge.column.folder": {
+    "defaultMessage": "Folder"
+  },
+  "knowledge.column.state": {
+    "defaultMessage": "State"
+  },
+  "knowledge.column.title": {
+    "defaultMessage": "Title"
+  },
+  "knowledge.column.type": {
+    "defaultMessage": "Type"
+  },
+  "knowledge.column.updated": {
+    "defaultMessage": "Updated"
+  },
+  "knowledge.create.action": {
+    "defaultMessage": "New item"
+  },
+  "knowledge.create.submit": {
+    "defaultMessage": "Create item"
+  },
+  "knowledge.create.title": {
+    "defaultMessage": "New Knowledge item"
+  },
+  "knowledge.creating": {
+    "defaultMessage": "Creating…"
+  },
+  "knowledge.draftMarker": {
+    "defaultMessage": "Draft"
+  },
+  "knowledge.empty.body": {
+    "defaultMessage": "Create guidance your legal team can find again."
+  },
+  "knowledge.empty.filteredBody": {
+    "defaultMessage": "Clear filters or choose another folder."
+  },
+  "knowledge.empty.filteredTitle": {
+    "defaultMessage": "No Knowledge items match these filters"
+  },
+  "knowledge.empty.title": {
+    "defaultMessage": "Build your Knowledge library"
+  },
+  "knowledge.filter.all": {
+    "defaultMessage": "All"
+  },
+  "knowledge.filter.audience": {
+    "defaultMessage": "Audience"
+  },
+  "knowledge.filter.author": {
+    "defaultMessage": "Author"
+  },
+  "knowledge.filter.state": {
+    "defaultMessage": "State"
+  },
+  "knowledge.filter.type": {
+    "defaultMessage": "Type"
+  },
+  "knowledge.filters.clear": {
+    "defaultMessage": "Clear filters"
+  },
+  "knowledge.folder.add": {
+    "defaultMessage": "Add folder"
+  },
+  "knowledge.folder.addTitle": {
+    "defaultMessage": "Add folder"
+  },
+  "knowledge.folder.all": {
+    "defaultMessage": "All Knowledge"
+  },
+  "knowledge.folder.createError": {
+    "defaultMessage": "The folder could not be created."
+  },
+  "knowledge.folder.delete": {
+    "defaultMessage": "Delete selected folder"
+  },
+  "knowledge.folder.deleteConfirm": {
+    "defaultMessage": "Delete {name}? Its folders and items move to the parent folder."
+  },
+  "knowledge.folder.deleteError": {
+    "defaultMessage": "The folder could not be deleted."
+  },
+  "knowledge.folder.edit": {
+    "defaultMessage": "Rename or move selected folder"
+  },
+  "knowledge.folder.editTitle": {
+    "defaultMessage": "Rename or move folder"
+  },
+  "knowledge.folder.moveDown": {
+    "defaultMessage": "Move {name} down"
+  },
+  "knowledge.folder.moveUp": {
+    "defaultMessage": "Move {name} up"
+  },
+  "knowledge.folder.name": {
+    "defaultMessage": "Folder name"
+  },
+  "knowledge.folder.parent": {
+    "defaultMessage": "Parent folder"
+  },
+  "knowledge.folder.reorderError": {
+    "defaultMessage": "The folder could not be reordered."
+  },
+  "knowledge.folder.root": {
+    "defaultMessage": "Library"
+  },
+  "knowledge.folder.save": {
+    "defaultMessage": "Save folder"
+  },
+  "knowledge.folder.tree": {
+    "defaultMessage": "Knowledge folders"
+  },
+  "knowledge.folder.updateError": {
+    "defaultMessage": "The folder could not be updated."
+  },
+  "knowledge.form.folder": {
+    "defaultMessage": "Folder"
+  },
+  "knowledge.form.noTypes": {
+    "defaultMessage": "An Administrator must add a Knowledge type first."
+  },
+  "knowledge.form.title": {
+    "defaultMessage": "Title"
+  },
+  "knowledge.form.type": {
+    "defaultMessage": "Type"
+  },
+  "knowledge.list.count": {
+    "defaultMessage": "{count, plural, one {# item shown} other {# items shown}}"
+  },
+  "knowledge.list.error": {
+    "defaultMessage": "The Knowledge list could not be read. Try again."
+  },
+  "knowledge.list.more": {
+    "defaultMessage": "Show more"
+  },
+  "knowledge.list.moreError": {
+    "defaultMessage": "More Knowledge items could not be read."
+  },
+  "knowledge.list.region": {
+    "defaultMessage": "Knowledge items"
+  },
+  "knowledge.record.guidance": {
+    "defaultMessage": "Guidance"
+  },
+  "knowledge.record.identity": {
+    "defaultMessage": "Knowledge item"
+  },
+  "knowledge.state.draft": {
+    "defaultMessage": "Draft"
+  },
+  "knowledge.state.published": {
+    "defaultMessage": "Published"
+  },
+  "knowledge.type.manage": {
+    "defaultMessage": "Manage types…"
+  },
   "linkedRecords.restricted": {
     "defaultMessage": "Restricted record"
   },
@@ -4126,6 +4339,9 @@
   },
   "nav.inbox": {
     "defaultMessage": "Inbox"
+  },
+  "nav.knowledge": {
+    "defaultMessage": "Knowledge"
   },
   "nav.matters": {
     "defaultMessage": "Matters"

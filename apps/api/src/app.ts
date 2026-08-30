@@ -81,6 +81,7 @@ import {
   knowledgeTypeOptionsRoutes,
   knowledgeTypesRoutes,
 } from "./modules/knowledge-types/routes.js";
+import { knowledgeRoutes } from "./modules/knowledge/routes.js";
 import { portalRoutes } from "./modules/portal/routes.js";
 import { requestConvertRoutes } from "./modules/requests/convert.js";
 import { requestDeclineRoutes } from "./modules/requests/decline.js";
@@ -470,6 +471,7 @@ export async function buildApp(deps: AppDeps, opts: FastifyServerOptions = {}) {
   await app.register(entityLinkedRecordsRoutes, { prefix: "/api/v1" });
   await app.register(knowledgeTypesRoutes, { prefix: "/api/v1" });
   await app.register(knowledgeTypeOptionsRoutes, { prefix: "/api/v1" });
+  await app.register(knowledgeRoutes, { prefix: "/api/v1" });
   await app.register(searchRoutes, { prefix: "/api/v1" });
   await app.register(fieldsRoutes, { prefix: "/api/v1" });
   await app.register(listViewsRoutes, { prefix: "/api/v1" });

@@ -1084,9 +1084,28 @@ type ExportPayloads = {
   };
 };
 
-/** A Knowledge Item moved because its configured type was archived (SET-003). */
+/** The Knowledge library's item and folder vocabulary (KNW-001–003). */
 type KnowledgePayloads = {
+  "knowledge_item.created": {
+    title: string;
+    knowledgeType: string;
+    folder: string | null;
+  };
+  "knowledge_item.updated": { title: string; changed: ChangedFields };
   "knowledge_item.type_reassigned": { title: string; from: string; to: string };
+  "knowledge_folder.created": {
+    folderId: string;
+    name: string;
+    parentName: string | null;
+  };
+  "knowledge_folder.renamed": { folderId: string; name: string; previousName: string };
+  "knowledge_folder.moved": {
+    folderId: string;
+    name: string;
+    parentName: string | null;
+  };
+  "knowledge_folder.reordered": { parentName: string | null; folderIds: string[] };
+  "knowledge_folder.deleted": { folderId: string; name: string };
 };
 
 /**

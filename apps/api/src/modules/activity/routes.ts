@@ -66,6 +66,7 @@ import {
   desc,
   eq,
   inArray,
+  knowledgeItems,
   matters,
   sql,
   users,
@@ -99,7 +100,7 @@ const PAGE_SIZE = 25;
  * so far, and each answers the reach question through its own audience
  * rule below.
  */
-const ActivityEntityType = z.enum(["matter", "contract", "entity"]);
+const ActivityEntityType = z.enum(["matter", "contract", "entity", "knowledge_item"]);
 
 /** The record's id. Bounded rather than shaped, as every id in this API
  * is: an opaque text primary key, with no UUID pattern asserted
@@ -196,14 +197,31 @@ export const activityRoutes: FastifyPluginAsyncZod = async (app) => {
           ? await contractAudience(app.db, request.user, entityId)
           : entityType === "matter"
             ? await matterAudience(app.db, request.user, entityId)
-            : await entityAudience(app.db, request.user, entityId);
+            : entityType === "entity"
+              ? await entityAudience(app.db, request.user, entityId)
+              : request.user.role === "administrator" || request.user.role === "legal_team_member"
+                ? (
+                    await app.db
+                      .select({ id: knowledgeItems.id })
+                      .from(knowledgeItems)
+                      .where(eq(knowledgeItems.id, entityId))
+                      .limit(1)
+                  )[0] && {
+                    entityType: "knowledge_item" as const,
+                    knowledgeItemId: entityId,
+                    tiers: ["legal_only"] as const,
+                    seesConfidentialDocuments: true,
+                  }
+                : null;
       if (!audience) throw httpError(404, NO_RECORD);
       const reachedId =
         audience.entityType === "contract"
           ? audience.contractId
           : audience.entityType === "matter"
             ? audience.matterId
-            : audience.entityId;
+            : audience.entityType === "entity"
+              ? audience.entityId
+              : audience.knowledgeItemId;
 
       // Keyset, on the pair the feed is ordered by. The cursor row's own
       // position comes from the table rather than from the client, so a
