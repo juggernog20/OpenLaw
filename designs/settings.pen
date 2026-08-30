@@ -43185,6 +43185,42 @@
                 },
                 {
                   "type": "frame",
+                  "id": "ya4jy",
+                  "name": "ri Knowledge",
+                  "width": "fill_container",
+                  "fill": "$control",
+                  "cornerRadius": 6,
+                  "gap": 8,
+                  "padding": [
+                    6,
+                    10
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon",
+                      "id": "RLiGT",
+                      "name": "i book-open Knowledge",
+                      "width": 16,
+                      "height": 16,
+                      "icon": "book-open",
+                      "library": "lucide",
+                      "fill": "$text-primary"
+                    },
+                    {
+                      "type": "text",
+                      "id": "ZmZe6",
+                      "name": "t Knowledge rail",
+                      "fill": "$text-primary",
+                      "content": "Knowledge",
+                      "fontFamily": "$font",
+                      "fontSize": 13,
+                      "fontWeight": "600"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
                   "id": "WdchF",
                   "name": "ri Notifications",
                   "width": "fill_container",
@@ -43250,42 +43286,6 @@
                       "fontFamily": "$font",
                       "fontSize": 13,
                       "fontWeight": "normal"
-                    }
-                  ]
-                },
-                {
-                  "type": "frame",
-                  "id": "ya4jy",
-                  "name": "ri Knowledge",
-                  "width": "fill_container",
-                  "fill": "$control",
-                  "cornerRadius": 6,
-                  "gap": 8,
-                  "padding": [
-                    6,
-                    10
-                  ],
-                  "alignItems": "center",
-                  "children": [
-                    {
-                      "type": "icon",
-                      "id": "RLiGT",
-                      "name": "i book-open Knowledge",
-                      "width": 16,
-                      "height": 16,
-                      "icon": "book-open",
-                      "library": "lucide",
-                      "fill": "$text-primary"
-                    },
-                    {
-                      "type": "text",
-                      "id": "ZmZe6",
-                      "name": "t Knowledge rail",
-                      "fill": "$text-primary",
-                      "content": "Knowledge",
-                      "fontFamily": "$font",
-                      "fontSize": 13,
-                      "fontWeight": "600"
                     }
                   ]
                 }

@@ -4211,7 +4211,7 @@ Entities combines a destination catalogue, a record, a calendar, and a graph, bu
 
 The Entities destination ships the Calendar, List, and Chart switch, with Calendar as its default. The List view is DES-046's fourth catalogue. The Entity record ships all six routed tabs and its Activity applet. Confidential banners, Grant maintenance, Restricted Entity rows and chart nodes, calendar empty states, overdue severity, and the ownership warning use the shared patterns named above. The M27 close journey and axe sweep cover the three destination views and every record tab on fresh Compose images.
 
-## DES-068: Knowledge is a file-first managed library (extends DES-046, DES-032, DES-016, DES-055, DES-052)
+## DES-068: Knowledge is a file-first managed library (extends DES-046, DES-032, DES-016, DES-055, DES-020)
 
 - **Status:** Accepted
 - **Date:** 2026-08-30
@@ -4238,7 +4238,7 @@ Knowledge contains governed paper, so its destination should scan like the other
 
 ### Consequences
 
-`designs/knowledge.pen` carries KN1–KN10 on the current S1 chrome: the managed library, both record-body states, creation flows, archive dialog, portal article and deflection panel, and both library zeroes. `designs/settings.pen` amends ST13 with an internal Knowledge row and adds ST22 for the four Knowledge types. M28 can reuse the managed-list, record card, activity bar, overflow, empty-state, taxonomy, and portal-link primitives without translating the older Knowledge-only patterns.
+`designs/knowledge.pen` carries KN1–KN10 on the current S1 chrome: the managed library, both record-body states, creation flows, archive dialog, portal article and deflection panel, and both library zeroes. `designs/settings.pen` amends ST13 with an internal Knowledge row and adds ST22, which mounts the DES-020 taxonomy anatomy for the four Knowledge types. M28 can reuse the managed-list, record card, activity bar, overflow, empty-state, taxonomy, and portal-link primitives without translating the older Knowledge-only patterns.
 
 ## Index of decisions
 
@@ -4311,4 +4311,4 @@ Knowledge contains governed paper, so its destination should scan like the other
 | DES-065 | A dispositioned Request points paper at its composer (extends DES-062, DES-057)                                                                                      | Accepted                                                                                                   |
 | DES-066 | The Documents destination is one flat managed list across records (extends DES-046, DES-018, DES-009)                                                                | Accepted                                                                                                   |
 | DES-067 | The Entities destination uses the managed-list and record-shell patterns (extends DES-046, DES-032, DES-016, DES-018)                                                | Accepted                                                                                                   |
-| DES-068 | Knowledge is a file-first managed library (extends DES-046, DES-032, DES-016, DES-055, DES-052)                                                                      | Accepted                                                                                                   |
+| DES-068 | Knowledge is a file-first managed library (extends DES-046, DES-032, DES-016, DES-055, DES-020)                                                                      | Accepted                                                                                                   |

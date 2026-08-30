@@ -339,6 +339,6 @@ No frame is added. The three screens are configurations of the shipped DES-020, 
 
 ## Amendment (2026-08-30, M28/1, #599) — Knowledge types and internal deflection links
 
-**ST22 adds the Knowledge row and Types pane.** The Organization rail places Knowledge after Entities. The pane mounts the DES-020 taxonomy anatomy with the four KNW-001 seed rows: Template, Precedent, Playbook, and Article. The screen is a design reference for M28 and does not mark the pane shipped.
+**ST22 adds the Knowledge row and Types pane.** ST22 draws the Knowledge rail entry between Intake and Notifications, the SET-001 slot. The rail mocks still omit the Entities entry (M27 added no frame), so Knowledge sits directly after Intake in ST22; the other Settings frames keep their older rail. The pane mounts the DES-020 taxonomy anatomy with the four KNW-001 seed rows: Template, Precedent, Playbook, and Article. The screen is a design reference for M28 and does not mark the pane shipped.
 
 **ST13 gains an internal Knowledge row.** Its first illustrative deflection target is now `When do I need an NDA?`, rendered with the Knowledge glyph and the target line `Knowledge item · opens in this portal`. External rows retain their URL treatment. Together with KN8 in `designs/knowledge.pen`, the two frames specify both the Administrator's configured row and the requester's portal rendering.

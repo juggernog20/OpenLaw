@@ -3866,7 +3866,7 @@
                                   "id": "w68zfd",
                                   "name": "Folder field value",
                                   "fill": "$text-primary",
-                                  "content": "Working with Legal",
+                                  "content": "Working with legal",
                                   "fontFamily": "Inter",
                                   "fontSize": 13,
                                   "fontWeight": "500"
@@ -3964,7 +3964,7 @@
                                       "id": "C6qwp",
                                       "name": "Audience value",
                                       "fill": "$text-primary",
-                                      "content": "Everyone",
+                                      "content": "Legal only",
                                       "fontFamily": "Inter",
                                       "fontSize": 12,
                                       "fontWeight": "500"
@@ -8527,7 +8527,7 @@
                       "fill": "$text-primary",
                       "textGrowth": "fixed-width",
                       "width": "fill_container",
-                      "content": "Archived items disappear from browse, search defaults, and the portal. Nothing is deleted — the body, attachments, and history stay available under the Archived filter.",
+                      "content": "Archived items disappear from browse, search defaults, and the portal. Nothing is deleted — the guidance, Documents, and history stay available under the Archived filter.",
                       "lineHeight": 1.55,
                       "fontFamily": "Inter",
                       "fontSize": 13,
@@ -8922,7 +8922,7 @@
                   "id": "vhCIT",
                   "name": "Portal article meta",
                   "fill": "$text-muted",
-                  "content": "Playbook · Published Aug 18 · Legal",
+                  "content": "Article · Published Aug 18 · Legal",
                   "fontFamily": "Inter",
                   "fontSize": 12,
                   "fontWeight": "normal"
@@ -10223,7 +10223,7 @@
                                       "id": "WacRO",
                                       "name": "Audience value",
                                       "fill": "$text-primary",
-                                      "content": "Everyone",
+                                      "content": "Legal only",
                                       "fontFamily": "Inter",
                                       "fontSize": 12,
                                       "fontWeight": "500"
@@ -12706,7 +12706,7 @@
                       "id": "lyiwJ",
                       "name": "CountLbl",
                       "fill": "$badge-count-fg",
-                      "content": "9",
+                      "content": "0",
                       "fontFamily": "Inter",
                       "fontSize": 11,
                       "fontWeight": "500"
@@ -12828,7 +12828,7 @@
                           "id": "TSoFc",
                           "name": "Blank library all text",
                           "fill": "$text-primary",
-                          "content": "All knowledge",
+                          "content": "All items",
                           "fontFamily": "Inter",
                           "fontSize": 12,
                           "fontWeight": "600"
