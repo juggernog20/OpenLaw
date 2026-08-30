@@ -30,7 +30,7 @@ ActivityBar, Pill, Avatar) live in this file as local copies per the designs con
 | ST17  | `svBem`  | Organization · Security (Authentication) | M5 ✓      |
 | ST18  | `vpr5X`  | Organization · Security · OIDC           | M5 ✓      |
 | ST19  | `BWmsJ`  | Contracts settings · Types               | M6 ✓      |
-| ST22  | `TTsQ2`  | Knowledge settings · Types               | M28       |
+| ST22  | `TTsQ2`  | Knowledge settings · Types               | M28 ✓     |
 
 ## What the mocks already got right
 
@@ -342,3 +342,9 @@ No frame is added. The three screens are configurations of the shipped DES-020, 
 **ST22 adds the Knowledge row and Types pane.** ST22 draws the Knowledge rail entry between Intake and Notifications, the SET-001 slot. The rail mocks still omit the Entities entry (M27 added no frame), so Knowledge sits directly after Intake in ST22; the other Settings frames keep their older rail. The pane mounts the DES-020 taxonomy anatomy with the four KNW-001 seed rows: Template, Precedent, Playbook, and Article. The screen is a design reference for M28 and does not mark the pane shipped.
 
 **ST13 gains an internal Knowledge row.** Its first illustrative deflection target is now `When do I need an NDA?`, rendered with the Knowledge glyph and the target line `Knowledge item · opens in this portal`. External rows retain their URL treatment. Together with KN8 in `designs/knowledge.pen`, the two frames specify both the Administrator's configured row and the requester's portal rendering.
+
+## Amendment (2026-08-30, M28 close, #598) — the Knowledge settings surfaces shipped
+
+**ST22 is live at `/settings/knowledge/types`.** The Organization rail places Knowledge after Entities and before Notifications. The pane mounts the shared DES-020 taxonomy editor with Template, Precedent, Playbook, and Article seeded once. Administrators add, rename, reorder, archive with reassignment, restore, and remove types through the shared routes. Member+ item pickers use the separate live-options read.
+
+**ST13 now edits both deflection target kinds.** The dialog switches between External address and Knowledge item, offers only live published portal-readable items, and keeps the label editable after it takes the item's title. Rows render the Knowledge title for an internal target and the scheme-less address for an external one. Personal Notification preferences also gains the Knowledge briefing-section email toggle recorded by NOT-008; no new Settings frame was needed for that row.
