@@ -575,6 +575,13 @@
       "when": 1787846071304,
       "tag": "0081_bright_talkback",
       "breakpoints": true
+    },
+    {
+      "idx": 82,
+      "version": "7",
+      "when": 1788031978333,
+      "tag": "0082_great_betty_ross",
+      "breakpoints": true
     }
   ]
 }

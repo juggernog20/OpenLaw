@@ -3,26 +3,26 @@
 /**
  * The attachment machinery's per-mount scope rule (#352), at the HTTP
  * seam of a mount whose rule is a function of the type row. Request
- * types (#350) are the mount that will need it. Their target decides
- * which catalog fields may attach (INT-002). This suite proves the
+ * types (#350) are the mount that will need it — their target decides
+ * which catalog fields may attach (INT-002) — and this suite proves the
  * machinery serves such a rule before that mount exists.
  *
  * The probe mount below is the factory with a function rule, over the
  * `matter_type_fields` join table and beside the ordinary matter-types
  * mount in the same app. Two mounts over one table is the point:
  * everything the probe does that the plain mount does not is the rule,
- * not the table. The row state the rule reads is `is_system_default`,
- * a real column the machinery never writes. That state and the rule it
- * encodes are this suite's, not the product's. No schema lands for a
- * test (TECH-014's incremental rule), and no assertion here reaches
- * past the routes.
+ * not the table. The row state the rule reads — `is_system_default`, a
+ * real column the machinery never writes — and the rule it encodes are
+ * this suite's, not the product's. No schema lands for a test
+ * (TECH-014's incremental rule), and no assertion here reaches past
+ * the routes.
  *
- * The two constant-rule mounts prove they are unchanged in their own
- * suites, which this change does not edit.
+ * That the two constant-rule mounts are unchanged is asserted where it
+ * belongs: their own suites, unedited.
  */
 
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { eq, fields, matterTypeFields, matterTypes } from "@openlaw/db";
+import { eq, matterTypeFields, matterTypes } from "@openlaw/db";
 import { buildApp } from "../app.js";
 import { testDeps } from "../testing/deps.js";
 import {
@@ -63,7 +63,7 @@ const probeAttachedFieldsRoutes = typeFieldRoutes({
 });
 
 let harness: TestHarness;
-/** The app under test, with the probe mount registered beside the plain one. */
+/** The harness's database, with the probe mount beside the plain one. */
 let app: Awaited<ReturnType<typeof buildApp>>;
 let adminCookies: Record<string, string>;
 
@@ -108,7 +108,7 @@ const setTargeted = async (typeId: string, targeted: boolean) => {
 };
 
 /** Defines a catalog field through the Fields pane's own create route. */
-const createField = async (displayName: string, moduleScope: "contract" | "global") => {
+const createField = async (displayName: string, moduleScope: "contract" | "entity" | "global") => {
   const res = await app.inject({
     method: "POST",
     url: "/api/v1/fields",
@@ -177,28 +177,17 @@ describe("a rule that is a function of the type row", () => {
     const targeted = await addProbeType("Speaking probe");
     const untargeted = await addProbeType("Silent probe");
     await setTargeted(targeted, true);
-    // The catalog's create route offers no entity scope, so plant the
-    // row directly. The schema allows what the API gates.
-    const [entityField] = await harness.db
-      .insert(fields)
-      .values({
-        slug: "probe_registered_office",
-        displayName: "Probe registered office",
-        moduleScope: "entity",
-        fieldType: "text",
-        fieldTag: "legal",
-      })
-      .returning();
+    const entityField = await createField("Probe registered office", "entity");
     const contractField = await createField("Probe counterparty name", "contract");
 
     // The targeted arm refuses the entity scope in its own words.
-    const outsideTargeted = await attach(targeted, entityField!.id);
+    const outsideTargeted = await attach(targeted, entityField);
     expect(outsideTargeted.statusCode, outsideTargeted.body).toBe(400);
     expect(outsideTargeted.headers["content-type"]).toContain("application/problem+json");
     expect(outsideTargeted.json()).toMatchObject({ status: 400, detail: TARGETED_REFUSAL });
 
     // The untargeted arm refuses a scope the targeted arm allows, and
-    // says something else. The line belongs to the rule, not the mount.
+    // says something else — the line belongs to the rule, not the mount.
     const outsideUntargeted = await attach(untargeted, contractField);
     expect(outsideUntargeted.statusCode, outsideUntargeted.body).toBe(400);
     expect(outsideUntargeted.headers["content-type"]).toContain("application/problem+json");
@@ -233,6 +222,9 @@ describe("the OpenAPI document", () => {
     );
     expect(await attachSummary("matter-types")).toContain(
       "matter-scoped and global fields (MTR-011)",
+    );
+    expect(await attachSummary("entity-types")).toContain(
+      "entity-scoped and global fields (ENT-001)",
     );
   });
 });

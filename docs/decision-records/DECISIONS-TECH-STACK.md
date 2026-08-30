@@ -981,6 +981,12 @@ It needed five. This decision records the real count and says when the count sto
 - The five hooks are covered by the behaviour they produce at each mount, not by tests of the hooks themselves — no test asserts that a factory was configured a certain way.
 - `applyPatch` has the most reach of the five: it runs under the row lock and can refuse. A second mount wanting it is fine; a third that needs it to do something other than validate-and-narrate is the split signal above.
 
+### M27 addendum (2026-08-29) — fifth taxonomy, third record-type attachment
+
+Officer roles is the **fifth `taxonomyRoutes` mount** (after Contract, Matter, Entity, and Request types), supplied entirely as configuration. Its usage adapter counts and reassigns the same full set of `entity_officers` rows, including resigned officers, while `protectedSlug: "other"` carries the fallback lock.
+
+Entity type Fields is the **third record-type `typeFieldRoutes` mount**, after Contract and Matter type Fields. Request-type form attachment also uses the factory, so it is the fourth configured mount in total; “third” here names the record-type sequence from TECH-023's original context. The Entity mount adds no hook: it supplies the constant `entity|global` scope rule and the `entity_type_fields` table.
+
 ## TECH-024: Web data and state model — loaders read, screens own what they show, live surfaces patch feeds
 
 - **Status:** Accepted
@@ -1031,6 +1037,43 @@ This record describes the model as built and names the places where a different 
 - DES-032's "one loader reads the whole record" clause stands and is the data-loading half of rule 7; the strip's look stays in DES-032.
 - Issues: #550 (refusal helper), #552 (`useFieldCommit`), #551 (web "third mount" doctrine, at M27), #554 (hook warnings).
 
+## TECH-025: A record applet's third web mount becomes configuration
+
+- **Status:** Accepted
+- **Date:** 2026-08-30
+- **Context:** M27/7 mounts the linked-record row pattern for a third record kind. Contract and Matter already carry paired linked-record cards; copying one more pair would make a shared interaction depend on which page happened to implement it.
+
+### Decision
+
+At the third web mount, a record applet is one generic component keyed by `{record reference, api seam}`. The component owns the repeated presentation and interaction, including navigation and the shared restricted-record cell. It reads its rows through the seam when it mounts, the way the Activity applet does, so the route loader carries only what the page needs before the tab opens (here, the tab-label counts). A module-specific wrapper may supply vocabulary or its typed API seam, but it may not fork the list behaviour.
+
+The Entity Contracts and Matters tabs are the first application: one `LinkedRecordsList` receives the Entity reference and the selected Contract-or-Matter seam. Query-derived Entity roll-ups silently omit walled targets before rows and counts; the component retains the restricted branch for link seams whose domain rule preserves a known relationship.
+
+### Built addendum (2026-08-30, M27/7, [#579](https://github.com/juggernog20/OpenLaw/issues/579))
+
+`LinkedRecordsList` and its typed seam configuration now serve both Entity roll-up tabs. The Contract and Matter mounts differ only in the record kind, endpoint, response key, empty copy, and link target supplied by `ENTITY_LINKED_RECORD_SEAMS`. The route loader reads the tab counts; the mounted list reads its own rows. No Entity-specific linked-record component was added.
+
+### Rationale
+
+- Two copies of a mount are a coincidence. Three copies are a pattern, and a pattern that lives in three files drifts in three directions.
+- Reading rows on mount keeps the loader small. A record page that reads every tab's rows up front pays for tabs the reader never opens.
+
+### Alternatives considered
+
+- **A third per-page linked-record card pair for Entity.** Rejected. It would keep the Entity page self-contained, which TECH-024 favours, but a fix to navigation or the restricted cell would then need three PRs, and the copies would diverge before the third landed.
+- **Loader-fetched rows for the Contracts and Matters tabs.** Rejected. It keeps TECH-024's rule 1 literal, but the Entity loader would read two row lists per open to serve tabs most readers do not click. The cost of the on-mount read is one request per tab open and a short loading state, the same trade the Activity applet already makes.
+- **Migrating the Contract and Matter pairs inside M27.** Rejected. Each pair carries its own access and placeholder doctrine, and a sweep would mix that review with the Entity feature.
+
+### Scheduled migration
+
+After M27, migrate the existing Contract and Matter link-card pairs to this configuration seam, **one pair per PR**. Each migration keeps its existing access and placeholder doctrine and removes only the duplicated web mount. No sweep lands inside M27, and no PR mixes two pairs.
+
+### Consequences
+
+- A fourth record mount supplies configuration rather than copying JSX, state, and navigation.
+- TECH-024 remains the data rule for the page. A lazy applet reads once per mount through its seam and holds nothing across tabs; it does not become a client cache.
+- The incremental migration is reviewable and preserves per-link access doctrine while converging the presentation.
+
 ## Index of decisions
 
 | #        | Decision                                                                      | Status                 |
@@ -1059,3 +1102,4 @@ This record describes the model as built and names the places where a different 
 | TECH-022 | Credentials at rest — sealed columns, one required key, outside the database  | Accepted               |
 | TECH-023 | Shared machinery grows named per-mount hooks — a third mount is configuration | Accepted               |
 | TECH-024 | Web data and state model — loaders read, screens own what they show           | Accepted               |
+| TECH-025 | A record applet's third web mount becomes configuration                       | Accepted               |

@@ -2527,6 +2527,24 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/v1/entities/{id}/documents": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** The paper on one Entity, newest first, with each document's complete version chain. Administrators and Legal Team Members who reach the Entity read it; Contributors and Business Users are refused (ENT-004). */
+    get: operations["listEntityDocuments"];
+    put?: never;
+    /** Upload a file to an Entity, creating a document with version 1 and optionally recreating its folder path. */
+    post: operations["uploadEntityDocument"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/v1/documents/{documentId}/versions": {
     parameters: {
       query?: never;
@@ -2797,6 +2815,24 @@ export interface paths {
     put?: never;
     /** Create a folder on a matter, or recreate a dropped folder path beneath an optional parent. */
     post: operations["createMatterFolder"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/entities/{id}/folders": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** The complete folder tree on one Entity, with viewer-scoped live document counts. Administrators and Legal Team Members who reach the Entity read it; Contributors and Business Users are refused (ENT-004). */
+    get: operations["listEntityFolders"];
+    put?: never;
+    /** Create a folder on an Entity, or recreate a dropped folder path beneath an optional parent. */
+    post: operations["createEntityFolder"];
     delete?: never;
     options?: never;
     head?: never;
@@ -3115,6 +3151,371 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/v1/entity-types/{id}/fields": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** One entity type's attached fields in per-type order — the type editor's Attached fields card */
+    get: operations["listEntityTypeFields"];
+    put?: never;
+    /** Attach a catalog field to a entity type: entity-scoped and global fields (ENT-001), appended to the per-type order, optional from the start unless isRequired says otherwise */
+    post: operations["attachEntityTypeField"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/entity-types/{id}/fields/{fieldId}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    /** Detach a field from a entity type: the join row goes, the catalog definition and stored values stay (MTR-014) */
+    delete: operations["detachEntityTypeField"];
+    options?: never;
+    head?: never;
+    /** Set an attachment's required flag: per attachment, so a field can be required for one type and optional elsewhere; hard enforcement arrives with the record milestone (M27 record fields) */
+    patch: operations["setEntityTypeFieldRequired"];
+    trace?: never;
+  };
+  "/api/v1/entity-types/{id}/fields/order": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    /** Apply a full permutation of one type's attached fields (SET-003 immediate apply); per-type orders renumber from 1 */
+    put: operations["reorderEntityTypeFields"];
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/officer-roles": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** The officer role taxonomy in display order (ENT-001); archived rows only with includeArchived=true */
+    get: operations["listOfficerRoles"];
+    put?: never;
+    /** Add an officer role: the slug is derived here, once, and is immutable after creation; the row appends to the display order */
+    post: operations["createOfficerRole"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/officer-roles/{id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** One officer role — the read behind the type editor */
+    get: operations["getOfficerRole"];
+    put?: never;
+    post?: never;
+    /** Hard-delete an officer role; `other` refuses (ENT-001), and so does a type still used by officers */
+    delete: operations["deleteOfficerRole"];
+    options?: never;
+    head?: never;
+    /** Rename an officer role's display name (DES-017 in-place rename) or edit its description; the slug never changes, and even `other` may rename */
+    patch: operations["updateOfficerRole"];
+    trace?: never;
+  };
+  "/api/v1/officer-roles/order": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    /** Apply a full permutation of the live rows (SET-003 immediate apply); display orders renumber from 1, archived rows keep theirs */
+    put: operations["reorderOfficerRoles"];
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/officer-roles/{id}/archive": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Archive an officer role (SET-003 guarded): a type still used by officers requires a reassignment target, which takes them; nothing is deleted; `other` refuses */
+    post: operations["archiveOfficerRole"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/officer-roles/{id}/restore": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Restore an archived officer role (SET-003's recovery story) to the end of the display order */
+    post: operations["restoreOfficerRole"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/entities/calendar": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["listEntityCalendar"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/entities/obligation-options": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["listEntityObligationOptions"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/entities/{id}/obligations": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["listEntityObligations"];
+    put?: never;
+    post: operations["createEntityObligation"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/entities/{id}/obligations/{childId}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    delete: operations["deleteEntityObligation"];
+    options?: never;
+    head?: never;
+    patch: operations["updateEntityObligation"];
+    trace?: never;
+  };
+  "/api/v1/entities/{id}/obligations/{childId}/file": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations["fileEntityObligation"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/entities/{id}/grants": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["listEntityGrants"];
+    put?: never;
+    post: operations["addEntityGrant"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/entities/{id}/grants/{userId}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    delete: operations["removeEntityGrant"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/entities/chart": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["getEntityChart"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/entities/{id}/holdings": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["listEntityHoldings"];
+    put?: never;
+    post: operations["createEntityHolding"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/entities/{id}/holdings/{relatedEntityId}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    delete: operations["deleteEntityHolding"];
+    options?: never;
+    head?: never;
+    patch: operations["updateEntityHolding"];
+    trace?: never;
+  };
+  "/api/v1/entities/{id}/officers": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["listEntityOfficers"];
+    put?: never;
+    post: operations["createEntityOfficer"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/entities/{id}/officers/{childId}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    delete: operations["deleteEntityOfficer"];
+    options?: never;
+    head?: never;
+    patch: operations["updateEntityOfficer"];
+    trace?: never;
+  };
+  "/api/v1/entities/{id}/registrations": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["listEntityRegistrations"];
+    put?: never;
+    post: operations["createEntityRegistration"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/entities/{id}/registrations/{childId}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    delete: operations["deleteEntityRegistration"];
+    options?: never;
+    head?: never;
+    patch: operations["updateEntityRegistration"];
+    trace?: never;
+  };
   "/api/v1/entities": {
     parameters: {
       query?: never;
@@ -3122,11 +3523,28 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** The registry, ordered by legal name (ENT-001) — the seam the M8 signing-entity picker consumes; archived rows only with includeArchived=true */
+    /** The filtered, sorted, keyset-paged Entity registry with its soonest open obligation; the entities array remains the M8 signing-entity picker seam */
     get: operations["listEntities"];
     put?: never;
     /** Register an entity with its ENT-001 identity card: legal name and type required, the rest optional; status defaults to active */
     post: operations["createEntity"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/entities/list-options": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Reach-scoped Jurisdiction and Majority owner options for the Entity registry */
+    get: operations["listEntityRegistryOptions"];
+    put?: never;
+    post?: never;
     delete?: never;
     options?: never;
     head?: never;
@@ -3142,6 +3560,23 @@ export interface paths {
     };
     /** The live entity types in display order — the register form's Member+ picker source (the /entity-types settings surface stays Administrator-only per SET-002) */
     get: operations["listEntityTypeOptions"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/entities/officer-roles": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** The live officer roles in display order, for Member+ Entity forms; the /officer-roles settings taxonomy stays Administrator-only */
+    get: operations["listOfficerRoleOptions"];
     put?: never;
     post?: never;
     delete?: never;
@@ -3202,6 +3637,57 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/v1/entities/{id}/contracts": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Contracts signed by this Entity that the viewer independently reaches. */
+    get: operations["listEntityContracts"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/entities/{id}/matters": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Matters naming this Entity in an attached Entity field that the viewer reaches. */
+    get: operations["listEntityMatters"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/entities/{id}/linked-record-counts": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Viewer-scoped Contract and Matter counts for Entity tab labels. */
+    get: operations["readEntityLinkedRecordCounts"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/v1/search": {
     parameters: {
       query?: never;
@@ -3226,7 +3712,7 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** The shared field catalog (CTR-016) scoped to contract and global fields, in creation order; archived rows only with includeArchived=true */
+    /** The shared field catalog (CTR-016) scoped to contract, matter, entity, and global fields, in creation order; archived rows only with includeArchived=true */
     get: operations["listFields"];
     put?: never;
     /** Define a field: the slug derives from the name and the field type is picked here, once — both are immutable after creation. Select types take their options list; an AI prompt rides on contract-scoped fields only (CTR-008) */
@@ -6970,11 +7456,20 @@ export interface operations {
                 displayName: string;
                 archived: boolean;
               }[];
-              entities: {
-                id: string;
-                legalName: string;
-                archived: boolean;
-              }[];
+              entities: (
+                | {
+                    /** @enum {boolean} */
+                    restricted: false;
+                    id: string;
+                    legalName: string;
+                    archived: boolean;
+                  }
+                | {
+                    /** @enum {boolean} */
+                    restricted: true;
+                    id: string;
+                  }
+              )[];
             };
             team: {
               id: string;
@@ -7099,11 +7594,20 @@ export interface operations {
                 displayName: string;
                 archived: boolean;
               }[];
-              entities: {
-                id: string;
-                legalName: string;
-                archived: boolean;
-              }[];
+              entities: (
+                | {
+                    /** @enum {boolean} */
+                    restricted: false;
+                    id: string;
+                    legalName: string;
+                    archived: boolean;
+                  }
+                | {
+                    /** @enum {boolean} */
+                    restricted: true;
+                    id: string;
+                  }
+              )[];
             };
             team: {
               id: string;
@@ -10456,11 +10960,20 @@ export interface operations {
                 displayName: string;
                 archived: boolean;
               }[];
-              entities: {
-                id: string;
-                legalName: string;
-                archived: boolean;
-              }[];
+              entities: (
+                | {
+                    /** @enum {boolean} */
+                    restricted: false;
+                    id: string;
+                    legalName: string;
+                    archived: boolean;
+                  }
+                | {
+                    /** @enum {boolean} */
+                    restricted: true;
+                    id: string;
+                  }
+              )[];
             };
             attachments: {
               id: string;
@@ -11546,10 +12059,20 @@ export interface operations {
                 image: string | null;
                 archived: boolean;
               } | null;
-              entity: {
-                id: string;
-                legalName: string;
-              } | null;
+              entity:
+                | (
+                    | {
+                        /** @enum {boolean} */
+                        restricted: false;
+                        id: string;
+                        legalName: string;
+                      }
+                    | {
+                        /** @enum {boolean} */
+                        restricted: true;
+                      }
+                  )
+                | null;
               primaryCounterparty: {
                 id: string;
                 name: string;
@@ -11649,10 +12172,20 @@ export interface operations {
                 image: string | null;
                 archived: boolean;
               } | null;
-              entity: {
-                id: string;
-                legalName: string;
-              } | null;
+              entity:
+                | (
+                    | {
+                        /** @enum {boolean} */
+                        restricted: false;
+                        id: string;
+                        legalName: string;
+                      }
+                    | {
+                        /** @enum {boolean} */
+                        restricted: true;
+                      }
+                  )
+                | null;
               primaryCounterparty: {
                 id: string;
                 name: string;
@@ -11840,10 +12373,20 @@ export interface operations {
                 image: string | null;
                 archived: boolean;
               } | null;
-              entity: {
-                id: string;
-                legalName: string;
-              } | null;
+              entity:
+                | (
+                    | {
+                        /** @enum {boolean} */
+                        restricted: false;
+                        id: string;
+                        legalName: string;
+                      }
+                    | {
+                        /** @enum {boolean} */
+                        restricted: true;
+                      }
+                  )
+                | null;
               primaryCounterparty: {
                 id: string;
                 name: string;
@@ -11908,10 +12451,19 @@ export interface operations {
                 image: string | null;
                 archived: boolean;
               }[];
-              entities: {
-                id: string;
-                legalName: string;
-              }[];
+              entities: (
+                | {
+                    /** @enum {boolean} */
+                    restricted: false;
+                    id: string;
+                    legalName: string;
+                  }
+                | {
+                    /** @enum {boolean} */
+                    restricted: true;
+                    id: string;
+                  }
+              )[];
             };
             team: {
               id: string;
@@ -12021,10 +12573,20 @@ export interface operations {
                 image: string | null;
                 archived: boolean;
               } | null;
-              entity: {
-                id: string;
-                legalName: string;
-              } | null;
+              entity:
+                | (
+                    | {
+                        /** @enum {boolean} */
+                        restricted: false;
+                        id: string;
+                        legalName: string;
+                      }
+                    | {
+                        /** @enum {boolean} */
+                        restricted: true;
+                      }
+                  )
+                | null;
               primaryCounterparty: {
                 id: string;
                 name: string;
@@ -12089,10 +12651,19 @@ export interface operations {
                 image: string | null;
                 archived: boolean;
               }[];
-              entities: {
-                id: string;
-                legalName: string;
-              }[];
+              entities: (
+                | {
+                    /** @enum {boolean} */
+                    restricted: false;
+                    id: string;
+                    legalName: string;
+                  }
+                | {
+                    /** @enum {boolean} */
+                    restricted: true;
+                    id: string;
+                  }
+              )[];
             };
           };
         };
@@ -12200,10 +12771,20 @@ export interface operations {
                 image: string | null;
                 archived: boolean;
               } | null;
-              entity: {
-                id: string;
-                legalName: string;
-              } | null;
+              entity:
+                | (
+                    | {
+                        /** @enum {boolean} */
+                        restricted: false;
+                        id: string;
+                        legalName: string;
+                      }
+                    | {
+                        /** @enum {boolean} */
+                        restricted: true;
+                      }
+                  )
+                | null;
               primaryCounterparty: {
                 id: string;
                 name: string;
@@ -12422,10 +13003,20 @@ export interface operations {
                 image: string | null;
                 archived: boolean;
               } | null;
-              entity: {
-                id: string;
-                legalName: string;
-              } | null;
+              entity:
+                | (
+                    | {
+                        /** @enum {boolean} */
+                        restricted: false;
+                        id: string;
+                        legalName: string;
+                      }
+                    | {
+                        /** @enum {boolean} */
+                        restricted: true;
+                      }
+                  )
+                | null;
               primaryCounterparty: {
                 id: string;
                 name: string;
@@ -12516,10 +13107,20 @@ export interface operations {
                 image: string | null;
                 archived: boolean;
               } | null;
-              entity: {
-                id: string;
-                legalName: string;
-              } | null;
+              entity:
+                | (
+                    | {
+                        /** @enum {boolean} */
+                        restricted: false;
+                        id: string;
+                        legalName: string;
+                      }
+                    | {
+                        /** @enum {boolean} */
+                        restricted: true;
+                      }
+                  )
+                | null;
               primaryCounterparty: {
                 id: string;
                 name: string;
@@ -12610,10 +13211,20 @@ export interface operations {
                 image: string | null;
                 archived: boolean;
               } | null;
-              entity: {
-                id: string;
-                legalName: string;
-              } | null;
+              entity:
+                | (
+                    | {
+                        /** @enum {boolean} */
+                        restricted: false;
+                        id: string;
+                        legalName: string;
+                      }
+                    | {
+                        /** @enum {boolean} */
+                        restricted: true;
+                      }
+                  )
+                | null;
               primaryCounterparty: {
                 id: string;
                 name: string;
@@ -12703,10 +13314,20 @@ export interface operations {
                 image: string | null;
                 archived: boolean;
               } | null;
-              entity: {
-                id: string;
-                legalName: string;
-              } | null;
+              entity:
+                | (
+                    | {
+                        /** @enum {boolean} */
+                        restricted: false;
+                        id: string;
+                        legalName: string;
+                      }
+                    | {
+                        /** @enum {boolean} */
+                        restricted: true;
+                      }
+                  )
+                | null;
               primaryCounterparty: {
                 id: string;
                 name: string;
@@ -12790,10 +13411,20 @@ export interface operations {
                 image: string | null;
                 archived: boolean;
               } | null;
-              entity: {
-                id: string;
-                legalName: string;
-              } | null;
+              entity:
+                | (
+                    | {
+                        /** @enum {boolean} */
+                        restricted: false;
+                        id: string;
+                        legalName: string;
+                      }
+                    | {
+                        /** @enum {boolean} */
+                        restricted: true;
+                      }
+                  )
+                | null;
               primaryCounterparty: {
                 id: string;
                 name: string;
@@ -14814,8 +15445,8 @@ export interface operations {
             records: {
               reference: string;
               /** @enum {string} */
-              kind: "contract" | "matter";
-              number: number;
+              kind: "contract" | "matter" | "entity";
+              number: number | null;
               title: string;
             }[];
           };
@@ -14835,7 +15466,7 @@ export interface operations {
   listDocuments: {
     parameters: {
       query?: {
-        owner?: "contract" | "matter";
+        owner?: "contract" | "matter" | "entity";
         record?: string;
         folder?: string;
         counterparty?: string;
@@ -14878,8 +15509,10 @@ export interface operations {
               archivedAt: string | null;
               owner: {
                 /** @enum {string} */
-                kind: "contract" | "matter";
-                number: number;
+                kind: "contract" | "matter" | "entity";
+                id: string;
+                number: number | null;
+                reference: string;
                 title: string;
               };
               folder: {
@@ -15213,6 +15846,200 @@ export interface operations {
       header?: never;
       path: {
         number: number;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "multipart/form-data": {
+          /**
+           * Format: binary
+           * @description The file itself. Any type is accepted (DOC-004).
+           */
+          file: string;
+          /**
+           * @description What this version is in the negotiation (CTR-014). Defaults to `draft_ours`. Must be sent before the file part.
+           * @enum {string}
+           */
+          kind?:
+            | "draft_ours"
+            | "draft_theirs"
+            | "redline_theirs"
+            | "redline_ours"
+            | "executed"
+            | "amendment";
+          /** @description What changed in this round, kept beside the file. Must be sent before the file part. */
+          note?: string;
+          /** @description Where the file is filed: a folder already on this record (DOC-006), or omitted for the record root. Must be sent before the file part. */
+          folderId?: string;
+          /** @description A relative folder path, `/` separated, find-or-created beneath `folderId` before the document is filed into its last segment (DOC-011). Must be sent before the file part. */
+          folderPath?: string;
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            document: {
+              id: string;
+              title: string;
+              description: string | null;
+              isPrimary: boolean;
+              versions: {
+                id: string;
+                versionNumber: number;
+                /** @enum {string} */
+                kind:
+                  | "draft_ours"
+                  | "draft_theirs"
+                  | "redline_theirs"
+                  | "redline_ours"
+                  | "executed"
+                  | "amendment"
+                  | "generated_redline";
+                note: string | null;
+                originalFilename: string;
+                mimeType: string;
+                /** @enum {string} */
+                renderFamily: "pdf" | "image" | "word" | "presentation" | "email" | "other";
+                byteSize: number;
+                checksumSha256: string;
+                uploadedBy: {
+                  id: string;
+                  displayName: string;
+                  image: string | null;
+                  archived: boolean;
+                };
+                /** Format: date-time */
+                createdAt: string;
+                isCurrent: boolean;
+                isExecuted: boolean;
+              }[];
+              archivedAt: string | null;
+              isConfidential: boolean;
+              folderId: string | null;
+              createdBy: {
+                id: string;
+                displayName: string;
+                image: string | null;
+                archived: boolean;
+              };
+              /** Format: date-time */
+              createdAt: string;
+              /** Format: date-time */
+              updatedAt: string;
+            };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  listEntityDocuments: {
+    parameters: {
+      query?: {
+        includeArchived?: "true" | "false";
+        folder?: "root" | string;
+        cursor?: string;
+      };
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            documents: {
+              id: string;
+              title: string;
+              description: string | null;
+              isPrimary: boolean;
+              versions: {
+                id: string;
+                versionNumber: number;
+                /** @enum {string} */
+                kind:
+                  | "draft_ours"
+                  | "draft_theirs"
+                  | "redline_theirs"
+                  | "redline_ours"
+                  | "executed"
+                  | "amendment"
+                  | "generated_redline";
+                note: string | null;
+                originalFilename: string;
+                mimeType: string;
+                /** @enum {string} */
+                renderFamily: "pdf" | "image" | "word" | "presentation" | "email" | "other";
+                byteSize: number;
+                checksumSha256: string;
+                uploadedBy: {
+                  id: string;
+                  displayName: string;
+                  image: string | null;
+                  archived: boolean;
+                };
+                /** Format: date-time */
+                createdAt: string;
+                isCurrent: boolean;
+                isExecuted: boolean;
+              }[];
+              archivedAt: string | null;
+              isConfidential: boolean;
+              folderId: string | null;
+              createdBy: {
+                id: string;
+                displayName: string;
+                image: string | null;
+                archived: boolean;
+              };
+              /** Format: date-time */
+              createdAt: string;
+              /** Format: date-time */
+              updatedAt: string;
+            }[];
+            nextCursor: string | null;
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  uploadEntityDocument: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
       };
       cookie?: never;
     };
@@ -16572,6 +17399,98 @@ export interface operations {
       };
     };
   };
+  listEntityFolders: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            folders: {
+              id: string;
+              name: string;
+              parentId: string | null;
+              documentCount: number;
+              /** Format: date-time */
+              createdAt: string;
+              /** Format: date-time */
+              updatedAt: string;
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  createEntityFolder: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          name?: string;
+          path?: string;
+          parentId?: string;
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            folders: {
+              id: string;
+              name: string;
+              parentId: string | null;
+              documentCount: number;
+              /** Format: date-time */
+              createdAt: string;
+              /** Format: date-time */
+              updatedAt: string;
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
   deleteContractFolder: {
     parameters: {
       query?: never;
@@ -17302,7 +18221,7 @@ export interface operations {
   listActivity: {
     parameters: {
       query: {
-        entityType: "matter" | "contract";
+        entityType: "matter" | "contract" | "entity";
         entityId: string;
         cursor?: string;
       };
@@ -17813,10 +18732,1887 @@ export interface operations {
       };
     };
   };
+  listEntityTypeFields: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            attachedFields: {
+              fieldId: string;
+              slug: string;
+              displayName: string;
+              /** @enum {string} */
+              fieldType:
+                | "text"
+                | "long_text"
+                | "number"
+                | "date"
+                | "boolean"
+                | "single_select"
+                | "multi_select"
+                | "user"
+                | "entity";
+              /** @enum {string} */
+              moduleScope: "entity" | "global";
+              displayOrder: number;
+              isRequired: boolean;
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  attachEntityTypeField: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          fieldId: string;
+          isRequired?: boolean;
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            attachedField: {
+              fieldId: string;
+              slug: string;
+              displayName: string;
+              /** @enum {string} */
+              fieldType:
+                | "text"
+                | "long_text"
+                | "number"
+                | "date"
+                | "boolean"
+                | "single_select"
+                | "multi_select"
+                | "user"
+                | "entity";
+              /** @enum {string} */
+              moduleScope: "entity" | "global";
+              displayOrder: number;
+              isRequired: boolean;
+            };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  detachEntityTypeField: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+        fieldId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  setEntityTypeFieldRequired: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+        fieldId: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          isRequired: boolean;
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            attachedField: {
+              fieldId: string;
+              slug: string;
+              displayName: string;
+              /** @enum {string} */
+              fieldType:
+                | "text"
+                | "long_text"
+                | "number"
+                | "date"
+                | "boolean"
+                | "single_select"
+                | "multi_select"
+                | "user"
+                | "entity";
+              /** @enum {string} */
+              moduleScope: "entity" | "global";
+              displayOrder: number;
+              isRequired: boolean;
+            };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  reorderEntityTypeFields: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          fieldIds: string[];
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            attachedFields: {
+              fieldId: string;
+              slug: string;
+              displayName: string;
+              /** @enum {string} */
+              fieldType:
+                | "text"
+                | "long_text"
+                | "number"
+                | "date"
+                | "boolean"
+                | "single_select"
+                | "multi_select"
+                | "user"
+                | "entity";
+              /** @enum {string} */
+              moduleScope: "entity" | "global";
+              displayOrder: number;
+              isRequired: boolean;
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  listOfficerRoles: {
+    parameters: {
+      query?: {
+        includeArchived?: "true" | "false";
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            officerRoles: {
+              id: string;
+              slug: string;
+              displayName: string;
+              description: string | null;
+              displayOrder: number;
+              isSystemDefault: boolean;
+              archivedAt: string | null;
+              inUseCount: number;
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  createOfficerRole: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          displayName: string;
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            officerRole: {
+              id: string;
+              slug: string;
+              displayName: string;
+              description: string | null;
+              displayOrder: number;
+              isSystemDefault: boolean;
+              archivedAt: string | null;
+              inUseCount: number;
+            };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  getOfficerRole: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            officerRole: {
+              id: string;
+              slug: string;
+              displayName: string;
+              description: string | null;
+              displayOrder: number;
+              isSystemDefault: boolean;
+              archivedAt: string | null;
+              inUseCount: number;
+            };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  deleteOfficerRole: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  updateOfficerRole: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          displayName?: string;
+          description?: string | null;
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            officerRole: {
+              id: string;
+              slug: string;
+              displayName: string;
+              description: string | null;
+              displayOrder: number;
+              isSystemDefault: boolean;
+              archivedAt: string | null;
+              inUseCount: number;
+            };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  reorderOfficerRoles: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          ids: string[];
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            officerRoles: {
+              id: string;
+              slug: string;
+              displayName: string;
+              description: string | null;
+              displayOrder: number;
+              isSystemDefault: boolean;
+              archivedAt: string | null;
+              inUseCount: number;
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  archiveOfficerRole: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          reassignToId?: string;
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            officerRole: {
+              id: string;
+              slug: string;
+              displayName: string;
+              description: string | null;
+              displayOrder: number;
+              isSystemDefault: boolean;
+              archivedAt: string | null;
+              inUseCount: number;
+            };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  restoreOfficerRole: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            officerRole: {
+              id: string;
+              slug: string;
+              displayName: string;
+              description: string | null;
+              displayOrder: number;
+              isSystemDefault: boolean;
+              archivedAt: string | null;
+              inUseCount: number;
+            };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  listEntityCalendar: {
+    parameters: {
+      query?: {
+        entity?: string;
+        assignee?: string;
+        from?: string;
+        to?: string;
+        includeCompleted?: "true" | "false";
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            obligations: {
+              id: string;
+              entityId: string;
+              label: string;
+              registration: {
+                id: string;
+                jurisdiction: string;
+                registrationNumber: string | null;
+              } | null;
+              recurrenceMonths: number | null;
+              /** Format: date */
+              nextDueOn: string;
+              assignee: {
+                id: string;
+                displayName: string;
+                image: string | null;
+              } | null;
+              note: string | null;
+              matter: {
+                id: string;
+                number: number;
+                title: string;
+              } | null;
+              completedOn: string | null;
+              /** Format: date-time */
+              createdAt: string;
+              /** Format: date-time */
+              updatedAt: string;
+              entity: {
+                id: string;
+                legalName: string;
+              };
+              overdue: boolean;
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  listEntityObligationOptions: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            users: {
+              id: string;
+              displayName: string;
+              image: string | null;
+            }[];
+            matters: {
+              id: string;
+              number: number;
+              title: string;
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  listEntityObligations: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            obligations: {
+              id: string;
+              entityId: string;
+              label: string;
+              registration: {
+                id: string;
+                jurisdiction: string;
+                registrationNumber: string | null;
+              } | null;
+              recurrenceMonths: number | null;
+              /** Format: date */
+              nextDueOn: string;
+              assignee: {
+                id: string;
+                displayName: string;
+                image: string | null;
+              } | null;
+              note: string | null;
+              matter: {
+                id: string;
+                number: number;
+                title: string;
+              } | null;
+              completedOn: string | null;
+              /** Format: date-time */
+              createdAt: string;
+              /** Format: date-time */
+              updatedAt: string;
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  createEntityObligation: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          label: string;
+          registrationId?: string | null;
+          recurrenceMonths?: number | null;
+          /** Format: date */
+          nextDueOn: string;
+          assigneeId?: string | null;
+          note?: string | null;
+          matterId?: string | null;
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            obligation: {
+              id: string;
+              entityId: string;
+              label: string;
+              registration: {
+                id: string;
+                jurisdiction: string;
+                registrationNumber: string | null;
+              } | null;
+              recurrenceMonths: number | null;
+              /** Format: date */
+              nextDueOn: string;
+              assignee: {
+                id: string;
+                displayName: string;
+                image: string | null;
+              } | null;
+              note: string | null;
+              matter: {
+                id: string;
+                number: number;
+                title: string;
+              } | null;
+              completedOn: string | null;
+              /** Format: date-time */
+              createdAt: string;
+              /** Format: date-time */
+              updatedAt: string;
+            };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  deleteEntityObligation: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+        childId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": unknown;
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  updateEntityObligation: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+        childId: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          label?: string;
+          registrationId?: string | null;
+          recurrenceMonths?: number | null;
+          /** Format: date */
+          nextDueOn?: string;
+          assigneeId?: string | null;
+          note?: string | null;
+          matterId?: string | null;
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            obligation: {
+              id: string;
+              entityId: string;
+              label: string;
+              registration: {
+                id: string;
+                jurisdiction: string;
+                registrationNumber: string | null;
+              } | null;
+              recurrenceMonths: number | null;
+              /** Format: date */
+              nextDueOn: string;
+              assignee: {
+                id: string;
+                displayName: string;
+                image: string | null;
+              } | null;
+              note: string | null;
+              matter: {
+                id: string;
+                number: number;
+                title: string;
+              } | null;
+              completedOn: string | null;
+              /** Format: date-time */
+              createdAt: string;
+              /** Format: date-time */
+              updatedAt: string;
+            };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  fileEntityObligation: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+        childId: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          /** Format: date */
+          filedOn?: string;
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            obligation: {
+              id: string;
+              entityId: string;
+              label: string;
+              registration: {
+                id: string;
+                jurisdiction: string;
+                registrationNumber: string | null;
+              } | null;
+              recurrenceMonths: number | null;
+              /** Format: date */
+              nextDueOn: string;
+              assignee: {
+                id: string;
+                displayName: string;
+                image: string | null;
+              } | null;
+              note: string | null;
+              matter: {
+                id: string;
+                number: number;
+                title: string;
+              } | null;
+              completedOn: string | null;
+              /** Format: date-time */
+              createdAt: string;
+              /** Format: date-time */
+              updatedAt: string;
+            };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  listEntityGrants: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            grants: {
+              id: string;
+              displayName: string;
+              image: string | null;
+              archived: boolean;
+            }[];
+            candidates: {
+              id: string;
+              displayName: string;
+              image: string | null;
+              archived: boolean;
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  addEntityGrant: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          userId: string;
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            grant: {
+              id: string;
+              displayName: string;
+              image: string | null;
+              archived: boolean;
+            };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  removeEntityGrant: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+        userId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  getEntityChart: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            nodes: (
+              | {
+                  /** @enum {boolean} */
+                  restricted: false;
+                  id: string;
+                  legalName: string;
+                  type: string;
+                  jurisdiction: string | null;
+                  /** @enum {string} */
+                  status: "active" | "dormant" | "dissolved" | "divested";
+                  primaryOwnerId: string | null;
+                }
+              | {
+                  /** @enum {boolean} */
+                  restricted: true;
+                  id: string;
+                  primaryOwnerId: string | null;
+                }
+            )[];
+            edges: {
+              ownerEntityId: string;
+              ownedEntityId: string;
+              ownershipPercent: number;
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  listEntityHoldings: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            owners: {
+              owner:
+                | {
+                    /** @enum {boolean} */
+                    restricted: false;
+                    id: string;
+                    legalName: string;
+                  }
+                | {
+                    /** @enum {boolean} */
+                    restricted: true;
+                  };
+              owned:
+                | {
+                    /** @enum {boolean} */
+                    restricted: false;
+                    id: string;
+                    legalName: string;
+                  }
+                | {
+                    /** @enum {boolean} */
+                    restricted: true;
+                  };
+              ownershipPercent: number;
+              /** Format: date-time */
+              createdAt: string;
+              /** Format: date-time */
+              updatedAt: string;
+            }[];
+            owned: {
+              owner:
+                | {
+                    /** @enum {boolean} */
+                    restricted: false;
+                    id: string;
+                    legalName: string;
+                  }
+                | {
+                    /** @enum {boolean} */
+                    restricted: true;
+                  };
+              owned:
+                | {
+                    /** @enum {boolean} */
+                    restricted: false;
+                    id: string;
+                    legalName: string;
+                  }
+                | {
+                    /** @enum {boolean} */
+                    restricted: true;
+                  };
+              ownershipPercent: number;
+              /** Format: date-time */
+              createdAt: string;
+              /** Format: date-time */
+              updatedAt: string;
+            }[];
+            warnings: {
+              /** @enum {string} */
+              code: "ownership-over-100";
+              ownedEntityId: string;
+              legalName: string;
+              totalPercent: number;
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  createEntityHolding: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          /** @enum {string} */
+          direction: "owner" | "owned";
+          relatedEntityId: string;
+          ownershipPercent: number;
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            holding: {
+              owner:
+                | {
+                    /** @enum {boolean} */
+                    restricted: false;
+                    id: string;
+                    legalName: string;
+                  }
+                | {
+                    /** @enum {boolean} */
+                    restricted: true;
+                  };
+              owned:
+                | {
+                    /** @enum {boolean} */
+                    restricted: false;
+                    id: string;
+                    legalName: string;
+                  }
+                | {
+                    /** @enum {boolean} */
+                    restricted: true;
+                  };
+              ownershipPercent: number;
+              /** Format: date-time */
+              createdAt: string;
+              /** Format: date-time */
+              updatedAt: string;
+            };
+            warnings: {
+              /** @enum {string} */
+              code: "ownership-over-100";
+              ownedEntityId: string;
+              legalName: string;
+              totalPercent: number;
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  deleteEntityHolding: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+        relatedEntityId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  updateEntityHolding: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+        relatedEntityId: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          ownershipPercent: number;
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            holding: {
+              owner:
+                | {
+                    /** @enum {boolean} */
+                    restricted: false;
+                    id: string;
+                    legalName: string;
+                  }
+                | {
+                    /** @enum {boolean} */
+                    restricted: true;
+                  };
+              owned:
+                | {
+                    /** @enum {boolean} */
+                    restricted: false;
+                    id: string;
+                    legalName: string;
+                  }
+                | {
+                    /** @enum {boolean} */
+                    restricted: true;
+                  };
+              ownershipPercent: number;
+              /** Format: date-time */
+              createdAt: string;
+              /** Format: date-time */
+              updatedAt: string;
+            };
+            warnings: {
+              /** @enum {string} */
+              code: "ownership-over-100";
+              ownedEntityId: string;
+              legalName: string;
+              totalPercent: number;
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  listEntityOfficers: {
+    parameters: {
+      query?: {
+        includeFormer?: "true" | "false";
+      };
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            officers: {
+              id: string;
+              entityId: string;
+              name: string;
+              officerRoleId: string;
+              officerRoleName: string;
+              appointedOn: string | null;
+              resignedOn: string | null;
+              user: {
+                id: string;
+                displayName: string;
+                image: string | null;
+                archived: boolean;
+              } | null;
+              /** Format: date-time */
+              createdAt: string;
+              /** Format: date-time */
+              updatedAt: string;
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  createEntityOfficer: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          name: string;
+          officerRoleId: string;
+          appointedOn?: string | null;
+          resignedOn?: string | null;
+          userId?: string | null;
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            officer: {
+              id: string;
+              entityId: string;
+              name: string;
+              officerRoleId: string;
+              officerRoleName: string;
+              appointedOn: string | null;
+              resignedOn: string | null;
+              user: {
+                id: string;
+                displayName: string;
+                image: string | null;
+                archived: boolean;
+              } | null;
+              /** Format: date-time */
+              createdAt: string;
+              /** Format: date-time */
+              updatedAt: string;
+            };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  deleteEntityOfficer: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+        childId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": unknown;
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  updateEntityOfficer: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+        childId: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          name?: string;
+          officerRoleId?: string;
+          appointedOn?: string | null;
+          resignedOn?: string | null;
+          userId?: string | null;
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            officer: {
+              id: string;
+              entityId: string;
+              name: string;
+              officerRoleId: string;
+              officerRoleName: string;
+              appointedOn: string | null;
+              resignedOn: string | null;
+              user: {
+                id: string;
+                displayName: string;
+                image: string | null;
+                archived: boolean;
+              } | null;
+              /** Format: date-time */
+              createdAt: string;
+              /** Format: date-time */
+              updatedAt: string;
+            };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  listEntityRegistrations: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            registrations: {
+              id: string;
+              entityId: string;
+              jurisdiction: string;
+              registrationNumber: string | null;
+              registeredAgent: string | null;
+              /** @enum {string} */
+              status: "active" | "lapsed" | "withdrawn";
+              /** Format: date-time */
+              createdAt: string;
+              /** Format: date-time */
+              updatedAt: string;
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  createEntityRegistration: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          jurisdiction: string;
+          registrationNumber?: string | null;
+          registeredAgent?: string | null;
+          /** @enum {string} */
+          status?: "active" | "lapsed" | "withdrawn";
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            registration: {
+              id: string;
+              entityId: string;
+              jurisdiction: string;
+              registrationNumber: string | null;
+              registeredAgent: string | null;
+              /** @enum {string} */
+              status: "active" | "lapsed" | "withdrawn";
+              /** Format: date-time */
+              createdAt: string;
+              /** Format: date-time */
+              updatedAt: string;
+            };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  deleteEntityRegistration: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+        childId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": unknown;
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  updateEntityRegistration: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+        childId: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          jurisdiction?: string;
+          registrationNumber?: string | null;
+          registeredAgent?: string | null;
+          /** @enum {string} */
+          status?: "active" | "lapsed" | "withdrawn";
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            registration: {
+              id: string;
+              entityId: string;
+              jurisdiction: string;
+              registrationNumber: string | null;
+              registeredAgent: string | null;
+              /** @enum {string} */
+              status: "active" | "lapsed" | "withdrawn";
+              /** Format: date-time */
+              createdAt: string;
+              /** Format: date-time */
+              updatedAt: string;
+            };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
   listEntities: {
     parameters: {
       query?: {
         includeArchived?: "true" | "false";
+        type?: string;
+        status?: "active" | "dormant" | "dissolved" | "divested";
+        jurisdiction?: string;
+        majorityOwner?: string;
+        sort?: "name" | "type" | "jurisdiction" | "status" | "nextObligation" | "created";
+        dir?: "asc" | "desc";
+        cursor?: string;
       };
       header?: never;
       path?: never;
@@ -17844,12 +20640,25 @@ export interface operations {
               registeredAddress: string | null;
               /** @enum {string} */
               status: "active" | "dormant" | "dissolved" | "divested";
+              sharesAuthorized: number | null;
+              sharesIssued: number | null;
+              parValue: number | null;
+              customFields: {
+                [key: string]: string | number | boolean | string[];
+              };
+              isConfidential: boolean;
               archivedAt: string | null;
               /** Format: date-time */
               createdAt: string;
               /** Format: date-time */
               updatedAt: string;
+              nextObligation: {
+                label: string;
+                /** Format: date */
+                dueOn: string;
+              } | null;
             }[];
+            nextCursor: string | null;
           };
         };
       };
@@ -17909,12 +20718,54 @@ export interface operations {
               registeredAddress: string | null;
               /** @enum {string} */
               status: "active" | "dormant" | "dissolved" | "divested";
+              sharesAuthorized: number | null;
+              sharesIssued: number | null;
+              parValue: number | null;
+              customFields: {
+                [key: string]: string | number | boolean | string[];
+              };
+              isConfidential: boolean;
               archivedAt: string | null;
               /** Format: date-time */
               createdAt: string;
               /** Format: date-time */
               updatedAt: string;
             };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  listEntityRegistryOptions: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            jurisdictions: string[];
+            majorityOwners: {
+              id: string;
+              legalName: string;
+            }[];
           };
         };
       };
@@ -17964,6 +20815,47 @@ export interface operations {
       };
     };
   };
+  listOfficerRoleOptions: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            officerRoles: {
+              id: string;
+              slug: string;
+              displayName: string;
+            }[];
+            users: {
+              id: string;
+              displayName: string;
+              image: string | null;
+              role: string;
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
   getEntity: {
     parameters: {
       query?: never;
@@ -17995,11 +20887,61 @@ export interface operations {
               registeredAddress: string | null;
               /** @enum {string} */
               status: "active" | "dormant" | "dissolved" | "divested";
+              sharesAuthorized: number | null;
+              sharesIssued: number | null;
+              parValue: number | null;
+              customFields: {
+                [key: string]: string | number | boolean | string[];
+              };
+              isConfidential: boolean;
               archivedAt: string | null;
               /** Format: date-time */
               createdAt: string;
               /** Format: date-time */
               updatedAt: string;
+            };
+            fields: {
+              fieldId: string;
+              slug: string;
+              displayName: string;
+              description: string | null;
+              /** @enum {string} */
+              fieldType:
+                | "text"
+                | "long_text"
+                | "number"
+                | "date"
+                | "boolean"
+                | "single_select"
+                | "multi_select"
+                | "user"
+                | "entity";
+              /** @enum {string} */
+              fieldTag: "business" | "legal";
+              options: string[] | null;
+              displayOrder: number;
+              isRequired: boolean;
+            }[];
+            customFieldRefs: {
+              users: {
+                id: string;
+                displayName: string;
+                archived: boolean;
+              }[];
+              entities: (
+                | {
+                    /** @enum {boolean} */
+                    restricted: false;
+                    id: string;
+                    legalName: string;
+                    archived: boolean;
+                  }
+                | {
+                    /** @enum {boolean} */
+                    restricted: true;
+                    id: string;
+                  }
+              )[];
             };
           };
         };
@@ -18037,6 +20979,13 @@ export interface operations {
           registeredAddress?: string | null;
           /** @enum {string} */
           status?: "active" | "dormant" | "dissolved" | "divested";
+          sharesAuthorized?: number | null;
+          sharesIssued?: number | null;
+          parValue?: number | null;
+          customFields?: {
+            [key: string]: (string | number | boolean | string[]) | null;
+          };
+          isConfidential?: boolean;
         };
       };
     };
@@ -18061,11 +21010,61 @@ export interface operations {
               registeredAddress: string | null;
               /** @enum {string} */
               status: "active" | "dormant" | "dissolved" | "divested";
+              sharesAuthorized: number | null;
+              sharesIssued: number | null;
+              parValue: number | null;
+              customFields: {
+                [key: string]: string | number | boolean | string[];
+              };
+              isConfidential: boolean;
               archivedAt: string | null;
               /** Format: date-time */
               createdAt: string;
               /** Format: date-time */
               updatedAt: string;
+            };
+            fields: {
+              fieldId: string;
+              slug: string;
+              displayName: string;
+              description: string | null;
+              /** @enum {string} */
+              fieldType:
+                | "text"
+                | "long_text"
+                | "number"
+                | "date"
+                | "boolean"
+                | "single_select"
+                | "multi_select"
+                | "user"
+                | "entity";
+              /** @enum {string} */
+              fieldTag: "business" | "legal";
+              options: string[] | null;
+              displayOrder: number;
+              isRequired: boolean;
+            }[];
+            customFieldRefs: {
+              users: {
+                id: string;
+                displayName: string;
+                archived: boolean;
+              }[];
+              entities: (
+                | {
+                    /** @enum {boolean} */
+                    restricted: false;
+                    id: string;
+                    legalName: string;
+                    archived: boolean;
+                  }
+                | {
+                    /** @enum {boolean} */
+                    restricted: true;
+                    id: string;
+                  }
+              )[];
             };
           };
         };
@@ -18112,6 +21111,13 @@ export interface operations {
               registeredAddress: string | null;
               /** @enum {string} */
               status: "active" | "dormant" | "dissolved" | "divested";
+              sharesAuthorized: number | null;
+              sharesIssued: number | null;
+              parValue: number | null;
+              customFields: {
+                [key: string]: string | number | boolean | string[];
+              };
+              isConfidential: boolean;
               archivedAt: string | null;
               /** Format: date-time */
               createdAt: string;
@@ -18163,12 +21169,145 @@ export interface operations {
               registeredAddress: string | null;
               /** @enum {string} */
               status: "active" | "dormant" | "dissolved" | "divested";
+              sharesAuthorized: number | null;
+              sharesIssued: number | null;
+              parValue: number | null;
+              customFields: {
+                [key: string]: string | number | boolean | string[];
+              };
+              isConfidential: boolean;
               archivedAt: string | null;
               /** Format: date-time */
               createdAt: string;
               /** Format: date-time */
               updatedAt: string;
             };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  listEntityContracts: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            records: {
+              /** @enum {string} */
+              kind: "contract";
+              /** @enum {boolean} */
+              restricted: false;
+              id: string;
+              number: number;
+              title: string;
+              statusName: string;
+              isConfidential: boolean;
+              archived: boolean;
+              /** @enum {string} */
+              statusCategory: "draft" | "review" | "approval" | "signature" | "active" | "ended";
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  listEntityMatters: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            records: {
+              /** @enum {string} */
+              kind: "matter";
+              /** @enum {boolean} */
+              restricted: false;
+              id: string;
+              number: number;
+              title: string;
+              statusName: string;
+              isConfidential: boolean;
+              archived: boolean;
+              /** @enum {string} */
+              statusCategory: "open" | "closed";
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  readEntityLinkedRecordCounts: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            contracts: number;
+            matters: number;
           };
         };
       };
@@ -18223,8 +21362,9 @@ export interface operations {
                   isConfidential: boolean;
                   rank: number;
                   /** @enum {string} */
-                  ownerKind: "contract" | "matter";
-                  ownerNumber: number;
+                  ownerKind: "contract" | "matter" | "entity";
+                  ownerId: string;
+                  ownerNumber: number | null;
                   versionId: string;
                   versionNumber: number;
                   snippet: string;
@@ -18269,7 +21409,7 @@ export interface operations {
               displayName: string;
               description: string | null;
               /** @enum {string} */
-              moduleScope: "contract" | "matter" | "global";
+              moduleScope: "contract" | "matter" | "entity" | "global";
               /** @enum {string} */
               fieldType:
                 | "text"
@@ -18315,7 +21455,7 @@ export interface operations {
           displayName: string;
           description?: string;
           /** @enum {string} */
-          moduleScope: "contract" | "matter" | "global";
+          moduleScope: "contract" | "matter" | "entity" | "global";
           /** @enum {string} */
           fieldType:
             | "text"
@@ -18348,7 +21488,7 @@ export interface operations {
               displayName: string;
               description: string | null;
               /** @enum {string} */
-              moduleScope: "contract" | "matter" | "global";
+              moduleScope: "contract" | "matter" | "entity" | "global";
               /** @enum {string} */
               fieldType:
                 | "text"
@@ -18416,7 +21556,7 @@ export interface operations {
               displayName: string;
               description: string | null;
               /** @enum {string} */
-              moduleScope: "contract" | "matter" | "global";
+              moduleScope: "contract" | "matter" | "entity" | "global";
               /** @enum {string} */
               fieldType:
                 | "text"
@@ -18462,7 +21602,7 @@ export interface operations {
       content: {
         "application/json": {
           /** @enum {string} */
-          moduleScope: "contract" | "matter" | "global";
+          moduleScope: "contract" | "matter" | "entity" | "global";
         };
       };
     };
@@ -18480,7 +21620,7 @@ export interface operations {
               displayName: string;
               description: string | null;
               /** @enum {string} */
-              moduleScope: "contract" | "matter" | "global";
+              moduleScope: "contract" | "matter" | "entity" | "global";
               /** @enum {string} */
               fieldType:
                 | "text"
@@ -18537,7 +21677,7 @@ export interface operations {
               displayName: string;
               description: string | null;
               /** @enum {string} */
-              moduleScope: "contract" | "matter" | "global";
+              moduleScope: "contract" | "matter" | "entity" | "global";
               /** @enum {string} */
               fieldType:
                 | "text"
@@ -18594,7 +21734,7 @@ export interface operations {
               displayName: string;
               description: string | null;
               /** @enum {string} */
-              moduleScope: "contract" | "matter" | "global";
+              moduleScope: "contract" | "matter" | "entity" | "global";
               /** @enum {string} */
               fieldType:
                 | "text"
@@ -18630,7 +21770,7 @@ export interface operations {
   listSavedViews: {
     parameters: {
       query: {
-        surface: "contracts" | "matters" | "documents";
+        surface: "contracts" | "matters" | "documents" | "entities";
       };
       header?: never;
       path?: never;
@@ -18648,7 +21788,7 @@ export interface operations {
             views: {
               id: string;
               /** @enum {string} */
-              surface: "contracts" | "matters" | "documents";
+              surface: "contracts" | "matters" | "documents" | "entities";
               name: string;
               config: {
                 columns: {
@@ -18692,7 +21832,7 @@ export interface operations {
       content: {
         "application/json": {
           /** @enum {string} */
-          surface: "contracts" | "matters" | "documents";
+          surface: "contracts" | "matters" | "documents" | "entities";
           name: string;
           config: {
             columns: {
@@ -18724,7 +21864,7 @@ export interface operations {
             views: {
               id: string;
               /** @enum {string} */
-              surface: "contracts" | "matters" | "documents";
+              surface: "contracts" | "matters" | "documents" | "entities";
               name: string;
               config: {
                 columns: {
@@ -18778,7 +21918,7 @@ export interface operations {
             views: {
               id: string;
               /** @enum {string} */
-              surface: "contracts" | "matters" | "documents";
+              surface: "contracts" | "matters" | "documents" | "entities";
               name: string;
               config: {
                 columns: {
@@ -18854,7 +21994,7 @@ export interface operations {
             views: {
               id: string;
               /** @enum {string} */
-              surface: "contracts" | "matters" | "documents";
+              surface: "contracts" | "matters" | "documents" | "entities";
               name: string;
               config: {
                 columns: {

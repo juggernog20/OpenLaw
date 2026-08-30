@@ -61,6 +61,7 @@ import {
   documents,
   eq,
   inArray,
+  isNotNull,
   isNull,
   matters,
   matterTeam,
@@ -398,6 +399,11 @@ export function documentAudienceScope(db: Executor, user: AuthenticatedUser): SQ
         eq(documents.isConfidential, false),
         namedOnTheOwningContract(db, user),
         namedOnTheOwningMatter(db, user),
+        // Entity paper has no audience narrowing of its own. Reach is a
+        // separate required predicate: `entityReachScope` (ENT-004) is
+        // applied before every consumer of this scope runs, so a document
+        // arriving here already sits on an Entity the viewer reaches.
+        isNotNull(documents.entityId),
       );
     case "business_user":
       return sql`false`;

@@ -285,6 +285,11 @@ export function stubApi(state: ApiState) {
     if (call.url.pathname === "/api/v1/documents/options" && call.method === "GET") {
       return json(200, { counterparties: [], uploaders: [], records: [] });
     }
+    // M27's Entity registry filter candidates. Empty is the ordinary
+    // fresh-install answer; the destination's filter suite supplies rows.
+    if (call.url.pathname === "/api/v1/entities/list-options" && call.method === "GET") {
+      return json(200, { jurisdictions: [], majorityOwners: [] });
+    }
     // The portal's own bell, which every portal render reads on mount
     // and on every navigation (NOT-001, M20/9). Zero and empty by
     // default, exactly as the staff bell's two reads above; only the
@@ -333,6 +338,57 @@ export function stubApi(state: ApiState) {
     }
     if (call.url.pathname === "/api/v1/entities" && call.method === "GET") {
       return json(200, { entities: [] });
+    }
+    // M27/6's destination opens on the cross-Entity compliance calendar.
+    // Empty is the blank-start state ENT-006 promises; only calendar
+    // route suites replace it through `extra`.
+    if (call.url.pathname === "/api/v1/entities/calendar" && call.method === "GET") {
+      return json(200, { obligations: [] });
+    }
+    if (call.url.pathname === "/api/v1/entities/obligation-options" && call.method === "GET") {
+      return json(200, { users: [], matters: [] });
+    }
+    if (call.url.pathname === "/api/v1/entities/officer-roles" && call.method === "GET") {
+      return json(200, { officerRoles: [], users: [] });
+    }
+    if (/^\/api\/v1\/entities\/[^/]+\/officers$/.test(call.url.pathname) && call.method === "GET") {
+      return json(200, { officers: [] });
+    }
+    if (/^\/api\/v1\/entities\/[^/]+\/holdings$/.test(call.url.pathname) && call.method === "GET") {
+      return json(200, { owners: [], owned: [], warnings: [] });
+    }
+    if (
+      /^\/api\/v1\/entities\/[^/]+\/registrations$/.test(call.url.pathname) &&
+      call.method === "GET"
+    ) {
+      return json(200, { registrations: [] });
+    }
+    if (
+      /^\/api\/v1\/entities\/[^/]+\/obligations$/.test(call.url.pathname) &&
+      call.method === "GET"
+    ) {
+      return json(200, { obligations: [] });
+    }
+    if (
+      /^\/api\/v1\/entities\/[^/]+\/linked-record-counts$/.test(call.url.pathname) &&
+      call.method === "GET"
+    ) {
+      return json(200, { contracts: 0, matters: 0 });
+    }
+    if (
+      /^\/api\/v1\/entities\/[^/]+\/(contracts|matters)$/.test(call.url.pathname) &&
+      call.method === "GET"
+    ) {
+      return json(200, { records: [] });
+    }
+    if (
+      /^\/api\/v1\/entities\/[^/]+\/documents$/.test(call.url.pathname) &&
+      call.method === "GET"
+    ) {
+      return json(200, { documents: [], nextCursor: null });
+    }
+    if (/^\/api\/v1\/entities\/[^/]+\/folders$/.test(call.url.pathname) && call.method === "GET") {
+      return json(200, { folders: [] });
     }
     if (call.url.pathname === "/api/v1/onboarding" && call.method === "GET") {
       return json(200, state.onboarding ?? { completed: true, emailConfigured: true });

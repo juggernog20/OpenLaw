@@ -606,6 +606,12 @@ The Documents repository composes the Document audience predicate with the ownin
 
 Administrators read every live Document. Legal Team Members read non-confidential records and the confidential records whose audience they join. Contributors read only Documents on records carrying their team row. Business Users receive no Documents navigation and cannot open the destination. A repository row still rechecks ordinary record and Document reach when it opens the current Version on the owning record.
 
+### Addendum (2026-08-30, M27/8, #580) — Confidential Entities join the wall
+
+Entities use DD-014's same continuous-wall posture with ENT-004's audience: Administrators always reach them, and a Legal Team Member reaches a Confidential Entity only through an explicit `entity_grants` row. Contributors and Business Users do not reach the Entities module. Confidentiality and grant maintenance are Administrator-only and audited.
+
+The predicate runs inside every Entity collection, record, picker, calendar, search, repository, roll-up, and notification read before limits and counts. Surfaces that already know a relationship exists—Holdings, the ownership chart, a Contract's signing Entity, and Entity-valued Fields—preserve only a muted Restricted Entity placeholder. No unreachable Entity name crosses the wall, and ordinary omission produces no row, count, notification, or pagination gap.
+
 ---
 
 ## DD-015: Contributor permission grid — read, comment, upload, edit business fields
@@ -933,6 +939,10 @@ MTR-003's open item is answered by adoption: matters take this machinery rather 
 ### Addendum (2026-08-29, M26 close, [#560](https://github.com/juggernog20/OpenLaw/issues/560)): Documents is the third saved-view surface
 
 The Documents destination adopts `list_views` under the `documents` surface slug. Its catalogue, column widths and order, filters, sort, and Member+ archived toggle use the same whole-config write as Contracts and Matters. Unknown column keys are still read past, and no table, column, seed, sharing rule, or Administrator default was added.
+
+### Addendum (2026-08-30, M27/9, [#581](https://github.com/juggernog20/OpenLaw/issues/581)): Entities is the fourth saved-view surface
+
+The Entity registry adopts `list_views` under the `entities` surface slug. Its chosen columns, Type, Status, Jurisdiction, Majority owner, and archived filters, and sort are one whole config under clauses 2 and 4. The fourth adopter adds no schema, sharing, or default-view exception; unknown catalogue keys remain a read-past.
 
 ## Index of decisions
 

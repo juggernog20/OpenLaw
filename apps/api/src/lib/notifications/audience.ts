@@ -50,8 +50,11 @@ import {
   asc,
   contracts,
   contractTeam,
+  entities,
+  entityGrants,
   eq,
   inArray,
+  isNotNull,
   isNull,
   matters,
   matterTeam,
@@ -66,6 +69,7 @@ import {
 } from "@openlaw/db";
 import type { AuthenticatedUser } from "../../auth/user.js";
 import { contractMentionCandidates, contractTeamScope } from "../contract-access.js";
+import { entityReachScope } from "../entity-access.js";
 import { matterMentionCandidates, matterTeamScope } from "../matter-access.js";
 import { requestEventTypesOn, type RequestSide } from "./catalog.js";
 
@@ -73,6 +77,7 @@ import { requestEventTypesOn, type RequestSide } from "./catalog.js";
  * the send job agree on it in one place. */
 export const CONTRACT_ENTITY = "contract" as const;
 export const MATTER_ENTITY = "matter" as const;
+export const ENTITY_ENTITY = "entity" as const;
 
 /** The second one, written from M20/8 by NOT-002's group 5 and from
  * M21/4 by group 4. Named here beside the first for the same reason. */
@@ -169,6 +174,38 @@ export async function matterReachedBy(
       .filter((person) => narrowing.tier === undefined || person.tiers.includes(narrowing.tier))
       .map((person) => person.id),
   );
+}
+
+/** The Entity arm of the notification wall (ENT-004), said over people. */
+export async function entityReachedBy(
+  db: Executor,
+  entityId: string,
+  userIds: readonly string[],
+): Promise<Set<string>> {
+  if (userIds.length === 0) return new Set();
+  const rows = await db
+    .select({ id: users.id })
+    .from(users)
+    .innerJoin(entities, eq(entities.id, entityId))
+    .leftJoin(
+      entityGrants,
+      and(eq(entityGrants.entityId, entities.id), eq(entityGrants.userId, users.id)),
+    )
+    .where(
+      and(
+        inArray(users.id, [...userIds]),
+        isNull(users.archivedAt),
+        isNull(entities.archivedAt),
+        or(
+          eq(users.role, "administrator"),
+          and(
+            eq(users.role, "legal_team_member"),
+            or(eq(entities.isConfidential, false), isNotNull(entityGrants.userId)),
+          ),
+        ),
+      ),
+    );
+  return new Set(rows.map((row) => row.id));
 }
 
 /** One record, and the people NOT-002's group 2 is about. */
@@ -544,6 +581,7 @@ export function notificationScope(
 function staffScope(db: Executor, user: AuthenticatedUser): SQL | undefined {
   const scope = contractTeamScope(db, user);
   const matterScope = matterTeamScope(db, user);
+  const entityScope = entityReachScope(db, user);
   return or(
     and(
       eq(notifications.entityType, CONTRACT_ENTITY),
@@ -566,6 +604,16 @@ function staffScope(db: Executor, user: AuthenticatedUser): SQL | undefined {
             notifications.entityId,
             db.select({ id: matters.id }).from(matters).where(matterScope),
           ),
+    ),
+    and(
+      eq(notifications.entityType, ENTITY_ENTITY),
+      inArray(
+        notifications.entityId,
+        db
+          .select({ id: entities.id })
+          .from(entities)
+          .where(and(isNull(entities.archivedAt), entityScope)),
+      ),
     ),
     MEMBER_PLUS.includes(user.role) ? inboxRows(db) : undefined,
   );

@@ -18,7 +18,7 @@ import { ContractsPage, contractsLoader } from "./routes/contracts";
 import { DocumentsPage, documentsLoader, documentsShouldRevalidate } from "./routes/documents";
 import { MattersPage, mattersLoader } from "./routes/matters";
 import { MatterRecordPage, matterRecordLoader } from "./routes/matter-record";
-import { EntitiesPage, entitiesLoader } from "./routes/entities";
+import { EntitiesPage, entitiesLoader, entitiesShouldRevalidate } from "./routes/entities";
 import { EntityRecordPage, entityRecordLoader } from "./routes/entity-record";
 import { RouteErrorPage } from "./routes/error-page";
 import { HomePage, homeLoader } from "./routes/home";
@@ -46,8 +46,10 @@ import {
 } from "./routes/settings-approver-groups";
 import {
   SettingsContractFieldsPage,
+  SettingsEntityFieldsPage,
   SettingsMatterFieldsPage,
   settingsContractFieldsLoader,
+  settingsEntityFieldsLoader,
   settingsMatterFieldsLoader,
 } from "./routes/settings-contract-fields";
 import {
@@ -72,6 +74,14 @@ import {
   settingsEntitiesIndexLoader,
   settingsEntityTypesLoader,
 } from "./routes/settings-entity-types";
+import {
+  SettingsEntityTypeEditorPage,
+  settingsEntityTypeEditorLoader,
+} from "./routes/settings-entity-type-editor";
+import {
+  SettingsOfficerRolesPage,
+  settingsOfficerRolesLoader,
+} from "./routes/settings-officer-roles";
 import {
   SettingsMatterTypeEditorPage,
   settingsMatterTypeEditorLoader,
@@ -237,6 +247,7 @@ export const routes: RouteObject[] = [
     // only (ENT-004) and bounces everyone else home.
     path: "/entities",
     loader: entitiesLoader,
+    shouldRevalidate: entitiesShouldRevalidate,
     element: <EntitiesPage />,
     errorElement: <RouteErrorPage />,
     hydrateFallbackElement: <></>,
@@ -244,7 +255,7 @@ export const routes: RouteObject[] = [
   {
     // #99: one entity's record page — the identity card with DES-017
     // per-field edits, archive, and restore. Member+ only (ENT-004).
-    path: "/entities/:entityId",
+    path: "/entities/:entityId/:tab?",
     loader: entityRecordLoader,
     element: (
       <KeyedByParam name="entityId">
@@ -401,11 +412,28 @@ export const routes: RouteObject[] = [
       },
       { path: "entities", loader: settingsEntitiesIndexLoader, element: <></> },
       {
-        // #97: no per-type editor screen — entity-scoped fields render
-        // on every entity (ENT-001), so nothing attaches per type.
         path: "entities/types",
         loader: settingsEntityTypesLoader,
         element: <SettingsEntityTypesPage />,
+      },
+      {
+        path: "entities/types/:typeId",
+        loader: settingsEntityTypeEditorLoader,
+        element: (
+          <KeyedByParam name="typeId">
+            <SettingsEntityTypeEditorPage />
+          </KeyedByParam>
+        ),
+      },
+      {
+        path: "entities/officer-roles",
+        loader: settingsOfficerRolesLoader,
+        element: <SettingsOfficerRolesPage />,
+      },
+      {
+        path: "entities/fields",
+        loader: settingsEntityFieldsLoader,
+        element: <SettingsEntityFieldsPage />,
       },
       {
         // #322: Organization · Notifications — the NOT-004 reminder

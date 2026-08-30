@@ -13,6 +13,7 @@ import {
   type LoaderFunctionArgs,
 } from "react-router";
 import { api } from "../lib/api";
+import { readRegistry } from "../lib/entities";
 import {
   commitsOnChange,
   isAnswered,
@@ -95,7 +96,7 @@ export async function matterRecordLoader({ params, request }: LoaderFunctionArgs
   ] = await Promise.all([
     api.GET("/api/v1/matters/{number}", { params: { path: { number } } }),
     canEdit ? api.GET("/api/v1/matters/options") : undefined,
-    canEdit ? api.GET("/api/v1/entities").catch(() => ({ data: undefined })) : undefined,
+    canEdit ? readRegistry().catch(() => ({ data: undefined })) : undefined,
     api.GET("/api/v1/matters/{number}/relations", { params: { path: { number } } }),
     api.GET("/api/v1/matters/{number}/contracts", { params: { path: { number } } }),
     api
@@ -417,7 +418,18 @@ export function MatterRecordPage() {
     fields,
     referenceNames: Object.fromEntries([
       ...peopleRefs.map((person) => [person.id, person.label] as const),
-      ...customFieldRefs.entities.map((entity) => [entity.id, entity.legalName] as const),
+      ...customFieldRefs.entities.map(
+        (entity) =>
+          [
+            entity.id,
+            entity.restricted
+              ? intl.formatMessage({
+                  id: "entities.restricted",
+                  defaultMessage: "Restricted Entity",
+                })
+              : entity.legalName,
+          ] as const,
+      ),
     ]),
   });
 
@@ -866,10 +878,18 @@ export function MatterRecordPage() {
                             frozen && !(contributor && !archived && field.fieldTag === "business")
                           }
                           people={peopleRefs}
-                          entities={customFieldRefs.entities.map((entity) => ({
-                            id: entity.id,
-                            label: entity.legalName,
-                          }))}
+                          entities={customFieldRefs.entities.map((entity) =>
+                            entity.restricted
+                              ? {
+                                  id: entity.id,
+                                  label: intl.formatMessage({
+                                    id: "entities.restricted",
+                                    defaultMessage: "Restricted Entity",
+                                  }),
+                                  restricted: true,
+                                }
+                              : { id: entity.id, label: entity.legalName },
+                          )}
                           status={fieldStatus[`field:${field.slug}`] ?? "idle"}
                           error={fieldError[`field:${field.slug}`]}
                           onInvalid={(detail) => note(`field:${field.slug}`, "error", detail)}
@@ -945,10 +965,18 @@ export function MatterRecordPage() {
             target={retypeTo}
             values={saved.customFields}
             people={peopleRefs}
-            entities={customFieldRefs.entities.map((entity) => ({
-              id: entity.id,
-              label: entity.legalName,
-            }))}
+            entities={customFieldRefs.entities.map((entity) =>
+              entity.restricted
+                ? {
+                    id: entity.id,
+                    label: intl.formatMessage({
+                      id: "entities.restricted",
+                      defaultMessage: "Restricted Entity",
+                    }),
+                    restricted: true,
+                  }
+                : { id: entity.id, label: entity.legalName },
+            )}
             onOpenChange={(open) => {
               if (!open) setRetypeTo(null);
             }}

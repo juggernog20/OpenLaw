@@ -214,7 +214,9 @@ const readContract = async (number: number) => {
     fields: AttachedField[];
     customFieldRefs: {
       users: { id: string; displayName: string; archived: boolean }[];
-      entities: { id: string; legalName: string }[];
+      entities: (
+        { restricted: false; id: string; legalName: string } | { restricted: true; id: string }
+      )[];
     };
   };
 };
@@ -405,6 +407,29 @@ describe("the fields a contract's type attaches (CTR-016)", () => {
 });
 
 describe("the nine field types round-trip through their own shape", () => {
+  it("resolves an unreachable Entity-valued field only as Restricted Entity", async () => {
+    const type = await newType("Restricted Entity field type");
+    const field = await defineField({ displayName: "Acquisition vehicle", fieldType: "entity" });
+    await attachField(type.id, field.fieldId);
+    const vehicle = await newEntity("Secret Field Vehicle Ltd");
+    const contract = await newContract("Restricted Entity field", type.id);
+    expect(
+      (await patchContract(contract.number, { customFields: { [field.slug]: vehicle.id } }))
+        .statusCode,
+    ).toBe(200);
+    const sealed = await harness.app.inject({
+      method: "PATCH",
+      url: `/api/v1/entities/${vehicle.id}`,
+      cookies: adminCookies,
+      payload: { isConfidential: true },
+    });
+    expect(sealed.statusCode, sealed.body).toBe(200);
+
+    const read = await readContract(contract.number);
+    expect(JSON.stringify(read.customFieldRefs)).not.toContain("Secret Field Vehicle Ltd");
+    expect(read.customFieldRefs.entities).toEqual([{ restricted: true, id: vehicle.id }]);
+  });
+
   it("stores, reads back, and clears every type", async () => {
     const type = await newType("Every type");
     const entity = await newEntity("Meridian Bio, Inc.");
@@ -456,7 +481,9 @@ describe("the nine field types round-trip through their own shape", () => {
     expect(read.customFieldRefs.users).toEqual([
       { id: memberId, displayName: MEMBER.displayName, image: null, archived: false },
     ]);
-    expect(read.customFieldRefs.entities).toEqual([{ id: entity.id, legalName: entity.legalName }]);
+    expect(read.customFieldRefs.entities).toEqual([
+      { restricted: false, id: entity.id, legalName: entity.legalName },
+    ]);
 
     // Every type clears the same way, and clearing removes the key
     // rather than storing a null.

@@ -27,11 +27,14 @@ import {
   type Db,
   type SQL,
 } from "@openlaw/db";
+import { DOCUMENT_OWNER_KINDS, type DocumentOwner } from "@openlaw/shared";
 import { requireAuth, type AuthenticatedUser } from "../../auth/guards.js";
 import { contractTeamScope } from "../../lib/contract-access.js";
 import { documentRepositoryScope } from "../../lib/document-access.js";
+import { entityReachScope } from "../../lib/entity-access.js";
 import { matterTeamScope } from "../../lib/matter-access.js";
 import { problemResponse } from "../../lib/problem.js";
+import { documentOwnerCase } from "../documents/owner.js";
 
 const SEARCH_KINDS = [
   "contract",
@@ -73,8 +76,9 @@ const SearchRowSchema = z.discriminatedUnion("kind", [
   z.object({
     kind: z.literal("document"),
     ...SearchRowFields,
-    ownerKind: z.enum(["contract", "matter"]),
-    ownerNumber: z.number().int().positive(),
+    ownerKind: z.enum(DOCUMENT_OWNER_KINDS),
+    ownerId: z.string(),
+    ownerNumber: z.number().int().positive().nullable(),
     versionId: z.string(),
     versionNumber: z.number().int().positive(),
     snippet: z.string(),
@@ -89,7 +93,8 @@ interface SearchDbRow extends Record<string, unknown> {
   is_confidential: boolean;
   rank: number;
   kind_order: number;
-  owner_kind: "contract" | "matter" | null;
+  owner_kind: DocumentOwner | null;
+  owner_id: string | null;
   owner_number: number | null;
   version_id: string | null;
   version_number: number | null;
@@ -170,7 +175,7 @@ function searchCtes(db: Db, user: AuthenticatedUser, query: string): SQL {
     contract_hits as (
       select
         kind, id, number, title, is_confidential, kind_order,
-        null::text as owner_kind, null::integer as owner_number,
+        null::text as owner_kind, null::text as owner_id, null::integer as owner_number,
         null::text as version_id, null::integer as version_number,
         null::text as snippet,
         case when exact_number
@@ -203,7 +208,7 @@ function searchCtes(db: Db, user: AuthenticatedUser, query: string): SQL {
     matter_hits as (
       select
         kind, id, number, title, is_confidential, kind_order,
-        null::text as owner_kind, null::integer as owner_number,
+        null::text as owner_kind, null::text as owner_id, null::integer as owner_number,
         null::text as version_id, null::integer as version_number,
         null::text as snippet,
         case when exact_number
@@ -222,9 +227,9 @@ function searchCtes(db: Db, user: AuthenticatedUser, query: string): SQL {
         coalesce(${documentVersionText.emailSubject}, ${documents.title}) as title,
         ${documents.isConfidential} as is_confidential,
         2::integer as kind_order,
-        case when ${documents.contractId} is not null then 'contract'::text else 'matter'::text end
-          as owner_kind,
-        coalesce(${contracts.number}, ${matters.number}) as owner_number,
+        ${documentOwnerCase((owner) => owner.kindSql)} as owner_kind,
+        ${documentOwnerCase((owner) => sql<string>`${owner.recordId}`)} as owner_id,
+        ${documentOwnerCase((owner) => sql<number>`${owner.number}`)} as owner_number,
         ${documentVersions.id} as version_id,
         ${documentVersions.versionNumber} as version_number,
         ${documents.searchVector}
@@ -245,12 +250,13 @@ function searchCtes(db: Db, user: AuthenticatedUser, query: string): SQL {
       left join ${documentVersionText} on ${documentVersionText.versionId} = ${documentVersions.id}
       left join ${contracts} on ${contracts.id} = ${documents.contractId}
       left join ${matters} on ${matters.id} = ${documents.matterId}
+      left join ${entities} on ${entities.id} = ${documents.entityId}
       where ${and(isNull(documents.archivedAt), documentRepositoryScope(db, user))}
     ),
     document_version_hits as (
       select
         kind, id, number, title, is_confidential, kind_order,
-        owner_kind, owner_number, version_id, version_number,
+        owner_kind, owner_id, owner_number, version_id, version_number,
         document_title, document_description, original_filename,
         email_subject, extracted_text, extracted_vector,
         ts_rank_cd(array[0.05, 0.1, 0.5, 1.0]::real[], document, search_query.value) as rank
@@ -261,7 +267,7 @@ function searchCtes(db: Db, user: AuthenticatedUser, query: string): SQL {
     document_winners as (
       select distinct on (id)
         kind, id, number, title, is_confidential, kind_order,
-        owner_kind, owner_number, version_id, version_number,
+        owner_kind, owner_id, owner_number, version_id, version_number,
         document_title, document_description, original_filename,
         email_subject, extracted_text, extracted_vector, rank
       from document_version_hits
@@ -270,7 +276,7 @@ function searchCtes(db: Db, user: AuthenticatedUser, query: string): SQL {
     document_hits as (
       select
         kind, id, number, title, is_confidential, kind_order,
-        owner_kind, owner_number, version_id, version_number,
+        owner_kind, owner_id, owner_number, version_id, version_number,
         ts_headline(
           'english',
           case
@@ -300,18 +306,18 @@ function searchCtes(db: Db, user: AuthenticatedUser, query: string): SQL {
         ${entities.id} as id,
         null::integer as number,
         ${entities.legalName} as title,
-        false as is_confidential,
+        ${entities.isConfidential} as is_confidential,
         3::integer as kind_order,
         ${entities.searchVector}
           || setweight(to_tsvector('english', coalesce(${entityTypes.displayName}, '')), 'C') as document
       from ${entities}
       inner join ${entityTypes} on ${entityTypes.id} = ${entities.entityTypeId}
-      where ${and(isNull(entities.archivedAt), staff)}
+      where ${and(isNull(entities.archivedAt), entityReachScope(db, user))}
     ),
     entity_hits as (
       select
         kind, id, number, title, is_confidential, kind_order,
-        null::text as owner_kind, null::integer as owner_number,
+        null::text as owner_kind, null::text as owner_id, null::integer as owner_number,
         null::text as version_id, null::integer as version_number,
         null::text as snippet,
         ts_rank_cd(array[0.05, 0.1, 0.5, 1.0]::real[], document, search_query.value) as rank
@@ -334,7 +340,7 @@ function searchCtes(db: Db, user: AuthenticatedUser, query: string): SQL {
     counterparty_hits as (
       select
         kind, id, number, title, is_confidential, kind_order,
-        null::text as owner_kind, null::integer as owner_number,
+        null::text as owner_kind, null::text as owner_id, null::integer as owner_number,
         null::text as version_id, null::integer as version_number,
         null::text as snippet,
         ts_rank_cd(array[0.05, 0.1, 0.5, 1.0]::real[], document, search_query.value) as rank
@@ -362,7 +368,7 @@ function searchCtes(db: Db, user: AuthenticatedUser, query: string): SQL {
     request_hits as (
       select
         kind, id, number, title, is_confidential, kind_order,
-        null::text as owner_kind, null::integer as owner_number,
+        null::text as owner_kind, null::text as owner_id, null::integer as owner_number,
         null::text as version_id, null::integer as version_number,
         null::text as snippet,
         case when exact_number
@@ -395,17 +401,30 @@ function toSearchRow(row: SearchDbRow): z.infer<typeof SearchRowSchema> {
   if (row.kind !== "document") return { ...common, kind: row.kind };
   if (
     row.owner_kind === null ||
-    row.owner_number === null ||
+    row.owner_id === null ||
     row.version_id === null ||
     row.version_number === null ||
     row.snippet === null
   ) {
     throw new Error("Document search hit is missing its owning record or matched version");
   }
+  let ownerKind: DocumentOwner;
+  switch (row.owner_kind) {
+    case "contract":
+      ownerKind = "contract";
+      break;
+    case "matter":
+      ownerKind = "matter";
+      break;
+    case "entity":
+      ownerKind = "entity";
+      break;
+  }
   return {
     ...common,
     kind: "document" as const,
-    ownerKind: row.owner_kind,
+    ownerKind,
+    ownerId: row.owner_id,
     ownerNumber: row.owner_number,
     versionId: row.version_id,
     versionNumber: row.version_number,
@@ -423,7 +442,7 @@ async function groupedSearch(db: Db, ctes: SQL): Promise<SearchDbRow[]> {
       from all_hits
     )
     select kind, id, number, title, is_confidential, rank, kind_order,
-      owner_kind, owner_number, version_id, version_number, snippet
+      owner_kind, owner_id, owner_number, version_id, version_number, snippet
     from ranked_hits
     where kind_position <= ${GROUPED_LIMIT}
     order by kind_order, rank desc, id desc
@@ -460,7 +479,7 @@ async function flatSearch(
       limit 1
     )
     select kind, id, number, title, is_confidential, rank, kind_order,
-      owner_kind, owner_number, version_id, version_number, snippet
+      owner_kind, owner_id, owner_number, version_id, version_number, snippet
     from all_hits
     where ${kindScope} and ${cursorScope}
     order by rank desc, id desc

@@ -33,6 +33,10 @@ _None — queue cleared 2026-08-06 (ENT-001 through ENT-007)._
 - **Alternatives considered** — Deep registry now; light card + jsonb (calendar can't key off a blob).
 - **Consequences** — SCHEMA.md entities section resolved; two configurable lists (types, officer roles) join the settings inventory; `fields.module_scope` enum gains `entity` (CTR-016 revision note).
 
+### Built addendum (2026-08-29, M27/3–4, #575, #576)
+
+Migration `0082_great_betty_ross` adds the share-capital columns, `entity` Field scope, `entity_type_fields`, officer roles, and `entity_officers`. Entities Settings mounts the shared taxonomy, type-editor, and Field-catalog machinery. The Entity record reads and writes the three share-capital columns and its type-attached Fields through `PATCH /entities/:id`. Each Field commit uses the shared coercion and required-value checks, including live `user` and `entity` references. Officers have Member+ list, create, inline update, resignation, and delete routes. Each write appends its own `entity_officer.*` Activity entry in the same transaction.
+
 ## ENT-002 — Multi-jurisdiction: registrations table
 
 - **Status** — Accepted
@@ -40,6 +44,10 @@ _None — queue cleared 2026-08-06 (ENT-001 through ENT-007)._
 - **Decision** — `entity_registrations`: one row per jurisdiction of registration/qualification — `jurisdiction`, `registration_number`, `registered_agent`, `status` (`active | lapsed | withdrawn`), timestamps. Formation jurisdiction stays on the entity; registrations cover everywhere it must stay in good standing. Renewal obligations per registration feed the compliance calendar (ENT-006).
 - **Rationale** — Per-state registration numbers, agents, and renewal dates are exactly the data a jurisdiction multi-select can't hold.
 - **Consequences** — Table in SCHEMA.md; the compliance calendar (ENT-006) references registrations.
+
+### Built addendum (2026-08-29, M27/3–4, #575, #576)
+
+Migration `0082_great_betty_ross` adds `entity_registrations`. The Entity Overview lists, creates, edits, and deletes registrations. The API and database both enforce `active | lapsed | withdrawn`. Each write appends its matching `entity_registration.*` Activity entry in the same transaction.
 
 ## ENT-003 — Corporate structure: full ownership graph + org chart in v1
 
@@ -51,6 +59,12 @@ _None — queue cleared 2026-08-06 (ENT-001 through ENT-007)._
 - **Alternatives considered** — parent_id + indented list (recommended); flat list.
 - **Consequences** — Org-chart renderer is a v1 build surface (tech-stack queue: charting approach — likely SVG/D3-class). Majority-spine derivation needed for breadcrumbs/roll-ups. Percent totals per owned entity ≤ 100 validated softly (warn, don't block — data entry precedes completeness).
 
+### Built addendum (2026-08-30, M27/5, #577)
+
+Holdings now read and write from either Entity, with graph-wide transaction locking and a full-path cycle check before each insert. Aggregate ownership above 100 percent returns a warning and still commits. The chart endpoint derives one primary owner per Entity by percent and legal name.
+
+The web chart uses a dependency-free SVG layout. A compact layered forest places leaf nodes in horizontal slots and centers each primary owner over its children. Entities without Holdings occupy a final row. Secondary Holdings use dashed curves. The SVG supports pointer drag, wheel zoom, arrow-key pan, keyboard zoom, and fit-to-window.
+
 ## ENT-004 — Access: global for legal staff; DD-014 confidential flag for the rare case
 
 - **Status** — Accepted
@@ -58,6 +72,16 @@ _None — queue cleared 2026-08-06 (ENT-001 through ENT-007)._
 - **Decision** — All entities visible to Member+; no per-entity grants. `is_confidential` (DD-014) covers sensitive cases (undisclosed acquisition vehicles): visible to Admins + a grant list, rendered as "restricted entity" elsewhere (MTR-015 convention). Contributors and Business Users have no Entities module access.
 - **Rationale** — The registry's value is shared truth; per-entity ACL is bookkeeping a small team won't maintain.
 - **Consequences** — `is_confidential` on entities; confidential-grant mechanism reuses the DD-014 pattern.
+
+### Grant addendum (2026-08-29, M27/1, [#573](https://github.com/juggernog20/OpenLaw/issues/573)) — `entity_grants` is the grant list
+
+ENT-004's grant list is the `entity_grants` relation: one row names one user granted access to one confidential Entity. Administrators remain implicitly entitled and do not need rows in this relation; `entity_grants` carries only the explicit named-user exceptions shown in the Confidential grant list dialog.
+
+### Built addendum (2026-08-30, M27/8, #580) — one Entity predicate reaches every surface
+
+The Entity reach predicate is now armed. Administrators reach every Entity; Legal Team Members reach open Entities and Confidential Entities carrying their `entity_grants` row; Contributors and Business Users reach none. Only Administrators set or clear the flag and maintain grants, and all four acts are audited.
+
+List, record, picker, calendar, search, Documents, roll-up, and notification queries compose that predicate before limits and counts. A known Holding, chart edge, Contract signing field, or Entity-valued custom Field may retain its relationship while naming the unreachable side only as Restricted Entity; every other surface omits the Entity without a row, name, count, notification, cursor gap, or page gap.
 
 ## ENT-005 — Statutory documents: entity-owned documents, no seeded folders
 
@@ -68,6 +92,10 @@ _None — queue cleared 2026-08-06 (ENT-001 through ENT-007)._
 - **Rationale** — (User preference.) Statutory filing taxonomies vary by jurisdiction mix; imposing one risks fighting how the team already files.
 - **Alternatives considered** — Seeded folder template (recommended, declined).
 - **Consequences** — SCHEMA.md: `entity_id` added to `documents` and `document_folders` owner sets. No settings surface for a folder template.
+
+### Built addendum (2026-08-30, M27/7, [#579](https://github.com/juggernog20/OpenLaw/issues/579)) — Entity paper uses the shared record machinery
+
+Entity is the third live `DocumentOwner` arm. Its Documents tab mounts the same Documents card, folder tree, folder-drop importer, version chain, panel, and landing route as Contract and Matter paper. The repository addresses an Entity filter by opaque id but names the owner by legal name; no statutory folders are seeded.
 
 ## ENT-006 — Compliance calendar: recurring obligations, blank-start, human-confirmed roll-forward
 
@@ -84,12 +112,24 @@ _None — queue cleared 2026-08-06 (ENT-001 through ENT-007)._
 - **Alternatives considered** — One-off key dates (annual re-entry); obligations auto-spawning matters (auto-created work violates the notify-only doctrine).
 - **Consequences** — Table in SCHEMA.md; completion events are activity-logged with the cycle date. A filing that needs real work gets a matter created manually and linked by the human doing it.
 
+### Built addendum (2026-08-30, M27/6, [#578](https://github.com/juggernog20/OpenLaw/issues/578)) — Filing advances the held cycle, and only filing advances it
+
+The obligation row is the schedule. Member+ can create, read, edit, and delete it beneath its Entity; the optional Registration, assignee, note, and manually chosen Matter are links on that same row. The Entities destination now opens on the cross-Entity calendar, ordered with overdue open obligations first and then by due date, with Entity, assignee, date-range, and completed-state filters. Its second form is a month grid over the same read.
+
+`Mark filed` takes the filing day, defaulting to the caller's local day. A recurring obligation advances by its `recurrence_months` at least once and keeps advancing until the resulting due day is after the filing day. That catches up a filing made after several missed cycles without inventing several completed rows. A one-off keeps its due day and records `completed_on`. Both write `entity_obligation.filed` with the cycle date and previous due day; recurring rows also carry the new due day. Reading the calendar, opening a new month, and running the morning round never mutate the schedule.
+
+A deleted Registration is not a deleted obligation: its foreign key is set to null and the obligation remains on the calendar. Registration rows on Overview expose the obligations that currently point at them.
+
 ## ENT-007 — Roll-ups: linked-records tabs with query-derived counts
 
 - **Status** — Accepted
 - **Date** — 2026-08-06
 - **Decision** — The entity page shows Contracts and Matters tabs listing referencing records (`contracts.entity_id` per CTR-011; matters via `entity`-scoped fields), counts in tab labels — pure queries, no stored counters. Restricted records render per the MTR-015 convention. Per-entity analytics belong to the dashboards capability (DD-005) later.
 - **Consequences** — None schema-side.
+
+### Built addendum (2026-08-30, M27/7, [#579](https://github.com/juggernog20/OpenLaw/issues/579)) — roll-ups are reach-scoped at the target
+
+Contracts are derived from `contracts.entity_id`; Matters are derived when any Entity-typed Field's slug in the Matter's `custom_fields` holds the Entity id. The read does not check that the Field is still attached to the Matter's type, so a detached Field's stored value keeps the link until the value is cleared. Both the rows and tab-label counts compose the target record's own reach predicate, so a walled target contributes neither a placeholder nor a count. The list component can render the shared restricted cell for seams whose doctrine retains a known link, but these query-derived roll-ups silently omit inaccessible targets.
 
 ## ENT-008 — The registry surface owns a Member+ entity-type read
 
@@ -101,6 +141,10 @@ _None — queue cleared 2026-08-06 (ENT-001 through ENT-007)._
 - **Alternatives considered** — Loosening `GET /entity-types` to Member+ (breaks SET-002's uniform gate and leaks settings metadata — archived rows, system flags, usage counts); embedding the types in the registry list response (couples two reads that change independently).
 - **Consequences** — Later Member+ forms over admin-configured taxonomies (the matter and contract type pickers on their record forms) repeat this pattern on their own surfaces.
 
+### Built addendum (2026-08-14, M7.2, [#98](https://github.com/juggernog20/OpenLaw/issues/98))
+
+`GET /api/v1/entities/types` answers Member+ with the live Entity types in display order and no settings metadata. The register form reads that route; the Administrator-only `/entity-types` taxonomy surface remains unchanged.
+
 ## ENT-009 — The type archive guard counts and moves every referencing entity, archived included
 
 - **Status** — Accepted
@@ -110,6 +154,10 @@ _None — queue cleared 2026-08-06 (ENT-001 through ENT-007)._
 - **Rationale** — One counting rule everywhere: if only live entities counted, a type referenced solely by archived entities would pass the guard and then hit the FK on delete. And restore must never resurrect a reference to an archived type — archiving an entity is recoverable (a mistake, not history), so its type reference is as real as a live one. The dedicated activity verb lets the M9 feed narrate _why_ the type changed (an Administrator archived the old type) instead of a generic edit.
 - **Alternatives considered** — Counting live entities only and leaving archived ones on the old type (splits the counted set from the FK set; restore brings back an archived-type reference); folding the move into `entity.updated` (loses the causal narration).
 - **Consequences** — The dialog's "used by N entities" can exceed the visible registry list when archived entities reference the type — correct, and self-explaining once the archived toggle is on. Contract and Matter types inherited the same semantics when M8 and M22 armed their counters.
+
+### Built addendum (2026-08-15, M7.4, [#100](https://github.com/juggernog20/OpenLaw/issues/100))
+
+The Entity-type taxonomy mount counts every referencing Entity, including archived records. Archive requires a live replacement when that count is non-zero and reassigns the complete set in the same transaction, appending one `entity.type_reassigned` entry per moved Entity and one `entity_type.archived` audit entry with the count and replacement. Hard delete refuses an in-use type with that same count.
 
 ## Index of decisions
 

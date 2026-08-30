@@ -6,6 +6,7 @@
  * wrapped per DES-013.
  */
 import type { ComponentType, PointerEvent, ReactNode } from "react";
+import type { DocumentOwner } from "@openlaw/shared";
 import {
   ArrowUpRight,
   BriefcaseBusiness,
@@ -81,9 +82,36 @@ function reference(intl: IntlShape, result: SearchResult): string {
 }
 
 function ownerReference(intl: IntlShape, result: Extract<SearchResult, { kind: "document" }>) {
-  return result.ownerKind === "contract"
-    ? contractReference(intl, result.ownerNumber)
-    : matterReference(intl, result.ownerNumber);
+  switch (result.ownerKind) {
+    case "contract":
+      return contractReference(intl, result.ownerNumber!);
+    case "matter":
+      return matterReference(intl, result.ownerNumber!);
+    case "entity":
+      return searchKindLabel(intl, "entity");
+  }
+}
+
+function ownerRoute(owner: DocumentOwner): string {
+  switch (owner) {
+    case "contract":
+      return "contracts";
+    case "matter":
+      return "matters";
+    case "entity":
+      return "entities";
+  }
+}
+
+function OwnerIcon({ owner }: Readonly<{ owner: DocumentOwner }>) {
+  switch (owner) {
+    case "contract":
+      return <FileSignature size={16} aria-hidden="true" />;
+    case "matter":
+      return <BriefcaseBusiness size={16} aria-hidden="true" />;
+    case "entity":
+      return <Landmark size={16} aria-hidden="true" />;
+  }
 }
 
 /** The route behind a result. Counterparties have no record page in v1,
@@ -107,13 +135,14 @@ export function searchResultPath(result: SearchResult, query: string): string {
     case "counterparty":
       return searchPagePath(result.title, "contract");
     case "document": {
-      const owner = result.ownerKind === "contract" ? "contracts" : "matters";
       const params = new URLSearchParams({
         doc: result.id,
         version: result.versionId,
         find: query,
       });
-      return `/${owner}/${String(result.ownerNumber)}/documents?${params.toString()}`;
+      return result.ownerKind === "entity"
+        ? `/entities/${encodeURIComponent(result.ownerId)}/documents?${params.toString()}`
+        : `/${ownerRoute(result.ownerKind)}/${String(result.ownerNumber)}/documents?${params.toString()}`;
     }
   }
 }
@@ -176,11 +205,7 @@ function RowBody({ result }: Readonly<{ result: SearchResult }>) {
           <>
             <span className="flex items-center gap-1.5 text-xs text-muted">
               <span>{intl.formatMessage(MESSAGES.ownedBy)}</span>
-              {result.ownerKind === "contract" ? (
-                <FileSignature size={16} aria-hidden="true" />
-              ) : (
-                <BriefcaseBusiness size={16} aria-hidden="true" />
-              )}
+              <OwnerIcon owner={result.ownerKind} />
               <span className="font-medium text-link">{ownerReference(intl, result)}</span>
             </span>
             <span className="truncate text-xs text-muted">

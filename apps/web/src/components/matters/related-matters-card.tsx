@@ -13,6 +13,7 @@ import {
 } from "../../lib/matter-relations";
 import { matterReference } from "../../lib/matters";
 import { Button } from "../ui/button";
+import { RestrictedRecordCell } from "../restricted-record-cell";
 import { MatterRelationDialog } from "./relation-dialog";
 
 function RelativeRow({
@@ -22,9 +23,11 @@ function RelativeRow({
   const intl = useIntl();
   if (relative.restricted) {
     return (
-      <li className="py-1 text-sm text-muted">
-        <FormattedMessage id="matters.relations.restricted" defaultMessage="Restricted Matter" />
-      </li>
+      <RestrictedRecordCell
+        as="li"
+        className="py-1"
+        label={{ id: "matters.relations.restricted", defaultMessage: "Restricted Matter" }}
+      />
     );
   }
   return (

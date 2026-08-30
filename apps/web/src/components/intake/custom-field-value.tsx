@@ -67,7 +67,8 @@ export function isArchivedCustomFieldReference(
     return refs.users.find((person) => person.id === value)?.archived === true;
   }
   if (field.fieldType === "entity") {
-    return refs.entities.find((row) => row.id === value)?.archived === true;
+    const entity = refs.entities.find((row) => row.id === value);
+    return entity?.restricted === false && entity.archived;
   }
   return false;
 }
@@ -91,8 +92,12 @@ export function customFieldValueText(
       return Array.isArray(value) ? intl.formatList(value, { type: "conjunction" }) : String(value);
     case "user":
       return refs.users.find((person) => person.id === value)?.displayName ?? String(value);
-    case "entity":
-      return refs.entities.find((row) => row.id === value)?.legalName ?? String(value);
+    case "entity": {
+      const entity = refs.entities.find((row) => row.id === value);
+      return entity?.restricted
+        ? intl.formatMessage({ id: "entities.restricted", defaultMessage: "Restricted Entity" })
+        : (entity?.legalName ?? String(value));
+    }
     default:
       return String(value);
   }

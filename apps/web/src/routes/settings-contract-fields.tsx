@@ -1,18 +1,19 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 /**
- * Contracts · Fields (#83): the shared CTR-016 field catalog scoped to
- * one module's fields plus global ones, per the ST11 frame of
- * settings.pen. It is the ListEditor in its DES-021 table variant: a
- * column header, no reorder (the catalog is unordered; per-type
- * attachment orders rendering), the scope pill, the type and tag
- * columns, and the sparkle marking Fields with an AI extraction prompt
- * (CTR-008). Creation has seven dimensions (two of them immutable), so
- * add and edit go through the field-editor dialog rather than an inline
- * row; the name still renames in place (DES-017). Archive is guarded
- * but never blocked and never reassigns. Stored values are retained by
- * rule (MTR-014), which the guard says out loud. The loader is the
- * client half of SET-002's gate; the API's 403 is the real refusal.
+ * Contracts · Fields (#83), the shared CTR-016 field catalog. It serves
+ * contract, matter, Entity, and global fields, one module scope per
+ * page, per the ST11 frame of settings.pen: the
+ * ListEditor in its DES-021 table variant — column header, no reorder
+ * (the catalog is unordered; per-type attachment orders rendering), the
+ * scope pill, the type and tag columns, and the sparkle marking fields
+ * with an AI extraction prompt (CTR-008). Creation has seven dimensions
+ * (two of them immutable), so add and edit go through the field-editor
+ * dialog rather than an inline row; the name still renames in place
+ * (DES-017). Archive is guarded but never blocked and never reassigns —
+ * stored values are retained by rule (MTR-014), which the guard says
+ * out loud. The loader is the client half of SET-002's gate; the API's
+ * 403 is the real refusal.
  */
 
 import { useRef, useState, type ReactNode } from "react";
@@ -24,6 +25,7 @@ import { api } from "../lib/api";
 import { problem as readProblem } from "../lib/problem";
 import { requireUser } from "../lib/session";
 import { ContractsSettingsTabs } from "../components/contracts-settings-tabs";
+import { EntitiesSettingsTabs } from "../components/entities-settings-tabs";
 import { MattersSettingsTabs } from "../components/matters-settings-tabs";
 import { ListEditor } from "../components/list-editor";
 import { PageTitle } from "../components/page-title";
@@ -53,6 +55,10 @@ export function settingsMatterFieldsLoader() {
   return settingsFieldsLoader("matter");
 }
 
+export function settingsEntityFieldsLoader() {
+  return settingsFieldsLoader("entity");
+}
+
 /** The nine CTR-016 field types, immutable after creation. */
 const FIELD_TYPES = [
   "text",
@@ -67,12 +73,11 @@ const FIELD_TYPES = [
 ] as const;
 type FieldType = (typeof FIELD_TYPES)[number];
 
-/** The select types, the only ones that carry an options list. */
+/** The select types — the only ones that carry an options list. */
 const SELECT_TYPES = new Set<FieldType>(["single_select", "multi_select"]);
 
-/** The scopes this pane's picker offers (CTR-016). Entity joins with
- * its milestone. */
-type ModuleScope = "contract" | "matter";
+/** Each settings mount offers its module scope plus global fields. */
+type ModuleScope = "contract" | "matter" | "entity";
 type Scope = ModuleScope | "global";
 
 const TAGS = ["business", "legal"] as const;
@@ -111,7 +116,7 @@ function scopeLabel(intl: IntlShape, scope: Scope): string {
     {
       id: "settings.contractFields.scopeLabel",
       defaultMessage:
-        "{scope, select, contract {Contract} matter {Matter} global {Global} other {Unknown}}",
+        "{scope, select, contract {Contract} matter {Matter} entity {Entity} global {Global} other {Unknown}}",
     },
     { scope },
   );
@@ -556,7 +561,7 @@ function ArchiveFieldDialog({
   module: ModuleScope;
   onOpenChange: (open: boolean) => void;
   onArchived: (row: FieldRow) => void;
-  /** Where focus lands after a successful archive. The row's archive
+  /** Where focus lands after a successful archive — the row's archive
    * button unmounts with the row, so the default restore has no home. */
   onArchivedCloseFocus: () => void;
 }>) {
@@ -623,8 +628,8 @@ function ArchiveFieldDialog({
             <TriangleAlert size={16} aria-hidden="true" className="mt-0.5 shrink-0" />
             {/* Fields never reassign and never block: everything is
                 retained by rule (MTR-014), which is the whole message.
-                M8 and M22 added record values to this same count, but
-                the copy still reads it as type attachments. */}
+                M8 and M22 added record values to this same count; the
+                copy deliberately calls every source "uses". */}
             <p>
               <FormattedMessage
                 id="settings.contractFields.archiveWarning"
@@ -683,8 +688,8 @@ function SettingsFieldsPage({
   const [archiveTarget, setArchiveTarget] = useState<FieldRow | null>(null);
   const listRef = useRef<HTMLUListElement>(null);
 
-  // The catalog is unordered (no display order; attachment order rules
-  // rendering once types attach fields). The list keeps creation order.
+  // The catalog is unordered (no display order — attachment order rules
+  // rendering once types attach fields); the list keeps creation order.
   const live = rows.filter((row) => !row.archivedAt);
   const archived = rows.filter((row) => row.archivedAt);
 
@@ -813,7 +818,7 @@ function SettingsFieldsPage({
           headerCaption={
             <FormattedMessage
               id="settings.contractFields.scopeCaption"
-              defaultMessage="{module, select, contract {Contract} matter {Matter} other {Module}} and global fields"
+              defaultMessage="{module, select, contract {Contract} matter {Matter} entity {Entity} other {Module}} and global fields"
               values={{ module }}
             />
           }
@@ -952,5 +957,12 @@ export function SettingsMatterFieldsPage() {
   const { fields } = useLoaderData<typeof settingsMatterFieldsLoader>();
   return (
     <SettingsFieldsPage initialFields={fields} module="matter" tabs={<MattersSettingsTabs />} />
+  );
+}
+
+export function SettingsEntityFieldsPage() {
+  const { fields } = useLoaderData<typeof settingsEntityFieldsLoader>();
+  return (
+    <SettingsFieldsPage initialFields={fields} module="entity" tabs={<EntitiesSettingsTabs />} />
   );
 }

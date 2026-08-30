@@ -284,7 +284,14 @@ describe("the prefill (INT-002, MTR-012)", () => {
         () => undefined,
         {
           users: [{ id: "u7", displayName: "Tom Iwu", archived: false }],
-          entities: [{ id: "e1", legalName: "Northwind GmbH", archived: false }],
+          entities: [
+            {
+              restricted: false,
+              id: "e1",
+              legalName: "Northwind GmbH",
+              archived: false,
+            },
+          ],
         },
       ),
     );
@@ -304,7 +311,14 @@ describe("the prefill (INT-002, MTR-012)", () => {
       () => undefined,
       {
         users: [{ id: "u7", displayName: "Tom Iwu", archived: true }],
-        entities: [{ id: "e1", legalName: "Wound Down GmbH", archived: true }],
+        entities: [
+          {
+            restricted: false,
+            id: "e1",
+            legalName: "Wound Down GmbH",
+            archived: true,
+          },
+        ],
       },
     );
     open(api);

@@ -55,9 +55,11 @@ import {
   users,
   type CustomFieldValue,
   type Executor,
+  type SQL,
 } from "@openlaw/db";
 import type { AuthenticatedUser } from "../../auth/guards.js";
 import { contractTeamScope } from "../../lib/contract-access.js";
+import { entityReachScope } from "../../lib/entity-access.js";
 import { matterTeamScope } from "../../lib/matter-access.js";
 import { CustomFieldsSchema } from "../../lib/custom-fields.js";
 import { httpError } from "../../lib/problem.js";
@@ -200,7 +202,17 @@ export const RequestCustomFieldRefsSchema = z.object({
  * behind a Request is Legal's repair to make, not the Requester's. */
 export const StaffRequestCustomFieldRefsSchema = z.object({
   users: z.array(z.object({ id: z.string(), displayName: z.string(), archived: z.boolean() })),
-  entities: z.array(z.object({ id: z.string(), legalName: z.string(), archived: z.boolean() })),
+  entities: z.array(
+    z.discriminatedUnion("restricted", [
+      z.object({
+        restricted: z.literal(false),
+        id: z.string(),
+        legalName: z.string(),
+        archived: z.boolean(),
+      }),
+      z.object({ restricted: z.literal(true), id: z.string() }),
+    ]),
+  ),
 });
 
 /**
@@ -300,6 +312,7 @@ async function selectResolvedRefs(
   db: Executor,
   attached: readonly AttachedCustomField[],
   values: Readonly<Record<string, CustomFieldValue>>,
+  entityScope?: SQL,
 ) {
   const idsOfType = (fieldType: "user" | "entity") => [
     ...new Set(
@@ -327,7 +340,7 @@ async function selectResolvedRefs(
             archivedAt: entities.archivedAt,
           })
           .from(entities)
-          .where(inArray(entities.id, entityIds)),
+          .where(and(inArray(entities.id, entityIds), entityScope)),
   ]);
   return { users: people, entities: named };
 }
@@ -353,19 +366,35 @@ export async function resolveStaffRefs(
   db: Executor,
   attached: readonly AttachedCustomField[],
   values: Readonly<Record<string, CustomFieldValue>>,
+  user: AuthenticatedUser,
 ) {
-  const refs = await selectResolvedRefs(db, attached, values);
+  const entityIds = [
+    ...new Set(
+      attached
+        .filter((field) => field.fieldType === "entity")
+        .map((field) => values[field.slug])
+        .filter((value): value is string => typeof value === "string" && value !== ""),
+    ),
+  ];
+  const refs = await selectResolvedRefs(db, attached, values, entityReachScope(db, user));
+  const named = new Map(refs.entities.map((entity) => [entity.id, entity]));
   return {
     users: refs.users.map(({ id, displayName, archivedAt }) => ({
       id,
       displayName,
       archived: archivedAt !== null,
     })),
-    entities: refs.entities.map(({ id, legalName, archivedAt }) => ({
-      id,
-      legalName,
-      archived: archivedAt !== null,
-    })),
+    entities: entityIds.map((id) => {
+      const entity = named.get(id);
+      return entity
+        ? {
+            restricted: false as const,
+            id,
+            legalName: entity.legalName,
+            archived: entity.archivedAt !== null,
+          }
+        : { restricted: true as const, id };
+    }),
   };
 }
 

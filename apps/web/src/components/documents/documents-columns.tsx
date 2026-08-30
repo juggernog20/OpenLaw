@@ -8,6 +8,7 @@ import { formatFileSize, formatRelativeOrShort } from "../../lib/format";
 import {
   documentKindLabel,
   documentLandingPath,
+  documentOwnerReference,
   DOCUMENT_KIND_PILL,
   type RepositoryDocument,
 } from "../../lib/documents";
@@ -61,7 +62,7 @@ const COLUMNS: ColumnDef<RepositoryDocument>[] = [
         id="documents.list.owner"
         defaultMessage="{reference} · {title}"
         values={{
-          reference: `${row.owner.kind === "contract" ? "C" : "M"}-${row.owner.number}`,
+          reference: documentOwnerReference(row.owner),
           title: row.owner.title,
         }}
       />

@@ -100,9 +100,8 @@ export interface TaxonomyPaneMessages {
 /**
  * The per-row editor affordance: the screen URL and its "Edit {name}"
  * label travel together, so a mount either has a working edit action or
- * none — never a labelled button with nowhere to go. Modules without an
- * editor screen (entity types — no per-type field attachments per
- * ENT-001) omit the pair.
+ * none — never a labelled button with nowhere to go. A module with no
+ * per-row editor omits the pair.
  */
 export interface TaxonomyPaneEditor<Row extends TaxonomyPaneRow = TaxonomyPaneRow> {
   path: (row: Row) => string;

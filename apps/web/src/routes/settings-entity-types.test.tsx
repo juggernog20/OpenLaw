@@ -5,9 +5,8 @@
  * on the entity mount — the five ENT-001 seeds at their own URL with
  * the Entities vocabulary, in-place rename against the entity routes,
  * the inline add row, the locked `other` row, and the archive-guard
- * modal. Entity types have no per-row editor screen (entity-scoped
- * fields render on every entity per ENT-001), so the pane draws no edit
- * action. The machinery itself is covered by the Contracts reference
+ * modal and the per-row link into the shared Fields attachment editor.
+ * The machinery itself is covered by the Contracts reference
  * suite and at the HTTP seam in apps/api — these tests pin the wiring:
  * the entity URL, the entity endpoints, and the entity copy.
  */
@@ -154,11 +153,13 @@ describe("the seeded list (ENT-001)", () => {
     ).toBeInTheDocument();
   });
 
-  it("draws no per-row editor action — entity types have no editor screen", async () => {
+  it("opens the shared per-type Fields editor", async () => {
     stubApi({ signedIn: ADMIN, extra: typesApi(newCalls()) });
-    renderAt("/settings/entities/types");
+    const { router } = renderAt("/settings/entities/types");
     await screen.findByText("Corporation");
-    expect(screen.queryByRole("button", { name: /^Edit/ })).not.toBeInTheDocument();
+    const user = userEvent.setup();
+    await user.click(screen.getByRole("button", { name: "Edit Corporation" }));
+    await waitFor(() => expect(router.state.location.pathname).toBe("/settings/entities/types/t1"));
   });
 });
 

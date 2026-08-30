@@ -8,6 +8,7 @@ import { FormattedMessage, useIntl } from "react-intl";
 import { matterReference, MATTER_STATUS_PILL } from "../../lib/matters";
 import { unlinkContractMatter, type LinkedMatter } from "../../lib/contract-matters";
 import { Button } from "../ui/button";
+import { RestrictedRecordCell } from "../restricted-record-cell";
 import { ContractMatterLinkDialog } from "./contract-matter-link-dialog";
 
 export function LinkedMatterCard({
@@ -64,12 +65,12 @@ export function LinkedMatterCard({
             />
           </p>
         ) : matter.restricted ? (
-          <p className="text-sm text-muted">
-            <FormattedMessage
-              id="contractMatter.restrictedMatter"
-              defaultMessage="Restricted matter"
-            />
-          </p>
+          <RestrictedRecordCell
+            label={{
+              id: "contractMatter.restrictedMatter",
+              defaultMessage: "Restricted matter",
+            }}
+          />
         ) : (
           <div className="flex min-w-0 flex-col gap-3 @sm/record:flex-row @sm/record:items-center">
             <Link

@@ -7,13 +7,14 @@
  * `matter_types` are the same machinery per CTR-002/MTR-001). Five rows
  * are seeded by the migration that creates the table; the `other` row
  * is system-protected in application code — no archive, no hard delete —
- * so a non-null fallback type always exists. Unlike the other type
- * tables there is no per-type field-attachment join: entity-scoped
- * fields render on every entity (ENT-001, M27). The nullable columns
- * keep the shared `taxonomyColumns` semantics: `description` NULL = no
- * description (the routes normalize an empty string to NULL; with no
- * per-type editor screen it is API-writable only for now), and
- * `archived_at` NULL = live, a timestamp = archived (SET-003).
+ * so a non-null fallback type always exists. Like the other type
+ * tables, Entity types carry Fields through a join table,
+ * `entity_type_fields`, the third record-type mount of the shared
+ * attachment machinery (TECH-023, M27). The nullable columns keep the
+ * shared `taxonomyColumns` semantics: `description` NULL = no
+ * description (the routes normalize an empty string to NULL; the M27
+ * per-type editor writes it), and `archived_at` NULL = live, a
+ * timestamp = archived (SET-003).
  */
 
 import { pgTable, uniqueIndex } from "drizzle-orm/pg-core";

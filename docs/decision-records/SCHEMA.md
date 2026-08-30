@@ -213,7 +213,9 @@ No `archived_at`: rows are deleted on disable, not archived.
 
 Source: **DD-008**, **ENT-001–004**
 
-Internal corporate entities — your subsidiaries, holdings, and related corporate persons. Visible to all Member+ (no per-entity grants); `is_confidential` covers the rare sensitive case (ENT-004).
+Internal corporate entities — your subsidiaries, holdings, and related corporate persons. Visible to Member+ by default; `is_confidential` switches the rare sensitive Entity to explicit readers in `entity_grants` (ENT-004).
+
+The M27 schema landed together in migration `0082_great_betty_ross`. It adds only nullable or defaulted columns (`custom_fields` defaults to `{}`, `is_confidential` to `false`), so populated pre-M27 Entity rows retain their values unchanged.
 
 | Column                                    | Type        | Notes                                                                                                                                  |
 | ----------------------------------------- | ----------- | -------------------------------------------------------------------------------------------------------------------------------------- |
@@ -229,18 +231,21 @@ Internal corporate entities — your subsidiaries, holdings, and related corpora
 | `status`                                  | text (enum) | `active` \| `dormant` \| `dissolved` \| `divested` — fixed per **ENT-001**                                                             |
 | `shares_authorized`, `shares_issued`      | bigint      | nullable; simple share capital per **ENT-001**                                                                                         |
 | `par_value`                               | bigint      | nullable, integer cents                                                                                                                |
-| `custom_fields`                           | jsonb       | keyed by slug; `entity`-scoped catalog fields per **ENT-001**/CTR-016                                                                  |
-| `is_confidential`                         | boolean     | per **DD-014**/ENT-004                                                                                                                 |
+| `custom_fields`                           | jsonb       | not null, default `{}`, keyed by slug; object shape enforced by CHECK; values retained on detach per **ENT-001**/CTR-016               |
+| `is_confidential`                         | boolean     | not null, default `false`, per **DD-014**/ENT-004                                                                                      |
 | `created_at`, `updated_at`, `archived_at` | timestamptz |                                                                                                                                        |
 | `search_vector`                           | tsvector    | stored generated English FTS: `legal_name` weight A; jurisdiction, registration number, and fixed status weight C (**DOC-009**, M25/2) |
 
 Support tables per **ENT-001/002/003/006**:
 
-- `entity_types` — MTR-001 machinery (slug, display_name, display_order, is_system_default, archived_at); `other` protected. Officer roles likewise: `officer_roles` (seeds: director, ceo, cfo, secretary, other).
+- `entity_types` — MTR-001 machinery (slug, display_name, display_order, is_system_default, archived_at); `other` protected.
+- `officer_roles` — the shared taxonomy column set; seeds director, ceo, cfo, secretary, other in display order. `other` is protected. Its SET-003 usage guard counts and reassigns every referencing `entity_officers` row, including resigned officers.
 - `entity_officers` — `entity_id`, `name` text, `officer_role_id` FK, `appointed_on`, `resigned_on` (null = current), `user_id` nullable FK, timestamps.
 - `entity_registrations` — `entity_id`, `jurisdiction`, `registration_number`, `registered_agent`, `status` (`active|lapsed|withdrawn`), timestamps.
-- `entity_holdings` — (`owner_entity_id`, `owned_entity_id`, `ownership_percent`, timestamps), compound PK on the pair; no cycles (application-enforced); soft ≤100% validation per owned entity. Backs the v1 org chart (ENT-003).
-- `entity_obligations` — `entity_id`, `label` text (no kind taxonomy), `registration_id` nullable FK, `recurrence_months` integer (null = one-off), `next_due_on` date, `assignee_id` nullable FK, `note`, timestamps. Blank-start; "Mark filed" logs the cycle and rolls `next_due_on` forward, human-confirmed (ENT-006). Feeds NOT-002 group 3.
+- `entity_holdings` — (`owner_entity_id`, `owned_entity_id`, `ownership_percent`, timestamps), compound PK on the pair; row CHECKs prohibit self-ownership and hold percentage to 0–100. Longer cycles remain application-enforced; soft ≤100% aggregate validation per owned Entity backs the v1 org chart (ENT-003).
+- `entity_obligations` — `entity_id`, `label` text (no kind taxonomy), `registration_id` nullable FK with `ON DELETE SET NULL`, `recurrence_months` integer (null = one-off), `next_due_on` date, `assignee_id` nullable FK, `note`, `matter_id` nullable FK, `completed_on`, timestamps. Blank-start; "Mark filed" logs the cycle and rolls recurring `next_due_on` forward until it is after the filing day, while a one-off records `completed_on`; nothing advances without that explicit write (ENT-006 and its M27/6 addendum). Feeds NOT-002 group 3 as `date.obligation_approaching`.
+- `entity_type_fields` — compound PK (`entity_type_id`, `field_id`) plus `display_order`, `is_required`, and `created_at`; attaches `entity`/`global` catalog Fields through the shared type-field machinery.
+- `entity_grants` — compound PK (`entity_id`, `user_id`) plus `created_at`; the explicit-reader set for confidential Entities (ENT-004).
 
 ---
 
@@ -989,7 +994,7 @@ _Landed in M18/1 (#316). The columns below are what the migration holds; the two
 | `id`                   | text        | uuidv7                                                                                                                                                                                                                                                                                                                                                                          |
 | `user_id`              | text        | FK → `users.id`, not null. No cascade: a person is archived, never deleted (SET-005)                                                                                                                                                                                                                                                                                            |
 | `event_type`           | text        | The NOT-002 catalog slug. **No CHECK**, for `activity_log.action`'s reason: a row outlives the build that wrote it, and the closed union lives in TypeScript                                                                                                                                                                                                                    |
-| `entity_type`          | text (enum) | `matter` \| `contract` \| `document` \| `request`. Polymorphic with `entity_id`, so no FK — the documented exception, as `comments` has it. `contract` is written from M18 and `request` from M20/8 (NOT-002 group 5) and, on the staff side, from M21/4's group 4 arrival and M21/5's mention arm; the other two arrive with their modules                                     |
+| `entity_type`          | text (enum) | `matter` \| `contract` \| `document` \| `request` \| `entity`. Polymorphic with `entity_id`, so no FK — the documented exception, as `comments` has it. `entity` joins the CHECK with M27.                                                                                                                                                                                      |
 | `entity_id`            | text        | not null                                                                                                                                                                                                                                                                                                                                                                        |
 | `payload`              | jsonb       | Rendering data, snapshotted at write time (the record's title is what the item says; the deep link shows current truth)                                                                                                                                                                                                                                                         |
 | `read_at`              | timestamptz | nullable. NOT-005: opening the center marks the visible items read                                                                                                                                                                                                                                                                                                              |
@@ -1122,7 +1127,7 @@ Source-of-truth for both the per-entity activity feed and the system-wide audit 
 | Column        | Type        | Notes                                                                                                                   |
 | ------------- | ----------- | ----------------------------------------------------------------------------------------------------------------------- |
 | `id`          | UUID        | PK                                                                                                                      |
-| `entity_type` | text (enum) | `matter` \| `contract` \| `document` \| `request` \| `user` \| `system`                                                 |
+| `entity_type` | text (enum) | `matter` \| `contract` \| `document` \| `request` \| `entity` \| `user` \| `system`                                     |
 | `entity_id`   | UUID        | nullable — `system`-typed entries (login, role change, intake-config change) have no entity                             |
 | `actor_id`    | UUID        | nullable — system-emitted events (cron jobs, external webhooks) have no human actor                                     |
 | `action`      | text        | slug, e.g., `matter.created`, `confidentiality.set`, `user.role_changed`, `document.downloaded`, `matter_type.archived` |
@@ -1150,7 +1155,7 @@ One person's saved way of reading one list. **Private to that person** — there
 | -------------------------- | ----------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `id`                       | text        | PK, uuidv7                                                                                                                                                                                                              |
 | `user_id`                  | text        | FK → `users.id` **ON DELETE CASCADE**. A view is a preference, not a record: a deleted user's saved columns are nobody's                                                                                                |
-| `surface`                  | text        | Which list this view is for — `contracts` today. **No CHECK against an enum**: a new destination adopting DES-046's table must not need a migration to be allowed to save a view                                        |
+| `surface`                  | text        | Which list this view is for — `contracts`, `matters`, `documents`, or `entities` today. **No CHECK against an enum**: a new destination adopting DES-046's table must not need a migration to be allowed to save a view |
 | `name`                     | text        | What the reader called it; shown in the views menu. CHECK: non-empty, trimmed, at most 60 characters                                                                                                                    |
 | `config`                   | jsonb       | The whole list state — columns shown, their order, their widths, the filters in force, the sort (DD-019 clause 2). Read and written whole; **no query reaches into it**. The API's schema is the authority on the shape |
 | `is_default`               | boolean     | not null, default false. The one view this person's list opens on. All-false means the list opens on the built-in layout, which is code rather than a seeded row (DD-019 clause 7)                                      |

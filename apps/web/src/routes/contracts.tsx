@@ -46,6 +46,7 @@ import { FormattedMessage, useIntl } from "react-intl";
 import { FilePen, Plus } from "lucide-react";
 import type { SortDirection } from "@openlaw/shared";
 import { api } from "../lib/api";
+import { readRegistry } from "../lib/entities";
 import {
   contractReference,
   type ContractRow,
@@ -133,7 +134,7 @@ export async function contractsLoader() {
     // one of our Entities. The people ride the options read; the Entities
     // are the M7 registry's own Member+ list.
     canEdit ? api.GET("/api/v1/contracts/options") : undefined,
-    canEdit ? api.GET("/api/v1/entities") : undefined,
+    canEdit ? readRegistry() : undefined,
   ]);
   if (!list.data || (canEdit && !(options?.data && registry?.data))) {
     throw new Error("The contract list could not be read.");

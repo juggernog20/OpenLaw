@@ -9,6 +9,9 @@ import {
   contractTypes,
   documents,
   documentVersions,
+  entities,
+  entityGrants,
+  entityTypes,
   eq,
   matters,
   matterStatuses,
@@ -59,6 +62,7 @@ let publicContractId = "";
 let confidentialContractDocumentId = "";
 let confidentialMatterDocumentId = "";
 let confidentialDocumentId = "";
+let confidentialEntityId = "";
 
 beforeAll(async () => {
   harness = await startHarness();
@@ -90,6 +94,21 @@ beforeAll(async () => {
   const matterStatusId = (
     await harness.db.select({ id: matterStatuses.id }).from(matterStatuses)
   )[0]!.id;
+  const entityTypeId = (await harness.db.select({ id: entityTypes.id }).from(entityTypes))[0]!.id;
+
+  const [confidentialEntity] = await harness.db
+    .insert(entities)
+    .values({
+      legalName: "Sealedsearch Acquisition Vehicle",
+      entityTypeId,
+      isConfidential: true,
+    })
+    .returning({ id: entities.id });
+  confidentialEntityId = confidentialEntity!.id;
+  await harness.db.insert(entityGrants).values({
+    entityId: confidentialEntityId,
+    userId: ids.get(PEOPLE.onTeam.email)!,
+  });
 
   const [confidentialContract] = await harness.db
     .insert(contracts)
@@ -195,7 +214,10 @@ afterAll(async () => {
 async function search(
   as: string,
   suffix = "",
-): Promise<{ results: { id: string }[]; nextCursor: string | null }> {
+): Promise<{
+  results: { id: string; kind: string; isConfidential: boolean }[];
+  nextCursor: string | null;
+}> {
   const response = await harness.app.inject({
     method: "GET",
     url: `/api/v1/search?q=sealedsearch${suffix}`,
@@ -222,7 +244,12 @@ describe("the DD-014 gate in search", () => {
       expect(ids).toContain(confidentialContractDocumentId);
       expect(ids).toContain(confidentialMatterDocumentId);
       expect(ids).toContain(confidentialDocumentId);
+      // A Contributor reaches no Entity at all (entityReachScope).
+      if (viewer === PEOPLE.contributor.email) expect(ids).not.toContain(confidentialEntityId);
+      else expect(ids).toContain(confidentialEntityId);
     }
+    const entity = (await search(PEOPLE.onTeam.email, "&kind=entity")).results[0];
+    expect(entity).toMatchObject({ id: confidentialEntityId, isConfidential: true });
   });
 
   it("omits off-team confidential rows before the limit, with no gap", async () => {
@@ -231,6 +258,7 @@ describe("the DD-014 gate in search", () => {
     expect(answer.nextCursor).toBeNull();
     expect((await search(PEOPLE.offTeam.email, "&kind=matter")).results).toEqual([]);
     expect((await search(PEOPLE.offTeam.email, "&kind=document")).results).toEqual([]);
+    expect((await search(PEOPLE.offTeam.email, "&kind=entity")).results).toEqual([]);
   });
 
   it("gives a Business User the empty answer through the scope predicates", async () => {

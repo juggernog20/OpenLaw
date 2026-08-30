@@ -21,6 +21,7 @@ import {
   DOCUMENT_REPOSITORY_KINDS,
   DOCUMENT_REPOSITORY_SORT_KEYS,
   documentLandingPath,
+  documentOwnerReference,
   documentRecordReference,
   documentRepositoryFilters,
   readDocumentOptions,
@@ -135,7 +136,7 @@ function layoutFromSearch(base: Layout, search: string): { layout: Layout; fromU
 
   const filters: Layout["filters"] = {};
   const owner = params.get("owner");
-  if (owner === "contract" || owner === "matter") filters.owner = owner;
+  if (owner === "contract" || owner === "matter" || owner === "entity") filters.owner = owner;
   const record = params.get("record") ?? "";
   if (documentRecordReference(record)) {
     filters.record = record;
@@ -463,7 +464,7 @@ function DocumentsPageState() {
                 ) : (
                   <FormattedMessage
                     id="documents.list.empty.title"
-                    defaultMessage="Paper lives on Contracts and Matters."
+                    defaultMessage="No documents yet"
                   />
                 )}
               </h2>
@@ -598,7 +599,7 @@ function RecentDocuments({ documents }: Readonly<{ documents: RepositoryDocument
                   id="documents.list.owner"
                   defaultMessage="{reference} · {title}"
                   values={{
-                    reference: `${document.owner.kind === "contract" ? "C" : "M"}-${String(document.owner.number)}`,
+                    reference: documentOwnerReference(document.owner),
                     title: document.owner.title,
                   }}
                 />

@@ -3134,6 +3134,10 @@ The Matters destination is DES-046's second catalogue and the first proof that t
 
 The Documents destination adopts the managed table whole. Title is its required flex column. Owning record, current Version kind, format, size, Version count, uploader, and uploaded time complete the built-in layout. The filter state joins the saved layout config, and Uploaded descending is the natural order. Resize, reorder, show and hide, sort, saved views, row truncation, horizontal escape, and the paging foot use the shared components unchanged.
 
+### Addendum (2026-08-30, M27/9, [#581](https://github.com/juggernog20/OpenLaw/issues/581)): Entities is the fourth managed-list catalogue
+
+The Entity registry adopts the managed table whole under the Calendar/List/Chart destination switch. Legal name is its required flex column; Type, Jurisdiction, Registration no., Status, and Next obligation complete the built-in layout, with Created available from the column menu. Type, Status, Jurisdiction, Majority owner, and Show archived are the saved filter row. The shared resize, reorder, sort, saved-view, truncation, horizontal escape, archived row action, and keyset foot behaviours are unchanged.
+
 ## DES-047: The Team roster is an activity-bar applet (amends DES-016, DES-032, DES-028)
 
 - **Status:** Accepted
@@ -4158,6 +4162,55 @@ The destination is another reader-owned list, so giving it a bespoke filter gram
 
 `designs/documents.pen` redraws DOC1 on the current S1 chrome and adds DOC8–DOC10 for the fresh-install, filtered-empty, and archived states. M26's web work can reuse the existing managed-table, saved-view, column, filter, empty-state, and archived-row primitives without translating an older mock. DOC2–DOC7 remain the references for their existing surfaces.
 
+## DES-067: The Entities destination uses the managed-list and record-shell patterns (extends DES-046, DES-032, DES-016, DES-018)
+
+- **Status:** Accepted
+- **Date:** 2026-08-29
+
+### Context
+
+ENT-001 through ENT-007 fix the Entity registry, ownership graph, compliance calendar, confidentiality rule, and linked-record roll-ups. The original `designs/entities.pen` screens describe those capabilities, but they predate the managed-table destination, routed record strip, activity-bar applets, and current confidentiality treatment. M27 needs one visual source of truth before those surfaces are built.
+
+### Decision
+
+**1. The registry is a DES-046 managed list with three sibling views.** The sub-bar switch is `Calendar / List / Chart`. List is the managed-table answer: Saved views and Columns stay in the sub-bar, the filter row carries Type, Status, Jurisdiction, and Majority owner, and the table includes `Next obligation`. Calendar keeps List and Month forms under the Calendar destination view.
+
+**2. An Entity is a DES-032 record page with the DES-016 activity bar.** Its routed strip is `Overview / Ownership / Obligations / Documents / Contracts / Matters`. Overview shows Identity, Share capital, Custom Fields, current and former officers, and registrations. The right-side Activity applet is an ordinary page-scoped applet opened from the activity bar.
+
+**3. Ownership and roll-ups stay inside that strip.** Ownership shows both owners and owned Entities with percentages. A total above 100% is a warning, not a write blocker, preserving ENT-003. A confidential neighbour is a `Restricted Entity` row. Contracts and Matters are query-backed roll-up tables whose labels carry their counts, preserving ENT-007 rather than introducing stored counters.
+
+**4. Confidentiality has one banner and one grant-list dialog.** A confidential Entity uses DES-009's record banner and names the people with explicit access in the `entity_grants` grant list. The chart keeps the topology visible but replaces an unreachable Entity with one muted restricted card. It never discloses the Entity name or other record facts.
+
+**5. Calendar zeroes distinguish absence from filtering.** A blank organization says that no obligations exist yet and offers `Add obligation`. A filtered zero says that no obligations match and offers `Clear all`. Both remain in the current calendar chrome, so filtering never turns into a second empty-page pattern.
+
+### Recorded normalization points
+
+1. Chips follow the Contracts filter row; Entities does not introduce a destination-specific facet grammar.
+2. Overdue uses the DES-018 severe token.
+3. The chart node is a card, not a bubble.
+4. `Restricted Entity` joins the MTR-015 convention.
+
+### Alternatives considered
+
+- **An Entity-specific facet grammar.** Rejected. The original mocks carried their own chips. One more filter vocabulary costs a reader a second set of habits for the same operation.
+- **Stored roll-up counters on the Entity.** Rejected. ENT-007 keeps the Contract and Matter counts query-derived. The cost is one count query per record open, which is cheaper than a counter that drifts.
+- **A write blocker when ownership totals pass 100%.** Rejected. ENT-003 keeps the graph writable during a transfer. The cost is that a wrong total stays visible as a warning until someone fixes it.
+- **Hiding a confidential neighbour from the chart.** Rejected. A hole in the graph misreads as a missing holding. The cost of the muted restricted card is that a viewer learns a confidential Entity exists at that position, though not its name or facts.
+- **A bubble chart node.** Rejected. The card matches the list row and the record header. The cost is a wider node, so a deep graph scrolls sooner.
+- **A second empty page for a filtered calendar.** Rejected. Two empty patterns would make a filter look like an empty organization.
+
+### Rationale
+
+Entities combines a destination catalogue, a record, a calendar, and a graph, but none needs private chrome. Reusing the established list, strip, applet, severity, confidentiality, and restricted-row conventions makes the module legible on first contact and gives the M27 build exact answers at the seams where the older mocks drifted.
+
+### Consequences
+
+`designs/entities.pen` carries EN1–EN16 on the current S1 chrome: the refreshed original eight screens plus Ownership, Contracts and Matters roll-ups, Confidential and grant-list states, a restricted chart node, and both calendar-empty states. M27's implementation can reuse the managed-table, record-strip, activity-bar, banner, dialog, empty-state, and restricted-placeholder primitives without translating the former Entity-specific treatments.
+
+### Built addendum (2026-08-30, M27 close, [#582](https://github.com/juggernog20/OpenLaw/issues/582))
+
+The Entities destination ships the Calendar, List, and Chart switch, with Calendar as its default. The List view is DES-046's fourth catalogue. The Entity record ships all six routed tabs and its Activity applet. Confidential banners, Grant maintenance, Restricted Entity rows and chart nodes, calendar empty states, overdue severity, and the ownership warning use the shared patterns named above. The M27 close journey and axe sweep cover the three destination views and every record tab on fresh Compose images.
+
 ## Index of decisions
 
 | #       | Decision                                                                                                                                                             | Status                                                                                                     |
@@ -4228,3 +4281,4 @@ The destination is another reader-owned list, so giving it a bespoke filter gram
 | DES-064 | Comment paper files through one destination dialog (extends DES-062, DES-023)                                                                                        | Accepted                                                                                                   |
 | DES-065 | A dispositioned Request points paper at its composer (extends DES-062, DES-057)                                                                                      | Accepted                                                                                                   |
 | DES-066 | The Documents destination is one flat managed list across records (extends DES-046, DES-018, DES-009)                                                                | Accepted                                                                                                   |
+| DES-067 | The Entities destination uses the managed-list and record-shell patterns (extends DES-046, DES-032, DES-016, DES-018)                                                | Accepted                                                                                                   |

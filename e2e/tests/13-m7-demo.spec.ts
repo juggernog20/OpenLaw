@@ -104,6 +104,8 @@ test.describe.serial("M7 demo path", () => {
         .click();
       await expect(page).toHaveURL(/\/entities$/);
       await expect(page.getByRole("heading", { level: 1, name: "Entities" })).toBeVisible();
+      await page.getByRole("link", { name: "List", exact: true }).click();
+      await expect(page).toHaveURL(/\/entities\?view=list$/);
 
       // Register the UK subsidiary with its full identity card.
       await page.getByRole("button", { name: "Register entity" }).first().click();

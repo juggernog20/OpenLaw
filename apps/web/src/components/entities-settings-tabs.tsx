@@ -2,9 +2,8 @@
 
 /**
  * The Entities settings section head on the shared SettingsSectionTabs
- * anatomy (#97). Types is the only pane this milestone; Officer Roles
- * and Fields join the strip when the full module lands (M27), the same
- * way the Contracts strip grew.
+ * anatomy. M27 adds the shared Officer roles taxonomy and Fields
+ * catalog alongside the Entity types pane.
  */
 
 import { FormattedMessage, useIntl } from "react-intl";
@@ -14,6 +13,16 @@ const TABS = [
   {
     path: "/settings/entities/types",
     label: <FormattedMessage id="settings.entities.tab.types" defaultMessage="Types" />,
+  },
+  {
+    path: "/settings/entities/officer-roles",
+    label: (
+      <FormattedMessage id="settings.entities.tab.officerRoles" defaultMessage="Officer roles" />
+    ),
+  },
+  {
+    path: "/settings/entities/fields",
+    label: <FormattedMessage id="settings.entities.tab.fields" defaultMessage="Fields" />,
   },
 ] as const;
 

@@ -34,8 +34,8 @@ ActivityBar, Pill, Avatar) live in this file as local copies per the designs con
 ## What the mocks already got right
 
 - The rail matches SET-001 as amended: Personal (Profile, Appearance, Notifications) and Organization
-  (General, Users, Security, Matters, Contracts, Intake, Notifications, Integrations). Entities and
-  Knowledge sections join the rail when their milestones land.
+  (General, Users, Security, Matters, Contracts, Intake, Entities, Notifications, Integrations). Knowledge
+  joins the rail when its milestone lands.
 - ST5 draws a **pending invite as a row** (status "Invited") — SET-005 before it was written.
 - ST17 matches TECH-008: mode cards (Built-in vs OIDC), the immediate-apply + activity-log caption,
   and the portal magic-link toggle with the built-in-mode "can't be turned off" rule.
@@ -330,3 +330,9 @@ DES-050/DES-052 and a drawing would settle no behavior; the portal pane is also 
 Statuses and Fields tabs plus live Type usage: existing settings anatomies mounted with Matter
 vocabulary, not a reason to redraw unrelated notification panes. No inventory item from an earlier
 pass is waiting on M22 now.
+
+## Amendment (2026-08-29, M27/3, #575) — Entities mounts the shared settings anatomies
+
+Entities Settings now carries three panes: **Types**, **Officer roles**, and **Fields**. Types opens a per-type editor that attaches Entity-scoped or global catalog Fields with the same order and required controls as ST15/ST16. Officer roles mounts the SET-003 taxonomy pane, seeded Director, CEO, CFO, Secretary, and Other; Other is protected, and the archive guard's count includes resigned officers because reassignment moves that same set. Fields mounts the shared catalog filtered to `entity` and `global` scopes.
+
+No frame is added. The three screens are configurations of the shipped DES-020, DES-021, and DES-022 anatomies, with Entities vocabulary and the existing Entities section header. The Organization rail's Entities entry and its placement were already recorded when the section first shipped.

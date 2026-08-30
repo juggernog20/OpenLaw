@@ -11,6 +11,7 @@ import {
   and,
   contracts,
   documents,
+  entities,
   isNotNull,
   isNull,
   matters,
@@ -18,8 +19,10 @@ import {
   type Executor,
   type SQL,
 } from "@openlaw/db";
+import { DOCUMENT_OWNER_KINDS, type DocumentOwner } from "@openlaw/shared";
 import { requireRole, type AuthenticatedUser } from "../auth/guards.js";
 import { contractTeamScope, documentAudienceScope } from "./contract-access.js";
+import { entityReachScope } from "./entity-access.js";
 import { matterTeamScope } from "./matter-access.js";
 
 /** Documents are readable by Member+ and by Contributors through reached records. */
@@ -28,6 +31,33 @@ export const requireDocumentReader = requireRole(
   "legal_team_member",
   "contributor",
 );
+
+function owningRecordScope(
+  owner: DocumentOwner,
+  db: Executor,
+  user: AuthenticatedUser,
+): SQL | undefined {
+  switch (owner) {
+    case "contract":
+      return and(
+        isNotNull(documents.contractId),
+        isNull(contracts.archivedAt),
+        contractTeamScope(db, user),
+      );
+    case "matter":
+      return and(
+        isNotNull(documents.matterId),
+        isNull(matters.archivedAt),
+        matterTeamScope(db, user),
+      );
+    case "entity":
+      return and(
+        isNotNull(documents.entityId),
+        isNull(entities.archivedAt),
+        entityReachScope(db, user),
+      );
+  }
+}
 
 /**
  * The complete Document repository gate, shared by search and the flat list.
@@ -39,13 +69,6 @@ export const requireDocumentReader = requireRole(
 export function documentRepositoryScope(db: Executor, user: AuthenticatedUser): SQL | undefined {
   return and(
     documentAudienceScope(db, user),
-    or(
-      and(
-        isNotNull(documents.contractId),
-        isNull(contracts.archivedAt),
-        contractTeamScope(db, user),
-      ),
-      and(isNotNull(documents.matterId), isNull(matters.archivedAt), matterTeamScope(db, user)),
-    ),
+    or(...DOCUMENT_OWNER_KINDS.map((owner) => owningRecordScope(owner, db, user))),
   );
 }

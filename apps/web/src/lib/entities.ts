@@ -9,12 +9,46 @@
 
 import type { IntlShape } from "react-intl";
 import type { paths } from "@openlaw/api-client";
+import { api } from "./api";
 
 /** One row of the entities API, aliased to the generated client schema
  * so a contract change surfaces as a compile error here, not as a
  * runtime surprise in a route. */
 export type EntityRow =
   paths["/api/v1/entities/{id}"]["get"]["responses"]["200"]["content"]["application/json"]["entity"];
+
+/** One row of M27/9's managed registry, including its derived next
+ * open Obligation. */
+export type RegistryEntityRow =
+  paths["/api/v1/entities"]["get"]["responses"]["200"]["content"]["application/json"]["entities"][number];
+
+type RegistryQuery = NonNullable<paths["/api/v1/entities"]["get"]["parameters"]["query"]>;
+
+/** The whole reachable registry, read page by page to the end of GET
+ * /entities' keyset cursor. The pickers (the M8 signing entity, matter
+ * and request Entity links, the template editor) and the Calendar and
+ * Chart views need every row, not the List view's first page. Answers
+ * in the client's `{ data }` shape so a loader treats it as one read. */
+export async function readRegistry(
+  query: Omit<RegistryQuery, "cursor"> = {},
+): Promise<{ data: { entities: RegistryEntityRow[] } | undefined }> {
+  const entities: RegistryEntityRow[] = [];
+  const seen = new Set<string>();
+  let cursor: string | undefined;
+  for (;;) {
+    const { data } = await api.GET("/api/v1/entities", {
+      params: { query: cursor === undefined ? query : { ...query, cursor } },
+    });
+    if (!data) return { data: undefined };
+    entities.push(...data.entities);
+    if (!data.nextCursor || seen.has(data.nextCursor)) return { data: { entities } };
+    seen.add(data.nextCursor);
+    cursor = data.nextCursor;
+  }
+}
+
+export type EntityRegistryOptions =
+  paths["/api/v1/entities/list-options"]["get"]["responses"]["200"]["content"]["application/json"];
 
 export type EntityStatus = EntityRow["status"];
 
@@ -41,6 +75,41 @@ export const ENTITY_STATUSES = exhaustiveStatusList([
 /** One option of GET /entities/types, the Member+ picker read (ENT-008). */
 export type EntityTypeOption =
   paths["/api/v1/entities/types"]["get"]["responses"]["200"]["content"]["application/json"]["entityTypes"][number];
+
+export type EntityRecordEnvelope =
+  paths["/api/v1/entities/{id}"]["get"]["responses"]["200"]["content"]["application/json"];
+export type EntityField = EntityRecordEnvelope["fields"][number];
+export type EntityCustomFieldRefs = EntityRecordEnvelope["customFieldRefs"];
+export type OfficerOptions =
+  paths["/api/v1/entities/officer-roles"]["get"]["responses"]["200"]["content"]["application/json"];
+export type OfficerRoleOption = OfficerOptions["officerRoles"][number];
+export type EntityPersonOption = OfficerOptions["users"][number];
+export type EntityOfficer =
+  paths["/api/v1/entities/{id}/officers"]["get"]["responses"]["200"]["content"]["application/json"]["officers"][number];
+export type EntityRegistration =
+  paths["/api/v1/entities/{id}/registrations"]["get"]["responses"]["200"]["content"]["application/json"]["registrations"][number];
+export type EntityRegistrationStatus = EntityRegistration["status"];
+export type EntityObligation =
+  paths["/api/v1/entities/{id}/obligations"]["get"]["responses"]["200"]["content"]["application/json"]["obligations"][number];
+export type EntityObligationOptions =
+  paths["/api/v1/entities/obligation-options"]["get"]["responses"]["200"]["content"]["application/json"];
+export type CalendarObligation =
+  paths["/api/v1/entities/calendar"]["get"]["responses"]["200"]["content"]["application/json"]["obligations"][number];
+export type EntityHoldings =
+  paths["/api/v1/entities/{id}/holdings"]["get"]["responses"]["200"]["content"]["application/json"];
+export type EntityHolding = EntityHoldings["owners"][number];
+export type EntityHoldingWarning = EntityHoldings["warnings"][number];
+export type EntityChart =
+  paths["/api/v1/entities/chart"]["get"]["responses"]["200"]["content"]["application/json"];
+export type EntityGrantEnvelope =
+  paths["/api/v1/entities/{id}/grants"]["get"]["responses"]["200"]["content"]["application/json"];
+export type EntityGrantPerson = EntityGrantEnvelope["grants"][number];
+
+export const ENTITY_REGISTRATION_STATUSES = [
+  "active",
+  "lapsed",
+  "withdrawn",
+] as const satisfies readonly EntityRegistrationStatus[];
 
 /** EN3/EN5's status pills: active=success, dormant=warning, divested=
  * neutral (the mock's three); dissolved takes the danger pair — the

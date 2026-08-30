@@ -206,6 +206,12 @@
   "activity.entity.archived": {
     "defaultMessage": "{actor} archived {name}"
   },
+  "activity.entity.confidentialityCleared": {
+    "defaultMessage": "{actor} cleared {name}'s confidential mark"
+  },
+  "activity.entity.confidentialitySet": {
+    "defaultMessage": "{actor} marked {name} confidential"
+  },
   "activity.entity.created": {
     "defaultMessage": "{actor} registered {name}"
   },
@@ -220,6 +226,51 @@
   },
   "activity.entity.updated": {
     "defaultMessage": "{actor} changed {name}"
+  },
+  "activity.entityGrant.added": {
+    "defaultMessage": "{actor} granted {person} access to {name}"
+  },
+  "activity.entityGrant.removed": {
+    "defaultMessage": "{actor} removed {person}'s access to {name}"
+  },
+  "activity.entityHolding.created": {
+    "defaultMessage": "{actor} recorded {owner} owning {percent}% of {owned}"
+  },
+  "activity.entityHolding.deleted": {
+    "defaultMessage": "{actor} removed {owner}'s {percent}% Holding in {owned}"
+  },
+  "activity.entityHolding.updated": {
+    "defaultMessage": "{actor} changed {owner}'s Holding in {owned} from {from}% to {to}%"
+  },
+  "activity.entityObligation.created": {
+    "defaultMessage": "{actor} added the obligation {obligation} to {name}"
+  },
+  "activity.entityObligation.deleted": {
+    "defaultMessage": "{actor} removed the obligation {obligation} from {name}"
+  },
+  "activity.entityObligation.filed": {
+    "defaultMessage": "{actor} marked {obligation} filed on {name}"
+  },
+  "activity.entityObligation.updated": {
+    "defaultMessage": "{actor} changed the obligation {obligation} on {name}"
+  },
+  "activity.entityOfficer.created": {
+    "defaultMessage": "{actor} appointed {officer} as {role} on {name}"
+  },
+  "activity.entityOfficer.deleted": {
+    "defaultMessage": "{actor} removed officer {officer} from {name}"
+  },
+  "activity.entityOfficer.updated": {
+    "defaultMessage": "{actor} changed officer {officer} on {name}"
+  },
+  "activity.entityRegistration.created": {
+    "defaultMessage": "{actor} added the {jurisdiction} registration to {name}"
+  },
+  "activity.entityRegistration.deleted": {
+    "defaultMessage": "{actor} removed the {jurisdiction} registration from {name}"
+  },
+  "activity.entityRegistration.updated": {
+    "defaultMessage": "{actor} changed the {jurisdiction} registration on {name}"
   },
   "activity.envelope.declined": {
     "defaultMessage": "This contract's envelope was declined{hasReason, select, yes { — {reason}} other {}}"
@@ -237,7 +288,7 @@
     "defaultMessage": "{actor} exported the audit log"
   },
   "activity.field": {
-    "defaultMessage": "{key, select, title {Title} description {Description} owner {Owner} entity {Signing entity} priority {Priority} risk {Risk} matterManager {Matter Manager} matterType {Matter type} contractType {Contract type} value {Value} status {Status} termType {Term type} effectiveDate {Effective date} expiryDate {Expiry date} renewalPeriodMonths {Renewal period (months)} noticePeriodDays {Notice period (days)} date {Date} label {Event} note {Note} kind {Kind} primaryCounterparty {Primary counterparty} primaryDocument {Primary document} displayName {Name} display_name {Display name} name {Name} role {Role} email {Email} stage {Stage} moduleScope {Scope} isRequired {Required} targetModule {Target} targetType {Target type} theme {Theme} timezone {Timezone} avatar {Avatar} logo {Logo} defaultLocale {Default language} defaultTimezone {Default timezone} authMode {Sign-in method} allowedEmailDomains {Allowed email domains} reminderOffsetDays {Reminder lead times} smtpUrl {SMTP server} smtpFrom {From address} issuer {Issuer} domain {Email domain} clientId {Client ID} clientSecret {Client secret} environment {Environment} integrationKey {Integration key} apiUserId {User ID} privateKey {RSA private key} webhookSecret {Connect HMAC secret} legalName {Legal name} entityType {Entity type} jurisdiction {Jurisdiction} formedOn {Formed on} registrationNumber {Registration number} taxId {Tax ID} registeredAgent {Registered agent} registeredAddress {Registered address} other {{key}}}"
+    "defaultMessage": "{key, select, title {Title} description {Description} owner {Owner} entity {Signing entity} priority {Priority} risk {Risk} matterManager {Matter Manager} matterType {Matter type} contractType {Contract type} value {Value} status {Status} termType {Term type} effectiveDate {Effective date} expiryDate {Expiry date} renewalPeriodMonths {Renewal period (months)} noticePeriodDays {Notice period (days)} date {Date} label {Event} note {Note} kind {Kind} primaryCounterparty {Primary counterparty} primaryDocument {Primary document} displayName {Name} display_name {Display name} name {Name} role {Role} email {Email} stage {Stage} moduleScope {Scope} isRequired {Required} targetModule {Target} targetType {Target type} theme {Theme} timezone {Timezone} avatar {Avatar} logo {Logo} defaultLocale {Default language} defaultTimezone {Default timezone} authMode {Sign-in method} allowedEmailDomains {Allowed email domains} reminderOffsetDays {Reminder lead times} smtpUrl {SMTP server} smtpFrom {From address} issuer {Issuer} domain {Email domain} clientId {Client ID} clientSecret {Client secret} environment {Environment} integrationKey {Integration key} apiUserId {User ID} privateKey {RSA private key} webhookSecret {Connect HMAC secret} legalName {Legal name} entityType {Entity type} jurisdiction {Jurisdiction} formedOn {Formed on} registrationNumber {Registration number} taxId {Tax ID} registeredAgent {Registered agent} registeredAddress {Registered address} sharesAuthorized {Authorized shares} sharesIssued {Issued shares} parValue {Par value} appointedOn {Appointed on} resignedOn {Resigned on} linkedUser {Linked user} registrationId {Registration} recurrenceMonths {Repeat every (months)} nextDueOn {Due date} assigneeId {Assignee} matterId {Matter} other {{key}}}"
   },
   "activity.field.narrowed": {
     "defaultMessage": "{actor} narrowed the field {name} to one module"
@@ -1133,6 +1184,12 @@
   "comments.tombstone.redacted": {
     "defaultMessage": "Comment removed by an Administrator."
   },
+  "common.add": {
+    "defaultMessage": "Add"
+  },
+  "common.cancel": {
+    "defaultMessage": "Cancel"
+  },
   "confidential.marker": {
     "defaultMessage": "Confidential"
   },
@@ -1174,12 +1231,6 @@
   },
   "contractMatter.refresh.error": {
     "defaultMessage": "The linked Contracts could not be refreshed."
-  },
-  "contractMatter.restrictedContract": {
-    "defaultMessage": "Restricted contract"
-  },
-  "contractMatter.restrictedMatter": {
-    "defaultMessage": "Restricted matter"
   },
   "contractMatter.search": {
     "defaultMessage": "Search by number or title"
@@ -2387,6 +2438,9 @@
   "documents.filter.owner.contracts": {
     "defaultMessage": "Contracts"
   },
+  "documents.filter.owner.entities": {
+    "defaultMessage": "Entities"
+  },
   "documents.filter.owner.matters": {
     "defaultMessage": "Matters"
   },
@@ -2541,7 +2595,7 @@
     "defaultMessage": "Upload to a record and it appears here."
   },
   "documents.list.empty.title": {
-    "defaultMessage": "Paper lives on Contracts and Matters."
+    "defaultMessage": "No documents yet"
   },
   "documents.list.filteredEmpty.body": {
     "defaultMessage": "Clear filters to return to the whole list."
@@ -2633,29 +2687,140 @@
   "entities.archivedPill": {
     "defaultMessage": "Archived"
   },
-  "entities.column.actions": {
-    "defaultMessage": "Actions"
+  "entities.calendar.add": {
+    "defaultMessage": "Add obligation"
   },
-  "entities.column.jurisdiction": {
-    "defaultMessage": "Jurisdiction"
+  "entities.calendar.allEntities": {
+    "defaultMessage": "All Entities"
   },
-  "entities.column.legalName": {
-    "defaultMessage": "Legal name"
+  "entities.calendar.apply": {
+    "defaultMessage": "Apply"
   },
-  "entities.column.status": {
-    "defaultMessage": "Status"
+  "entities.calendar.assignee": {
+    "defaultMessage": "Assignee"
   },
-  "entities.column.type": {
-    "defaultMessage": "Type"
+  "entities.calendar.clear": {
+    "defaultMessage": "Clear all"
+  },
+  "entities.calendar.display": {
+    "defaultMessage": "Calendar display"
+  },
+  "entities.calendar.dueDate": {
+    "defaultMessage": "Due date"
+  },
+  "entities.calendar.empty": {
+    "defaultMessage": "No obligations yet"
+  },
+  "entities.calendar.emptyHint": {
+    "defaultMessage": "Obligations added to Entity records appear here."
+  },
+  "entities.calendar.entity": {
+    "defaultMessage": "Entity"
+  },
+  "entities.calendar.every": {
+    "defaultMessage": "Every {months, plural, one {month} other {# months}}"
+  },
+  "entities.calendar.everyone": {
+    "defaultMessage": "Everyone"
+  },
+  "entities.calendar.filed": {
+    "defaultMessage": "Filed"
+  },
+  "entities.calendar.from": {
+    "defaultMessage": "From"
+  },
+  "entities.calendar.includeCompleted": {
+    "defaultMessage": "Include completed"
+  },
+  "entities.calendar.listView": {
+    "defaultMessage": "Due-date list"
+  },
+  "entities.calendar.monthView": {
+    "defaultMessage": "Month"
+  },
+  "entities.calendar.nextMonth": {
+    "defaultMessage": "Next month"
+  },
+  "entities.calendar.noMatch": {
+    "defaultMessage": "No obligations match"
+  },
+  "entities.calendar.noMatchHint": {
+    "defaultMessage": "Change or clear the filters to see other due dates."
+  },
+  "entities.calendar.obligation": {
+    "defaultMessage": "Obligation"
+  },
+  "entities.calendar.oneOff": {
+    "defaultMessage": "One-off"
+  },
+  "entities.calendar.previousMonth": {
+    "defaultMessage": "Previous month"
+  },
+  "entities.calendar.repeat": {
+    "defaultMessage": "Repeat"
+  },
+  "entities.calendar.title": {
+    "defaultMessage": "Compliance calendar"
+  },
+  "entities.calendar.to": {
+    "defaultMessage": "To"
+  },
+  "entities.calendar.today": {
+    "defaultMessage": "Today"
+  },
+  "entities.calendar.unassigned": {
+    "defaultMessage": "Unassigned"
+  },
+  "entities.chart.description": {
+    "defaultMessage": "Majority Holdings form the solid tree. Secondary Holdings use dashed lines."
+  },
+  "entities.chart.fit": {
+    "defaultMessage": "Fit to window"
+  },
+  "entities.chart.instructions": {
+    "defaultMessage": "Use the arrow keys to pan, plus and minus to zoom, and zero to fit the chart."
+  },
+  "entities.chart.label": {
+    "defaultMessage": "Entity ownership chart"
+  },
+  "entities.chart.noJurisdiction": {
+    "defaultMessage": "No jurisdiction"
+  },
+  "entities.chart.open": {
+    "defaultMessage": "Open {name}"
+  },
+  "entities.chart.title": {
+    "defaultMessage": "Entity ownership chart"
+  },
+  "entities.confidential.banner": {
+    "defaultMessage": "Confidential Entity — Administrators and granted Legal Team Members see it."
+  },
+  "entities.confidential.bannerRegion": {
+    "defaultMessage": "Confidential Entity"
+  },
+  "entities.confidential.field": {
+    "defaultMessage": "Confidential — restrict to the grant list"
+  },
+  "entities.confidential.manage": {
+    "defaultMessage": "Manage access"
   },
   "entities.count": {
     "defaultMessage": "{count, plural, one {# entity} other {# entities}}"
   },
-  "entities.empty.body": {
-    "defaultMessage": "The registry holds your own corporate entities — subsidiaries, holding companies, and branches. Register them with their legal details, and contracts pick the signing entity from this list."
+  "entities.documents.batch.failures": {
+    "defaultMessage": "{failed, plural, one {# file failed} other {# files failed}}. {landed, plural, =0 {Nothing was added to the Entity.} one {The other # is on the Entity.} other {The other # are on the Entity.}}"
   },
-  "entities.empty.title": {
-    "defaultMessage": "No entities yet"
+  "entities.documents.batch.onRecord": {
+    "defaultMessage": "{count, plural, =0 {Nothing was added to the Entity.} one {# file is already on the Entity.} other {# files are already on the Entity.}}"
+  },
+  "entities.documents.empty": {
+    "defaultMessage": "No documents on this Entity yet."
+  },
+  "entities.documents.folder.deleteIntoRoot": {
+    "defaultMessage": "Anything in it moves onto the Entity itself. Nothing is deleted."
+  },
+  "entities.documents.folder.recordRoot": {
+    "defaultMessage": "The Entity itself"
   },
   "entities.form.formedOn": {
     "defaultMessage": "Formed on"
@@ -2702,14 +2867,383 @@
   "entities.form.typePlaceholder": {
     "defaultMessage": "Type…"
   },
-  "entities.listError": {
+  "entities.grants.add": {
+    "defaultMessage": "Grant access"
+  },
+  "entities.grants.description": {
+    "defaultMessage": "Administrators always have access. Grant Legal Team Members access here."
+  },
+  "entities.grants.empty": {
+    "defaultMessage": "No grants yet."
+  },
+  "entities.grants.person": {
+    "defaultMessage": "Legal Team Member"
+  },
+  "entities.grants.pick": {
+    "defaultMessage": "Pick a person"
+  },
+  "entities.grants.remove": {
+    "defaultMessage": "Remove {name}"
+  },
+  "entities.grants.title": {
+    "defaultMessage": "Confidential access"
+  },
+  "entities.linked.contracts": {
+    "defaultMessage": "Contracts"
+  },
+  "entities.linked.empty": {
+    "defaultMessage": "No linked records."
+  },
+  "entities.linked.failed": {
+    "defaultMessage": "The linked records could not be read."
+  },
+  "entities.linked.loading": {
+    "defaultMessage": "Loading linked records…"
+  },
+  "entities.linked.matters": {
+    "defaultMessage": "Matters"
+  },
+  "entities.list.archived": {
+    "defaultMessage": "Archived"
+  },
+  "entities.list.column.actions": {
+    "defaultMessage": "Actions"
+  },
+  "entities.list.column.created": {
+    "defaultMessage": "Created"
+  },
+  "entities.list.column.jurisdiction": {
+    "defaultMessage": "Jurisdiction"
+  },
+  "entities.list.column.legalName": {
+    "defaultMessage": "Legal name"
+  },
+  "entities.list.column.nextObligation": {
+    "defaultMessage": "Next obligation"
+  },
+  "entities.list.column.registrationNumber": {
+    "defaultMessage": "Registration no."
+  },
+  "entities.list.column.status": {
+    "defaultMessage": "Status"
+  },
+  "entities.list.column.type": {
+    "defaultMessage": "Type"
+  },
+  "entities.list.countShown": {
+    "defaultMessage": "{count, plural, one {# entity shown} other {# entities shown}}"
+  },
+  "entities.list.empty.body": {
+    "defaultMessage": "The registry holds your own corporate entities — subsidiaries, holding companies, and branches. Register them with their legal details, and contracts pick the signing entity from this list."
+  },
+  "entities.list.empty.title": {
+    "defaultMessage": "No Entities yet"
+  },
+  "entities.list.error": {
     "defaultMessage": "The registry could not be read. Try again."
+  },
+  "entities.list.filter.active": {
+    "defaultMessage": "Active filters"
+  },
+  "entities.list.filter.chip": {
+    "defaultMessage": "{name}: {value}"
+  },
+  "entities.list.filter.clear": {
+    "defaultMessage": "Clear all"
+  },
+  "entities.list.filter.clear.label": {
+    "defaultMessage": "Clear all filters"
+  },
+  "entities.list.filter.jurisdiction": {
+    "defaultMessage": "Jurisdiction"
+  },
+  "entities.list.filter.jurisdiction.all": {
+    "defaultMessage": "All jurisdictions"
+  },
+  "entities.list.filter.majorityOwner": {
+    "defaultMessage": "Majority owner"
+  },
+  "entities.list.filter.majorityOwner.all": {
+    "defaultMessage": "All majority owners"
+  },
+  "entities.list.filter.matchedNone": {
+    "defaultMessage": "The active filters matched no Entities."
+  },
+  "entities.list.filter.remove": {
+    "defaultMessage": "Remove {name} filter"
+  },
+  "entities.list.filter.status": {
+    "defaultMessage": "Status"
+  },
+  "entities.list.filter.status.all": {
+    "defaultMessage": "All statuses"
+  },
+  "entities.list.filter.type": {
+    "defaultMessage": "Type"
+  },
+  "entities.list.filter.type.all": {
+    "defaultMessage": "All types"
+  },
+  "entities.list.filteredEmpty.body": {
+    "defaultMessage": "Clear filters to return to the whole registry."
+  },
+  "entities.list.filteredEmpty.clear": {
+    "defaultMessage": "Clear filters"
+  },
+  "entities.list.filteredEmpty.title": {
+    "defaultMessage": "No Entities match these filters"
+  },
+  "entities.list.loadedMore": {
+    "defaultMessage": "{count, plural, one {# more Entity loaded} other {# more Entities loaded}}"
+  },
+  "entities.list.more": {
+    "defaultMessage": "Show more"
+  },
+  "entities.list.moreError": {
+    "defaultMessage": "The next Entities could not be read. Try again."
+  },
+  "entities.list.restore": {
+    "defaultMessage": "Restore"
+  },
+  "entities.list.restoreError": {
+    "defaultMessage": "The entity could not be restored."
+  },
+  "entities.list.restoreRow": {
+    "defaultMessage": "Restore {name}"
+  },
+  "entities.list.showArchived": {
+    "defaultMessage": "Show archived"
+  },
+  "entities.list.value.noObligation": {
+    "defaultMessage": "—"
+  },
+  "entities.list.value.none": {
+    "defaultMessage": "—"
+  },
+  "entities.ownership.addFailed": {
+    "defaultMessage": "The Holding could not be added."
+  },
+  "entities.ownership.addHolding": {
+    "defaultMessage": "Add Holding"
+  },
+  "entities.ownership.dialogTitle": {
+    "defaultMessage": "Add Holding"
+  },
+  "entities.ownership.directionOwned": {
+    "defaultMessage": "This Entity owns"
+  },
+  "entities.ownership.directionOwner": {
+    "defaultMessage": "Owns this Entity"
+  },
+  "entities.ownership.entityLabel": {
+    "defaultMessage": "Entity"
+  },
+  "entities.ownership.matches": {
+    "defaultMessage": "Entity matches"
+  },
+  "entities.ownership.noOwners": {
+    "defaultMessage": "No Entity owns this Entity."
+  },
+  "entities.ownership.noneOwned": {
+    "defaultMessage": "This Entity owns no other Entities."
+  },
+  "entities.ownership.overTotal": {
+    "defaultMessage": "Ownership totals {total}% for {name}."
+  },
+  "entities.ownership.owned": {
+    "defaultMessage": "Owned Entities"
+  },
+  "entities.ownership.owners": {
+    "defaultMessage": "Owners"
+  },
+  "entities.ownership.percentLabel": {
+    "defaultMessage": "Ownership percent"
+  },
+  "entities.ownership.pickEntity": {
+    "defaultMessage": "Pick an Entity."
+  },
+  "entities.ownership.relationship": {
+    "defaultMessage": "Relationship"
+  },
+  "entities.ownership.remove": {
+    "defaultMessage": "Remove {name}"
+  },
+  "entities.ownership.removeError": {
+    "defaultMessage": "The Holding could not be removed."
+  },
+  "entities.ownership.rowPercent": {
+    "defaultMessage": "{name} ownership percent"
+  },
+  "entities.ownership.updateError": {
+    "defaultMessage": "The Holding could not be updated."
   },
   "entities.record.archive": {
     "defaultMessage": "Archive"
   },
   "entities.record.archivedNote": {
-    "defaultMessage": "This entity is archived — it is out of the registry list. Restore it to edit."
+    "defaultMessage": "This entity is archived. Restore it to edit."
+  },
+  "entities.record.confidentiality": {
+    "defaultMessage": "Confidentiality"
+  },
+  "entities.record.fields.empty": {
+    "defaultMessage": "This Entity type has no Fields."
+  },
+  "entities.record.fields.no": {
+    "defaultMessage": "No"
+  },
+  "entities.record.fields.numberInvalid": {
+    "defaultMessage": "Enter this as a number."
+  },
+  "entities.record.fields.title": {
+    "defaultMessage": "Fields"
+  },
+  "entities.record.fields.yes": {
+    "defaultMessage": "Yes"
+  },
+  "entities.record.none": {
+    "defaultMessage": "None"
+  },
+  "entities.record.notRecorded": {
+    "defaultMessage": "Not recorded"
+  },
+  "entities.record.obligations.actions": {
+    "defaultMessage": "Actions"
+  },
+  "entities.record.obligations.add": {
+    "defaultMessage": "Add obligation"
+  },
+  "entities.record.obligations.assignee": {
+    "defaultMessage": "Assignee"
+  },
+  "entities.record.obligations.column": {
+    "defaultMessage": "Obligation"
+  },
+  "entities.record.obligations.dueDate": {
+    "defaultMessage": "Due date"
+  },
+  "entities.record.obligations.empty": {
+    "defaultMessage": "No obligations for this Entity."
+  },
+  "entities.record.obligations.emptyHint": {
+    "defaultMessage": "Add the first due date when it is known."
+  },
+  "entities.record.obligations.fileOneOff": {
+    "defaultMessage": "Filing this completes the one-off obligation."
+  },
+  "entities.record.obligations.fileRecurring": {
+    "defaultMessage": "Filing this moves forward {months, plural, one {# month} other {# months}} from the current due date until the next due date is after the filing date."
+  },
+  "entities.record.obligations.filedOn": {
+    "defaultMessage": "Filed {date}"
+  },
+  "entities.record.obligations.filedOnField": {
+    "defaultMessage": "Filed on"
+  },
+  "entities.record.obligations.label": {
+    "defaultMessage": "Label"
+  },
+  "entities.record.obligations.markFiled": {
+    "defaultMessage": "Mark filed"
+  },
+  "entities.record.obligations.markFiledRow": {
+    "defaultMessage": "Mark {label} filed"
+  },
+  "entities.record.obligations.matter": {
+    "defaultMessage": "Matter"
+  },
+  "entities.record.obligations.none": {
+    "defaultMessage": "None"
+  },
+  "entities.record.obligations.note": {
+    "defaultMessage": "Note"
+  },
+  "entities.record.obligations.registration": {
+    "defaultMessage": "Registration"
+  },
+  "entities.record.obligations.remove": {
+    "defaultMessage": "Delete {label}"
+  },
+  "entities.record.obligations.repeat": {
+    "defaultMessage": "Repeat every (months)"
+  },
+  "entities.record.obligations.rowField": {
+    "defaultMessage": "{label} {field}"
+  },
+  "entities.record.obligations.title": {
+    "defaultMessage": "Obligations"
+  },
+  "entities.record.obligations.unassigned": {
+    "defaultMessage": "Unassigned"
+  },
+  "entities.record.officers.add": {
+    "defaultMessage": "Add officer"
+  },
+  "entities.record.officers.appointedOn": {
+    "defaultMessage": "Appointed on"
+  },
+  "entities.record.officers.empty": {
+    "defaultMessage": "No current officers."
+  },
+  "entities.record.officers.name": {
+    "defaultMessage": "Officer name"
+  },
+  "entities.record.officers.remove": {
+    "defaultMessage": "Remove {officer}"
+  },
+  "entities.record.officers.resignedOn": {
+    "defaultMessage": "Resigned on"
+  },
+  "entities.record.officers.role": {
+    "defaultMessage": "Role"
+  },
+  "entities.record.officers.rowField": {
+    "defaultMessage": "{officer} {field}"
+  },
+  "entities.record.officers.showFormer": {
+    "defaultMessage": "Show former"
+  },
+  "entities.record.officers.title": {
+    "defaultMessage": "Officers"
+  },
+  "entities.record.officers.user": {
+    "defaultMessage": "Linked user"
+  },
+  "entities.record.registrations.add": {
+    "defaultMessage": "Add registration"
+  },
+  "entities.record.registrations.agent": {
+    "defaultMessage": "Registered agent"
+  },
+  "entities.record.registrations.empty": {
+    "defaultMessage": "No additional registrations."
+  },
+  "entities.record.registrations.jurisdiction": {
+    "defaultMessage": "Jurisdiction"
+  },
+  "entities.record.registrations.linkedObligations": {
+    "defaultMessage": "Linked obligations"
+  },
+  "entities.record.registrations.number": {
+    "defaultMessage": "Registration number"
+  },
+  "entities.record.registrations.obligationDue": {
+    "defaultMessage": "<link>{label}</link> due {date}"
+  },
+  "entities.record.registrations.remove": {
+    "defaultMessage": "Remove {jurisdiction} registration"
+  },
+  "entities.record.registrations.rowField": {
+    "defaultMessage": "{jurisdiction} {field}"
+  },
+  "entities.record.registrations.status": {
+    "defaultMessage": "Status"
+  },
+  "entities.record.registrations.statusLabel": {
+    "defaultMessage": "{status, select, active {Active} lapsed {Lapsed} withdrawn {Withdrawn} other {{status}}}"
+  },
+  "entities.record.registrations.title": {
+    "defaultMessage": "Registrations"
   },
   "entities.record.registry": {
     "defaultMessage": "Registry"
@@ -2717,23 +3251,71 @@
   "entities.record.restore": {
     "defaultMessage": "Restore"
   },
+  "entities.record.sections": {
+    "defaultMessage": "Entity sections"
+  },
+  "entities.record.shareCapital.authorized": {
+    "defaultMessage": "Authorized shares"
+  },
+  "entities.record.shareCapital.invalid": {
+    "defaultMessage": "Enter a whole number of zero or more."
+  },
+  "entities.record.shareCapital.issued": {
+    "defaultMessage": "Issued shares"
+  },
+  "entities.record.shareCapital.parValue": {
+    "defaultMessage": "Par value (minor units)"
+  },
+  "entities.record.shareCapital.title": {
+    "defaultMessage": "Share capital"
+  },
+  "entities.record.tab.contracts": {
+    "defaultMessage": "Contracts"
+  },
+  "entities.record.tab.contracts.count": {
+    "defaultMessage": "{count, plural, one {# linked Contract} other {# linked Contracts}}"
+  },
+  "entities.record.tab.documents": {
+    "defaultMessage": "Documents"
+  },
+  "entities.record.tab.matters": {
+    "defaultMessage": "Matters"
+  },
+  "entities.record.tab.matters.count": {
+    "defaultMessage": "{count, plural, one {# linked Matter} other {# linked Matters}}"
+  },
+  "entities.record.tab.obligations": {
+    "defaultMessage": "Obligations"
+  },
+  "entities.record.tab.overview": {
+    "defaultMessage": "Overview"
+  },
+  "entities.record.tab.ownership": {
+    "defaultMessage": "Ownership"
+  },
   "entities.register": {
     "defaultMessage": "Register entity"
   },
-  "entities.restoreError": {
-    "defaultMessage": "The entity could not be restored."
-  },
-  "entities.restoreRow": {
-    "defaultMessage": "Restore {name}"
-  },
-  "entities.showArchived": {
-    "defaultMessage": "Show archived"
+  "entities.restricted": {
+    "defaultMessage": "Restricted Entity"
   },
   "entities.statusLabel": {
     "defaultMessage": "{status, select, active {Active} dormant {Dormant} dissolved {Dissolved} divested {Divested} other {Unknown}}"
   },
   "entities.title": {
     "defaultMessage": "Entities"
+  },
+  "entities.view.calendar": {
+    "defaultMessage": "Calendar"
+  },
+  "entities.view.chart": {
+    "defaultMessage": "Chart"
+  },
+  "entities.view.label": {
+    "defaultMessage": "Registry view"
+  },
+  "entities.view.list": {
+    "defaultMessage": "List"
   },
   "error.body": {
     "defaultMessage": "The page could not load. Reload to try again."
@@ -2980,6 +3562,9 @@
   },
   "keys.title": {
     "defaultMessage": "Keyboard shortcuts"
+  },
+  "linkedRecords.restricted": {
+    "defaultMessage": "Restricted record"
   },
   "listEditor.archivedPill": {
     "defaultMessage": "Archived"
@@ -3581,6 +4166,9 @@
   "notifications.date.noticeDeadline": {
     "defaultMessage": "The notice deadline on {contract} is coming up"
   },
+  "notifications.date.obligation": {
+    "defaultMessage": "{obligation} on {contract} is coming up"
+  },
   "notifications.document.added": {
     "defaultMessage": "{hasActor, select, yes {{actor} added a document to {contract}} other {A document was added to {contract}}}"
   },
@@ -3634,6 +4222,9 @@
   },
   "notifications.unknown": {
     "defaultMessage": "{contract} — {event}"
+  },
+  "notifications.unnamedObligation": {
+    "defaultMessage": "an obligation"
   },
   "notifications.unnamedRecord": {
     "defaultMessage": "a record"
@@ -4338,13 +4929,13 @@
     "defaultMessage": "Restore {name}"
   },
   "settings.contractFields.scopeCaption": {
-    "defaultMessage": "{module, select, contract {Contract} matter {Matter} other {Module}} and global fields"
+    "defaultMessage": "{module, select, contract {Contract} matter {Matter} entity {Entity} other {Module}} and global fields"
   },
   "settings.contractFields.scopeColumn": {
     "defaultMessage": "Scope"
   },
   "settings.contractFields.scopeLabel": {
-    "defaultMessage": "{scope, select, contract {Contract} matter {Matter} global {Global} other {Unknown}}"
+    "defaultMessage": "{scope, select, contract {Contract} matter {Matter} entity {Entity} global {Global} other {Unknown}}"
   },
   "settings.contractFields.scopePrefix": {
     "defaultMessage": "Scope:"
@@ -4691,6 +5282,12 @@
   "settings.eSignature.webhookUrl.hint": {
     "defaultMessage": "Paste this into a DocuSign Connect configuration so envelope status reaches this install."
   },
+  "settings.entities.tab.fields": {
+    "defaultMessage": "Fields"
+  },
+  "settings.entities.tab.officerRoles": {
+    "defaultMessage": "Officer roles"
+  },
   "settings.entities.tab.types": {
     "defaultMessage": "Types"
   },
@@ -4699,6 +5296,66 @@
   },
   "settings.entities.title": {
     "defaultMessage": "Entities"
+  },
+  "settings.entityTypeEditor.allAttached": {
+    "defaultMessage": "Every eligible field is attached."
+  },
+  "settings.entityTypeEditor.allTypes": {
+    "defaultMessage": "All types"
+  },
+  "settings.entityTypeEditor.attach": {
+    "defaultMessage": "Attach field"
+  },
+  "settings.entityTypeEditor.attached": {
+    "defaultMessage": "{name} attached."
+  },
+  "settings.entityTypeEditor.attachedFields": {
+    "defaultMessage": "Attached fields"
+  },
+  "settings.entityTypeEditor.description": {
+    "defaultMessage": "Description"
+  },
+  "settings.entityTypeEditor.detach": {
+    "defaultMessage": "Detach {name}"
+  },
+  "settings.entityTypeEditor.detached": {
+    "defaultMessage": "{name} detached."
+  },
+  "settings.entityTypeEditor.displayName": {
+    "defaultMessage": "Display name"
+  },
+  "settings.entityTypeEditor.empty": {
+    "defaultMessage": "No fields are attached to this type."
+  },
+  "settings.entityTypeEditor.fieldColumn": {
+    "defaultMessage": "Field"
+  },
+  "settings.entityTypeEditor.globalCaption": {
+    "defaultMessage": "{type} · global"
+  },
+  "settings.entityTypeEditor.help": {
+    "defaultMessage": "Drag to reorder. Required fields are enforced at creation and re-type; detaching a field keeps stored values."
+  },
+  "settings.entityTypeEditor.inUse": {
+    "defaultMessage": "{count, plural, one {# entity uses this type.} other {# entities use this type.}}"
+  },
+  "settings.entityTypeEditor.moved": {
+    "defaultMessage": "{name} moved to position {position} of {total}."
+  },
+  "settings.entityTypeEditor.reorder": {
+    "defaultMessage": "Reorder {name}, position {position} of {total}. Use the arrow keys to move it."
+  },
+  "settings.entityTypeEditor.requiredColumn": {
+    "defaultMessage": "Required"
+  },
+  "settings.entityTypeEditor.requiredFor": {
+    "defaultMessage": "{name} required"
+  },
+  "settings.entityTypeEditor.slug": {
+    "defaultMessage": "Slug"
+  },
+  "settings.entityTypeEditor.slugNote": {
+    "defaultMessage": "Slug is immutable — it keys reporting and the API."
   },
   "settings.entityTypes.add": {
     "defaultMessage": "Add type"
@@ -4726,6 +5383,9 @@
   },
   "settings.entityTypes.count": {
     "defaultMessage": "{count, plural, one {# type} other {# types}}"
+  },
+  "settings.entityTypes.edit": {
+    "defaultMessage": "Edit {name}"
   },
   "settings.entityTypes.help": {
     "defaultMessage": "Drag to reorder. Archiving a type in use asks for a replacement; Other can't be archived."
@@ -5401,6 +6061,69 @@
   },
   "settings.notifications.title": {
     "defaultMessage": "Notification preferences"
+  },
+  "settings.officerRoles.add": {
+    "defaultMessage": "Add role"
+  },
+  "settings.officerRoles.addName": {
+    "defaultMessage": "New role name"
+  },
+  "settings.officerRoles.archive": {
+    "defaultMessage": "Archive {name}"
+  },
+  "settings.officerRoles.archiveError": {
+    "defaultMessage": "The role could not be archived."
+  },
+  "settings.officerRoles.archiveSubmit": {
+    "defaultMessage": "Archive role"
+  },
+  "settings.officerRoles.archiveTitle": {
+    "defaultMessage": "Archive {name}"
+  },
+  "settings.officerRoles.archiveWarning": {
+    "defaultMessage": "{count, plural, =0 {{name} is not used by any officers — it can be archived without reassignment.} one {{name} is used by # officer. Pick a replacement role — that officer moves to it when the role is archived.} other {{name} is used by # officers. Pick a replacement role — those officers move to it when the role is archived.}}"
+  },
+  "settings.officerRoles.auditNote": {
+    "defaultMessage": "The change applies immediately and is recorded in the audit log."
+  },
+  "settings.officerRoles.count": {
+    "defaultMessage": "{count, plural, one {# role} other {# roles}}"
+  },
+  "settings.officerRoles.help": {
+    "defaultMessage": "Drag to reorder. Archiving a role in use asks for a replacement; Other can't be archived."
+  },
+  "settings.officerRoles.inUse": {
+    "defaultMessage": "{count, plural, one {# officer} other {# officers}}"
+  },
+  "settings.officerRoles.locked": {
+    "defaultMessage": "{name} is system-protected and can't be archived"
+  },
+  "settings.officerRoles.moved": {
+    "defaultMessage": "{name} moved to position {position} of {total}."
+  },
+  "settings.officerRoles.noCandidates": {
+    "defaultMessage": "No other active role can take its officers. Add or restore another role first."
+  },
+  "settings.officerRoles.pageTitle": {
+    "defaultMessage": "Officer roles"
+  },
+  "settings.officerRoles.reassignLabel": {
+    "defaultMessage": "Reassign {count, plural, =0 {officers} one {# officer} other {# officers}} to"
+  },
+  "settings.officerRoles.reassignNone": {
+    "defaultMessage": "No reassignment"
+  },
+  "settings.officerRoles.renameLabel": {
+    "defaultMessage": "Rename {name}"
+  },
+  "settings.officerRoles.reorder": {
+    "defaultMessage": "Reorder {name}, position {position} of {total}. Use the arrow keys to move it."
+  },
+  "settings.officerRoles.restore": {
+    "defaultMessage": "Restore {name}"
+  },
+  "settings.officerRoles.title": {
+    "defaultMessage": "Officer roles"
   },
   "settings.profile.changePassword": {
     "defaultMessage": "Change password"

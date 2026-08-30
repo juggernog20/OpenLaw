@@ -57,12 +57,13 @@ type Prefixed<P extends string, M> = { [K in keyof M & string as `${P}.${K}`]: M
 // The taxonomies (#85: one machinery each)
 
 /** The taxonomy tables' audit namespaces. */
-export type TaxonomyActionPrefix = "contract_type" | "matter_type" | "entity_type" | "request_type";
+export type TaxonomyActionPrefix =
+  "contract_type" | "matter_type" | "entity_type" | "officer_role" | "request_type";
 /** The catalogs of fields attached to a type — two type editors, and
  * the request type's form definition (INT-002), which is the same
  * machinery over the same catalog. */
 export type TypeFieldActionPrefix =
-  "contract_type_field" | "matter_type_field" | "request_type_field";
+  "contract_type_field" | "entity_type_field" | "matter_type_field" | "request_type_field";
 
 /**
  * The seven verbs a settings taxonomy writes. A rename carries the pair
@@ -441,6 +442,97 @@ type EntityPayloads = {
   "entity.type_reassigned": { legalName: string; from: string; to: string };
   "entity.archived": { legalName: string };
   "entity.restored": { legalName: string };
+  "entity.confidentiality_set": { legalName: string };
+  "entity.confidentiality_cleared": { legalName: string };
+  "entity_grant.added": { legalName: string; userId: string; userName: string };
+  "entity_grant.removed": { legalName: string; userId: string; userName: string };
+  "entity_officer.created": {
+    legalName: string;
+    officerName: string;
+    role: string;
+    appointedOn: string | null;
+    resignedOn: string | null;
+    userName: string | null;
+  };
+  "entity_officer.updated": {
+    legalName: string;
+    officerName: string;
+    changed: ChangedFields;
+  };
+  "entity_officer.deleted": { legalName: string; officerName: string; role: string };
+  "entity_registration.created": {
+    legalName: string;
+    jurisdiction: string;
+    registrationNumber: string | null;
+    registeredAgent: string | null;
+    status: string;
+  };
+  "entity_registration.updated": {
+    legalName: string;
+    jurisdiction: string;
+    changed: ChangedFields;
+  };
+  "entity_registration.deleted": {
+    legalName: string;
+    jurisdiction: string;
+    registrationNumber: string | null;
+  };
+  /**
+   * One Holding write appends two entries, one on each Entity of the
+   * link. `legalName` is the Entity the entry hangs off, so the two
+   * entries for one act carry different values; `ownerName` and
+   * `ownedName` are the same on both.
+   */
+  "entity_holding.created": {
+    legalName: string;
+    ownerName: string;
+    ownedName: string;
+    ownershipPercent: number;
+  };
+  /** Same pairing as `entity_holding.created`: `legalName` is the Entity
+   * the entry hangs off. */
+  "entity_holding.updated": {
+    legalName: string;
+    ownerName: string;
+    ownedName: string;
+    from: number;
+    to: number;
+  };
+  /** Same pairing as `entity_holding.created`: `legalName` is the Entity
+   * the entry hangs off. */
+  "entity_holding.deleted": {
+    legalName: string;
+    ownerName: string;
+    ownedName: string;
+    ownershipPercent: number;
+  };
+  "entity_obligation.created": {
+    legalName: string;
+    obligationId: string;
+    label: string;
+    nextDueOn: string;
+  };
+  "entity_obligation.updated": {
+    legalName: string;
+    obligationId: string;
+    label: string;
+    changed: ChangedFields;
+  };
+  "entity_obligation.deleted": {
+    legalName: string;
+    obligationId: string;
+    label: string;
+    nextDueOn: string;
+  };
+  "entity_obligation.filed": {
+    legalName: string;
+    obligationId: string;
+    label: string;
+    cycleDate: string;
+    previousDueOn: string;
+    nextDueOn: string | null;
+    completedOn: string | null;
+  };
 };
 
 /**
@@ -1000,8 +1092,10 @@ export type ActivityPayloadMap = UserPayloads &
   Prefixed<"contract_type", TaxonomyPayloads> &
   Prefixed<"matter_type", TaxonomyPayloads> &
   Prefixed<"entity_type", TaxonomyPayloads> &
+  Prefixed<"officer_role", TaxonomyPayloads> &
   Prefixed<"request_type", TaxonomyPayloads> &
   Prefixed<"contract_type_field", TypeFieldPayloads> &
+  Prefixed<"entity_type_field", TypeFieldPayloads> &
   Prefixed<"matter_type_field", TypeFieldPayloads> &
   Prefixed<"request_type_field", TypeFieldPayloads> &
   ContractStatusPayloads &

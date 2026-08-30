@@ -129,7 +129,7 @@ interface Arm {
    * own address. Empty means the record's overview, which is what the
    * bare URL lands on (DES-032).
    */
-  section?: "documents" | "approvals" | "key-dates" | "tasks";
+  section?: "documents" | "approvals" | "key-dates" | "tasks" | "obligations";
   /**
    * A Request row for this event is the **staff side's**, so it addresses
    * the staff detail rather than the portal one: group 4's arrival
@@ -290,6 +290,14 @@ const ARMS: Readonly<Record<string, Arm>> = {
       defaultMessage: "{contract} is expiring",
     }),
   },
+  "date.obligation_approaching": {
+    icon: CalendarClock,
+    section: "obligations",
+    message: defineMessage({
+      id: "notifications.date.obligation",
+      defaultMessage: "{obligation} on {contract} is coming up",
+    }),
+  },
   // Group 4 — the Inbox's own arrival (INT-006, M21/4). The one Request
   // arm that lands on the **staff** bell, and the one that addresses the
   // staff detail rather than the portal: the reader is a triager, and
@@ -376,6 +384,12 @@ const UNNAMED = defineMessage({
   defaultMessage: "a record",
 });
 
+/** What an Obligation whose payload carries no label is called. */
+const UNNAMED_OBLIGATION = defineMessage({
+  id: "notifications.unnamedObligation",
+  defaultMessage: "an obligation",
+});
+
 /**
  * The arm for a slug read off the wire, if this build has one.
  *
@@ -397,6 +411,9 @@ function armFor(eventType: string): Arm | undefined {
  * in each arm.
  */
 function recordName(intl: IntlShape, item: BellItem): string {
+  if (item.entityType === "entity") {
+    return text(item.payload, "entityLegalName") ?? intl.formatMessage(UNNAMED);
+  }
   if (item.entityType === "request") {
     const summary = text(item.payload, "requestSummary");
     if (summary) return summary;
@@ -438,6 +455,11 @@ function recordName(intl: IntlShape, item: BellItem): string {
  * written for, and the reader's role does not come into it.
  */
 function hrefFor(item: BellItem, arm: Arm | undefined): string | null {
+  if (item.entityType === "entity") {
+    return arm?.section
+      ? `/entities/${item.entityId}/${arm.section}`
+      : `/entities/${item.entityId}`;
+  }
   if (item.entityType === "request") {
     const number = wholeNumber(item.payload, "requestNumber");
     if (number === null) return null;
@@ -481,6 +503,7 @@ export function narrateNotification(intl: IntlShape, item: BellItem): NarratedNo
       // `hasActor` below relies on.
       contract: record,
       request: record,
+      obligation: text(item.payload, "label") ?? intl.formatMessage(UNNAMED_OBLIGATION),
       actor: actor ?? "",
       // Every arm gets this whether or not its sentence selects on it.
       hasActor: actor ? "yes" : "no",

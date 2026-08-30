@@ -23,12 +23,14 @@ import type { AttachedField, CustomFieldDraft } from "../lib/custom-fields";
 import { Checkbox } from "./ui/checkbox";
 import { Input } from "./ui/input";
 import { Switch } from "./ui/switch";
+import { RestrictedRecordCell } from "./restricted-record-cell";
 
 export interface FieldReference {
   id: string;
   label: string;
   /** SET-005: an archived person renders greyed but stays selectable. */
   archived?: boolean;
+  restricted?: boolean;
 }
 
 export interface CustomFieldControlProps {
@@ -194,6 +196,16 @@ export function CustomFieldControl({
       );
     case "user":
     case "entity":
+      if (
+        field.fieldType === "entity" &&
+        entities.some((row) => row.id === text && row.restricted)
+      ) {
+        return (
+          <RestrictedRecordCell
+            label={{ id: "entities.restricted", defaultMessage: "Restricted Entity" }}
+          />
+        );
+      }
       return (
         <select
           {...shared}

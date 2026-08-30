@@ -98,7 +98,7 @@ describe("the /entities destination", () => {
         entityRow({ id: "e3", legalName: "Gresham Analytics Ltd", status: "divested" }),
       ]),
     });
-    renderAt("/entities");
+    renderAt("/entities?view=list");
 
     expect(await screen.findByRole("heading", { level: 1, name: "Entities" })).toBeInTheDocument();
     const nav = screen.getByRole("navigation", { name: "Primary" });
@@ -134,10 +134,10 @@ describe("the /entities destination", () => {
         });
       }),
     });
-    renderAt("/entities");
+    renderAt("/entities?view=list");
 
     // The empty state says what the registry is and offers the action.
-    expect(await screen.findByRole("heading", { name: "No entities yet" })).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { name: "No Entities yet" })).toBeInTheDocument();
     expect(screen.getByText(/your own corporate entities/)).toBeInTheDocument();
 
     // The action is offered twice on an empty registry — the sub-bar
@@ -160,14 +160,14 @@ describe("the /entities destination", () => {
     // The new row replaces the empty state.
     const table = screen.getByRole("table");
     expect(within(table).getByText("Aldgate UK Ltd")).toBeInTheDocument();
-    expect(screen.queryByRole("heading", { name: "No entities yet" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "No Entities yet" })).not.toBeInTheDocument();
   });
 
   it("refuses to register without the required legal name and type", async () => {
     stubApi({ signedIn: ADMIN, extra: registryApi([]) });
-    renderAt("/entities");
+    renderAt("/entities?view=list");
     const user = userEvent.setup();
-    await screen.findByRole("heading", { name: "No entities yet" });
+    await screen.findByRole("heading", { name: "No Entities yet" });
     await user.click(screen.getAllByRole("button", { name: "Register entity" })[0]!);
     const dialog = await screen.findByRole("dialog");
 
@@ -186,9 +186,9 @@ describe("the /entities destination", () => {
       signedIn: ADMIN,
       extra: registryApi([], () => problem(400, "The entity type must be a live type.")),
     });
-    renderAt("/entities");
+    renderAt("/entities?view=list");
     const user = userEvent.setup();
-    await screen.findByRole("heading", { name: "No entities yet" });
+    await screen.findByRole("heading", { name: "No Entities yet" });
     await user.click(screen.getAllByRole("button", { name: "Register entity" })[0]!);
     const dialog = await screen.findByRole("dialog");
 
@@ -211,7 +211,7 @@ describe("the /entities destination", () => {
       signedIn: MEMBER,
       extra: registryApi([entityRow({ id: "e1", legalName: "Aldgate GmbH" })]),
     });
-    renderAt("/entities");
+    renderAt("/entities?view=list");
 
     const table = await screen.findByRole("table");
     expect(within(table).getByRole("link", { name: "Aldgate GmbH" })).toHaveAttribute(
@@ -246,7 +246,7 @@ describe("the /entities destination", () => {
         return undefined;
       },
     });
-    renderAt("/entities");
+    renderAt("/entities?view=list");
     const user = userEvent.setup();
 
     // The working list hides the archived entity.
@@ -293,7 +293,7 @@ describe("the /entities destination", () => {
         return undefined;
       },
     });
-    renderAt("/entities");
+    renderAt("/entities?view=list");
     const user = userEvent.setup();
 
     await user.click(await screen.findByRole("switch", { name: "Show archived" }));
@@ -319,7 +319,7 @@ describe("the /entities destination", () => {
         return undefined;
       },
     });
-    renderAt("/entities");
+    renderAt("/entities?view=list");
     const user = userEvent.setup();
 
     await user.click(await screen.findByRole("switch", { name: "Show archived" }));
@@ -331,7 +331,7 @@ describe("the /entities destination", () => {
 
   it("bounces a Contributor home and draws them no Entities nav item", async () => {
     stubApi({ signedIn: CONTRIBUTOR });
-    renderAt("/entities");
+    renderAt("/entities?view=list");
     // The home page renders instead of the registry.
     expect(await screen.findByRole("heading", { level: 1, name: "Home" })).toBeInTheDocument();
     const nav = screen.getByRole("navigation", { name: "Primary" });
@@ -340,7 +340,7 @@ describe("the /entities destination", () => {
 
   it("sends an unauthenticated visitor to login", async () => {
     stubApi({ signedIn: null, needsSetup: false });
-    renderAt("/entities");
+    renderAt("/entities?view=list");
     expect(await screen.findByRole("heading", { name: "Sign in" })).toBeInTheDocument();
   });
 });

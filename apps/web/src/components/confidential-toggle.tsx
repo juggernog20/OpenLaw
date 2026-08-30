@@ -46,7 +46,7 @@ export function ConfidentialToggle({
   disabled?: boolean;
   /** The commit's micro-state, where a surface commits (DES-017). */
   status?: ReactNode;
-  record?: "contract" | "matter";
+  record?: "contract" | "matter" | "entity";
   onChange: (confidential: boolean) => void;
 }>) {
   const labelId = `${id}-label`;
@@ -66,6 +66,11 @@ export function ConfidentialToggle({
             <FormattedMessage
               id="matters.confidential.field"
               defaultMessage="Confidential — restrict to the matter team"
+            />
+          ) : record === "entity" ? (
+            <FormattedMessage
+              id="entities.confidential.field"
+              defaultMessage="Confidential — restrict to the grant list"
             />
           ) : (
             <FormattedMessage

@@ -12,6 +12,7 @@ import {
   type LinkedContract,
 } from "../../lib/contract-matters";
 import { Button } from "../ui/button";
+import { RestrictedRecordCell } from "../restricted-record-cell";
 import { ContractMatterLinkDialog } from "../contracts/contract-matter-link-dialog";
 
 export function LinkedContractsCard({
@@ -92,12 +93,15 @@ export function LinkedContractsCard({
           <ul className="divide-y divide-border-default">
             {contracts.map((contract, index) =>
               contract.restricted ? (
-                <li key={`restricted-${index}`} className="py-3 text-sm text-muted">
-                  <FormattedMessage
-                    id="contractMatter.restrictedContract"
-                    defaultMessage="Restricted contract"
-                  />
-                </li>
+                <RestrictedRecordCell
+                  key={`restricted-${index}`}
+                  as="li"
+                  className="py-3"
+                  label={{
+                    id: "contractMatter.restrictedContract",
+                    defaultMessage: "Restricted contract",
+                  }}
+                />
               ) : (
                 <li
                   key={contract.number}

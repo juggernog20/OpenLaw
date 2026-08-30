@@ -338,6 +338,11 @@ function changeLabel(intl: IntlShape, key: string, context: NarrationContext): s
         "jurisdiction {Jurisdiction} formedOn {Formed on} " +
         "registrationNumber {Registration number} taxId {Tax ID} " +
         "registeredAgent {Registered agent} registeredAddress {Registered address} " +
+        "sharesAuthorized {Authorized shares} sharesIssued {Issued shares} " +
+        "parValue {Par value} appointedOn {Appointed on} resignedOn {Resigned on} " +
+        "linkedUser {Linked user} " +
+        "registrationId {Registration} recurrenceMonths {Repeat every (months)} " +
+        "nextDueOn {Due date} assigneeId {Assignee} matterId {Matter} " +
         "other {{key}}}",
     },
     { key },
@@ -2357,6 +2362,7 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
   ...taxonomyArms("contract_type", Tag, TAXONOMY_VERBS),
   ...taxonomyArms("matter_type", Tag, TAXONOMY_VERBS),
   ...taxonomyArms("entity_type", Tag, TAXONOMY_VERBS),
+  ...taxonomyArms("officer_role", Tag, TAXONOMY_VERBS),
   ...taxonomyArms("request_type", Tag, TAXONOMY_VERBS),
   // A status has a stage rather than a description, so it never writes
   // the `updated` verb.
@@ -2485,6 +2491,7 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
 
   // ---- Fields attached to a type ----
   ...typeFieldArms("contract_type_field"),
+  ...typeFieldArms("entity_type_field"),
   ...typeFieldArms("matter_type_field"),
   ...typeFieldArms("request_type_field"),
 
@@ -2526,6 +2533,44 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
     values: (intl, payload) => ({ name: thingName(intl, payload) }),
     changes: (intl, payload, context) => directChange(intl, payload, "entityType", context),
   },
+  "entity.confidentiality_set": {
+    icon: Lock,
+    message: defineMessage({
+      id: "activity.entity.confidentialitySet",
+      defaultMessage: "{actor} marked {name} confidential",
+    }),
+    values: (intl, payload) => ({ name: thingName(intl, payload) }),
+  },
+  "entity.confidentiality_cleared": {
+    icon: Lock,
+    message: defineMessage({
+      id: "activity.entity.confidentialityCleared",
+      defaultMessage: "{actor} cleared {name}'s confidential mark",
+    }),
+    values: (intl, payload) => ({ name: thingName(intl, payload) }),
+  },
+  "entity_grant.added": {
+    icon: UserPlus,
+    message: defineMessage({
+      id: "activity.entityGrant.added",
+      defaultMessage: "{actor} granted {person} access to {name}",
+    }),
+    values: (intl, payload) => ({
+      name: thingName(intl, payload),
+      person: named(intl, payload, "userName"),
+    }),
+  },
+  "entity_grant.removed": {
+    icon: UserMinus,
+    message: defineMessage({
+      id: "activity.entityGrant.removed",
+      defaultMessage: "{actor} removed {person}'s access to {name}",
+    }),
+    values: (intl, payload) => ({
+      name: thingName(intl, payload),
+      person: named(intl, payload, "userName"),
+    }),
+  },
   "entity.archived": {
     icon: Archive,
     message: defineMessage({
@@ -2541,6 +2586,157 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
       defaultMessage: "{actor} restored {name}",
     }),
     values: (intl, payload) => ({ name: thingName(intl, payload) }),
+  },
+  "entity_officer.created": {
+    icon: UserPlus,
+    message: defineMessage({
+      id: "activity.entityOfficer.created",
+      defaultMessage: "{actor} appointed {officer} as {role} on {name}",
+    }),
+    values: (intl, payload) => ({
+      name: thingName(intl, payload),
+      officer: named(intl, payload, "officerName"),
+      role: named(intl, payload, "role"),
+    }),
+  },
+  "entity_officer.updated": {
+    icon: UserCog,
+    message: defineMessage({
+      id: "activity.entityOfficer.updated",
+      defaultMessage: "{actor} changed officer {officer} on {name}",
+    }),
+    values: (intl, payload) => ({
+      name: thingName(intl, payload),
+      officer: named(intl, payload, "officerName"),
+    }),
+    changes: changesFrom,
+  },
+  "entity_officer.deleted": {
+    icon: UserMinus,
+    message: defineMessage({
+      id: "activity.entityOfficer.deleted",
+      defaultMessage: "{actor} removed officer {officer} from {name}",
+    }),
+    values: (intl, payload) => ({
+      name: thingName(intl, payload),
+      officer: named(intl, payload, "officerName"),
+    }),
+  },
+  "entity_registration.created": {
+    icon: Globe,
+    message: defineMessage({
+      id: "activity.entityRegistration.created",
+      defaultMessage: "{actor} added the {jurisdiction} registration to {name}",
+    }),
+    values: (intl, payload) => ({
+      name: thingName(intl, payload),
+      jurisdiction: named(intl, payload, "jurisdiction"),
+    }),
+  },
+  "entity_registration.updated": {
+    icon: PencilLine,
+    message: defineMessage({
+      id: "activity.entityRegistration.updated",
+      defaultMessage: "{actor} changed the {jurisdiction} registration on {name}",
+    }),
+    values: (intl, payload) => ({
+      name: thingName(intl, payload),
+      jurisdiction: named(intl, payload, "jurisdiction"),
+    }),
+    changes: changesFrom,
+  },
+  "entity_registration.deleted": {
+    icon: Trash2,
+    message: defineMessage({
+      id: "activity.entityRegistration.deleted",
+      defaultMessage: "{actor} removed the {jurisdiction} registration from {name}",
+    }),
+    values: (intl, payload) => ({
+      name: thingName(intl, payload),
+      jurisdiction: named(intl, payload, "jurisdiction"),
+    }),
+  },
+  "entity_holding.created": {
+    icon: Network,
+    message: defineMessage({
+      id: "activity.entityHolding.created",
+      defaultMessage: "{actor} recorded {owner} owning {percent}% of {owned}",
+    }),
+    values: (intl, payload) => ({
+      owner: named(intl, payload, "ownerName"),
+      owned: named(intl, payload, "ownedName"),
+      percent: named(intl, payload, "ownershipPercent"),
+    }),
+  },
+  "entity_holding.updated": {
+    icon: Network,
+    message: defineMessage({
+      id: "activity.entityHolding.updated",
+      defaultMessage: "{actor} changed {owner}'s Holding in {owned} from {from}% to {to}%",
+    }),
+    values: (intl, payload) => ({
+      owner: named(intl, payload, "ownerName"),
+      owned: named(intl, payload, "ownedName"),
+      from: named(intl, payload, "from"),
+      to: named(intl, payload, "to"),
+    }),
+  },
+  "entity_holding.deleted": {
+    icon: Network,
+    message: defineMessage({
+      id: "activity.entityHolding.deleted",
+      defaultMessage: "{actor} removed {owner}'s {percent}% Holding in {owned}",
+    }),
+    values: (intl, payload) => ({
+      owner: named(intl, payload, "ownerName"),
+      owned: named(intl, payload, "ownedName"),
+      percent: named(intl, payload, "ownershipPercent"),
+    }),
+  },
+  "entity_obligation.created": {
+    icon: CalendarPlus,
+    message: defineMessage({
+      id: "activity.entityObligation.created",
+      defaultMessage: "{actor} added the obligation {obligation} to {name}",
+    }),
+    values: (intl, payload) => ({
+      name: thingName(intl, payload),
+      obligation: named(intl, payload, "label"),
+    }),
+  },
+  "entity_obligation.updated": {
+    icon: PencilLine,
+    message: defineMessage({
+      id: "activity.entityObligation.updated",
+      defaultMessage: "{actor} changed the obligation {obligation} on {name}",
+    }),
+    values: (intl, payload) => ({
+      name: thingName(intl, payload),
+      obligation: named(intl, payload, "label"),
+    }),
+    changes: changesFrom,
+  },
+  "entity_obligation.deleted": {
+    icon: CalendarX,
+    message: defineMessage({
+      id: "activity.entityObligation.deleted",
+      defaultMessage: "{actor} removed the obligation {obligation} from {name}",
+    }),
+    values: (intl, payload) => ({
+      name: thingName(intl, payload),
+      obligation: named(intl, payload, "label"),
+    }),
+  },
+  "entity_obligation.filed": {
+    icon: Check,
+    message: defineMessage({
+      id: "activity.entityObligation.filed",
+      defaultMessage: "{actor} marked {obligation} filed on {name}",
+    }),
+    values: (intl, payload) => ({
+      name: thingName(intl, payload),
+      obligation: named(intl, payload, "label"),
+    }),
   },
 
   // ---- Data leaving the system ----
