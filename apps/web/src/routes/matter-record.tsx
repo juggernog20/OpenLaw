@@ -13,6 +13,7 @@ import {
   type LoaderFunctionArgs,
 } from "react-router";
 import { api } from "../lib/api";
+import { readRegistry } from "../lib/entities";
 import {
   commitsOnChange,
   isAnswered,
@@ -95,7 +96,7 @@ export async function matterRecordLoader({ params, request }: LoaderFunctionArgs
   ] = await Promise.all([
     api.GET("/api/v1/matters/{number}", { params: { path: { number } } }),
     canEdit ? api.GET("/api/v1/matters/options") : undefined,
-    canEdit ? api.GET("/api/v1/entities").catch(() => ({ data: undefined })) : undefined,
+    canEdit ? readRegistry().catch(() => ({ data: undefined })) : undefined,
     api.GET("/api/v1/matters/{number}/relations", { params: { path: { number } } }),
     api.GET("/api/v1/matters/{number}/contracts", { params: { path: { number } } }),
     api

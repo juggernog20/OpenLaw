@@ -7,6 +7,7 @@ import { MATTER_SORT_KEYS, type MatterSortKey } from "@openlaw/shared";
 import { FormattedMessage, useIntl } from "react-intl";
 import { redirect, useLoaderData, useNavigate } from "react-router";
 import { api } from "../lib/api";
+import { readRegistry } from "../lib/entities";
 import { CONTROL_CLASS } from "../lib/form-controls";
 import {
   builtInLayout,
@@ -85,7 +86,7 @@ export async function mattersLoader() {
   const [list, options, entities] = await Promise.all([
     api.GET("/api/v1/matters", { params: { query: listQuery(layout) } }),
     api.GET("/api/v1/matters/options"),
-    canCreate ? api.GET("/api/v1/entities") : undefined,
+    canCreate ? readRegistry() : undefined,
   ]);
   if (!list.data || !options.data || (canCreate && !entities?.data)) {
     throw new Error("The matter list could not be read.");

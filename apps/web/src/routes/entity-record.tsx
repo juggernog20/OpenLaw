@@ -8,6 +8,7 @@ import { Archive, ArchiveRestore, Building2, ChevronRight } from "lucide-react";
 import { api } from "../lib/api";
 import {
   ENTITY_STATUSES,
+  readRegistry,
   STATUS_PILL,
   statusLabel,
   type EntityCustomFieldRefs,
@@ -80,7 +81,7 @@ export async function entityRecordLoader({ params, request }: LoaderFunctionArgs
     api.GET("/api/v1/entities/officer-roles"),
     api.GET("/api/v1/entities/{id}/officers", { params: { path: { id } } }),
     api.GET("/api/v1/entities/{id}/registrations", { params: { path: { id } } }),
-    api.GET("/api/v1/entities"),
+    readRegistry(),
     api.GET("/api/v1/entities/{id}/holdings", { params: { path: { id } } }),
     api.GET("/api/v1/entities/{id}/obligations", { params: { path: { id } } }),
     api.GET("/api/v1/entities/obligation-options"),

@@ -285,6 +285,11 @@ export function stubApi(state: ApiState) {
     if (call.url.pathname === "/api/v1/documents/options" && call.method === "GET") {
       return json(200, { counterparties: [], uploaders: [], records: [] });
     }
+    // M27's Entity registry filter candidates. Empty is the ordinary
+    // fresh-install answer; the destination's filter suite supplies rows.
+    if (call.url.pathname === "/api/v1/entities/list-options" && call.method === "GET") {
+      return json(200, { jurisdictions: [], majorityOwners: [] });
+    }
     // The portal's own bell, which every portal render reads on mount
     // and on every navigation (NOT-001, M20/9). Zero and empty by
     // default, exactly as the staff bell's two reads above; only the

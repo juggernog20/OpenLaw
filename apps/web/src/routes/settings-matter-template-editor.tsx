@@ -8,6 +8,7 @@ import { defineMessages, FormattedMessage, useIntl, type IntlShape } from "react
 import { Link, redirect, useLoaderData, type LoaderFunctionArgs } from "react-router";
 import type { paths } from "@openlaw/api-client";
 import { api } from "../lib/api";
+import { readRegistry } from "../lib/entities";
 import {
   emptyDraft,
   toDraft,
@@ -57,7 +58,7 @@ export async function settingsMatterTemplateEditorLoader({ params }: LoaderFunct
     }),
     api.GET("/api/v1/fields", { params: { query: { includeArchived: "true" } } }),
     api.GET("/api/v1/users", {}),
-    api.GET("/api/v1/entities", { params: { query: { includeArchived: "true" } } }),
+    readRegistry({ includeArchived: "true" }),
   ]);
   if (!attachments.data || !catalog.data || !users.data || !entities.data) {
     throw new Error("The Matter template fields could not be read.");

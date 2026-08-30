@@ -3523,11 +3523,28 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** The registry, ordered by legal name (ENT-001) — the seam the M8 signing-entity picker consumes; archived rows only with includeArchived=true */
+    /** The filtered, sorted, keyset-paged Entity registry with its soonest open obligation; the entities array remains the M8 signing-entity picker seam */
     get: operations["listEntities"];
     put?: never;
     /** Register an entity with its ENT-001 identity card: legal name and type required, the rest optional; status defaults to active */
     post: operations["createEntity"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/entities/list-options": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Reach-scoped Jurisdiction and Majority owner options for the Entity registry */
+    get: operations["listEntityRegistryOptions"];
+    put?: never;
+    post?: never;
     delete?: never;
     options?: never;
     head?: never;
@@ -20589,6 +20606,13 @@ export interface operations {
     parameters: {
       query?: {
         includeArchived?: "true" | "false";
+        type?: string;
+        status?: "active" | "dormant" | "dissolved" | "divested";
+        jurisdiction?: string;
+        majorityOwner?: string;
+        sort?: "name" | "type" | "jurisdiction" | "status" | "nextObligation" | "created";
+        dir?: "asc" | "desc";
+        cursor?: string;
       };
       header?: never;
       path?: never;
@@ -20628,7 +20652,13 @@ export interface operations {
               createdAt: string;
               /** Format: date-time */
               updatedAt: string;
+              nextObligation: {
+                label: string;
+                /** Format: date */
+                dueOn: string;
+              } | null;
             }[];
+            nextCursor: string | null;
           };
         };
       };
@@ -20701,6 +20731,41 @@ export interface operations {
               /** Format: date-time */
               updatedAt: string;
             };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  listEntityRegistryOptions: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            jurisdictions: string[];
+            majorityOwners: {
+              id: string;
+              legalName: string;
+            }[];
           };
         };
       };
@@ -21705,7 +21770,7 @@ export interface operations {
   listSavedViews: {
     parameters: {
       query: {
-        surface: "contracts" | "matters" | "documents";
+        surface: "contracts" | "matters" | "documents" | "entities";
       };
       header?: never;
       path?: never;
@@ -21723,7 +21788,7 @@ export interface operations {
             views: {
               id: string;
               /** @enum {string} */
-              surface: "contracts" | "matters" | "documents";
+              surface: "contracts" | "matters" | "documents" | "entities";
               name: string;
               config: {
                 columns: {
@@ -21767,7 +21832,7 @@ export interface operations {
       content: {
         "application/json": {
           /** @enum {string} */
-          surface: "contracts" | "matters" | "documents";
+          surface: "contracts" | "matters" | "documents" | "entities";
           name: string;
           config: {
             columns: {
@@ -21799,7 +21864,7 @@ export interface operations {
             views: {
               id: string;
               /** @enum {string} */
-              surface: "contracts" | "matters" | "documents";
+              surface: "contracts" | "matters" | "documents" | "entities";
               name: string;
               config: {
                 columns: {
@@ -21853,7 +21918,7 @@ export interface operations {
             views: {
               id: string;
               /** @enum {string} */
-              surface: "contracts" | "matters" | "documents";
+              surface: "contracts" | "matters" | "documents" | "entities";
               name: string;
               config: {
                 columns: {
@@ -21929,7 +21994,7 @@ export interface operations {
             views: {
               id: string;
               /** @enum {string} */
-              surface: "contracts" | "matters" | "documents";
+              surface: "contracts" | "matters" | "documents" | "entities";
               name: string;
               config: {
                 columns: {

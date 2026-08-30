@@ -2792,21 +2792,6 @@
   "entities.chart.title": {
     "defaultMessage": "Entity ownership chart"
   },
-  "entities.column.actions": {
-    "defaultMessage": "Actions"
-  },
-  "entities.column.jurisdiction": {
-    "defaultMessage": "Jurisdiction"
-  },
-  "entities.column.legalName": {
-    "defaultMessage": "Legal name"
-  },
-  "entities.column.status": {
-    "defaultMessage": "Status"
-  },
-  "entities.column.type": {
-    "defaultMessage": "Type"
-  },
   "entities.confidential.banner": {
     "defaultMessage": "Confidential Entity — Administrators and granted Legal Team Members see it."
   },
@@ -2836,12 +2821,6 @@
   },
   "entities.documents.folder.recordRoot": {
     "defaultMessage": "The Entity itself"
-  },
-  "entities.empty.body": {
-    "defaultMessage": "The registry holds your own corporate entities — subsidiaries, holding companies, and branches. Register them with their legal details, and contracts pick the signing entity from this list."
-  },
-  "entities.empty.title": {
-    "defaultMessage": "No entities yet"
   },
   "entities.form.formedOn": {
     "defaultMessage": "Formed on"
@@ -2924,8 +2903,122 @@
   "entities.linked.matters": {
     "defaultMessage": "Matters"
   },
-  "entities.listError": {
+  "entities.list.archived": {
+    "defaultMessage": "Archived"
+  },
+  "entities.list.column.actions": {
+    "defaultMessage": "Actions"
+  },
+  "entities.list.column.created": {
+    "defaultMessage": "Created"
+  },
+  "entities.list.column.jurisdiction": {
+    "defaultMessage": "Jurisdiction"
+  },
+  "entities.list.column.legalName": {
+    "defaultMessage": "Legal name"
+  },
+  "entities.list.column.nextObligation": {
+    "defaultMessage": "Next obligation"
+  },
+  "entities.list.column.registrationNumber": {
+    "defaultMessage": "Registration no."
+  },
+  "entities.list.column.status": {
+    "defaultMessage": "Status"
+  },
+  "entities.list.column.type": {
+    "defaultMessage": "Type"
+  },
+  "entities.list.countShown": {
+    "defaultMessage": "{count, plural, one {# entity shown} other {# entities shown}}"
+  },
+  "entities.list.empty.body": {
+    "defaultMessage": "The registry holds your own corporate entities — subsidiaries, holding companies, and branches. Register them with their legal details, and contracts pick the signing entity from this list."
+  },
+  "entities.list.empty.title": {
+    "defaultMessage": "No entities yet"
+  },
+  "entities.list.error": {
     "defaultMessage": "The registry could not be read. Try again."
+  },
+  "entities.list.filter.active": {
+    "defaultMessage": "Active filters"
+  },
+  "entities.list.filter.chip": {
+    "defaultMessage": "{name}: {value}"
+  },
+  "entities.list.filter.clear": {
+    "defaultMessage": "Clear all"
+  },
+  "entities.list.filter.clear.label": {
+    "defaultMessage": "Clear all filters"
+  },
+  "entities.list.filter.jurisdiction": {
+    "defaultMessage": "Jurisdiction"
+  },
+  "entities.list.filter.jurisdiction.all": {
+    "defaultMessage": "All jurisdictions"
+  },
+  "entities.list.filter.majorityOwner": {
+    "defaultMessage": "Majority owner"
+  },
+  "entities.list.filter.majorityOwner.all": {
+    "defaultMessage": "All majority owners"
+  },
+  "entities.list.filter.matchedNone": {
+    "defaultMessage": "The active filters matched no Entities."
+  },
+  "entities.list.filter.remove": {
+    "defaultMessage": "Remove {name} filter"
+  },
+  "entities.list.filter.status": {
+    "defaultMessage": "Status"
+  },
+  "entities.list.filter.status.all": {
+    "defaultMessage": "All statuses"
+  },
+  "entities.list.filter.type": {
+    "defaultMessage": "Type"
+  },
+  "entities.list.filter.type.all": {
+    "defaultMessage": "All types"
+  },
+  "entities.list.filteredEmpty.body": {
+    "defaultMessage": "Clear filters to return to the whole registry."
+  },
+  "entities.list.filteredEmpty.clear": {
+    "defaultMessage": "Clear filters"
+  },
+  "entities.list.filteredEmpty.title": {
+    "defaultMessage": "No Entities match these filters."
+  },
+  "entities.list.loadedMore": {
+    "defaultMessage": "{count, plural, one {# more Entity loaded} other {# more Entities loaded}}"
+  },
+  "entities.list.more": {
+    "defaultMessage": "Show more"
+  },
+  "entities.list.moreError": {
+    "defaultMessage": "The next Entities could not be read. Try again."
+  },
+  "entities.list.restore": {
+    "defaultMessage": "Restore"
+  },
+  "entities.list.restoreError": {
+    "defaultMessage": "The entity could not be restored."
+  },
+  "entities.list.restoreRow": {
+    "defaultMessage": "Restore {name}"
+  },
+  "entities.list.showArchived": {
+    "defaultMessage": "Show archived"
+  },
+  "entities.list.value.noObligation": {
+    "defaultMessage": "—"
+  },
+  "entities.list.value.none": {
+    "defaultMessage": "—"
   },
   "entities.ownership.addFailed": {
     "defaultMessage": "The Holding could not be added."
@@ -3200,17 +3293,8 @@
   "entities.register": {
     "defaultMessage": "Register entity"
   },
-  "entities.restoreError": {
-    "defaultMessage": "The entity could not be restored."
-  },
-  "entities.restoreRow": {
-    "defaultMessage": "Restore {name}"
-  },
   "entities.restricted": {
     "defaultMessage": "Restricted Entity"
-  },
-  "entities.showArchived": {
-    "defaultMessage": "Show archived"
   },
   "entities.statusLabel": {
     "defaultMessage": "{status, select, active {Active} dormant {Dormant} dissolved {Dissolved} divested {Divested} other {Unknown}}"

@@ -3134,6 +3134,10 @@ The Matters destination is DES-046's second catalogue and the first proof that t
 
 The Documents destination adopts the managed table whole. Title is its required flex column. Owning record, current Version kind, format, size, Version count, uploader, and uploaded time complete the built-in layout. The filter state joins the saved layout config, and Uploaded descending is the natural order. Resize, reorder, show and hide, sort, saved views, row truncation, horizontal escape, and the paging foot use the shared components unchanged.
 
+### Addendum (2026-08-30, M27/9, [#581](https://github.com/juggernog20/OpenLaw/issues/581)): Entities is the fourth managed-list catalogue
+
+The Entity registry adopts the managed table whole under the Calendar/List/Chart destination switch. Legal name is its required flex column; Type, Jurisdiction, Registration no., Status, and Next obligation complete the built-in layout, with Created available from the column menu. Type, Status, Jurisdiction, Majority owner, and Show archived are the saved filter row. The shared resize, reorder, sort, saved-view, truncation, horizontal escape, archived row action, and keyset foot behaviours are unchanged.
+
 ## DES-047: The Team roster is an activity-bar applet (amends DES-016, DES-032, DES-028)
 
 - **Status:** Accepted
