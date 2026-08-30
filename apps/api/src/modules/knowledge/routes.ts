@@ -77,6 +77,9 @@ const KnowledgeItemSchema = z.object({
   folderName: z.string().nullable(),
   state: z.enum(KNOWLEDGE_ITEM_STATES),
   audience: z.enum(KNOWLEDGE_ITEM_AUDIENCES),
+  publishedAt: z.iso.datetime({ offset: true }).nullable(),
+  archivedAt: z.iso.datetime({ offset: true }).nullable(),
+  deflectionLinkCount: z.number().int().nonnegative(),
   replacedBy: ReferenceSchema.nullable(),
   primaryDocument: PrimaryDocumentSchema.nullable(),
   documentCount: z.number().int().nonnegative(),
@@ -149,6 +152,10 @@ function itemProjection(shape: keyof typeof itemColumns) {
       where counted_document.knowledge_item_id = ${knowledgeItems.id}
         and counted_document.archived_at is null
     )`,
+    deflectionLinkCount: sql<number>`(
+      select count(*)::int from intake_links counted_link
+      where counted_link.knowledge_item_id = ${knowledgeItems.id}
+    )`,
     createdBy: {
       id: creators.id,
       displayName: creators.displayName,
@@ -177,6 +184,7 @@ type ProjectedItem = {
   primaryMimeType: string | null;
   primaryRenderFamily: RenderFamily;
   documentCount: number;
+  deflectionLinkCount: number;
   createdBy: { id: string; displayName: string; image: string | null; archivedAt: Date | null };
   updatedBy: { id: string; displayName: string; image: string | null; archivedAt: Date | null };
 };
@@ -191,6 +199,9 @@ function summarize(row: ProjectedItem) {
     folderName: row.folderName,
     state: row.item.state,
     audience: row.item.audience,
+    publishedAt: row.item.publishedAt?.toISOString() ?? null,
+    archivedAt: row.item.archivedAt?.toISOString() ?? null,
+    deflectionLinkCount: row.deflectionLinkCount,
     replacedBy:
       row.replacementId && row.replacementTitle
         ? { id: row.replacementId, title: row.replacementTitle }
@@ -699,6 +710,7 @@ export const knowledgeRoutes: FastifyPluginAsyncZod = async (app) => {
             folderId: IdSchema.nullable().optional(),
             replacedById: IdSchema.nullable().optional(),
             primaryDocumentId: IdSchema.nullable().optional(),
+            audience: z.enum(KNOWLEDGE_ITEM_AUDIENCES).optional(),
           })
           .refine((body) => Object.keys(body).length > 0, {
             message: "Name at least one field to change.",
@@ -786,6 +798,10 @@ export const knowledgeRoutes: FastifyPluginAsyncZod = async (app) => {
           patch.replacedById = to?.id ?? null;
           changed.replacedBy = { from: from[0]?.title ?? null, to: to?.title ?? null };
         }
+        if (request.body.audience !== undefined && request.body.audience !== target.audience) {
+          patch.audience = request.body.audience;
+          changed.audience = { from: target.audience, to: request.body.audience };
+        }
         if (
           request.body.primaryDocumentId !== undefined &&
           request.body.primaryDocumentId !== target.primaryDocumentId
@@ -833,6 +849,184 @@ export const knowledgeRoutes: FastifyPluginAsyncZod = async (app) => {
           action: "knowledge_item.updated",
           visibility: "legal_only",
           payload: { title: updated!.title, changed },
+        });
+      });
+      return { knowledgeItem: project((await readItem(app.db, request.params.id))!) };
+    },
+  );
+
+  async function lifecycleTarget(tx: Transaction, id: string) {
+    const [target] = await tx
+      .select()
+      .from(knowledgeItems)
+      .where(eq(knowledgeItems.id, id))
+      .limit(1)
+      .for("update");
+    if (!target) throw httpError(404, "No Knowledge Item exists with this id.");
+    return target;
+  }
+
+  async function replacementForArchive(tx: Transaction, itemId: string, replacementId: string) {
+    if (replacementId === itemId) throw httpError(409, "A Knowledge Item cannot replace itself.");
+    const [replacement] = await tx
+      .select({ id: knowledgeItems.id, title: knowledgeItems.title })
+      .from(knowledgeItems)
+      .where(and(eq(knowledgeItems.id, replacementId), isNull(knowledgeItems.archivedAt)))
+      .limit(1)
+      .for("key share");
+    if (!replacement) throw httpError(400, "The replacement must be a live Knowledge Item.");
+    return replacement;
+  }
+
+  app.post(
+    "/knowledge/:id/publish",
+    {
+      preHandler: requireMember,
+      schema: {
+        operationId: "publishKnowledgeItem",
+        tags: ["knowledge"],
+        params: z.object({ id: IdSchema }),
+        body: z.strictObject({}),
+        response: {
+          200: z.object({ knowledgeItem: KnowledgeItemSchema }),
+          default: problemResponse,
+        },
+      },
+    },
+    async (request) => {
+      await app.db.transaction(async (tx) => {
+        const target = await lifecycleTarget(tx, request.params.id);
+        if (target.archivedAt)
+          throw httpError(409, "Restore this Knowledge Item before publishing it.");
+        if (target.state === "published") return;
+        await tx
+          .update(knowledgeItems)
+          .set({ state: "published", publishedAt: new Date(), updatedBy: request.user.id })
+          .where(eq(knowledgeItems.id, target.id));
+        await recordActivity(tx, {
+          entityType: "knowledge_item",
+          entityId: target.id,
+          actorId: request.user.id,
+          action: "knowledge_item.published",
+          visibility: "legal_only",
+          payload: { title: target.title },
+        });
+      });
+      return { knowledgeItem: project((await readItem(app.db, request.params.id))!) };
+    },
+  );
+
+  app.post(
+    "/knowledge/:id/unpublish",
+    {
+      preHandler: requireMember,
+      schema: {
+        operationId: "unpublishKnowledgeItem",
+        tags: ["knowledge"],
+        params: z.object({ id: IdSchema }),
+        body: z.strictObject({}),
+        response: {
+          200: z.object({ knowledgeItem: KnowledgeItemSchema }),
+          default: problemResponse,
+        },
+      },
+    },
+    async (request) => {
+      await app.db.transaction(async (tx) => {
+        const target = await lifecycleTarget(tx, request.params.id);
+        if (target.archivedAt)
+          throw httpError(409, "Restore this Knowledge Item before returning it to draft.");
+        if (target.state === "draft") return;
+        await tx
+          .update(knowledgeItems)
+          .set({ state: "draft", publishedAt: null, updatedBy: request.user.id })
+          .where(eq(knowledgeItems.id, target.id));
+        await recordActivity(tx, {
+          entityType: "knowledge_item",
+          entityId: target.id,
+          actorId: request.user.id,
+          action: "knowledge_item.unpublished",
+          visibility: "legal_only",
+          payload: { title: target.title },
+        });
+      });
+      return { knowledgeItem: project((await readItem(app.db, request.params.id))!) };
+    },
+  );
+
+  app.post(
+    "/knowledge/:id/archive",
+    {
+      preHandler: requireMember,
+      schema: {
+        operationId: "archiveKnowledgeItem",
+        tags: ["knowledge"],
+        params: z.object({ id: IdSchema }),
+        body: z.strictObject({ replacedById: IdSchema.optional() }),
+        response: {
+          200: z.object({ knowledgeItem: KnowledgeItemSchema }),
+          default: problemResponse,
+        },
+      },
+    },
+    async (request) => {
+      await app.db.transaction(async (tx) => {
+        const target = await lifecycleTarget(tx, request.params.id);
+        if (target.archivedAt) return;
+        const replacement = request.body.replacedById
+          ? await replacementForArchive(tx, target.id, request.body.replacedById)
+          : null;
+        await tx
+          .update(knowledgeItems)
+          .set({
+            archivedAt: new Date(),
+            replacedById: replacement?.id ?? null,
+            updatedBy: request.user.id,
+          })
+          .where(eq(knowledgeItems.id, target.id));
+        await recordActivity(tx, {
+          entityType: "knowledge_item",
+          entityId: target.id,
+          actorId: request.user.id,
+          action: "knowledge_item.archived",
+          visibility: "legal_only",
+          payload: { title: target.title, replacedBy: replacement?.title ?? null },
+        });
+      });
+      return { knowledgeItem: project((await readItem(app.db, request.params.id))!) };
+    },
+  );
+
+  app.post(
+    "/knowledge/:id/restore",
+    {
+      preHandler: requireMember,
+      schema: {
+        operationId: "restoreKnowledgeItem",
+        tags: ["knowledge"],
+        params: z.object({ id: IdSchema }),
+        body: z.strictObject({}),
+        response: {
+          200: z.object({ knowledgeItem: KnowledgeItemSchema }),
+          default: problemResponse,
+        },
+      },
+    },
+    async (request) => {
+      await app.db.transaction(async (tx) => {
+        const target = await lifecycleTarget(tx, request.params.id);
+        if (!target.archivedAt) return;
+        await tx
+          .update(knowledgeItems)
+          .set({ archivedAt: null, updatedBy: request.user.id })
+          .where(eq(knowledgeItems.id, target.id));
+        await recordActivity(tx, {
+          entityType: "knowledge_item",
+          entityId: target.id,
+          actorId: request.user.id,
+          action: "knowledge_item.restored",
+          visibility: "legal_only",
+          payload: { title: target.title },
         });
       });
       return { knowledgeItem: project((await readItem(app.db, request.params.id))!) };

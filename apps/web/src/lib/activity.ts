@@ -2562,6 +2562,38 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
     values: (intl, payload) => ({ name: named(intl, payload, "title") }),
     changes: changesFrom,
   },
+  "knowledge_item.published": {
+    icon: Globe,
+    message: defineMessage({
+      id: "activity.knowledgeItem.published",
+      defaultMessage: "{actor} published {name}",
+    }),
+    values: (intl, payload) => ({ name: named(intl, payload, "title") }),
+  },
+  "knowledge_item.unpublished": {
+    icon: Undo2,
+    message: defineMessage({
+      id: "activity.knowledgeItem.unpublished",
+      defaultMessage: "{actor} returned {name} to draft",
+    }),
+    values: (intl, payload) => ({ name: named(intl, payload, "title") }),
+  },
+  "knowledge_item.archived": {
+    icon: Archive,
+    message: defineMessage({
+      id: "activity.knowledgeItem.archived",
+      defaultMessage: "{actor} archived {name}",
+    }),
+    values: (intl, payload) => ({ name: named(intl, payload, "title") }),
+  },
+  "knowledge_item.restored": {
+    icon: ArchiveRestore,
+    message: defineMessage({
+      id: "activity.knowledgeItem.restored",
+      defaultMessage: "{actor} restored {name}",
+    }),
+    values: (intl, payload) => ({ name: named(intl, payload, "title") }),
+  },
   "knowledge_folder.created": {
     icon: FolderPlus,
     message: defineMessage({

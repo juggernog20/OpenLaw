@@ -2,7 +2,18 @@
 
 /** M28's one-section Knowledge record with DES-017 field commits. */
 import { useMemo, useRef, useState } from "react";
-import { BookOpen, ChevronRight, Eye, Pencil } from "lucide-react";
+import {
+  Archive,
+  ArchiveRestore,
+  BookOpen,
+  ChevronRight,
+  Eye,
+  Globe2,
+  MoreHorizontal,
+  Pencil,
+  Send,
+  Undo2,
+} from "lucide-react";
 import { FormattedMessage, useIntl } from "react-intl";
 import { Link, redirect, useLoaderData, type LoaderFunctionArgs } from "react-router";
 import type { paths } from "@openlaw/api-client";
@@ -21,6 +32,13 @@ import { StatusNote } from "../components/status-note";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
+import { Dialog, DialogContent, DialogTitle } from "../components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "../components/ui/dropdown-menu";
 import { DocumentsCard } from "../components/documents/documents-card";
 import { DocPanel } from "../components/documents/doc-panel";
 import { RecordContext } from "../components/record-context";
@@ -36,7 +54,7 @@ export async function knowledgeRecordLoader({ params, request }: LoaderFunctionA
   const landingQuery = new URL(request.url).searchParams;
   const documentId = landingQuery.get("doc")?.trim();
   const versionId = landingQuery.get("version")?.trim();
-  const [item, types, folders, paper, landing] = await Promise.all([
+  const [item, types, folders, paper, landing, replacements] = await Promise.all([
     api.GET("/api/v1/knowledge/{id}", { params: { path: { id } } }),
     api.GET("/api/v1/knowledge/type-options"),
     api.GET("/api/v1/knowledge/folders"),
@@ -44,8 +62,11 @@ export async function knowledgeRecordLoader({ params, request }: LoaderFunctionA
     documentId && versionId
       ? readDocumentLanding({ entityType: "knowledge_item", id }, documentId, versionId)
       : null,
+    api.GET("/api/v1/knowledge", {
+      params: { query: { sort: "title", dir: "asc" } },
+    }),
   ]);
-  if (!item.data || !types.data || !folders.data || !paper.ok)
+  if (!item.data || !types.data || !folders.data || !paper.ok || !replacements.data)
     throw new Error("The Knowledge item could not be read.");
   return {
     user,
@@ -56,10 +77,11 @@ export async function knowledgeRecordLoader({ params, request }: LoaderFunctionA
     documentCursor: paper.nextCursor,
     landing,
     documentFindQuery: landingQuery.get("find")?.trim() || null,
+    replacementItems: replacements.data.knowledgeItems.filter((row) => row.id !== id),
   };
 }
 
-type FieldKey = "title" | "type" | "folder" | "body";
+type FieldKey = "title" | "type" | "folder" | "body" | "audience";
 
 export function KnowledgeRecordPage() {
   const loaded = useLoaderData<typeof knowledgeRecordLoader>();
@@ -70,6 +92,11 @@ export function KnowledgeRecordPage() {
   const [body, setBody] = useState(saved.body ?? "");
   const [editingBody, setEditingBody] = useState(Boolean(saved.body));
   const [preview, setPreview] = useState(false);
+  const [actionBusy, setActionBusy] = useState(false);
+  const [actionError, setActionError] = useState<string>();
+  const [archiveOpen, setArchiveOpen] = useState(false);
+  const [replacementId, setReplacementId] = useState("");
+  const [reachWarning, setReachWarning] = useState<"unpublish" | "legal_only" | null>(null);
   const [paper, setPaper] = useState<ContractDocument[]>(loaded.documents);
   const [paperCursor, setPaperCursor] = useState<string | null>(loaded.documentCursor);
   const [filed, setFiled] = useState<ContractDocument[]>([]);
@@ -88,9 +115,9 @@ export function KnowledgeRecordPage() {
       ownerId: null,
       confidential: false,
       canEdit: true,
-      frozen: false,
+      frozen: saved.archivedAt !== null,
     }),
-    [loaded.user.id, loaded.user.role, saved.id],
+    [loaded.user.id, loaded.user.role, saved.archivedAt, saved.id],
   );
   const open = useMemo(() => {
     if (!reading) return null;
@@ -131,6 +158,67 @@ export function KnowledgeRecordPage() {
     requestAnimationFrame(() => textarea.current?.focus());
   }
 
+  async function runAction(kind: "publish" | "unpublish" | "archive" | "restore") {
+    if (actionBusy) return;
+    setActionBusy(true);
+    setActionError(undefined);
+    const response =
+      kind === "publish"
+        ? await api.POST("/api/v1/knowledge/{id}/publish", {
+            params: { path: { id: saved.id } },
+            body: {},
+          })
+        : kind === "unpublish"
+          ? await api.POST("/api/v1/knowledge/{id}/unpublish", {
+              params: { path: { id: saved.id } },
+              body: {},
+            })
+          : kind === "archive"
+            ? await api.POST("/api/v1/knowledge/{id}/archive", {
+                params: { path: { id: saved.id } },
+                body: replacementId ? { replacedById: replacementId } : {},
+              })
+            : await api.POST("/api/v1/knowledge/{id}/restore", {
+                params: { path: { id: saved.id } },
+                body: {},
+              });
+    setActionBusy(false);
+    if (!response.data) {
+      setActionError(
+        intl.formatMessage({
+          id: "knowledge.action.failed",
+          defaultMessage: "The Knowledge Item could not be changed.",
+        }),
+      );
+      return;
+    }
+    setSaved(response.data.knowledgeItem);
+    setArchiveOpen(false);
+    setReachWarning(null);
+  }
+
+  function requestUnpublish() {
+    if (saved.deflectionLinkCount > 0) setReachWarning("unpublish");
+    else void runAction("unpublish");
+  }
+
+  function requestAudience(audience: "legal_only" | "everyone") {
+    if (audience === saved.audience) return;
+    if (audience === "legal_only" && saved.deflectionLinkCount > 0) {
+      setReachWarning("legal_only");
+      return;
+    }
+    void commit("audience", { audience });
+  }
+
+  function confirmLostReach() {
+    if (reachWarning === "unpublish") void runAction("unpublish");
+    else if (reachWarning === "legal_only") {
+      setReachWarning(null);
+      void commit("audience", { audience: "legal_only" });
+    }
+  }
+
   return (
     <RecordContext.Provider value={recordFacts}>
       <AppShell
@@ -155,6 +243,70 @@ export function KnowledgeRecordPage() {
                 <FormattedMessage id="knowledge.draftMarker" defaultMessage="Draft" />
               </span>
             ) : null}
+            {saved.audience === "everyone" && saved.state === "published" && !saved.archivedAt ? (
+              <span className="inline-flex items-center gap-1 rounded-pill bg-status-info-bg px-2 py-0.5 text-xs font-medium text-status-info-fg">
+                <Globe2 size={12} aria-hidden="true" />
+                <FormattedMessage id="knowledge.onPortal" defaultMessage="On the portal" />
+              </span>
+            ) : null}
+            {saved.archivedAt ? (
+              <span className="rounded-pill bg-status-neutral-bg px-2 py-0.5 text-xs font-medium text-status-neutral-fg">
+                <FormattedMessage id="knowledge.archivedMarker" defaultMessage="Archived" />
+              </span>
+            ) : null}
+            <div className="ml-auto flex items-center gap-2">
+              <StatusNote
+                status={actionBusy ? "saving" : actionError ? "error" : "idle"}
+                detail={actionError}
+              />
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    disabled={actionBusy}
+                    aria-label={intl.formatMessage({
+                      id: "knowledge.actions",
+                      defaultMessage: "Knowledge Item actions",
+                    })}
+                  >
+                    <MoreHorizontal size={16} aria-hidden="true" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  {saved.archivedAt ? (
+                    <DropdownMenuItem onSelect={() => void runAction("restore")}>
+                      <ArchiveRestore size={16} aria-hidden="true" />
+                      <FormattedMessage id="knowledge.action.restore" defaultMessage="Restore" />
+                    </DropdownMenuItem>
+                  ) : (
+                    <>
+                      {saved.state === "draft" ? (
+                        <DropdownMenuItem onSelect={() => void runAction("publish")}>
+                          <Send size={16} aria-hidden="true" />
+                          <FormattedMessage
+                            id="knowledge.action.publish"
+                            defaultMessage="Publish"
+                          />
+                        </DropdownMenuItem>
+                      ) : (
+                        <DropdownMenuItem onSelect={requestUnpublish}>
+                          <Undo2 size={16} aria-hidden="true" />
+                          <FormattedMessage
+                            id="knowledge.action.unpublish"
+                            defaultMessage="Unpublish"
+                          />
+                        </DropdownMenuItem>
+                      )}
+                      <DropdownMenuItem onSelect={() => setArchiveOpen(true)}>
+                        <Archive size={16} aria-hidden="true" />
+                        <FormattedMessage id="knowledge.action.archive" defaultMessage="Archive" />
+                      </DropdownMenuItem>
+                    </>
+                  )}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
           </section>
         }
       >
@@ -195,6 +347,7 @@ export function KnowledgeRecordPage() {
                     <Input
                       id="knowledge-record-title"
                       value={title}
+                      disabled={saved.archivedAt !== null}
                       onChange={(event) => setTitle(event.target.value)}
                       onBlur={() => commits.commitText("title", titleField)}
                       onKeyDown={(event) => {
@@ -230,6 +383,7 @@ export function KnowledgeRecordPage() {
                       id="knowledge-record-type"
                       className={CONTROL_CLASS}
                       value={saved.knowledgeTypeId}
+                      disabled={saved.archivedAt !== null}
                       onChange={(event) =>
                         void commit("type", { knowledgeTypeId: event.target.value })
                       }
@@ -255,6 +409,7 @@ export function KnowledgeRecordPage() {
                       id="knowledge-record-folder"
                       className={CONTROL_CLASS}
                       value={saved.folderId ?? ""}
+                      disabled={saved.archivedAt !== null}
                       onChange={(event) =>
                         void commit("folder", { folderId: event.target.value || null })
                       }
@@ -271,6 +426,39 @@ export function KnowledgeRecordPage() {
                     <StatusNote
                       status={commits.status.folder ?? "idle"}
                       detail={commits.error.folder}
+                    />
+                  </div>
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  <Label htmlFor="knowledge-record-audience">
+                    <FormattedMessage id="knowledge.form.audience" defaultMessage="Audience" />
+                  </Label>
+                  <div className="flex items-center gap-2">
+                    <select
+                      id="knowledge-record-audience"
+                      className={CONTROL_CLASS}
+                      value={saved.audience}
+                      disabled={saved.archivedAt !== null}
+                      onChange={(event) =>
+                        requestAudience(event.target.value as "legal_only" | "everyone")
+                      }
+                    >
+                      <option value="legal_only">
+                        {intl.formatMessage({
+                          id: "knowledge.audience.legalOnly",
+                          defaultMessage: "Legal Only",
+                        })}
+                      </option>
+                      <option value="everyone">
+                        {intl.formatMessage({
+                          id: "knowledge.audience.everyone",
+                          defaultMessage: "Everyone",
+                        })}
+                      </option>
+                    </select>
+                    <StatusNote
+                      status={commits.status.audience ?? "idle"}
+                      detail={commits.error.audience}
                     />
                   </div>
                 </div>
@@ -371,6 +559,7 @@ export function KnowledgeRecordPage() {
                     <Button
                       size="sm"
                       variant="secondary"
+                      disabled={saved.archivedAt !== null}
                       aria-pressed={preview}
                       onClick={() => setPreview((value) => !value)}
                     >
@@ -392,7 +581,11 @@ export function KnowledgeRecordPage() {
               <div className="min-h-48 p-4">
                 {!editingBody ? (
                   <div className="flex min-h-40 items-center justify-center">
-                    <Button variant="secondary" onClick={showEditor}>
+                    <Button
+                      variant="secondary"
+                      onClick={showEditor}
+                      disabled={saved.archivedAt !== null}
+                    >
                       <Pencil size={16} />
                       <FormattedMessage id="knowledge.body.add" defaultMessage="Add guidance" />
                     </Button>
@@ -412,6 +605,7 @@ export function KnowledgeRecordPage() {
                       id="knowledge-body"
                       className={`${TEXTAREA_CLASS} min-h-64 font-mono`}
                       value={body}
+                      disabled={saved.archivedAt !== null}
                       placeholder={intl.formatMessage({
                         id: "knowledge.body.placeholder",
                         defaultMessage: "Write guidance in Markdown…",
@@ -432,6 +626,80 @@ export function KnowledgeRecordPage() {
           </div>
         </RecordApplets>
       </AppShell>
+      <Dialog open={archiveOpen} onOpenChange={setArchiveOpen}>
+        <DialogContent aria-describedby="knowledge-archive-help">
+          <DialogTitle>
+            <FormattedMessage
+              id="knowledge.archive.title"
+              defaultMessage="Archive Knowledge Item"
+            />
+          </DialogTitle>
+          <div className="mt-4 flex flex-col gap-4">
+            <p id="knowledge-archive-help" className="text-sm text-muted">
+              <FormattedMessage
+                id="knowledge.archive.help"
+                defaultMessage="Optionally point readers to the Knowledge Item that replaces this one."
+              />
+            </p>
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="knowledge-replacement">
+                <FormattedMessage id="knowledge.archive.replacedBy" defaultMessage="Replaced by" />
+              </Label>
+              <select
+                id="knowledge-replacement"
+                className={CONTROL_CLASS}
+                value={replacementId}
+                onChange={(event) => setReplacementId(event.target.value)}
+              >
+                <option value="">
+                  {intl.formatMessage({
+                    id: "knowledge.archive.none",
+                    defaultMessage: "No replacement",
+                  })}
+                </option>
+                {loaded.replacementItems.map((row) => (
+                  <option key={row.id} value={row.id}>
+                    {row.title}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button variant="secondary" onClick={() => setArchiveOpen(false)}>
+                <FormattedMessage id="action.cancel" defaultMessage="Cancel" />
+              </Button>
+              <Button onClick={() => void runAction("archive")} disabled={actionBusy}>
+                <FormattedMessage id="knowledge.action.archive" defaultMessage="Archive" />
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+      <Dialog open={reachWarning !== null} onOpenChange={(open) => !open && setReachWarning(null)}>
+        <DialogContent aria-describedby="knowledge-reach-warning">
+          <DialogTitle>
+            <FormattedMessage
+              id="knowledge.reach.title"
+              defaultMessage="Remove this from the portal?"
+            />
+          </DialogTitle>
+          <p id="knowledge-reach-warning" className="mt-4 text-sm text-muted">
+            <FormattedMessage
+              id="knowledge.reach.warning"
+              defaultMessage="{count, plural, one {# deflection link points} other {# deflection links point}} at this item. The {count, plural, one {link} other {links}} will stay in Settings but disappear from the portal."
+              values={{ count: saved.deflectionLinkCount }}
+            />
+          </p>
+          <div className="mt-4 flex justify-end gap-2">
+            <Button variant="secondary" onClick={() => setReachWarning(null)}>
+              <FormattedMessage id="action.cancel" defaultMessage="Cancel" />
+            </Button>
+            <Button onClick={confirmLostReach} disabled={actionBusy}>
+              <FormattedMessage id="action.continue" defaultMessage="Continue" />
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </RecordContext.Provider>
   );
 }

@@ -46,11 +46,27 @@
  */
 
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
+import type { FastifyReply } from "fastify";
 import { z } from "zod";
-import { and, asc, eq, intakeLinks, isNull, requestTypeFields, requestTypes } from "@openlaw/db";
+import {
+  and,
+  asc,
+  desc,
+  documents,
+  documentVersions,
+  eq,
+  intakeLinks,
+  isNull,
+  knowledgeItems,
+  or,
+  requestTypeFields,
+  requestTypes,
+  type Executor,
+} from "@openlaw/db";
 import { requireAuth } from "../../auth/guards.js";
 import { AttachedCustomFieldSchema, selectAttachedFields } from "../../lib/custom-fields.js";
-import { httpError, problemResponse } from "../../lib/problem.js";
+import { httpError, problemResponse, PROBLEM_CONTENT_TYPE } from "../../lib/problem.js";
+import { attachmentDisposition } from "../../lib/uploads.js";
 
 const PortalRequestTypeSchema = z.object({
   id: z.string(),
@@ -62,13 +78,100 @@ const PortalRequestTypeSchema = z.object({
   displayOrder: z.number().int(),
 });
 
-const PortalIntakeLinkSchema = z.object({
+const PortalIntakeLinkSchema = z.union([
+  z.object({
+    id: z.string(),
+    label: z.string(),
+    /** Absolute http/https, exactly as stored (INT-004). */
+    url: z.string(),
+    displayOrder: z.number().int(),
+  }),
+  z.object({
+    id: z.string(),
+    label: z.string(),
+    knowledgeItemId: z.string(),
+    displayOrder: z.number().int(),
+  }),
+]);
+
+const PortalDocumentSchema = z.object({
   id: z.string(),
-  label: z.string(),
-  /** Absolute http/https, exactly as stored (INT-004). */
-  url: z.string(),
-  displayOrder: z.number().int(),
+  title: z.string(),
+  currentVersion: z.object({
+    id: z.string(),
+    originalFilename: z.string(),
+    mimeType: z.string(),
+    byteSize: z.number().int().nonnegative(),
+    downloadUrl: z.string(),
+  }),
 });
+
+const PortalKnowledgeItemSchema = z.object({
+  id: z.string(),
+  title: z.string(),
+  body: z.string().nullable(),
+  primaryDocument: z.object({ id: z.string(), title: z.string() }).nullable(),
+  documents: z.array(PortalDocumentSchema),
+});
+
+const DownloadSchema = z.any().meta({ type: "string", format: "binary" });
+const PORTAL_KNOWLEDGE_NOT_FOUND = "No portal Knowledge Item exists with this id.";
+
+async function portalKnowledgeItem(db: Executor, id: string) {
+  const [item] = await db
+    .select({
+      id: knowledgeItems.id,
+      title: knowledgeItems.title,
+      body: knowledgeItems.body,
+      primaryDocumentId: knowledgeItems.primaryDocumentId,
+    })
+    .from(knowledgeItems)
+    .where(
+      and(
+        eq(knowledgeItems.id, id),
+        eq(knowledgeItems.state, "published"),
+        eq(knowledgeItems.audience, "everyone"),
+        isNull(knowledgeItems.archivedAt),
+      ),
+    )
+    .limit(1);
+  return item ?? null;
+}
+
+function portalKnowledgeNotFound(reply: FastifyReply) {
+  return reply.type(PROBLEM_CONTENT_TYPE).status(404).send({
+    type: "about:blank",
+    title: "Not found",
+    status: 404,
+    detail: PORTAL_KNOWLEDGE_NOT_FOUND,
+  });
+}
+
+function portalLink(row: {
+  id: string;
+  label: string;
+  url: string | null;
+  knowledgeItemId: string | null;
+  displayOrder: number;
+}) {
+  return row.knowledgeItemId
+    ? {
+        id: row.id,
+        label: row.label,
+        knowledgeItemId: row.knowledgeItemId,
+        displayOrder: row.displayOrder,
+      }
+    : { id: row.id, label: row.label, url: row.url!, displayOrder: row.displayOrder };
+}
+
+const reachableLink = or(
+  isNull(intakeLinks.knowledgeItemId),
+  and(
+    eq(knowledgeItems.state, "published"),
+    eq(knowledgeItems.audience, "everyone"),
+    isNull(knowledgeItems.archivedAt),
+  ),
+);
 
 export const portalRoutes: FastifyPluginAsyncZod = async (app) => {
   app.get(
@@ -130,12 +233,14 @@ export const portalRoutes: FastifyPluginAsyncZod = async (app) => {
           id: intakeLinks.id,
           label: intakeLinks.label,
           url: intakeLinks.url,
+          knowledgeItemId: intakeLinks.knowledgeItemId,
           displayOrder: intakeLinks.displayOrder,
         })
         .from(intakeLinks)
-        .where(and(isNull(intakeLinks.requestTypeId), isNull(intakeLinks.knowledgeItemId)))
+        .leftJoin(knowledgeItems, eq(intakeLinks.knowledgeItemId, knowledgeItems.id))
+        .where(and(isNull(intakeLinks.requestTypeId), reachableLink))
         .orderBy(asc(intakeLinks.displayOrder), asc(intakeLinks.createdAt));
-      return { intakeLinks: rows.map((row) => ({ ...row, url: row.url! })) };
+      return { intakeLinks: rows.map(portalLink) };
     },
   );
 
@@ -195,17 +300,129 @@ export const portalRoutes: FastifyPluginAsyncZod = async (app) => {
             id: intakeLinks.id,
             label: intakeLinks.label,
             url: intakeLinks.url,
+            knowledgeItemId: intakeLinks.knowledgeItemId,
             displayOrder: intakeLinks.displayOrder,
           })
           .from(intakeLinks)
-          .where(and(eq(intakeLinks.requestTypeId, type.id), isNull(intakeLinks.knowledgeItemId)))
+          .leftJoin(knowledgeItems, eq(intakeLinks.knowledgeItemId, knowledgeItems.id))
+          .where(and(eq(intakeLinks.requestTypeId, type.id), reachableLink))
           .orderBy(asc(intakeLinks.displayOrder), asc(intakeLinks.createdAt)),
       ]);
       return {
         requestType: type,
         fields,
-        intakeLinks: links.map((link) => ({ ...link, url: link.url! })),
+        intakeLinks: links.map(portalLink),
       };
+    },
+  );
+
+  app.get(
+    "/portal/knowledge/:id",
+    {
+      preHandler: requireAuth,
+      schema: {
+        operationId: "readPortalKnowledgeItem",
+        tags: ["portal"],
+        params: z.object({ id: z.string() }),
+        response: {
+          200: z.object({ knowledgeItem: PortalKnowledgeItemSchema }),
+          default: problemResponse,
+        },
+      },
+    },
+    async (request, reply) => {
+      const item = await portalKnowledgeItem(app.db, request.params.id);
+      if (!item) return portalKnowledgeNotFound(reply);
+      const paper = await app.db
+        .select({ id: documents.id, title: documents.title })
+        .from(documents)
+        .where(and(eq(documents.knowledgeItemId, item.id), isNull(documents.archivedAt)))
+        .orderBy(asc(documents.createdAt), asc(documents.id));
+      const withVersions = (
+        await Promise.all(
+          paper.map(async (document) => {
+            const [version] = await app.db
+              .select({
+                id: documentVersions.id,
+                originalFilename: documentVersions.originalFilename,
+                mimeType: documentVersions.mimeType,
+                byteSize: documentVersions.byteSize,
+              })
+              .from(documentVersions)
+              .where(eq(documentVersions.documentId, document.id))
+              .orderBy(desc(documentVersions.versionNumber))
+              .limit(1);
+            return version
+              ? {
+                  ...document,
+                  currentVersion: {
+                    ...version,
+                    downloadUrl: `/api/v1/portal/knowledge/${item.id}/documents/${document.id}/download`,
+                  },
+                }
+              : null;
+          }),
+        )
+      ).filter((row): row is NonNullable<typeof row> => row !== null);
+      withVersions.sort((left, right) => {
+        if (left.id === item.primaryDocumentId) return -1;
+        if (right.id === item.primaryDocumentId) return 1;
+        return 0;
+      });
+      const primary = withVersions.find((row) => row.id === item.primaryDocumentId) ?? null;
+      return {
+        knowledgeItem: {
+          id: item.id,
+          title: item.title,
+          body: item.body,
+          primaryDocument: primary ? { id: primary.id, title: primary.title } : null,
+          documents: withVersions,
+        },
+      };
+    },
+  );
+
+  app.get(
+    "/portal/knowledge/:id/documents/:documentId/download",
+    {
+      preHandler: requireAuth,
+      schema: {
+        operationId: "downloadPortalKnowledgeDocument",
+        tags: ["portal"],
+        produces: ["application/octet-stream"],
+        params: z.object({ id: z.string(), documentId: z.string() }),
+        response: { 200: DownloadSchema, default: problemResponse },
+      },
+    },
+    async (request, reply) => {
+      const item = await portalKnowledgeItem(app.db, request.params.id);
+      if (!item) return portalKnowledgeNotFound(reply);
+      const [version] = await app.db
+        .select({
+          fileRef: documentVersions.fileRef,
+          originalFilename: documentVersions.originalFilename,
+          mimeType: documentVersions.mimeType,
+          byteSize: documentVersions.byteSize,
+        })
+        .from(documents)
+        .innerJoin(documentVersions, eq(documentVersions.documentId, documents.id))
+        .where(
+          and(
+            eq(documents.id, request.params.documentId),
+            eq(documents.knowledgeItemId, item.id),
+            isNull(documents.archivedAt),
+          ),
+        )
+        .orderBy(desc(documentVersions.versionNumber))
+        .limit(1);
+      if (!version) return portalKnowledgeNotFound(reply);
+      return reply
+        .header("content-type", version.mimeType)
+        .header("content-length", String(version.byteSize))
+        .header("content-disposition", attachmentDisposition(version.originalFilename))
+        .header("x-content-type-options", "nosniff")
+        .header("cache-control", "private, max-age=0, must-revalidate")
+        .send(await app.storage.get(version.fileRef));
     },
   );
 };

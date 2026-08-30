@@ -353,11 +353,23 @@
   "activity.knowledgeFolder.reordered": {
     "defaultMessage": "{actor} reordered Knowledge folders"
   },
+  "activity.knowledgeItem.archived": {
+    "defaultMessage": "{actor} archived {name}"
+  },
   "activity.knowledgeItem.created": {
     "defaultMessage": "{actor} created {name}"
   },
+  "activity.knowledgeItem.published": {
+    "defaultMessage": "{actor} published {name}"
+  },
+  "activity.knowledgeItem.restored": {
+    "defaultMessage": "{actor} restored {name}"
+  },
   "activity.knowledgeItem.typeReassigned": {
     "defaultMessage": "{actor} re-typed {name}"
+  },
+  "activity.knowledgeItem.unpublished": {
+    "defaultMessage": "{actor} returned {name} to draft"
   },
   "activity.knowledgeItem.updated": {
     "defaultMessage": "{actor} changed {name}"
@@ -3590,8 +3602,41 @@
   "keys.title": {
     "defaultMessage": "Keyboard shortcuts"
   },
+  "knowledge.action.archive": {
+    "defaultMessage": "Archive"
+  },
+  "knowledge.action.failed": {
+    "defaultMessage": "The Knowledge Item could not be changed."
+  },
   "knowledge.action.openPreview": {
     "defaultMessage": "Open preview"
+  },
+  "knowledge.action.publish": {
+    "defaultMessage": "Publish"
+  },
+  "knowledge.action.restore": {
+    "defaultMessage": "Restore"
+  },
+  "knowledge.action.unpublish": {
+    "defaultMessage": "Unpublish"
+  },
+  "knowledge.actions": {
+    "defaultMessage": "Knowledge Item actions"
+  },
+  "knowledge.archive.help": {
+    "defaultMessage": "Optionally point readers to the Knowledge Item that replaces this one."
+  },
+  "knowledge.archive.none": {
+    "defaultMessage": "No replacement"
+  },
+  "knowledge.archive.replacedBy": {
+    "defaultMessage": "Replaced by"
+  },
+  "knowledge.archive.title": {
+    "defaultMessage": "Archive Knowledge Item"
+  },
+  "knowledge.archivedMarker": {
+    "defaultMessage": "Archived"
   },
   "knowledge.audience.everyone": {
     "defaultMessage": "Everyone"
@@ -3773,6 +3818,9 @@
   "knowledge.folder.updateError": {
     "defaultMessage": "The folder could not be updated."
   },
+  "knowledge.form.audience": {
+    "defaultMessage": "Audience"
+  },
   "knowledge.form.folder": {
     "defaultMessage": "Folder"
   },
@@ -3826,6 +3874,15 @@
   },
   "knowledge.new.item": {
     "defaultMessage": "New knowledge item"
+  },
+  "knowledge.onPortal": {
+    "defaultMessage": "On the portal"
+  },
+  "knowledge.reach.title": {
+    "defaultMessage": "Remove this from the portal?"
+  },
+  "knowledge.reach.warning": {
+    "defaultMessage": "{count, plural, one {# deflection link points} other {# deflection links point}} at this item. The {count, plural, one {link} other {links}} will stay in Settings but disappear from the portal."
   },
   "knowledge.record.guidance": {
     "defaultMessage": "Guidance"
@@ -4627,6 +4684,21 @@
   },
   "portal.home.title": {
     "defaultMessage": "What do you need from Legal?"
+  },
+  "portal.knowledge.back": {
+    "defaultMessage": "Your requests"
+  },
+  "portal.knowledge.download": {
+    "defaultMessage": "Download"
+  },
+  "portal.knowledge.downloadNamed": {
+    "defaultMessage": "Download {filename}"
+  },
+  "portal.knowledge.files": {
+    "defaultMessage": "Files"
+  },
+  "portal.knowledge.guidance": {
+    "defaultMessage": "Guidance"
   },
   "portal.myRequests.count": {
     "defaultMessage": "{count, plural, one {# request} other {# requests}}"
@@ -5786,6 +5858,9 @@
   "settings.intakeLinks.archivedOption": {
     "defaultMessage": "{name} (archived)"
   },
+  "settings.intakeLinks.chooseKnowledge": {
+    "defaultMessage": "Choose an item…"
+  },
   "settings.intakeLinks.count": {
     "defaultMessage": "{count, plural, one {# link} other {# links}}"
   },
@@ -5807,8 +5882,20 @@
   "settings.intakeLinks.editTitle": {
     "defaultMessage": "Edit {name}"
   },
+  "settings.intakeLinks.externalKind": {
+    "defaultMessage": "External address"
+  },
   "settings.intakeLinks.help": {
     "defaultMessage": "Shown under \"Before you submit…\" on the portal home. Links assigned to a request type show on that form instead. Drag a row, or focus its handle and use the arrow keys, to reorder. Removing a link deletes it — there is no archive."
+  },
+  "settings.intakeLinks.knowledgeKind": {
+    "defaultMessage": "Knowledge item"
+  },
+  "settings.intakeLinks.knowledgeLabel": {
+    "defaultMessage": "Knowledge item"
+  },
+  "settings.intakeLinks.knowledgeMissing": {
+    "defaultMessage": "Choose a Knowledge Item."
   },
   "settings.intakeLinks.labelHelp": {
     "defaultMessage": "What the panel reads as — an answer, not an address."
@@ -5842,6 +5929,9 @@
   },
   "settings.intakeLinks.reorder": {
     "defaultMessage": "Reorder {name}, position {position} of {total}. Use the arrow keys to move it."
+  },
+  "settings.intakeLinks.targetKind": {
+    "defaultMessage": "Target"
   },
   "settings.intakeLinks.title": {
     "defaultMessage": "Deflection links"

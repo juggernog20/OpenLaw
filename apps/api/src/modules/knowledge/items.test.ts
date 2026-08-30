@@ -281,6 +281,118 @@ describe("Knowledge Item create, read, and inline updates", () => {
   });
 });
 
+describe("Knowledge Item publishing and archive lifecycle", () => {
+  it("publishes, unpublishes, archives with a successor, and restores through distinct verbs", async () => {
+    const item = await create(memberCookies, {
+      title: "Portal NDA guide",
+      knowledgeTypeId: playbookId,
+    });
+    const successor = await create(memberCookies, {
+      title: "Replacement NDA guide",
+      knowledgeTypeId: playbookId,
+    });
+    const id = item.json().knowledgeItem.id as string;
+    const successorId = successor.json().knowledgeItem.id as string;
+
+    const audience = await harness.app.inject({
+      method: "PATCH",
+      url: `/api/v1/knowledge/${id}`,
+      cookies: memberCookies,
+      payload: { audience: "everyone" },
+    });
+    expect(audience.statusCode, audience.body).toBe(200);
+    expect(audience.json().knowledgeItem).toMatchObject({
+      audience: "everyone",
+      state: "draft",
+      publishedAt: null,
+      archivedAt: null,
+    });
+
+    const published = await harness.app.inject({
+      method: "POST",
+      url: `/api/v1/knowledge/${id}/publish`,
+      cookies: memberCookies,
+      payload: {},
+    });
+    expect(published.statusCode, published.body).toBe(200);
+    expect(published.json().knowledgeItem.state).toBe("published");
+    expect(published.json().knowledgeItem.publishedAt).toEqual(expect.any(String));
+    const firstPublishedAt = published.json().knowledgeItem.publishedAt as string;
+
+    const publishNoop = await harness.app.inject({
+      method: "POST",
+      url: `/api/v1/knowledge/${id}/publish`,
+      cookies: adminCookies,
+      payload: {},
+    });
+    expect(publishNoop.statusCode, publishNoop.body).toBe(200);
+    expect(publishNoop.json().knowledgeItem.publishedAt).toBe(firstPublishedAt);
+
+    const unpublished = await harness.app.inject({
+      method: "POST",
+      url: `/api/v1/knowledge/${id}/unpublish`,
+      cookies: memberCookies,
+      payload: {},
+    });
+    expect(unpublished.statusCode, unpublished.body).toBe(200);
+    expect(unpublished.json().knowledgeItem).toMatchObject({ state: "draft", publishedAt: null });
+
+    const archived = await harness.app.inject({
+      method: "POST",
+      url: `/api/v1/knowledge/${id}/archive`,
+      cookies: memberCookies,
+      payload: { replacedById: successorId },
+    });
+    expect(archived.statusCode, archived.body).toBe(200);
+    expect(archived.json().knowledgeItem.archivedAt).toEqual(expect.any(String));
+    expect(archived.json().knowledgeItem.replacedBy).toEqual({
+      id: successorId,
+      title: "Replacement NDA guide",
+    });
+
+    const restored = await harness.app.inject({
+      method: "POST",
+      url: `/api/v1/knowledge/${id}/restore`,
+      cookies: adminCookies,
+      payload: {},
+    });
+    expect(restored.statusCode, restored.body).toBe(200);
+    expect(restored.json().knowledgeItem.archivedAt).toBeNull();
+
+    const actions = await harness.db
+      .select({ action: activityLog.action })
+      .from(activityLog)
+      .where(eq(activityLog.entityId, id))
+      .orderBy(asc(activityLog.createdAt));
+    expect(actions.map((row) => row.action)).toEqual([
+      "knowledge_item.created",
+      "knowledge_item.updated",
+      "knowledge_item.published",
+      "knowledge_item.unpublished",
+      "knowledge_item.archived",
+      "knowledge_item.restored",
+    ]);
+  });
+
+  it("keeps every lifecycle route at the Member+ floor", async () => {
+    const attempts = (cookies?: Record<string, string>) =>
+      ["publish", "unpublish", "archive", "restore"].map((verb) =>
+        harness.app.inject({
+          method: "POST",
+          url: `/api/v1/knowledge/not-real/${verb}`,
+          cookies,
+          payload: {},
+        }),
+      );
+    for (const response of await Promise.all(attempts())) expect(response.statusCode).toBe(401);
+    for (const cookies of [contributorCookies, businessCookies]) {
+      for (const response of await Promise.all(attempts(cookies))) {
+        expect(response.statusCode, response.body).toBe(403);
+      }
+    }
+  });
+});
+
 describe("the managed Knowledge list", () => {
   it("filters by type, state, audience, author, and a folder including descendants", async () => {
     await harness.db.insert(knowledgeItems).values([
