@@ -1127,7 +1127,7 @@ Source-of-truth for both the per-entity activity feed and the system-wide audit 
 | Column        | Type        | Notes                                                                                                                   |
 | ------------- | ----------- | ----------------------------------------------------------------------------------------------------------------------- |
 | `id`          | UUID        | PK                                                                                                                      |
-| `entity_type` | text (enum) | `matter` \| `contract` \| `document` \| `request` \| `user` \| `system`                                                 |
+| `entity_type` | text (enum) | `matter` \| `contract` \| `document` \| `request` \| `entity` \| `user` \| `system`                                     |
 | `entity_id`   | UUID        | nullable — `system`-typed entries (login, role change, intake-config change) have no entity                             |
 | `actor_id`    | UUID        | nullable — system-emitted events (cron jobs, external webhooks) have no human actor                                     |
 | `action`      | text        | slug, e.g., `matter.created`, `confidentiality.set`, `user.role_changed`, `document.downloaded`, `matter_type.archived` |
@@ -1155,7 +1155,7 @@ One person's saved way of reading one list. **Private to that person** — there
 | -------------------------- | ----------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `id`                       | text        | PK, uuidv7                                                                                                                                                                                                              |
 | `user_id`                  | text        | FK → `users.id` **ON DELETE CASCADE**. A view is a preference, not a record: a deleted user's saved columns are nobody's                                                                                                |
-| `surface`                  | text        | Which list this view is for — `contracts` today. **No CHECK against an enum**: a new destination adopting DES-046's table must not need a migration to be allowed to save a view                                        |
+| `surface`                  | text        | Which list this view is for — `contracts`, `matters`, `documents`, or `entities` today. **No CHECK against an enum**: a new destination adopting DES-046's table must not need a migration to be allowed to save a view |
 | `name`                     | text        | What the reader called it; shown in the views menu. CHECK: non-empty, trimmed, at most 60 characters                                                                                                                    |
 | `config`                   | jsonb       | The whole list state — columns shown, their order, their widths, the filters in force, the sort (DD-019 clause 2). Read and written whole; **no query reaches into it**. The API's schema is the authority on the shape |
 | `is_default`               | boolean     | not null, default false. The one view this person's list opens on. All-false means the list opens on the built-in layout, which is code rather than a seeded row (DD-019 clause 7)                                      |

@@ -1049,6 +1049,10 @@ At the third web mount, a record applet is one generic component keyed by `{reco
 
 The Entity Contracts and Matters tabs are the first application: one `LinkedRecordsList` receives the Entity reference and the selected Contract-or-Matter seam. Query-derived Entity roll-ups silently omit walled targets before rows and counts; the component retains the restricted branch for link seams whose domain rule preserves a known relationship.
 
+### Built addendum (2026-08-30, M27/7, [#579](https://github.com/juggernog20/OpenLaw/issues/579))
+
+`LinkedRecordsList` and its typed seam configuration now serve both Entity roll-up tabs. The Contract and Matter mounts differ only in the record kind, endpoint, response key, empty copy, and link target supplied by `ENTITY_LINKED_RECORD_SEAMS`. The route loader reads the tab counts; the mounted list reads its own rows. No Entity-specific linked-record component was added.
+
 ### Scheduled migration
 
 After M27, migrate the existing Contract and Matter link-card pairs to this configuration seam, **one pair per PR**. Each migration keeps its existing access and placeholder doctrine and removes only the duplicated web mount. No sweep lands inside M27, and no PR mixes two pairs.

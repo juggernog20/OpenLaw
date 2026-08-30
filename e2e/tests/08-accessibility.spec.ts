@@ -48,7 +48,7 @@ test.describe("accessibility floor", () => {
     await reportAxeViolations(page, testInfo, "documents");
   });
 
-  test("Entity chart: axe-clean chart region", async ({ page, request }, testInfo) => {
+  test("Entities views and record tabs: axe scans", async ({ page, request }, testInfo) => {
     await ensureAdminExists(request);
     await signInAs(page, ADMIN.email, ADMIN.password, ADMIN.displayName);
     const options = await page.request.get("/api/v1/entities/types");
@@ -84,6 +84,16 @@ test.describe("accessibility floor", () => {
       });
       expect(held.status(), await held.text()).toBe(201);
 
+      await page.goto("/entities");
+      await expect(page.getByRole("heading", { name: "Compliance calendar" })).toBeVisible();
+      await reportAxeViolations(page, testInfo, "entities-calendar");
+
+      await page.goto("/entities?view=list");
+      await expect(
+        page.getByRole("row").filter({ hasText: `Axe UK Subsidiary ${suffix}` }),
+      ).toBeVisible();
+      await reportAxeViolations(page, testInfo, "entities-list");
+
       await page.goto("/entities?view=chart");
       const chart = page.getByRole("region", { name: "Entity ownership chart" });
       await expect(chart).toBeVisible();
@@ -94,6 +104,20 @@ test.describe("accessibility floor", () => {
         include: '[aria-label="Entity ownership chart"]',
       });
       expect(violations).toEqual([]);
+
+      const recordTabs = [
+        ["", "Registry"],
+        ["ownership", "Owners"],
+        ["obligations", "Obligations"],
+        ["documents", "Documents"],
+        ["contracts", "Contracts"],
+        ["matters", "Matters"],
+      ] as const;
+      for (const [tab, heading] of recordTabs) {
+        await page.goto(`/entities/${createdIds[1]}${tab ? `/${tab}` : ""}`);
+        await expect(page.getByRole("heading", { name: heading }).first()).toBeVisible();
+        await reportAxeViolations(page, testInfo, `entity-${tab || "overview"}`);
+      }
     } finally {
       for (const id of createdIds.reverse()) {
         const archived = await page.request.post(`/api/v1/entities/${id}/archive`);

@@ -38,6 +38,14 @@ _Avoid_: article, wiki page, resource
 One of _our own_ corporate entities — a subsidiary, holding company, or branch [DD-008].
 _Avoid_: company, organisation, party, counterparty, subsidiary
 
+**Holding**:
+A directional ownership fact between two Entities, recording the percentage one Entity owns of the other. Holdings form the ownership graph; they do not make either Entity a child record [ENT-003].
+_Avoid_: parent link, ownership relation, shareholding record
+
+**Registration**:
+One jurisdiction where an Entity is registered or qualified to do business, with its own registration number, registered agent, and active, lapsed, or withdrawn status. Formation jurisdiction stays on the Entity [ENT-002].
+_Avoid_: formation, licence, incorporation
+
 **Counterparty**:
 An external organisation on the other side of a contract or matter [DD-008].
 _Avoid_: vendor, supplier, client, third party, entity
@@ -72,6 +80,10 @@ _Avoid_: assignee, lead, responsible
 
 **Requester**:
 The Business User who submitted a given Request.
+
+**Officer**:
+A person recorded against an Entity by name and configurable role, with appointment and optional resignation dates. An Officer may link to a user, but does not need an OpenLaw account [ENT-001].
+_Avoid_: Entity user, team member, Signer
 
 ### Lifecycle
 
@@ -130,6 +142,10 @@ Soft delete, for mistakes and imports. Separate from Closing and Ending, and nev
 **Confidential**:
 An opt-in per-record flag that hides a Matter, Contract, or Document from everyone outside its named team. Records are silently omitted, never shown as placeholders [DD-014].
 _Avoid_: private, restricted, sensitive, secret
+
+**Grant**:
+An explicit named-user exception that lets one Legal Team Member reach one Confidential Entity. Administrators need no Grant, and a Grant gives no wider role or team membership [ENT-004].
+_Avoid_: Entity team, access role, permission group
 
 **Visibility tier**:
 The audience of a comment or activity entry — **Legal Only**, **Working Team**, or **Full Thread** [DD-016].

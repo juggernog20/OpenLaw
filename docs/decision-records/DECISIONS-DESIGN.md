@@ -4198,6 +4198,10 @@ Entities combines a destination catalogue, a record, a calendar, and a graph, bu
 
 `designs/entities.pen` carries EN1–EN16 on the current S1 chrome: the refreshed original eight screens plus Ownership, Contracts and Matters roll-ups, Confidential and grant-list states, a restricted chart node, and both calendar-empty states. M27's implementation can reuse the managed-table, record-strip, activity-bar, banner, dialog, empty-state, and restricted-placeholder primitives without translating the former Entity-specific treatments.
 
+### Built addendum (2026-08-30, M27 close, [#582](https://github.com/juggernog20/OpenLaw/issues/582))
+
+The Entities destination ships the Calendar, List, and Chart switch, with Calendar as its default. The List view is DES-046's fourth catalogue. The Entity record ships all six routed tabs and its Activity applet. Confidential banners, Grant maintenance, Restricted Entity rows and chart nodes, calendar empty states, overdue severity, and the ownership warning use the shared patterns named above. The M27 close journey and axe sweep cover the three destination views and every record tab on fresh Compose images.
+
 ## Index of decisions
 
 | #       | Decision                                                                                                                                                             | Status                                                                                                     |

@@ -34,8 +34,8 @@ ActivityBar, Pill, Avatar) live in this file as local copies per the designs con
 ## What the mocks already got right
 
 - The rail matches SET-001 as amended: Personal (Profile, Appearance, Notifications) and Organization
-  (General, Users, Security, Matters, Contracts, Intake, Notifications, Integrations). Entities and
-  Knowledge sections join the rail when their milestones land.
+  (General, Users, Security, Matters, Contracts, Intake, Entities, Notifications, Integrations). Knowledge
+  joins the rail when its milestone lands.
 - ST5 draws a **pending invite as a row** (status "Invited") — SET-005 before it was written.
 - ST17 matches TECH-008: mode cards (Built-in vs OIDC), the immediate-apply + activity-log caption,
   and the portal magic-link toggle with the built-in-mode "can't be turned off" rule.
