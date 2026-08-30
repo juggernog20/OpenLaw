@@ -326,26 +326,28 @@ export function KnowledgeRecordPage() {
               onDocuments={(documents, cursor) => {
                 setPaper(documents);
                 if (cursor !== undefined) setPaperCursor(cursor);
+                // The card's listing is the newer truth for the identity
+                // row: a designation moved, or the primary was erased.
                 const primary = documents.find((document) => document.isPrimary);
                 const current = primary?.versions.find((version) => version.isCurrent);
-                if (primary && current) {
-                  setSaved((item) => ({
-                    ...item,
-                    primaryDocument: {
-                      id: primary.id,
-                      title: primary.title,
-                      currentVersion: {
-                        id: current.id,
-                        originalFilename: current.originalFilename,
-                        mimeType: current.mimeType,
-                        renderFamily:
-                          current.renderFamily === "other" ? "unsupported" : current.renderFamily,
-                      },
-                    },
-                    documentCount: documents.filter((document) => document.archivedAt === null)
-                      .length,
-                  }));
-                }
+                setSaved((item) => ({
+                  ...item,
+                  primaryDocument:
+                    primary && current
+                      ? {
+                          id: primary.id,
+                          title: primary.title,
+                          currentVersion: {
+                            id: current.id,
+                            originalFilename: current.originalFilename,
+                            mimeType: current.mimeType,
+                            renderFamily: current.renderFamily,
+                          },
+                        }
+                      : null,
+                  documentCount: documents.filter((document) => document.archivedAt === null)
+                    .length,
+                }));
               }}
               onFiled={setFiled}
               onFolders={() => undefined}

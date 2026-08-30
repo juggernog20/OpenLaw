@@ -22243,7 +22243,7 @@ export interface operations {
                   originalFilename: string;
                   mimeType: string;
                   /** @enum {string} */
-                  renderFamily: "pdf" | "image" | "word" | "presentation" | "email" | "unsupported";
+                  renderFamily: "pdf" | "image" | "word" | "presentation" | "email" | "other";
                 };
               } | null;
               documentCount: number;
@@ -22327,7 +22327,7 @@ export interface operations {
                   originalFilename: string;
                   mimeType: string;
                   /** @enum {string} */
-                  renderFamily: "pdf" | "image" | "word" | "presentation" | "email" | "unsupported";
+                  renderFamily: "pdf" | "image" | "word" | "presentation" | "email" | "other";
                 };
               } | null;
               documentCount: number;
@@ -22440,7 +22440,7 @@ export interface operations {
                   originalFilename: string;
                   mimeType: string;
                   /** @enum {string} */
-                  renderFamily: "pdf" | "image" | "word" | "presentation" | "email" | "unsupported";
+                  renderFamily: "pdf" | "image" | "word" | "presentation" | "email" | "other";
                 };
               } | null;
               documentCount: number;
@@ -22528,7 +22528,7 @@ export interface operations {
                   originalFilename: string;
                   mimeType: string;
                   /** @enum {string} */
-                  renderFamily: "pdf" | "image" | "word" | "presentation" | "email" | "unsupported";
+                  renderFamily: "pdf" | "image" | "word" | "presentation" | "email" | "other";
                 };
               } | null;
               documentCount: number;

@@ -1018,6 +1018,11 @@ function CreateFromFilesDialog({
   const [folderId, setFolderId] = useState(initialFolder);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string>();
+  const intl = useIntl();
+  const refused = intl.formatMessage({
+    id: "knowledge.fromFiles.failed",
+    defaultMessage: "The files could not be added.",
+  });
 
   async function create() {
     if (files.length === 0 || !typeId || busy) return;
@@ -1032,13 +1037,13 @@ function CreateFromFilesDialog({
     );
     setBusy(false);
     if (!response?.ok) {
-      setError((await problem(response)).detail ?? "The files could not be added.");
+      setError((await problem(response)).detail ?? refused);
       return;
     }
     const answer = (await response.json()) as { knowledgeItems?: Array<{ id: string }> };
     const first = answer.knowledgeItems?.[0];
     if (!first) {
-      setError("The files could not be added.");
+      setError(refused);
       return;
     }
     onOpenChange(false);
@@ -1078,12 +1083,17 @@ function CreateFromFilesDialog({
               className="sr-only"
               type="file"
               multiple
-              aria-label="Choose Knowledge files"
+              aria-label={intl.formatMessage({
+                id: "knowledge.fromFiles.choose",
+                defaultMessage: "Choose Knowledge files",
+              })}
               onChange={(event) => setFiles(Array.from(event.target.files ?? []))}
             />
           </label>
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor="knowledge-files-type">Type</Label>
+            <Label htmlFor="knowledge-files-type">
+              <FormattedMessage id="knowledge.form.type" defaultMessage="Type" />
+            </Label>
             <select
               id="knowledge-files-type"
               className={CONTROL_CLASS}
@@ -1098,14 +1108,18 @@ function CreateFromFilesDialog({
             </select>
           </div>
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor="knowledge-files-folder">Folder</Label>
+            <Label htmlFor="knowledge-files-folder">
+              <FormattedMessage id="knowledge.form.folder" defaultMessage="Folder" />
+            </Label>
             <select
               id="knowledge-files-folder"
               className={CONTROL_CLASS}
               value={folderId}
               onChange={(event) => setFolderId(event.target.value)}
             >
-              <option value="">Library</option>
+              <option value="">
+                <FormattedMessage id="knowledge.folder.root" defaultMessage="Library" />
+              </option>
               {folders.map((row) => (
                 <option key={row.id} value={row.id}>
                   {folderLabel(folders, row.id)}

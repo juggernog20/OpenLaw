@@ -3785,11 +3785,17 @@
   "knowledge.form.type": {
     "defaultMessage": "Type"
   },
+  "knowledge.fromFiles.choose": {
+    "defaultMessage": "Choose Knowledge files"
+  },
   "knowledge.fromFiles.count": {
     "defaultMessage": "{count, plural, =0 {No files selected} one {# file selected} other {# files selected}}"
   },
   "knowledge.fromFiles.drop": {
     "defaultMessage": "Drop files here or choose files"
+  },
+  "knowledge.fromFiles.failed": {
+    "defaultMessage": "The files could not be added."
   },
   "knowledge.fromFiles.submit": {
     "defaultMessage": "Create drafts"

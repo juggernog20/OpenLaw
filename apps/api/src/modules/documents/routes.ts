@@ -1384,7 +1384,8 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
       let committed = false;
       let knowledgeTypeId: string | undefined;
       let folderId: string | undefined;
-      let choicesChecked = false;
+      /** The names the activity feed shows, read once with the choices. */
+      let choices: { knowledgeType: string; folder: string | null } | undefined;
       try {
         const parts = request.parts({
           limits: { files: 50, fields: 4, parts: 54, fileSize: app.maxUploadBytes },
@@ -1402,22 +1403,24 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
           if (!knowledgeTypeId) {
             throw httpError(400, "Choose a Knowledge type before the files.");
           }
-          if (!choicesChecked) {
+          if (!choices) {
             const [type] = await app.db
-              .select({ id: knowledgeTypes.id })
+              .select({ id: knowledgeTypes.id, displayName: knowledgeTypes.displayName })
               .from(knowledgeTypes)
               .where(and(eq(knowledgeTypes.id, knowledgeTypeId), isNull(knowledgeTypes.archivedAt)))
               .limit(1);
             if (!type) throw httpError(400, "The Knowledge type must be a live Knowledge type.");
+            let folderName: string | null = null;
             if (folderId) {
               const [folder] = await app.db
-                .select({ id: knowledgeFolders.id })
+                .select({ id: knowledgeFolders.id, name: knowledgeFolders.name })
                 .from(knowledgeFolders)
                 .where(eq(knowledgeFolders.id, folderId))
                 .limit(1);
               if (!folder) throw httpError(400, "The folder must be a Knowledge folder.");
+              folderName = folder.name;
             }
-            choicesChecked = true;
+            choices = { knowledgeType: type.displayName, folder: folderName };
           }
           const itemId = uuidv7();
           const documentId = uuidv7();
@@ -1464,11 +1467,13 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
               entityId: upload.itemId,
               actorId: request.user.id,
               action: "knowledge_item.created",
-              visibility: RECORD_ACTIVITY_TIER,
+              // The same tier and payload shape the JSON create route
+              // writes, so one feed entry reads the same either way.
+              visibility: "legal_only",
               payload: {
                 title: upload.file.filename,
-                knowledgeType: knowledgeTypeId!,
-                folder: folderId ?? null,
+                knowledgeType: choices!.knowledgeType,
+                folder: choices!.folder,
               },
             });
             await recordActivity(tx, {

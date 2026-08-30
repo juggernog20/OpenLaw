@@ -136,6 +136,36 @@ describe("file-first Knowledge", () => {
       }),
     ]);
 
+    // A primary the table does not preview still lists: its format is
+    // `other`, the same name every Document read answers with.
+    const unfiltered = await harness.app.inject({
+      method: "GET",
+      url: "/api/v1/knowledge",
+      cookies: memberCookies,
+    });
+    expect(unfiltered.statusCode, unfiltered.body).toBe(200);
+    const schedule = unfiltered
+      .json()
+      .knowledgeItems.find((row: { title: string }) => row.title === "Schedule.csv");
+    expect(schedule.primaryDocument.currentVersion.renderFamily).toBe("other");
+    const bare = await harness.app.inject({
+      method: "POST",
+      url: "/api/v1/knowledge",
+      cookies: memberCookies,
+      payload: { title: "No paper yet", knowledgeTypeId: templateId },
+    });
+    expect(bare.statusCode, bare.body).toBe(201);
+    const others = await harness.app.inject({
+      method: "GET",
+      url: "/api/v1/knowledge?format=other",
+      cookies: memberCookies,
+    });
+    expect(others.statusCode, others.body).toBe(200);
+    expect(others.json().knowledgeItems.map((row: { title: string }) => row.title)).toEqual([
+      "Schedule.csv",
+      "Policy.txt",
+    ]);
+
     const repository = await harness.app.inject({
       method: "GET",
       url: `/api/v1/documents?owner=knowledge_item&record=${first.id}`,

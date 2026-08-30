@@ -12,6 +12,7 @@ import {
   documentVersions,
   eq,
   getTableColumns,
+  isNotNull,
   isNull,
   knowledgeFolders,
   knowledgeItems,
@@ -38,7 +39,7 @@ import { requireRole } from "../../auth/guards.js";
 import { recordActivity } from "../../lib/activity.js";
 import { httpError, problemResponse } from "../../lib/problem.js";
 import { folderName } from "../documents/folders.js";
-import { renderFamilySql } from "../../lib/render-family.js";
+import { RENDER_FAMILIES, renderFamilySql, type RenderFamily } from "../../lib/render-family.js";
 
 const requireMember = requireRole("administrator", "legal_team_member");
 const PAGE_SIZE = 50;
@@ -62,7 +63,7 @@ const PrimaryDocumentSchema = z.object({
     id: z.string(),
     originalFilename: z.string(),
     mimeType: z.string(),
-    renderFamily: z.enum(["pdf", "image", "word", "presentation", "email", "unsupported"]),
+    renderFamily: z.enum(RENDER_FAMILIES),
   }),
 });
 
@@ -174,7 +175,7 @@ type ProjectedItem = {
   primaryVersionId: string | null;
   primaryOriginalFilename: string | null;
   primaryMimeType: string | null;
-  primaryRenderFamily: "pdf" | "image" | "word" | "presentation" | "email" | "unsupported";
+  primaryRenderFamily: RenderFamily;
   documentCount: number;
   createdBy: { id: string; displayName: string; image: string | null; archivedAt: Date | null };
   updatedBy: { id: string; displayName: string; image: string | null; archivedAt: Date | null };
@@ -302,13 +303,18 @@ function listScope(filters: ListFilters): SQL | undefined {
     filters.state ? eq(knowledgeItems.state, filters.state) : undefined,
     filters.audience ? eq(knowledgeItems.audience, filters.audience) : undefined,
     filters.author ? eq(knowledgeItems.createdBy, filters.author) : undefined,
+    // An item with no primary Document has no format: `other` names a
+    // primary the table does not preview, not the absence of one.
     filters.format
-      ? eq(
-          sql<string>`replace(${renderFamilySql(
-            primaryVersions.mimeType,
-            primaryVersions.originalFilename,
-          )}, 'presentation', 'powerpoint')`,
-          filters.format,
+      ? and(
+          isNotNull(primaryVersions.id),
+          eq(
+            sql<string>`replace(${renderFamilySql(
+              primaryVersions.mimeType,
+              primaryVersions.originalFilename,
+            )}, 'presentation', 'powerpoint')`,
+            filters.format,
+          ),
         )
       : undefined,
     filters.folder

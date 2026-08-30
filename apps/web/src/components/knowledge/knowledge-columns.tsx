@@ -60,7 +60,7 @@ const COLUMNS: ColumnDef<KnowledgeItem>[] = [
           ? "PDF"
           : family === "presentation"
             ? "PowerPoint"
-            : family === "unsupported"
+            : family === "other"
               ? "Other"
               : family
                 ? family[0]!.toUpperCase() + family.slice(1)

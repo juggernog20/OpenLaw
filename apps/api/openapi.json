@@ -46425,7 +46425,7 @@
                                           "word",
                                           "presentation",
                                           "email",
-                                          "unsupported"
+                                          "other"
                                         ]
                                       }
                                     },
@@ -46665,7 +46665,7 @@
                                         "word",
                                         "presentation",
                                         "email",
-                                        "unsupported"
+                                        "other"
                                       ]
                                     }
                                   },
@@ -46941,7 +46941,7 @@
                                         "word",
                                         "presentation",
                                         "email",
-                                        "unsupported"
+                                        "other"
                                       ]
                                     }
                                   },
@@ -47231,7 +47231,7 @@
                                         "word",
                                         "presentation",
                                         "email",
-                                        "unsupported"
+                                        "other"
                                       ]
                                     }
                                   },
