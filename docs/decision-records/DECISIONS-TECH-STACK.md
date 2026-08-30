@@ -1045,9 +1045,9 @@ This record describes the model as built and names the places where a different 
 
 ### Decision
 
-At the third web mount, a record applet is one generic component keyed by `{record reference, api seam}`. The page owns loading and state under TECH-024; the component owns the repeated presentation and interaction, including navigation and the shared restricted-record cell. A module-specific wrapper may supply vocabulary or its typed API seam, but it may not fork the list behaviour.
+At the third web mount, a record applet is one generic component keyed by `{record reference, api seam}`. The component owns the repeated presentation and interaction, including navigation and the shared restricted-record cell. It reads its rows through the seam when it mounts, the way the Activity applet does, so the route loader carries only what the page needs before the tab opens (here, the tab-label counts). A module-specific wrapper may supply vocabulary or its typed API seam, but it may not fork the list behaviour.
 
-The Entity Contracts and Matters tabs are the first application: one `LinkedRecordsList` receives the Entity reference, the selected Contract-or-Matter seam, and loader-owned rows. Query-derived Entity roll-ups silently omit walled targets before rows and counts; the component retains the restricted branch for link seams whose domain rule preserves a known relationship.
+The Entity Contracts and Matters tabs are the first application: one `LinkedRecordsList` receives the Entity reference and the selected Contract-or-Matter seam. Query-derived Entity roll-ups silently omit walled targets before rows and counts; the component retains the restricted branch for link seams whose domain rule preserves a known relationship.
 
 ### Scheduled migration
 
@@ -1056,7 +1056,7 @@ After M27, migrate the existing Contract and Matter link-card pairs to this conf
 ### Consequences
 
 - A fourth record mount supplies configuration rather than copying JSX, state, and navigation.
-- TECH-024 remains the data rule: route loaders read; the generic component does not become a client cache.
+- TECH-024 remains the data rule for the page. A lazy applet reads once per mount through its seam and holds nothing across tabs; it does not become a client cache.
 - The incremental migration is reviewable and preserves per-link access doctrine while converging the presentation.
 
 ## Index of decisions

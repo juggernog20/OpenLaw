@@ -123,7 +123,7 @@ A deleted Registration is not a deleted obligation: its foreign key is set to nu
 
 ### Addendum (2026-08-30, M27/7, [#579](https://github.com/juggernog20/OpenLaw/issues/579)) — roll-ups are reach-scoped at the target
 
-Contracts are derived from `contracts.entity_id`; Matters are derived when an Entity-typed Field attached to the Matter's type has the Entity id in `custom_fields`. Both the rows and tab-label counts compose the target record's own reach predicate, so a walled target contributes neither a placeholder nor a count. The list component can render the shared restricted cell for seams whose doctrine retains a known link, but these query-derived roll-ups silently omit inaccessible targets.
+Contracts are derived from `contracts.entity_id`; Matters are derived when any Entity-typed Field's slug in the Matter's `custom_fields` holds the Entity id. The read does not check that the Field is still attached to the Matter's type, so a detached Field's stored value keeps the link until the value is cleared. Both the rows and tab-label counts compose the target record's own reach predicate, so a walled target contributes neither a placeholder nor a count. The list component can render the shared restricted cell for seams whose doctrine retains a known link, but these query-derived roll-ups silently omit inaccessible targets.
 
 ## ENT-008 — The registry surface owns a Member+ entity-type read
 

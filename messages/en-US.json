@@ -2426,6 +2426,9 @@
   "documents.filter.owner.contracts": {
     "defaultMessage": "Contracts"
   },
+  "documents.filter.owner.entities": {
+    "defaultMessage": "Entities"
+  },
   "documents.filter.owner.matters": {
     "defaultMessage": "Matters"
   },
@@ -2580,7 +2583,7 @@
     "defaultMessage": "Upload to a record and it appears here."
   },
   "documents.list.empty.title": {
-    "defaultMessage": "Paper lives on Contracts and Matters."
+    "defaultMessage": "Paper lives on Contracts, Matters, and Entities."
   },
   "documents.list.filteredEmpty.body": {
     "defaultMessage": "Clear filters to return to the whole list."
@@ -2795,6 +2798,21 @@
   "entities.count": {
     "defaultMessage": "{count, plural, one {# entity} other {# entities}}"
   },
+  "entities.documents.batch.failures": {
+    "defaultMessage": "{failed, plural, one {# file failed} other {# files failed}}. {landed, plural, =0 {Nothing was added to the Entity.} one {The other # is on the Entity.} other {The other # are on the Entity.}}"
+  },
+  "entities.documents.batch.onRecord": {
+    "defaultMessage": "{count, plural, =0 {Nothing was added to the Entity.} one {# file is already on the Entity.} other {# files are already on the Entity.}}"
+  },
+  "entities.documents.empty": {
+    "defaultMessage": "No documents on this Entity yet."
+  },
+  "entities.documents.folder.deleteIntoRoot": {
+    "defaultMessage": "Anything in it moves onto the Entity itself. Nothing is deleted."
+  },
+  "entities.documents.folder.recordRoot": {
+    "defaultMessage": "The Entity itself"
+  },
   "entities.empty.body": {
     "defaultMessage": "The registry holds your own corporate entities — subsidiaries, holding companies, and branches. Register them with their legal details, and contracts pick the signing entity from this list."
   },
@@ -2845,6 +2863,21 @@
   },
   "entities.form.typePlaceholder": {
     "defaultMessage": "Type…"
+  },
+  "entities.linked.contracts": {
+    "defaultMessage": "Contracts"
+  },
+  "entities.linked.empty": {
+    "defaultMessage": "No linked records."
+  },
+  "entities.linked.failed": {
+    "defaultMessage": "The linked records could not be read."
+  },
+  "entities.linked.loading": {
+    "defaultMessage": "Loading linked records…"
+  },
+  "entities.linked.matters": {
+    "defaultMessage": "Matters"
   },
   "entities.listError": {
     "defaultMessage": "The registry could not be read. Try again."
@@ -3032,9 +3065,6 @@
   "entities.record.officers.user": {
     "defaultMessage": "Linked user"
   },
-  "entities.record.placeholder": {
-    "defaultMessage": "This section will arrive in a later M27 ticket."
-  },
   "entities.record.registrations.add": {
     "defaultMessage": "Add registration"
   },
@@ -3098,11 +3128,17 @@
   "entities.record.tab.contracts": {
     "defaultMessage": "Contracts"
   },
+  "entities.record.tab.contracts.count": {
+    "defaultMessage": "{count, plural, one {# linked Contract} other {# linked Contracts}}"
+  },
   "entities.record.tab.documents": {
     "defaultMessage": "Documents"
   },
   "entities.record.tab.matters": {
     "defaultMessage": "Matters"
+  },
+  "entities.record.tab.matters.count": {
+    "defaultMessage": "{count, plural, one {# linked Matter} other {# linked Matters}}"
   },
   "entities.record.tab.obligations": {
     "defaultMessage": "Obligations"
@@ -3388,6 +3424,9 @@
   },
   "keys.title": {
     "defaultMessage": "Keyboard shortcuts"
+  },
+  "linkedRecords.restricted": {
+    "defaultMessage": "Restricted record"
   },
   "listEditor.archivedPill": {
     "defaultMessage": "Archived"

@@ -3,7 +3,7 @@
 /** The Entity record shell and M27/4 Overview (ENT-001/ENT-002). */
 import { useMemo, useState, type ReactNode } from "react";
 import { Link, redirect, useLoaderData, type LoaderFunctionArgs } from "react-router";
-import { FormattedMessage, useIntl } from "react-intl";
+import { defineMessage, FormattedMessage, useIntl, type IntlShape } from "react-intl";
 import { Archive, ArchiveRestore, Building2, ChevronRight } from "lucide-react";
 import { api } from "../lib/api";
 import {
@@ -342,7 +342,7 @@ export function EntityRecordPage() {
                 id: "entities.record.sections",
                 defaultMessage: "Entity sections",
               })}
-              tabs={recordTabs(saved.id, loaded.linkedCounts)}
+              tabs={recordTabs(intl, saved.id, loaded.linkedCounts)}
             />
           </>
         }
@@ -659,21 +659,31 @@ const TAB_LABELS: Readonly<Record<EntityTab, ReactNode>> = {
   matters: <FormattedMessage id="entities.record.tab.matters" defaultMessage="Matters" />,
 };
 
-function recordTabs(id: string, counts: { contracts: number; matters: number }) {
+const COUNT_LABELS = {
+  contracts: defineMessage({
+    id: "entities.record.tab.contracts.count",
+    defaultMessage: "{count, plural, one {# linked Contract} other {# linked Contracts}}",
+  }),
+  matters: defineMessage({
+    id: "entities.record.tab.matters.count",
+    defaultMessage: "{count, plural, one {# linked Matter} other {# linked Matters}}",
+  }),
+} as const;
+
+function recordTabs(intl: IntlShape, id: string, counts: { contracts: number; matters: number }) {
   return [
     { to: `/entities/${id}`, end: true, label: TAB_LABELS.overview },
-    ...RECORD_TABS.map((tab) => ({
-      to: `/entities/${id}/${tab}`,
-      label: TAB_LABELS[tab],
-      count:
-        tab === "contracts" ? counts.contracts : tab === "matters" ? counts.matters : undefined,
-      countLabel:
-        tab === "contracts"
-          ? `${counts.contracts} linked Contracts`
-          : tab === "matters"
-            ? `${counts.matters} linked Matters`
-            : undefined,
-    })),
+    ...RECORD_TABS.map((tab) => {
+      const counted = tab === "contracts" || tab === "matters";
+      return {
+        to: `/entities/${id}/${tab}`,
+        label: TAB_LABELS[tab],
+        count: counted ? counts[tab] : undefined,
+        countLabel: counted
+          ? intl.formatMessage(COUNT_LABELS[tab], { count: counts[tab] })
+          : undefined,
+      };
+    }),
   ];
 }
 

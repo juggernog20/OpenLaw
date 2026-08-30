@@ -224,13 +224,13 @@ describe("the /entities/:entityId record page", () => {
       "href",
       "/contracts/7",
     );
-    expect(screen.getByRole("img", { name: "1 linked Contracts" })).toBeInTheDocument();
+    expect(screen.getByRole("img", { name: "1 linked Contract" })).toBeInTheDocument();
     await router.navigate("/entities/e1/matters");
     expect(await screen.findByRole("link", { name: /M-8.*Dispute/ })).toHaveAttribute(
       "href",
       "/matters/8",
     );
-    expect(screen.getByRole("img", { name: "1 linked Matters" })).toBeInTheDocument();
+    expect(screen.getByRole("img", { name: "1 linked Matter" })).toBeInTheDocument();
   });
 
   it("mounts the Activity applet with the Entity reference", async () => {

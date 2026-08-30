@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 import { useEffect, useState } from "react";
-import { defineMessage, FormattedMessage } from "react-intl";
+import { defineMessage, FormattedMessage, useIntl } from "react-intl";
 import { Link } from "react-router";
 import type { RecordReference } from "./record-context";
 import { RestrictedRecordCell } from "./restricted-record-cell";
@@ -11,6 +11,10 @@ const RESTRICTED = defineMessage({
   id: "linkedRecords.restricted",
   defaultMessage: "Restricted record",
 });
+const TITLES = {
+  contract: defineMessage({ id: "entities.linked.contracts", defaultMessage: "Contracts" }),
+  matter: defineMessage({ id: "entities.linked.matters", defaultMessage: "Matters" }),
+} as const;
 
 export function LinkedRecordsList({
   record,
@@ -19,6 +23,7 @@ export function LinkedRecordsList({
   record: RecordReference;
   seam: LinkedRecordsSeam;
 }>) {
+  const intl = useIntl();
   const [rows, setRows] = useState<readonly (LinkedRecord | { restricted: true })[] | null>(null);
   const [failed, setFailed] = useState(false);
 
@@ -39,19 +44,13 @@ export function LinkedRecordsList({
 
   return (
     <section
-      aria-label={seam.kind === "contract" ? "Contracts" : "Matters"}
+      aria-label={intl.formatMessage(TITLES[seam.kind])}
       data-record={`${record.kind}:${record.id}`}
       data-api-seam={seam.kind}
       className="overflow-hidden rounded-card border border-border-default bg-raised"
     >
       <header className="flex h-section-header items-center border-b border-border-default bg-section-header px-4">
-        <h2 className="text-base font-semibold">
-          {seam.kind === "contract" ? (
-            <FormattedMessage id="entities.linked.contracts" defaultMessage="Contracts" />
-          ) : (
-            <FormattedMessage id="entities.linked.matters" defaultMessage="Matters" />
-          )}
-        </h2>
+        <h2 className="text-base font-semibold">{intl.formatMessage(TITLES[seam.kind])}</h2>
       </header>
       {failed ? (
         <p className="p-4 text-sm text-danger">
