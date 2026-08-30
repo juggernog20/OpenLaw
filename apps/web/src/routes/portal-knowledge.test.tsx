@@ -2,7 +2,7 @@
 
 import { screen, within } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
-import { json, renderAt, stubApi, type StubCall } from "../testing/helpers";
+import { json, problem, renderAt, stubApi, type StubCall } from "../testing/helpers";
 
 const REQUESTER = {
   id: "requester-1",
@@ -79,5 +79,19 @@ describe("the portal Knowledge Item", () => {
     expect(screen.queryByText("Playbook")).not.toBeInTheDocument();
     expect(screen.queryByText("Nadia Counsel")).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /edit|publish|archive/i })).not.toBeInTheDocument();
+  });
+
+  it("lands a link whose item is no longer on the portal back on the home", async () => {
+    stubApi({
+      signedIn: REQUESTER,
+      extra: (call) =>
+        call.url.pathname === "/api/v1/portal/knowledge/gone" && call.method === "GET"
+          ? problem(404, "No portal Knowledge Item exists with this id.")
+          : undefined,
+    });
+    renderAt("/portal/knowledge/gone");
+    expect(
+      await screen.findByRole("heading", { name: "What do you need from Legal?" }),
+    ).toBeInTheDocument();
   });
 });

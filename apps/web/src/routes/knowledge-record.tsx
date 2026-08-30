@@ -62,11 +62,9 @@ export async function knowledgeRecordLoader({ params, request }: LoaderFunctionA
     documentId && versionId
       ? readDocumentLanding({ entityType: "knowledge_item", id }, documentId, versionId)
       : null,
-    api.GET("/api/v1/knowledge", {
-      params: { query: { sort: "title", dir: "asc" } },
-    }),
+    readReplacementItems(),
   ]);
-  if (!item.data || !types.data || !folders.data || !paper.ok || !replacements.data)
+  if (!item.data || !types.data || !folders.data || !paper.ok || !replacements)
     throw new Error("The Knowledge item could not be read.");
   return {
     user,
@@ -77,8 +75,26 @@ export async function knowledgeRecordLoader({ params, request }: LoaderFunctionA
     documentCursor: paper.nextCursor,
     landing,
     documentFindQuery: landingQuery.get("find")?.trim() || null,
-    replacementItems: replacements.data.knowledgeItems.filter((row) => row.id !== id),
+    replacementItems: replacements.filter((row) => row.id !== id),
   };
+}
+
+/** Every live Knowledge Item, for the Archive dialog's replaced-by
+ * picker. The list answers one page at a time, so this walks the
+ * cursor to the end; a picker cut off at the first page would hide the
+ * item the author came to name. Null when any page fails. */
+async function readReplacementItems() {
+  const rows: Array<{ id: string; title: string }> = [];
+  let cursor: string | undefined;
+  do {
+    const page = await api.GET("/api/v1/knowledge", {
+      params: { query: { sort: "title", dir: "asc", ...(cursor ? { cursor } : {}) } },
+    });
+    if (!page.data) return null;
+    rows.push(...page.data.knowledgeItems.map((row) => ({ id: row.id, title: row.title })));
+    cursor = page.data.nextCursor ?? undefined;
+  } while (cursor);
+  return rows;
 }
 
 type FieldKey = "title" | "type" | "folder" | "body" | "audience";

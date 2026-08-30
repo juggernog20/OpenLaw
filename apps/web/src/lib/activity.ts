@@ -344,6 +344,7 @@ function changeLabel(intl: IntlShape, key: string, context: NarrationContext): s
         "linkedUser {Linked user} " +
         "registrationId {Registration} recurrenceMonths {Repeat every (months)} " +
         "nextDueOn {Due date} assigneeId {Assignee} matterId {Matter} " +
+        "audience {Audience} url {Address} target {Target} " +
         "other {{key}}}",
     },
     { key },

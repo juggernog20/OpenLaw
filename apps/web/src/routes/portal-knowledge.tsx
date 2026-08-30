@@ -16,6 +16,10 @@ export async function portalKnowledgeLoader({ params }: LoaderFunctionArgs) {
   const response = await api.GET("/api/v1/portal/knowledge/{id}", {
     params: { path: { id: params.id! } },
   });
+  // Draft, Legal Only, archived, and unknown all answer one 404 (KNW-004
+  // addendum), and none is a fault a requester can act on. A stale link
+  // lands back on the portal home, as a stale request or form link does.
+  if (response.response.status === 404) return redirect("/portal");
   if (!response.data) throw new Error("The Knowledge Item could not be read.");
   return { user, item: response.data.knowledgeItem };
 }

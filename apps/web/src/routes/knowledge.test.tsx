@@ -102,11 +102,18 @@ function recordApi(patches: unknown[], initial: Record<string, unknown> = {}) {
   return (call: StubCall): Response | undefined => {
     if (call.url.pathname === "/api/v1/knowledge/knowledge-1" && call.method === "GET")
       return json(200, { knowledgeItem: current });
-    if (call.url.pathname === "/api/v1/knowledge" && call.method === "GET")
+    if (call.url.pathname === "/api/v1/knowledge" && call.method === "GET") {
+      // Two pages, so the replaced-by picker is seen to walk the cursor.
+      if (call.url.searchParams.get("cursor") === "knowledge-2")
+        return json(200, {
+          knowledgeItems: [item({ id: "knowledge-3", title: "Second-page playbook" })],
+          nextCursor: null,
+        });
       return json(200, {
         knowledgeItems: [item({ id: "knowledge-2", title: "Current contract review playbook" })],
-        nextCursor: null,
+        nextCursor: "knowledge-2",
       });
+    }
     if (call.url.pathname === "/api/v1/knowledge/knowledge-1/documents" && call.method === "GET")
       return json(200, {
         documents: [
@@ -516,6 +523,9 @@ describe("a Knowledge record", () => {
     await user.click(await screen.findByRole("button", { name: "Knowledge Item actions" }));
     await user.click(screen.getByRole("menuitem", { name: "Archive" }));
     const archive = await screen.findByRole("dialog", { name: "Archive Knowledge Item" });
+    expect(
+      within(archive).getByRole("option", { name: "Second-page playbook" }),
+    ).toBeInTheDocument();
     await user.selectOptions(within(archive).getByLabelText("Replaced by"), "knowledge-2");
     await user.click(within(archive).getByRole("button", { name: "Archive" }));
     await waitFor(() =>
