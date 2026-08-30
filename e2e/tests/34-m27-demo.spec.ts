@@ -63,8 +63,10 @@ test.describe.serial("M27 deployer journey", () => {
     await signInAs(page, ADMIN.email, ADMIN.password, ADMIN.displayName);
     await page.goto("/entities?view=list");
 
-    const parent = await registerEntity(page, PARENT_NAME, "Delaware");
-    const subsidiary = await registerEntity(page, SUBSIDIARY_NAME, "England & Wales");
+    // Every per-run row is tracked from the moment it exists, so the
+    // cleanup below can remove it even when a later step fails.
+    let parent: CreatedEntity | undefined;
+    let subsidiary: CreatedEntity | undefined;
     let officerId: string | undefined;
     let obligationId: string | undefined;
     let holdingCreated = false;
@@ -73,25 +75,26 @@ test.describe.serial("M27 deployer journey", () => {
       const failures: unknown[] = [];
       const settle = async (step: () => Promise<void>) =>
         step().catch((error: unknown) => failures.push(error));
-      if (obligationId) {
+      const subsidiaryId = subsidiary?.id;
+      const parentId = parent?.id;
+      if (obligationId && subsidiaryId) {
         await settle(() =>
-          deleteChild(
-            page.request,
-            `/api/v1/entities/${subsidiary.id}/obligations/${obligationId}`,
-          ),
+          deleteChild(page.request, `/api/v1/entities/${subsidiaryId}/obligations/${obligationId}`),
         );
       }
-      if (officerId) {
+      if (officerId && subsidiaryId) {
         await settle(() =>
-          deleteChild(page.request, `/api/v1/entities/${subsidiary.id}/officers/${officerId}`),
+          deleteChild(page.request, `/api/v1/entities/${subsidiaryId}/officers/${officerId}`),
         );
       }
-      if (holdingCreated) {
+      if (holdingCreated && subsidiaryId && parentId) {
         await settle(() =>
-          deleteChild(page.request, `/api/v1/entities/${subsidiary.id}/holdings/${parent.id}`),
+          deleteChild(page.request, `/api/v1/entities/${subsidiaryId}/holdings/${parentId}`),
         );
       }
-      for (const entity of [subsidiary, parent]) {
+      for (const entity of [subsidiary, parent].filter(
+        (row): row is CreatedEntity => row !== undefined,
+      )) {
         await settle(async () => {
           const archived = await page.request.post(`/api/v1/entities/${entity.id}/archive`);
           expect(archived.status(), await archived.text()).toBe(200);
@@ -101,7 +104,11 @@ test.describe.serial("M27 deployer journey", () => {
     };
 
     try {
-      await page.goto(`/entities/${subsidiary.id}/ownership`);
+      parent = await registerEntity(page, PARENT_NAME, "Delaware");
+      subsidiary = await registerEntity(page, SUBSIDIARY_NAME, "England & Wales");
+      const subsidiaryId = subsidiary.id;
+
+      await page.goto(`/entities/${subsidiaryId}/ownership`);
       await main(page).getByRole("button", { name: "Add Holding" }).click();
       const holding = page.getByRole("dialog", { name: "Add Holding" });
       await holding.getByRole("combobox", { name: "Entity" }).fill(PARENT_NAME);
@@ -109,7 +116,7 @@ test.describe.serial("M27 deployer journey", () => {
       await holding.getByLabel("Ownership percent").fill("100");
       const holdingResponse = page.waitForResponse(
         (response) =>
-          response.url().endsWith(`/api/v1/entities/${subsidiary.id}/holdings`) &&
+          response.url().endsWith(`/api/v1/entities/${subsidiaryId}/holdings`) &&
           response.request().method() === "POST",
       );
       await holding.getByRole("button", { name: "Add", exact: true }).click();
@@ -119,7 +126,7 @@ test.describe.serial("M27 deployer journey", () => {
       await expect(main(page).getByRole("link", { name: PARENT_NAME, exact: true })).toBeVisible();
       await expect(main(page).getByLabel(`${PARENT_NAME} ownership percent`)).toHaveValue("100");
 
-      await page.goto(`/entities/${subsidiary.id}`);
+      await page.goto(`/entities/${subsidiaryId}`);
       const officers = main(page)
         .getByRole("heading", { name: "Officers" })
         .locator("..")
@@ -130,7 +137,7 @@ test.describe.serial("M27 deployer journey", () => {
       await officers.getByLabel("Appointed on").fill("2026-08-01");
       const officerResponse = page.waitForResponse(
         (response) =>
-          response.url().endsWith(`/api/v1/entities/${subsidiary.id}/officers`) &&
+          response.url().endsWith(`/api/v1/entities/${subsidiaryId}/officers`) &&
           response.request().method() === "POST",
       );
       await officers.getByRole("button", { name: "Add", exact: true }).click();
@@ -142,7 +149,7 @@ test.describe.serial("M27 deployer journey", () => {
       ).toHaveValue(DIRECTOR_NAME);
 
       const dueOn = nextMonthDay();
-      await page.goto(`/entities/${subsidiary.id}/obligations`);
+      await page.goto(`/entities/${subsidiaryId}/obligations`);
       await main(page).getByRole("button", { name: "Add obligation" }).click();
       const obligation = page.getByRole("dialog", { name: "Add obligation" });
       await obligation.getByLabel("Label").fill(OBLIGATION_LABEL);
@@ -150,7 +157,7 @@ test.describe.serial("M27 deployer journey", () => {
       await obligation.getByLabel("Repeat every (months)").fill("12");
       const obligationResponse = page.waitForResponse(
         (response) =>
-          response.url().endsWith(`/api/v1/entities/${subsidiary.id}/obligations`) &&
+          response.url().endsWith(`/api/v1/entities/${subsidiaryId}/obligations`) &&
           response.request().method() === "POST",
       );
       await obligation.getByRole("button", { name: "Add obligation" }).click();
@@ -165,7 +172,7 @@ test.describe.serial("M27 deployer journey", () => {
       const subsidiaryRow = page.getByRole("row").filter({ hasText: SUBSIDIARY_NAME });
       await expect(subsidiaryRow).toBeVisible();
       await subsidiaryRow.click();
-      await expect(page).toHaveURL(`/entities/${subsidiary.id}`);
+      await expect(page).toHaveURL(`/entities/${subsidiaryId}`);
       await expect(
         main(page).getByRole("textbox", { name: `${DIRECTOR_NAME} Officer name` }),
       ).toHaveValue(DIRECTOR_NAME);

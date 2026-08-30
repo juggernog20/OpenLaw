@@ -756,7 +756,7 @@ async function verify(fingerprint) {
 
   const entity = (await get(`/api/v1/entities/${fingerprint.entity.id}`)).entity;
   same(entity.legalName, fingerprint.entity.legalName, "entity legal name");
-  const listedEntities = (await get("/api/v1/entities?sort=name&direction=asc")).entities;
+  const listedEntities = (await get("/api/v1/entities?sort=name&dir=asc")).entities;
   check(
     listedEntities.some((row) => row.id === fingerprint.entity.id),
     "the seeded Entity is absent from the M27 registry",
