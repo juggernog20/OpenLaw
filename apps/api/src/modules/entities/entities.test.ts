@@ -196,11 +196,17 @@ describe("the ENT-004 access floor", () => {
     const cleared = await patchEntity(adminCookies, id, { isConfidential: false });
     expect(cleared.statusCode, cleared.body).toBe(200);
     expect((await getEntity(memberCookies, id)).statusCode).toBe(200);
-    const actions = await harness.db
-      .select({ action: activityLog.action })
-      .from(activityLog)
-      .where(eq(activityLog.entityId, id));
-    expect(actions.map((row) => row.action)).toEqual(
+    // The Administrator audit log is the read seam for these entries.
+    const audit = await harness.app.inject({
+      method: "GET",
+      url: `/api/v1/audit-log?entityType=entity&q=${id}`,
+      cookies: adminCookies,
+    });
+    expect(audit.statusCode, audit.body).toBe(200);
+    expect(audit.headers["content-type"]).toContain("application/json");
+    const entries = audit.json().entries as { action: string; entityId: string | null }[];
+    expect(entries.every((entry) => entry.entityId === id)).toBe(true);
+    expect(entries.map((entry) => entry.action)).toEqual(
       expect.arrayContaining([
         "entity.confidentiality_set",
         "entity_grant.added",

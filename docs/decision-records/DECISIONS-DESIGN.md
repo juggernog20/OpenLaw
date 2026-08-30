@@ -4190,6 +4190,15 @@ ENT-001 through ENT-007 fix the Entity registry, ownership graph, compliance cal
 3. The chart node is a card, not a bubble.
 4. `Restricted Entity` joins the MTR-015 convention.
 
+### Alternatives considered
+
+- **An Entity-specific facet grammar.** Rejected. The original mocks carried their own chips. One more filter vocabulary costs a reader a second set of habits for the same operation.
+- **Stored roll-up counters on the Entity.** Rejected. ENT-007 keeps the Contract and Matter counts query-derived. The cost is one count query per record open, which is cheaper than a counter that drifts.
+- **A write blocker when ownership totals pass 100%.** Rejected. ENT-003 keeps the graph writable during a transfer. The cost is that a wrong total stays visible as a warning until someone fixes it.
+- **Hiding a confidential neighbour from the chart.** Rejected. A hole in the graph misreads as a missing holding. The cost of the muted restricted card is that a viewer learns a confidential Entity exists at that position, though not its name or facts.
+- **A bubble chart node.** Rejected. The card matches the list row and the record header. The cost is a wider node, so a deep graph scrolls sooner.
+- **A second empty page for a filtered calendar.** Rejected. Two empty patterns would make a filter look like an empty organization.
+
 ### Rationale
 
 Entities combines a destination catalogue, a record, a calendar, and a graph, but none needs private chrome. Reusing the established list, strip, applet, severity, confidentiality, and restricted-row conventions makes the module legible on first contact and gives the M27 build exact answers at the seams where the older mocks drifted.

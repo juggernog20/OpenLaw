@@ -21,10 +21,16 @@ const COLLEAGUE = {
   displayName: "Yusuf Haddad",
   password: "correct-horse-battery",
 } as const;
+const CONTRIBUTOR = {
+  email: "obligations-contributor@example.com",
+  displayName: "Casey Contributor",
+  password: "correct-horse-battery",
+} as const;
 
 let harness: TestHarness;
 let memberCookies: Record<string, string>;
 let adminCookies: Record<string, string>;
+let contributorCookies: Record<string, string>;
 let memberId: string;
 let corporationId: string;
 let colleagueId: string;
@@ -48,6 +54,9 @@ beforeAll(async () => {
     if (fixture === MEMBER) memberId = person.id;
   }
   memberCookies = await signInCookies(harness.app, MEMBER.email, MEMBER.password);
+  const contributor = await provisionUser(harness.app.auth, CONTRIBUTOR);
+  await harness.db.update(users).set({ role: "contributor" }).where(eq(users.id, contributor.id));
+  contributorCookies = await signInCookies(harness.app, CONTRIBUTOR.email, CONTRIBUTOR.password);
   const types = await harness.app.inject({
     method: "GET",
     url: "/api/v1/entities/types",
@@ -216,6 +225,81 @@ describe("Entity obligation CRUD", () => {
       .where(eq(entityObligations.id, obligationId));
     expect(row?.registrationId).toBeNull();
   });
+
+  it("keeps every obligation route at the Member+ floor", async () => {
+    const routes = [
+      { method: "GET", url: "/api/v1/entities/none/obligations" },
+      {
+        method: "POST",
+        url: "/api/v1/entities/none/obligations",
+        payload: { label: "x", nextDueOn: "2026-01-01" },
+      },
+      { method: "PATCH", url: "/api/v1/entities/none/obligations/none", payload: { label: "x" } },
+      { method: "DELETE", url: "/api/v1/entities/none/obligations/none" },
+      { method: "POST", url: "/api/v1/entities/none/obligations/none/file", payload: {} },
+      { method: "GET", url: "/api/v1/entities/calendar" },
+    ] as const;
+    for (const route of routes) {
+      const anonymous = await harness.app.inject({ ...route });
+      expect(anonymous.statusCode, `${route.method} ${route.url}: ${anonymous.body}`).toBe(401);
+      const contributor = await harness.app.inject({ ...route, cookies: contributorCookies });
+      expect(contributor.statusCode, `${route.method} ${route.url}: ${contributor.body}`).toBe(403);
+      expect(contributor.headers["content-type"]).toContain("application/problem+json");
+    }
+  });
+
+  it("answers 404 for an unknown obligation id on update, delete, and file", async () => {
+    const entity = await newEntity("Unknown Obligation Ltd");
+    const base = `/api/v1/entities/${entity.id}/obligations/no-such-id`;
+    const attempts = [
+      harness.app.inject({
+        method: "PATCH",
+        url: base,
+        cookies: memberCookies,
+        payload: { label: "x" },
+      }),
+      harness.app.inject({ method: "DELETE", url: base, cookies: memberCookies }),
+      harness.app.inject({
+        method: "POST",
+        url: `${base}/file`,
+        cookies: memberCookies,
+        payload: {},
+      }),
+    ];
+    for (const response of await Promise.all(attempts)) {
+      expect(response.statusCode, response.body).toBe(404);
+      expect(response.headers["content-type"]).toContain("application/problem+json");
+    }
+  });
+
+  it("refuses another Entity's registration, a bad recurrence, and a malformed due date as 400", async () => {
+    const entity = await newEntity("Validation Ltd");
+    const other = await newEntity("Other Registration Ltd");
+    const foreign = await newRegistration(other.id, "Ireland");
+    const attempts = [
+      createObligation(entity.id, {
+        label: "Cross-Entity link",
+        registrationId: foreign.id,
+        nextDueOn: "2026-11-01",
+      }),
+      createObligation(entity.id, {
+        label: "Bad recurrence",
+        recurrenceMonths: 0,
+        nextDueOn: "2026-11-01",
+      }),
+      createObligation(entity.id, { label: "Bad date", nextDueOn: "2026-13-01" }),
+    ];
+    for (const response of await Promise.all(attempts)) {
+      expect(response.statusCode, response.body).toBe(400);
+      expect(response.headers["content-type"]).toContain("application/problem+json");
+    }
+    const listed = await harness.app.inject({
+      method: "GET",
+      url: `/api/v1/entities/${entity.id}/obligations`,
+      cookies: memberCookies,
+    });
+    expect(listed.json().obligations).toEqual([]);
+  });
 });
 
 describe("Mark filed", () => {
@@ -288,7 +372,7 @@ describe("Mark filed", () => {
     });
   });
 
-  it("catches up across two missed recurrence cycles and stops after filedOn", async () => {
+  it("catches up across three missed recurrence cycles and stops after filedOn", async () => {
     const entity = await newEntity("Missed Cycles Ltd");
     const created = await createObligation(entity.id, {
       label: "Biennial register",

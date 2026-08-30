@@ -289,9 +289,7 @@ describe("the /documents destination", () => {
   it("names the module in the fresh-install empty state", async () => {
     stubApi({ signedIn: MEMBER });
     renderAt("/documents");
-    expect(
-      await screen.findByText("Paper lives on Contracts, Matters, and Entities."),
-    ).toBeVisible();
+    expect(await screen.findByText("No documents yet")).toBeVisible();
     expect(screen.getByText("Upload to a record and it appears here.")).toBeVisible();
   });
 });

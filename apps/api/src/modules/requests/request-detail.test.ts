@@ -458,6 +458,30 @@ describe("the values, labelled through the type's live fields (INT-002)", () => 
     ]);
   });
 
+  it("withholds the legal name of a confidential Entity from a Legal Team Member with no grant", async () => {
+    const entityId = await createEntity("Sealed Vehicle Ltd");
+    const { number } = await submit({
+      summary: "Names a sealed Entity",
+      customFields: { [slug("Contracting entity")]: entityId },
+    });
+    const sealed = await harness.app.inject({
+      method: "PATCH",
+      url: `/api/v1/entities/${entityId}`,
+      cookies: adminCookies,
+      payload: { isConfidential: true },
+    });
+    expect(sealed.statusCode, sealed.body).toBe(200);
+
+    const withheld = await readDetail(number, memberCookies);
+    expect(withheld.statusCode, withheld.body).toBe(200);
+    expect(withheld.body).not.toContain("Sealed Vehicle Ltd");
+    expect(withheld.json().customFieldRefs.entities).toEqual([{ restricted: true, id: entityId }]);
+    // The Administrator reaches every Entity, so the same row is named.
+    expect((await readDetail(number, adminCookies)).json().customFieldRefs.entities).toEqual([
+      { restricted: false, id: entityId, legalName: "Sealed Vehicle Ltd", archived: false },
+    ]);
+  });
+
   it("goes on naming a person and an Entity that have since been archived", async () => {
     const entityId = await createEntity("Wound Down GmbH");
     const { number } = await submit({

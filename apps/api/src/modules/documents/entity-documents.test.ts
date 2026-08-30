@@ -58,7 +58,7 @@ beforeAll(async () => {
 afterAll(async () => harness.stop());
 
 describe("Entity-owned Documents", () => {
-  it("uploads a folder drop, appends a version, filters the repository, and searches to the owner", async () => {
+  it("files a dropped folder path, appends a version, and answers the Entity owner in the repository and in search", async () => {
     const created = await harness.app.inject({
       method: "POST",
       url: `/api/v1/entities/${entityId}/documents`,
@@ -107,7 +107,9 @@ describe("Entity-owned Documents", () => {
     });
     const hit = search.json().results.find((row: { kind: string }) => row.kind === "document");
     expect(hit).toMatchObject({ kind: "document", ownerKind: "entity", ownerId: entityId });
+  });
 
+  it("hides a confidential Entity's paper from the repository and the owner options", async () => {
     const sealed = await harness.app.inject({
       method: "PATCH",
       url: `/api/v1/entities/${entityId}`,
@@ -129,7 +131,9 @@ describe("Entity-owned Documents", () => {
     });
     expect(walledOptions.body).not.toContain("Entity Paper Ltd");
     expect(walledOptions.json().records).toEqual([]);
+  });
 
+  it("restores a granted reader's access to a confidential Entity's paper", async () => {
     const granted = await harness.app.inject({
       method: "POST",
       url: `/api/v1/entities/${entityId}/grants`,

@@ -1,6 +1,17 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-import { useState } from "react";
+/**
+ * The Entity record's Registrations card: ENT-002's per-jurisdiction
+ * rows, added, edited inline, and removed one at a time.
+ *
+ * `obligations` defaults to empty because the Overview mount has no
+ * obligation read of its own. When the caller passes them, each row
+ * lists the obligations that point at it (ENT-006) as links to the
+ * Entity's Obligations tab, not to an obligation page. An obligation
+ * has no page of its own.
+ */
+
+import { useId, useState } from "react";
 import { Link } from "react-router";
 import { FormattedMessage, useIntl, type IntlShape } from "react-intl";
 import { Plus, Trash2 } from "lucide-react";
@@ -100,10 +111,14 @@ export function RegistrationsCard({
     setRegistrations((current) => current.filter((row) => row.id !== id));
   }
 
+  const headingId = useId();
   return (
-    <section className="overflow-hidden rounded-card border border-border-default bg-raised">
+    <section
+      aria-labelledby={headingId}
+      className="overflow-hidden rounded-card border border-border-default bg-raised"
+    >
       <header className="flex min-h-section-header items-center justify-between gap-3 border-b border-border-default bg-section-header px-4 py-2">
-        <h2 className="text-base font-semibold">
+        <h2 id={headingId} className="text-base font-semibold">
           <FormattedMessage
             id="entities.record.registrations.title"
             defaultMessage="Registrations"
@@ -184,10 +199,7 @@ export function RegistrationsCard({
           </div>
           <div className="flex items-center gap-2 @2xl/page:col-span-4">
             <Button size="sm" onClick={() => void addRegistration()}>
-              <FormattedMessage
-                id="entities.record.registrations.addConfirm"
-                defaultMessage="Add"
-              />
+              <FormattedMessage id="common.add" defaultMessage="Add" />
             </Button>
             <Button size="sm" variant="ghost" onClick={() => setAdding(false)}>
               <FormattedMessage id="action.cancel" defaultMessage="Cancel" />
@@ -343,20 +355,23 @@ function RegistrationRow({
           </p>
           <ul className="mt-1 flex flex-wrap gap-x-4 gap-y-1">
             {obligations.map((obligation) => (
-              <li key={obligation.id}>
-                <Link
-                  className="text-sm text-link hover:underline"
-                  to={`/entities/${entityId}/obligations`}
-                >
-                  {obligation.label}
-                </Link>
-                <span className="ms-2 text-xs text-muted">
-                  <FormattedMessage
-                    id="entities.record.registrations.obligationDue"
-                    defaultMessage="due {date}"
-                    values={{ date: formatShortDate(obligation.nextDueOn) }}
-                  />
-                </span>
+              <li key={obligation.id} className="text-xs text-muted">
+                <FormattedMessage
+                  id="entities.record.registrations.obligationDue"
+                  defaultMessage="<link>{label}</link> due {date}"
+                  values={{
+                    label: obligation.label,
+                    date: formatShortDate(obligation.nextDueOn),
+                    link: (chunks) => (
+                      <Link
+                        className="me-2 text-sm text-link hover:underline"
+                        to={`/entities/${entityId}/obligations`}
+                      >
+                        {chunks}
+                      </Link>
+                    ),
+                  }}
+                />
               </li>
             ))}
           </ul>

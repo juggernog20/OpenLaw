@@ -1,6 +1,19 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-import { useState } from "react";
+/**
+ * The Entity record's Officers card: ENT-001's `entity_officers` rows,
+ * added, edited inline, resigned, and removed one at a time.
+ *
+ * The list shows current officers unless "Show former" is on, so an
+ * update that sets `resignedOn` drops the row from the list while the
+ * toggle is off. The row still exists; the toggle reads it back. A
+ * row's role or linked user may no longer be in the option lists (an
+ * archived role, a person no longer offered), so the row's own value
+ * is re-offered as one extra option. Without it the select would show
+ * the first option and read as a change nobody made.
+ */
+
+import { useId, useState } from "react";
 import { FormattedMessage, useIntl } from "react-intl";
 import { Plus, Trash2 } from "lucide-react";
 import { api } from "../../lib/api";
@@ -44,7 +57,12 @@ export function OfficersCard({
         params: { path: { id: entityId }, query: next ? { includeFormer: "true" } : {} },
       })
       .catch(() => undefined);
-    if (result?.data) setOfficers(result.data.officers);
+    if (!result?.data) {
+      setStatus("error");
+      setError((await problem(result)).detail);
+      return;
+    }
+    setOfficers(result.data.officers);
   }
 
   async function addOfficer() {
@@ -109,10 +127,14 @@ export function OfficersCard({
     setOfficers((current) => current.filter((row) => row.id !== id));
   }
 
+  const headingId = useId();
   return (
-    <section className="overflow-hidden rounded-card border border-border-default bg-raised">
+    <section
+      aria-labelledby={headingId}
+      className="overflow-hidden rounded-card border border-border-default bg-raised"
+    >
       <header className="flex min-h-section-header items-center justify-between gap-3 border-b border-border-default bg-section-header px-4 py-2">
-        <h2 className="text-base font-semibold">
+        <h2 id={headingId} className="text-base font-semibold">
           <FormattedMessage id="entities.record.officers.title" defaultMessage="Officers" />
         </h2>
         <div className="flex items-center gap-3">
@@ -200,7 +222,7 @@ export function OfficersCard({
           </div>
           <div className="flex items-center gap-2 @2xl/page:col-span-4">
             <Button size="sm" onClick={() => void addOfficer()}>
-              <FormattedMessage id="entities.record.officers.addConfirm" defaultMessage="Add" />
+              <FormattedMessage id="common.add" defaultMessage="Add" />
             </Button>
             <Button size="sm" variant="ghost" onClick={() => setAdding(false)}>
               <FormattedMessage id="action.cancel" defaultMessage="Cancel" />

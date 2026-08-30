@@ -464,7 +464,7 @@ function DocumentsPageState() {
                 ) : (
                   <FormattedMessage
                     id="documents.list.empty.title"
-                    defaultMessage="Paper lives on Contracts, Matters, and Entities."
+                    defaultMessage="No documents yet"
                   />
                 )}
               </h2>

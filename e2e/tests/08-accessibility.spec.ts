@@ -63,6 +63,20 @@ test.describe("accessibility floor", () => {
     expect(corporationId).toBeDefined();
     const suffix = Date.now();
     const createdIds: string[] = [];
+    // Archive every per-run Entity even when one archive call fails, so a
+    // failed cleanup never leaves rows behind in the persistent instance.
+    const cleanup = async () => {
+      const failures: unknown[] = [];
+      for (const id of [...createdIds].reverse()) {
+        try {
+          const archived = await page.request.post(`/api/v1/entities/${id}/archive`);
+          expect(archived.status(), await archived.text()).toBe(200);
+        } catch (error: unknown) {
+          failures.push(error);
+        }
+      }
+      if (failures.length > 0) throw new AggregateError(failures, "Entity axe cleanup failed");
+    };
     try {
       for (const [legalName, jurisdiction] of [
         [`Axe Delaware Parent ${suffix}`, "Delaware"],
@@ -120,10 +134,7 @@ test.describe("accessibility floor", () => {
         await reportAxeViolations(page, testInfo, `entity-${tab || "overview"}`);
       }
     } finally {
-      for (const id of createdIds.reverse()) {
-        const archived = await page.request.post(`/api/v1/entities/${id}/archive`);
-        expect(archived.status(), await archived.text()).toBe(200);
-      }
+      await cleanup();
     }
   });
 

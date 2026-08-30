@@ -4,7 +4,7 @@
 import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it } from "vitest";
-import { json, renderAt, stubApi, type StubCall } from "../testing/helpers";
+import { json, problem, renderAt, stubApi, type StubCall } from "../testing/helpers";
 
 const MEMBER = {
   id: "u1",
@@ -157,6 +157,68 @@ describe("the Entity Obligations tab", () => {
       assigneeId: "u2",
     });
     expect(screen.getByDisplayValue("Tax return")).toBeInTheDocument();
+  });
+
+  it("sends nothing from Add obligation until both label and due date are filled", async () => {
+    let posted = 0;
+    stubApi({
+      signedIn: MEMBER,
+      extra: (call) => {
+        if (call.url.pathname === "/api/v1/entities/e1/obligations" && call.method === "POST") {
+          posted += 1;
+          return json(201, { obligation });
+        }
+        return entityRecordApi(call);
+      },
+    });
+    renderAt("/entities/e1/obligations");
+    const user = userEvent.setup();
+    await user.click(await screen.findByRole("button", { name: "Add obligation" }));
+    const dialog = await screen.findByRole("dialog", { name: "Add obligation" });
+    await user.click(within(dialog).getByRole("button", { name: "Add obligation" }));
+    await user.type(within(dialog).getByLabelText("Label"), "Tax return");
+    await user.click(within(dialog).getByRole("button", { name: "Add obligation" }));
+    expect(posted).toBe(0);
+    expect(screen.getByRole("dialog", { name: "Add obligation" })).toBeInTheDocument();
+  });
+
+  it("keeps the Add obligation dialog open with its typing when the API refuses", async () => {
+    const detail = "The due date must be today or later.";
+    stubApi({
+      signedIn: MEMBER,
+      extra: (call) =>
+        call.url.pathname === "/api/v1/entities/e1/obligations" && call.method === "POST"
+          ? problem(400, detail)
+          : entityRecordApi(call),
+    });
+    renderAt("/entities/e1/obligations");
+    const user = userEvent.setup();
+    await user.click(await screen.findByRole("button", { name: "Add obligation" }));
+    const dialog = await screen.findByRole("dialog", { name: "Add obligation" });
+    await user.type(within(dialog).getByLabelText("Label"), "Tax return");
+    await user.type(within(dialog).getByLabelText("Due date"), "2020-01-01");
+    await user.click(within(dialog).getByRole("button", { name: "Add obligation" }));
+    expect(await within(dialog).findByText(detail)).toBeInTheDocument();
+    expect(screen.getByRole("dialog", { name: "Add obligation" })).toBeInTheDocument();
+    expect(within(dialog).getByLabelText("Label")).toHaveValue("Tax return");
+  });
+
+  it("keeps the saved due date when Mark filed is refused", async () => {
+    const detail = "This obligation was already filed for this cycle.";
+    stubApi({
+      signedIn: MEMBER,
+      extra: (call) =>
+        call.url.pathname === "/api/v1/entities/e1/obligations/o1/file"
+          ? problem(409, detail)
+          : entityRecordApi(call),
+    });
+    renderAt("/entities/e1/obligations");
+    const user = userEvent.setup();
+    await user.click(await screen.findByRole("button", { name: "Mark Annual return filed" }));
+    const dialog = await screen.findByRole("dialog", { name: "Mark filed" });
+    await user.click(within(dialog).getByRole("button", { name: "Mark filed" }));
+    expect(await within(dialog).findByText(detail)).toBeInTheDocument();
+    expect(screen.getByDisplayValue("2026-09-30")).toBeInTheDocument();
   });
 
   it("opens Mark filed with the cycle date and replaces the recurring row after confirmation", async () => {

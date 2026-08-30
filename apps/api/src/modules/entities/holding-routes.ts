@@ -98,11 +98,7 @@ function holdingProjection(db: Executor) {
     .innerJoin(ownedEntities, eq(entityHoldings.ownedEntityId, ownedEntities.id));
 }
 
-type HoldingProjection = Awaited<ReturnType<typeof holdingRows>>[number];
-
-async function holdingRows(db: Executor) {
-  return holdingProjection(db);
-}
+type HoldingProjection = Awaited<ReturnType<typeof holdingProjection>>[number];
 
 function toHolding(row: HoldingProjection, visible?: ReadonlySet<string>) {
   const entity = (id: string, legalName: string) =>
@@ -175,6 +171,18 @@ async function holdingBeside(db: Executor, entityId: string, relatedEntityId: st
   return row ?? null;
 }
 
+/**
+ * The write envelope, read while the advisory lock is still held. Reading
+ * after commit would race a concurrent delete of the same pair and turn a
+ * write that landed into a 500; the warnings would also describe another
+ * writer's totals.
+ */
+async function writtenHolding(tx: Transaction, ownerId: string, ownedId: string) {
+  const holding = await holdingByPair(tx, ownerId, ownedId);
+  if (!holding) throw new Error("The written Holding could not be read.");
+  return { holding: toHolding(holding), warnings: await warningsFor(tx, [ownedId]) };
+}
+
 /** Finds an existing path from `start` to `target`, following ownership downwards. */
 function ownershipPath(
   rows: readonly { ownerEntityId: string; ownedEntityId: string }[],
@@ -239,17 +247,18 @@ function assertEditable(entity: { archivedAt: Date | null }) {
 
 async function recordHoldingActivity(
   tx: Transaction,
-  input: Readonly<{
-    action: "entity_holding.created" | "entity_holding.updated" | "entity_holding.deleted";
-    actorId: string;
-    ownerId: string;
-    ownerName: string;
-    ownedId: string;
-    ownedName: string;
-    ownershipPercent?: number;
-    from?: number;
-    to?: number;
-  }>,
+  input: Readonly<
+    {
+      actorId: string;
+      ownerId: string;
+      ownerName: string;
+      ownedId: string;
+      ownedName: string;
+    } & (
+      | { action: "entity_holding.updated"; from: number; to: number }
+      | { action: "entity_holding.created" | "entity_holding.deleted"; ownershipPercent: number }
+    )
+  >,
 ) {
   for (const [entityId, legalName] of [
     [input.ownerId, input.ownerName],
@@ -270,8 +279,8 @@ async function recordHoldingActivity(
           legalName,
           ownerName: input.ownerName,
           ownedName: input.ownedName,
-          from: input.from!,
-          to: input.to!,
+          from: input.from,
+          to: input.to,
         },
       });
     } else {
@@ -282,7 +291,7 @@ async function recordHoldingActivity(
           legalName,
           ownerName: input.ownerName,
           ownedName: input.ownedName,
-          ownershipPercent: input.ownershipPercent!,
+          ownershipPercent: input.ownershipPercent,
         },
       });
     }
@@ -316,7 +325,7 @@ export const entityHoldingRoutes: FastifyPluginAsyncZod = async (app) => {
         .innerJoin(entityTypes, eq(entities.entityTypeId, entityTypes.id))
         .orderBy(asc(sql`lower(${entities.legalName})`), asc(entities.id));
       const visible = await reachableIds(app.db, request.user);
-      const allHoldings = await holdingRows(app.db);
+      const allHoldings = await holdingProjection(app.db);
       const included = new Set(visible);
       for (const row of allHoldings) {
         if (visible.has(row.ownerId) || visible.has(row.ownedId)) {
@@ -384,8 +393,11 @@ export const entityHoldingRoutes: FastifyPluginAsyncZod = async (app) => {
       const entity = await reachedEntity(app.db, request.user, request.params.id);
       if (!entity) throw httpError(404, NO_ENTITY);
       const visible = await reachableIds(app.db, request.user);
-      const rows = (await holdingRows(app.db)).filter(
-        (row) => row.ownerId === entity.id || row.ownedId === entity.id,
+      const rows = await holdingProjection(app.db).where(
+        or(
+          eq(entityHoldings.ownerEntityId, entity.id),
+          eq(entityHoldings.ownedEntityId, entity.id),
+        ),
       );
       const owners = rows
         .filter((row) => row.ownedId === entity.id)
@@ -423,7 +435,7 @@ export const entityHoldingRoutes: FastifyPluginAsyncZod = async (app) => {
       },
     },
     async (request, reply) => {
-      const pair = await app.db.transaction(async (tx) => {
+      const written = await app.db.transaction(async (tx) => {
         await tx.execute(sql`select pg_advisory_xact_lock(${ADVISORY_LOCK.entityHoldings})`);
         const anchor = await reachedEntity(tx, request.user, request.params.id, { lock: true });
         if (!anchor) throw httpError(404, NO_ENTITY);
@@ -456,14 +468,9 @@ export const entityHoldingRoutes: FastifyPluginAsyncZod = async (app) => {
           ownedName: owned.legalName,
           ownershipPercent: request.body.ownershipPercent,
         });
-        return { ownerId: owner.id, ownedId: owned.id };
+        return writtenHolding(tx, owner.id, owned.id);
       });
-      const holding = await holdingByPair(app.db, pair.ownerId, pair.ownedId);
-      if (!holding) throw new Error("The created Holding could not be read.");
-      return reply.status(201).send({
-        holding: toHolding(holding),
-        warnings: await warningsFor(app.db, [pair.ownedId]),
-      });
+      return reply.status(201).send(written);
     },
   );
 
@@ -480,7 +487,7 @@ export const entityHoldingRoutes: FastifyPluginAsyncZod = async (app) => {
       },
     },
     async (request) => {
-      const pair = await app.db.transaction(async (tx) => {
+      return app.db.transaction(async (tx) => {
         await tx.execute(sql`select pg_advisory_xact_lock(${ADVISORY_LOCK.entityHoldings})`);
         const anchor = await reachedEntity(tx, request.user, request.params.id, { lock: true });
         if (!anchor) throw httpError(404, NO_ENTITY);
@@ -514,14 +521,8 @@ export const entityHoldingRoutes: FastifyPluginAsyncZod = async (app) => {
             to: request.body.ownershipPercent,
           });
         }
-        return { ownerId: row.ownerId, ownedId: row.ownedId };
+        return writtenHolding(tx, row.ownerId, row.ownedId);
       });
-      const holding = await holdingByPair(app.db, pair.ownerId, pair.ownedId);
-      if (!holding) throw new Error("The updated Holding could not be read.");
-      return {
-        holding: toHolding(holding),
-        warnings: await warningsFor(app.db, [pair.ownedId]),
-      };
     },
   );
 

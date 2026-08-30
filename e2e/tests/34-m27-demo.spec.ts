@@ -127,10 +127,7 @@ test.describe.serial("M27 deployer journey", () => {
       await expect(main(page).getByLabel(`${PARENT_NAME} ownership percent`)).toHaveValue("100");
 
       await page.goto(`/entities/${subsidiaryId}`);
-      const officers = main(page)
-        .getByRole("heading", { name: "Officers" })
-        .locator("..")
-        .locator("..");
+      const officers = main(page).getByRole("region", { name: "Officers" });
       await officers.getByRole("button", { name: "Add officer" }).click();
       await officers.getByLabel("Officer name").fill(DIRECTOR_NAME);
       await officers.getByLabel("Role").selectOption({ label: "Director" });

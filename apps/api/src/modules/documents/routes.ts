@@ -1409,7 +1409,9 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
       schema: {
         operationId: "listEntityDocuments",
         summary:
-          "The paper on one Entity, newest first, with each document's complete version chain.",
+          "The paper on one Entity, newest first, with each document's complete version chain. " +
+          "Administrators and Legal Team Members who reach the Entity read it; Contributors " +
+          "and Business Users are refused (ENT-004).",
         tags: ["documents"],
         params: EntityParams,
         querystring: ArchivedQuery.extend(FolderQuery.shape).extend({
@@ -3684,22 +3686,28 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
       document.createdBy !== user.id &&
       document.ownerManagerId !== user.id
     ) {
+      const manager = ownerCopy(document.owner.kind).manager;
       throw httpError(
         403,
-        "Only an Administrator, the person who uploaded this document, or " +
-          `the ${ownerCopy(document.owner.kind).manager} can change this.`,
+        manager === null
+          ? "Only an Administrator or the person who uploaded this document can change this."
+          : "Only an Administrator, the person who uploaded this document, or " +
+              `the ${manager} can change this.`,
       );
     }
   }
 
-  function ownerCopy(owner: DocumentOwner): { manager: string; noun: string } {
+  /** The copy each owner kind lends a refusal. `manager` is null where
+   * the owner has no managing person: an Entity carries no Owner or
+   * Matter Manager, so `ownerManagerId` is always null on its paper. */
+  function ownerCopy(owner: DocumentOwner): { manager: string | null; noun: string } {
     switch (owner) {
       case "contract":
         return { manager: "contract's Owner", noun: "contract" };
       case "matter":
         return { manager: "Matter Manager", noun: "matter" };
       case "entity":
-        return { manager: "Entity owner", noun: "entity" };
+        return { manager: null, noun: "Entity" };
     }
   }
 

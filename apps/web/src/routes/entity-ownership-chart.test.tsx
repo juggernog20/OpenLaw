@@ -226,7 +226,7 @@ describe("/entities?view=chart", () => {
       "data-restricted",
       "true",
     );
-    expect(screen.queryByText("Invisible Acquisition Vehicle")).not.toBeInTheDocument();
+    expect(screen.queryByText("secret")).not.toBeInTheDocument();
   });
 
   it("renders the majority tree, secondary edge, unconnected row, click-through, and keyboard pan", async () => {

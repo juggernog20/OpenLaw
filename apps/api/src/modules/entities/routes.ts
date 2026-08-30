@@ -161,7 +161,7 @@ const majorityOwnerEntities = alias(entities, "majority_owner_entities");
 const majorityOwnerId = sql<string | null>`(
   select ${entityHoldings.ownerEntityId}
   from ${entityHoldings}
-  inner join ${sql.raw('"entities" as "majority_owner_entities"')}
+  inner join ${entities} as ${majorityOwnerEntities}
     on ${majorityOwnerEntities.id} = ${entityHoldings.ownerEntityId}
   where ${entityHoldings.ownedEntityId} = ${entities.id}
   order by
@@ -183,7 +183,7 @@ function primaryOwnerIds(
     select distinct on (${entityHoldings.ownedEntityId}) ${entityHoldings.ownerEntityId}
     from ${entityHoldings}
     inner join ${entities} on ${entities.id} = ${entityHoldings.ownedEntityId}
-    inner join ${sql.raw('"entities" as "majority_owner_entities"')}
+    inner join ${entities} as ${majorityOwnerEntities}
       on ${majorityOwnerEntities.id} = ${entityHoldings.ownerEntityId}
     where ${and(isNull(entities.archivedAt), entityReachScope(db, user))}
     order by

@@ -26,8 +26,16 @@ export function EntityGrantsDialog({
     let live = true;
     void api
       .GET("/api/v1/entities/{id}/grants", { params: { path: { id: entityId } } })
-      .then((result) => {
-        if (live && result.data) setData(result.data);
+      .catch(() => undefined)
+      .then(async (result) => {
+        if (!live) return;
+        if (result?.data) {
+          setData(result.data);
+          setError(undefined);
+          return;
+        }
+        // A failed read must not look like an empty grant list.
+        setError((await problem(result)).detail);
       });
     return () => {
       live = false;

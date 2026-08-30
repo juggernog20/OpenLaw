@@ -2,9 +2,9 @@
 
 /** Entities · Officer roles at the shared taxonomy route seam. */
 import { describe, expect, it } from "vitest";
-import { screen, within } from "@testing-library/react";
+import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { json, renderAt, stubApi, type StubCall } from "../testing/helpers";
+import { json, problem, renderAt, stubApi, type StubCall } from "../testing/helpers";
 
 const ADMIN = {
   id: "u1",
@@ -32,16 +32,28 @@ const ROLES = [
   inUseCount,
 }));
 
-function rolesApi(call: StubCall): Response | undefined {
-  if (call.url.pathname === "/api/v1/officer-roles" && call.method === "GET") {
-    return json(200, { officerRoles: ROLES });
-  }
-  return undefined;
+type RoleCalls = { archives: { id: string; body: unknown }[] };
+const newCalls = (): RoleCalls => ({ archives: [] });
+
+function rolesApi(calls: RoleCalls = newCalls()) {
+  return (call: StubCall): Response | undefined => {
+    const path = call.url.pathname;
+    if (path === "/api/v1/officer-roles" && call.method === "GET") {
+      return json(200, { officerRoles: ROLES });
+    }
+    const archive = /^\/api\/v1\/officer-roles\/([^/]+)\/archive$/.exec(path);
+    if (archive && call.method === "POST") {
+      calls.archives.push({ id: archive[1]!, body: call.body });
+      const row = ROLES.find((role) => role.id === archive[1])!;
+      return json(200, { officerRole: { ...row, archivedAt: "2026-08-30T00:00:00.000Z" } });
+    }
+    return undefined;
+  };
 }
 
 describe("the Entities Officer roles pane", () => {
   it("renders the five seeds, protects Other, and exposes the full officer usage count", async () => {
-    stubApi({ signedIn: ADMIN, extra: rolesApi });
+    stubApi({ signedIn: ADMIN, extra: rolesApi() });
     renderAt("/settings/entities/officer-roles");
     expect(await screen.findByText("Director")).toBeInTheDocument();
     expect(screen.getByText("2 officers")).toBeInTheDocument();
@@ -57,7 +69,7 @@ describe("the Entities Officer roles pane", () => {
   });
 
   it("uses the shared reassignment guard copy for every referenced officer", async () => {
-    stubApi({ signedIn: ADMIN, extra: rolesApi });
+    stubApi({ signedIn: ADMIN, extra: rolesApi() });
     renderAt("/settings/entities/officer-roles");
     const user = userEvent.setup();
     await user.click(await screen.findByRole("button", { name: "Archive Director" }));
@@ -68,6 +80,44 @@ describe("the Entities Officer roles pane", () => {
       ),
     ).toBeInTheDocument();
     expect(within(dialog).getByRole("combobox", { name: "Reassign 2 officers to" })).toBeRequired();
+  });
+
+  it("sends the reassignment pick to the officer-role archive endpoint", async () => {
+    const calls = newCalls();
+    stubApi({ signedIn: ADMIN, extra: rolesApi(calls) });
+    renderAt("/settings/entities/officer-roles");
+    const user = userEvent.setup();
+    await user.click(await screen.findByRole("button", { name: "Archive Director" }));
+    const dialog = await screen.findByRole("dialog", { name: "Archive Director" });
+    await user.selectOptions(
+      within(dialog).getByRole("combobox", { name: "Reassign 2 officers to" }),
+      "CFO",
+    );
+    await user.click(within(dialog).getByRole("button", { name: "Archive role" }));
+    await waitFor(() =>
+      expect(calls.archives).toEqual([{ id: "r1", body: { reassignToId: "r3" } }]),
+    );
+  });
+
+  it("reads the API's refusal detail inside the archive dialog", async () => {
+    const detail = "This role is used by 2 officers. Pick a reassignment target to archive it.";
+    stubApi({
+      signedIn: ADMIN,
+      extra: (call: StubCall) =>
+        call.method === "POST" && call.url.pathname.endsWith("/archive")
+          ? problem(409, detail)
+          : rolesApi()(call),
+    });
+    renderAt("/settings/entities/officer-roles");
+    const user = userEvent.setup();
+    await user.click(await screen.findByRole("button", { name: "Archive Director" }));
+    const dialog = await screen.findByRole("dialog", { name: "Archive Director" });
+    await user.selectOptions(
+      within(dialog).getByRole("combobox", { name: "Reassign 2 officers to" }),
+      "CFO",
+    );
+    await user.click(within(dialog).getByRole("button", { name: "Archive role" }));
+    expect(await within(dialog).findByRole("alert")).toHaveTextContent(detail);
   });
 
   it("redirects a non-Administrator to Profile", async () => {

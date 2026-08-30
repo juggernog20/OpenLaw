@@ -203,6 +203,7 @@ export function EntityListFilterBar({
       </div>
       {chips.length > 0 && (
         <div
+          role="group"
           className="flex flex-wrap items-center gap-2"
           aria-label={intl.formatMessage(MESSAGES.active)}
         >

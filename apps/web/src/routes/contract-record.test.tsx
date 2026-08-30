@@ -507,8 +507,9 @@ function recordApi(
     OPTIONS.contractTypes.find((option) => option.id === of.contractTypeId)?.fields ?? [];
   const customEnvelope = () => ({
     fields: fieldsOf(row),
-    // Nothing in these suites stores a `user` or `entity` value, so no
-    // row is named that the pickers do not already offer.
+    // Empty unless a suite names referenced rows. Only the restricted
+    // Entity-valued Field case supplies one, and it names a row no
+    // picker offers.
     customFieldRefs: initialRefs,
   });
   let team = initialTeam;

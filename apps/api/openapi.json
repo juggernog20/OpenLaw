@@ -31074,7 +31074,7 @@
     "/api/v1/entities/{id}/documents": {
       "get": {
         "operationId": "listEntityDocuments",
-        "summary": "The paper on one Entity, newest first, with each document's complete version chain.",
+        "summary": "The paper on one Entity, newest first, with each document's complete version chain. Administrators and Legal Team Members who reach the Entity read it; Contributors and Business Users are refused (ENT-004).",
         "tags": ["documents"],
         "parameters": [
           {
@@ -34774,7 +34774,7 @@
     "/api/v1/entities/{id}/folders": {
       "get": {
         "operationId": "listEntityFolders",
-        "summary": "The complete folder tree on one Entity, with viewer-scoped live document counts.",
+        "summary": "The complete folder tree on one Entity, with viewer-scoped live document counts. Administrators and Legal Team Members who reach the Entity read it; Contributors and Business Users are refused (ENT-004).",
         "tags": ["documents"],
         "parameters": [
           {
@@ -45026,7 +45026,7 @@
     "/api/v1/fields": {
       "get": {
         "operationId": "listFields",
-        "summary": "The shared field catalog (CTR-016) scoped to contract and global fields, in creation order; archived rows only with includeArchived=true",
+        "summary": "The shared field catalog (CTR-016) scoped to contract, matter, entity, and global fields, in creation order; archived rows only with includeArchived=true",
         "tags": ["fields"],
         "parameters": [
           {

@@ -251,8 +251,8 @@ export const fieldsRoutes: FastifyPluginAsyncZod = async (app) => {
       schema: {
         operationId: "listFields",
         summary:
-          "The shared field catalog (CTR-016) scoped to contract and " +
-          "global fields, in creation order; archived rows only with " +
+          "The shared field catalog (CTR-016) scoped to contract, matter, " +
+          "entity, and global fields, in creation order; archived rows only with " +
           "includeArchived=true",
         tags: ["fields"],
         querystring: z.object({ includeArchived: z.enum(["true", "false"]).optional() }),

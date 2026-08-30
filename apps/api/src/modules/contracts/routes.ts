@@ -764,15 +764,18 @@ function toRow(
     statusName: context.statusName,
     stage: context.stage,
     manager: toPersonOrNull(context.manager),
+    // The projection blanks `legalName` on a signing Entity outside the
+    // viewer's reach, so a null name is the restricted case however the
+    // context was built.
     entity:
       context.entity === null
         ? null
-        : context.entityRestricted
+        : context.entityRestricted || context.entity.legalName === null
           ? { restricted: true as const }
           : {
               restricted: false as const,
               id: context.entity.id,
-              legalName: context.entity.legalName!,
+              legalName: context.entity.legalName,
             },
     primaryCounterparty: context.primaryCounterparty,
     priority: row.priority,

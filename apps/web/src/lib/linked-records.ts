@@ -1,5 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
+/**
+ * The seams `LinkedRecordsList` reads through (TECH-025): one per
+ * linked-record kind, each wrapping the Entity roll-up read (ENT-007).
+ *
+ * The seams are module constants on purpose. The mounted list re-reads
+ * when its seam changes, so a seam built per render would re-read on
+ * every render of the record page.
+ */
+
 import type { paths } from "@openlaw/api-client";
 import { api } from "./api";
 

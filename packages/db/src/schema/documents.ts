@@ -137,13 +137,15 @@ export const documents = pgTable(
      * and no custom fields on a document. NULL when nobody wrote one. */
     description: text("description"),
     /** The contract arm of DOC-008's owning record. A viewer reaches a
-     * document only through whichever contract or matter owns it. */
+     * document only through the contract, matter, or Entity that owns
+     * it; the Entity arm applies `entityReachScope` (ENT-004). */
     contractId: text("contract_id").references(() => contracts.id),
-    /** M22's second owning record. Exactly one of this and
-     * `contract_id` is present; the table check below is the floor under
-     * every application write (DOC-008). */
+    /** M22's second owning record. Exactly one of `contract_id`,
+     * `matter_id`, and `entity_id` is present; the table check below is
+     * the floor under every application write (DOC-008). */
     matterId: text("matter_id").references(() => matters.id),
-    /** M27's Entity-owned statutory Document arm (ENT-005). */
+    /** M27's third owning record: the Entity-owned statutory Document arm
+     * (ENT-005). Subject to the same exactly-one-owner check. */
     entityId: text("entity_id").references(() => entities.id),
     /**
      * CTR-014's executed pin: which version of this document is the

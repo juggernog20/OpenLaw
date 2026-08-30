@@ -242,24 +242,43 @@ describe("the SET-003 officer usage guard", () => {
 });
 
 describe("the Member+ officer-role picker", () => {
-  it("answers live roles while the settings read still refuses a Legal Team Member", async () => {
+  it("answers live roles and omits an archived one", async () => {
+    const created = await harness.app.inject({
+      method: "POST",
+      url: "/api/v1/officer-roles",
+      cookies: adminCookies,
+      payload: { displayName: "Picker Retired" },
+    });
+    expect(created.statusCode, created.body).toBe(201);
+    const archived = await harness.app.inject({
+      method: "POST",
+      url: `/api/v1/officer-roles/${created.json().officerRole.id}/archive`,
+      cookies: adminCookies,
+      payload: {},
+    });
+    expect(archived.statusCode, archived.body).toBe(200);
+
     const res = await harness.app.inject({
       method: "GET",
       url: "/api/v1/entities/officer-roles",
       cookies: memberCookies,
     });
     expect(res.statusCode, res.body).toBe(200);
-    expect(res.json().officerRoles.map((row: { slug: string }) => row.slug)).not.toContain(
-      "director",
-    );
-    expect(res.json().officerRoles.map((row: { slug: string }) => row.slug)).toContain("secretary");
+    const slugs = res.json().officerRoles.map((row: { slug: string }) => row.slug);
+    expect(slugs).not.toContain("picker-retired");
+    expect(slugs).toContain("secretary");
   });
 });
 
 describe("the DD-017 audit trail", () => {
-  it("records officer-role mutations under the officer_role namespace", async () => {
+  /** The officer_role entries that name one slug, oldest first. */
+  const entriesNaming = async (slug: string) => {
     const rows = await harness.db
-      .select({ action: activityLog.action, visibility: activityLog.visibility })
+      .select({
+        action: activityLog.action,
+        visibility: activityLog.visibility,
+        payload: activityLog.payload,
+      })
       .from(activityLog)
       .where(
         inArray(activityLog.action, [
@@ -270,17 +289,76 @@ describe("the DD-017 audit trail", () => {
           "officer_role.restored",
           "officer_role.deleted",
         ]),
-      );
-    expect(new Set(rows.map((row) => row.action))).toEqual(
-      new Set([
-        "officer_role.created",
-        "officer_role.renamed",
-        "officer_role.reordered",
-        "officer_role.archived",
-        "officer_role.restored",
-        "officer_role.deleted",
-      ]),
-    );
-    expect(rows.every((row) => row.visibility === "admin_only")).toBe(true);
+      )
+      .orderBy(asc(activityLog.createdAt));
+    const named = rows.filter((row) => {
+      const payload = row.payload as { slug?: string; order?: string[] };
+      return payload.slug === slug || payload.order?.includes(slug) === true;
+    });
+    expect(named.every((row) => row.visibility === "admin_only")).toBe(true);
+    return named.map((row) => row.action);
+  };
+
+  it("records each officer-role mutation beside its request, at admin_only", async () => {
+    const created = await harness.app.inject({
+      method: "POST",
+      url: "/api/v1/officer-roles",
+      cookies: adminCookies,
+      payload: { displayName: "Audited Role" },
+    });
+    expect(created.statusCode, created.body).toBe(201);
+    const id = created.json().officerRole.id as string;
+    const slug = created.json().officerRole.slug as string;
+    const trail = ["officer_role.created"];
+    expect(await entriesNaming(slug)).toEqual(trail);
+
+    const renamed = await harness.app.inject({
+      method: "PATCH",
+      url: `/api/v1/officer-roles/${id}`,
+      cookies: adminCookies,
+      payload: { displayName: "Audited Role Renamed" },
+    });
+    expect(renamed.statusCode, renamed.body).toBe(200);
+    trail.push("officer_role.renamed");
+    expect(await entriesNaming(slug)).toEqual(trail);
+
+    const live = await listRoles(adminCookies, false);
+    const reordered = await harness.app.inject({
+      method: "PUT",
+      url: "/api/v1/officer-roles/order",
+      cookies: adminCookies,
+      payload: { ids: [id, ...live.filter((row) => row.id !== id).map((row) => row.id)] },
+    });
+    expect(reordered.statusCode, reordered.body).toBe(200);
+    trail.push("officer_role.reordered");
+    expect(await entriesNaming(slug)).toEqual(trail);
+
+    const archived = await harness.app.inject({
+      method: "POST",
+      url: `/api/v1/officer-roles/${id}/archive`,
+      cookies: adminCookies,
+      payload: {},
+    });
+    expect(archived.statusCode, archived.body).toBe(200);
+    trail.push("officer_role.archived");
+    expect(await entriesNaming(slug)).toEqual(trail);
+
+    const restored = await harness.app.inject({
+      method: "POST",
+      url: `/api/v1/officer-roles/${id}/restore`,
+      cookies: adminCookies,
+    });
+    expect(restored.statusCode, restored.body).toBe(200);
+    trail.push("officer_role.restored");
+    expect(await entriesNaming(slug)).toEqual(trail);
+
+    const deleted = await harness.app.inject({
+      method: "DELETE",
+      url: `/api/v1/officer-roles/${id}`,
+      cookies: adminCookies,
+    });
+    expect(deleted.statusCode, deleted.body).toBe(204);
+    trail.push("officer_role.deleted");
+    expect(await entriesNaming(slug)).toEqual(trail);
   });
 });

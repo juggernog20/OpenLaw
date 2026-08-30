@@ -135,7 +135,7 @@ interface ContractRow {
   /** The Owner (CTR-004); null = unassigned, which reads as triage. */
   manager: Person | null;
   /** Our side (CTR-011); null = which of ours signs is not known yet. */
-  entity: { id: string; legalName: string } | null;
+  entity: { restricted: false; id: string; legalName: string } | { restricted: true } | null;
   /** Their side, reduced to the one name a list row shows (CTR-011);
    * null = nobody is recorded on the other side yet. */
   primaryCounterparty: { id: string; name: string } | null;
@@ -1543,6 +1543,31 @@ describe("the signing entity (CTR-011)", () => {
       restricted: false,
       id: vehicle.id,
       legalName: "Hidden Signing Vehicle Ltd",
+    });
+  });
+
+  it("renders Restricted Entity to a Contributor even when the signing Entity is not confidential", async () => {
+    // ENT-004: Contributors have no Entities module access, so the
+    // signing Entity is restricted for them whatever its flag says.
+    const contract = await newContract("Contributor sees a restricted signer");
+    const signer = await newEntity("Open Books Holdings Ltd");
+    expect(
+      (await patchContract(adminCookies, contract.number, { entityId: signer.id })).statusCode,
+    ).toBe(200);
+    const seated = await addTeamMember(adminCookies, contract.number, {
+      userId: idOf(CONTRIBUTOR),
+      role: "contributor",
+    });
+    expect(seated.statusCode, seated.body).toBe(201);
+
+    const read = await getContract(contributorCookies, contract.number);
+    expect(read.statusCode, read.body).toBe(200);
+    expect(read.body).not.toContain("Open Books Holdings Ltd");
+    expect(read.json().contract.entity).toEqual({ restricted: true });
+    expect((await getContract(memberCookies, contract.number)).json().contract.entity).toEqual({
+      restricted: false,
+      id: signer.id,
+      legalName: "Open Books Holdings Ltd",
     });
   });
 

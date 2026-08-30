@@ -230,14 +230,14 @@ describe("the Entity registry managed list", () => {
     const api = surface({ rows: [], emptyWhenFiltered: true });
     stubApi({ signedIn: MEMBER, extra: api.handler });
     renderAt("/entities?view=list");
-    expect(await screen.findByRole("heading", { name: "No entities yet" })).toBeVisible();
+    expect(await screen.findByRole("heading", { name: "No Entities yet" })).toBeVisible();
 
     await user.selectOptions(screen.getByRole("combobox", { name: "Type" }), "t-corp");
     expect(
-      await screen.findByRole("heading", { name: "No Entities match these filters." }),
+      await screen.findByRole("heading", { name: "No Entities match these filters" }),
     ).toBeVisible();
     await user.click(screen.getByRole("button", { name: "Clear filters" }));
-    expect(await screen.findByRole("heading", { name: "No entities yet" })).toBeVisible();
+    expect(await screen.findByRole("heading", { name: "No Entities yet" })).toBeVisible();
   });
 
   it("reads the whole registry, cursor by cursor, behind the Calendar", async () => {

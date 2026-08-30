@@ -180,18 +180,40 @@ export function EntityRecordPage() {
         }
       : null,
   );
+  // KeyedByParam remounts this page per Entity, not per tab, so a tab
+  // change keeps the component while the loader answers again. Paper is
+  // read only for the Documents tab, so seed the document state from
+  // every fresh answer or the tab draws the first mount's empty list.
+  // Done during render, React's own reset-on-prop-change shape.
+  const [seededFrom, setSeededFrom] = useState(loaded);
+  if (seededFrom !== loaded) {
+    setSeededFrom(loaded);
+    setPaper(loaded.documents);
+    setPaperCursor(loaded.documentCursor);
+    setFolders(loaded.folders);
+    setFiled([]);
+    setReading(
+      loaded.documentLanding
+        ? {
+            documentId: loaded.documentLanding.document.id,
+            versionId: loaded.documentLanding.versionId,
+          }
+        : null,
+    );
+  }
   const frozen = saved.archivedAt !== null;
-  const majorityOwner = loaded.holdings.owners
-    .filter((holding) => !holding.owner.restricted)
-    .sort(
-      (a, b) =>
-        b.ownershipPercent - a.ownershipPercent ||
-        (!a.owner.restricted && !b.owner.restricted
-          ? a.owner.legalName.localeCompare(b.owner.legalName, undefined, {
-              sensitivity: "base",
-            }) || a.owner.id.localeCompare(b.owner.id)
-          : 0),
-    )[0]?.owner;
+  // Sort every holder, restricted ones included. When the largest stake
+  // sits with a Restricted Entity the breadcrumb draws no owner crumb
+  // (ENT-004) rather than promoting a smaller open holder to parent.
+  const majorityOwner = loaded.holdings.owners.slice().sort(
+    (a, b) =>
+      b.ownershipPercent - a.ownershipPercent ||
+      (!a.owner.restricted && !b.owner.restricted
+        ? a.owner.legalName.localeCompare(b.owner.legalName, undefined, {
+            sensitivity: "base",
+          }) || a.owner.id.localeCompare(b.owner.id)
+        : 0),
+  )[0]?.owner;
 
   const people: FieldReference[] = mergeReferences(
     loaded.users.map((row) => ({ id: row.id, label: row.displayName })),
@@ -315,7 +337,11 @@ export function EntityRecordPage() {
           saved.isConfidential ? (
             <ConfidentialBanner
               record="entity"
-              manageTeamHref={loaded.user.role === "administrator" ? "#entity-access" : undefined}
+              manageTeamHref={
+                loaded.user.role === "administrator"
+                  ? `/entities/${saved.id}#entity-access`
+                  : undefined
+              }
             />
           ) : undefined
         }

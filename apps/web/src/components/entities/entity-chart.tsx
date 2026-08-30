@@ -19,6 +19,10 @@ interface ViewTransform {
 export function EntityChart({ chart }: Readonly<{ chart: EntityChartData }>) {
   const intl = useIntl();
   const instructionsId = useId();
+  // Two mounted charts must not share title and description ids, or
+  // `aria-labelledby` on the second resolves to the first chart's nodes.
+  const titleId = useId();
+  const descriptionId = useId();
   const layout = useMemo(() => layoutEntityChart(chart), [chart]);
   const positions = useMemo(() => new Map(layout.nodes.map((node) => [node.id, node])), [layout]);
   const regionRef = useRef<HTMLDivElement>(null);
@@ -94,7 +98,7 @@ export function EntityChart({ chart }: Readonly<{ chart: EntityChartData }>) {
           width="100%"
           height="100%"
           viewBox={`0 0 ${layout.width} ${layout.height}`}
-          aria-labelledby="entity-chart-title entity-chart-description"
+          aria-labelledby={`${titleId} ${descriptionId}`}
           onPointerDown={(event) => {
             if ((event.target as Element).closest("a")) return;
             drag.current = { pointerId: event.pointerId, x: event.clientX, y: event.clientY };
@@ -112,13 +116,13 @@ export function EntityChart({ chart }: Readonly<{ chart: EntityChartData }>) {
             event.currentTarget.releasePointerCapture?.(event.pointerId);
           }}
         >
-          <title id="entity-chart-title">
+          <title id={titleId}>
             {intl.formatMessage({
               id: "entities.chart.title",
               defaultMessage: "Entity ownership chart",
             })}
           </title>
-          <desc id="entity-chart-description">
+          <desc id={descriptionId}>
             {intl.formatMessage({
               id: "entities.chart.description",
               defaultMessage:

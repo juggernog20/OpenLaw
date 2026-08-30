@@ -1,7 +1,18 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
+/**
+ * The Entity record's Share capital card: ENT-001's three simple
+ * columns (authorized shares, issued shares, par value in minor
+ * units), each committed on its own per DES-017.
+ *
+ * All three columns are whole numbers of zero or more. A blank draft
+ * clears the column to null. A draft that is not a whole number never
+ * leaves the card. The refusal shows beside the box until the next
+ * commit or Escape clears it.
+ */
+
 import { useState } from "react";
-import { FormattedMessage } from "react-intl";
+import { FormattedMessage, useIntl } from "react-intl";
 import type { EntityRow } from "../../lib/entities";
 import type { FieldStatus } from "../../lib/field-commit";
 import { StatusNote } from "../status-note";
@@ -53,16 +64,34 @@ export function ShareCapitalCard({
   error: Partial<Record<CapitalKey, string | undefined>>;
   onCommit: (key: CapitalKey, value: number | null) => void;
 }>) {
+  const intl = useIntl();
   const [drafts, setDrafts] = useState<Record<CapitalKey, string>>(() => capitalDrafts(entity));
+  // Refusals the card raised itself, without a request. One overrides
+  // the commit status of its column until the next commit or Escape.
+  const [refusals, setRefusals] = useState<Partial<Record<CapitalKey, string>>>({});
+  function refuse(key: CapitalKey, detail?: string) {
+    setRefusals((current) => ({ ...current, [key]: detail }));
+  }
   function commit(key: CapitalKey) {
     const draft = drafts[key].trim();
     const saved = entity[key];
     if (draft === "") {
+      refuse(key, undefined);
       if (saved !== null) onCommit(key, null);
       return;
     }
     const value = Number(draft);
-    if (!Number.isSafeInteger(value) || value < 0) return;
+    if (!Number.isSafeInteger(value) || value < 0) {
+      refuse(
+        key,
+        intl.formatMessage({
+          id: "entities.record.shareCapital.invalid",
+          defaultMessage: "Enter a whole number of zero or more.",
+        }),
+      );
+      return;
+    }
+    refuse(key, undefined);
     if (value !== saved) onCommit(key, value);
   }
 
@@ -96,10 +125,14 @@ export function ShareCapitalCard({
                   if (event.key === "Enter") commit(key);
                   if (event.key === "Escape") {
                     setDrafts((current) => ({ ...current, [key]: String(entity[key] ?? "") }));
+                    refuse(key, undefined);
                   }
                 }}
               />
-              <StatusNote status={status[key] ?? "idle"} detail={error[key]} />
+              <StatusNote
+                status={refusals[key] === undefined ? (status[key] ?? "idle") : "error"}
+                detail={refusals[key] ?? error[key]}
+              />
             </div>
           </div>
         ))}

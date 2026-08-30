@@ -1041,7 +1041,7 @@ This record describes the model as built and names the places where a different 
 
 - **Status:** Accepted
 - **Date:** 2026-08-30
-- **Trigger:** M27/7 mounts the linked-record row pattern for a third record kind. Contract and Matter already carry paired linked-record cards; copying one more pair would make a shared interaction depend on which page happened to implement it.
+- **Context:** M27/7 mounts the linked-record row pattern for a third record kind. Contract and Matter already carry paired linked-record cards; copying one more pair would make a shared interaction depend on which page happened to implement it.
 
 ### Decision
 
@@ -1052,6 +1052,17 @@ The Entity Contracts and Matters tabs are the first application: one `LinkedReco
 ### Built addendum (2026-08-30, M27/7, [#579](https://github.com/juggernog20/OpenLaw/issues/579))
 
 `LinkedRecordsList` and its typed seam configuration now serve both Entity roll-up tabs. The Contract and Matter mounts differ only in the record kind, endpoint, response key, empty copy, and link target supplied by `ENTITY_LINKED_RECORD_SEAMS`. The route loader reads the tab counts; the mounted list reads its own rows. No Entity-specific linked-record component was added.
+
+### Rationale
+
+- Two copies of a mount are a coincidence. Three copies are a pattern, and a pattern that lives in three files drifts in three directions.
+- Reading rows on mount keeps the loader small. A record page that reads every tab's rows up front pays for tabs the reader never opens.
+
+### Alternatives considered
+
+- **A third per-page linked-record card pair for Entity.** Rejected. It would keep the Entity page self-contained, which TECH-024 favours, but a fix to navigation or the restricted cell would then need three PRs, and the copies would diverge before the third landed.
+- **Loader-fetched rows for the Contracts and Matters tabs.** Rejected. It keeps TECH-024's rule 1 literal, but the Entity loader would read two row lists per open to serve tabs most readers do not click. The cost of the on-mount read is one request per tab open and a short loading state, the same trade the Activity applet already makes.
+- **Migrating the Contract and Matter pairs inside M27.** Rejected. Each pair carries its own access and placeholder doctrine, and a sweep would mix that review with the Entity feature.
 
 ### Scheduled migration
 

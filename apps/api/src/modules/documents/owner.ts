@@ -1,5 +1,17 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
+/**
+ * The one definition of a Document owner in SQL: which column holds it,
+ * which record it joins, and how its reference reads. Every owner-aware
+ * query in the repository composes these arms instead of repeating the
+ * `case` by hand, so a fourth owner is one switch arm here (DOC-008).
+ *
+ * The queries lean on the table check `documents_owner_check`: exactly
+ * one of `contract_id`, `matter_id`, and `entity_id` is present on a row.
+ * That is what lets `documentOwnerCase` read the first non-null column as
+ * the owner and never fall through. Drizzle's `sql` template keeps the
+ * arms typed (TECH-006).
+ */
 import { contracts, documents, entities, matters, sql, type SQL } from "@openlaw/db";
 import { DOCUMENT_OWNER_KINDS, type DocumentOwner } from "@openlaw/shared";
 

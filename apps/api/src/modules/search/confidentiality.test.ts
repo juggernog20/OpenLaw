@@ -244,7 +244,9 @@ describe("the DD-014 gate in search", () => {
       expect(ids).toContain(confidentialContractDocumentId);
       expect(ids).toContain(confidentialMatterDocumentId);
       expect(ids).toContain(confidentialDocumentId);
-      if (viewer !== PEOPLE.contributor.email) expect(ids).toContain(confidentialEntityId);
+      // A Contributor reaches no Entity at all (entityReachScope).
+      if (viewer === PEOPLE.contributor.email) expect(ids).not.toContain(confidentialEntityId);
+      else expect(ids).toContain(confidentialEntityId);
     }
     const entity = (await search(PEOPLE.onTeam.email, "&kind=entity")).results[0];
     expect(entity).toMatchObject({ id: confidentialEntityId, isConfidential: true });

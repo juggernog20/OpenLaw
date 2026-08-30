@@ -4,7 +4,7 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { entityObligations, eq, notifications, users } from "@openlaw/db";
 import { provisionUser } from "../../auth/instance.js";
-import type { PipelineLogger } from "../../pipeline/logger.js";
+import type { LogFields, PipelineLogger } from "../../pipeline/logger.js";
 import { runMorningRound } from "../../pipeline/morning-round.js";
 import {
   signInCookies,
@@ -37,10 +37,15 @@ let assigneeId: string;
 let entityId: string;
 let corporationId: string;
 
+/** Errors the round logged. A per-record failure is caught and logged,
+ * not raised, so a case that counts reminders must also read this. */
+const loggedErrors: { fields: LogFields; message: string }[] = [];
 const quietLog: PipelineLogger = {
   info: () => undefined,
   warn: () => undefined,
-  error: () => undefined,
+  error: (fields, message) => {
+    loggedErrors.push({ fields, message });
+  },
 };
 
 beforeAll(async () => {
@@ -235,6 +240,7 @@ describe("Entity obligation reminders", () => {
       { now: new Date(`${DAYS.at(-1)!.today}T09:00:00Z`) },
     );
     expect(rerun.reminders).toBe(0);
+    expect(loggedErrors).toEqual([]);
     const after = await harness.db
       .select({ id: notifications.id })
       .from(notifications)

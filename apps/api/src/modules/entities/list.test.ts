@@ -213,9 +213,13 @@ describe("the managed Entity registry", () => {
           const currentValue = value(current, sort);
           if (previousValue === null) expect(currentValue).toBeNull();
           else if (currentValue !== null) {
-            const compared = previousValue.localeCompare(currentValue);
+            // Code-point order, which is what the route's lower(...)
+            // order by answers on the test database. localeCompare would
+            // weigh punctuation by ICU rules instead.
+            const compared =
+              previousValue === currentValue ? 0 : previousValue < currentValue ? -1 : 1;
             expect(dir === "asc" ? compared <= 0 : compared >= 0).toBe(true);
-            if (compared === 0) expect(previous.id.localeCompare(current.id)).toBeLessThan(0);
+            if (compared === 0) expect(previous.id < current.id).toBe(true);
           }
         }
       }

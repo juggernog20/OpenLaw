@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 /**
- * Contracts · Fields (#83), the shared CTR-016 field catalog scoped to
- * contract and global fields, per the ST11 frame of settings.pen: the
+ * Contracts · Fields (#83), the shared CTR-016 field catalog. It serves
+ * contract, matter, Entity, and global fields, one module scope per
+ * page, per the ST11 frame of settings.pen: the
  * ListEditor in its DES-021 table variant — column header, no reorder
  * (the catalog is unordered; per-type attachment orders rendering), the
  * scope pill, the type and tag columns, and the sparkle marking fields

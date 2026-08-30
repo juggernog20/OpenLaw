@@ -987,8 +987,21 @@ export const documentFoldersRoutes: FastifyPluginAsyncZod = async (app) => {
     if (folder.ownerArchivedAt) {
       throw httpError(
         409,
-        `This ${folder.owner.kind} is archived. Restore it before changing its folders.`,
+        `This ${ownerNoun(folder.owner.kind)} is archived. Restore it before changing its folders.`,
       );
+    }
+  }
+
+  /** The owner kind as the refusal names it. The wire value is a
+   * discriminant, not copy: CONTEXT.md spells the third owner "Entity". */
+  function ownerNoun(owner: ReachedFolder["owner"]["kind"]): string {
+    switch (owner) {
+      case "contract":
+        return "contract";
+      case "matter":
+        return "matter";
+      case "entity":
+        return "Entity";
     }
   }
 
@@ -1233,7 +1246,10 @@ export const documentFoldersRoutes: FastifyPluginAsyncZod = async (app) => {
       preHandler: requireFolderReader,
       schema: {
         operationId: "listEntityFolders",
-        summary: "The complete folder tree on one Entity, with viewer-scoped live document counts.",
+        summary:
+          "The complete folder tree on one Entity, with viewer-scoped live document counts. " +
+          "Administrators and Legal Team Members who reach the Entity read it; Contributors " +
+          "and Business Users are refused (ENT-004).",
         tags: ["documents"],
         params: z.object({ id: RecordIdSchema }),
         response: { 200: FoldersEnvelope, default: problemResponse },

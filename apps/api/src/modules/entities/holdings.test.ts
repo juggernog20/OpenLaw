@@ -333,10 +333,32 @@ describe("Entity Holdings", () => {
         cookies: contributorCookies,
         payload: { direction: "owned", relatedEntityId: "other", ownershipPercent: 10 },
       }),
+      harness.app.inject({
+        method: "PATCH",
+        url: "/api/v1/entities/none/holdings/other",
+        cookies: contributorCookies,
+        payload: { ownershipPercent: 10 },
+      }),
+      harness.app.inject({
+        method: "DELETE",
+        url: "/api/v1/entities/none/holdings/other",
+        cookies: contributorCookies,
+      }),
+      harness.app.inject({
+        method: "PATCH",
+        url: "/api/v1/entities/none/holdings/other",
+        payload: { ownershipPercent: 10 },
+      }),
+      harness.app.inject({ method: "DELETE", url: "/api/v1/entities/none/holdings/other" }),
     ];
-    const [anonymous, contributor] = await Promise.all(attempts);
-    expect(anonymous!.statusCode).toBe(401);
-    expect(contributor!.statusCode).toBe(403);
+    const [anonymousRead, post, patch, remove, anonymousPatch, anonymousDelete] =
+      await Promise.all(attempts);
+    for (const refused of [anonymousRead, anonymousPatch, anonymousDelete]) {
+      expect(refused!.statusCode, refused!.body).toBe(401);
+    }
+    for (const refused of [post, patch, remove]) {
+      expect(refused!.statusCode, refused!.body).toBe(403);
+    }
   });
 });
 

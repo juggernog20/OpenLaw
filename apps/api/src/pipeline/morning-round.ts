@@ -676,10 +676,21 @@ async function dueDates(db: Db, today: string, offsets: readonly number[]): Prom
             .from(users)
             .where(and(eq(users.role, "administrator"), isNull(users.archivedAt)))
         ).map((row) => row.id);
+  // Reach is a question per Entity, not per obligation: ask it once per
+  // Entity with every assignee that Entity's due rows name.
+  const assigneesByEntity = new Map<string, Set<string>>();
   for (const row of obligationRows) {
-    const assignedAudience = row.assigneeId
-      ? await entityReachedBy(db, row.entityId, [row.assigneeId])
-      : new Set<string>();
+    if (!row.assigneeId) continue;
+    const ids = assigneesByEntity.get(row.entityId) ?? new Set<string>();
+    ids.add(row.assigneeId);
+    assigneesByEntity.set(row.entityId, ids);
+  }
+  const reachedByEntity = new Map<string, Set<string>>();
+  for (const [entityId, ids] of assigneesByEntity) {
+    reachedByEntity.set(entityId, await entityReachedBy(db, entityId, [...ids]));
+  }
+  for (const row of obligationRows) {
+    const assignedAudience = reachedByEntity.get(row.entityId) ?? new Set<string>();
     due.push({
       entityType: ENTITY_ENTITY,
       entityId: row.entityId,

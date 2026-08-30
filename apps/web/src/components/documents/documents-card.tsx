@@ -447,7 +447,7 @@ export function DocumentsCard({
   // Owner is, and whether administration is frozen (TECH-024 rule 7).
   // The viewer's role decides one control here: DOC-010's erasure. The
   // viewer's id and the Owner's are two of the Confidential flag's three
-  // actors (CTR-022).
+  // actors (CTR-022). An Entity record answers no Owner (ENT-005).
   const { record: reference, viewer, ownerId, frozen } = useRecord();
   /** CTR-003's reference, the address the upload route takes. One
    * object per record, so nothing keyed on it re-runs every render. */
@@ -780,11 +780,12 @@ export function DocumentsCard({
   /**
    * Whether this viewer may decide who sees one document (DD-014,
    * CTR-022). Three actors: an Administrator, the person who uploaded
-   * it, and the contract's Owner.
+   * it, and the record's Owner. An Entity has no Owner, so there the
+   * first two decide.
    *
    * It says exactly what the seam says, out of facts the record already
    * answered — the uploader is on the row, and the Owner is on the
-   * contract. Reach is not asked again, because being drawn this row is
+   * record. Reach is not asked again, because being drawn this row is
    * what proves it. The API refuses anybody else with a plain 403; this
    * is only what keeps a control from offering a dead end.
    */
@@ -1026,13 +1027,15 @@ export function DocumentsCard({
   /**
    * DD-014's per-document flag, set and cleared.
    *
-   * It narrows one file to the contract's named team, its Owner, and
+   * It narrows one file to the record's named team, its Owner, and
    * Administrators, even on a record everybody can open. Clearing it
-   * puts the file back where the contract's own audience is.
+   * puts the file back where the record's own audience is. On an
+   * Entity, which has no team and no Owner, the flag narrows the file
+   * to Administrators and the Entity's own grant list (ENT-004).
    *
    * **Setting it can put the file outside the setter's own audience.**
    * An Administrator and the record's Owner always stay inside it; a
-   * Legal Team Member who uploaded a file to a contract they hold no
+   * Legal Team Member who uploaded a file to a record they hold no
    * team row on does not, because uploading grants nothing (DOC-008).
    * The seam answers their own write with the row, so the section keeps
    * drawing it until the page is loaded again — a successful write that

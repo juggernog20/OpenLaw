@@ -32,7 +32,6 @@ import {
   readRegistry,
   statusLabel,
   type CalendarObligation,
-  type EntityRegistryOptions,
   type EntityRow,
   type EntityStatus,
   type EntityTypeOption,
@@ -213,7 +212,7 @@ export async function entitiesLoader({ request }: LoaderFunctionArgs) {
     activeViewId: opensOn?.id ?? null,
     fromUrl: parsed.fromUrl,
     search: url.search,
-    listOptions: listOptions?.data ?? { jurisdictions: [], majorityOwners: [] },
+    listOptions: listOptions?.data,
     loadKey: ++loads,
   };
 }
@@ -501,11 +500,11 @@ function EntitiesPageState() {
           }
           primaryAction={registerButton}
           filters={
-            view === "list" ? (
+            view === "list" && loaded.listOptions ? (
               <EntityListFilterBar
                 filters={filters}
                 types={entityTypes}
-                options={loaded.listOptions as EntityRegistryOptions}
+                options={loaded.listOptions}
                 busy={busy}
                 empty={rows.length === 0}
                 error={listError}
@@ -959,6 +958,7 @@ function MonthCalendar({
     day.setUTCDate(start.getUTCDate() + offset);
     return day;
   });
+  const weeks = Array.from({ length: 6 }, (_, week) => days.slice(week * 7, week * 7 + 7));
   function step(delta: number) {
     setMonth(new Date(Date.UTC(month.getUTCFullYear(), month.getUTCMonth() + delta, 1)));
   }
@@ -994,43 +994,52 @@ function MonthCalendar({
           </Button>
         </div>
       </header>
-      <div role="grid" aria-label={title} className="grid grid-cols-7">
-        {days.slice(0, 7).map((day) => (
-          <div
-            role="columnheader"
-            key={day.getUTCDay()}
-            className="border-b border-e border-border-muted bg-section-header px-2 py-2 text-center text-xs font-medium text-muted"
-          >
-            {intl.formatDate(day, { weekday: "short", timeZone: "UTC" })}
+      {/* A grid may hold only rows, so each week is one row and the
+          weekday headers sit in a row of their own. Without the rows
+          assistive technology gives no date position to any link. */}
+      <div role="grid" aria-label={title}>
+        <div role="row" className="grid grid-cols-7">
+          {days.slice(0, 7).map((day) => (
+            <div
+              role="columnheader"
+              key={day.getUTCDay()}
+              className="border-b border-e border-border-muted bg-section-header px-2 py-2 text-center text-xs font-medium text-muted"
+            >
+              {intl.formatDate(day, { weekday: "short", timeZone: "UTC" })}
+            </div>
+          ))}
+        </div>
+        {weeks.map((week) => (
+          <div role="row" key={isoDay(week[0]!)} className="grid grid-cols-7">
+            {week.map((day) => {
+              const key = isoDay(day);
+              const held = rows.filter((row) => row.nextDueOn === key);
+              const inMonth = day.getUTCMonth() === monthIndex;
+              return (
+                <div
+                  role="gridcell"
+                  key={key}
+                  className="min-h-28 border-b border-e border-border-muted p-2"
+                >
+                  <span className={`text-xs ${inMonth ? "text-primary" : "text-subtle"}`}>
+                    {day.getUTCDate()}
+                  </span>
+                  <div className="mt-1 flex flex-col gap-1">
+                    {held.map((row) => (
+                      <Link
+                        key={row.id}
+                        to={`/entities/${row.entityId}/obligations`}
+                        className={`rounded-chip px-1.5 py-1 text-xs hover:underline ${row.overdue ? "bg-status-severe-bg text-status-severe-fg" : "bg-accent text-link"}`}
+                      >
+                        {row.label}
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
           </div>
         ))}
-        {days.map((day) => {
-          const key = isoDay(day);
-          const held = rows.filter((row) => row.nextDueOn === key);
-          const inMonth = day.getUTCMonth() === monthIndex;
-          return (
-            <div
-              role="gridcell"
-              key={key}
-              className="min-h-28 border-b border-e border-border-muted p-2"
-            >
-              <span className={`text-xs ${inMonth ? "text-primary" : "text-subtle"}`}>
-                {day.getUTCDate()}
-              </span>
-              <div className="mt-1 flex flex-col gap-1">
-                {held.map((row) => (
-                  <Link
-                    key={row.id}
-                    to={`/entities/${row.entityId}/obligations`}
-                    className={`rounded-chip px-1.5 py-1 text-xs hover:underline ${row.overdue ? "bg-status-severe-bg text-status-severe-fg" : "bg-accent text-link"}`}
-                  >
-                    {row.label}
-                  </Link>
-                ))}
-              </div>
-            </div>
-          );
-        })}
       </div>
     </section>
   );
@@ -1074,10 +1083,10 @@ function EmptyRegistry({
           {narrowed ? (
             <FormattedMessage
               id="entities.list.filteredEmpty.title"
-              defaultMessage="No Entities match these filters."
+              defaultMessage="No Entities match these filters"
             />
           ) : (
-            <FormattedMessage id="entities.list.empty.title" defaultMessage="No entities yet" />
+            <FormattedMessage id="entities.list.empty.title" defaultMessage="No Entities yet" />
           )}
         </h2>
         <p className="max-w-md text-base text-muted">

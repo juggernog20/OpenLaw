@@ -1,5 +1,16 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
+/**
+ * One roll-up list on the Entity record (ENT-007): the Contracts or
+ * Matters that name this Entity, read through a `LinkedRecordsSeam`
+ * (TECH-025).
+ *
+ * The record loader supplies only the tab counts. The rows are read
+ * here, on mount, through the seam, so a tab that is never opened
+ * costs no read. A row the reader cannot reach comes back restricted
+ * and draws as a Restricted record cell, never as a gap.
+ */
+
 import { useEffect, useState } from "react";
 import { defineMessage, FormattedMessage, useIntl } from "react-intl";
 import { Link } from "react-router";

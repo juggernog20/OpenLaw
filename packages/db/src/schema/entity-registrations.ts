@@ -17,7 +17,9 @@ export const entityRegistrations = pgTable(
       .notNull()
       .references(() => entities.id),
     jurisdiction: text("jurisdiction").notNull(),
+    /** NULL when the jurisdiction's number is not on record. */
     registrationNumber: text("registration_number"),
+    /** NULL when no agent is appointed in this jurisdiction. */
     registeredAgent: text("registered_agent"),
     status: text("status", { enum: ENTITY_REGISTRATION_STATUSES }).notNull().default("active"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),

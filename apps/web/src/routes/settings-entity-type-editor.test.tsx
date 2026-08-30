@@ -65,13 +65,24 @@ const FIELDS = [
   },
 ];
 
+/** LEI already sits on the type, so the attach menu must not offer it. */
+const ATTACHED_LEI = {
+  fieldId: "f1",
+  slug: "lei",
+  displayName: "LEI",
+  fieldType: "text",
+  moduleScope: "entity",
+  displayOrder: 1,
+  isRequired: false,
+};
+
 function editorApi(call: StubCall): Response | undefined {
   const path = call.url.pathname;
   if (path === "/api/v1/entity-types/t1" && call.method === "GET") {
     return json(200, { entityType: CORPORATION });
   }
   if (path === "/api/v1/entity-types/t1/fields" && call.method === "GET") {
-    return json(200, { attachedFields: [] });
+    return json(200, { attachedFields: [ATTACHED_LEI] });
   }
   if (path === "/api/v1/fields" && call.method === "GET") {
     return json(200, { fields: FIELDS });
@@ -92,8 +103,10 @@ describe("the Entity type editor", () => {
     const user = userEvent.setup();
     await user.click(screen.getByRole("button", { name: "Attach field" }));
     const menu = await screen.findByRole("menu");
-    expect(within(menu).getByText("LEI")).toBeInTheDocument();
+    // Department is unattached and global, so it is the one offer. LEI is
+    // already attached; Term belongs to Contracts.
     expect(within(menu).getByText("Department")).toBeInTheDocument();
+    expect(within(menu).queryByText("LEI")).not.toBeInTheDocument();
     expect(within(menu).queryByText("Term")).not.toBeInTheDocument();
   });
 });

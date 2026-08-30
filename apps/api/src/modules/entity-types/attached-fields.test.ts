@@ -2,7 +2,7 @@
 
 /** Entity type Fields: the third mount of the shared attachment routes (TECH-023). */
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { activityLog, eq, fields, inArray, users } from "@openlaw/db";
+import { activityLog, asc, eq, fields, inArray, users } from "@openlaw/db";
 import { provisionUser } from "../../auth/instance.js";
 import {
   signInCookies,
@@ -154,9 +154,24 @@ describe("the entity_type_fields route mount", () => {
   });
 
   it("sets required, reorders, and detaches without deleting the catalog Field", async () => {
+    // Its own two Fields, so the case does not read what a sibling left attached.
+    const own = [
+      await createField("Detach target", "entity"),
+      await createField("Detach neighbour", "entity"),
+    ];
+    for (const field of own) {
+      const attached = await harness.app.inject({
+        method: "POST",
+        url: `/api/v1/entity-types/${entityTypeId}/fields`,
+        cookies: adminCookies,
+        payload: { fieldId: field.id },
+      });
+      expect(attached.statusCode, attached.body).toBe(201);
+    }
     const before = await listAttached();
     expect(before.length).toBeGreaterThanOrEqual(2);
-    const target = before[0]!;
+    const target = before.find((row) => row.fieldId === own[0]!.id)!;
+    expect(target).toBeDefined();
 
     const required = await harness.app.inject({
       method: "PATCH",
@@ -221,9 +236,10 @@ describe("the entity_type_fields route mount", () => {
 });
 
 describe("the DD-017 audit trail", () => {
-  it("records every attachment verb under entity_type_field", async () => {
+  /** The entries that name one Field's slug, oldest first. */
+  const entriesNaming = async (fieldSlug: string) => {
     const rows = await harness.db
-      .select({ action: activityLog.action })
+      .select({ action: activityLog.action, payload: activityLog.payload })
       .from(activityLog)
       .where(
         inArray(activityLog.action, [
@@ -232,14 +248,66 @@ describe("the DD-017 audit trail", () => {
           "entity_type_field.reordered",
           "entity_type_field.detached",
         ]),
-      );
-    expect(new Set(rows.map((row) => row.action))).toEqual(
-      new Set([
-        "entity_type_field.attached",
-        "entity_type_field.required_changed",
-        "entity_type_field.reordered",
-        "entity_type_field.detached",
-      ]),
-    );
+      )
+      .orderBy(asc(activityLog.createdAt));
+    return rows
+      .filter((row) => {
+        const payload = row.payload as { fieldSlug?: string; order?: string[] };
+        return payload.fieldSlug === fieldSlug || payload.order?.includes(fieldSlug) === true;
+      })
+      .map((row) => row.action);
+  };
+
+  it("records each attachment verb beside the request that caused it", async () => {
+    const field = await createField("Audited entity field", "entity");
+    expect(await entriesNaming(field.slug)).toEqual([]);
+
+    const attached = await harness.app.inject({
+      method: "POST",
+      url: `/api/v1/entity-types/${entityTypeId}/fields`,
+      cookies: adminCookies,
+      payload: { fieldId: field.id },
+    });
+    expect(attached.statusCode, attached.body).toBe(201);
+    expect(await entriesNaming(field.slug)).toEqual(["entity_type_field.attached"]);
+
+    const required = await harness.app.inject({
+      method: "PATCH",
+      url: `/api/v1/entity-types/${entityTypeId}/fields/${field.id}`,
+      cookies: adminCookies,
+      payload: { isRequired: true },
+    });
+    expect(required.statusCode, required.body).toBe(200);
+    expect(await entriesNaming(field.slug)).toEqual([
+      "entity_type_field.attached",
+      "entity_type_field.required_changed",
+    ]);
+
+    const reversed = [...(await listAttached())].reverse();
+    const reordered = await harness.app.inject({
+      method: "PUT",
+      url: `/api/v1/entity-types/${entityTypeId}/fields/order`,
+      cookies: adminCookies,
+      payload: { fieldIds: reversed.map((row) => row.fieldId) },
+    });
+    expect(reordered.statusCode, reordered.body).toBe(200);
+    expect(await entriesNaming(field.slug)).toEqual([
+      "entity_type_field.attached",
+      "entity_type_field.required_changed",
+      "entity_type_field.reordered",
+    ]);
+
+    const detached = await harness.app.inject({
+      method: "DELETE",
+      url: `/api/v1/entity-types/${entityTypeId}/fields/${field.id}`,
+      cookies: adminCookies,
+    });
+    expect(detached.statusCode, detached.body).toBe(204);
+    expect(await entriesNaming(field.slug)).toEqual([
+      "entity_type_field.attached",
+      "entity_type_field.required_changed",
+      "entity_type_field.reordered",
+      "entity_type_field.detached",
+    ]);
   });
 });

@@ -1,6 +1,18 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-import { useState, type ReactNode } from "react";
+/**
+ * The Entity record's Obligations tab: the compliance calendar rows of
+ * one Entity (ENT-006), edited inline row by row and filed through the
+ * Mark filed dialog.
+ *
+ * Two rules the types do not show. A row is locked when the Entity is
+ * archived or when `completedOn` is set, because a filed one-off is a
+ * record, not a schedule. Filing a recurring obligation does not
+ * complete the row. It advances `nextDueOn` by the recurrence, as many
+ * times as it takes to pass the filing day, and the row stays open.
+ */
+
+import { useId, useState, type ReactNode } from "react";
 import { Link } from "react-router";
 import { FormattedMessage, useIntl, type IntlShape } from "react-intl";
 import { Check, Plus, Trash2 } from "lucide-react";
@@ -77,10 +89,7 @@ function fieldLabels(intl: IntlShape) {
       id: "entities.record.obligations.markFiled",
       defaultMessage: "Mark filed",
     }),
-    cancel: intl.formatMessage({
-      id: "entities.record.obligations.cancel",
-      defaultMessage: "Cancel",
-    }),
+    cancel: intl.formatMessage({ id: "common.cancel", defaultMessage: "Cancel" }),
   };
 }
 
@@ -142,10 +151,14 @@ export function ObligationsPanel({
     setStatus("idle");
   }
 
+  const headingId = useId();
   return (
-    <section className="overflow-hidden rounded-card border border-border-default bg-raised">
+    <section
+      aria-labelledby={headingId}
+      className="overflow-hidden rounded-card border border-border-default bg-raised"
+    >
       <header className="flex min-h-section-header items-center justify-between gap-3 border-b border-border-default bg-section-header px-4 py-2">
-        <h2 className="text-lg font-semibold">
+        <h2 id={headingId} className="text-lg font-semibold">
           <FormattedMessage id="entities.record.obligations.title" defaultMessage="Obligations" />
         </h2>
         <div className="flex items-center gap-3">
@@ -276,6 +289,13 @@ function ObligationRow({
   const [recurrence, setRecurrence] = useState(
     row.recurrenceMonths === null ? "" : String(row.recurrenceMonths),
   );
+  const [due, setDue] = useState(row.nextDueOn);
+  // Filing advances the saved day (ENT-006). The box follows it.
+  const [dueSeed, setDueSeed] = useState(row.nextDueOn);
+  if (dueSeed !== row.nextDueOn) {
+    setDueSeed(row.nextDueOn);
+    setDue(row.nextDueOn);
+  }
   const locked = frozen || row.completedOn !== null;
   // `{label} due date`, `{label} note`, and the rest: one row's controls
   // read as that obligation's own, not as seven anonymous fields.
@@ -293,9 +313,15 @@ function ObligationRow({
         <Input
           aria-label={field(labels.dueDate)}
           type="date"
-          value={row.nextDueOn}
+          value={due}
           disabled={locked}
-          onChange={(event) => onUpdate({ nextDueOn: event.target.value })}
+          onChange={(event) => setDue(event.target.value)}
+          // A date box emits "" while a day is cleared or half typed. The
+          // due date is required, so only a whole, changed day is sent.
+          onBlur={() => {
+            if (due === "") setDue(row.nextDueOn);
+            else if (due !== row.nextDueOn) onUpdate({ nextDueOn: due });
+          }}
         />
       </td>
       <td className="p-3">

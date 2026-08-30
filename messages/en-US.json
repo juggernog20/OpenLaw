@@ -2595,7 +2595,7 @@
     "defaultMessage": "Upload to a record and it appears here."
   },
   "documents.list.empty.title": {
-    "defaultMessage": "Paper lives on Contracts, Matters, and Entities."
+    "defaultMessage": "No documents yet"
   },
   "documents.list.filteredEmpty.body": {
     "defaultMessage": "Clear filters to return to the whole list."
@@ -2937,7 +2937,7 @@
     "defaultMessage": "The registry holds your own corporate entities — subsidiaries, holding companies, and branches. Register them with their legal details, and contracts pick the signing entity from this list."
   },
   "entities.list.empty.title": {
-    "defaultMessage": "No entities yet"
+    "defaultMessage": "No Entities yet"
   },
   "entities.list.error": {
     "defaultMessage": "The registry could not be read. Try again."
@@ -2991,7 +2991,7 @@
     "defaultMessage": "Clear filters"
   },
   "entities.list.filteredEmpty.title": {
-    "defaultMessage": "No Entities match these filters."
+    "defaultMessage": "No Entities match these filters"
   },
   "entities.list.loadedMore": {
     "defaultMessage": "{count, plural, one {# more Entity loaded} other {# more Entities loaded}}"
@@ -3089,8 +3089,17 @@
   "entities.record.fields.empty": {
     "defaultMessage": "This Entity type has no Fields."
   },
+  "entities.record.fields.no": {
+    "defaultMessage": "No"
+  },
+  "entities.record.fields.numberInvalid": {
+    "defaultMessage": "Enter this as a number."
+  },
   "entities.record.fields.title": {
     "defaultMessage": "Fields"
+  },
+  "entities.record.fields.yes": {
+    "defaultMessage": "Yes"
   },
   "entities.record.none": {
     "defaultMessage": "None"
@@ -3106,9 +3115,6 @@
   },
   "entities.record.obligations.assignee": {
     "defaultMessage": "Assignee"
-  },
-  "entities.record.obligations.cancel": {
-    "defaultMessage": "Cancel"
   },
   "entities.record.obligations.column": {
     "defaultMessage": "Obligation"
@@ -3173,9 +3179,6 @@
   "entities.record.officers.add": {
     "defaultMessage": "Add officer"
   },
-  "entities.record.officers.addConfirm": {
-    "defaultMessage": "Add"
-  },
   "entities.record.officers.appointedOn": {
     "defaultMessage": "Appointed on"
   },
@@ -3209,9 +3212,6 @@
   "entities.record.registrations.add": {
     "defaultMessage": "Add registration"
   },
-  "entities.record.registrations.addConfirm": {
-    "defaultMessage": "Add"
-  },
   "entities.record.registrations.agent": {
     "defaultMessage": "Registered agent"
   },
@@ -3228,7 +3228,7 @@
     "defaultMessage": "Registration number"
   },
   "entities.record.registrations.obligationDue": {
-    "defaultMessage": "due {date}"
+    "defaultMessage": "<link>{label}</link> due {date}"
   },
   "entities.record.registrations.remove": {
     "defaultMessage": "Remove {jurisdiction} registration"
@@ -3256,6 +3256,9 @@
   },
   "entities.record.shareCapital.authorized": {
     "defaultMessage": "Authorized shares"
+  },
+  "entities.record.shareCapital.invalid": {
+    "defaultMessage": "Enter a whole number of zero or more."
   },
   "entities.record.shareCapital.issued": {
     "defaultMessage": "Issued shares"
@@ -4219,6 +4222,9 @@
   },
   "notifications.unknown": {
     "defaultMessage": "{contract} — {event}"
+  },
+  "notifications.unnamedObligation": {
+    "defaultMessage": "an obligation"
   },
   "notifications.unnamedRecord": {
     "defaultMessage": "a record"

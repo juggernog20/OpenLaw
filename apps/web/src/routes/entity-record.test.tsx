@@ -315,14 +315,12 @@ describe("the /entities/:entityId record page", () => {
       signedIn: MEMBER,
       extra: (call) => {
         const answer = api.handler(call);
-        if (call.url.pathname === "/api/v1/entities/e1" && answer) {
-          return json(200, {
-            entity: entityRow(),
-            fields: [field],
-            customFieldRefs: { users: [], entities: [] },
-          });
-        }
-        return answer;
+        if (call.url.pathname !== "/api/v1/entities/e1" || !answer) return answer;
+        // Keep the stub's own row, so the committed value reads back;
+        // only add the attachment the Fields card draws.
+        return answer
+          .json()
+          .then((body) => json(200, { ...(body as Record<string, unknown>), fields: [field] }));
       },
     });
     renderAt("/entities/e1");
@@ -333,6 +331,7 @@ describe("the /entities/:entityId record page", () => {
     await waitFor(() =>
       expect(api.patches).toContainEqual({ customFields: { reporting_code: "ENT-44" } }),
     );
+    expect(screen.getByLabelText("Reporting code")).toHaveValue("ENT-44");
   });
 
   it("adds, resigns, and removes an officer through the Officers card", async () => {

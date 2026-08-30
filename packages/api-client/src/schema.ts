@@ -2534,7 +2534,7 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** The paper on one Entity, newest first, with each document's complete version chain. */
+    /** The paper on one Entity, newest first, with each document's complete version chain. Administrators and Legal Team Members who reach the Entity read it; Contributors and Business Users are refused (ENT-004). */
     get: operations["listEntityDocuments"];
     put?: never;
     /** Upload a file to an Entity, creating a document with version 1 and optionally recreating its folder path. */
@@ -2828,7 +2828,7 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** The complete folder tree on one Entity, with viewer-scoped live document counts. */
+    /** The complete folder tree on one Entity, with viewer-scoped live document counts. Administrators and Legal Team Members who reach the Entity read it; Contributors and Business Users are refused (ENT-004). */
     get: operations["listEntityFolders"];
     put?: never;
     /** Create a folder on an Entity, or recreate a dropped folder path beneath an optional parent. */
@@ -3712,7 +3712,7 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** The shared field catalog (CTR-016) scoped to contract and global fields, in creation order; archived rows only with includeArchived=true */
+    /** The shared field catalog (CTR-016) scoped to contract, matter, entity, and global fields, in creation order; archived rows only with includeArchived=true */
     get: operations["listFields"];
     put?: never;
     /** Define a field: the slug derives from the name and the field type is picked here, once — both are immutable after creation. Select types take their options list; an AI prompt rides on contract-scoped fields only (CTR-008) */

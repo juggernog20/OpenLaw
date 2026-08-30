@@ -384,6 +384,12 @@ const UNNAMED = defineMessage({
   defaultMessage: "a record",
 });
 
+/** What an Obligation whose payload carries no label is called. */
+const UNNAMED_OBLIGATION = defineMessage({
+  id: "notifications.unnamedObligation",
+  defaultMessage: "an obligation",
+});
+
 /**
  * The arm for a slug read off the wire, if this build has one.
  *
@@ -497,7 +503,7 @@ export function narrateNotification(intl: IntlShape, item: BellItem): NarratedNo
       // `hasActor` below relies on.
       contract: record,
       request: record,
-      obligation: text(item.payload, "label") ?? "Obligation",
+      obligation: text(item.payload, "label") ?? intl.formatMessage(UNNAMED_OBLIGATION),
       actor: actor ?? "",
       // Every arm gets this whether or not its sentence selects on it.
       hasActor: actor ? "yes" : "no",

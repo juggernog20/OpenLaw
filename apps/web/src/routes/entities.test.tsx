@@ -137,7 +137,7 @@ describe("the /entities destination", () => {
     renderAt("/entities?view=list");
 
     // The empty state says what the registry is and offers the action.
-    expect(await screen.findByRole("heading", { name: "No entities yet" })).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { name: "No Entities yet" })).toBeInTheDocument();
     expect(screen.getByText(/your own corporate entities/)).toBeInTheDocument();
 
     // The action is offered twice on an empty registry — the sub-bar
@@ -160,14 +160,14 @@ describe("the /entities destination", () => {
     // The new row replaces the empty state.
     const table = screen.getByRole("table");
     expect(within(table).getByText("Aldgate UK Ltd")).toBeInTheDocument();
-    expect(screen.queryByRole("heading", { name: "No entities yet" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "No Entities yet" })).not.toBeInTheDocument();
   });
 
   it("refuses to register without the required legal name and type", async () => {
     stubApi({ signedIn: ADMIN, extra: registryApi([]) });
     renderAt("/entities?view=list");
     const user = userEvent.setup();
-    await screen.findByRole("heading", { name: "No entities yet" });
+    await screen.findByRole("heading", { name: "No Entities yet" });
     await user.click(screen.getAllByRole("button", { name: "Register entity" })[0]!);
     const dialog = await screen.findByRole("dialog");
 
@@ -188,7 +188,7 @@ describe("the /entities destination", () => {
     });
     renderAt("/entities?view=list");
     const user = userEvent.setup();
-    await screen.findByRole("heading", { name: "No entities yet" });
+    await screen.findByRole("heading", { name: "No Entities yet" });
     await user.click(screen.getAllByRole("button", { name: "Register entity" })[0]!);
     const dialog = await screen.findByRole("dialog");
 

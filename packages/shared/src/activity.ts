@@ -477,12 +477,20 @@ type EntityPayloads = {
     jurisdiction: string;
     registrationNumber: string | null;
   };
+  /**
+   * One Holding write appends two entries, one on each Entity of the
+   * link. `legalName` is the Entity the entry hangs off, so the two
+   * entries for one act carry different values; `ownerName` and
+   * `ownedName` are the same on both.
+   */
   "entity_holding.created": {
     legalName: string;
     ownerName: string;
     ownedName: string;
     ownershipPercent: number;
   };
+  /** Same pairing as `entity_holding.created`: `legalName` is the Entity
+   * the entry hangs off. */
   "entity_holding.updated": {
     legalName: string;
     ownerName: string;
@@ -490,6 +498,8 @@ type EntityPayloads = {
     from: number;
     to: number;
   };
+  /** Same pairing as `entity_holding.created`: `legalName` is the Entity
+   * the entry hangs off. */
   "entity_holding.deleted": {
     legalName: string;
     ownerName: string;

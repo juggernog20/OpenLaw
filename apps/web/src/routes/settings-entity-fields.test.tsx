@@ -12,6 +12,7 @@ const ADMIN = {
   role: "administrator",
   theme: "light",
 };
+const MEMBER = { ...ADMIN, role: "legal_team_member" };
 const base = {
   description: null,
   fieldType: "text",
@@ -45,5 +46,13 @@ describe("the Entities Fields pane", () => {
       "aria-current",
       "page",
     );
+  });
+
+  it("bounces a Legal Team Member to Profile and hides the rail entry", async () => {
+    stubApi({ signedIn: MEMBER });
+    renderAt("/settings/entities/fields");
+    expect(await screen.findByRole("heading", { name: "Profile" })).toBeInTheDocument();
+    const rail = screen.getByRole("navigation", { name: "Settings sections" });
+    expect(within(rail).queryByText("Entities")).not.toBeInTheDocument();
   });
 });

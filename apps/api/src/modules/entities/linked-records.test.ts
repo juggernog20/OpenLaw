@@ -28,10 +28,20 @@ const MEMBER = {
   displayName: "Entity Rollups",
   password: "correct-horse-battery",
 } as const;
+const CONTRIBUTOR = {
+  email: "entity-rollups-contributor@example.com",
+  displayName: "Casey Contributor",
+  password: "correct-horse-battery",
+} as const;
 
 let harness: TestHarness;
 let cookies: Record<string, string>;
+let contributorCookies: Record<string, string>;
 let entityId: string;
+/** Confidential, with no grant for MEMBER: walled from the roll-ups. */
+let walledEntityId: string;
+
+const ROLL_UP_PATHS = ["contracts", "matters", "linked-record-counts"] as const;
 
 beforeAll(async () => {
   harness = await startHarness();
@@ -39,6 +49,9 @@ beforeAll(async () => {
   const member = await provisionUser(harness.app.auth, MEMBER);
   await harness.db.update(users).set({ role: "legal_team_member" }).where(eq(users.id, member.id));
   cookies = await signInCookies(harness.app, MEMBER.email, MEMBER.password);
+  const contributor = await provisionUser(harness.app.auth, CONTRIBUTOR);
+  await harness.db.update(users).set({ role: "contributor" }).where(eq(users.id, contributor.id));
+  contributorCookies = await signInCookies(harness.app, CONTRIBUTOR.email, CONTRIBUTOR.password);
 
   const [entityType] = await harness.db.select({ id: entityTypes.id }).from(entityTypes).limit(1);
   const [entity] = await harness.db
@@ -46,6 +59,11 @@ beforeAll(async () => {
     .values({ legalName: "UK Subsidiary", entityTypeId: entityType!.id })
     .returning({ id: entities.id });
   entityId = entity!.id;
+  const [walled] = await harness.db
+    .insert(entities)
+    .values({ legalName: "Walled Vehicle", entityTypeId: entityType!.id, isConfidential: true })
+    .returning({ id: entities.id });
+  walledEntityId = walled!.id;
   const [contractType] = await harness.db
     .select({ id: contractTypes.id })
     .from(contractTypes)
@@ -129,5 +147,34 @@ describe("Entity linked-record roll-ups", () => {
       "Visible Entity matter",
     ]);
     expect(counts.json()).toEqual({ contracts: 1, matters: 1 });
+  });
+
+  it("answers 404 for a confidential Entity the Legal Team Member holds no grant on", async () => {
+    for (const path of ROLL_UP_PATHS) {
+      const response = await harness.app.inject({
+        method: "GET",
+        url: `/api/v1/entities/${walledEntityId}/${path}`,
+        cookies,
+      });
+      expect(response.statusCode, `${path}: ${response.body}`).toBe(404);
+      expect(response.headers["content-type"]).toContain("application/problem+json");
+      expect(response.body).not.toContain("Walled Vehicle");
+    }
+  });
+
+  it("refuses a Contributor and an anonymous caller on every roll-up", async () => {
+    for (const path of ROLL_UP_PATHS) {
+      const contributor = await harness.app.inject({
+        method: "GET",
+        url: `/api/v1/entities/${entityId}/${path}`,
+        cookies: contributorCookies,
+      });
+      expect(contributor.statusCode, `${path}: ${contributor.body}`).toBe(403);
+      const anonymous = await harness.app.inject({
+        method: "GET",
+        url: `/api/v1/entities/${entityId}/${path}`,
+      });
+      expect(anonymous.statusCode, `${path}: ${anonymous.body}`).toBe(401);
+    }
   });
 });

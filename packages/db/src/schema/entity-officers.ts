@@ -18,8 +18,12 @@ export const entityOfficers = pgTable(
     officerRoleId: text("officer_role_id")
       .notNull()
       .references(() => officerRoles.id),
+    /** NULL when the appointment date is not on record. */
     appointedOn: date("appointed_on"),
+    /** NULL means a current officer; a date makes them a former one. */
     resignedOn: date("resigned_on"),
+    /** The app user this officer is, when they have an account. NULL for
+     * the usual case: an officer who is not a user (ENT-001). */
     userId: text("user_id").references(() => users.id),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true })

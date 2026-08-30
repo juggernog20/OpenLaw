@@ -399,9 +399,10 @@ export function documentAudienceScope(db: Executor, user: AuthenticatedUser): SQ
         eq(documents.isConfidential, false),
         namedOnTheOwningContract(db, user),
         namedOnTheOwningMatter(db, user),
-        // Entity paper has no audience narrowing yet: Entity confidentiality
-        // is schema, not policy, until M27/8 arms the grant list. Every
-        // reached Entity's documents pass here, confidential or not.
+        // Entity paper has no audience narrowing of its own. Reach is a
+        // separate required predicate: `entityReachScope` (ENT-004) is
+        // applied before every consumer of this scope runs, so a document
+        // arriving here already sits on an Entity the viewer reaches.
         isNotNull(documents.entityId),
       );
     case "business_user":
