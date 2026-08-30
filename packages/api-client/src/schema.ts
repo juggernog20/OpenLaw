@@ -3793,6 +3793,103 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/v1/knowledge": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** The filtered, sorted, keyset-paged managed Knowledge library */
+    get: operations["listKnowledgeItems"];
+    put?: never;
+    post: operations["createKnowledgeItem"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/knowledge/options": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["getKnowledgeListOptions"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/knowledge/{id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["getKnowledgeItem"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch: operations["updateKnowledgeItem"];
+    trace?: never;
+  };
+  "/api/v1/knowledge/folders": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["listKnowledgeFolders"];
+    put?: never;
+    post: operations["createKnowledgeFolder"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/knowledge/folders/order": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put: operations["reorderKnowledgeFolders"];
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/knowledge/folders/{folderId}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    delete: operations["deleteKnowledgeFolder"];
+    options?: never;
+    head?: never;
+    patch: operations["updateKnowledgeFolder"];
+    trace?: never;
+  };
   "/api/v1/search": {
     parameters: {
       query?: never;
@@ -18326,7 +18423,7 @@ export interface operations {
   listActivity: {
     parameters: {
       query: {
-        entityType: "matter" | "contract" | "entity";
+        entityType: "matter" | "contract" | "entity" | "knowledge_item";
         entityId: string;
         cursor?: string;
       };
@@ -21829,6 +21926,556 @@ export interface operations {
       };
     };
   };
+  listKnowledgeItems: {
+    parameters: {
+      query?: {
+        type?: string;
+        state?: "draft" | "published";
+        audience?: "legal_only" | "everyone";
+        folder?: string;
+        author?: string;
+        sort?:
+          "title" | "type" | "state" | "audience" | "folder" | "author" | "created" | "updated";
+        dir?: "asc" | "desc";
+        cursor?: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            knowledgeItems: {
+              id: string;
+              title: string;
+              knowledgeTypeId: string;
+              knowledgeTypeName: string;
+              folderId: string | null;
+              folderName: string | null;
+              /** @enum {string} */
+              state: "draft" | "published";
+              /** @enum {string} */
+              audience: "legal_only" | "everyone";
+              replacedBy: {
+                id: string;
+                title: string;
+              } | null;
+              createdBy: {
+                id: string;
+                displayName: string;
+                image: string | null;
+                archived: boolean;
+              };
+              updatedBy: {
+                id: string;
+                displayName: string;
+                image: string | null;
+                archived: boolean;
+              };
+              /** Format: date-time */
+              createdAt: string;
+              /** Format: date-time */
+              updatedAt: string;
+            }[];
+            nextCursor: string | null;
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  createKnowledgeItem: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          title: string;
+          knowledgeTypeId: string;
+          folderId?: string;
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            knowledgeItem: {
+              id: string;
+              title: string;
+              knowledgeTypeId: string;
+              knowledgeTypeName: string;
+              body: string | null;
+              folderId: string | null;
+              folderName: string | null;
+              /** @enum {string} */
+              state: "draft" | "published";
+              /** @enum {string} */
+              audience: "legal_only" | "everyone";
+              replacedBy: {
+                id: string;
+                title: string;
+              } | null;
+              createdBy: {
+                id: string;
+                displayName: string;
+                image: string | null;
+                archived: boolean;
+              };
+              updatedBy: {
+                id: string;
+                displayName: string;
+                image: string | null;
+                archived: boolean;
+              };
+              /** Format: date-time */
+              createdAt: string;
+              /** Format: date-time */
+              updatedAt: string;
+            };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  getKnowledgeListOptions: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            authors: {
+              id: string;
+              displayName: string;
+              image: string | null;
+              archived: boolean;
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  getKnowledgeItem: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            knowledgeItem: {
+              id: string;
+              title: string;
+              knowledgeTypeId: string;
+              knowledgeTypeName: string;
+              body: string | null;
+              folderId: string | null;
+              folderName: string | null;
+              /** @enum {string} */
+              state: "draft" | "published";
+              /** @enum {string} */
+              audience: "legal_only" | "everyone";
+              replacedBy: {
+                id: string;
+                title: string;
+              } | null;
+              createdBy: {
+                id: string;
+                displayName: string;
+                image: string | null;
+                archived: boolean;
+              };
+              updatedBy: {
+                id: string;
+                displayName: string;
+                image: string | null;
+                archived: boolean;
+              };
+              /** Format: date-time */
+              createdAt: string;
+              /** Format: date-time */
+              updatedAt: string;
+            };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  updateKnowledgeItem: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          title?: string;
+          knowledgeTypeId?: string;
+          body?: string | null;
+          folderId?: string | null;
+          replacedById?: string | null;
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            knowledgeItem: {
+              id: string;
+              title: string;
+              knowledgeTypeId: string;
+              knowledgeTypeName: string;
+              body: string | null;
+              folderId: string | null;
+              folderName: string | null;
+              /** @enum {string} */
+              state: "draft" | "published";
+              /** @enum {string} */
+              audience: "legal_only" | "everyone";
+              replacedBy: {
+                id: string;
+                title: string;
+              } | null;
+              createdBy: {
+                id: string;
+                displayName: string;
+                image: string | null;
+                archived: boolean;
+              };
+              updatedBy: {
+                id: string;
+                displayName: string;
+                image: string | null;
+                archived: boolean;
+              };
+              /** Format: date-time */
+              createdAt: string;
+              /** Format: date-time */
+              updatedAt: string;
+            };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  listKnowledgeFolders: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            folders: {
+              id: string;
+              name: string;
+              parentId: string | null;
+              displayOrder: number;
+              itemCount: number;
+              /** Format: date-time */
+              createdAt: string;
+              /** Format: date-time */
+              updatedAt: string;
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  createKnowledgeFolder: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          name: string;
+          parentId?: string;
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            folders: {
+              id: string;
+              name: string;
+              parentId: string | null;
+              displayOrder: number;
+              itemCount: number;
+              /** Format: date-time */
+              createdAt: string;
+              /** Format: date-time */
+              updatedAt: string;
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  reorderKnowledgeFolders: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          parentId: string | null;
+          ids: string[];
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            folders: {
+              id: string;
+              name: string;
+              parentId: string | null;
+              displayOrder: number;
+              itemCount: number;
+              /** Format: date-time */
+              createdAt: string;
+              /** Format: date-time */
+              updatedAt: string;
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  deleteKnowledgeFolder: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        folderId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            folders: {
+              id: string;
+              name: string;
+              parentId: string | null;
+              displayOrder: number;
+              itemCount: number;
+              /** Format: date-time */
+              createdAt: string;
+              /** Format: date-time */
+              updatedAt: string;
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  updateKnowledgeFolder: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        folderId: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          name?: string;
+          parentId?: string | null;
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            folders: {
+              id: string;
+              name: string;
+              parentId: string | null;
+              displayOrder: number;
+              itemCount: number;
+              /** Format: date-time */
+              createdAt: string;
+              /** Format: date-time */
+              updatedAt: string;
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
   search: {
     parameters: {
       query: {
@@ -22277,7 +22924,7 @@ export interface operations {
   listSavedViews: {
     parameters: {
       query: {
-        surface: "contracts" | "matters" | "documents" | "entities";
+        surface: "contracts" | "matters" | "documents" | "entities" | "knowledge";
       };
       header?: never;
       path?: never;
@@ -22295,7 +22942,7 @@ export interface operations {
             views: {
               id: string;
               /** @enum {string} */
-              surface: "contracts" | "matters" | "documents" | "entities";
+              surface: "contracts" | "matters" | "documents" | "entities" | "knowledge";
               name: string;
               config: {
                 columns: {
@@ -22339,7 +22986,7 @@ export interface operations {
       content: {
         "application/json": {
           /** @enum {string} */
-          surface: "contracts" | "matters" | "documents" | "entities";
+          surface: "contracts" | "matters" | "documents" | "entities" | "knowledge";
           name: string;
           config: {
             columns: {
@@ -22371,7 +23018,7 @@ export interface operations {
             views: {
               id: string;
               /** @enum {string} */
-              surface: "contracts" | "matters" | "documents" | "entities";
+              surface: "contracts" | "matters" | "documents" | "entities" | "knowledge";
               name: string;
               config: {
                 columns: {
@@ -22425,7 +23072,7 @@ export interface operations {
             views: {
               id: string;
               /** @enum {string} */
-              surface: "contracts" | "matters" | "documents" | "entities";
+              surface: "contracts" | "matters" | "documents" | "entities" | "knowledge";
               name: string;
               config: {
                 columns: {
@@ -22501,7 +23148,7 @@ export interface operations {
             views: {
               id: string;
               /** @enum {string} */
-              surface: "contracts" | "matters" | "documents" | "entities";
+              surface: "contracts" | "matters" | "documents" | "entities" | "knowledge";
               name: string;
               config: {
                 columns: {

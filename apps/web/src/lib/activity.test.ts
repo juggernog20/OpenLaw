@@ -354,6 +354,35 @@ const SAMPLE_PAYLOADS: { [A in ActivityAction]: ActivityPayloadMap[A] } = {
     from: "Playbook",
     to: "Article",
   },
+  "knowledge_item.created": {
+    title: "Contract review playbook",
+    knowledgeType: "Playbook",
+    folder: "Commercial",
+  },
+  "knowledge_item.updated": {
+    title: "Contract review playbook",
+    changed: { folder: { from: "Commercial", to: "Corporate" } },
+  },
+  "knowledge_folder.created": {
+    folderId: "folder-1",
+    name: "Commercial",
+    parentName: null,
+  },
+  "knowledge_folder.renamed": {
+    folderId: "folder-1",
+    name: "Contracts",
+    previousName: "Commercial",
+  },
+  "knowledge_folder.moved": {
+    folderId: "folder-1",
+    name: "Contracts",
+    parentName: "Playbooks",
+  },
+  "knowledge_folder.reordered": {
+    parentName: null,
+    folderIds: ["folder-2", "folder-1"],
+  },
+  "knowledge_folder.deleted": { folderId: "folder-1", name: "Contracts" },
   "entity.confidentiality_set": { legalName: "Helix Labs GmbH" },
   "entity.confidentiality_cleared": { legalName: "Helix Labs GmbH" },
   "entity_grant.added": {

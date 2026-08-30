@@ -50,6 +50,7 @@ import {
   ArchiveRestore,
   ArrowRightLeft,
   Bell,
+  BookOpen,
   Building2,
   CalendarClock,
   CalendarPlus,
@@ -2543,6 +2544,62 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
     }),
     values: (intl, payload) => ({ name: named(intl, payload, "title") }),
     changes: (intl, payload, context) => directChange(intl, payload, "knowledgeType", context),
+  },
+  "knowledge_item.created": {
+    icon: BookOpen,
+    message: defineMessage({
+      id: "activity.knowledgeItem.created",
+      defaultMessage: "{actor} created {name}",
+    }),
+    values: (intl, payload) => ({ name: named(intl, payload, "title") }),
+  },
+  "knowledge_item.updated": {
+    icon: PencilLine,
+    message: defineMessage({
+      id: "activity.knowledgeItem.updated",
+      defaultMessage: "{actor} changed {name}",
+    }),
+    values: (intl, payload) => ({ name: named(intl, payload, "title") }),
+    changes: changesFrom,
+  },
+  "knowledge_folder.created": {
+    icon: FolderPlus,
+    message: defineMessage({
+      id: "activity.knowledgeFolder.created",
+      defaultMessage: "{actor} created the Knowledge folder {name}",
+    }),
+    values: (intl, payload) => ({ name: named(intl, payload, "name") }),
+  },
+  "knowledge_folder.renamed": {
+    icon: PencilLine,
+    message: defineMessage({
+      id: "activity.knowledgeFolder.renamed",
+      defaultMessage: "{actor} renamed a Knowledge folder to {name}",
+    }),
+    values: (intl, payload) => ({ name: named(intl, payload, "name") }),
+  },
+  "knowledge_folder.moved": {
+    icon: FolderInput,
+    message: defineMessage({
+      id: "activity.knowledgeFolder.moved",
+      defaultMessage: "{actor} moved the Knowledge folder {name}",
+    }),
+    values: (intl, payload) => ({ name: named(intl, payload, "name") }),
+  },
+  "knowledge_folder.reordered": {
+    icon: ListOrdered,
+    message: defineMessage({
+      id: "activity.knowledgeFolder.reordered",
+      defaultMessage: "{actor} reordered Knowledge folders",
+    }),
+  },
+  "knowledge_folder.deleted": {
+    icon: FolderX,
+    message: defineMessage({
+      id: "activity.knowledgeFolder.deleted",
+      defaultMessage: "{actor} removed the Knowledge folder {name}",
+    }),
+    values: (intl, payload) => ({ name: named(intl, payload, "name") }),
   },
   "entity.confidentiality_set": {
     icon: Lock,
