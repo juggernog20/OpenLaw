@@ -88,6 +88,11 @@ reviews:
     # Note: these are regexes, not globs.
     base_branches:
       - "^dev$"
+      # Milestone sub-task PRs land on an omnibus feat branch (per the
+      # implement-all flow), and the local CLI's WebSocket has failed on
+      # every M27/M29 run — the hosted review on PR open is the working
+      # CodeRabbit seat for those PRs.
+      - "^feat/"
     ignore_title_keywords:
       - "wip"
       - "do not review"
