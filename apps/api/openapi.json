@@ -49909,6 +49909,151 @@
                             },
                             "required": ["type", "total", "rows"],
                             "additionalProperties": false
+                          },
+                          {
+                            "type": "object",
+                            "properties": {
+                              "type": {
+                                "type": "string",
+                                "enum": ["obligations"]
+                              },
+                              "total": {
+                                "type": "integer",
+                                "exclusiveMinimum": 0,
+                                "maximum": 9007199254740991
+                              },
+                              "rows": {
+                                "maxItems": 3,
+                                "type": "array",
+                                "items": {
+                                  "type": "object",
+                                  "properties": {
+                                    "id": {
+                                      "type": "string"
+                                    },
+                                    "label": {
+                                      "type": "string"
+                                    },
+                                    "dueDate": {
+                                      "type": "string",
+                                      "format": "date",
+                                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                                    },
+                                    "isOverdue": {
+                                      "type": "boolean"
+                                    },
+                                    "isUnassigned": {
+                                      "type": "boolean"
+                                    },
+                                    "entity": {
+                                      "type": "object",
+                                      "properties": {
+                                        "id": {
+                                          "type": "string"
+                                        },
+                                        "legalName": {
+                                          "type": "string"
+                                        }
+                                      },
+                                      "required": ["id", "legalName"],
+                                      "additionalProperties": false
+                                    }
+                                  },
+                                  "required": [
+                                    "id",
+                                    "label",
+                                    "dueDate",
+                                    "isOverdue",
+                                    "isUnassigned",
+                                    "entity"
+                                  ],
+                                  "additionalProperties": false
+                                }
+                              }
+                            },
+                            "required": ["type", "total", "rows"],
+                            "additionalProperties": false
+                          },
+                          {
+                            "type": "object",
+                            "properties": {
+                              "type": {
+                                "type": "string",
+                                "enum": ["inbox"]
+                              },
+                              "total": {
+                                "type": "integer",
+                                "exclusiveMinimum": 0,
+                                "maximum": 9007199254740991
+                              },
+                              "rows": {
+                                "maxItems": 3,
+                                "type": "array",
+                                "items": {
+                                  "type": "object",
+                                  "properties": {
+                                    "id": {
+                                      "type": "string"
+                                    },
+                                    "number": {
+                                      "type": "integer",
+                                      "exclusiveMinimum": 0,
+                                      "maximum": 9007199254740991
+                                    },
+                                    "summary": {
+                                      "type": "string"
+                                    },
+                                    "urgency": {
+                                      "type": "string",
+                                      "enum": ["low", "medium", "high", "critical"]
+                                    },
+                                    "requestType": {
+                                      "type": "object",
+                                      "properties": {
+                                        "id": {
+                                          "type": "string"
+                                        },
+                                        "displayName": {
+                                          "type": "string"
+                                        }
+                                      },
+                                      "required": ["id", "displayName"],
+                                      "additionalProperties": false
+                                    },
+                                    "requester": {
+                                      "type": "object",
+                                      "properties": {
+                                        "id": {
+                                          "type": "string"
+                                        },
+                                        "displayName": {
+                                          "type": "string"
+                                        }
+                                      },
+                                      "required": ["id", "displayName"],
+                                      "additionalProperties": false
+                                    },
+                                    "createdAt": {
+                                      "type": "string",
+                                      "format": "date-time",
+                                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                                    }
+                                  },
+                                  "required": [
+                                    "id",
+                                    "number",
+                                    "summary",
+                                    "urgency",
+                                    "requestType",
+                                    "requester",
+                                    "createdAt"
+                                  ],
+                                  "additionalProperties": false
+                                }
+                              }
+                            },
+                            "required": ["type", "total", "rows"],
+                            "additionalProperties": false
                           }
                         ]
                       }

@@ -23579,6 +23579,45 @@ export interface operations {
                     };
                   }[];
                 }
+              | {
+                  /** @enum {string} */
+                  type: "obligations";
+                  total: number;
+                  rows: {
+                    id: string;
+                    label: string;
+                    /** Format: date */
+                    dueDate: string;
+                    isOverdue: boolean;
+                    isUnassigned: boolean;
+                    entity: {
+                      id: string;
+                      legalName: string;
+                    };
+                  }[];
+                }
+              | {
+                  /** @enum {string} */
+                  type: "inbox";
+                  total: number;
+                  rows: {
+                    id: string;
+                    number: number;
+                    summary: string;
+                    /** @enum {string} */
+                    urgency: "low" | "medium" | "high" | "critical";
+                    requestType: {
+                      id: string;
+                      displayName: string;
+                    };
+                    requester: {
+                      id: string;
+                      displayName: string;
+                    };
+                    /** Format: date-time */
+                    createdAt: string;
+                  }[];
+                }
             )[];
           };
         };

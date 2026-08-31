@@ -9,3 +9,5 @@ export type HomeSection = HomeEnvelope["sections"][number];
 export type ApprovalHomeSection = Extract<HomeSection, { type: "approvals" }>;
 export type TasksHomeSection = Extract<HomeSection, { type: "tasks" }>;
 export type DatesHomeSection = Extract<HomeSection, { type: "dates" }>;
+export type ObligationsHomeSection = Extract<HomeSection, { type: "obligations" }>;
+export type InboxHomeSection = Extract<HomeSection, { type: "inbox" }>;
