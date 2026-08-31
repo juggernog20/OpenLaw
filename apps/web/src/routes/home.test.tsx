@@ -4,6 +4,7 @@
 import { describe, expect, it } from "vitest";
 import { screen, within } from "@testing-library/react";
 import { json, renderAt, stubApi } from "../testing/helpers";
+import { formatDeadline } from "../lib/format";
 
 const MEMBER = {
   id: "u2",
@@ -70,6 +71,65 @@ const tasksSection = {
         id: "matter-2",
         number: 13,
         title: "Employment investigation",
+        isConfidential: false,
+      },
+    },
+  ],
+} as const;
+
+function inDays(days: number): string {
+  const date = new Date();
+  date.setDate(date.getDate() + days);
+  const pad = (value: number) => String(value).padStart(2, "0");
+  return `${String(date.getFullYear())}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+}
+
+const noticeDate = inDays(7);
+const matterDate = inDays(10);
+
+const datesSection = {
+  type: "dates",
+  total: 6,
+  rows: [
+    {
+      source: "notice_deadline",
+      keyDateId: null,
+      date: noticeDate,
+      label: null,
+      noticePeriodDays: 30,
+      record: {
+        kind: "contract",
+        id: "contract-1",
+        number: 42,
+        title: "Confidential supplier renewal",
+        isConfidential: true,
+      },
+    },
+    {
+      source: "key_date",
+      keyDateId: "matter-date-1",
+      date: matterDate,
+      label: "Response filing deadline",
+      noticePeriodDays: null,
+      record: {
+        kind: "matter",
+        id: "matter-1",
+        number: 12,
+        title: "Regulatory response",
+        isConfidential: false,
+      },
+    },
+    {
+      source: "expiry",
+      keyDateId: null,
+      date: inDays(12),
+      label: null,
+      noticePeriodDays: null,
+      record: {
+        kind: "contract",
+        id: "contract-2",
+        number: 43,
+        title: "Nimbus pilot agreement",
         isConfidential: false,
       },
     },
@@ -156,5 +216,34 @@ describe("Home", () => {
     expect(within(card).getByText("Jan 1, 2099")).toBeInTheDocument();
     expect(within(card).getByText("No due date")).toBeInTheDocument();
     expect(screen.queryByText("Welcome to OpenLaw")).not.toBeInTheDocument();
+  });
+
+  it("renders Dates with DES-042 names, DES-014 dates, record links, and CONFI", async () => {
+    stubApi({
+      signedIn: MEMBER,
+      extra: (call) =>
+        call.url.pathname === "/api/v1/home" && call.method === "GET"
+          ? json(200, { sections: [datesSection] })
+          : undefined,
+    });
+    renderAt("/");
+
+    const card = await screen.findByRole("region", { name: "Dates approaching" });
+    expect(within(card).getByText("6")).toBeInTheDocument();
+
+    const notice = within(card).getByText("Renewal notice deadline — 30 days before expiry");
+    expect(notice.closest("a")).toHaveAttribute("href", "/contracts/42/key-dates");
+    expect(within(card).getByText(/Confidential supplier renewal/)).toBeInTheDocument();
+    expect(within(card).getByRole("img", { name: "Confidential" })).toBeInTheDocument();
+    expect(within(notice.closest("a")!).getByText("Derived")).toBeInTheDocument();
+    expect(within(notice.closest("a")!).getByText(formatDeadline(noticeDate))).toBeInTheDocument();
+
+    const matter = within(card).getByText("Response filing deadline");
+    expect(matter.closest("a")).toHaveAttribute("href", "/matters/12/key-dates");
+    expect(within(matter.closest("a")!).getByText("Key date")).toBeInTheDocument();
+    expect(within(matter.closest("a")!).getByText(/Regulatory response/)).toBeInTheDocument();
+
+    const expiry = within(card).getByText("Current term expires");
+    expect(expiry.closest("a")).toHaveAttribute("href", "/contracts/43/key-dates");
   });
 });

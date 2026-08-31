@@ -49817,6 +49817,98 @@
                             },
                             "required": ["type", "total", "rows"],
                             "additionalProperties": false
+                          },
+                          {
+                            "type": "object",
+                            "properties": {
+                              "type": {
+                                "type": "string",
+                                "enum": ["dates"]
+                              },
+                              "total": {
+                                "type": "integer",
+                                "exclusiveMinimum": 0,
+                                "maximum": 9007199254740991
+                              },
+                              "rows": {
+                                "maxItems": 3,
+                                "type": "array",
+                                "items": {
+                                  "type": "object",
+                                  "properties": {
+                                    "source": {
+                                      "type": "string",
+                                      "enum": ["key_date", "expiry", "notice_deadline"]
+                                    },
+                                    "keyDateId": {
+                                      "type": ["string", "null"]
+                                    },
+                                    "date": {
+                                      "type": "string",
+                                      "format": "date",
+                                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                                    },
+                                    "label": {
+                                      "type": ["string", "null"]
+                                    },
+                                    "noticePeriodDays": {
+                                      "anyOf": [
+                                        {
+                                          "type": "integer",
+                                          "minimum": 0,
+                                          "maximum": 9007199254740991
+                                        },
+                                        {
+                                          "type": "null"
+                                        }
+                                      ]
+                                    },
+                                    "record": {
+                                      "type": "object",
+                                      "properties": {
+                                        "kind": {
+                                          "type": "string",
+                                          "enum": ["contract", "matter"]
+                                        },
+                                        "id": {
+                                          "type": "string"
+                                        },
+                                        "number": {
+                                          "type": "integer",
+                                          "exclusiveMinimum": 0,
+                                          "maximum": 9007199254740991
+                                        },
+                                        "title": {
+                                          "type": "string"
+                                        },
+                                        "isConfidential": {
+                                          "type": "boolean"
+                                        }
+                                      },
+                                      "required": [
+                                        "kind",
+                                        "id",
+                                        "number",
+                                        "title",
+                                        "isConfidential"
+                                      ],
+                                      "additionalProperties": false
+                                    }
+                                  },
+                                  "required": [
+                                    "source",
+                                    "keyDateId",
+                                    "date",
+                                    "label",
+                                    "noticePeriodDays",
+                                    "record"
+                                  ],
+                                  "additionalProperties": false
+                                }
+                              }
+                            },
+                            "required": ["type", "total", "rows"],
+                            "additionalProperties": false
                           }
                         ]
                       }

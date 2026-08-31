@@ -8,3 +8,4 @@ export type HomeEnvelope =
 export type HomeSection = HomeEnvelope["sections"][number];
 export type ApprovalHomeSection = Extract<HomeSection, { type: "approvals" }>;
 export type TasksHomeSection = Extract<HomeSection, { type: "tasks" }>;
+export type DatesHomeSection = Extract<HomeSection, { type: "dates" }>;

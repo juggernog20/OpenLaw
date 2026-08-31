@@ -3,17 +3,21 @@
 /** The M29 Home read, through the real app factory and real Postgres. */
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import {
+  and,
   contractApprovals,
+  contractKeyDates,
   contracts,
   contractStatuses,
   contractTasks,
   contractTeam,
   eq,
   matters,
+  matterKeyDates,
   matterStatuses,
   matterTasks,
   matterTeam,
   matterTypes,
+  sql,
   users,
 } from "@openlaw/db";
 import { provisionUser } from "../../auth/instance.js";
@@ -70,6 +74,25 @@ interface TaskSection {
     title: string;
     dueDate: string | null;
     isOverdue: boolean;
+    record: {
+      kind: "contract" | "matter";
+      id: string;
+      number: number;
+      title: string;
+      isConfidential: boolean;
+    };
+  }>;
+}
+
+interface DatesSection {
+  type: "dates";
+  total: number;
+  rows: Array<{
+    source: "key_date" | "expiry" | "notice_deadline";
+    keyDateId: string | null;
+    date: string;
+    label: string | null;
+    noticePeriodDays: number | null;
     record: {
       kind: "contract" | "matter";
       id: string;
@@ -155,7 +178,7 @@ async function home(fixture: { email: string }) {
     cookies: as(fixture),
   });
   expect(response.statusCode, response.body).toBe(200);
-  return response.json() as { sections: Array<ApprovalSection | TaskSection> };
+  return response.json() as { sections: Array<ApprovalSection | TaskSection | DatesSection> };
 }
 
 function tasksIn(result: Awaited<ReturnType<typeof home>>): TaskSection | undefined {
@@ -166,6 +189,16 @@ function approvalsIn(result: Awaited<ReturnType<typeof home>>): ApprovalSection 
   return result.sections.find(
     (section): section is ApprovalSection => section.type === "approvals",
   );
+}
+
+function datesIn(result: Awaited<ReturnType<typeof home>>): DatesSection | undefined {
+  return result.sections.find((section): section is DatesSection => section.type === "dates");
+}
+
+function plusDays(civilDate: string, days: number): string {
+  const date = new Date(`${civilDate}T00:00:00Z`);
+  date.setUTCDate(date.getUTCDate() + days);
+  return date.toISOString().slice(0, 10);
 }
 
 describe("GET /api/v1/home", () => {
@@ -419,5 +452,215 @@ describe("GET /api/v1/home", () => {
     });
     expect(section!.rows.some((row) => row.title === "This must leave no gap")).toBe(false);
     expect(tasksIn(await home(OTHER))).toBeUndefined();
+  });
+
+  it("unions the four approaching date kinds for the Manager and team, before its total and cap", async () => {
+    const todayResult = await harness.db.execute<{ today: string }>(
+      sql`select current_date::text as today`,
+    );
+    const today = todayResult.rows[0]!.today;
+    const [openMatterStatus] = await harness.db
+      .select({ id: matterStatuses.id })
+      .from(matterStatuses)
+      .where(eq(matterStatuses.category, "open"))
+      .limit(1);
+    const [closedMatterStatus] = await harness.db
+      .select({ id: matterStatuses.id })
+      .from(matterStatuses)
+      .where(eq(matterStatuses.category, "closed"))
+      .limit(1);
+    const [matterType] = await harness.db.select({ id: matterTypes.id }).from(matterTypes).limit(1);
+
+    const createMatter = async (
+      title: string,
+      options: { closed?: boolean; archived?: boolean; onTeam?: boolean } = {},
+    ) => {
+      const [matter] = await harness.db
+        .insert(matters)
+        .values({
+          title,
+          matterTypeId: matterType!.id,
+          statusId: options.closed ? closedMatterStatus!.id : openMatterStatus!.id,
+          managerId: idOf(REQUESTER),
+          createdBy: idOf(REQUESTER),
+          closedAt: options.closed ? new Date() : null,
+          archivedAt: options.archived ? new Date() : null,
+        })
+        .returning({ id: matters.id, number: matters.number });
+      await harness.db
+        .insert(matterTeam)
+        .values([
+          { matterId: matter!.id, userId: idOf(REQUESTER), role: "creator" },
+          ...(options.onTeam
+            ? [{ matterId: matter!.id, userId: idOf(APPROVER), role: "member" as const }]
+            : []),
+        ]);
+      return matter!;
+    };
+
+    const contract = await newContract("Approaching renewal");
+    await harness.db
+      .insert(contractTeam)
+      .values({ contractId: contract.id, userId: idOf(APPROVER), role: "member" });
+    await harness.db
+      .update(contracts)
+      .set({
+        expiryDate: plusDays(today, 3),
+        noticePeriodDays: 2,
+        isConfidential: true,
+      })
+      .where(eq(contracts.id, contract.id));
+    const [contractKeyDate] = await harness.db
+      .insert(contractKeyDates)
+      .values({
+        contractId: contract.id,
+        date: plusDays(today, 2),
+        label: "Price review window opens",
+      })
+      .returning({ id: contractKeyDates.id });
+
+    const matter = await createMatter("Regulatory response", { onTeam: true });
+    await harness.db.insert(matterKeyDates).values({
+      matterId: matter.id,
+      date: plusDays(today, 4),
+      label: "Response filing deadline",
+    });
+
+    const [managerOnlyMatter] = await harness.db
+      .insert(matters)
+      .values({
+        title: "Manager-only calendar",
+        matterTypeId: matterType!.id,
+        statusId: openMatterStatus!.id,
+        managerId: idOf(OTHER),
+        createdBy: idOf(REQUESTER),
+      })
+      .returning({ id: matters.id, number: matters.number });
+    await harness.db
+      .insert(matterTeam)
+      .values({ matterId: managerOnlyMatter!.id, userId: idOf(REQUESTER), role: "creator" });
+    await harness.db.insert(matterKeyDates).values({
+      matterId: managerOnlyMatter!.id,
+      date: plusDays(today, 5),
+      label: "Manager date without a team row",
+    });
+
+    const outsideWindow = await newContract("Later Contract date");
+    await harness.db
+      .insert(contractTeam)
+      .values({ contractId: outsideWindow.id, userId: idOf(APPROVER), role: "member" });
+    await harness.db.insert(contractKeyDates).values({
+      contractId: outsideWindow.id,
+      date: plusDays(today, 31),
+      label: "Beyond Home's window",
+    });
+
+    const ended = await newContract("Ended Contract date");
+    await harness.db
+      .insert(contractTeam)
+      .values({ contractId: ended.id, userId: idOf(APPROVER), role: "member" });
+    await harness.db
+      .update(contracts)
+      .set({ expiryDate: plusDays(today, 1), endedAt: new Date() })
+      .where(eq(contracts.id, ended.id));
+
+    const archived = await newContract("Archived Contract date");
+    await harness.db
+      .insert(contractTeam)
+      .values({ contractId: archived.id, userId: idOf(APPROVER), role: "member" });
+    await harness.db
+      .update(contracts)
+      .set({ expiryDate: plusDays(today, 1), archivedAt: new Date() })
+      .where(eq(contracts.id, archived.id));
+
+    for (const [title, options] of [
+      ["Closed Matter date", { closed: true, onTeam: true }],
+      ["Archived Matter date", { archived: true, onTeam: true }],
+    ] as const) {
+      const excluded = await createMatter(title, options);
+      await harness.db.insert(matterKeyDates).values({
+        matterId: excluded.id,
+        date: plusDays(today, 1),
+        label: title,
+      });
+    }
+
+    const walled = await newContract("Walled Contract date");
+    await harness.db
+      .insert(contractTeam)
+      .values({ contractId: walled.id, userId: idOf(APPROVER), role: "member" });
+    await harness.db
+      .update(contracts)
+      .set({ isConfidential: true })
+      .where(eq(contracts.id, walled.id));
+    await harness.db.insert(contractKeyDates).values({
+      contractId: walled.id,
+      date: today,
+      label: "This must leave no row, count, or gap",
+    });
+    await harness.db
+      .delete(contractTeam)
+      .where(and(eq(contractTeam.contractId, walled.id), eq(contractTeam.userId, idOf(APPROVER))));
+
+    const result = await home(APPROVER);
+    expect(result.sections.map((homeSection) => homeSection.type)).toEqual([
+      "approvals",
+      "tasks",
+      "dates",
+    ]);
+    const section = datesIn(result);
+    expect(section).toMatchObject({ type: "dates", total: 4 });
+    expect(section!.rows).toHaveLength(3);
+    expect(section!.rows.map((row) => row.source)).toEqual([
+      "notice_deadline",
+      "key_date",
+      "expiry",
+    ]);
+    expect(section!.rows[0]).toMatchObject({
+      keyDateId: null,
+      date: plusDays(today, 1),
+      label: null,
+      noticePeriodDays: 2,
+      record: {
+        kind: "contract",
+        number: contract.number,
+        title: "Approaching renewal",
+        isConfidential: true,
+      },
+    });
+    expect(section!.rows[1]).toMatchObject({
+      keyDateId: contractKeyDate!.id,
+      label: "Price review window opens",
+      noticePeriodDays: null,
+    });
+    expect(section!.rows.every((row) => !row.record.title.includes("Walled"))).toBe(true);
+
+    await harness.db
+      .update(contractKeyDates)
+      .set({ date: plusDays(today, 31) })
+      .where(eq(contractKeyDates.id, contractKeyDate!.id));
+    const shifted = datesIn(await home(APPROVER));
+    expect(shifted).toMatchObject({ type: "dates", total: 3 });
+    expect(shifted!.rows.map((row) => [row.record.kind, row.source])).toEqual([
+      ["contract", "notice_deadline"],
+      ["contract", "expiry"],
+      ["matter", "key_date"],
+    ]);
+    expect(shifted!.rows[2]).toMatchObject({
+      label: "Response filing deadline",
+      record: { number: matter.number, title: "Regulatory response" },
+    });
+
+    expect(datesIn(await home(OTHER))).toMatchObject({
+      type: "dates",
+      total: 1,
+      rows: [
+        {
+          label: "Manager date without a team row",
+          record: { number: managerOnlyMatter!.number, title: "Manager-only calendar" },
+        },
+      ],
+    });
+    expect(datesIn(await home(CONTRIBUTOR))).toBeUndefined();
   });
 });
