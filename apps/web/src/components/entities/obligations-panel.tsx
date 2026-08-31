@@ -24,6 +24,7 @@ import type {
 } from "../../lib/entities";
 import { civilToday, formatFullDate } from "../../lib/format";
 import { CONTROL_CLASS, TEXTAREA_CLASS } from "../../lib/form-controls";
+import { matterReference } from "../../lib/matters";
 import { problem } from "../../lib/problem";
 import { StatusNote, type FieldStatus } from "../status-note";
 import { Button } from "../ui/button";
@@ -369,7 +370,7 @@ function ObligationRow({
           <option value="">{labels.none}</option>
           {registrations.map((registration) => (
             <option key={registration.id} value={registration.id}>
-              {registrationLabel(registration)}
+              {registrationLabel(intl, registration)}
             </option>
           ))}
         </select>
@@ -404,7 +405,7 @@ function ObligationRow({
           <option value="">{labels.none}</option>
           {options.matters.map((matter) => (
             <option key={matter.id} value={matter.id}>
-              {matterLabel(matter)}
+              {matterLabel(intl, matter)}
             </option>
           ))}
         </select>
@@ -413,7 +414,7 @@ function ObligationRow({
             className="mt-1 block text-sm text-link hover:underline"
             to={`/matters/${row.matter.number}`}
           >
-            {matterLabel(row.matter)}
+            {matterLabel(intl, row.matter)}
           </Link>
         ) : null}
       </td>
@@ -557,7 +558,7 @@ function AddObligationDialog({
             <option value="">{labels.none}</option>
             {registrations.map((row) => (
               <option key={row.id} value={row.id}>
-                {registrationLabel(row)}
+                {registrationLabel(intl, row)}
               </option>
             ))}
           </SelectDraft>
@@ -583,7 +584,7 @@ function AddObligationDialog({
             <option value="">{labels.none}</option>
             {options.matters.map((row) => (
               <option key={row.id} value={row.id}>
-                {matterLabel(row)}
+                {matterLabel(intl, row)}
               </option>
             ))}
           </SelectDraft>
@@ -746,14 +747,29 @@ function SelectDraft({
   );
 }
 
-function registrationLabel(row: Pick<EntityRegistration, "jurisdiction" | "registrationNumber">) {
+function registrationLabel(
+  intl: IntlShape,
+  row: Pick<EntityRegistration, "jurisdiction" | "registrationNumber">,
+) {
   return row.registrationNumber
-    ? `${row.jurisdiction} · ${row.registrationNumber}`
+    ? intl.formatMessage(
+        {
+          id: "entities.record.obligations.registrationOption",
+          defaultMessage: "{jurisdiction} · {registrationNumber}",
+        },
+        { jurisdiction: row.jurisdiction, registrationNumber: row.registrationNumber },
+      )
     : row.jurisdiction;
 }
 
-function matterLabel(row: { number: number; title: string }) {
-  return `M-${row.number} · ${row.title}`;
+function matterLabel(intl: IntlShape, row: { number: number; title: string }) {
+  return intl.formatMessage(
+    {
+      id: "entities.record.obligations.matterOption",
+      defaultMessage: "{reference} · {title}",
+    },
+    { reference: matterReference(intl, row.number), title: row.title },
+  );
 }
 
 function byDueDate(a: EntityObligation, b: EntityObligation) {

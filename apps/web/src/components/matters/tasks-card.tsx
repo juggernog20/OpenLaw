@@ -227,7 +227,7 @@ function TaskRow({
         {(task.assigneeName || task.dueDate) && (
           <span className="text-xs text-muted">
             {task.assigneeName}
-            {task.assigneeName && task.dueDate ? " · " : ""}
+            {task.assigneeName && task.dueDate && <span aria-hidden="true"> · </span>}
             {task.dueDate && (
               <FormattedMessage
                 id="matterTasks.due"
