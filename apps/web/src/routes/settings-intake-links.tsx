@@ -52,6 +52,7 @@ import { useRef, useState } from "react";
 import { redirect, useLoaderData } from "react-router";
 import { FormattedMessage, useIntl, type IntlShape } from "react-intl";
 import { Pencil } from "lucide-react";
+import type { paths } from "@openlaw/api-client";
 import { api } from "../lib/api";
 import { CONTROL_CLASS } from "../lib/form-controls";
 import { networkError } from "../lib/messages";
@@ -66,15 +67,11 @@ import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
 import type { FieldStatus } from "../components/status-note";
 
-/** One row of GET /intake-links, as the client sees it. */
-interface LinkRow {
-  id: string;
-  label: string;
-  url: string;
-  /** NULL = the portal home panel (INT-004). */
-  requestTypeId: string | null;
-  displayOrder: number;
-}
+/** One row of GET /intake-links, straight from the generated contract
+ * so a target-field change on the API cannot drift past this screen.
+ * `requestTypeId: null` = the portal home panel (INT-004). */
+type LinkRow =
+  paths["/api/v1/intake-links"]["get"]["responses"][200]["content"]["application/json"]["intakeLinks"][number];
 
 /** One link as the list editor draws it: the shared row anatomy over
  * the API row, the label standing in as the display name. */
@@ -88,19 +85,27 @@ interface PlacementType {
   archivedAt: string | null;
 }
 
+type KnowledgeOption =
+  paths["/api/v1/intake-links/knowledge-options"]["get"]["responses"][200]["content"]["application/json"]["knowledgeItems"][number];
+
 export async function settingsIntakeLinksLoader() {
   const user = await requireUser();
   if (user.role !== "administrator") return redirect("/settings/profile");
-  const [linksRes, typesRes] = await Promise.all([
+  const [linksRes, typesRes, knowledgeRes] = await Promise.all([
     api.GET("/api/v1/intake-links"),
     // Archived types ride along: a link assigned to a type archived
     // after it was picked still has to read as itself in the chip.
     api.GET("/api/v1/request-types", { params: { query: { includeArchived: "true" } } }),
+    api.GET("/api/v1/intake-links/knowledge-options"),
   ]);
-  if (!linksRes.data || !typesRes.data) {
+  if (!linksRes.data || !typesRes.data || !knowledgeRes.data) {
     throw new Error("The deflection links could not be read.");
   }
-  return { links: linksRes.data.intakeLinks, requestTypes: typesRes.data.requestTypes };
+  return {
+    links: linksRes.data.intakeLinks,
+    requestTypes: typesRes.data.requestTypes,
+    knowledgeItems: knowledgeRes.data.knowledgeItems,
+  };
 }
 
 /**
@@ -138,6 +143,8 @@ function isWebUrl(url: string): boolean {
 interface EditorDraft {
   label: string;
   url: string;
+  targetKind: "external" | "knowledge";
+  knowledgeItemId: string;
   /** "" = the portal home panel; otherwise a request type id. */
   requestTypeId: string;
 }
@@ -146,6 +153,8 @@ function draftOf(target: LinkRow | null): EditorDraft {
   return {
     label: target?.label ?? "",
     url: target?.url ?? "",
+    targetKind: target?.knowledgeItemId ? "knowledge" : "external",
+    knowledgeItemId: target?.knowledgeItemId ?? "",
     requestTypeId: target?.requestTypeId ?? "",
   };
 }
@@ -153,6 +162,7 @@ function draftOf(target: LinkRow | null): EditorDraft {
 function LinkEditorDialog({
   target,
   requestTypes,
+  knowledgeItems,
   onOpenChange,
   onCreated,
   onSaved,
@@ -160,6 +170,7 @@ function LinkEditorDialog({
   /** The link being edited, or null for create mode. */
   target: LinkRow | null;
   requestTypes: readonly PlacementType[];
+  knowledgeItems: readonly KnowledgeOption[];
   onOpenChange: (open: boolean) => void;
   onCreated: (row: LinkRow) => void;
   onSaved: (row: LinkRow) => void;
@@ -178,6 +189,12 @@ function LinkEditorDialog({
   const placements = requestTypes.filter(
     (row) => row.archivedAt === null || row.id === target?.requestTypeId,
   );
+  const knowledgeChoices =
+    target?.knowledgeItemId &&
+    target.knowledgeItemTitle &&
+    !knowledgeItems.some((row) => row.id === target.knowledgeItemId)
+      ? [{ id: target.knowledgeItemId, title: target.knowledgeItemTitle }, ...knowledgeItems]
+      : knowledgeItems;
 
   function refuse(message: string) {
     setError(message);
@@ -185,9 +202,11 @@ function LinkEditorDialog({
   }
 
   async function create(label: string, url: string) {
+    const target =
+      draft.targetKind === "external" ? { url } : { knowledgeItemId: draft.knowledgeItemId };
     const result = await api
       .POST("/api/v1/intake-links", {
-        body: { label, url, requestTypeId: draft.requestTypeId || null },
+        body: { label, ...target, requestTypeId: draft.requestTypeId || null },
       })
       .catch(() => undefined);
     const { data } = result ?? {};
@@ -207,9 +226,18 @@ function LinkEditorDialog({
 
   async function edit(existing: LinkRow, label: string, url: string) {
     const requestTypeId = draft.requestTypeId || null;
-    const body: { label?: string; url?: string; requestTypeId?: string | null } = {};
+    const body: {
+      label?: string;
+      url?: string;
+      knowledgeItemId?: string;
+      requestTypeId?: string | null;
+    } = {};
     if (label !== existing.label) body.label = label;
-    if (url !== existing.url) body.url = url;
+    if (draft.targetKind === "external") {
+      if (existing.knowledgeItemId !== null || url !== existing.url) body.url = url;
+    } else if (existing.url !== null || draft.knowledgeItemId !== existing.knowledgeItemId) {
+      body.knowledgeItemId = draft.knowledgeItemId;
+    }
     if (requestTypeId !== existing.requestTypeId) body.requestTypeId = requestTypeId;
     // Nothing changed: the API refuses an empty body, and rightly — so
     // the dialog just closes rather than asking it to.
@@ -247,8 +275,17 @@ function LinkEditorDialog({
       );
       return;
     }
-    if (!isWebUrl(url)) {
+    if (draft.targetKind === "external" && !isWebUrl(url)) {
       refuse(urlRefusal(intl));
+      return;
+    }
+    if (draft.targetKind === "knowledge" && draft.knowledgeItemId === "") {
+      refuse(
+        intl.formatMessage({
+          id: "settings.intakeLinks.knowledgeMissing",
+          defaultMessage: "Choose a Knowledge Item.",
+        }),
+      );
       return;
     }
     setBusy(true);
@@ -278,6 +315,97 @@ function LinkEditorDialog({
             void submit();
           }}
         >
+          <fieldset className="flex flex-col gap-1.5">
+            <legend className="text-sm font-medium">
+              <FormattedMessage id="settings.intakeLinks.targetKind" defaultMessage="Target" />
+            </legend>
+            <div className="flex gap-4">
+              {(["external", "knowledge"] as const).map((kind) => (
+                <label key={kind} className="inline-flex items-center gap-2 text-sm">
+                  <input
+                    type="radio"
+                    name="target-kind"
+                    value={kind}
+                    checked={draft.targetKind === kind}
+                    onChange={() => set("targetKind", kind)}
+                  />
+                  {kind === "external" ? (
+                    <FormattedMessage
+                      id="settings.intakeLinks.externalKind"
+                      defaultMessage="External address"
+                    />
+                  ) : (
+                    <FormattedMessage
+                      id="settings.intakeLinks.knowledgeKind"
+                      defaultMessage="Knowledge item"
+                    />
+                  )}
+                </label>
+              ))}
+            </div>
+          </fieldset>
+          {draft.targetKind === "external" ? (
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="intake-link-url">
+                <FormattedMessage id="settings.intakeLinks.urlLabel" defaultMessage="Address" />
+              </Label>
+              <Input
+                id="intake-link-url"
+                inputMode="url"
+                value={draft.url}
+                onChange={(event) => {
+                  set("url", event.target.value);
+                  if (error !== null) setError(null);
+                }}
+              />
+              <p className="text-xs text-muted">
+                <FormattedMessage
+                  id="settings.intakeLinks.urlHelp"
+                  defaultMessage="A full web address, starting with http:// or https://."
+                />
+              </p>
+            </div>
+          ) : (
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="intake-link-knowledge">
+                <FormattedMessage
+                  id="settings.intakeLinks.knowledgeLabel"
+                  defaultMessage="Knowledge item"
+                />
+              </Label>
+              <select
+                id="intake-link-knowledge"
+                className={CONTROL_CLASS}
+                value={draft.knowledgeItemId}
+                onChange={(event) => {
+                  const previousTitle = knowledgeChoices.find(
+                    (row) => row.id === draft.knowledgeItemId,
+                  )?.title;
+                  const next = knowledgeChoices.find((row) => row.id === event.target.value);
+                  setDraft((current) => ({
+                    ...current,
+                    knowledgeItemId: event.target.value,
+                    label:
+                      current.label.trim() === "" || current.label === previousTitle
+                        ? (next?.title ?? current.label)
+                        : current.label,
+                  }));
+                }}
+              >
+                <option value="">
+                  {intl.formatMessage({
+                    id: "settings.intakeLinks.chooseKnowledge",
+                    defaultMessage: "Choose an item…",
+                  })}
+                </option>
+                {knowledgeChoices.map((row) => (
+                  <option key={row.id} value={row.id}>
+                    {row.title}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="intake-link-label">
               <FormattedMessage id="settings.intakeLinks.labelLabel" defaultMessage="Label" />
@@ -292,30 +420,6 @@ function LinkEditorDialog({
               <FormattedMessage
                 id="settings.intakeLinks.labelHelp"
                 defaultMessage="What the panel reads as — an answer, not an address."
-              />
-            </p>
-          </div>
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor="intake-link-url">
-              <FormattedMessage id="settings.intakeLinks.urlLabel" defaultMessage="Address" />
-            </Label>
-            <Input
-              id="intake-link-url"
-              // Not `type="url"`: the browser's own constraint check
-              // would block the submit with a native bubble, and the
-              // refusal an Administrator reads has to be ours (DES-015).
-              inputMode="url"
-              value={draft.url}
-              onChange={(event) => {
-                set("url", event.target.value);
-                // Typing answers the refusal the last press left.
-                if (error !== null) setError(null);
-              }}
-            />
-            <p className="text-xs text-muted">
-              <FormattedMessage
-                id="settings.intakeLinks.urlHelp"
-                defaultMessage="A full web address, starting with http:// or https://."
               />
             </p>
           </div>
@@ -536,7 +640,9 @@ export function SettingsIntakeLinksPage() {
           nameSlotClassName="min-w-0 flex-1"
           // The second line is the address, without the scheme every row
           // would otherwise repeat (ST13).
-          rowCaption={(row) => <span className="text-link">{schemeless(row.url)}</span>}
+          rowCaption={(row) => (
+            <span className="text-link">{row.knowledgeItemTitle ?? schemeless(row.url ?? "")}</span>
+          )}
           rowDetails={(row) => (
             <span className="w-40 shrink-0">
               <span className="inline-flex max-w-full rounded-chip bg-status-neutral-bg px-2 py-0.5 text-xs font-semibold text-status-neutral-fg">
@@ -597,6 +703,7 @@ export function SettingsIntakeLinksPage() {
         <LinkEditorDialog
           target={editor.target}
           requestTypes={loaded.requestTypes}
+          knowledgeItems={loaded.knowledgeItems}
           onOpenChange={(open) => {
             if (!open) setEditor(null);
           }}

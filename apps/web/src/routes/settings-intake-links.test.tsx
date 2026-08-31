@@ -33,6 +33,11 @@ const REQUEST_TYPES = [
   { id: "r3", displayName: "Vendor onboarding", archivedAt: "2026-08-01T00:00:00.000Z" },
 ];
 
+const KNOWLEDGE_ITEMS = [
+  { id: "k1", title: "When an NDA is not needed" },
+  { id: "k2", title: "Contract review playbook" },
+];
+
 /** The three rows ST13 draws: two on the portal home, one on a type. */
 const SEEDS = [
   ["l1", "NDA FAQ — when you don't need legal", "https://wiki.acme.com/legal/nda-faq", null],
@@ -43,7 +48,9 @@ const SEEDS = [
 interface StubLink {
   id: string;
   label: string;
-  url: string;
+  url: string | null;
+  knowledgeItemId: string | null;
+  knowledgeItemTitle: string | null;
   requestTypeId: string | null;
   displayOrder: number;
 }
@@ -53,6 +60,8 @@ function seededLinks(): StubLink[] {
     id,
     label,
     url,
+    knowledgeItemId: null,
+    knowledgeItemTitle: null,
     requestTypeId,
     displayOrder: index + 1,
   }));
@@ -87,15 +96,26 @@ function linksApi(
     if (path === "/api/v1/request-types" && call.method === "GET") {
       return json(200, { requestTypes: REQUEST_TYPES });
     }
+    if (path === "/api/v1/intake-links/knowledge-options" && call.method === "GET") {
+      return json(200, { knowledgeItems: KNOWLEDGE_ITEMS });
+    }
     if (path === "/api/v1/intake-links" && call.method === "POST") {
       calls.creates.push(call.body);
       if (options.createFails) return problem(400, options.createFails);
-      const body = call.body as { label: string; url: string; requestTypeId: string | null };
+      const body = call.body as {
+        label: string;
+        url?: string;
+        knowledgeItemId?: string;
+        requestTypeId: string | null;
+      };
+      const knowledge = KNOWLEDGE_ITEMS.find((row) => row.id === body.knowledgeItemId);
       return json(201, {
         intakeLink: {
           id: "l-new",
           label: body.label,
-          url: body.url,
+          url: body.url ?? null,
+          knowledgeItemId: body.knowledgeItemId ?? null,
+          knowledgeItemTitle: knowledge?.title ?? null,
           requestTypeId: body.requestTypeId,
           displayOrder: rows.length + 1,
         },
@@ -174,6 +194,25 @@ describe("the panel (ST13)", () => {
     // The scheme is machinery, and the row drops it. Only the row does.
     expect(screen.queryByText(/https:\/\//)).not.toBeInTheDocument();
     expect(screen.getByText("3 links")).toBeInTheDocument();
+  });
+
+  it("shows the Knowledge Item title for an internal link and keeps a lost-reach row visible", async () => {
+    const rows: StubLink[] = [
+      {
+        id: "internal",
+        label: "Read this first",
+        url: null,
+        knowledgeItemId: "lost-item",
+        knowledgeItemTitle: "Retired NDA guidance",
+        requestTypeId: null,
+        displayOrder: 1,
+      },
+    ];
+    stubApi({ signedIn: ADMIN, extra: linksApi(newCalls(), rows) });
+    renderAt("/settings/intake/links");
+
+    expect(await screen.findByText("Read this first")).toBeInTheDocument();
+    expect(screen.getByText("Retired NDA guidance")).toBeInTheDocument();
   });
 
   it("names each row's placement in its chip", async () => {
@@ -329,6 +368,36 @@ describe("the DES-021 dialog behind Add", () => {
     );
     const rows = within(linkList()).getAllByRole("listitem");
     expect(chipOf(rows.at(-1)!)).toBe("Placement: NDA request");
+  });
+
+  it("switches to a Knowledge Item target, defaults its editable label, and shows the item title in the row", async () => {
+    const calls = newCalls();
+    stubApi({ signedIn: ADMIN, extra: linksApi(calls) });
+    renderAt("/settings/intake/links");
+    const user = userEvent.setup();
+    await user.click(await screen.findByRole("button", { name: "Add link" }));
+    const dialog = await screen.findByRole("dialog", { name: "Add link" });
+
+    await user.click(within(dialog).getByRole("radio", { name: "Knowledge item" }));
+    await user.selectOptions(
+      within(dialog).getByRole("combobox", { name: "Knowledge item" }),
+      "k1",
+    );
+    expect(within(dialog).getByLabelText("Label")).toHaveValue("When an NDA is not needed");
+    await user.clear(within(dialog).getByLabelText("Label"));
+    await user.type(within(dialog).getByLabelText("Label"), "Read this before submitting");
+    await user.click(within(dialog).getByRole("button", { name: "Add link" }));
+
+    await waitFor(() =>
+      expect(calls.creates).toEqual([
+        {
+          label: "Read this before submitting",
+          knowledgeItemId: "k1",
+          requestTypeId: null,
+        },
+      ]),
+    );
+    expect(await screen.findByText("When an NDA is not needed")).toBeInTheDocument();
   });
 
   it("refuses a malformed or non-http(s) address before it reaches the API", async () => {

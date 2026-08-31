@@ -32,6 +32,10 @@ _Avoid_: revision, draft, copy
 A curated piece of know-how — template, precedent, playbook, or article — distinct from the documents it owns [KNW-001].
 _Avoid_: article, wiki page, resource
 
+**Knowledge Folder**:
+A nested folder that organizes Knowledge Items in the Knowledge destination. It does not organize the Documents inside an item. The tree starts blank, and Type remains a separate filter [KNW-003, DOC-006].
+_Avoid_: Document folder, library type, category
+
 ### Parties
 
 **Entity**:
@@ -155,6 +159,10 @@ _Avoid_: Privileged (deliberately rejected — privilege is a legal doctrine, no
 The lightweight, magic-link-authenticated surface where Business Users submit Requests and follow their threads [INT-001].
 _Avoid_: customer portal, self-service portal
 
+**portal-readable**:
+The audience setting on a Knowledge Item that lets a signed-in portal reader reach it, but only while the item is published and not archived. The stored value is `everyone`; "portal-readable" names its product meaning [KNW-004].
+_Avoid_: public, externally shared, anonymous
+
 **Activity feed**:
 The per-record narrative of what happened, inheriting the visibility tier of each action [DD-017].
 
@@ -248,6 +256,10 @@ _Avoid_: polling, status poller, sync job, the backfill sweep (that is M12's, an
 **Executed pin**:
 Which version of a Document the team calls the signed copy — the one previews, exports, and AI analysis target by default. It is **explicit and never inferred from a version's kind**: a round tagged `executed` is what its uploader called it, a chain can hold two rounds both called that, and the pin names one of them. A person sets and clears it by hand; the signing integration sets it automatically when an Envelope completes, and never corrects a team that moves it afterwards [CTR-014, CTR-013].
 _Avoid_: executed flag, signed version, final document, the executed document
+
+**Primary document (Knowledge sense)**:
+The one Document a Knowledge Item pins as its main Document. Its current Version opens first on the record and appears first on the portal article. The pin is optional, explicit, and must name a live Document owned by that same item [KNW-001].
+_Avoid_: primary file, attachment, executed pin
 
 **Approval request**:
 One named person's sign-off on one Contract. A Member+ user asks; the named approver alone answers, with an approval or a rejection and an optional note; and the answer is final. Requests run in parallel — there are no chains and no order — and at most one is pending per approver per Contract. Asking again after a rejection makes a new request rather than reopening the old one. The requester, the Contract's Owner, or an Administrator cancels a pending one, which deletes it and leaves the activity entry as the record that it was made [CTR-012].

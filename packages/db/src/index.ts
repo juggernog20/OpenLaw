@@ -42,6 +42,9 @@ import * as entityTypeFieldsSchema from "./schema/entity-type-fields.js";
 import * as entityTypesSchema from "./schema/entity-types.js";
 import * as fieldsSchema from "./schema/fields.js";
 import * as intakeLinksSchema from "./schema/intake-links.js";
+import * as knowledgeFoldersSchema from "./schema/knowledge-folders.js";
+import * as knowledgeItemsSchema from "./schema/knowledge-items.js";
+import * as knowledgeTypesSchema from "./schema/knowledge-types.js";
 import * as listViewsSchema from "./schema/list-views.js";
 import * as matterTypeFieldsSchema from "./schema/matter-type-fields.js";
 import * as matterTypesSchema from "./schema/matter-types.js";
@@ -93,6 +96,9 @@ export * from "./schema/entity-type-fields.js";
 export * from "./schema/entity-types.js";
 export * from "./schema/fields.js";
 export * from "./schema/intake-links.js";
+export * from "./schema/knowledge-folders.js";
+export * from "./schema/knowledge-items.js";
+export * from "./schema/knowledge-types.js";
 export * from "./schema/list-views.js";
 export * from "./schema/matter-type-fields.js";
 export * from "./schema/matter-types.js";
@@ -146,6 +152,9 @@ export const schema = {
   ...entityTypesSchema,
   ...fieldsSchema,
   ...intakeLinksSchema,
+  ...knowledgeFoldersSchema,
+  ...knowledgeItemsSchema,
+  ...knowledgeTypesSchema,
   ...listViewsSchema,
   ...matterTypeFieldsSchema,
   ...matterTypesSchema,
@@ -174,6 +183,7 @@ export {
   count,
   desc,
   eq,
+  getTableColumns,
   gte,
   ilike,
   inArray,

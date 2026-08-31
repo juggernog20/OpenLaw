@@ -42,6 +42,19 @@ export type ContractFolder = ListResponse["folders"][number];
  * it now stands, or why not. */
 export type FoldersOutcome = { ok: true; folders: ContractFolder[] } | ({ ok: false } & Problem);
 
+function knowledgeFoldersRefused(): FoldersOutcome {
+  return {
+    ok: false,
+    // No client-authored detail: an English sentence written here would
+    // bypass i18n when a surface renders `detail` directly. Absent, the
+    // surface's own localized fallback speaks instead.
+    detail: undefined,
+    type: "about:blank",
+    status: 400,
+    network: false,
+  };
+}
+
 async function foldersOutcome(
   result: (OpenApiResult & { data?: ListResponse }) | undefined,
 ): Promise<FoldersOutcome> {
@@ -162,6 +175,8 @@ export async function readRecordFolders(record: DocumentRecord): Promise<Folders
         .catch(() => undefined);
       return foldersOutcome(result);
     }
+    case "knowledge_item":
+      return knowledgeFoldersRefused();
   }
 }
 
@@ -204,6 +219,8 @@ export async function createRecordFolder(
         .catch(() => undefined);
       return foldersOutcome(result);
     }
+    case "knowledge_item":
+      return knowledgeFoldersRefused();
   }
 }
 
@@ -272,6 +289,8 @@ export async function recreateRecordFolderPath(
         .catch(() => undefined);
       return foldersOutcome(result);
     }
+    case "knowledge_item":
+      return knowledgeFoldersRefused();
   }
 }
 

@@ -189,13 +189,14 @@ describe("the portal bell (NOT-001, NOT-005)", () => {
   });
 });
 
-/** The grid the API answers, with NOT-002's defaults. All five groups,
+/** The grid the API answers, with the model's defaults. Every group,
  * because the model is the model — the pane draws one of them. */
 const DEFAULTS = [
   { eventGroup: "assigned_to_you", inApp: true, email: true },
   { eventGroup: "activity_on_your_records", inApp: true, email: false },
   { eventGroup: "dates_approaching", inApp: true, email: true },
   { eventGroup: "new_requests", inApp: true, email: false },
+  { eventGroup: "knowledge", inApp: true, email: true },
   { eventGroup: "requester_events", inApp: true, email: true },
 ];
 

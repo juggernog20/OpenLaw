@@ -58,7 +58,12 @@ type Prefixed<P extends string, M> = { [K in keyof M & string as `${P}.${K}`]: M
 
 /** The taxonomy tables' audit namespaces. */
 export type TaxonomyActionPrefix =
-  "contract_type" | "matter_type" | "entity_type" | "officer_role" | "request_type";
+  | "contract_type"
+  | "matter_type"
+  | "entity_type"
+  | "officer_role"
+  | "request_type"
+  | "knowledge_type";
 /** The catalogs of fields attached to a type — two type editors, and
  * the request type's form definition (INT-002), which is the same
  * machinery over the same catalog. */
@@ -103,6 +108,9 @@ type TypeFieldPayloads = {
  * searched for.
  */
 type UserPayloads = {
+  /** A successful daily briefing send. The counts make the system
+   * marker useful in the audit log without copying briefing contents. */
+  "user.briefing_sent": { dateCount: number; knowledgeCount: number };
   "user.theme_changed": FieldChangePayload;
   "user.timezone_changed": FieldChangePayload;
   /**
@@ -117,7 +125,7 @@ type UserPayloads = {
    * not a stored fact this writer could report.
    */
   "user.notification_preference_changed": {
-    /** One of NOT-002's five groups. */
+    /** One of the notification preference groups. */
     eventGroup: string;
     /** `in_app` or `email` (NOT-001's two channels). */
     channel: string;
@@ -1079,6 +1087,34 @@ type ExportPayloads = {
   };
 };
 
+/** The Knowledge library's item and folder vocabulary (KNW-001–003). */
+type KnowledgePayloads = {
+  "knowledge_item.created": {
+    title: string;
+    knowledgeType: string;
+    folder: string | null;
+  };
+  "knowledge_item.updated": { title: string; changed: ChangedFields };
+  "knowledge_item.published": { title: string };
+  "knowledge_item.unpublished": { title: string };
+  "knowledge_item.archived": { title: string; replacedBy: string | null };
+  "knowledge_item.restored": { title: string };
+  "knowledge_item.type_reassigned": { title: string; from: string; to: string };
+  "knowledge_folder.created": {
+    folderId: string;
+    name: string;
+    parentName: string | null;
+  };
+  "knowledge_folder.renamed": { folderId: string; name: string; previousName: string };
+  "knowledge_folder.moved": {
+    folderId: string;
+    name: string;
+    parentName: string | null;
+  };
+  "knowledge_folder.reordered": { parentName: string | null; folderIds: string[] };
+  "knowledge_folder.deleted": { folderId: string; name: string };
+};
+
 /**
  * The closed audit vocabulary (DD-017), slug by slug, each paired with
  * what its writer puts in the payload.
@@ -1094,6 +1130,7 @@ export type ActivityPayloadMap = UserPayloads &
   Prefixed<"entity_type", TaxonomyPayloads> &
   Prefixed<"officer_role", TaxonomyPayloads> &
   Prefixed<"request_type", TaxonomyPayloads> &
+  Prefixed<"knowledge_type", TaxonomyPayloads> &
   Prefixed<"contract_type_field", TypeFieldPayloads> &
   Prefixed<"entity_type_field", TypeFieldPayloads> &
   Prefixed<"matter_type_field", TypeFieldPayloads> &
@@ -1118,6 +1155,7 @@ export type ActivityPayloadMap = UserPayloads &
   SigningConnectorPayloads &
   EnvelopePayloads &
   SignerErasurePayloads &
+  KnowledgePayloads &
   ExportPayloads;
 
 /** Every slug this build writes. */

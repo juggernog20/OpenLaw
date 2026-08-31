@@ -257,6 +257,21 @@ export function stubApi(state: ApiState) {
     if (call.url.pathname === "/api/v1/list-views" && call.method === "GET") {
       return json(200, { views: [] });
     }
+    // Knowledge is a Member+ shell destination. Its empty library,
+    // folder tree, filters, and create form are the ordinary defaults;
+    // route suites about populated records override them through extra.
+    if (call.url.pathname === "/api/v1/knowledge" && call.method === "GET") {
+      return json(200, { knowledgeItems: [], nextCursor: null });
+    }
+    if (call.url.pathname === "/api/v1/knowledge/folders" && call.method === "GET") {
+      return json(200, { folders: [] });
+    }
+    if (call.url.pathname === "/api/v1/knowledge/type-options" && call.method === "GET") {
+      return json(200, { knowledgeTypes: [] });
+    }
+    if (call.url.pathname === "/api/v1/knowledge/options" && call.method === "GET") {
+      return json(200, { authors: [] });
+    }
     // The shell's bell reads its badge on mount and on every navigation
     // (NOT-005, M18/2), so every authenticated route hits this. Zero by
     // default, which is what a fresh install answers; only the bell's

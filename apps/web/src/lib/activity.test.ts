@@ -76,6 +76,7 @@ const ENVELOPE_ENDING = {
  */
 const SAMPLE_PAYLOADS: { [A in ActivityAction]: ActivityPayloadMap[A] } = {
   // Profile and user administration
+  "user.briefing_sent": { dateCount: 2, knowledgeCount: 1 },
   "user.theme_changed": { field: "theme", old: "light", new: "dark" },
   "user.timezone_changed": { field: "timezone", old: "UTC", new: "Asia/Dubai" },
   "user.notification_preference_changed": {
@@ -126,6 +127,13 @@ const SAMPLE_PAYLOADS: { [A in ActivityAction]: ActivityPayloadMap[A] } = {
   "entity_type.archived": TAXONOMY_ARCHIVE,
   "entity_type.restored": TAXONOMY_NAMED,
   "entity_type.deleted": TAXONOMY_NAMED,
+  "knowledge_type.created": TAXONOMY_NAMED,
+  "knowledge_type.renamed": TAXONOMY_RENAME,
+  "knowledge_type.updated": TAXONOMY_UPDATE,
+  "knowledge_type.reordered": { order: ["template", "playbook"] },
+  "knowledge_type.archived": TAXONOMY_ARCHIVE,
+  "knowledge_type.restored": TAXONOMY_NAMED,
+  "knowledge_type.deleted": TAXONOMY_NAMED,
   "officer_role.created": TAXONOMY_NAMED,
   "officer_role.renamed": TAXONOMY_RENAME,
   "officer_role.updated": TAXONOMY_UPDATE,
@@ -342,6 +350,47 @@ const SAMPLE_PAYLOADS: { [A in ActivityAction]: ActivityPayloadMap[A] } = {
   },
   "entity.status_changed": { legalName: "Helix Labs GmbH", from: "active", to: "dormant" },
   "entity.type_reassigned": { legalName: "Helix Labs GmbH", from: "GmbH", to: "AG" },
+  "knowledge_item.type_reassigned": {
+    title: "Contract review playbook",
+    from: "Playbook",
+    to: "Article",
+  },
+  "knowledge_item.created": {
+    title: "Contract review playbook",
+    knowledgeType: "Playbook",
+    folder: "Commercial",
+  },
+  "knowledge_item.updated": {
+    title: "Contract review playbook",
+    changed: { folder: { from: "Commercial", to: "Corporate" } },
+  },
+  "knowledge_item.published": { title: "Contract review playbook" },
+  "knowledge_item.unpublished": { title: "Contract review playbook" },
+  "knowledge_item.archived": {
+    title: "Contract review playbook",
+    replacedBy: "Current contract review playbook",
+  },
+  "knowledge_item.restored": { title: "Contract review playbook" },
+  "knowledge_folder.created": {
+    folderId: "folder-1",
+    name: "Commercial",
+    parentName: null,
+  },
+  "knowledge_folder.renamed": {
+    folderId: "folder-1",
+    name: "Contracts",
+    previousName: "Commercial",
+  },
+  "knowledge_folder.moved": {
+    folderId: "folder-1",
+    name: "Contracts",
+    parentName: "Playbooks",
+  },
+  "knowledge_folder.reordered": {
+    parentName: null,
+    folderIds: ["folder-2", "folder-1"],
+  },
+  "knowledge_folder.deleted": { folderId: "folder-1", name: "Contracts" },
   "entity.confidentiality_set": { legalName: "Helix Labs GmbH" },
   "entity.confidentiality_cleared": { legalName: "Helix Labs GmbH" },
   "entity_grant.added": {

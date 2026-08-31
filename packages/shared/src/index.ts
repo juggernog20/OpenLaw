@@ -320,8 +320,27 @@ export const MAX_ENVELOPE_REASON_LENGTH = 1000;
  * app names it on every read. One typo in either copy would silently
  * save views nobody's list ever asks for.
  */
-export const LIST_VIEW_SURFACES = ["contracts", "matters", "documents", "entities"] as const;
+export const LIST_VIEW_SURFACES = [
+  "contracts",
+  "matters",
+  "documents",
+  "entities",
+  "knowledge",
+] as const;
 export type ListViewSurface = (typeof LIST_VIEW_SURFACES)[number];
+
+/** M28/3's sortable Knowledge library columns. */
+export const KNOWLEDGE_LIST_SORT_KEYS = [
+  "title",
+  "type",
+  "state",
+  "audience",
+  "folder",
+  "author",
+  "created",
+  "updated",
+] as const;
+export type KnowledgeListSortKey = (typeof KNOWLEDGE_LIST_SORT_KEYS)[number];
 
 /** M27/9's sortable Entity registry columns, shared across the HTTP
  * contract and the managed-table catalogue. */

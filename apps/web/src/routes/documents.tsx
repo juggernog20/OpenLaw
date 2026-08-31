@@ -88,7 +88,7 @@ function mirrorSearch(navigate: NavigateFunction, search: string) {
 
 function listQuery(layout: Layout): DocumentsQuery {
   const filters = documentRepositoryFilters(layout.filters);
-  const record = documentRecordReference(filters.record);
+  const record = documentRecordReference(filters.record, filters.owner || undefined);
   const uploadedFrom = civilToLocalDate(filters.uploadedFrom) ? filters.uploadedFrom : "";
   const uploadedTo = civilToLocalDate(filters.uploadedTo) ? filters.uploadedTo : "";
   return {
@@ -136,9 +136,20 @@ function layoutFromSearch(base: Layout, search: string): { layout: Layout; fromU
 
   const filters: Layout["filters"] = {};
   const owner = params.get("owner");
-  if (owner === "contract" || owner === "matter" || owner === "entity") filters.owner = owner;
+  if (
+    owner === "contract" ||
+    owner === "matter" ||
+    owner === "entity" ||
+    owner === "knowledge_item"
+  )
+    filters.owner = owner;
   const record = params.get("record") ?? "";
-  if (documentRecordReference(record)) {
+  if (
+    documentRecordReference(
+      record,
+      documentRepositoryFilters({ owner: owner ?? "" }).owner || undefined,
+    )
+  ) {
     filters.record = record;
     const folder = params.get("folder");
     if (folder) filters.folder = folder;
@@ -311,7 +322,7 @@ function DocumentsPageState() {
     const next = { ...layout.filters, [key]: value };
     if (key === "record") next.folder = "";
     if (key === "owner" && value) {
-      const record = documentRecordReference(filters.record);
+      const record = documentRecordReference(filters.record, filters.owner || undefined);
       if (record && record.entityType !== value) {
         next.record = "";
         next.folder = "";

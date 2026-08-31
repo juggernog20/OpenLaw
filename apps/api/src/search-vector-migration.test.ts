@@ -256,7 +256,7 @@ async function sourceRows(
       )
     : sql.raw("");
   const withoutLaterDocumentColumns = migrated
-    ? sql.raw(" - 'search_vector' - 'entity_id'")
+    ? sql.raw(" - 'search_vector' - 'entity_id' - 'knowledge_item_id'")
     : sql.raw("");
   const tableNames = SEARCH_TABLE_NAMES.map((name) => sql`${name}`);
   const result = await db.execute<{ table_name: string; rows: unknown[] }>(sql`

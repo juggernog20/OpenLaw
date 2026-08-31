@@ -33,9 +33,11 @@
  * nothing. The ST13 row renders it without its scheme.
  */
 
-import { index, integer, pgTable, text, timestamp } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
+import { check, index, integer, pgTable, text, timestamp } from "drizzle-orm/pg-core";
 import { requestTypes } from "./request-types.js";
 import { uuidPk } from "./helpers.js";
+import { knowledgeItems } from "./knowledge-items.js";
 
 export const intakeLinks = pgTable(
   "intake_links",
@@ -43,8 +45,12 @@ export const intakeLinks = pgTable(
     id: uuidPk(),
     /** What the panel reads as, for example "NDA FAQ — when you don't need legal". */
     label: text("label").notNull(),
-    /** The absolute http/https address, as entered. */
-    url: text("url").notNull(),
+    /** The external target, or NULL when this points at Knowledge. */
+    url: text("url"),
+    /** The internal target, or NULL for an external URL. */
+    knowledgeItemId: text("knowledge_item_id").references(() => knowledgeItems.id, {
+      onDelete: "set null",
+    }),
     /** Where the link shows: NULL = the portal home panel, a request
      * type = that type's form only (INT-004). */
     requestTypeId: text("request_type_id").references(() => requestTypes.id, {
@@ -64,6 +70,11 @@ export const intakeLinks = pgTable(
     // The portal reads one placement's panel at a time (M20), and the
     // cascade delete looks the same way up.
     index("intake_links_request_type_id_idx").on(table.requestTypeId),
+    index("intake_links_knowledge_item_id_idx").on(table.knowledgeItemId),
+    check(
+      "intake_links_target_check",
+      sql`num_nonnulls(${table.url}, ${table.knowledgeItemId}) = 1`,
+    ),
   ],
 );
 

@@ -5,9 +5,9 @@
  * per event group, one switch per channel, saved the moment it is
  * flipped (SET-003 immediate apply).
  *
- * **One grid, two panes** (M20/9). The API answers all five of NOT-002's
+ * **One grid, two panes** (M20/9). The API answers all six notification
  * groups, and which of them a surface draws is the surface's business:
- * Personal → Notifications draws the four staff groups, and the portal's
+ * Personal → Notifications draws the staff groups, and the portal's
  * settings surface draws `requester_events` alone. So the caller passes
  * the order it wants and this module owns everything else — the copy,
  * the layout, the save chain, and what a refused write does.
@@ -45,7 +45,7 @@ import { Switch } from "./ui/switch";
 export type GroupPreference =
   paths["/api/v1/me/notification-preferences"]["get"]["responses"]["200"]["content"]["application/json"]["groups"][number];
 
-/** One of NOT-002's five groups, as the model names it. */
+/** One of the six notification groups, as the model names it. */
 export type EventGroup = GroupPreference["eventGroup"];
 
 /**
@@ -99,6 +99,16 @@ export const GROUP_COPY: Record<
     detail: defineMessage({
       id: "settings.notifications.group.requests.detail",
       defaultMessage: "New intake requests arriving in the Inbox.",
+    }),
+  },
+  knowledge: {
+    label: defineMessage({
+      id: "settings.notifications.group.knowledge",
+      defaultMessage: "Knowledge items",
+    }),
+    detail: defineMessage({
+      id: "settings.notifications.group.knowledge.detail",
+      defaultMessage: "Knowledge items included in your daily briefing.",
     }),
   },
   // Group 5, drawn on the portal alone (NOT-001). The sentence names
@@ -241,10 +251,13 @@ export function useNotificationPreferences(initial: GroupPreference[]): Preferen
 export function NotificationSwitchGrid({
   order,
   state,
+  emailOnlyGroups = [],
 }: Readonly<{
   /** Which groups this pane draws, in the order it draws them. */
   order: readonly EventGroup[];
   state: PreferenceState;
+  /** Briefing sections that have no per-publication bell channel. */
+  emailOnlyGroups?: readonly EventGroup[];
 }>) {
   const choiceOf = (group: EventGroup): GroupPreference =>
     // The API answers every group, so the fallback is unreachable. It is
@@ -282,6 +295,7 @@ export function NotificationSwitchGrid({
 
       {order.map((group) => {
         const choice = choiceOf(group);
+        const emailOnly = emailOnlyGroups.includes(group);
         const labelId = `notification-group-${group}`;
         const detailId = `${labelId}-detail`;
         return (
@@ -298,25 +312,33 @@ export function NotificationSwitchGrid({
               </span>
             </div>
             <div className="flex gap-6 @lg/prefs:gap-0">
-              {CHANNELS.map((channel) => (
-                <span key={channel.id} className="flex items-center gap-2 @lg/prefs:w-22.5">
-                  {/* Visible while the columns are stacked, and the
+              {CHANNELS.map((channel) =>
+                emailOnly && channel.id === "in_app" ? (
+                  <span
+                    key={channel.id}
+                    aria-hidden="true"
+                    className="hidden @lg/prefs:block @lg/prefs:w-22.5"
+                  />
+                ) : (
+                  <span key={channel.id} className="flex items-center gap-2 @lg/prefs:w-22.5">
+                    {/* Visible while the columns are stacked, and the
                       switch's own name once the heads carry it — in both
                       states it is what names the control. */}
-                  <span
-                    id={`${labelId}-${channel.id}`}
-                    className="text-xs text-muted @lg/prefs:sr-only"
-                  >
-                    <FormattedMessage {...channel.label} />
+                    <span
+                      id={`${labelId}-${channel.id}`}
+                      className="text-xs text-muted @lg/prefs:sr-only"
+                    >
+                      <FormattedMessage {...channel.label} />
+                    </span>
+                    <Switch
+                      checked={choice[channel.key]}
+                      onCheckedChange={(next) => state.commit(group, channel, next)}
+                      aria-labelledby={`${labelId} ${labelId}-${channel.id}`}
+                      aria-describedby={detailId}
+                    />
                   </span>
-                  <Switch
-                    checked={choice[channel.key]}
-                    onCheckedChange={(next) => state.commit(group, channel, next)}
-                    aria-labelledby={`${labelId} ${labelId}-${channel.id}`}
-                    aria-describedby={detailId}
-                  />
-                </span>
-              ))}
+                ),
+              )}
             </div>
           </div>
         );
@@ -327,6 +349,18 @@ export function NotificationSwitchGrid({
           id="settings.notifications.caption"
           defaultMessage="Email off keeps the bell items coming. In-app off turns the group off entirely, email included."
         />
+        {/* The two-switch sentence is false for an email-only group —
+            there are no bell items to keep coming — so the caption says
+            so whenever one is drawn. */}
+        {emailOnlyGroups.length > 0 ? (
+          <>
+            {" "}
+            <FormattedMessage
+              id="settings.notifications.captionEmailOnly"
+              defaultMessage="A group with no in-app switch reaches you by email only; its one switch is the whole choice."
+            />
+          </>
+        ) : null}
       </p>
     </div>
   );
