@@ -10,6 +10,9 @@ import {
   contractStatuses,
   contractTasks,
   contractTeam,
+  entities,
+  entityObligations,
+  entityTypes,
   eq,
   matters,
   matterKeyDates,
@@ -17,6 +20,8 @@ import {
   matterTasks,
   matterTeam,
   matterTypes,
+  requests,
+  requestTypes,
   sql,
   users,
 } from "@openlaw/db";
@@ -103,6 +108,32 @@ interface DatesSection {
   }>;
 }
 
+interface ObligationsSection {
+  type: "obligations";
+  total: number;
+  rows: Array<{
+    id: string;
+    label: string;
+    dueDate: string;
+    isOverdue: boolean;
+    isUnassigned: boolean;
+    entity: { id: string; legalName: string };
+  }>;
+}
+
+interface InboxSection {
+  type: "inbox";
+  total: number;
+  rows: Array<{
+    id: string;
+    number: number;
+    summary: string;
+    urgency: "low" | "medium" | "high" | "critical";
+    requester: { id: string; displayName: string };
+    createdAt: string;
+  }>;
+}
+
 let harness: TestHarness;
 const cookies = new Map<string, Record<string, string>>();
 const userIds = new Map<string, string>();
@@ -178,7 +209,11 @@ async function home(fixture: { email: string }) {
     cookies: as(fixture),
   });
   expect(response.statusCode, response.body).toBe(200);
-  return response.json() as { sections: Array<ApprovalSection | TaskSection | DatesSection> };
+  return response.json() as {
+    sections: Array<
+      ApprovalSection | TaskSection | DatesSection | ObligationsSection | InboxSection
+    >;
+  };
 }
 
 function tasksIn(result: Awaited<ReturnType<typeof home>>): TaskSection | undefined {
@@ -193,6 +228,16 @@ function approvalsIn(result: Awaited<ReturnType<typeof home>>): ApprovalSection 
 
 function datesIn(result: Awaited<ReturnType<typeof home>>): DatesSection | undefined {
   return result.sections.find((section): section is DatesSection => section.type === "dates");
+}
+
+function obligationsIn(result: Awaited<ReturnType<typeof home>>): ObligationsSection | undefined {
+  return result.sections.find(
+    (section): section is ObligationsSection => section.type === "obligations",
+  );
+}
+
+function inboxIn(result: Awaited<ReturnType<typeof home>>): InboxSection | undefined {
+  return result.sections.find((section): section is InboxSection => section.type === "inbox");
 }
 
 function plusDays(civilDate: string, days: number): string {
@@ -662,5 +707,167 @@ describe("GET /api/v1/home", () => {
       ],
     });
     expect(datesIn(await home(CONTRIBUTOR))).toBeUndefined();
+  });
+
+  it("shows reachable open obligations assigned to the viewer and the Administrator fallback", async () => {
+    const entityType = await harness.db.select({ id: entityTypes.id }).from(entityTypes).limit(1);
+    const entityTypeId = entityType[0]!.id;
+    const today = new Date().toISOString().slice(0, 10);
+    await harness.db.insert(entities).values([
+      {
+        id: "home-obligations-reachable",
+        legalName: "Alderidge Holdings Ltd",
+        entityTypeId,
+      },
+      {
+        id: "home-obligations-walled",
+        legalName: "Confidential Acquisition Vehicle",
+        entityTypeId,
+        isConfidential: true,
+      },
+    ]);
+    await harness.db.insert(entityObligations).values([
+      {
+        id: "home-obligation-overdue",
+        entityId: "home-obligations-reachable",
+        label: "Annual return",
+        nextDueOn: plusDays(today, -3),
+        assigneeId: idOf(APPROVER),
+      },
+      {
+        id: "home-obligation-due-today",
+        entityId: "home-obligations-reachable",
+        label: "Licence renewal",
+        nextDueOn: today,
+        assigneeId: idOf(APPROVER),
+      },
+      {
+        id: "home-obligation-next",
+        entityId: "home-obligations-reachable",
+        label: "Registered agent renewal",
+        nextDueOn: plusDays(today, 4),
+        assigneeId: idOf(APPROVER),
+      },
+      {
+        id: "home-obligation-capped",
+        entityId: "home-obligations-reachable",
+        label: "Further filing",
+        nextDueOn: plusDays(today, 8),
+        assigneeId: idOf(APPROVER),
+      },
+      {
+        id: "home-obligation-completed",
+        entityId: "home-obligations-reachable",
+        label: "Already filed",
+        nextDueOn: plusDays(today, -10),
+        assigneeId: idOf(APPROVER),
+        completedOn: plusDays(today, -9),
+      },
+      {
+        id: "home-obligation-unassigned",
+        entityId: "home-obligations-reachable",
+        label: "Unowned filing",
+        nextDueOn: plusDays(today, 1),
+      },
+      {
+        id: "home-obligation-walled-row",
+        entityId: "home-obligations-walled",
+        label: "Secret filing",
+        nextDueOn: plusDays(today, -20),
+        assigneeId: idOf(APPROVER),
+      },
+    ]);
+
+    const memberSection = obligationsIn(await home(APPROVER));
+    expect(memberSection).toMatchObject({ type: "obligations", total: 4 });
+    expect(memberSection!.rows.map((row) => row.label)).toEqual([
+      "Annual return",
+      "Licence renewal",
+      "Registered agent renewal",
+    ]);
+    expect(memberSection!.rows[0]).toMatchObject({ isOverdue: true, isUnassigned: false });
+    expect(memberSection!.rows.slice(1).every((row) => !row.isOverdue)).toBe(true);
+    expect(
+      memberSection!.rows.every(
+        (row) => row.entity.legalName !== "Confidential Acquisition Vehicle",
+      ),
+    ).toBe(true);
+
+    expect(obligationsIn(await home(OTHER))).toBeUndefined();
+    expect(obligationsIn(await home(CONTRIBUTOR))).toBeUndefined();
+    expect(obligationsIn(await home(ADMIN))).toMatchObject({
+      type: "obligations",
+      total: 1,
+      rows: [{ label: "Unowned filing", isUnassigned: true }],
+    });
+  });
+
+  it("reports the Member+ Inbox in its urgency-then-age order and omits it elsewhere", async () => {
+    const requestType = await harness.db
+      .select({ id: requestTypes.id })
+      .from(requestTypes)
+      .limit(1);
+    const requestTypeId = requestType[0]!.id;
+    const requesterId = idOf(REQUESTER);
+    await harness.db.insert(requests).values([
+      {
+        requestTypeId,
+        requesterId,
+        summary: "Critical oldest",
+        urgency: "critical",
+        createdAt: new Date("2026-08-01T09:00:00Z"),
+      },
+      {
+        requestTypeId,
+        requesterId,
+        summary: "Critical newer",
+        urgency: "critical",
+        createdAt: new Date("2026-08-02T09:00:00Z"),
+      },
+      {
+        requestTypeId,
+        requesterId,
+        summary: "High oldest",
+        urgency: "high",
+        createdAt: new Date("2026-07-01T09:00:00Z"),
+      },
+      {
+        requestTypeId,
+        requesterId,
+        summary: "Medium request",
+        urgency: "medium",
+        createdAt: new Date("2026-06-01T09:00:00Z"),
+      },
+      {
+        requestTypeId,
+        requesterId,
+        summary: "Low request",
+        urgency: "low",
+        createdAt: new Date("2026-05-01T09:00:00Z"),
+      },
+      {
+        requestTypeId,
+        requesterId,
+        summary: "Already resolved",
+        urgency: "critical",
+        status: "resolved",
+        createdAt: new Date("2026-01-01T09:00:00Z"),
+      },
+    ]);
+
+    for (const viewer of [ADMIN, APPROVER]) {
+      const section = inboxIn(await home(viewer));
+      expect(section).toMatchObject({ type: "inbox", total: 5 });
+      expect(section!.rows.map((row) => row.summary)).toEqual([
+        "Critical oldest",
+        "Critical newer",
+        "High oldest",
+      ]);
+      expect(section!.rows[0]).toMatchObject({
+        urgency: "critical",
+        requester: { id: requesterId, displayName: REQUESTER.displayName },
+      });
+    }
+    expect(inboxIn(await home(CONTRIBUTOR))).toBeUndefined();
   });
 });

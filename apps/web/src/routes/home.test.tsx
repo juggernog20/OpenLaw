@@ -136,6 +136,45 @@ const datesSection = {
   ],
 } as const;
 
+const obligationsSection = {
+  type: "obligations",
+  total: 6,
+  rows: [
+    {
+      id: "obligation-1",
+      label: "Delaware annual report",
+      dueDate: "2000-01-01",
+      isOverdue: true,
+      isUnassigned: false,
+      entity: { id: "entity-1", legalName: "Alderidge Holdings Ltd" },
+    },
+    {
+      id: "obligation-2",
+      label: "Trade licence renewal",
+      dueDate: "2099-09-30",
+      isOverdue: false,
+      isUnassigned: true,
+      entity: { id: "entity-2", legalName: "Alderidge MENA Ltd" },
+    },
+  ],
+} as const;
+
+const inboxSection = {
+  type: "inbox",
+  total: 5,
+  rows: [
+    {
+      id: "request-1",
+      number: 1042,
+      summary: "Data processing addendum review",
+      urgency: "high",
+      requestType: { id: "type-1", displayName: "Sales" },
+      requester: { id: "user-1", displayName: "Priya Nair" },
+      createdAt: "2026-08-28T09:00:00.000Z",
+    },
+  ],
+} as const;
+
 describe("Home", () => {
   it("renders the loader's Approvals card and links each row to the Contract section", async () => {
     stubApi({
@@ -245,5 +284,55 @@ describe("Home", () => {
 
     const expiry = within(card).getByText("Current term expires");
     expect(expiry.closest("a")).toHaveAttribute("href", "/contracts/43/key-dates");
+  });
+
+  it("renders Entity obligations with the severe and unassigned markers", async () => {
+    stubApi({
+      signedIn: MEMBER,
+      extra: (call) =>
+        call.url.pathname === "/api/v1/home" && call.method === "GET"
+          ? json(200, { sections: [obligationsSection] })
+          : undefined,
+    });
+    renderAt("/");
+
+    const card = await screen.findByRole("region", { name: "Entity obligations" });
+    expect(within(card).getByText("6")).toBeInTheDocument();
+    expect(within(card).getByRole("link", { name: /Delaware annual report/ })).toHaveAttribute(
+      "href",
+      "/entities/entity-1/obligations",
+    );
+    expect(within(card).getByText("Jan 1, 2000")).toHaveClass(
+      "bg-status-severe-bg",
+      "text-status-severe-fg",
+    );
+    expect(within(card).getByText("Unassigned")).toBeInTheDocument();
+    expect(within(card).getByRole("link", { name: "View all 6" })).toHaveAttribute(
+      "href",
+      "/entities",
+    );
+  });
+
+  it("renders Inbox pressure with Request rows and routes triage through the Inbox", async () => {
+    stubApi({
+      signedIn: MEMBER,
+      extra: (call) =>
+        call.url.pathname === "/api/v1/home" && call.method === "GET"
+          ? json(200, { sections: [inboxSection] })
+          : undefined,
+    });
+    renderAt("/");
+
+    const card = await screen.findByRole("region", { name: "Inbox" });
+    expect(within(card).getByText("5")).toBeInTheDocument();
+    expect(
+      within(card).getByRole("link", { name: /Data processing addendum review/ }),
+    ).toHaveAttribute("href", "/inbox/1042");
+    expect(within(card).getByText(/R-1042 · Sales · Priya Nair/)).toBeInTheDocument();
+    expect(within(card).getByText("High urgency")).toBeInTheDocument();
+    expect(within(card).getByRole("link", { name: "View all 5" })).toHaveAttribute(
+      "href",
+      "/inbox",
+    );
   });
 });

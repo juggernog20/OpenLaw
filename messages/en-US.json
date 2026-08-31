@@ -3419,6 +3419,27 @@
   "home.dates.title": {
     "defaultMessage": "Dates approaching"
   },
+  "home.inbox.request": {
+    "defaultMessage": "{reference} · {requestType} · {requester}"
+  },
+  "home.inbox.title": {
+    "defaultMessage": "Inbox"
+  },
+  "home.inbox.urgency": {
+    "defaultMessage": "{urgency} urgency"
+  },
+  "home.obligations.entityDue": {
+    "defaultMessage": "{entity} · Due {date}"
+  },
+  "home.obligations.overdue": {
+    "defaultMessage": "Overdue"
+  },
+  "home.obligations.title": {
+    "defaultMessage": "Entity obligations"
+  },
+  "home.obligations.unassigned": {
+    "defaultMessage": "Unassigned"
+  },
   "home.section.viewAll": {
     "defaultMessage": "View all {count}"
   },
