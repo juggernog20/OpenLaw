@@ -3389,11 +3389,29 @@
   "format.deadline.withQualifier": {
     "defaultMessage": "{date} ({qualifier})"
   },
-  "home.placeholder": {
-    "defaultMessage": "Modules arrive with their own builds."
+  "home.approvals.awaiting": {
+    "defaultMessage": "Awaiting you"
+  },
+  "home.approvals.requestedBy": {
+    "defaultMessage": "Requested by {name} · Contract C-{number}"
+  },
+  "home.approvals.title": {
+    "defaultMessage": "Approvals waiting on you"
+  },
+  "home.section.viewAll": {
+    "defaultMessage": "View all {count}"
   },
   "home.title": {
     "defaultMessage": "Home"
+  },
+  "home.welcome.body": {
+    "defaultMessage": "Nothing is waiting on you. Approvals, Tasks, dates, obligations, and Requests will appear here when they need you."
+  },
+  "home.welcome.destinations": {
+    "defaultMessage": "Go to a destination"
+  },
+  "home.welcome.title": {
+    "defaultMessage": "Welcome to OpenLaw"
   },
   "inbox.assign": {
     "defaultMessage": "Assign"

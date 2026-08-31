@@ -104,6 +104,9 @@ export const contractApprovals = pgTable(
     uniqueIndex("contract_approvals_pending_idx")
       .on(table.contractId, table.approverId)
       .where(sql`status = 'pending'`),
+    /** M29's cross-record read: one person's unresolved asks. Status is
+     * beside the approver so decided history is skipped in the index. */
+    index("contract_approvals_approver_status_idx").on(table.approverId, table.status),
     /**
      * `source` and `status` hold only the values CTR-012 defines.
      *
