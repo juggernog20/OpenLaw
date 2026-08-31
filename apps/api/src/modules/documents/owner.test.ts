@@ -7,23 +7,37 @@ import { parseDocumentOwnerReference } from "./owner.js";
 
 describe("resolveDocumentOwner", () => {
   it("names the one owner a document has", () => {
-    expect(resolveDocumentOwner({ contract: "c1", matter: null, entity: null })).toEqual({
+    expect(
+      resolveDocumentOwner({ contract: "c1", matter: null, entity: null, knowledge_item: null }),
+    ).toEqual({
       kind: "contract",
       value: "c1",
     });
-    expect(resolveDocumentOwner({ contract: undefined, matter: "m1", entity: null })).toEqual({
+    expect(
+      resolveDocumentOwner({
+        contract: undefined,
+        matter: "m1",
+        entity: null,
+        knowledge_item: null,
+      }),
+    ).toEqual({
       kind: "matter",
       value: "m1",
     });
   });
 
   it("refuses a row with no owner or more than one", () => {
-    expect(() => resolveDocumentOwner({ contract: null, matter: null, entity: null })).toThrow(
-      /exactly one owning record/,
-    );
-    expect(() => resolveDocumentOwner({ contract: "c1", matter: "m1", entity: null })).toThrow(
-      /exactly one owning record/,
-    );
+    expect(() =>
+      resolveDocumentOwner({ contract: null, matter: null, entity: null, knowledge_item: null }),
+    ).toThrow(/exactly one owning record/);
+    expect(() =>
+      resolveDocumentOwner({
+        contract: "c1",
+        matter: "m1",
+        entity: null,
+        knowledge_item: null,
+      }),
+    ).toThrow(/exactly one owning record/);
   });
 });
 
@@ -49,5 +63,11 @@ describe("parseDocumentOwnerReference", () => {
     // An id that merely starts with an owner letter is still an id.
     expect(parseDocumentOwnerReference("Cabinet").owner.kind).toBe("entity");
     expect(parseDocumentOwnerReference("M-").owner.kind).toBe("entity");
+  });
+
+  it("uses the owner hint for an opaque Knowledge item id", () => {
+    const item = parseDocumentOwnerReference("knowledge-1", "knowledge_item");
+    expect(item.owner.kind).toBe("knowledge_item");
+    expect(item.id).toBe("knowledge-1");
   });
 });

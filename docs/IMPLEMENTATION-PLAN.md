@@ -41,7 +41,7 @@ document is the map, not the territory.
 
 ## Where we are
 
-**Arc 6 is complete: M27 turns the Entity registry into the corporate record.** A subsidiary now carries Officers, Registrations, Holdings, Obligations, statutory Documents, and query-derived Contract and Matter roll-ups. The Entities destination opens on the compliance calendar, with the DES-046 registry and the ownership chart beside it; the DD-014 gate reaches every view and reference. M27 also extends the M26 Documents destination to Entity-owned Documents. **M26 makes the legal file layer browsable from one Documents destination.** A reader can start with a Counterparty, format, Version kind, date, uploader, or owning-record filter, then open the matching current Version on its Contract or Matter without knowing that owner first. Recent means recently uploaded, and the flat managed list carries saved views while DD-014 removes unreachable rows and filter options before paging. **M25 opened Arc 6 with one global search across the records and the words inside their paper.** Pressing `/` opens the ranked, viewer-scoped answer; a Document hit names its owning record and opens the matching Version with the PDF find bar already filled. Stored generated vectors keep record edits and extracted text indexed in the same write, while DD-014's existing reach predicates stay ahead of ranking and paging. **Arcs 4 and 5 are complete: M24 adds reusable Matter templates to the complete Matter workspace.** Named templates can pre-fill Matter defaults and custom fields, then create relative Tasks and Key dates through either the direct or Intake creation path. M23 supplied the work surfaces around the M22 record: Key dates join the active deadline system; Tasks stay a lightweight internal checklist; parent, child, and flat relationships remain navigational; Contracts link without losing their standalone identity; reached Contributors can edit business Fields and supply supporting Documents; and Closing is an advisory signal that leaves the record writable. Arc 1 is done: the monorepo and CI,
+**Arc 6 is complete: M28 gives the legal team's know-how a file-first Knowledge destination and a requester-facing route out of Intake.** A dropped file creates one draft Knowledge Item with its Document pinned as primary. Member+ publishes it, marks it portal-readable, and an Administrator places it on the portal home as an internal deflection link. The portal article reads the primary Document first and optional Markdown guidance last. Nested Knowledge Folders organize items without adding Document folders, the managed list and search cover both item text and owned paper, the Documents repository gains its fourth owner, and the morning briefing gains its Knowledge section. **M27 turns the Entity registry into the corporate record.** A subsidiary now carries Officers, Registrations, Holdings, Obligations, statutory Documents, and query-derived Contract and Matter roll-ups. The Entities destination opens on the compliance calendar, with the DES-046 registry and the ownership chart beside it; the DD-014 gate reaches every view and reference. M27 also extends the M26 Documents destination to Entity-owned Documents. **M26 makes the legal file layer browsable from one Documents destination.** A reader can start with a Counterparty, format, Version kind, date, uploader, or owning-record filter, then open the matching current Version on its Contract or Matter without knowing that owner first. Recent means recently uploaded, and the flat managed list carries saved views while DD-014 removes unreachable rows and filter options before paging. **M25 opened Arc 6 with one global search across the records and the words inside their paper.** Pressing `/` opens the ranked, viewer-scoped answer; a Document hit names its owning record and opens the matching Version with the PDF find bar already filled. Stored generated vectors keep record edits and extracted text indexed in the same write, while DD-014's existing reach predicates stay ahead of ranking and paging. **Arcs 4 and 5 are complete: M24 adds reusable Matter templates to the complete Matter workspace.** Named templates can pre-fill Matter defaults and custom fields, then create relative Tasks and Key dates through either the direct or Intake creation path. M23 supplied the work surfaces around the M22 record: Key dates join the active deadline system; Tasks stay a lightweight internal checklist; parent, child, and flat relationships remain navigational; Contracts link without losing their standalone identity; reached Contributors can edit business Fields and supply supporting Documents; and Closing is an advisory signal that leaves the record writable. Arc 1 is done: the monorepo and CI,
 the authentication chain, the Compose stack a deployer actually runs, the themed app shell, and the
 `/settings` destination with its Personal and Organization rails. Arc 2 is done too: the
 configurable types and statuses, the Entities registry, the contract record, the conversation on a
@@ -594,13 +594,24 @@ all of it findable.
   - The close journey proves the full demo sentence against fresh Compose images; the retained upgrade gate carries a populated pre-M27 Entity and its Entity-referencing Contracts through the M27 migration, then proves the Entity lists and opens with empty Officers, Registrations, Holdings, and Obligations
   - _Decisions:_ ENT-001 to ENT-009, DD-014, DD-017, DD-019, DOC-006, DOC-008, NOT-002, TECH-023, TECH-025, DES-046, DES-067 · _Issues:_ #573–#582 · _Parent:_ #572
 
-- [ ] **M28 — Knowledge**
-      _Demo:_ Publish a playbook, mark it portal-readable, and watch it appear as a deflection link on the
-      portal submission form.
-  - Knowledge items as one typed entity: text body plus owned documents
-  - Draft / published with edit-in-place; Member+ authoring
-  - Nested folders, blank start; the legal-only default with a portal-readable flag
-  - _Decisions:_ KNW-001 to KNW-004, INT-004
+- [x] **M28 — Knowledge**
+      _Demo:_ Drop a Word playbook to create the Knowledge Item, publish it, mark it portal-readable,
+      place it in "Before you submit…" on the portal home, sign in to the portal, and open it there.
+  - One typed, file-first Knowledge Item with optional Markdown guidance, owned Documents and Version
+    chains, an explicit primary Document, and one-draft-per-file drop creation
+  - Member+ edit-in-place authoring with named publish, unpublish, archive, and restore acts; nested
+    blank-start Knowledge Folders; Legal Only by default and portal-readable by choice
+  - The fifth DES-046 managed-list catalogue, global search, and the fourth Documents repository owner;
+    the shared Documents card mounts without Document folders
+  - Internal or external deflection targets; the portal article applies one published, portal-readable,
+    live gate to the item and its current-Version downloads
+  - The fifth morning-briefing section lists newly published Knowledge Items, excludes the author, and
+    has its own email toggle
+  - The close journey proves the full demo sentence against fresh Compose images; the axe sweep covers
+    the destination, record, and portal article; the retained upgrade gate carries pre-M28 Documents and
+    external deflection links through migration `0083_wide_inhumans` and reads them back unchanged
+  - _Decisions:_ KNW-001 to KNW-004, INT-004, DOC-006, DOC-008, NOT-008, TECH-023, TECH-025,
+    DES-046, DES-068 · _Issues:_ #599–#605 · _Parent:_ #598
 
 ---
 

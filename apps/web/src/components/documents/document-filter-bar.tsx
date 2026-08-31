@@ -34,6 +34,7 @@ const MESSAGES = defineMessages({
   ownerContracts: { id: "documents.filter.owner.contracts", defaultMessage: "Contracts" },
   ownerMatters: { id: "documents.filter.owner.matters", defaultMessage: "Matters" },
   ownerEntities: { id: "documents.filter.owner.entities", defaultMessage: "Entities" },
+  ownerKnowledge: { id: "documents.filter.owner.knowledge", defaultMessage: "Knowledge" },
   record: { id: "documents.filter.record", defaultMessage: "Record" },
   recordPlaceholder: {
     id: "documents.filter.record.placeholder",
@@ -105,8 +106,15 @@ export function DocumentFilterBar({
   const listRef = useRef<HTMLUListElement>(null);
   const [recordDraft, setRecordDraft] = useState<string | null>(null);
   const selectedRecord = options.records.find((record) => record.reference === filters.record);
+  // One derived owner for the folder read and the folder select's
+  // guard: the owner filter can sit on "All" while the picked record is
+  // a Knowledge Item, and the two must agree that such a record has no
+  // Document folders.
+  const derivedOwner = filters.owner || selectedRecord?.kind;
   const selectedLabel =
-    selectedRecord?.kind === "entity" ? selectedRecord.title : selectedRecord?.reference;
+    selectedRecord?.kind === "entity" || selectedRecord?.kind === "knowledge_item"
+      ? selectedRecord.title
+      : selectedRecord?.reference;
   const recordText = recordDraft ?? selectedLabel ?? filters.record;
   const [searchOpen, setSearchOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
@@ -122,7 +130,7 @@ export function DocumentFilterBar({
       : options.records
           .filter((record) => filters.owner === "" || record.kind === filters.owner)
           .filter((record) =>
-            `${record.kind === "entity" ? record.title : record.reference} ${record.title}`
+            `${record.kind === "entity" || record.kind === "knowledge_item" ? record.title : record.reference} ${record.title}`
               .toLocaleLowerCase()
               .includes(query),
           )
@@ -132,7 +140,8 @@ export function DocumentFilterBar({
   const rowId = (index: number) => `${listboxId}-row-${index}`;
 
   useEffect(() => {
-    const record = documentRecordReference(filters.record);
+    if (derivedOwner === "knowledge_item") return () => undefined;
+    const record = documentRecordReference(filters.record, derivedOwner || undefined);
     let cancelled = false;
     if (!record) return () => undefined;
     void readRecordFolders(record).then((answer) => {
@@ -143,7 +152,7 @@ export function DocumentFilterBar({
     return () => {
       cancelled = true;
     };
-  }, [filters.record]);
+  }, [derivedOwner, filters.record]);
 
   // The arrow keys can walk past the list's foot; the named row has to
   // be in view for a sighted keyboard user, as in the contract picker.
@@ -171,7 +180,9 @@ export function DocumentFilterBar({
           ? MESSAGES.ownerContracts
           : filters.owner === "matter"
             ? MESSAGES.ownerMatters
-            : MESSAGES.ownerEntities,
+            : filters.owner === "entity"
+              ? MESSAGES.ownerEntities
+              : MESSAGES.ownerKnowledge,
       ),
     });
   }
@@ -248,6 +259,7 @@ export function DocumentFilterBar({
     ["contract", MESSAGES.ownerContracts],
     ["matter", MESSAGES.ownerMatters],
     ["entity", MESSAGES.ownerEntities],
+    ["knowledge_item", MESSAGES.ownerKnowledge],
   ] as const;
   return (
     <div className="flex flex-col gap-2">
@@ -344,8 +356,12 @@ export function DocumentFilterBar({
                   }}
                   onMouseMove={() => setActiveIndex(index)}
                 >
-                  {match.kind === "entity" ? match.title : match.reference}
-                  {match.kind === "entity" || match.reference === match.title
+                  {match.kind === "entity" || match.kind === "knowledge_item"
+                    ? match.title
+                    : match.reference}
+                  {match.kind === "entity" ||
+                  match.kind === "knowledge_item" ||
+                  match.reference === match.title
                     ? null
                     : ` · ${match.title}`}
                 </li>
@@ -354,7 +370,7 @@ export function DocumentFilterBar({
           )}
         </label>
 
-        {filters.record && (
+        {filters.record && derivedOwner !== "knowledge_item" && (
           <label className="flex flex-col gap-1 text-xs font-medium text-muted">
             <FormattedMessage {...MESSAGES.folder} />
             <select

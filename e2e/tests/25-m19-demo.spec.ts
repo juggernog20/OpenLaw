@@ -392,7 +392,7 @@ test.describe.serial("M19 demo path", () => {
       await page.getByRole("button", { name: "Add link" }).click();
       const dialog = page.getByRole("dialog", { name: "Add link" });
       await dialog.getByLabel("Label").fill(linkLabel);
-      await dialog.getByLabel("Address").fill(LINK_URL);
+      await dialog.getByLabel("Address", { exact: true }).fill(LINK_URL);
       await dialog.getByLabel("Placement").selectOption({ label: typeName });
       const linked = page.waitForResponse(
         (response) =>

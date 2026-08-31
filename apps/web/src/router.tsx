@@ -20,6 +20,8 @@ import { MattersPage, mattersLoader } from "./routes/matters";
 import { MatterRecordPage, matterRecordLoader } from "./routes/matter-record";
 import { EntitiesPage, entitiesLoader, entitiesShouldRevalidate } from "./routes/entities";
 import { EntityRecordPage, entityRecordLoader } from "./routes/entity-record";
+import { KnowledgePage, knowledgeLoader } from "./routes/knowledge";
+import { KnowledgeRecordPage, knowledgeRecordLoader } from "./routes/knowledge-record";
 import { RouteErrorPage } from "./routes/error-page";
 import { HomePage, homeLoader } from "./routes/home";
 import { InboxPage, inboxLoader } from "./routes/inbox";
@@ -29,6 +31,7 @@ import { LoginPage, loginLoader } from "./routes/login";
 import { PortalHomePage, portalHomeLoader } from "./routes/portal";
 import { PortalRequestFormPage, portalRequestFormLoader } from "./routes/portal-request-form";
 import { PortalRequestPage, portalRequestLoader } from "./routes/portal-request";
+import { PortalKnowledgePage, portalKnowledgeLoader } from "./routes/portal-knowledge";
 import { PortalEntryPage, portalEntryLoader } from "./routes/portal-entry";
 import { PortalSettingsPage, portalSettingsLoader } from "./routes/portal-settings";
 import { SetPasswordPage } from "./routes/set-password";
@@ -74,6 +77,11 @@ import {
   settingsEntitiesIndexLoader,
   settingsEntityTypesLoader,
 } from "./routes/settings-entity-types";
+import {
+  SettingsKnowledgeTypesPage,
+  settingsKnowledgeIndexLoader,
+  settingsKnowledgeTypesLoader,
+} from "./routes/settings-knowledge-types";
 import {
   SettingsEntityTypeEditorPage,
   settingsEntityTypeEditorLoader,
@@ -266,6 +274,24 @@ export const routes: RouteObject[] = [
     hydrateFallbackElement: <></>,
   },
   {
+    path: "/knowledge",
+    loader: knowledgeLoader,
+    element: <KnowledgePage />,
+    errorElement: <RouteErrorPage />,
+    hydrateFallbackElement: <></>,
+  },
+  {
+    path: "/knowledge/:id",
+    loader: knowledgeRecordLoader,
+    element: (
+      <KeyedByParam name="id">
+        <KnowledgeRecordPage />
+      </KeyedByParam>
+    ),
+    errorElement: <RouteErrorPage />,
+    hydrateFallbackElement: <></>,
+  },
+  {
     // SET-004 first-run wizard; its loader admits only an Administrator
     // on an instance whose onboarding is still open.
     path: "/welcome",
@@ -435,6 +461,12 @@ export const routes: RouteObject[] = [
         loader: settingsEntityFieldsLoader,
         element: <SettingsEntityFieldsPage />,
       },
+      { path: "knowledge", loader: settingsKnowledgeIndexLoader, element: <></> },
+      {
+        path: "knowledge/types",
+        loader: settingsKnowledgeTypesLoader,
+        element: <SettingsKnowledgeTypesPage />,
+      },
       {
         // #322: Organization · Notifications — the NOT-004 reminder
         // lead times. Named for what it holds, because the Personal
@@ -486,6 +518,15 @@ export const routes: RouteObject[] = [
       // user (M20/9): NOT-002's group 5 and nothing else, reached from
       // the gear in the portal header.
       { path: "settings", loader: portalSettingsLoader, element: <PortalSettingsPage /> },
+      {
+        path: "knowledge/:id",
+        loader: portalKnowledgeLoader,
+        element: (
+          <KeyedByParam name="id">
+            <PortalKnowledgePage />
+          </KeyedByParam>
+        ),
+      },
       // One request type's form, addressed by the slug the picker
       // links on (INT-002). A slug that names nothing, or names an
       // archived type, lands back on the home — see the loader.

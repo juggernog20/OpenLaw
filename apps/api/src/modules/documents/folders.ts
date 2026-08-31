@@ -225,6 +225,8 @@ function folderScope(owner: FolderOwner): ReturnType<typeof eq> {
       return eq(documentFolders.matterId, owner.value);
     case "entity":
       return eq(documentFolders.entityId, owner.value);
+    case "knowledge_item":
+      throw httpError(400, "Knowledge item Documents do not have Document folders.");
   }
 }
 
@@ -236,6 +238,8 @@ function documentScope(owner: FolderOwner): ReturnType<typeof eq> {
       return eq(documents.matterId, owner.value);
     case "entity":
       return eq(documents.entityId, owner.value);
+    case "knowledge_item":
+      throw httpError(400, "Knowledge item Documents do not have Document folders.");
   }
 }
 
@@ -247,6 +251,8 @@ function folderOwnerValues(owner: FolderOwner) {
       return { matterId: owner.value } as const;
     case "entity":
       return { entityId: owner.value } as const;
+    case "knowledge_item":
+      throw httpError(400, "Knowledge item Documents do not have Document folders.");
   }
 }
 
@@ -258,6 +264,8 @@ function folderReachScope(owner: DocumentOwner, db: Executor, user: Authenticate
       return and(isNotNull(documentFolders.matterId), matterTeamScope(db, user));
     case "entity":
       return and(isNotNull(documentFolders.entityId), entityReachScope(db, user));
+    case "knowledge_item":
+      return sql`false`;
   }
 }
 
@@ -859,6 +867,7 @@ export const documentFoldersRoutes: FastifyPluginAsyncZod = async (app) => {
       contract: row.contractId,
       matter: row.matterId,
       entity: row.entityId,
+      knowledge_item: null,
     });
     let ownerArchivedAt: Date | null;
     switch (owner.kind) {
@@ -871,6 +880,8 @@ export const documentFoldersRoutes: FastifyPluginAsyncZod = async (app) => {
       case "entity":
         ownerArchivedAt = row.entityArchivedAt;
         break;
+      case "knowledge_item":
+        throw new Error("A Document folder cannot belong to a Knowledge item.");
     }
     return {
       id: row.id,
@@ -1002,6 +1013,8 @@ export const documentFoldersRoutes: FastifyPluginAsyncZod = async (app) => {
         return "matter";
       case "entity":
         return "Entity";
+      case "knowledge_item":
+        return "Knowledge item";
     }
   }
 

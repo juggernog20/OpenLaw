@@ -58,6 +58,7 @@ describe("app shell chrome", () => {
       "Contracts",
       "Documents",
       "Entities",
+      "Knowledge",
     ]);
     expect(links[0]).toHaveAttribute("aria-current", "page");
     expect(links[1]).not.toHaveAttribute("aria-current");

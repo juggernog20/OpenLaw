@@ -31,6 +31,12 @@ _None — queue cleared 2026-08-06 (KNW-001 through KNW-005)._
 - **Alternatives considered** — Distinct entities per kind (4× machinery); documents-with-a-flag (no home for non-file knowledge; DOC-002 routed the library here).
 - **Consequences** — `knowledge_items`, `knowledge_types` in SCHEMA.md; DOC-008 owner set complete (matter | contract | entity | knowledge item).
 
+### Built addendum (2026-08-30, M28 close, [#598](https://github.com/juggernog20/OpenLaw/issues/598)) — file-first, one primary Document, drop-to-create, and Markdown guidance
+
+The shipped record is file-first. Dropping one or several files on the Knowledge destination creates one draft Knowledge Item per file, takes each title from its filename, creates its first owned Document and Version, and pins that Document as the item's primary Document. An item may also start without a Document. On a record with several Documents, Member+ may move or clear the primary pin, and the pin must name a live Document that item owns.
+
+The optional `body` stores Markdown source. The editor gives source and preview modes. Rendering uses a fixed React-element allowlist for headings, lists, links, emphasis, and code; it accepts no raw HTML and uses no HTML injection. The body remains guidance beside the files, and the record and portal both read the primary file before the body.
+
 ## KNW-002 — Publishing: Member+ authors, draft/published, edit-in-place
 
 - **Status** — Accepted
@@ -39,12 +45,22 @@ _None — queue cleared 2026-08-06 (KNW-001 through KNW-005)._
 - **Rationale** — At 2–10 people a review queue between the team and its own know-how mostly guarantees an empty library.
 - **Consequences** — `state`, `replaced_by_id` columns. Curator workflow, if ever needed, layers on later.
 
+### Built addendum (2026-08-30, [#603](https://github.com/juggernog20/OpenLaw/issues/603)) — lifecycle acts are named, audited routes
+
+Publishing, unpublishing, archiving, and restoring are actions rather than generic field edits. Each has its own Member+ route and activity verb. The first publish stamps `published_at`; publishing an already-published item does not replace that date. Unpublish returns the item to draft and clears the stamp. Archive accepts an optional live replacement and restore removes the archive stamp. Audience remains an ordinary field write because it describes who may read a published item rather than changing the item's lifecycle.
+
+A change that removes portal reach is allowed even when intake links point at the item. The record UI names the number of affected links before unpublishing or choosing Legal only, but the settings rows remain intact. This preserves the Administrator's configuration for repair instead of silently deleting it as a side effect of an author's lifecycle decision.
+
 ## KNW-003 — Organization: nested folders, blank-start
 
 - **Status** — Accepted
 - **Date** — 2026-08-06
 - **Decision** — `knowledge_folders` (nested, DOC-006/011 pattern at knowledge scope — organizing _items_, not documents) + `knowledge_items.folder_id`. **Blank-start**, consistent with ENT-005/006: the organization builds its own structure. Type is a filter, not the hierarchy.
 - **Consequences** — Two light tables; list + search across everything with type/folder/author filters.
+
+### Built addendum (2026-08-30, M28 close, [#598](https://github.com/juggernog20/OpenLaw/issues/598)) — the blank nested tree organizes items
+
+The Knowledge destination starts with no folders. Member+ may create, rename, move, reorder, and dissolve nested Knowledge Folders. Moving refuses cycles. Dissolving a folder moves its child folders and Knowledge Items to the parent and deletes no item. Selecting a folder scopes the managed list to that folder and its descendants; Type remains an independent filter. The shared Document-folder name rule applies, but a Knowledge Item's Documents stay in one flat card and gain no `document_folders` owner arm.
 
 ## KNW-004 — Audience: legal-only default + portal-readable flag; v1 surfacing = browse/search/deflection
 
@@ -53,6 +69,12 @@ _None — queue cleared 2026-08-06 (KNW-001 through KNW-005)._
 - **Decision** — `audience`: `legal_only` (default) | `everyone` — published `everyone` items render read-only in the portal (magic-link, no login), which lets INT-004 deflection links point at real knowledge articles. v1 surfacing is the Knowledge destination + deflection links only; in-workflow surfacing (template picker at contract creation, clause suggestions in review) goes to FUTURE-FEATURES.
 - **Rationale** — The deflection layer needs a home for the FAQ content it links; in-workflow surfacing needs a populated corpus before it's more than an empty dropdown.
 - **Consequences** — Portal gains a read-only knowledge-article view. INT-004's links can be internal (knowledge item) or external (URL).
+
+### Built addendum (2026-08-30, [#603](https://github.com/juggernog20/OpenLaw/issues/603)) — one portal-reach gate governs the article, its files, and deflection
+
+A Knowledge item exists on the portal only while it is live, published, and `everyone`. The article read and every document download apply that same gate. Draft, Legal only, archived, and unknown items answer the same 404 body, so refusal does not disclose which condition failed. The portal routes require the existing session and no additional credential; a Member+ session may use them in the same requester capacity.
+
+The portal article is read-only: its title, current-version downloads, and body, with the primary file first and the body last. It carries no author, folder, type, or edit affordance. Internal deflection links open that route in the same tab. External links retain the existing new-tab behavior.
 
 ## KNW-005 — Deferred set: search intelligence, usage tracking, staleness, AI, external ingestion
 

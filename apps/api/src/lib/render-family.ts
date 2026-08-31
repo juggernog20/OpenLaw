@@ -239,7 +239,7 @@ export function renderFamilyOf(mimeType: string, filename: string): RenderFamily
  * and sorts. MIME arms come first, so a declared family keeps the same
  * precedence over the filename that {@link renderFamilyOf} applies.
  */
-export function renderFamilySql(mimeType: AnyPgColumn, filename: AnyPgColumn): SQL {
+export function renderFamilySql(mimeType: AnyPgColumn, filename: AnyPgColumn): SQL<RenderFamily> {
   // The same whitespace set String.prototype.trim strips in {@link mediaType}:
   // btrim alone strips spaces only, so a tab before the `;` would split
   // the two classifications.
@@ -254,7 +254,9 @@ export function renderFamilySql(mimeType: AnyPgColumn, filename: AnyPgColumn): S
       ([key, route]) => sql`when ${extension} = ${key} then ${route.family}`,
     ),
   ];
-  return sql`case ${sql.join(arms, sql` `)} else 'other' end`;
+  // Every arm names a family and the fallback is 'other', so the CASE
+  // can only yield a RenderFamily.
+  return sql<RenderFamily>`case ${sql.join(arms, sql` `)} else 'other' end`;
 }
 
 /**

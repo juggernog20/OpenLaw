@@ -20,7 +20,7 @@
  */
 
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
-import { eq, intakeLinks, users } from "@openlaw/db";
+import { eq, intakeLinks, knowledgeItems, knowledgeTypes, users } from "@openlaw/db";
 import { provisionUser } from "../../auth/instance.js";
 import {
   signInCookies as harnessSignInCookies,
@@ -86,7 +86,8 @@ interface PortalType {
 interface PortalLink {
   id: string;
   label: string;
-  url: string;
+  url?: string;
+  knowledgeItemId?: string;
   displayOrder: number;
 }
 
@@ -124,8 +125,9 @@ async function seedTypeIds(): Promise<Map<string, string>> {
 }
 
 async function addLink(body: {
-  label: string;
-  url: string;
+  label?: string;
+  url?: string;
+  knowledgeItemId?: string;
   requestTypeId?: string | null;
 }): Promise<string> {
   const res = await harness.app.inject({
@@ -248,6 +250,102 @@ describe("the deflection links a requester is offered", () => {
 
   it("answers an empty panel when no link is placed on the home", async () => {
     expect(await portalLinks()).toEqual([]);
+  });
+
+  it("returns an internal target, skips it when reach is lost, and leaves external links unchanged", async () => {
+    const [admin] = await harness.db
+      .select({ id: users.id })
+      .from(users)
+      .where(eq(users.email, ADMIN.email));
+    const [type] = await harness.db
+      .select({ id: knowledgeTypes.id })
+      .from(knowledgeTypes)
+      .where(eq(knowledgeTypes.slug, "article"));
+    const [item] = await harness.db
+      .insert(knowledgeItems)
+      .values({
+        title: "NDA answer",
+        knowledgeTypeId: type!.id,
+        state: "published",
+        audience: "everyone",
+        publishedAt: new Date(),
+        createdBy: admin!.id,
+        updatedBy: admin!.id,
+      })
+      .returning({ id: knowledgeItems.id });
+    await addLink({ knowledgeItemId: item!.id });
+    const externalUrl = "https://Wiki.Acme.com/Legal/NDA?from=Portal#top";
+    await addLink({ label: "External answer", url: externalUrl });
+
+    expect(await portalLinks()).toEqual([
+      expect.objectContaining({ label: "NDA answer", knowledgeItemId: item!.id }),
+      expect.objectContaining({ label: "External answer", url: externalUrl }),
+    ]);
+    expect(Object.keys((await portalLinks())[0]!).sort()).toEqual([
+      "displayOrder",
+      "id",
+      "knowledgeItemId",
+      "label",
+    ]);
+
+    await harness.db
+      .update(knowledgeItems)
+      .set({ audience: "legal_only" })
+      .where(eq(knowledgeItems.id, item!.id));
+    expect(await portalLinks()).toEqual([
+      expect.objectContaining({ label: "External answer", url: externalUrl }),
+    ]);
+  });
+
+  it("applies the same reach gate to an internal link on a request form", async () => {
+    const ids = await seedTypeIds();
+    const [admin] = await harness.db
+      .select({ id: users.id })
+      .from(users)
+      .where(eq(users.email, ADMIN.email));
+    const [type] = await harness.db
+      .select({ id: knowledgeTypes.id })
+      .from(knowledgeTypes)
+      .where(eq(knowledgeTypes.slug, "article"));
+    const [item] = await harness.db
+      .insert(knowledgeItems)
+      .values({
+        title: "Contract review answer",
+        knowledgeTypeId: type!.id,
+        state: "published",
+        audience: "everyone",
+        publishedAt: new Date(),
+        createdBy: admin!.id,
+        updatedBy: admin!.id,
+      })
+      .returning({ id: knowledgeItems.id });
+    await addLink({
+      knowledgeItemId: item!.id,
+      requestTypeId: ids.get("contract_review")!,
+    });
+
+    const readFormLinks = async () => {
+      const res = await harness.app.inject({
+        method: "GET",
+        url: "/api/v1/portal/request-types/contract_review",
+        cookies: requesterCookies,
+      });
+      expect(res.statusCode, res.body).toBe(200);
+      return res.json().intakeLinks as PortalLink[];
+    };
+
+    expect(await readFormLinks()).toEqual([
+      expect.objectContaining({
+        label: "Contract review answer",
+        knowledgeItemId: item!.id,
+      }),
+    ]);
+
+    await harness.db
+      .update(knowledgeItems)
+      .set({ state: "draft", publishedAt: null })
+      .where(eq(knowledgeItems.id, item!.id));
+    expect(await readFormLinks()).toEqual([]);
   });
 
   it("refuses a caller with no session", async () => {

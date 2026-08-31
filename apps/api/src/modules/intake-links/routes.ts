@@ -35,9 +35,13 @@
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
 import { z } from "zod";
 import {
+  and,
   asc,
   eq,
+  getTableColumns,
   intakeLinks,
+  isNull,
+  knowledgeItems,
   requestTypes,
   type Executor,
   type IntakeLink,
@@ -50,8 +54,10 @@ import { httpError, problemResponse } from "../../lib/problem.js";
 const IntakeLinkSchema = z.object({
   id: z.string(),
   label: z.string(),
-  /** As entered: absolute, http or https, unnormalized. */
-  url: z.string(),
+  /** Exactly one target is non-null (INT-004's M28 addendum). */
+  url: z.string().nullable(),
+  knowledgeItemId: z.string().nullable(),
+  knowledgeItemTitle: z.string().nullable(),
   /** NULL = the portal home panel (INT-004). */
   requestTypeId: z.string().nullable(),
   displayOrder: z.number().int(),
@@ -65,11 +71,13 @@ const LabelSchema = z.string().trim().min(1).max(200);
  * has to act on gets a sentence rather than a field-path error. */
 const UrlSchema = z.string().trim().min(1).max(2048);
 
-function toRow(row: IntakeLink) {
+function toRow(row: IntakeLink, knowledgeItemTitle: string | null = null) {
   return {
     id: row.id,
     label: row.label,
     url: row.url,
+    knowledgeItemId: row.knowledgeItemId,
+    knowledgeItemTitle,
     requestTypeId: row.requestTypeId,
     displayOrder: row.displayOrder,
   };
@@ -103,10 +111,11 @@ export const intakeLinksRoutes: FastifyPluginAsyncZod = async (app) => {
    * of it. */
   async function listAll(db: Executor) {
     const rows = await db
-      .select()
+      .select({ link: getTableColumns(intakeLinks), knowledgeItemTitle: knowledgeItems.title })
       .from(intakeLinks)
+      .leftJoin(knowledgeItems, eq(intakeLinks.knowledgeItemId, knowledgeItems.id))
       .orderBy(asc(intakeLinks.displayOrder), asc(intakeLinks.createdAt));
-    return rows.map(toRow);
+    return rows.map((row) => toRow(row.link, row.knowledgeItemTitle));
   }
 
   /** Locks and returns one link, or 404s — every `:id` mutation starts
@@ -162,6 +171,66 @@ export const intakeLinksRoutes: FastifyPluginAsyncZod = async (app) => {
     return row.displayName;
   }
 
+  async function knowledgeTarget(tx: Transaction, id: string) {
+    const [row] = await tx
+      .select({ id: knowledgeItems.id, title: knowledgeItems.title })
+      .from(knowledgeItems)
+      .where(
+        and(
+          eq(knowledgeItems.id, id),
+          eq(knowledgeItems.state, "published"),
+          eq(knowledgeItems.audience, "everyone"),
+          isNull(knowledgeItems.archivedAt),
+        ),
+      )
+      .limit(1)
+      .for("key share");
+    if (!row) {
+      throw httpError(400, "Choose a published Knowledge Item that is available on the portal.");
+    }
+    return row;
+  }
+
+  async function answerRow(db: Executor, row: IntakeLink) {
+    if (!row.knowledgeItemId) return toRow(row);
+    const [item] = await db
+      .select({ title: knowledgeItems.title })
+      .from(knowledgeItems)
+      .where(eq(knowledgeItems.id, row.knowledgeItemId))
+      .limit(1);
+    return toRow(row, item?.title ?? null);
+  }
+
+  app.get(
+    "/intake-links/knowledge-options",
+    {
+      preHandler: requireRole("administrator"),
+      schema: {
+        operationId: "listIntakeLinkKnowledgeOptions",
+        tags: ["intake-links"],
+        response: {
+          200: z.object({
+            knowledgeItems: z.array(z.object({ id: z.string(), title: z.string() })),
+          }),
+          default: problemResponse,
+        },
+      },
+    },
+    async () => ({
+      knowledgeItems: await app.db
+        .select({ id: knowledgeItems.id, title: knowledgeItems.title })
+        .from(knowledgeItems)
+        .where(
+          and(
+            eq(knowledgeItems.state, "published"),
+            eq(knowledgeItems.audience, "everyone"),
+            isNull(knowledgeItems.archivedAt),
+          ),
+        )
+        .orderBy(asc(knowledgeItems.title), asc(knowledgeItems.id)),
+    }),
+  );
+
   app.get(
     "/intake-links",
     {
@@ -185,13 +254,16 @@ export const intakeLinksRoutes: FastifyPluginAsyncZod = async (app) => {
       schema: {
         operationId: "createIntakeLink",
         summary:
-          "Add a deflection link: a label over an absolute http/https " +
-          "URL, placed on the portal home (no request type) or on one " +
-          "live request type's form; the row appends to the panel order",
+          "Add a deflection link over exactly one target — an absolute " +
+          "http/https URL or a portal-readable Knowledge Item — placed " +
+          "on the portal home (no request type) or on one live request " +
+          "type's form; the label defaults to the Knowledge Item's " +
+          "title, and the row appends to the panel order",
         tags: ["intake-links"],
-        body: z.object({
-          label: LabelSchema,
-          url: UrlSchema,
+        body: z.strictObject({
+          label: LabelSchema.optional(),
+          url: UrlSchema.optional(),
+          knowledgeItemId: z.string().min(1).optional(),
           /** Omitted or null = the portal home panel. */
           requestTypeId: z.string().nullish(),
         }),
@@ -199,13 +271,19 @@ export const intakeLinksRoutes: FastifyPluginAsyncZod = async (app) => {
       },
     },
     async (request, reply) => {
-      const label = request.body.label.trim();
-      const url = request.body.url.trim();
-      assertWebUrl(url);
+      const url = request.body.url?.trim() ?? null;
+      const knowledgeItemId = request.body.knowledgeItemId ?? null;
+      if ((url === null) === (knowledgeItemId === null)) {
+        throw httpError(400, "Give exactly one target: an external address or a Knowledge Item.");
+      }
+      if (url !== null) assertWebUrl(url);
       const requestTypeId = request.body.requestTypeId ?? null;
 
       const row = await app.db.transaction(async (tx) => {
         const placement = await placementName(tx, requestTypeId, { mustBeLive: true });
+        const item = knowledgeItemId ? await knowledgeTarget(tx, knowledgeItemId) : null;
+        const label = request.body.label?.trim() || item?.title;
+        if (!label) throw httpError(400, "Name the link.");
         // The order spans both placements, as the pane's one list does.
         const existing = await tx
           .select({ displayOrder: intakeLinks.displayOrder })
@@ -216,18 +294,18 @@ export const intakeLinksRoutes: FastifyPluginAsyncZod = async (app) => {
 
         const [created] = await tx
           .insert(intakeLinks)
-          .values({ label, url, requestTypeId, displayOrder })
+          .values({ label, url, knowledgeItemId, requestTypeId, displayOrder })
           .returning();
         await recordActivity(tx, {
           entityType: "system",
           actorId: request.user.id,
           action: "intake_link.created",
           visibility: "admin_only",
-          payload: { label, url, placement },
+          payload: { label, url: url ?? `/portal/knowledge/${knowledgeItemId}`, placement },
         });
         return created!;
       });
-      return reply.status(201).send({ intakeLink: toRow(row) });
+      return reply.status(201).send({ intakeLink: await answerRow(app.db, row) });
     },
   );
 
@@ -238,7 +316,8 @@ export const intakeLinksRoutes: FastifyPluginAsyncZod = async (app) => {
       schema: {
         operationId: "updateIntakeLink",
         summary:
-          "Edit a deflection link's label, URL, or placement; a move " +
+          "Edit a deflection link's label, target (an external URL or a " +
+          "portal-readable Knowledge Item), or placement; a move " +
           "targets a live request type, and `requestTypeId: null` moves " +
           "the link to the portal home panel",
         tags: ["intake-links"],
@@ -249,7 +328,8 @@ export const intakeLinksRoutes: FastifyPluginAsyncZod = async (app) => {
         body: z
           .strictObject({
             label: LabelSchema.optional(),
-            url: UrlSchema.optional(),
+            url: UrlSchema.nullable().optional(),
+            knowledgeItemId: z.string().min(1).nullable().optional(),
             requestTypeId: z.string().nullable().optional(),
           })
           .refine((body) => Object.keys(body).length > 0, {
@@ -261,8 +341,9 @@ export const intakeLinksRoutes: FastifyPluginAsyncZod = async (app) => {
     async (request) => {
       const label = request.body.label?.trim();
       const url = request.body.url?.trim();
-      if (url !== undefined) assertWebUrl(url);
+      if (url) assertWebUrl(url);
       const movesPlacement = "requestTypeId" in request.body;
+      const changesTarget = "url" in request.body || "knowledgeItemId" in request.body;
 
       const row = await app.db.transaction(async (tx) => {
         const target = await lockedLink(tx, request.params.id);
@@ -276,9 +357,38 @@ export const intakeLinksRoutes: FastifyPluginAsyncZod = async (app) => {
           patch.label = label;
           changed.label = { from: target.label, to: label };
         }
-        if (url !== undefined && url !== target.url) {
-          patch.url = url;
-          changed.url = { from: target.url, to: url };
+        if (changesTarget) {
+          const nextUrl =
+            request.body.url !== undefined
+              ? (url ?? null)
+              : request.body.knowledgeItemId
+                ? null
+                : target.url;
+          const nextKnowledgeItemId =
+            request.body.knowledgeItemId !== undefined
+              ? request.body.knowledgeItemId
+              : request.body.url
+                ? null
+                : target.knowledgeItemId;
+          if ((nextUrl === null) === (nextKnowledgeItemId === null)) {
+            throw httpError(
+              400,
+              "Give exactly one target: an external address or a Knowledge Item.",
+            );
+          }
+          const item = nextKnowledgeItemId ? await knowledgeTarget(tx, nextKnowledgeItemId) : null;
+          if (nextUrl !== target.url || nextKnowledgeItemId !== target.knowledgeItemId) {
+            patch.url = nextUrl;
+            patch.knowledgeItemId = nextKnowledgeItemId;
+            if (target.knowledgeItemId === null && nextKnowledgeItemId === null) {
+              changed.url = { from: target.url, to: nextUrl };
+            } else {
+              changed.target = {
+                from: target.url ?? target.knowledgeItemId,
+                to: nextUrl ?? item?.title ?? nextKnowledgeItemId,
+              };
+            }
+          }
         }
         if (requestTypeId !== target.requestTypeId) {
           patch.requestTypeId = requestTypeId;
@@ -315,7 +425,7 @@ export const intakeLinksRoutes: FastifyPluginAsyncZod = async (app) => {
         });
         return updated!;
       });
-      return { intakeLink: toRow(row) };
+      return { intakeLink: await answerRow(app.db, row) };
     },
   );
 
@@ -350,7 +460,7 @@ export const intakeLinksRoutes: FastifyPluginAsyncZod = async (app) => {
           throw httpError(400, "The order must list every deflection link exactly once.");
         }
         if (ids.every((id, index) => current[index]!.id === id)) {
-          return { intakeLinks: current.map(toRow) };
+          return { intakeLinks: await Promise.all(current.map((row) => answerRow(tx, row))) };
         }
 
         const reordered: IntakeLink[] = [];
@@ -374,7 +484,7 @@ export const intakeLinksRoutes: FastifyPluginAsyncZod = async (app) => {
           visibility: "admin_only",
           payload: { order: reordered.map((row) => row.label) },
         });
-        return { intakeLinks: reordered.map(toRow) };
+        return { intakeLinks: await Promise.all(reordered.map((row) => answerRow(tx, row))) };
       });
     },
   );
@@ -406,7 +516,11 @@ export const intakeLinksRoutes: FastifyPluginAsyncZod = async (app) => {
           actorId: request.user.id,
           action: "intake_link.deleted",
           visibility: "admin_only",
-          payload: { label: target.label, url: target.url, placement },
+          payload: {
+            label: target.label,
+            url: target.url ?? `/portal/knowledge/${target.knowledgeItemId}`,
+            placement,
+          },
         });
       });
       return reply.status(204).send();

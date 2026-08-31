@@ -14,8 +14,10 @@ import {
   entities,
   isNotNull,
   isNull,
+  knowledgeItems,
   matters,
   or,
+  sql,
   type Executor,
   type SQL,
 } from "@openlaw/db";
@@ -55,6 +57,12 @@ function owningRecordScope(
         isNotNull(documents.entityId),
         isNull(entities.archivedAt),
         entityReachScope(db, user),
+      );
+    case "knowledge_item":
+      return and(
+        isNotNull(documents.knowledgeItemId),
+        isNull(knowledgeItems.archivedAt),
+        user.role === "administrator" || user.role === "legal_team_member" ? undefined : sql`false`,
       );
   }
 }

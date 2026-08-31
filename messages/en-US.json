@@ -288,7 +288,7 @@
     "defaultMessage": "{actor} exported the audit log"
   },
   "activity.field": {
-    "defaultMessage": "{key, select, title {Title} description {Description} owner {Owner} entity {Signing entity} priority {Priority} risk {Risk} matterManager {Matter Manager} matterType {Matter type} contractType {Contract type} value {Value} status {Status} termType {Term type} effectiveDate {Effective date} expiryDate {Expiry date} renewalPeriodMonths {Renewal period (months)} noticePeriodDays {Notice period (days)} date {Date} label {Event} note {Note} kind {Kind} primaryCounterparty {Primary counterparty} primaryDocument {Primary document} displayName {Name} display_name {Display name} name {Name} role {Role} email {Email} stage {Stage} moduleScope {Scope} isRequired {Required} targetModule {Target} targetType {Target type} theme {Theme} timezone {Timezone} avatar {Avatar} logo {Logo} defaultLocale {Default language} defaultTimezone {Default timezone} authMode {Sign-in method} allowedEmailDomains {Allowed email domains} reminderOffsetDays {Reminder lead times} smtpUrl {SMTP server} smtpFrom {From address} issuer {Issuer} domain {Email domain} clientId {Client ID} clientSecret {Client secret} environment {Environment} integrationKey {Integration key} apiUserId {User ID} privateKey {RSA private key} webhookSecret {Connect HMAC secret} legalName {Legal name} entityType {Entity type} jurisdiction {Jurisdiction} formedOn {Formed on} registrationNumber {Registration number} taxId {Tax ID} registeredAgent {Registered agent} registeredAddress {Registered address} sharesAuthorized {Authorized shares} sharesIssued {Issued shares} parValue {Par value} appointedOn {Appointed on} resignedOn {Resigned on} linkedUser {Linked user} registrationId {Registration} recurrenceMonths {Repeat every (months)} nextDueOn {Due date} assigneeId {Assignee} matterId {Matter} other {{key}}}"
+    "defaultMessage": "{key, select, title {Title} description {Description} owner {Owner} entity {Signing entity} priority {Priority} risk {Risk} matterManager {Matter Manager} matterType {Matter type} contractType {Contract type} value {Value} status {Status} termType {Term type} effectiveDate {Effective date} expiryDate {Expiry date} renewalPeriodMonths {Renewal period (months)} noticePeriodDays {Notice period (days)} date {Date} label {Event} note {Note} kind {Kind} primaryCounterparty {Primary counterparty} primaryDocument {Primary document} displayName {Name} display_name {Display name} name {Name} role {Role} email {Email} stage {Stage} moduleScope {Scope} isRequired {Required} targetModule {Target} targetType {Target type} theme {Theme} timezone {Timezone} avatar {Avatar} logo {Logo} defaultLocale {Default language} defaultTimezone {Default timezone} authMode {Sign-in method} allowedEmailDomains {Allowed email domains} reminderOffsetDays {Reminder lead times} smtpUrl {SMTP server} smtpFrom {From address} issuer {Issuer} domain {Email domain} clientId {Client ID} clientSecret {Client secret} environment {Environment} integrationKey {Integration key} apiUserId {User ID} privateKey {RSA private key} webhookSecret {Connect HMAC secret} legalName {Legal name} entityType {Entity type} knowledgeType {Knowledge type} jurisdiction {Jurisdiction} formedOn {Formed on} registrationNumber {Registration number} taxId {Tax ID} registeredAgent {Registered agent} registeredAddress {Registered address} sharesAuthorized {Authorized shares} sharesIssued {Issued shares} parValue {Par value} appointedOn {Appointed on} resignedOn {Resigned on} linkedUser {Linked user} registrationId {Registration} recurrenceMonths {Repeat every (months)} nextDueOn {Due date} assigneeId {Assignee} matterId {Matter} audience {Audience} url {Address} target {Target} other {{key}}}"
   },
   "activity.field.narrowed": {
     "defaultMessage": "{actor} narrowed the field {name} to one module"
@@ -337,6 +337,45 @@
   },
   "activity.keyDate.removed": {
     "defaultMessage": "{actor} removed the key date {label} on {date}"
+  },
+  "activity.knowledgeFolder.created": {
+    "defaultMessage": "{actor} created the Knowledge folder {name}"
+  },
+  "activity.knowledgeFolder.deleted": {
+    "defaultMessage": "{actor} removed the Knowledge folder {name}"
+  },
+  "activity.knowledgeFolder.moved": {
+    "defaultMessage": "{atRoot, select, true {{actor} moved the Knowledge folder {name} to the Library} other {{actor} moved the Knowledge folder {name} into {parent}}}"
+  },
+  "activity.knowledgeFolder.renamed": {
+    "defaultMessage": "{actor} renamed the {previousName} Knowledge folder to {name}"
+  },
+  "activity.knowledgeFolder.reordered": {
+    "defaultMessage": "{actor} reordered Knowledge folders"
+  },
+  "activity.knowledgeItem.archived": {
+    "defaultMessage": "{actor} archived {name}"
+  },
+  "activity.knowledgeItem.created": {
+    "defaultMessage": "{actor} created {name}"
+  },
+  "activity.knowledgeItem.published": {
+    "defaultMessage": "{actor} published {name}"
+  },
+  "activity.knowledgeItem.restored": {
+    "defaultMessage": "{actor} restored {name}"
+  },
+  "activity.knowledgeItem.typeReassigned": {
+    "defaultMessage": "{actor} re-typed {name}"
+  },
+  "activity.knowledgeItem.unpublished": {
+    "defaultMessage": "{actor} returned {name} to draft"
+  },
+  "activity.knowledgeItem.untitled": {
+    "defaultMessage": "(untitled)"
+  },
+  "activity.knowledgeItem.updated": {
+    "defaultMessage": "{actor} changed {name}"
   },
   "activity.loadError": {
     "defaultMessage": "The history could not be read. Reopen the panel to try again."
@@ -489,25 +528,25 @@
     "defaultMessage": "(untitled)"
   },
   "activity.taxonomy.archived": {
-    "defaultMessage": "{actor} archived the {kind, select, contract_type {contract type} matter_type {matter type} entity_type {entity type} request_type {request type} contract_status {contract status} field {field} approver_group {approver group} matter_template {matter template} other {type}} {name}"
+    "defaultMessage": "{actor} archived the {kind, select, contract_type {contract type} matter_type {matter type} entity_type {entity type} knowledge_type {knowledge type} request_type {request type} contract_status {contract status} field {field} approver_group {approver group} matter_template {matter template} other {type}} {name}"
   },
   "activity.taxonomy.created": {
-    "defaultMessage": "{actor} added the {kind, select, contract_type {contract type} matter_type {matter type} entity_type {entity type} request_type {request type} contract_status {contract status} field {field} approver_group {approver group} matter_template {matter template} other {type}} {name}"
+    "defaultMessage": "{actor} added the {kind, select, contract_type {contract type} matter_type {matter type} entity_type {entity type} knowledge_type {knowledge type} request_type {request type} contract_status {contract status} field {field} approver_group {approver group} matter_template {matter template} other {type}} {name}"
   },
   "activity.taxonomy.deleted": {
-    "defaultMessage": "{actor} deleted the {kind, select, contract_type {contract type} matter_type {matter type} entity_type {entity type} request_type {request type} contract_status {contract status} field {field} approver_group {approver group} matter_template {matter template} other {type}} {name}"
+    "defaultMessage": "{actor} deleted the {kind, select, contract_type {contract type} matter_type {matter type} entity_type {entity type} knowledge_type {knowledge type} request_type {request type} contract_status {contract status} field {field} approver_group {approver group} matter_template {matter template} other {type}} {name}"
   },
   "activity.taxonomy.renamed": {
-    "defaultMessage": "{actor} renamed the {kind, select, contract_type {contract type} matter_type {matter type} entity_type {entity type} request_type {request type} contract_status {contract status} field {field} approver_group {approver group} matter_template {matter template} other {type}} {name}"
+    "defaultMessage": "{actor} renamed the {kind, select, contract_type {contract type} matter_type {matter type} entity_type {entity type} knowledge_type {knowledge type} request_type {request type} contract_status {contract status} field {field} approver_group {approver group} matter_template {matter template} other {type}} {name}"
   },
   "activity.taxonomy.reordered": {
-    "defaultMessage": "{actor} reordered the {kind, select, contract_type {contract type} matter_type {matter type} entity_type {entity type} request_type {request type} contract_status {contract status} field {field} approver_group {approver group} matter_template {matter template} other {type}} list"
+    "defaultMessage": "{actor} reordered the {kind, select, contract_type {contract type} matter_type {matter type} entity_type {entity type} knowledge_type {knowledge type} request_type {request type} contract_status {contract status} field {field} approver_group {approver group} matter_template {matter template} other {type}} list"
   },
   "activity.taxonomy.restored": {
-    "defaultMessage": "{actor} restored the {kind, select, contract_type {contract type} matter_type {matter type} entity_type {entity type} request_type {request type} contract_status {contract status} field {field} approver_group {approver group} matter_template {matter template} other {type}} {name}"
+    "defaultMessage": "{actor} restored the {kind, select, contract_type {contract type} matter_type {matter type} entity_type {entity type} knowledge_type {knowledge type} request_type {request type} contract_status {contract status} field {field} approver_group {approver group} matter_template {matter template} other {type}} {name}"
   },
   "activity.taxonomy.updated": {
-    "defaultMessage": "{actor} changed the {kind, select, contract_type {contract type} matter_type {matter type} entity_type {entity type} request_type {request type} contract_status {contract status} field {field} approver_group {approver group} matter_template {matter template} other {type}} {name}"
+    "defaultMessage": "{actor} changed the {kind, select, contract_type {contract type} matter_type {matter type} entity_type {entity type} knowledge_type {knowledge type} request_type {request type} contract_status {contract status} field {field} approver_group {approver group} matter_template {matter template} other {type}} {name}"
   },
   "activity.teamRole": {
     "defaultMessage": "{role, select, member {Member} watcher {Watcher} creator {Creator} contributor {Contributor} other {{role}}}"
@@ -536,6 +575,9 @@
   "activity.user.avatarChanged": {
     "defaultMessage": "{actor} changed their avatar"
   },
+  "activity.user.briefingSent": {
+    "defaultMessage": "The morning round sent a daily briefing"
+  },
   "activity.user.displayNameChanged": {
     "defaultMessage": "{actor} changed their display name"
   },
@@ -549,7 +591,7 @@
     "defaultMessage": "{actor} invited {email} as {role}"
   },
   "activity.user.notificationPreferenceChanged": {
-    "defaultMessage": "{actor} turned {channel, select, in_app {bell items} email {emails} other {{channel}}} {state, select, on {on} off {off} other {{state}}} for {group, select, assigned_to_you {direct asks} activity_on_your_records {activity on their records} dates_approaching {approaching dates} new_requests {new requests} requester_events {requester events} other {{group}}}"
+    "defaultMessage": "{actor} turned {channel, select, in_app {bell items} email {emails} other {{channel}}} {state, select, on {on} off {off} other {{state}}} for {group, select, assigned_to_you {direct asks} activity_on_your_records {activity on their records} dates_approaching {approaching dates} new_requests {new requests} knowledge {knowledge items} requester_events {requester events} other {{group}}}"
   },
   "activity.user.otherSessionsRevoked": {
     "defaultMessage": "{actor} signed out their other sessions"
@@ -2441,6 +2483,9 @@
   "documents.filter.owner.entities": {
     "defaultMessage": "Entities"
   },
+  "documents.filter.owner.knowledge": {
+    "defaultMessage": "Knowledge"
+  },
   "documents.filter.owner.matters": {
     "defaultMessage": "Matters"
   },
@@ -3563,6 +3608,324 @@
   "keys.title": {
     "defaultMessage": "Keyboard shortcuts"
   },
+  "knowledge.action.archive": {
+    "defaultMessage": "Archive"
+  },
+  "knowledge.action.failed": {
+    "defaultMessage": "The Knowledge Item could not be changed."
+  },
+  "knowledge.action.openPreview": {
+    "defaultMessage": "Open preview"
+  },
+  "knowledge.action.openPreviewOf": {
+    "defaultMessage": "Open preview of {title}"
+  },
+  "knowledge.action.publish": {
+    "defaultMessage": "Publish"
+  },
+  "knowledge.action.restore": {
+    "defaultMessage": "Restore"
+  },
+  "knowledge.action.unpublish": {
+    "defaultMessage": "Unpublish"
+  },
+  "knowledge.actions": {
+    "defaultMessage": "Knowledge Item actions"
+  },
+  "knowledge.actionsFor": {
+    "defaultMessage": "Actions for {title}"
+  },
+  "knowledge.archive.help": {
+    "defaultMessage": "Optionally point readers to the Knowledge Item that replaces this one."
+  },
+  "knowledge.archive.none": {
+    "defaultMessage": "No replacement"
+  },
+  "knowledge.archive.pickerFailed": {
+    "defaultMessage": "The replacement list could not be read. You can archive without naming one."
+  },
+  "knowledge.archive.replacedBy": {
+    "defaultMessage": "Replaced by"
+  },
+  "knowledge.archive.title": {
+    "defaultMessage": "Archive Knowledge Item"
+  },
+  "knowledge.archivedMarker": {
+    "defaultMessage": "Archived"
+  },
+  "knowledge.audience.everyone": {
+    "defaultMessage": "Everyone"
+  },
+  "knowledge.audience.legalOnly": {
+    "defaultMessage": "Legal Only"
+  },
+  "knowledge.body.add": {
+    "defaultMessage": "Add guidance"
+  },
+  "knowledge.body.edit": {
+    "defaultMessage": "Edit"
+  },
+  "knowledge.body.help": {
+    "defaultMessage": "Markdown headings, lists, emphasis, code, and links are supported."
+  },
+  "knowledge.body.markdown": {
+    "defaultMessage": "Guidance in Markdown"
+  },
+  "knowledge.body.placeholder": {
+    "defaultMessage": "Write guidance in Markdown…"
+  },
+  "knowledge.body.preview": {
+    "defaultMessage": "Preview"
+  },
+  "knowledge.column.actions": {
+    "defaultMessage": "Actions"
+  },
+  "knowledge.column.audience": {
+    "defaultMessage": "Audience"
+  },
+  "knowledge.column.author": {
+    "defaultMessage": "Author"
+  },
+  "knowledge.column.created": {
+    "defaultMessage": "Created"
+  },
+  "knowledge.column.folder": {
+    "defaultMessage": "Folder"
+  },
+  "knowledge.column.format": {
+    "defaultMessage": "Format"
+  },
+  "knowledge.column.state": {
+    "defaultMessage": "State"
+  },
+  "knowledge.column.title": {
+    "defaultMessage": "Title"
+  },
+  "knowledge.column.type": {
+    "defaultMessage": "Type"
+  },
+  "knowledge.column.updated": {
+    "defaultMessage": "Updated"
+  },
+  "knowledge.create.action": {
+    "defaultMessage": "New item"
+  },
+  "knowledge.create.submit": {
+    "defaultMessage": "Create item"
+  },
+  "knowledge.create.title": {
+    "defaultMessage": "New Knowledge Item"
+  },
+  "knowledge.creating": {
+    "defaultMessage": "Creating…"
+  },
+  "knowledge.documents.action.setPrimary": {
+    "defaultMessage": "Set as primary"
+  },
+  "knowledge.documents.batch.failures": {
+    "defaultMessage": "{failed, plural, one {# file failed} other {# files failed}}. {landed, plural, =0 {Nothing was added to the Knowledge Item.} one {The other # is on the Knowledge Item.} other {The other # are on the Knowledge Item.}}"
+  },
+  "knowledge.documents.batch.onRecord": {
+    "defaultMessage": "{count, plural, =0 {Nothing was added to the Knowledge Item.} one {# file is already on the Knowledge Item.} other {# files are already on the Knowledge Item.}}"
+  },
+  "knowledge.documents.deleteIntoRoot": {
+    "defaultMessage": "Nothing is deleted."
+  },
+  "knowledge.documents.empty": {
+    "defaultMessage": "No documents on this Knowledge Item yet."
+  },
+  "knowledge.documents.recordRoot": {
+    "defaultMessage": "The Knowledge Item itself"
+  },
+  "knowledge.draftMarker": {
+    "defaultMessage": "Draft"
+  },
+  "knowledge.empty.body": {
+    "defaultMessage": "Create guidance your legal team can find again."
+  },
+  "knowledge.empty.filteredBody": {
+    "defaultMessage": "Clear filters or choose another folder."
+  },
+  "knowledge.empty.filteredTitle": {
+    "defaultMessage": "No Knowledge items match these filters"
+  },
+  "knowledge.empty.title": {
+    "defaultMessage": "Build your Knowledge library"
+  },
+  "knowledge.filter.all": {
+    "defaultMessage": "All"
+  },
+  "knowledge.filter.audience": {
+    "defaultMessage": "Audience"
+  },
+  "knowledge.filter.author": {
+    "defaultMessage": "Author"
+  },
+  "knowledge.filter.format": {
+    "defaultMessage": "Format"
+  },
+  "knowledge.filter.state": {
+    "defaultMessage": "State"
+  },
+  "knowledge.filter.type": {
+    "defaultMessage": "Type"
+  },
+  "knowledge.filters.clear": {
+    "defaultMessage": "Clear filters"
+  },
+  "knowledge.folder.add": {
+    "defaultMessage": "Add folder"
+  },
+  "knowledge.folder.addTitle": {
+    "defaultMessage": "Add folder"
+  },
+  "knowledge.folder.all": {
+    "defaultMessage": "All Knowledge"
+  },
+  "knowledge.folder.createError": {
+    "defaultMessage": "The folder could not be created."
+  },
+  "knowledge.folder.delete": {
+    "defaultMessage": "Delete selected folder"
+  },
+  "knowledge.folder.deleteBody": {
+    "defaultMessage": "Its folders and items move to the parent folder. Nothing is deleted."
+  },
+  "knowledge.folder.deleteError": {
+    "defaultMessage": "The folder could not be deleted."
+  },
+  "knowledge.folder.deleteSubmit": {
+    "defaultMessage": "Delete folder"
+  },
+  "knowledge.folder.deleteTitle": {
+    "defaultMessage": "Delete the {name} folder?"
+  },
+  "knowledge.folder.edit": {
+    "defaultMessage": "Rename or move selected folder"
+  },
+  "knowledge.folder.editTitle": {
+    "defaultMessage": "Rename or move folder"
+  },
+  "knowledge.folder.moveDown": {
+    "defaultMessage": "Move {name} down"
+  },
+  "knowledge.folder.moveUp": {
+    "defaultMessage": "Move {name} up"
+  },
+  "knowledge.folder.name": {
+    "defaultMessage": "Folder name"
+  },
+  "knowledge.folder.parent": {
+    "defaultMessage": "Parent folder"
+  },
+  "knowledge.folder.reorderError": {
+    "defaultMessage": "The folder could not be reordered."
+  },
+  "knowledge.folder.root": {
+    "defaultMessage": "Library"
+  },
+  "knowledge.folder.save": {
+    "defaultMessage": "Save folder"
+  },
+  "knowledge.folder.tree": {
+    "defaultMessage": "Knowledge folders"
+  },
+  "knowledge.folder.updateError": {
+    "defaultMessage": "The folder could not be updated."
+  },
+  "knowledge.form.audience": {
+    "defaultMessage": "Audience"
+  },
+  "knowledge.form.folder": {
+    "defaultMessage": "Folder"
+  },
+  "knowledge.form.noTypes": {
+    "defaultMessage": "An Administrator must add a Knowledge type first."
+  },
+  "knowledge.form.title": {
+    "defaultMessage": "Title"
+  },
+  "knowledge.form.type": {
+    "defaultMessage": "Type"
+  },
+  "knowledge.format.label": {
+    "defaultMessage": "{family, select, pdf {PDF} word {Word} presentation {PowerPoint} powerpoint {PowerPoint} image {Image} email {Email} other {Other}}"
+  },
+  "knowledge.fromFiles.choose": {
+    "defaultMessage": "Choose Knowledge files"
+  },
+  "knowledge.fromFiles.count": {
+    "defaultMessage": "{count, plural, =0 {No files selected} one {# file selected} other {# files selected}}"
+  },
+  "knowledge.fromFiles.drop": {
+    "defaultMessage": "Drop files here or choose files"
+  },
+  "knowledge.fromFiles.failed": {
+    "defaultMessage": "The files could not be added."
+  },
+  "knowledge.fromFiles.submit": {
+    "defaultMessage": "Create drafts"
+  },
+  "knowledge.fromFiles.title": {
+    "defaultMessage": "New from files"
+  },
+  "knowledge.list.count": {
+    "defaultMessage": "{count, plural, one {# item shown} other {# items shown}}"
+  },
+  "knowledge.list.error": {
+    "defaultMessage": "The Knowledge list could not be read. Try again."
+  },
+  "knowledge.list.more": {
+    "defaultMessage": "Show more"
+  },
+  "knowledge.list.moreError": {
+    "defaultMessage": "More Knowledge items could not be read."
+  },
+  "knowledge.list.region": {
+    "defaultMessage": "Knowledge items"
+  },
+  "knowledge.markdown.newTab": {
+    "defaultMessage": "(opens in a new tab)"
+  },
+  "knowledge.new.action": {
+    "defaultMessage": "New"
+  },
+  "knowledge.new.fromFiles": {
+    "defaultMessage": "New from files"
+  },
+  "knowledge.new.item": {
+    "defaultMessage": "New Knowledge Item"
+  },
+  "knowledge.onPortal": {
+    "defaultMessage": "On the portal"
+  },
+  "knowledge.reach.title": {
+    "defaultMessage": "Remove this from the portal?"
+  },
+  "knowledge.reach.warning": {
+    "defaultMessage": "{count, plural, one {# deflection link points} other {# deflection links point}} at this item. The {count, plural, one {link} other {links}} will stay in Settings but disappear from the portal."
+  },
+  "knowledge.record.guidance": {
+    "defaultMessage": "Guidance"
+  },
+  "knowledge.record.identity": {
+    "defaultMessage": "Knowledge item"
+  },
+  "knowledge.record.noPrimary": {
+    "defaultMessage": "None"
+  },
+  "knowledge.record.primaryDocument": {
+    "defaultMessage": "Primary document"
+  },
+  "knowledge.state.draft": {
+    "defaultMessage": "Draft"
+  },
+  "knowledge.state.published": {
+    "defaultMessage": "Published"
+  },
+  "knowledge.type.manage": {
+    "defaultMessage": "Manage types…"
+  },
   "linkedRecords.restricted": {
     "defaultMessage": "Restricted record"
   },
@@ -4124,6 +4487,9 @@
   "nav.inbox": {
     "defaultMessage": "Inbox"
   },
+  "nav.knowledge": {
+    "defaultMessage": "Knowledge"
+  },
   "nav.matters": {
     "defaultMessage": "Matters"
   },
@@ -4339,6 +4705,21 @@
   },
   "portal.home.title": {
     "defaultMessage": "What do you need from Legal?"
+  },
+  "portal.knowledge.back": {
+    "defaultMessage": "Your requests"
+  },
+  "portal.knowledge.download": {
+    "defaultMessage": "Download"
+  },
+  "portal.knowledge.downloadNamed": {
+    "defaultMessage": "Download {filename}"
+  },
+  "portal.knowledge.files": {
+    "defaultMessage": "Documents"
+  },
+  "portal.knowledge.guidance": {
+    "defaultMessage": "Guidance"
   },
   "portal.myRequests.count": {
     "defaultMessage": "{count, plural, one {# request} other {# requests}}"
@@ -4601,6 +4982,9 @@
   "search.kind.entity": {
     "defaultMessage": "Entity"
   },
+  "search.kind.knowledge": {
+    "defaultMessage": "Knowledge Item"
+  },
   "search.kind.matter": {
     "defaultMessage": "Matter"
   },
@@ -4627,6 +5011,9 @@
   },
   "search.page.showMore": {
     "defaultMessage": "Show more"
+  },
+  "search.result.knowledgeDraft": {
+    "defaultMessage": "Draft · Knowledge Item"
   },
   "search.result.ownedBy": {
     "defaultMessage": "Owned by"
@@ -5492,6 +5879,9 @@
   "settings.intakeLinks.archivedOption": {
     "defaultMessage": "{name} (archived)"
   },
+  "settings.intakeLinks.chooseKnowledge": {
+    "defaultMessage": "Choose an item…"
+  },
   "settings.intakeLinks.count": {
     "defaultMessage": "{count, plural, one {# link} other {# links}}"
   },
@@ -5513,8 +5903,20 @@
   "settings.intakeLinks.editTitle": {
     "defaultMessage": "Edit {name}"
   },
+  "settings.intakeLinks.externalKind": {
+    "defaultMessage": "External address"
+  },
   "settings.intakeLinks.help": {
     "defaultMessage": "Shown under \"Before you submit…\" on the portal home. Links assigned to a request type show on that form instead. Drag a row, or focus its handle and use the arrow keys, to reorder. Removing a link deletes it — there is no archive."
+  },
+  "settings.intakeLinks.knowledgeKind": {
+    "defaultMessage": "Knowledge item"
+  },
+  "settings.intakeLinks.knowledgeLabel": {
+    "defaultMessage": "Knowledge item"
+  },
+  "settings.intakeLinks.knowledgeMissing": {
+    "defaultMessage": "Choose a Knowledge Item."
   },
   "settings.intakeLinks.labelHelp": {
     "defaultMessage": "What the panel reads as — an answer, not an address."
@@ -5549,6 +5951,9 @@
   "settings.intakeLinks.reorder": {
     "defaultMessage": "Reorder {name}, position {position} of {total}. Use the arrow keys to move it."
   },
+  "settings.intakeLinks.targetKind": {
+    "defaultMessage": "Target"
+  },
   "settings.intakeLinks.title": {
     "defaultMessage": "Deflection links"
   },
@@ -5560,6 +5965,75 @@
   },
   "settings.intakeLinks.urlLabel": {
     "defaultMessage": "Address"
+  },
+  "settings.knowledge.tab.types": {
+    "defaultMessage": "Types"
+  },
+  "settings.knowledge.tabsLabel": {
+    "defaultMessage": "Knowledge panes"
+  },
+  "settings.knowledge.title": {
+    "defaultMessage": "Knowledge"
+  },
+  "settings.knowledgeTypes.add": {
+    "defaultMessage": "Add type"
+  },
+  "settings.knowledgeTypes.addName": {
+    "defaultMessage": "New type name"
+  },
+  "settings.knowledgeTypes.archive": {
+    "defaultMessage": "Archive {name}"
+  },
+  "settings.knowledgeTypes.archiveError": {
+    "defaultMessage": "The type could not be archived."
+  },
+  "settings.knowledgeTypes.archiveSubmit": {
+    "defaultMessage": "Archive type"
+  },
+  "settings.knowledgeTypes.archiveTitle": {
+    "defaultMessage": "Archive {name}"
+  },
+  "settings.knowledgeTypes.archiveWarning": {
+    "defaultMessage": "{count, plural, =0 {{name} is not used by any knowledge items — it can be archived without reassignment.} one {{name} is used by # knowledge item. Pick a replacement type — that item moves to it when the type is archived.} other {{name} is used by # knowledge items. Pick a replacement type — those items move to it when the type is archived.}}"
+  },
+  "settings.knowledgeTypes.auditNote": {
+    "defaultMessage": "The change applies immediately and is recorded in the audit log."
+  },
+  "settings.knowledgeTypes.count": {
+    "defaultMessage": "{count, plural, one {# type} other {# types}}"
+  },
+  "settings.knowledgeTypes.help": {
+    "defaultMessage": "Drag to reorder. Archiving a type in use asks for a replacement."
+  },
+  "settings.knowledgeTypes.inUse": {
+    "defaultMessage": "{count, plural, one {# knowledge item} other {# knowledge items}}"
+  },
+  "settings.knowledgeTypes.moved": {
+    "defaultMessage": "{name} moved to position {position} of {total}."
+  },
+  "settings.knowledgeTypes.noCandidates": {
+    "defaultMessage": "No other active type can take its knowledge items. Add or restore another type first."
+  },
+  "settings.knowledgeTypes.pageTitle": {
+    "defaultMessage": "Knowledge types"
+  },
+  "settings.knowledgeTypes.reassignLabel": {
+    "defaultMessage": "Reassign {count, plural, =0 {knowledge items} one {# knowledge item} other {# knowledge items}} to"
+  },
+  "settings.knowledgeTypes.reassignNone": {
+    "defaultMessage": "No reassignment"
+  },
+  "settings.knowledgeTypes.renameLabel": {
+    "defaultMessage": "Rename {name}"
+  },
+  "settings.knowledgeTypes.reorder": {
+    "defaultMessage": "Reorder {name}, position {position} of {total}. Use the arrow keys to move it."
+  },
+  "settings.knowledgeTypes.restore": {
+    "defaultMessage": "Restore {name}"
+  },
+  "settings.knowledgeTypes.title": {
+    "defaultMessage": "Knowledge types"
   },
   "settings.matterStatuses.add": {
     "defaultMessage": "Add status"
@@ -6020,6 +6494,9 @@
   "settings.notifications.caption": {
     "defaultMessage": "Email off keeps the bell items coming. In-app off turns the group off entirely, email included."
   },
+  "settings.notifications.captionEmailOnly": {
+    "defaultMessage": "A group with no in-app switch reaches you by email only; its one switch is the whole choice."
+  },
   "settings.notifications.channel.email": {
     "defaultMessage": "Email"
   },
@@ -6046,6 +6523,12 @@
   },
   "settings.notifications.group.dates.detail": {
     "defaultMessage": "Key dates, notice deadlines, and expiries — emailed as one daily digest."
+  },
+  "settings.notifications.group.knowledge": {
+    "defaultMessage": "Knowledge items"
+  },
+  "settings.notifications.group.knowledge.detail": {
+    "defaultMessage": "Knowledge items included in your daily briefing."
   },
   "settings.notifications.group.requesterEvents": {
     "defaultMessage": "Request updates"
@@ -6472,6 +6955,9 @@
   },
   "settings.section.integrations": {
     "defaultMessage": "Integrations"
+  },
+  "settings.section.knowledge": {
+    "defaultMessage": "Knowledge"
   },
   "settings.section.matters": {
     "defaultMessage": "Matters"

@@ -12,7 +12,15 @@
  * the owner and never fall through. Drizzle's `sql` template keeps the
  * arms typed (TECH-006).
  */
-import { contracts, documents, entities, matters, sql, type SQL } from "@openlaw/db";
+import {
+  contracts,
+  documents,
+  entities,
+  knowledgeItems,
+  matters,
+  sql,
+  type SQL,
+} from "@openlaw/db";
 import { DOCUMENT_OWNER_KINDS, type DocumentOwner } from "@openlaw/shared";
 
 /**
@@ -54,6 +62,17 @@ export function documentOwnerSql(owner: DocumentOwner) {
         number: sql<number | null>`null::integer`,
         title: entities.legalName,
       } as const;
+    case "knowledge_item":
+      return {
+        kind: owner,
+        prefix: null,
+        kindSql: sql<DocumentOwner>`'knowledge_item'::text`,
+        prefixSql: sql<string>`''::text`,
+        documentOwnerId: documents.knowledgeItemId,
+        recordId: knowledgeItems.id,
+        number: sql<number | null>`null::integer`,
+        title: knowledgeItems.title,
+      } as const;
   }
 }
 
@@ -71,7 +90,7 @@ export function documentOwnerCase<T>(
 /** A C- or M- reference, optionally left-padded for lexical sorting. */
 export function documentOwnerReferenceSql(padded: boolean): SQL<string> {
   return documentOwnerCase((owner) => {
-    if (owner.kind === "entity") return sql<string>`${owner.title}`;
+    if (owner.prefix === null) return sql<string>`${owner.title}`;
     return padded
       ? sql<string>`concat(${owner.prefixSql}, '-', lpad(${owner.number}::text, 10, '0'))`
       : sql<string>`concat(${owner.prefixSql}, '-', ${owner.number}::text)`;
@@ -81,7 +100,7 @@ export function documentOwnerReferenceSql(padded: boolean): SQL<string> {
 /** The query value that identifies one owning record in the repository. */
 export function documentOwnerFilterValueSql(): SQL<string> {
   return documentOwnerCase((owner) =>
-    owner.kind === "entity"
+    owner.prefix === null
       ? sql<string>`${owner.recordId}`
       : sql<string>`concat(${owner.prefixSql}, '-', ${owner.number}::text)`,
   );
@@ -95,6 +114,7 @@ export function documentOwnerFilterValueSql(): SQL<string> {
  */
 export function parseDocumentOwnerReference(
   reference: string,
+  ownerHint?: DocumentOwner,
 ):
   | { owner: ReturnType<typeof documentOwnerSql>; number: number; id?: never }
   | { owner: ReturnType<typeof documentOwnerSql>; id: string; number?: never } {
@@ -102,6 +122,11 @@ export function parseDocumentOwnerReference(
   const owner = match
     ? DOCUMENT_OWNER_KINDS.map(documentOwnerSql).find((o) => o.prefix === match[1])
     : undefined;
-  if (!owner) return { owner: documentOwnerSql("entity"), id: reference };
+  if (!owner) {
+    return {
+      owner: documentOwnerSql(ownerHint === "knowledge_item" ? "knowledge_item" : "entity"),
+      id: reference,
+    };
+  }
   return { owner, number: Number(match![2]) };
 }

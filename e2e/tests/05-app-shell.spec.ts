@@ -36,11 +36,11 @@ test.describe("application shell", () => {
 
     // Nav renders from the destination registry, with the current
     // destination marked: Home in slot one, the M21 Inbox next (INT-006
-    // M21/13), then the M22 Matters, M8 Contracts, M26 Documents, and
-    // M7 Entities destinations.
+    // M21/13), then the M22 Matters, M8 Contracts, M26 Documents, M7
+    // Entities, and M28 Knowledge destinations.
     const nav = page.getByRole("navigation");
     const links = nav.getByRole("link");
-    await expect(links).toHaveCount(6);
+    await expect(links).toHaveCount(7);
     await expect(links.first()).toContainText("Home");
     await expect(links.first()).toHaveAttribute("aria-current", "page");
     await expect(links.nth(1)).toContainText("Inbox");
@@ -48,6 +48,7 @@ test.describe("application shell", () => {
     await expect(links.nth(3)).toContainText("Contracts");
     await expect(links.nth(4)).toContainText("Documents");
     await expect(links.nth(5)).toContainText("Entities");
+    await expect(links.nth(6)).toContainText("Knowledge");
 
     // Sub-bar carries the page title as the page's single h1.
     await expect(page.getByRole("heading", { level: 1, name: "Home" })).toBeVisible();

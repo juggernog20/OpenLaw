@@ -12,6 +12,7 @@
 
 import {
   BriefcaseBusiness,
+  BookOpen,
   FileText,
   House,
   Inbox,
@@ -90,6 +91,13 @@ export const destinations: Destination[] = [
     path: "/entities",
     icon: Landmark,
     label: defineMessage({ id: "nav.entities", defaultMessage: "Entities" }),
+    roles: MEMBER_PLUS_ROLES,
+  },
+  {
+    id: "knowledge",
+    path: "/knowledge",
+    icon: BookOpen,
+    label: defineMessage({ id: "nav.knowledge", defaultMessage: "Knowledge" }),
     roles: MEMBER_PLUS_ROLES,
   },
 ];

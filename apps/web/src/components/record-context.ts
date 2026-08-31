@@ -18,7 +18,7 @@
 import { createContext, useContext } from "react";
 import type { Role } from "../lib/roles";
 
-export type RecordKind = "contract" | "matter" | "entity";
+export type RecordKind = "contract" | "matter" | "entity" | "knowledge_item";
 
 /** Which record the page is drawing. */
 export interface RecordReference {

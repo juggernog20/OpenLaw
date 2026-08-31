@@ -337,6 +337,7 @@ describe("who the Inbox is for (INT-006, DD-013)", () => {
       "Contracts",
       "Documents",
       "Entities",
+      "Knowledge",
     ]);
     expect(links[1]).toHaveAttribute("aria-current", "page");
   });

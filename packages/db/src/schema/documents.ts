@@ -50,6 +50,7 @@ import { contracts } from "./contracts.js";
 import { documentFolders } from "./document-folders.js";
 import { entities } from "./entities.js";
 import { searchVector, uuidPk } from "./helpers.js";
+import { knowledgeItems } from "./knowledge-items.js";
 import { matters } from "./matters.js";
 
 /**
@@ -90,9 +91,9 @@ export type HandSetDocumentVersionKind = (typeof HAND_SET_DOCUMENT_VERSION_KINDS
  * **Exactly one owning record** (DOC-008): a matter, a contract, an
  * entity, or a knowledge item, and there is no such thing as a
  * standalone document. M11 began with Contract as the only owner; M22
- * added Matter, while Entity and Knowledge remain with M27/M28. The
- * current constraint therefore names `matter_id` and `contract_id` and
- * requires exactly one.
+ * added Matter, M27 added Entity, and M28 completes the set with
+ * Knowledge. The current constraint names all four columns and requires
+ * exactly one.
  *
  * **The migration that adds a second owner column must carry the rule
  * down with it, not hand it to the application.** Dropping `NOT NULL`
@@ -147,6 +148,8 @@ export const documents = pgTable(
     /** M27's third owning record: the Entity-owned statutory Document arm
      * (ENT-005). Subject to the same exactly-one-owner check. */
     entityId: text("entity_id").references(() => entities.id),
+    /** M28's fourth and final owning-record arm (KNW-001). */
+    knowledgeItemId: text("knowledge_item_id").references(() => knowledgeItems.id),
     /**
      * CTR-014's executed pin: which version of this document is the
      * signed one (M11/4). It is the file previews, exports, and AI
@@ -253,6 +256,7 @@ export const documents = pgTable(
     index("documents_contract_idx").on(table.contractId, table.createdAt, table.id),
     index("documents_matter_idx").on(table.matterId, table.createdAt, table.id),
     index("documents_entity_idx").on(table.entityId, table.createdAt, table.id),
+    index("documents_knowledge_item_idx").on(table.knowledgeItemId, table.createdAt, table.id),
     // The executed pin's own column — the referencing side of the
     // foreign key into `document_versions` (M11/5). No read filters on
     // it, so it carried no index until now: what needs one is DOC-010's
@@ -273,7 +277,7 @@ export const documents = pgTable(
     index("documents_search_vector_idx").using("gin", table.searchVector),
     check(
       "documents_owner_check",
-      sql`num_nonnulls(${table.matterId}, ${table.contractId}, ${table.entityId}) = 1`,
+      sql`num_nonnulls(${table.matterId}, ${table.contractId}, ${table.entityId}, ${table.knowledgeItemId}) = 1`,
     ),
   ],
 );

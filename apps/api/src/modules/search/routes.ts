@@ -17,6 +17,8 @@ import {
   entityTypes,
   eq,
   isNull,
+  knowledgeItems,
+  knowledgeTypes,
   matters,
   matterStatuses,
   matterTypes,
@@ -43,6 +45,7 @@ const SEARCH_KINDS = [
   "entity",
   "counterparty",
   "request",
+  "knowledge_item",
 ] as const;
 type SearchKind = (typeof SEARCH_KINDS)[number];
 
@@ -74,6 +77,11 @@ const SearchRowSchema = z.discriminatedUnion("kind", [
     ...SearchRowFields,
   }),
   z.object({
+    kind: z.literal("knowledge_item"),
+    ...SearchRowFields,
+    state: z.enum(["draft", "published"]),
+  }),
+  z.object({
     kind: z.literal("document"),
     ...SearchRowFields,
     ownerKind: z.enum(DOCUMENT_OWNER_KINDS),
@@ -99,6 +107,7 @@ interface SearchDbRow extends Record<string, unknown> {
   version_id: string | null;
   version_number: number | null;
   snippet: string | null;
+  state: "draft" | "published" | null;
 }
 
 interface ExactNumber {
@@ -177,7 +186,7 @@ function searchCtes(db: Db, user: AuthenticatedUser, query: string): SQL {
         kind, id, number, title, is_confidential, kind_order,
         null::text as owner_kind, null::text as owner_id, null::integer as owner_number,
         null::text as version_id, null::integer as version_number,
-        null::text as snippet,
+        null::text as snippet, null::text as state,
         case when exact_number
           then ${EXACT_NUMBER_RANK}::real
           else ts_rank_cd(array[0.05, 0.1, 0.5, 1.0]::real[], document, search_query.value)
@@ -210,7 +219,7 @@ function searchCtes(db: Db, user: AuthenticatedUser, query: string): SQL {
         kind, id, number, title, is_confidential, kind_order,
         null::text as owner_kind, null::text as owner_id, null::integer as owner_number,
         null::text as version_id, null::integer as version_number,
-        null::text as snippet,
+        null::text as snippet, null::text as state,
         case when exact_number
           then ${EXACT_NUMBER_RANK}::real
           else ts_rank_cd(array[0.05, 0.1, 0.5, 1.0]::real[], document, search_query.value)
@@ -232,6 +241,7 @@ function searchCtes(db: Db, user: AuthenticatedUser, query: string): SQL {
         ${documentOwnerCase((owner) => sql<number>`${owner.number}`)} as owner_number,
         ${documentVersions.id} as version_id,
         ${documentVersions.versionNumber} as version_number,
+        null::text as state,
         ${documents.searchVector}
           || setweight(to_tsvector('english', coalesce(${documentVersions.originalFilename}, '')), 'B')
           || setweight(to_tsvector('english', regexp_replace(
@@ -251,6 +261,7 @@ function searchCtes(db: Db, user: AuthenticatedUser, query: string): SQL {
       left join ${contracts} on ${contracts.id} = ${documents.contractId}
       left join ${matters} on ${matters.id} = ${documents.matterId}
       left join ${entities} on ${entities.id} = ${documents.entityId}
+      left join ${knowledgeItems} on ${knowledgeItems.id} = ${documents.knowledgeItemId}
       where ${and(isNull(documents.archivedAt), documentRepositoryScope(db, user))}
     ),
     document_version_hits as (
@@ -258,7 +269,7 @@ function searchCtes(db: Db, user: AuthenticatedUser, query: string): SQL {
         kind, id, number, title, is_confidential, kind_order,
         owner_kind, owner_id, owner_number, version_id, version_number,
         document_title, document_description, original_filename,
-        email_subject, extracted_text, extracted_vector,
+        email_subject, extracted_text, extracted_vector, state,
         ts_rank_cd(array[0.05, 0.1, 0.5, 1.0]::real[], document, search_query.value) as rank
       from document_version_candidates
       cross join search_query
@@ -269,7 +280,7 @@ function searchCtes(db: Db, user: AuthenticatedUser, query: string): SQL {
         kind, id, number, title, is_confidential, kind_order,
         owner_kind, owner_id, owner_number, version_id, version_number,
         document_title, document_description, original_filename,
-        email_subject, extracted_text, extracted_vector, rank
+        email_subject, extracted_text, extracted_vector, state, rank
       from document_version_hits
       order by id, version_number desc
     ),
@@ -296,7 +307,7 @@ function searchCtes(db: Db, user: AuthenticatedUser, query: string): SQL {
           search_query.value,
           'StartSel=<mark>, StopSel=</mark>, MaxWords=24, MinWords=8, ShortWord=2'
         ) as snippet,
-        rank
+        state, rank
       from document_winners
       cross join search_query
     ),
@@ -319,7 +330,7 @@ function searchCtes(db: Db, user: AuthenticatedUser, query: string): SQL {
         kind, id, number, title, is_confidential, kind_order,
         null::text as owner_kind, null::text as owner_id, null::integer as owner_number,
         null::text as version_id, null::integer as version_number,
-        null::text as snippet,
+        null::text as snippet, null::text as state,
         ts_rank_cd(array[0.05, 0.1, 0.5, 1.0]::real[], document, search_query.value) as rank
       from entity_candidates
       cross join search_query
@@ -342,7 +353,7 @@ function searchCtes(db: Db, user: AuthenticatedUser, query: string): SQL {
         kind, id, number, title, is_confidential, kind_order,
         null::text as owner_kind, null::text as owner_id, null::integer as owner_number,
         null::text as version_id, null::integer as version_number,
-        null::text as snippet,
+        null::text as snippet, null::text as state,
         ts_rank_cd(array[0.05, 0.1, 0.5, 1.0]::real[], document, search_query.value) as rank
       from counterparty_candidates
       cross join search_query
@@ -370,7 +381,7 @@ function searchCtes(db: Db, user: AuthenticatedUser, query: string): SQL {
         kind, id, number, title, is_confidential, kind_order,
         null::text as owner_kind, null::text as owner_id, null::integer as owner_number,
         null::text as version_id, null::integer as version_number,
-        null::text as snippet,
+        null::text as snippet, null::text as state,
         case when exact_number
           then ${EXACT_NUMBER_RANK}::real
           else ts_rank_cd(array[0.05, 0.1, 0.5, 1.0]::real[], document, search_query.value)
@@ -379,6 +390,33 @@ function searchCtes(db: Db, user: AuthenticatedUser, query: string): SQL {
       cross join search_query
       where document @@ search_query.value or exact_number
     ),
+    knowledge_item_candidates as (
+      select
+        'knowledge_item'::text as kind,
+        ${knowledgeItems.id} as id,
+        null::integer as number,
+        ${knowledgeItems.title} as title,
+        false as is_confidential,
+        6::integer as kind_order,
+        ${knowledgeItems.state} as state,
+        ${knowledgeItems.searchVector}
+          || setweight(to_tsvector('english', coalesce(${knowledgeTypes.displayName}, '')), 'C')
+          as document
+      from ${knowledgeItems}
+      inner join ${knowledgeTypes} on ${knowledgeTypes.id} = ${knowledgeItems.knowledgeTypeId}
+      where ${and(isNull(knowledgeItems.archivedAt), staff)}
+    ),
+    knowledge_item_hits as (
+      select
+        kind, id, number, title, is_confidential, kind_order,
+        null::text as owner_kind, null::text as owner_id, null::integer as owner_number,
+        null::text as version_id, null::integer as version_number,
+        null::text as snippet, state,
+        ts_rank_cd(array[0.05, 0.1, 0.5, 1.0]::real[], document, search_query.value) as rank
+      from knowledge_item_candidates
+      cross join search_query
+      where document @@ search_query.value
+    ),
     all_hits as (
       select * from contract_hits
       union all select * from matter_hits
@@ -386,6 +424,7 @@ function searchCtes(db: Db, user: AuthenticatedUser, query: string): SQL {
       union all select * from entity_hits
       union all select * from counterparty_hits
       union all select * from request_hits
+      union all select * from knowledge_item_hits
     )
   `;
 }
@@ -398,6 +437,10 @@ function toSearchRow(row: SearchDbRow): z.infer<typeof SearchRowSchema> {
     isConfidential: row.is_confidential,
     rank: row.rank,
   };
+  if (row.kind === "knowledge_item") {
+    if (row.state === null) throw new Error("Knowledge search hit is missing its state");
+    return { ...common, kind: row.kind, state: row.state };
+  }
   if (row.kind !== "document") return { ...common, kind: row.kind };
   if (
     row.owner_kind === null ||
@@ -418,6 +461,9 @@ function toSearchRow(row: SearchDbRow): z.infer<typeof SearchRowSchema> {
       break;
     case "entity":
       ownerKind = "entity";
+      break;
+    case "knowledge_item":
+      ownerKind = "knowledge_item";
       break;
   }
   return {
@@ -442,7 +488,7 @@ async function groupedSearch(db: Db, ctes: SQL): Promise<SearchDbRow[]> {
       from all_hits
     )
     select kind, id, number, title, is_confidential, rank, kind_order,
-      owner_kind, owner_id, owner_number, version_id, version_number, snippet
+      owner_kind, owner_id, owner_number, version_id, version_number, snippet, state
     from ranked_hits
     where kind_position <= ${GROUPED_LIMIT}
     order by kind_order, rank desc, id desc
@@ -479,7 +525,7 @@ async function flatSearch(
       limit 1
     )
     select kind, id, number, title, is_confidential, rank, kind_order,
-      owner_kind, owner_id, owner_number, version_id, version_number, snippet
+      owner_kind, owner_id, owner_number, version_id, version_number, snippet, state
     from all_hits
     where ${kindScope} and ${cursorScope}
     order by rank desc, id desc
