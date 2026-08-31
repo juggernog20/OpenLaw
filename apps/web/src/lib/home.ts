@@ -11,3 +11,5 @@ export type TasksHomeSection = Extract<HomeSection, { type: "tasks" }>;
 export type DatesHomeSection = Extract<HomeSection, { type: "dates" }>;
 export type ObligationsHomeSection = Extract<HomeSection, { type: "obligations" }>;
 export type InboxHomeSection = Extract<HomeSection, { type: "inbox" }>;
+export type ContractsHomeSection = Extract<HomeSection, { type: "contracts" }>;
+export type MattersHomeSection = Extract<HomeSection, { type: "matters" }>;

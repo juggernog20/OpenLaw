@@ -7,7 +7,9 @@ import { requireRole } from "../../auth/guards.js";
 import { problemResponse } from "../../lib/problem.js";
 import { ApprovalsHomeSectionSchema, readApprovalsHomeSection } from "./sections/approvals.js";
 import { DatesHomeSectionSchema, readDatesHomeSection } from "./sections/dates.js";
+import { ContractsHomeSectionSchema, readContractsHomeSection } from "./sections/contracts.js";
 import { InboxHomeSectionSchema, readInboxHomeSection } from "./sections/inbox.js";
+import { MattersHomeSectionSchema, readMattersHomeSection } from "./sections/matters.js";
 import {
   ObligationsHomeSectionSchema,
   readObligationsHomeSection,
@@ -20,6 +22,8 @@ const HomeSectionSchema = z.discriminatedUnion("type", [
   DatesHomeSectionSchema,
   ObligationsHomeSectionSchema,
   InboxHomeSectionSchema,
+  ContractsHomeSectionSchema,
+  MattersHomeSectionSchema,
 ]);
 const HomeEnvelopeSchema = z.object({ sections: z.array(HomeSectionSchema) });
 
@@ -43,15 +47,17 @@ export const homeRoutes: FastifyPluginAsyncZod = async (app) => {
       },
     },
     async (request) => {
-      const [approvals, tasks, dates, obligations, inbox] = await Promise.all([
+      const [approvals, tasks, dates, obligations, inbox, contracts, matters] = await Promise.all([
         readApprovalsHomeSection(app.db, request.user),
         readTasksHomeSection(app.db, request.user),
         readDatesHomeSection(app.db, request.user),
         readObligationsHomeSection(app.db, request.user),
         readInboxHomeSection(app.db, request.user),
+        readContractsHomeSection(app.db, request.user),
+        readMattersHomeSection(app.db, request.user),
       ]);
       return {
-        sections: [approvals, tasks, dates, obligations, inbox].filter(
+        sections: [approvals, tasks, dates, obligations, inbox, contracts, matters].filter(
           (section) => section !== null,
         ),
       };

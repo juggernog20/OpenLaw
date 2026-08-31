@@ -17,6 +17,8 @@ import { HomeDatesCard } from "../components/home/dates-card";
 import { HomeInboxCard } from "../components/home/inbox-card";
 import { HomeObligationsCard } from "../components/home/obligations-card";
 import { HomeWelcomeCard } from "../components/home/welcome-card";
+import { HomeContractsCard } from "../components/home/contracts-card";
+import { HomeMattersCard } from "../components/home/matters-card";
 
 export async function homeLoader({ request }: LoaderFunctionArgs) {
   // A failed magic-link redemption redirects here with an ?error= query
@@ -77,6 +79,10 @@ export function HomePage() {
                 return <HomeObligationsCard key={section.type} section={section} />;
               case "inbox":
                 return <HomeInboxCard key={section.type} section={section} />;
+              case "contracts":
+                return <HomeContractsCard key={section.type} section={section} />;
+              case "matters":
+                return <HomeMattersCard key={section.type} section={section} />;
             }
           })}
         </div>

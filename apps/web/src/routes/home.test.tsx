@@ -175,6 +175,56 @@ const inboxSection = {
   ],
 } as const;
 
+const contractDate = inDays(14);
+const contractsSection = {
+  type: "contracts",
+  total: 7,
+  rows: [
+    {
+      id: "contract-portfolio-1",
+      number: 501,
+      title: "Confidential acquisition agreement",
+      isConfidential: true,
+      stage: "draft",
+      nextDate: contractDate,
+      renewalPendingConfirmation: false,
+    },
+    {
+      id: "contract-portfolio-2",
+      number: 502,
+      title: "Supplier renewal",
+      isConfidential: false,
+      stage: "active",
+      nextDate: null,
+      renewalPendingConfirmation: true,
+    },
+  ],
+} as const;
+
+const matterDeadline = inDays(16);
+const mattersSection = {
+  type: "matters",
+  total: 4,
+  rows: [
+    {
+      id: "matter-portfolio-1",
+      number: 91,
+      title: "Confidential employment investigation",
+      isConfidential: true,
+      status: { id: "matter-status-open", displayName: "Open" },
+      nextDeadline: { date: matterDeadline, label: "Response filing deadline" },
+    },
+    {
+      id: "matter-portfolio-2",
+      number: 92,
+      title: "Board governance review",
+      isConfidential: false,
+      status: { id: "matter-status-progress", displayName: "In Progress" },
+      nextDeadline: null,
+    },
+  ],
+} as const;
+
 describe("Home", () => {
   it("renders the loader's Approvals card and links each row to the Contract section", async () => {
     stubApi({
@@ -333,6 +383,48 @@ describe("Home", () => {
     expect(within(card).getByRole("link", { name: "View all 5" })).toHaveAttribute(
       "href",
       "/inbox",
+    );
+  });
+
+  it("renders the Manager's Contract and Matter portfolios with lifecycle, next dates, and markers", async () => {
+    stubApi({
+      signedIn: MEMBER,
+      extra: (call) =>
+        call.url.pathname === "/api/v1/home" && call.method === "GET"
+          ? json(200, { sections: [contractsSection, mattersSection] })
+          : undefined,
+    });
+    renderAt("/");
+
+    const contracts = await screen.findByRole("region", { name: "Your contracts" });
+    expect(within(contracts).getByText("7")).toBeInTheDocument();
+    expect(
+      within(contracts).getByRole("link", { name: "Confidential acquisition agreement" }),
+    ).toHaveAttribute("href", "/contracts/501");
+    expect(within(contracts).getByText("Contract C-501 · Draft")).toBeInTheDocument();
+    expect(within(contracts).getByText(formatDeadline(contractDate))).toBeInTheDocument();
+    expect(within(contracts).getByRole("img", { name: "Confidential" })).toBeInTheDocument();
+    expect(within(contracts).getByText("Renewal pending confirmation")).toBeInTheDocument();
+    expect(within(contracts).getByText("No upcoming date")).toBeInTheDocument();
+    expect(within(contracts).getByRole("link", { name: "View all 7" })).toHaveAttribute(
+      "href",
+      "/contracts",
+    );
+
+    const matters = screen.getByRole("region", { name: "Your matters" });
+    expect(within(matters).getByText("4")).toBeInTheDocument();
+    expect(
+      within(matters).getByRole("link", { name: "Confidential employment investigation" }),
+    ).toHaveAttribute("href", "/matters/91");
+    expect(within(matters).getByText("Matter M-91 · Open")).toBeInTheDocument();
+    expect(within(matters).getByText("Response filing deadline")).toBeInTheDocument();
+    expect(within(matters).getByText(formatDeadline(matterDeadline))).toBeInTheDocument();
+    expect(within(matters).getByRole("img", { name: "Confidential" })).toBeInTheDocument();
+    expect(within(matters).getByText("Matter M-92 · In Progress")).toBeInTheDocument();
+    expect(within(matters).getByText("No upcoming deadline")).toBeInTheDocument();
+    expect(within(matters).getByRole("link", { name: "View all 4" })).toHaveAttribute(
+      "href",
+      "/matters?manager=me",
     );
   });
 });
