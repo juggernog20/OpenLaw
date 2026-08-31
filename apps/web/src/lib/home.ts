@@ -7,3 +7,4 @@ export type HomeEnvelope =
   paths["/api/v1/home"]["get"]["responses"]["200"]["content"]["application/json"];
 export type HomeSection = HomeEnvelope["sections"][number];
 export type ApprovalHomeSection = Extract<HomeSection, { type: "approvals" }>;
+export type TasksHomeSection = Extract<HomeSection, { type: "tasks" }>;

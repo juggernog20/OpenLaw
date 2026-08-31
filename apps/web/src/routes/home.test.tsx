@@ -30,6 +30,52 @@ const approvalSection = {
   ],
 } as const;
 
+const tasksSection = {
+  type: "tasks",
+  total: 4,
+  rows: [
+    {
+      id: "contract-task-1",
+      title: "Prepare financing signature pages",
+      dueDate: "2000-01-01",
+      isOverdue: true,
+      record: {
+        kind: "contract",
+        id: "contract-1",
+        number: 42,
+        title: "Confidential financing",
+        isConfidential: true,
+      },
+    },
+    {
+      id: "matter-task-1",
+      title: "Review response exhibits",
+      dueDate: "2099-01-01",
+      isOverdue: false,
+      record: {
+        kind: "matter",
+        id: "matter-1",
+        number: 12,
+        title: "Regulatory response",
+        isConfidential: false,
+      },
+    },
+    {
+      id: "matter-task-2",
+      title: "Confirm interview list",
+      dueDate: null,
+      isOverdue: false,
+      record: {
+        kind: "matter",
+        id: "matter-2",
+        number: 13,
+        title: "Employment investigation",
+        isConfidential: false,
+      },
+    },
+  ],
+} as const;
+
 describe("Home", () => {
   it("renders the loader's Approvals card and links each row to the Contract section", async () => {
     stubApi({
@@ -79,5 +125,36 @@ describe("Home", () => {
       "href",
       "/matters",
     );
+  });
+
+  it("renders the merged Tasks card with record links, due dates, severe, and CONFI markers", async () => {
+    stubApi({
+      signedIn: MEMBER,
+      extra: (call) =>
+        call.url.pathname === "/api/v1/home" && call.method === "GET"
+          ? json(200, { sections: [tasksSection] })
+          : undefined,
+    });
+    renderAt("/");
+
+    const card = await screen.findByRole("region", { name: "Tasks assigned to you" });
+    expect(within(card).getByText("4")).toBeInTheDocument();
+
+    const contractTask = within(card).getByText("Prepare financing signature pages");
+    expect(contractTask.closest("a")).toHaveAttribute("href", "/contracts/42/tasks");
+    expect(within(card).getByText(/Confidential financing · Contract C-42/)).toBeInTheDocument();
+    expect(within(card).getByRole("img", { name: "Confidential" })).toBeInTheDocument();
+    expect(within(card).getByText("Overdue")).toBeInTheDocument();
+    expect(within(card).getByText("Jan 1, 2000")).toHaveClass(
+      "bg-status-severe-bg",
+      "text-status-severe-fg",
+    );
+
+    const matterTask = within(card).getByText("Review response exhibits");
+    expect(matterTask.closest("a")).toHaveAttribute("href", "/matters/12/tasks");
+    expect(within(card).getByText(/Regulatory response · Matter M-12/)).toBeInTheDocument();
+    expect(within(card).getByText("Jan 1, 2099")).toBeInTheDocument();
+    expect(within(card).getByText("No due date")).toBeInTheDocument();
+    expect(screen.queryByText("Welcome to OpenLaw")).not.toBeInTheDocument();
   });
 });

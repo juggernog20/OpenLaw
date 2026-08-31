@@ -23517,26 +23517,47 @@ export interface operations {
         };
         content: {
           "application/json": {
-            sections: {
-              /** @enum {string} */
-              type: "approvals";
-              total: number;
-              rows: {
-                id: string;
-                contract: {
-                  id: string;
-                  number: number;
-                  title: string;
-                  isConfidential: boolean;
-                };
-                requestedBy: {
-                  id: string;
-                  displayName: string;
-                };
-                /** Format: date-time */
-                requestedAt: string;
-              }[];
-            }[];
+            sections: (
+              | {
+                  /** @enum {string} */
+                  type: "approvals";
+                  total: number;
+                  rows: {
+                    id: string;
+                    contract: {
+                      id: string;
+                      number: number;
+                      title: string;
+                      isConfidential: boolean;
+                    };
+                    requestedBy: {
+                      id: string;
+                      displayName: string;
+                    };
+                    /** Format: date-time */
+                    requestedAt: string;
+                  }[];
+                }
+              | {
+                  /** @enum {string} */
+                  type: "tasks";
+                  total: number;
+                  rows: {
+                    id: string;
+                    title: string;
+                    dueDate: string | null;
+                    isOverdue: boolean;
+                    record: {
+                      /** @enum {string} */
+                      kind: "contract" | "matter";
+                      id: string;
+                      number: number;
+                      title: string;
+                      isConfidential: boolean;
+                    };
+                  }[];
+                }
+            )[];
           };
         };
       };

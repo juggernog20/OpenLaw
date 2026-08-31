@@ -3401,6 +3401,18 @@
   "home.section.viewAll": {
     "defaultMessage": "View all {count}"
   },
+  "home.tasks.noDueDate": {
+    "defaultMessage": "No due date"
+  },
+  "home.tasks.overdue": {
+    "defaultMessage": "Overdue"
+  },
+  "home.tasks.record": {
+    "defaultMessage": "{title} · {kind, select, contract {Contract C-{number}} other {Matter M-{number}}}"
+  },
+  "home.tasks.title": {
+    "defaultMessage": "Tasks assigned to you"
+  },
   "home.title": {
     "defaultMessage": "Home"
   },

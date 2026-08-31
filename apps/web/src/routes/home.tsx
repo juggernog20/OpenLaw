@@ -12,6 +12,7 @@ import { AppShell } from "../components/shell/app-shell";
 import { PageSubBar } from "../components/shell/page-subbar";
 import { PageTitle } from "../components/page-title";
 import { HomeApprovalsCard } from "../components/home/approvals-card";
+import { HomeTasksCard } from "../components/home/tasks-card";
 import { HomeWelcomeCard } from "../components/home/welcome-card";
 
 export async function homeLoader({ request }: LoaderFunctionArgs) {
@@ -65,6 +66,8 @@ export function HomePage() {
             switch (section.type) {
               case "approvals":
                 return <HomeApprovalsCard key={section.type} section={section} />;
+              case "tasks":
+                return <HomeTasksCard key={section.type} section={section} />;
             }
           })}
         </div>
