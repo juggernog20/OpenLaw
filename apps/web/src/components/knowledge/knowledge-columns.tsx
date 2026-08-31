@@ -7,6 +7,7 @@ import { Link } from "react-router";
 import { formatShortDate } from "../../lib/format";
 import {
   knowledgeAudienceLabel,
+  knowledgeFormatLabel,
   knowledgeStateLabel,
   type KnowledgeItem,
 } from "../../lib/knowledge";
@@ -53,18 +54,9 @@ const COLUMNS: ColumnDef<KnowledgeItem>[] = [
       intl.formatMessage({ id: "knowledge.column.format", defaultMessage: "Format" }),
     defaultWidth: 120,
     minWidth: 88,
-    render: (row) => {
+    render: (row, intl) => {
       const family = row.primaryDocument?.currentVersion.renderFamily;
-      const label =
-        family === "pdf"
-          ? "PDF"
-          : family === "presentation"
-            ? "PowerPoint"
-            : family === "other"
-              ? "Other"
-              : family
-                ? family[0]!.toUpperCase() + family.slice(1)
-                : "—";
+      const label = family ? knowledgeFormatLabel(intl, family) : "—";
       return family ? (
         <span className="rounded-pill bg-status-neutral-bg px-2 py-0.5 text-xs font-medium text-status-neutral-fg">
           {label}
@@ -157,13 +149,17 @@ const COLUMNS: ColumnDef<KnowledgeItem>[] = [
   },
   {
     key: "actions",
-    header: <span className="sr-only">Actions</span>,
+    header: (
+      <span className="sr-only">
+        <FormattedMessage id="knowledge.column.actions" defaultMessage="Actions" />
+      </span>
+    ),
     label: (intl) =>
       intl.formatMessage({ id: "knowledge.column.actions", defaultMessage: "Actions" }),
     defaultWidth: 56,
     minWidth: 48,
     required: true,
-    render: (row) =>
+    render: (row, intl) =>
       row.primaryDocument ? (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -171,7 +167,10 @@ const COLUMNS: ColumnDef<KnowledgeItem>[] = [
               type="button"
               variant="ghost"
               size="icon"
-              aria-label={`Actions for ${row.title}`}
+              aria-label={intl.formatMessage(
+                { id: "knowledge.actionsFor", defaultMessage: "Actions for {title}" },
+                { title: row.title },
+              )}
             >
               <MoreHorizontal size={16} aria-hidden="true" />
             </Button>

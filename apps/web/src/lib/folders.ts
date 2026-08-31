@@ -45,7 +45,10 @@ export type FoldersOutcome = { ok: true; folders: ContractFolder[] } | ({ ok: fa
 function knowledgeFoldersRefused(): FoldersOutcome {
   return {
     ok: false,
-    detail: "Knowledge item Documents do not have Document folders.",
+    // No client-authored detail: an English sentence written here would
+    // bypass i18n when a surface renders `detail` directly. Absent, the
+    // surface's own localized fallback speaks instead.
+    detail: undefined,
     type: "about:blank",
     status: 400,
     network: false,

@@ -774,6 +774,17 @@ function taskNamed(intl: IntlShape, payload: Payload): string {
   );
 }
 
+/** What a Knowledge entry calls the item it names. Its own fallback
+ * rather than {@link named}'s, because that one is a person's —
+ * "created someone" is not a sentence, and the log is append-only, so
+ * a sentence once rendered wrong stays wrong. */
+function knowledgeItemNamed(intl: IntlShape, payload: Payload): string {
+  return (
+    text(payload, "title") ??
+    intl.formatMessage({ id: "activity.knowledgeItem.untitled", defaultMessage: "(untitled)" })
+  );
+}
+
 /**
  * The people a soft-gate override went past (CTR-012), in the order the
  * payload holds them — the roster's own order, oldest ask first.
@@ -2550,7 +2561,7 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
       id: "activity.knowledgeItem.typeReassigned",
       defaultMessage: "{actor} re-typed {name}",
     }),
-    values: (intl, payload) => ({ name: named(intl, payload, "title") }),
+    values: (intl, payload) => ({ name: knowledgeItemNamed(intl, payload) }),
     changes: (intl, payload, context) => directChange(intl, payload, "knowledgeType", context),
   },
   "knowledge_item.created": {
@@ -2559,7 +2570,7 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
       id: "activity.knowledgeItem.created",
       defaultMessage: "{actor} created {name}",
     }),
-    values: (intl, payload) => ({ name: named(intl, payload, "title") }),
+    values: (intl, payload) => ({ name: knowledgeItemNamed(intl, payload) }),
   },
   "knowledge_item.updated": {
     icon: PencilLine,
@@ -2567,7 +2578,7 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
       id: "activity.knowledgeItem.updated",
       defaultMessage: "{actor} changed {name}",
     }),
-    values: (intl, payload) => ({ name: named(intl, payload, "title") }),
+    values: (intl, payload) => ({ name: knowledgeItemNamed(intl, payload) }),
     changes: changesFrom,
   },
   "knowledge_item.published": {
@@ -2576,7 +2587,7 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
       id: "activity.knowledgeItem.published",
       defaultMessage: "{actor} published {name}",
     }),
-    values: (intl, payload) => ({ name: named(intl, payload, "title") }),
+    values: (intl, payload) => ({ name: knowledgeItemNamed(intl, payload) }),
   },
   "knowledge_item.unpublished": {
     icon: Undo2,
@@ -2584,7 +2595,7 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
       id: "activity.knowledgeItem.unpublished",
       defaultMessage: "{actor} returned {name} to draft",
     }),
-    values: (intl, payload) => ({ name: named(intl, payload, "title") }),
+    values: (intl, payload) => ({ name: knowledgeItemNamed(intl, payload) }),
   },
   "knowledge_item.archived": {
     icon: Archive,
@@ -2592,7 +2603,7 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
       id: "activity.knowledgeItem.archived",
       defaultMessage: "{actor} archived {name}",
     }),
-    values: (intl, payload) => ({ name: named(intl, payload, "title") }),
+    values: (intl, payload) => ({ name: knowledgeItemNamed(intl, payload) }),
   },
   "knowledge_item.restored": {
     icon: ArchiveRestore,
@@ -2600,7 +2611,7 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
       id: "activity.knowledgeItem.restored",
       defaultMessage: "{actor} restored {name}",
     }),
-    values: (intl, payload) => ({ name: named(intl, payload, "title") }),
+    values: (intl, payload) => ({ name: knowledgeItemNamed(intl, payload) }),
   },
   "knowledge_folder.created": {
     icon: FolderPlus,
@@ -2608,23 +2619,28 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
       id: "activity.knowledgeFolder.created",
       defaultMessage: "{actor} created the Knowledge folder {name}",
     }),
-    values: (intl, payload) => ({ name: named(intl, payload, "name") }),
+    values: (intl, payload) => ({ name: folderNamed(intl, payload, "name") }),
   },
   "knowledge_folder.renamed": {
     icon: PencilLine,
     message: defineMessage({
       id: "activity.knowledgeFolder.renamed",
-      defaultMessage: "{actor} renamed a Knowledge folder to {name}",
+      defaultMessage: "{actor} renamed the {previousName} Knowledge folder to {name}",
     }),
-    values: (intl, payload) => ({ name: named(intl, payload, "name") }),
+    values: (intl, payload) => ({
+      name: folderNamed(intl, payload, "name"),
+      previousName: folderNamed(intl, payload, "previousName"),
+    }),
   },
   "knowledge_folder.moved": {
     icon: FolderInput,
     message: defineMessage({
       id: "activity.knowledgeFolder.moved",
-      defaultMessage: "{actor} moved the Knowledge folder {name}",
+      defaultMessage:
+        "{atRoot, select, true {{actor} moved the Knowledge folder {name} to the Library} " +
+        "other {{actor} moved the Knowledge folder {name} into {parent}}}",
     }),
-    values: (intl, payload) => ({ name: named(intl, payload, "name") }),
+    values: (intl, payload) => ({ ...folderNarration(intl, payload) }),
   },
   "knowledge_folder.reordered": {
     icon: ListOrdered,
@@ -2639,7 +2655,7 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
       id: "activity.knowledgeFolder.deleted",
       defaultMessage: "{actor} removed the Knowledge folder {name}",
     }),
-    values: (intl, payload) => ({ name: named(intl, payload, "name") }),
+    values: (intl, payload) => ({ name: folderNamed(intl, payload, "name") }),
   },
   "entity.confidentiality_set": {
     icon: Lock,

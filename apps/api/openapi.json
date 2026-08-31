@@ -14952,7 +14952,7 @@
       },
       "post": {
         "operationId": "createIntakeLink",
-        "summary": "Add a deflection link: a label over an absolute http/https URL, placed on the portal home (no request type) or on one live request type's form; the row appends to the panel order",
+        "summary": "Add a deflection link over exactly one target — an absolute http/https URL or a portal-readable Knowledge Item — placed on the portal home (no request type) or on one live request type's form; the label defaults to the Knowledge Item's title, and the row appends to the panel order",
         "tags": ["intake-links"],
         "requestBody": {
           "required": true,
@@ -14972,7 +14972,8 @@
                     "maxLength": 2048
                   },
                   "knowledgeItemId": {
-                    "type": "string"
+                    "type": "string",
+                    "minLength": 1
                   },
                   "requestTypeId": {
                     "type": ["string", "null"]
@@ -15052,7 +15053,7 @@
     "/api/v1/intake-links/{id}": {
       "patch": {
         "operationId": "updateIntakeLink",
-        "summary": "Edit a deflection link's label, URL, or placement; a move targets a live request type, and `requestTypeId: null` moves the link to the portal home panel",
+        "summary": "Edit a deflection link's label, target (an external URL or a portal-readable Knowledge Item), or placement; a move targets a live request type, and `requestTypeId: null` moves the link to the portal home panel",
         "tags": ["intake-links"],
         "requestBody": {
           "required": true,
@@ -15079,7 +15080,15 @@
                     ]
                   },
                   "knowledgeItemId": {
-                    "type": ["string", "null"]
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
                   },
                   "requestTypeId": {
                     "type": ["string", "null"]
@@ -15622,6 +15631,7 @@
     "/api/v1/portal/knowledge/{id}": {
       "get": {
         "operationId": "readPortalKnowledgeItem",
+        "summary": "One portal-readable Knowledge Item — published, audience Everyone, not archived; every signed-in role reads it (Administrator, Legal Team Member, Contributor, and Business User per DD-013), and anything short of that gate answers 404",
         "tags": ["portal"],
         "parameters": [
           {
@@ -15746,6 +15756,7 @@
     "/api/v1/portal/knowledge/{id}/documents/{documentId}/download": {
       "get": {
         "operationId": "downloadPortalKnowledgeDocument",
+        "summary": "The current Version's bytes for one Document on a portal-readable Knowledge Item, behind the same gate as the article; every signed-in role downloads it (Administrator, Legal Team Member, Contributor, and Business User per DD-013)",
         "tags": ["portal"],
         "parameters": [
           {

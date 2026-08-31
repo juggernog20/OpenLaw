@@ -5,6 +5,7 @@
  * It emits React elements from a fixed tag set; source HTML remains text.
  */
 import { Fragment, type ReactNode } from "react";
+import { FormattedMessage } from "react-intl";
 
 const INLINE = /(\[[^\]]+\]\([^)]+\)|`[^`]+`|\*\*[^*]+\*\*|__[^_]+__|\*[^*]+\*|_[^_]+_)/g;
 
@@ -34,6 +35,15 @@ function inline(source: string): ReactNode[] {
             className="text-link underline"
           >
             {link[1]}
+            {/* Every Markdown link opens a new tab; a sighted reader
+                sees the switch happen and a screen-reader user does
+                not — the same sr-only note the deflection panel adds. */}{" "}
+            <span className="sr-only">
+              <FormattedMessage
+                id="knowledge.markdown.newTab"
+                defaultMessage="(opens in a new tab)"
+              />
+            </span>
           </a>
         ) : (
           <Fragment key={index}>{link[1]}</Fragment>
@@ -89,8 +99,12 @@ export function KnowledgeMarkdown({ source }: Readonly<{ source: string }>) {
     const heading = /^(#{1,3})\s+(.+)$/.exec(line);
     if (heading) {
       // The record page owns h1 and its Guidance section owns h2, so
-      // `#` starts at h3 and the outline stays in order.
-      const Tag = `h${String(heading[1]!.length + 2)}` as "h3" | "h4" | "h5";
+      // `#` starts at h3 and the outline stays in order. A lookup
+      // rather than a template-string cast: the regex admits one to
+      // three marker characters, and the array states the same range
+      // without asserting it.
+      const headingTags = ["h3", "h4", "h5"] as const;
+      const Tag = headingTags[heading[1]!.length - 1] ?? "h5";
       blocks.push(
         <Tag key={blocks.length} className="font-semibold">
           {inline(heading[2]!)}

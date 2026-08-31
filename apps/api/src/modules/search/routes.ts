@@ -399,8 +399,7 @@ function searchCtes(db: Db, user: AuthenticatedUser, query: string): SQL {
         false as is_confidential,
         6::integer as kind_order,
         ${knowledgeItems.state} as state,
-        setweight(to_tsvector('english', coalesce(${knowledgeItems.title}, '')), 'A')
-          || setweight(to_tsvector('english', coalesce(${knowledgeItems.body}, '')), 'B')
+        ${knowledgeItems.searchVector}
           || setweight(to_tsvector('english', coalesce(${knowledgeTypes.displayName}, '')), 'C')
           as document
       from ${knowledgeItems}

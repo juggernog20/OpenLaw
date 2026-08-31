@@ -20,6 +20,11 @@ function portalKnowledge(call: StubCall) {
       id: "knowledge-1",
       title: "When an NDA is not needed",
       body: "## Before you start\n\nUse the template below.",
+      // Administrative fields the portal contract does not carry. They
+      // ride the stub anyway so the no-metadata test below pins that
+      // the screen drops them even when a payload holds them.
+      knowledgeTypeName: "Playbook",
+      createdBy: { id: "author-1", displayName: "Nadia Counsel", image: null, archived: false },
       primaryDocument: { id: "primary-document", title: "NDA guide" },
       documents: [
         {

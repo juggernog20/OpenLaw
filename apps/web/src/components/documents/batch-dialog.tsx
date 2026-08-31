@@ -193,12 +193,12 @@ const BATCH_COPY = {
     failures: defineMessage({
       id: "knowledge.documents.batch.failures",
       defaultMessage:
-        "{failed, plural, one {# file failed} other {# files failed}}. {landed, plural, =0 {Nothing was added to the Knowledge item.} one {The other # is on the Knowledge item.} other {The other # are on the Knowledge item.}}",
+        "{failed, plural, one {# file failed} other {# files failed}}. {landed, plural, =0 {Nothing was added to the Knowledge Item.} one {The other # is on the Knowledge Item.} other {The other # are on the Knowledge Item.}}",
     }),
     onRecord: defineMessage({
       id: "knowledge.documents.batch.onRecord",
       defaultMessage:
-        "{count, plural, =0 {Nothing was added to the Knowledge item.} one {# file is already on the Knowledge item.} other {# files are already on the Knowledge item.}}",
+        "{count, plural, =0 {Nothing was added to the Knowledge Item.} one {# file is already on the Knowledge Item.} other {# files are already on the Knowledge Item.}}",
     }),
   },
 } as const;

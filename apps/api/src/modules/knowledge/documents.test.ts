@@ -161,10 +161,16 @@ describe("file-first Knowledge", () => {
       cookies: memberCookies,
     });
     expect(others.statusCode, others.body).toBe(200);
-    expect(others.json().knowledgeItems.map((row: { title: string }) => row.title)).toEqual([
-      "Schedule.csv",
-      "Policy.txt",
-    ]);
+    // Sorted before comparing: the five rows are written in one
+    // transaction, so their `updated_at` values can land in the same
+    // millisecond and the default sort's tie-break may order these two
+    // either way. The claim under test is the format filter, not order.
+    expect(
+      others
+        .json()
+        .knowledgeItems.map((row: { title: string }) => row.title)
+        .sort(),
+    ).toEqual(["Policy.txt", "Schedule.csv"]);
 
     const repository = await harness.app.inject({
       method: "GET",

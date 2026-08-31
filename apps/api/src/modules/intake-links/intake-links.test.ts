@@ -669,9 +669,10 @@ describe("a Knowledge deflection link (M28)", () => {
     expect(response.json().knowledgeItems).toEqual(
       expect.arrayContaining([{ id: reachable, title: "Reachable answer" }]),
     );
-    expect(response.json().knowledgeItems.map((row: { title: string }) => row.title)).not.toEqual(
-      expect.arrayContaining(["Draft answer", "Legal answer", "Archived answer"]),
-    );
+    const offered = response.json().knowledgeItems.map((row: { title: string }) => row.title);
+    for (const hidden of ["Draft answer", "Legal answer", "Archived answer"]) {
+      expect(offered).not.toContain(hidden);
+    }
   });
 
   it("switches targets, keeps an internal row when it loses reach, and lets it be repaired", async () => {

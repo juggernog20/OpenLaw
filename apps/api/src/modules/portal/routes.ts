@@ -138,6 +138,13 @@ async function portalKnowledgeItem(db: Executor, id: string) {
   return item ?? null;
 }
 
+/**
+ * Deliberately hand-written rather than thrown through `httpError`: the
+ * shared handler stamps `instance` with the request URL, which carries
+ * the probed id. The KNW-004 addendum wants draft, Legal only, archived,
+ * and unknown items to answer one byte-identical 404 body, so nothing
+ * derived from the request may appear in it.
+ */
 function portalKnowledgeNotFound(reply: FastifyReply) {
   return reply.type(PROBLEM_CONTENT_TYPE).status(404).send({
     type: "about:blank",
@@ -322,6 +329,11 @@ export const portalRoutes: FastifyPluginAsyncZod = async (app) => {
       preHandler: requireAuth,
       schema: {
         operationId: "readPortalKnowledgeItem",
+        summary:
+          "One portal-readable Knowledge Item — published, audience " +
+          "Everyone, not archived; every signed-in role reads it " +
+          "(Administrator, Legal Team Member, Contributor, and Business " +
+          "User per DD-013), and anything short of that gate answers 404",
         tags: ["portal"],
         params: z.object({ id: z.string() }),
         response: {
@@ -388,6 +400,11 @@ export const portalRoutes: FastifyPluginAsyncZod = async (app) => {
       preHandler: requireAuth,
       schema: {
         operationId: "downloadPortalKnowledgeDocument",
+        summary:
+          "The current Version's bytes for one Document on a " +
+          "portal-readable Knowledge Item, behind the same gate as the " +
+          "article; every signed-in role downloads it (Administrator, " +
+          "Legal Team Member, Contributor, and Business User per DD-013)",
         tags: ["portal"],
         produces: ["application/octet-stream"],
         params: z.object({ id: z.string(), documentId: z.string() }),

@@ -349,6 +349,18 @@ export function NotificationSwitchGrid({
           id="settings.notifications.caption"
           defaultMessage="Email off keeps the bell items coming. In-app off turns the group off entirely, email included."
         />
+        {/* The two-switch sentence is false for an email-only group —
+            there are no bell items to keep coming — so the caption says
+            so whenever one is drawn. */}
+        {emailOnlyGroups.length > 0 ? (
+          <>
+            {" "}
+            <FormattedMessage
+              id="settings.notifications.captionEmailOnly"
+              defaultMessage="A group with no in-app switch reaches you by email only; its one switch is the whole choice."
+            />
+          </>
+        ) : null}
       </p>
     </div>
   );

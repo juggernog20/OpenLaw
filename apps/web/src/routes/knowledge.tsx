@@ -22,6 +22,8 @@ import { CONTROL_CLASS } from "../lib/form-controls";
 import {
   folderDepth,
   folderLabel,
+  KNOWLEDGE_FORMATS,
+  knowledgeFormatLabel,
   type KnowledgeFolder,
   type KnowledgeItem,
 } from "../lib/knowledge";
@@ -387,7 +389,7 @@ export function KnowledgePage() {
                 </DropdownMenuItem>
                 <DropdownMenuItem onSelect={() => setCreateOpen(true)}>
                   <BookOpen size={16} aria-hidden="true" />
-                  <FormattedMessage id="knowledge.new.item" defaultMessage="New knowledge item" />
+                  <FormattedMessage id="knowledge.new.item" defaultMessage="New Knowledge Item" />
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -770,14 +772,7 @@ function KnowledgeFilters({
         value={String(filters.format ?? "")}
         disabled={busy}
         onChange={(value) => onFilter("format", value)}
-        options={[
-          ["pdf", "PDF"],
-          ["word", "Word"],
-          ["powerpoint", "PowerPoint"],
-          ["image", "Image"],
-          ["email", "Email"],
-          ["other", "Other"],
-        ]}
+        options={KNOWLEDGE_FORMATS.map((format) => [format, knowledgeFormatLabel(intl, format)])}
       />
       <Button
         variant="ghost"
@@ -915,7 +910,7 @@ function CreateItemDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogTitle>
-          <FormattedMessage id="knowledge.create.title" defaultMessage="New Knowledge item" />
+          <FormattedMessage id="knowledge.create.title" defaultMessage="New Knowledge Item" />
         </DialogTitle>
         <div className="mt-4 flex flex-col gap-4">
           <div className="flex flex-col gap-1.5">

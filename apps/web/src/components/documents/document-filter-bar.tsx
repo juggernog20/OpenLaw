@@ -106,6 +106,11 @@ export function DocumentFilterBar({
   const listRef = useRef<HTMLUListElement>(null);
   const [recordDraft, setRecordDraft] = useState<string | null>(null);
   const selectedRecord = options.records.find((record) => record.reference === filters.record);
+  // One derived owner for the folder read and the folder select's
+  // guard: the owner filter can sit on "All" while the picked record is
+  // a Knowledge Item, and the two must agree that such a record has no
+  // Document folders.
+  const derivedOwner = filters.owner || selectedRecord?.kind;
   const selectedLabel =
     selectedRecord?.kind === "entity" || selectedRecord?.kind === "knowledge_item"
       ? selectedRecord.title
@@ -135,9 +140,8 @@ export function DocumentFilterBar({
   const rowId = (index: number) => `${listboxId}-row-${index}`;
 
   useEffect(() => {
-    const owner = filters.owner || selectedRecord?.kind;
-    if (owner === "knowledge_item") return () => undefined;
-    const record = documentRecordReference(filters.record, owner || undefined);
+    if (derivedOwner === "knowledge_item") return () => undefined;
+    const record = documentRecordReference(filters.record, derivedOwner || undefined);
     let cancelled = false;
     if (!record) return () => undefined;
     void readRecordFolders(record).then((answer) => {
@@ -148,7 +152,7 @@ export function DocumentFilterBar({
     return () => {
       cancelled = true;
     };
-  }, [filters.owner, filters.record, selectedRecord?.kind]);
+  }, [derivedOwner, filters.record]);
 
   // The arrow keys can walk past the list's foot; the named row has to
   // be in view for a sighted keyboard user, as in the contract picker.
@@ -366,7 +370,7 @@ export function DocumentFilterBar({
           )}
         </label>
 
-        {filters.record && filters.owner !== "knowledge_item" && (
+        {filters.record && derivedOwner !== "knowledge_item" && (
           <label className="flex flex-col gap-1 text-xs font-medium text-muted">
             <FormattedMessage {...MESSAGES.folder} />
             <select

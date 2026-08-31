@@ -258,7 +258,7 @@ Which version of a Document the team calls the signed copy — the one previews,
 _Avoid_: executed flag, signed version, final document, the executed document
 
 **Primary document (Knowledge sense)**:
-The one Document a Knowledge Item pins as its main file. Its current Version opens first on the record and appears first on the portal article. The pin is optional, explicit, and must name a live Document owned by that same item [KNW-001].
+The one Document a Knowledge Item pins as its main Document. Its current Version opens first on the record and appears first on the portal article. The pin is optional, explicit, and must name a live Document owned by that same item [KNW-001].
 _Avoid_: primary file, attachment, executed pin
 
 **Approval request**:

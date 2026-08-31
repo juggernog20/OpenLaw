@@ -24,7 +24,7 @@ const FOLDERS = [
     name: "Commercial",
     parentId: null,
     displayOrder: 0,
-    itemCount: 0,
+    itemCount: 1,
     createdAt: "2026-08-01T00:00:00.000Z",
     updatedAt: "2026-08-01T00:00:00.000Z",
   },
@@ -37,7 +37,26 @@ const FOLDERS = [
     createdAt: "2026-08-01T00:00:00.000Z",
     updatedAt: "2026-08-01T00:00:00.000Z",
   },
+  {
+    id: "disputes",
+    name: "Disputes",
+    parentId: null,
+    displayOrder: 1,
+    itemCount: 0,
+    createdAt: "2026-08-01T00:00:00.000Z",
+    updatedAt: "2026-08-01T00:00:00.000Z",
+  },
 ];
+
+/** The selected folder and every descendant — the subtree the API's
+ * folder filter lists (KNW-003), mirrored so the stub cannot pass a
+ * screen the real list would contradict. */
+function subtreeOf(folderId: string): string[] {
+  return [
+    folderId,
+    ...FOLDERS.filter((row) => row.parentId === folderId).flatMap((row) => subtreeOf(row.id)),
+  ];
+}
 
 function item(overrides: Record<string, unknown> = {}) {
   return {
@@ -82,7 +101,9 @@ function libraryApi(rows = [item()]) {
       const type = call.url.searchParams.get("type");
       return json(200, {
         knowledgeItems: rows.filter(
-          (row) => (!folder || row.folderId === folder) && (!type || row.knowledgeTypeId === type),
+          (row) =>
+            (!folder || subtreeOf(folder).includes(String(row.folderId))) &&
+            (!type || row.knowledgeTypeId === type),
         ),
         nextCursor: null,
       });
@@ -117,16 +138,16 @@ function recordApi(patches: unknown[], initial: Record<string, unknown> = {}) {
     if (call.url.pathname === "/api/v1/knowledge/knowledge-1/documents" && call.method === "GET")
       return json(200, {
         documents: [
-          document(),
-          document({ id: "document-2", title: "alternate.docx", isPrimary: false }),
+          documentFixture(),
+          documentFixture({ id: "document-2", title: "alternate.docx", isPrimary: false }),
         ],
         nextCursor: null,
       });
     if (call.url.pathname === "/api/v1/documents/document-2/primary" && call.method === "POST")
       return json(200, {
         documents: [
-          document({ isPrimary: false }),
-          document({ id: "document-2", title: "alternate.docx", isPrimary: true }),
+          documentFixture({ isPrimary: false }),
+          documentFixture({ id: "document-2", title: "alternate.docx", isPrimary: true }),
         ],
         nextCursor: null,
       });
@@ -180,7 +201,7 @@ function recordApi(patches: unknown[], initial: Record<string, unknown> = {}) {
   };
 }
 
-function document(overrides: Record<string, unknown> = {}) {
+function documentFixture(overrides: Record<string, unknown> = {}) {
   return {
     id: "document-1",
     title: "Contract review playbook.pdf",
@@ -273,7 +294,7 @@ describe("the Knowledge library", () => {
     renderAt("/knowledge");
     const user = userEvent.setup();
     await user.click((await screen.findAllByRole("button", { name: "New" }))[0]!);
-    expect(screen.getByRole("menuitem", { name: "New knowledge item" })).toBeInTheDocument();
+    expect(screen.getByRole("menuitem", { name: "New Knowledge Item" })).toBeInTheDocument();
     await user.click(screen.getByRole("menuitem", { name: "New from files" }));
     const dialog = await screen.findByRole("dialog", { name: "New from files" });
     await user.upload(within(dialog).getByLabelText("Choose Knowledge files"), [
@@ -293,7 +314,11 @@ describe("the Knowledge library", () => {
     stubApi({ signedIn: MEMBER, extra: libraryApi() });
     renderAt("/knowledge");
     const user = userEvent.setup();
+    // Selecting a parent lists its descendants' items too (KNW-003):
+    // the item sits in Contracts, inside Commercial.
     await user.click(await screen.findByRole("button", { name: /Commercial/ }));
+    expect(await screen.findByRole("link", { name: "Contract review playbook" })).toBeVisible();
+    await user.click(screen.getByRole("button", { name: /Disputes/ }));
     expect(
       await screen.findByRole("heading", { name: "No Knowledge items match these filters" }),
     ).toBeInTheDocument();
@@ -324,8 +349,8 @@ describe("the Knowledge library", () => {
     renderAt("/knowledge");
     const user = userEvent.setup();
     await user.click((await screen.findAllByRole("button", { name: "New" }))[0]!);
-    await user.click(await screen.findByRole("menuitem", { name: "New knowledge item" }));
-    const dialog = await screen.findByRole("dialog", { name: "New Knowledge item" });
+    await user.click(await screen.findByRole("menuitem", { name: "New Knowledge Item" }));
+    const dialog = await screen.findByRole("dialog", { name: "New Knowledge Item" });
     await user.type(within(dialog).getByLabelText("Title"), "Review guide");
     await user.selectOptions(within(dialog).getByLabelText("Type"), "type-article");
     await user.selectOptions(within(dialog).getByLabelText("Folder"), "contracts");
@@ -359,8 +384,8 @@ describe("the Knowledge library", () => {
     const user = userEvent.setup();
     await user.click(await screen.findByRole("button", { name: /Contracts/ }));
     await user.click((await screen.findAllByRole("button", { name: "New" }))[0]!);
-    await user.click(await screen.findByRole("menuitem", { name: "New knowledge item" }));
-    const dialog = await screen.findByRole("dialog", { name: "New Knowledge item" });
+    await user.click(await screen.findByRole("menuitem", { name: "New Knowledge Item" }));
+    const dialog = await screen.findByRole("dialog", { name: "New Knowledge Item" });
     expect(within(dialog).getByLabelText("Folder")).toHaveValue("contracts");
     await user.type(within(dialog).getByLabelText("Title"), "Filed guide");
     await user.click(within(dialog).getByRole("button", { name: "Create item" }));
@@ -440,7 +465,9 @@ describe("a Knowledge record", () => {
     const user = userEvent.setup();
     expect(await screen.findByRole("heading", { name: "Documents" })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "New folder" })).not.toBeInTheDocument();
-    await user.click(screen.getByRole("button", { name: "Open preview" }));
+    await user.click(
+      screen.getByRole("button", { name: "Open preview of Contract review playbook.pdf" }),
+    );
     expect(
       await screen.findByRole("complementary", {
         name: "Contract review playbook.pdf, version 1",
@@ -483,7 +510,10 @@ describe("a Knowledge record", () => {
     await user.click(await screen.findByRole("button", { name: "Preview" }));
     expect(screen.getByRole("heading", { name: "Review" })).toBeInTheDocument();
     expect(screen.getByText("term").tagName).toBe("STRONG");
-    expect(screen.getByRole("link", { name: "source" })).toHaveAttribute("rel", "noreferrer");
+    expect(screen.getByRole("link", { name: "source (opens in a new tab)" })).toHaveAttribute(
+      "rel",
+      "noreferrer",
+    );
     expect(screen.queryByRole("link", { name: "bad" })).not.toBeInTheDocument();
     expect(screen.getByText(/<img src=x onerror=alert/)).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "History" }));
@@ -523,8 +553,10 @@ describe("a Knowledge record", () => {
     await user.click(await screen.findByRole("button", { name: "Knowledge Item actions" }));
     await user.click(screen.getByRole("menuitem", { name: "Archive" }));
     const archive = await screen.findByRole("dialog", { name: "Archive Knowledge Item" });
+    // The picker reads when the dialog opens, so its options arrive
+    // after the dialog does.
     expect(
-      within(archive).getByRole("option", { name: "Second-page playbook" }),
+      await within(archive).findByRole("option", { name: "Second-page playbook" }),
     ).toBeInTheDocument();
     await user.selectOptions(within(archive).getByLabelText("Replaced by"), "knowledge-2");
     await user.click(within(archive).getByRole("button", { name: "Archive" }));

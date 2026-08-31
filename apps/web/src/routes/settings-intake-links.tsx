@@ -52,6 +52,7 @@ import { useRef, useState } from "react";
 import { redirect, useLoaderData } from "react-router";
 import { FormattedMessage, useIntl, type IntlShape } from "react-intl";
 import { Pencil } from "lucide-react";
+import type { paths } from "@openlaw/api-client";
 import { api } from "../lib/api";
 import { CONTROL_CLASS } from "../lib/form-controls";
 import { networkError } from "../lib/messages";
@@ -66,17 +67,11 @@ import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
 import type { FieldStatus } from "../components/status-note";
 
-/** One row of GET /intake-links, as the client sees it. */
-interface LinkRow {
-  id: string;
-  label: string;
-  url: string | null;
-  knowledgeItemId: string | null;
-  knowledgeItemTitle: string | null;
-  /** NULL = the portal home panel (INT-004). */
-  requestTypeId: string | null;
-  displayOrder: number;
-}
+/** One row of GET /intake-links, straight from the generated contract
+ * so a target-field change on the API cannot drift past this screen.
+ * `requestTypeId: null` = the portal home panel (INT-004). */
+type LinkRow =
+  paths["/api/v1/intake-links"]["get"]["responses"][200]["content"]["application/json"]["intakeLinks"][number];
 
 /** One link as the list editor draws it: the shared row anatomy over
  * the API row, the label standing in as the display name. */
@@ -90,10 +85,8 @@ interface PlacementType {
   archivedAt: string | null;
 }
 
-interface KnowledgeOption {
-  id: string;
-  title: string;
-}
+type KnowledgeOption =
+  paths["/api/v1/intake-links/knowledge-options"]["get"]["responses"][200]["content"]["application/json"]["knowledgeItems"][number];
 
 export async function settingsIntakeLinksLoader() {
   const user = await requireUser();

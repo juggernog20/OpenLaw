@@ -44,12 +44,12 @@ const MESSAGES = defineMessages({
   entity: { id: "search.kind.entity", defaultMessage: "Entity" },
   counterparty: { id: "search.kind.counterparty", defaultMessage: "Counterparty" },
   request: { id: "search.kind.request", defaultMessage: "Request" },
-  knowledge_item: { id: "search.kind.knowledge", defaultMessage: "Knowledge item" },
+  knowledge_item: { id: "search.kind.knowledge", defaultMessage: "Knowledge Item" },
   version: { id: "search.result.version", defaultMessage: "v{number}" },
   ownedBy: { id: "search.result.ownedBy", defaultMessage: "Owned by" },
   draftKnowledge: {
     id: "search.result.knowledgeDraft",
-    defaultMessage: "Draft · Knowledge item",
+    defaultMessage: "Draft · Knowledge Item",
   },
 });
 

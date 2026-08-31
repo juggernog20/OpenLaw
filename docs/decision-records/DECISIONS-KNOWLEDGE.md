@@ -33,7 +33,7 @@ _None — queue cleared 2026-08-06 (KNW-001 through KNW-005)._
 
 ### Built addendum (2026-08-30, M28 close, [#598](https://github.com/juggernog20/OpenLaw/issues/598)) — file-first, one primary Document, drop-to-create, and Markdown guidance
 
-The shipped record is file-first. Dropping one or several files on the Knowledge destination creates one draft Knowledge Item per file, takes each title from its filename, creates its first owned Document and Version, and pins that Document as the item's primary Document. An item may also start without a file. On a record with several Documents, Member+ may move or clear the primary pin, and the pin must name a live Document that item owns.
+The shipped record is file-first. Dropping one or several files on the Knowledge destination creates one draft Knowledge Item per file, takes each title from its filename, creates its first owned Document and Version, and pins that Document as the item's primary Document. An item may also start without a Document. On a record with several Documents, Member+ may move or clear the primary pin, and the pin must name a live Document that item owns.
 
 The optional `body` stores Markdown source. The editor gives source and preview modes. Rendering uses a fixed React-element allowlist for headings, lists, links, emphasis, and code; it accepts no raw HTML and uses no HTML injection. The body remains guidance beside the files, and the record and portal both read the primary file before the body.
 

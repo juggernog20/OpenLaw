@@ -254,14 +254,16 @@ export const intakeLinksRoutes: FastifyPluginAsyncZod = async (app) => {
       schema: {
         operationId: "createIntakeLink",
         summary:
-          "Add a deflection link: a label over an absolute http/https " +
-          "URL, placed on the portal home (no request type) or on one " +
-          "live request type's form; the row appends to the panel order",
+          "Add a deflection link over exactly one target — an absolute " +
+          "http/https URL or a portal-readable Knowledge Item — placed " +
+          "on the portal home (no request type) or on one live request " +
+          "type's form; the label defaults to the Knowledge Item's " +
+          "title, and the row appends to the panel order",
         tags: ["intake-links"],
         body: z.strictObject({
           label: LabelSchema.optional(),
           url: UrlSchema.optional(),
-          knowledgeItemId: z.string().optional(),
+          knowledgeItemId: z.string().min(1).optional(),
           /** Omitted or null = the portal home panel. */
           requestTypeId: z.string().nullish(),
         }),
@@ -314,7 +316,8 @@ export const intakeLinksRoutes: FastifyPluginAsyncZod = async (app) => {
       schema: {
         operationId: "updateIntakeLink",
         summary:
-          "Edit a deflection link's label, URL, or placement; a move " +
+          "Edit a deflection link's label, target (an external URL or a " +
+          "portal-readable Knowledge Item), or placement; a move " +
           "targets a live request type, and `requestTypeId: null` moves " +
           "the link to the portal home panel",
         tags: ["intake-links"],
@@ -326,7 +329,7 @@ export const intakeLinksRoutes: FastifyPluginAsyncZod = async (app) => {
           .strictObject({
             label: LabelSchema.optional(),
             url: UrlSchema.nullable().optional(),
-            knowledgeItemId: z.string().nullable().optional(),
+            knowledgeItemId: z.string().min(1).nullable().optional(),
             requestTypeId: z.string().nullable().optional(),
           })
           .refine((body) => Object.keys(body).length > 0, {

@@ -820,9 +820,12 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
       case "entity":
         return and(isNotNull(documents.entityId), entityReachScope(db, user));
       case "knowledge_item":
+        // No archived filter: archiving freezes a record, it does not
+        // hide it. `assertLiveOwner` answers writes on an archived
+        // item's paper with the 409 that names the cause, and reads
+        // stay reachable — the same shape as the other three arms.
         return and(
           isNotNull(documents.knowledgeItemId),
-          isNull(knowledgeItems.archivedAt),
           user.role === "administrator" || user.role === "legal_team_member"
             ? undefined
             : sql`false`,
@@ -1385,7 +1388,7 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
       let knowledgeTypeId: string | undefined;
       let folderId: string | undefined;
       /** The names the activity feed shows, read once with the choices. */
-      let choices: { knowledgeType: string; folder: string | null } | undefined;
+      let choices: { knowledgeType: string } | undefined;
       try {
         const parts = request.parts({
           limits: { files: 50, fields: 4, parts: 54, fileSize: app.maxUploadBytes },
@@ -1410,17 +1413,7 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
               .where(and(eq(knowledgeTypes.id, knowledgeTypeId), isNull(knowledgeTypes.archivedAt)))
               .limit(1);
             if (!type) throw httpError(400, "The Knowledge type must be a live Knowledge type.");
-            let folderName: string | null = null;
-            if (folderId) {
-              const [folder] = await app.db
-                .select({ id: knowledgeFolders.id, name: knowledgeFolders.name })
-                .from(knowledgeFolders)
-                .where(eq(knowledgeFolders.id, folderId))
-                .limit(1);
-              if (!folder) throw httpError(400, "The folder must be a Knowledge folder.");
-              folderName = folder.name;
-            }
-            choices = { knowledgeType: type.displayName, folder: folderName };
+            choices = { knowledgeType: type.displayName };
           }
           const itemId = uuidv7();
           const documentId = uuidv7();
@@ -1433,6 +1426,20 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
           stored.push({ itemId, documentId, versionId, file });
         }
         if (stored.length === 0) throw httpError(400, "Attach at least one file to upload.");
+        // Validated after the whole stream: multipart field order is the
+        // client's choice, so a `folderId` that arrives after the file
+        // parts must still answer the 400 rather than fail the insert's
+        // foreign key with a 500.
+        let folderName: string | null = null;
+        if (folderId) {
+          const [folder] = await app.db
+            .select({ id: knowledgeFolders.id, name: knowledgeFolders.name })
+            .from(knowledgeFolders)
+            .where(eq(knowledgeFolders.id, folderId))
+            .limit(1);
+          if (!folder) throw httpError(400, "The folder must be a Knowledge folder.");
+          folderName = folder.name;
+        }
 
         const created = await app.db.transaction(async (tx) => {
           const answer: Array<{ id: string; title: string; primaryDocumentId: string }> = [];
@@ -1473,7 +1480,24 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
               payload: {
                 title: upload.file.filename,
                 knowledgeType: choices!.knowledgeType,
-                folder: choices!.folder,
+                folder: folderName,
+              },
+            });
+            // `document.created` before `document.primary_set`, the
+            // order `POST /knowledge/:id/documents` writes: the feed
+            // reads newest first, so the pin narrates above the upload
+            // that created its target.
+            await recordActivity(tx, {
+              entityType: "knowledge_item",
+              entityId: upload.itemId,
+              actorId: request.user.id,
+              action: "document.created",
+              visibility: RECORD_ACTIVITY_TIER,
+              payload: {
+                documentId: upload.documentId,
+                versionId: upload.versionId,
+                title: upload.file.filename,
+                folderName: null,
               },
             });
             await recordActivity(tx, {
@@ -1488,19 +1512,6 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
                 fromDocumentId: null,
                 from: null,
                 to: upload.file.filename,
-              },
-            });
-            await recordActivity(tx, {
-              entityType: "knowledge_item",
-              entityId: upload.itemId,
-              actorId: request.user.id,
-              action: "document.created",
-              visibility: RECORD_ACTIVITY_TIER,
-              payload: {
-                documentId: upload.documentId,
-                versionId: upload.versionId,
-                title: upload.file.filename,
-                folderName: null,
               },
             });
             answer.push({

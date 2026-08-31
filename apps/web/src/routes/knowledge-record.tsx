@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 /** M28's one-section Knowledge record with DES-017 field commits. */
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Archive,
   ArchiveRestore,
@@ -54,7 +54,7 @@ export async function knowledgeRecordLoader({ params, request }: LoaderFunctionA
   const landingQuery = new URL(request.url).searchParams;
   const documentId = landingQuery.get("doc")?.trim();
   const versionId = landingQuery.get("version")?.trim();
-  const [item, types, folders, paper, landing, replacements] = await Promise.all([
+  const [item, types, folders, paper, landing] = await Promise.all([
     api.GET("/api/v1/knowledge/{id}", { params: { path: { id } } }),
     api.GET("/api/v1/knowledge/type-options"),
     api.GET("/api/v1/knowledge/folders"),
@@ -62,9 +62,8 @@ export async function knowledgeRecordLoader({ params, request }: LoaderFunctionA
     documentId && versionId
       ? readDocumentLanding({ entityType: "knowledge_item", id }, documentId, versionId)
       : null,
-    readReplacementItems(),
   ]);
-  if (!item.data || !types.data || !folders.data || !paper.ok || !replacements)
+  if (!item.data || !types.data || !folders.data || !paper.ok)
     throw new Error("The Knowledge item could not be read.");
   return {
     user,
@@ -75,14 +74,18 @@ export async function knowledgeRecordLoader({ params, request }: LoaderFunctionA
     documentCursor: paper.nextCursor,
     landing,
     documentFindQuery: landingQuery.get("find")?.trim() || null,
-    replacementItems: replacements.filter((row) => row.id !== id),
   };
 }
 
 /** Every live Knowledge Item, for the Archive dialog's replaced-by
  * picker. The list answers one page at a time, so this walks the
  * cursor to the end; a picker cut off at the first page would hide the
- * item the author came to name. Null when any page fails. */
+ * item the author came to name. Null when any page fails.
+ *
+ * Read when the Archive dialog opens, not in the loader: the walk
+ * grows with the library, most visits never open the dialog, and a
+ * failed page of an ancillary picker must not take down a record that
+ * is otherwise readable. */
 async function readReplacementItems() {
   const rows: Array<{ id: string; title: string }> = [];
   let cursor: string | undefined;
@@ -112,6 +115,11 @@ export function KnowledgeRecordPage() {
   const [actionError, setActionError] = useState<string>();
   const [archiveOpen, setArchiveOpen] = useState(false);
   const [replacementId, setReplacementId] = useState("");
+  const [replacementItems, setReplacementItems] = useState<Array<{
+    id: string;
+    title: string;
+  }> | null>(null);
+  const [replacementsFailed, setReplacementsFailed] = useState(false);
   const [reachWarning, setReachWarning] = useState<"unpublish" | "legal_only" | null>(null);
   const [paper, setPaper] = useState<ContractDocument[]>(loaded.documents);
   const [paperCursor, setPaperCursor] = useState<string | null>(loaded.documentCursor);
@@ -124,6 +132,26 @@ export function KnowledgeRecordPage() {
   const textarea = useRef<HTMLTextAreaElement>(null);
   const commits = useFieldCommit<FieldKey>();
   const history = useActivityApplet({ entityType: "knowledge_item", entityId: saved.id });
+  // The replaced-by picker walks the whole library, so it reads when
+  // the Archive dialog first opens rather than on every record load,
+  // and a failure stays inside the dialog. Closing and reopening
+  // retries a failed read.
+  useEffect(() => {
+    if (!archiveOpen || replacementItems !== null) return;
+    let cancelled = false;
+    void readReplacementItems().then((rows) => {
+      if (cancelled) return;
+      if (rows) {
+        setReplacementItems(rows.filter((row) => row.id !== saved.id));
+        setReplacementsFailed(false);
+      } else {
+        setReplacementsFailed(true);
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [archiveOpen, replacementItems, saved.id]);
   const recordFacts = useMemo(
     () => ({
       record: { kind: "knowledge_item" as const, id: saved.id, number: 0 },
@@ -455,9 +483,12 @@ export function KnowledgeRecordPage() {
                       className={CONTROL_CLASS}
                       value={saved.audience}
                       disabled={saved.archivedAt !== null}
-                      onChange={(event) =>
-                        requestAudience(event.target.value as "legal_only" | "everyone")
-                      }
+                      onChange={(event) => {
+                        const picked = (["legal_only", "everyone"] as const).find(
+                          (option) => option === event.target.value,
+                        );
+                        if (picked) requestAudience(picked);
+                      }}
                     >
                       <option value="legal_only">
                         {intl.formatMessage({
@@ -488,10 +519,13 @@ export function KnowledgeRecordPage() {
                   {saved.primaryDocument ? (
                     <button
                       type="button"
-                      aria-label={intl.formatMessage({
-                        id: "knowledge.action.openPreview",
-                        defaultMessage: "Open preview",
-                      })}
+                      aria-label={intl.formatMessage(
+                        {
+                          id: "knowledge.action.openPreviewOf",
+                          defaultMessage: "Open preview of {title}",
+                        },
+                        { title: saved.primaryDocument.title },
+                      )}
                       className="flex items-center justify-between rounded-button border border-border-default px-3 py-2 text-start hover:bg-hover"
                       onClick={() =>
                         setReading({
@@ -666,6 +700,7 @@ export function KnowledgeRecordPage() {
                 className={CONTROL_CLASS}
                 value={replacementId}
                 onChange={(event) => setReplacementId(event.target.value)}
+                disabled={replacementItems === null}
               >
                 <option value="">
                   {intl.formatMessage({
@@ -673,12 +708,20 @@ export function KnowledgeRecordPage() {
                     defaultMessage: "No replacement",
                   })}
                 </option>
-                {loaded.replacementItems.map((row) => (
+                {(replacementItems ?? []).map((row) => (
                   <option key={row.id} value={row.id}>
                     {row.title}
                   </option>
                 ))}
               </select>
+              {replacementsFailed ? (
+                <p className="text-sm text-muted">
+                  <FormattedMessage
+                    id="knowledge.archive.pickerFailed"
+                    defaultMessage="The replacement list could not be read. You can archive without naming one."
+                  />
+                </p>
+              ) : null}
             </div>
             <div className="flex justify-end gap-2">
               <Button variant="secondary" onClick={() => setArchiveOpen(false)}>

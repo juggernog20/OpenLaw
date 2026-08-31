@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-/** The Knowledge settings section head; Types is M28's first pane. */
+/** The Knowledge settings section head; Types is M28's first pane —
+ * KNW-001's configurable type list on the SET-003 taxonomy machinery. */
 import { FormattedMessage, useIntl } from "react-intl";
 import { SettingsSectionTabs } from "./settings-section-tabs";
 

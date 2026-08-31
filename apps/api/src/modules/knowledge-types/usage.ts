@@ -21,6 +21,10 @@ export const knowledgeTypeUsage: TaxonomyUsage = {
       .set({ knowledgeTypeId: to.id, updatedBy: actorId })
       .where(eq(knowledgeItems.knowledgeTypeId, from.id))
       .returning({ id: knowledgeItems.id, title: knowledgeItems.title });
+    // Drizzle refuses `values([])`, so an empty move must answer before
+    // the activity write — the same guard the Contract and Matter
+    // type-usage implementations carry.
+    if (moved.length === 0) return 0;
     await recordActivity(
       tx,
       moved.map((row) => ({

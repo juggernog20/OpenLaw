@@ -1478,7 +1478,7 @@ export interface paths {
     /** The INT-004 deflection links in panel order; a link with no request type belongs to the portal home panel */
     get: operations["listIntakeLinks"];
     put?: never;
-    /** Add a deflection link: a label over an absolute http/https URL, placed on the portal home (no request type) or on one live request type's form; the row appends to the panel order */
+    /** Add a deflection link over exactly one target — an absolute http/https URL or a portal-readable Knowledge Item — placed on the portal home (no request type) or on one live request type's form; the label defaults to the Knowledge Item's title, and the row appends to the panel order */
     post: operations["createIntakeLink"];
     delete?: never;
     options?: never;
@@ -1500,7 +1500,7 @@ export interface paths {
     delete: operations["deleteIntakeLink"];
     options?: never;
     head?: never;
-    /** Edit a deflection link's label, URL, or placement; a move targets a live request type, and `requestTypeId: null` moves the link to the portal home panel */
+    /** Edit a deflection link's label, target (an external URL or a portal-readable Knowledge Item), or placement; a move targets a live request type, and `requestTypeId: null` moves the link to the portal home panel */
     patch: operations["updateIntakeLink"];
     trace?: never;
   };
@@ -1579,6 +1579,7 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
+    /** One portal-readable Knowledge Item — published, audience Everyone, not archived; every signed-in role reads it (Administrator, Legal Team Member, Contributor, and Business User per DD-013), and anything short of that gate answers 404 */
     get: operations["readPortalKnowledgeItem"];
     put?: never;
     post?: never;
@@ -1595,6 +1596,7 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
+    /** The current Version's bytes for one Document on a portal-readable Knowledge Item, behind the same gate as the article; every signed-in role downloads it (Administrator, Legal Team Member, Contributor, and Business User per DD-013) */
     get: operations["downloadPortalKnowledgeDocument"];
     put?: never;
     post?: never;

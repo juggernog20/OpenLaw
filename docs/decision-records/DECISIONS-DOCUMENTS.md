@@ -142,7 +142,7 @@ The record-scoped facet now includes Entity. Nested creation, rename, move, diss
 
 ### Built addendum (2026-08-30, M28/4, [#598](https://github.com/juggernog20/OpenLaw/issues/598)): Knowledge organization does not widen Document folders
 
-Knowledge Items own Documents, but their Documents do not gain a fourth folder mount. The Knowledge folder tree organizes the owning items under KNW-003; the shared Documents card therefore mounts without its folder tree, and repository requests that combine a Knowledge owner with a Document-folder filter are refused. This keeps one organizational answer instead of nesting a private Document tree inside a library item.
+Knowledge Items own Documents, but their Documents do not gain a fourth folder mount. The Knowledge Folder tree organizes the owning items under KNW-003 — it never files the Documents inside an item; the shared Documents card therefore mounts without its folder tree, and repository requests that combine a Knowledge owner with a Document-folder filter are refused. This keeps one organizational answer instead of nesting a private Document tree inside a library item.
 
 ## DOC-007 — Metadata: standard document properties only; no custom fields; tags deferred
 

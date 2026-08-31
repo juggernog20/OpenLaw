@@ -131,8 +131,9 @@ export function documentRecordReference(
 ): DocumentRecord | null {
   const match = /^([CM])-([1-9]\d*)$/.exec(reference);
   if (!match?.[2]) {
-    // The API's rule: a value shaped like a numbered reference must be one;
-    // anything else is an opaque Entity id.
+    // The API's rule: a value shaped like a numbered reference must be
+    // one; anything else is an opaque id — an Entity's, or a Knowledge
+    // Item's when the caller says the owner is one.
     return reference.length > 0 && reference.length <= 64 && !/^[CM]-/.test(reference)
       ? { entityType: owner === "knowledge_item" ? "knowledge_item" : "entity", id: reference }
       : null;

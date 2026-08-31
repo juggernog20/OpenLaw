@@ -95,21 +95,39 @@ test.describe("accessibility floor", () => {
       });
       expect(published.status(), await published.text()).toBe(200);
 
+      // The whole-page scans stay advisory (the helper's contract);
+      // the surfaces M28 itself built are gated the way the entity
+      // chart is — a narrowed scan whose findings fail the run.
       await page.goto("/knowledge");
       await expect(page).toHaveTitle("Knowledge · OpenLaw");
       await expect(page.getByRole("link", { name: title })).toBeVisible();
       await reportAxeViolations(page, testInfo, "knowledge-destination");
+      expect(
+        await reportAxeViolations(page, testInfo, "knowledge-list", {
+          include: '[aria-label="Knowledge items"]',
+        }),
+      ).toEqual([]);
 
       await page.goto(`/knowledge/${itemId}`);
       await expect(page).toHaveTitle(`${title} · OpenLaw`);
       await expect(page.getByRole("region", { name: "Knowledge item" })).toBeVisible();
       await reportAxeViolations(page, testInfo, "knowledge-record");
+      expect(
+        await reportAxeViolations(page, testInfo, "knowledge-record-identity", {
+          include: '[aria-labelledby="knowledge-identity-heading"]',
+        }),
+      ).toEqual([]);
 
       await page.goto(`/portal/knowledge/${itemId}`);
       await expect(page).toHaveTitle(`${title} · OpenLaw`);
       await expect(page.getByRole("heading", { name: title })).toBeVisible();
       await expect(page.getByRole("region", { name: "Guidance" })).toBeVisible();
       await reportAxeViolations(page, testInfo, "portal-knowledge-article");
+      expect(
+        await reportAxeViolations(page, testInfo, "portal-knowledge-guidance", {
+          include: '[aria-labelledby="portal-knowledge-guidance"]',
+        }),
+      ).toEqual([]);
     } catch (error) {
       await sweepOrSay("the Knowledge axe scan", cleanup);
       throw error;

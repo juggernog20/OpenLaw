@@ -7,7 +7,6 @@ import {
   alias,
   and,
   asc,
-  count,
   documents,
   documentVersions,
   eq,
@@ -103,6 +102,9 @@ const FolderSchema = z.object({
   name: z.string(),
   parentId: z.string().nullable(),
   displayOrder: z.number().int().nonnegative(),
+  /** Live Knowledge Items in this folder **and its descendants** — the
+   * same subtree selecting the folder lists (KNW-003), so the number
+   * says what opening the folder will show. */
   itemCount: z.number().int().nonnegative(),
   createdAt: z.iso.datetime({ offset: true }),
   updatedAt: z.iso.datetime({ offset: true }),
@@ -131,7 +133,7 @@ const itemColumns = {
   summary: withoutBody(getTableColumns(knowledgeItems)),
 } as const;
 
-function itemProjection(shape: keyof typeof itemColumns) {
+function itemProjection<S extends keyof typeof itemColumns>(shape: S) {
   return {
     item: itemColumns[shape],
     knowledgeTypeName: knowledgeTypes.displayName,
@@ -245,7 +247,10 @@ function project(row: ProjectedItem) {
   return { ...summarize(row), body: row.item.body ?? null };
 }
 
-function itemSelect(db: Executor, shape: keyof typeof itemColumns = "full") {
+function itemSelect<S extends keyof typeof itemColumns = "full">(
+  db: Executor,
+  shape: S = "full" as S,
+) {
   return db
     .select(itemProjection(shape))
     .from(knowledgeItems)
@@ -263,7 +268,7 @@ function itemSelect(db: Executor, shape: keyof typeof itemColumns = "full") {
 
 async function readItem(db: Executor, id: string): Promise<ProjectedItem | null> {
   const [row] = await itemSelect(db).where(eq(knowledgeItems.id, id)).limit(1);
-  return (row as ProjectedItem | undefined) ?? null;
+  return row ?? null;
 }
 
 /** The type's name as the log names it. No liveness check: the item's
@@ -409,12 +414,11 @@ interface FolderRow extends KnowledgeFolder {
 }
 
 async function folderRows(db: Executor): Promise<FolderRow[]> {
-  const counts = db
-    .select({ folderId: knowledgeItems.folderId, itemCount: count().as("item_count") })
-    .from(knowledgeItems)
-    .where(and(isNull(knowledgeItems.archivedAt), sql`${knowledgeItems.folderId} is not null`))
-    .groupBy(knowledgeItems.folderId)
-    .as("knowledge_folder_item_counts");
+  // Counted over the same subtree `listScope`'s folder filter lists:
+  // selecting a folder scopes the managed list to the folder and its
+  // descendants (KNW-003), so the number beside the folder must say
+  // what opening it will show. A direct count would read `0` on a
+  // parent whose items all sit in children.
   return db
     .select({
       id: knowledgeFolders.id,
@@ -423,10 +427,21 @@ async function folderRows(db: Executor): Promise<FolderRow[]> {
       displayOrder: knowledgeFolders.displayOrder,
       createdAt: knowledgeFolders.createdAt,
       updatedAt: knowledgeFolders.updatedAt,
-      itemCount: sql<number>`coalesce(${counts.itemCount}, 0)::int`,
+      itemCount: sql<number>`(
+        with recursive knowledge_folder_subtree(id) as (
+          select ${knowledgeFolders.id}
+          union all
+          select child.id
+          from knowledge_folders child
+          inner join knowledge_folder_subtree parent on child.parent_id = parent.id
+        )
+        select count(*)::int
+        from knowledge_items counted_item
+        where counted_item.folder_id in (select id from knowledge_folder_subtree)
+          and counted_item.archived_at is null
+      )`,
     })
     .from(knowledgeFolders)
-    .leftJoin(counts, eq(counts.folderId, knowledgeFolders.id))
     .orderBy(asc(knowledgeFolders.displayOrder), asc(knowledgeFolders.id));
 }
 
@@ -505,6 +520,39 @@ function assertNoCycle(
   }
 }
 
+/** The Document-folder tree's ceiling (DOC-011), applied at Knowledge
+ * scope for the same reason: the tree is walked recursively on every
+ * read, and a tree with no ceiling is one bad script away from a stack
+ * overflow that turns the whole listing into a 500. */
+const MAX_KNOWLEDGE_FOLDER_DEPTH = 10;
+
+function assertFolderDepthWithin(depth: number): void {
+  if (depth > MAX_KNOWLEDGE_FOLDER_DEPTH) {
+    throw httpError(
+      409,
+      `Folders can be nested ${MAX_KNOWLEDGE_FOLDER_DEPTH} deep. Put this one higher up.`,
+    );
+  }
+}
+
+/** How many folders sit above this one, the folder itself included. */
+function folderDepthOf(rows: readonly FolderRow[], folderId: string | null): number {
+  let depth = 0;
+  let at = folderId;
+  for (let step = 0; at !== null && step <= rows.length; step += 1) {
+    depth += 1;
+    at = folderById(rows, at).parentId;
+  }
+  return depth;
+}
+
+/** How many levels hang beneath this folder. */
+function folderHeightOf(rows: readonly FolderRow[], folderId: string): number {
+  const children = rows.filter((row) => row.parentId === folderId);
+  if (children.length === 0) return 0;
+  return 1 + Math.max(...children.map((child) => folderHeightOf(rows, child.id)));
+}
+
 async function recordFolderActivity(
   tx: Transaction,
   actorId: string,
@@ -573,13 +621,13 @@ export const knowledgeRoutes: FastifyPluginAsyncZod = async (app) => {
           .where(and(eq(knowledgeItems.id, request.query.cursor), listScope(filters)))
           .limit(1);
         if (!row) return { knowledgeItems: [], nextCursor: null };
-        cursorRow = row as ProjectedItem;
+        cursorRow = row;
       }
       const rows = await itemSelect(app.db, "summary")
         .where(and(listScope(filters), cursorRow ? afterCursor(sort, cursorRow) : undefined))
         .orderBy(...orderFor(sort))
         .limit(PAGE_SIZE + 1);
-      const page = rows.slice(0, PAGE_SIZE) as ProjectedItem[];
+      const page = rows.slice(0, PAGE_SIZE);
       return {
         knowledgeItems: page.map(summarize),
         nextCursor: rows.length > PAGE_SIZE ? (page.at(-1)?.item.id ?? null) : null,
@@ -1063,6 +1111,7 @@ export const knowledgeRoutes: FastifyPluginAsyncZod = async (app) => {
         const rows = await folderRows(tx);
         const parent = request.body.parentId ? folderById(rows, request.body.parentId) : null;
         const name = folderName(request.body.name);
+        assertFolderDepthWithin(folderDepthOf(rows, parent?.id ?? null) + 1);
         assertNameFree(rows, parent?.id ?? null, name);
         const siblings = rows.filter((row) => row.parentId === (parent?.id ?? null));
         const displayOrder = siblings.reduce((max, row) => Math.max(max, row.displayOrder), -1) + 1;
@@ -1151,7 +1200,13 @@ export const knowledgeRoutes: FastifyPluginAsyncZod = async (app) => {
           : target.parentId
             ? folderById(rows, target.parentId)
             : null;
-        if (moving) assertNoCycle(rows, target.id, parent?.id ?? null);
+        if (moving) {
+          assertNoCycle(rows, target.id, parent?.id ?? null);
+          // Where the folder lands, itself, and everything it brings.
+          assertFolderDepthWithin(
+            folderDepthOf(rows, parent?.id ?? null) + 1 + folderHeightOf(rows, target.id),
+          );
+        }
         const name = request.body.name === undefined ? target.name : folderName(request.body.name);
         assertNameFree(rows, parent?.id ?? null, name, target.id);
         const renamed = name !== target.name;

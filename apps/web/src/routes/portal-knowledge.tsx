@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-/** The read-only portal view of one published Everyone Knowledge Item. */
+/** The read-only portal view of one published Everyone Knowledge Item
+ * (KNW-004): primary Document first, body last, no edit affordance. */
 import { Download, ChevronLeft, FileText } from "lucide-react";
 import { FormattedMessage, useIntl } from "react-intl";
 import { Link, redirect, useLoaderData, type LoaderFunctionArgs } from "react-router";
@@ -49,7 +50,7 @@ export function PortalKnowledgePage() {
         >
           <header className="flex h-section-header items-center border-b border-border-default bg-section-header px-4">
             <h2 id="portal-knowledge-files" className="text-base font-semibold">
-              <FormattedMessage id="portal.knowledge.files" defaultMessage="Files" />
+              <FormattedMessage id="portal.knowledge.files" defaultMessage="Documents" />
             </h2>
           </header>
           <ul className="divide-y divide-border-muted">

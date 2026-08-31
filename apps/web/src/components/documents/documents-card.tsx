@@ -2909,11 +2909,11 @@ const RECORD_COPY = {
   knowledge_item: {
     empty: defineMessage({
       id: "knowledge.documents.empty",
-      defaultMessage: "No documents on this Knowledge item yet.",
+      defaultMessage: "No documents on this Knowledge Item yet.",
     }),
     recordRoot: defineMessage({
       id: "knowledge.documents.recordRoot",
-      defaultMessage: "The Knowledge item itself",
+      defaultMessage: "The Knowledge Item itself",
     }),
     deleteIntoRoot: defineMessage({
       id: "knowledge.documents.deleteIntoRoot",

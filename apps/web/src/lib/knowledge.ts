@@ -31,6 +31,26 @@ export function knowledgeAudienceLabel(intl: IntlShape, value: KnowledgeAudience
     : intl.formatMessage({ id: "knowledge.audience.everyone", defaultMessage: "Everyone" });
 }
 
+/** The list's format filter values, in the order the filter offers them. */
+export const KNOWLEDGE_FORMATS = ["pdf", "word", "powerpoint", "image", "email", "other"] as const;
+
+/**
+ * One label set for a primary Document's render family, shared by the
+ * Format column and the Format filter so the two cannot drift. The
+ * column speaks renderFamily (`presentation`), the filter speaks the
+ * API's format key (`powerpoint`); both arms answer the same word.
+ */
+export function knowledgeFormatLabel(intl: IntlShape, family: string): string {
+  return intl.formatMessage(
+    {
+      id: "knowledge.format.label",
+      defaultMessage:
+        "{family, select, pdf {PDF} word {Word} presentation {PowerPoint} powerpoint {PowerPoint} image {Image} email {Email} other {Other}}",
+    },
+    { family },
+  );
+}
+
 /** Depth in the API's parent-before-child tree, for visual indentation. */
 export function folderDepth(folders: readonly KnowledgeFolder[], folder: KnowledgeFolder): number {
   const byId = new Map(folders.map((row) => [row.id, row]));

@@ -4213,7 +4213,7 @@ The Entities destination ships the Calendar, List, and Chart switch, with Calend
 
 ### Built addendum (2026-08-30, M28 close, [#598](https://github.com/juggernog20/OpenLaw/issues/598)) — Knowledge is the fifth managed-list catalogue
 
-The Knowledge destination supplies the fifth catalogue and the `knowledge` saved-view surface. Title is the required flex column. Type, State, Audience, Folder, primary format, file count, creator, and updated time complete the catalogue. Type, State, Audience, Author, Format, and folder scope ride the URL and saved config. The left Knowledge Folder tree composes with those filters instead of replacing them. Resize, reorder, show and hide, sorting, saved views, paging, empty-library and filtered-zero states use the shared managed-list components unchanged. The M28 close journey and axe sweep cover the destination, one Knowledge record, and the portal article on fresh Compose images.
+The Knowledge destination supplies the fifth catalogue and the `knowledge` saved-view surface. Title is the required flex column. Type, State, Audience, Folder, primary format, Document count, creator, and updated time complete the catalogue. Type, State, Audience, Author, Format, and folder scope ride the URL and saved config. The left Knowledge Folder tree composes with those filters instead of replacing them. Resize, reorder, show and hide, sorting, saved views, paging, empty-library and filtered-zero states use the shared managed-list components unchanged. The M28 close journey and axe sweep cover the destination, one Knowledge record, and the portal article on fresh Compose images.
 
 ## DES-068: Knowledge is a file-first managed library (extends DES-046, DES-032, DES-016, DES-055, DES-020)
 
@@ -4222,7 +4222,7 @@ The Knowledge destination supplies the fifth catalogue and the `knowledge` saved
 
 ### Context
 
-KNW-001 makes a Knowledge Item a governed set of files with an optional guidance body, not a body-first article with attachments. The original KN1–KN6 frames predate the managed-list destination, the record strip rule, the record overflow menu, and the current portal and Settings chrome. M28 needs one visual answer before those surfaces are built.
+KNW-001 makes a Knowledge Item a governed set of Documents with an optional guidance body, not a body-first article with attachments. The original KN1–KN6 frames predate the managed-list destination, the record strip rule, the record overflow menu, and the current portal and Settings chrome. M28 needs one visual answer before those surfaces are built.
 
 ### Decision
 
@@ -4230,11 +4230,18 @@ The Knowledge destination and its record, portal, and Settings surfaces reuse th
 
 ### Recorded normalization points
 
-1. **Managed list.** The destination mounts DES-046 with `Default view`, `Columns`, and a `New` menu whose actions are `New from files` and `New knowledge item`. The left column remains the folder tree. The filter row is Type, State, Audience, Author, and Format, and Format is a table column.
+1. **Managed list.** The destination mounts DES-046 with `Default view`, `Columns`, and a `New` menu whose actions are `New from files` and `New Knowledge Item`. The left column remains the folder tree. The filter row is Type, State, Audience, Author, and Format, and Format is a table column.
 2. **One-section record with no tab strip.** DES-032's strip appears only when a record has multiple named sections, so the Knowledge record has none. Its one section carries the identity card, Documents, optional guidance, DES-055 overflow, and the DES-016 activity bar.
 3. **Primary document row.** Identity names the title, type, folder, state, audience, and optional replacement, then gives the primary Document its own `Open preview` row. The Documents card marks that row and offers `Set as primary` on every other Document.
-4. **Portal article chrome.** The article opens under `Your requests`; the primary file is first, other files follow, and the optional guidance body is last. A file-first item therefore remains useful when no guidance body exists.
+4. **Portal article chrome.** The article opens under `Your requests`; the primary Document is first, other Documents follow, and the optional guidance body is last. A file-first item therefore remains useful when no guidance body exists.
 5. **Internal link rendering.** ST13 names a Knowledge target as `Knowledge item · opens in this portal`, with a book glyph instead of a URL. The portal panel renders that target as an internal article row without an external-link glyph or domain; external targets keep both.
+
+### Alternatives considered
+
+- **A Knowledge-specific table and chrome.** Rejected: a private list widget would mean a second implementation of resize, reorder, saved views, and paging, and the library would stop scanning like the other four catalogues. The cost of reuse is real — Knowledge takes every future shared-chrome change whether it asked for it or not — and it is the cheaper side of the trade.
+- **A tab strip on the record.** Rejected: DES-032's strip earns its place only when a record has several named sections. A one-item strip would advertise structure the record does not have.
+- **A private Document folder tree inside an item.** Rejected: KNW-003 organizes items, not their Documents, and a second tree inside a record would give one file two organizational answers (the DOC-006 M28/4 addendum).
+- **Keeping the original KN1–KN6 body-first frames.** Rejected: they predate the managed-list destination, the record strip rule, and the current portal chrome, and KNW-001's model is a governed set of Documents rather than an article with attachments.
 
 ### Rationale
 
