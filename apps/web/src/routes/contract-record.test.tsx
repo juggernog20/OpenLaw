@@ -1158,8 +1158,13 @@ describe("the /contracts/:number record page", () => {
     await user.click(picker);
     await user.type(picker, "Helix");
 
+    // Wait for the create row, not a match row. A match row can come
+    // from the empty-term search the click scheduled, and that stale
+    // answer still lists Orion. The create row is withheld until the
+    // answer to the full term is in (#611), so it is the signal that
+    // the list below is the one the rendering rule promises.
+    await screen.findByRole("option", { name: 'Create "Helix"' });
     // Contains, not starts-with — both Helix organizations are offered.
-    await screen.findByRole("option", { name: /Helix Labs GmbH/ });
     const listbox = screen.getByRole("listbox", { name: "Counterparty matches" });
     const options = within(listbox).getAllByRole("option");
     expect(options.map((option) => option.textContent)).toEqual([
