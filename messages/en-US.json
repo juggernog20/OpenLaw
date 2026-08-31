@@ -2492,6 +2492,9 @@
   "documents.filter.record": {
     "defaultMessage": "Record"
   },
+  "documents.filter.record.match": {
+    "defaultMessage": "{reference} · {title}"
+  },
   "documents.filter.record.matches": {
     "defaultMessage": "Record matches"
   },
@@ -3197,6 +3200,9 @@
   "entities.record.obligations.matter": {
     "defaultMessage": "Matter"
   },
+  "entities.record.obligations.matterOption": {
+    "defaultMessage": "{reference} · {title}"
+  },
   "entities.record.obligations.none": {
     "defaultMessage": "None"
   },
@@ -3205,6 +3211,9 @@
   },
   "entities.record.obligations.registration": {
     "defaultMessage": "Registration"
+  },
+  "entities.record.obligations.registrationOption": {
+    "defaultMessage": "{jurisdiction} · {registrationNumber}"
   },
   "entities.record.obligations.remove": {
     "defaultMessage": "Delete {label}"
@@ -4051,6 +4060,9 @@
   },
   "matterTasks.section": {
     "defaultMessage": "Tasks"
+  },
+  "matterTasks.separator": {
+    "defaultMessage": "·"
   },
   "matterTasks.toggle": {
     "defaultMessage": "{done, select, true {Reopen Task: {title}} other {Complete Task: {title}}}"

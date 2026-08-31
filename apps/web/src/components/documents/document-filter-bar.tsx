@@ -356,14 +356,21 @@ export function DocumentFilterBar({
                   }}
                   onMouseMove={() => setActiveIndex(index)}
                 >
-                  {match.kind === "entity" || match.kind === "knowledge_item"
-                    ? match.title
-                    : match.reference}
                   {match.kind === "entity" ||
                   match.kind === "knowledge_item" ||
-                  match.reference === match.title
-                    ? null
-                    : ` · ${match.title}`}
+                  match.reference === match.title ? (
+                    match.kind === "entity" || match.kind === "knowledge_item" ? (
+                      match.title
+                    ) : (
+                      match.reference
+                    )
+                  ) : (
+                    <FormattedMessage
+                      id="documents.filter.record.match"
+                      defaultMessage="{reference} · {title}"
+                      values={{ reference: match.reference, title: match.title }}
+                    />
+                  )}
                 </li>
               ))}
             </ul>
