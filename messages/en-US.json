@@ -3398,6 +3398,18 @@
   "home.approvals.title": {
     "defaultMessage": "Approvals waiting on you"
   },
+  "home.contracts.meta": {
+    "defaultMessage": "Contract C-{number} · {stage}"
+  },
+  "home.contracts.noUpcomingDate": {
+    "defaultMessage": "No upcoming date"
+  },
+  "home.contracts.renewalPending": {
+    "defaultMessage": "Renewal pending confirmation"
+  },
+  "home.contracts.title": {
+    "defaultMessage": "Your contracts"
+  },
   "home.dates.derived": {
     "defaultMessage": "Derived"
   },
@@ -3427,6 +3439,15 @@
   },
   "home.inbox.urgency": {
     "defaultMessage": "{urgency} urgency"
+  },
+  "home.matters.meta": {
+    "defaultMessage": "Matter M-{number} · {status}"
+  },
+  "home.matters.noUpcomingDeadline": {
+    "defaultMessage": "No upcoming deadline"
+  },
+  "home.matters.title": {
+    "defaultMessage": "Your matters"
   },
   "home.obligations.entityDue": {
     "defaultMessage": "{entity} · Due {date}"
