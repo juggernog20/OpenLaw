@@ -23557,6 +23557,28 @@ export interface operations {
                     };
                   }[];
                 }
+              | {
+                  /** @enum {string} */
+                  type: "dates";
+                  total: number;
+                  rows: {
+                    /** @enum {string} */
+                    source: "key_date" | "expiry" | "notice_deadline";
+                    keyDateId: string | null;
+                    /** Format: date */
+                    date: string;
+                    label: string | null;
+                    noticePeriodDays: number | null;
+                    record: {
+                      /** @enum {string} */
+                      kind: "contract" | "matter";
+                      id: string;
+                      number: number;
+                      title: string;
+                      isConfidential: boolean;
+                    };
+                  }[];
+                }
             )[];
           };
         };

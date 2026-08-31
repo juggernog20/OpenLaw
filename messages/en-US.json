@@ -3398,6 +3398,27 @@
   "home.approvals.title": {
     "defaultMessage": "Approvals waiting on you"
   },
+  "home.dates.derived": {
+    "defaultMessage": "Derived"
+  },
+  "home.dates.expiry": {
+    "defaultMessage": "Current term expires"
+  },
+  "home.dates.keyDate": {
+    "defaultMessage": "Key date"
+  },
+  "home.dates.noticeDeadline": {
+    "defaultMessage": "Renewal notice deadline"
+  },
+  "home.dates.noticeDeadlineWithPeriod": {
+    "defaultMessage": "Renewal notice deadline — {days, plural, one {# day} other {# days}} before expiry"
+  },
+  "home.dates.record": {
+    "defaultMessage": "{kind, select, contract {Contract C-{number}} other {Matter M-{number}}}"
+  },
+  "home.dates.title": {
+    "defaultMessage": "Dates approaching"
+  },
   "home.section.viewAll": {
     "defaultMessage": "View all {count}"
   },
