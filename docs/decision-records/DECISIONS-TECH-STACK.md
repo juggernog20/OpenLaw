@@ -1072,9 +1072,17 @@ The Knowledge record is the third web mount of the Documents card. One `Document
 - **Loader-fetched rows for the Contracts and Matters tabs.** Rejected. It keeps TECH-024's rule 1 literal, but the Entity loader would read two row lists per open to serve tabs most readers do not click. The cost of the on-mount read is one request per tab open and a short loading state, the same trade the Activity applet already makes.
 - **Migrating the Contract and Matter pairs inside M27.** Rejected. Each pair carries its own access and placeholder doctrine, and a sweep would mix that review with the Entity feature.
 
-### Scheduled migration
+### Scheduled migration — withdrawn (2026-08-31, [#627](https://github.com/juggernog20/OpenLaw/issues/627), [#628](https://github.com/juggernog20/OpenLaw/issues/628))
 
-After M27, migrate the existing Contract and Matter link-card pairs to this configuration seam, **one pair per PR**. Each migration keeps its existing access and placeholder doctrine and removes only the duplicated web mount. No sweep lands inside M27, and no PR mixes two pairs.
+The original text scheduled this after M27: migrate the existing Contract and Matter link-card pairs to this configuration seam, one pair per PR, each keeping its access and placeholder doctrine and removing only the duplicated web mount.
+
+Withdrawn before any pair was migrated. Reading the four cards showed the schedule contradicted this decision's own rule:
+
+- **The trigger is per applet, and it never fired for these cards.** The relations card pair (`related-contracts-card`, `related-matters-card`) and the cross-link card pair (`linked-matter-card`, `linked-contracts-card`) each have two mounts. The Entity record mounts neither. Only the roll-up list reached a third mount in M27. Merging a two-mount pair is the pre-merge that HLR CC-10 ruled out: a generic with a flag per divergence, built for a third consumer that does not exist.
+- **The pairs are write surfaces; the seam is read-only.** Each card carries link and unlink actions, a module dialog, busy state, and error copy. `LinkedRecordsList` deliberately has none of that.
+- **The pairs are loader-fed by doctrine, not by accident.** [#312](https://github.com/juggernog20/OpenLaw/issues/312): the record page reads relations once, the breadcrumb and the card draw from that one copy, and every write answers the whole surface. A seam that re-reads on mount would fork that surface and reopen the disagreement #312 closed.
+
+The rule of this decision stands unchanged. When a third page needs a relations card or a cross-link card, build that third one as the generic, keyed by `{record reference, api seam}`, and migrate the existing pair to it then — one pair per PR.
 
 ### Consequences
 
