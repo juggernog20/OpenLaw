@@ -4255,6 +4255,63 @@ Knowledge contains governed paper, so its destination should scan like the other
 
 The destination, one-section record, file-first portal article, archive dialog, internal deflection row, two creation paths, and both zero states ship on the recorded chrome. The record omits the tab strip, carries the Activity applet, and opens its primary Document through the shared doc panel. Internal deflection links stay in the portal tab; external links keep their announced new-tab treatment.
 
+## DES-069: Home is a fixed personal read of seven capped sections (extends DES-056, DES-030, DES-018, DES-029, DES-043)
+
+- **Status:** Accepted
+- **Date:** 2026-08-31
+
+### Context
+
+The Dashboard frames in `designs/final-themes.pen` are token-era ancestors. They call the destination Dashboard, use the retired Workspace sub-bar and navigation, expose Filter and Customize controls, and divide a matter-heavy summary from a narrow activity rail. They predate the DES-030 shell, the current destination registry, the Inbox, and the shared record-card convention. M29 needs one implementation source for Home without turning a personal work read into another configurable managed list.
+
+### Decision
+
+Home uses the DES-030 shell and current role-filtered top navigation, with Home active. Its sub-bar contains the `Home` title and no summary copy, filters, view controls, or create action. The Member+ reading order is fixed:
+
+1. Approvals waiting on you
+2. Tasks assigned to you
+3. Dates approaching
+4. Entity obligations
+5. Inbox
+6. Your contracts
+7. Your matters
+
+At desktop widths adjacent cards may share a row, but that row-wise sequence remains the document and narrow-layout order. Each section uses the record-page card convention: a `border-default` card on `bg-raised` at the six-pixel card radius, a 38-pixel `bg-section-header` strip, its title, a `badge-count` total badge, capped rows, and a trailing `View all N` link. Home shows at most three rows in a populated section. The badge and link report the full eligible total; the link opens the corresponding destination or filtered destination. Home has no local paging.
+
+Home adopts DES-056's fixed-read posture. It has no managed-table header, column controls, sorting, saved views, Filter control, Customize control, widget picker, or section rearrangement. Server-side eligibility and role predicates determine the read; the user does not curate it.
+
+Rows are compact scanning summaries: a leading glyph, the title over its reference or context, and a trailing edge that carries at most one status flag and one time cue. An overdue row uses DES-018's severe marker. A Confidential record title carries DES-029's lock plus literal `CONFI` marker beside the title. `Renewal pending confirmation` is the DES-043 warning flag on the affected Contract row, not a Contract status and not an overdue treatment.
+
+A Contributor sees only Tasks assigned to you, Dates approaching, Your contracts, and Your matters, plus the Contributor destination registry. An introduction card opens the Contributor body ("Work shared with you") and states the reduced scope, so the missing sections read as intended rather than broken. Inbox is absent rather than disabled or shown as an empty card. The Business User portal does not mount staff Home.
+
+When every role-eligible section has a zero total, Home replaces the card grid with one welcome card. It states that nothing is waiting and links only to destinations the user can reach; it does not render seven independent zero states. DES-030 still owns scrolling in `main`; shell chrome and Home geometry stay invariant across Light, Warm, and Dark.
+
+### Recorded normalization points
+
+1. **Destination and shell.** `Dashboard` and `Workspace` become `Home`. The ancestor's `Dashboard / Intake / Matters / Contracts / Documents / Entities / Knowledge` navigation becomes the current `Home / Inbox / Matters / Contracts / Documents / Entities / Knowledge` Member+ registry, with Lucide icons and role filtering.
+2. **Sub-bar.** The ancestor's portfolio summary, Filter, Customize, and New matter controls are removed. Home names the surface and does not pretend to be either a managed table or a creation entry point.
+3. **Section inventory.** `My approvals` becomes Approvals waiting on you and moves first. `Upcoming` splits into Dates approaching and Entity obligations. Tasks assigned to you is added. `Intake queue` becomes Inbox and uses Request vocabulary. `My open matters` splits into Your contracts and Your matters. `Recent activity` and `Recent documents` are removed; those histories and files remain on records and in Documents.
+4. **Hierarchy.** The old main-column/sidebar split becomes one record-card grid. Pairing is visual only: the seven-section order above is stable in the document, responsive stack, and assistive reading order.
+5. **Density and totals.** The ancestor's unrelated per-card row counts become a three-row cap with full totals and an explicit destination link. The total is not the number of rendered rows.
+6. **Actions.** Inline queue decisions and bespoke card controls are removed. A Home row opens its underlying work; workflow actions live on that destination or record.
+7. **Semantic markers.** The ancestor's Confidential shorthand is normalized to DES-029's lock and literal `CONFI`. DES-018 severe identifies overdue rows, and DES-043's warning flag identifies renewal pending confirmation. Request urgency and Matter priority wear DES-018's ramp by value with the ramp's own vocabulary, not I1's retired `Normal`. These meanings do not change with theme.
+8. **Theme fidelity.** Light, Warm, and Dark use the current shell and semantic theme tokens with identical geometry. `designs/final-themes.pen` remains the token-era ancestor and is not amended.
+9. **Role and zero behavior.** Contributor removes ineligible sections and Inbox rather than leaving holes. A wholly idle user gets one welcome and destination guide rather than a dashboard full of empty-card copy.
+
+### Alternatives considered
+
+- **A managed or customizable dashboard.** Rejected: saved views, movable widgets, and local filters would duplicate DES-046 machinery and make two users' Home surfaces structurally incomparable.
+- **Retaining the old portfolio-and-activity layout.** Rejected: it overweights Matters, mixes passive history with waiting work, and encodes retired shell chrome.
+- **Seven empty section cards.** Rejected: repeated zero copy makes an idle state feel broken and gives no clearer next step than one role-aware welcome.
+
+### Rationale
+
+Home answers a stable question: what needs this user's attention, and where can they continue? A fixed order makes that scan learnable, while capped record-shaped cards preserve context without creating seven small list products. Shared confidentiality, severity, and renewal treatments keep the same fact visually identical wherever it appears.
+
+### Consequences
+
+`designs/home.pen` is the M29 source for populated Light, Warm, and Dark Home, the all-zero welcome, and the Contributor projection. Web tickets must preserve section order, role omission, row caps, full totals, and marker semantics, and must route continuation to the owning destination rather than adding Home-only workflows. Tests should pin the projection order, Contributor absence rules, all-zero switch, and confidentiality and renewal labels.
+
 ## Index of decisions
 
 | #       | Decision                                                                                                                                                             | Status                                                                                                     |
@@ -4327,3 +4384,4 @@ The destination, one-section record, file-first portal article, archive dialog, 
 | DES-066 | The Documents destination is one flat managed list across records (extends DES-046, DES-018, DES-009)                                                                | Accepted                                                                                                   |
 | DES-067 | The Entities destination uses the managed-list and record-shell patterns (extends DES-046, DES-032, DES-016, DES-018)                                                | Accepted                                                                                                   |
 | DES-068 | Knowledge is a file-first managed library (extends DES-046, DES-032, DES-016, DES-055, DES-020)                                                                      | Accepted                                                                                                   |
+| DES-069 | Home is a fixed personal read of seven capped sections (extends DES-056, DES-030, DES-018, DES-029, DES-043)                                                         | Accepted                                                                                                   |
