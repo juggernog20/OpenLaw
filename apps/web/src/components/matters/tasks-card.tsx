@@ -227,7 +227,11 @@ function TaskRow({
         {(task.assigneeName || task.dueDate) && (
           <span className="text-xs text-muted">
             {task.assigneeName}
-            {task.assigneeName && task.dueDate && <span aria-hidden="true"> · </span>}
+            {task.assigneeName && task.dueDate && (
+              <span aria-hidden="true">
+                {intl.formatMessage({ id: "matterTasks.separator", defaultMessage: " · " })}
+              </span>
+            )}
             {task.dueDate && (
               <FormattedMessage
                 id="matterTasks.due"

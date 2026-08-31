@@ -3698,6 +3698,9 @@
   "matterTasks.section": {
     "defaultMessage": "Tasks"
   },
+  "matterTasks.separator": {
+    "defaultMessage": "·"
+  },
   "matterTasks.toggle": {
     "defaultMessage": "{done, select, true {Reopen Task: {title}} other {Complete Task: {title}}}"
   },
