@@ -4056,6 +4056,23 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/v1/home": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** The signed-in staff user's personal Home sections in stable order. Zero-total sections are omitted; every present section carries a three-row cap and its full eligible total. Record reach is applied inside each section query, before totals and caps */
+    get: operations["getHome"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/v1/fields": {
     parameters: {
       query?: never;
@@ -23475,6 +23492,65 @@ export interface operations {
       };
       /** @description Problem details (RFC 9457) */
       default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  getHome: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            sections: {
+              /** @enum {string} */
+              type: "approvals";
+              total: number;
+              rows: {
+                id: string;
+                contract: {
+                  id: string;
+                  number: number;
+                  title: string;
+                  isConfidential: boolean;
+                };
+                requestedBy: {
+                  id: string;
+                  displayName: string;
+                };
+                /** Format: date-time */
+                requestedAt: string;
+              }[];
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      403: {
         headers: {
           [name: string]: unknown;
         };

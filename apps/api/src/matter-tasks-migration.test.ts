@@ -45,6 +45,7 @@ describe("the Matter Tasks migration", () => {
         sql`select indexname from pg_indexes where tablename = 'matter_tasks' order by indexname`,
       );
       expect(indexes.rows.map((row) => row.indexname)).toEqual([
+        "matter_tasks_assignee_due_idx",
         "matter_tasks_matter_order_idx",
         "matter_tasks_pkey",
       ]);

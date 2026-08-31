@@ -72,6 +72,29 @@ export const NOTIFICATION_EVENT_GROUPS = [
 export type NotificationEventGroup = (typeof NOTIFICATION_EVENT_GROUPS)[number];
 
 /**
+ * NOT-008's email-only sections. These are preference keys, not event
+ * groups: each switch controls one block in the daily briefing and has
+ * no in-app counterpart. Knowledge keeps the event-group preference M28
+ * gave it, so these are the five sections still waiting on M29.
+ */
+export const BRIEFING_PREFERENCE_GROUPS = [
+  "briefing.approvals",
+  "briefing.tasks",
+  "briefing.dates",
+  "briefing.obligations",
+  "briefing.intake",
+] as const;
+export type BriefingPreferenceGroup = (typeof BRIEFING_PREFERENCE_GROUPS)[number];
+
+/** Every key the override table admits. Event-group and briefing-section
+ * settings share one natural-key table while remaining separate vocabularies. */
+export const NOTIFICATION_PREFERENCE_GROUPS = [
+  ...NOTIFICATION_EVENT_GROUPS,
+  ...BRIEFING_PREFERENCE_GROUPS,
+] as const;
+export type NotificationPreferenceGroup = (typeof NOTIFICATION_PREFERENCE_GROUPS)[number];
+
+/**
  * The two channels one system renders on (NOT-001). Fixed for the event
  * group's reason: the fan-out branches on each of them by name.
  */
@@ -110,6 +133,9 @@ export const NOTIFICATION_EVENT_TYPES = [
   "date.notice_deadline_approaching",
   "date.expiry_approaching",
   "date.obligation_approaching",
+  /** One daily state-summary prompt. It opens Home and never emails: it
+   * announces the briefing email rather than producing another one. */
+  "briefing.ready",
   // Group 4 — new requests (INT-006).
   /**
    * A Request reached the Inbox — the staff side of a submission
@@ -295,7 +321,7 @@ export const notificationPreferences = pgTable(
     userId: text("user_id")
       .notNull()
       .references(() => users.id),
-    eventGroup: text("event_group", { enum: NOTIFICATION_EVENT_GROUPS }).notNull(),
+    eventGroup: text("event_group", { enum: NOTIFICATION_PREFERENCE_GROUPS }).notNull(),
     channel: text("channel", { enum: NOTIFICATION_CHANNELS }).notNull(),
     enabled: boolean("enabled").notNull(),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
@@ -311,11 +337,15 @@ export const notificationPreferences = pgTable(
     }),
     check(
       "notification_preferences_group_check",
-      sql`${table.eventGroup} in (${sql.raw(NOTIFICATION_EVENT_GROUPS.map((g) => `'${g}'`).join(", "))})`,
+      sql`${table.eventGroup} in (${sql.raw(NOTIFICATION_PREFERENCE_GROUPS.map((g) => `'${g}'`).join(", "))})`,
     ),
     check(
       "notification_preferences_channel_check",
       sql`${table.channel} in (${sql.raw(NOTIFICATION_CHANNELS.map((c) => `'${c}'`).join(", "))})`,
+    ),
+    check(
+      "notification_preferences_briefing_email_only",
+      sql`${table.eventGroup} not like 'briefing.%' or ${table.channel} = 'email'`,
     ),
   ],
 );

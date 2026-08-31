@@ -1,11 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 /**
- * Guarded landing page inside the application shell (M4). The page
- * body stays a placeholder — dashboards arrive in M29 — but the chrome
- * around it is the real shell: header, nav, sub-bar. The account
- * surfaces auth needs (sign out, two-factor enrolment) live in the
- * header user menu.
+ * The guarded staff landing page and M29 personal state summary.
  */
 
 import { redirect, useLoaderData, type LoaderFunctionArgs } from "react-router";
@@ -15,6 +11,8 @@ import { requireUser, useSignOut } from "../lib/session";
 import { AppShell } from "../components/shell/app-shell";
 import { PageSubBar } from "../components/shell/page-subbar";
 import { PageTitle } from "../components/page-title";
+import { HomeApprovalsCard } from "../components/home/approvals-card";
+import { HomeWelcomeCard } from "../components/home/welcome-card";
 
 export async function homeLoader({ request }: LoaderFunctionArgs) {
   // A failed magic-link redemption redirects here with an ?error= query
@@ -41,11 +39,13 @@ export async function homeLoader({ request }: LoaderFunctionArgs) {
     const { data } = await api.GET("/api/v1/onboarding");
     if (data && !data.completed) return redirect("/welcome");
   }
-  return { user };
+  const home = await api.GET("/api/v1/home");
+  if (!home.data) throw new Error("Home could not be read.");
+  return { user, sections: home.data.sections };
 }
 
 export function HomePage() {
-  const { user } = useLoaderData<typeof homeLoader>();
+  const { user, sections } = useLoaderData<typeof homeLoader>();
   const intl = useIntl();
 
   const signOut = useSignOut("/auth/login");
@@ -57,12 +57,18 @@ export function HomePage() {
       subbar={<PageSubBar title={<FormattedMessage id="home.title" defaultMessage="Home" />} />}
     >
       <PageTitle title={intl.formatMessage({ id: "home.title", defaultMessage: "Home" })} />
-      <p className="text-muted">
-        <FormattedMessage
-          id="home.placeholder"
-          defaultMessage="Modules arrive with their own builds."
-        />
-      </p>
+      {sections.length === 0 ? (
+        <HomeWelcomeCard role={user.role} />
+      ) : (
+        <div className="grid grid-cols-1 gap-4 @4xl/page:grid-cols-2">
+          {sections.map((section) => {
+            switch (section.type) {
+              case "approvals":
+                return <HomeApprovalsCard key={section.type} section={section} />;
+            }
+          })}
+        </div>
+      )}
     </AppShell>
   );
 }

@@ -495,7 +495,7 @@ Lightweight checklist items on a matter. Deliberately not a task entity: no comm
 | `display_order`            | integer     | not null; manual ordering within the checklist |
 | `created_at`, `updated_at` | timestamptz |                                                |
 
-Indexed on (`matter_id`, `display_order`).
+Indexed on (`matter_id`, `display_order`). M29 adds (`assignee_id`, `due_date`) for the personal Home and briefing reads.
 
 Landed in incremental migration `0074_bored_felicia_hardy.sql` (M23/4, #492). The migration only adds this table, its two foreign keys, title check, and ordering index; it does not rewrite existing Matter rows.
 
@@ -639,7 +639,7 @@ One row per approval request. Parallel — all pending must approve. Soft gate: 
 | `decided_at`               | timestamptz | nullable                                                      |
 | `created_at`, `updated_at` | timestamptz |                                                               |
 
-Five invariants ride the table itself (M14/3). A **partial** unique index on (`contract_id`, `approver_id`) `where status = 'pending'` enforces CTR-012's one-pending-request-per-approver rule while leaving a decided row free, so a re-request after a rejection writes a new row. A check constraint pairs `group_id` with `source = 'group'`, and a second one pairs `decided_at` with a status other than `pending` — a half-set pair on either would draw a cell nobody could read. Two more hold `source` and `status` to the values CTR-012 defines: the paired checks above do not imply them, because an unknown `source` with a NULL `group_id` satisfies the first pair and an unknown `status` carrying a `decided_at` satisfies the second. Index on `contract_id` for the roster read.
+Five invariants ride the table itself (M14/3). A **partial** unique index on (`contract_id`, `approver_id`) `where status = 'pending'` enforces CTR-012's one-pending-request-per-approver rule while leaving a decided row free, so a re-request after a rejection writes a new row. A check constraint pairs `group_id` with `source = 'group'`, and a second one pairs `decided_at` with a status other than `pending` — a half-set pair on either would draw a cell nobody could read. Two more hold `source` and `status` to the values CTR-012 defines: the paired checks above do not imply them, because an unknown `source` with a NULL `group_id` satisfies the first pair and an unknown `status` carrying a `decided_at` satisfies the second. Index on `contract_id` for the roster read; M29 adds (`approver_id`, `status`) for the personal Home and briefing reads.
 
 ---
 
@@ -679,6 +679,8 @@ Landed in M17/1, migration `0049_contract_tasks`.
 | `due_date`                 | date        | nullable                      |
 | `display_order`            | integer     | not null                      |
 | `created_at`, `updated_at` | timestamptz |                               |
+
+M29 adds an index on (`assignee_id`, `due_date`) for the personal Home and briefing reads.
 
 ---
 
@@ -1011,7 +1013,9 @@ Indexes: `notifications_user_idx` on `(user_id, created_at, id)` — the list's 
 
 Checks: `entity_type` in the vocabulary; a reminder carries both halves of its identity or neither; an email is sent or skipped, never both; and neither outcome is reachable on a row that never owed one.
 
-`notification_preferences`: (`user_id` FK, `event_group`, `channel` `in_app|email`, `enabled` boolean, timestamps), compound PK on the first three, CHECKs on the two closed unions. M28 adds the `knowledge` briefing-section value to `event_group`. **It is a set of overrides, not a full grid**: a person with no row for a pair takes the group's default, and the defaults live in application code (NOT-002) rather than being seeded — so a default that changes reaches everybody who never expressed an opinion, and nobody who did. That is why `enabled` has no column default: a row exists precisely because somebody said something.
+`notification_preferences`: (`user_id` FK, `event_group`, `channel` `in_app|email`, `enabled` boolean, timestamps), compound PK on the first three, CHECKs on the two closed unions. M28 adds the `knowledge` briefing-section value to `event_group`. M29 adds the email-only `briefing.approvals`, `briefing.tasks`, `briefing.dates`, `briefing.obligations`, and `briefing.intake` section switches. The first four default on; Intake defaults off. A check rejects an `in_app` row for any `briefing.*` key. **It is a set of overrides, not a full grid**: a person with no row for a pair takes the group's default, and the defaults live in application code (NOT-002) rather than being seeded — so a default that changes reaches everybody who never expressed an opinion, and nobody who did. That is why `enabled` has no column default: a row exists precisely because somebody said something.
+
+M29 also widens the TypeScript event catalog with `briefing.ready`. Notification rows deliberately retain no event-type CHECK; the event is bell-only and never incurs another email debt.
 
 ---
 

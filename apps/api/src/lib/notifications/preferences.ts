@@ -27,10 +27,21 @@ import {
   notificationPreferences,
   NOTIFICATION_EVENT_GROUPS,
   type Executor,
+  type BriefingPreferenceGroup,
   type NotificationChannel,
   type NotificationEventGroup,
 } from "@openlaw/db";
 import { defaultChoice, type ChannelChoice } from "./catalog.js";
+
+/** NOT-008's defaults for the five email-only section switches. Intake
+ * follows its opt-in event group; every other briefing section is on. */
+export const BRIEFING_PREFERENCE_DEFAULTS: Readonly<Record<BriefingPreferenceGroup, boolean>> = {
+  "briefing.approvals": true,
+  "briefing.tasks": true,
+  "briefing.dates": true,
+  "briefing.obligations": true,
+  "briefing.intake": false,
+};
 
 /**
  * Lays one stored row over a choice that started as the group's
@@ -108,7 +119,12 @@ export async function myChannelChoices(db: Executor, userId: string): Promise<Gr
     .from(notificationPreferences)
     .where(eq(notificationPreferences.userId, userId));
   for (const row of rows) {
-    const choice = choices.get(row.eventGroup);
+    // Briefing-section preferences share the override table but are not
+    // part of this event-group grid. Find against the event vocabulary
+    // to narrow the key before applying it.
+    const eventGroup = NOTIFICATION_EVENT_GROUPS.find((group) => group === row.eventGroup);
+    if (!eventGroup) continue;
+    const choice = choices.get(eventGroup);
     if (choice) apply(choice, row.channel, row.enabled);
   }
   return NOTIFICATION_EVENT_GROUPS.map((group) => ({ eventGroup: group, ...choices.get(group)! }));
