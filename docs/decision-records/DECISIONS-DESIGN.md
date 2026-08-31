@@ -4276,13 +4276,13 @@ Home uses the DES-030 shell and current role-filtered top navigation, with Home 
 6. Your contracts
 7. Your matters
 
-At desktop widths adjacent cards may share a row, but that row-wise sequence remains the document and narrow-layout order. Each section uses the record-page card convention: the six-pixel accent edge, a 40-pixel header strip, its title, a neutral total badge, capped rows, and a trailing `View all N` link. Home shows at most three rows in a populated section. The badge and link report the full eligible total; the link opens the corresponding destination or filtered destination. Home has no local paging.
+At desktop widths adjacent cards may share a row, but that row-wise sequence remains the document and narrow-layout order. Each section uses the record-page card convention: a `border-default` card on `bg-raised` at the six-pixel card radius, a 38-pixel `bg-section-header` strip, its title, a `badge-count` total badge, capped rows, and a trailing `View all N` link. Home shows at most three rows in a populated section. The badge and link report the full eligible total; the link opens the corresponding destination or filtered destination. Home has no local paging.
 
 Home adopts DES-056's fixed-read posture. It has no managed-table header, column controls, sorting, saved views, Filter control, Customize control, widget picker, or section rearrangement. Server-side eligibility and role predicates determine the read; the user does not curate it.
 
-Rows are one-line scanning summaries: title first, reference or context second, and no more than one status or time treatment at the trailing edge. An overdue row uses DES-018's severe marker. A Confidential record title carries DES-029's lock plus literal `CONFI` marker beside the title. `Renewal pending confirmation` is the DES-043 warning flag on the affected Contract row, not a Contract status and not an overdue treatment.
+Rows are compact scanning summaries: a leading glyph, the title over its reference or context, and a trailing edge that carries at most one status flag and one time cue. An overdue row uses DES-018's severe marker. A Confidential record title carries DES-029's lock plus literal `CONFI` marker beside the title. `Renewal pending confirmation` is the DES-043 warning flag on the affected Contract row, not a Contract status and not an overdue treatment.
 
-A Contributor sees only Tasks assigned to you, Dates approaching, Your contracts, and Your matters, plus the Contributor destination registry. Inbox is absent rather than disabled or shown as an empty card. The Business User portal does not mount staff Home.
+A Contributor sees only Tasks assigned to you, Dates approaching, Your contracts, and Your matters, plus the Contributor destination registry. An introduction card opens the Contributor body ("Work shared with you") and states the reduced scope, so the missing sections read as intended rather than broken. Inbox is absent rather than disabled or shown as an empty card. The Business User portal does not mount staff Home.
 
 When every role-eligible section has a zero total, Home replaces the card grid with one welcome card. It states that nothing is waiting and links only to destinations the user can reach; it does not render seven independent zero states. DES-030 still owns scrolling in `main`; shell chrome and Home geometry stay invariant across Light, Warm, and Dark.
 
@@ -4294,7 +4294,7 @@ When every role-eligible section has a zero total, Home replaces the card grid w
 4. **Hierarchy.** The old main-column/sidebar split becomes one record-card grid. Pairing is visual only: the seven-section order above is stable in the document, responsive stack, and assistive reading order.
 5. **Density and totals.** The ancestor's unrelated per-card row counts become a three-row cap with full totals and an explicit destination link. The total is not the number of rendered rows.
 6. **Actions.** Inline queue decisions and bespoke card controls are removed. A Home row opens its underlying work; workflow actions live on that destination or record.
-7. **Semantic markers.** The ancestor's Confidential shorthand is normalized to DES-029's lock and literal `CONFI`. DES-018 severe identifies overdue rows, and DES-043's warning flag identifies renewal pending confirmation. These meanings do not change with theme.
+7. **Semantic markers.** The ancestor's Confidential shorthand is normalized to DES-029's lock and literal `CONFI`. DES-018 severe identifies overdue rows, and DES-043's warning flag identifies renewal pending confirmation. Request urgency and Matter priority wear DES-018's ramp by value with the ramp's own vocabulary, not I1's retired `Normal`. These meanings do not change with theme.
 8. **Theme fidelity.** Light, Warm, and Dark use the current shell and semantic theme tokens with identical geometry. `designs/final-themes.pen` remains the token-era ancestor and is not amended.
 9. **Role and zero behavior.** Contributor removes ineligible sections and Inbox rather than leaving holes. A wholly idle user gets one welcome and destination guide rather than a dashboard full of empty-card copy.
 
