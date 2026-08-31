@@ -16,7 +16,7 @@ export function HomeSectionCard({
   headingId: string;
   title: ReactNode;
   total: number;
-  viewAllTo: string;
+  viewAllTo?: string;
   children: ReactNode;
 }>) {
   return (
@@ -33,17 +33,19 @@ export function HomeSectionCard({
             {total}
           </span>
         </div>
-        <Link
-          to={viewAllTo}
-          className="inline-flex shrink-0 items-center gap-1 text-sm font-medium text-link hover:underline"
-        >
-          <FormattedMessage
-            id="home.section.viewAll"
-            defaultMessage="View all {count}"
-            values={{ count: total }}
-          />
-          <ArrowRight size={14} aria-hidden="true" />
-        </Link>
+        {viewAllTo ? (
+          <Link
+            to={viewAllTo}
+            className="inline-flex shrink-0 items-center gap-1 text-sm font-medium text-link hover:underline"
+          >
+            <FormattedMessage
+              id="home.section.viewAll"
+              defaultMessage="View all {count}"
+              values={{ count: total }}
+            />
+            <ArrowRight size={14} aria-hidden="true" />
+          </Link>
+        ) : null}
       </header>
       <ul className="divide-y divide-border-muted">{children}</ul>
     </section>

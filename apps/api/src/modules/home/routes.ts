@@ -6,8 +6,12 @@ import { z } from "zod";
 import { requireRole } from "../../auth/guards.js";
 import { problemResponse } from "../../lib/problem.js";
 import { ApprovalsHomeSectionSchema, readApprovalsHomeSection } from "./sections/approvals.js";
+import { readTasksHomeSection, TasksHomeSectionSchema } from "./sections/tasks.js";
 
-const HomeSectionSchema = z.discriminatedUnion("type", [ApprovalsHomeSectionSchema]);
+const HomeSectionSchema = z.discriminatedUnion("type", [
+  ApprovalsHomeSectionSchema,
+  TasksHomeSectionSchema,
+]);
 const HomeEnvelopeSchema = z.object({ sections: z.array(HomeSectionSchema) });
 
 export const homeRoutes: FastifyPluginAsyncZod = async (app) => {
@@ -30,8 +34,11 @@ export const homeRoutes: FastifyPluginAsyncZod = async (app) => {
       },
     },
     async (request) => {
-      const approvals = await readApprovalsHomeSection(app.db, request.user);
-      return { sections: approvals ? [approvals] : [] };
+      const [approvals, tasks] = await Promise.all([
+        readApprovalsHomeSection(app.db, request.user),
+        readTasksHomeSection(app.db, request.user),
+      ]);
+      return { sections: [approvals, tasks].filter((section) => section !== null) };
     },
   );
 };

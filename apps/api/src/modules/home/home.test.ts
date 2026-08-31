@@ -2,7 +2,20 @@
 
 /** The M29 Home read, through the real app factory and real Postgres. */
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { contractApprovals, contracts, contractTeam, eq, users } from "@openlaw/db";
+import {
+  contractApprovals,
+  contracts,
+  contractStatuses,
+  contractTasks,
+  contractTeam,
+  eq,
+  matters,
+  matterStatuses,
+  matterTasks,
+  matterTeam,
+  matterTypes,
+  users,
+} from "@openlaw/db";
 import { provisionUser } from "../../auth/instance.js";
 import {
   signInCookies,
@@ -46,6 +59,24 @@ interface ApprovalSection {
     contract: { id: string; number: number; title: string; isConfidential: boolean };
     requestedBy: { id: string; displayName: string };
     requestedAt: string;
+  }>;
+}
+
+interface TaskSection {
+  type: "tasks";
+  total: number;
+  rows: Array<{
+    id: string;
+    title: string;
+    dueDate: string | null;
+    isOverdue: boolean;
+    record: {
+      kind: "contract" | "matter";
+      id: string;
+      number: number;
+      title: string;
+      isConfidential: boolean;
+    };
   }>;
 }
 
@@ -124,7 +155,17 @@ async function home(fixture: { email: string }) {
     cookies: as(fixture),
   });
   expect(response.statusCode, response.body).toBe(200);
-  return response.json() as { sections: ApprovalSection[] };
+  return response.json() as { sections: Array<ApprovalSection | TaskSection> };
+}
+
+function tasksIn(result: Awaited<ReturnType<typeof home>>): TaskSection | undefined {
+  return result.sections.find((section): section is TaskSection => section.type === "tasks");
+}
+
+function approvalsIn(result: Awaited<ReturnType<typeof home>>): ApprovalSection | undefined {
+  return result.sections.find(
+    (section): section is ApprovalSection => section.type === "approvals",
+  );
 }
 
 describe("GET /api/v1/home", () => {
@@ -160,18 +201,19 @@ describe("GET /api/v1/home", () => {
 
     const result = await home(APPROVER);
     expect(result.sections).toHaveLength(1);
-    expect(result.sections[0]).toMatchObject({ type: "approvals", total: 4 });
-    expect(result.sections[0]!.rows).toHaveLength(3);
-    expect(result.sections[0]!.rows.map((row) => row.contract.title)).toEqual([
+    const section = approvalsIn(result)!;
+    expect(section).toMatchObject({ type: "approvals", total: 4 });
+    expect(section.rows).toHaveLength(3);
+    expect(section.rows.map((row) => row.contract.title)).toEqual([
       "Oldest ask",
       "Second ask",
       "Third ask",
     ]);
-    expect(result.sections[0]!.rows[0]).toMatchObject({
+    expect(section.rows[0]).toMatchObject({
       requestedBy: { id: idOf(REQUESTER), displayName: REQUESTER.displayName },
       contract: { isConfidential: false },
     });
-    expect(result.sections[0]!.rows[0]!.requestedAt).toBe("2026-08-10T09:00:00.000Z");
+    expect(section.rows[0]!.requestedAt).toBe("2026-08-10T09:00:00.000Z");
   });
 
   it("omits the section for a non-approver", async () => {
@@ -198,9 +240,184 @@ describe("GET /api/v1/home", () => {
       .where(eq(contracts.id, contract.id));
     await harness.db.delete(contractTeam).where(eq(contractTeam.contractId, contract.id));
 
-    const section = (await home(APPROVER)).sections[0]!;
+    const section = approvalsIn(await home(APPROVER))!;
     expect(section.total).toBe(4);
     expect(section.rows).toHaveLength(3);
     expect(section.rows.some((row) => row.contract.id === contract.id)).toBe(false);
+  });
+
+  it("merges the viewer's open Contract and Matter Tasks before ordering, totals, and the cap", async () => {
+    const [openMatterStatus] = await harness.db
+      .select({ id: matterStatuses.id })
+      .from(matterStatuses)
+      .where(eq(matterStatuses.category, "open"))
+      .limit(1);
+    const [closedMatterStatus] = await harness.db
+      .select({ id: matterStatuses.id })
+      .from(matterStatuses)
+      .where(eq(matterStatuses.category, "closed"))
+      .limit(1);
+    const [matterType] = await harness.db.select({ id: matterTypes.id }).from(matterTypes).limit(1);
+    const [endedContractStatus] = await harness.db
+      .select({ id: contractStatuses.id })
+      .from(contractStatuses)
+      .where(eq(contractStatuses.stage, "ended"))
+      .limit(1);
+
+    const createMatter = async (
+      title: string,
+      options: { closed?: boolean; archived?: boolean } = {},
+    ) => {
+      const [matter] = await harness.db
+        .insert(matters)
+        .values({
+          title,
+          matterTypeId: matterType!.id,
+          statusId: options.closed ? closedMatterStatus!.id : openMatterStatus!.id,
+          managerId: idOf(REQUESTER),
+          createdBy: idOf(REQUESTER),
+          closedAt: options.closed ? new Date("2026-08-01T09:00:00Z") : null,
+          archivedAt: options.archived ? new Date("2026-08-01T09:00:00Z") : null,
+        })
+        .returning({ id: matters.id, number: matters.number });
+      await harness.db
+        .insert(matterTeam)
+        .values({ matterId: matter!.id, userId: idOf(REQUESTER), role: "creator" });
+      return matter!;
+    };
+
+    const confidential = await newContract("Confidential financing");
+    await harness.db
+      .insert(contractTeam)
+      .values({ contractId: confidential.id, userId: idOf(APPROVER), role: "member" });
+    await harness.db
+      .update(contracts)
+      .set({ isConfidential: true })
+      .where(eq(contracts.id, confidential.id));
+    await harness.db.insert(contractTasks).values({
+      contractId: confidential.id,
+      title: "Prepare financing signature pages",
+      assigneeId: idOf(APPROVER),
+      dueDate: "2000-01-01",
+      displayOrder: 0,
+    });
+
+    const overdueMatter = await createMatter("Employment investigation");
+    await harness.db.insert(matterTasks).values({
+      matterId: overdueMatter.id,
+      title: "Draft witness outline",
+      assigneeId: idOf(APPROVER),
+      dueDate: "2000-01-02",
+      displayOrder: 0,
+    });
+
+    const futureMatter = await createMatter("Regulatory response");
+    await harness.db.insert(matterTasks).values({
+      matterId: futureMatter.id,
+      title: "Review response exhibits",
+      assigneeId: idOf(APPROVER),
+      dueDate: "2099-01-01",
+      displayOrder: 0,
+    });
+
+    const undatedContract = await newContract("Supplier renewal");
+    await harness.db.insert(contractTasks).values({
+      contractId: undatedContract.id,
+      title: "Confirm renewal owner",
+      assigneeId: idOf(APPROVER),
+      dueDate: null,
+      displayOrder: 0,
+    });
+
+    const hidden = await newContract("Walled acquisition");
+    await harness.db
+      .update(contracts)
+      .set({ isConfidential: true })
+      .where(eq(contracts.id, hidden.id));
+    await harness.db.insert(contractTasks).values({
+      contractId: hidden.id,
+      title: "This must leave no gap",
+      assigneeId: idOf(APPROVER),
+      dueDate: "1990-01-01",
+      displayOrder: 0,
+    });
+
+    const done = await newContract("Done task owner");
+    await harness.db.insert(contractTasks).values({
+      contractId: done.id,
+      title: "Already complete",
+      assigneeId: idOf(APPROVER),
+      dueDate: "1991-01-01",
+      displayOrder: 0,
+      isDone: true,
+    });
+
+    const ended = await newContract("Ended task owner");
+    await harness.db
+      .update(contracts)
+      .set({ statusId: endedContractStatus!.id, endedAt: new Date("2026-08-01T09:00:00Z") })
+      .where(eq(contracts.id, ended.id));
+    await harness.db.insert(contractTasks).values({
+      contractId: ended.id,
+      title: "Ended Contract task",
+      assigneeId: idOf(APPROVER),
+      dueDate: "1992-01-01",
+      displayOrder: 0,
+    });
+
+    const archived = await newContract("Archived task owner");
+    await harness.db
+      .update(contracts)
+      .set({ archivedAt: new Date("2026-08-01T09:00:00Z") })
+      .where(eq(contracts.id, archived.id));
+    await harness.db.insert(contractTasks).values({
+      contractId: archived.id,
+      title: "Archived Contract task",
+      assigneeId: idOf(APPROVER),
+      dueDate: "1993-01-01",
+      displayOrder: 0,
+    });
+
+    const closed = await createMatter("Closed task owner", { closed: true });
+    const archivedMatter = await createMatter("Archived Matter task owner", { archived: true });
+    await harness.db.insert(matterTasks).values([
+      {
+        matterId: closed.id,
+        title: "Closed Matter task",
+        assigneeId: idOf(APPROVER),
+        dueDate: "1994-01-01",
+        displayOrder: 0,
+      },
+      {
+        matterId: archivedMatter.id,
+        title: "Archived Matter task",
+        assigneeId: idOf(APPROVER),
+        dueDate: "1995-01-01",
+        displayOrder: 0,
+      },
+    ]);
+
+    const result = await home(APPROVER);
+    expect(result.sections.map((section) => section.type)).toEqual(["approvals", "tasks"]);
+    const section = tasksIn(result);
+    expect(section).toMatchObject({ type: "tasks", total: 4 });
+    expect(section!.rows).toHaveLength(3);
+    expect(section!.rows.map((row) => row.title)).toEqual([
+      "Prepare financing signature pages",
+      "Draft witness outline",
+      "Review response exhibits",
+    ]);
+    expect(section!.rows.map((row) => row.record.kind)).toEqual(["contract", "matter", "matter"]);
+    expect(section!.rows.map((row) => row.isOverdue)).toEqual([true, true, false]);
+    expect(section!.rows[0]).toMatchObject({
+      dueDate: "2000-01-01",
+      record: {
+        number: confidential.number,
+        title: "Confidential financing",
+        isConfidential: true,
+      },
+    });
+    expect(section!.rows.some((row) => row.title === "This must leave no gap")).toBe(false);
+    expect(tasksIn(await home(OTHER))).toBeUndefined();
   });
 });
