@@ -152,7 +152,9 @@ test.describe.serial("M28 deployer journey", () => {
       itemId = item!.id;
       await expect(page).toHaveURL(`/knowledge/${itemId}`);
       await expect(page.getByText("Primary document")).toBeVisible();
-      await expect(page.getByRole("button", { name: "Open preview" })).toContainText(FILENAME);
+      await expect(page.getByRole("button", { name: `Open preview of ${FILENAME}` })).toContainText(
+        FILENAME,
+      );
 
       await page.getByRole("button", { name: "Knowledge Item actions" }).click();
       const published = page.waitForResponse(
@@ -195,7 +197,7 @@ test.describe.serial("M28 deployer journey", () => {
       await panel.getByRole("link", { name: LINK_LABEL }).click();
       await expect(portal).toHaveURL(`/portal/knowledge/${itemId}`);
       await expect(portal.getByRole("heading", { name: ITEM_TITLE })).toBeVisible();
-      const files = portal.getByRole("region", { name: "Files" });
+      const files = portal.getByRole("region", { name: "Documents" });
       await expect(files.getByText(FILENAME)).toBeVisible();
       await expect(files.getByRole("link", { name: `Download ${FILENAME}` })).toBeVisible();
     } catch (error) {
