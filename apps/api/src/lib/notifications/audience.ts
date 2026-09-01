@@ -583,6 +583,7 @@ function staffScope(db: Executor, user: AuthenticatedUser): SQL | undefined {
   const matterScope = matterTeamScope(db, user);
   const entityScope = entityReachScope(db, user);
   return or(
+    and(eq(notifications.eventType, "briefing.ready"), eq(notifications.userId, user.id)),
     and(
       eq(notifications.entityType, CONTRACT_ENTITY),
       // An Administrator reaches every contract, so the subquery would be

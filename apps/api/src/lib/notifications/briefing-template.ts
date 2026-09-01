@@ -27,6 +27,9 @@
 import type { NotificationEventType } from "@openlaw/db";
 import { civilInstant } from "../contract-term.js";
 import type { MailMessage } from "../mailer.js";
+import type { ApprovalsHomeSection } from "../../modules/home/sections/approvals.js";
+import type { InboxHomeSection } from "../../modules/home/sections/inbox.js";
+import type { TasksHomeSection } from "../../modules/home/sections/tasks.js";
 import { matterLink, origin, recordLink } from "./email.js";
 
 interface DigestRowBase {
@@ -66,8 +69,11 @@ export interface KnowledgeBriefingItem {
 /** Every section the round has assembled for one reader. */
 export interface BriefingMail {
   recipientName: string;
+  approvals: ApprovalsHomeSection | null;
+  tasks: TasksHomeSection | null;
   rows: readonly DigestRow[];
   knowledgeItems: readonly KnowledgeBriefingItem[];
+  intake: InboxHomeSection | null;
 }
 
 /** Which of the three sources leads when two dates fall on one day —
@@ -97,6 +103,27 @@ const DIGEST_DATE = new Intl.DateTimeFormat("en-US", {
   month: "short",
   day: "numeric",
 });
+
+const BRIEFING_DATE = new Intl.DateTimeFormat("en-US", {
+  timeZone: "UTC",
+  year: "numeric",
+  month: "short",
+  day: "numeric",
+});
+const BRIEFING_NUMBER = new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 });
+
+function civilDateLabel(value: string): string {
+  return BRIEFING_DATE.format(civilInstant(value));
+}
+
+function instantDateLabel(value: string): string {
+  return BRIEFING_DATE.format(new Date(value));
+}
+
+function recordReference(kind: "contract" | "matter", number: number): string {
+  const held = BRIEFING_NUMBER.format(number);
+  return kind === "matter" ? `M-${held}` : `#${held}`;
+}
 
 /** How far away one date is, in the words a briefing uses. Digits rather
  * than words (DES-015 rule 9), and the two days either side of today are
@@ -182,6 +209,60 @@ function dateSections(rows: readonly DigestRow[]) {
   ].filter((section) => section.rows.length > 0);
 }
 
+function approvalLink(row: ApprovalsHomeSection["rows"][number], baseUrl: string): string {
+  return `${recordLink(baseUrl, row.contract.number)}/approvals`;
+}
+
+function taskLink(row: TasksHomeSection["rows"][number], baseUrl: string): string {
+  const record =
+    row.record.kind === "matter"
+      ? matterLink(baseUrl, row.record.number)
+      : recordLink(baseUrl, row.record.number);
+  return `${record}/tasks`;
+}
+
+function intakeLink(row: InboxHomeSection["rows"][number], baseUrl: string): string {
+  return `${origin(baseUrl)}/inbox/${BRIEFING_NUMBER.format(row.number)}`;
+}
+
+function approvalLine(row: ApprovalsHomeSection["rows"][number]): string {
+  return `${row.contract.title} (#${BRIEFING_NUMBER.format(row.contract.number)}) — requested by ${row.requestedBy.displayName} on ${instantDateLabel(row.requestedAt)}`;
+}
+
+function taskLine(row: TasksHomeSection["rows"][number]): string {
+  const due = row.dueDate ? ` — due ${civilDateLabel(row.dueDate)}` : "";
+  return `${row.title} — ${row.record.title} (${recordReference(row.record.kind, row.record.number)})${due}`;
+}
+
+function intakeLine(row: InboxHomeSection["rows"][number]): string {
+  return `R-${BRIEFING_NUMBER.format(row.number)} ${row.summary} — ${row.requestType.displayName}, ${row.urgency}`;
+}
+
+function textRows<T>(
+  heading: string,
+  rows: readonly T[],
+  line: (row: T) => string,
+  link: (row: T) => string,
+): string[] {
+  if (rows.length === 0) return [];
+  return [heading, "", ...rows.flatMap((row) => [line(row), link(row), ""])];
+}
+
+function htmlRows<T>(
+  heading: string,
+  rows: readonly T[],
+  line: (row: T) => string,
+  link: (row: T) => string,
+): string {
+  if (rows.length === 0) return "";
+  return `<h2>${heading}</h2><ul>${rows
+    .map((row) => {
+      const href = escapeHtml(link(row));
+      return `<li>${escapeHtml(line(row))}<br><a href="${href}">${href}</a></li>`;
+    })
+    .join("")}</ul>`;
+}
+
 /**
  * The morning briefing one person is owed, or `null` when they are owed
  * none.
@@ -203,7 +284,11 @@ export function renderBriefingMail(
 ): MailMessage | null {
   const rows = sortedDates(briefing.rows);
   const knowledgeItems = sortedKnowledge(briefing.knowledgeItems);
-  if (rows.length === 0 && knowledgeItems.length === 0) return null;
+  const approvals = briefing.approvals?.rows ?? [];
+  const tasks = briefing.tasks?.rows ?? [];
+  const intake = briefing.intake?.rows ?? [];
+  const hasWorkSections = approvals.length > 0 || tasks.length > 0 || intake.length > 0;
+  if (!hasWorkSections && rows.length === 0 && knowledgeItems.length === 0) return null;
 
   const dateCount = rows.length;
   const kinds = new Set(rows.map((row) => row.entityType));
@@ -219,23 +304,27 @@ export function renderBriefingMail(
   // (DES-015 rules 6, 7, 9). The one-section subjects say what the
   // section holds; a briefing with both is just the briefing.
   const subject =
-    knowledgeItems.length === 0
+    !hasWorkSections && knowledgeItems.length === 0
       ? `${dateCount} ${dateCount === 1 ? "date" : "dates"} on ${destination}`
-      : dateCount === 0
+      : !hasWorkSections && dateCount === 0
         ? `${knowledgeItems.length} new Knowledge ${knowledgeItems.length === 1 ? "item" : "items"}`
         : "Your daily briefing";
   const introduction =
-    knowledgeItems.length === 0
+    !hasWorkSections && knowledgeItems.length === 0
       ? `These dates are coming up on ${destination}, nearest first.`
-      : dateCount === 0
+      : !hasWorkSections && dateCount === 0
         ? "These Knowledge items were published since your previous briefing."
         : "Here is your daily briefing.";
 
-  const textSections = dateSections(rows).flatMap((section) => [
-    section.heading,
-    "",
-    ...section.rows.flatMap((row) => [digestLine(row), digestLink(row, baseUrl), ""]),
-  ]);
+  const textSections = [
+    ...textRows("Approvals", approvals, approvalLine, (row) => approvalLink(row, baseUrl)),
+    ...textRows("Tasks", tasks, taskLine, (row) => taskLink(row, baseUrl)),
+    ...dateSections(rows).flatMap((section) => [
+      section.heading,
+      "",
+      ...section.rows.flatMap((row) => [digestLine(row), digestLink(row, baseUrl), ""]),
+    ]),
+  ];
   if (knowledgeItems.length > 0) {
     textSections.push(
       "Knowledge",
@@ -243,7 +332,12 @@ export function renderBriefingMail(
       ...knowledgeItems.flatMap((item) => [item.title, knowledgeLink(item, baseUrl), ""]),
     );
   }
+  textSections.push(...textRows("Intake", intake, intakeLine, (row) => intakeLink(row, baseUrl)));
 
+  const htmlApprovals = htmlRows("Approvals", approvals, approvalLine, (row) =>
+    approvalLink(row, baseUrl),
+  );
+  const htmlTasks = htmlRows("Tasks", tasks, taskLine, (row) => taskLink(row, baseUrl));
   const htmlDateSections = dateSections(rows)
     .map(
       (section) =>
@@ -264,6 +358,7 @@ export function renderBriefingMail(
             return `<li><a href="${link}">${escapeHtml(item.title)}</a></li>`;
           })
           .join("")}</ul>`;
+  const htmlIntake = htmlRows("Intake", intake, intakeLine, (row) => intakeLink(row, baseUrl));
   const settingsLink = `${origin(baseUrl)}/settings/notifications`;
 
   return {
@@ -283,7 +378,7 @@ export function renderBriefingMail(
     ].join("\n"),
     html:
       `<!doctype html><html><body><p>Hello ${escapeHtml(briefing.recipientName)},</p>` +
-      `<p>${escapeHtml(introduction)}</p>${htmlDateSections}${htmlKnowledge}` +
+      `<p>${escapeHtml(introduction)}</p>${htmlApprovals}${htmlTasks}${htmlDateSections}${htmlKnowledge}${htmlIntake}` +
       `<p>Change what reaches you in your <a href="${escapeHtml(settingsLink)}">notification settings</a>.</p>` +
       "</body></html>",
   };

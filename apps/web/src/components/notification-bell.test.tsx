@@ -208,6 +208,33 @@ describe("the notification centre", () => {
     expect(link).toHaveAttribute("href", "/contracts/41/approvals");
   });
 
+  it("opens Home from the daily briefing summary", async () => {
+    const user = userEvent.setup();
+    bellApi({
+      unread: 1,
+      pages: {
+        first: {
+          notifications: [
+            item(1, {
+              eventType: "briefing.ready",
+              entityType: "knowledge_item",
+              entityId: MEMBER.id,
+              payload: { localDate: "2026-08-18" },
+            }),
+          ],
+          nextCursor: null,
+        },
+      },
+    });
+    renderAt("/");
+
+    await user.click(await bell("1 unread"));
+    const centre = await screen.findByRole("dialog", { name: "Notifications" });
+    expect(
+      within(centre).getByRole("link", { name: /^Your daily briefing is ready/ }),
+    ).toHaveAttribute("href", "/");
+  });
+
   it("narrates an Entity obligation and opens its Obligations tab", async () => {
     const user = userEvent.setup();
     bellApi({

@@ -19,7 +19,9 @@ import { api } from "../lib/api";
 import { requireUser } from "../lib/session";
 import { PageTitle } from "../components/page-title";
 import {
+  BriefingSwitchList,
   NotificationSwitchGrid,
+  useBriefingPreferences,
   useNotificationPreferences,
   type EventGroup,
 } from "../components/notification-preferences";
@@ -32,7 +34,7 @@ export async function settingsNotificationsLoader() {
   // A failed read must fail the pane. Drawing the catalog's defaults off
   // a network error would show somebody a grid that is not theirs.
   if (!data) throw new Error("The notification preferences could not be read.");
-  return { groups: data.groups };
+  return { groups: data.groups, briefing: data.briefing };
 }
 
 /**
@@ -62,6 +64,7 @@ export function SettingsNotificationsPage() {
   const intl = useIntl();
   const loaded = useLoaderData<typeof settingsNotificationsLoader>();
   const state = useNotificationPreferences(loaded.groups);
+  const briefingState = useBriefingPreferences(loaded.briefing);
 
   return (
     <>
@@ -85,7 +88,17 @@ export function SettingsNotificationsPage() {
           order={STAFF_GROUPS}
           state={state}
           emailOnlyGroups={["knowledge"]}
+          inAppOnlyGroups={["dates_approaching"]}
         />
+      </SettingsCard>
+      <SettingsCard
+        title={
+          <FormattedMessage id="settings.notifications.briefing.title" defaultMessage="Briefing" />
+        }
+        actions={<StatusNote status={briefingState.status} detail={briefingState.detail} />}
+        flush
+      >
+        <BriefingSwitchList state={briefingState} />
       </SettingsCard>
     </>
   );

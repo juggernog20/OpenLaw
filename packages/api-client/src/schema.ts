@@ -4270,14 +4270,14 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** What the signed-in person gets on each of NOT-002's five event groups, per channel. It is the **effective** answer — their own saved rows over the group's defaults — because the table holds overrides rather than a grid, and a person who has never opened the pane has no rows at all. Every group is answered, whether or not anything in it has ever fired: an opinion can be held about a group before its first event exists. Which of the five a surface draws is the surface's business — the staff pane draws four and the portal pane draws `requester_events` alone. There is no user parameter — a preference is one person's, and the signed-in person is the whole scope */
+    /** What the signed-in person gets from each event group and email-only briefing section. It is the **effective** answer — their own saved rows over the group's defaults — because the table holds overrides rather than a grid, and a person who has never opened the pane has no rows at all. Every group is answered, whether or not anything in it has ever fired: an opinion can be held about a group before its first event exists. Which event groups a surface draws is the surface's business — the staff pane draws four and the portal pane draws `requester_events` alone. There is no user parameter — a preference is one person's, and the signed-in person is the whole scope */
     get: operations["getMyNotificationPreferences"];
     put?: never;
     post?: never;
     delete?: never;
     options?: never;
     head?: never;
-    /** Save one channel's answer for one event group, for the signed-in person (NOT-001). One pair per request, because a toggle is what the pane saves and it saves the moment it is flipped (SET-003 immediate apply). The write lands in `notification_preferences` as an override, so the very next event honours it with no other wiring — and turning email off leaves the group's bell items flowing, which is the point of the two channels being separate rows. A save back to the group's own default **removes** the override rather than storing one that agrees with it: the table holds disagreements, and the effective answer is identical either way. Recorded in the activity log like every settings mutation. Answers the whole grid back, so the pane can never drift from what the fan-out will honour */
+    /** Save one channel's answer for an event group or one email-only briefing section, for the signed-in person (NOT-001). One pair per request, because a toggle is what the pane saves and it saves the moment it is flipped (SET-003 immediate apply). The write lands in `notification_preferences` as an override, so the very next event honours it with no other wiring — and turning email off leaves the group's bell items flowing, which is the point of the two channels being separate rows. A save back to the group's own default **removes** the override rather than storing one that agrees with it: the table holds disagreements, and the effective answer is identical either way. Recorded in the activity log like every settings mutation. Answers the whole grid back, so the pane can never drift from what the fan-out will honour */
     patch: operations["updateMyNotificationPreferences"];
     trace?: never;
   };
@@ -24491,6 +24491,16 @@ export interface operations {
               inApp: boolean;
               email: boolean;
             }[];
+            briefing: {
+              /** @enum {string} */
+              eventGroup:
+                | "briefing.approvals"
+                | "briefing.tasks"
+                | "briefing.dates"
+                | "briefing.obligations"
+                | "briefing.intake";
+              email: boolean;
+            }[];
           };
         };
       };
@@ -24514,19 +24524,32 @@ export interface operations {
     };
     requestBody: {
       content: {
-        "application/json": {
-          /** @enum {string} */
-          eventGroup:
-            | "assigned_to_you"
-            | "activity_on_your_records"
-            | "dates_approaching"
-            | "new_requests"
-            | "knowledge"
-            | "requester_events";
-          /** @enum {string} */
-          channel: "in_app" | "email";
-          enabled: boolean;
-        };
+        "application/json":
+          | {
+              /** @enum {string} */
+              eventGroup:
+                | "assigned_to_you"
+                | "activity_on_your_records"
+                | "dates_approaching"
+                | "new_requests"
+                | "knowledge"
+                | "requester_events";
+              /** @enum {string} */
+              channel: "in_app" | "email";
+              enabled: boolean;
+            }
+          | {
+              /** @enum {string} */
+              eventGroup:
+                | "briefing.approvals"
+                | "briefing.tasks"
+                | "briefing.dates"
+                | "briefing.obligations"
+                | "briefing.intake";
+              /** @enum {string} */
+              channel: "email";
+              enabled: boolean;
+            };
       };
     };
     responses: {
@@ -24547,6 +24570,16 @@ export interface operations {
                 | "knowledge"
                 | "requester_events";
               inApp: boolean;
+              email: boolean;
+            }[];
+            briefing: {
+              /** @enum {string} */
+              eventGroup:
+                | "briefing.approvals"
+                | "briefing.tasks"
+                | "briefing.dates"
+                | "briefing.obligations"
+                | "briefing.intake";
               email: boolean;
             }[];
           };

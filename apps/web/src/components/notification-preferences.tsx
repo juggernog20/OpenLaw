@@ -48,6 +48,10 @@ export type GroupPreference =
 /** One of the six notification groups, as the model names it. */
 export type EventGroup = GroupPreference["eventGroup"];
 
+export type BriefingPreference =
+  paths["/api/v1/me/notification-preferences"]["get"]["responses"]["200"]["content"]["application/json"]["briefing"][number];
+export type BriefingGroup = BriefingPreference["eventGroup"];
+
 /**
  * What each group is called and what it covers.
  *
@@ -88,7 +92,7 @@ export const GROUP_COPY: Record<
     }),
     detail: defineMessage({
       id: "settings.notifications.group.dates.detail",
-      defaultMessage: "Key dates, notice deadlines, and expiries — emailed as one daily digest.",
+      defaultMessage: "Bell reminders for key dates, notice deadlines, expiries, and obligations.",
     }),
   },
   new_requests: {
@@ -125,6 +129,56 @@ export const GROUP_COPY: Record<
       id: "settings.notifications.group.requesterEvents.detail",
       defaultMessage:
         "Receipts, replies, status changes, and decisions on the requests you submit.",
+    }),
+  },
+};
+
+const BRIEFING_COPY: Record<
+  BriefingGroup,
+  { label: MessageDescriptor; detail: MessageDescriptor }
+> = {
+  "briefing.approvals": {
+    label: defineMessage({
+      id: "settings.notifications.briefing.approvals",
+      defaultMessage: "Approvals",
+    }),
+    detail: defineMessage({
+      id: "settings.notifications.briefing.approvals.detail",
+      defaultMessage: "Approval requests waiting on you.",
+    }),
+  },
+  "briefing.tasks": {
+    label: defineMessage({ id: "settings.notifications.briefing.tasks", defaultMessage: "Tasks" }),
+    detail: defineMessage({
+      id: "settings.notifications.briefing.tasks.detail",
+      defaultMessage: "Tasks assigned to you that are due today or overdue.",
+    }),
+  },
+  "briefing.dates": {
+    label: defineMessage({ id: "settings.notifications.briefing.dates", defaultMessage: "Dates" }),
+    detail: defineMessage({
+      id: "settings.notifications.briefing.dates.detail",
+      defaultMessage: "Key dates, notice deadlines, and expiries.",
+    }),
+  },
+  "briefing.obligations": {
+    label: defineMessage({
+      id: "settings.notifications.briefing.obligations",
+      defaultMessage: "Obligations",
+    }),
+    detail: defineMessage({
+      id: "settings.notifications.briefing.obligations.detail",
+      defaultMessage: "Entity obligations assigned to you or awaiting an Administrator.",
+    }),
+  },
+  "briefing.intake": {
+    label: defineMessage({
+      id: "settings.notifications.briefing.intake",
+      defaultMessage: "Intake",
+    }),
+    detail: defineMessage({
+      id: "settings.notifications.briefing.intake.detail",
+      defaultMessage: "Open Requests in the Inbox. Off by default.",
     }),
   },
 };
@@ -241,6 +295,130 @@ export function useNotificationPreferences(initial: GroupPreference[]): Preferen
   return { groups, status, detail, commit };
 }
 
+export const BRIEFING_GROUPS: readonly BriefingGroup[] = [
+  "briefing.approvals",
+  "briefing.tasks",
+  "briefing.dates",
+  "briefing.obligations",
+  "briefing.intake",
+];
+
+export interface BriefingPreferenceState {
+  rows: BriefingPreference[];
+  status: FieldStatus;
+  detail: string | null;
+  commit: (group: BriefingGroup, enabled: boolean) => void;
+}
+
+/** The immediate-save chain for NOT-008's email-only section rows. */
+export function useBriefingPreferences(initial: BriefingPreference[]): BriefingPreferenceState {
+  const [rows, setRows] = useState(initial);
+  const [status, setStatus] = useState<FieldStatus>("idle");
+  const [detail, setDetail] = useState<string | null>(null);
+  const pending = useRef<Promise<void>>(Promise.resolve());
+  const queued = useRef(0);
+
+  const setPair = (group: BriefingGroup, enabled: boolean) =>
+    setRows((current) =>
+      current.map((row) => (row.eventGroup === group ? { ...row, email: enabled } : row)),
+    );
+
+  async function send(group: BriefingGroup, enabled: boolean): Promise<void> {
+    setStatus("saving");
+    setDetail(null);
+    try {
+      const result = await api.PATCH("/api/v1/me/notification-preferences", {
+        body: { eventGroup: group, channel: "email", enabled },
+      });
+      if (!result.data) {
+        setPair(group, !enabled);
+        setStatus("error");
+        setDetail((await problem(result)).detail ?? null);
+        return;
+      }
+      if (queued.current === 1) setRows(result.data.briefing);
+      setStatus("saved");
+    } catch {
+      setPair(group, !enabled);
+      setStatus("error");
+    }
+  }
+
+  function commit(group: BriefingGroup, enabled: boolean): void {
+    setPair(group, enabled);
+    queued.current += 1;
+    pending.current = pending.current
+      .then(() => send(group, enabled))
+      .catch(() => setStatus("error"))
+      .finally(() => {
+        queued.current -= 1;
+      });
+  }
+
+  return { rows, status, detail, commit };
+}
+
+/** The visually separate email-only Briefing group (DES-050 extension). */
+export function BriefingSwitchList({ state }: Readonly<{ state: BriefingPreferenceState }>) {
+  const choiceOf = (group: BriefingGroup) =>
+    state.rows.find((row) => row.eventGroup === group)?.email ?? false;
+
+  return (
+    <div className="@container/prefs">
+      <div
+        aria-hidden="true"
+        className="hidden h-8.5 items-center border-b border-border-default @lg/prefs:flex"
+      >
+        <span className="flex-1 px-4 text-xs font-semibold text-muted">
+          <FormattedMessage id="settings.notifications.column.section" defaultMessage="Section" />
+        </span>
+        <span className="w-27 px-2 text-xs font-semibold text-muted">
+          <FormattedMessage id="settings.notifications.emailOnly" defaultMessage="Email only" />
+        </span>
+      </div>
+      {BRIEFING_GROUPS.map((group) => {
+        const labelId = `notification-group-${group}`;
+        const detailId = `${labelId}-detail`;
+        return (
+          <div
+            key={group}
+            className="flex flex-col gap-3 border-b border-border-muted px-4 py-3 last:border-b-0 @lg/prefs:flex-row @lg/prefs:items-center @lg/prefs:gap-0 @lg/prefs:pe-0 @lg/prefs:py-2.5"
+          >
+            <div className="flex flex-1 flex-col gap-0.5 @lg/prefs:pe-4">
+              <span id={labelId} className="text-base font-medium text-primary">
+                <FormattedMessage {...BRIEFING_COPY[group].label} />
+              </span>
+              <span id={detailId} className="text-sm text-muted">
+                <FormattedMessage {...BRIEFING_COPY[group].detail} />
+              </span>
+            </div>
+            <span className="flex items-center gap-2 @lg/prefs:w-27 @lg/prefs:px-2">
+              <span id={`${labelId}-email`} className="text-xs text-muted @lg/prefs:sr-only">
+                <FormattedMessage
+                  id="settings.notifications.channel.email"
+                  defaultMessage="Email"
+                />
+              </span>
+              <Switch
+                checked={choiceOf(group)}
+                onCheckedChange={(enabled) => state.commit(group, enabled)}
+                aria-labelledby={`${labelId} ${labelId}-email`}
+                aria-describedby={detailId}
+              />
+            </span>
+          </div>
+        );
+      })}
+      <p className="border-t border-border-default px-4 py-3 text-sm text-muted">
+        <FormattedMessage
+          id="settings.notifications.briefing.caption"
+          defaultMessage="These switches change the email only. Your Home sections and daily bell summary stay on."
+        />
+      </p>
+    </div>
+  );
+}
+
 /**
  * The grid itself: a column head, one row per group drawn, and the
  * caption that says what the two switches mean to each other.
@@ -252,12 +430,15 @@ export function NotificationSwitchGrid({
   order,
   state,
   emailOnlyGroups = [],
+  inAppOnlyGroups = [],
 }: Readonly<{
   /** Which groups this pane draws, in the order it draws them. */
   order: readonly EventGroup[];
   state: PreferenceState;
   /** Briefing sections that have no per-publication bell channel. */
   emailOnlyGroups?: readonly EventGroup[];
+  /** Event groups whose email is controlled by the Briefing card. */
+  inAppOnlyGroups?: readonly EventGroup[];
 }>) {
   const choiceOf = (group: EventGroup): GroupPreference =>
     // The API answers every group, so the fallback is unreachable. It is
@@ -296,6 +477,7 @@ export function NotificationSwitchGrid({
       {order.map((group) => {
         const choice = choiceOf(group);
         const emailOnly = emailOnlyGroups.includes(group);
+        const inAppOnly = inAppOnlyGroups.includes(group);
         const labelId = `notification-group-${group}`;
         const detailId = `${labelId}-detail`;
         return (
@@ -313,7 +495,7 @@ export function NotificationSwitchGrid({
             </div>
             <div className="flex gap-6 @lg/prefs:gap-0">
               {CHANNELS.map((channel) =>
-                emailOnly && channel.id === "in_app" ? (
+                (emailOnly && channel.id === "in_app") || (inAppOnly && channel.id === "email") ? (
                   <span
                     key={channel.id}
                     aria-hidden="true"
@@ -358,6 +540,15 @@ export function NotificationSwitchGrid({
             <FormattedMessage
               id="settings.notifications.captionEmailOnly"
               defaultMessage="A group with no in-app switch reaches you by email only; its one switch is the whole choice."
+            />
+          </>
+        ) : null}
+        {inAppOnlyGroups.length > 0 ? (
+          <>
+            {" "}
+            <FormattedMessage
+              id="settings.notifications.captionInAppOnly"
+              defaultMessage="Approaching-date emails are set in the Briefing group below."
             />
           </>
         ) : null}

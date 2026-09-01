@@ -33,10 +33,19 @@ const DEFAULTS = [
   { eventGroup: "requester_events", inApp: true, email: true },
 ];
 
+const BRIEFING_DEFAULTS = [
+  { eventGroup: "briefing.approvals", email: true },
+  { eventGroup: "briefing.tasks", email: true },
+  { eventGroup: "briefing.dates", email: true },
+  { eventGroup: "briefing.obligations", email: true },
+  { eventGroup: "briefing.intake", email: false },
+];
+
 /** Answers the pane's read and captures its writes, the way the real
  * endpoint does. Every save answers the whole grid back. */
 function capturePreferenceWrites(writes: unknown[], failWith?: Response) {
   let groups = DEFAULTS.map((row) => ({ ...row }));
+  let briefing = BRIEFING_DEFAULTS.map((row) => ({ ...row }));
   return (call: StubCall) => {
     if (call.url.pathname !== "/api/v1/me/notification-preferences") return undefined;
     if (call.method === "PATCH") {
@@ -48,8 +57,11 @@ function capturePreferenceWrites(writes: unknown[], failWith?: Response) {
           ? { ...row, [body.channel === "in_app" ? "inApp" : "email"]: body.enabled }
           : row,
       );
+      briefing = briefing.map((row) =>
+        row.eventGroup === body.eventGroup ? { ...row, email: body.enabled } : row,
+      );
     }
-    return json(200, { groups });
+    return json(200, { groups, briefing });
   };
 }
 
@@ -91,7 +103,9 @@ describe("Personal · Notifications (#320)", () => {
     expect(
       screen.getByRole("switch", { name: "Activity on your records Email" }),
     ).not.toBeChecked();
-    expect(screen.getByRole("switch", { name: "Dates approaching Email" })).toBeChecked();
+    expect(
+      screen.queryByRole("switch", { name: "Dates approaching Email" }),
+    ).not.toBeInTheDocument();
     expect(screen.getByRole("switch", { name: "New requests Email" })).not.toBeChecked();
     expect(screen.getByRole("switch", { name: "Knowledge items Email" })).toBeChecked();
   });
@@ -108,7 +122,33 @@ describe("Personal · Notifications (#320)", () => {
     expect(screen.queryByText("Request updates")).not.toBeInTheDocument();
     // Four event groups have two channels. Knowledge has one briefing
     // switch because publishing never makes a bell event.
-    expect(screen.getAllByRole("switch")).toHaveLength(9);
+    expect(screen.getAllByRole("switch")).toHaveLength(13);
+  });
+
+  it("draws a separate email-only Briefing group and saves its rows", async () => {
+    const user = userEvent.setup();
+    const writes: unknown[] = [];
+    stubApi({ signedIn: MEMBER, extra: capturePreferenceWrites(writes) });
+    renderAt("/settings/notifications");
+
+    const briefing = await screen.findByRole("heading", { name: "Briefing" });
+    expect(briefing).toBeVisible();
+    for (const label of ["Approvals", "Tasks", "Dates", "Obligations", "Intake"]) {
+      expect(screen.getByText(label)).toBeVisible();
+      expect(screen.queryByRole("switch", { name: `${label} In-app` })).not.toBeInTheDocument();
+    }
+    expect(screen.getByRole("switch", { name: "Approvals Email" })).toBeChecked();
+    expect(screen.getByRole("switch", { name: "Intake Email" })).not.toBeChecked();
+
+    await user.click(screen.getByRole("switch", { name: "Intake Email" }));
+    await waitFor(() =>
+      expect(writes).toContainEqual({
+        eventGroup: "briefing.intake",
+        channel: "email",
+        enabled: true,
+      }),
+    );
+    expect(screen.getByRole("switch", { name: "Intake Email" })).toBeChecked();
   });
 
   it("saves a flip immediately and leaves the other channel alone", async () => {
@@ -139,7 +179,7 @@ describe("Personal · Notifications (#320)", () => {
       signedIn: MEMBER,
       extra: (call: StubCall) => {
         if (call.url.pathname !== "/api/v1/me/notification-preferences") return undefined;
-        if (call.method !== "PATCH") return json(200, { groups });
+        if (call.method !== "PATCH") return json(200, { groups, briefing: BRIEFING_DEFAULTS });
         const body = call.body as { eventGroup: string; channel: string; enabled: boolean };
         writes.push(body);
         groups = groups.map((row) =>
@@ -149,7 +189,7 @@ describe("Personal · Notifications (#320)", () => {
         );
         // Every reply is held open, so the test decides when each one
         // lands and can look at the pane in the gap between them.
-        const answer = json(200, { groups });
+        const answer = json(200, { groups, briefing: BRIEFING_DEFAULTS });
         return new Promise<Response>((resolve) => {
           releases.push(() => {
             resolve(answer);
@@ -160,31 +200,31 @@ describe("Personal · Notifications (#320)", () => {
     renderAt("/settings/notifications");
 
     await user.click(await screen.findByRole("switch", { name: "Assigned to you Email" }));
-    await user.click(screen.getByRole("switch", { name: "Dates approaching Email" }));
+    await user.click(screen.getByRole("switch", { name: "Activity on your records Email" }));
 
     // Both switches have already moved, and only the first write is out.
     expect(screen.getByRole("switch", { name: "Assigned to you Email" })).not.toBeChecked();
-    expect(screen.getByRole("switch", { name: "Dates approaching Email" })).not.toBeChecked();
+    expect(screen.getByRole("switch", { name: "Activity on your records Email" })).toBeChecked();
     expect(writes).toHaveLength(1);
 
     releases[0]!();
     await waitFor(() => expect(writes).toHaveLength(2));
     expect(writes).toEqual([
       { eventGroup: "assigned_to_you", channel: "email", enabled: false },
-      { eventGroup: "dates_approaching", channel: "email", enabled: false },
+      { eventGroup: "activity_on_your_records", channel: "email", enabled: true },
     ]);
     // The second write is still in the air, and the first reply's grid
     // predates the second press. The pane must not draw that snapshot
     // over the switch that already moved, not even for the round trip
     // the queued write takes.
-    expect(screen.getByRole("switch", { name: "Dates approaching Email" })).not.toBeChecked();
+    expect(screen.getByRole("switch", { name: "Activity on your records Email" })).toBeChecked();
     expect(screen.getByRole("switch", { name: "Assigned to you Email" })).not.toBeChecked();
 
     releases[1]!();
     // Once the last reply lands, its grid is the state. The last reply
     // is the last press.
     expect(await screen.findByText("Saved")).toBeVisible();
-    expect(screen.getByRole("switch", { name: "Dates approaching Email" })).not.toBeChecked();
+    expect(screen.getByRole("switch", { name: "Activity on your records Email" })).toBeChecked();
     expect(screen.getByRole("switch", { name: "Assigned to you Email" })).not.toBeChecked();
   });
 
@@ -197,12 +237,12 @@ describe("Personal · Notifications (#320)", () => {
     });
     renderAt("/settings/notifications");
 
-    const email = await screen.findByRole("switch", { name: "Dates approaching Email" });
+    const email = await screen.findByRole("switch", { name: "Assigned to you Email" });
     await user.click(email);
 
     expect(await screen.findByText("The change could not be saved.")).toBeVisible();
     await waitFor(() =>
-      expect(screen.getByRole("switch", { name: "Dates approaching Email" })).toBeChecked(),
+      expect(screen.getByRole("switch", { name: "Assigned to you Email" })).toBeChecked(),
     );
   });
 });

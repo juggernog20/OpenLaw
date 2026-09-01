@@ -879,7 +879,10 @@ async function fanOut(
         // whose email never leaves owes none, whatever a stale
         // preference row says — otherwise the row would claim a debt
         // nothing in the system could ever pay.
-        emailOwed: choice.email && timing !== "none",
+        // A digest debt is settled by the live briefing-section switch
+        // in the morning round (NOT-008), not by this event group's old
+        // email answer. Immediate events still use the group answer.
+        emailOwed: timing !== "none" && (timing === "digest" || choice.email),
         // Both halves or neither — the table's own check. A reminder
         // that carried one of them would be a row the unique index
         // cannot hold.

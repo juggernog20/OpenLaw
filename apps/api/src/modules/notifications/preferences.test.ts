@@ -96,6 +96,16 @@ interface GroupPreference {
   email: boolean;
 }
 
+interface BriefingPreference {
+  eventGroup: string;
+  email: boolean;
+}
+
+interface PreferenceEnvelope {
+  groups: GroupPreference[];
+  briefing: BriefingPreference[];
+}
+
 beforeAll(async () => {
   harness = await startHarness();
   const setup = await harness.app.inject({
@@ -127,13 +137,17 @@ afterAll(async () => {
 
 /** The whole grid, as the pane reads it. */
 async function preferences(fixture: { email: string }): Promise<GroupPreference[]> {
+  return (await preferenceEnvelope(fixture)).groups;
+}
+
+async function preferenceEnvelope(fixture: { email: string }): Promise<PreferenceEnvelope> {
   const res = await harness.app.inject({
     method: "GET",
     url: "/api/v1/me/notification-preferences",
     cookies: as(fixture),
   });
   expect(res.statusCode, res.body).toBe(200);
-  return (res.json() as { groups: GroupPreference[] }).groups;
+  return res.json() as PreferenceEnvelope;
 }
 
 /** One group's answer out of a grid. */
@@ -302,6 +316,34 @@ async function mailArrives(fixture: { email: string }, contract: ContractRow) {
 }
 
 describe("the grid the pane draws", () => {
+  it("answers and round-trips the email-only briefing section rows", async () => {
+    const initial = await preferenceEnvelope(BYSTANDER);
+    expect(initial.briefing).toEqual([
+      { eventGroup: "briefing.approvals", email: true },
+      { eventGroup: "briefing.tasks", email: true },
+      { eventGroup: "briefing.dates", email: true },
+      { eventGroup: "briefing.obligations", email: true },
+      { eventGroup: "briefing.intake", email: false },
+    ]);
+
+    const saved = await saveToggle(BYSTANDER, "briefing.intake", "email", true);
+    expect(saved.statusCode, saved.body).toBe(200);
+    expect((saved.json() as PreferenceEnvelope).briefing).toContainEqual({
+      eventGroup: "briefing.intake",
+      email: true,
+    });
+    expect((await preferenceEnvelope(BYSTANDER)).briefing).toContainEqual({
+      eventGroup: "briefing.intake",
+      email: true,
+    });
+
+    const refused = await saveToggle(BYSTANDER, "briefing.intake", "in_app", false);
+    expect(refused.statusCode, refused.body).toBe(400);
+
+    const restored = await saveToggle(BYSTANDER, "briefing.intake", "email", false);
+    expect(restored.statusCode, restored.body).toBe(200);
+  });
+
   it("answers every group with its defaults before anybody has an opinion", async () => {
     const groups = await preferences(BYSTANDER);
     // The table holds overrides, so a person who has never opened the

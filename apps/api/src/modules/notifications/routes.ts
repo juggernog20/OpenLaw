@@ -17,8 +17,9 @@
  *
  * **The preferences pair is mounted once and serves both**, because a
  * preference is one person's whichever bell they are looking at. The
- * model is the model, and which of NOT-002's five groups a surface draws
- * is the surface's business.
+ * model is the model, and which event groups a surface draws is the
+ * surface's business. NOT-008's email-only section preferences travel
+ * in the same envelope, but remain a separate vocabulary.
  *
  * Two reads and two writes for each bell, and a read/write pair for the
  * preferences behind them. **The list** is this person's items, newest
@@ -35,10 +36,9 @@
  * number rather than assuming its own write cleared it.
  *
  * **The preferences pair is the pane behind the bell** (inventory row
- * ST3): what each of NOT-002's five groups does for this person, and a
- * save of one group on one channel. The write is an override on a table
- * the fan-out already reads, so a saved toggle changes the very next
- * event with nothing else wired to it.
+ * ST3): what each event group does for this person, plus the daily
+ * briefing's email-only section switches. A save writes one override;
+ * fan-out and the morning round read those answers live.
  *
  * **Every route here is the signed-in person's, and only theirs.** There
  * is no user parameter and no way to ask for — or to write on — somebody
@@ -83,6 +83,7 @@ import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
 import { z } from "zod";
 import {
   and,
+  BRIEFING_PREFERENCE_GROUPS,
   count,
   desc,
   eq,
@@ -98,7 +99,12 @@ import { requireAuth } from "../../auth/guards.js";
 import type { AuthenticatedUser } from "../../auth/user.js";
 import { recordActivity } from "../../lib/activity.js";
 import { notificationScope, type NotificationSurface } from "../../lib/notifications/audience.js";
-import { myChannelChoices, saveChannelChoice } from "../../lib/notifications/preferences.js";
+import {
+  myBriefingChoices,
+  myChannelChoices,
+  saveBriefingChoice,
+  saveChannelChoice,
+} from "../../lib/notifications/preferences.js";
 import { problemResponse } from "../../lib/problem.js";
 
 /**
@@ -188,10 +194,18 @@ const PreferenceSchema = z.object({
   email: z.boolean(),
 });
 
-/** All five groups, in NOT-002's order. The read and the write answer
- * the same envelope, so a save needs no second request to be sure of
- * what it left behind. */
-const PreferencesEnvelope = z.object({ groups: z.array(PreferenceSchema) });
+const BriefingPreferenceSchema = z.object({
+  eventGroup: z.enum(BRIEFING_PREFERENCE_GROUPS),
+  email: z.boolean(),
+});
+
+/** Event groups and briefing sections in their respective stable orders.
+ * The read and the write answer the same envelope, so a save needs no
+ * second request to be sure of what it left behind. */
+const PreferencesEnvelope = z.object({
+  groups: z.array(PreferenceSchema),
+  briefing: z.array(BriefingPreferenceSchema),
+});
 
 /**
  * One bell, as a mount: where it sits, which rows it may answer with,
@@ -525,14 +539,14 @@ export const notificationsRoutes: FastifyPluginAsyncZod = async (app) => {
       schema: {
         operationId: "getMyNotificationPreferences",
         summary:
-          "What the signed-in person gets on each of NOT-002's five " +
-          "event groups, per channel. It is the **effective** answer — " +
+          "What the signed-in person gets from each event group and " +
+          "email-only briefing section. It is the **effective** answer — " +
           "their own saved rows over the group's defaults — because the " +
           "table holds overrides rather than a grid, and a person who " +
           "has never opened the pane has no rows at all. Every group is " +
           "answered, whether or not anything in it has ever fired: an " +
           "opinion can be held about a group before its first event " +
-          "exists. Which of the five a surface draws " +
+          "exists. Which event groups a surface draws " +
           "is the surface's business — the staff pane draws four and " +
           "the portal pane draws `requester_events` alone. There is no " +
           "user parameter — a preference is one person's, and the " +
@@ -541,7 +555,13 @@ export const notificationsRoutes: FastifyPluginAsyncZod = async (app) => {
         response: { 200: PreferencesEnvelope, default: problemResponse },
       },
     },
-    async (request) => ({ groups: await myChannelChoices(app.db, request.user.id) }),
+    async (request) => {
+      const [groups, briefing] = await Promise.all([
+        myChannelChoices(app.db, request.user.id),
+        myBriefingChoices(app.db, request.user.id),
+      ]);
+      return { groups, briefing };
+    },
   );
 
   app.patch(
@@ -551,7 +571,8 @@ export const notificationsRoutes: FastifyPluginAsyncZod = async (app) => {
       schema: {
         operationId: "updateMyNotificationPreferences",
         summary:
-          "Save one channel's answer for one event group, for the " +
+          "Save one channel's answer for an event group or one email-only " +
+          "briefing section, for the " +
           "signed-in person (NOT-001). One pair per request, because a " +
           "toggle is what the pane saves and it saves the moment it is " +
           "flipped (SET-003 immediate apply). The write lands in " +
@@ -566,11 +587,18 @@ export const notificationsRoutes: FastifyPluginAsyncZod = async (app) => {
           "mutation. Answers the whole grid back, so the pane can never " +
           "drift from what the fan-out will honour",
         tags: ["notifications"],
-        body: z.strictObject({
-          eventGroup: z.enum(NOTIFICATION_EVENT_GROUPS),
-          channel: z.enum(NOTIFICATION_CHANNELS),
-          enabled: z.boolean(),
-        }),
+        body: z.union([
+          z.strictObject({
+            eventGroup: z.enum(NOTIFICATION_EVENT_GROUPS),
+            channel: z.enum(NOTIFICATION_CHANNELS),
+            enabled: z.boolean(),
+          }),
+          z.strictObject({
+            eventGroup: z.enum(BRIEFING_PREFERENCE_GROUPS),
+            channel: z.literal("email"),
+            enabled: z.boolean(),
+          }),
+        ]),
         response: { 200: PreferencesEnvelope, default: problemResponse },
       },
     },
@@ -581,7 +609,18 @@ export const notificationsRoutes: FastifyPluginAsyncZod = async (app) => {
       // the write actually left behind.
       await app.db.transaction(async (tx) => {
         const { eventGroup, channel, enabled } = request.body;
-        await saveChannelChoice(tx, request.user.id, eventGroup, channel, enabled);
+        const briefingGroup = BRIEFING_PREFERENCE_GROUPS.find(
+          (candidate) => candidate === eventGroup,
+        );
+        if (briefingGroup) {
+          await saveBriefingChoice(tx, request.user.id, briefingGroup, enabled);
+        } else {
+          const notificationGroup = NOTIFICATION_EVENT_GROUPS.find(
+            (candidate) => candidate === eventGroup,
+          );
+          if (!notificationGroup) throw new Error("The notification preference group is invalid.");
+          await saveChannelChoice(tx, request.user.id, notificationGroup, channel, enabled);
+        }
         // Narrated on every write, not only on a change of effect. The
         // table records that somebody expressed an opinion, and
         // re-affirming one against a default that may later move is a
@@ -596,7 +635,11 @@ export const notificationsRoutes: FastifyPluginAsyncZod = async (app) => {
           visibility: "admin_only",
           payload: { eventGroup, channel, enabled },
         });
-        return { groups: await myChannelChoices(tx, request.user.id) };
+        const [groups, briefing] = await Promise.all([
+          myChannelChoices(tx, request.user.id),
+          myBriefingChoices(tx, request.user.id),
+        ]);
+        return { groups, briefing };
       }),
   );
 };
