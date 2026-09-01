@@ -12,6 +12,7 @@ import {
   contractTeam,
   contractTypes,
   entities,
+  entityGrants,
   entityObligations,
   entityTypes,
   eq,
@@ -806,7 +807,18 @@ describe("GET /api/v1/home", () => {
         entityTypeId,
         isConfidential: true,
       },
+      {
+        id: "home-obligations-granted",
+        legalName: "Granted Confidential Vehicle",
+        entityTypeId,
+        isConfidential: true,
+      },
     ]);
+    // A grant row is the other way an assignee reaches a Confidential
+    // Entity (ENT-004): this row must stay off the Administrator fallback.
+    await harness.db
+      .insert(entityGrants)
+      .values({ entityId: "home-obligations-granted", userId: idOf(OTHER) });
     await harness.db.insert(entityObligations).values([
       {
         id: "home-obligation-overdue",
@@ -857,6 +869,13 @@ describe("GET /api/v1/home", () => {
         nextDueOn: plusDays(today, -20),
         assigneeId: idOf(APPROVER),
       },
+      {
+        id: "home-obligation-granted-row",
+        entityId: "home-obligations-granted",
+        label: "Granted filing",
+        nextDueOn: plusDays(today, 2),
+        assigneeId: idOf(OTHER),
+      },
     ]);
 
     const memberSection = obligationsIn(await home(APPROVER));
@@ -874,8 +893,15 @@ describe("GET /api/v1/home", () => {
       ),
     ).toBe(true);
 
-    expect(obligationsIn(await home(OTHER))).toBeUndefined();
+    // The grant reaches OTHER their own row on the Confidential Entity…
+    expect(obligationsIn(await home(OTHER))).toMatchObject({
+      type: "obligations",
+      total: 1,
+      rows: [{ label: "Granted filing", isUnassigned: false }],
+    });
     expect(obligationsIn(await home(CONTRIBUTOR))).toBeUndefined();
+    // …and because that assignee reaches it, the row stays off the
+    // Administrator fallback. Only the walled and unowned rows land there.
     expect(obligationsIn(await home(ADMIN))).toMatchObject({
       type: "obligations",
       total: 2,
