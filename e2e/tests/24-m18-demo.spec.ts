@@ -25,10 +25,10 @@
  * inbox on its own, within seconds, and sits on their bell as well —
  * NOT-002's group 1, where a direct ask interrupts.
  *
- * **The badge.** Eleven dates give the Owner more unread items than the
- * badge will draw, so it reads "9+" (NOT-005) while its accessible name
- * still says the whole number. Opening the centre reads the page it
- * draws, and the badge goes.
+ * **The badge.** Eleven date reminders plus the daily briefing summary
+ * give the Owner more unread items than the badge will draw, so it reads
+ * "9+" (NOT-005) while its accessible name still says the whole number.
+ * Opening the centre reads the page it draws, and the badge goes.
  *
  * **How the round is made to run.** The morning round is a pg-boss cron
  * on the hour, and a browser suite has neither a way to reach a
@@ -125,6 +125,9 @@ const EXTRA_CONTRACTS = 9;
  * record's notice deadline and key date, and one expiry each on the
  * records beside it. */
 const EXPECTED_REMINDERS = EXTRA_CONTRACTS + 2;
+
+/** NOT-008 adds one daily summary row beside the date reminders. */
+const EXPECTED_BELL_ITEMS = EXPECTED_REMINDERS + 1;
 
 /**
  * Zones dense enough that one of them always reads a workable hour.
@@ -594,22 +597,27 @@ test.describe("M18 demo path", () => {
       expect(digest.text).toContain(`/contracts/${number}/key-dates`);
       expect(digest.text).toContain("/settings/notifications");
 
-      // The seam half: eleven items, none of them read yet, and the
-      // subject record carrying its two.
+      // The seam half: eleven date reminders plus one NOT-008 briefing
+      // summary, none of them read yet, and the subject record carrying
+      // its two reminders.
       const items = await readBell(ownerPage.request);
-      expect(items).toHaveLength(EXPECTED_REMINDERS);
-      const onSubject = items.filter((item) => item.payload.contractNumber === number);
+      expect(items).toHaveLength(EXPECTED_BELL_ITEMS);
+      const reminders = items.filter((item) => item.eventType.startsWith("date."));
+      expect(reminders).toHaveLength(EXPECTED_REMINDERS);
+      const briefingItems = items.filter((item) => item.eventType === "briefing.ready");
+      expect(briefingItems).toHaveLength(1);
+      const onSubject = reminders.filter((item) => item.payload.contractNumber === number);
       expect(
         onSubject.filter((item) => item.eventType === "date.notice_deadline_approaching"),
       ).toHaveLength(1);
       expect(
         onSubject.filter((item) => item.eventType === "date.key_date_approaching"),
       ).toHaveLength(1);
-      expect(items.filter((item) => item.eventType === "date.expiry_approaching")).toHaveLength(
+      expect(reminders.filter((item) => item.eventType === "date.expiry_approaching")).toHaveLength(
         EXTRA_CONTRACTS,
       );
       expect(items.every((item) => item.readAt === null)).toBe(true);
-      expect(await readUnread(ownerPage.request)).toBe(EXPECTED_REMINDERS);
+      expect(await readUnread(ownerPage.request)).toBe(EXPECTED_BELL_ITEMS);
 
       // ---- The badge: capped for the eye, whole for a reader ----
 
@@ -619,13 +627,17 @@ test.describe("M18 demo path", () => {
       await expect(ownerBell.getByText("9+")).toBeVisible();
       // … and named uncapped, because hiding the number from a screen
       // reader would make the cap cost information rather than noise.
-      await expect(ownerBell).toHaveAccessibleName(`Notifications, ${EXPECTED_REMINDERS} unread`);
+      await expect(ownerBell).toHaveAccessibleName(`Notifications, ${EXPECTED_BELL_ITEMS} unread`);
 
       // ---- Opening the centre reads what it draws ----
 
       await ownerBell.click();
       const centre = notificationCentre(ownerPage);
       await expect(centre).toBeVisible();
+      const briefingRow = centre.getByRole("link", {
+        name: /^Your daily briefing is ready/,
+      });
+      await expect(briefingRow).toHaveAttribute("href", "/");
       const deadlineRow = centre.getByRole("link", {
         name: `The notice deadline on ${title} is coming up`,
       });
@@ -660,7 +672,7 @@ test.describe("M18 demo path", () => {
       expect(second.reminders).toBe(0);
       expect(second.digests).toBe(0);
       expect(await readUnread(ownerPage.request)).toBe(0);
-      expect(await readBell(ownerPage.request)).toHaveLength(EXPECTED_REMINDERS);
+      expect(await readBell(ownerPage.request)).toHaveLength(EXPECTED_BELL_ITEMS);
     } catch (error) {
       await sweepOrSay("M18 demo", leaveInert);
       throw error;

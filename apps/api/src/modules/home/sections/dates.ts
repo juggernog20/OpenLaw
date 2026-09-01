@@ -6,6 +6,7 @@ import {
   and,
   contractKeyDates,
   contracts,
+  contractStatuses,
   contractTeam,
   eq,
   inArray,
@@ -15,6 +16,7 @@ import {
   matterKeyDates,
   matterStatuses,
   matterTeam,
+  ne,
   or,
   sql,
   type AnyPgColumn,
@@ -73,7 +75,8 @@ interface DateDbRow extends Record<string, unknown> {
  *
  * The notice deadline is subtracted inside this query and stored nowhere,
  * exactly as the morning round reads it. Lifecycle predicates are the
- * round's too: ended_at/archived_at for Contracts, and the joined status
+ * round's too, with CTR-019's legacy-stage guard added for Contracts:
+ * ended_at, stage, and archived_at for Contracts, and the joined status
  * category plus archived_at for Matters.
  */
 export async function readDatesHomeSection(
@@ -103,6 +106,7 @@ export async function readDatesHomeSection(
   const liveContracts = and(
     isNull(contracts.endedAt),
     isNull(contracts.archivedAt),
+    ne(contractStatuses.stage, "ended"),
     personalContracts,
     contractTeamScope(db, user),
   );
@@ -132,6 +136,7 @@ export async function readDatesHomeSection(
         2 as source_rank
       from ${contractKeyDates}
       inner join ${contracts} on ${contracts.id} = ${contractKeyDates.contractId}
+      inner join ${contractStatuses} on ${contractStatuses.id} = ${contracts.statusId}
       where ${and(liveContracts, inWindow(contractKeyDates.date))}
 
       union all
@@ -149,6 +154,7 @@ export async function readDatesHomeSection(
         ${contracts.isConfidential} as record_is_confidential,
         1 as source_rank
       from ${contracts}
+      inner join ${contractStatuses} on ${contractStatuses.id} = ${contracts.statusId}
       where ${and(liveContracts, isNotNull(contracts.expiryDate), inWindow(contracts.expiryDate))}
 
       union all
@@ -166,6 +172,7 @@ export async function readDatesHomeSection(
         ${contracts.isConfidential} as record_is_confidential,
         0 as source_rank
       from ${contracts}
+      inner join ${contractStatuses} on ${contractStatuses.id} = ${contracts.statusId}
       where ${and(
         liveContracts,
         isNotNull(contracts.expiryDate),
