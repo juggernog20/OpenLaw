@@ -37,6 +37,7 @@ export const matterTasks = pgTable(
   },
   (table) => [
     index("matter_tasks_matter_order_idx").on(table.matterId, table.displayOrder),
+    index("matter_tasks_assignee_due_idx").on(table.assigneeId, table.dueDate),
     check("matter_tasks_title_check", sql`length(btrim(${table.title})) between 1 and 200`),
   ],
 );

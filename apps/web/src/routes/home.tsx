@@ -1,11 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 /**
- * Guarded landing page inside the application shell (M4). The page
- * body stays a placeholder — dashboards arrive in M29 — but the chrome
- * around it is the real shell: header, nav, sub-bar. The account
- * surfaces auth needs (sign out, two-factor enrolment) live in the
- * header user menu.
+ * The guarded staff landing page and M29 personal state summary.
  */
 
 import { redirect, useLoaderData, type LoaderFunctionArgs } from "react-router";
@@ -15,6 +11,14 @@ import { requireUser, useSignOut } from "../lib/session";
 import { AppShell } from "../components/shell/app-shell";
 import { PageSubBar } from "../components/shell/page-subbar";
 import { PageTitle } from "../components/page-title";
+import { HomeApprovalsCard } from "../components/home/approvals-card";
+import { HomeTasksCard } from "../components/home/tasks-card";
+import { HomeDatesCard } from "../components/home/dates-card";
+import { HomeInboxCard } from "../components/home/inbox-card";
+import { HomeObligationsCard } from "../components/home/obligations-card";
+import { HomeWelcomeCard } from "../components/home/welcome-card";
+import { HomeContractsCard } from "../components/home/contracts-card";
+import { HomeMattersCard } from "../components/home/matters-card";
 
 export async function homeLoader({ request }: LoaderFunctionArgs) {
   // A failed magic-link redemption redirects here with an ?error= query
@@ -41,11 +45,13 @@ export async function homeLoader({ request }: LoaderFunctionArgs) {
     const { data } = await api.GET("/api/v1/onboarding");
     if (data && !data.completed) return redirect("/welcome");
   }
-  return { user };
+  const home = await api.GET("/api/v1/home");
+  if (!home.data) throw new Error("Home could not be read.");
+  return { user, sections: home.data.sections };
 }
 
 export function HomePage() {
-  const { user } = useLoaderData<typeof homeLoader>();
+  const { user, sections } = useLoaderData<typeof homeLoader>();
   const intl = useIntl();
 
   const signOut = useSignOut("/auth/login");
@@ -57,12 +63,30 @@ export function HomePage() {
       subbar={<PageSubBar title={<FormattedMessage id="home.title" defaultMessage="Home" />} />}
     >
       <PageTitle title={intl.formatMessage({ id: "home.title", defaultMessage: "Home" })} />
-      <p className="text-muted">
-        <FormattedMessage
-          id="home.placeholder"
-          defaultMessage="Modules arrive with their own builds."
-        />
-      </p>
+      {sections.length === 0 ? (
+        <HomeWelcomeCard role={user.role} />
+      ) : (
+        <div className="grid grid-cols-1 gap-4 @4xl/page:grid-cols-2">
+          {sections.map((section) => {
+            switch (section.type) {
+              case "approvals":
+                return <HomeApprovalsCard key={section.type} section={section} />;
+              case "tasks":
+                return <HomeTasksCard key={section.type} section={section} />;
+              case "dates":
+                return <HomeDatesCard key={section.type} section={section} />;
+              case "obligations":
+                return <HomeObligationsCard key={section.type} section={section} />;
+              case "inbox":
+                return <HomeInboxCard key={section.type} section={section} />;
+              case "contracts":
+                return <HomeContractsCard key={section.type} section={section} />;
+              case "matters":
+                return <HomeMattersCard key={section.type} section={section} />;
+            }
+          })}
+        </div>
+      )}
     </AppShell>
   );
 }

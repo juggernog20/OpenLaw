@@ -290,6 +290,12 @@ export function stubApi(state: ApiState) {
     if (call.url.pathname === "/api/v1/search" && call.method === "GET") {
       return json(200, { results: [], nextCursor: null });
     }
+    // M29's state summary. Empty is the ordinary fresh-user answer, so
+    // every shell test keeps using the same default fixture; Home's own
+    // suite replaces it through `extra`.
+    if (call.url.pathname === "/api/v1/home" && call.method === "GET") {
+      return json(200, { sections: [] });
+    }
     // M26's flat repository. A fresh install has no Documents, and only
     // the destination's own suite replaces this answer through `extra`.
     if (call.url.pathname === "/api/v1/documents" && call.method === "GET") {

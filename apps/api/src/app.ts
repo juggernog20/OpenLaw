@@ -100,6 +100,7 @@ import { signerErasureRoutes } from "./modules/signer-erasure/routes.js";
 import { signingConnectorRoutes } from "./modules/signing-connector/routes.js";
 import { signingWebhookRoutes } from "./modules/signing-webhook/routes.js";
 import { searchRoutes } from "./modules/search/routes.js";
+import { homeRoutes } from "./modules/home/routes.js";
 import { authHandler } from "./auth/handler.js";
 import { createAuth, type Auth, type AuthConfig } from "./auth/instance.js";
 import type { AuthenticatedSession, AuthenticatedUser } from "./auth/guards.js";
@@ -473,6 +474,7 @@ export async function buildApp(deps: AppDeps, opts: FastifyServerOptions = {}) {
   await app.register(knowledgeTypeOptionsRoutes, { prefix: "/api/v1" });
   await app.register(knowledgeRoutes, { prefix: "/api/v1" });
   await app.register(searchRoutes, { prefix: "/api/v1" });
+  await app.register(homeRoutes, { prefix: "/api/v1" });
   await app.register(fieldsRoutes, { prefix: "/api/v1" });
   await app.register(listViewsRoutes, { prefix: "/api/v1" });
   await app.register(notificationsRoutes, { prefix: "/api/v1" });
