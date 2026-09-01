@@ -104,25 +104,18 @@ const DIGEST_DATE = new Intl.DateTimeFormat("en-US", {
   day: "numeric",
 });
 
-const BRIEFING_DATE = new Intl.DateTimeFormat("en-US", {
-  timeZone: "UTC",
-  year: "numeric",
-  month: "short",
-  day: "numeric",
-});
-const BRIEFING_NUMBER = new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 });
+const BRIEFING_COUNT = new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 });
 
 function civilDateLabel(value: string): string {
-  return BRIEFING_DATE.format(civilInstant(value));
+  return DIGEST_DATE.format(civilInstant(value));
 }
 
 function instantDateLabel(value: string): string {
-  return BRIEFING_DATE.format(new Date(value));
+  return DIGEST_DATE.format(new Date(value));
 }
 
 function recordReference(kind: "contract" | "matter", number: number): string {
-  const held = BRIEFING_NUMBER.format(number);
-  return kind === "matter" ? `M-${held}` : `#${held}`;
+  return kind === "matter" ? `M-${number}` : `#${number}`;
 }
 
 /** How far away one date is, in the words a briefing uses. Digits rather
@@ -222,11 +215,11 @@ function taskLink(row: TasksHomeSection["rows"][number], baseUrl: string): strin
 }
 
 function intakeLink(row: InboxHomeSection["rows"][number], baseUrl: string): string {
-  return `${origin(baseUrl)}/inbox/${BRIEFING_NUMBER.format(row.number)}`;
+  return `${origin(baseUrl)}/inbox/${row.number}`;
 }
 
 function approvalLine(row: ApprovalsHomeSection["rows"][number]): string {
-  return `${row.contract.title} (#${BRIEFING_NUMBER.format(row.contract.number)}) — requested by ${row.requestedBy.displayName} on ${instantDateLabel(row.requestedAt)}`;
+  return `${row.contract.title} (#${row.contract.number}) — requested by ${row.requestedBy.displayName} on ${instantDateLabel(row.requestedAt)}`;
 }
 
 function taskLine(row: TasksHomeSection["rows"][number]): string {
@@ -235,7 +228,7 @@ function taskLine(row: TasksHomeSection["rows"][number]): string {
 }
 
 function intakeLine(row: InboxHomeSection["rows"][number]): string {
-  return `R-${BRIEFING_NUMBER.format(row.number)} ${row.summary} — ${row.requestType.displayName}, ${row.urgency}`;
+  return `R-${row.number} ${row.summary} — ${row.requestType.displayName}, ${row.urgency}`;
 }
 
 function textRows<T>(
@@ -305,9 +298,9 @@ export function renderBriefingMail(
   // section holds; a briefing with both is just the briefing.
   const subject =
     !hasWorkSections && knowledgeItems.length === 0
-      ? `${dateCount} ${dateCount === 1 ? "date" : "dates"} on ${destination}`
+      ? `${BRIEFING_COUNT.format(dateCount)} ${dateCount === 1 ? "date" : "dates"} on ${destination}`
       : !hasWorkSections && dateCount === 0
-        ? `${knowledgeItems.length} new Knowledge ${knowledgeItems.length === 1 ? "item" : "items"}`
+        ? `${BRIEFING_COUNT.format(knowledgeItems.length)} new Knowledge ${knowledgeItems.length === 1 ? "item" : "items"}`
         : "Your daily briefing";
   const introduction =
     !hasWorkSections && knowledgeItems.length === 0

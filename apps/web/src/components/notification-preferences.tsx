@@ -209,77 +209,55 @@ export interface PreferenceState {
   commit: (group: EventGroup, channel: Channel, enabled: boolean) => void;
 }
 
+type PreferenceWrite<Row> = { rows: Row[]; detail: null } | { rows: null; detail: string | null };
+
 /**
- * The save chain behind the grid.
+ * The serialized immediate-save chain shared by both preference cards.
  *
- * A hook rather than state inside the grid, because the status note it
- * produces is drawn by the **card**, not by the table — one note per
- * card is DES-050 point 6, and a note per switch would put eight live
- * regions on one pane.
+ * Each save answers its whole grid, so racing requests could let an old
+ * snapshot undo a later press. Writes leave in press order and only the
+ * last reply replaces local state. A refusal rolls back its one pair.
  */
-export function useNotificationPreferences(initial: GroupPreference[]): PreferenceState {
-  const [groups, setGroups] = useState<GroupPreference[]>(initial);
+function usePreferenceChain<Row, Change extends { enabled: boolean }>(
+  initial: Row[],
+  update: (rows: Row[], change: Change, enabled: boolean) => Row[],
+  write: (change: Change) => Promise<PreferenceWrite<Row>>,
+) {
+  const [rows, setRows] = useState<Row[]>(initial);
   const [status, setStatus] = useState<FieldStatus>("idle");
   const [detail, setDetail] = useState<string | null>(null);
-
-  /** Moves one pair, and nothing else on the grid. */
-  const setPair = (group: EventGroup, key: "inApp" | "email", value: boolean) =>
-    setGroups((rows) =>
-      rows.map((row) => (row.eventGroup === group ? { ...row, [key]: value } : row)),
-    );
-
-  /**
-   * The writes still in flight, as one chain.
-   *
-   * Each save answers the **whole** grid, so two of them racing would let
-   * the slower reply land last and undo the faster one's pair. Sending
-   * them in the order they were pressed makes the last reply the last
-   * press, which is the only ordering a person watching switches move
-   * would accept.
-   */
   const pending = useRef<Promise<void>>(Promise.resolve());
-
-  /** How many presses are in the chain, counting the one in flight.
-   * `1` inside {@link send} means "nothing is queued behind me". */
   const queued = useRef(0);
 
-  async function send(group: EventGroup, channel: Channel, enabled: boolean): Promise<void> {
+  async function send(change: Change): Promise<void> {
     setStatus("saving");
     setDetail(null);
     try {
-      const result = await api.PATCH("/api/v1/me/notification-preferences", {
-        body: { eventGroup: group, channel: channel.id, enabled },
-      });
-      const { data } = result;
-      if (!data) {
+      const result = await write(change);
+      if (result.rows === null) {
         // Only this pair goes back, and only to the value this press
         // moved it from. A whole-grid snapshot would also undo whatever
         // was pressed while this request was in the air.
-        setPair(group, channel.key, !enabled);
+        setRows((current) => update(current, change, !change.enabled));
         setStatus("error");
-        setDetail((await problem(result)).detail ?? null);
+        setDetail(result.detail);
         return;
       }
-      // The write answers the whole grid, so the pane takes the server's
-      // state rather than trusting the row it just moved — but only from
-      // the last reply in the chain. An earlier one predates the presses
-      // still queued behind it, and its snapshot would draw them undone
-      // for as long as the next request is in the air.
-      if (queued.current === 1) setGroups(data.groups);
+      if (queued.current === 1) setRows(result.rows);
       setStatus("saved");
     } catch {
-      setPair(group, channel.key, !enabled);
+      setRows((current) => update(current, change, !change.enabled));
       setStatus("error");
     }
   }
 
-  function commit(group: EventGroup, channel: Channel, enabled: boolean): void {
+  function commit(change: Change): void {
     // The switch moves at once (SET-003 immediate apply); the write
     // queues behind whatever is already in flight.
-    setPair(group, channel.key, enabled);
+    setRows((current) => update(current, change, change.enabled));
     queued.current += 1;
     pending.current = pending.current
-      .then(() => send(group, channel, enabled))
+      .then(() => send(change))
       // A rejected link must not poison the chain. `send` handles its
       // own failures, so this catches only what it cannot — and if it
       // ever did reject, every later press would skip its `then` and the
@@ -292,7 +270,35 @@ export function useNotificationPreferences(initial: GroupPreference[]): Preferen
       });
   }
 
-  return { groups, status, detail, commit };
+  return { rows, status, detail, commit };
+}
+
+/**
+ * The save chain behind the event-group grid. A hook rather than state
+ * inside the grid lets the card draw one DES-050 status note.
+ */
+export function useNotificationPreferences(initial: GroupPreference[]): PreferenceState {
+  const chain = usePreferenceChain(
+    initial,
+    (rows, change: { group: EventGroup; channel: Channel; enabled: boolean }, enabled) =>
+      rows.map((row) =>
+        row.eventGroup === change.group ? { ...row, [change.channel.key]: enabled } : row,
+      ),
+    async (change) => {
+      const result = await api.PATCH("/api/v1/me/notification-preferences", {
+        body: { eventGroup: change.group, channel: change.channel.id, enabled: change.enabled },
+      });
+      return result.data
+        ? { rows: result.data.groups, detail: null }
+        : { rows: null, detail: (await problem(result)).detail ?? null };
+    },
+  );
+  return {
+    groups: chain.rows,
+    status: chain.status,
+    detail: chain.detail,
+    commit: (group, channel, enabled) => chain.commit({ group, channel, enabled }),
+  };
 }
 
 export const BRIEFING_GROUPS: readonly BriefingGroup[] = [
@@ -312,50 +318,25 @@ export interface BriefingPreferenceState {
 
 /** The immediate-save chain for NOT-008's email-only section rows. */
 export function useBriefingPreferences(initial: BriefingPreference[]): BriefingPreferenceState {
-  const [rows, setRows] = useState(initial);
-  const [status, setStatus] = useState<FieldStatus>("idle");
-  const [detail, setDetail] = useState<string | null>(null);
-  const pending = useRef<Promise<void>>(Promise.resolve());
-  const queued = useRef(0);
-
-  const setPair = (group: BriefingGroup, enabled: boolean) =>
-    setRows((current) =>
-      current.map((row) => (row.eventGroup === group ? { ...row, email: enabled } : row)),
-    );
-
-  async function send(group: BriefingGroup, enabled: boolean): Promise<void> {
-    setStatus("saving");
-    setDetail(null);
-    try {
+  const chain = usePreferenceChain(
+    initial,
+    (rows, change: { group: BriefingGroup; enabled: boolean }, enabled) =>
+      rows.map((row) => (row.eventGroup === change.group ? { ...row, email: enabled } : row)),
+    async (change) => {
       const result = await api.PATCH("/api/v1/me/notification-preferences", {
-        body: { eventGroup: group, channel: "email", enabled },
+        body: { eventGroup: change.group, channel: "email", enabled: change.enabled },
       });
-      if (!result.data) {
-        setPair(group, !enabled);
-        setStatus("error");
-        setDetail((await problem(result)).detail ?? null);
-        return;
-      }
-      if (queued.current === 1) setRows(result.data.briefing);
-      setStatus("saved");
-    } catch {
-      setPair(group, !enabled);
-      setStatus("error");
-    }
-  }
-
-  function commit(group: BriefingGroup, enabled: boolean): void {
-    setPair(group, enabled);
-    queued.current += 1;
-    pending.current = pending.current
-      .then(() => send(group, enabled))
-      .catch(() => setStatus("error"))
-      .finally(() => {
-        queued.current -= 1;
-      });
-  }
-
-  return { rows, status, detail, commit };
+      return result.data
+        ? { rows: result.data.briefing, detail: null }
+        : { rows: null, detail: (await problem(result)).detail ?? null };
+    },
+  );
+  return {
+    rows: chain.rows,
+    status: chain.status,
+    detail: chain.detail,
+    commit: (group, enabled) => chain.commit({ group, enabled }),
+  };
 }
 
 /** The visually separate email-only Briefing group (DES-050 extension). */

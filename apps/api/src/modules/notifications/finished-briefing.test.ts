@@ -307,6 +307,6 @@ describe("the finished daily briefing", () => {
       (row) => row.eventType === "briefing.ready",
     ).length;
     expect(readyAfterRerun).toBe(readyBeforeRerun);
-    expect(first.digests).toBeGreaterThanOrEqual(2);
+    expect(first.digests).toBe(2);
   });
 });

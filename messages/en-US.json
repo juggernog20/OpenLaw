@@ -591,7 +591,7 @@
     "defaultMessage": "{actor} invited {email} as {role}"
   },
   "activity.user.notificationPreferenceChanged": {
-    "defaultMessage": "{actor} turned {channel, select, in_app {bell items} email {emails} other {{channel}}} {state, select, on {on} off {off} other {{state}}} for {group, select, assigned_to_you {direct asks} activity_on_your_records {activity on their records} dates_approaching {approaching dates} new_requests {new requests} knowledge {knowledge items} requester_events {requester events} other {{group}}}"
+    "defaultMessage": "{actor} turned {channel, select, in_app {bell items} email {emails} other {{channel}}} {state, select, on {on} off {off} other {{state}}} for {group, select, assigned_to_you {direct asks} activity_on_your_records {activity on their records} dates_approaching {approaching dates} new_requests {new requests} knowledge {knowledge items} requester_events {requester events} briefing_approvals {approvals in their briefing} briefing_tasks {Tasks in their briefing} briefing_dates {dates in their briefing} briefing_obligations {obligations in their briefing} briefing_intake {Intake in their briefing} other {{group}}}"
   },
   "activity.user.otherSessionsRevoked": {
     "defaultMessage": "{actor} signed out their other sessions"

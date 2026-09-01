@@ -68,6 +68,11 @@ interface TaskDbRow extends Record<string, unknown> {
 export async function readTasksHomeSection(
   db: Executor,
   user: AuthenticatedUser,
+  /**
+   * The latest due date to answer. When present it is also the overdue
+   * baseline, and undated Tasks fall out because they are not yet due.
+   * Without it, Home keeps every open Task and uses `current_date`.
+   */
   dueThrough?: string,
 ): Promise<TasksHomeSection | null> {
   const today = dueThrough ? sql`${dueThrough}::date` : sql`current_date`;

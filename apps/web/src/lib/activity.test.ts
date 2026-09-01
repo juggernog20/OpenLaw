@@ -982,6 +982,16 @@ describe("the cross-reference fallbacks between an ask and its record", () => {
 });
 
 describe("the sentences a reader gets", () => {
+  it("names a briefing section preference without exposing its slug", () => {
+    expect(
+      narrate("user.notification_preference_changed", {
+        eventGroup: "briefing.intake",
+        channel: "email",
+        enabled: true,
+      }).sentence,
+    ).toBe("Nadia Counsel turned emails on for Intake in their briefing");
+  });
+
   it("narrates both kinds behind a version-kind correction", () => {
     const narration = narrate(
       "document.version_kind_changed",

@@ -14,6 +14,7 @@
 import { describe, expect, it } from "vitest";
 import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import type { BriefingPreference } from "../components/notification-preferences";
 import { json, problem, renderAt, stubApi, type StubCall } from "../testing/helpers";
 
 const MEMBER = {
@@ -39,13 +40,13 @@ const BRIEFING_DEFAULTS = [
   { eventGroup: "briefing.dates", email: true },
   { eventGroup: "briefing.obligations", email: true },
   { eventGroup: "briefing.intake", email: false },
-];
+] satisfies BriefingPreference[];
 
 /** Answers the pane's read and captures its writes, the way the real
  * endpoint does. Every save answers the whole grid back. */
 function capturePreferenceWrites(writes: unknown[], failWith?: Response) {
   let groups = DEFAULTS.map((row) => ({ ...row }));
-  let briefing = BRIEFING_DEFAULTS.map((row) => ({ ...row }));
+  let briefing: BriefingPreference[] = BRIEFING_DEFAULTS.map((row) => ({ ...row }));
   return (call: StubCall) => {
     if (call.url.pathname !== "/api/v1/me/notification-preferences") return undefined;
     if (call.method === "PATCH") {

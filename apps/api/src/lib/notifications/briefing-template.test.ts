@@ -13,7 +13,7 @@ const FULL_BRIEFING: BriefingMail = {
         id: "approval-1",
         contract: {
           id: "contract-1",
-          number: 41,
+          number: 1041,
           title: "Northwind supply terms",
           isConfidential: false,
         },
@@ -34,7 +34,7 @@ const FULL_BRIEFING: BriefingMail = {
         record: {
           kind: "matter",
           id: "matter-1",
-          number: 17,
+          number: 1017,
           title: "Atlas acquisition",
           isConfidential: false,
         },
@@ -74,7 +74,7 @@ const FULL_BRIEFING: BriefingMail = {
     rows: [
       {
         id: "request-1",
-        number: 29,
+        number: 1029,
         summary: "Review distributor redline",
         urgency: "high",
         requestType: { id: "request-type-1", displayName: "Contract review" },
@@ -100,9 +100,10 @@ describe("the full daily briefing template", () => {
       }
     }
     expect(message!.text).toContain("Sep 1, 2026");
-    expect(message!.html).toContain("/contracts/41/approvals");
-    expect(message!.text).toContain("/matters/17/tasks");
-    expect(message!.html).toContain("/inbox/29");
+    expect(message!.html).toContain("/contracts/1041/approvals");
+    expect(message!.text).toContain("/matters/1017/tasks");
+    expect(message!.html).toContain("/inbox/1029");
+    expect(message!.text).not.toMatch(/(?:#|M-|R-)1,0/);
   });
 
   it("omits empty sections and refuses a fully empty briefing", () => {
