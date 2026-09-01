@@ -23618,6 +23618,41 @@ export interface operations {
                     createdAt: string;
                   }[];
                 }
+              | {
+                  /** @enum {string} */
+                  type: "contracts";
+                  total: number;
+                  rows: {
+                    id: string;
+                    number: number;
+                    title: string;
+                    isConfidential: boolean;
+                    /** @enum {string} */
+                    stage: "draft" | "review" | "approval" | "signature" | "active" | "ended";
+                    nextDate: string | null;
+                    renewalPendingConfirmation: boolean;
+                  }[];
+                }
+              | {
+                  /** @enum {string} */
+                  type: "matters";
+                  total: number;
+                  rows: {
+                    id: string;
+                    number: number;
+                    title: string;
+                    isConfidential: boolean;
+                    status: {
+                      id: string;
+                      displayName: string;
+                    };
+                    nextDeadline: {
+                      /** Format: date */
+                      date: string;
+                      label: string;
+                    } | null;
+                  }[];
+                }
             )[];
           };
         };
