@@ -994,6 +994,7 @@ async function sendBriefing(
       rows,
       knowledgeItems: knowledge,
       intake,
+      readerTimeZone: person.timezone,
     },
     person.email,
     deps.baseUrl,

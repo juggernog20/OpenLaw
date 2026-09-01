@@ -83,6 +83,7 @@ const FULL_BRIEFING: BriefingMail = {
       },
     ],
   },
+  readerTimeZone: null,
 };
 
 describe("the full daily briefing template", () => {
@@ -104,6 +105,42 @@ describe("the full daily briefing template", () => {
     expect(message!.text).toContain("/matters/1017/tasks");
     expect(message!.html).toContain("/inbox/1029");
     expect(message!.text).not.toMatch(/(?:#|M-|R-)1,0/);
+    expect(message!.subject).toBe("Your daily briefing");
+  });
+
+  it("names the one section a single-section briefing holds in its subject", () => {
+    const base = {
+      recipientName: FULL_BRIEFING.recipientName,
+      approvals: null,
+      tasks: null,
+      intake: null,
+      readerTimeZone: null,
+    };
+    const datesOnly = renderBriefingMail(
+      { ...base, rows: FULL_BRIEFING.rows, knowledgeItems: [] },
+      "casey@example.com",
+      "https://openlaw.test",
+    );
+    expect(datesOnly!.subject).toBe("2 dates on your records");
+
+    const knowledgeOnly = renderBriefingMail(
+      { ...base, rows: [], knowledgeItems: FULL_BRIEFING.knowledgeItems },
+      "casey@example.com",
+      "https://openlaw.test",
+    );
+    expect(knowledgeOnly!.subject).toBe("1 new Knowledge item");
+  });
+
+  it("places an approval's instant on the reader's own calendar", () => {
+    // 2026-08-31T09:00Z is still Aug 30 in Honolulu (UTC-10). The date
+    // rows are civil dates and must not shift; only the instant does.
+    const message = renderBriefingMail(
+      { ...FULL_BRIEFING, readerTimeZone: "Pacific/Honolulu" },
+      "casey@example.com",
+      "https://openlaw.test",
+    );
+    expect(message!.text).toContain("requested by Nadia Counsel on Aug 30, 2026");
+    expect(message!.text).toContain("Sep 8, 2026");
   });
 
   it("names the rows a section's three-row cap kept out", () => {
@@ -128,6 +165,7 @@ describe("the full daily briefing template", () => {
         rows: [],
         knowledgeItems: [],
         intake: null,
+        readerTimeZone: null,
       },
       "casey@example.com",
       "https://openlaw.test",
@@ -145,6 +183,7 @@ describe("the full daily briefing template", () => {
           rows: [],
           knowledgeItems: [],
           intake: null,
+          readerTimeZone: null,
         },
         "casey@example.com",
         "https://openlaw.test",

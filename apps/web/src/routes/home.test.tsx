@@ -3,7 +3,7 @@
 /** The M29 Home surface through the real route table and standard fetch stub. */
 import { describe, expect, it } from "vitest";
 import { screen, within } from "@testing-library/react";
-import { json, renderAt, stubApi } from "../testing/helpers";
+import { json, problem, renderAt, stubApi } from "../testing/helpers";
 import { formatDeadline } from "../lib/format";
 
 const MEMBER = {
@@ -226,6 +226,21 @@ const mattersSection = {
 } as const;
 
 describe("Home", () => {
+  it("lands on the error boundary when the home read fails", async () => {
+    stubApi({
+      signedIn: MEMBER,
+      extra: (call) =>
+        call.url.pathname === "/api/v1/home" && call.method === "GET"
+          ? problem(500, "Home could not be read.")
+          : undefined,
+    });
+    renderAt("/");
+
+    expect(
+      await screen.findByRole("heading", { name: "Something went wrong." }),
+    ).toBeInTheDocument();
+  });
+
   it("renders the loader's Approvals card and links each row to the Contract section", async () => {
     stubApi({
       signedIn: MEMBER,

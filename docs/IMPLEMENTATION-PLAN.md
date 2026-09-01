@@ -627,8 +627,9 @@ leaves a coherent product; none of them is optional in the sense that we intend 
       navigating anywhere.
   - Home is the fixed personal read of pending Approvals, assigned Tasks, approaching Dates, Entity
     Obligations, the Inbox, managed Contracts, and managed Matters
-  - The daily briefing carries its six cross-module sections and writes one Home-linked bell summary;
-    absent section preferences keep the application defaults
+  - The daily briefing carries its six cross-module sections and writes one Home-linked bell summary
+    when a Home-backed section has content (a Knowledge-only briefing mails without one); absent
+    section preferences keep the application defaults
   - Reporting and org-wide analytics stay deferred as a destination
   - The close journey proves the demo sentence against fresh Compose images; the populated Home joins
     the axe sweep; the retained upgrade gate reads pre-M29 rows through Home with no backfill

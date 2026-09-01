@@ -24,7 +24,7 @@ export function HomeObligationsCard({ section }: Readonly<{ section: Obligations
           >
             <span className="flex min-w-0 items-center gap-2.5">
               <span className="flex size-6.5 shrink-0 items-center justify-center rounded-card bg-section-header text-muted">
-                <CalendarClock size={14} aria-hidden="true" />
+                <CalendarClock size={16} aria-hidden="true" />
               </span>
               <span className="min-w-0">
                 <span className="flex min-w-0 items-center gap-2">

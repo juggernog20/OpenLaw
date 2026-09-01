@@ -227,6 +227,10 @@ beforeAll(async () => {
       channel: "email",
       enabled: true,
     },
+    // Deliberately off: NOT-008 keeps the briefing's section toggles
+    // independent of the event-group grid, so the control date must
+    // still reach this reader's briefing — the assertion below proves
+    // the coupling never comes back.
     {
       userId: idOf(OPTED_MEMBER),
       eventGroup: "dates_approaching",

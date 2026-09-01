@@ -339,6 +339,7 @@ describe("the grid the pane draws", () => {
 
     const refused = await saveToggle(BYSTANDER, "briefing.intake", "in_app", false);
     expect(refused.statusCode, refused.body).toBe(400);
+    expect(refused.headers["content-type"]).toContain("application/problem+json");
 
     const restored = await saveToggle(BYSTANDER, "briefing.intake", "email", false);
     expect(restored.statusCode, restored.body).toBe(200);

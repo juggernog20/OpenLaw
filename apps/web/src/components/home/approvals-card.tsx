@@ -28,7 +28,7 @@ export function HomeApprovalsCard({ section }: Readonly<{ section: ApprovalHomeS
           >
             <span className="flex min-w-0 items-center gap-2.5">
               <span className="flex size-6.5 shrink-0 items-center justify-center rounded-card bg-section-header text-muted">
-                <BadgeCheck size={14} aria-hidden="true" />
+                <BadgeCheck size={16} aria-hidden="true" />
               </span>
               <span className="min-w-0">
                 <span className="flex min-w-0 items-center gap-2">

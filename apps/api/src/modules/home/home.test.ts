@@ -70,6 +70,11 @@ const EMPTY_MANAGER = {
   displayName: "Alex Empty",
   password: "correct-horse-battery",
 } as const;
+const BUSINESS = {
+  email: "home-business@example.com",
+  displayName: "Robin Requester",
+  password: "correct-horse-battery",
+} as const;
 
 interface ContractRow {
   id: string;
@@ -209,6 +214,7 @@ beforeAll(async () => {
     [MANAGER_ONE, "legal_team_member"],
     [MANAGER_TWO, "legal_team_member"],
     [EMPTY_MANAGER, "legal_team_member"],
+    [BUSINESS, "business_user"],
   ] as const) {
     const user = await provisionUser(harness.app.auth, fixture);
     await harness.db.update(users).set({ role }).where(eq(users.id, user.id));
@@ -310,6 +316,18 @@ function plusDays(civilDate: string, days: number): string {
 }
 
 describe("GET /api/v1/home", () => {
+  it("refuses the read without a session and for a Business User", async () => {
+    const anonymous = await harness.app.inject({ method: "GET", url: "/api/v1/home" });
+    expect(anonymous.statusCode, anonymous.body).toBe(401);
+
+    const business = await harness.app.inject({
+      method: "GET",
+      url: "/api/v1/home",
+      cookies: as(BUSINESS),
+    });
+    expect(business.statusCode, business.body).toBe(403);
+  });
+
   it("caps and totals the viewer's pending approvals, oldest first", async () => {
     const eligible: Array<{ contract: ContractRow; approvalId: string }> = [];
     for (const title of ["Oldest ask", "Second ask", "Third ask", "Newest ask"]) {
@@ -794,7 +812,13 @@ describe("GET /api/v1/home", () => {
   it("shows reachable open obligations assigned to the viewer and the Administrator fallback", async () => {
     const entityType = await harness.db.select({ id: entityTypes.id }).from(entityTypes).limit(1);
     const entityTypeId = entityType[0]!.id;
-    const today = new Date().toISOString().slice(0, 10);
+    // The section filters and orders against the database's own
+    // current_date; the JS clock can disagree with it across midnight
+    // or a non-UTC container timezone, as the dates test above found.
+    const todayResult = await harness.db.execute<{ today: string }>(
+      sql`select current_date::text as today`,
+    );
+    const today = todayResult.rows[0]!.today;
     await harness.db.insert(entities).values([
       {
         id: "home-obligations-reachable",

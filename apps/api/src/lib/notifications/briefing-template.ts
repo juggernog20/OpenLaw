@@ -74,6 +74,10 @@ export interface BriefingMail {
   rows: readonly DigestRow[];
   knowledgeItems: readonly KnowledgeBriefingItem[];
   intake: InboxHomeSection | null;
+  /** The reader's profile timezone (SET-006), or null for UTC. Civil
+   * dates stay anchored to UTC; this zone only places true instants —
+   * an approval's `requestedAt` — on the reader's own calendar. */
+  readerTimeZone: string | null;
 }
 
 /** Which of the three sources leads when two dates fall on one day —
@@ -110,8 +114,14 @@ function civilDateLabel(value: string): string {
   return DIGEST_DATE.format(civilInstant(value));
 }
 
-function instantDateLabel(value: string): string {
-  return DIGEST_DATE.format(new Date(value));
+function instantDateLabel(value: string, timeZone: string | null): string {
+  if (!timeZone) return DIGEST_DATE.format(new Date(value));
+  return new Intl.DateTimeFormat("en-US", {
+    timeZone,
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  }).format(new Date(value));
 }
 
 function recordReference(kind: "contract" | "matter", number: number): string {
@@ -218,8 +228,11 @@ function intakeLink(row: InboxHomeSection["rows"][number], baseUrl: string): str
   return `${origin(baseUrl)}/inbox/${row.number}`;
 }
 
-function approvalLine(row: ApprovalsHomeSection["rows"][number]): string {
-  return `${row.contract.title} (#${row.contract.number}) — requested by ${row.requestedBy.displayName} on ${instantDateLabel(row.requestedAt)}`;
+function approvalLine(
+  row: ApprovalsHomeSection["rows"][number],
+  readerTimeZone: string | null,
+): string {
+  return `${row.contract.title} (#${row.contract.number}) — requested by ${row.requestedBy.displayName} on ${instantDateLabel(row.requestedAt, readerTimeZone)}`;
 }
 
 function taskLine(row: TasksHomeSection["rows"][number]): string {
@@ -341,7 +354,7 @@ export function renderBriefingMail(
     ...textRows(
       "Approvals",
       approvals,
-      approvalLine,
+      (row) => approvalLine(row, briefing.readerTimeZone),
       (row) => approvalLink(row, baseUrl),
       approvalsMore,
     ),
@@ -366,7 +379,7 @@ export function renderBriefingMail(
   const htmlApprovals = htmlRows(
     "Approvals",
     approvals,
-    approvalLine,
+    (row) => approvalLine(row, briefing.readerTimeZone),
     (row) => approvalLink(row, baseUrl),
     approvalsMore,
   );

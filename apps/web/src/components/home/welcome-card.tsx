@@ -13,7 +13,7 @@ export function HomeWelcomeCard({ role }: Readonly<{ role: Role }>) {
     <section className="mx-auto w-full max-w-190 overflow-hidden rounded-card border border-border-default bg-raised text-center">
       <div className="flex flex-col items-center gap-2.5 px-6 py-7">
         <span className="flex size-11 items-center justify-center rounded-full bg-section-header text-muted">
-          <House size={22} aria-hidden="true" />
+          <House size={24} aria-hidden="true" />
         </span>
         <h2 className="text-xl font-semibold">
           <FormattedMessage id="home.welcome.title" defaultMessage="Welcome to OpenLaw" />
@@ -40,7 +40,7 @@ export function HomeWelcomeCard({ role }: Readonly<{ role: Role }>) {
                 <span className="flex-1">
                   <FormattedMessage {...destination.label} />
                 </span>
-                <ArrowRight size={14} aria-hidden="true" />
+                <ArrowRight size={16} aria-hidden="true" />
               </Link>
             </li>
           ))}

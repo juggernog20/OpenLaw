@@ -57,7 +57,7 @@ export function HomeDatesCard({ section }: Readonly<{ section: DatesHomeSection 
           >
             <span className="flex min-w-0 items-center gap-2.5">
               <span className="flex size-6.5 shrink-0 items-center justify-center rounded-card bg-section-header text-muted">
-                <CalendarDays size={14} aria-hidden="true" />
+                <CalendarDays size={16} aria-hidden="true" />
               </span>
               <span className="min-w-0">
                 <span className="block truncate text-md font-medium">
