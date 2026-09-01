@@ -6,11 +6,13 @@ import {
   and,
   asc,
   entities,
+  entityGrants,
   entityObligations,
   eq,
   isNull,
   or,
   sql,
+  users,
   type Executor,
 } from "@openlaw/db";
 import type { AuthenticatedUser } from "../../../auth/user.js";
@@ -40,7 +42,8 @@ export type ObligationsHomeSection = z.infer<typeof ObligationsHomeSectionSchema
  *
  * The calendar's open-state, reach, and overdue ordering are composed
  * before the window total and cap. Administrators additionally carry
- * unassigned rows, matching ENT-006's morning-round audience fallback.
+ * unassigned rows and rows whose named assignee cannot reach the Entity,
+ * matching ENT-006's morning-round audience fallback.
  */
 export async function readObligationsHomeSection(
   db: Executor,
@@ -51,6 +54,25 @@ export async function readObligationsHomeSection(
 
   const today = localMoment(now, user.timezone).date;
   const isOverdue = sql<boolean>`${entityObligations.nextDueOn} < ${today}`;
+  const assigneeCanReachEntity = sql<boolean>`exists (
+    select 1
+    from ${users}
+    left join ${entityGrants}
+      on ${entityGrants.entityId} = ${entities.id}
+      and ${entityGrants.userId} = ${users.id}
+    where ${users.id} = ${entityObligations.assigneeId}
+      and ${users.archivedAt} is null
+      and (
+        ${users.role} = 'administrator'
+        or (
+          ${users.role} = 'legal_team_member'
+          and (
+            ${entities.isConfidential} = false
+            or ${entityGrants.userId} is not null
+          )
+        )
+      )
+  )`;
   const rows = await db
     .select({
       id: entityObligations.id,
@@ -70,7 +92,11 @@ export async function readObligationsHomeSection(
         isNull(entities.archivedAt),
         entityReachScope(db, user),
         user.role === "administrator"
-          ? or(eq(entityObligations.assigneeId, user.id), isNull(entityObligations.assigneeId))
+          ? or(
+              eq(entityObligations.assigneeId, user.id),
+              isNull(entityObligations.assigneeId),
+              sql`not ${assigneeCanReachEntity}`,
+            )
           : eq(entityObligations.assigneeId, user.id),
       ),
     )

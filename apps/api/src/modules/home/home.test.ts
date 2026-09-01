@@ -671,6 +671,24 @@ describe("GET /api/v1/home", () => {
       .set({ expiryDate: plusDays(today, 1), endedAt: new Date() })
       .where(eq(contracts.id, ended.id));
 
+    const [endedStatus] = await harness.db
+      .select({ id: contractStatuses.id })
+      .from(contractStatuses)
+      .where(eq(contractStatuses.stage, "ended"))
+      .limit(1);
+    const legacyEnded = await newContract("Legacy ended Contract date");
+    await harness.db
+      .insert(contractTeam)
+      .values({ contractId: legacyEnded.id, userId: idOf(APPROVER), role: "member" });
+    await harness.db
+      .update(contracts)
+      .set({
+        statusId: endedStatus!.id,
+        expiryDate: today,
+        endedAt: null,
+      })
+      .where(eq(contracts.id, legacyEnded.id));
+
     const archived = await newContract("Archived Contract date");
     await harness.db
       .insert(contractTeam)
@@ -741,6 +759,7 @@ describe("GET /api/v1/home", () => {
       noticePeriodDays: null,
     });
     expect(section!.rows.every((row) => !row.record.title.includes("Walled"))).toBe(true);
+    expect(section!.rows.every((row) => !row.record.title.includes("Legacy ended"))).toBe(true);
 
     await harness.db
       .update(contractKeyDates)
@@ -859,8 +878,11 @@ describe("GET /api/v1/home", () => {
     expect(obligationsIn(await home(CONTRIBUTOR))).toBeUndefined();
     expect(obligationsIn(await home(ADMIN))).toMatchObject({
       type: "obligations",
-      total: 1,
-      rows: [{ label: "Unowned filing", isUnassigned: true }],
+      total: 2,
+      rows: [
+        { label: "Secret filing", isUnassigned: false },
+        { label: "Unowned filing", isUnassigned: true },
+      ],
     });
   });
 
