@@ -1007,7 +1007,15 @@ async function sendBriefing(
     entityId: person.id,
     action: "user.briefing_sent",
     visibility: "admin_only",
-    payload: { dateCount: rows.length, knowledgeCount: knowledge.length },
+    // Counts of what the mail carried — one per section, none of the
+    // content (M28/6 addendum). A toggled-off section counts zero.
+    payload: {
+      approvalCount: approvals?.rows.length ?? 0,
+      taskCount: tasks?.rows.length ?? 0,
+      dateCount: rows.length,
+      knowledgeCount: knowledge.length,
+      intakeCount: intake?.rows.length ?? 0,
+    },
     createdAt: now,
   });
   // Only after the relay took it. A send that threw leaves every row

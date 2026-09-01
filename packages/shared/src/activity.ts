@@ -108,9 +108,16 @@ type TypeFieldPayloads = {
  * searched for.
  */
 type UserPayloads = {
-  /** A successful daily briefing send. The counts make the system
-   * marker useful in the audit log without copying briefing contents. */
-  "user.briefing_sent": { dateCount: number; knowledgeCount: number };
+  /** A successful daily briefing send. One count per section the mail
+   * carried (M28/6 addendum) makes the system marker useful in the
+   * audit log without copying briefing contents. */
+  "user.briefing_sent": {
+    approvalCount: number;
+    taskCount: number;
+    dateCount: number;
+    knowledgeCount: number;
+    intakeCount: number;
+  };
   "user.theme_changed": FieldChangePayload;
   "user.timezone_changed": FieldChangePayload;
   /**
