@@ -106,6 +106,19 @@ describe("the full daily briefing template", () => {
     expect(message!.text).not.toMatch(/(?:#|M-|R-)1,0/);
   });
 
+  it("names the rows a section's three-row cap kept out", () => {
+    const message = renderBriefingMail(
+      { ...FULL_BRIEFING, tasks: { ...FULL_BRIEFING.tasks!, total: 5 } },
+      "casey@example.com",
+      "https://openlaw.test",
+    );
+    expect(message!.text).toContain("And 4 more on Home.\nhttps://openlaw.test/");
+    expect(message!.html).toContain("And 4 more on Home.");
+    // The sections whose total is what they show name no remainder.
+    expect(message!.text).not.toContain("And 0 more");
+    expect(message!.text.match(/more on Home/g)).toHaveLength(1);
+  });
+
   it("omits empty sections and refuses a fully empty briefing", () => {
     const tasksOnly = renderBriefingMail(
       {

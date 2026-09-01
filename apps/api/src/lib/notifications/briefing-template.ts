@@ -231,14 +231,34 @@ function intakeLine(row: InboxHomeSection["rows"][number]): string {
   return `R-${row.number} ${row.summary} — ${row.requestType.displayName}, ${row.urgency}`;
 }
 
+interface OverflowLine {
+  line: string;
+  href: string;
+}
+
+/** What a section's cap kept out, named so the mail never understates
+ * the day. The Home section reads cut at their card's three rows but
+ * carry the window total; the card wears "View all {total}", and this
+ * line is the mail's version of it. */
+function moreOnHome(total: number, shown: number, baseUrl: string): OverflowLine | null {
+  if (total <= shown) return null;
+  return {
+    line: `And ${BRIEFING_COUNT.format(total - shown)} more on Home.`,
+    href: `${origin(baseUrl)}/`,
+  };
+}
+
 function textRows<T>(
   heading: string,
   rows: readonly T[],
   line: (row: T) => string,
   link: (row: T) => string,
+  more: OverflowLine | null = null,
 ): string[] {
   if (rows.length === 0) return [];
-  return [heading, "", ...rows.flatMap((row) => [line(row), link(row), ""])];
+  const body = rows.flatMap((row) => [line(row), link(row), ""]);
+  if (more) body.push(more.line, more.href, "");
+  return [heading, "", ...body];
 }
 
 function htmlRows<T>(
@@ -246,14 +266,18 @@ function htmlRows<T>(
   rows: readonly T[],
   line: (row: T) => string,
   link: (row: T) => string,
+  more: OverflowLine | null = null,
 ): string {
   if (rows.length === 0) return "";
-  return `<h2>${heading}</h2><ul>${rows
-    .map((row) => {
-      const href = escapeHtml(link(row));
-      return `<li>${escapeHtml(line(row))}<br><a href="${href}">${href}</a></li>`;
-    })
-    .join("")}</ul>`;
+  const items = rows.map((row) => {
+    const href = escapeHtml(link(row));
+    return `<li>${escapeHtml(line(row))}<br><a href="${href}">${href}</a></li>`;
+  });
+  if (more) {
+    const href = escapeHtml(more.href);
+    items.push(`<li>${escapeHtml(more.line)}<br><a href="${href}">${href}</a></li>`);
+  }
+  return `<h2>${heading}</h2><ul>${items.join("")}</ul>`;
 }
 
 /**
@@ -309,9 +333,19 @@ export function renderBriefingMail(
         ? "These Knowledge items were published since your previous briefing."
         : "Here is your daily briefing.";
 
+  const approvalsMore = moreOnHome(briefing.approvals?.total ?? 0, approvals.length, baseUrl);
+  const tasksMore = moreOnHome(briefing.tasks?.total ?? 0, tasks.length, baseUrl);
+  const intakeMore = moreOnHome(briefing.intake?.total ?? 0, intake.length, baseUrl);
+
   const textSections = [
-    ...textRows("Approvals", approvals, approvalLine, (row) => approvalLink(row, baseUrl)),
-    ...textRows("Tasks", tasks, taskLine, (row) => taskLink(row, baseUrl)),
+    ...textRows(
+      "Approvals",
+      approvals,
+      approvalLine,
+      (row) => approvalLink(row, baseUrl),
+      approvalsMore,
+    ),
+    ...textRows("Tasks", tasks, taskLine, (row) => taskLink(row, baseUrl), tasksMore),
     ...dateSections(rows).flatMap((section) => [
       section.heading,
       "",
@@ -325,12 +359,18 @@ export function renderBriefingMail(
       ...knowledgeItems.flatMap((item) => [item.title, knowledgeLink(item, baseUrl), ""]),
     );
   }
-  textSections.push(...textRows("Intake", intake, intakeLine, (row) => intakeLink(row, baseUrl)));
-
-  const htmlApprovals = htmlRows("Approvals", approvals, approvalLine, (row) =>
-    approvalLink(row, baseUrl),
+  textSections.push(
+    ...textRows("Intake", intake, intakeLine, (row) => intakeLink(row, baseUrl), intakeMore),
   );
-  const htmlTasks = htmlRows("Tasks", tasks, taskLine, (row) => taskLink(row, baseUrl));
+
+  const htmlApprovals = htmlRows(
+    "Approvals",
+    approvals,
+    approvalLine,
+    (row) => approvalLink(row, baseUrl),
+    approvalsMore,
+  );
+  const htmlTasks = htmlRows("Tasks", tasks, taskLine, (row) => taskLink(row, baseUrl), tasksMore);
   const htmlDateSections = dateSections(rows)
     .map(
       (section) =>
@@ -351,7 +391,13 @@ export function renderBriefingMail(
             return `<li><a href="${link}">${escapeHtml(item.title)}</a></li>`;
           })
           .join("")}</ul>`;
-  const htmlIntake = htmlRows("Intake", intake, intakeLine, (row) => intakeLink(row, baseUrl));
+  const htmlIntake = htmlRows(
+    "Intake",
+    intake,
+    intakeLine,
+    (row) => intakeLink(row, baseUrl),
+    intakeMore,
+  );
   const settingsLink = `${origin(baseUrl)}/settings/notifications`;
 
   return {
