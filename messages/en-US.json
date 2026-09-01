@@ -4607,6 +4607,9 @@
   "notifications.bell": {
     "defaultMessage": "Notifications, {count, plural, =0 {none unread} one {# unread} other {# unread}}"
   },
+  "notifications.briefing.ready": {
+    "defaultMessage": "Your daily briefing is ready"
+  },
   "notifications.centre": {
     "defaultMessage": "Notifications"
   },
@@ -6596,11 +6599,50 @@
   "settings.matters.title": {
     "defaultMessage": "Matters"
   },
+  "settings.notifications.briefing.approvals": {
+    "defaultMessage": "Approvals"
+  },
+  "settings.notifications.briefing.approvals.detail": {
+    "defaultMessage": "Approval requests waiting on you."
+  },
+  "settings.notifications.briefing.caption": {
+    "defaultMessage": "These switches change the email only. Your Home sections and daily bell summary stay on."
+  },
+  "settings.notifications.briefing.dates": {
+    "defaultMessage": "Dates"
+  },
+  "settings.notifications.briefing.dates.detail": {
+    "defaultMessage": "Key dates, notice deadlines, and expiries."
+  },
+  "settings.notifications.briefing.intake": {
+    "defaultMessage": "Intake"
+  },
+  "settings.notifications.briefing.intake.detail": {
+    "defaultMessage": "Open Requests in the Inbox. Off by default."
+  },
+  "settings.notifications.briefing.obligations": {
+    "defaultMessage": "Obligations"
+  },
+  "settings.notifications.briefing.obligations.detail": {
+    "defaultMessage": "Entity obligations assigned to you or awaiting an Administrator."
+  },
+  "settings.notifications.briefing.tasks": {
+    "defaultMessage": "Tasks"
+  },
+  "settings.notifications.briefing.tasks.detail": {
+    "defaultMessage": "Tasks assigned to you that are due today or overdue."
+  },
+  "settings.notifications.briefing.title": {
+    "defaultMessage": "Briefing"
+  },
   "settings.notifications.caption": {
     "defaultMessage": "Email off keeps the bell items coming. In-app off turns the group off entirely, email included."
   },
   "settings.notifications.captionEmailOnly": {
     "defaultMessage": "A group with no in-app switch reaches you by email only; its one switch is the whole choice."
+  },
+  "settings.notifications.captionInAppOnly": {
+    "defaultMessage": "Approaching-date emails are set in the Briefing group below."
   },
   "settings.notifications.channel.email": {
     "defaultMessage": "Email"
@@ -6610,6 +6652,12 @@
   },
   "settings.notifications.column.group": {
     "defaultMessage": "Event group"
+  },
+  "settings.notifications.column.section": {
+    "defaultMessage": "Section"
+  },
+  "settings.notifications.emailOnly": {
+    "defaultMessage": "Email only"
   },
   "settings.notifications.group.activity": {
     "defaultMessage": "Activity on your records"
@@ -6627,7 +6675,7 @@
     "defaultMessage": "Dates approaching"
   },
   "settings.notifications.group.dates.detail": {
-    "defaultMessage": "Key dates, notice deadlines, and expiries — emailed as one daily digest."
+    "defaultMessage": "Bell reminders for key dates, notice deadlines, expiries, and obligations."
   },
   "settings.notifications.group.knowledge": {
     "defaultMessage": "Knowledge items"
