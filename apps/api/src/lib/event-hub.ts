@@ -7,6 +7,7 @@ import {
   LIVE_EVENT_CHANNEL,
   parseLiveEvent,
   type LiveEvent,
+  type LiveEventVisibility,
   type LiveRecordEntityType,
 } from "@openlaw/shared";
 
@@ -15,7 +16,11 @@ export const DEFAULT_EVENT_HEARTBEAT_MS = 15_000;
 export interface EventConnectionScope {
   userId: string;
   role: UserRole;
-  record?: { entityType: LiveRecordEntityType; entityId: string };
+  record?: {
+    entityType: LiveRecordEntityType;
+    entityId: string;
+    tiers: readonly LiveEventVisibility[];
+  };
 }
 
 export interface EventHub {
@@ -46,7 +51,9 @@ function addressedTo(event: LiveEvent, scope: EventConnectionScope): boolean {
       return isMemberPlus(scope.role);
     case "record":
       return scope.record
-        ? scope.record.entityType === event.entityType && scope.record.entityId === event.entityId
+        ? scope.record.entityType === event.entityType &&
+            scope.record.entityId === event.entityId &&
+            scope.record.tiers.includes(event.visibility)
         : false;
   }
 }
@@ -158,7 +165,7 @@ export function createPostgresEventHub(options: {
       next.once("error", (error) => lose(next, error));
       next.once("end", () => lose(next));
       try {
-        await next.query(`listen ${LIVE_EVENT_CHANNEL}`);
+        await next.query(`listen ${next.escapeIdentifier(LIVE_EVENT_CHANNEL)}`);
       } catch (error) {
         lose(next, error as Error);
         throw error;
@@ -192,7 +199,7 @@ export function createPostgresEventHub(options: {
       client = undefined;
       if (!active) return;
       try {
-        await active.query(`unlisten ${LIVE_EVENT_CHANNEL}`);
+        await active.query(`unlisten ${active.escapeIdentifier(LIVE_EVENT_CHANNEL)}`);
       } finally {
         active.release(true);
       }

@@ -9,7 +9,12 @@
 
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { contracts, createDb, eq, users } from "@openlaw/db";
-import { LIVE_EVENT_CHANNEL, type LiveEvent, type RecordLiveEvent } from "@openlaw/shared";
+import {
+  LIVE_EVENT_CHANNEL,
+  parseLiveEvent,
+  type LiveEvent,
+  type RecordLiveEvent,
+} from "@openlaw/shared";
 import { provisionUser } from "../../auth/instance.js";
 import { publishLiveEvent } from "../../lib/live-events.js";
 import {
@@ -93,7 +98,10 @@ class EventStream {
       .find((line) => line.startsWith("data:"))
       ?.slice(5)
       .trim();
-    this.frames.push({ event, data: data ? (JSON.parse(data) as LiveEvent) : undefined });
+    this.frames.push({
+      event,
+      data: data ? (parseLiveEvent(JSON.parse(data) as unknown) ?? undefined) : undefined,
+    });
   }
 
   private async pump(): Promise<void> {
@@ -204,6 +212,13 @@ beforeAll(async () => {
   };
   firstRecord = await makeRecord("Live channel one");
   secondRecord = await makeRecord("Live channel two");
+  const team = await harness.app.inject({
+    method: "POST",
+    url: `/api/v1/contracts/${secondRecord.number}/team`,
+    cookies: adminCookies,
+    payload: { userId: contributor.id, role: "contributor" },
+  });
+  expect(team.statusCode, team.body).toBe(201);
 
   origin = await harness.app.listen({ host: "127.0.0.1", port: 0 });
 });
@@ -320,6 +335,22 @@ describe("GET /api/events", () => {
       }),
     ).rejects.toThrow("roll back the fixture");
     await expectNoFrame(stream, liveFrame("record"));
+    await stream.close();
+  });
+
+  it("delivers record frames only at a visibility tier the viewer can read", async () => {
+    const stream = await EventStream.open(streamUrl(secondRecord), contributorCookies);
+    await harness.db.transaction((tx) =>
+      publishLiveEvent(tx, {
+        ...recordEvent(secondRecord.id, "legal-only-entry"),
+        visibility: "legal_only",
+      }),
+    );
+    await expectNoFrame(stream, liveFrame("record"));
+
+    const event = recordEvent(secondRecord.id, "working-team-entry");
+    await harness.db.transaction((tx) => publishLiveEvent(tx, event));
+    await expect(stream.next(liveFrame("record"))).resolves.toMatchObject({ data: event });
     await stream.close();
   });
 

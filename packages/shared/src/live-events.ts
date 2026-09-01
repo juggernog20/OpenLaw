@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-import type { ActivityAction } from "./activity.js";
+/** TECH-009's shared vocabulary for transient live-surface prompts. */
 
 /** The one Postgres channel every API and worker process uses (TECH-009). */
 export const LIVE_EVENT_CHANNEL = "openlaw_live_events";
@@ -26,7 +26,8 @@ export type LiveEventVisibility = (typeof LIVE_EVENT_VISIBILITIES)[number];
 /** An activity entry was appended on one record. Content stays on the read route. */
 export interface RecordLiveEvent {
   kind: "record";
-  action: ActivityAction;
+  /** Open on the read side so prompts from an older process still parse. */
+  action: string;
   entityType: LiveRecordEntityType;
   entityId: string;
   entryId: string;
@@ -79,7 +80,7 @@ export function parseLiveEvent(value: unknown): LiveEvent | null {
     visibilities.includes(value.visibility)
     ? {
         kind: "record",
-        action: value.action as ActivityAction,
+        action: value.action,
         entityType: value.entityType as LiveRecordEntityType,
         entityId: value.entityId,
         entryId: value.entryId,
