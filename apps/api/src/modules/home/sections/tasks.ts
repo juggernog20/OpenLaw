@@ -9,6 +9,7 @@ import {
   contractTasks,
   eq,
   isNull,
+  lte,
   matters,
   matterStatuses,
   matterTasks,
@@ -67,14 +68,21 @@ interface TaskDbRow extends Record<string, unknown> {
 export async function readTasksHomeSection(
   db: Executor,
   user: AuthenticatedUser,
+  /**
+   * The latest due date to answer. When present it is also the overdue
+   * baseline, and undated Tasks fall out because they are not yet due.
+   * Without it, Home keeps every open Task and uses `current_date`.
+   */
+  dueThrough?: string,
 ): Promise<TasksHomeSection | null> {
+  const today = dueThrough ? sql`${dueThrough}::date` : sql`current_date`;
   const result = await db.execute<TaskDbRow>(sql`
     with home_tasks as (
       select
         ${contractTasks.id} as id,
         ${contractTasks.title} as title,
         ${contractTasks.dueDate} as due_date,
-        (${contractTasks.dueDate} < current_date) as is_overdue,
+        (${contractTasks.dueDate} < ${today}) as is_overdue,
         'contract'::text as record_kind,
         ${contracts.id} as record_id,
         ${contracts.number} as record_number,
@@ -86,6 +94,7 @@ export async function readTasksHomeSection(
       where ${and(
         eq(contractTasks.assigneeId, user.id),
         eq(contractTasks.isDone, false),
+        dueThrough ? lte(contractTasks.dueDate, dueThrough) : undefined,
         isNull(contracts.archivedAt),
         ne(contractStatuses.stage, "ended"),
         contractTeamScope(db, user),
@@ -97,7 +106,7 @@ export async function readTasksHomeSection(
         ${matterTasks.id} as id,
         ${matterTasks.title} as title,
         ${matterTasks.dueDate} as due_date,
-        (${matterTasks.dueDate} < current_date) as is_overdue,
+        (${matterTasks.dueDate} < ${today}) as is_overdue,
         'matter'::text as record_kind,
         ${matters.id} as record_id,
         ${matters.number} as record_number,
@@ -109,6 +118,7 @@ export async function readTasksHomeSection(
       where ${and(
         eq(matterTasks.assigneeId, user.id),
         eq(matterTasks.isDone, false),
+        dueThrough ? lte(matterTasks.dueDate, dueThrough) : undefined,
         isNull(matters.archivedAt),
         eq(matterStatuses.category, "open"),
         matterTeamScope(db, user),

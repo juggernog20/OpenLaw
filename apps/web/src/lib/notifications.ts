@@ -54,6 +54,7 @@ import {
   Activity,
   AtSign,
   CalendarClock,
+  CalendarDays,
   CircleX,
   FilePlus2,
   GitCommitHorizontal,
@@ -298,6 +299,13 @@ const ARMS: Readonly<Record<string, Arm>> = {
       defaultMessage: "{obligation} on {contract} is coming up",
     }),
   },
+  "briefing.ready": {
+    icon: CalendarDays,
+    message: defineMessage({
+      id: "notifications.briefing.ready",
+      defaultMessage: "Your daily briefing is ready",
+    }),
+  },
   // Group 4 — the Inbox's own arrival (INT-006, M21/4). The one Request
   // arm that lands on the **staff** bell, and the one that addresses the
   // staff detail rather than the portal: the reader is a triager, and
@@ -455,6 +463,7 @@ function recordName(intl: IntlShape, item: BellItem): string {
  * written for, and the reader's role does not come into it.
  */
 function hrefFor(item: BellItem, arm: Arm | undefined): string | null {
+  if (item.eventType === "briefing.ready") return "/";
   if (item.entityType === "entity") {
     return arm?.section
       ? `/entities/${item.entityId}/${arm.section}`

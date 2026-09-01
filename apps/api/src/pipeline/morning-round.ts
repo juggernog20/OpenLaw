@@ -83,6 +83,7 @@ import {
   type NotificationEventType,
   type UserRole,
 } from "@openlaw/db";
+import type { AuthenticatedUser } from "../auth/user.js";
 import { civilDate, civilInstant, daysBetween } from "../lib/contract-term.js";
 import type { MailerResolver } from "../lib/mailer.js";
 import { recordActivity } from "../lib/activity.js";
@@ -104,7 +105,10 @@ import {
 import { localMoment, morningHasArrived } from "../lib/notifications/local-day.js";
 import type { Notifier } from "../lib/notifications/notifier.js";
 import { reminderOffsets } from "../lib/notifications/offsets.js";
-import { channelChoices } from "../lib/notifications/preferences.js";
+import { briefingChoices, channelChoices } from "../lib/notifications/preferences.js";
+import { readApprovalsHomeSection } from "../modules/home/sections/approvals.js";
+import { readInboxHomeSection } from "../modules/home/sections/inbox.js";
+import { readTasksHomeSection } from "../modules/home/sections/tasks.js";
 import { reasonOf } from "./derivations.js";
 import { boundedQueueAsk, type JobQueue } from "./jobs.js";
 import type { PipelineLogger } from "./logger.js";
@@ -870,8 +874,23 @@ async function sendBriefing(
     // owed, and the next day's briefing carries them.
     return NOTHING;
   }
-  const knowledge = await briefingKnowledge(deps, person, previous, now);
-  if (owed.length === 0 && knowledge.length === 0) return NOTHING;
+  const homeUser: AuthenticatedUser = { ...person, theme: "light" };
+  const [knowledge, sectionChoices, approvalsFound, tasksFound, intakeFound] = await Promise.all([
+    briefingKnowledge(deps, person, previous, now),
+    briefingChoices(deps.db, [person.id]).then((choices) => choices.get(person.id)!),
+    readApprovalsHomeSection(deps.db, homeUser),
+    readTasksHomeSection(deps.db, homeUser, person.today),
+    readInboxHomeSection(deps.db, homeUser),
+  ]);
+  if (
+    owed.length === 0 &&
+    knowledge.length === 0 &&
+    approvalsFound === null &&
+    tasksFound === null &&
+    intakeFound === null
+  ) {
+    return NOTHING;
+  }
 
   // The wall, live and per record (M10, DD-014). A row about a record
   // this reader can no longer open is settled rather than sent: a
@@ -900,6 +919,7 @@ async function sendBriefing(
   }
 
   const rows: DigestRow[] = [];
+  let hasDateContent = false;
   const sending: string[] = [];
   const skipping: string[] = [];
   for (const row of owed) {
@@ -914,11 +934,33 @@ async function sendBriefing(
       skipping.push(row.id);
       continue;
     }
-    rows.push(line);
-    sending.push(row.id);
+    hasDateContent = true;
+    const enabled =
+      line.entityType === ENTITY_ENTITY
+        ? sectionChoices["briefing.obligations"]
+        : sectionChoices["briefing.dates"];
+    if (enabled) {
+      rows.push(line);
+      sending.push(row.id);
+    } else {
+      skipping.push(row.id);
+    }
   }
 
-  if (rows.length === 0 && knowledge.length === 0) {
+  const approvals = sectionChoices["briefing.approvals"] ? approvalsFound : null;
+  const tasks = sectionChoices["briefing.tasks"] ? tasksFound : null;
+  const intake = sectionChoices["briefing.intake"] ? intakeFound : null;
+  const hasHomeContent =
+    approvalsFound !== null || tasksFound !== null || intakeFound !== null || hasDateContent;
+  if (hasHomeContent) await ensureBriefingReady(deps, person, now);
+
+  if (
+    approvals === null &&
+    tasks === null &&
+    rows.length === 0 &&
+    knowledge.length === 0 &&
+    intake === null
+  ) {
     await settle(deps, skipping, "skipped", now);
     if (unreadable.size > 0) {
       deps.log.warn(
@@ -937,7 +979,7 @@ async function sendBriefing(
     await settle(deps, [...sending, ...skipping], "skipped", now);
     deps.log.error(
       { userId: person.id, reason: "unconfigured", rows: sending.length },
-      "email is unconfigured, so a morning digest was skipped — " +
+      "email is unconfigured, so a morning briefing was skipped — " +
         "the bell items are unaffected; set SMTP_URL and SMTP_FROM, or " +
         "configure email in Settings",
     );
@@ -945,7 +987,14 @@ async function sendBriefing(
   }
 
   const message = renderBriefingMail(
-    { recipientName: person.displayName, rows, knowledgeItems: knowledge },
+    {
+      recipientName: person.displayName,
+      approvals,
+      tasks,
+      rows,
+      knowledgeItems: knowledge,
+      intake,
+    },
     person.email,
     deps.baseUrl,
   );
@@ -958,7 +1007,15 @@ async function sendBriefing(
     entityId: person.id,
     action: "user.briefing_sent",
     visibility: "admin_only",
-    payload: { dateCount: rows.length, knowledgeCount: knowledge.length },
+    // Counts of what the mail carried — one per section, none of the
+    // content (M28/6 addendum). A toggled-off section counts zero.
+    payload: {
+      approvalCount: approvals?.rows.length ?? 0,
+      taskCount: tasks?.rows.length ?? 0,
+      dateCount: rows.length,
+      knowledgeCount: knowledge.length,
+      intakeCount: intake?.rows.length ?? 0,
+    },
     createdAt: now,
   });
   // Only after the relay took it. A send that threw leaves every row
@@ -966,6 +1023,41 @@ async function sendBriefing(
   await settle(deps, sending, "sent", now);
   await settle(deps, skipping, "skipped", now);
   return { sent: true, skipped: skipping.length };
+}
+
+/** One Home-linked bell summary, deduplicated by the reader's local day. */
+async function ensureBriefingReady(
+  deps: MorningRoundDeps,
+  person: Served,
+  now: Date,
+): Promise<void> {
+  await deps.db
+    .insert(notifications)
+    .values({
+      userId: person.id,
+      eventType: "briefing.ready",
+      // This summary is about the reader's state, not one record. The
+      // stable reader id is the once-a-day identity; the narrator and
+      // staff scope handle this event before asking for record reach.
+      entityType: "knowledge_item",
+      entityId: person.id,
+      payload: { localDate: person.today },
+      emailOwed: false,
+      reminderDate: person.today,
+      reminderOffsetDays: 0,
+      createdAt: now,
+    })
+    .onConflictDoNothing({
+      target: [
+        notifications.userId,
+        notifications.eventType,
+        notifications.entityType,
+        notifications.entityId,
+        notifications.reminderDate,
+        notifications.reminderOffsetDays,
+      ],
+      where: sql`reminder_date is not null`,
+    });
 }
 
 /** One owed row as a line of the briefing, or null where the payload

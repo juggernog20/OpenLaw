@@ -236,6 +236,24 @@ function reasonValues(payload: Payload): Record<string, string> {
   return { hasReason: reason ? "yes" : "no", reason: reason ?? "" };
 }
 
+/** ICU select keys cannot carry NOT-008's dotted preference slugs. */
+function preferenceGroupKey(group: string): string {
+  switch (group) {
+    case "briefing.approvals":
+      return "briefing_approvals";
+    case "briefing.tasks":
+      return "briefing_tasks";
+    case "briefing.dates":
+      return "briefing_dates";
+    case "briefing.obligations":
+      return "briefing_obligations";
+    case "briefing.intake":
+      return "briefing_intake";
+    default:
+      return group;
+  }
+}
+
 /** A payload value as a plain string, or null when the payload does not
  * carry it. Everything read out of a payload goes through here: the
  * shapes are as old as the rows, so nothing may assume one. */
@@ -2209,7 +2227,12 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
         "activity_on_your_records {activity on their records} " +
         "dates_approaching {approaching dates} new_requests {new requests} " +
         "knowledge {knowledge items} " +
-        "requester_events {requester events} other {{group}}}",
+        "requester_events {requester events} " +
+        "briefing_approvals {approvals in their briefing} " +
+        "briefing_tasks {Tasks in their briefing} " +
+        "briefing_dates {dates in their briefing} " +
+        "briefing_obligations {obligations in their briefing} " +
+        "briefing_intake {Intake in their briefing} other {{group}}}",
     }),
     values: (intl, payload) => ({
       // Their own fallbacks rather than {@link named}'s, because that
@@ -2221,12 +2244,13 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
           id: "activity.notificationPreference.unknownChannel",
           defaultMessage: "a channel",
         }),
-      group:
+      group: preferenceGroupKey(
         text(payload, "eventGroup") ??
-        intl.formatMessage({
-          id: "activity.notificationPreference.unknownGroup",
-          defaultMessage: "an event group",
-        }),
+          intl.formatMessage({
+            id: "activity.notificationPreference.unknownGroup",
+            defaultMessage: "an event group",
+          }),
+      ),
       // Same reasoning one line up, applied to the direction: anything
       // that is not a boolean is a payload this build did not write, and
       // "turned emails off" about a person who turned them on is a
