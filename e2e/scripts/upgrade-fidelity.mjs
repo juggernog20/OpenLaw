@@ -1003,7 +1003,11 @@ async function verify(fingerprint) {
   // M29 reads these rows in place. The baseline created every one
   // through an older public API; no Home row or migration backfill can
   // be involved. Stable section order also proves each reader composed
-  // into the one upgraded envelope.
+  // into the one upgraded envelope. The envelope omits zero-total
+  // sections, so the missing Inbox entry is an assertion of its own:
+  // the seed opens no Intake Request, and no upgrade step may invent
+  // one. A seed that later opens a Request must add "inbox" here,
+  // between "obligations" and "contracts".
   const home = await get("/api/v1/home");
   same(
     home.sections.map((section) => section.type),

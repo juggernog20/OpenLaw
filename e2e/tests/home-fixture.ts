@@ -41,7 +41,6 @@ export interface PopulatedHomeFixture {
   contract: { id: string; number: number; title: string };
   matter: { id: string; number: number; title: string };
   entity: { id: string; legalName: string };
-  approvalLabel: string;
   taskTitle: string;
   keyDateLabel: string;
   obligationLabel: string;
@@ -181,7 +180,6 @@ export async function createPopulatedHomeFixture(
       contract: { ...contract, title: contractTitle },
       matter: { ...matter, title: matterTitle },
       entity: { ...entity, legalName },
-      approvalLabel: contractTitle,
       taskTitle,
       keyDateLabel,
       obligationLabel,
