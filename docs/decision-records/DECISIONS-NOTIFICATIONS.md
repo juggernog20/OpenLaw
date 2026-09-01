@@ -472,7 +472,9 @@ The Knowledge row in Personal → Notifications exposes its email section toggle
 
 The five `briefing.*` preference keys are email-only overrides. Approvals, Tasks, Dates, and Obligations default on. Intake defaults off. Existing users receive those defaults from application code because migration `0084_lush_ender_wiggin` inserts no preference rows. The Knowledge section is already live from M28/6 and keeps its `knowledge` email preference. It has no Home card. A Knowledge-only briefing sends email but does not create the Home-linked bell summary.
 
-When Home-backed content exists, the round writes one deduplicated `briefing.ready` bell row for the reader's local date. It owes no email and opens `/`. A second round on that date creates no second row. An empty reading creates none. A successful send appends `user.briefing_sent` with counts for Approvals, Tasks, Dates, Knowledge, and Intake, while the content remains in the email alone.
+Home is the in-app daily summary view deferred by clause 5, so its built `/` destination satisfies the bell's destination gate. When Home-backed content exists, the round writes one deduplicated `briefing.ready` bell row for the reader's local date. It owes no email and opens `/`. A second round on that date creates no second row. An empty reading creates none.
+
+A successful send appends `user.briefing_sent` with `approvalCount`, `taskCount`, `dateCount`, `knowledgeCount`, and `intakeCount`, while the content remains in the email alone. `dateCount` is the combined count of Dates and Entity Obligation rows.
 
 ---
 
