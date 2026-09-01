@@ -17,11 +17,13 @@
 import { test, expect } from "@playwright/test";
 import { z } from "zod";
 import { ADMIN, ensureAdminExists, reportAxeViolations, signInAs, sweepOrSay } from "./helpers.js";
+import { createPopulatedHomeFixture } from "./home-fixture.js";
 
 const KnowledgeTypesEnvelope = z.object({
   knowledgeTypes: z.array(z.object({ id: z.string(), slug: z.string() })),
 });
 const CreatedKnowledgeItem = z.object({ knowledgeItem: z.object({ id: z.string() }) });
+const Me = z.object({ user: z.object({ id: z.string() }) });
 
 test.describe("accessibility floor", () => {
   test("login page: axe scan, title, and document language", async ({ page }, testInfo) => {
@@ -35,13 +37,36 @@ test.describe("accessibility floor", () => {
     await reportAxeViolations(page, testInfo, "login");
   });
 
-  test("home page: axe scan and title", async ({ page, request }, testInfo) => {
+  test("populated Home: axe scan and title", async ({ page, request }, testInfo) => {
     await ensureAdminExists(request);
     await signInAs(page, ADMIN.email, ADMIN.password, ADMIN.displayName);
 
-    await expect(page).toHaveTitle("Home · OpenLaw");
+    const meResponse = await page.request.get("/api/v1/me");
+    expect(meResponse.status(), await meResponse.text()).toBe(200);
+    const fixture = await createPopulatedHomeFixture(
+      page.request,
+      Me.parse(await meResponse.json()).user.id,
+      `axe-${Date.now()}`,
+    );
+    try {
+      await page.goto("/");
+      await expect(page).toHaveTitle("Home · OpenLaw");
+      await expect(page.getByRole("region", { name: "Approvals waiting on you" })).toBeVisible();
+      await expect(page.getByRole("region", { name: "Tasks assigned to you" })).toBeVisible();
+      await expect(page.getByRole("region", { name: "Dates approaching" })).toBeVisible();
+      await expect(page.getByRole("region", { name: "Entity obligations" })).toBeVisible();
+      await expect(page.getByRole("region", { name: "Your contracts" })).toBeVisible();
+      await expect(page.getByRole("region", { name: "Your matters" })).toBeVisible();
 
-    await reportAxeViolations(page, testInfo, "home");
+      await reportAxeViolations(page, testInfo, "home-populated");
+      expect(
+        await reportAxeViolations(page, testInfo, "home-populated-main", { include: "main" }),
+      ).toEqual([]);
+    } catch (error) {
+      await sweepOrSay("the populated Home axe scan", fixture.cleanup);
+      throw error;
+    }
+    await fixture.cleanup();
   });
 
   test("Documents page: axe scan and title", async ({ page, request }, testInfo) => {

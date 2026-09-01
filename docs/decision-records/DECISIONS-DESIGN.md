@@ -1881,6 +1881,12 @@ Tier 3 is the leak-prevention surface DES-009 rationale 3 describes, minus the m
 
 _M11/6 adds the inline variant's second surface: a **document** row in the contract record's Documents section, where DD-014's per-document flag is set. It is Tier 1 unchanged rather than a new pattern — the row is a list row, and the thing it marks is not the record the page is about, so DES-028 point 7 does not reach it and the record's own banner says nothing about one file inside an open contract. The marker still marks nothing absent: a viewer outside a confidential document's audience is answered no row, so the section has no hidden state to draw. Setting and clearing the flag is a verb in the row's overflow menu rather than a switch on the row, following the same DES-025 pattern the section's other five acts already follow, and drawn for DD-014's three actors alone — absent, not disabled._
 
+### Built addendum (2026-09-01, M29 close, [#625](https://github.com/juggernog20/OpenLaw/issues/625)): Home closes the dashboard obligation
+
+Home renders the inline lock and literal `CONFI` beside reachable Confidential Contract and Matter titles in its Approvals, Tasks, Dates, Your contracts, and Your matters sections. The marker keeps its accessible name and carries no background wash. Record reach runs before totals and the three-row cap, so an unreachable Confidential record still contributes no title, marker, row, count, or gap.
+
+This closes the last future surface named in this record's consequences. Search adopted the marker in M25, and Home adopts it in M29.
+
 ## DES-030: The shell scroll model — one viewport tall, and `main` owns the scroll
 
 - **Status:** Accepted
@@ -4344,7 +4350,7 @@ Home answers a stable question: what needs this user's attention, and where can 
 | DES-026 | The history panel interior — narrated row, medallion, and load-more foot (extends DES-016)                                                                           | Accepted                                                                                                   |
 | DES-027 | The audit-log pane — filter bar, narrated table row, and the export foot (extends DES-021, DES-026)                                                                  | Accepted                                                                                                   |
 | DES-028 | The confidential record page — the Tier 2 banner and the flag control (extends DES-009)                                                                              | Accepted                                                                                                   |
-| DES-029 | The confidential marker and the composer notice — DES-009's Tier 1 and Tier 3                                                                                        | Accepted                                                                                                   |
+| DES-029 | The confidential marker and the composer notice — DES-009's Tier 1 and Tier 3                                                                                        | Accepted; Home check-off added at M29 close                                                                |
 | DES-030 | The shell scroll model — one viewport tall, and `main` owns the scroll                                                                                               | Accepted                                                                                                   |
 | DES-031 | The paging foot — table placement, the thread's head control, and where focus lands (extends DES-026)                                                                | Accepted                                                                                                   |
 | DES-032 | The record-page section strip — routed tabs under the breadcrumb (extends DES-016, DES-030)                                                                          | Accepted                                                                                                   |
