@@ -238,6 +238,12 @@ _None — queue cleared 2026-08-05 (NOT-001 through NOT-005)._
 
   **The digest's copy and its anatomy are DES-051**, which closed DES-015's deferred email-copy exception. It turned out to be owed for every message this system sends rather than only for the digest, so the register covers all of them and the exception is gone rather than narrowed.
 
+### Amendment (2026-09-01, M29 close, [#625](https://github.com/juggernog20/OpenLaw/issues/625)): the daily briefing is built
+
+The date-only digest has become NOT-008's cross-module daily briefing. The hourly round, each reader's 08:00 gate, one-send-per-local-day rule, live reach check, and recovery of owed immediate mail remain unchanged. The one morning email can now carry Approvals, Tasks due today or overdue, Dates, Entity Obligations, Knowledge, and opted-in Intake in that fixed order.
+
+Five email-only section preferences control Approvals, Tasks, Dates, Obligations, and Intake. An absent preference row means the application default. The first four default on and Intake defaults off. Knowledge keeps the email preference M28 added to its event group. A fully empty reading still sends nothing.
+
 ## NOT-004 — Reminder lead times: one admin-configurable offset list, seeded 7/1/0
 
 - **Status** — Accepted
@@ -347,6 +353,14 @@ The surface is `renderDigestMail` in `apps/api/src/lib/notifications/email.ts`, 
 
 **Known wording gap.** Clause 2's framing line says "nearest first", which is true of the rows still ahead and not of the overdue rows behind them. It only shows on a briefing that missed its morning. Recorded rather than fixed: the sentence has shipped, and changing it is an amendment to this clause.
 
+### Amendment (2026-09-01, M29 close, [#625](https://github.com/juggernog20/OpenLaw/issues/625)): the anatomy now covers six sections
+
+Clauses 1 to 6 now have a wider reading. A dates-only email keeps the date-count subject and date framing above. A Knowledge-only email names its new Knowledge item count. An email that carries Approvals, Tasks, or Intake, or that mixes Dates and Knowledge, uses `Your daily briefing` and the framing line `Here is your daily briefing.`
+
+The body renders the present sections in one fixed order: Approvals, Tasks, Dates, Obligations, Knowledge, then Intake. Empty sections disappear. Approvals, Tasks, and Intake use the same three-row section contracts as Home and add `And N more on Home.` when the cap omits eligible rows. Each row links to the Contract, Matter, Entity, Knowledge Item, or Request surface that resolves it. Date order and distance keep clauses 3 to 7 above. The settings link and the no-empty-send rule keep clauses 8 and 9.
+
+Both HTML and plain text are authored outputs of `briefing-template.ts`. User-written values are escaped in HTML. The plain-text part keeps the same section order and links. DES-051 still owns the sentence register.
+
 ## NOT-007 — Email delivery is at-least-once; a duplicate is accepted over a drop
 
 - **Status:** Accepted
@@ -452,6 +466,14 @@ Knowledge publication is ambient. It creates no notification row and no per-publ
 
 The Knowledge row in Personal → Notifications exposes its email section toggle only. It does not expose an in-app switch, and changing it does not change another briefing section or notification group. The section is omitted from both the HTML and text parts when its window is empty. A Knowledge-only briefing still leaves when the section has items.
 
+#### M29 built addendum: the six-section briefing and its Home-linked summary
+
+[M29/7](https://github.com/juggernog20/OpenLaw/issues/624) completes the briefing. Approvals waiting on the reader, the reader's Tasks due today or overdue, and open Intake Requests join the existing Dates, Entity Obligations, and Knowledge sections. Present sections render in clause 2 order in both mail parts. Empty sections disappear, and a day with no enabled content sends nothing. Approvals, Tasks, and Intake share their query contracts with Home. Their email names any rows hidden by Home's three-row cap.
+
+The five `briefing.*` preference keys are email-only overrides. Approvals, Tasks, Dates, and Obligations default on. Intake defaults off. Existing users receive those defaults from application code because migration `0084_lush_ender_wiggin` inserts no preference rows. The Knowledge section is already live from M28/6 and keeps its `knowledge` email preference. It has no Home card. A Knowledge-only briefing sends email but does not create the Home-linked bell summary.
+
+When Home-backed content exists, the round writes one deduplicated `briefing.ready` bell row for the reader's local date. It owes no email and opens `/`. A second round on that date creates no second row. An empty reading creates none. A successful send appends `user.briefing_sent` with counts for Approvals, Tasks, Dates, Knowledge, and Intake, while the content remains in the email alone.
+
 ---
 
 ## Index of decisions
@@ -460,9 +482,9 @@ The Knowledge row in Personal → Notifications exposes its email section toggle
 | ------- | ------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | NOT-001 | One system, two surfaces: bell + email for staff and portal users  | Accepted; the portal surface built and its read rule added by the M20/8 and M20/9 addenda; the absent Administrator override recorded by the M20/10 addendum                                                                                                                                                                    |
 | NOT-002 | Event catalog: five groups, defaults by interruptiveness           | Accepted; group 5's four events added by M20/8 addendum; group 4's first event and its opt-in email by the M21/4 addendum; group 1's `request` arm by the M21/5 addendum; the reply promise following a conversion onto the record by the M21/11 addendum; the side default and the archived-Request arm by the M21/12 addendum |
-| NOT-003 | Timing: direct events immediate; date reminders in a daily digest  | Accepted                                                                                                                                                                                                                                                                                                                        |
+| NOT-003 | Timing: direct events immediate; date reminders in a daily digest  | Accepted; the M29 close records the built cross-module briefing amendment                                                                                                                                                                                                                                                       |
 | NOT-004 | Reminder lead times: admin-configurable offsets, seeded 7/1/0      | Accepted                                                                                                                                                                                                                                                                                                                        |
 | NOT-005 | Badge: unread count, 9+ cap, read-on-open                          | Accepted                                                                                                                                                                                                                                                                                                                        |
-| NOT-006 | The morning digest's anatomy and its delivery rules                | Accepted                                                                                                                                                                                                                                                                                                                        |
+| NOT-006 | The morning digest's anatomy and its delivery rules                | Accepted; the M29 close records the built six-section anatomy amendment                                                                                                                                                                                                                                                         |
 | NOT-007 | Email delivery is at-least-once; duplicate accepted over drop      | Accepted                                                                                                                                                                                                                                                                                                                        |
-| NOT-008 | The daily briefing: cross-module morning email replaces the digest | Accepted                                                                                                                                                                                                                                                                                                                        |
+| NOT-008 | The daily briefing: cross-module morning email replaces the digest | Accepted; Knowledge built in M28/6 and the six-section briefing completed in M29/7                                                                                                                                                                                                                                              |
