@@ -263,6 +263,7 @@ describe("Home", () => {
     const welcomeHeading = await screen.findByRole("heading", { name: "Welcome to OpenLaw" });
     const welcome = welcomeHeading.closest("section");
     expect(welcome).not.toBeNull();
+    expect(within(welcome!).getByText(/contracts, matters/)).toBeInTheDocument();
     expect(
       screen.queryByRole("region", { name: "Approvals waiting on you" }),
     ).not.toBeInTheDocument();
@@ -399,12 +400,14 @@ describe("Home", () => {
     const contracts = await screen.findByRole("region", { name: "Your contracts" });
     expect(within(contracts).getByText("7")).toBeInTheDocument();
     expect(
-      within(contracts).getByRole("link", { name: "Confidential acquisition agreement" }),
+      within(contracts).getByRole("link", { name: /Confidential acquisition agreement/ }),
     ).toHaveAttribute("href", "/contracts/501");
     expect(within(contracts).getByText("Contract C-501 · Draft")).toBeInTheDocument();
     expect(within(contracts).getByText(formatDeadline(contractDate))).toBeInTheDocument();
     expect(within(contracts).getByRole("img", { name: "Confidential" })).toBeInTheDocument();
-    expect(within(contracts).getByText("Renewal pending confirmation")).toBeInTheDocument();
+    expect(
+      within(contracts).getByRole("img", { name: "Renewal pending confirmation" }),
+    ).toBeInTheDocument();
     expect(within(contracts).getByText("No upcoming date")).toBeInTheDocument();
     expect(within(contracts).getByRole("link", { name: "View all 7" })).toHaveAttribute(
       "href",
@@ -414,7 +417,7 @@ describe("Home", () => {
     const matters = screen.getByRole("region", { name: "Your matters" });
     expect(within(matters).getByText("4")).toBeInTheDocument();
     expect(
-      within(matters).getByRole("link", { name: "Confidential employment investigation" }),
+      within(matters).getByRole("link", { name: /Confidential employment investigation/ }),
     ).toHaveAttribute("href", "/matters/91");
     expect(within(matters).getByText("Matter M-91 · Open")).toBeInTheDocument();
     expect(within(matters).getByText("Response filing deadline")).toBeInTheDocument();

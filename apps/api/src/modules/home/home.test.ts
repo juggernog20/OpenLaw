@@ -1031,7 +1031,13 @@ describe("GET /api/v1/home", () => {
       idOf(MANAGER_TWO),
       { expiryDate: plusDays(today, 4) },
     );
-    await insertContract("Ended Contract", idOf(MANAGER_ONE), { stage: "ended" });
+    const legacyEndedContract = await insertContract("Ended Contract", idOf(MANAGER_ONE), {
+      stage: "ended",
+    });
+    await harness.db
+      .update(contracts)
+      .set({ endedAt: null })
+      .where(eq(contracts.id, legacyEndedContract.id));
     await insertContract("Archived Contract", idOf(MANAGER_ONE), { archived: true });
 
     const insertMatter = async (

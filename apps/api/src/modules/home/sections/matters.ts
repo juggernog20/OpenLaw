@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-/** M29's Matter portfolio, keyed on the viewer as Matter Manager. */
+/** DES-069's Matter portfolio, keyed on the viewer as MTR-003 Matter Manager. */
 import { z } from "zod";
 import {
   and,
@@ -39,22 +39,15 @@ export async function readMattersHomeSection(
   db: Executor,
   user: AuthenticatedUser,
 ): Promise<MattersHomeSection | null> {
-  const nextDeadlineDate = sql<string | null>`(
-    select ${matterKeyDates.date}::text
-    from ${matterKeyDates}
-    where ${matterKeyDates.matterId} = ${matters.id}
-      and ${matterKeyDates.date} >= current_date
-    order by ${matterKeyDates.date}, ${matterKeyDates.id}
-    limit 1
-  )`;
-  const nextDeadlineLabel = sql<string | null>`(
-    select ${matterKeyDates.label}
-    from ${matterKeyDates}
-    where ${matterKeyDates.matterId} = ${matters.id}
-      and ${matterKeyDates.date} >= current_date
-    order by ${matterKeyDates.date}, ${matterKeyDates.id}
-    limit 1
-  )`;
+  const nextDeadline = db
+    .select({ date: matterKeyDates.date, label: matterKeyDates.label })
+    .from(matterKeyDates)
+    .where(
+      and(eq(matterKeyDates.matterId, matters.id), sql`${matterKeyDates.date} >= current_date`),
+    )
+    .orderBy(matterKeyDates.date, matterKeyDates.id)
+    .limit(1)
+    .as("home_matter_next_deadline");
 
   const rows = await db
     .select({
@@ -64,12 +57,13 @@ export async function readMattersHomeSection(
       isConfidential: matters.isConfidential,
       statusId: matterStatuses.id,
       statusDisplayName: matterStatuses.displayName,
-      nextDeadlineDate,
-      nextDeadlineLabel,
+      nextDeadlineDate: nextDeadline.date,
+      nextDeadlineLabel: nextDeadline.label,
       total: sql<number>`count(*) over()::integer`,
     })
     .from(matters)
     .innerJoin(matterStatuses, eq(matters.statusId, matterStatuses.id))
+    .leftJoinLateral(nextDeadline, sql`true`)
     .where(
       and(
         eq(matters.managerId, user.id),
@@ -78,7 +72,7 @@ export async function readMattersHomeSection(
         matterTeamScope(db, user),
       ),
     )
-    .orderBy(sql`${nextDeadlineDate} asc nulls last`, desc(matters.number))
+    .orderBy(sql`${nextDeadline.date} asc nulls last`, desc(matters.number))
     .limit(HOME_SECTION_LIMIT);
 
   const first = rows[0];

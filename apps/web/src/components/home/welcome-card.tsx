@@ -21,7 +21,7 @@ export function HomeWelcomeCard({ role }: Readonly<{ role: Role }>) {
         <p className="max-w-150 text-md leading-relaxed text-muted">
           <FormattedMessage
             id="home.welcome.body"
-            defaultMessage="Nothing is waiting on you. Approvals, Tasks, dates, obligations, and Requests will appear here when they need you."
+            defaultMessage="Nothing is waiting on you. Approvals, Tasks, dates, obligations, contracts, matters, and Requests will appear here when they need you."
           />
         </p>
       </div>

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-/** Matters for which the viewer is the Matter Manager. */
+/** DES-069's Matter portfolio card in the TECH-001/TECH-003 Home SPA. */
 import { BriefcaseBusiness } from "lucide-react";
 import { FormattedMessage } from "react-intl";
 import { Link } from "react-router";
@@ -9,7 +9,7 @@ import { formatDeadline, formatFullDate } from "../../lib/format";
 import { ConfidentialMarker } from "../confidential-marker";
 import { HomeSectionCard } from "./section-card";
 
-export function HomeMattersCard({ section }: Readonly<{ section: MattersHomeSection }>) {
+export function HomeMattersCard({ section }: { section: MattersHomeSection }) {
   return (
     <HomeSectionCard
       headingId="home-matters-heading"
@@ -21,12 +21,11 @@ export function HomeMattersCard({ section }: Readonly<{ section: MattersHomeSect
         <li key={row.id}>
           <Link
             to={`/matters/${String(row.number)}`}
-            aria-label={row.title}
             className="flex min-h-11.25 items-center justify-between gap-3 px-3 py-2 text-primary hover:bg-section-header focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-link"
           >
             <span className="flex min-w-0 items-center gap-2.5">
               <span className="flex size-6.5 shrink-0 items-center justify-center rounded-card bg-section-header text-muted">
-                <BriefcaseBusiness size={14} aria-hidden="true" />
+                <BriefcaseBusiness size={16} aria-hidden="true" />
               </span>
               <span className="min-w-0">
                 <span className="flex min-w-0 items-center gap-2">

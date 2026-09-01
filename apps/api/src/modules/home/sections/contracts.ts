@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-/** M29's Contract portfolio, keyed on the viewer as Owner. */
+/** DES-069's Contract portfolio, keyed on the viewer as CTR-004 Owner. */
 import { z } from "zod";
 import {
   and,
@@ -11,6 +11,7 @@ import {
   desc,
   eq,
   isNull,
+  ne,
   sql,
   type Executor,
 } from "@openlaw/db";
@@ -93,6 +94,7 @@ export async function readContractsHomeSection(
         eq(contracts.managerId, user.id),
         isNull(contracts.archivedAt),
         isNull(contracts.endedAt),
+        ne(contractStatuses.stage, "ended"),
         contractTeamScope(db, user),
       ),
     )
