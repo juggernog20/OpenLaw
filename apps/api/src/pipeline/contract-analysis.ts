@@ -381,6 +381,10 @@ async function applyAnswers(
     ] as const) {
       const item = prepared.get(slug);
       if (!item) continue;
+      // A core answer is consumed here even when the writer keeps or rejects it.
+      // Leaving it in `prepared` would make the custom-field pass below write the
+      // same slug into `custom_fields`, bypassing the core writer's decision.
+      prepared.delete(slug);
       if (slug === "expiry_date" && nextTermType === "evergreen") {
         outcome.invalid.push(slug);
         continue;
@@ -409,7 +413,6 @@ async function applyAnswers(
       }
       flags[slug] = flag(item.evidence, run.id);
       outcome.written.push(slug);
-      prepared.delete(slug);
     }
 
     const counterparty = prepared.get("counterparty");

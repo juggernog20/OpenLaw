@@ -390,7 +390,13 @@ export async function startPipeline(options: PipelineOptions): Promise<Pipeline>
     },
     async requestContractAnalysis(contractId: string, runId: string): Promise<void> {
       const job: ContractAnalysisJob = { contractId, runId };
-      await boss.send(JOB_QUEUES.contractAnalysis, job, { singletonKey: contractId });
+      const jobId = await boss.send(JOB_QUEUES.contractAnalysis, job, {
+        singletonKey: contractId,
+      });
+      // A short queue reports a singleton collision with `null`. Treat that as
+      // a refused wake-up so the route can remove the run row instead of
+      // returning a permanently pending run for work that was never queued.
+      if (!jobId) throw new Error("The Contract already has a queued analysis job.");
     },
   };
 

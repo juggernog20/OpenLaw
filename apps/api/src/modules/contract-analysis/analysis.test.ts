@@ -450,6 +450,8 @@ describe("the manual Contract analysis run", () => {
       valueCadence: "one_time",
       customFields: { our_position: "Customer" },
     });
+    expect(row!.customFields).not.toHaveProperty("notice_period_days");
+    expect(row!.customFields).not.toHaveProperty("value");
     expect(row!.aiUnverified?.effective_date).toMatchObject({
       evidence: "Revised effective on 2026-02-01",
       runId: run.id,
@@ -490,6 +492,8 @@ describe("the manual Contract analysis run", () => {
       valueCurrency: null,
       valueCadence: null,
     });
+    expect(row!.customFields).not.toHaveProperty("expiry_date");
+    expect(row!.customFields).not.toHaveProperty("renewal_period_months");
   });
 
   it("analyzes the executed pin instead of the current Version", async () => {
