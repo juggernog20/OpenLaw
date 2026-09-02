@@ -476,6 +476,12 @@ The provider universe collapses to three wire protocols; presets give the named 
 
 A "Test connection" affordance in settings. Extraction prompt/schema behavior must tolerate model variance — evidence-snippet validation guards against weak models hallucinating fields (values without matching document text get flagged, not written).
 
+### Addendum (2026-09-02, M31/1)
+
+The pane shipped in **Settings → Organization → Integrations → AI analysis**, beside the E-signature pane, rather than under Contracts. The connector is one sealed singleton row (TECH-022), and a resolver reads it live before each probe or run.
+
+Two wire facts changed the OpenAI-compatible adapter after the first cut. OpenAI's current reasoning models refuse `max_tokens` (they take `max_completion_tokens`) and refuse any `temperature` but the default, while Ollama, vLLM, and OpenRouter still take `max_tokens` and honor temperature zero. The adapter starts on `max_completion_tokens` for the OpenAI and Azure OpenAI presets, on `max_tokens` elsewhere, and when a refusal names one of the two fields it drops or renames that field and repeats the call once. Reasoning models on every protocol also spend their thinking inside the output token budget, so the probe allows 1024 tokens and an extraction 8192, and an extraction may take up to two minutes against a local model.
+
 ## TECH-013: DocuSign auth — JWT grant (service integration)
 
 - **Status:** Accepted

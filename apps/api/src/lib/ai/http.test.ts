@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { postJson } from "./http.js";
+import { postJson, PROBE_BOUND } from "./http.js";
 import { AiConfigError, AiTimeoutError } from "./provider.js";
 
 afterEach(() => vi.unstubAllGlobals());
@@ -22,7 +22,9 @@ describe("AI provider HTTP bounds", () => {
       vi.fn().mockResolvedValue(new Response(body, { status: 400, statusText: "Bad request" })),
     );
 
-    await expect(postJson(new URL("https://provider.test"), {}, {})).rejects.toEqual(
+    await expect(
+      postJson(new URL("https://provider.test"), {}, {}, PROBE_BOUND.timeoutMs),
+    ).rejects.toEqual(
       expect.objectContaining<Partial<AiConfigError>>({
         name: "AiConfigError",
         message: "Bad request",
@@ -46,8 +48,8 @@ describe("AI provider HTTP bounds", () => {
         ),
     );
 
-    await expect(postJson(new URL("https://provider.test"), {}, {})).rejects.toBeInstanceOf(
-      AiTimeoutError,
-    );
+    await expect(
+      postJson(new URL("https://provider.test"), {}, {}, PROBE_BOUND.timeoutMs),
+    ).rejects.toBeInstanceOf(AiTimeoutError);
   });
 });

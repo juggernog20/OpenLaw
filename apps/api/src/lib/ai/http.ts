@@ -9,8 +9,26 @@ import {
   type AiExtractionTarget,
 } from "./provider.js";
 
-const AI_CALL_TIMEOUT_MS = 30_000;
 const MAX_REFUSAL_BYTES = 500;
+
+/** How long one call may take and how many tokens the model may spend answering it. */
+export interface AiCallBound {
+  maxTokens: number;
+  timeoutMs: number;
+}
+
+/**
+ * A probe is one short exchange. The token cap is still generous because
+ * reasoning models spend their thinking inside the same output budget, and
+ * a 16-token cap leaves them nothing to answer with.
+ */
+export const PROBE_BOUND: AiCallBound = { maxTokens: 1024, timeoutMs: 30_000 };
+
+/**
+ * An extraction returns one value and one quote per field, after any
+ * thinking, and may wait on a local model working through a long contract.
+ */
+export const EXTRACTION_BOUND: AiCallBound = { maxTokens: 8192, timeoutMs: 120_000 };
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return value !== null && typeof value === "object" && !Array.isArray(value);
@@ -88,8 +106,9 @@ export async function postJson(
   url: URL,
   headers: Readonly<Record<string, string>>,
   body: unknown,
+  timeoutMs: number,
 ): Promise<unknown> {
-  const signal = AbortSignal.timeout(AI_CALL_TIMEOUT_MS);
+  const signal = AbortSignal.timeout(timeoutMs);
   let response: Response;
   try {
     response = await fetch(url, {
