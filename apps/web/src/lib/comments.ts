@@ -38,6 +38,44 @@ export type CommentTier = Comment["visibility"];
 /** The record a thread hangs off — the reference the panel is keyed by. */
 export type CommentEntityType = Comment["entityType"];
 
+/**
+ * Re-reads the newest end of a thread through one row already on screen.
+ *
+ * A live frame names no comment body, and an edited row may sit on any
+ * page the reader has loaded. Walking until the old first row appears
+ * gives a caller every visible row it must reconcile while leaving the
+ * read route in charge of audience filtering.
+ */
+export async function readCommentWindow(
+  entityType: CommentEntityType,
+  entityId: string,
+  throughId?: string,
+): Promise<ThreadResponse | undefined> {
+  let cursor: string | undefined;
+  let comments: Comment[] = [];
+
+  for (;;) {
+    const { data } = await api
+      .GET("/api/v1/comments", {
+        params: {
+          query: {
+            entityType,
+            entityId,
+            ...(cursor ? { cursor } : {}),
+          },
+        },
+      })
+      .catch(() => ({ data: undefined }));
+    if (!data) return undefined;
+
+    comments = [...data.comments, ...comments];
+    if (!throughId || comments.some((comment) => comment.id === throughId) || !data.nextCursor) {
+      return { comments, nextCursor: data.nextCursor };
+    }
+    cursor = data.nextCursor;
+  }
+}
+
 /** The two filing destinations accepted by CMT-011's one attachment route. */
 export type CommentAttachmentFiling = NonNullable<
   paths["/api/v1/comments/{commentId}/attachments/{attachmentId}/file"]["post"]["requestBody"]

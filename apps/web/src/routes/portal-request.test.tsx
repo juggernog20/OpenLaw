@@ -641,6 +641,51 @@ describe("the conversation", () => {
     expect(within(card).queryByText("The renewal term is twelve months.")).not.toBeInTheDocument();
   });
 
+  it("reports a failed live re-read and clears the warning after a later answer", async () => {
+    const sources = stubEventSource();
+    let failThread = false;
+    stubApi({
+      signedIn: REQUESTER,
+      extra: (call: StubCall) => {
+        if (failThread && call.url.pathname === "/api/v1/comments" && call.method === "GET") {
+          return problem(503, "The thread is not available.");
+        }
+        return detailRead(detail(), 200, {
+          comments: [comment({ id: "c1", body: "Legal is checking the renewal term." })],
+        })(call);
+      },
+    });
+    renderAt("/portal/requests/45");
+
+    const card = await screen.findByRole("region", { name: "Conversation" });
+    expect(within(card).getByText("Legal is checking the renewal term.")).toBeInTheDocument();
+    failThread = true;
+    sources[0]!.emit({
+      kind: "record",
+      action: "comment.posted",
+      entityType: "request",
+      entityId: "rq1",
+      entryId: "activity-portal-failed-read",
+      visibility: "full_thread",
+    });
+
+    expect(await within(card).findByRole("alert")).toHaveTextContent(
+      "The conversation could not be read. Reload the page to try again.",
+    );
+    expect(within(card).getByText("Legal is checking the renewal term.")).toBeInTheDocument();
+
+    failThread = false;
+    sources[0]!.emit({
+      kind: "record",
+      action: "comment.posted",
+      entityType: "request",
+      entityId: "rq1",
+      entryId: "activity-portal-recovered-read",
+      visibility: "full_thread",
+    });
+    await waitFor(() => expect(within(card).queryByRole("alert")).not.toBeInTheDocument());
+  });
+
   it("offers the reply box no tier to choose", async () => {
     stubApi({ signedIn: REQUESTER, extra: detailRead(detail()) });
     renderAt("/portal/requests/45");
@@ -904,6 +949,49 @@ describe("the conversation", () => {
     expect(older.compareDocumentPosition(newer)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
     // The thread reaches its own beginning, so the control goes.
     expect(screen.queryByRole("button", { name: "Show earlier replies" })).not.toBeInTheDocument();
+  });
+
+  it("replaces an edited reply in an older page after a live prompt", async () => {
+    const user = userEvent.setup();
+    const sources = stubEventSource();
+    let older = comment({ id: "c0", body: "The original older reply." });
+    stubApi({
+      signedIn: REQUESTER,
+      extra: (call: StubCall) => {
+        if (call.url.pathname === "/api/v1/comments" && call.method === "GET") {
+          return call.url.searchParams.get("cursor")
+            ? json(200, { comments: [older], nextCursor: null })
+            : json(200, {
+                comments: [comment({ id: "c5", body: "The newest reply." })],
+                nextCursor: "c5",
+              });
+        }
+        return detailRead(detail())(call);
+      },
+    });
+    renderAt("/portal/requests/45");
+
+    const card = await screen.findByRole("region", { name: "Conversation" });
+    await user.click(within(card).getByRole("button", { name: "Show earlier replies" }));
+    expect(await within(card).findByText("The original older reply.")).toBeInTheDocument();
+
+    older = {
+      ...older,
+      body: "The corrected older reply.",
+      editedAt: "2026-08-07T10:00:00.000Z",
+    };
+    sources[0]!.emit({
+      kind: "record",
+      action: "comment.edited",
+      entityType: "request",
+      entityId: "rq1",
+      entryId: "activity-portal-older-edit",
+      visibility: "full_thread",
+    });
+
+    expect(await within(card).findByText("The corrected older reply.")).toBeInTheDocument();
+    expect(within(card).getByText("edited")).toBeInTheDocument();
+    expect(within(card).queryByText("The original older reply.")).not.toBeInTheDocument();
   });
 
   it("draws a removed reply as the tombstone it is", async () => {

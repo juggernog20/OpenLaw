@@ -42,7 +42,9 @@ export interface PanelApplet extends AppletBase {
   render: () => ReactNode;
   /** Reports the panel's logical open state. A closing panel stays
    * mounted for its slide, so mount state cannot answer this question
-   * for live surfaces that must stop marking content read at close. */
+   * for live surfaces that must stop marking content read at close.
+   * The callback must be stable across renders: RecordApplets keys its
+   * reporting effect on this identity. */
   onExpandedChange?: (expanded: boolean) => void;
   /**
    * Rendered beside the panel's title while the applet is open. The

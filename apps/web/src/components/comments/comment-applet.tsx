@@ -70,6 +70,7 @@ import {
   mentionText,
   namedInDraft,
   narrowestTierFor,
+  readCommentWindow,
   RECORD_DEFAULT_TIER,
   sendComment,
   tierAudience,
@@ -171,6 +172,7 @@ export function useCommentApplet({
   filing,
 }: CommentAppletOptions): Applet {
   const [comments, setComments] = useState<Comment[] | null>(null);
+  const commentsRef = useRef<Comment[] | null>(null);
   const [candidates, setCandidates] = useState<MentionCandidate[]>([]);
   const [loadFailed, setLoadFailed] = useState(false);
   /** What the badge says. Zero draws no badge at all, which is also
@@ -193,6 +195,11 @@ export function useCommentApplet({
   const threadLanded = useRef(0);
   const unreadIssued = useRef(0);
   const unreadLanded = useRef(0);
+  const refreshing = useRef(false);
+  const refreshAgain = useRef(false);
+  useEffect(() => {
+    commentsRef.current = comments;
+  }, [comments]);
   const changePanelOpen = useCallback((open: boolean) => {
     panelOpen.current = open;
     if (!open) {
@@ -276,15 +283,15 @@ export function useCommentApplet({
     await markRead();
   }, [entityType, entityId, markRead]);
 
-  /** Re-asks the newest page after a content-free prompt. New rows join
-   * the end of the flat chronological thread, and rows already on
-   * screen take the server's corrected form. Older pages and their
-   * cursor stay untouched. */
+  /** Re-asks the visible window after a content-free prompt. New rows
+   * join the end of the flat chronological thread, and every row on
+   * screen takes the server's corrected form. When the re-ask fails,
+   * the last successfully loaded thread deliberately stays visible
+   * until another frame or a reopen gives it a fresh answer. */
   const refreshThread = useCallback(async () => {
     const issue = (threadIssued.current += 1);
-    const { data } = await api
-      .GET("/api/v1/comments", { params: { query: { entityType, entityId } } })
-      .catch(() => ({ data: undefined }));
+    const throughId = commentsRef.current?.[0]?.id;
+    const data = await readCommentWindow(entityType, entityId, throughId);
     if (!data || issue < threadLanded.current) return;
     if (!panelOpen.current) {
       void readUnread();
@@ -303,9 +310,28 @@ export function useCommentApplet({
         ...data.comments.filter((comment) => !existing.has(comment.id)),
       ];
     });
-    if (first) setCursor(data.nextCursor);
+    if (first || commentsRef.current?.[0]?.id === throughId) setCursor(data.nextCursor);
     await markRead();
   }, [entityType, entityId, markRead, readUnread]);
+
+  /** One live re-ask at a time. Frames received during it collapse into
+   * one trailing read, whose open/closed route is chosen when it runs. */
+  const promptRefresh = useCallback(async () => {
+    if (refreshing.current) {
+      refreshAgain.current = true;
+      return;
+    }
+    refreshing.current = true;
+    try {
+      do {
+        refreshAgain.current = false;
+        if (panelOpen.current) await refreshThread();
+        else await readUnread();
+      } while (refreshAgain.current);
+    } finally {
+      refreshing.current = false;
+    }
+  }, [readUnread, refreshThread]);
 
   useEffect(
     () =>
@@ -321,10 +347,9 @@ export function useCommentApplet({
         // converted Request is opened by its Request address and the
         // server resolves that scope to the Contract or Matter holding
         // the moved thread (CMT-001).
-        if (panelOpen.current) void refreshThread();
-        else void readUnread();
+        void promptRefresh();
       }),
-    [readUnread, refreshThread],
+    [promptRefresh],
   );
 
   /**

@@ -4153,6 +4153,45 @@ describe("the contract record's comment applet (M9/2)", () => {
       expect(within(panel).queryByRole("button", { name: "Show older" })).not.toBeInTheDocument();
     });
 
+    it("replaces an edited row in an older loaded page after a live prompt", async () => {
+      const user = userEvent.setup();
+      const sources = stubEventSource();
+      const paged = pagedComments();
+      stubApi({
+        signedIn: MEMBER,
+        extra: (call: StubCall) => paged.handler(call) ?? recordApi(contractRow()).handler(call),
+      });
+      renderAt("/contracts/42");
+      await openChat(user);
+
+      const panel = await screen.findByRole("complementary", { name: "Comments" });
+      await user.click(within(panel).getByRole("button", { name: "Show older" }));
+      expect(await within(panel).findByText("The first word.")).toBeInTheDocument();
+
+      paged.OLDER[0] = comment(
+        "c-older",
+        "The corrected first word.",
+        "working_team",
+        AUTHOR,
+        "2026-08-12T09:00:00.000Z",
+        [],
+        { editedAt: "2026-08-12T14:00:00.000Z" },
+      );
+      sources[0]!.emit({
+        kind: "record",
+        action: "comment.edited",
+        entityType: "contract",
+        entityId: "c1",
+        entryId: "activity-live-older-edit",
+        visibility: "working_team",
+      });
+
+      expect(await within(panel).findByText("The corrected first word.")).toBeInTheDocument();
+      expect(within(panel).getByText("edited")).toBeInTheDocument();
+      expect(within(panel).queryByText("The first word.")).not.toBeInTheDocument();
+      expect(paged.cursors).toEqual([null, "c-newest", null, "c-newest"]);
+    });
+
     it("puts focus on the oldest comment it brought, because the thread grew above the reader", async () => {
       const user = userEvent.setup();
       const paged = pagedComments();

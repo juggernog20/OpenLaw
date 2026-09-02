@@ -53,7 +53,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { FormattedMessage, defineMessage, useIntl } from "react-intl";
 import { api } from "../../lib/api";
-import { sendComment, type Comment } from "../../lib/comments";
+import { readCommentWindow, sendComment, type Comment } from "../../lib/comments";
 import { formatLongDateTime, formatRelativeOrShort } from "../../lib/format";
 import { TEXTAREA_CLASS } from "../../lib/form-controls";
 import { problem as readProblem } from "../../lib/problem";
@@ -85,6 +85,7 @@ export function RequestThread({
   thread: LoadedThread | null;
 }>) {
   const [comments, setComments] = useState<Comment[]>(thread?.comments ?? []);
+  const commentsRef = useRef<Comment[]>(thread?.comments ?? []);
   const [cursor, setCursor] = useState<string | null>(thread?.nextCursor ?? null);
   const [olderFailed, setOlderFailed] = useState(false);
   const [loadingOlder, setLoadingOlder] = useState(false);
@@ -94,19 +95,23 @@ export function RequestThread({
   const [landed, setLanded] = useState<string | null>(null);
   const newestIssued = useRef(0);
   const newestLanded = useRef(0);
+  useEffect(() => {
+    commentsRef.current = comments;
+  }, [comments]);
 
   /** A frame carries no reply text, so the open portal card asks the
-   * existing Full Thread read and adopts its rows. The current cursor
-   * still points behind every row already loaded and is left alone. */
+   * existing Full Thread read through the oldest row already on screen
+   * and adopts the corrected window. */
   const refreshNewest = useCallback(async () => {
     const issue = (newestIssued.current += 1);
-    const { data } = await api
-      .GET("/api/v1/comments", {
-        params: { query: { entityType: "request", entityId: requestId } },
-      })
-      .catch(() => ({ data: undefined }));
-    if (!data || issue < newestLanded.current) return;
+    const throughId = commentsRef.current[0]?.id;
+    const data = await readCommentWindow("request", requestId, throughId);
+    if (issue < newestLanded.current) return;
     newestLanded.current = issue;
+    if (!data) {
+      setReadFailed(true);
+      return;
+    }
     setReadFailed(false);
     setComments((current) => {
       const fresh = new Map(data.comments.map((comment) => [comment.id, comment]));
@@ -116,6 +121,7 @@ export function RequestThread({
         ...data.comments.filter((comment) => !existing.has(comment.id)),
       ];
     });
+    if (commentsRef.current[0]?.id === throughId) setCursor(data.nextCursor);
   }, [requestId]);
 
   useEffect(
