@@ -218,6 +218,7 @@ import { httpError, problemResponse, problemTypeResponse } from "../../lib/probl
 import { assertApprovalGate, type UnresolvedApproval } from "../../lib/soft-gate.js";
 import { createContract, CONTRACT_RENEWAL_VEHICLES } from "./create.js";
 import { AnalysisRunSchema, latestAnalysisRun } from "../contract-analysis/routes.js";
+import { clearAiUnverified } from "../../lib/ai-unverified.js";
 
 /** Every mutation, and every picker read behind one, is Member+. */
 const requireMember = requireRole("administrator", "legal_team_member");
@@ -3014,6 +3015,10 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
         // state with no primary and no parties either.
         let promotedName: string | undefined;
         if (removed.isPrimary) {
+          // A person taking the primary off verifies that slot (CTR-008):
+          // an analysis run may have linked it, and its marker must not
+          // outlive the link.
+          await clearAiUnverified(tx, current.row.id, "counterparty");
           const [next] = await tx
             .select({ id: counterparties.id, name: counterparties.name })
             .from(contractCounterparties)
@@ -3093,6 +3098,8 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
         if (target.isPrimary) throw httpError(409, "That counterparty is already the primary.");
 
         await promotePrimary(tx, current.row.id, target.id);
+        // The person chose the primary, so the slot is theirs (CTR-008).
+        await clearAiUnverified(tx, current.row.id, "counterparty");
         await recordActivity(tx, {
           entityType: "contract",
           entityId: current.row.id,

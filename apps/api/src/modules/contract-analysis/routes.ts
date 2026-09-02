@@ -5,6 +5,7 @@
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
 import { z } from "zod";
 import {
+  AI_PRESETS,
   and,
   contractAnalysisRuns,
   contracts,
@@ -35,15 +36,7 @@ export const AnalysisRunSchema = z.object({
   state: z.enum(["pending", "ready", "failed"]),
   trigger: z.enum(["automatic", "manual"]),
   requestedBy: z.string().nullable(),
-  preset: z.enum([
-    "anthropic",
-    "openai",
-    "azure_openai",
-    "gemini",
-    "openrouter",
-    "ollama",
-    "custom",
-  ]),
+  preset: z.enum(AI_PRESETS),
   model: z.string(),
   truncated: z.boolean(),
   outcome: AnalysisOutcomeSchema.nullable(),

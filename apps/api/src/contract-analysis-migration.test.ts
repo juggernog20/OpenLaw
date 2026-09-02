@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-/** Rehearses the M31 analysis substrate migration from a populated install. */
+/** Rehearses the M31 analysis store migration from a populated install. */
 import { PostgreSqlContainer, type StartedPostgreSqlContainer } from "@testcontainers/postgresql";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { runMigrations, sql, type Db, type JournalEntry } from "@openlaw/db";
@@ -16,7 +16,7 @@ beforeAll(async () => {
 
 afterAll(async () => container?.stop());
 
-describe("the M31 Contract analysis substrate migration", () => {
+describe("the M31 Contract analysis store migration", () => {
   it("adds empty run and prompt stores without backfilling existing Contracts", async () => {
     const db: Db = await freshDb(container, "contract_analysis_upgrade");
     try {

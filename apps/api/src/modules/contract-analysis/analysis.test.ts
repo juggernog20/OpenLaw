@@ -392,6 +392,73 @@ describe("the manual Contract analysis run", () => {
     });
     expect(patched.statusCode, patched.body).toBe(200);
     expect(patched.json().contract.aiUnverified).not.toHaveProperty("effective_date");
+
+    // A second party beside the AI-linked primary leaves its marker alone.
+    const added = await harness.app.inject({
+      method: "POST",
+      url: `/api/v1/contracts/${String(contract.number)}/counterparties`,
+      cookies: memberCookies,
+      payload: { name: "Beta GmbH" },
+    });
+    expect(added.statusCode, added.body).toBe(201);
+    const [beforeRemoval] = await harness.db
+      .select({ aiUnverified: contracts.aiUnverified })
+      .from(contracts)
+      .where(eq(contracts.id, contract.id));
+    expect(beforeRemoval!.aiUnverified).toHaveProperty("counterparty");
+
+    // A person taking the AI-linked primary off verifies that slot.
+    const removed = await harness.app.inject({
+      method: "DELETE",
+      url: `/api/v1/contracts/${String(contract.number)}/counterparties/${party!.id}`,
+      cookies: memberCookies,
+    });
+    expect(removed.statusCode, removed.body).toBe(200);
+    const [afterRemoval] = await harness.db
+      .select({ aiUnverified: contracts.aiUnverified })
+      .from(contracts)
+      .where(eq(contracts.id, contract.id));
+    expect(afterRemoval!.aiUnverified).not.toHaveProperty("counterparty");
+    expect(afterRemoval!.aiUnverified).toHaveProperty("governing_law");
+  });
+
+  it("clears the counterparty marker when a person names another primary", async () => {
+    const contract = await newContract("Analysis primary handover");
+    const [acme] = await harness.db
+      .select({ id: counterparties.id })
+      .from(counterparties)
+      .where(eq(counterparties.name, "Acme LLC"));
+    const [beta] = await harness.db
+      .insert(counterparties)
+      .values({ name: "Handover Beta Ltd" })
+      .returning();
+    await harness.db.insert(contractCounterparties).values([
+      { contractId: contract.id, counterpartyId: acme!.id, isPrimary: true },
+      { contractId: contract.id, counterpartyId: beta!.id, isPrimary: false },
+    ]);
+    await harness.db
+      .update(contracts)
+      .set({
+        aiUnverified: {
+          counterparty: {
+            evidence: "Acme LLC",
+            runId: "older",
+            writtenAt: new Date().toISOString(),
+          },
+        },
+      })
+      .where(eq(contracts.id, contract.id));
+    const promoted = await harness.app.inject({
+      method: "POST",
+      url: `/api/v1/contracts/${String(contract.number)}/counterparties/${beta!.id}/primary`,
+      cookies: memberCookies,
+    });
+    expect(promoted.statusCode, promoted.body).toBe(200);
+    const [row] = await harness.db
+      .select({ aiUnverified: contracts.aiUnverified })
+      .from(contracts)
+      .where(eq(contracts.id, contract.id));
+    expect(row!.aiUnverified).toBeNull();
   });
 
   it("keeps human and confirmed values, replaces earlier AI evidence, and reports an occupied Counterparty", async () => {
