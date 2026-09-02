@@ -115,6 +115,8 @@ export function NotificationBell({ surface }: Readonly<{ surface: BellSurface }>
   const intl = useIntl();
   const location = useLocation();
   const [open, setOpen] = useState(false);
+  /** The current popover state for work that resumes after a read. */
+  const openNow = useRef(false);
   const [unread, setUnread] = useState(0);
 
   /** null until the first page answers. */
@@ -245,10 +247,10 @@ export function NotificationBell({ surface }: Readonly<{ surface: BellSurface }>
         if (event.kind !== "bell" && event.kind !== "open") return;
         void (async () => {
           await readCount();
-          if (open) await loadPage(null);
+          if (openNow.current) await loadPage(null);
         })();
       }),
-    [loadPage, open, readCount],
+    [loadPage, readCount],
   );
 
   // Opening is what draws the centre, so opening is what reads it. Every
@@ -257,6 +259,7 @@ export function NotificationBell({ surface }: Readonly<{ surface: BellSurface }>
   // one place the panel is opened from.
   const onOpenChange = useCallback(
     (next: boolean) => {
+      openNow.current = next;
       setOpen(next);
       if (next) void loadPage(null);
     },

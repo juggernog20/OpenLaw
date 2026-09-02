@@ -24,7 +24,7 @@
  */
 
 import { describe, expect, it } from "vitest";
-import { screen, within } from "@testing-library/react";
+import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { BellItem } from "../lib/notifications";
 import {
@@ -225,6 +225,46 @@ describe("the live bell (M30/2)", () => {
     unread = 1;
     sources[0]!.emit({ kind: "bell", userId: MEMBER.id });
     expect(await within(centre).findAllByRole("listitem")).toHaveLength(1);
+  });
+
+  it("does not refresh or mark rows read after the centre closes", async () => {
+    const user = userEvent.setup();
+    const sources = stubEventSource();
+    let countReads = 0;
+    let listReads = 0;
+    let resolveLiveCount!: (response: Response) => void;
+    stubApi({
+      signedIn: MEMBER,
+      extra: (call) => {
+        if (call.url.pathname === "/api/v1/notifications/unread-count") {
+          countReads += 1;
+          if (countReads === 2) {
+            return new Promise<Response>((resolve) => {
+              resolveLiveCount = resolve;
+            });
+          }
+          return json(200, { unread: 0 });
+        }
+        if (call.url.pathname === "/api/v1/notifications" && call.method === "GET") {
+          listReads += 1;
+          return json(200, { notifications: [], nextCursor: null });
+        }
+        return undefined;
+      },
+    });
+    renderAt("/");
+    await user.click(await bell("none unread"));
+    expect(await screen.findByRole("dialog", { name: "Notifications" })).toBeVisible();
+    expect(listReads).toBe(1);
+
+    sources[0]!.emit({ kind: "bell", userId: MEMBER.id });
+    await waitFor(() => expect(countReads).toBe(2));
+    await user.keyboard("{Escape}");
+    expect(screen.queryByRole("dialog", { name: "Notifications" })).not.toBeInTheDocument();
+
+    resolveLiveCount(json(200, { unread: 3 }));
+    expect(await bell("3 unread")).toBeVisible();
+    expect(listReads).toBe(1);
   });
 
   it("uses the same live read model against the portal routes", async () => {

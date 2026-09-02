@@ -43,7 +43,7 @@ Element.prototype.scrollIntoView ??= () => {};
 // jsdom has no EventSource. Most route suites only need the authenticated
 // shell to own a quiet connection; live-surface suites replace this with
 // the controllable double from testing/helpers.
-globalThis.EventSource ??= class extends EventTarget {
+class QuietEventSource extends EventTarget implements EventSource {
   static readonly CONNECTING = 0;
   static readonly OPEN = 1;
   static readonly CLOSED = 2;
@@ -51,17 +51,63 @@ globalThis.EventSource ??= class extends EventTarget {
   readonly OPEN = 1;
   readonly CLOSED = 2;
   readonly url: string;
-  readonly withCredentials = false;
+  readonly withCredentials: boolean;
   readonly readyState = 0;
-  onopen = null;
-  onmessage = null;
-  onerror = null;
-  constructor(url: string | URL) {
+  onopen: EventSource["onopen"] = null;
+  onmessage: EventSource["onmessage"] = null;
+  onerror: EventSource["onerror"] = null;
+  constructor(url: string | URL, init?: EventSourceInit) {
     super();
     this.url = String(url);
+    this.withCredentials = init?.withCredentials ?? false;
+  }
+  addEventListener<K extends keyof EventSourceEventMap>(
+    type: K,
+    listener: (this: EventSource, event: EventSourceEventMap[K]) => unknown,
+    options?: boolean | AddEventListenerOptions,
+  ): void;
+  addEventListener(
+    type: string,
+    listener: (this: EventSource, event: MessageEvent) => unknown,
+    options?: boolean | AddEventListenerOptions,
+  ): void;
+  addEventListener(
+    type: string,
+    listener: EventListenerOrEventListenerObject,
+    options?: boolean | AddEventListenerOptions,
+  ): void;
+  addEventListener(
+    type: string,
+    listener: unknown,
+    options?: boolean | AddEventListenerOptions,
+  ) {
+    super.addEventListener(type, listener as EventListenerOrEventListenerObject, options);
+  }
+  removeEventListener<K extends keyof EventSourceEventMap>(
+    type: K,
+    listener: (this: EventSource, event: EventSourceEventMap[K]) => unknown,
+    options?: boolean | EventListenerOptions,
+  ): void;
+  removeEventListener(
+    type: string,
+    listener: (this: EventSource, event: MessageEvent) => unknown,
+    options?: boolean | EventListenerOptions,
+  ): void;
+  removeEventListener(
+    type: string,
+    listener: EventListenerOrEventListenerObject,
+    options?: boolean | EventListenerOptions,
+  ): void;
+  removeEventListener(
+    type: string,
+    listener: unknown,
+    options?: boolean | EventListenerOptions,
+  ) {
+    super.removeEventListener(type, listener as EventListenerOrEventListenerObject, options);
   }
   close() {}
-} as unknown as typeof EventSource;
+}
+globalThis.EventSource ??= QuietEventSource;
 
 afterEach(() => {
   cleanup();

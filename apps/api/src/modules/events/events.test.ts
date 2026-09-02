@@ -366,6 +366,23 @@ describe("GET /api/events", () => {
     await Promise.all([admin.close(), member.close()]);
   });
 
+  it("delivers the notifier's bell frame through the HTTP stream", async () => {
+    const stream = await EventStream.open(streamUrl(), memberCookies);
+    const assigned = await harness.app.inject({
+      method: "PATCH",
+      url: `/api/v1/contracts/${secondRecord.number}`,
+      cookies: adminCookies,
+      payload: { managerId: memberId },
+    });
+    expect(assigned.statusCode, assigned.body).toBe(200);
+
+    await expect(stream.next(liveFrame("bell"))).resolves.toMatchObject({
+      event: "bell",
+      data: { kind: "bell", userId: memberId },
+    });
+    await stream.close();
+  });
+
   it("delivers Inbox totals to Member+ connections and not Contributors", async () => {
     const member = await EventStream.open(streamUrl(), memberCookies);
     const contributor = await EventStream.open(streamUrl(), contributorCookies);
