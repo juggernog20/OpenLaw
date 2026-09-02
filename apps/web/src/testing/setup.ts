@@ -40,6 +40,29 @@ globalThis.ResizeObserver ??= class {
 // layout-free tree could not perform anyway.
 Element.prototype.scrollIntoView ??= () => {};
 
+// jsdom has no EventSource. Most route suites only need the authenticated
+// shell to own a quiet connection; live-surface suites replace this with
+// the controllable double from testing/helpers.
+globalThis.EventSource ??= class extends EventTarget {
+  static readonly CONNECTING = 0;
+  static readonly OPEN = 1;
+  static readonly CLOSED = 2;
+  readonly CONNECTING = 0;
+  readonly OPEN = 1;
+  readonly CLOSED = 2;
+  readonly url: string;
+  readonly withCredentials = false;
+  readonly readyState = 0;
+  onopen = null;
+  onmessage = null;
+  onerror = null;
+  constructor(url: string | URL) {
+    super();
+    this.url = String(url);
+  }
+  close() {}
+} as unknown as typeof EventSource;
+
 afterEach(() => {
   cleanup();
   vi.unstubAllGlobals();

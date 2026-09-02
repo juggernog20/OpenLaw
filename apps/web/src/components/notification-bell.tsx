@@ -30,11 +30,13 @@
  * thing that reads it, and the bell is the only place it is shown.
  *
  * **The badge is the server's number, always.** It is read on mount,
- * again on every navigation, and again on a slow poll — the three
- * moments a stale count is noticed. It is never decremented locally:
+ * again on every navigation, and on the shared channel's bell and open
+ * frames. It is never decremented locally:
  * both writes answer the count that remains, so the badge takes that
  * answer rather than assuming its own request cleared what it sent.
- * Live updates over SSE are M30's, and nothing here anticipates them.
+ * A bell frame re-asks the count and refreshes an open centre. The
+ * browser reconnects the shared EventSource; its next open frame makes
+ * this surface re-ask the same reads.
  *
  * **Opening the centre marks the page it drew read** (NOT-005), and so
  * does "Show older" for the page it brings. That is the whole read
@@ -53,22 +55,11 @@ import { Bell } from "lucide-react";
 import { Link, useLocation } from "react-router";
 import { defineMessage, FormattedMessage, useIntl, type MessageDescriptor } from "react-intl";
 import { api } from "../lib/api";
+import { subscribeLiveEvents } from "../lib/events";
 import { formatLongDateTime, formatRelativeOrShort } from "../lib/format";
 import { narrateNotification, type BellItem } from "../lib/notifications";
 import { Button } from "./ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
-
-/**
- * How often the badge re-reads itself while the app sits open, in
- * milliseconds.
- *
- * A minute rather than seconds: a notification is a prompt and not an
- * alarm, and the channel that makes an urgent one timely is email
- * (NOT-003). The live channel is M30's; until it exists this is the
- * floor under "updates on poll and navigation", not the mechanism
- * anybody relies on.
- */
-const POLL_INTERVAL_MS = 60_000;
 
 /** Above this the badge reads "9+" (NOT-005). The cap is the badge's:
  * the API answers the whole number, and the accessible name says it. */
@@ -178,12 +169,6 @@ export function NotificationBell({ surface }: Readonly<{ surface: BellSurface }>
     };
   }, [fetchCount, location.pathname]);
 
-  // And a slow poll under both, for the tab left open on one page.
-  useEffect(() => {
-    const timer = setInterval(() => void readCount(), POLL_INTERVAL_MS);
-    return () => clearInterval(timer);
-  }, [readCount]);
-
   /**
    * Marks a page's unread items read and takes the badge from the
    * answer.
@@ -248,6 +233,22 @@ export function NotificationBell({ surface }: Readonly<{ surface: BellSurface }>
       await markPageRead(data.notifications);
     },
     [markPageRead, surface],
+  );
+
+  // One shared EventSource serves both bells and every later live
+  // surface. A bell prompt carries no count or list row: both are read
+  // from their ordinary routes. `open` fires again after native
+  // reconnection, so every open surface re-asks the same reads.
+  useEffect(
+    () =>
+      subscribeLiveEvents((event) => {
+        if (event.kind !== "bell" && event.kind !== "open") return;
+        void (async () => {
+          await readCount();
+          if (open) await loadPage(null);
+        })();
+      }),
+    [loadPage, open, readCount],
   );
 
   // Opening is what draws the centre, so opening is what reads it. Every

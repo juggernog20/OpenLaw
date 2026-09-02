@@ -22,9 +22,9 @@
  *    through `preferences.ts`, which the Personal → Notifications pane
  *    reads through too — the pane draws what the fan-out honours
  *    because both start from the same defaults and apply the same rows.
- * 4. **Write the bell rows inside the caller's transaction.** A mutation
- *    that rolls back tells nobody anything — the notification and the
- *    thing it is about are one act.
+ * 4. **Write the bell rows and publish their prompts inside the caller's
+ *    transaction.** A mutation that rolls back tells nobody anything —
+ *    the notification and the thing it is about are one act.
  * 5. **Queue the email work after commit**, and never before. The queue
  *    is a different system with a different availability, and a mutation
  *    must not fail because it is down.
@@ -71,6 +71,7 @@ import {
   type Transaction,
 } from "@openlaw/db";
 import { boundedQueueAsk, type JobQueue } from "../../pipeline/jobs.js";
+import { publishLiveEvent } from "../live-events.js";
 import {
   contractRecordAudience,
   CONTRACT_ENTITY,
@@ -916,7 +917,19 @@ async function fanOut(
           where: sql`reminder_date is not null`,
         })
       : insert
-  ).returning({ id: notifications.id, emailOwed: notifications.emailOwed });
+  ).returning({
+    id: notifications.id,
+    userId: notifications.userId,
+    emailOwed: notifications.emailOwed,
+  });
+
+  // The prompt carries no count and no item. It only tells the named
+  // viewer to re-ask the ordinary reads. pg_notify is issued through the
+  // same transaction, so a rolled-back mutation exposes neither row nor
+  // frame and a deduplicated reminder publishes nothing.
+  for (const row of written) {
+    await publishLiveEvent(tx, { kind: "bell", userId: row.userId });
+  }
 
   // 5. The wake-ups, collected for after the commit — only for the
   // rows whose email leaves at once. A digest row owes its email to the

@@ -25,6 +25,7 @@
 
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { contracts, desc, eq, notifications, users, type Notification } from "@openlaw/db";
+import type { LiveEvent } from "@openlaw/shared";
 import { provisionUser } from "../../auth/instance.js";
 import {
   signInCookies,
@@ -255,6 +256,25 @@ async function addToTeam(number: number, userId: string, role = "member"): Promi
 }
 
 describe("being handed a contract (CTR-004)", () => {
+  it("publishes a bell prompt addressed to the recipient with the row's transaction", async () => {
+    const contract = await newContract("Direct · live hand-over");
+    let resolveEvent!: (event: LiveEvent) => void;
+    const delivered = new Promise<LiveEvent>((resolve) => {
+      resolveEvent = resolve;
+    });
+    const unsubscribe = harness.app.eventHub.subscribe(
+      { userId: idOf(TARGET), role: "legal_team_member" },
+      resolveEvent,
+    );
+
+    try {
+      await assignOwner(contract.number, idOf(TARGET));
+      await expect(delivered).resolves.toEqual({ kind: "bell", userId: idOf(TARGET) });
+    } finally {
+      unsubscribe();
+    }
+  });
+
   it("leaves the new Owner a bell item and one immediate email", async () => {
     const contract = await newContract("Direct · handed over");
     await assignOwner(contract.number, idOf(TARGET));

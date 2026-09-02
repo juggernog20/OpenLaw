@@ -24,8 +24,9 @@
  * under a fixed activity bar (DES-016).
  */
 
-import { useCallback, useLayoutEffect, useMemo, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useState, type ReactNode } from "react";
 import { api } from "../../lib/api";
+import { retainLiveEvents } from "../../lib/events";
 import { useGlobalKeys } from "../../lib/keyboard";
 import { cn } from "../../lib/utils";
 import { applyPreferredTheme, type Theme } from "../../lib/theme";
@@ -68,6 +69,10 @@ export function AppShell({
   // pre-login screens have no search input and no overlays to serve.
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
   useGlobalKeys({ onOpenCheatSheet: () => setShortcutsOpen(true) });
+
+  // The authenticated shell owns the tab's one live connection. The
+  // shared module keeps it through route-to-route shell replacement.
+  useEffect(() => retainLiveEvents(), []);
 
   const [themeStatus, setThemeStatus] = useState<FieldStatus>("idle");
   const changeTheme = useCallback((next: Theme) => {
