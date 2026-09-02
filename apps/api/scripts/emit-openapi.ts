@@ -19,6 +19,7 @@ import { createNotifier } from "../src/lib/notifications/notifier.js";
 import { createTestingEventHub } from "../src/lib/event-hub.js";
 import { createUnconfiguredJobQueue } from "../src/pipeline/jobs.js";
 import { createUnconfiguredSigningResolver } from "../src/lib/signing/resolver.js";
+import { createUnconfiguredAiResolver } from "../src/lib/ai/resolver.js";
 
 // Rendering the document only registers routes; nothing connects to the
 // database, sends mail, or stores a file, so inert stand-in dependencies
@@ -36,6 +37,7 @@ const app = await buildApp(
     docEngine: createFakeDocEngine(),
     jobs,
     resolveSigningProvider: createUnconfiguredSigningResolver(),
+    resolveAiProvider: createUnconfiguredAiResolver(),
     notifier: createNotifier({ db, jobs, log: { error: () => {} } }),
     eventHub: createTestingEventHub(),
   },

@@ -129,6 +129,7 @@ import {
   settingsESignatureLoader,
   settingsIntegrationsIndexLoader,
 } from "./routes/settings-e-signature";
+import { SettingsAiAnalysisPage, settingsAiAnalysisLoader } from "./routes/settings-ai-analysis";
 import { SettingsProfilePage, settingsProfileLoader } from "./routes/settings-profile";
 import { SetupPage, setupLoader } from "./routes/setup";
 import { TwoFactorPage } from "./routes/two-factor";
@@ -482,6 +483,11 @@ export const routes: RouteObject[] = [
         path: "integrations/e-signature",
         loader: settingsESignatureLoader,
         element: <SettingsESignaturePage />,
+      },
+      {
+        path: "integrations/ai-analysis",
+        loader: settingsAiAnalysisLoader,
+        element: <SettingsAiAnalysisPage />,
       },
     ],
   },

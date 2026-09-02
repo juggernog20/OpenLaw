@@ -596,6 +596,13 @@
       "when": 1788190784636,
       "tag": "0084_lush_ender_wiggin",
       "breakpoints": true
+    },
+    {
+      "idx": 85,
+      "version": "7",
+      "when": 1788362397610,
+      "tag": "0085_loud_scourge",
+      "breakpoints": true
     }
   ]
 }

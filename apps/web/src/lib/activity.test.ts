@@ -811,6 +811,28 @@ const SAMPLE_PAYLOADS: { [A in ActivityAction]: ActivityPayloadMap[A] } = {
     integrationKey: "ik_1",
   },
 
+  // AI connector
+  "ai_connector.configured": {
+    preset: "openai",
+    protocol: "openai_chat_completions",
+    baseUrl: "https://api.openai.com/v1",
+    model: "gpt-test",
+  },
+  "ai_connector.updated": {
+    preset: "openai",
+    field: "apiKey",
+    old: "[secret]",
+    new: "[secret]",
+  },
+  "ai_connector.disabled": { preset: "openai" },
+  "ai_connector.enabled": { preset: "openai" },
+  "ai_connector.removed": {
+    preset: "openai",
+    protocol: "openai_chat_completions",
+    baseUrl: "https://api.openai.com/v1",
+    model: "gpt-test",
+  },
+
   // Signature round
   "envelope.sent": {
     envelopeId: "env_1",
@@ -1102,6 +1124,18 @@ describe("the sentences a reader gets", () => {
     expect(narration.changes).toEqual([
       { label: "Role", from: "Contributor", to: "Legal team member" },
     ]);
+  });
+
+  it("names AI presets and connector fields as the Integrations pane does", () => {
+    expect(
+      narrate("ai_connector.configured", {
+        ...SAMPLE_PAYLOADS["ai_connector.configured"],
+        preset: "azure_openai",
+      }).sentence,
+    ).toBe("Nadia Counsel connected the AI provider Azure OpenAI");
+    expect(
+      narrate("ai_connector.updated", SAMPLE_PAYLOADS["ai_connector.updated"]).changes,
+    ).toEqual([{ label: "API key", from: "[secret]", to: "[secret]" }]);
   });
 
   it("names the far record of a relation by reference and title, one arm per type", () => {

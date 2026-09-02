@@ -4,7 +4,7 @@
  * Bringing stored credentials under the key in use (TECH-022,
  * [#259](https://github.com/juggernog20/OpenLaw/issues/259)).
  *
- * **Why a boot pass rather than a SQL migration.** The four credential
+ * **Why a boot pass rather than a SQL migration.** The five credential
  * columns are sealed by application code with a key that lives outside
  * the database (see `secrets.ts`). A drizzle-kit migration is SQL run
  * by Postgres, which has no key and no cipher — so the one thing a
@@ -43,6 +43,7 @@ import type { PgColumn, PgTable } from "drizzle-orm/pg-core";
 // the root re-exports this one, and a value import would close the loop.
 import type { Db } from "./index.js";
 import { ssoProviders } from "./schema/auth.js";
+import { aiConnector } from "./schema/ai-connector.js";
 import { orgSettings } from "./schema/org.js";
 import { signingConnectors } from "./schema/signing-connectors.js";
 import { openSecret, sealSecret, sealedByCurrentKey } from "./secrets.js";
@@ -78,6 +79,7 @@ interface SecretColumn {
  * See TECH-022's #387 addendum.
  */
 const SEALED_COLUMNS: SecretColumn[] = [
+  { table: aiConnector, id: aiConnector.id, column: aiConnector.apiKey },
   { table: signingConnectors, id: signingConnectors.id, column: signingConnectors.privateKey },
   { table: signingConnectors, id: signingConnectors.id, column: signingConnectors.webhookSecret },
   { table: orgSettings, id: orgSettings.id, column: orgSettings.smtpUrl },
