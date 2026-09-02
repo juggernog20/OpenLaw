@@ -26,11 +26,12 @@
  * request thread rather than being pushed off the top of it.
  */
 
-import { useLayoutEffect, type ReactNode } from "react";
+import { useEffect, useLayoutEffect, type ReactNode } from "react";
 import { Settings } from "lucide-react";
 import { Link } from "react-router";
 import { FormattedMessage, useIntl } from "react-intl";
 import { applyPreferredTheme, type Theme } from "../../lib/theme";
+import { retainLiveEvents } from "../../lib/events";
 import { Avatar } from "../avatar";
 import { NotificationBell } from "../notification-bell";
 import { SkipLink } from "../skip-link";
@@ -58,6 +59,10 @@ export function PortalShell({
   useLayoutEffect(() => {
     applyPreferredTheme(user.theme);
   }, [user.theme]);
+
+  // The portal is the second authenticated shell over the same tab-wide
+  // channel. Consumers subscribe to the module and never open a stream.
+  useEffect(() => retainLiveEvents(), []);
 
   return (
     <div className="@container/shell flex h-dvh flex-col overflow-hidden bg-canvas text-primary">

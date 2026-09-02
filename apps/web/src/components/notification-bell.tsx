@@ -30,11 +30,13 @@
  * thing that reads it, and the bell is the only place it is shown.
  *
  * **The badge is the server's number, always.** It is read on mount,
- * again on every navigation, and again on a slow poll — the three
- * moments a stale count is noticed. It is never decremented locally:
+ * again on every navigation, and on the shared channel's bell and open
+ * frames. It is never decremented locally:
  * both writes answer the count that remains, so the badge takes that
  * answer rather than assuming its own request cleared what it sent.
- * Live updates over SSE are M30's, and nothing here anticipates them.
+ * A bell frame re-asks the count and refreshes an open centre. The
+ * browser reconnects the shared EventSource; its next open frame makes
+ * this surface re-ask the same reads.
  *
  * **Opening the centre marks the page it drew read** (NOT-005), and so
  * does "Show older" for the page it brings. That is the whole read
@@ -53,22 +55,11 @@ import { Bell } from "lucide-react";
 import { Link, useLocation } from "react-router";
 import { defineMessage, FormattedMessage, useIntl, type MessageDescriptor } from "react-intl";
 import { api } from "../lib/api";
+import { subscribeLiveEvents } from "../lib/events";
 import { formatLongDateTime, formatRelativeOrShort } from "../lib/format";
 import { narrateNotification, type BellItem } from "../lib/notifications";
 import { Button } from "./ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
-
-/**
- * How often the badge re-reads itself while the app sits open, in
- * milliseconds.
- *
- * A minute rather than seconds: a notification is a prompt and not an
- * alarm, and the channel that makes an urgent one timely is email
- * (NOT-003). The live channel is M30's; until it exists this is the
- * floor under "updates on poll and navigation", not the mechanism
- * anybody relies on.
- */
-const POLL_INTERVAL_MS = 60_000;
 
 /** Above this the badge reads "9+" (NOT-005). The cap is the badge's:
  * the API answers the whole number, and the accessible name says it. */
@@ -124,6 +115,8 @@ export function NotificationBell({ surface }: Readonly<{ surface: BellSurface }>
   const intl = useIntl();
   const location = useLocation();
   const [open, setOpen] = useState(false);
+  /** The current popover state for work that resumes after a read. */
+  const openNow = useRef(false);
   const [unread, setUnread] = useState(0);
 
   /** null until the first page answers. */
@@ -178,12 +171,6 @@ export function NotificationBell({ surface }: Readonly<{ surface: BellSurface }>
     };
   }, [fetchCount, location.pathname]);
 
-  // And a slow poll under both, for the tab left open on one page.
-  useEffect(() => {
-    const timer = setInterval(() => void readCount(), POLL_INTERVAL_MS);
-    return () => clearInterval(timer);
-  }, [readCount]);
-
   /**
    * Marks a page's unread items read and takes the badge from the
    * answer.
@@ -214,18 +201,31 @@ export function NotificationBell({ surface }: Readonly<{ surface: BellSurface }>
     [surface],
   );
 
+  /**
+   * Reads one page into the centre.
+   *
+   * `from` null is the first page, and it starts a new generation so
+   * an older page in flight cannot land on top of it. `why` says who
+   * asked: `open` is the reader opening the centre, and `live` is a
+   * bell frame arriving while it is already open.
+   */
   const loadPage = useCallback(
-    async (from: string | null) => {
+    async (from: string | null, why: "open" | "live" = "open") => {
       const mine = from === null ? (generation.current += 1) : generation.current;
       setBusy(true);
       setLoadFailed(false);
-      // A first page drops what the last read answered: a reopen that
-      // fails must not leave the previous list on screen as current.
       if (from === null) {
-        setItems(null);
-        setCursor(null);
         setLandingIndex(null);
         landed.current = null;
+      }
+      // An opened centre drops what the last read answered: a reopen
+      // that fails must not leave the previous list on screen as
+      // current. A live re-read keeps the rows until the answer replaces
+      // them, so a reader part-way down the list is not left holding a
+      // list that vanished, and a row they had focus on keeps it.
+      if (from === null && why === "open") {
+        setItems(null);
+        setCursor(null);
       }
       const query = { query: from ? { cursor: from } : {} };
       const { data } = await (
@@ -236,7 +236,10 @@ export function NotificationBell({ surface }: Readonly<{ surface: BellSurface }>
       if (mine !== generation.current) return;
       setBusy(false);
       if (!data) {
-        setLoadFailed(true);
+        // A live re-read that fails has nothing to say: the rows on
+        // screen are still the last answer, and the badge has already
+        // moved. The failure copy is for a read the reader asked for.
+        if (why === "open") setLoadFailed(true);
         return;
       }
       setItems((current) =>
@@ -250,12 +253,31 @@ export function NotificationBell({ surface }: Readonly<{ surface: BellSurface }>
     [markPageRead, surface],
   );
 
+  // One shared EventSource serves both bells and every later live
+  // surface. A bell prompt carries no count or list row: both are read
+  // from their ordinary routes. `open` fires again after native
+  // reconnection, so every open surface re-asks the same reads.
+  useEffect(
+    () =>
+      subscribeLiveEvents((event) => {
+        if (event.kind !== "bell" && event.kind !== "open") return;
+        void (async () => {
+          await readCount();
+          if (openNow.current) await loadPage(null, "live");
+        })();
+      }),
+    [loadPage, readCount],
+  );
+
   // Opening is what draws the centre, so opening is what reads it. Every
   // open re-reads: a panel opened twice in a long session must not show
   // the first open's answer. The read starts in the open handler, the
-  // one place the panel is opened from.
+  // one place the panel is opened from. It is also the one place it is
+  // closed from: a row's navigation closes through here too, so the
+  // `openNow` ref the live re-read consults cannot drift from `open`.
   const onOpenChange = useCallback(
     (next: boolean) => {
+      openNow.current = next;
       setOpen(next);
       if (next) void loadPage(null);
     },
@@ -383,7 +405,7 @@ export function NotificationBell({ surface }: Readonly<{ surface: BellSurface }>
                 <NotificationRow
                   key={item.id}
                   item={item}
-                  onNavigate={() => setOpen(false)}
+                  onNavigate={() => onOpenChange(false)}
                   ref={index === landingIndex ? landing : undefined}
                 />
               ))}
