@@ -8,7 +8,18 @@
  */
 
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { contracts, createDb, eq, sql, users } from "@openlaw/db";
+import {
+  and,
+  contracts,
+  count,
+  createDb,
+  eq,
+  isNull,
+  requests,
+  requestTypes,
+  sql,
+  users,
+} from "@openlaw/db";
 import {
   LIVE_EVENT_CHANNEL,
   parseLiveEvent,
@@ -34,6 +45,12 @@ const MEMBER = {
 const CONTRIBUTOR = {
   email: "events-contributor@example.com",
   displayName: "Events Contributor",
+  password: "correct-horse-battery",
+} as const;
+
+const REQUESTER = {
+  email: "events-requester@example.com",
+  displayName: "Events Requester",
   password: "correct-horse-battery",
 } as const;
 
@@ -165,8 +182,12 @@ let origin: string;
 let adminCookies: Record<string, string>;
 let memberCookies: Record<string, string>;
 let contributorCookies: Record<string, string>;
+let requesterCookies: Record<string, string>;
 let adminId: string;
 let memberId: string;
+let ndaContractTypeId: string;
+let contractRequestTypeId: string;
+let noTargetRequestTypeId: string;
 let firstRecord: { id: string; number: number };
 let secondRecord: { id: string; number: number };
 
@@ -184,6 +205,8 @@ beforeAll(async () => {
   memberId = member.id;
   const contributor = await provisionUser(harness.app.auth, CONTRIBUTOR);
   await harness.db.update(users).set({ role: "contributor" }).where(eq(users.id, contributor.id));
+  const requester = await provisionUser(harness.app.auth, REQUESTER);
+  await harness.db.update(users).set({ role: "business_user" }).where(eq(users.id, requester.id));
 
   const [admin] = await harness.db
     .select({ id: users.id })
@@ -194,6 +217,7 @@ beforeAll(async () => {
   adminCookies = await signInCookies(harness.app, ADMIN.email, ADMIN.password);
   memberCookies = await signInCookies(harness.app, MEMBER.email, MEMBER.password);
   contributorCookies = await signInCookies(harness.app, CONTRIBUTOR.email, CONTRIBUTOR.password);
+  requesterCookies = await signInCookies(harness.app, REQUESTER.email, REQUESTER.password);
 
   const options = await harness.app.inject({
     method: "GET",
@@ -201,16 +225,22 @@ beforeAll(async () => {
     cookies: adminCookies,
   });
   expect(options.statusCode, options.body).toBe(200);
-  const contractTypeId = (options.json().contractTypes as Array<{ id: string; slug: string }>).find(
+  ndaContractTypeId = (options.json().contractTypes as Array<{ id: string; slug: string }>).find(
     (type) => type.slug === "nda",
   )!.id;
+
+  const seededRequestTypes = await harness.db
+    .select({ id: requestTypes.id, slug: requestTypes.slug })
+    .from(requestTypes);
+  contractRequestTypeId = seededRequestTypes.find((type) => type.slug === "nda_request")!.id;
+  noTargetRequestTypeId = seededRequestTypes.find((type) => type.slug === "legal_question")!.id;
 
   const makeRecord = async (title: string) => {
     const response = await harness.app.inject({
       method: "POST",
       url: "/api/v1/contracts",
       cookies: adminCookies,
-      payload: { title, contractTypeId },
+      payload: { title, contractTypeId: ndaContractTypeId },
     });
     expect(response.statusCode, response.body).toBe(201);
     return response.json().contract as { id: string; number: number };
@@ -503,6 +533,147 @@ describe("GET /api/events", () => {
     await expect(member.next(liveFrame("inbox"))).resolves.toMatchObject({ data: event });
     await expectNoFrame(contributor, liveFrame("inbox"));
     await Promise.all([member.close(), contributor.close()]);
+  });
+
+  it("publishes the queue total from submission and all four triage actions", async () => {
+    const member = await EventStream.open(streamUrl(), memberCookies);
+    const contributor = await EventStream.open(streamUrl(), contributorCookies);
+
+    try {
+      const submit = async (requestTypeId: string, summary: string) => {
+        const response = await harness.app.inject({
+          method: "POST",
+          url: "/api/v1/requests",
+          cookies: requesterCookies,
+          payload: {
+            requestTypeId,
+            summary,
+            description: "The live Inbox count needs this Request.",
+            urgency: "medium",
+          },
+        });
+        expect(response.statusCode, response.body).toBe(201);
+        return response.json().request as { number: number };
+      };
+
+      const converted = await submit(contractRequestTypeId, "Convert from the Inbox");
+      await expect(member.next(liveFrame("inbox"))).resolves.toMatchObject({
+        data: { kind: "inbox", total: 1 },
+      });
+      const retargeted = await submit(noTargetRequestTypeId, "Re-target from the Inbox");
+      await expect(member.next(liveFrame("inbox"))).resolves.toMatchObject({
+        data: { kind: "inbox", total: 2 },
+      });
+      const resolved = await submit(contractRequestTypeId, "Resolve from the Inbox");
+      await expect(member.next(liveFrame("inbox"))).resolves.toMatchObject({
+        data: { kind: "inbox", total: 3 },
+      });
+      const declined = await submit(contractRequestTypeId, "Decline from the Inbox");
+      await expect(member.next(liveFrame("inbox"))).resolves.toMatchObject({
+        data: { kind: "inbox", total: 4 },
+      });
+
+      const actions = [
+        () =>
+          harness.app.inject({
+            method: "POST",
+            url: `/api/v1/requests/${converted.number}/convert`,
+            cookies: memberCookies,
+            payload: { title: "Converted live Request" },
+          }),
+        () =>
+          harness.app.inject({
+            method: "POST",
+            url: `/api/v1/requests/${retargeted.number}/convert`,
+            cookies: memberCookies,
+            payload: { title: "Re-targeted live Request", contractTypeId: ndaContractTypeId },
+          }),
+        () =>
+          harness.app.inject({
+            method: "POST",
+            url: `/api/v1/requests/${resolved.number}/resolve`,
+            cookies: memberCookies,
+            payload: {},
+          }),
+        () =>
+          harness.app.inject({
+            method: "POST",
+            url: `/api/v1/requests/${declined.number}/decline`,
+            cookies: memberCookies,
+            payload: { reason: "This Request does not need legal work." },
+          }),
+      ];
+
+      for (const [index, action] of actions.entries()) {
+        const response = await action();
+        expect(response.statusCode, response.body).toBe(200);
+        await expect(member.next(liveFrame("inbox"))).resolves.toMatchObject({
+          data: { kind: "inbox", total: 3 - index },
+        });
+      }
+
+      await expectNoFrame(contributor, liveFrame("inbox"));
+    } finally {
+      await Promise.all([member.close(), contributor.close()]);
+    }
+  });
+
+  it("serializes totals when two Request dispositions finish together", async () => {
+    const member = await EventStream.open(streamUrl(), memberCookies);
+    try {
+      const submit = async (summary: string) => {
+        const response = await harness.app.inject({
+          method: "POST",
+          url: "/api/v1/requests",
+          cookies: requesterCookies,
+          payload: {
+            requestTypeId: contractRequestTypeId,
+            summary,
+            description: "Two triagers are clearing different Requests.",
+            urgency: "low",
+          },
+        });
+        expect(response.statusCode, response.body).toBe(201);
+        return response.json().request as { number: number };
+      };
+
+      const [before] = await harness.db
+        .select({ total: count() })
+        .from(requests)
+        .where(and(isNull(requests.archivedAt), eq(requests.status, "new")));
+      const first = await submit("First concurrent disposition");
+      await expect(member.next(liveFrame("inbox"))).resolves.toMatchObject({
+        data: { kind: "inbox", total: before!.total + 1 },
+      });
+      const second = await submit("Second concurrent disposition");
+      await expect(member.next(liveFrame("inbox"))).resolves.toMatchObject({
+        data: { kind: "inbox", total: before!.total + 2 },
+      });
+
+      const outcomes = await Promise.all([
+        harness.app.inject({
+          method: "POST",
+          url: `/api/v1/requests/${first.number}/resolve`,
+          cookies: memberCookies,
+          payload: {},
+        }),
+        harness.app.inject({
+          method: "POST",
+          url: `/api/v1/requests/${second.number}/decline`,
+          cookies: memberCookies,
+          payload: { reason: "No legal work is needed." },
+        }),
+      ]);
+      expect(outcomes.map((response) => response.statusCode)).toEqual([200, 200]);
+      await expect(member.next(liveFrame("inbox"))).resolves.toMatchObject({
+        data: { kind: "inbox", total: before!.total + 1 },
+      });
+      await expect(member.next(liveFrame("inbox"))).resolves.toMatchObject({
+        data: { kind: "inbox", total: before!.total },
+      });
+    } finally {
+      await member.close();
+    }
   });
 
   it("drops a malformed payload without dropping the stream", async () => {

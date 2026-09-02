@@ -296,6 +296,9 @@ export const ADVISORY_LOCK = {
   /** Held across an ENT-003 Holding check-and-write. The graph-wide
    * lock makes the cycle walk and insert one transaction-wide act. */
   entityHoldings: 4101007,
+  /** Held while a Request queue change counts and publishes the new
+   * shared Inbox total in its writing transaction (INT-006). */
+  inboxTotal: 4101008,
 } as const;
 
 /**
