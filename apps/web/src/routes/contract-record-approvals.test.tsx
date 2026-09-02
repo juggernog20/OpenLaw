@@ -19,7 +19,7 @@
  */
 
 import { describe, expect, it } from "vitest";
-import { screen, waitFor, within } from "@testing-library/react";
+import { act, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import {
   json,
@@ -157,6 +157,7 @@ function recordApi(
 ) {
   let approvals = initialApprovals;
   let reads = 0;
+  let refuseRead = false;
   const writes: { method: string; path: string; body: unknown }[] = [];
   let refuse: { status: number; detail: string } | null = null;
 
@@ -181,6 +182,10 @@ function recordApi(
     }
     if (call.url.pathname === "/api/v1/contracts/42/approvals" && call.method === "GET") {
       reads += 1;
+      if (refuseRead) {
+        refuseRead = false;
+        return problem(503, "Approval roster unavailable");
+      }
       return envelope();
     }
     if (call.url.pathname === "/api/v1/contracts/42/approvals" && call.method === "POST") {
@@ -258,6 +263,9 @@ function recordApi(
     replaceApprovals: (next: Record<string, unknown>[]) => {
       approvals = next;
     },
+    refuseNextRead: () => {
+      refuseRead = true;
+    },
     refuseNext: (status: number, detail: string) => {
       refuse = { status, detail };
     },
@@ -299,6 +307,32 @@ describe("the contract record's Approvals section", () => {
     expect(await screen.findByText("Approved")).toBeInTheDocument();
     expect(strip.queryByRole("img", { name: /open approval/ })).not.toBeInTheDocument();
     expect(api.reads).toBe(2);
+  });
+
+  it("keeps the last roster and badge when a live re-ask fails", async () => {
+    const sources = stubEventSource();
+    const api = recordApi([approval()]);
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42/approvals");
+
+    const strip = within(await screen.findByRole("navigation", { name: "Contract sections" }));
+    expect(await screen.findByText("Pending")).toBeInTheDocument();
+    expect(strip.getByRole("img", { name: "1 open approval" })).toBeInTheDocument();
+
+    api.refuseNextRead();
+    sources[0]!.emit({
+      kind: "record",
+      action: "approval.approved",
+      entityType: "contract",
+      entityId: "c1",
+      entryId: "activity-decision",
+      visibility: "working_team",
+    });
+    await waitFor(() => expect(api.reads).toBe(2));
+    await act(async () => Promise.resolve());
+
+    expect(screen.getByText("Pending")).toBeInTheDocument();
+    expect(strip.getByRole("img", { name: "1 open approval" })).toBeInTheDocument();
   });
 
   it("re-asks the roster for individual asks, applied groups, and cancellations", async () => {

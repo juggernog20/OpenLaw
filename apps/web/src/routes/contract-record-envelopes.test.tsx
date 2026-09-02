@@ -207,6 +207,7 @@ function recordApi(
     primaryDocument: initial.primaryDocument === undefined ? PRIMARY : initial.primaryDocument,
   };
   let reads = 0;
+  let refuseRead = false;
   const writes: { path: string; body: unknown }[] = [];
   /** What the next send answers with; a refusal when set. */
   let refuse: { status: number; detail: string; type?: string } | null = null;
@@ -230,6 +231,10 @@ function recordApi(
     }
     if (call.url.pathname === "/api/v1/contracts/42/envelopes" && call.method === "GET") {
       reads += 1;
+      if (refuseRead) {
+        refuseRead = false;
+        return problem(503, "Signing state unavailable");
+      }
       return json(200, state);
     }
     if (call.url.pathname === "/api/v1/contracts/42/envelopes" && call.method === "POST") {
@@ -279,6 +284,9 @@ function recordApi(
     replaceEnvelopes: (envelopes: Record<string, unknown>[]) => {
       state = { ...state, envelopes };
     },
+    refuseNextRead: () => {
+      refuseRead = true;
+    },
     refuseNext: (status: number, detail: string, type?: string) => {
       refuse = { status, detail, type };
     },
@@ -316,6 +324,30 @@ describe("the record's signing block", () => {
     const rows = await envelopeRows();
     expect(within(rows[0]!).getByText("Signed")).toBeInTheDocument();
     expect(api.reads).toBe(2);
+  });
+
+  it("keeps the last Envelope state when a live re-ask fails", async () => {
+    const sources = stubEventSource();
+    const api = recordApi({ envelopes: [envelopeRow()] });
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42/approvals");
+
+    expect(await screen.findByText("Envelope sent")).toBeInTheDocument();
+    api.refuseNextRead();
+    sources[0]!.emit({
+      kind: "record",
+      action: "envelope.signed",
+      entityType: "contract",
+      entityId: "c1",
+      entryId: "activity-signed",
+      visibility: "working_team",
+    });
+    await waitFor(() => expect(api.reads).toBe(2));
+    await act(async () => Promise.resolve());
+
+    expect(screen.getByText("Envelope sent")).toBeInTheDocument();
+    const rows = await envelopeRows();
+    expect(within(rows[0]!).getByText("Out for signature")).toBeInTheDocument();
   });
 
   it("re-asks the signing read for document.executed_set, not version_added", async () => {
