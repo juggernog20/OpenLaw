@@ -50,6 +50,7 @@ import { contractTypes } from "./contract-types.js";
 import { documents } from "./documents.js";
 import { entities } from "./entities.js";
 import type { CustomFieldValue } from "./fields.js";
+import type { AiUnverifiedMap } from "@openlaw/shared";
 import { searchVector, uuidPk } from "./helpers.js";
 import { matters } from "./matters.js";
 import { SEVERITY_LEVELS } from "./severity.js";
@@ -243,6 +244,8 @@ export const contracts = pgTable(
       .$type<Record<string, CustomFieldValue>>()
       .notNull()
       .default({}),
+    /** CTR-008's evidence for values a run wrote and no person has confirmed. */
+    aiUnverified: jsonb("ai_unverified").$type<AiUnverifiedMap>(),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true })
       .notNull()

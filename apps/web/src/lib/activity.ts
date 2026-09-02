@@ -1208,6 +1208,20 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
       field: changes[0]?.label ?? "",
     }),
   },
+  "contract.analysis_completed": {
+    icon: Activity,
+    message: defineMessage({
+      id: "activity.contract.analysisCompleted",
+      defaultMessage: "{actor} completed an AI analysis of this contract",
+    }),
+  },
+  "contract.analysis_failed": {
+    icon: TriangleAlert,
+    message: defineMessage({
+      id: "activity.contract.analysisFailed",
+      defaultMessage: "{actor} could not complete an AI analysis of this contract",
+    }),
+  },
   "contract.status_changed": {
     icon: GitCommitHorizontal,
     message: defineMessage({

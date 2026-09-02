@@ -27,6 +27,7 @@ import type { MailerResolver } from "../lib/mailer.js";
 import type { SigningResolver } from "../lib/signing/resolver.js";
 import type { AiResolver } from "../lib/ai/resolver.js";
 import { runBackfillSweep } from "./backfill.js";
+import { handleContractAnalysis } from "./contract-analysis.js";
 import type { DerivationDeps } from "./derivations.js";
 import { handleDisplayConversion } from "./display-conversion.js";
 import { createNotifier } from "../lib/notifications/notifier.js";
@@ -34,6 +35,7 @@ import { handleExecutedCopyFetch } from "./executed-copy.js";
 import { handleNotificationEmail } from "./notification-email.js";
 import {
   JOB_QUEUES,
+  type ContractAnalysisJob,
   type DisplayConversionJob,
   type ExecutedCopyFetchJob,
   type JobQueue,
@@ -153,6 +155,14 @@ export const EXECUTED_COPY_QUEUE_OPTIONS = {
  */
 export const NOTIFICATION_EMAIL_QUEUE_OPTIONS = {
   expireInSeconds: 120,
+  retryLimit: 2,
+  retryDelay: 30,
+  retryBackoff: true,
+} as const;
+
+/** One provider call, with the pipeline's three-attempt backoff. */
+export const CONTRACT_ANALYSIS_QUEUE_OPTIONS = {
+  expireInSeconds: 300,
   retryLimit: 2,
   retryDelay: 30,
   retryBackoff: true,
@@ -378,6 +388,10 @@ export async function startPipeline(options: PipelineOptions): Promise<Pipeline>
       // leave one job between them rather than two messages.
       await boss.send(JOB_QUEUES.notificationEmail, job, { singletonKey: notificationId });
     },
+    async requestContractAnalysis(contractId: string, runId: string): Promise<void> {
+      const job: ContractAnalysisJob = { contractId, runId };
+      await boss.send(JOB_QUEUES.contractAnalysis, job, { singletonKey: contractId });
+    },
   };
 
   // Cut short when the process is stopping. Both scheduled sweeps
@@ -441,6 +455,15 @@ export async function startPipeline(options: PipelineOptions): Promise<Pipeline>
     await boss.updateQueue(JOB_QUEUES.notificationEmail, {
       notify: true,
       ...NOTIFICATION_EMAIL_QUEUE_OPTIONS,
+    });
+    await boss.createQueue(JOB_QUEUES.contractAnalysis, {
+      policy: "short",
+      notify: true,
+      ...CONTRACT_ANALYSIS_QUEUE_OPTIONS,
+    });
+    await boss.updateQueue(JOB_QUEUES.contractAnalysis, {
+      notify: true,
+      ...CONTRACT_ANALYSIS_QUEUE_OPTIONS,
     });
     // `singleton` allows one sweep to be running at a time. Two at once
     // would be correct — the sweep only asks, and the `short` policy
@@ -586,6 +609,22 @@ export async function startPipeline(options: PipelineOptions): Promise<Pipeline>
           }
         },
       );
+      await boss.work(
+        JOB_QUEUES.contractAnalysis,
+        oneAtATime,
+        async (jobs: JobWithMetadata<ContractAnalysisJob>[]) => {
+          for (const job of jobs) {
+            await handleContractAnalysis(
+              { db: handlers.db, resolveAiProvider: handlers.resolveAiProvider, log },
+              {
+                runId: job.data.runId,
+                retryCount: job.retryCount,
+                retryLimit: job.retryLimit,
+              },
+            );
+          }
+        },
+      );
       // The sweep gets its own worker rather than sharing the derivation
       // ones, so an hour-long walk of a large library cannot sit in front
       // of the OCR somebody is waiting on. It takes no metadata and no
@@ -658,6 +697,7 @@ export async function startPipeline(options: PipelineOptions): Promise<Pipeline>
             JOB_QUEUES.backfillSweep,
             JOB_QUEUES.reconciliationSweep,
             JOB_QUEUES.morningRound,
+            JOB_QUEUES.contractAnalysis,
           ],
           backfillSweepCron: BACKFILL_SWEEP_CRON,
           reconciliationSweepCron: RECONCILIATION_SWEEP_CRON,

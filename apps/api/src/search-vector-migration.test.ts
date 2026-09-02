@@ -241,11 +241,11 @@ async function sourceRows(
   db: Db,
   migrated: boolean,
 ): Promise<Array<{ table_name: string; rows: unknown[] }>> {
-  // Later migrations may add more derived search inputs beside the
-  // generated vector. Neither is source data this M25 rehearsal is
-  // promising to preserve byte-for-byte.
+  // Later migrations may add more derived search inputs or nullable
+  // bookkeeping beside the generated vector. None is source data this
+  // M25 rehearsal is promising to preserve byte-for-byte.
   const withoutDerivedSearch = migrated
-    ? sql.raw(" - 'search_vector' - 'email_subject'")
+    ? sql.raw(" - 'search_vector' - 'email_subject' - 'ai_unverified'")
     : sql.raw("");
   // Later milestones add nullable/defaulted source columns. This M25
   // rehearsal compares the pre-M25 source shape, so omit those later
