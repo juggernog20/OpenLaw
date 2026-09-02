@@ -176,10 +176,13 @@ describe("saving and reading", () => {
   });
 
   it("refuses a base URL that embeds plaintext credentials", async () => {
+    const credentialUrl = new globalThis.URL("https://models.example.test/v1");
+    credentialUrl.username = "example-user";
+    credentialUrl.password = "example-password";
     const response = await save({
       preset: "custom",
       protocol: "openai_chat_completions",
-      baseUrl: "https://token:secret@models.example.test/v1",
+      baseUrl: credentialUrl.toString(),
       apiKey: FAKE_VALID_AI_KEY,
       model: "legal-model",
     });
