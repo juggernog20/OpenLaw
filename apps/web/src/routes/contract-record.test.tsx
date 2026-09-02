@@ -4624,6 +4624,44 @@ describe("the contract record's history applet (M9/6)", () => {
     expect(within(feed).getAllByRole("listitem")).toHaveLength(2);
   });
 
+  it("keeps the first page when a reconnect's re-ask fails before it lands", async () => {
+    const user = userEvent.setup();
+    const sources = stubEventSource();
+    let activityReads = 0;
+    let resolveFirst!: (response: Response) => void;
+    const first = new Promise<Response>((resolve) => {
+      resolveFirst = resolve;
+    });
+    const record = recordApi(contractRow());
+    const handler = (call: StubCall): StubAnswer => {
+      if (call.url.pathname !== "/api/v1/activity" || call.method !== "GET") {
+        return record.handler(call);
+      }
+      activityReads += 1;
+      return activityReads === 1 ? first : problem(500, "Something went wrong.");
+    };
+    stubApi({ signedIn: MEMBER, extra: handler });
+    renderAt("/contracts/42");
+    await openHistory(user);
+
+    const panel = await screen.findByRole("complementary", { name: "History" });
+    await waitFor(() => expect(activityReads).toBe(1));
+    // The scoped connection opens while the first page is still in
+    // flight, as it does on every record-to-record navigation with the
+    // panel open. Its re-ask fails.
+    sources[0]!.open();
+    await waitFor(() => expect(activityReads).toBe(2));
+    expect(await within(panel).findByRole("alert")).toHaveTextContent(
+      "The history could not be read.",
+    );
+
+    // The slower first page is still a good answer, not a stale one.
+    resolveFirst(json(200, { entries: [entry("a1", "contract.created")], nextCursor: null }));
+    const feed = await within(panel).findByRole("list", { name: "History" });
+    expect(within(feed).getAllByRole("listitem")).toHaveLength(1);
+    expect(within(panel).queryByRole("alert")).not.toBeInTheDocument();
+  });
+
   it("re-asks the visible newest page on reconnect and leaves a filtered entry invisible", async () => {
     const user = userEvent.setup();
     const sources = stubEventSource();

@@ -130,10 +130,14 @@ function ActivityFeed({
   /** Guards the pages against each other: a reopen must not have the
    * previous panel's in-flight page land on top of the new one. */
   const generation = useRef(0);
-  /** Orders reads of the head independently of older-page reads. A
-   * slower prompt must not land after a newer view of the head, while
-   * an in-flight "Show older" remains valid across either prompt. */
-  const newestGeneration = useRef(0);
+  /** Orders reads of the head independently of older-page reads, by
+   * the last answer that landed rather than the last read issued. A
+   * slower read asked before a newer view landed is stale and stays
+   * off screen. A newer read that failed landed nothing, so the older
+   * answer still counts when it arrives. An in-flight "Show older"
+   * remains valid across either. */
+  const headIssued = useRef(0);
+  const headLanded = useRef(0);
 
   // A new record is a new feed. The reset happens during render, so
   // the first page below never draws over the last record's entries.
@@ -159,40 +163,47 @@ function ActivityFeed({
     [entityType, entityId],
   );
 
-  /** Lands a page's answer, unless a later read has begun since. */
-  const land = useCallback(
-    (from: string | null, mine: number, data: ActivityPage | undefined, newest?: number) => {
-      if (
-        mine !== generation.current ||
-        (newest !== undefined && newest !== newestGeneration.current)
-      )
-        return;
-      setBusy(false);
-      if (!data) {
-        setLoadFailed(true);
-        return;
-      }
-      setEntries((current) =>
-        from === null ? data.entries : [...(current ?? []), ...data.entries],
-      );
-      setCursor(data.nextCursor);
-    },
-    [],
-  );
+  /** Lands an older page's answer, unless the panel has moved on. */
+  const land = useCallback((mine: number, data: ActivityPage | undefined) => {
+    if (mine !== generation.current) return;
+    setBusy(false);
+    if (!data) {
+      setLoadFailed(true);
+      return;
+    }
+    setEntries((current) => [...(current ?? []), ...data.entries]);
+    setCursor(data.nextCursor);
+  }, []);
 
-  /** Re-asks the head without replacing the older pages already on screen. */
-  const refreshNewest = useCallback(async () => {
+  /**
+   * Reads the head. The panel's first page and every live re-ask are
+   * this same read: until an answer has landed, the answer is the feed;
+   * after that, unseen rows merge at the top and the older pages, the
+   * cursor, and a scrolled reader's anchor stay where they were.
+   */
+  const readNewest = useCallback(async () => {
     const mine = generation.current;
-    const newest = (newestGeneration.current += 1);
-    const hadNoEntries = entries === null;
+    const issue = (headIssued.current += 1);
     const data = await fetchPage(null);
-    if (mine !== generation.current || newest !== newestGeneration.current || !data) return;
-    if (hadNoEntries) {
-      // A reconnect can recover the first read too. In that case this
-      // answer is the feed rather than a merge into one already drawn.
+    if (mine !== generation.current || issue < headLanded.current) return;
+    const first = headLanded.current === 0;
+    if (!data) {
+      // With no feed on screen this is the first-page failure, whichever
+      // read it was. A feed already drawn stays as it is; the next
+      // prompt or reconnect asks again.
+      if (first) {
+        setBusy(false);
+        setLoadFailed(true);
+      }
+      return;
+    }
+    headLanded.current = issue;
+    if (first) {
       setBusy(false);
       setLoadFailed(false);
       setCursor(data.nextCursor);
+      setEntries(data.entries);
+      return;
     }
     const viewport = scroller.current;
     pendingScrollAnchor.current =
@@ -200,11 +211,10 @@ function ActivityFeed({
         ? { height: viewport.scrollHeight, top: viewport.scrollTop }
         : null;
     setEntries((current) => {
-      if (current === null) return data.entries;
       const fresh = new Set(data.entries.map((entry) => entry.id));
-      return [...data.entries, ...current.filter((entry) => !fresh.has(entry.id))];
+      return [...data.entries, ...(current ?? []).filter((entry) => !fresh.has(entry.id))];
     });
-  }, [entries, fetchPage]);
+  }, [fetchPage]);
 
   useLayoutEffect(() => {
     const anchor = pendingScrollAnchor.current;
@@ -219,7 +229,7 @@ function ActivityFeed({
     const mine = generation.current;
     setBusy(true);
     setLoadFailed(false);
-    void fetchPage(from).then((data) => land(from, mine, data));
+    void fetchPage(from).then((data) => land(mine, data));
   }
 
   // The panel mounts when the bar expands it, so this is where "opened"
@@ -227,10 +237,10 @@ function ActivityFeed({
   // from going stale in another. The state is already reset by the time
   // this runs; only the answer is written here.
   useEffect(() => {
-    const mine = (generation.current += 1);
-    const newest = (newestGeneration.current += 1);
-    void fetchPage(null).then((data) => land(null, mine, data, newest));
-  }, [fetchPage, land]);
+    generation.current += 1;
+    headLanded.current = 0;
+    void readNewest();
+  }, [readNewest]);
 
   // The channel carries prompts, never feed content. Any record action
   // can narrate itself, so this catch-all asks the ordinary filtered
@@ -245,10 +255,10 @@ function ActivityFeed({
             event.entityType === entityType &&
             event.entityId === entityId)
         ) {
-          void refreshNewest();
+          void readNewest();
         }
       }),
-    [entityType, entityId, refreshNewest],
+    [entityType, entityId, readNewest],
   );
 
   return (
