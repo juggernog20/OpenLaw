@@ -39,6 +39,7 @@ import type { JobQueue } from "./pipeline/jobs.js";
 import type { Notifier } from "./lib/notifications/notifier.js";
 import type { StorageAdapter } from "./lib/storage/adapter.js";
 import type { SigningResolver } from "./lib/signing/resolver.js";
+import type { EventHub } from "./lib/event-hub.js";
 import { DEFAULT_MAX_UPLOAD_MB, MEGABYTE } from "./lib/uploads.js";
 import { metaRoutes } from "./modules/meta/routes.js";
 import { authRoutes } from "./modules/auth/routes.js";
@@ -99,6 +100,7 @@ import { emailSettingsRoutes } from "./modules/email-settings/routes.js";
 import { signerErasureRoutes } from "./modules/signer-erasure/routes.js";
 import { signingConnectorRoutes } from "./modules/signing-connector/routes.js";
 import { signingWebhookRoutes } from "./modules/signing-webhook/routes.js";
+import { eventRoutes } from "./modules/events/routes.js";
 import { searchRoutes } from "./modules/search/routes.js";
 import { homeRoutes } from "./modules/home/routes.js";
 import { authHandler } from "./auth/handler.js";
@@ -156,6 +158,12 @@ export interface AppDeps {
    */
   notifier: Notifier;
   /**
+   * TECH-009's one Postgres listener and local connection registry.
+   * The app starts and stops it, so no entrypoint can forget either end
+   * of the lifecycle.
+   */
+  eventHub: EventHub;
+  /**
    * The largest file one upload may carry, in bytes (story 24). Read
    * from `MAX_UPLOAD_MB` at startup and injected, like the storage root
    * — no module reads the environment for it. Unset here, the default
@@ -189,6 +197,7 @@ declare module "fastify" {
     jobs: JobQueue;
     resolveSigningProvider: SigningResolver;
     notifier: Notifier;
+    eventHub: EventHub;
     /** The address this install answers on (BASE_URL), so the settings
      * pane can show the webhook URL an Administrator pastes into the
      * provider's console without reading source code. */
@@ -208,6 +217,7 @@ export async function buildApp(deps: AppDeps, opts: FastifyServerOptions = {}) {
   app.decorate("jobs", deps.jobs);
   app.decorate("resolveSigningProvider", deps.resolveSigningProvider);
   app.decorate("notifier", deps.notifier);
+  app.decorate("eventHub", deps.eventHub);
   app.decorate("baseUrl", deps.config.baseUrl);
   const maxUploadBytes = deps.maxUploadBytes ?? DEFAULT_MAX_UPLOAD_MB * MEGABYTE;
   app.decorate("maxUploadBytes", maxUploadBytes);
@@ -215,6 +225,11 @@ export async function buildApp(deps: AppDeps, opts: FastifyServerOptions = {}) {
   // Shape hints for V8; guards assign the real values per request.
   app.decorateRequest("user", undefined as unknown as AuthenticatedUser);
   app.decorateRequest("session", undefined as unknown as AuthenticatedSession);
+
+  await deps.eventHub.start();
+  app.addHook("onClose", async () => {
+    await deps.eventHub.stop();
+  });
 
   // DD-017's SIEM clause: every activity row also leaves this process as
   // one line of structured JSON through the application logger, so a
@@ -416,6 +431,10 @@ export async function buildApp(deps: AppDeps, opts: FastifyServerOptions = {}) {
   });
 
   await app.register(authHandler);
+  // The stream owns its full path and bypasses JSON response
+  // serialization. Its session and optional record gates still run
+  // before it writes the first byte.
+  await app.register(eventRoutes);
   // Registered beside the auth handler rather than with the /api/v1
   // module plugins, and for its reason: it declares its own full path
   // and installs a raw-buffer content-type parser that must not reach

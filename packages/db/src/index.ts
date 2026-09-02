@@ -10,6 +10,7 @@ import { fileURLToPath } from "node:url";
 import { drizzle, type NodePgDatabase } from "drizzle-orm/node-postgres";
 import { migrate } from "drizzle-orm/node-postgres/migrator";
 import pg from "pg";
+export type { PoolClient } from "pg";
 import { guardMigrationJournal } from "./migration-journal.js";
 import * as activitySchema from "./schema/activity.js";
 import * as approverGroupsSchema from "./schema/approver-groups.js";

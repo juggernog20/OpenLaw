@@ -16,6 +16,7 @@ import { createUnconfiguredMailer } from "../src/lib/mailer.js";
 import { createLocalStorage } from "../src/lib/storage/local.js";
 import { createFakeDocEngine } from "../src/lib/doc-engine/fake.js";
 import { createNotifier } from "../src/lib/notifications/notifier.js";
+import { createTestingEventHub } from "../src/lib/event-hub.js";
 import { createUnconfiguredJobQueue } from "../src/pipeline/jobs.js";
 import { createUnconfiguredSigningResolver } from "../src/lib/signing/resolver.js";
 
@@ -36,6 +37,7 @@ const app = await buildApp(
     jobs,
     resolveSigningProvider: createUnconfiguredSigningResolver(),
     notifier: createNotifier({ db, jobs, log: { error: () => {} } }),
+    eventHub: createTestingEventHub(),
   },
   { logger: false },
 );
