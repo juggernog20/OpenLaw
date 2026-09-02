@@ -635,7 +635,7 @@ leaves a coherent product; none of them is optional in the sense that we intend 
     the axe sweep; the retained upgrade gate reads pre-M29 rows through Home with no backfill
   - _Decisions:_ DD-005, NOT-003, NOT-006, NOT-008, DES-029, DES-069 · _Issues:_ #616–#625
 
-- [ ] **M30 — Live surfaces**
+- [x] **M30 — Live surfaces**
       _Demo:_ Two browsers on the same contract; a comment posted in one appears in the other without a
       refresh.
   - SSE on the surfaces where staleness is visible — comments, activity, approvals, envelope events
