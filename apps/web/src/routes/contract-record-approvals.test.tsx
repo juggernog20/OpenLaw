@@ -158,6 +158,8 @@ function recordApi(
   let approvals = initialApprovals;
   let reads = 0;
   let refuseRead = false;
+  /** When set, the next roster read answers only once this settles. */
+  let holdRead: Promise<void> | null = null;
   const writes: { method: string; path: string; body: unknown }[] = [];
   let refuse: { status: number; detail: string } | null = null;
 
@@ -185,6 +187,14 @@ function recordApi(
       if (refuseRead) {
         refuseRead = false;
         return problem(503, "Approval roster unavailable");
+      }
+      if (holdRead) {
+        // The body is fixed now, as a real server's would be. The hold
+        // only delays its arrival.
+        const answer = envelope();
+        const held = holdRead;
+        holdRead = null;
+        return held.then(() => answer);
       }
       return envelope();
     }
@@ -266,6 +276,14 @@ function recordApi(
     refuseNextRead: () => {
       refuseRead = true;
     },
+    /** Holds the next roster read; the returned function lets it land. */
+    holdNextRead: () => {
+      let release!: () => void;
+      holdRead = new Promise<void>((resolve) => {
+        release = resolve;
+      });
+      return release;
+    },
     refuseNext: (status: number, detail: string) => {
       refuse = { status, detail };
     },
@@ -333,6 +351,65 @@ describe("the contract record's Approvals section", () => {
 
     expect(screen.getByText("Pending")).toBeInTheDocument();
     expect(strip.getByRole("img", { name: "1 open approval" })).toBeInTheDocument();
+  });
+
+  it("re-asks the roster when the connection opens after a missed decision", async () => {
+    const sources = stubEventSource();
+    const api = recordApi([approval()]);
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42/approvals");
+
+    const strip = within(await screen.findByRole("navigation", { name: "Contract sections" }));
+    expect(await screen.findByText("Pending")).toBeInTheDocument();
+    expect(api.reads).toBe(1);
+
+    // A decision applied while this tab was disconnected has no frame
+    // to narrate it here. The native open on reconnect is the recovery
+    // re-ask, and it finds the decision.
+    api.replaceApprovals([approval({ status: "approved", decidedAt: "2026-08-12T00:00:00.000Z" })]);
+    sources[0]!.open();
+
+    expect(await screen.findByText("Approved")).toBeInTheDocument();
+    expect(strip.queryByRole("img", { name: /open approval/ })).not.toBeInTheDocument();
+    expect(api.reads).toBe(2);
+  });
+
+  it("collapses frames that arrive during a re-ask into one trailing read", async () => {
+    const sources = stubEventSource();
+    const api = recordApi([approval()]);
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42/approvals");
+
+    expect(await screen.findByText("Pending")).toBeInTheDocument();
+    const frame = (entryId: string) =>
+      sources[0]!.emit({
+        kind: "record",
+        action: "approval.approved",
+        entityType: "contract",
+        entityId: "c1",
+        entryId,
+        visibility: "working_team",
+      });
+
+    // The first frame's read is held with the old roster in its body.
+    const release = api.holdNextRead();
+    frame("activity-first");
+    await waitFor(() => expect(api.reads).toBe(2));
+
+    // Two more frames while it is in flight ask for nothing yet.
+    frame("activity-second");
+    frame("activity-third");
+    await act(async () => Promise.resolve());
+    expect(api.reads).toBe(2);
+
+    // Once the slow read lands, one trailing read runs and its newer
+    // answer is what the card keeps, not the slow read's stale one.
+    api.replaceApprovals([approval({ status: "approved", decidedAt: "2026-08-12T00:00:00.000Z" })]);
+    release();
+    expect(await screen.findByText("Approved")).toBeInTheDocument();
+    await act(async () => Promise.resolve());
+    expect(api.reads).toBe(3);
+    expect(screen.queryByText("Pending")).not.toBeInTheDocument();
   });
 
   it("re-asks the roster for individual asks, applied groups, and cancellations", async () => {

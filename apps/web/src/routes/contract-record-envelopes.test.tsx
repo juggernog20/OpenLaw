@@ -350,6 +350,29 @@ describe("the record's signing block", () => {
     expect(within(rows[0]!).getByText("Out for signature")).toBeInTheDocument();
   });
 
+  it("re-asks the signing read when the connection opens after a missed ending", async () => {
+    const sources = stubEventSource();
+    const api = recordApi({ envelopes: [envelopeRow()] });
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42/approvals");
+
+    expect(await screen.findByText("Envelope sent")).toBeInTheDocument();
+    expect(api.reads).toBe(1);
+
+    // An ending the worker's sweep applied while this tab was
+    // disconnected has no frame to narrate it here. The native open on
+    // reconnect is the recovery re-ask, and it finds the ending.
+    api.replaceEnvelopes([
+      envelopeRow({ status: "voided", completedAt: "2026-08-12T00:00:00.000Z" }),
+    ]);
+    sources[0]!.open();
+
+    expect(await screen.findByText("Envelope voided")).toBeInTheDocument();
+    const rows = await envelopeRows();
+    expect(within(rows[0]!).getByText("Voided")).toBeInTheDocument();
+    expect(api.reads).toBe(2);
+  });
+
   it("re-asks the signing read for document.executed_set, not version_added", async () => {
     const sources = stubEventSource();
     const signed = envelopeRow({
