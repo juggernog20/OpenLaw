@@ -76,6 +76,40 @@ export async function readCommentWindow(
   }
 }
 
+/** The read route's own order, `(createdAt, id)`. `createdAt` is the
+ * API's fixed-width UTC string, so plain string comparison is the time
+ * order, and the id (uuidv7) breaks a same-instant tie the same way. */
+function byThreadOrder(left: Comment, right: Comment): number {
+  if (left.createdAt !== right.createdAt) return left.createdAt < right.createdAt ? -1 : 1;
+  if (left.id === right.id) return 0;
+  return left.id < right.id ? -1 : 1;
+}
+
+/**
+ * Folds a re-read window into the rows already on screen.
+ *
+ * A row the window answered again takes the server's form, so an edit
+ * or a tombstone lands in its place. A row the window did not reach
+ * stays: the reader may have paged further back than one re-read needs
+ * to go. Rows the screen has not seen join the thread.
+ *
+ * The result is put back in the read route's order rather than appended
+ * to. A window ends at the page that holds the old first row, and once
+ * new comments have shifted every page boundary that page also carries
+ * rows older than it. Appended, those rows would sit under the newest
+ * one; a thread that is not chronological is not the thread (CMT-002).
+ */
+export function mergeCommentWindow(
+  current: readonly Comment[],
+  answered: readonly Comment[],
+): Comment[] {
+  const merged = new Map(answered.map((comment) => [comment.id, comment]));
+  for (const comment of current) {
+    if (!merged.has(comment.id)) merged.set(comment.id, comment);
+  }
+  return [...merged.values()].sort(byThreadOrder);
+}
+
 /** The two filing destinations accepted by CMT-011's one attachment route. */
 export type CommentAttachmentFiling = NonNullable<
   paths["/api/v1/comments/{commentId}/attachments/{attachmentId}/file"]["post"]["requestBody"]

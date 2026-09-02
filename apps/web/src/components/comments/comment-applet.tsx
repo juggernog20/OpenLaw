@@ -68,6 +68,7 @@ import { api } from "../../lib/api";
 import {
   composerTiers,
   mentionText,
+  mergeCommentWindow,
   namedInDraft,
   narrowestTierFor,
   readCommentWindow,
@@ -193,6 +194,11 @@ export function useCommentApplet({
    * stale. */
   const threadIssued = useRef(0);
   const threadLanded = useRef(0);
+  /** Reads issued before this number were for a panel since closed or a
+   * record since left, and nothing they carry is wanted. `threadLanded`
+   * alone cannot say that: a read it calls stale may only have been
+   * overtaken by a newer answer for the same open panel. */
+  const threadCancelled = useRef(0);
   const unreadIssued = useRef(0);
   const unreadLanded = useRef(0);
   const refreshing = useRef(false);
@@ -205,6 +211,7 @@ export function useCommentApplet({
     if (!open) {
       // A read still in flight for a panel the reader closed delivered
       // nothing. Make it stale before it can move the watermark.
+      threadCancelled.current = threadIssued.current + 1;
       threadLanded.current = threadIssued.current + 1;
     }
   }, []);
@@ -228,6 +235,7 @@ export function useCommentApplet({
       // Make every answer issued for the old record stale before the
       // next record can show it.
       unreadLanded.current = unreadIssued.current + 1;
+      threadCancelled.current = threadIssued.current + 1;
       threadLanded.current = threadIssued.current + 1;
     };
   }, [readUnread]);
@@ -263,8 +271,13 @@ export function useCommentApplet({
         .GET("/api/v1/comments/mention-candidates", { params: { query: { entityType, entityId } } })
         .catch(() => ({ data: undefined })),
     ]);
-    if (issue < threadLanded.current) return;
+    if (issue < threadCancelled.current) return;
+    // The roster is this record's whichever read answered the thread
+    // first. A live re-ask that landed during the open supplies rows,
+    // never the people a comment can address, so the typeahead would
+    // otherwise open empty until the next reopen.
     setCandidates(people.data?.candidates ?? []);
+    if (issue < threadLanded.current) return;
     if (!thread.data) {
       setLoadFailed(true);
       return;
@@ -284,7 +297,7 @@ export function useCommentApplet({
   }, [entityType, entityId, markRead]);
 
   /** Re-asks the visible window after a content-free prompt. New rows
-   * join the end of the flat chronological thread, and every row on
+   * take their place in the flat chronological thread, and every row on
    * screen takes the server's corrected form. When the re-ask fails,
    * the last successfully loaded thread deliberately stays visible
    * until another frame or a reopen gives it a fresh answer. */
@@ -301,15 +314,9 @@ export function useCommentApplet({
     const first = !threadLoaded.current;
     threadLoaded.current = true;
     setLoadFailed(false);
-    setComments((current) => {
-      if (first || current === null) return data.comments;
-      const fresh = new Map(data.comments.map((comment) => [comment.id, comment]));
-      const existing = new Set(current.map((comment) => comment.id));
-      return [
-        ...current.map((comment) => fresh.get(comment.id) ?? comment),
-        ...data.comments.filter((comment) => !existing.has(comment.id)),
-      ];
-    });
+    setComments((current) =>
+      first || current === null ? data.comments : mergeCommentWindow(current, data.comments),
+    );
     if (first || commentsRef.current?.[0]?.id === throughId) setCursor(data.nextCursor);
     await markRead();
   }, [entityType, entityId, markRead, readUnread]);

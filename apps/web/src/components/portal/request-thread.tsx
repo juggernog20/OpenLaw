@@ -53,7 +53,12 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { FormattedMessage, defineMessage, useIntl } from "react-intl";
 import { api } from "../../lib/api";
-import { readCommentWindow, sendComment, type Comment } from "../../lib/comments";
+import {
+  mergeCommentWindow,
+  readCommentWindow,
+  sendComment,
+  type Comment,
+} from "../../lib/comments";
 import { formatLongDateTime, formatRelativeOrShort } from "../../lib/format";
 import { TEXTAREA_CLASS } from "../../lib/form-controls";
 import { problem as readProblem } from "../../lib/problem";
@@ -113,14 +118,7 @@ export function RequestThread({
       return;
     }
     setReadFailed(false);
-    setComments((current) => {
-      const fresh = new Map(data.comments.map((comment) => [comment.id, comment]));
-      const existing = new Set(current.map((comment) => comment.id));
-      return [
-        ...current.map((comment) => fresh.get(comment.id) ?? comment),
-        ...data.comments.filter((comment) => !existing.has(comment.id)),
-      ];
-    });
+    setComments((current) => mergeCommentWindow(current, data.comments));
     if (commentsRef.current[0]?.id === throughId) setCursor(data.nextCursor);
   }, [requestId]);
 
