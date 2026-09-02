@@ -8,7 +8,7 @@
  */
 
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { contracts, createDb, eq, users } from "@openlaw/db";
+import { contracts, createDb, eq, sql, users } from "@openlaw/db";
 import {
   LIVE_EVENT_CHANNEL,
   parseLiveEvent,
@@ -376,6 +376,26 @@ describe("GET /api/events", () => {
     await expect(member.next(liveFrame("inbox"))).resolves.toMatchObject({ data: event });
     await expectNoFrame(contributor, liveFrame("inbox"));
     await Promise.all([member.close(), contributor.close()]);
+  });
+
+  it("drops a malformed payload without dropping the stream", async () => {
+    const stream = await EventStream.open(streamUrl(), memberCookies);
+    // Postgres authenticates the process, not the payload: one payload
+    // that is not JSON, and one that parses but is not a live event.
+    await harness.db.execute(sql`select pg_notify(${LIVE_EVENT_CHANNEL}, ${"not json"})`);
+    await harness.db.execute(
+      sql`select pg_notify(${LIVE_EVENT_CHANNEL}, ${JSON.stringify({ kind: "bell" })})`,
+    );
+    await expectNoFrame(stream, liveFrame("bell"));
+
+    // The listener survived both: a well-formed frame still arrives.
+    const event: LiveEvent = { kind: "bell", userId: memberId };
+    await harness.db.transaction((tx) => publishLiveEvent(tx, event));
+    await expect(stream.next(liveFrame("bell"))).resolves.toMatchObject({ data: event });
+    expect(
+      harness.jobLog.some((line) => line.message === "live event payload could not be read"),
+    ).toBe(true);
+    await stream.close();
   });
 
   it("receives a publish from a second process handle over the shared Postgres channel", async () => {

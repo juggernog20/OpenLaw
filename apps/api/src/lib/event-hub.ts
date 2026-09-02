@@ -200,6 +200,10 @@ export function createPostgresEventHub(options: {
       if (!active) return;
       try {
         await active.query(`unlisten ${active.escapeIdentifier(LIVE_EVENT_CHANNEL)}`);
+      } catch {
+        // The session may have died between the last health event and
+        // this call. `release(true)` below destroys it either way, and
+        // a failed courtesy UNLISTEN must not fail `app.close()`.
       } finally {
         active.release(true);
       }
