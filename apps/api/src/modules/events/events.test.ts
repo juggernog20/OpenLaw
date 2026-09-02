@@ -16,6 +16,7 @@ import {
   type RecordLiveEvent,
 } from "@openlaw/shared";
 import { provisionUser } from "../../auth/instance.js";
+import { recordActivity } from "../../lib/activity.js";
 import { publishLiveEvent } from "../../lib/live-events.js";
 import {
   signInCookies,
@@ -335,6 +336,80 @@ describe("GET /api/events", () => {
       }),
     ).rejects.toThrow("roll back the fixture");
     await expectNoFrame(stream, liveFrame("record"));
+    await stream.close();
+  });
+
+  it("publishes every record activity append from its writing transaction", async () => {
+    const stream = await EventStream.open(streamUrl(secondRecord), adminCookies);
+    let releaseCommit!: () => void;
+    let appended!: () => void;
+    const written = new Promise<void>((resolve) => {
+      appended = resolve;
+    });
+    const hold = new Promise<void>((resolve) => {
+      releaseCommit = resolve;
+    });
+
+    let entryIds: string[] = [];
+    const transaction = harness.db.transaction(async (tx) => {
+      const rows = await recordActivity(tx, [
+        {
+          entityType: "contract",
+          entityId: secondRecord.id,
+          actorId: adminId,
+          action: "contract.updated",
+          visibility: "working_team",
+          payload: {
+            number: secondRecord.number,
+            title: "Live channel two",
+            changed: { title: { from: "Before", to: "After" } },
+          },
+        },
+        {
+          entityType: "contract",
+          entityId: secondRecord.id,
+          actorId: adminId,
+          action: "contract.updated",
+          visibility: "legal_only",
+          payload: {
+            number: secondRecord.number,
+            title: "Live channel two",
+            changed: { priority: { from: "medium", to: "high" } },
+          },
+        },
+      ]);
+      entryIds = rows.map((row) => row.id);
+      appended();
+      await hold;
+    });
+
+    await written;
+    await expectNoFrame(stream, liveFrame("record"));
+    releaseCommit();
+    await transaction;
+
+    const frames = await Promise.all([
+      stream.next(liveFrame("record")),
+      stream.next(liveFrame("record")),
+    ]);
+    expect(frames.map((frame) => frame.data)).toEqual([
+      {
+        kind: "record",
+        action: "contract.updated",
+        entityType: "contract",
+        entityId: secondRecord.id,
+        entryId: entryIds[0],
+        visibility: "working_team",
+      },
+      {
+        kind: "record",
+        action: "contract.updated",
+        entityType: "contract",
+        entityId: secondRecord.id,
+        entryId: entryIds[1],
+        visibility: "legal_only",
+      },
+    ]);
     await stream.close();
   });
 

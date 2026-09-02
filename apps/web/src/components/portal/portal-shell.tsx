@@ -31,7 +31,7 @@ import { Settings } from "lucide-react";
 import { Link } from "react-router";
 import { FormattedMessage, useIntl } from "react-intl";
 import { applyPreferredTheme, type Theme } from "../../lib/theme";
-import { retainLiveEvents } from "../../lib/events";
+import { retainLiveEvents, type LiveEventRecordScope } from "../../lib/events";
 import { Avatar } from "../avatar";
 import { NotificationBell } from "../notification-bell";
 import { SkipLink } from "../skip-link";
@@ -50,8 +50,14 @@ export interface PortalUser {
 export function PortalShell({
   user,
   onSignOut,
+  recordScope,
   children,
-}: Readonly<{ user: PortalUser; onSignOut: () => void; children: ReactNode }>) {
+}: Readonly<{
+  user: PortalUser;
+  onSignOut: () => void;
+  recordScope?: LiveEventRecordScope;
+  children: ReactNode;
+}>) {
   const intl = useIntl();
   // The server value wins over the pre-paint mirror, the same way the
   // staff shell reconciles it (#44). A magic-link session is often a
@@ -62,7 +68,17 @@ export function PortalShell({
 
   // The portal is the second authenticated shell over the same tab-wide
   // channel. Consumers subscribe to the module and never open a stream.
-  useEffect(() => retainLiveEvents(), []);
+  const liveEntityType = recordScope?.entityType;
+  const liveEntityId = recordScope?.entityId;
+  useEffect(
+    () =>
+      retainLiveEvents(
+        liveEntityType && liveEntityId
+          ? { entityType: liveEntityType, entityId: liveEntityId }
+          : undefined,
+      ),
+    [liveEntityType, liveEntityId],
+  );
 
   return (
     <div className="@container/shell flex h-dvh flex-col overflow-hidden bg-canvas text-primary">

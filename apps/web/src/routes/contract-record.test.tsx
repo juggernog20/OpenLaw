@@ -39,6 +39,7 @@ import {
   problem,
   renderAt,
   stubApi,
+  stubEventSource,
   type StubAnswer,
   type StubCall,
 } from "../testing/helpers";
@@ -4508,6 +4509,186 @@ describe("the contract record's history applet (M9/6)", () => {
     // row, and the end of the feed offers nothing further.
     expect(activity.cursors).toEqual([null, "a2"]);
     expect(within(panel).queryByRole("button", { name: "Show older" })).not.toBeInTheDocument();
+  });
+
+  it("appends a live entry without replacing pages the reader already loaded", async () => {
+    const user = userEvent.setup();
+    const sources = stubEventSource();
+    const pages = [
+      [entry("a3", "contract.updated"), entry("a2", "contract.archived")],
+      [entry("a1", "contract.created")],
+    ];
+    const activity = activityApi(pages);
+    stubApi({ signedIn: MEMBER, extra: pageApi(activity) });
+    renderAt("/contracts/42");
+    await openHistory(user);
+
+    const panel = await screen.findByRole("complementary", { name: "History" });
+    const feed = within(panel).getByRole("list", { name: "History" });
+    await user.click(within(panel).getByRole("button", { name: "Show older" }));
+    await waitFor(() => expect(within(feed).getAllByRole("listitem")).toHaveLength(3));
+
+    pages[0] = [entry("a4", "contract.restored"), entry("a3", "contract.updated")];
+    sources[0]!.emit({
+      kind: "record",
+      action: "contract.restored",
+      entityType: "contract",
+      entityId: "c1",
+      entryId: "a4",
+      visibility: "working_team",
+    });
+
+    await waitFor(() => expect(within(feed).getAllByRole("listitem")).toHaveLength(4));
+    expect(
+      within(feed)
+        .getAllByRole("listitem")
+        .map((row) => row.textContent),
+    ).toEqual([
+      expect.stringContaining("restored this contract"),
+      expect.stringContaining("changed this contract"),
+      expect.stringContaining("archived this contract"),
+      expect.stringContaining("created this contract"),
+    ]);
+    expect(activity.cursors).toEqual([null, "a2", null]);
+    expect(within(panel).queryByRole("button", { name: "Show older" })).not.toBeInTheDocument();
+    expect(sources[0]?.url).toBe("/api/events?entityType=contract&entityId=c1");
+  });
+
+  it("keeps the newest live answer when record prompts overlap", async () => {
+    const user = userEvent.setup();
+    const sources = stubEventSource();
+    let activityReads = 0;
+    let resolveEarlier!: (response: Response) => void;
+    let resolveLater!: (response: Response) => void;
+    const earlier = new Promise<Response>((resolve) => {
+      resolveEarlier = resolve;
+    });
+    const later = new Promise<Response>((resolve) => {
+      resolveLater = resolve;
+    });
+    const record = recordApi(contractRow());
+    const handler = (call: StubCall): StubAnswer => {
+      if (call.url.pathname !== "/api/v1/activity" || call.method !== "GET") {
+        return record.handler(call);
+      }
+      activityReads += 1;
+      if (activityReads === 1) {
+        return json(200, { entries: [entry("a1", "contract.created")], nextCursor: null });
+      }
+      return activityReads === 2 ? earlier : later;
+    };
+    stubApi({ signedIn: MEMBER, extra: handler });
+    renderAt("/contracts/42");
+    await openHistory(user);
+
+    const panel = await screen.findByRole("complementary", { name: "History" });
+    const feed = within(panel).getByRole("list", { name: "History" });
+    await within(feed).findByText(/created this contract/);
+
+    sources[0]!.emit({
+      kind: "record",
+      action: "contract.archived",
+      entityType: "contract",
+      entityId: "c1",
+      entryId: "a2",
+      visibility: "working_team",
+    });
+    await waitFor(() => expect(activityReads).toBe(2));
+    sources[0]!.emit({
+      kind: "record",
+      action: "contract.restored",
+      entityType: "contract",
+      entityId: "c1",
+      entryId: "a3",
+      visibility: "working_team",
+    });
+    await waitFor(() => expect(activityReads).toBe(3));
+
+    resolveLater(
+      json(200, {
+        entries: [entry("a3", "contract.restored"), entry("a1", "contract.created")],
+        nextCursor: null,
+      }),
+    );
+    await within(feed).findByText(/restored this contract/);
+
+    resolveEarlier(
+      json(200, {
+        entries: [entry("a2", "contract.archived"), entry("a1", "contract.created")],
+        nextCursor: null,
+      }),
+    );
+    await act(async () => earlier);
+
+    expect(within(feed).queryByText(/archived this contract/)).not.toBeInTheDocument();
+    expect(within(feed).getAllByRole("listitem")).toHaveLength(2);
+  });
+
+  it("keeps the first page when a reconnect's re-ask fails before it lands", async () => {
+    const user = userEvent.setup();
+    const sources = stubEventSource();
+    let activityReads = 0;
+    let resolveFirst!: (response: Response) => void;
+    const first = new Promise<Response>((resolve) => {
+      resolveFirst = resolve;
+    });
+    const record = recordApi(contractRow());
+    const handler = (call: StubCall): StubAnswer => {
+      if (call.url.pathname !== "/api/v1/activity" || call.method !== "GET") {
+        return record.handler(call);
+      }
+      activityReads += 1;
+      return activityReads === 1 ? first : problem(500, "Something went wrong.");
+    };
+    stubApi({ signedIn: MEMBER, extra: handler });
+    renderAt("/contracts/42");
+    await openHistory(user);
+
+    const panel = await screen.findByRole("complementary", { name: "History" });
+    await waitFor(() => expect(activityReads).toBe(1));
+    // The scoped connection opens while the first page is still in
+    // flight, as it does on every record-to-record navigation with the
+    // panel open. Its re-ask fails.
+    sources[0]!.open();
+    await waitFor(() => expect(activityReads).toBe(2));
+    expect(await within(panel).findByRole("alert")).toHaveTextContent(
+      "The history could not be read.",
+    );
+
+    // The slower first page is still a good answer, not a stale one.
+    resolveFirst(json(200, { entries: [entry("a1", "contract.created")], nextCursor: null }));
+    const feed = await within(panel).findByRole("list", { name: "History" });
+    expect(within(feed).getAllByRole("listitem")).toHaveLength(1);
+    expect(within(panel).queryByRole("alert")).not.toBeInTheDocument();
+  });
+
+  it("re-asks the visible newest page on reconnect and leaves a filtered entry invisible", async () => {
+    const user = userEvent.setup();
+    const sources = stubEventSource();
+    const pages = [[entry("a1", "contract.created")]];
+    const activity = activityApi(pages);
+    stubApi({ signedIn: CONTRIBUTOR, extra: pageApi(activity) });
+    renderAt("/contracts/42");
+    await openHistory(user);
+
+    const panel = await screen.findByRole("complementary", { name: "History" });
+    const feed = within(panel).getByRole("list", { name: "History" });
+    expect(within(feed).getAllByRole("listitem")).toHaveLength(1);
+
+    sources[0]!.emit({
+      kind: "record",
+      action: "comment.posted",
+      entityType: "contract",
+      entityId: "c1",
+      entryId: "hidden-entry",
+      visibility: "legal_only",
+    });
+    await waitFor(() => expect(activity.cursors).toHaveLength(2));
+    expect(within(feed).getAllByRole("listitem")).toHaveLength(1);
+
+    sources[0]!.open();
+    await waitFor(() => expect(activity.cursors).toHaveLength(3));
+    expect(within(feed).getAllByRole("listitem")).toHaveLength(1);
   });
 
   it("says what the panel is for when nothing has happened yet", async () => {

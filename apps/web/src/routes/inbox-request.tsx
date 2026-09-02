@@ -253,6 +253,7 @@ export function InboxRequestPage() {
     <AppShell
       user={user}
       onSignOut={() => void signOut()}
+      recordScope={{ entityType: "request", entityId: request.id }}
       flush
       subbar={
         <section

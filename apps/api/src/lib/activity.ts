@@ -6,6 +6,10 @@
  * this helper rather than inserting into activity_log themselves. Write
  * side only; the feeds and the audit-log viewer read it in M9.
  *
+ * Record rows also publish TECH-009's content-free `record` prompt from
+ * this door. The insert and `pg_notify` share a transaction, so every
+ * later module gets commit-gated liveness without its own publish site.
+ *
  * **The vocabulary is not here.** The action slugs and the payload each
  * one writes live in `@openlaw/shared`, because both ends of the log
  * read them: this module writes the rows, and the web narrator turns one
@@ -19,8 +23,17 @@ import {
   type ActivityVisibility,
   type Executor,
 } from "@openlaw/db";
-import type { ActivityAction, ActivityPayloadMap } from "@openlaw/shared";
+import {
+  LIVE_EVENT_VISIBILITIES,
+  LIVE_RECORD_ENTITY_TYPES,
+  type ActivityAction,
+  type ActivityPayloadMap,
+  type LiveEvent,
+  type LiveEventVisibility,
+  type LiveRecordEntityType,
+} from "@openlaw/shared";
 import { emitActivityEvent } from "./activity-emitter.js";
+import { publishLiveEvents } from "./live-events.js";
 
 /**
  * The vocabulary itself lives in `@openlaw/shared`, because both ends of
@@ -101,6 +114,31 @@ export const RECORD_ACTIVITY_TIER: ActivityVisibility = "working_team";
  */
 export type RecordedActivity = typeof activityLog.$inferSelect;
 
+const liveEntityTypes: readonly string[] = LIVE_RECORD_ENTITY_TYPES;
+const liveVisibilities: readonly string[] = LIVE_EVENT_VISIBILITIES;
+
+function isLiveEntityType(value: string): value is LiveRecordEntityType {
+  return liveEntityTypes.includes(value);
+}
+
+function isLiveVisibility(value: string): value is LiveEventVisibility {
+  return liveVisibilities.includes(value);
+}
+
+function recordPrompt(row: RecordedActivity): LiveEvent | null {
+  if (!row.entityId || !isLiveEntityType(row.entityType) || !isLiveVisibility(row.visibility)) {
+    return null;
+  }
+  return {
+    kind: "record",
+    action: row.action,
+    entityType: row.entityType,
+    entityId: row.entityId,
+    entryId: row.id,
+    visibility: row.visibility,
+  };
+}
+
 /** Appends multiple entries in one write. */
 export async function recordActivity(
   db: Executor,
@@ -124,29 +162,37 @@ export async function recordActivity(
   entryOrEntries: ActivityEntry | ActivityEntry[],
 ): Promise<RecordedActivity[]> {
   const entries = Array.isArray(entryOrEntries) ? entryOrEntries : [entryOrEntries];
-  const rows = await db
-    .insert(activityLog)
-    .values(
-      entries.map((entry) => ({
-        entityType: entry.entityType,
-        entityId: entry.entityId ?? null,
-        actorId: entry.actorId ?? null,
-        action: entry.action,
-        visibility: entry.visibility,
-        createdAt: entry.createdAt,
-        // The column is `Record<string, unknown>` and stays that way: a
-        // row is read back long after the shape that wrote it was
-        // typed, so the reader gets what is there rather than what the
-        // current build would have written.
-        payload: (entry.payload ?? {}) as Record<string, unknown>,
-      })),
-    )
-    // Every column, because the emitted line is built from the row and
-    // not from the entry that asked for it. Nothing here pairs a
-    // returned row with an input by position: `RETURNING` order is not
-    // something to lean on, and the line has to be a copy of what was
-    // actually stored anyway.
-    .returning();
+  const rows = await db.transaction(async (tx) => {
+    const inserted = await tx
+      .insert(activityLog)
+      .values(
+        entries.map((entry) => ({
+          entityType: entry.entityType,
+          entityId: entry.entityId ?? null,
+          actorId: entry.actorId ?? null,
+          action: entry.action,
+          visibility: entry.visibility,
+          createdAt: entry.createdAt,
+          // The column is `Record<string, unknown>` and stays that way: a
+          // row is read back long after the shape that wrote it was
+          // typed, so the reader gets what is there rather than what the
+          // current build would have written.
+          payload: (entry.payload ?? {}) as Record<string, unknown>,
+        })),
+      )
+      // Every column, because the emitted line is built from the row and
+      // not from the entry that asked for it. Nothing here pairs a
+      // returned row with an input by position: `RETURNING` order is not
+      // something to lean on, and the line has to be a copy of what was
+      // actually stored anyway.
+      .returning();
+
+    await publishLiveEvents(
+      tx,
+      inserted.map(recordPrompt).filter((event): event is LiveEvent => event !== null),
+    );
+    return inserted;
+  });
 
   // The SIEM copy (DD-017), one line per row, alongside the in-app
   // write rather than instead of it. It rides the insert rather than the

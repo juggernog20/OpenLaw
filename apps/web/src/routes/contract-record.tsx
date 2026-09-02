@@ -1523,6 +1523,7 @@ export function ContractRecordPage() {
       <AppShell
         user={user}
         onSignOut={() => void signOut()}
+        recordScope={{ entityType: "contract", entityId: contract.id }}
         flush
         // DES-009 Tier 2, where the C8 mock stacks it: under the nav,
         // above the sub-bar. Every viewer who reaches a confidential
