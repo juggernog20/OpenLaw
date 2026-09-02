@@ -76,11 +76,7 @@ class QuietEventSource extends EventTarget implements EventSource {
     listener: EventListenerOrEventListenerObject,
     options?: boolean | AddEventListenerOptions,
   ): void;
-  addEventListener(
-    type: string,
-    listener: unknown,
-    options?: boolean | AddEventListenerOptions,
-  ) {
+  addEventListener(type: string, listener: unknown, options?: boolean | AddEventListenerOptions) {
     super.addEventListener(type, listener as EventListenerOrEventListenerObject, options);
   }
   removeEventListener<K extends keyof EventSourceEventMap>(
@@ -98,11 +94,7 @@ class QuietEventSource extends EventTarget implements EventSource {
     listener: EventListenerOrEventListenerObject,
     options?: boolean | EventListenerOptions,
   ): void;
-  removeEventListener(
-    type: string,
-    listener: unknown,
-    options?: boolean | EventListenerOptions,
-  ) {
+  removeEventListener(type: string, listener: unknown, options?: boolean | EventListenerOptions) {
     super.removeEventListener(type, listener as EventListenerOrEventListenerObject, options);
   }
   close() {}
