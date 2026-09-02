@@ -58,6 +58,7 @@ import { activityRoutes } from "./modules/activity/routes.js";
 import { auditLogRoutes } from "./modules/audit-log/routes.js";
 import { commentsRoutes } from "./modules/comments/routes.js";
 import { contractsRoutes } from "./modules/contracts/routes.js";
+import { contractAnalysisRoutes } from "./modules/contract-analysis/routes.js";
 import { documentsRoutes } from "./modules/documents/routes.js";
 import { documentRepositoryRoutes } from "./modules/documents/repository.js";
 import { documentFoldersRoutes } from "./modules/documents/folders.js";
@@ -478,6 +479,7 @@ export async function buildApp(deps: AppDeps, opts: FastifyServerOptions = {}) {
   await app.register(contractStatusesRoutes, { prefix: "/api/v1" });
   await app.register(approverGroupsRoutes, { prefix: "/api/v1" });
   await app.register(contractsRoutes, { prefix: "/api/v1" });
+  await app.register(contractAnalysisRoutes, { prefix: "/api/v1" });
   await app.register(contractApprovalsRoutes, { prefix: "/api/v1" });
   await app.register(contractEnvelopesRoutes, { prefix: "/api/v1" });
   await app.register(contractKeyDatesRoutes, { prefix: "/api/v1" });

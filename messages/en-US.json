@@ -104,6 +104,12 @@
   "activity.comment.redacted": {
     "defaultMessage": "{actor} removed a comment from the record"
   },
+  "activity.contract.analysisCompleted": {
+    "defaultMessage": "{actor} completed an AI analysis of this contract"
+  },
+  "activity.contract.analysisFailed": {
+    "defaultMessage": "{actor} could not complete an AI analysis of this contract"
+  },
   "activity.contract.archived": {
     "defaultMessage": "{actor} archived this contract"
   },

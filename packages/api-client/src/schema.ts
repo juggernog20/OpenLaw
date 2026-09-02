@@ -2209,6 +2209,23 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/v1/contracts/{number}/analysis": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Queue one manual CTR-008 analysis of the primary Document's executed pin, or its current Version when no pin exists. One pending run is allowed per Contract. Member+ only, on a live record with ready text and an enabled AI connector */
+    post: operations["runContractAnalysis"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/v1/contracts/{number}/approvals": {
     parameters: {
       query?: never;
@@ -13072,6 +13089,14 @@ export interface operations {
               customFields: {
                 [key: string]: string | number | boolean | string[];
               };
+              aiUnverified: {
+                [key: string]: {
+                  evidence: string;
+                  runId: string;
+                  /** Format: date-time */
+                  writtenAt: string;
+                };
+              } | null;
               isConfidential: boolean;
               endedAt: string | null;
               archivedAt: string | null;
@@ -13185,6 +13210,14 @@ export interface operations {
               customFields: {
                 [key: string]: string | number | boolean | string[];
               };
+              aiUnverified: {
+                [key: string]: {
+                  evidence: string;
+                  runId: string;
+                  /** Format: date-time */
+                  writtenAt: string;
+                };
+              } | null;
               isConfidential: boolean;
               endedAt: string | null;
               archivedAt: string | null;
@@ -13386,6 +13419,14 @@ export interface operations {
               customFields: {
                 [key: string]: string | number | boolean | string[];
               };
+              aiUnverified: {
+                [key: string]: {
+                  evidence: string;
+                  runId: string;
+                  /** Format: date-time */
+                  writtenAt: string;
+                };
+              } | null;
               isConfidential: boolean;
               endedAt: string | null;
               archivedAt: string | null;
@@ -13466,6 +13507,40 @@ export interface operations {
                 archived: boolean;
               } | null;
             }[];
+            analysis: {
+              available: boolean;
+              latestRun: {
+                id: string;
+                contractId: string;
+                versionId: string | null;
+                /** @enum {string} */
+                state: "pending" | "ready" | "failed";
+                /** @enum {string} */
+                trigger: "automatic" | "manual";
+                requestedBy: string | null;
+                /** @enum {string} */
+                preset:
+                  | "anthropic"
+                  | "openai"
+                  | "azure_openai"
+                  | "gemini"
+                  | "openrouter"
+                  | "ollama"
+                  | "custom";
+                model: string;
+                truncated: boolean;
+                outcome: {
+                  written: string[];
+                  kept: string[];
+                  unsupported: string[];
+                  invalid: string[];
+                  unmatched?: string;
+                } | null;
+                failure: string | null;
+                startedAt: string | null;
+                finishedAt: string | null;
+              } | null;
+            };
           };
         };
       };
@@ -13586,6 +13661,14 @@ export interface operations {
               customFields: {
                 [key: string]: string | number | boolean | string[];
               };
+              aiUnverified: {
+                [key: string]: {
+                  evidence: string;
+                  runId: string;
+                  /** Format: date-time */
+                  writtenAt: string;
+                };
+              } | null;
               isConfidential: boolean;
               endedAt: string | null;
               archivedAt: string | null;
@@ -13784,6 +13867,14 @@ export interface operations {
               customFields: {
                 [key: string]: string | number | boolean | string[];
               };
+              aiUnverified: {
+                [key: string]: {
+                  evidence: string;
+                  runId: string;
+                  /** Format: date-time */
+                  writtenAt: string;
+                };
+              } | null;
               isConfidential: boolean;
               endedAt: string | null;
               archivedAt: string | null;
@@ -14016,6 +14107,14 @@ export interface operations {
               customFields: {
                 [key: string]: string | number | boolean | string[];
               };
+              aiUnverified: {
+                [key: string]: {
+                  evidence: string;
+                  runId: string;
+                  /** Format: date-time */
+                  writtenAt: string;
+                };
+              } | null;
               isConfidential: boolean;
               endedAt: string | null;
               archivedAt: string | null;
@@ -14120,6 +14219,14 @@ export interface operations {
               customFields: {
                 [key: string]: string | number | boolean | string[];
               };
+              aiUnverified: {
+                [key: string]: {
+                  evidence: string;
+                  runId: string;
+                  /** Format: date-time */
+                  writtenAt: string;
+                };
+              } | null;
               isConfidential: boolean;
               endedAt: string | null;
               archivedAt: string | null;
@@ -14224,6 +14331,14 @@ export interface operations {
               customFields: {
                 [key: string]: string | number | boolean | string[];
               };
+              aiUnverified: {
+                [key: string]: {
+                  evidence: string;
+                  runId: string;
+                  /** Format: date-time */
+                  writtenAt: string;
+                };
+              } | null;
               isConfidential: boolean;
               endedAt: string | null;
               archivedAt: string | null;
@@ -14327,6 +14442,14 @@ export interface operations {
               customFields: {
                 [key: string]: string | number | boolean | string[];
               };
+              aiUnverified: {
+                [key: string]: {
+                  evidence: string;
+                  runId: string;
+                  /** Format: date-time */
+                  writtenAt: string;
+                };
+              } | null;
               isConfidential: boolean;
               endedAt: string | null;
               archivedAt: string | null;
@@ -14424,6 +14547,14 @@ export interface operations {
               customFields: {
                 [key: string]: string | number | boolean | string[];
               };
+              aiUnverified: {
+                [key: string]: {
+                  evidence: string;
+                  runId: string;
+                  /** Format: date-time */
+                  writtenAt: string;
+                };
+              } | null;
               isConfidential: boolean;
               endedAt: string | null;
               archivedAt: string | null;
@@ -14431,6 +14562,69 @@ export interface operations {
               createdAt: string;
               /** Format: date-time */
               updatedAt: string;
+            };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  runContractAnalysis: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        number: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      202: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            run: {
+              id: string;
+              contractId: string;
+              versionId: string | null;
+              /** @enum {string} */
+              state: "pending" | "ready" | "failed";
+              /** @enum {string} */
+              trigger: "automatic" | "manual";
+              requestedBy: string | null;
+              /** @enum {string} */
+              preset:
+                | "anthropic"
+                | "openai"
+                | "azure_openai"
+                | "gemini"
+                | "openrouter"
+                | "ollama"
+                | "custom";
+              model: string;
+              truncated: boolean;
+              outcome: {
+                written: string[];
+                kept: string[];
+                unsupported: string[];
+                invalid: string[];
+                unmatched?: string;
+              } | null;
+              failure: string | null;
+              startedAt: string | null;
+              finishedAt: string | null;
             };
           };
         };

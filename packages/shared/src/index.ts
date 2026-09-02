@@ -16,6 +16,19 @@
  */
 export const OPENLAW_VERSION = "0.0.1";
 
+/** CTR-008's shared Contract analysis vocabulary. */
+export {
+  AI_ANALYSIS_CHARACTER_BUDGET,
+  CORE_ANALYSIS_TARGETS,
+  CORE_ANALYSIS_TARGET_TYPES,
+  type AiUnverifiedEntry,
+  type AiUnverifiedMap,
+  type ContractAnalysisOutcome,
+  type CoreAnalysisSlug,
+  type CoreAnalysisTarget,
+  type CoreAnalysisTargetType,
+} from "./analysis.js";
+
 /** DOC-008's one-of owner vocabulary and resolver. */
 export {
   DOCUMENT_OWNER_KINDS,

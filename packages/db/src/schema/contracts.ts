@@ -50,6 +50,7 @@ import { contractTypes } from "./contract-types.js";
 import { documents } from "./documents.js";
 import { entities } from "./entities.js";
 import type { CustomFieldValue } from "./fields.js";
+import type { AiUnverifiedMap } from "@openlaw/shared";
 import { searchVector, uuidPk } from "./helpers.js";
 import { matters } from "./matters.js";
 import { SEVERITY_LEVELS } from "./severity.js";
@@ -243,6 +244,8 @@ export const contracts = pgTable(
       .$type<Record<string, CustomFieldValue>>()
       .notNull()
       .default({}),
+    /** CTR-008's evidence for values a run wrote and no person has confirmed. */
+    aiUnverified: jsonb("ai_unverified").$type<AiUnverifiedMap>(),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true })
       .notNull()
@@ -366,6 +369,10 @@ export const contracts = pgTable(
     // or bare string would make `custom_fields ? slug` — the archive
     // guard's own test — an error rather than an answer.
     check("contracts_custom_fields_check", sql`jsonb_typeof(${table.customFields}) = 'object'`),
+    check(
+      "contracts_ai_unverified_check",
+      sql`${table.aiUnverified} is null or jsonb_typeof(${table.aiUnverified}) = 'object'`,
+    ),
     // The shortest cycle CTR-015 forbids, stated where no write path can
     // get past it. The longer ones need a walk and the walk is the write
     // path's; this is the one case a single row can decide by itself.

@@ -273,6 +273,14 @@ describe("creating fields (the nine-type, scope, and options matrix)", () => {
       fieldTag: "business",
     });
     expect(second.slug).toBe("renewal_term_2");
+
+    const coreCollision = await createdField({
+      displayName: "Value",
+      moduleScope: "contract",
+      fieldType: "text",
+      fieldTag: "business",
+    });
+    expect(coreCollision.slug).toBe("value_2");
   });
 
   it("writes a field.created activity row for the acting Administrator", async () => {

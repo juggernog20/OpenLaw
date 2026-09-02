@@ -118,6 +118,8 @@ export const JOB_QUEUES = {
    * post.
    */
   morningRound: "notification.morning-round",
+  /** One CTR-008 analysis run, collapsed by Contract while waiting. */
+  contractAnalysis: "contract.analysis",
 } as const;
 
 /** What the text-extraction queue carries. */
@@ -154,6 +156,11 @@ export interface ExecutedCopyFetchJob {
  */
 export interface NotificationEmailJob {
   notificationId: string;
+}
+
+export interface ContractAnalysisJob {
+  contractId: string;
+  runId: string;
 }
 
 /**
@@ -206,6 +213,9 @@ export interface JobQueue {
    * scheduled round re-asks for every row still owed and unsent.
    */
   requestNotificationEmail(notificationId: string): Promise<void>;
+
+  /** Queues one durable analysis run under the Contract's singleton key. */
+  requestContractAnalysis(contractId: string, runId: string): Promise<void>;
 }
 
 /**
@@ -270,5 +280,6 @@ export function createUnconfiguredJobQueue(): JobQueue {
     requestDisplayConversion: refuse,
     requestExecutedCopyFetch: refuse,
     requestNotificationEmail: refuse,
+    requestContractAnalysis: refuse,
   };
 }

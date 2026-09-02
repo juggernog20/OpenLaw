@@ -63,6 +63,7 @@ export {
 } from "./executed-copy.js";
 export {
   JOB_QUEUES,
+  type ContractAnalysisJob,
   type DisplayConversionJob,
   type ExecutedCopyFetchJob,
   type JobQueue,
@@ -97,6 +98,7 @@ export {
 } from "./reconciliation.js";
 export {
   startPipeline,
+  CONTRACT_ANALYSIS_QUEUE_OPTIONS,
   DISPLAY_CONVERSION_QUEUE_OPTIONS,
   EXECUTED_COPY_QUEUE_OPTIONS,
   MORNING_ROUND_QUEUE_OPTIONS,

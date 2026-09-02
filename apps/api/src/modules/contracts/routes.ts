@@ -217,6 +217,8 @@ import {
 import { httpError, problemResponse, problemTypeResponse } from "../../lib/problem.js";
 import { assertApprovalGate, type UnresolvedApproval } from "../../lib/soft-gate.js";
 import { createContract, CONTRACT_RENEWAL_VEHICLES } from "./create.js";
+import { AnalysisRunSchema, latestAnalysisRun } from "../contract-analysis/routes.js";
+import { clearAiUnverified } from "../../lib/ai-unverified.js";
 
 /** Every mutation, and every picker read behind one, is Member+. */
 const requireMember = requireRole("administrator", "legal_team_member");
@@ -508,6 +510,17 @@ const ContractRowSchema = z.object({
    * `description` does — it is a column of the record, and the
    * per-field PATCH answers with the row. */
   customFields: CustomFieldsSchema,
+  /** Evidence for values written by AI and not yet confirmed or edited. */
+  aiUnverified: z
+    .record(
+      z.string(),
+      z.object({
+        evidence: z.string(),
+        runId: z.string(),
+        writtenAt: z.iso.datetime(),
+      }),
+    )
+    .nullable(),
   /** DD-014's opt-in gate. `true` means only the named team, the Owner,
    * and Administrators reach this record at all — so every viewer who
    * receives this row already reaches it, and the flag is here to be
@@ -595,6 +608,10 @@ const ContractRecordEnvelope = ContractFieldsEnvelope.extend({
    * a renewal history — and most-recent-first so the "Last renewal"
    * fact is the first row rather than a scan for a maximum. */
   renewals: z.array(ConfirmedRenewalSchema),
+  analysis: z.object({
+    available: z.boolean(),
+    latestRun: AnalysisRunSchema.nullable(),
+  }),
 });
 
 /** What the confirmed roll answers with: the record, because the roll
@@ -800,6 +817,7 @@ function toRow(
     proposedRenewalExpiry: proposedRollExpiry(row),
     description: row.description,
     customFields,
+    aiUnverified: row.aiUnverified,
     isConfidential: row.isConfidential,
     endedAt: row.endedAt?.toISOString() ?? null,
     archivedAt: row.archivedAt?.toISOString() ?? null,
@@ -1772,11 +1790,13 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
         .where(and(eq(contracts.number, request.params.number), teamScope(request.user)))
         .limit(1);
       if (!row) throw httpError(404, NO_CONTRACT);
-      const [team, parties, custom, renewals] = await Promise.all([
+      const [team, parties, custom, renewals, provider, latestRun] = await Promise.all([
         selectTeam(app.db, row.row.id),
         selectCounterparties(app.db, row.row.id),
         customFieldsEnvelope(app.db, row, request.user),
         selectRenewals(app.db, row.row.id),
+        app.resolveAiProvider(),
+        latestAnalysisRun(app.db, row.row.id),
       ]);
       return {
         contract: toRow(row, custom.customFields),
@@ -1785,6 +1805,7 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
         team,
         counterparties: parties,
         renewals,
+        analysis: { available: provider !== null, latestRun },
       };
     },
   );
@@ -2322,6 +2343,33 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
             patch.valueCurrency = next?.currency ?? null;
             patch.valueCadence = next?.cadence ?? null;
             changed.value = { from: before, to: next };
+          }
+        }
+
+        // A person's write verifies that slot by definition. Clear every
+        // AI marker named by this PATCH in the same transaction and add
+        // no second activity entry for the clearing itself (CTR-008).
+        const humanWrittenSlugs = new Set<string>();
+        if (body.termType !== undefined) humanWrittenSlugs.add("term_type");
+        if (body.effectiveDate !== undefined) humanWrittenSlugs.add("effective_date");
+        if (body.expiryDate !== undefined) humanWrittenSlugs.add("expiry_date");
+        if (body.renewalPeriodMonths !== undefined) {
+          humanWrittenSlugs.add("renewal_period_months");
+        }
+        if (body.noticePeriodDays !== undefined) humanWrittenSlugs.add("notice_period_days");
+        if (body.value !== undefined) humanWrittenSlugs.add("value");
+        for (const slug of Object.keys(body.customFields ?? {})) humanWrittenSlugs.add(slug);
+        // A term-type write may clear a dependent even when the body did
+        // not name it. That clear is a human write to the slot too.
+        if (patch.expiryDate !== undefined) humanWrittenSlugs.add("expiry_date");
+        if (patch.renewalPeriodMonths !== undefined) {
+          humanWrittenSlugs.add("renewal_period_months");
+        }
+        if (target.aiUnverified && humanWrittenSlugs.size > 0) {
+          const remaining = { ...target.aiUnverified };
+          for (const slug of humanWrittenSlugs) delete remaining[slug];
+          if (Object.keys(remaining).length !== Object.keys(target.aiUnverified).length) {
+            patch.aiUnverified = Object.keys(remaining).length > 0 ? remaining : null;
           }
         }
 
@@ -2967,6 +3015,10 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
         // state with no primary and no parties either.
         let promotedName: string | undefined;
         if (removed.isPrimary) {
+          // A person taking the primary off verifies that slot (CTR-008):
+          // an analysis run may have linked it, and its marker must not
+          // outlive the link.
+          await clearAiUnverified(tx, current.row.id, "counterparty");
           const [next] = await tx
             .select({ id: counterparties.id, name: counterparties.name })
             .from(contractCounterparties)
@@ -3046,6 +3098,8 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
         if (target.isPrimary) throw httpError(409, "That counterparty is already the primary.");
 
         await promotePrimary(tx, current.row.id, target.id);
+        // The person chose the primary, so the slot is theirs (CTR-008).
+        await clearAiUnverified(tx, current.row.id, "counterparty");
         await recordActivity(tx, {
           entityType: "contract",
           entityId: current.row.id,

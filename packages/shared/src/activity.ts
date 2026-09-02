@@ -768,6 +768,26 @@ type ContractPayloads = {
     matterNumber: number;
     matterTitle: string;
   };
+  "contract.analysis_completed": {
+    number: number;
+    title: string;
+    runId: string;
+    versionId: string;
+    model: string;
+    written: string[];
+    kept: string[];
+    unsupported: string[];
+    invalid: string[];
+    unmatched?: string;
+  };
+  "contract.analysis_failed": {
+    number: number;
+    title: string;
+    runId: string;
+    versionId: string | null;
+    model: string;
+    reason: string;
+  };
   "contract.archived": { number: number; title: string };
   "contract.restored": { number: number; title: string };
 };
