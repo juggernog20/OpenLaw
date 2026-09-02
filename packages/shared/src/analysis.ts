@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
+/** CTR-008's shared target vocabulary, answer provenance, and source-text budget. */
+
 /** The writer types carried by the seven built-in Contract targets. */
 export const CORE_ANALYSIS_TARGET_TYPES = [
   "term_type",

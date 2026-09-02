@@ -1,5 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
+/**
+ * CTR-008's pg-boss worker: resolve the analysis Version, extract answers,
+ * apply the no-overwrite writer rules in one transaction, and distinguish
+ * terminal provider faults from transient failures that the queue retries.
+ */
+
 import {
   activityLog,
   and,
@@ -449,6 +455,9 @@ async function applyAnswers(
     }
 
     for (const [slug, item] of prepared) {
+      // Core targets have dedicated writers above. Keep this boundary even if
+      // a future core branch forgets to consume its prepared answer.
+      if (item.target.core) continue;
       if (!writable(row, flags, slug, termWasSet)) {
         outcome.kept.push(slug);
         continue;
@@ -460,7 +469,9 @@ async function applyAnswers(
       outcome.written.push(slug);
     }
 
-    patch.aiUnverified = Object.keys(flags).length > 0 ? flags : null;
+    if (outcome.written.length > 0) {
+      patch.aiUnverified = Object.keys(flags).length > 0 ? flags : null;
+    }
     if (Object.keys(patch).length > 0) {
       await tx.update(contracts).set(patch).where(eq(contracts.id, row.id));
     }

@@ -1,5 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
+/**
+ * TECH-006 persistence for CTR-008: editable core-prompt overrides and the
+ * durable ledger of queued, completed, and failed Contract analysis runs.
+ */
+
 import type { ContractAnalysisOutcome } from "@openlaw/shared";
 import { sql } from "drizzle-orm";
 import { boolean, check, index, jsonb, pgTable, text, timestamp } from "drizzle-orm/pg-core";

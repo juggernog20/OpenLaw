@@ -23,6 +23,7 @@ CREATE TABLE "contract_analysis_runs" (
 );
 --> statement-breakpoint
 ALTER TABLE "contracts" ADD COLUMN "ai_unverified" jsonb;--> statement-breakpoint
+ALTER TABLE "contracts" ADD CONSTRAINT "contracts_ai_unverified_check" CHECK ("contracts"."ai_unverified" is null or jsonb_typeof("contracts"."ai_unverified") = 'object');--> statement-breakpoint
 ALTER TABLE "contract_analysis_runs" ADD CONSTRAINT "contract_analysis_runs_contract_id_contracts_id_fk" FOREIGN KEY ("contract_id") REFERENCES "public"."contracts"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "contract_analysis_runs" ADD CONSTRAINT "contract_analysis_runs_version_id_document_versions_id_fk" FOREIGN KEY ("version_id") REFERENCES "public"."document_versions"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "contract_analysis_runs" ADD CONSTRAINT "contract_analysis_runs_requested_by_users_id_fk" FOREIGN KEY ("requested_by") REFERENCES "public"."users"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint

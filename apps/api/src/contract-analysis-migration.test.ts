@@ -57,6 +57,12 @@ describe("the M31 Contract analysis substrate migration", () => {
         select state, trigger from contract_analysis_runs where id = 'analysis-run'
       `);
       expect(run.rows[0]).toEqual({ state: "pending", trigger: "manual" });
+      await expect(
+        db.execute(sql`
+          update contracts set ai_unverified = '[]'::jsonb
+          where id = 'analysis-existing-contract'
+        `),
+      ).rejects.toThrow();
     } finally {
       await db.$client.end();
     }

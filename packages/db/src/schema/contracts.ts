@@ -369,6 +369,10 @@ export const contracts = pgTable(
     // or bare string would make `custom_fields ? slug` — the archive
     // guard's own test — an error rather than an answer.
     check("contracts_custom_fields_check", sql`jsonb_typeof(${table.customFields}) = 'object'`),
+    check(
+      "contracts_ai_unverified_check",
+      sql`${table.aiUnverified} is null or jsonb_typeof(${table.aiUnverified}) = 'object'`,
+    ),
     // The shortest cycle CTR-015 forbids, stated where no write path can
     // get past it. The longer ones need a walk and the walk is the write
     // path's; this is the one case a single row can decide by itself.

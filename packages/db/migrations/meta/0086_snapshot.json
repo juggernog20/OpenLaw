@@ -3459,6 +3459,10 @@
           "name": "contracts_custom_fields_check",
           "value": "jsonb_typeof(\"contracts\".\"custom_fields\") = 'object'"
         },
+        "contracts_ai_unverified_check": {
+          "name": "contracts_ai_unverified_check",
+          "value": "\"contracts\".\"ai_unverified\" is null or jsonb_typeof(\"contracts\".\"ai_unverified\") = 'object'"
+        },
         "contracts_parent_not_self_check": {
           "name": "contracts_parent_not_self_check",
           "value": "\"contracts\".\"parent_id\" is null or \"contracts\".\"parent_id\" <> \"contracts\".\"id\""

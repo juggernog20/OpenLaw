@@ -1,5 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
+/**
+ * CTR-008's composed extraction vocabulary: shared core targets followed by
+ * prompted Fields attached to the Contract's type, with editable prompt
+ * overrides applied to the core entries.
+ */
+
 import {
   aiFieldPrompts,
   and,

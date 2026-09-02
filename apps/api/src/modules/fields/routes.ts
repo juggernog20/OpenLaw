@@ -39,6 +39,7 @@ import {
   type Field,
   type Transaction,
 } from "@openlaw/db";
+import { CORE_ANALYSIS_TARGETS } from "@openlaw/shared";
 import { requireRole } from "../../auth/guards.js";
 import { recordActivity } from "../../lib/activity.js";
 import { httpError, problemResponse } from "../../lib/problem.js";
@@ -316,11 +317,9 @@ export const fieldsRoutes: FastifyPluginAsyncZod = async (app) => {
         // hold their slugs (restore brings them back), so the scan
         // includes them.
         const existing = await tx.select({ slug: fields.slug }).from(fields).for("update");
-        const slug = freeSlug(
-          displayName,
-          "field",
-          new Set(existing.map((candidate) => candidate.slug)),
-        );
+        const taken = new Set(existing.map((candidate) => candidate.slug));
+        for (const target of CORE_ANALYSIS_TARGETS) taken.add(target.slug);
+        const slug = freeSlug(displayName, "field", taken);
 
         const [created] = await tx
           .insert(fields)
