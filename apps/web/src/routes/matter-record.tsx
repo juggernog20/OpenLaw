@@ -476,6 +476,7 @@ export function MatterRecordPage() {
       <AppShell
         user={user}
         onSignOut={() => void signOut()}
+        recordScope={{ entityType: "matter", entityId: loader.matter.id }}
         flush
         banner={
           saved.isConfidential ? (

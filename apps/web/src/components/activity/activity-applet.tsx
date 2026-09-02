@@ -27,6 +27,11 @@
  * page at a time. No badge: chat is the only applet that carries one
  * (CMT-004).
  *
+ * **The open feed is live (TECH-009).** A record prompt re-asks only the
+ * newest page through the same filtered read, merges unseen rows at the
+ * head, and keeps the older-page cursor and a scrolled reader's anchor.
+ * Reconnect is the same re-ask. A closed panel subscribes to nothing.
+ *
  * Timestamps follow DES-014's activity-feed rule — relative inside a
  * week, short absolute after — with the long absolute and its timezone
  * in the tooltip, so a cross-region reader knows what they are reading.
@@ -36,7 +41,7 @@
  * of the panel carries its restriction with it.
  */
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { History } from "lucide-react";
 import { defineMessage, FormattedMessage, useIntl } from "react-intl";
 import { api } from "../../lib/api";
@@ -47,6 +52,7 @@ import {
   type NarrationContext,
 } from "../../lib/activity";
 import { formatLongDateTime, formatRelativeOrShort } from "../../lib/format";
+import { subscribeLiveEvents } from "../../lib/events";
 import { ConfidentialMarker } from "../confidential-marker";
 import { Button } from "../ui/button";
 import type { Applet } from "../shell/applets";
@@ -119,6 +125,8 @@ function ActivityFeed({
   // Busy from the first render: the first page is in flight as soon as
   // the panel is on screen.
   const [busy, setBusy] = useState(true);
+  const scroller = useRef<HTMLDivElement>(null);
+  const pendingScrollAnchor = useRef<{ height: number; top: number } | null>(null);
   /** Guards the pages against each other: a reopen must not have the
    * previous panel's in-flight page land on top of the new one. */
   const generation = useRef(0);
@@ -159,6 +167,38 @@ function ActivityFeed({
     setCursor(data.nextCursor);
   }, []);
 
+  /** Re-asks the head without replacing the older pages already on screen. */
+  const refreshNewest = useCallback(async () => {
+    const mine = generation.current;
+    const hadNoEntries = entries === null;
+    const data = await fetchPage(null);
+    if (mine !== generation.current || !data) return;
+    if (hadNoEntries) {
+      // A reconnect can recover the first read too. In that case this
+      // answer is the feed rather than a merge into one already drawn.
+      setLoadFailed(false);
+      setCursor(data.nextCursor);
+    }
+    const viewport = scroller.current;
+    pendingScrollAnchor.current =
+      viewport && viewport.scrollTop > 0
+        ? { height: viewport.scrollHeight, top: viewport.scrollTop }
+        : null;
+    setEntries((current) => {
+      if (current === null) return data.entries;
+      const fresh = new Set(data.entries.map((entry) => entry.id));
+      return [...data.entries, ...current.filter((entry) => !fresh.has(entry.id))];
+    });
+  }, [entries, fetchPage]);
+
+  useLayoutEffect(() => {
+    const anchor = pendingScrollAnchor.current;
+    const viewport = scroller.current;
+    if (!anchor || !viewport) return;
+    viewport.scrollTop = anchor.top + viewport.scrollHeight - anchor.height;
+    pendingScrollAnchor.current = null;
+  }, [entries]);
+
   /** The next page, from the button. */
   function loadPage(from: string) {
     const mine = generation.current;
@@ -176,9 +216,28 @@ function ActivityFeed({
     void fetchPage(null).then((data) => land(null, mine, data));
   }, [fetchPage, land]);
 
+  // The channel carries prompts, never feed content. Any record action
+  // can narrate itself, so this catch-all asks the ordinary filtered
+  // read for the newest page. Native `open` covers first connect and
+  // reconnect alike; a closed panel has no subscriber and asks nothing.
+  useEffect(
+    () =>
+      subscribeLiveEvents((event) => {
+        if (
+          event.kind === "open" ||
+          (event.kind === "record" &&
+            event.entityType === entityType &&
+            event.entityId === entityId)
+        ) {
+          void refreshNewest();
+        }
+      }),
+    [entityType, entityId, refreshNewest],
+  );
+
   return (
     <div className="flex h-full min-h-0 flex-col">
-      <div className="min-h-0 flex-1 overflow-y-auto">
+      <div ref={scroller} className="min-h-0 flex-1 overflow-y-auto">
         {/* Two failures, and they leave the reader in different places.
             A first page that fails has no feed and no control to retry
             with, so reopening the panel is the way back. A failed "Show

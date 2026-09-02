@@ -128,7 +128,11 @@ export function PortalRequestPage() {
   const signOut = useSignOut("/portal/enter");
 
   return (
-    <PortalShell user={user} onSignOut={() => void signOut()}>
+    <PortalShell
+      user={user}
+      onSignOut={() => void signOut()}
+      recordScope={{ entityType: "request", entityId: request.id }}
+    >
       {/* Reference then summary, composed as one message — the
           separator is locale copy, not code (DES-013). The contract
           record's own document title is the sibling. */}

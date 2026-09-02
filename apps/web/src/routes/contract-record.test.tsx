@@ -39,6 +39,7 @@ import {
   problem,
   renderAt,
   stubApi,
+  stubEventSource,
   type StubAnswer,
   type StubCall,
 } from "../testing/helpers";
@@ -4508,6 +4509,78 @@ describe("the contract record's history applet (M9/6)", () => {
     // row, and the end of the feed offers nothing further.
     expect(activity.cursors).toEqual([null, "a2"]);
     expect(within(panel).queryByRole("button", { name: "Show older" })).not.toBeInTheDocument();
+  });
+
+  it("appends a live entry without replacing pages the reader already loaded", async () => {
+    const user = userEvent.setup();
+    const sources = stubEventSource();
+    const pages = [
+      [entry("a3", "contract.updated"), entry("a2", "contract.archived")],
+      [entry("a1", "contract.created")],
+    ];
+    const activity = activityApi(pages);
+    stubApi({ signedIn: MEMBER, extra: pageApi(activity) });
+    renderAt("/contracts/42");
+    await openHistory(user);
+
+    const panel = await screen.findByRole("complementary", { name: "History" });
+    const feed = within(panel).getByRole("list", { name: "History" });
+    await user.click(within(panel).getByRole("button", { name: "Show older" }));
+    await waitFor(() => expect(within(feed).getAllByRole("listitem")).toHaveLength(3));
+
+    pages[0] = [entry("a4", "contract.restored"), entry("a3", "contract.updated")];
+    sources[0]!.emit({
+      kind: "record",
+      action: "contract.restored",
+      entityType: "contract",
+      entityId: "c1",
+      entryId: "a4",
+      visibility: "working_team",
+    });
+
+    await waitFor(() => expect(within(feed).getAllByRole("listitem")).toHaveLength(4));
+    expect(
+      within(feed)
+        .getAllByRole("listitem")
+        .map((row) => row.textContent),
+    ).toEqual([
+      expect.stringContaining("restored this contract"),
+      expect.stringContaining("changed this contract"),
+      expect.stringContaining("archived this contract"),
+      expect.stringContaining("created this contract"),
+    ]);
+    expect(activity.cursors).toEqual([null, "a2", null]);
+    expect(within(panel).queryByRole("button", { name: "Show older" })).not.toBeInTheDocument();
+    expect(sources[0]?.url).toBe("/api/events?entityType=contract&entityId=c1");
+  });
+
+  it("re-asks the visible newest page on reconnect and leaves a filtered entry invisible", async () => {
+    const user = userEvent.setup();
+    const sources = stubEventSource();
+    const pages = [[entry("a1", "contract.created")]];
+    const activity = activityApi(pages);
+    stubApi({ signedIn: CONTRIBUTOR, extra: pageApi(activity) });
+    renderAt("/contracts/42");
+    await openHistory(user);
+
+    const panel = await screen.findByRole("complementary", { name: "History" });
+    const feed = within(panel).getByRole("list", { name: "History" });
+    expect(within(feed).getAllByRole("listitem")).toHaveLength(1);
+
+    sources[0]!.emit({
+      kind: "record",
+      action: "comment.posted",
+      entityType: "contract",
+      entityId: "c1",
+      entryId: "hidden-entry",
+      visibility: "legal_only",
+    });
+    await waitFor(() => expect(activity.cursors).toHaveLength(2));
+    expect(within(feed).getAllByRole("listitem")).toHaveLength(1);
+
+    sources[0]!.open();
+    await waitFor(() => expect(activity.cursors).toHaveLength(3));
+    expect(within(feed).getAllByRole("listitem")).toHaveLength(1);
   });
 
   it("says what the panel is for when nothing has happened yet", async () => {

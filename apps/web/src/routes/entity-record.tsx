@@ -333,6 +333,7 @@ export function EntityRecordPage() {
       <AppShell
         user={loaded.user}
         onSignOut={() => void signOut()}
+        recordScope={{ entityType: "entity", entityId: loaded.entity.id }}
         banner={
           saved.isConfidential ? (
             <ConfidentialBanner

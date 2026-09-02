@@ -26,7 +26,7 @@
 
 import { useCallback, useEffect, useLayoutEffect, useMemo, useState, type ReactNode } from "react";
 import { api } from "../../lib/api";
-import { retainLiveEvents } from "../../lib/events";
+import { retainLiveEvents, type LiveEventRecordScope } from "../../lib/events";
 import { useGlobalKeys } from "../../lib/keyboard";
 import { cn } from "../../lib/utils";
 import { applyPreferredTheme, type Theme } from "../../lib/theme";
@@ -44,6 +44,7 @@ export function AppShell({
   banner,
   subbar,
   flush = false,
+  recordScope,
   children,
 }: Readonly<{
   user: ShellUser;
@@ -53,6 +54,8 @@ export function AppShell({
    * shell renders whatever it is given and offers no way to close it. */
   banner?: ReactNode;
   subbar?: ReactNode;
+  /** The record this shell's live connection must pass through the open gate for. */
+  recordScope?: LiveEventRecordScope;
   /** Edge-to-edge main region for pages that own their gutters (the settings rail). */
   flush?: boolean;
   children: ReactNode;
@@ -72,7 +75,17 @@ export function AppShell({
 
   // The authenticated shell owns the tab's one live connection. The
   // shared module keeps it through route-to-route shell replacement.
-  useEffect(() => retainLiveEvents(), []);
+  const liveEntityType = recordScope?.entityType;
+  const liveEntityId = recordScope?.entityId;
+  useEffect(
+    () =>
+      retainLiveEvents(
+        liveEntityType && liveEntityId
+          ? { entityType: liveEntityType, entityId: liveEntityId }
+          : undefined,
+      ),
+    [liveEntityType, liveEntityId],
+  );
 
   const [themeStatus, setThemeStatus] = useState<FieldStatus>("idle");
   const changeTheme = useCallback((next: Theme) => {

@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-/** One browser-owned connection for TECH-009's live prompts. */
+/** One browser-owned connection for TECH-009's live prompts, re-scoped per record. */
 
-import { parseLiveEvent, type LiveEvent } from "@openlaw/shared";
+import { parseLiveEvent, type LiveEvent, type LiveRecordEntityType } from "@openlaw/shared";
 
 /** `open` fires on the first connection and after every native reconnect. */
 export type BrowserLiveEvent = LiveEvent | { kind: "open" };
@@ -13,6 +13,13 @@ const listeners = new Set<Listener>();
 let source: EventSource | null = null;
 let owners = 0;
 let closeGeneration = 0;
+let recordScope: LiveEventRecordScope | undefined;
+
+/** The record one authenticated shell currently has open. */
+export interface LiveEventRecordScope {
+  entityType: LiveRecordEntityType;
+  entityId: string;
+}
 
 function dispatch(event: BrowserLiveEvent) {
   for (const listener of listeners) listener(event);
@@ -29,9 +36,25 @@ function receive(message: MessageEvent<string>) {
   if (event) dispatch(event);
 }
 
+function sameScope(
+  left: LiveEventRecordScope | undefined,
+  right: LiveEventRecordScope | undefined,
+) {
+  return left?.entityType === right?.entityType && left?.entityId === right?.entityId;
+}
+
+function eventUrl() {
+  if (!recordScope) return "/api/events";
+  const query = new URLSearchParams({
+    entityType: recordScope.entityType,
+    entityId: recordScope.entityId,
+  });
+  return `/api/events?${query}`;
+}
+
 function connect() {
   if (source) return;
-  source = new EventSource("/api/events");
+  source = new EventSource(eventUrl());
   source.addEventListener("open", () => dispatch({ kind: "open" }));
   source.addEventListener("bell", receive as EventListener);
   source.addEventListener("record", receive as EventListener);
@@ -46,9 +69,14 @@ function connect() {
  * connection, and still closes it when navigation really leaves the
  * signed-in app.
  */
-export function retainLiveEvents(): () => void {
+export function retainLiveEvents(scope?: LiveEventRecordScope): () => void {
   owners += 1;
   closeGeneration += 1;
+  if (!sameScope(recordScope, scope)) {
+    source?.close();
+    source = null;
+    recordScope = scope;
+  }
   connect();
   let retained = true;
   return () => {
@@ -60,6 +88,7 @@ export function retainLiveEvents(): () => void {
       if (owners !== 0 || mine !== closeGeneration) return;
       source?.close();
       source = null;
+      recordScope = undefined;
     });
   };
 }
