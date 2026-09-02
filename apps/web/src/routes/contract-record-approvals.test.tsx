@@ -21,7 +21,14 @@
 import { describe, expect, it } from "vitest";
 import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { json, problem, renderAt, stubApi, type StubCall } from "../testing/helpers";
+import {
+  json,
+  problem,
+  renderAt,
+  stubApi,
+  stubEventSource,
+  type StubCall,
+} from "../testing/helpers";
 
 const ADMIN = {
   id: "u1",
@@ -149,6 +156,7 @@ function recordApi(
   groups: { id: string; name: string; memberIds: string[] }[] = GROUPS,
 ) {
   let approvals = initialApprovals;
+  let reads = 0;
   const writes: { method: string; path: string; body: unknown }[] = [];
   let refuse: { status: number; detail: string } | null = null;
 
@@ -172,6 +180,7 @@ function recordApi(
       });
     }
     if (call.url.pathname === "/api/v1/contracts/42/approvals" && call.method === "GET") {
+      reads += 1;
       return envelope();
     }
     if (call.url.pathname === "/api/v1/contracts/42/approvals" && call.method === "POST") {
@@ -243,6 +252,12 @@ function recordApi(
   return {
     handler,
     writes,
+    get reads() {
+      return reads;
+    },
+    replaceApprovals: (next: Record<string, unknown>[]) => {
+      approvals = next;
+    },
     refuseNext: (status: number, detail: string) => {
       refuse = { status, detail };
     },
@@ -255,6 +270,89 @@ async function rosterRows() {
 }
 
 describe("the contract record's Approvals section", () => {
+  it("re-asks the roster on a live decision and updates the tab badge", async () => {
+    const sources = stubEventSource();
+    const api = recordApi([approval()]);
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42/approvals");
+
+    const strip = within(await screen.findByRole("navigation", { name: "Contract sections" }));
+    expect(await strip.findByRole("img", { name: "1 open approval" })).toBeInTheDocument();
+    expect(api.reads).toBe(1);
+
+    api.replaceApprovals([
+      approval({
+        status: "approved",
+        note: "Clear on commercials.",
+        decidedAt: "2026-08-12T00:00:00.000Z",
+      }),
+    ]);
+    sources[0]!.emit({
+      kind: "record",
+      action: "approval.approved",
+      entityType: "contract",
+      entityId: "c1",
+      entryId: "activity-decision",
+      visibility: "working_team",
+    });
+
+    expect(await screen.findByText("Approved")).toBeInTheDocument();
+    expect(strip.queryByRole("img", { name: /open approval/ })).not.toBeInTheDocument();
+    expect(api.reads).toBe(2);
+  });
+
+  it("re-asks the roster for individual asks, applied groups, and cancellations", async () => {
+    const sources = stubEventSource();
+    const api = recordApi([]);
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42/approvals");
+
+    await screen.findByText("No approvals requested on this contract yet.");
+    api.replaceApprovals([approval()]);
+    sources[0]!.emit({
+      kind: "record",
+      action: "approval.requested",
+      entityType: "contract",
+      entityId: "c1",
+      entryId: "activity-manual",
+      visibility: "working_team",
+    });
+    expect(await screen.findByText("Added manually")).toBeInTheDocument();
+
+    api.replaceApprovals([
+      approval(),
+      approval({
+        id: "a2",
+        approver: named("u1"),
+        source: "group",
+        groupName: "Commercial sign-off",
+      }),
+    ]);
+    sources[0]!.emit({
+      kind: "record",
+      action: "approval.requested",
+      entityType: "contract",
+      entityId: "c1",
+      entryId: "activity-group",
+      visibility: "working_team",
+    });
+    expect(await screen.findByText("Commercial sign-off")).toBeInTheDocument();
+
+    api.replaceApprovals([]);
+    sources[0]!.emit({
+      kind: "record",
+      action: "approval.cancelled",
+      entityType: "contract",
+      entityId: "c1",
+      entryId: "activity-cancelled",
+      visibility: "working_team",
+    });
+    expect(
+      await screen.findByText("No approvals requested on this contract yet."),
+    ).toBeInTheDocument();
+    expect(api.reads).toBe(4);
+  });
+
   it("draws the roster with a pill, the note, who asked, and when", async () => {
     const api = recordApi([
       approval({
