@@ -60,6 +60,7 @@ import type { Notifier, NotifyingTransaction } from "../../lib/notifications/not
 import { httpError, problemTypeResponse } from "../../lib/problem.js";
 import { NO_REQUEST, staffRequestRow, toStaffRequest } from "./projection.js";
 import { convertedContractOf, convertedRecordOf } from "./record-reference.js";
+import { publishInboxTotal } from "./live-inbox.js";
 
 /** INT-006: Member+ triages, and there are no routing rules to narrow
  * that further. Every disposition route wears it. */
@@ -178,6 +179,7 @@ export async function dispositionOf(
   return app.notifier.notifying(async (tx) => {
     const held = await lockUndecided(tx, user, number);
     await decide(tx, held);
+    await publishInboxTotal(tx);
     // Read back inside the transaction, so the reply states what this
     // act wrote. The join is the detail read's own, under this viewer's
     // reach (DD-014) — a disposition answers no more than the screen

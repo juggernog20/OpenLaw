@@ -39,6 +39,7 @@ import {
   problem,
   renderAt,
   stubApi,
+  stubEventSource,
   type StubAnswer,
   type StubCall,
 } from "../testing/helpers";
@@ -2635,7 +2636,20 @@ describe("the contract record's comment applet (M9/2)", () => {
       }
       return undefined;
     };
-    return { handler, posts, reads, corrections, marksRead, filings };
+    return {
+      handler,
+      posts,
+      reads,
+      corrections,
+      marksRead,
+      filings,
+      setThread(next: ReturnType<typeof comment>[]) {
+        thread = next;
+      },
+      setUnread(next: number) {
+        unread = next;
+      },
+    };
   }
 
   /** The record page's own seam plus the thread's, in that order. */
@@ -3838,6 +3852,117 @@ describe("the contract record's comment applet (M9/2)", () => {
       expect(comments.marksRead).toEqual([]);
       expect(within(bar).getByRole("button", { name: "Comments (2)" })).toBeInTheDocument();
     });
+
+    it("adopts the server's filtered count from a live comment prompt while closed", async () => {
+      const user = userEvent.setup();
+      const sources = stubEventSource();
+      const comments = commentsApi();
+      stubApi({ signedIn: MEMBER, extra: pageApi(comments) });
+      renderAt("/contracts/42");
+
+      const bar = await screen.findByRole("toolbar", { name: "Applets" });
+      expect(await within(bar).findByRole("button", { name: "Comments" })).toBeInTheDocument();
+      await openChat(user);
+      const panel = await screen.findByRole("complementary", { name: "Comments" });
+      await waitFor(() => expect(comments.reads).toHaveLength(1));
+      await user.click(within(panel).getByRole("button", { name: "Close" }));
+      // The panel stays mounted for its closing slide. It is already
+      // logically closed and must not mark a reply read during it.
+      comments.setUnread(2);
+      sources[0]!.emit({
+        kind: "record",
+        action: "comment.posted",
+        entityType: "contract",
+        entityId: "c1",
+        entryId: "activity-live-post",
+        visibility: "working_team",
+      });
+
+      expect(await within(bar).findByRole("button", { name: "Comments (2)" })).toBeInTheDocument();
+      // A closed panel asks only for its badge. The one thread read and
+      // watermark write are from the earlier open, not this prompt.
+      expect(comments.reads).toHaveLength(1);
+    });
+  });
+
+  describe("live comment prompts", () => {
+    it("adds a new server row to an open thread without reopening it", async () => {
+      const user = userEvent.setup();
+      const sources = stubEventSource();
+      const first = comment("c-1", "The first note.", "working_team");
+      const second = comment("c-2", "The reply from the other tab.", "working_team", CASEY);
+      const comments = commentsApi([first]);
+      stubApi({ signedIn: MEMBER, extra: pageApi(comments) });
+      renderAt("/contracts/42");
+      await openChat(user);
+
+      const thread = await screen.findByRole("list", { name: "Comments" });
+      expect(within(thread).getAllByRole("listitem")).toHaveLength(1);
+      comments.setThread([first, second]);
+      sources[0]!.emit({
+        kind: "record",
+        action: "comment.posted",
+        entityType: "contract",
+        entityId: "c1",
+        entryId: "activity-live-post",
+        visibility: "working_team",
+      });
+
+      expect(await within(thread).findByText("The reply from the other tab.")).toBeInTheDocument();
+      expect(within(thread).getAllByRole("listitem")).toHaveLength(2);
+      expect(comments.reads).toHaveLength(2);
+    });
+
+    it("replaces an edited row and then its soft-delete tombstone in place", async () => {
+      const user = userEvent.setup();
+      const sources = stubEventSource();
+      const original = comment("c-1", "Text another reader may answer.", "working_team", CASEY);
+      const comments = commentsApi([original]);
+      stubApi({ signedIn: MEMBER, extra: pageApi(comments) });
+      renderAt("/contracts/42");
+      await openChat(user);
+
+      const thread = await screen.findByRole("list", { name: "Comments" });
+      const edited = {
+        ...original,
+        body: "Corrected text from the server.",
+        editedAt: "2026-08-12T14:00:00.000Z",
+      };
+      comments.setThread([edited]);
+      sources[0]!.emit({
+        kind: "record",
+        action: "comment.edited",
+        entityType: "contract",
+        entityId: "c1",
+        entryId: "activity-live-edit",
+        visibility: "working_team",
+      });
+
+      expect(
+        await within(thread).findByText("Corrected text from the server."),
+      ).toBeInTheDocument();
+      expect(within(thread).getByText("edited")).toBeInTheDocument();
+      expect(within(thread).queryByText("Text another reader may answer.")).not.toBeInTheDocument();
+
+      comments.setThread([
+        {
+          ...edited,
+          body: "",
+          deletedAt: "2026-08-12T15:00:00.000Z",
+        },
+      ]);
+      sources[0]!.emit({
+        kind: "record",
+        action: "comment.deleted",
+        entityType: "contract",
+        entityId: "c1",
+        entryId: "activity-live-delete",
+        visibility: "working_team",
+      });
+
+      expect(await within(thread).findByText("Comment deleted by its author.")).toBeInTheDocument();
+      expect(within(thread).queryByText("Corrected text from the server.")).not.toBeInTheDocument();
+    });
   });
 
   /**
@@ -3983,7 +4108,9 @@ describe("the contract record's comment applet (M9/2)", () => {
   describe("the paged thread (CTR-024, DES-031)", () => {
     /** Two pages: the newest one first, the older one behind a cursor. */
     function pagedComments() {
-      const NEWEST = [comment("c-newest", "The last word.", "working_team")];
+      const NEWEST = [
+        comment("c-newest", "The last word.", "working_team", AUTHOR, "2026-08-12T10:00:00.000Z"),
+      ];
       const OLDER = [comment("c-older", "The first word.", "working_team")];
       const cursors: (string | null)[] = [];
       const handler = (call: StubCall): Response | undefined => {
@@ -4025,6 +4152,104 @@ describe("the contract record's comment applet (M9/2)", () => {
       expect(rows[1]).toHaveTextContent("The last word.");
       expect(paged.cursors).toEqual([null, "c-newest"]);
       // The start of the thread: the control goes with it.
+      expect(within(panel).queryByRole("button", { name: "Show older" })).not.toBeInTheDocument();
+    });
+
+    it("replaces an edited row in an older loaded page after a live prompt", async () => {
+      const user = userEvent.setup();
+      const sources = stubEventSource();
+      const paged = pagedComments();
+      stubApi({
+        signedIn: MEMBER,
+        extra: (call: StubCall) => paged.handler(call) ?? recordApi(contractRow()).handler(call),
+      });
+      renderAt("/contracts/42");
+      await openChat(user);
+
+      const panel = await screen.findByRole("complementary", { name: "Comments" });
+      await user.click(within(panel).getByRole("button", { name: "Show older" }));
+      expect(await within(panel).findByText("The first word.")).toBeInTheDocument();
+
+      paged.OLDER[0] = comment(
+        "c-older",
+        "The corrected first word.",
+        "working_team",
+        AUTHOR,
+        "2026-08-12T09:00:00.000Z",
+        [],
+        { editedAt: "2026-08-12T14:00:00.000Z" },
+      );
+      sources[0]!.emit({
+        kind: "record",
+        action: "comment.edited",
+        entityType: "contract",
+        entityId: "c1",
+        entryId: "activity-live-older-edit",
+        visibility: "working_team",
+      });
+
+      expect(await within(panel).findByText("The corrected first word.")).toBeInTheDocument();
+      expect(within(panel).getByText("edited")).toBeInTheDocument();
+      expect(within(panel).queryByText("The first word.")).not.toBeInTheDocument();
+      expect(paged.cursors).toEqual([null, "c-newest", null, "c-newest"]);
+    });
+
+    it("keeps the thread chronological when a live prompt shifts the page boundary", async () => {
+      const user = userEvent.setup();
+      const sources = stubEventSource();
+      const at = (hour: string) => `2026-08-12T${hour}:00:00.000Z`;
+      const a = comment("c-a", "The first word.", "working_team", AUTHOR, at("09"));
+      const b = comment("c-b", "The second word.", "working_team", AUTHOR, at("10"));
+      const c = comment("c-c", "The third word.", "working_team", AUTHOR, at("11"));
+      const d = comment("c-d", "The word from the other tab.", "working_team", CASEY, at("12"));
+      // Two rows to a page. Before the post the newest page is [b, c].
+      // After it every boundary moves by one, so the page the re-read
+      // walks back to for b also carries a, which was never on screen.
+      let pages: Record<string, { comments: Comment[]; nextCursor: string | null }> = {
+        newest: { comments: [b, c], nextCursor: "c-b" },
+        "c-b": { comments: [a], nextCursor: null },
+      };
+      const paged = pagedComments();
+      stubApi({
+        signedIn: MEMBER,
+        extra: (call: StubCall) => {
+          if (call.url.pathname === "/api/v1/comments" && call.method === "GET") {
+            const page = pages[call.url.searchParams.get("cursor") ?? "newest"];
+            return page ? json(200, page) : undefined;
+          }
+          return paged.handler(call) ?? recordApi(contractRow()).handler(call);
+        },
+      });
+      renderAt("/contracts/42");
+      await openChat(user);
+
+      const panel = await screen.findByRole("complementary", { name: "Comments" });
+      expect(await within(panel).findByText("The third word.")).toBeInTheDocument();
+      expect(within(panel).getByRole("button", { name: "Show older" })).toBeInTheDocument();
+
+      pages = {
+        newest: { comments: [c, d], nextCursor: "c-c" },
+        "c-c": { comments: [a, b], nextCursor: null },
+      };
+      sources[0]!.emit({
+        kind: "record",
+        action: "comment.posted",
+        entityType: "contract",
+        entityId: "c1",
+        entryId: "activity-live-shift",
+        visibility: "working_team",
+      });
+
+      expect(await within(panel).findByText("The word from the other tab.")).toBeInTheDocument();
+      const rows = within(panel).getAllByRole("listitem");
+      expect(rows.map((row) => row.textContent)).toEqual([
+        expect.stringContaining("The first word."),
+        expect.stringContaining("The second word."),
+        expect.stringContaining("The third word."),
+        expect.stringContaining("The word from the other tab."),
+      ]);
+      // The re-read reached the start of the thread, so there is no
+      // older page left to offer.
       expect(within(panel).queryByRole("button", { name: "Show older" })).not.toBeInTheDocument();
     });
 
@@ -4508,6 +4733,233 @@ describe("the contract record's history applet (M9/6)", () => {
     // row, and the end of the feed offers nothing further.
     expect(activity.cursors).toEqual([null, "a2"]);
     expect(within(panel).queryByRole("button", { name: "Show older" })).not.toBeInTheDocument();
+  });
+
+  it("appends a live entry without replacing pages the reader already loaded", async () => {
+    const user = userEvent.setup();
+    const sources = stubEventSource();
+    const pages = [
+      [entry("a3", "contract.updated"), entry("a2", "contract.archived")],
+      [entry("a1", "contract.created")],
+    ];
+    const activity = activityApi(pages);
+    stubApi({ signedIn: MEMBER, extra: pageApi(activity) });
+    renderAt("/contracts/42");
+    await openHistory(user);
+
+    const panel = await screen.findByRole("complementary", { name: "History" });
+    const feed = within(panel).getByRole("list", { name: "History" });
+    await user.click(within(panel).getByRole("button", { name: "Show older" }));
+    await waitFor(() => expect(within(feed).getAllByRole("listitem")).toHaveLength(3));
+
+    pages[0] = [entry("a4", "contract.restored"), entry("a3", "contract.updated")];
+    sources[0]!.emit({
+      kind: "record",
+      action: "contract.restored",
+      entityType: "contract",
+      entityId: "c1",
+      entryId: "a4",
+      visibility: "working_team",
+    });
+
+    await waitFor(() => expect(within(feed).getAllByRole("listitem")).toHaveLength(4));
+    expect(
+      within(feed)
+        .getAllByRole("listitem")
+        .map((row) => row.textContent),
+    ).toEqual([
+      expect.stringContaining("restored this contract"),
+      expect.stringContaining("changed this contract"),
+      expect.stringContaining("archived this contract"),
+      expect.stringContaining("created this contract"),
+    ]);
+    expect(activity.cursors).toEqual([null, "a2", null]);
+    expect(within(panel).queryByRole("button", { name: "Show older" })).not.toBeInTheDocument();
+    expect(sources[0]?.url).toBe("/api/events?entityType=contract&entityId=c1");
+  });
+
+  it("keeps the newest live answer when record prompts overlap", async () => {
+    const user = userEvent.setup();
+    const sources = stubEventSource();
+    let activityReads = 0;
+    let resolveEarlier!: (response: Response) => void;
+    let resolveLater!: (response: Response) => void;
+    const earlier = new Promise<Response>((resolve) => {
+      resolveEarlier = resolve;
+    });
+    const later = new Promise<Response>((resolve) => {
+      resolveLater = resolve;
+    });
+    const record = recordApi(contractRow());
+    const handler = (call: StubCall): StubAnswer => {
+      if (call.url.pathname !== "/api/v1/activity" || call.method !== "GET") {
+        return record.handler(call);
+      }
+      activityReads += 1;
+      if (activityReads === 1) {
+        return json(200, { entries: [entry("a1", "contract.created")], nextCursor: null });
+      }
+      return activityReads === 2 ? earlier : later;
+    };
+    stubApi({ signedIn: MEMBER, extra: handler });
+    renderAt("/contracts/42");
+    await openHistory(user);
+
+    const panel = await screen.findByRole("complementary", { name: "History" });
+    const feed = within(panel).getByRole("list", { name: "History" });
+    await within(feed).findByText(/created this contract/);
+
+    sources[0]!.emit({
+      kind: "record",
+      action: "contract.archived",
+      entityType: "contract",
+      entityId: "c1",
+      entryId: "a2",
+      visibility: "working_team",
+    });
+    await waitFor(() => expect(activityReads).toBe(2));
+    sources[0]!.emit({
+      kind: "record",
+      action: "contract.restored",
+      entityType: "contract",
+      entityId: "c1",
+      entryId: "a3",
+      visibility: "working_team",
+    });
+    await waitFor(() => expect(activityReads).toBe(3));
+
+    resolveLater(
+      json(200, {
+        entries: [entry("a3", "contract.restored"), entry("a1", "contract.created")],
+        nextCursor: null,
+      }),
+    );
+    await within(feed).findByText(/restored this contract/);
+
+    resolveEarlier(
+      json(200, {
+        entries: [entry("a2", "contract.archived"), entry("a1", "contract.created")],
+        nextCursor: null,
+      }),
+    );
+    await act(async () => earlier);
+
+    expect(within(feed).queryByText(/archived this contract/)).not.toBeInTheDocument();
+    expect(within(feed).getAllByRole("listitem")).toHaveLength(2);
+  });
+
+  it("keeps the first page when a reconnect's re-ask fails before it lands", async () => {
+    const user = userEvent.setup();
+    const sources = stubEventSource();
+    let activityReads = 0;
+    let resolveFirst!: (response: Response) => void;
+    const first = new Promise<Response>((resolve) => {
+      resolveFirst = resolve;
+    });
+    const record = recordApi(contractRow());
+    const handler = (call: StubCall): StubAnswer => {
+      if (call.url.pathname !== "/api/v1/activity" || call.method !== "GET") {
+        return record.handler(call);
+      }
+      activityReads += 1;
+      return activityReads === 1 ? first : problem(500, "Something went wrong.");
+    };
+    stubApi({ signedIn: MEMBER, extra: handler });
+    renderAt("/contracts/42");
+    await openHistory(user);
+
+    const panel = await screen.findByRole("complementary", { name: "History" });
+    await waitFor(() => expect(activityReads).toBe(1));
+    // The scoped connection opens while the first page is still in
+    // flight, as it does on every record-to-record navigation with the
+    // panel open. Its re-ask fails.
+    sources[0]!.open();
+    await waitFor(() => expect(activityReads).toBe(2));
+    expect(await within(panel).findByRole("alert")).toHaveTextContent(
+      "The history could not be read.",
+    );
+
+    // The slower first page is still a good answer, not a stale one.
+    resolveFirst(json(200, { entries: [entry("a1", "contract.created")], nextCursor: null }));
+    const feed = await within(panel).findByRole("list", { name: "History" });
+    expect(within(feed).getAllByRole("listitem")).toHaveLength(1);
+    expect(within(panel).queryByRole("alert")).not.toBeInTheDocument();
+  });
+
+  it("starts the feed over when a reconnect's page overlaps nothing it held", async () => {
+    const user = userEvent.setup();
+    const sources = stubEventSource();
+    // Two pages of one entry each while the panel is open, then a
+    // disconnect long enough for a whole page of newer entries to
+    // arrive: the re-asked head page holds none of the rows on screen.
+    const before = [[entry("a2", "contract.updated")], [entry("a1", "contract.created")]];
+    const after = [
+      [entry("a4", "contract.updated", {}, "working_team", "2026-08-12T11:00:00.000Z")],
+      [entry("a3", "contract.updated", {}, "working_team", "2026-08-12T10:00:00.000Z")],
+      [entry("a2", "contract.updated")],
+      [entry("a1", "contract.created")],
+    ];
+    let pages = before;
+    const record = recordApi(contractRow());
+    const cursors: (string | null)[] = [];
+    const handler = (call: StubCall): StubAnswer => {
+      if (call.url.pathname !== "/api/v1/activity" || call.method !== "GET") {
+        return record.handler(call);
+      }
+      const cursor = call.url.searchParams.get("cursor");
+      cursors.push(cursor);
+      const index = cursor === null ? 0 : pages.findIndex((page) => page.at(-1)?.id === cursor) + 1;
+      const entries = pages[index] ?? [];
+      const next = pages[index + 1] ? (entries.at(-1)?.id ?? null) : null;
+      return json(200, { entries, nextCursor: next });
+    };
+    stubApi({ signedIn: MEMBER, extra: handler });
+    renderAt("/contracts/42");
+    await openHistory(user);
+
+    const panel = await screen.findByRole("complementary", { name: "History" });
+    const feed = within(panel).getByRole("list", { name: "History" });
+    await user.click(within(panel).getByRole("button", { name: "Show older" }));
+    await waitFor(() => expect(within(feed).getAllByRole("listitem")).toHaveLength(2));
+
+    pages = after;
+    sources[0]!.open();
+    await waitFor(() => expect(cursors).toHaveLength(3));
+    // The answer is the feed again: the head page alone, with its own
+    // cursor, so "Show older" walks the gap instead of skipping it.
+    await waitFor(() => expect(within(feed).getAllByRole("listitem")).toHaveLength(1));
+    await user.click(within(panel).getByRole("button", { name: "Show older" }));
+    await waitFor(() => expect(within(feed).getAllByRole("listitem")).toHaveLength(2));
+    expect(cursors.at(-1)).toBe("a4");
+  });
+
+  it("re-asks the visible newest page on reconnect and leaves a filtered entry invisible", async () => {
+    const user = userEvent.setup();
+    const sources = stubEventSource();
+    const pages = [[entry("a1", "contract.created")]];
+    const activity = activityApi(pages);
+    stubApi({ signedIn: CONTRIBUTOR, extra: pageApi(activity) });
+    renderAt("/contracts/42");
+    await openHistory(user);
+
+    const panel = await screen.findByRole("complementary", { name: "History" });
+    const feed = within(panel).getByRole("list", { name: "History" });
+    expect(within(feed).getAllByRole("listitem")).toHaveLength(1);
+
+    sources[0]!.emit({
+      kind: "record",
+      action: "comment.posted",
+      entityType: "contract",
+      entityId: "c1",
+      entryId: "hidden-entry",
+      visibility: "legal_only",
+    });
+    await waitFor(() => expect(activity.cursors).toHaveLength(2));
+    expect(within(feed).getAllByRole("listitem")).toHaveLength(1);
+
+    sources[0]!.open();
+    await waitFor(() => expect(activity.cursors).toHaveLength(3));
+    expect(within(feed).getAllByRole("listitem")).toHaveLength(1);
   });
 
   it("says what the panel is for when nothing has happened yet", async () => {

@@ -381,6 +381,16 @@ Server-Sent Events (`/api/events`) push to the live surfaces: notification bell 
 
 Polling (dead-feeling chat/bell); WebSockets (infra without a consumer).
 
+### Addendum (2026-09-02, M30 close, [#649](https://github.com/juggernog20/OpenLaw/issues/649)) — the shipped channel
+
+`GET /api/events` is the one live connection per signed-in browser tab. The staff and portal shells own it, and every live surface in that tab shares it. A record route opens the connection with its `entityType` and `entityId`. Navigation to another record closes and reopens the connection at the new scope, so the ordinary reach predicate runs again. A connection without a record scope carries only user-addressed bell prompts and the Member+ Inbox total.
+
+Frames prompt reads rather than carrying rows. A `record` frame names the record, Activity action, entry, and visibility tier. A `bell` frame names the users whose notification rows changed. The client then calls the existing comments, Activity, Approvals, Envelope, or notification read, and that route applies its normal reach and visibility rules. The `inbox` frame carries the current queue total because that number is the whole live fact and has no separate count route. No comment body, Activity payload, Approval row, Envelope row, notification row, or Request row rides the stream.
+
+Postgres supplies fan-out between processes. Publishers call `pg_notify` inside the transaction that changes the source row. Postgres sends nothing for a rollback and delivers after commit. Each API process holds one dedicated `LISTEN` connection and fans an accepted frame out to its local SSE connections. The worker publishes through the same database channel, so reconciliation and executed-copy work reaches tabs without a second service.
+
+Heartbeat comments keep an idle response open. The browser reconnects through native `EventSource`; each open causes mounted live surfaces to re-read. The channel stores nothing, handles no `Last-Event-ID`, and replays nothing. A missed frame can delay freshness until reconnect, but the reconnect reads restore the current server answer.
+
 ## TECH-010: Document engines — one LibreOffice + OCR sidecar
 
 - **Status:** Accepted

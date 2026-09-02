@@ -37,6 +37,7 @@ import { createFakeDocEngine } from "../lib/doc-engine/fake.js";
 import { createFakeSigningProvider, type FakeSigningProvider } from "../lib/signing/fake.js";
 import { createSigningResolver, type SigningResolver } from "../lib/signing/resolver.js";
 import { createNotifier, type Notifier } from "../lib/notifications/notifier.js";
+import { createPostgresEventHub } from "../lib/event-hub.js";
 import { startPipeline, type Pipeline } from "../pipeline/pg-boss.js";
 import type { PipelineLogger } from "../pipeline/logger.js";
 
@@ -316,6 +317,8 @@ export interface HarnessOptions {
    * absent.
    */
   morningRoundTrigger?: boolean;
+  /** Shortened only by the SSE suite; production sends every 15 seconds. */
+  eventHeartbeatMs?: number;
 }
 
 export async function startHarness(options: HarnessOptions = {}): Promise<TestHarness> {
@@ -419,6 +422,11 @@ export async function startHarness(options: HarnessOptions = {}): Promise<TestHa
       jobs: pipeline,
       log: { error: (fields, message) => jobLog.push({ level: "error", message, fields }) },
     });
+    const eventHub = createPostgresEventHub({
+      db,
+      heartbeatMs: options.eventHeartbeatMs,
+      log: { error: (fields, message) => jobLog.push({ level: "error", message, fields }) },
+    });
     const app = await buildApp({
       db,
       config: TEST_AUTH_CONFIG,
@@ -428,6 +436,7 @@ export async function startHarness(options: HarnessOptions = {}): Promise<TestHa
       jobs: pipeline,
       resolveSigningProvider,
       notifier,
+      eventHub,
       maxUploadBytes: options.maxUploadBytes,
       morningRoundTrigger: options.morningRoundTrigger,
     });

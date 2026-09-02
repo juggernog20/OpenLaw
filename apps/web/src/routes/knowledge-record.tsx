@@ -268,6 +268,7 @@ export function KnowledgeRecordPage() {
       <AppShell
         user={loaded.user}
         onSignOut={() => void signOut()}
+        recordScope={{ entityType: "knowledge_item", entityId: loaded.item.id }}
         flush
         subbar={
           <section

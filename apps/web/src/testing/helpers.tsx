@@ -12,6 +12,7 @@ import { vi } from "vitest";
 import { render } from "@testing-library/react";
 import { createMemoryRouter, RouterProvider } from "react-router";
 import { IntlProvider } from "react-intl";
+import type { LiveEvent } from "@openlaw/shared";
 import { routes } from "../router";
 
 export interface StubCall {
@@ -48,6 +49,74 @@ export function problem(status: number, detail: string, type = "about:blank"): R
  * makes the test fail loudly instead of hitting the network.
  */
 export type StubAnswer = Response | Promise<Response> | undefined;
+
+/**
+ * The browser channel used by route tests.
+ *
+ * Native EventSource reconnects without making a new object, so `open`
+ * may be dispatched more than once. Tests use the same shape: `open()`
+ * means the initial connection or a reconnect, and `emit()` delivers one
+ * named frame through the shared channel.
+ */
+export interface EventSourceTestDouble {
+  readonly url: string;
+  readonly readyState: number;
+  open(): void;
+  emit(event: LiveEvent): void;
+  /** Delivers one frame exactly as the wire would, JSON or not. */
+  emitRaw(kind: string, data: string): void;
+  close(): void;
+}
+
+/** Installs the one EventSource test double shared by web surface tests. */
+export function stubEventSource(): EventSourceTestDouble[] {
+  const sources: EventSourceTestDouble[] = [];
+
+  class TestEventSource extends EventTarget implements EventSourceTestDouble {
+    static readonly CONNECTING = 0;
+    static readonly OPEN = 1;
+    static readonly CLOSED = 2;
+
+    readonly CONNECTING = TestEventSource.CONNECTING;
+    readonly OPEN = TestEventSource.OPEN;
+    readonly CLOSED = TestEventSource.CLOSED;
+    readonly url: string;
+    readonly withCredentials: boolean;
+    readyState = TestEventSource.CONNECTING;
+    onopen: ((ev: Event) => unknown) | null = null;
+    onmessage: ((ev: MessageEvent) => unknown) | null = null;
+    onerror: ((ev: Event) => unknown) | null = null;
+
+    constructor(url: string | URL, init?: EventSourceInit) {
+      super();
+      this.url = String(url);
+      this.withCredentials = init?.withCredentials ?? false;
+      sources.push(this);
+    }
+
+    open() {
+      this.readyState = TestEventSource.OPEN;
+      const event = new Event("open");
+      this.onopen?.(event);
+      this.dispatchEvent(event);
+    }
+
+    emit(event: LiveEvent) {
+      this.emitRaw(event.kind, JSON.stringify(event));
+    }
+
+    emitRaw(kind: string, data: string) {
+      this.dispatchEvent(new MessageEvent(kind, { data }));
+    }
+
+    close() {
+      this.readyState = TestEventSource.CLOSED;
+    }
+  }
+
+  vi.stubGlobal("EventSource", TestEventSource);
+  return sources;
+}
 
 /**
  * Installs a global fetch stub. The handler answers per call; returning

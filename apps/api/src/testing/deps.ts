@@ -49,6 +49,7 @@ import { createFakeDocEngine } from "../lib/doc-engine/fake.js";
 import { createLocalStorage } from "../lib/storage/local.js";
 import { createUnconfiguredSigningResolver } from "../lib/signing/resolver.js";
 import { createNotifier } from "../lib/notifications/notifier.js";
+import { createTestingEventHub } from "../lib/event-hub.js";
 import { createUnconfiguredJobQueue } from "../pipeline/jobs.js";
 import { CapturingMailer, fixedMailerResolver, TEST_AUTH_CONFIG } from "./harness.js";
 
@@ -116,6 +117,7 @@ export function testDeps(overrides: Partial<AppDeps> = {}): AppDeps {
         error: (fields, message) => console.error(message, fields),
       },
     }),
+    eventHub: createTestingEventHub(),
     ...overrides,
   };
 }

@@ -33,6 +33,7 @@ import {
   TEST_AUTH_CONFIG,
   type TestHarness,
 } from "../../testing/harness.js";
+import { testDeps } from "../../testing/deps.js";
 
 const ROUND_URL = "/api/v1/notifications/morning-round";
 
@@ -141,16 +142,18 @@ describe("the on-demand morning round", () => {
   it("does not exist on an app the overlay never enabled", async () => {
     // The same dependencies this harness's own app holds, with the one
     // flag left off — which is what every deployment builds.
-    const plain = await buildApp({
-      db: harness.db,
-      config: TEST_AUTH_CONFIG,
-      resolveMailer: harness.resolveMailer,
-      storage: harness.storage,
-      docEngine: harness.docEngine,
-      jobs: harness.pipeline,
-      resolveSigningProvider: harness.resolveSigningProvider,
-      notifier: harness.notifier,
-    });
+    const plain = await buildApp(
+      testDeps({
+        db: harness.db,
+        config: TEST_AUTH_CONFIG,
+        resolveMailer: harness.resolveMailer,
+        storage: harness.storage,
+        docEngine: harness.docEngine,
+        jobs: harness.pipeline,
+        resolveSigningProvider: harness.resolveSigningProvider,
+        notifier: harness.notifier,
+      }),
+    );
     try {
       await plain.ready();
       const res = await plain.inject({ method: "POST", url: ROUND_URL, cookies: as(ADMIN) });

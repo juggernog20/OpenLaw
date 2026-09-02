@@ -70,6 +70,7 @@ describe("openapi document", () => {
     expect(doc.paths["/api/v1/meta"].get.operationId).toBe("getMeta");
     expect(doc.paths["/api/v1/search"].get.operationId).toBe("search");
     expect(doc.paths["/api/v1/echo"]).toBeUndefined();
+    expect(doc.paths["/api/events"]).toBeUndefined();
   });
 
   /**

@@ -36,6 +36,22 @@ export type {
   TaxonomyActionPrefix,
   TypeFieldActionPrefix,
 } from "./activity.js";
+
+/** TECH-009's transient event vocabulary, shared by every process and client. */
+export {
+  LIVE_EVENT_CHANNEL,
+  LIVE_EVENT_KINDS,
+  LIVE_EVENT_VISIBILITIES,
+  LIVE_RECORD_ENTITY_TYPES,
+  parseLiveEvent,
+  type BellLiveEvent,
+  type InboxLiveEvent,
+  type LiveEvent,
+  type LiveEventKind,
+  type LiveEventVisibility,
+  type LiveRecordEntityType,
+  type RecordLiveEvent,
+} from "./live-events.js";
 // `EmptyActivityPayload` and `FieldChangePayload` are deliberately not
 // re-exported. They are how `ActivityPayloadMap` is written — the shapes
 // a slug's entry resolves to — and a consumer reaches them by indexing

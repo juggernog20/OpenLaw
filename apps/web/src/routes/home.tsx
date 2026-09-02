@@ -4,7 +4,14 @@
  * The guarded staff landing page and M29 personal state summary.
  */
 
-import { redirect, useLoaderData, type LoaderFunctionArgs } from "react-router";
+import { useEffect, useState } from "react";
+import {
+  redirect,
+  useLoaderData,
+  useLocation,
+  useRevalidator,
+  type LoaderFunctionArgs,
+} from "react-router";
 import { FormattedMessage, useIntl } from "react-intl";
 import { api } from "../lib/api";
 import { requireUser, useSignOut } from "../lib/session";
@@ -19,6 +26,7 @@ import { HomeObligationsCard } from "../components/home/obligations-card";
 import { HomeWelcomeCard } from "../components/home/welcome-card";
 import { HomeContractsCard } from "../components/home/contracts-card";
 import { HomeMattersCard } from "../components/home/matters-card";
+import { subscribeLiveEvents } from "../lib/events";
 
 export async function homeLoader({ request }: LoaderFunctionArgs) {
   // A failed magic-link redemption redirects here with an ?error= query
@@ -51,10 +59,55 @@ export async function homeLoader({ request }: LoaderFunctionArgs) {
 }
 
 export function HomePage() {
-  const { user, sections } = useLoaderData<typeof homeLoader>();
+  const { user, sections: loadedSections } = useLoaderData<typeof homeLoader>();
+  const location = useLocation();
+  const { revalidate } = useRevalidator();
   const intl = useIntl();
 
   const signOut = useSignOut("/auth/login");
+
+  // The live Inbox total, and how many reconnect reads this screen has
+  // started. A patch names the navigation that drew its card and the
+  // read count it arrived under. A real navigation gets a new key and
+  // its own loader answer, so a patch from the old one never applies.
+  const [live, setLive] = useState<{
+    recoveries: number;
+    patch: { locationKey: string; recovery: number; total: number } | null;
+  }>({ recoveries: 0, patch: null });
+  // The loader answer on screen, stamped with the read count it landed
+  // under. A new answer outranks every patch older than the read that
+  // asked for it. A frame that lands while that read is in flight is
+  // newer than its answer and stays over it.
+  const [answer, setAnswer] = useState({ sections: loadedSections, recovery: 0 });
+  if (answer.sections !== loadedSections) {
+    setAnswer({ sections: loadedSections, recovery: live.recoveries });
+  }
+  const patch = live.patch;
+  const sections =
+    patch !== null && patch.locationKey === location.key && patch.recovery >= answer.recovery
+      ? loadedSections.map((section) =>
+          section.type === "inbox" ? { ...section, total: patch.total } : section,
+        )
+      : loadedSections;
+  useEffect(
+    () =>
+      subscribeLiveEvents((event) => {
+        if (event.kind === "open") {
+          // The card keeps its last live total while the recovery read
+          // is in flight. The answer replaces it when it lands.
+          setLive((state) => ({ ...state, recoveries: state.recoveries + 1 }));
+          void revalidate();
+          return;
+        }
+        if (event.kind !== "inbox") return;
+        if (!loadedSections.some((section) => section.type === "inbox")) return;
+        setLive((state) => ({
+          ...state,
+          patch: { locationKey: location.key, recovery: state.recoveries, total: event.total },
+        }));
+      }),
+    [loadedSections, location.key, revalidate],
+  );
 
   return (
     <AppShell

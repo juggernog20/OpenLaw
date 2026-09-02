@@ -19,9 +19,16 @@
  */
 
 import { describe, expect, it } from "vitest";
-import { screen, waitFor, within } from "@testing-library/react";
+import { act, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { json, problem, renderAt, stubApi, type StubCall } from "../testing/helpers";
+import {
+  json,
+  problem,
+  renderAt,
+  stubApi,
+  stubEventSource,
+  type StubCall,
+} from "../testing/helpers";
 
 const ADMIN = {
   id: "u1",
@@ -149,6 +156,10 @@ function recordApi(
   groups: { id: string; name: string; memberIds: string[] }[] = GROUPS,
 ) {
   let approvals = initialApprovals;
+  let reads = 0;
+  let refuseRead = false;
+  /** When set, the next roster read answers only once this settles. */
+  let holdRead: Promise<void> | null = null;
   const writes: { method: string; path: string; body: unknown }[] = [];
   let refuse: { status: number; detail: string } | null = null;
 
@@ -172,6 +183,19 @@ function recordApi(
       });
     }
     if (call.url.pathname === "/api/v1/contracts/42/approvals" && call.method === "GET") {
+      reads += 1;
+      if (refuseRead) {
+        refuseRead = false;
+        return problem(503, "Approval roster unavailable");
+      }
+      if (holdRead) {
+        // The body is fixed now, as a real server's would be. The hold
+        // only delays its arrival.
+        const answer = envelope();
+        const held = holdRead;
+        holdRead = null;
+        return held.then(() => answer);
+      }
       return envelope();
     }
     if (call.url.pathname === "/api/v1/contracts/42/approvals" && call.method === "POST") {
@@ -243,6 +267,23 @@ function recordApi(
   return {
     handler,
     writes,
+    get reads() {
+      return reads;
+    },
+    replaceApprovals: (next: Record<string, unknown>[]) => {
+      approvals = next;
+    },
+    refuseNextRead: () => {
+      refuseRead = true;
+    },
+    /** Holds the next roster read; the returned function lets it land. */
+    holdNextRead: () => {
+      let release!: () => void;
+      holdRead = new Promise<void>((resolve) => {
+        release = resolve;
+      });
+      return release;
+    },
     refuseNext: (status: number, detail: string) => {
       refuse = { status, detail };
     },
@@ -255,6 +296,174 @@ async function rosterRows() {
 }
 
 describe("the contract record's Approvals section", () => {
+  it("re-asks the roster on a live decision and updates the tab badge", async () => {
+    const sources = stubEventSource();
+    const api = recordApi([approval()]);
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42/approvals");
+
+    const strip = within(await screen.findByRole("navigation", { name: "Contract sections" }));
+    expect(await strip.findByRole("img", { name: "1 open approval" })).toBeInTheDocument();
+    expect(api.reads).toBe(1);
+
+    api.replaceApprovals([
+      approval({
+        status: "approved",
+        note: "Clear on commercials.",
+        decidedAt: "2026-08-12T00:00:00.000Z",
+      }),
+    ]);
+    sources[0]!.emit({
+      kind: "record",
+      action: "approval.approved",
+      entityType: "contract",
+      entityId: "c1",
+      entryId: "activity-decision",
+      visibility: "working_team",
+    });
+
+    expect(await screen.findByText("Approved")).toBeInTheDocument();
+    expect(strip.queryByRole("img", { name: /open approval/ })).not.toBeInTheDocument();
+    expect(api.reads).toBe(2);
+  });
+
+  it("keeps the last roster and badge when a live re-ask fails", async () => {
+    const sources = stubEventSource();
+    const api = recordApi([approval()]);
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42/approvals");
+
+    const strip = within(await screen.findByRole("navigation", { name: "Contract sections" }));
+    expect(await screen.findByText("Pending")).toBeInTheDocument();
+    expect(strip.getByRole("img", { name: "1 open approval" })).toBeInTheDocument();
+
+    api.refuseNextRead();
+    sources[0]!.emit({
+      kind: "record",
+      action: "approval.approved",
+      entityType: "contract",
+      entityId: "c1",
+      entryId: "activity-decision",
+      visibility: "working_team",
+    });
+    await waitFor(() => expect(api.reads).toBe(2));
+    await act(async () => Promise.resolve());
+
+    expect(screen.getByText("Pending")).toBeInTheDocument();
+    expect(strip.getByRole("img", { name: "1 open approval" })).toBeInTheDocument();
+  });
+
+  it("re-asks the roster when the connection opens after a missed decision", async () => {
+    const sources = stubEventSource();
+    const api = recordApi([approval()]);
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42/approvals");
+
+    const strip = within(await screen.findByRole("navigation", { name: "Contract sections" }));
+    expect(await screen.findByText("Pending")).toBeInTheDocument();
+    expect(api.reads).toBe(1);
+
+    // A decision applied while this tab was disconnected has no frame
+    // to narrate it here. The native open on reconnect is the recovery
+    // re-ask, and it finds the decision.
+    api.replaceApprovals([approval({ status: "approved", decidedAt: "2026-08-12T00:00:00.000Z" })]);
+    sources[0]!.open();
+
+    expect(await screen.findByText("Approved")).toBeInTheDocument();
+    expect(strip.queryByRole("img", { name: /open approval/ })).not.toBeInTheDocument();
+    expect(api.reads).toBe(2);
+  });
+
+  it("collapses frames that arrive during a re-ask into one trailing read", async () => {
+    const sources = stubEventSource();
+    const api = recordApi([approval()]);
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42/approvals");
+
+    expect(await screen.findByText("Pending")).toBeInTheDocument();
+    const frame = (entryId: string) =>
+      sources[0]!.emit({
+        kind: "record",
+        action: "approval.approved",
+        entityType: "contract",
+        entityId: "c1",
+        entryId,
+        visibility: "working_team",
+      });
+
+    // The first frame's read is held with the old roster in its body.
+    const release = api.holdNextRead();
+    frame("activity-first");
+    await waitFor(() => expect(api.reads).toBe(2));
+
+    // Two more frames while it is in flight ask for nothing yet.
+    frame("activity-second");
+    frame("activity-third");
+    await act(async () => Promise.resolve());
+    expect(api.reads).toBe(2);
+
+    // Once the slow read lands, one trailing read runs and its newer
+    // answer is what the card keeps, not the slow read's stale one.
+    api.replaceApprovals([approval({ status: "approved", decidedAt: "2026-08-12T00:00:00.000Z" })]);
+    release();
+    expect(await screen.findByText("Approved")).toBeInTheDocument();
+    await act(async () => Promise.resolve());
+    expect(api.reads).toBe(3);
+    expect(screen.queryByText("Pending")).not.toBeInTheDocument();
+  });
+
+  it("re-asks the roster for individual asks, applied groups, and cancellations", async () => {
+    const sources = stubEventSource();
+    const api = recordApi([]);
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42/approvals");
+
+    await screen.findByText("No approvals requested on this contract yet.");
+    api.replaceApprovals([approval()]);
+    sources[0]!.emit({
+      kind: "record",
+      action: "approval.requested",
+      entityType: "contract",
+      entityId: "c1",
+      entryId: "activity-manual",
+      visibility: "working_team",
+    });
+    expect(await screen.findByText("Added manually")).toBeInTheDocument();
+
+    api.replaceApprovals([
+      approval(),
+      approval({
+        id: "a2",
+        approver: named("u1"),
+        source: "group",
+        groupName: "Commercial sign-off",
+      }),
+    ]);
+    sources[0]!.emit({
+      kind: "record",
+      action: "approval.requested",
+      entityType: "contract",
+      entityId: "c1",
+      entryId: "activity-group",
+      visibility: "working_team",
+    });
+    expect(await screen.findByText("Commercial sign-off")).toBeInTheDocument();
+
+    api.replaceApprovals([]);
+    sources[0]!.emit({
+      kind: "record",
+      action: "approval.cancelled",
+      entityType: "contract",
+      entityId: "c1",
+      entryId: "activity-cancelled",
+      visibility: "working_team",
+    });
+    expect(
+      await screen.findByText("No approvals requested on this contract yet."),
+    ).toBeInTheDocument();
+    expect(api.reads).toBe(4);
+  });
+
   it("draws the roster with a pill, the note, who asked, and when", async () => {
     const api = recordApi([
       approval({

@@ -28,6 +28,7 @@ import {
   SIGNING_STANDIN_VARIABLE,
 } from "./lib/signing/config.js";
 import { createNotifier } from "./lib/notifications/notifier.js";
+import { createPostgresEventHub } from "./lib/event-hub.js";
 import { createConsoleLogger } from "./pipeline/logger.js";
 import { createSigningResolver } from "./lib/signing/resolver.js";
 import { maxUploadBytes } from "./lib/uploads.js";
@@ -233,6 +234,7 @@ const jobs = await startPipeline({ connectionString: databaseUrl });
 // value), and a sink assigned afterwards would be a second thing to
 // keep in step with it.
 const notifier = createNotifier({ db, jobs, log: createConsoleLogger() });
+const eventHub = createPostgresEventHub({ db, log: createConsoleLogger() });
 
 const app = await buildApp(
   {
@@ -254,6 +256,7 @@ const app = await buildApp(
     jobs,
     resolveSigningProvider,
     notifier,
+    eventHub,
     maxUploadBytes: uploadCeiling,
     morningRoundTrigger,
     webDist: webDistPresent ? webDist : undefined,

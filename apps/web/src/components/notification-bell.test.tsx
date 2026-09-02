@@ -24,10 +24,17 @@
  */
 
 import { describe, expect, it } from "vitest";
-import { screen, within } from "@testing-library/react";
+import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { BellItem } from "../lib/notifications";
-import { json, problem, renderAt, stubApi, type StubCall } from "../testing/helpers";
+import {
+  json,
+  problem,
+  renderAt,
+  stubApi,
+  stubEventSource,
+  type StubCall,
+} from "../testing/helpers";
 
 const MEMBER = {
   id: "u2",
@@ -60,6 +67,7 @@ function item(index: number, over: Partial<BellItem> = {}): BellItem {
  * of every write the surface made. */
 function bellApi(state: {
   unread: number;
+  surface?: "staff" | "portal";
   pages?: Record<string, { notifications: BellItem[]; nextCursor: string | null }>;
   /** What the mark-read write answers. Defaults to zero. */
   afterRead?: number;
@@ -73,26 +81,28 @@ function bellApi(state: {
   const pages = state.pages ?? {
     first: { notifications: [], nextCursor: null },
   };
+  const root =
+    state.surface === "portal" ? "/api/v1/portal/notifications" : "/api/v1/notifications";
   stubApi({
     signedIn: MEMBER,
     extra: (call: StubCall) => {
-      if (call.url.pathname === "/api/v1/notifications/unread-count") {
+      if (call.url.pathname === `${root}/unread-count`) {
         return json(200, { unread: state.unread });
       }
-      if (call.url.pathname === "/api/v1/notifications" && call.method === "GET") {
+      if (call.url.pathname === root && call.method === "GET") {
         const key = call.url.searchParams.get("cursor") ?? "first";
         if (state.failCursor !== undefined && state.failCursor === (key === "first" ? null : key)) {
           return problem(500, "Nope.");
         }
         return json(200, pages[key] ?? { notifications: [], nextCursor: null });
       }
-      if (call.url.pathname === "/api/v1/notifications/read" && call.method === "POST") {
+      if (call.url.pathname === `${root}/read` && call.method === "POST") {
         writes.push({ path: "read", body: call.body });
         return state.failWrites
           ? problem(500, "Nope.")
           : json(200, { unread: state.afterRead ?? 0 });
       }
-      if (call.url.pathname === "/api/v1/notifications/read-all" && call.method === "POST") {
+      if (call.url.pathname === `${root}/read-all` && call.method === "POST") {
         writes.push({ path: "read-all", body: call.body });
         return state.failWrites ? problem(500, "Nope.") : json(200, { unread: 0 });
       }
@@ -134,6 +144,251 @@ describe("the bell badge (NOT-005)", () => {
     renderAt("/");
 
     expect(await bell("none unread")).toHaveTextContent("");
+  });
+});
+
+describe("the live bell (M30/2)", () => {
+  it("shares the shell's one connection and takes a bell refresh from the count route", async () => {
+    const sources = stubEventSource();
+    let unread = 2;
+    let countReads = 0;
+    stubApi({
+      signedIn: MEMBER,
+      extra: (call) => {
+        if (call.url.pathname === "/api/v1/notifications/unread-count") {
+          countReads += 1;
+          return json(200, { unread });
+        }
+        return undefined;
+      },
+    });
+    renderAt("/");
+
+    expect(await bell("2 unread")).toBeVisible();
+    expect(sources).toHaveLength(1);
+    expect(sources[0]?.url).toBe("/api/events");
+
+    unread = 7;
+    sources[0]!.emit({ kind: "bell", userId: MEMBER.id });
+    expect(await bell("7 unread")).toBeVisible();
+    expect(countReads).toBe(2);
+  });
+
+  it("re-asks the count when the browser reconnects", async () => {
+    const sources = stubEventSource();
+    let unread = 0;
+    bellApi({ unread });
+    renderAt("/");
+    expect(await bell("none unread")).toBeVisible();
+
+    unread = 4;
+    // Re-stub the count with the changed server answer. `open` is the
+    // browser's signal for both the first connection and a reconnect.
+    stubApi({
+      signedIn: MEMBER,
+      extra: (call) =>
+        call.url.pathname === "/api/v1/notifications/unread-count"
+          ? json(200, { unread })
+          : undefined,
+    });
+    sources[0]!.open();
+    expect(await bell("4 unread")).toBeVisible();
+  });
+
+  it("refreshes an open centre when a bell frame arrives", async () => {
+    const user = userEvent.setup();
+    const sources = stubEventSource();
+    let notifications: BellItem[] = [];
+    let unread = 0;
+    stubApi({
+      signedIn: MEMBER,
+      extra: (call) => {
+        if (call.url.pathname === "/api/v1/notifications/unread-count") {
+          return json(200, { unread });
+        }
+        if (call.url.pathname === "/api/v1/notifications" && call.method === "GET") {
+          return json(200, { notifications, nextCursor: null });
+        }
+        if (call.url.pathname === "/api/v1/notifications/read" && call.method === "POST") {
+          unread = 0;
+          return json(200, { unread });
+        }
+        return undefined;
+      },
+    });
+    renderAt("/");
+    await user.click(await bell("none unread"));
+    const centre = await screen.findByRole("dialog", { name: "Notifications" });
+    expect(within(centre).queryAllByRole("listitem")).toHaveLength(0);
+
+    notifications = [item(1)];
+    unread = 1;
+    sources[0]!.emit({ kind: "bell", userId: MEMBER.id });
+    expect(await within(centre).findAllByRole("listitem")).toHaveLength(1);
+  });
+
+  it("does not refresh or mark rows read after the centre closes", async () => {
+    const user = userEvent.setup();
+    const sources = stubEventSource();
+    let countReads = 0;
+    let listReads = 0;
+    let resolveLiveCount!: (response: Response) => void;
+    stubApi({
+      signedIn: MEMBER,
+      extra: (call) => {
+        if (call.url.pathname === "/api/v1/notifications/unread-count") {
+          countReads += 1;
+          if (countReads === 2) {
+            return new Promise<Response>((resolve) => {
+              resolveLiveCount = resolve;
+            });
+          }
+          return json(200, { unread: 0 });
+        }
+        if (call.url.pathname === "/api/v1/notifications" && call.method === "GET") {
+          listReads += 1;
+          return json(200, { notifications: [], nextCursor: null });
+        }
+        return undefined;
+      },
+    });
+    renderAt("/");
+    await user.click(await bell("none unread"));
+    expect(await screen.findByRole("dialog", { name: "Notifications" })).toBeVisible();
+    expect(listReads).toBe(1);
+
+    sources[0]!.emit({ kind: "bell", userId: MEMBER.id });
+    await waitFor(() => expect(countReads).toBe(2));
+    await user.keyboard("{Escape}");
+    expect(screen.queryByRole("dialog", { name: "Notifications" })).not.toBeInTheDocument();
+
+    resolveLiveCount(json(200, { unread: 3 }));
+    expect(await bell("3 unread")).toBeVisible();
+    expect(listReads).toBe(1);
+  });
+
+  it("keeps the drawn rows on screen while a live re-read is pending or fails", async () => {
+    const user = userEvent.setup();
+    const sources = stubEventSource();
+    let listReads = 0;
+    let unread = 1;
+    let answerList: ((response: Response) => void) | null = null;
+    stubApi({
+      signedIn: MEMBER,
+      extra: (call) => {
+        if (call.url.pathname === "/api/v1/notifications/unread-count") {
+          return json(200, { unread });
+        }
+        if (call.url.pathname === "/api/v1/notifications" && call.method === "GET") {
+          listReads += 1;
+          if (listReads === 1) return json(200, { notifications: [item(1)], nextCursor: null });
+          return new Promise<Response>((resolve) => {
+            answerList = resolve;
+          });
+        }
+        if (call.url.pathname === "/api/v1/notifications/read" && call.method === "POST") {
+          unread = 0;
+          return json(200, { unread });
+        }
+        return undefined;
+      },
+    });
+    renderAt("/");
+    await user.click(await bell("1 unread"));
+    const centre = await screen.findByRole("dialog", { name: "Notifications" });
+    const firstRow = within(centre).getByRole("link", { name: /Acme MSA 1/ });
+    firstRow.focus();
+
+    // The re-read is in flight: the row the reader is on stays, and so
+    // does their focus on it.
+    unread = 1;
+    sources[0]!.emit({ kind: "bell", userId: MEMBER.id });
+    await waitFor(() => expect(listReads).toBe(2));
+    expect(within(centre).getByRole("link", { name: /Acme MSA 1/ })).toHaveFocus();
+
+    // The re-read fails: the list it already had is still the answer,
+    // and no failure copy is drawn for a read the reader never asked for.
+    answerList!(problem(500, "Nope."));
+    await waitFor(() => expect(within(centre).queryAllByRole("listitem")).toHaveLength(1));
+    expect(within(centre).queryByRole("alert")).not.toBeInTheDocument();
+
+    // The next re-read answers: the new row joins the one under focus.
+    sources[0]!.emit({ kind: "bell", userId: MEMBER.id });
+    await waitFor(() => expect(listReads).toBe(3));
+    answerList!(json(200, { notifications: [item(2), item(1)], nextCursor: null }));
+    await waitFor(() => expect(within(centre).getAllByRole("listitem")).toHaveLength(2));
+    expect(within(centre).getByRole("link", { name: /Acme MSA 1/ })).toHaveFocus();
+  });
+
+  it("does not read a centre that a row's navigation closed", async () => {
+    const user = userEvent.setup();
+    const sources = stubEventSource();
+    let listReads = 0;
+    let unread = 1;
+    const writes: unknown[] = [];
+    stubApi({
+      signedIn: MEMBER,
+      extra: (call) => {
+        if (call.url.pathname === "/api/v1/notifications/unread-count") {
+          return json(200, { unread });
+        }
+        if (call.url.pathname === "/api/v1/notifications" && call.method === "GET") {
+          listReads += 1;
+          return json(200, {
+            notifications: [
+              item(1, {
+                eventType: "briefing.ready",
+                entityType: "knowledge_item",
+                entityId: MEMBER.id,
+                payload: { localDate: "2026-08-18" },
+                readAt: "2026-08-18T12:00:00.000Z",
+              }),
+            ],
+            nextCursor: null,
+          });
+        }
+        if (call.url.pathname === "/api/v1/notifications/read" && call.method === "POST") {
+          writes.push(call.body);
+          return json(200, { unread: 0 });
+        }
+        return undefined;
+      },
+    });
+    renderAt("/");
+    await user.click(await bell("1 unread"));
+    const centre = await screen.findByRole("dialog", { name: "Notifications" });
+    await user.click(within(centre).getByRole("link", { name: /^Your daily briefing is ready/ }));
+    expect(screen.queryByRole("dialog", { name: "Notifications" })).not.toBeInTheDocument();
+    expect(listReads).toBe(1);
+
+    // The count re-read is the only work a closed centre owes a frame.
+    // Once the badge shows the new answer, any list read the frame would
+    // have started has already been issued.
+    unread = 5;
+    sources[0]!.emit({ kind: "bell", userId: MEMBER.id });
+    expect(await bell("5 unread")).toBeVisible();
+    expect(listReads).toBe(1);
+    expect(writes).toEqual([]);
+  });
+
+  it("uses the same live read model against the portal routes", async () => {
+    const sources = stubEventSource();
+    let unread = 1;
+    bellApi({ unread, surface: "portal" });
+    renderAt("/portal");
+
+    expect(await bell("1 unread")).toBeVisible();
+    expect(sources).toHaveLength(1);
+    unread = 6;
+    stubApi({
+      signedIn: MEMBER,
+      extra: (call) =>
+        call.url.pathname === "/api/v1/portal/notifications/unread-count"
+          ? json(200, { unread })
+          : undefined,
+    });
+    sources[0]!.emit({ kind: "bell", userId: MEMBER.id });
+    expect(await bell("6 unread")).toBeVisible();
   });
 });
 

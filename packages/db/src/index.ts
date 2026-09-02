@@ -10,6 +10,7 @@ import { fileURLToPath } from "node:url";
 import { drizzle, type NodePgDatabase } from "drizzle-orm/node-postgres";
 import { migrate } from "drizzle-orm/node-postgres/migrator";
 import pg from "pg";
+export type { PoolClient } from "pg";
 import { guardMigrationJournal } from "./migration-journal.js";
 import * as activitySchema from "./schema/activity.js";
 import * as approverGroupsSchema from "./schema/approver-groups.js";
@@ -295,6 +296,9 @@ export const ADVISORY_LOCK = {
   /** Held across an ENT-003 Holding check-and-write. The graph-wide
    * lock makes the cycle walk and insert one transaction-wide act. */
   entityHoldings: 4101007,
+  /** Held while a Request queue change counts and publishes the new
+   * shared Inbox total in its writing transaction (INT-006). */
+  inboxTotal: 4101008,
 } as const;
 
 /**

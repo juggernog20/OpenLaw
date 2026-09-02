@@ -21,10 +21,17 @@
  */
 
 import { describe, expect, it } from "vitest";
-import { screen, waitFor, within } from "@testing-library/react";
+import { act, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { ENVELOPE_LIVE_PROBLEM_TYPE, MAX_ENVELOPE_SIGNERS } from "@openlaw/shared";
-import { json, problem, renderAt, stubApi, type StubCall } from "../testing/helpers";
+import {
+  json,
+  problem,
+  renderAt,
+  stubApi,
+  stubEventSource,
+  type StubCall,
+} from "../testing/helpers";
 
 const MEMBER = {
   id: "u2",
@@ -199,6 +206,8 @@ function recordApi(
     signingConfigured: initial.signingConfigured ?? true,
     primaryDocument: initial.primaryDocument === undefined ? PRIMARY : initial.primaryDocument,
   };
+  let reads = 0;
+  let refuseRead = false;
   const writes: { path: string; body: unknown }[] = [];
   /** What the next send answers with; a refusal when set. */
   let refuse: { status: number; detail: string; type?: string } | null = null;
@@ -221,6 +230,11 @@ function recordApi(
       });
     }
     if (call.url.pathname === "/api/v1/contracts/42/envelopes" && call.method === "GET") {
+      reads += 1;
+      if (refuseRead) {
+        refuseRead = false;
+        return problem(503, "Signing state unavailable");
+      }
       return json(200, state);
     }
     if (call.url.pathname === "/api/v1/contracts/42/envelopes" && call.method === "POST") {
@@ -264,6 +278,15 @@ function recordApi(
   return {
     handler,
     writes,
+    get reads() {
+      return reads;
+    },
+    replaceEnvelopes: (envelopes: Record<string, unknown>[]) => {
+      state = { ...state, envelopes };
+    },
+    refuseNextRead: () => {
+      refuseRead = true;
+    },
     refuseNext: (status: number, detail: string, type?: string) => {
       refuse = { status, detail, type };
     },
@@ -277,6 +300,118 @@ async function envelopeRows() {
 }
 
 describe("the record's signing block", () => {
+  it("re-asks the signing read when an Envelope ending lands", async () => {
+    const sources = stubEventSource();
+    const api = recordApi({ envelopes: [envelopeRow()] });
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42/approvals");
+
+    expect(await screen.findByText("Envelope sent")).toBeInTheDocument();
+    expect(api.reads).toBe(1);
+    api.replaceEnvelopes([
+      envelopeRow({ status: "signed", completedAt: "2026-08-12T00:00:00.000Z" }),
+    ]);
+    sources[0]!.emit({
+      kind: "record",
+      action: "envelope.signed",
+      entityType: "contract",
+      entityId: "c1",
+      entryId: "activity-signed",
+      visibility: "working_team",
+    });
+
+    expect(await screen.findByText("Envelope signed")).toBeInTheDocument();
+    const rows = await envelopeRows();
+    expect(within(rows[0]!).getByText("Signed")).toBeInTheDocument();
+    expect(api.reads).toBe(2);
+  });
+
+  it("keeps the last Envelope state when a live re-ask fails", async () => {
+    const sources = stubEventSource();
+    const api = recordApi({ envelopes: [envelopeRow()] });
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42/approvals");
+
+    expect(await screen.findByText("Envelope sent")).toBeInTheDocument();
+    api.refuseNextRead();
+    sources[0]!.emit({
+      kind: "record",
+      action: "envelope.signed",
+      entityType: "contract",
+      entityId: "c1",
+      entryId: "activity-signed",
+      visibility: "working_team",
+    });
+    await waitFor(() => expect(api.reads).toBe(2));
+    await act(async () => Promise.resolve());
+
+    expect(screen.getByText("Envelope sent")).toBeInTheDocument();
+    const rows = await envelopeRows();
+    expect(within(rows[0]!).getByText("Out for signature")).toBeInTheDocument();
+  });
+
+  it("re-asks the signing read when the connection opens after a missed ending", async () => {
+    const sources = stubEventSource();
+    const api = recordApi({ envelopes: [envelopeRow()] });
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42/approvals");
+
+    expect(await screen.findByText("Envelope sent")).toBeInTheDocument();
+    expect(api.reads).toBe(1);
+
+    // An ending the worker's sweep applied while this tab was
+    // disconnected has no frame to narrate it here. The native open on
+    // reconnect is the recovery re-ask, and it finds the ending.
+    api.replaceEnvelopes([
+      envelopeRow({ status: "voided", completedAt: "2026-08-12T00:00:00.000Z" }),
+    ]);
+    sources[0]!.open();
+
+    expect(await screen.findByText("Envelope voided")).toBeInTheDocument();
+    const rows = await envelopeRows();
+    expect(within(rows[0]!).getByText("Voided")).toBeInTheDocument();
+    expect(api.reads).toBe(2);
+  });
+
+  it("re-asks the signing read for document.executed_set, not version_added", async () => {
+    const sources = stubEventSource();
+    const signed = envelopeRow({
+      status: "signed",
+      completedAt: "2026-08-12T00:00:00.000Z",
+    });
+    const api = recordApi({ envelopes: [signed] });
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42/approvals");
+
+    const rows = await envelopeRows();
+    expect(within(rows[0]!).getByText("Filing the executed copy…")).toBeInTheDocument();
+    api.replaceEnvelopes([{ ...signed, executedFetch: "ready", executedCopy: EXECUTED_COPY }]);
+
+    sources[0]!.emit({
+      kind: "record",
+      action: "document.version_added",
+      entityType: "contract",
+      entityId: "c1",
+      entryId: "activity-version",
+      visibility: "working_team",
+    });
+    await act(async () => Promise.resolve());
+    expect(api.reads).toBe(1);
+    expect(within(rows[0]!).queryByRole("link", { name: "Executed copy" })).not.toBeInTheDocument();
+
+    sources[0]!.emit({
+      kind: "record",
+      action: "document.executed_set",
+      entityType: "contract",
+      entityId: "c1",
+      entryId: "activity-pin",
+      visibility: "working_team",
+    });
+    const link = await within(rows[0]!).findByRole("link", { name: "Executed copy" });
+    expect(link).toHaveAttribute("href", "/api/v1/documents/d1/versions/v3/download");
+    expect(api.reads).toBe(2);
+  });
+
   it("draws the envelope with its pill, signers, version, and sender", async () => {
     const api = recordApi({ envelopes: [envelopeRow()] });
     stubApi({ signedIn: MEMBER, extra: api.handler });

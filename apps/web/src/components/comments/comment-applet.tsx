@@ -68,8 +68,10 @@ import { api } from "../../lib/api";
 import {
   composerTiers,
   mentionText,
+  mergeCommentWindow,
   namedInDraft,
   narrowestTierFor,
+  readCommentWindow,
   RECORD_DEFAULT_TIER,
   sendComment,
   tierAudience,
@@ -84,6 +86,7 @@ import {
 } from "../../lib/comments";
 import { formatLongDateTime, formatRelativeOrShort } from "../../lib/format";
 import { TEXTAREA_CLASS } from "../../lib/form-controls";
+import { subscribeLiveEvents } from "../../lib/events";
 import { problem as readProblem } from "../../lib/problem";
 import type { Role } from "../../lib/roles";
 import { cn } from "../../lib/utils";
@@ -170,6 +173,7 @@ export function useCommentApplet({
   filing,
 }: CommentAppletOptions): Applet {
   const [comments, setComments] = useState<Comment[] | null>(null);
+  const commentsRef = useRef<Comment[] | null>(null);
   const [candidates, setCandidates] = useState<MentionCandidate[]>([]);
   const [loadFailed, setLoadFailed] = useState(false);
   /** What the badge says. Zero draws no badge at all, which is also
@@ -180,29 +184,86 @@ export function useCommentApplet({
    * thread (CTR-024). The panel opens on the newest end and walks
    * backwards, which is the direction a reader goes for more. */
   const [cursor, setCursor] = useState<string | null>(null);
+  /** The hook outlives the panel. This ref says which live prompt the
+   * chat slot owes: a thread read while open, or only its badge while
+   * closed. */
+  const panelOpen = useRef(false);
+  const threadLoaded = useRef(false);
+  /** Orders overlapping opens and live re-asks by the last successful
+   * answer. A failed newer read must not make an older valid answer
+   * stale. */
+  const threadIssued = useRef(0);
+  const threadLanded = useRef(0);
+  /** Reads issued before this number were for a panel since closed or a
+   * record since left, and nothing they carry is wanted. `threadLanded`
+   * alone cannot say that: a read it calls stale may only have been
+   * overtaken by a newer answer for the same open panel. */
+  const threadCancelled = useRef(0);
+  const unreadIssued = useRef(0);
+  const unreadLanded = useRef(0);
+  const refreshing = useRef(false);
+  const refreshAgain = useRef(false);
+  useEffect(() => {
+    commentsRef.current = comments;
+  }, [comments]);
+  const changePanelOpen = useCallback((open: boolean) => {
+    panelOpen.current = open;
+    if (!open) {
+      // A read still in flight for a panel the reader closed delivered
+      // nothing. Make it stale before it can move the watermark.
+      threadCancelled.current = threadIssued.current + 1;
+      threadLanded.current = threadIssued.current + 1;
+    }
+  }, []);
+
+  const readUnread = useCallback(async () => {
+    const issue = (unreadIssued.current += 1);
+    const { data } = await api
+      .GET("/api/v1/comments/unread", { params: { query: { entityType, entityId } } })
+      .catch(() => ({ data: undefined }));
+    if (!data || issue < unreadLanded.current) return;
+    unreadLanded.current = issue;
+    // The number is the server's filtered answer. Never increment the
+    // old badge from a frame, because the frame says nothing about what
+    // this viewer can read (CMT-009).
+    setUnread(data.unread);
+  }, [entityType, entityId]);
 
   useEffect(() => {
-    let current = true;
-    void api
-      .GET("/api/v1/comments/unread", { params: { query: { entityType, entityId } } })
-      .catch(() => ({ data: undefined }))
-      .then(({ data }) => {
-        // The record may have changed under a slow read; the last
-        // record's count is not this one's.
-        if (current) setUnread(data?.unread ?? 0);
-      });
+    void readUnread();
     return () => {
-      current = false;
+      // Make every answer issued for the old record stale before the
+      // next record can show it.
+      unreadLanded.current = unreadIssued.current + 1;
+      threadCancelled.current = threadIssued.current + 1;
+      threadLanded.current = threadIssued.current + 1;
+      // The in-flight loop belongs to the record being left. Release
+      // the gate so the next record's first prompt reads instead of
+      // queueing behind a closure that can no longer paint.
+      refreshing.current = false;
+      refreshAgain.current = false;
     };
+  }, [readUnread]);
+
+  const markRead = useCallback(async () => {
+    const issue = (unreadIssued.current += 1);
+    const marked = await api
+      .POST("/api/v1/comments/read", { body: { entityType, entityId } })
+      .catch(() => ({ data: undefined }));
+    if (!marked.data || issue < unreadLanded.current) return;
+    unreadLanded.current = issue;
+    setUnread(marked.data.unread);
   }, [entityType, entityId]);
 
   const load = useCallback(async () => {
+    const issue = (threadIssued.current += 1);
     setLoadFailed(false);
     // Drop what the last read answered before asking again. A reopen
     // that fails must not leave the previous thread — or its count — on
     // screen as though it were current.
     setComments(null);
     setCursor(null);
+    threadLoaded.current = false;
     // The people this record can address come down with the thread. The
     // list is one working group, so it costs a small read once, and the
     // typeahead is instant when the `@` is typed rather than waiting on
@@ -215,11 +276,20 @@ export function useCommentApplet({
         .GET("/api/v1/comments/mention-candidates", { params: { query: { entityType, entityId } } })
         .catch(() => ({ data: undefined })),
     ]);
+    if (issue < threadCancelled.current) return;
+    // The roster is this record's whichever read answered the thread
+    // first. A live re-ask that landed during the open supplies rows,
+    // never the people a comment can address, so the typeahead would
+    // otherwise open empty until the next reopen.
     setCandidates(people.data?.candidates ?? []);
+    if (issue < threadLanded.current) return;
     if (!thread.data) {
       setLoadFailed(true);
       return;
     }
+    if (!panelOpen.current) return;
+    threadLanded.current = issue;
+    threadLoaded.current = true;
     setComments(thread.data.comments);
     setCursor(thread.data.nextCursor);
     // The thread is on screen, so it has been read — and only now. A
@@ -228,11 +298,71 @@ export function useCommentApplet({
     // ever delivering what it pointed at. The seam answers the count
     // that remains, so the badge takes the server's number rather than
     // assuming zero.
-    const marked = await api
-      .POST("/api/v1/comments/read", { body: { entityType, entityId } })
-      .catch(() => ({ data: undefined }));
-    if (marked.data) setUnread(marked.data.unread);
-  }, [entityType, entityId]);
+    await markRead();
+  }, [entityType, entityId, markRead]);
+
+  /** Re-asks the visible window after a content-free prompt. New rows
+   * take their place in the flat chronological thread, and every row on
+   * screen takes the server's corrected form. When the re-ask fails,
+   * the last successfully loaded thread deliberately stays visible
+   * until another frame or a reopen gives it a fresh answer. */
+  const refreshThread = useCallback(async () => {
+    const issue = (threadIssued.current += 1);
+    const throughId = commentsRef.current?.[0]?.id;
+    const data = await readCommentWindow(entityType, entityId, throughId);
+    if (!data || issue < threadLanded.current) return;
+    if (!panelOpen.current) {
+      void readUnread();
+      return;
+    }
+    threadLanded.current = issue;
+    const first = !threadLoaded.current;
+    threadLoaded.current = true;
+    setLoadFailed(false);
+    setComments((current) =>
+      first || current === null ? data.comments : mergeCommentWindow(current, data.comments),
+    );
+    if (first || commentsRef.current?.[0]?.id === throughId) setCursor(data.nextCursor);
+    await markRead();
+  }, [entityType, entityId, markRead, readUnread]);
+
+  /** One live re-ask at a time. Frames received during it collapse into
+   * one trailing read, whose open/closed route is chosen when it runs. */
+  const promptRefresh = useCallback(async () => {
+    if (refreshing.current) {
+      refreshAgain.current = true;
+      return;
+    }
+    refreshing.current = true;
+    try {
+      do {
+        refreshAgain.current = false;
+        if (panelOpen.current) await refreshThread();
+        else await readUnread();
+      } while (refreshAgain.current);
+    } finally {
+      refreshing.current = false;
+    }
+  }, [readUnread, refreshThread]);
+
+  useEffect(
+    () =>
+      subscribeLiveEvents((event) => {
+        if (
+          event.kind !== "open" &&
+          !(event.kind === "record" && event.action.startsWith("comment."))
+        ) {
+          return;
+        }
+        // Record scope is enforced when the one tab connection opens.
+        // Do not compare the frame's pair with the page's pair here: a
+        // converted Request is opened by its Request address and the
+        // server resolves that scope to the Contract or Matter holding
+        // the moved thread (CMT-001).
+        void promptRefresh();
+      }),
+    [promptRefresh],
+  );
 
   /**
    * One page further back, prepended in place (CTR-024, DES-031).
@@ -259,6 +389,7 @@ export function useCommentApplet({
     label: CHAT_LABEL,
     // CMT-004: chat is the only applet that carries one.
     badge: unread,
+    onExpandedChange: changePanelOpen,
     accessory: () => (comments === null ? null : <CountPill count={comments.length} />),
     render: () => (
       <CommentThread
