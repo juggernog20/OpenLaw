@@ -71,7 +71,7 @@ import {
   type Transaction,
 } from "@openlaw/db";
 import { boundedQueueAsk, type JobQueue } from "../../pipeline/jobs.js";
-import { publishLiveEvent } from "../live-events.js";
+import { publishLiveEvents } from "../live-events.js";
 import {
   contractRecordAudience,
   CONTRACT_ENTITY,
@@ -926,10 +926,13 @@ async function fanOut(
   // The prompt carries no count and no item. It only tells the named
   // viewer to re-ask the ordinary reads. pg_notify is issued through the
   // same transaction, so a rolled-back mutation exposes neither row nor
-  // frame and a deduplicated reminder publishes nothing.
-  for (const row of written) {
-    await publishLiveEvent(tx, { kind: "bell", userId: row.userId });
-  }
+  // frame and a deduplicated reminder publishes nothing. One statement
+  // for the whole audience: the locks this transaction holds should not
+  // wait on one round trip per recipient.
+  await publishLiveEvents(
+    tx,
+    written.map((row) => ({ kind: "bell", userId: row.userId })),
+  );
 
   // 5. The wake-ups, collected for after the commit — only for the
   // rows whose email leaves at once. A digest row owes its email to the
