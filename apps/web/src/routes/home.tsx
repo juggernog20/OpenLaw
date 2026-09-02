@@ -4,7 +4,8 @@
  * The guarded staff landing page and M29 personal state summary.
  */
 
-import { redirect, useLoaderData, type LoaderFunctionArgs } from "react-router";
+import { useEffect, useState } from "react";
+import { redirect, useLoaderData, useRevalidator, type LoaderFunctionArgs } from "react-router";
 import { FormattedMessage, useIntl } from "react-intl";
 import { api } from "../lib/api";
 import { requireUser, useSignOut } from "../lib/session";
@@ -19,6 +20,7 @@ import { HomeObligationsCard } from "../components/home/obligations-card";
 import { HomeWelcomeCard } from "../components/home/welcome-card";
 import { HomeContractsCard } from "../components/home/contracts-card";
 import { HomeMattersCard } from "../components/home/matters-card";
+import { subscribeLiveEvents } from "../lib/events";
 
 export async function homeLoader({ request }: LoaderFunctionArgs) {
   // A failed magic-link redemption redirects here with an ?error= query
@@ -51,10 +53,38 @@ export async function homeLoader({ request }: LoaderFunctionArgs) {
 }
 
 export function HomePage() {
-  const { user, sections } = useLoaderData<typeof homeLoader>();
+  const { user, sections: loadedSections } = useLoaderData<typeof homeLoader>();
+  const [inboxPatch, setInboxPatch] = useState<{
+    base: typeof loadedSections;
+    total: number;
+  } | null>(null);
+  const { revalidate } = useRevalidator();
   const intl = useIntl();
 
   const signOut = useSignOut("/auth/login");
+
+  // A patch belongs to the loader answer that drew its card. Navigation
+  // and reconnect recovery replace that array, which drops the old
+  // patch without copying loader data into state.
+  const sections =
+    inboxPatch?.base === loadedSections
+      ? loadedSections.map((section) =>
+          section.type === "inbox" ? { ...section, total: inboxPatch.total } : section,
+        )
+      : loadedSections;
+  useEffect(
+    () =>
+      subscribeLiveEvents((event) => {
+        if (event.kind === "open") {
+          void revalidate();
+          return;
+        }
+        if (event.kind !== "inbox") return;
+        if (!loadedSections.some((section) => section.type === "inbox")) return;
+        setInboxPatch({ base: loadedSections, total: event.total });
+      }),
+    [loadedSections, revalidate],
+  );
 
   return (
     <AppShell

@@ -143,6 +143,7 @@ import {
   type AttachedCustomField,
 } from "../../lib/custom-fields.js";
 import { httpError, problemResponse, problemTypeResponse } from "../../lib/problem.js";
+import { publishInboxTotal } from "./live-inbox.js";
 import {
   attachmentOn,
   DownloadSchema,
@@ -358,6 +359,7 @@ export const requestsRoutes: FastifyPluginAsyncZod = async (app) => {
           requestType: requestType.displayName,
           urgency: row!.urgency,
         });
+        await publishInboxTotal(tx);
         return row!;
       });
 

@@ -2,8 +2,8 @@
 
 /** The M29 Home surface through the real route table and standard fetch stub. */
 import { describe, expect, it } from "vitest";
-import { screen, within } from "@testing-library/react";
-import { json, problem, renderAt, stubApi } from "../testing/helpers";
+import { act, screen, waitFor, within } from "@testing-library/react";
+import { json, problem, renderAt, stubApi, stubEventSource } from "../testing/helpers";
 import { formatDeadline } from "../lib/format";
 
 const MEMBER = {
@@ -400,6 +400,82 @@ describe("Home", () => {
       "href",
       "/inbox",
     );
+  });
+
+  it("patches a drawn Inbox count from its live frame without re-reading Home", async () => {
+    const sources = stubEventSource();
+    let homeReads = 0;
+    stubApi({
+      signedIn: MEMBER,
+      extra: (call) => {
+        if (call.url.pathname !== "/api/v1/home" || call.method !== "GET") return undefined;
+        homeReads += 1;
+        return json(200, { sections: [inboxSection] });
+      },
+    });
+    renderAt("/");
+
+    const card = await screen.findByRole("region", { name: "Inbox" });
+    expect(homeReads).toBe(1);
+    expect(within(card).getByRole("link", { name: "View all 5" })).toBeInTheDocument();
+
+    act(() => sources[0]!.emit({ kind: "inbox", total: 6 }));
+
+    expect(await within(card).findByRole("link", { name: "View all 6" })).toBeInTheDocument();
+    expect(within(card).getByText("6")).toBeInTheDocument();
+    expect(within(card).getByText("Data processing addendum review")).toBeInTheDocument();
+    expect(homeReads).toBe(1);
+  });
+
+  it("ignores an Inbox frame while the card is absent", async () => {
+    const sources = stubEventSource();
+    let sections: readonly object[] = [];
+    let homeReads = 0;
+    stubApi({
+      signedIn: MEMBER,
+      extra: (call) => {
+        if (call.url.pathname !== "/api/v1/home" || call.method !== "GET") return undefined;
+        homeReads += 1;
+        return json(200, { sections });
+      },
+    });
+    const { router } = renderAt("/");
+
+    expect(await screen.findByRole("heading", { name: "Welcome to OpenLaw" })).toBeInTheDocument();
+    act(() => sources[0]!.emit({ kind: "inbox", total: 1 }));
+
+    expect(screen.queryByRole("region", { name: "Inbox" })).not.toBeInTheDocument();
+    expect(homeReads).toBe(1);
+
+    sections = [{ ...inboxSection, total: 1 }];
+    await act(() => router.navigate("/?after=inbox-frame"));
+    const card = await screen.findByRole("region", { name: "Inbox" });
+    expect(within(card).getByText("1")).toBeInTheDocument();
+    expect(homeReads).toBe(2);
+  });
+
+  it("re-asks Home on reconnect and adopts the recovered Inbox section", async () => {
+    const sources = stubEventSource();
+    let sections: readonly object[] = [];
+    let homeReads = 0;
+    stubApi({
+      signedIn: MEMBER,
+      extra: (call) => {
+        if (call.url.pathname !== "/api/v1/home" || call.method !== "GET") return undefined;
+        homeReads += 1;
+        return json(200, { sections });
+      },
+    });
+    renderAt("/");
+
+    expect(await screen.findByRole("heading", { name: "Welcome to OpenLaw" })).toBeInTheDocument();
+    expect(homeReads).toBe(1);
+    sections = [{ ...inboxSection, total: 1 }];
+    act(() => sources[0]!.open());
+
+    await waitFor(() => expect(homeReads).toBe(2));
+    const card = await screen.findByRole("region", { name: "Inbox" });
+    expect(within(card).getByText("1")).toBeInTheDocument();
   });
 
   it("renders the Manager's Contract and Matter portfolios with lifecycle, next dates, and markers", async () => {
