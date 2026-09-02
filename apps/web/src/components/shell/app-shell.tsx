@@ -24,9 +24,9 @@
  * under a fixed activity bar (DES-016).
  */
 
-import { useCallback, useEffect, useLayoutEffect, useMemo, useState, type ReactNode } from "react";
+import { useCallback, useLayoutEffect, useMemo, useState, type ReactNode } from "react";
 import { api } from "../../lib/api";
-import { retainLiveEvents, type LiveEventRecordScope } from "../../lib/events";
+import { useRetainedLiveEvents, type LiveEventRecordScope } from "../../lib/events";
 import { useGlobalKeys } from "../../lib/keyboard";
 import { cn } from "../../lib/utils";
 import { applyPreferredTheme, type Theme } from "../../lib/theme";
@@ -75,17 +75,7 @@ export function AppShell({
 
   // The authenticated shell owns the tab's one live connection. The
   // shared module keeps it through route-to-route shell replacement.
-  const liveEntityType = recordScope?.entityType;
-  const liveEntityId = recordScope?.entityId;
-  useEffect(
-    () =>
-      retainLiveEvents(
-        liveEntityType && liveEntityId
-          ? { entityType: liveEntityType, entityId: liveEntityId }
-          : undefined,
-      ),
-    [liveEntityType, liveEntityId],
-  );
+  useRetainedLiveEvents(recordScope);
 
   const [themeStatus, setThemeStatus] = useState<FieldStatus>("idle");
   const changeTheme = useCallback((next: Theme) => {

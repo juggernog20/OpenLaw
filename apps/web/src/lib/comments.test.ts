@@ -3,7 +3,8 @@
 /** Folding a live re-read window into the thread on screen (M30/4, CMT-002). */
 
 import { describe, expect, it } from "vitest";
-import { mergeCommentWindow, type Comment } from "./comments";
+import { json, problem, stubFetch } from "../testing/helpers";
+import { mergeCommentWindow, readCommentWindow, type Comment } from "./comments";
 
 function comment(id: string, createdAt: string, body = id): Comment {
   return {
@@ -64,5 +65,79 @@ describe("mergeCommentWindow", () => {
       [comment("c-3", instant), comment("c-1", instant)],
     );
     expect(merged.map((row) => row.id)).toEqual(["c-1", "c-2", "c-3"]);
+  });
+});
+
+describe("readCommentWindow", () => {
+  /** Answers the thread read page by page, newest page first, keyed by
+   * the cursor each page hands back. */
+  function threadApi(pages: Comment[][], failAt?: number) {
+    const reads: string[] = [];
+    stubFetch((call) => {
+      if (call.url.pathname !== "/api/v1/comments" || call.method !== "GET") {
+        return problem(404, "Not stubbed.");
+      }
+      const cursor = call.url.searchParams.get("cursor");
+      const index = cursor ? Number(cursor.replace("page-", "")) : 0;
+      reads.push(cursor ?? "first");
+      if (index === failAt) return problem(500, "Nope.");
+      const next = index + 1 < pages.length ? `page-${index + 1}` : null;
+      return json(200, { comments: pages[index] ?? [], nextCursor: next });
+    });
+    return reads;
+  }
+
+  it("walks back until the row asked for appears, older pages first", async () => {
+    const reads = threadApi([
+      [C, D],
+      [A, B],
+    ]);
+    const window = await readCommentWindow("contract", "c1", "c-b");
+    expect(window?.comments.map((row) => row.id)).toEqual(["c-a", "c-b", "c-c", "c-d"]);
+    expect(window?.nextCursor).toBeNull();
+    expect(reads).toEqual(["first", "page-1"]);
+  });
+
+  it("stops at the first page when no row is asked for", async () => {
+    const reads = threadApi([
+      [C, D],
+      [A, B],
+    ]);
+    const window = await readCommentWindow("contract", "c1");
+    expect(window?.comments.map((row) => row.id)).toEqual(["c-c", "c-d"]);
+    expect(window?.nextCursor).toBe("page-1");
+    expect(reads).toEqual(["first"]);
+  });
+
+  it("stops at the thread's start when the row asked for never appears", async () => {
+    const reads = threadApi([
+      [C, D],
+      [A, B],
+    ]);
+    const window = await readCommentWindow("contract", "c1", "c-gone");
+    expect(window?.comments.map((row) => row.id)).toEqual(["c-a", "c-b", "c-c", "c-d"]);
+    expect(reads).toEqual(["first", "page-1"]);
+  });
+
+  it("gives up the walk after a bounded number of pages", async () => {
+    const pages = Array.from({ length: 8 }, (_, index) => [
+      comment(`c-${index}`, `2026-08-12T0${index}:00:00.000Z`),
+    ]);
+    const reads = threadApi(pages);
+    const window = await readCommentWindow("contract", "c1", "c-gone");
+    expect(reads).toHaveLength(5);
+    expect(window?.comments).toHaveLength(5);
+    expect(window?.nextCursor).toBe("page-5");
+  });
+
+  it("answers nothing when a page fails, whichever page it was", async () => {
+    threadApi(
+      [
+        [C, D],
+        [A, B],
+      ],
+      1,
+    );
+    await expect(readCommentWindow("contract", "c1", "c-b")).resolves.toBeUndefined();
   });
 });

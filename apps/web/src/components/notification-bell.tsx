@@ -247,8 +247,10 @@ export function NotificationBell({ surface }: Readonly<{ surface: BellSurface }>
       );
       setCursor(data.nextCursor);
       // Shown is read (NOT-005). After the rows are on screen rather
-      // than before, so a page that never arrived is never marked.
-      await markPageRead(data.notifications);
+      // than before, so a page that never arrived is never marked. A
+      // read whose centre closed while it was out showed nobody
+      // anything, so it marks nothing either.
+      if (openNow.current) await markPageRead(data.notifications);
     },
     [markPageRead, surface],
   );

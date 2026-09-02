@@ -4886,6 +4886,53 @@ describe("the contract record's history applet (M9/6)", () => {
     expect(within(panel).queryByRole("alert")).not.toBeInTheDocument();
   });
 
+  it("starts the feed over when a reconnect's page overlaps nothing it held", async () => {
+    const user = userEvent.setup();
+    const sources = stubEventSource();
+    // Two pages of one entry each while the panel is open, then a
+    // disconnect long enough for a whole page of newer entries to
+    // arrive: the re-asked head page holds none of the rows on screen.
+    const before = [[entry("a2", "contract.updated")], [entry("a1", "contract.created")]];
+    const after = [
+      [entry("a4", "contract.updated", {}, "working_team", "2026-08-12T11:00:00.000Z")],
+      [entry("a3", "contract.updated", {}, "working_team", "2026-08-12T10:00:00.000Z")],
+      [entry("a2", "contract.updated")],
+      [entry("a1", "contract.created")],
+    ];
+    let pages = before;
+    const record = recordApi(contractRow());
+    const cursors: (string | null)[] = [];
+    const handler = (call: StubCall): StubAnswer => {
+      if (call.url.pathname !== "/api/v1/activity" || call.method !== "GET") {
+        return record.handler(call);
+      }
+      const cursor = call.url.searchParams.get("cursor");
+      cursors.push(cursor);
+      const index = cursor === null ? 0 : pages.findIndex((page) => page.at(-1)?.id === cursor) + 1;
+      const entries = pages[index] ?? [];
+      const next = pages[index + 1] ? (entries.at(-1)?.id ?? null) : null;
+      return json(200, { entries, nextCursor: next });
+    };
+    stubApi({ signedIn: MEMBER, extra: handler });
+    renderAt("/contracts/42");
+    await openHistory(user);
+
+    const panel = await screen.findByRole("complementary", { name: "History" });
+    const feed = within(panel).getByRole("list", { name: "History" });
+    await user.click(within(panel).getByRole("button", { name: "Show older" }));
+    await waitFor(() => expect(within(feed).getAllByRole("listitem")).toHaveLength(2));
+
+    pages = after;
+    sources[0]!.open();
+    await waitFor(() => expect(cursors).toHaveLength(3));
+    // The answer is the feed again: the head page alone, with its own
+    // cursor, so "Show older" walks the gap instead of skipping it.
+    await waitFor(() => expect(within(feed).getAllByRole("listitem")).toHaveLength(1));
+    await user.click(within(panel).getByRole("button", { name: "Show older" }));
+    await waitFor(() => expect(within(feed).getAllByRole("listitem")).toHaveLength(2));
+    expect(cursors.at(-1)).toBe("a4");
+  });
+
   it("re-asks the visible newest page on reconnect and leaves a filtered entry invisible", async () => {
     const user = userEvent.setup();
     const sources = stubEventSource();

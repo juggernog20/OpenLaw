@@ -2,6 +2,7 @@
 
 /** One browser-owned connection for TECH-009's live prompts, re-scoped per record. */
 
+import { useEffect } from "react";
 import { parseLiveEvent, type LiveEvent, type LiveRecordEntityType } from "@openlaw/shared";
 
 /** `open` fires on the first connection and after every native reconnect. */
@@ -91,6 +92,23 @@ export function retainLiveEvents(scope?: LiveEventRecordScope): () => void {
       recordScope = undefined;
     });
   };
+}
+
+/**
+ * Holds the tab's connection for as long as the calling shell is mounted.
+ *
+ * The effect depends on the scope's primitives, not the object: a shell
+ * passing an inline literal must not tear the connection down and reopen
+ * it on every render. Both authenticated shells call this, so that rule
+ * is kept once.
+ */
+export function useRetainedLiveEvents(scope?: LiveEventRecordScope): void {
+  const entityType = scope?.entityType;
+  const entityId = scope?.entityId;
+  useEffect(
+    () => retainLiveEvents(entityType && entityId ? { entityType, entityId } : undefined),
+    [entityType, entityId],
+  );
 }
 
 /** Subscribes a live surface without opening a second connection. */

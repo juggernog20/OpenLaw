@@ -63,6 +63,8 @@ export interface EventSourceTestDouble {
   readonly readyState: number;
   open(): void;
   emit(event: LiveEvent): void;
+  /** Delivers one frame exactly as the wire would, JSON or not. */
+  emitRaw(kind: string, data: string): void;
   close(): void;
 }
 
@@ -100,8 +102,11 @@ export function stubEventSource(): EventSourceTestDouble[] {
     }
 
     emit(event: LiveEvent) {
-      const message = new MessageEvent(event.kind, { data: JSON.stringify(event) });
-      this.dispatchEvent(message);
+      this.emitRaw(event.kind, JSON.stringify(event));
+    }
+
+    emitRaw(kind: string, data: string) {
+      this.dispatchEvent(new MessageEvent(kind, { data }));
     }
 
     close() {

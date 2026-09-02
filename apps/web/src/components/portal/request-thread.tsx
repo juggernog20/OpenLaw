@@ -112,11 +112,13 @@ export function RequestThread({
     const throughId = commentsRef.current[0]?.id;
     const data = await readCommentWindow("request", requestId, throughId);
     if (issue < newestLanded.current) return;
-    newestLanded.current = issue;
     if (!data) {
+      // A failed newer read must not make an older valid answer stale:
+      // the watermark moves only on an answer the card can draw.
       setReadFailed(true);
       return;
     }
+    newestLanded.current = issue;
     setReadFailed(false);
     setComments((current) => mergeCommentWindow(current, data.comments));
     if (commentsRef.current[0]?.id === throughId) setCursor(data.nextCursor);

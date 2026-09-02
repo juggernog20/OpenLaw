@@ -724,7 +724,14 @@ export function ContractRecordPage() {
           return;
         }
         if (event.action.startsWith("approval.")) void refreshApprovals();
-        if (event.action.startsWith("envelope.") || event.action === "document.executed_set") {
+        // The executed copy narrates as a document verb, not an envelope
+        // one (CTR-013, M15/5): its arrival, and a pin taken off again,
+        // both change what the envelope row draws.
+        if (
+          event.action.startsWith("envelope.") ||
+          event.action === "document.executed_set" ||
+          event.action === "document.executed_cleared"
+        ) {
           void refreshSigning();
         }
       }),

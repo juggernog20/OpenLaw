@@ -237,6 +237,11 @@ export function useCommentApplet({
       unreadLanded.current = unreadIssued.current + 1;
       threadCancelled.current = threadIssued.current + 1;
       threadLanded.current = threadIssued.current + 1;
+      // The in-flight loop belongs to the record being left. Release
+      // the gate so the next record's first prompt reads instead of
+      // queueing behind a closure that can no longer paint.
+      refreshing.current = false;
+      refreshAgain.current = false;
     };
   }, [readUnread]);
 

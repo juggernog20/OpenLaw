@@ -38,6 +38,13 @@ export type CommentTier = Comment["visibility"];
 /** The record a thread hangs off — the reference the panel is keyed by. */
 export type CommentEntityType = Comment["entityType"];
 
+/** How far back one re-ask walks. A window that never reaches the old
+ * first row still merges by id, so a short window degrades to "some
+ * older rows not refreshed"; an unbounded walk would re-read a long
+ * thread page by page on every prompt, on a channel that fans out to
+ * every open tab. */
+const MAX_WINDOW_PAGES = 5;
+
 /**
  * Re-reads the newest end of a thread through one row already on screen.
  *
@@ -53,6 +60,7 @@ export async function readCommentWindow(
 ): Promise<ThreadResponse | undefined> {
   let cursor: string | undefined;
   let comments: Comment[] = [];
+  let pages = 0;
 
   for (;;) {
     const { data } = await api
@@ -69,7 +77,13 @@ export async function readCommentWindow(
     if (!data) return undefined;
 
     comments = [...data.comments, ...comments];
-    if (!throughId || comments.some((comment) => comment.id === throughId) || !data.nextCursor) {
+    pages += 1;
+    if (
+      !throughId ||
+      comments.some((comment) => comment.id === throughId) ||
+      !data.nextCursor ||
+      pages >= MAX_WINDOW_PAGES
+    ) {
       return { comments, nextCursor: data.nextCursor };
     }
     cursor = data.nextCursor;

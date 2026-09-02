@@ -172,7 +172,7 @@ async function openComments(page: Page): Promise<Locator> {
 
 async function postWorkingTeamComment(page: Page, body: string): Promise<void> {
   const panel = comments(page);
-  await panel.getByRole("group", { name: "Audience" }).getByText("Working Team").click();
+  await panel.getByRole("group", { name: "Audience" }).getByText("Working team").click();
   await panel.getByLabel("New comment").fill(body);
   const posted = page.waitForResponse(
     (response) =>

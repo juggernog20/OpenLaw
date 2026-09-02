@@ -138,6 +138,12 @@ function ActivityFeed({
    * remains valid across either. */
   const headIssued = useRef(0);
   const headLanded = useRef(0);
+  /** What the feed holds, for the head read to compare its answer with
+   * outside a state updater. */
+  const entriesRef = useRef<ActivityEntry[] | null>(null);
+  useEffect(() => {
+    entriesRef.current = entries;
+  }, [entries]);
 
   // A new record is a new feed. The reset happens during render, so
   // the first page below never draws over the last record's entries.
@@ -205,15 +211,28 @@ function ActivityFeed({
       setEntries(data.entries);
       return;
     }
+    const fresh = new Set(data.entries.map((entry) => entry.id));
+    const held = entriesRef.current ?? [];
+    if (held.length > 0 && !held.some((entry) => fresh.has(entry.id))) {
+      // A head page that overlaps nothing held means more than a page
+      // arrived since the last read, a long disconnect over a bulk
+      // narration. Merging would hide the rows between the two and
+      // the old cursor would never reach them, so the answer is the
+      // feed again, from the top.
+      pendingScrollAnchor.current = null;
+      setCursor(data.nextCursor);
+      setEntries(data.entries);
+      return;
+    }
     const viewport = scroller.current;
     pendingScrollAnchor.current =
       viewport && viewport.scrollTop > 0
         ? { height: viewport.scrollHeight, top: viewport.scrollTop }
         : null;
-    setEntries((current) => {
-      const fresh = new Set(data.entries.map((entry) => entry.id));
-      return [...data.entries, ...(current ?? []).filter((entry) => !fresh.has(entry.id))];
-    });
+    setEntries((current) => [
+      ...data.entries,
+      ...(current ?? []).filter((entry) => !fresh.has(entry.id)),
+    ]);
   }, [fetchPage]);
 
   useLayoutEffect(() => {
