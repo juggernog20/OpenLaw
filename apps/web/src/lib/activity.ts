@@ -2403,6 +2403,49 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
     values: (intl, payload) => ({ provider: named(intl, payload, "provider") }),
   },
 
+  // ---- The AI connector (CTR-008, TECH-012) ----
+  "ai_connector.configured": {
+    icon: Plug,
+    message: defineMessage({
+      id: "activity.aiConnector.configured",
+      defaultMessage: "{actor} connected the AI provider {provider}",
+    }),
+    values: (intl, payload) => ({ provider: named(intl, payload, "preset") }),
+  },
+  "ai_connector.updated": {
+    icon: Plug,
+    message: defineMessage({
+      id: "activity.aiConnector.updated",
+      defaultMessage: "{actor} changed the AI connector {provider}",
+    }),
+    values: (intl, payload) => ({ provider: named(intl, payload, "preset") }),
+    changes: fieldChange,
+  },
+  "ai_connector.disabled": {
+    icon: Unplug,
+    message: defineMessage({
+      id: "activity.aiConnector.disabled",
+      defaultMessage: "{actor} turned off the AI connector {provider}",
+    }),
+    values: (intl, payload) => ({ provider: named(intl, payload, "preset") }),
+  },
+  "ai_connector.enabled": {
+    icon: Plug,
+    message: defineMessage({
+      id: "activity.aiConnector.enabled",
+      defaultMessage: "{actor} turned on the AI connector {provider}",
+    }),
+    values: (intl, payload) => ({ provider: named(intl, payload, "preset") }),
+  },
+  "ai_connector.removed": {
+    icon: Trash2,
+    message: defineMessage({
+      id: "activity.aiConnector.removed",
+      defaultMessage: "{actor} removed the AI connector {provider} and its API key",
+    }),
+    values: (intl, payload) => ({ provider: named(intl, payload, "preset") }),
+  },
+
   // ---- The settings taxonomies and the field catalog ----
   ...taxonomyArms("contract_type", Tag, TAXONOMY_VERBS),
   ...taxonomyArms("matter_type", Tag, TAXONOMY_VERBS),

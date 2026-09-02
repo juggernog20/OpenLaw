@@ -1013,6 +1013,30 @@ type SigningConnectorPayloads = {
   };
 };
 
+/** The singleton AI connector follows the signing connector's settings history. */
+type AiConnectorPayloads = {
+  "ai_connector.configured": {
+    preset: string;
+    protocol: string;
+    baseUrl: string;
+    model: string;
+  };
+  "ai_connector.updated": {
+    preset: string;
+    field: string;
+    old: unknown;
+    new: unknown;
+  };
+  "ai_connector.disabled": { preset: string };
+  "ai_connector.enabled": { preset: string };
+  "ai_connector.removed": {
+    preset: string;
+    protocol: string;
+    baseUrl: string;
+    model: string;
+  };
+};
+
 /**
  * One round of signature on one contract (M15/2, M15/3, CTR-013). These
  * hang off the contract, not off the envelope, for the reason the
@@ -1160,6 +1184,7 @@ export type ActivityPayloadMap = UserPayloads &
   FolderPayloads &
   SsoProviderPayloads &
   SigningConnectorPayloads &
+  AiConnectorPayloads &
   EnvelopePayloads &
   SignerErasurePayloads &
   KnowledgePayloads &

@@ -48,6 +48,7 @@ import type { AppDeps } from "../app.js";
 import { createFakeDocEngine } from "../lib/doc-engine/fake.js";
 import { createLocalStorage } from "../lib/storage/local.js";
 import { createUnconfiguredSigningResolver } from "../lib/signing/resolver.js";
+import { createFakeAiProvider } from "../lib/ai/fake.js";
 import { createNotifier } from "../lib/notifications/notifier.js";
 import { createTestingEventHub } from "../lib/event-hub.js";
 import { createUnconfiguredJobQueue } from "../pipeline/jobs.js";
@@ -97,6 +98,7 @@ const UNWRITTEN_STORAGE_ROOT = join(tmpdir(), "openlaw-test-deps-never-written")
 export function testDeps(overrides: Partial<AppDeps> = {}): AppDeps {
   const db = overrides.db ?? createDb(UNUSED_DATABASE_URL);
   const jobs = overrides.jobs ?? createUnconfiguredJobQueue();
+  const ai = createFakeAiProvider();
   return {
     db,
     config: TEST_AUTH_CONFIG,
@@ -105,6 +107,7 @@ export function testDeps(overrides: Partial<AppDeps> = {}): AppDeps {
     docEngine: createFakeDocEngine(),
     jobs,
     resolveSigningProvider: createUnconfiguredSigningResolver(),
+    resolveAiProvider: () => Promise.resolve(ai),
     // The real seam over whatever database and queue this app ended up
     // with, rather than a fake of its own: everything it does is a
     // query and a queue ask. On the defaults both refuse loudly, so a

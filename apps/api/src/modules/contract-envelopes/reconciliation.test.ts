@@ -641,6 +641,7 @@ describe("the scheduled shape", () => {
         storage: harness.storage,
         docEngine: harness.docEngine,
         resolveSigningProvider: harness.resolveSigningProvider,
+        resolveAiProvider: harness.resolveAiProvider,
         resolveMailer: () =>
           Promise.resolve({ source: "unset" as const, from: null, mailer: harness.mailer }),
         baseUrl: "http://localhost",

@@ -36,6 +36,9 @@ import type { DocEngine } from "../lib/doc-engine/engine.js";
 import { createFakeDocEngine } from "../lib/doc-engine/fake.js";
 import { createFakeSigningProvider, type FakeSigningProvider } from "../lib/signing/fake.js";
 import { createSigningResolver, type SigningResolver } from "../lib/signing/resolver.js";
+import { createFakeAiProvider, type FakeAiProvider } from "../lib/ai/fake.js";
+import { createAiResolver, type AiResolver } from "../lib/ai/resolver.js";
+import type { AiDriverFactory } from "../lib/ai/resolver.js";
 import { createNotifier, type Notifier } from "../lib/notifications/notifier.js";
 import { createPostgresEventHub } from "../lib/event-hub.js";
 import { startPipeline, type Pipeline } from "../pipeline/pg-boss.js";
@@ -270,6 +273,9 @@ export interface TestHarness {
    * changes what the next round resolves.
    */
   resolveSigningProvider: SigningResolver;
+  /** The deterministic AI provider built from the live connector row. */
+  readonly ai: FakeAiProvider | null;
+  resolveAiProvider: AiResolver;
   /**
    * This container's Postgres, as a connection string.
    *
@@ -319,6 +325,8 @@ export interface HarnessOptions {
   morningRoundTrigger?: boolean;
   /** Shortened only by the SSE suite; production sends every 15 seconds. */
   eventHeartbeatMs?: number;
+  /** Uses the deterministic fake unless a provider integration suite supplies a real factory. */
+  aiDriverFactory?: AiDriverFactory;
 }
 
 export async function startHarness(options: HarnessOptions = {}): Promise<TestHarness> {
@@ -393,6 +401,28 @@ export async function startHarness(options: HarnessOptions = {}): Promise<TestHa
       }
       return signing;
     });
+    let ai: FakeAiProvider | null = null;
+    let aiKey: string | null = null;
+    const fakeAiDriver: AiDriverFactory = (config) => {
+      const key = JSON.stringify([
+        config.preset,
+        config.protocol,
+        config.baseUrl,
+        config.apiKey,
+        config.model,
+      ]);
+      if (!ai || aiKey !== key) {
+        ai = createFakeAiProvider({
+          preset: config.preset,
+          protocol: config.protocol,
+          apiKey: config.apiKey,
+          model: config.model,
+        });
+        aiKey = key;
+      }
+      return ai;
+    };
+    const resolveAiProvider = createAiResolver(db, options.aiDriverFactory ?? fakeAiDriver);
     // The real queue and the real handlers, on this container's
     // Postgres. pg-boss installs its schema in about a tenth of a
     // second, so every suite runs the production pipeline rather than a
@@ -408,6 +438,7 @@ export async function startHarness(options: HarnessOptions = {}): Promise<TestHa
         storage,
         docEngine,
         resolveSigningProvider,
+        resolveAiProvider,
         resolveMailer,
         baseUrl: TEST_AUTH_CONFIG.baseUrl,
         log: capturingLogger(jobLog),
@@ -435,6 +466,7 @@ export async function startHarness(options: HarnessOptions = {}): Promise<TestHa
       docEngine,
       jobs: pipeline,
       resolveSigningProvider,
+      resolveAiProvider,
       notifier,
       eventHub,
       maxUploadBytes: options.maxUploadBytes,
@@ -454,9 +486,13 @@ export async function startHarness(options: HarnessOptions = {}): Promise<TestHa
       notifier,
       jobLog,
       resolveSigningProvider,
+      resolveAiProvider,
       databaseUrl: container.getConnectionUri(),
       get signing() {
         return signing;
+      },
+      get ai() {
+        return ai;
       },
       get smtpEnv() {
         return smtpEnv;

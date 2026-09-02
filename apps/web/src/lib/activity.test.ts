@@ -811,6 +811,28 @@ const SAMPLE_PAYLOADS: { [A in ActivityAction]: ActivityPayloadMap[A] } = {
     integrationKey: "ik_1",
   },
 
+  // AI connector
+  "ai_connector.configured": {
+    preset: "openai",
+    protocol: "openai_chat_completions",
+    baseUrl: "https://api.openai.com/v1",
+    model: "gpt-test",
+  },
+  "ai_connector.updated": {
+    preset: "openai",
+    field: "apiKey",
+    old: "[secret]",
+    new: "[secret]",
+  },
+  "ai_connector.disabled": { preset: "openai" },
+  "ai_connector.enabled": { preset: "openai" },
+  "ai_connector.removed": {
+    preset: "openai",
+    protocol: "openai_chat_completions",
+    baseUrl: "https://api.openai.com/v1",
+    model: "gpt-test",
+  },
+
   // Signature round
   "envelope.sent": {
     envelopeId: "env_1",

@@ -13,6 +13,7 @@ import pg from "pg";
 export type { PoolClient } from "pg";
 import { guardMigrationJournal } from "./migration-journal.js";
 import * as activitySchema from "./schema/activity.js";
+import * as aiConnectorSchema from "./schema/ai-connector.js";
 import * as approverGroupsSchema from "./schema/approver-groups.js";
 import * as authSchema from "./schema/auth.js";
 import * as commentsSchema from "./schema/comments.js";
@@ -67,6 +68,7 @@ import * as signingConnectorsSchema from "./schema/signing-connectors.js";
 import { resealStoredSecrets, type SecretsRewrap } from "./rewrap.js";
 
 export * from "./schema/activity.js";
+export * from "./schema/ai-connector.js";
 export * from "./schema/approver-groups.js";
 export * from "./schema/auth.js";
 export * from "./schema/comments.js";
@@ -123,6 +125,7 @@ export * from "./rewrap.js";
 export * from "./secrets.js";
 export const schema = {
   ...activitySchema,
+  ...aiConnectorSchema,
   ...approverGroupsSchema,
   ...authSchema,
   ...commentsSchema,

@@ -25,6 +25,7 @@
 import { PgBoss, type JobWithMetadata } from "pg-boss";
 import type { MailerResolver } from "../lib/mailer.js";
 import type { SigningResolver } from "../lib/signing/resolver.js";
+import type { AiResolver } from "../lib/ai/resolver.js";
 import { runBackfillSweep } from "./backfill.js";
 import type { DerivationDeps } from "./derivations.js";
 import { handleDisplayConversion } from "./display-conversion.js";
@@ -171,6 +172,8 @@ export interface PipelineHandlers extends DerivationDeps {
    * connector resolves to nothing, and an executed-copy job then
    * records a terminal failure rather than waiting for one. */
   resolveSigningProvider: SigningResolver;
+  /** The AI connector, read live for each future analysis run (TECH-012). */
+  resolveAiProvider: AiResolver;
   /**
    * The mailer, resolved per send (TECH-011, #37) exactly as the API
    * resolves it — so a relay saved in the wizard reaches the very next

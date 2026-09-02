@@ -849,6 +849,7 @@ describe("the scheduled shape", () => {
         storage: harness.storage,
         docEngine: harness.docEngine,
         resolveSigningProvider: harness.resolveSigningProvider,
+        resolveAiProvider: harness.resolveAiProvider,
         resolveMailer: harness.resolveMailer,
         baseUrl: "http://localhost",
         log: recordingLog().log,

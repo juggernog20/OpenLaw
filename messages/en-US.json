@@ -44,6 +44,21 @@
   "activity.actor.system": {
     "defaultMessage": "OpenLaw"
   },
+  "activity.aiConnector.configured": {
+    "defaultMessage": "{actor} connected the AI provider {provider}"
+  },
+  "activity.aiConnector.disabled": {
+    "defaultMessage": "{actor} turned off the AI connector {provider}"
+  },
+  "activity.aiConnector.enabled": {
+    "defaultMessage": "{actor} turned on the AI connector {provider}"
+  },
+  "activity.aiConnector.removed": {
+    "defaultMessage": "{actor} removed the AI connector {provider} and its API key"
+  },
+  "activity.aiConnector.updated": {
+    "defaultMessage": "{actor} changed the AI connector {provider}"
+  },
   "activity.applet": {
     "defaultMessage": "History"
   },
@@ -5138,6 +5153,120 @@
   "search.seeAll": {
     "defaultMessage": "See all results"
   },
+  "settings.aiAnalysis.apiKey": {
+    "defaultMessage": "API key"
+  },
+  "settings.aiAnalysis.apiKey.keep": {
+    "defaultMessage": "Leave blank to keep the current key. Paste a new one to rotate."
+  },
+  "settings.aiAnalysis.apiKey.optional": {
+    "defaultMessage": "Ollama does not require an API key."
+  },
+  "settings.aiAnalysis.apiKey.placeholder": {
+    "defaultMessage": "••••••••••••••••"
+  },
+  "settings.aiAnalysis.apiKey.required": {
+    "defaultMessage": "Required for this provider. The key is write-only and encrypted at rest."
+  },
+  "settings.aiAnalysis.baseUrl": {
+    "defaultMessage": "Base URL"
+  },
+  "settings.aiAnalysis.chip.connected": {
+    "defaultMessage": "Connected"
+  },
+  "settings.aiAnalysis.chip.notConnected": {
+    "defaultMessage": "Not connected"
+  },
+  "settings.aiAnalysis.chip.turnedOff": {
+    "defaultMessage": "Turned off"
+  },
+  "settings.aiAnalysis.connected": {
+    "defaultMessage": "Connection successful."
+  },
+  "settings.aiAnalysis.deploymentEndpoint": {
+    "defaultMessage": "Deployment endpoint"
+  },
+  "settings.aiAnalysis.enabled": {
+    "defaultMessage": "Use AI analysis"
+  },
+  "settings.aiAnalysis.enabled.off": {
+    "defaultMessage": "Off since {when}. Turn it on to make AI analysis available again."
+  },
+  "settings.aiAnalysis.enabled.on": {
+    "defaultMessage": "Turn this off to hide AI analysis without deleting the connector."
+  },
+  "settings.aiAnalysis.intro": {
+    "defaultMessage": "Connect your own AI provider for contract analysis. OpenLaw sends contract text only when an analysis runs."
+  },
+  "settings.aiAnalysis.model": {
+    "defaultMessage": "Model"
+  },
+  "settings.aiAnalysis.pageTitle": {
+    "defaultMessage": "AI analysis"
+  },
+  "settings.aiAnalysis.protocol": {
+    "defaultMessage": "Protocol"
+  },
+  "settings.aiAnalysis.protocol.anthropic": {
+    "defaultMessage": "Anthropic Messages"
+  },
+  "settings.aiAnalysis.protocol.gemini": {
+    "defaultMessage": "Gemini"
+  },
+  "settings.aiAnalysis.protocol.openai": {
+    "defaultMessage": "OpenAI-compatible chat completions"
+  },
+  "settings.aiAnalysis.provider": {
+    "defaultMessage": "Provider"
+  },
+  "settings.aiAnalysis.provider.anthropic": {
+    "defaultMessage": "Anthropic"
+  },
+  "settings.aiAnalysis.provider.azureOpenAi": {
+    "defaultMessage": "Azure OpenAI"
+  },
+  "settings.aiAnalysis.provider.custom": {
+    "defaultMessage": "Custom endpoint"
+  },
+  "settings.aiAnalysis.provider.gemini": {
+    "defaultMessage": "Gemini"
+  },
+  "settings.aiAnalysis.provider.ollama": {
+    "defaultMessage": "Ollama"
+  },
+  "settings.aiAnalysis.provider.openRouter": {
+    "defaultMessage": "OpenRouter"
+  },
+  "settings.aiAnalysis.provider.openai": {
+    "defaultMessage": "OpenAI"
+  },
+  "settings.aiAnalysis.providerCard": {
+    "defaultMessage": "Provider"
+  },
+  "settings.aiAnalysis.remove": {
+    "defaultMessage": "Remove connector"
+  },
+  "settings.aiAnalysis.removeBody": {
+    "defaultMessage": "The API key is deleted with the connector. Reconnecting means entering it again."
+  },
+  "settings.aiAnalysis.removeConfirm": {
+    "defaultMessage": "Remove connector"
+  },
+  "settings.aiAnalysis.removeTitle": {
+    "defaultMessage": "Remove the AI connector"
+  },
+  "settings.aiAnalysis.save": {
+    "defaultMessage": "Save connector"
+  },
+  "settings.aiAnalysis.test": {
+    "defaultMessage": "Test connection"
+  },
+  "settings.aiAnalysis.testFailed": {
+    "defaultMessage": "The connection test failed. Check the connector and try again."
+  },
+  "settings.aiAnalysis.testing": {
+    "defaultMessage": "Testing the connection…"
+  },
   "settings.appearance.caption": {
     "defaultMessage": "Theme is a personal preference — it doesn't affect other users."
   },
@@ -6073,6 +6202,18 @@
   },
   "settings.intakeLinks.urlLabel": {
     "defaultMessage": "Address"
+  },
+  "settings.integrations.tab.aiAnalysis": {
+    "defaultMessage": "AI analysis"
+  },
+  "settings.integrations.tab.eSignature": {
+    "defaultMessage": "E-signature"
+  },
+  "settings.integrations.tabsLabel": {
+    "defaultMessage": "Integration panes"
+  },
+  "settings.integrations.title": {
+    "defaultMessage": "Integrations"
   },
   "settings.knowledge.tab.types": {
     "defaultMessage": "Types"

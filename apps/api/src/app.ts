@@ -39,6 +39,7 @@ import type { JobQueue } from "./pipeline/jobs.js";
 import type { Notifier } from "./lib/notifications/notifier.js";
 import type { StorageAdapter } from "./lib/storage/adapter.js";
 import type { SigningResolver } from "./lib/signing/resolver.js";
+import type { AiResolver } from "./lib/ai/resolver.js";
 import type { EventHub } from "./lib/event-hub.js";
 import { DEFAULT_MAX_UPLOAD_MB, MEGABYTE } from "./lib/uploads.js";
 import { metaRoutes } from "./modules/meta/routes.js";
@@ -99,6 +100,7 @@ import { usersRoutes } from "./modules/users/routes.js";
 import { emailSettingsRoutes } from "./modules/email-settings/routes.js";
 import { signerErasureRoutes } from "./modules/signer-erasure/routes.js";
 import { signingConnectorRoutes } from "./modules/signing-connector/routes.js";
+import { aiConnectorRoutes } from "./modules/ai-connector/routes.js";
 import { signingWebhookRoutes } from "./modules/signing-webhook/routes.js";
 import { eventRoutes } from "./modules/events/routes.js";
 import { searchRoutes } from "./modules/search/routes.js";
@@ -147,6 +149,8 @@ export interface AppDeps {
    * keeps CTR-013's zero-config manual hand-off working.
    */
   resolveSigningProvider: SigningResolver;
+  /** The enabled AI connector, read live before each probe or analysis run. */
+  resolveAiProvider: AiResolver;
   /**
    * The notification seam (NOT-001, NOT-002), injected like the queue
    * and for the queue's reason: a route names what happened — an
@@ -196,6 +200,7 @@ declare module "fastify" {
     docEngine: DocEngine;
     jobs: JobQueue;
     resolveSigningProvider: SigningResolver;
+    resolveAiProvider: AiResolver;
     notifier: Notifier;
     eventHub: EventHub;
     /** The address this install answers on (BASE_URL), so the settings
@@ -216,6 +221,7 @@ export async function buildApp(deps: AppDeps, opts: FastifyServerOptions = {}) {
   app.decorate("docEngine", deps.docEngine);
   app.decorate("jobs", deps.jobs);
   app.decorate("resolveSigningProvider", deps.resolveSigningProvider);
+  app.decorate("resolveAiProvider", deps.resolveAiProvider);
   app.decorate("notifier", deps.notifier);
   app.decorate("eventHub", deps.eventHub);
   app.decorate("baseUrl", deps.config.baseUrl);
@@ -447,6 +453,7 @@ export async function buildApp(deps: AppDeps, opts: FastifyServerOptions = {}) {
   await app.register(usersRoutes, { prefix: "/api/v1" });
   await app.register(emailSettingsRoutes, { prefix: "/api/v1" });
   await app.register(signingConnectorRoutes, { prefix: "/api/v1" });
+  await app.register(aiConnectorRoutes, { prefix: "/api/v1" });
   await app.register(signerErasureRoutes, { prefix: "/api/v1" });
   await app.register(contractTypesRoutes, { prefix: "/api/v1" });
   await app.register(attachedFieldsRoutes, { prefix: "/api/v1" });
