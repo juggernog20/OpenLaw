@@ -54,6 +54,12 @@ export async function buildAnalysisTargets(
       .orderBy(asc(contractTypeFields.displayOrder), asc(contractTypeFields.createdAt)),
   ]);
   const promptBySlug = new Map(overrides.map((row) => [row.slug, row.prompt]));
+  // New Fields cannot take a core slug (the catalog reserves them), but a
+  // Field created before M31 may already hold one. The core target owns
+  // the slug in the outcome and the unverified map, so such a Field is
+  // left out rather than written twice under one key.
+  const coreSlugs = new Set<string>(CORE_ANALYSIS_TARGETS.map((target) => target.slug));
+  const catalog = attached.filter((field) => !coreSlugs.has(field.slug));
   return [
     ...CORE_ANALYSIS_TARGETS.map((target) => ({
       slug: target.slug,
@@ -62,7 +68,7 @@ export async function buildAnalysisTargets(
       options: null,
       core: true,
     })),
-    ...attached.map((field) => ({
+    ...catalog.map((field) => ({
       slug: field.slug,
       prompt: field.prompt!,
       type: field.type,
