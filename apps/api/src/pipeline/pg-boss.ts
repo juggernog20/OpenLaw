@@ -26,6 +26,7 @@ import { PgBoss, type JobWithMetadata } from "pg-boss";
 import type { MailerResolver } from "../lib/mailer.js";
 import type { SigningResolver } from "../lib/signing/resolver.js";
 import type { AiResolver } from "../lib/ai/resolver.js";
+import { requestAutomaticContractAnalysis } from "./automatic-contract-analysis.js";
 import { runBackfillSweep } from "./backfill.js";
 import { handleContractAnalysis } from "./contract-analysis.js";
 import type { DerivationDeps } from "./derivations.js";
@@ -388,15 +389,14 @@ export async function startPipeline(options: PipelineOptions): Promise<Pipeline>
       // leave one job between them rather than two messages.
       await boss.send(JOB_QUEUES.notificationEmail, job, { singletonKey: notificationId });
     },
-    async requestContractAnalysis(contractId: string, runId: string): Promise<void> {
+    async requestContractAnalysis(contractId: string, runId: string): Promise<boolean> {
       const job: ContractAnalysisJob = { contractId, runId };
       const jobId = await boss.send(JOB_QUEUES.contractAnalysis, job, {
         singletonKey: contractId,
       });
-      // A short queue reports a singleton collision with `null`. Treat that as
-      // a refused wake-up so the route can remove the run row instead of
-      // returning a permanently pending run for work that was never queued.
-      if (!jobId) throw new Error("The Contract already has a queued analysis job.");
+      // A short queue reports a waiting singleton collision with `null`.
+      // The caller removes the row it made for a job the queue did not take.
+      return jobId !== null;
     },
   };
 
@@ -519,6 +519,16 @@ export async function startPipeline(options: PipelineOptions): Promise<Pipeline>
        * same seam over the same queue.
        */
       const notifier = createNotifier({ db: handlers.db, jobs: queue, log });
+      const onTextReady = (versionId: string) =>
+        requestAutomaticContractAnalysis(
+          {
+            db: handlers.db,
+            jobs: queue,
+            resolveAiProvider: handlers.resolveAiProvider,
+            log,
+          },
+          versionId,
+        );
 
       // One at a time, with the job's own counters. The counters are
       // what let a handler tell "try again" from "this was the last
@@ -557,11 +567,15 @@ export async function startPipeline(options: PipelineOptions): Promise<Pipeline>
         oneAtATime,
         async (jobs: JobWithMetadata<TextExtractionJob>[]) => {
           for (const job of jobs) {
-            await handleTextExtraction(handlers, {
-              versionId: job.data.versionId,
-              retryCount: job.retryCount,
-              retryLimit: job.retryLimit,
-            });
+            await handleTextExtraction(
+              handlers,
+              {
+                versionId: job.data.versionId,
+                retryCount: job.retryCount,
+                retryLimit: job.retryLimit,
+              },
+              onTextReady,
+            );
           }
         },
       );
@@ -570,11 +584,15 @@ export async function startPipeline(options: PipelineOptions): Promise<Pipeline>
         oneAtATime,
         async (jobs: JobWithMetadata<DisplayConversionJob>[]) => {
           for (const job of jobs) {
-            await handleDisplayConversion(handlers, {
-              versionId: job.data.versionId,
-              retryCount: job.retryCount,
-              retryLimit: job.retryLimit,
-            });
+            await handleDisplayConversion(
+              handlers,
+              {
+                versionId: job.data.versionId,
+                retryCount: job.retryCount,
+                retryLimit: job.retryLimit,
+              },
+              onTextReady,
+            );
           }
         },
       );
@@ -584,7 +602,12 @@ export async function startPipeline(options: PipelineOptions): Promise<Pipeline>
         async (jobs: JobWithMetadata<ExecutedCopyFetchJob>[]) => {
           for (const job of jobs) {
             await handleExecutedCopyFetch(
-              { ...handlers, jobs: queue, notifier },
+              {
+                ...handlers,
+                jobs: queue,
+                notifier,
+                onExecutedVersionPinned: onTextReady,
+              },
               {
                 envelopeId: job.data.envelopeId,
                 retryCount: job.retryCount,

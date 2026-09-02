@@ -123,6 +123,30 @@ export async function analysisTargetText(
   };
 }
 
+/** Reads the Version a run snapshotted on its first attempt. */
+async function snapshottedTargetText(
+  db: Executor,
+  contractId: string,
+  contractTypeId: string,
+  versionId: string,
+): Promise<AnalysisTargetText | null> {
+  const [derived] = await db
+    .select({ state: documentVersionText.state, text: documentVersionText.text })
+    .from(documentVersions)
+    .innerJoin(documents, eq(documentVersions.documentId, documents.id))
+    .innerJoin(documentVersionText, eq(documentVersionText.versionId, documentVersions.id))
+    .where(
+      and(
+        eq(documentVersions.id, versionId),
+        eq(documents.contractId, contractId),
+        isNull(documents.archivedAt),
+      ),
+    )
+    .limit(1);
+  if (derived?.state !== "ready" || !derived.text?.trim()) return null;
+  return { contractId, contractTypeId, versionId, text: derived.text };
+}
+
 function reasonOf(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
 }
@@ -551,25 +575,51 @@ export async function handleContractAnalysis(
   if (!run || run.state !== "pending") return;
 
   try {
-    const provider = await deps.resolveAiProvider();
-    if (!provider) throw new AiConfigError("No enabled AI connector is configured.");
-    const targetText = await analysisTargetText(deps.db, run.contractId);
-    if (!targetText) {
-      throw new AnalysisTargetError("The Contract has no ready, non-empty analysis target text.");
-    }
-    const truncated = targetText.text.length > AI_ANALYSIS_CHARACTER_BUDGET;
-    const sentText = targetText.text.slice(0, AI_ANALYSIS_CHARACTER_BUDGET);
-    const targets = await buildAnalysisTargets(deps.db, targetText.contractTypeId);
-    await deps.db
-      .update(contractAnalysisRuns)
-      .set({
-        versionId: targetText.versionId,
-        preset: provider.preset,
-        model: provider.model,
-        truncated,
-        startedAt: new Date(),
-      })
-      .where(eq(contractAnalysisRuns.id, run.id));
+    const prepared = await deps.db.transaction(async (tx) => {
+      const [contract] = await tx
+        .select({
+          id: contracts.id,
+          contractTypeId: contracts.contractTypeId,
+          archivedAt: contracts.archivedAt,
+          endedAt: contracts.endedAt,
+        })
+        .from(contracts)
+        .where(eq(contracts.id, run.contractId))
+        .limit(1)
+        .for("update");
+      if (!contract) {
+        throw new AnalysisTargetError("The Contract no longer exists.");
+      }
+      if (contract.archivedAt || contract.endedAt) {
+        throw new AnalysisTargetError("The Contract is frozen and cannot be analyzed.");
+      }
+
+      const provider = await deps.resolveAiProvider();
+      if (!provider) throw new AiConfigError("No enabled AI connector is configured.");
+
+      const targetText =
+        run.startedAt && run.versionId
+          ? await snapshottedTargetText(tx, run.contractId, contract.contractTypeId, run.versionId)
+          : await analysisTargetText(tx, run.contractId);
+      if (!targetText) {
+        throw new AnalysisTargetError("The Contract has no ready, non-empty analysis target text.");
+      }
+      const truncated = targetText.text.length > AI_ANALYSIS_CHARACTER_BUDGET;
+      const sentText = targetText.text.slice(0, AI_ANALYSIS_CHARACTER_BUDGET);
+      const targets = await buildAnalysisTargets(tx, targetText.contractTypeId);
+      await tx
+        .update(contractAnalysisRuns)
+        .set({
+          versionId: targetText.versionId,
+          preset: provider.preset,
+          model: provider.model,
+          truncated,
+          startedAt: run.startedAt ?? new Date(),
+        })
+        .where(eq(contractAnalysisRuns.id, run.id));
+      return { provider, targetText, truncated, sentText, targets };
+    });
+    const { provider, targetText, truncated, sentText, targets } = prepared;
     const extractions = await provider.extract(sentText, targets);
     await applyAnswers(
       deps,

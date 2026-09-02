@@ -230,6 +230,7 @@ import {
   updateDocumentVersionKind,
   versionStorageKey,
 } from "../../lib/document-versions.js";
+import { requestAutomaticContractAnalysis } from "../../pipeline/automatic-contract-analysis.js";
 import { needsDisplayRendition } from "../../pipeline/display-conversion.js";
 import { extractsText } from "../../pipeline/text-extraction.js";
 
@@ -2678,54 +2679,62 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
     async (request) => {
       const { documentId } = request.params;
       const { versionId } = request.body;
-      return {
-        document: await app.db.transaction(async (tx) => {
-          const target = await reachedDocument(tx, request.user, documentId, true);
-          assertOpenDocument(target);
-          assertContractDocument(target);
+      const document = await app.db.transaction(async (tx) => {
+        const target = await reachedDocument(tx, request.user, documentId, true);
+        assertOpenDocument(target);
+        assertContractDocument(target);
 
-          // DOC-001's same-document invariant, enforced at write time
-          // and enforced by the read itself: the version is looked up
-          // by its own id **and** this document's, inside the locked
-          // transaction that then writes it. A version of another
-          // document is not found here, so there is no path from a
-          // mismatched pair to a stored row.
-          const [version] = await tx
-            .select({
-              id: documentVersions.id,
-              versionNumber: documentVersions.versionNumber,
-            })
-            .from(documentVersions)
-            .where(
-              and(eq(documentVersions.id, versionId), eq(documentVersions.documentId, documentId)),
-            )
-            .limit(1);
-          if (!version) throw httpError(404, "That version is not part of this document.");
-          if (target.executedVersionId === version.id) {
-            throw httpError(409, "That version is already this document's executed copy.");
-          }
+        // DOC-001's same-document invariant, enforced at write time
+        // and enforced by the read itself: the version is looked up
+        // by its own id **and** this document's, inside the locked
+        // transaction that then writes it. A version of another
+        // document is not found here, so there is no path from a
+        // mismatched pair to a stored row.
+        const [version] = await tx
+          .select({
+            id: documentVersions.id,
+            versionNumber: documentVersions.versionNumber,
+          })
+          .from(documentVersions)
+          .where(
+            and(eq(documentVersions.id, versionId), eq(documentVersions.documentId, documentId)),
+          )
+          .limit(1);
+        if (!version) throw httpError(404, "That version is not part of this document.");
+        if (target.executedVersionId === version.id) {
+          throw httpError(409, "That version is already this document's executed copy.");
+        }
 
-          await tx
-            .update(documents)
-            .set({ executedVersionId: version.id })
-            .where(eq(documents.id, documentId));
-          await recordActivity(tx, {
-            entityType: target.owner.kind,
-            entityId: target.owner.value,
-            actorId: request.user.id,
-            action: "document.executed_set",
-            visibility: RECORD_ACTIVITY_TIER,
-            payload: {
-              documentId,
-              title: target.title,
-              versionId: version.id,
-              versionNumber: version.versionNumber,
-            },
-          });
+        await tx
+          .update(documents)
+          .set({ executedVersionId: version.id })
+          .where(eq(documents.id, documentId));
+        await recordActivity(tx, {
+          entityType: target.owner.kind,
+          entityId: target.owner.value,
+          actorId: request.user.id,
+          action: "document.executed_set",
+          visibility: RECORD_ACTIVITY_TIER,
+          payload: {
+            documentId,
+            title: target.title,
+            versionId: version.id,
+            versionNumber: version.versionNumber,
+          },
+        });
 
-          return documentWithChain(tx, documentId, target.primaryDocumentId);
-        }),
-      };
+        return documentWithChain(tx, documentId, target.primaryDocumentId);
+      });
+      await requestAutomaticContractAnalysis(
+        {
+          db: app.db,
+          jobs: app.jobs,
+          resolveAiProvider: app.resolveAiProvider,
+          log: app.log,
+        },
+        versionId,
+      );
+      return { document };
     },
   );
 

@@ -11,6 +11,7 @@ import {
   contracts,
   desc,
   eq,
+  isNull,
   type ContractAnalysisRun,
   type Executor,
 } from "@openlaw/db";
@@ -106,6 +107,7 @@ export const contractAnalysisRoutes: FastifyPluginAsyncZod = async (app) => {
             and(
               eq(contractAnalysisRuns.contractId, reached.id),
               eq(contractAnalysisRuns.state, "pending"),
+              isNull(contractAnalysisRuns.startedAt),
             ),
           )
           .limit(1);
@@ -133,12 +135,17 @@ export const contractAnalysisRoutes: FastifyPluginAsyncZod = async (app) => {
         return created!;
       });
 
+      let queued: boolean;
       try {
-        await app.jobs.requestContractAnalysis(run.contractId, run.id);
+        queued = await app.jobs.requestContractAnalysis(run.contractId, run.id);
       } catch (error) {
         await app.db.delete(contractAnalysisRuns).where(eq(contractAnalysisRuns.id, run.id));
         request.log.error({ err: error, runId: run.id }, "could not queue contract analysis");
         throw httpError(503, "The analysis run could not be queued. Try again.");
+      }
+      if (!queued) {
+        await app.db.delete(contractAnalysisRuns).where(eq(contractAnalysisRuns.id, run.id));
+        throw httpError(409, "An analysis run is already pending for this Contract.");
       }
       return reply.status(202).send({ run: toAnalysisRun(run) });
     },

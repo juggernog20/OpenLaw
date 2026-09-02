@@ -109,6 +109,10 @@ export interface ExecutedCopyDeps {
   /** Where the appended round's own derivations are asked for, after
    * this job's transaction commits. */
   jobs: JobQueue;
+  /** The executed-pin trigger. This normally skips here because the
+   * appended Version's text starts pending; its derivation calls the
+   * same scheduler again when that text becomes ready. */
+  onExecutedVersionPinned?: (versionId: string) => Promise<void>;
   /**
    * The biggest executed copy this install will file, in bytes.
    *
@@ -432,6 +436,7 @@ export async function fileExecutedCopy(deps: ExecutedCopyDeps, envelopeId: strin
     { envelopeId: owed.envelopeId, documentId, versionId, bytes: stored.byteSize },
     "filed an envelope's executed copy and pinned it",
   );
+  await deps.onExecutedVersionPinned?.(versionId);
   // After the commit, never inside it — the transaction is closed, and
   // a queue that cannot be reached must not undo a round that is
   // already on the record. The `pending` derivation rows this append

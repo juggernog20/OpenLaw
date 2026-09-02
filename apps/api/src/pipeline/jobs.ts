@@ -214,8 +214,11 @@ export interface JobQueue {
    */
   requestNotificationEmail(notificationId: string): Promise<void>;
 
-  /** Queues one durable analysis run under the Contract's singleton key. */
-  requestContractAnalysis(contractId: string, runId: string): Promise<void>;
+  /**
+   * Queues one durable analysis run under the Contract's singleton key.
+   * Answers false when another waiting job already holds that key.
+   */
+  requestContractAnalysis(contractId: string, runId: string): Promise<boolean>;
 }
 
 /**
@@ -238,7 +241,7 @@ export const QUEUE_ASK_TIMEOUT_MS = 2000;
  * unobserved; whichever side loses the race settles later with a
  * handler already attached, so neither becomes an unhandled rejection.
  */
-export async function boundedQueueAsk(asked: Promise<void>): Promise<void> {
+export async function boundedQueueAsk<T>(asked: Promise<T>): Promise<T> {
   asked.catch(() => {});
   let timer: NodeJS.Timeout | undefined;
   const bound = new Promise<never>((_resolve, reject) => {
@@ -250,7 +253,7 @@ export async function boundedQueueAsk(asked: Promise<void>): Promise<void> {
   });
   bound.catch(() => {});
   try {
-    await Promise.race([asked, bound]);
+    return await Promise.race([asked, bound]);
   } finally {
     clearTimeout(timer);
   }
