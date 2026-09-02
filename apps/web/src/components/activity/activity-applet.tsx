@@ -130,6 +130,10 @@ function ActivityFeed({
   /** Guards the pages against each other: a reopen must not have the
    * previous panel's in-flight page land on top of the new one. */
   const generation = useRef(0);
+  /** Orders reads of the head independently of older-page reads. A
+   * slower prompt must not land after a newer view of the head, while
+   * an in-flight "Show older" remains valid across either prompt. */
+  const newestGeneration = useRef(0);
 
   // A new record is a new feed. The reset happens during render, so
   // the first page below never draws over the last record's entries.
@@ -156,26 +160,37 @@ function ActivityFeed({
   );
 
   /** Lands a page's answer, unless a later read has begun since. */
-  const land = useCallback((from: string | null, mine: number, data: ActivityPage | undefined) => {
-    if (mine !== generation.current) return;
-    setBusy(false);
-    if (!data) {
-      setLoadFailed(true);
-      return;
-    }
-    setEntries((current) => (from === null ? data.entries : [...(current ?? []), ...data.entries]));
-    setCursor(data.nextCursor);
-  }, []);
+  const land = useCallback(
+    (from: string | null, mine: number, data: ActivityPage | undefined, newest?: number) => {
+      if (
+        mine !== generation.current ||
+        (newest !== undefined && newest !== newestGeneration.current)
+      )
+        return;
+      setBusy(false);
+      if (!data) {
+        setLoadFailed(true);
+        return;
+      }
+      setEntries((current) =>
+        from === null ? data.entries : [...(current ?? []), ...data.entries],
+      );
+      setCursor(data.nextCursor);
+    },
+    [],
+  );
 
   /** Re-asks the head without replacing the older pages already on screen. */
   const refreshNewest = useCallback(async () => {
     const mine = generation.current;
+    const newest = (newestGeneration.current += 1);
     const hadNoEntries = entries === null;
     const data = await fetchPage(null);
-    if (mine !== generation.current || !data) return;
+    if (mine !== generation.current || newest !== newestGeneration.current || !data) return;
     if (hadNoEntries) {
       // A reconnect can recover the first read too. In that case this
       // answer is the feed rather than a merge into one already drawn.
+      setBusy(false);
       setLoadFailed(false);
       setCursor(data.nextCursor);
     }
@@ -213,7 +228,8 @@ function ActivityFeed({
   // this runs; only the answer is written here.
   useEffect(() => {
     const mine = (generation.current += 1);
-    void fetchPage(null).then((data) => land(null, mine, data));
+    const newest = (newestGeneration.current += 1);
+    void fetchPage(null).then((data) => land(null, mine, data, newest));
   }, [fetchPage, land]);
 
   // The channel carries prompts, never feed content. Any record action

@@ -4554,6 +4554,76 @@ describe("the contract record's history applet (M9/6)", () => {
     expect(sources[0]?.url).toBe("/api/events?entityType=contract&entityId=c1");
   });
 
+  it("keeps the newest live answer when record prompts overlap", async () => {
+    const user = userEvent.setup();
+    const sources = stubEventSource();
+    let activityReads = 0;
+    let resolveEarlier!: (response: Response) => void;
+    let resolveLater!: (response: Response) => void;
+    const earlier = new Promise<Response>((resolve) => {
+      resolveEarlier = resolve;
+    });
+    const later = new Promise<Response>((resolve) => {
+      resolveLater = resolve;
+    });
+    const record = recordApi(contractRow());
+    const handler = (call: StubCall): StubAnswer => {
+      if (call.url.pathname !== "/api/v1/activity" || call.method !== "GET") {
+        return record.handler(call);
+      }
+      activityReads += 1;
+      if (activityReads === 1) {
+        return json(200, { entries: [entry("a1", "contract.created")], nextCursor: null });
+      }
+      return activityReads === 2 ? earlier : later;
+    };
+    stubApi({ signedIn: MEMBER, extra: handler });
+    renderAt("/contracts/42");
+    await openHistory(user);
+
+    const panel = await screen.findByRole("complementary", { name: "History" });
+    const feed = within(panel).getByRole("list", { name: "History" });
+    await within(feed).findByText(/created this contract/);
+
+    sources[0]!.emit({
+      kind: "record",
+      action: "contract.archived",
+      entityType: "contract",
+      entityId: "c1",
+      entryId: "a2",
+      visibility: "working_team",
+    });
+    await waitFor(() => expect(activityReads).toBe(2));
+    sources[0]!.emit({
+      kind: "record",
+      action: "contract.restored",
+      entityType: "contract",
+      entityId: "c1",
+      entryId: "a3",
+      visibility: "working_team",
+    });
+    await waitFor(() => expect(activityReads).toBe(3));
+
+    resolveLater(
+      json(200, {
+        entries: [entry("a3", "contract.restored"), entry("a1", "contract.created")],
+        nextCursor: null,
+      }),
+    );
+    await within(feed).findByText(/restored this contract/);
+
+    resolveEarlier(
+      json(200, {
+        entries: [entry("a2", "contract.archived"), entry("a1", "contract.created")],
+        nextCursor: null,
+      }),
+    );
+    await act(async () => earlier);
+
+    expect(within(feed).queryByText(/archived this contract/)).not.toBeInTheDocument();
+    expect(within(feed).getAllByRole("listitem")).toHaveLength(2);
+  });
+
   it("re-asks the visible newest page on reconnect and leaves a filtered entry invisible", async () => {
     const user = userEvent.setup();
     const sources = stubEventSource();
