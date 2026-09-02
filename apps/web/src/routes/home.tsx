@@ -60,39 +60,51 @@ export async function homeLoader({ request }: LoaderFunctionArgs) {
 
 export function HomePage() {
   const { user, sections: loadedSections } = useLoaderData<typeof homeLoader>();
-  const [inboxPatch, setInboxPatch] = useState<{
-    locationKey: string;
-    total: number;
-  } | null>(null);
   const location = useLocation();
   const { revalidate } = useRevalidator();
   const intl = useIntl();
 
   const signOut = useSignOut("/auth/login");
 
-  // A patch belongs to the navigation that drew its card. A reconnect
-  // read keeps that identity, so a newer frame can win if it lands while
-  // the read is in flight. A real navigation gets a new key and its own
-  // loader answer.
+  // The live Inbox total, and how many reconnect reads this screen has
+  // started. A patch names the navigation that drew its card and the
+  // read count it arrived under. A real navigation gets a new key and
+  // its own loader answer, so a patch from the old one never applies.
+  const [live, setLive] = useState<{
+    recoveries: number;
+    patch: { locationKey: string; recovery: number; total: number } | null;
+  }>({ recoveries: 0, patch: null });
+  // The loader answer on screen, stamped with the read count it landed
+  // under. A new answer outranks every patch older than the read that
+  // asked for it. A frame that lands while that read is in flight is
+  // newer than its answer and stays over it.
+  const [answer, setAnswer] = useState({ sections: loadedSections, recovery: 0 });
+  if (answer.sections !== loadedSections) {
+    setAnswer({ sections: loadedSections, recovery: live.recoveries });
+  }
+  const patch = live.patch;
   const sections =
-    inboxPatch?.locationKey === location.key
+    patch !== null && patch.locationKey === location.key && patch.recovery >= answer.recovery
       ? loadedSections.map((section) =>
-          section.type === "inbox" ? { ...section, total: inboxPatch.total } : section,
+          section.type === "inbox" ? { ...section, total: patch.total } : section,
         )
       : loadedSections;
   useEffect(
     () =>
       subscribeLiveEvents((event) => {
         if (event.kind === "open") {
-          // The read starts after the last known live fact. A frame that
-          // follows this point is newer and stays over its answer.
-          setInboxPatch(null);
+          // The card keeps its last live total while the recovery read
+          // is in flight. The answer replaces it when it lands.
+          setLive((state) => ({ ...state, recoveries: state.recoveries + 1 }));
           void revalidate();
           return;
         }
         if (event.kind !== "inbox") return;
         if (!loadedSections.some((section) => section.type === "inbox")) return;
-        setInboxPatch({ locationKey: location.key, total: event.total });
+        setLive((state) => ({
+          ...state,
+          patch: { locationKey: location.key, recovery: state.recoveries, total: event.total },
+        }));
       }),
     [loadedSections, location.key, revalidate],
   );

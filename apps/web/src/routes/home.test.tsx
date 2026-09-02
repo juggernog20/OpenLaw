@@ -511,6 +511,38 @@ describe("Home", () => {
     expect(homeReads).toBe(2);
   });
 
+  it("keeps the last live Inbox total while a reconnect read is in flight, then adopts its answer", async () => {
+    const sources = stubEventSource();
+    let homeReads = 0;
+    let finishRecovery!: () => void;
+    stubApi({
+      signedIn: MEMBER,
+      extra: (call) => {
+        if (call.url.pathname !== "/api/v1/home" || call.method !== "GET") return undefined;
+        homeReads += 1;
+        if (homeReads === 1) return json(200, { sections: [inboxSection] });
+        return new Promise<Response>((resolve) => {
+          finishRecovery = () => resolve(json(200, { sections: [{ ...inboxSection, total: 9 }] }));
+        });
+      },
+    });
+    renderAt("/");
+
+    const card = await screen.findByRole("region", { name: "Inbox" });
+    act(() => sources[0]!.emit({ kind: "inbox", total: 8 }));
+    expect(await within(card).findByText("8")).toBeInTheDocument();
+
+    act(() => sources[0]!.open());
+    await waitFor(() => expect(homeReads).toBe(2));
+    // The stale loader total must not show while the read is pending.
+    expect(within(card).getByText("8")).toBeInTheDocument();
+    expect(within(card).queryByText("5")).not.toBeInTheDocument();
+
+    await act(async () => finishRecovery());
+    expect(await within(card).findByText("9")).toBeInTheDocument();
+    expect(within(card).queryByText("8")).not.toBeInTheDocument();
+  });
+
   it("renders the Manager's Contract and Matter portfolios with lifecycle, next dates, and markers", async () => {
     stubApi({
       signedIn: MEMBER,
