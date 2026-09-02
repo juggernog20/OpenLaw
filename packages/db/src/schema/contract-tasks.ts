@@ -81,6 +81,9 @@ export const contractTasks = pgTable(
     /** "This contract's tasks, in display order" — the one read every
      * checklist surface rides. */
     index("contract_tasks_contract_order_idx").on(table.contractId, table.displayOrder),
+    /** M29's cross-record checklist read, ordered from the assignee to
+     * the dated work. NULL due dates sort after the dated rows. */
+    index("contract_tasks_assignee_due_idx").on(table.assigneeId, table.dueDate),
     /** A title is a line, not a document. Stated here as well as at the
      * seam for the reason every other bound in this schema is: the
      * refusal a person reads is the route's, and this is the rule the

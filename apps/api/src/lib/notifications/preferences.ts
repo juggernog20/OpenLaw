@@ -22,15 +22,29 @@
 
 import {
   and,
+  BRIEFING_PREFERENCE_GROUPS,
   eq,
   inArray,
   notificationPreferences,
   NOTIFICATION_EVENT_GROUPS,
   type Executor,
+  type BriefingPreferenceGroup,
   type NotificationChannel,
   type NotificationEventGroup,
 } from "@openlaw/db";
 import { defaultChoice, type ChannelChoice } from "./catalog.js";
+
+/** NOT-008's defaults for the five email-only section switches. Intake
+ * follows its opt-in event group; every other briefing section is on. */
+export const BRIEFING_PREFERENCE_DEFAULTS: Readonly<Record<BriefingPreferenceGroup, boolean>> = {
+  "briefing.approvals": true,
+  "briefing.tasks": true,
+  "briefing.dates": true,
+  "briefing.obligations": true,
+  "briefing.intake": false,
+};
+
+export type BriefingChoices = Readonly<Record<BriefingPreferenceGroup, boolean>>;
 
 /**
  * Lays one stored row over a choice that started as the group's
@@ -108,10 +122,63 @@ export async function myChannelChoices(db: Executor, userId: string): Promise<Gr
     .from(notificationPreferences)
     .where(eq(notificationPreferences.userId, userId));
   for (const row of rows) {
-    const choice = choices.get(row.eventGroup);
+    // Briefing-section preferences share the override table but are not
+    // part of this event-group grid. Find against the event vocabulary
+    // to narrow the key before applying it.
+    const eventGroup = NOTIFICATION_EVENT_GROUPS.find((group) => group === row.eventGroup);
+    if (!eventGroup) continue;
+    const choice = choices.get(eventGroup);
     if (choice) apply(choice, row.channel, row.enabled);
   }
   return NOTIFICATION_EVENT_GROUPS.map((group) => ({ eventGroup: group, ...choices.get(group)! }));
+}
+
+/** The five email-section answers for each person, read live by every round. */
+export async function briefingChoices(
+  db: Executor,
+  userIds: readonly string[],
+): Promise<Map<string, BriefingChoices>> {
+  const choices = new Map<string, Record<BriefingPreferenceGroup, boolean>>(
+    userIds.map((id) => [id, { ...BRIEFING_PREFERENCE_DEFAULTS }] as const),
+  );
+  if (userIds.length === 0) return choices;
+  const rows = await db
+    .select({
+      userId: notificationPreferences.userId,
+      eventGroup: notificationPreferences.eventGroup,
+      enabled: notificationPreferences.enabled,
+    })
+    .from(notificationPreferences)
+    .where(
+      and(
+        inArray(notificationPreferences.userId, [...userIds]),
+        inArray(notificationPreferences.eventGroup, [...BRIEFING_PREFERENCE_GROUPS]),
+        eq(notificationPreferences.channel, "email"),
+      ),
+    );
+  for (const row of rows) {
+    const group = BRIEFING_PREFERENCE_GROUPS.find((candidate) => candidate === row.eventGroup);
+    const choice = choices.get(row.userId);
+    if (group && choice) choice[group] = row.enabled;
+  }
+  return choices;
+}
+
+export interface BriefingGroupChoice {
+  eventGroup: BriefingPreferenceGroup;
+  email: boolean;
+}
+
+/** One person's effective briefing-section grid, in NOT-008 order. */
+export async function myBriefingChoices(
+  db: Executor,
+  userId: string,
+): Promise<BriefingGroupChoice[]> {
+  const choice = (await briefingChoices(db, [userId])).get(userId)!;
+  return BRIEFING_PREFERENCE_GROUPS.map((eventGroup) => ({
+    eventGroup,
+    email: choice[eventGroup],
+  }));
 }
 
 /**
@@ -160,6 +227,35 @@ export async function saveChannelChoice(
   await db
     .insert(notificationPreferences)
     .values({ userId, eventGroup, channel, enabled })
+    .onConflictDoUpdate({
+      target: [
+        notificationPreferences.userId,
+        notificationPreferences.eventGroup,
+        notificationPreferences.channel,
+      ],
+      set: { enabled, updatedAt: new Date() },
+    });
+}
+
+/** Saves one email-only briefing-section override. */
+export async function saveBriefingChoice(
+  db: Executor,
+  userId: string,
+  eventGroup: BriefingPreferenceGroup,
+  enabled: boolean,
+): Promise<void> {
+  const naturalKey = and(
+    eq(notificationPreferences.userId, userId),
+    eq(notificationPreferences.eventGroup, eventGroup),
+    eq(notificationPreferences.channel, "email"),
+  );
+  if (BRIEFING_PREFERENCE_DEFAULTS[eventGroup] === enabled) {
+    await db.delete(notificationPreferences).where(naturalKey);
+    return;
+  }
+  await db
+    .insert(notificationPreferences)
+    .values({ userId, eventGroup, channel: "email", enabled })
     .onConflictDoUpdate({
       target: [
         notificationPreferences.userId,

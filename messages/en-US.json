@@ -591,7 +591,7 @@
     "defaultMessage": "{actor} invited {email} as {role}"
   },
   "activity.user.notificationPreferenceChanged": {
-    "defaultMessage": "{actor} turned {channel, select, in_app {bell items} email {emails} other {{channel}}} {state, select, on {on} off {off} other {{state}}} for {group, select, assigned_to_you {direct asks} activity_on_your_records {activity on their records} dates_approaching {approaching dates} new_requests {new requests} knowledge {knowledge items} requester_events {requester events} other {{group}}}"
+    "defaultMessage": "{actor} turned {channel, select, in_app {bell items} email {emails} other {{channel}}} {state, select, on {on} off {off} other {{state}}} for {group, select, assigned_to_you {direct asks} activity_on_your_records {activity on their records} dates_approaching {approaching dates} new_requests {new requests} knowledge {knowledge items} requester_events {requester events} briefing_approvals {approvals in their briefing} briefing_tasks {Tasks in their briefing} briefing_dates {dates in their briefing} briefing_obligations {obligations in their briefing} briefing_intake {Intake in their briefing} other {{group}}}"
   },
   "activity.user.otherSessionsRevoked": {
     "defaultMessage": "{actor} signed out their other sessions"
@@ -3389,11 +3389,104 @@
   "format.deadline.withQualifier": {
     "defaultMessage": "{date} ({qualifier})"
   },
-  "home.placeholder": {
-    "defaultMessage": "Modules arrive with their own builds."
+  "home.approvals.awaiting": {
+    "defaultMessage": "Awaiting you"
+  },
+  "home.approvals.requestedBy": {
+    "defaultMessage": "Requested by {name} · Contract C-{number}"
+  },
+  "home.approvals.title": {
+    "defaultMessage": "Approvals waiting on you"
+  },
+  "home.contracts.meta": {
+    "defaultMessage": "Contract C-{number} · {stage}"
+  },
+  "home.contracts.noUpcomingDate": {
+    "defaultMessage": "No upcoming date"
+  },
+  "home.contracts.renewalPending": {
+    "defaultMessage": "Renewal pending confirmation"
+  },
+  "home.contracts.title": {
+    "defaultMessage": "Your contracts"
+  },
+  "home.dates.derived": {
+    "defaultMessage": "Derived"
+  },
+  "home.dates.expiry": {
+    "defaultMessage": "Current term expires"
+  },
+  "home.dates.keyDate": {
+    "defaultMessage": "Key date"
+  },
+  "home.dates.noticeDeadline": {
+    "defaultMessage": "Renewal notice deadline"
+  },
+  "home.dates.noticeDeadlineWithPeriod": {
+    "defaultMessage": "Renewal notice deadline — {days, plural, one {# day} other {# days}} before expiry"
+  },
+  "home.dates.record": {
+    "defaultMessage": "{kind, select, contract {Contract C-{number}} other {Matter M-{number}}}"
+  },
+  "home.dates.title": {
+    "defaultMessage": "Dates approaching"
+  },
+  "home.inbox.request": {
+    "defaultMessage": "{reference} · {requestType} · {requester}"
+  },
+  "home.inbox.title": {
+    "defaultMessage": "Inbox"
+  },
+  "home.inbox.urgency": {
+    "defaultMessage": "{urgency} urgency"
+  },
+  "home.matters.meta": {
+    "defaultMessage": "Matter M-{number} · {status}"
+  },
+  "home.matters.noUpcomingDeadline": {
+    "defaultMessage": "No upcoming deadline"
+  },
+  "home.matters.title": {
+    "defaultMessage": "Your matters"
+  },
+  "home.obligations.entityDue": {
+    "defaultMessage": "{entity} · Due {date}"
+  },
+  "home.obligations.overdue": {
+    "defaultMessage": "Overdue"
+  },
+  "home.obligations.title": {
+    "defaultMessage": "Entity obligations"
+  },
+  "home.obligations.unassigned": {
+    "defaultMessage": "Unassigned"
+  },
+  "home.section.viewAll": {
+    "defaultMessage": "View all {count}"
+  },
+  "home.tasks.noDueDate": {
+    "defaultMessage": "No due date"
+  },
+  "home.tasks.overdue": {
+    "defaultMessage": "Overdue"
+  },
+  "home.tasks.record": {
+    "defaultMessage": "{title} · {kind, select, contract {Contract C-{number}} other {Matter M-{number}}}"
+  },
+  "home.tasks.title": {
+    "defaultMessage": "Tasks assigned to you"
   },
   "home.title": {
     "defaultMessage": "Home"
+  },
+  "home.welcome.body": {
+    "defaultMessage": "Nothing is waiting on you. Approvals, Tasks, dates, obligations, contracts, matters, and Requests will appear here when they need you."
+  },
+  "home.welcome.destinations": {
+    "defaultMessage": "Go to a destination"
+  },
+  "home.welcome.title": {
+    "defaultMessage": "Welcome to OpenLaw"
   },
   "inbox.assign": {
     "defaultMessage": "Assign"
@@ -4513,6 +4606,9 @@
   },
   "notifications.bell": {
     "defaultMessage": "Notifications, {count, plural, =0 {none unread} one {# unread} other {# unread}}"
+  },
+  "notifications.briefing.ready": {
+    "defaultMessage": "Your daily briefing is ready"
   },
   "notifications.centre": {
     "defaultMessage": "Notifications"
@@ -6503,11 +6599,50 @@
   "settings.matters.title": {
     "defaultMessage": "Matters"
   },
+  "settings.notifications.briefing.approvals": {
+    "defaultMessage": "Approvals"
+  },
+  "settings.notifications.briefing.approvals.detail": {
+    "defaultMessage": "Approval requests waiting on you."
+  },
+  "settings.notifications.briefing.caption": {
+    "defaultMessage": "These switches change the email only. Your Home sections and daily bell summary stay on."
+  },
+  "settings.notifications.briefing.dates": {
+    "defaultMessage": "Dates"
+  },
+  "settings.notifications.briefing.dates.detail": {
+    "defaultMessage": "Key dates, notice deadlines, and expiries."
+  },
+  "settings.notifications.briefing.intake": {
+    "defaultMessage": "Intake"
+  },
+  "settings.notifications.briefing.intake.detail": {
+    "defaultMessage": "Open Requests in the Inbox. Off by default."
+  },
+  "settings.notifications.briefing.obligations": {
+    "defaultMessage": "Obligations"
+  },
+  "settings.notifications.briefing.obligations.detail": {
+    "defaultMessage": "Entity obligations assigned to you or awaiting an Administrator."
+  },
+  "settings.notifications.briefing.tasks": {
+    "defaultMessage": "Tasks"
+  },
+  "settings.notifications.briefing.tasks.detail": {
+    "defaultMessage": "Tasks assigned to you that are due today or overdue."
+  },
+  "settings.notifications.briefing.title": {
+    "defaultMessage": "Briefing"
+  },
   "settings.notifications.caption": {
     "defaultMessage": "Email off keeps the bell items coming. In-app off turns the group off entirely, email included."
   },
   "settings.notifications.captionEmailOnly": {
     "defaultMessage": "A group with no in-app switch reaches you by email only; its one switch is the whole choice."
+  },
+  "settings.notifications.captionInAppOnly": {
+    "defaultMessage": "Approaching-date emails are set in the Briefing group below."
   },
   "settings.notifications.channel.email": {
     "defaultMessage": "Email"
@@ -6517,6 +6652,12 @@
   },
   "settings.notifications.column.group": {
     "defaultMessage": "Event group"
+  },
+  "settings.notifications.column.section": {
+    "defaultMessage": "Section"
+  },
+  "settings.notifications.emailOnly": {
+    "defaultMessage": "Email only"
   },
   "settings.notifications.group.activity": {
     "defaultMessage": "Activity on your records"
@@ -6534,7 +6675,7 @@
     "defaultMessage": "Dates approaching"
   },
   "settings.notifications.group.dates.detail": {
-    "defaultMessage": "Key dates, notice deadlines, and expiries — emailed as one daily digest."
+    "defaultMessage": "Bell reminders for key dates, notice deadlines, expiries, and obligations."
   },
   "settings.notifications.group.knowledge": {
     "defaultMessage": "Knowledge items"

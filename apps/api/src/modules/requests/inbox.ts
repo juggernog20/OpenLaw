@@ -84,6 +84,7 @@ import {
   convertedRecordOf,
   type ConversionRecordReference,
 } from "./record-reference.js";
+import { requestUrgencyRank } from "./urgency-order.js";
 
 /** INT-006: Member+ triages, and there are no routing rules to narrow
  * that further. A Contributor and a Business User are refused rather
@@ -242,26 +243,10 @@ export const requestInboxRoutes: FastifyPluginAsyncZod = async (app) => {
   }
 };
 
-/**
- * DES-018's severity ramp as a number the database can order.
- *
- * `urgency` holds a slug, and ordering slugs sorts them critical, high,
- * low, medium — an alphabet, not a ramp. The `case` restates the
- * sequence DES-018 already fixed, built from `SEVERITY_LEVELS` rather
- * than written out, so a level added to the ramp cannot be left out of
- * the ordering. Descending on this expression is "critical first".
- */
-function severityRank(column: AnyPgColumn): SQL {
-  const arms = SEVERITY_LEVELS.map(
-    (level, index) => sql`when ${level} then ${sql.raw(String(index + 1))}`,
-  );
-  return sql`case ${column} ${sql.join(arms, sql` `)} end`;
-}
-
 /** The one ordering expression, shared by the page and its boundary —
  * a keyset cursor over an ordering the boundary reproduces only
  * approximately is one that skips and repeats rows. */
-const urgencyRank = severityRank(requests.urgency);
+const urgencyRank = requestUrgencyRank(requests.urgency);
 
 /**
  * The keyset boundary: every Request strictly further down the queue

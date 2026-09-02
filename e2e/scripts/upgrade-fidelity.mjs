@@ -98,6 +98,13 @@ const CONNECT_SECRET = "openlaw-upgrade-fidelity-connect-secret"; // NOSONAR —
 /** Words carried only by the pre-M25 PDF's extracted-text row. */
 const SEARCH_PHRASE = "assignor transfers the whole of the rights";
 
+/** One civil date relative to the seed run, in the form the API stores. */
+function inDays(days) {
+  const date = new Date();
+  date.setUTCDate(date.getUTCDate() + days);
+  return date.toISOString().slice(0, 10);
+}
+
 /** The session the whole run carries, as a cookie jar. */
 const jar = new Map();
 
@@ -257,6 +264,7 @@ async function seed() {
   check(status.needsSetup, "the seed needs a fresh install; this one already has an Administrator");
   await post("/api/v1/auth/setup", ADMIN, { accept: [201] });
   await post("/api/v1/onboarding/complete");
+  const adminUser = (await get("/api/v1/me")).user;
 
   // Org identity, so `org_settings` carries more than its seeded defaults.
   await patch("/api/v1/org/general", {
@@ -363,6 +371,13 @@ async function seed() {
       status: "active",
     })
   ).entity;
+  const homeObligation = (
+    await post(`/api/v1/entities/${entity.id}/obligations`, {
+      label: "Upgrade Home annual return",
+      nextDueOn: inDays(21),
+      assigneeId: adminUser.id,
+    })
+  ).obligation;
 
   // One live status per stage, from whatever this release seeds. Taking
   // them from the API rather than naming them keeps the seed working
@@ -418,11 +433,26 @@ async function seed() {
   await post(`/api/v1/contracts/${archived.number}/archive`);
   archived.archived = true;
 
-  // An approval nobody has answered, so `contract_approvals` is not empty.
+  // Rows that predate M29 but must populate its personal Home without a
+  // backfill. This Contract is managed by the existing Administrator,
+  // carries their pending approval, and has one upcoming Key date.
   const approvalHost = contracts[0];
-  await post(`/api/v1/contracts/${approvalHost.number}/approvals`, {
-    approverIds: [invited[0].id],
-  });
+  await patch(`/api/v1/contracts/${approvalHost.number}`, { managerId: adminUser.id });
+  const homeApprovals = (
+    await post(`/api/v1/contracts/${approvalHost.number}/approvals`, {
+      approverIds: [invited[0].id, adminUser.id],
+    })
+  ).approvals;
+  const homeApproval = homeApprovals.find((row) => row.approver.id === adminUser.id);
+  check(homeApproval !== undefined, "the pre-M29 approval was not in the roster");
+  const homeKeyDateLabel = "Upgrade Home signing deadline";
+  const homeKeyDate = (
+    await post(`/api/v1/contracts/${approvalHost.number}/key-dates`, {
+      date: inDays(14),
+      label: homeKeyDateLabel,
+    })
+  ).deadlines.find((row) => row.label === homeKeyDateLabel);
+  check(homeKeyDate !== undefined, "the pre-M29 Contract Key date was not in the answer");
 
   // A team member and a comment, so those tables carry rows too.
   await post(`/api/v1/contracts/${approvalHost.number}/team`, {
@@ -515,6 +545,28 @@ async function seed() {
     })
   ).matter;
   await post(`/api/v1/matters/${archivedMatter.number}/archive`);
+
+  // The M23 Matter above closes to prove lifecycle preservation. Keep a
+  // second pre-M29 Matter open, managed by the existing Administrator,
+  // with one Task assigned to them for Home's cross-record read.
+  const homeMatterCreated = (
+    await post("/api/v1/matters", {
+      title: "Upgrade Home managed Matter",
+      matterTypeId: matterType.id,
+    })
+  ).matter;
+  const homeMatter = (
+    await patch(`/api/v1/matters/${homeMatterCreated.number}`, { managerId: adminUser.id })
+  ).matter;
+  const homeTaskTitle = "Upgrade Home assigned Task";
+  const homeTask = (
+    await post(`/api/v1/matters/${homeMatter.number}/tasks`, {
+      title: homeTaskTitle,
+      assigneeId: adminUser.id,
+      dueDate: inDays(7),
+    })
+  ).tasks.find((row) => row.title === homeTaskTitle);
+  check(homeTask !== undefined, "the pre-M29 Home Task was not in the answer");
 
   const matterDocuments = (await get(`/api/v1/matters/${closedMatter.number}/documents`)).documents;
   const seededMatterDocument = matterDocuments.find((row) => row.id === matterDocument.id);
@@ -673,7 +725,58 @@ async function seed() {
         closedAt: archivedMatter.closedAt,
         archived: true,
       },
+      {
+        id: homeMatter.id,
+        number: homeMatter.number,
+        title: homeMatter.title,
+        description: homeMatter.description,
+        priority: homeMatter.priority,
+        risk: homeMatter.risk,
+        statusName: homeMatter.statusName,
+        statusCategory: homeMatter.statusCategory,
+        managerId: homeMatter.manager?.id ?? null,
+        customFields: homeMatter.customFields,
+        openedAt: homeMatter.openedAt,
+        closedAt: homeMatter.closedAt,
+        archived: false,
+      },
     ],
+    home: {
+      approval: {
+        id: homeApproval.id,
+        contractId: approvalHost.id,
+        contractNumber: approvalHost.number,
+        contractTitle: approvalHost.title,
+      },
+      task: {
+        id: homeTask.id,
+        matterId: homeMatter.id,
+        matterNumber: homeMatter.number,
+        matterTitle: homeMatter.title,
+        title: homeTask.title,
+      },
+      keyDate: {
+        id: homeKeyDate.keyDateId,
+        contractId: approvalHost.id,
+        contractNumber: approvalHost.number,
+        contractTitle: approvalHost.title,
+        date: homeKeyDate.date,
+        label: homeKeyDate.label,
+      },
+      obligation: {
+        id: homeObligation.id,
+        entityId: entity.id,
+        entityName: entity.legalName,
+        label: homeObligation.label,
+      },
+      briefingDefaults: [
+        { eventGroup: "briefing.approvals", email: true },
+        { eventGroup: "briefing.tasks", email: true },
+        { eventGroup: "briefing.dates", email: true },
+        { eventGroup: "briefing.obligations", email: true },
+        { eventGroup: "briefing.intake", email: false },
+      ],
+    },
     matterTeam: {
       matterNumber: closedMatter.number,
       userId: invited[0].id,
@@ -847,7 +950,10 @@ async function verify(fingerprint) {
   same(holdings.warnings, [], "pre-M27 Entity Holding warnings");
   const obligations = (await get(`/api/v1/entities/${fingerprint.entity.id}/obligations`))
     .obligations;
-  same(obligations, [], "pre-M27 Entity Obligations");
+  const obligation = obligations.find((row) => row.id === fingerprint.home.obligation.id);
+  check(obligation !== undefined, "the pre-M29 Entity Obligation is gone after the upgrade");
+  same(obligation.label, fingerprint.home.obligation.label, "pre-M29 Entity Obligation label");
+  same(obligation.assignee?.id, me.user.id, "pre-M29 Entity Obligation assignee");
 
   const listedContracts = (await get("/api/v1/contracts")).contracts;
   for (const seeded of fingerprint.contracts.filter((row) => !row.archived)) {
@@ -893,6 +999,56 @@ async function verify(fingerprint) {
       `Matter ${seeded.number} archival changed across the upgrade`,
     );
   }
+
+  // M29 reads these rows in place. The baseline created every one
+  // through an older public API; no Home row or migration backfill can
+  // be involved. Stable section order also proves each reader composed
+  // into the one upgraded envelope. The envelope omits zero-total
+  // sections, so the missing Inbox entry is an assertion of its own:
+  // the seed opens no Intake Request, and no upgrade step may invent
+  // one. A seed that later opens a Request must add "inbox" here,
+  // between "obligations" and "contracts".
+  const home = await get("/api/v1/home");
+  same(
+    home.sections.map((section) => section.type),
+    ["approvals", "tasks", "dates", "obligations", "contracts", "matters"],
+    "pre-M29 Home section order",
+  );
+  const homeSection = (type) => {
+    const section = home.sections.find((candidate) => candidate.type === type);
+    check(section !== undefined, `the upgraded Home has no ${type} section`);
+    return section;
+  };
+  check(
+    homeSection("approvals").rows.some((row) => row.id === fingerprint.home.approval.id),
+    "the pre-M29 pending approval is absent from Home",
+  );
+  check(
+    homeSection("tasks").rows.some((row) => row.id === fingerprint.home.task.id),
+    "the pre-M29 assigned Task is absent from Home",
+  );
+  check(
+    homeSection("dates").rows.some((row) => row.keyDateId === fingerprint.home.keyDate.id),
+    "the pre-M29 upcoming Key date is absent from Home",
+  );
+  check(
+    homeSection("obligations").rows.some((row) => row.id === fingerprint.home.obligation.id),
+    "the pre-M29 assigned Entity Obligation is absent from Home",
+  );
+  check(
+    homeSection("contracts").rows.some((row) => row.id === fingerprint.home.approval.contractId),
+    "the pre-M29 managed Contract is absent from Home",
+  );
+  check(
+    homeSection("matters").rows.some((row) => row.id === fingerprint.home.task.matterId),
+    "the pre-M29 managed Matter is absent from Home",
+  );
+
+  // The baseline cannot write M29's briefing preference vocabulary.
+  // This existing user therefore has no rows for these pairs, and the
+  // upgraded effective read must answer the application defaults.
+  const preferences = await get("/api/v1/me/notification-preferences");
+  same(preferences.briefing, fingerprint.home.briefingDefaults, "existing-user briefing defaults");
 
   const matterTeam = (await get(`/api/v1/matters/${fingerprint.matterTeam.matterNumber}`)).team;
   const teamMember = matterTeam.find((row) => row.id === fingerprint.matterTeam.userId);

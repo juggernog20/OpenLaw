@@ -139,6 +139,7 @@ export const EVENT_GROUP: Record<NotificationEventType, NotificationEventGroup> 
   "date.notice_deadline_approaching": "dates_approaching",
   "date.expiry_approaching": "dates_approaching",
   "date.obligation_approaching": "dates_approaching",
+  "briefing.ready": "dates_approaching",
   // Group 4 — new requests. One act, two audiences: this is the staff
   // side of a submission (INT-006), and `request.created` below is the
   // Requester's own receipt for the same moment. They are two events
@@ -175,6 +176,10 @@ export function defaultChoice(group: NotificationEventGroup): ChannelChoice {
 
 /** How email leaves for one event, or `none` when it does not. */
 export function emailTimingOf(eventType: NotificationEventType): EmailTiming {
+  // The daily briefing's bell row points back to Home. It announces the
+  // email that already left, so routing it into another email would loop
+  // the summary through the digest machinery.
+  if (eventType === "briefing.ready") return "none";
   return EVENT_GROUP_POLICY[EVENT_GROUP[eventType]].emailTiming;
 }
 

@@ -49654,6 +49654,598 @@
         }
       }
     },
+    "/api/v1/home": {
+      "get": {
+        "operationId": "getHome",
+        "summary": "The signed-in staff user's personal Home sections in stable order. Zero-total sections are omitted; every present section carries a three-row cap and its full eligible total. Record reach is applied inside each section query, before totals and caps",
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "sections": {
+                      "type": "array",
+                      "items": {
+                        "oneOf": [
+                          {
+                            "type": "object",
+                            "properties": {
+                              "type": {
+                                "type": "string",
+                                "enum": ["approvals"]
+                              },
+                              "total": {
+                                "type": "integer",
+                                "exclusiveMinimum": 0,
+                                "maximum": 9007199254740991
+                              },
+                              "rows": {
+                                "maxItems": 3,
+                                "type": "array",
+                                "items": {
+                                  "type": "object",
+                                  "properties": {
+                                    "id": {
+                                      "type": "string"
+                                    },
+                                    "contract": {
+                                      "type": "object",
+                                      "properties": {
+                                        "id": {
+                                          "type": "string"
+                                        },
+                                        "number": {
+                                          "type": "integer",
+                                          "exclusiveMinimum": 0,
+                                          "maximum": 9007199254740991
+                                        },
+                                        "title": {
+                                          "type": "string"
+                                        },
+                                        "isConfidential": {
+                                          "type": "boolean"
+                                        }
+                                      },
+                                      "required": ["id", "number", "title", "isConfidential"],
+                                      "additionalProperties": false
+                                    },
+                                    "requestedBy": {
+                                      "type": "object",
+                                      "properties": {
+                                        "id": {
+                                          "type": "string"
+                                        },
+                                        "displayName": {
+                                          "type": "string"
+                                        }
+                                      },
+                                      "required": ["id", "displayName"],
+                                      "additionalProperties": false
+                                    },
+                                    "requestedAt": {
+                                      "type": "string",
+                                      "format": "date-time",
+                                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                                    }
+                                  },
+                                  "required": ["id", "contract", "requestedBy", "requestedAt"],
+                                  "additionalProperties": false
+                                }
+                              }
+                            },
+                            "required": ["type", "total", "rows"],
+                            "additionalProperties": false
+                          },
+                          {
+                            "type": "object",
+                            "properties": {
+                              "type": {
+                                "type": "string",
+                                "enum": ["tasks"]
+                              },
+                              "total": {
+                                "type": "integer",
+                                "exclusiveMinimum": 0,
+                                "maximum": 9007199254740991
+                              },
+                              "rows": {
+                                "maxItems": 3,
+                                "type": "array",
+                                "items": {
+                                  "type": "object",
+                                  "properties": {
+                                    "id": {
+                                      "type": "string"
+                                    },
+                                    "title": {
+                                      "type": "string"
+                                    },
+                                    "dueDate": {
+                                      "anyOf": [
+                                        {
+                                          "type": "string",
+                                          "format": "date",
+                                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                                        },
+                                        {
+                                          "type": "null"
+                                        }
+                                      ]
+                                    },
+                                    "isOverdue": {
+                                      "type": "boolean"
+                                    },
+                                    "record": {
+                                      "type": "object",
+                                      "properties": {
+                                        "kind": {
+                                          "type": "string",
+                                          "enum": ["contract", "matter"]
+                                        },
+                                        "id": {
+                                          "type": "string"
+                                        },
+                                        "number": {
+                                          "type": "integer",
+                                          "exclusiveMinimum": 0,
+                                          "maximum": 9007199254740991
+                                        },
+                                        "title": {
+                                          "type": "string"
+                                        },
+                                        "isConfidential": {
+                                          "type": "boolean"
+                                        }
+                                      },
+                                      "required": [
+                                        "kind",
+                                        "id",
+                                        "number",
+                                        "title",
+                                        "isConfidential"
+                                      ],
+                                      "additionalProperties": false
+                                    }
+                                  },
+                                  "required": ["id", "title", "dueDate", "isOverdue", "record"],
+                                  "additionalProperties": false
+                                }
+                              }
+                            },
+                            "required": ["type", "total", "rows"],
+                            "additionalProperties": false
+                          },
+                          {
+                            "type": "object",
+                            "properties": {
+                              "type": {
+                                "type": "string",
+                                "enum": ["dates"]
+                              },
+                              "total": {
+                                "type": "integer",
+                                "exclusiveMinimum": 0,
+                                "maximum": 9007199254740991
+                              },
+                              "rows": {
+                                "maxItems": 3,
+                                "type": "array",
+                                "items": {
+                                  "type": "object",
+                                  "properties": {
+                                    "source": {
+                                      "type": "string",
+                                      "enum": ["key_date", "expiry", "notice_deadline"]
+                                    },
+                                    "keyDateId": {
+                                      "type": ["string", "null"]
+                                    },
+                                    "date": {
+                                      "type": "string",
+                                      "format": "date",
+                                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                                    },
+                                    "label": {
+                                      "type": ["string", "null"]
+                                    },
+                                    "noticePeriodDays": {
+                                      "anyOf": [
+                                        {
+                                          "type": "integer",
+                                          "minimum": 0,
+                                          "maximum": 9007199254740991
+                                        },
+                                        {
+                                          "type": "null"
+                                        }
+                                      ]
+                                    },
+                                    "record": {
+                                      "type": "object",
+                                      "properties": {
+                                        "kind": {
+                                          "type": "string",
+                                          "enum": ["contract", "matter"]
+                                        },
+                                        "id": {
+                                          "type": "string"
+                                        },
+                                        "number": {
+                                          "type": "integer",
+                                          "exclusiveMinimum": 0,
+                                          "maximum": 9007199254740991
+                                        },
+                                        "title": {
+                                          "type": "string"
+                                        },
+                                        "isConfidential": {
+                                          "type": "boolean"
+                                        }
+                                      },
+                                      "required": [
+                                        "kind",
+                                        "id",
+                                        "number",
+                                        "title",
+                                        "isConfidential"
+                                      ],
+                                      "additionalProperties": false
+                                    }
+                                  },
+                                  "required": [
+                                    "source",
+                                    "keyDateId",
+                                    "date",
+                                    "label",
+                                    "noticePeriodDays",
+                                    "record"
+                                  ],
+                                  "additionalProperties": false
+                                }
+                              }
+                            },
+                            "required": ["type", "total", "rows"],
+                            "additionalProperties": false
+                          },
+                          {
+                            "type": "object",
+                            "properties": {
+                              "type": {
+                                "type": "string",
+                                "enum": ["obligations"]
+                              },
+                              "total": {
+                                "type": "integer",
+                                "exclusiveMinimum": 0,
+                                "maximum": 9007199254740991
+                              },
+                              "rows": {
+                                "maxItems": 3,
+                                "type": "array",
+                                "items": {
+                                  "type": "object",
+                                  "properties": {
+                                    "id": {
+                                      "type": "string"
+                                    },
+                                    "label": {
+                                      "type": "string"
+                                    },
+                                    "dueDate": {
+                                      "type": "string",
+                                      "format": "date",
+                                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                                    },
+                                    "isOverdue": {
+                                      "type": "boolean"
+                                    },
+                                    "isUnassigned": {
+                                      "type": "boolean"
+                                    },
+                                    "entity": {
+                                      "type": "object",
+                                      "properties": {
+                                        "id": {
+                                          "type": "string"
+                                        },
+                                        "legalName": {
+                                          "type": "string"
+                                        }
+                                      },
+                                      "required": ["id", "legalName"],
+                                      "additionalProperties": false
+                                    }
+                                  },
+                                  "required": [
+                                    "id",
+                                    "label",
+                                    "dueDate",
+                                    "isOverdue",
+                                    "isUnassigned",
+                                    "entity"
+                                  ],
+                                  "additionalProperties": false
+                                }
+                              }
+                            },
+                            "required": ["type", "total", "rows"],
+                            "additionalProperties": false
+                          },
+                          {
+                            "type": "object",
+                            "properties": {
+                              "type": {
+                                "type": "string",
+                                "enum": ["inbox"]
+                              },
+                              "total": {
+                                "type": "integer",
+                                "exclusiveMinimum": 0,
+                                "maximum": 9007199254740991
+                              },
+                              "rows": {
+                                "maxItems": 3,
+                                "type": "array",
+                                "items": {
+                                  "type": "object",
+                                  "properties": {
+                                    "id": {
+                                      "type": "string"
+                                    },
+                                    "number": {
+                                      "type": "integer",
+                                      "exclusiveMinimum": 0,
+                                      "maximum": 9007199254740991
+                                    },
+                                    "summary": {
+                                      "type": "string"
+                                    },
+                                    "urgency": {
+                                      "type": "string",
+                                      "enum": ["low", "medium", "high", "critical"]
+                                    },
+                                    "requestType": {
+                                      "type": "object",
+                                      "properties": {
+                                        "id": {
+                                          "type": "string"
+                                        },
+                                        "displayName": {
+                                          "type": "string"
+                                        }
+                                      },
+                                      "required": ["id", "displayName"],
+                                      "additionalProperties": false
+                                    },
+                                    "requester": {
+                                      "type": "object",
+                                      "properties": {
+                                        "id": {
+                                          "type": "string"
+                                        },
+                                        "displayName": {
+                                          "type": "string"
+                                        }
+                                      },
+                                      "required": ["id", "displayName"],
+                                      "additionalProperties": false
+                                    },
+                                    "createdAt": {
+                                      "type": "string",
+                                      "format": "date-time",
+                                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                                    }
+                                  },
+                                  "required": [
+                                    "id",
+                                    "number",
+                                    "summary",
+                                    "urgency",
+                                    "requestType",
+                                    "requester",
+                                    "createdAt"
+                                  ],
+                                  "additionalProperties": false
+                                }
+                              }
+                            },
+                            "required": ["type", "total", "rows"],
+                            "additionalProperties": false
+                          },
+                          {
+                            "type": "object",
+                            "properties": {
+                              "type": {
+                                "type": "string",
+                                "enum": ["contracts"]
+                              },
+                              "total": {
+                                "type": "integer",
+                                "exclusiveMinimum": 0,
+                                "maximum": 9007199254740991
+                              },
+                              "rows": {
+                                "maxItems": 3,
+                                "type": "array",
+                                "items": {
+                                  "type": "object",
+                                  "properties": {
+                                    "id": {
+                                      "type": "string"
+                                    },
+                                    "number": {
+                                      "type": "integer",
+                                      "exclusiveMinimum": 0,
+                                      "maximum": 9007199254740991
+                                    },
+                                    "title": {
+                                      "type": "string"
+                                    },
+                                    "isConfidential": {
+                                      "type": "boolean"
+                                    },
+                                    "stage": {
+                                      "type": "string",
+                                      "enum": [
+                                        "draft",
+                                        "review",
+                                        "approval",
+                                        "signature",
+                                        "active",
+                                        "ended"
+                                      ]
+                                    },
+                                    "nextDate": {
+                                      "anyOf": [
+                                        {
+                                          "type": "string",
+                                          "format": "date",
+                                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                                        },
+                                        {
+                                          "type": "null"
+                                        }
+                                      ]
+                                    },
+                                    "renewalPendingConfirmation": {
+                                      "type": "boolean"
+                                    }
+                                  },
+                                  "required": [
+                                    "id",
+                                    "number",
+                                    "title",
+                                    "isConfidential",
+                                    "stage",
+                                    "nextDate",
+                                    "renewalPendingConfirmation"
+                                  ],
+                                  "additionalProperties": false
+                                }
+                              }
+                            },
+                            "required": ["type", "total", "rows"],
+                            "additionalProperties": false
+                          },
+                          {
+                            "type": "object",
+                            "properties": {
+                              "type": {
+                                "type": "string",
+                                "enum": ["matters"]
+                              },
+                              "total": {
+                                "type": "integer",
+                                "exclusiveMinimum": 0,
+                                "maximum": 9007199254740991
+                              },
+                              "rows": {
+                                "maxItems": 3,
+                                "type": "array",
+                                "items": {
+                                  "type": "object",
+                                  "properties": {
+                                    "id": {
+                                      "type": "string"
+                                    },
+                                    "number": {
+                                      "type": "integer",
+                                      "exclusiveMinimum": 0,
+                                      "maximum": 9007199254740991
+                                    },
+                                    "title": {
+                                      "type": "string"
+                                    },
+                                    "isConfidential": {
+                                      "type": "boolean"
+                                    },
+                                    "status": {
+                                      "type": "object",
+                                      "properties": {
+                                        "id": {
+                                          "type": "string"
+                                        },
+                                        "displayName": {
+                                          "type": "string"
+                                        }
+                                      },
+                                      "required": ["id", "displayName"],
+                                      "additionalProperties": false
+                                    },
+                                    "nextDeadline": {
+                                      "anyOf": [
+                                        {
+                                          "type": "object",
+                                          "properties": {
+                                            "date": {
+                                              "type": "string",
+                                              "format": "date",
+                                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                                            },
+                                            "label": {
+                                              "type": "string"
+                                            }
+                                          },
+                                          "required": ["date", "label"],
+                                          "additionalProperties": false
+                                        },
+                                        {
+                                          "type": "null"
+                                        }
+                                      ]
+                                    }
+                                  },
+                                  "required": [
+                                    "id",
+                                    "number",
+                                    "title",
+                                    "isConfidential",
+                                    "status",
+                                    "nextDeadline"
+                                  ],
+                                  "additionalProperties": false
+                                }
+                              }
+                            },
+                            "required": ["type", "total", "rows"],
+                            "additionalProperties": false
+                          }
+                        ]
+                      }
+                    }
+                  },
+                  "required": ["sections"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/fields": {
       "get": {
         "operationId": "listFields",
@@ -51634,7 +52226,7 @@
     "/api/v1/me/notification-preferences": {
       "get": {
         "operationId": "getMyNotificationPreferences",
-        "summary": "What the signed-in person gets on each of NOT-002's five event groups, per channel. It is the **effective** answer — their own saved rows over the group's defaults — because the table holds overrides rather than a grid, and a person who has never opened the pane has no rows at all. Every group is answered, whether or not anything in it has ever fired: an opinion can be held about a group before its first event exists. Which of the five a surface draws is the surface's business — the staff pane draws four and the portal pane draws `requester_events` alone. There is no user parameter — a preference is one person's, and the signed-in person is the whole scope",
+        "summary": "What the signed-in person gets from each event group and email-only briefing section. It is the **effective** answer — their own saved rows over the group's defaults — because the table holds overrides rather than a grid, and a person who has never opened the pane has no rows at all. Every group is answered, whether or not anything in it has ever fired: an opinion can be held about a group before its first event exists. Which event groups a surface draws is the surface's business — the staff pane draws four and the portal pane draws `requester_events` alone. There is no user parameter — a preference is one person's, and the signed-in person is the whole scope",
         "tags": ["notifications"],
         "responses": {
           "200": {
@@ -51670,9 +52262,32 @@
                         "required": ["eventGroup", "inApp", "email"],
                         "additionalProperties": false
                       }
+                    },
+                    "briefing": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "eventGroup": {
+                            "type": "string",
+                            "enum": [
+                              "briefing.approvals",
+                              "briefing.tasks",
+                              "briefing.dates",
+                              "briefing.obligations",
+                              "briefing.intake"
+                            ]
+                          },
+                          "email": {
+                            "type": "boolean"
+                          }
+                        },
+                        "required": ["eventGroup", "email"],
+                        "additionalProperties": false
+                      }
                     }
                   },
-                  "required": ["groups"],
+                  "required": ["groups", "briefing"],
                   "additionalProperties": false
                 }
               }
@@ -51692,36 +52307,64 @@
       },
       "patch": {
         "operationId": "updateMyNotificationPreferences",
-        "summary": "Save one channel's answer for one event group, for the signed-in person (NOT-001). One pair per request, because a toggle is what the pane saves and it saves the moment it is flipped (SET-003 immediate apply). The write lands in `notification_preferences` as an override, so the very next event honours it with no other wiring — and turning email off leaves the group's bell items flowing, which is the point of the two channels being separate rows. A save back to the group's own default **removes** the override rather than storing one that agrees with it: the table holds disagreements, and the effective answer is identical either way. Recorded in the activity log like every settings mutation. Answers the whole grid back, so the pane can never drift from what the fan-out will honour",
+        "summary": "Save one channel's answer for an event group or one email-only briefing section, for the signed-in person (NOT-001). One pair per request, because a toggle is what the pane saves and it saves the moment it is flipped (SET-003 immediate apply). The write lands in `notification_preferences` as an override, so the very next event honours it with no other wiring — and turning email off leaves the group's bell items flowing, which is the point of the two channels being separate rows. A save back to the group's own default **removes** the override rather than storing one that agrees with it: the table holds disagreements, and the effective answer is identical either way. Recorded in the activity log like every settings mutation. Answers the whole grid back, so the pane can never drift from what the fan-out will honour",
         "tags": ["notifications"],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "type": "object",
-                "properties": {
-                  "eventGroup": {
-                    "type": "string",
-                    "enum": [
-                      "assigned_to_you",
-                      "activity_on_your_records",
-                      "dates_approaching",
-                      "new_requests",
-                      "knowledge",
-                      "requester_events"
-                    ]
+                "anyOf": [
+                  {
+                    "type": "object",
+                    "properties": {
+                      "eventGroup": {
+                        "type": "string",
+                        "enum": [
+                          "assigned_to_you",
+                          "activity_on_your_records",
+                          "dates_approaching",
+                          "new_requests",
+                          "knowledge",
+                          "requester_events"
+                        ]
+                      },
+                      "channel": {
+                        "type": "string",
+                        "enum": ["in_app", "email"]
+                      },
+                      "enabled": {
+                        "type": "boolean"
+                      }
+                    },
+                    "required": ["eventGroup", "channel", "enabled"],
+                    "additionalProperties": false
                   },
-                  "channel": {
-                    "type": "string",
-                    "enum": ["in_app", "email"]
-                  },
-                  "enabled": {
-                    "type": "boolean"
+                  {
+                    "type": "object",
+                    "properties": {
+                      "eventGroup": {
+                        "type": "string",
+                        "enum": [
+                          "briefing.approvals",
+                          "briefing.tasks",
+                          "briefing.dates",
+                          "briefing.obligations",
+                          "briefing.intake"
+                        ]
+                      },
+                      "channel": {
+                        "type": "string",
+                        "enum": ["email"]
+                      },
+                      "enabled": {
+                        "type": "boolean"
+                      }
+                    },
+                    "required": ["eventGroup", "channel", "enabled"],
+                    "additionalProperties": false
                   }
-                },
-                "required": ["eventGroup", "channel", "enabled"],
-                "additionalProperties": false
+                ]
               }
             }
           }
@@ -51760,9 +52403,32 @@
                         "required": ["eventGroup", "inApp", "email"],
                         "additionalProperties": false
                       }
+                    },
+                    "briefing": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "eventGroup": {
+                            "type": "string",
+                            "enum": [
+                              "briefing.approvals",
+                              "briefing.tasks",
+                              "briefing.dates",
+                              "briefing.obligations",
+                              "briefing.intake"
+                            ]
+                          },
+                          "email": {
+                            "type": "boolean"
+                          }
+                        },
+                        "required": ["eventGroup", "email"],
+                        "additionalProperties": false
+                      }
                     }
                   },
-                  "required": ["groups"],
+                  "required": ["groups", "briefing"],
                   "additionalProperties": false
                 }
               }

@@ -26,6 +26,7 @@
 import { describe, expect, it } from "vitest";
 import { screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import type { BellItem } from "../lib/notifications";
 import { json, problem, renderAt, stubApi, type StubCall } from "../testing/helpers";
 
 const MEMBER = {
@@ -35,18 +36,8 @@ const MEMBER = {
   role: "legal_team_member",
 };
 
-interface Item {
-  id: string;
-  eventType: string;
-  entityType: string;
-  entityId: string;
-  payload: Record<string, unknown>;
-  readAt: string | null;
-  createdAt: string;
-}
-
 /** One approval-request item, the only event M18/1 fires. */
-function item(index: number, over: Partial<Item> = {}): Item {
+function item(index: number, over: Partial<BellItem> = {}): BellItem {
   return {
     id: `n${index}`,
     eventType: "approval.requested",
@@ -69,7 +60,7 @@ function item(index: number, over: Partial<Item> = {}): Item {
  * of every write the surface made. */
 function bellApi(state: {
   unread: number;
-  pages?: Record<string, { notifications: Item[]; nextCursor: string | null }>;
+  pages?: Record<string, { notifications: BellItem[]; nextCursor: string | null }>;
   /** What the mark-read write answers. Defaults to zero. */
   afterRead?: number;
   /** Fails the named page read, so the two failure states can be seen. */
@@ -206,6 +197,33 @@ describe("the notification centre", () => {
       name: /Nadia Counsel asked you to approve Acme MSA 1/,
     });
     expect(link).toHaveAttribute("href", "/contracts/41/approvals");
+  });
+
+  it("opens Home from the daily briefing summary", async () => {
+    const user = userEvent.setup();
+    bellApi({
+      unread: 1,
+      pages: {
+        first: {
+          notifications: [
+            item(1, {
+              eventType: "briefing.ready",
+              entityType: "knowledge_item",
+              entityId: MEMBER.id,
+              payload: { localDate: "2026-08-18" },
+            }),
+          ],
+          nextCursor: null,
+        },
+      },
+    });
+    renderAt("/");
+
+    await user.click(await bell("1 unread"));
+    const centre = await screen.findByRole("dialog", { name: "Notifications" });
+    expect(
+      within(centre).getByRole("link", { name: /^Your daily briefing is ready/ }),
+    ).toHaveAttribute("href", "/");
   });
 
   it("narrates an Entity obligation and opens its Obligations tab", async () => {

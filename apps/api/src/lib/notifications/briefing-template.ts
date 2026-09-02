@@ -27,6 +27,9 @@
 import type { NotificationEventType } from "@openlaw/db";
 import { civilInstant } from "../contract-term.js";
 import type { MailMessage } from "../mailer.js";
+import type { ApprovalsHomeSection } from "../../modules/home/sections/approvals.js";
+import type { InboxHomeSection } from "../../modules/home/sections/inbox.js";
+import type { TasksHomeSection } from "../../modules/home/sections/tasks.js";
 import { matterLink, origin, recordLink } from "./email.js";
 
 interface DigestRowBase {
@@ -66,8 +69,15 @@ export interface KnowledgeBriefingItem {
 /** Every section the round has assembled for one reader. */
 export interface BriefingMail {
   recipientName: string;
+  approvals: ApprovalsHomeSection | null;
+  tasks: TasksHomeSection | null;
   rows: readonly DigestRow[];
   knowledgeItems: readonly KnowledgeBriefingItem[];
+  intake: InboxHomeSection | null;
+  /** The reader's profile timezone (SET-006), or null for UTC. Civil
+   * dates stay anchored to UTC; this zone only places true instants —
+   * an approval's `requestedAt` — on the reader's own calendar. */
+  readerTimeZone: string | null;
 }
 
 /** Which of the three sources leads when two dates fall on one day —
@@ -97,6 +107,26 @@ const DIGEST_DATE = new Intl.DateTimeFormat("en-US", {
   month: "short",
   day: "numeric",
 });
+
+const BRIEFING_COUNT = new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 });
+
+function civilDateLabel(value: string): string {
+  return DIGEST_DATE.format(civilInstant(value));
+}
+
+function instantDateLabel(value: string, timeZone: string | null): string {
+  if (!timeZone) return DIGEST_DATE.format(new Date(value));
+  return new Intl.DateTimeFormat("en-US", {
+    timeZone,
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  }).format(new Date(value));
+}
+
+function recordReference(kind: "contract" | "matter", number: number): string {
+  return kind === "matter" ? `M-${number}` : `#${number}`;
+}
 
 /** How far away one date is, in the words a briefing uses. Digits rather
  * than words (DES-015 rule 9), and the two days either side of today are
@@ -182,6 +212,87 @@ function dateSections(rows: readonly DigestRow[]) {
   ].filter((section) => section.rows.length > 0);
 }
 
+function approvalLink(row: ApprovalsHomeSection["rows"][number], baseUrl: string): string {
+  return `${recordLink(baseUrl, row.contract.number)}/approvals`;
+}
+
+function taskLink(row: TasksHomeSection["rows"][number], baseUrl: string): string {
+  const record =
+    row.record.kind === "matter"
+      ? matterLink(baseUrl, row.record.number)
+      : recordLink(baseUrl, row.record.number);
+  return `${record}/tasks`;
+}
+
+function intakeLink(row: InboxHomeSection["rows"][number], baseUrl: string): string {
+  return `${origin(baseUrl)}/inbox/${row.number}`;
+}
+
+function approvalLine(
+  row: ApprovalsHomeSection["rows"][number],
+  readerTimeZone: string | null,
+): string {
+  return `${row.contract.title} (#${row.contract.number}) — requested by ${row.requestedBy.displayName} on ${instantDateLabel(row.requestedAt, readerTimeZone)}`;
+}
+
+function taskLine(row: TasksHomeSection["rows"][number]): string {
+  const due = row.dueDate ? ` — due ${civilDateLabel(row.dueDate)}` : "";
+  return `${row.title} — ${row.record.title} (${recordReference(row.record.kind, row.record.number)})${due}`;
+}
+
+function intakeLine(row: InboxHomeSection["rows"][number]): string {
+  return `R-${row.number} ${row.summary} — ${row.requestType.displayName}, ${row.urgency}`;
+}
+
+interface OverflowLine {
+  line: string;
+  href: string;
+}
+
+/** What a section's cap kept out, named so the mail never understates
+ * the day. The Home section reads cut at their card's three rows but
+ * carry the window total; the card wears "View all {total}", and this
+ * line is the mail's version of it. */
+function moreOnHome(total: number, shown: number, baseUrl: string): OverflowLine | null {
+  if (total <= shown) return null;
+  return {
+    line: `And ${BRIEFING_COUNT.format(total - shown)} more on Home.`,
+    href: `${origin(baseUrl)}/`,
+  };
+}
+
+function textRows<T>(
+  heading: string,
+  rows: readonly T[],
+  line: (row: T) => string,
+  link: (row: T) => string,
+  more: OverflowLine | null = null,
+): string[] {
+  if (rows.length === 0) return [];
+  const body = rows.flatMap((row) => [line(row), link(row), ""]);
+  if (more) body.push(more.line, more.href, "");
+  return [heading, "", ...body];
+}
+
+function htmlRows<T>(
+  heading: string,
+  rows: readonly T[],
+  line: (row: T) => string,
+  link: (row: T) => string,
+  more: OverflowLine | null = null,
+): string {
+  if (rows.length === 0) return "";
+  const items = rows.map((row) => {
+    const href = escapeHtml(link(row));
+    return `<li>${escapeHtml(line(row))}<br><a href="${href}">${href}</a></li>`;
+  });
+  if (more) {
+    const href = escapeHtml(more.href);
+    items.push(`<li>${escapeHtml(more.line)}<br><a href="${href}">${href}</a></li>`);
+  }
+  return `<h2>${heading}</h2><ul>${items.join("")}</ul>`;
+}
+
 /**
  * The morning briefing one person is owed, or `null` when they are owed
  * none.
@@ -203,7 +314,11 @@ export function renderBriefingMail(
 ): MailMessage | null {
   const rows = sortedDates(briefing.rows);
   const knowledgeItems = sortedKnowledge(briefing.knowledgeItems);
-  if (rows.length === 0 && knowledgeItems.length === 0) return null;
+  const approvals = briefing.approvals?.rows ?? [];
+  const tasks = briefing.tasks?.rows ?? [];
+  const intake = briefing.intake?.rows ?? [];
+  const hasWorkSections = approvals.length > 0 || tasks.length > 0 || intake.length > 0;
+  if (!hasWorkSections && rows.length === 0 && knowledgeItems.length === 0) return null;
 
   const dateCount = rows.length;
   const kinds = new Set(rows.map((row) => row.entityType));
@@ -219,23 +334,37 @@ export function renderBriefingMail(
   // (DES-015 rules 6, 7, 9). The one-section subjects say what the
   // section holds; a briefing with both is just the briefing.
   const subject =
-    knowledgeItems.length === 0
-      ? `${dateCount} ${dateCount === 1 ? "date" : "dates"} on ${destination}`
-      : dateCount === 0
-        ? `${knowledgeItems.length} new Knowledge ${knowledgeItems.length === 1 ? "item" : "items"}`
+    !hasWorkSections && knowledgeItems.length === 0
+      ? `${BRIEFING_COUNT.format(dateCount)} ${dateCount === 1 ? "date" : "dates"} on ${destination}`
+      : !hasWorkSections && dateCount === 0
+        ? `${BRIEFING_COUNT.format(knowledgeItems.length)} new Knowledge ${knowledgeItems.length === 1 ? "item" : "items"}`
         : "Your daily briefing";
   const introduction =
-    knowledgeItems.length === 0
+    !hasWorkSections && knowledgeItems.length === 0
       ? `These dates are coming up on ${destination}, nearest first.`
-      : dateCount === 0
+      : !hasWorkSections && dateCount === 0
         ? "These Knowledge items were published since your previous briefing."
         : "Here is your daily briefing.";
 
-  const textSections = dateSections(rows).flatMap((section) => [
-    section.heading,
-    "",
-    ...section.rows.flatMap((row) => [digestLine(row), digestLink(row, baseUrl), ""]),
-  ]);
+  const approvalsMore = moreOnHome(briefing.approvals?.total ?? 0, approvals.length, baseUrl);
+  const tasksMore = moreOnHome(briefing.tasks?.total ?? 0, tasks.length, baseUrl);
+  const intakeMore = moreOnHome(briefing.intake?.total ?? 0, intake.length, baseUrl);
+
+  const textSections = [
+    ...textRows(
+      "Approvals",
+      approvals,
+      (row) => approvalLine(row, briefing.readerTimeZone),
+      (row) => approvalLink(row, baseUrl),
+      approvalsMore,
+    ),
+    ...textRows("Tasks", tasks, taskLine, (row) => taskLink(row, baseUrl), tasksMore),
+    ...dateSections(rows).flatMap((section) => [
+      section.heading,
+      "",
+      ...section.rows.flatMap((row) => [digestLine(row), digestLink(row, baseUrl), ""]),
+    ]),
+  ];
   if (knowledgeItems.length > 0) {
     textSections.push(
       "Knowledge",
@@ -243,7 +372,18 @@ export function renderBriefingMail(
       ...knowledgeItems.flatMap((item) => [item.title, knowledgeLink(item, baseUrl), ""]),
     );
   }
+  textSections.push(
+    ...textRows("Intake", intake, intakeLine, (row) => intakeLink(row, baseUrl), intakeMore),
+  );
 
+  const htmlApprovals = htmlRows(
+    "Approvals",
+    approvals,
+    (row) => approvalLine(row, briefing.readerTimeZone),
+    (row) => approvalLink(row, baseUrl),
+    approvalsMore,
+  );
+  const htmlTasks = htmlRows("Tasks", tasks, taskLine, (row) => taskLink(row, baseUrl), tasksMore);
   const htmlDateSections = dateSections(rows)
     .map(
       (section) =>
@@ -264,6 +404,13 @@ export function renderBriefingMail(
             return `<li><a href="${link}">${escapeHtml(item.title)}</a></li>`;
           })
           .join("")}</ul>`;
+  const htmlIntake = htmlRows(
+    "Intake",
+    intake,
+    intakeLine,
+    (row) => intakeLink(row, baseUrl),
+    intakeMore,
+  );
   const settingsLink = `${origin(baseUrl)}/settings/notifications`;
 
   return {
@@ -283,7 +430,7 @@ export function renderBriefingMail(
     ].join("\n"),
     html:
       `<!doctype html><html><body><p>Hello ${escapeHtml(briefing.recipientName)},</p>` +
-      `<p>${escapeHtml(introduction)}</p>${htmlDateSections}${htmlKnowledge}` +
+      `<p>${escapeHtml(introduction)}</p>${htmlApprovals}${htmlTasks}${htmlDateSections}${htmlKnowledge}${htmlIntake}` +
       `<p>Change what reaches you in your <a href="${escapeHtml(settingsLink)}">notification settings</a>.</p>` +
       "</body></html>",
   };

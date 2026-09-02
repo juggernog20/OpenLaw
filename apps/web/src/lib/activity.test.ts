@@ -76,7 +76,13 @@ const ENVELOPE_ENDING = {
  */
 const SAMPLE_PAYLOADS: { [A in ActivityAction]: ActivityPayloadMap[A] } = {
   // Profile and user administration
-  "user.briefing_sent": { dateCount: 2, knowledgeCount: 1 },
+  "user.briefing_sent": {
+    approvalCount: 1,
+    taskCount: 2,
+    dateCount: 2,
+    knowledgeCount: 1,
+    intakeCount: 0,
+  },
   "user.theme_changed": { field: "theme", old: "light", new: "dark" },
   "user.timezone_changed": { field: "timezone", old: "UTC", new: "Asia/Dubai" },
   "user.notification_preference_changed": {
@@ -982,6 +988,16 @@ describe("the cross-reference fallbacks between an ask and its record", () => {
 });
 
 describe("the sentences a reader gets", () => {
+  it("names a briefing section preference without exposing its slug", () => {
+    expect(
+      narrate("user.notification_preference_changed", {
+        eventGroup: "briefing.intake",
+        channel: "email",
+        enabled: true,
+      }).sentence,
+    ).toBe("Nadia Counsel turned emails on for Intake in their briefing");
+  });
+
   it("narrates both kinds behind a version-kind correction", () => {
     const narration = narrate(
       "document.version_kind_changed",
