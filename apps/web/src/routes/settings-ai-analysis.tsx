@@ -1,5 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
+/**
+ * The DES-054 AI analysis integration pane. Its loader enforces the
+ * Administrator boundary and the form preserves the API key as write-only.
+ */
+
 import { useRef, useState, type ReactNode, type SubmitEvent as FormSubmitEvent } from "react";
 import { redirect, useLoaderData } from "react-router";
 import { FormattedMessage, useIntl } from "react-intl";

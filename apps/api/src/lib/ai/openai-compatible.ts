@@ -18,7 +18,7 @@ export function createOpenAiCompatibleProvider(config: AiProviderConfig): AiProv
   const headers: Record<string, string> =
     config.preset === "azure_openai"
       ? { "api-key": config.apiKey ?? "" }
-      : config.preset !== "ollama" && config.apiKey
+      : config.apiKey
         ? { authorization: `Bearer ${config.apiKey}` }
         : {};
 

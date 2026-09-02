@@ -7,7 +7,7 @@ import type { AiProvider, AiProviderConfig } from "./provider.js";
 export type AiDriverFactory = (config: AiProviderConfig) => AiProvider;
 export type AiResolver = () => Promise<AiProvider | null>;
 
-/** Reads the singleton row on every call and reuses a driver until that row changes. */
+/** Reads the singleton row on every call and reuses a driver until its effective config changes. */
 export function createAiResolver(
   db: Db,
   buildDriver: AiDriverFactory = createAiProvider,
@@ -23,7 +23,15 @@ export function createAiResolver(
       cached = null;
       return null;
     }
-    const key = `${row.id}:${row.updatedAt.getTime()}`;
+    const key = JSON.stringify([
+      row.id,
+      row.preset,
+      row.protocol,
+      row.baseUrl,
+      row.apiKey,
+      row.model,
+      row.updatedAt.toISOString(),
+    ]);
     if (cached?.key === key) return cached.driver;
     const driver = buildDriver({
       preset: row.preset,

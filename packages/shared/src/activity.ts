@@ -1021,12 +1021,19 @@ type AiConnectorPayloads = {
     baseUrl: string;
     model: string;
   };
-  "ai_connector.updated": {
-    preset: string;
-    field: string;
-    old: unknown;
-    new: unknown;
-  };
+  "ai_connector.updated":
+    | {
+        preset: string;
+        field: "apiKey";
+        old: "[secret]";
+        new: "[secret]";
+      }
+    | {
+        preset: string;
+        field: "preset" | "protocol" | "baseUrl" | "model";
+        old: unknown;
+        new: unknown;
+      };
   "ai_connector.disabled": { preset: string };
   "ai_connector.enabled": { preset: string };
   "ai_connector.removed": {

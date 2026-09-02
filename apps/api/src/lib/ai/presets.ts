@@ -1,5 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
+/**
+ * Server-owned TECH-012 provider presets. Each preset fixes its wire protocol,
+ * host where one is shared, default model, and credential requirement.
+ */
+
 import type { AiPreset, AiProtocol } from "@openlaw/db";
 
 export interface AiPresetDefinition {

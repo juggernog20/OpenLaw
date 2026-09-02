@@ -87,10 +87,18 @@ describe("the AI connector role gate", () => {
       { method: "DELETE" as const, url: URL },
     ];
     for (const request of requests) {
-      expect((await harness.app.inject(request)).statusCode).toBe(401);
-      expect((await harness.app.inject({ ...request, cookies: memberCookies })).statusCode).toBe(
-        403,
-      );
+      const anonymous = await harness.app.inject(request);
+      expect(anonymous.statusCode).toBe(401);
+      expect(anonymous.headers["content-type"]).toContain("application/problem+json");
+      expect(anonymous.json()).toMatchObject({ status: 401, title: "Authentication required." });
+
+      const member = await harness.app.inject({ ...request, cookies: memberCookies });
+      expect(member.statusCode).toBe(403);
+      expect(member.headers["content-type"]).toContain("application/problem+json");
+      expect(member.json()).toMatchObject({
+        status: 403,
+        title: "You do not have permission to perform this action.",
+      });
     }
   });
 });
@@ -165,6 +173,23 @@ describe("saving and reading", () => {
     });
     expect(azure.statusCode, azure.body).toBe(200);
     expect(azure.json().connector.baseUrl).toContain("/deployments/contracts/chat/completions");
+  });
+
+  it("refuses a base URL that embeds plaintext credentials", async () => {
+    const response = await save({
+      preset: "custom",
+      protocol: "openai_chat_completions",
+      baseUrl: "https://token:secret@models.example.test/v1",
+      apiKey: FAKE_VALID_AI_KEY,
+      model: "legal-model",
+    });
+    expect(response.statusCode).toBe(400);
+    expect(response.headers["content-type"]).toContain("application/problem+json");
+    expect(response.json()).toMatchObject({
+      status: 400,
+      title: "The provider base URL must not contain credentials.",
+    });
+    expect(response.json().detail).toContain("must not contain credentials");
   });
 
   it("never returns the key, and a blank save keeps the sealed value", async () => {

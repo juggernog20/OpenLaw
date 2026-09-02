@@ -189,6 +189,11 @@ describe("OpenAI-compatible preset authentication", () => {
     expect(server.requests.at(-1)!.headers.authorization).toBeUndefined();
   });
 
+  it("uses bearer authorization when Ollama is behind an authenticated proxy", async () => {
+    await provider({ preset: "ollama" }).probe();
+    expect(server.requests.at(-1)!.headers.authorization).toBe(`Bearer ${VALID_KEY}`);
+  });
+
   it("keeps the provider's reason for a wrong endpoint", async () => {
     await expect(provider({ baseUrl: `${server.baseUrl}/wrong` }).probe()).rejects.toEqual(
       expect.objectContaining({

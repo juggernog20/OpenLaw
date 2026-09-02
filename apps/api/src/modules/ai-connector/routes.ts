@@ -1,5 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
+/**
+ * The Administrator-only API behind the AI analysis integration pane (TECH-003,
+ * TECH-012). It owns preset normalization, write-only credential handling, live
+ * connection probes, lifecycle controls, and the connector's settings history.
+ */
+
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
 import { z } from "zod";
 import {
@@ -100,6 +106,9 @@ function checkedBaseUrl(value: string | undefined): string {
   if (url.protocol !== "http:" && url.protocol !== "https:") {
     throw httpError(400, "The provider base URL must use HTTP or HTTPS.");
   }
+  if (url.username || url.password) {
+    throw httpError(400, "The provider base URL must not contain credentials.");
+  }
   return url.toString();
 }
 
@@ -192,20 +201,34 @@ export const aiConnectorRoutes: FastifyPluginAsyncZod = async (app) => {
           .returning();
         if (!row) throw httpError(500, "The AI connector could not be saved.");
 
-        const changes: { field: string; old: unknown; new: unknown }[] = [];
         for (const field of ["preset", "protocol", "baseUrl", "model"] as const) {
           if (current[field] !== row[field]) {
-            changes.push({ field, old: current[field], new: row[field] });
+            await recordActivity(tx, {
+              entityType: "system",
+              actorId: request.user.id,
+              action: "ai_connector.updated",
+              visibility: "admin_only",
+              payload: {
+                preset: row.preset,
+                field,
+                old: current[field],
+                new: row[field],
+              },
+            });
           }
         }
-        if (apiKey) changes.push({ field: "apiKey", old: "[secret]", new: "[secret]" });
-        for (const change of changes) {
+        if (apiKey) {
           await recordActivity(tx, {
             entityType: "system",
             actorId: request.user.id,
             action: "ai_connector.updated",
             visibility: "admin_only",
-            payload: { preset: row.preset, ...change },
+            payload: {
+              preset: row.preset,
+              field: "apiKey",
+              old: "[secret]",
+              new: "[secret]",
+            },
           });
         }
         return row;

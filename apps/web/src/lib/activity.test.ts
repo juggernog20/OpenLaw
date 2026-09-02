@@ -1126,6 +1126,18 @@ describe("the sentences a reader gets", () => {
     ]);
   });
 
+  it("names AI presets and connector fields as the Integrations pane does", () => {
+    expect(
+      narrate("ai_connector.configured", {
+        ...SAMPLE_PAYLOADS["ai_connector.configured"],
+        preset: "azure_openai",
+      }).sentence,
+    ).toBe("Nadia Counsel connected the AI provider Azure OpenAI");
+    expect(
+      narrate("ai_connector.updated", SAMPLE_PAYLOADS["ai_connector.updated"]).changes,
+    ).toEqual([{ label: "API key", from: "[secret]", to: "[secret]" }]);
+  });
+
   it("names the far record of a relation by reference and title, one arm per type", () => {
     expect(narrate("contract.parent_set", SAMPLE_PAYLOADS["contract.parent_set"]).sentence).toBe(
       "Nadia Counsel put this contract under C-12 (Helix master services agreement)",

@@ -17,6 +17,8 @@ const MEMBER = { ...ADMIN, id: "u2", role: "legal_team_member" };
 
 type AiResponse =
   paths["/api/v1/ai-connector"]["get"]["responses"]["200"]["content"]["application/json"];
+type AiSaveRequest =
+  paths["/api/v1/ai-connector"]["put"]["requestBody"]["content"]["application/json"];
 
 const PRESETS = [
   {
@@ -84,6 +86,22 @@ const PRESETS = [
   },
 ] satisfies AiResponse["presets"];
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return value !== null && typeof value === "object" && !Array.isArray(value);
+}
+
+function isAiSaveRequest(value: unknown): value is AiSaveRequest {
+  if (!isRecord(value)) return false;
+  const preset = PRESETS.find((option) => option.preset === value.preset);
+  return (
+    preset !== undefined &&
+    typeof value.model === "string" &&
+    (value.protocol === undefined || typeof value.protocol === "string") &&
+    (value.baseUrl === undefined || typeof value.baseUrl === "string") &&
+    (value.apiKey === undefined || typeof value.apiKey === "string")
+  );
+}
+
 function connector(overrides: Partial<AiResponse["connector"]> = {}): AiResponse["connector"] {
   return {
     configured: true,
@@ -121,12 +139,12 @@ function connectorApi(
     if (call.url.pathname === "/api/v1/ai-connector") {
       if (call.method === "PUT") {
         saves.push(call.body);
-        const body = call.body as Record<string, string>;
+        if (!isAiSaveRequest(call.body)) throw new Error("Unexpected AI connector save body");
+        const body = call.body;
         const option = PRESETS.find((candidate) => candidate.preset === body.preset)!;
         stored = connector({
           preset: option.preset,
-          protocol:
-            (body.protocol as AiResponse["connector"]["protocol"] | undefined) ?? option.protocol,
+          protocol: body.protocol ?? option.protocol,
           baseUrl: body.baseUrl ?? option.baseUrl,
           model: body.model,
           hasApiKey: stored.hasApiKey || body.apiKey !== undefined,

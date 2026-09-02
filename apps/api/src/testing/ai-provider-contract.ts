@@ -1,5 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
+/**
+ * The shared TECH-012 behavioral contract exercised by deterministic and real
+ * protocol adapters, including extraction variance and connection refusal.
+ */
+
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { AiConfigError, type AiExtractionTarget, type AiProvider } from "../lib/ai/provider.js";
 

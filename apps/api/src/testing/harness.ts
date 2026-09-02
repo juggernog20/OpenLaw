@@ -422,7 +422,15 @@ export async function startHarness(options: HarnessOptions = {}): Promise<TestHa
       }
       return ai;
     };
-    const resolveAiProvider = createAiResolver(db, options.aiDriverFactory ?? fakeAiDriver);
+    const liveAiResolver = createAiResolver(db, options.aiDriverFactory ?? fakeAiDriver);
+    const resolveAiProvider: AiResolver = async () => {
+      const resolved = await liveAiResolver();
+      if (!resolved) {
+        ai = null;
+        aiKey = null;
+      }
+      return resolved;
+    };
     // The real queue and the real handlers, on this container's
     // Postgres. pg-boss installs its schema in about a tenth of a
     // second, so every suite runs the production pipeline rather than a

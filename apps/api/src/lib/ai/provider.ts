@@ -1,5 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
+/**
+ * The TECH-012 AI connector seam: protocol-neutral extraction and probing,
+ * plus the error taxonomy used by the live resolver and later pipeline work.
+ */
+
 import type { AiPreset, AiProtocol } from "@openlaw/db";
 
 /** One field the provider should extract from the contract text. */

@@ -352,7 +352,8 @@ function changeLabel(intl: IntlShape, key: string, context: NarrationContext): s
         "clientSecret {Client secret} " +
         "environment {Environment} integrationKey {Integration key} " +
         "apiUserId {User ID} privateKey {RSA private key} " +
-        "webhookSecret {Connect HMAC secret} " +
+        "webhookSecret {Connect HMAC secret} preset {Provider} protocol {Protocol} " +
+        "baseUrl {Base URL} model {Model} apiKey {API key} " +
         "legalName {Legal name} entityType {Entity type} knowledgeType {Knowledge type} " +
         "jurisdiction {Jurisdiction} formedOn {Formed on} " +
         "registrationNumber {Registration number} taxId {Tax ID} " +
@@ -841,6 +842,20 @@ function teamRole(intl: IntlShape, payload: Payload): string {
         "contributor {Contributor} other {{role}}}",
     },
     { role },
+  );
+}
+
+/** A stored AI preset slug in the same words as the Integrations pane. */
+function aiPreset(intl: IntlShape, payload: Payload): string {
+  return intl.formatMessage(
+    {
+      id: "activity.aiConnector.preset",
+      defaultMessage:
+        "{preset, select, anthropic {Anthropic} openai {OpenAI} " +
+        "azure_openai {Azure OpenAI} gemini {Gemini} openrouter {OpenRouter} " +
+        "ollama {Ollama} custom {Custom endpoint} other {{preset}}}",
+    },
+    { preset: text(payload, "preset") ?? "unknown" },
   );
 }
 
@@ -2410,7 +2425,7 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
       id: "activity.aiConnector.configured",
       defaultMessage: "{actor} connected the AI provider {provider}",
     }),
-    values: (intl, payload) => ({ provider: named(intl, payload, "preset") }),
+    values: (intl, payload) => ({ provider: aiPreset(intl, payload) }),
   },
   "ai_connector.updated": {
     icon: Plug,
@@ -2418,7 +2433,7 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
       id: "activity.aiConnector.updated",
       defaultMessage: "{actor} changed the AI connector {provider}",
     }),
-    values: (intl, payload) => ({ provider: named(intl, payload, "preset") }),
+    values: (intl, payload) => ({ provider: aiPreset(intl, payload) }),
     changes: fieldChange,
   },
   "ai_connector.disabled": {
@@ -2427,7 +2442,7 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
       id: "activity.aiConnector.disabled",
       defaultMessage: "{actor} turned off the AI connector {provider}",
     }),
-    values: (intl, payload) => ({ provider: named(intl, payload, "preset") }),
+    values: (intl, payload) => ({ provider: aiPreset(intl, payload) }),
   },
   "ai_connector.enabled": {
     icon: Plug,
@@ -2435,7 +2450,7 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
       id: "activity.aiConnector.enabled",
       defaultMessage: "{actor} turned on the AI connector {provider}",
     }),
-    values: (intl, payload) => ({ provider: named(intl, payload, "preset") }),
+    values: (intl, payload) => ({ provider: aiPreset(intl, payload) }),
   },
   "ai_connector.removed": {
     icon: Trash2,
@@ -2443,7 +2458,7 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
       id: "activity.aiConnector.removed",
       defaultMessage: "{actor} removed the AI connector {provider} and its API key",
     }),
-    values: (intl, payload) => ({ provider: named(intl, payload, "preset") }),
+    values: (intl, payload) => ({ provider: aiPreset(intl, payload) }),
   },
 
   // ---- The settings taxonomies and the field catalog ----

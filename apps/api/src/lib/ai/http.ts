@@ -10,6 +10,15 @@ import {
 } from "./provider.js";
 
 const AI_CALL_TIMEOUT_MS = 30_000;
+const MAX_REFUSAL_BYTES = 500;
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return value !== null && typeof value === "object" && !Array.isArray(value);
+}
+
+function isTimedOut(signal: AbortSignal, error: unknown): boolean {
+  return signal.aborted || (error instanceof DOMException && error.name === "TimeoutError");
+}
 
 /** Adds a protocol path unless the configured URL already names its final endpoint. */
 export function protocolUrl(baseUrl: string, path: string, finalSuffix: string): URL {
@@ -24,10 +33,9 @@ export function protocolUrl(baseUrl: string, path: string, finalSuffix: string):
 
 function nestedReason(value: unknown): string | null {
   if (typeof value === "string" && value.trim()) return value.trim();
-  if (!value || typeof value !== "object") return null;
-  const record = value as Record<string, unknown>;
+  if (!isRecord(value)) return null;
   for (const key of ["message", "detail", "error_description", "error"]) {
-    const reason = nestedReason(record[key]);
+    const reason = nestedReason(value[key]);
     if (reason) return reason;
   }
   return null;
@@ -35,7 +43,31 @@ function nestedReason(value: unknown): string | null {
 
 /** Reads the provider's own reason without copying an HTML error page into Settings. */
 async function refusalReason(response: Response): Promise<string> {
-  const raw = await response.text();
+  const reader = response.body?.getReader();
+  if (!reader) return response.statusText || `HTTP ${response.status}`;
+  const decoder = new TextDecoder();
+  let raw = "";
+  let readBytes = 0;
+  let truncated: boolean;
+  try {
+    while (readBytes <= MAX_REFUSAL_BYTES) {
+      const part = await reader.read();
+      if (part.done) {
+        raw += decoder.decode();
+        break;
+      }
+      const remaining = MAX_REFUSAL_BYTES + 1 - readBytes;
+      const bytes = part.value.subarray(0, remaining);
+      raw += decoder.decode(bytes, { stream: true });
+      readBytes += bytes.byteLength;
+      if (part.value.byteLength > bytes.byteLength) break;
+    }
+    truncated = readBytes > MAX_REFUSAL_BYTES;
+    if (truncated) await reader.cancel();
+  } finally {
+    reader.releaseLock();
+  }
+  if (truncated) return response.statusText || `HTTP ${response.status}`;
   try {
     const reason = nestedReason(JSON.parse(raw));
     if (reason) return reason;
@@ -43,7 +75,7 @@ async function refusalReason(response: Response): Promise<string> {
     // A short plain-text refusal is still the provider's useful reason.
   }
   const plain = raw.replace(/\s+/g, " ").trim();
-  return plain && plain.length <= 500 ? plain : response.statusText || `HTTP ${response.status}`;
+  return plain || response.statusText || `HTTP ${response.status}`;
 }
 
 function transportReason(error: unknown): string {
@@ -57,16 +89,17 @@ export async function postJson(
   headers: Readonly<Record<string, string>>,
   body: unknown,
 ): Promise<unknown> {
+  const signal = AbortSignal.timeout(AI_CALL_TIMEOUT_MS);
   let response: Response;
   try {
     response = await fetch(url, {
       method: "POST",
       headers: { "content-type": "application/json", ...headers },
       body: JSON.stringify(body),
-      signal: AbortSignal.timeout(AI_CALL_TIMEOUT_MS),
+      signal,
     });
   } catch (error) {
-    if (error instanceof DOMException && error.name === "TimeoutError") {
+    if (isTimedOut(signal, error)) {
       throw new AiTimeoutError("The provider did not answer in time.", { cause: error });
     }
     throw new AiUnavailableError(`The provider could not be reached. ${transportReason(error)}`, {
@@ -74,7 +107,18 @@ export async function postJson(
     });
   }
   if (!response.ok) {
-    const reason = await refusalReason(response);
+    let reason: string;
+    try {
+      reason = await refusalReason(response);
+    } catch (error) {
+      if (isTimedOut(signal, error)) {
+        throw new AiTimeoutError("The provider did not answer in time.", { cause: error });
+      }
+      throw new AiUnavailableError(
+        `The provider response could not be read. ${transportReason(error)}`,
+        { cause: error },
+      );
+    }
     const message = reason || `The provider refused the request with HTTP ${response.status}.`;
     if (response.status === 429 || response.status >= 500) {
       throw new AiUnavailableError(message);
@@ -84,6 +128,9 @@ export async function postJson(
   try {
     return await response.json();
   } catch (error) {
+    if (isTimedOut(signal, error)) {
+      throw new AiTimeoutError("The provider did not answer in time.", { cause: error });
+    }
     throw new AiResponseError("The provider returned a response that was not JSON.", {
       cause: error,
     });
@@ -122,20 +169,18 @@ export function parseExtractionReply(
       cause: error,
     });
   }
-  if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+  if (!isRecord(parsed)) {
     throw new AiResponseError("The provider reply was not an object keyed by field slug.");
   }
-  const object = parsed as Record<string, unknown>;
   const answers: AiExtraction[] = [];
   for (const target of targets) {
-    if (!(target.slug in object)) continue;
-    const entry = object[target.slug];
-    if (entry && typeof entry === "object" && !Array.isArray(entry) && "value" in entry) {
-      const record = entry as Record<string, unknown>;
+    if (!(target.slug in parsed)) continue;
+    const entry = parsed[target.slug];
+    if (isRecord(entry) && "value" in entry) {
       answers.push({
         slug: target.slug,
-        value: record.value,
-        ...(typeof record.evidence === "string" ? { evidence: record.evidence } : {}),
+        value: entry.value,
+        ...(typeof entry.evidence === "string" ? { evidence: entry.evidence } : {}),
       });
     } else {
       // Weak compatible models sometimes return the scalar directly.
@@ -153,8 +198,8 @@ export function stringAt(value: unknown, path: readonly (string | number)[]): st
       if (!Array.isArray(current)) return "";
       current = current[key];
     } else {
-      if (!current || typeof current !== "object") return "";
-      current = (current as Record<string, unknown>)[key];
+      if (!isRecord(current)) return "";
+      current = current[key];
     }
   }
   return typeof current === "string" ? current : "";

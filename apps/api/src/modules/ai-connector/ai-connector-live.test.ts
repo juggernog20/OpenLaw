@@ -84,6 +84,7 @@ describe("the connector test through a node:http provider", () => {
     await save(VALID_KEY);
     const response = await probe();
     expect(response.statusCode, response.body).toBe(200);
+    expect(response.headers["content-type"]).toContain("application/json");
     expect(response.json()).toEqual({ ok: true });
   });
 
@@ -91,6 +92,8 @@ describe("the connector test through a node:http provider", () => {
     await save("wrong-key");
     const response = await probe();
     expect(response.statusCode).toBe(502);
+    expect(response.headers["content-type"]).toContain("application/problem+json");
+    expect(response.json()).toMatchObject({ status: 502, title: "Bad gateway" });
     expect(response.json().detail).toContain("That API key is not valid.");
   });
 
@@ -98,6 +101,8 @@ describe("the connector test through a node:http provider", () => {
     await save(VALID_KEY, `${baseUrl}/wrong`);
     const response = await probe();
     expect(response.statusCode).toBe(502);
+    expect(response.headers["content-type"]).toContain("application/problem+json");
+    expect(response.json()).toMatchObject({ status: 502, title: "Bad gateway" });
     expect(response.json().detail).toContain("The deployment URL is wrong.");
   });
 });
