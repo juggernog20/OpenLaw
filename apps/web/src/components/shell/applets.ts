@@ -40,6 +40,10 @@ interface AppletBase {
 /** A slot that expands the side panel with its own content. */
 export interface PanelApplet extends AppletBase {
   render: () => ReactNode;
+  /** Reports the panel's logical open state. A closing panel stays
+   * mounted for its slide, so mount state cannot answer this question
+   * for live surfaces that must stop marking content read at close. */
+  onExpandedChange?: (expanded: boolean) => void;
   /**
    * Rendered beside the panel's title while the applet is open. The
    * panel header is chrome, but what sits in it is the applet's. The

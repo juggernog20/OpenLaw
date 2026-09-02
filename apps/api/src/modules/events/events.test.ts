@@ -40,6 +40,9 @@ const CONTRIBUTOR = {
 interface SseFrame {
   event?: string;
   data?: LiveEvent;
+  /** The exact JSON text carried by the wire, before the shared parser
+   * narrows it to the accepted event vocabulary. */
+  rawData?: string;
   comment?: string;
 }
 
@@ -101,6 +104,7 @@ class EventStream {
       .trim();
     this.frames.push({
       event,
+      rawData: data,
       data: data ? (parseLiveEvent(JSON.parse(data) as unknown) ?? undefined) : undefined,
     });
   }
@@ -427,6 +431,37 @@ describe("GET /api/events", () => {
     await harness.db.transaction((tx) => publishLiveEvent(tx, event));
     await expect(stream.next(liveFrame("record"))).resolves.toMatchObject({ data: event });
     await stream.close();
+  });
+
+  it("carries ids but never comment text, and sends no hidden-tier frame", async () => {
+    const admin = await EventStream.open(streamUrl(secondRecord), adminCookies);
+    const contributor = await EventStream.open(streamUrl(secondRecord), contributorCookies);
+    const secret = "Counsel's hidden comment text must stay off the channel.";
+    const posted = await harness.app.inject({
+      method: "POST",
+      url: "/api/v1/comments",
+      cookies: adminCookies,
+      payload: {
+        entityType: "contract",
+        entityId: secondRecord.id,
+        body: secret,
+        visibility: "legal_only",
+      },
+    });
+    expect(posted.statusCode, posted.body).toBe(201);
+
+    const frame = await admin.next(liveFrame("record"));
+    expect(frame.data).toMatchObject({
+      kind: "record",
+      action: "comment.posted",
+      entityType: "contract",
+      entityId: secondRecord.id,
+      visibility: "legal_only",
+    });
+    expect(frame.rawData).not.toContain(secret);
+    expect(JSON.parse(frame.rawData!)).toEqual(frame.data);
+    await expectNoFrame(contributor, liveFrame("record"));
+    await Promise.all([admin.close(), contributor.close()]);
   });
 
   it("delivers a bell frame only to the named user", async () => {

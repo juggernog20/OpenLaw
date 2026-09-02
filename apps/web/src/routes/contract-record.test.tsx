@@ -2636,7 +2636,20 @@ describe("the contract record's comment applet (M9/2)", () => {
       }
       return undefined;
     };
-    return { handler, posts, reads, corrections, marksRead, filings };
+    return {
+      handler,
+      posts,
+      reads,
+      corrections,
+      marksRead,
+      filings,
+      setThread(next: ReturnType<typeof comment>[]) {
+        thread = next;
+      },
+      setUnread(next: number) {
+        unread = next;
+      },
+    };
   }
 
   /** The record page's own seam plus the thread's, in that order. */
@@ -3838,6 +3851,117 @@ describe("the contract record's comment applet (M9/2)", () => {
       // would take the signal away without delivering what it points at.
       expect(comments.marksRead).toEqual([]);
       expect(within(bar).getByRole("button", { name: "Comments (2)" })).toBeInTheDocument();
+    });
+
+    it("adopts the server's filtered count from a live comment prompt while closed", async () => {
+      const user = userEvent.setup();
+      const sources = stubEventSource();
+      const comments = commentsApi();
+      stubApi({ signedIn: MEMBER, extra: pageApi(comments) });
+      renderAt("/contracts/42");
+
+      const bar = await screen.findByRole("toolbar", { name: "Applets" });
+      expect(await within(bar).findByRole("button", { name: "Comments" })).toBeInTheDocument();
+      await openChat(user);
+      const panel = await screen.findByRole("complementary", { name: "Comments" });
+      await waitFor(() => expect(comments.reads).toHaveLength(1));
+      await user.click(within(panel).getByRole("button", { name: "Close" }));
+      // The panel stays mounted for its closing slide. It is already
+      // logically closed and must not mark a reply read during it.
+      comments.setUnread(2);
+      sources[0]!.emit({
+        kind: "record",
+        action: "comment.posted",
+        entityType: "contract",
+        entityId: "c1",
+        entryId: "activity-live-post",
+        visibility: "working_team",
+      });
+
+      expect(await within(bar).findByRole("button", { name: "Comments (2)" })).toBeInTheDocument();
+      // A closed panel asks only for its badge. The one thread read and
+      // watermark write are from the earlier open, not this prompt.
+      expect(comments.reads).toHaveLength(1);
+    });
+  });
+
+  describe("live comment prompts", () => {
+    it("adds a new server row to an open thread without reopening it", async () => {
+      const user = userEvent.setup();
+      const sources = stubEventSource();
+      const first = comment("c-1", "The first note.", "working_team");
+      const second = comment("c-2", "The reply from the other tab.", "working_team", CASEY);
+      const comments = commentsApi([first]);
+      stubApi({ signedIn: MEMBER, extra: pageApi(comments) });
+      renderAt("/contracts/42");
+      await openChat(user);
+
+      const thread = await screen.findByRole("list", { name: "Comments" });
+      expect(within(thread).getAllByRole("listitem")).toHaveLength(1);
+      comments.setThread([first, second]);
+      sources[0]!.emit({
+        kind: "record",
+        action: "comment.posted",
+        entityType: "contract",
+        entityId: "c1",
+        entryId: "activity-live-post",
+        visibility: "working_team",
+      });
+
+      expect(await within(thread).findByText("The reply from the other tab.")).toBeInTheDocument();
+      expect(within(thread).getAllByRole("listitem")).toHaveLength(2);
+      expect(comments.reads).toHaveLength(2);
+    });
+
+    it("replaces an edited row and then its soft-delete tombstone in place", async () => {
+      const user = userEvent.setup();
+      const sources = stubEventSource();
+      const original = comment("c-1", "Text another reader may answer.", "working_team", CASEY);
+      const comments = commentsApi([original]);
+      stubApi({ signedIn: MEMBER, extra: pageApi(comments) });
+      renderAt("/contracts/42");
+      await openChat(user);
+
+      const thread = await screen.findByRole("list", { name: "Comments" });
+      const edited = {
+        ...original,
+        body: "Corrected text from the server.",
+        editedAt: "2026-08-12T14:00:00.000Z",
+      };
+      comments.setThread([edited]);
+      sources[0]!.emit({
+        kind: "record",
+        action: "comment.edited",
+        entityType: "contract",
+        entityId: "c1",
+        entryId: "activity-live-edit",
+        visibility: "working_team",
+      });
+
+      expect(
+        await within(thread).findByText("Corrected text from the server."),
+      ).toBeInTheDocument();
+      expect(within(thread).getByText("edited")).toBeInTheDocument();
+      expect(within(thread).queryByText("Text another reader may answer.")).not.toBeInTheDocument();
+
+      comments.setThread([
+        {
+          ...edited,
+          body: "",
+          deletedAt: "2026-08-12T15:00:00.000Z",
+        },
+      ]);
+      sources[0]!.emit({
+        kind: "record",
+        action: "comment.deleted",
+        entityType: "contract",
+        entityId: "c1",
+        entryId: "activity-live-delete",
+        visibility: "working_team",
+      });
+
+      expect(await within(thread).findByText("Comment deleted by its author.")).toBeInTheDocument();
+      expect(within(thread).queryByText("Corrected text from the server.")).not.toBeInTheDocument();
     });
   });
 

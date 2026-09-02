@@ -82,6 +82,15 @@ export function RecordApplets({
   // screen. Everyone else keeps the generated id.
   const panelId = shown?.hash ?? generatedPanelId;
 
+  // A retained closing panel is inert and already logically closed.
+  // Report the resolved expanded applet rather than whether its render
+  // tree is still mounted for the width transition.
+  const expandedChange = expanded?.onExpandedChange;
+  useEffect(() => {
+    expandedChange?.(true);
+    return () => expandedChange?.(false);
+  }, [expandedChange]);
+
   // DES-047: a hash link whose fragment matches an applet opens that
   // applet. Native fragment navigation would miss — the panel is not
   // in the DOM until it is expanded — so this is the whole of the

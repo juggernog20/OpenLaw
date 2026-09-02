@@ -26,6 +26,7 @@ import {
   problem,
   renderAt,
   stubApi,
+  stubEventSource,
   type StubAnswer,
   type StubCall,
 } from "../testing/helpers";
@@ -588,6 +589,56 @@ describe("the conversation", () => {
     expect(within(card).getByText("You")).toBeInTheDocument();
     expect(within(card).getByText("Sarah Chen")).toBeInTheDocument();
     expect(within(card).getByText("Legal")).toBeInTheDocument();
+  });
+
+  it("adds and replaces Full Thread replies from live comment prompts", async () => {
+    const sources = stubEventSource();
+    const liveThread = {
+      comments: [comment({ id: "c1", body: "Legal is checking the renewal term." })],
+    };
+    stubApi({ signedIn: REQUESTER, extra: detailRead(detail(), 200, liveThread) });
+    renderAt("/portal/requests/45");
+
+    const card = await screen.findByRole("region", { name: "Conversation" });
+    expect(within(card).getByText("Legal is checking the renewal term.")).toBeInTheDocument();
+    expect(sources[0]?.url).toBe("/api/events?entityType=request&entityId=rq1");
+
+    const reply = comment({ id: "c2", body: "The renewal term is twelve months." });
+    liveThread.comments = [liveThread.comments[0]!, reply];
+    sources[0]!.emit({
+      kind: "record",
+      action: "comment.posted",
+      entityType: "request",
+      entityId: "rq1",
+      entryId: "activity-portal-post",
+      visibility: "full_thread",
+    });
+    expect(await within(card).findByText("The renewal term is twelve months.")).toBeInTheDocument();
+
+    liveThread.comments = [
+      liveThread.comments[0]!,
+      {
+        ...reply,
+        body: "The renewal term is twenty-four months.",
+        editedAt: "2026-08-07T10:00:00.000Z",
+      },
+    ];
+    sources[0]!.emit({
+      kind: "record",
+      action: "comment.edited",
+      // A converted Request keeps this portal address, while the frame
+      // names the Contract that now holds its moved thread (CMT-001).
+      entityType: "contract",
+      entityId: "ct7",
+      entryId: "activity-portal-edit",
+      visibility: "full_thread",
+    });
+
+    expect(
+      await within(card).findByText("The renewal term is twenty-four months."),
+    ).toBeInTheDocument();
+    expect(within(card).getByText("edited")).toBeInTheDocument();
+    expect(within(card).queryByText("The renewal term is twelve months.")).not.toBeInTheDocument();
   });
 
   it("offers the reply box no tier to choose", async () => {
