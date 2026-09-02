@@ -38,6 +38,78 @@ export type CommentTier = Comment["visibility"];
 /** The record a thread hangs off — the reference the panel is keyed by. */
 export type CommentEntityType = Comment["entityType"];
 
+/**
+ * Re-reads the newest end of a thread through one row already on screen.
+ *
+ * A live frame names no comment body, and an edited row may sit on any
+ * page the reader has loaded. Walking until the old first row appears
+ * gives a caller every visible row it must reconcile while leaving the
+ * read route in charge of audience filtering.
+ */
+export async function readCommentWindow(
+  entityType: CommentEntityType,
+  entityId: string,
+  throughId?: string,
+): Promise<ThreadResponse | undefined> {
+  let cursor: string | undefined;
+  let comments: Comment[] = [];
+
+  for (;;) {
+    const { data } = await api
+      .GET("/api/v1/comments", {
+        params: {
+          query: {
+            entityType,
+            entityId,
+            ...(cursor ? { cursor } : {}),
+          },
+        },
+      })
+      .catch(() => ({ data: undefined }));
+    if (!data) return undefined;
+
+    comments = [...data.comments, ...comments];
+    if (!throughId || comments.some((comment) => comment.id === throughId) || !data.nextCursor) {
+      return { comments, nextCursor: data.nextCursor };
+    }
+    cursor = data.nextCursor;
+  }
+}
+
+/** The read route's own order, `(createdAt, id)`. `createdAt` is the
+ * API's fixed-width UTC string, so plain string comparison is the time
+ * order, and the id (uuidv7) breaks a same-instant tie the same way. */
+function byThreadOrder(left: Comment, right: Comment): number {
+  if (left.createdAt !== right.createdAt) return left.createdAt < right.createdAt ? -1 : 1;
+  if (left.id === right.id) return 0;
+  return left.id < right.id ? -1 : 1;
+}
+
+/**
+ * Folds a re-read window into the rows already on screen.
+ *
+ * A row the window answered again takes the server's form, so an edit
+ * or a tombstone lands in its place. A row the window did not reach
+ * stays: the reader may have paged further back than one re-read needs
+ * to go. Rows the screen has not seen join the thread.
+ *
+ * The result is put back in the read route's order rather than appended
+ * to. A window ends at the page that holds the old first row, and once
+ * new comments have shifted every page boundary that page also carries
+ * rows older than it. Appended, those rows would sit under the newest
+ * one; a thread that is not chronological is not the thread (CMT-002).
+ */
+export function mergeCommentWindow(
+  current: readonly Comment[],
+  answered: readonly Comment[],
+): Comment[] {
+  const merged = new Map(answered.map((comment) => [comment.id, comment]));
+  for (const comment of current) {
+    if (!merged.has(comment.id)) merged.set(comment.id, comment);
+  }
+  return [...merged.values()].sort(byThreadOrder);
+}
+
 /** The two filing destinations accepted by CMT-011's one attachment route. */
 export type CommentAttachmentFiling = NonNullable<
   paths["/api/v1/comments/{commentId}/attachments/{attachmentId}/file"]["post"]["requestBody"]

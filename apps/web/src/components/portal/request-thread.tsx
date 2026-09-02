@@ -50,13 +50,19 @@
  *    there is nobody else an author could be.
  */
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { FormattedMessage, defineMessage, useIntl } from "react-intl";
 import { api } from "../../lib/api";
-import { sendComment, type Comment } from "../../lib/comments";
+import {
+  mergeCommentWindow,
+  readCommentWindow,
+  sendComment,
+  type Comment,
+} from "../../lib/comments";
 import { formatLongDateTime, formatRelativeOrShort } from "../../lib/format";
 import { TEXTAREA_CLASS } from "../../lib/form-controls";
 import { problem as readProblem } from "../../lib/problem";
+import { subscribeLiveEvents } from "../../lib/events";
 import { cn } from "../../lib/utils";
 import { Avatar } from "../avatar";
 import { CommentAttachmentRows, CommentFilePicker } from "../comments/comment-attachments";
@@ -84,12 +90,54 @@ export function RequestThread({
   thread: LoadedThread | null;
 }>) {
   const [comments, setComments] = useState<Comment[]>(thread?.comments ?? []);
+  const commentsRef = useRef<Comment[]>(thread?.comments ?? []);
   const [cursor, setCursor] = useState<string | null>(thread?.nextCursor ?? null);
   const [olderFailed, setOlderFailed] = useState(false);
   const [loadingOlder, setLoadingOlder] = useState(false);
+  const [readFailed, setReadFailed] = useState(thread === null);
   /** The message that should take focus once it is on screen, or `null`
    * when nothing is waiting for it. */
   const [landed, setLanded] = useState<string | null>(null);
+  const newestIssued = useRef(0);
+  const newestLanded = useRef(0);
+  useEffect(() => {
+    commentsRef.current = comments;
+  }, [comments]);
+
+  /** A frame carries no reply text, so the open portal card asks the
+   * existing Full Thread read through the oldest row already on screen
+   * and adopts the corrected window. */
+  const refreshNewest = useCallback(async () => {
+    const issue = (newestIssued.current += 1);
+    const throughId = commentsRef.current[0]?.id;
+    const data = await readCommentWindow("request", requestId, throughId);
+    if (issue < newestLanded.current) return;
+    newestLanded.current = issue;
+    if (!data) {
+      setReadFailed(true);
+      return;
+    }
+    setReadFailed(false);
+    setComments((current) => mergeCommentWindow(current, data.comments));
+    if (commentsRef.current[0]?.id === throughId) setCursor(data.nextCursor);
+  }, [requestId]);
+
+  useEffect(
+    () =>
+      subscribeLiveEvents((event) => {
+        if (
+          event.kind === "open" ||
+          (event.kind === "record" && event.action.startsWith("comment."))
+        ) {
+          // The server already scoped this tab to the Request and, after
+          // conversion, to the record holding its moved thread. The
+          // frame may therefore name a Contract or Matter while this
+          // stable portal address still asks by Request id.
+          void refreshNewest();
+        }
+      }),
+    [refreshNewest],
+  );
 
   /**
    * One page further back, prepended in place (CTR-024).
@@ -136,7 +184,7 @@ export function RequestThread({
         </h2>
       </div>
       <div className="flex flex-col gap-4 p-4">
-        {thread === null && (
+        {readFailed && (
           <p role="alert" className="text-sm text-status-danger-fg">
             <FormattedMessage
               id="portal.request.threadFailed"
