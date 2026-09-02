@@ -470,12 +470,45 @@ describe("Home", () => {
 
     expect(await screen.findByRole("heading", { name: "Welcome to OpenLaw" })).toBeInTheDocument();
     expect(homeReads).toBe(1);
+    act(() => sources[0]!.open());
+    await waitFor(() => expect(homeReads).toBe(2));
+
     sections = [{ ...inboxSection, total: 1 }];
     act(() => sources[0]!.open());
 
-    await waitFor(() => expect(homeReads).toBe(2));
+    await waitFor(() => expect(homeReads).toBe(3));
     const card = await screen.findByRole("region", { name: "Inbox" });
     expect(within(card).getByText("1")).toBeInTheDocument();
+  });
+
+  it("keeps an Inbox frame that lands while reconnect recovery is reading", async () => {
+    const sources = stubEventSource();
+    let homeReads = 0;
+    let finishRecovery!: () => void;
+    stubApi({
+      signedIn: MEMBER,
+      extra: (call) => {
+        if (call.url.pathname !== "/api/v1/home" || call.method !== "GET") return undefined;
+        homeReads += 1;
+        if (homeReads === 1) return json(200, { sections: [inboxSection] });
+        return new Promise<Response>((resolve) => {
+          finishRecovery = () => resolve(json(200, { sections: [inboxSection] }));
+        });
+      },
+    });
+    renderAt("/");
+
+    const card = await screen.findByRole("region", { name: "Inbox" });
+    expect(within(card).getByText("5")).toBeInTheDocument();
+    act(() => sources[0]!.open());
+    await waitFor(() => expect(homeReads).toBe(2));
+
+    act(() => sources[0]!.emit({ kind: "inbox", total: 6 }));
+    expect(await within(card).findByText("6")).toBeInTheDocument();
+    await act(async () => finishRecovery());
+
+    expect(within(card).getByText("6")).toBeInTheDocument();
+    expect(homeReads).toBe(2);
   });
 
   it("renders the Manager's Contract and Matter portfolios with lifecycle, next dates, and markers", async () => {

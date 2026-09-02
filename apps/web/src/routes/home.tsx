@@ -5,7 +5,13 @@
  */
 
 import { useEffect, useState } from "react";
-import { redirect, useLoaderData, useRevalidator, type LoaderFunctionArgs } from "react-router";
+import {
+  redirect,
+  useLoaderData,
+  useLocation,
+  useRevalidator,
+  type LoaderFunctionArgs,
+} from "react-router";
 import { FormattedMessage, useIntl } from "react-intl";
 import { api } from "../lib/api";
 import { requireUser, useSignOut } from "../lib/session";
@@ -55,19 +61,21 @@ export async function homeLoader({ request }: LoaderFunctionArgs) {
 export function HomePage() {
   const { user, sections: loadedSections } = useLoaderData<typeof homeLoader>();
   const [inboxPatch, setInboxPatch] = useState<{
-    base: typeof loadedSections;
+    locationKey: string;
     total: number;
   } | null>(null);
+  const location = useLocation();
   const { revalidate } = useRevalidator();
   const intl = useIntl();
 
   const signOut = useSignOut("/auth/login");
 
-  // A patch belongs to the loader answer that drew its card. Navigation
-  // and reconnect recovery replace that array, which drops the old
-  // patch without copying loader data into state.
+  // A patch belongs to the navigation that drew its card. A reconnect
+  // read keeps that identity, so a newer frame can win if it lands while
+  // the read is in flight. A real navigation gets a new key and its own
+  // loader answer.
   const sections =
-    inboxPatch?.base === loadedSections
+    inboxPatch?.locationKey === location.key
       ? loadedSections.map((section) =>
           section.type === "inbox" ? { ...section, total: inboxPatch.total } : section,
         )
@@ -76,14 +84,17 @@ export function HomePage() {
     () =>
       subscribeLiveEvents((event) => {
         if (event.kind === "open") {
+          // The read starts after the last known live fact. A frame that
+          // follows this point is newer and stays over its answer.
+          setInboxPatch(null);
           void revalidate();
           return;
         }
         if (event.kind !== "inbox") return;
         if (!loadedSections.some((section) => section.type === "inbox")) return;
-        setInboxPatch({ base: loadedSections, total: event.total });
+        setInboxPatch({ locationKey: location.key, total: event.total });
       }),
-    [loadedSections, revalidate],
+    [loadedSections, location.key, revalidate],
   );
 
   return (
