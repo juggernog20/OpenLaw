@@ -89,6 +89,19 @@ export const ENVELOPE_PILL: Record<EnvelopeStatus, string> = {
 export const liveEnvelope = (envelopes: readonly ContractEnvelope[]): ContractEnvelope | null =>
   envelopes.find((envelope) => envelope.status === "sent") ?? null;
 
+/** Reads the record's whole signing state through the same route the
+ * loader uses. Live prompts call this rather than carrying an Envelope
+ * row on the channel, so reach and document confidentiality are
+ * re-applied at the standing read seam. */
+export async function readContractSigning(contractNumber: number): Promise<SigningOutcome> {
+  const result = await api
+    .GET("/api/v1/contracts/{number}/envelopes", {
+      params: { path: { number: contractNumber } },
+    })
+    .catch(() => undefined);
+  return result?.data ? { ok: true, ...result.data } : { ok: false, ...(await problem(result)) };
+}
+
 /**
  * Sends one version of the primary document out for signature
  * (CTR-013).

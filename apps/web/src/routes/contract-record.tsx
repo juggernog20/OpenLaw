@@ -173,7 +173,12 @@ import {
   type ValueCadence,
   type UserOption,
 } from "../lib/contracts";
-import { ENVELOPE_PILL, type ContractEnvelope, type SigningState } from "../lib/envelopes";
+import {
+  ENVELOPE_PILL,
+  readContractSigning,
+  type ContractEnvelope,
+  type SigningState,
+} from "../lib/envelopes";
 import {
   commitsOnChange,
   sameDraft,
@@ -193,7 +198,12 @@ import {
   toMajorUnits,
   toMinorUnits,
 } from "../lib/format";
-import { APPROVAL_PILL, isUnresolved, type ContractApproval } from "../lib/approvals";
+import {
+  APPROVAL_PILL,
+  isUnresolved,
+  readContractApprovals,
+  type ContractApproval,
+} from "../lib/approvals";
 import { readContractKeyDates, type ContractDeadline } from "../lib/key-dates";
 import type { ContractTask } from "../lib/tasks";
 import { confirmContractRenewal, type ConfirmedRenewal } from "../lib/renewals";
@@ -205,6 +215,7 @@ import {
 } from "../lib/documents";
 import type { ContractFolder } from "../lib/folders";
 import { CONTROL_CLASS, TEXTAREA_CLASS } from "../lib/form-controls";
+import { subscribeLiveEvents } from "../lib/events";
 import { problem as readProblem } from "../lib/problem";
 import { cn } from "../lib/utils";
 import { canReadContracts, isMemberPlus } from "../lib/roles";
@@ -644,6 +655,81 @@ export function ContractRecordPage() {
    * it — and the section replaces what it holds without a page
    * re-read. */
   const [signing, setSigning] = useState<SigningState>(contractSigning);
+  /** Live frames are prompts, never rows. Keep one re-ask per half in
+   * flight and collapse any frames that arrive during it into one
+   * trailing read. That last read is the server's newest answer, so a
+   * slower earlier response cannot put a decided Approval or ended
+   * Envelope back into its old state. */
+  const approvalsRefreshing = useRef(false);
+  const approvalsRefreshAgain = useRef(false);
+  const signingRefreshing = useRef(false);
+  const signingRefreshAgain = useRef(false);
+
+  const refreshApprovals = useCallback(async () => {
+    if (approvalsRefreshing.current) {
+      approvalsRefreshAgain.current = true;
+      return;
+    }
+    approvalsRefreshing.current = true;
+    try {
+      do {
+        approvalsRefreshAgain.current = false;
+        const outcome = await readContractApprovals(contract.number);
+        if (outcome.ok) setApprovals(outcome.approvals);
+      } while (approvalsRefreshAgain.current);
+    } finally {
+      approvalsRefreshing.current = false;
+    }
+  }, [contract.number]);
+
+  const refreshSigning = useCallback(async () => {
+    if (signingRefreshing.current) {
+      signingRefreshAgain.current = true;
+      return;
+    }
+    signingRefreshing.current = true;
+    try {
+      do {
+        signingRefreshAgain.current = false;
+        const outcome = await readContractSigning(contract.number);
+        if (outcome.ok) {
+          setSigning({
+            envelopes: outcome.envelopes,
+            signingConfigured: outcome.signingConfigured,
+            primaryDocument: outcome.primaryDocument,
+          });
+        }
+      } while (signingRefreshAgain.current);
+    } finally {
+      signingRefreshing.current = false;
+    }
+  }, [contract.number]);
+
+  useEffect(
+    () =>
+      subscribeLiveEvents((event) => {
+        // Native open covers the first connection and reconnect alike.
+        // The loader's reads remain the navigation floor; this is the
+        // recovery re-ask for anything missed while disconnected.
+        if (event.kind === "open") {
+          void refreshApprovals();
+          void refreshSigning();
+          return;
+        }
+        if (
+          event.kind !== "record" ||
+          event.entityType !== "contract" ||
+          event.entityId !== contract.id
+        ) {
+          return;
+        }
+        if (event.action.startsWith("approval.")) void refreshApprovals();
+        if (event.action.startsWith("envelope.") || event.action === "document.executed_set") {
+          void refreshSigning();
+        }
+      }),
+    [contract.id, refreshApprovals, refreshSigning],
+  );
   /**
    * Every confirmed roll on the record, most recent first (M16/4,
    * CTR-006). State rather than loader data because confirming a roll
