@@ -5,6 +5,7 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import {
   activityLog,
+  asc,
   contractAnalysisRuns,
   contracts,
   documentVersions,
@@ -199,7 +200,8 @@ async function waitForRuns(contractId: string, count: number, state?: "pending" 
     const rows = await harness.db
       .select()
       .from(contractAnalysisRuns)
-      .where(eq(contractAnalysisRuns.contractId, contractId));
+      .where(eq(contractAnalysisRuns.contractId, contractId))
+      .orderBy(asc(contractAnalysisRuns.id));
     if (rows.length === count && (!state || rows.every((row) => row.state === state))) return rows;
     await new Promise((resolve) => setTimeout(resolve, 50));
   }

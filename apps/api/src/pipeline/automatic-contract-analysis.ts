@@ -13,15 +13,17 @@ import {
   and,
   contractAnalysisRuns,
   contracts,
+  desc,
   documentVersions,
+  documentVersionText,
   documents,
   eq,
   isNotNull,
   isNull,
+  sql,
   type Db,
 } from "@openlaw/db";
 import type { AiResolver } from "../lib/ai/resolver.js";
-import { analysisTargetText } from "./contract-analysis.js";
 import { boundedQueueAsk, type JobQueue } from "./jobs.js";
 import type { PipelineLogger } from "./logger.js";
 
@@ -49,7 +51,11 @@ export async function requestAutomaticContractAnalysis(
   try {
     const run = await deps.db.transaction(async (tx) => {
       const [candidate] = await tx
-        .select({ contractId: contracts.id })
+        .select({
+          contractId: contracts.id,
+          documentId: documents.id,
+          executedVersionId: documents.executedVersionId,
+        })
         .from(documentVersions)
         .innerJoin(documents, eq(documentVersions.documentId, documents.id))
         .innerJoin(
@@ -59,7 +65,7 @@ export async function requestAutomaticContractAnalysis(
             eq(documents.id, contracts.primaryDocumentId),
           ),
         )
-        .where(eq(documentVersions.id, versionId))
+        .where(and(eq(documentVersions.id, versionId), isNull(documents.archivedAt)))
         .limit(1);
       if (!candidate) return null;
 
@@ -77,8 +83,33 @@ export async function requestAutomaticContractAnalysis(
       const provider = await deps.resolveAiProvider();
       if (!provider) return null;
 
-      const target = await analysisTargetText(tx, contract.id);
-      if (!target || target.versionId !== versionId) return null;
+      let targetVersionId = candidate.executedVersionId;
+      if (!targetVersionId) {
+        const [current] = await tx
+          .select({ id: documentVersions.id })
+          .from(documentVersions)
+          .where(eq(documentVersions.documentId, candidate.documentId))
+          .orderBy(desc(documentVersions.versionNumber))
+          .limit(1);
+        targetVersionId = current?.id ?? null;
+      }
+      if (targetVersionId !== versionId) return null;
+
+      // Scheduling needs only target identity and readiness. Keep the
+      // potentially large extracted text off request paths; the worker
+      // reads it after the queued run starts.
+      const [ready] = await tx
+        .select({ versionId: documentVersionText.versionId })
+        .from(documentVersionText)
+        .where(
+          and(
+            eq(documentVersionText.versionId, targetVersionId),
+            eq(documentVersionText.state, "ready"),
+            sql`btrim(coalesce(${documentVersionText.text}, '')) <> ''`,
+          ),
+        )
+        .limit(1);
+      if (!ready) return null;
 
       const [waiting] = await tx
         .select({ id: contractAnalysisRuns.id })
@@ -107,7 +138,7 @@ export async function requestAutomaticContractAnalysis(
             eq(contractAnalysisRuns.contractId, contract.id),
             eq(contractAnalysisRuns.state, "pending"),
             isNotNull(contractAnalysisRuns.startedAt),
-            eq(contractAnalysisRuns.versionId, target.versionId),
+            eq(contractAnalysisRuns.versionId, targetVersionId),
           ),
         )
         .limit(1);
@@ -117,7 +148,7 @@ export async function requestAutomaticContractAnalysis(
         .insert(contractAnalysisRuns)
         .values({
           contractId: contract.id,
-          versionId: target.versionId,
+          versionId: targetVersionId,
           state: "pending",
           trigger: "automatic",
           requestedBy: null,

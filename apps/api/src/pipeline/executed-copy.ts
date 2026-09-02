@@ -436,7 +436,6 @@ export async function fileExecutedCopy(deps: ExecutedCopyDeps, envelopeId: strin
     { envelopeId: owed.envelopeId, documentId, versionId, bytes: stored.byteSize },
     "filed an envelope's executed copy and pinned it",
   );
-  await deps.onExecutedVersionPinned?.(versionId);
   // After the commit, never inside it — the transaction is closed, and
   // a queue that cannot be reached must not undo a round that is
   // already on the record. The `pending` derivation rows this append
@@ -446,6 +445,16 @@ export async function fileExecutedCopy(deps: ExecutedCopyDeps, envelopeId: strin
     mimeType: "application/pdf",
     originalFilename: filename,
   });
+  // Analysis is not durable until its run row exists. It must not starve
+  // the derivation requests above if an injected callback misbehaves.
+  try {
+    await deps.onExecutedVersionPinned?.(versionId);
+  } catch (error) {
+    deps.log.warn(
+      { envelopeId: owed.envelopeId, versionId, reason: reasonOf(error) },
+      "could not request automatic analysis for a filed executed copy",
+    );
+  }
 }
 
 /**
