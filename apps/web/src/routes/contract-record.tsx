@@ -142,6 +142,7 @@ import {
   useLoaderData,
   useNavigate,
   useParams,
+  useRevalidator,
   type LoaderFunctionArgs,
 } from "react-router";
 import { FormattedMessage, defineMessage, useIntl, type IntlShape } from "react-intl";
@@ -154,6 +155,7 @@ import {
   contractReference,
   daysRemainingLabel,
   type ContractCounterparty,
+  type ContractAnalysis,
   type ContractValue,
   formatContractValue,
   riskLabel,
@@ -242,6 +244,11 @@ import { TasksCard } from "../components/contracts/tasks-card";
 import { RenewalBanner } from "../components/contracts/renewal-banner";
 import { TEAM_CARD_ID, useTeamApplet } from "../components/contracts/team-applet";
 import { TermTimelineCard } from "../components/contracts/term-timeline-card";
+import {
+  AiAnalysisCard,
+  ConfirmUnverified,
+  UnverifiedMarker,
+} from "../components/contracts/ai-analysis-card";
 import { CounterpartyPicker, type CounterpartyPick } from "../components/counterparty-picker";
 import { CustomFieldControl, type FieldReference } from "../components/custom-field-control";
 import { DocPanel } from "../components/documents/doc-panel";
@@ -410,6 +417,7 @@ export async function contractRecordLoader({ params, request }: LoaderFunctionAr
      * (grill row G.R5) — and two surfaces draw them: the card's rows,
      * and the Contract card's "Last renewal" fact. */
     renewals: record.data.renewals,
+    analysis: record.data.analysis ?? { available: false, latestRun: null },
     /** Where the next page of paper starts, or null when the first page
      * is all of it (CTR-024). */
     documentsCursor: documents.data.nextCursor,
@@ -476,6 +484,19 @@ type FieldKey =
  * disagree about what an absence looks like.
  */
 const NOT_RECORDED = defineMessage({ id: "contracts.record.notRecorded", defaultMessage: "—" });
+
+function textDrafts(row: ContractRow): Record<TextFieldKey, string> {
+  return { title: row.title, description: row.description ?? "" };
+}
+
+function termDrafts(row: ContractRow): Record<TermDraftKey, string> {
+  return {
+    effectiveDate: row.effectiveDate ?? "",
+    expiryDate: row.expiryDate ?? "",
+    renewalPeriodMonths: row.renewalPeriodMonths === null ? "" : String(row.renewalPeriodMonths),
+    noticePeriodDays: row.noticePeriodDays === null ? "" : String(row.noticePeriodDays),
+  };
+}
 
 /** What the envelope chip says, one sentence per status (DES-036). Each
  * one names the envelope rather than only its state, so the chip reads
@@ -582,6 +603,7 @@ export function ContractRecordPage() {
     taskDoneCount: contractTaskDoneCount,
     taskTotalCount: contractTaskTotalCount,
     renewals: contractRenewals,
+    analysis: loadedAnalysis,
     documentsCursor,
     fields,
     customFieldRefs,
@@ -599,9 +621,11 @@ export function ContractRecordPage() {
   } = useLoaderData<typeof contractRecordLoader>();
   const intl = useIntl();
   const navigate = useNavigate();
+  const { revalidate } = useRevalidator();
 
   /** The saved record — the server's truth after the last commit. */
   const [saved, setSaved] = useState<ContractRow>(contract);
+  const [analysis, setAnalysis] = useState<ContractAnalysis>(loadedAnalysis);
   /** MTR-007's one linked Matter, redrawn from the canonical Contract datum. */
   const [linkedMatter, setLinkedMatter] = useState(loadedMatter);
 
@@ -723,6 +747,12 @@ export function ContractRecordPage() {
         ) {
           return;
         }
+        if (
+          event.action.startsWith("contract.analysis_") ||
+          event.action === "contract.field_confirmed"
+        ) {
+          void revalidate();
+        }
         if (event.action.startsWith("approval.")) void refreshApprovals();
         // The executed copy narrates as a document verb, not an envelope
         // one (CTR-013, M15/5): its arrival, and a pin taken off again,
@@ -735,7 +765,7 @@ export function ContractRecordPage() {
           void refreshSigning();
         }
       }),
-    [contract.id, refreshApprovals, refreshSigning],
+    [contract.id, refreshApprovals, refreshSigning, revalidate],
   );
   /**
    * Every confirmed roll on the record, most recent first (M16/4,
@@ -965,6 +995,24 @@ export function ContractRecordPage() {
   const [archiveStatus, setArchiveStatus] = useState<FieldStatus>("idle");
   const [archiveError, setArchiveError] = useState<string | undefined>(undefined);
 
+  // TECH-024 clause 4's whole-record live re-read. React Router replaces
+  // the loader answer after `revalidate()`; the screen then adopts that
+  // answer just as it adopts a mutation response.
+  useEffect(() => {
+    // Loader data is the external server snapshot this state mirrors;
+    // a live revalidation deliberately replaces every locally adopted copy.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setSaved(contract);
+    setAttached(fields);
+    setRefs(customFieldRefs);
+    setRoster(team);
+    setParties(counterparties);
+    setRenewals(contractRenewals);
+    setAnalysis(loadedAnalysis);
+    setDrafts(textDrafts(contract));
+    setTermFields(termDrafts(contract));
+  }, [contract, fields, customFieldRefs, team, counterparties, contractRenewals, loadedAnalysis]);
+
   /**
    * What happened to this record (DD-017), keyed by the same entity
    * reference the chat applet takes.
@@ -1015,6 +1063,14 @@ export function ContractRecordPage() {
    * freezes every Field; a Contributor's live record leaves only the
    * explicit business-owned seams above writable (DD-015, CTR-021). */
   const frozen = archived || !canEdit;
+  const analysisConfirmable = canEdit && !archived;
+  const analysisRunnable = analysisConfirmable && saved.endedAt === null;
+  const unverifiedMarker = (slug: string) =>
+    saved.aiUnverified?.[slug] ? <UnverifiedMarker /> : null;
+  const confirmationControl = (slug: string) =>
+    saved.aiUnverified?.[slug] && analysisConfirmable ? (
+      <ConfirmUnverified onConfirm={() => confirmAnalysisField(slug)} />
+    ) : null;
   /**
    * Work waiting in the three sections that carry a count chip on the
    * tab strip. Unresolved approvals (pending, or a rejection nobody
@@ -1155,21 +1211,6 @@ export function ContractRecordPage() {
     readingTrigger.current = null;
   }, [open]);
 
-  function textDrafts(row: ContractRow): Record<TextFieldKey, string> {
-    return { title: row.title, description: row.description ?? "" };
-  }
-
-  /** The saved term, as the four inputs hold it: an unrecorded date and
-   * an unrecorded count are both an empty box. */
-  function termDrafts(row: ContractRow): Record<TermDraftKey, string> {
-    return {
-      effectiveDate: row.effectiveDate ?? "",
-      expiryDate: row.expiryDate ?? "",
-      renewalPeriodMonths: row.renewalPeriodMonths === null ? "" : String(row.renewalPeriodMonths),
-      noticePeriodDays: row.noticePeriodDays === null ? "" : String(row.noticePeriodDays),
-    };
-  }
-
   /**
    * Re-reads the record's deadline union (M16/3, CTR-009).
    *
@@ -1202,6 +1243,40 @@ export function ContractRecordPage() {
   function note(key: FieldKey, status: FieldStatus, detail?: string) {
     setFieldStatus((current) => ({ ...current, [key]: status }));
     setFieldError((current) => ({ ...current, [key]: detail }));
+  }
+
+  async function runAnalysis(): Promise<string | undefined> {
+    const result = await api
+      .POST("/api/v1/contracts/{number}/analysis", {
+        params: { path: { number: saved.number } },
+      })
+      .catch(() => undefined);
+    if (!result?.data) return (await readProblem(result)).detail;
+    setAnalysis((current) => ({ ...current, latestRun: result.data.run }));
+    return undefined;
+  }
+
+  async function confirmAnalysisField(slug: string): Promise<string | undefined> {
+    const result = await api
+      .POST("/api/v1/contracts/{number}/analysis/confirm", {
+        params: { path: { number: saved.number } },
+        body: { slug },
+      })
+      .catch(() => undefined);
+    if (!result?.data) return (await readProblem(result)).detail;
+    setSaved(result.data.contract);
+    return undefined;
+  }
+
+  async function confirmAllAnalysisFields(): Promise<string | undefined> {
+    const result = await api
+      .POST("/api/v1/contracts/{number}/analysis/confirm-all", {
+        params: { path: { number: saved.number } },
+      })
+      .catch(() => undefined);
+    if (!result?.data) return (await readProblem(result)).detail;
+    setSaved(result.data.contract);
+    return undefined;
   }
 
   /** One PATCH per committed field (DES-017): success adopts the
@@ -1798,6 +1873,9 @@ export function ContractRecordPage() {
                   archived={archived}
                   busy={archiveStatus === "saving"}
                   onRename={frozen ? undefined : startRename}
+                  onRunAnalysis={
+                    analysis.available && analysisRunnable ? () => void runAnalysis() : undefined
+                  }
                   onArchive={canEdit ? () => void archiveOrRestore() : undefined}
                 />
               </div>
@@ -2141,6 +2219,8 @@ export function ContractRecordPage() {
                       frozen={frozen}
                       status={fieldStatus.counterparties ?? "idle"}
                       error={fieldError.counterparties}
+                      marker={unverifiedMarker("counterparty")}
+                      confirmation={confirmationControl("counterparty")}
                       onStatus={(next, detail) => note("counterparties", next, detail)}
                       onChange={(row, next) => {
                         // The primary decides what the list column and the
@@ -2226,6 +2306,8 @@ export function ContractRecordPage() {
                       frozen={businessFrozen}
                       status={fieldStatus.value ?? "idle"}
                       error={fieldError.value}
+                      marker={unverifiedMarker("value")}
+                      confirmation={confirmationControl("value")}
                       onStatus={(next, detail) => note("value", next, detail)}
                       onCommit={(next) => void commit("value", { value: next })}
                     />
@@ -2240,9 +2322,15 @@ export function ContractRecordPage() {
                           says the record holds nothing there, which is
                           exactly true. */}
                     <div className="flex flex-col gap-1.5">
-                      <Label htmlFor="contract-term-type">
-                        <FormattedMessage id="contracts.form.termType" defaultMessage="Term type" />
-                      </Label>
+                      <div className="flex items-center gap-2">
+                        <Label htmlFor="contract-term-type">
+                          <FormattedMessage
+                            id="contracts.form.termType"
+                            defaultMessage="Term type"
+                          />
+                        </Label>
+                        {unverifiedMarker("term_type")}
+                      </div>
                       <div className="flex items-center gap-2">
                         <select
                           id="contract-term-type"
@@ -2265,6 +2353,7 @@ export function ContractRecordPage() {
                           status={fieldStatus.termType ?? "idle"}
                           detail={fieldError.termType}
                         />
+                        {confirmationControl("term_type")}
                       </div>
                     </div>
                     <TermField
@@ -2280,6 +2369,8 @@ export function ContractRecordPage() {
                       frozen={businessFrozen}
                       status={fieldStatus.effectiveDate ?? "idle"}
                       error={fieldError.effectiveDate}
+                      marker={unverifiedMarker("effective_date")}
+                      confirmation={confirmationControl("effective_date")}
                       onDraft={(next) =>
                         setTermFields((current) => ({ ...current, effectiveDate: next }))
                       }
@@ -2312,6 +2403,8 @@ export function ContractRecordPage() {
                         frozen={frozen}
                         status={fieldStatus.expiryDate ?? "idle"}
                         error={fieldError.expiryDate}
+                        marker={unverifiedMarker("expiry_date")}
+                        confirmation={confirmationControl("expiry_date")}
                         onDraft={(next) =>
                           setTermFields((current) => ({ ...current, expiryDate: next }))
                         }
@@ -2339,6 +2432,8 @@ export function ContractRecordPage() {
                         frozen={frozen}
                         status={fieldStatus.renewalPeriodMonths ?? "idle"}
                         error={fieldError.renewalPeriodMonths}
+                        marker={unverifiedMarker("renewal_period_months")}
+                        confirmation={confirmationControl("renewal_period_months")}
                         onDraft={(next) =>
                           setTermFields((current) => ({ ...current, renewalPeriodMonths: next }))
                         }
@@ -2376,6 +2471,8 @@ export function ContractRecordPage() {
                       frozen={frozen}
                       status={fieldStatus.noticePeriodDays ?? "idle"}
                       error={fieldError.noticePeriodDays}
+                      marker={unverifiedMarker("notice_period_days")}
+                      confirmation={confirmationControl("notice_period_days")}
                       onDraft={(next) =>
                         setTermFields((current) => ({ ...current, noticePeriodDays: next }))
                       }
@@ -2494,6 +2591,16 @@ export function ContractRecordPage() {
                     />
                   </div>
                 </section>
+                <AiAnalysisCard
+                  analysis={analysis}
+                  contract={saved}
+                  fields={attached}
+                  canRun={analysis.available && analysisRunnable}
+                  canConfirm={analysisConfirmable}
+                  onRun={runAnalysis}
+                  onConfirm={confirmAnalysisField}
+                  onConfirmAll={confirmAllAnalysisFields}
+                />
                 {/* CTR-006's term as a picture (M16/2). It closes the
                       Overview because it draws facts the two cards
                       above already state — the mock's own order, where
@@ -2526,10 +2633,13 @@ export function ContractRecordPage() {
                 entities={entityReferences}
                 frozen={frozen}
                 businessEditable={!archived && contributor}
+                aiUnverified={saved.aiUnverified}
+                canConfirm={analysisConfirmable}
                 status={fieldStatus}
                 error={fieldError}
                 onStatus={note}
                 onCommit={commitCustomField}
+                onConfirm={confirmAnalysisField}
               />
             )}
             {/* The record's paper (M11/2, M11/3), in the section the
@@ -2793,6 +2903,8 @@ function CounterpartiesField({
   frozen,
   status,
   error,
+  marker,
+  confirmation,
   onStatus,
   onChange,
 }: Readonly<{
@@ -2804,6 +2916,8 @@ function CounterpartiesField({
   frozen: boolean;
   status: FieldStatus;
   error: string | undefined;
+  marker?: React.ReactNode;
+  confirmation?: React.ReactNode;
   onStatus: (status: FieldStatus, detail?: string) => void;
   onChange: (contract: ContractRow, parties: ContractCounterparty[]) => void;
 }>) {
@@ -2900,7 +3014,9 @@ function CounterpartiesField({
         <Label htmlFor="contract-counterparty">
           <FormattedMessage id="contracts.form.counterparties" defaultMessage="Counterparties" />
         </Label>
+        {marker}
         <StatusNote status={status} detail={error} />
+        {confirmation}
       </div>
       {parties.length > 0 && (
         <ul
@@ -3087,6 +3203,8 @@ function ValueField({
   frozen,
   status,
   error,
+  marker,
+  confirmation,
   onStatus,
   onCommit,
 }: Readonly<{
@@ -3096,6 +3214,8 @@ function ValueField({
   frozen: boolean;
   status: FieldStatus;
   error: string | undefined;
+  marker?: React.ReactNode;
+  confirmation?: React.ReactNode;
   onStatus: (status: FieldStatus, detail?: string) => void;
   onCommit: (value: ContractValue | null) => void;
 }>) {
@@ -3194,7 +3314,9 @@ function ValueField({
         <span id="contract-value-label" className="text-sm font-medium text-primary">
           <FormattedMessage id="contracts.form.value" defaultMessage="Value" />
         </span>
+        {marker}
         <StatusNote status={status} detail={error} />
+        {confirmation}
       </div>
       <div
         role="group"
@@ -3313,10 +3435,13 @@ function FieldsCard({
   entities,
   frozen,
   businessEditable,
+  aiUnverified,
+  canConfirm,
   status,
   error,
   onStatus,
   onCommit,
+  onConfirm,
 }: Readonly<{
   fields: readonly AttachedField[];
   values: CustomFieldValues;
@@ -3326,12 +3451,15 @@ function FieldsCard({
   frozen: boolean;
   /** A live Contributor may edit only business-tagged Fields. */
   businessEditable: boolean;
+  aiUnverified: ContractRow["aiUnverified"];
+  canConfirm: boolean;
   status: Partial<Record<FieldKey, FieldStatus>>;
   error: Partial<Record<FieldKey, string | undefined>>;
   onStatus: (key: FieldKey, status: FieldStatus, detail?: string) => void;
   /** Fire and forget: the row reads the outcome from its own
    * micro-state, which `onStatus` has already been handed. */
   onCommit: (slug: string, value: CustomFieldValue | null) => void;
+  onConfirm: (slug: string) => Promise<string | undefined>;
 }>) {
   return (
     <section
@@ -3363,6 +3491,12 @@ function FieldsCard({
               people={people}
               entities={entities}
               frozen={frozen && !(businessEditable && field.fieldTag === "business")}
+              marker={Boolean(aiUnverified?.[field.slug])}
+              confirmation={
+                aiUnverified?.[field.slug] && canConfirm ? (
+                  <ConfirmUnverified onConfirm={() => onConfirm(field.slug)} />
+                ) : null
+              }
               status={status[`field:${field.slug}`] ?? "idle"}
               error={error[`field:${field.slug}`]}
               onStatus={(next, detail) => onStatus(`field:${field.slug}`, next, detail)}
@@ -3388,6 +3522,8 @@ function CustomFieldRow({
   people,
   entities,
   frozen,
+  marker,
+  confirmation,
   status,
   error,
   onStatus,
@@ -3398,6 +3534,8 @@ function CustomFieldRow({
   people: readonly FieldReference[];
   entities: readonly FieldReference[];
   frozen: boolean;
+  marker: boolean;
+  confirmation: React.ReactNode;
   status: FieldStatus;
   error: string | undefined;
   onStatus: (status: FieldStatus, detail?: string) => void;
@@ -3453,22 +3591,25 @@ function CustomFieldRow({
       <div className="flex shrink-0 flex-col gap-0.5 @2xl/page:w-55">
         {/* The id is what a checkbox group points at: `for` names one
             control, and a multi-select is several. */}
-        <Label id={`${controlId}-label`} htmlFor={controlId}>
-          {field.displayName}
-          {field.isRequired && (
-            <>
-              {/* The C10 mock's required marker. The glyph is
-                  decoration; the word beside it is what a reader who
-                  cannot see the color gets. */}
-              <span aria-hidden="true" className="ms-0.5 text-status-danger-fg">
-                *
-              </span>
-              <span className="sr-only">
-                <FormattedMessage id="contracts.field.requiredMark" defaultMessage="(required)" />
-              </span>
-            </>
-          )}
-        </Label>
+        <div className="flex flex-wrap items-center gap-2">
+          <Label id={`${controlId}-label`} htmlFor={controlId}>
+            {field.displayName}
+            {field.isRequired && (
+              <>
+                {/* The C10 mock's required marker. The glyph is
+                    decoration; the word beside it is what a reader who
+                    cannot see the color gets. */}
+                <span aria-hidden="true" className="ms-0.5 text-status-danger-fg">
+                  *
+                </span>
+                <span className="sr-only">
+                  <FormattedMessage id="contracts.field.requiredMark" defaultMessage="(required)" />
+                </span>
+              </>
+            )}
+          </Label>
+          {marker && <UnverifiedMarker />}
+        </div>
         {field.description && (
           <span id={helpId} className="text-xs text-muted">
             {field.description}
@@ -3503,6 +3644,7 @@ function CustomFieldRow({
           />
         </div>
         <StatusNote status={status} detail={error} />
+        {confirmation}
       </div>
     </div>
   );
@@ -3793,6 +3935,8 @@ function TermField({
   frozen,
   status,
   error,
+  marker,
+  confirmation,
   onDraft,
   onCommit,
   onRevert,
@@ -3808,13 +3952,18 @@ function TermField({
   frozen: boolean;
   status: FieldStatus;
   error: string | undefined;
+  marker?: React.ReactNode;
+  confirmation?: React.ReactNode;
   onDraft: (next: string) => void;
   onCommit: (next?: string) => void;
   onRevert: () => void;
 }>) {
   return (
     <div className="flex flex-col gap-1.5">
-      <Label htmlFor={id}>{label}</Label>
+      <div className="flex items-center gap-2">
+        <Label htmlFor={id}>{label}</Label>
+        {marker}
+      </div>
       <div className="flex items-center gap-2">
         {type === "date" ? (
           <DatePicker
@@ -3847,6 +3996,7 @@ function TermField({
           />
         )}
         <StatusNote status={status} detail={error} />
+        {confirmation}
       </div>
     </div>
   );

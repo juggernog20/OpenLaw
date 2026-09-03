@@ -543,6 +543,11 @@ const SAMPLE_PAYLOADS: { [A in ActivityAction]: ActivityPayloadMap[A] } = {
     model: "analysis-model",
     reason: "The provider did not answer.",
   },
+  "contract.field_confirmed": {
+    number: 41,
+    title: "Helix supply agreement",
+    slug: "effective_date",
+  },
   "contract.status_changed": {
     number: 41,
     title: "Helix supply agreement",

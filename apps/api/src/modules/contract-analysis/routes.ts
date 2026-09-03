@@ -10,11 +10,13 @@ import {
   contractAnalysisRuns,
   contracts,
   desc,
+  documentVersions,
   eq,
   isNull,
   type ContractAnalysisRun,
   type Executor,
 } from "@openlaw/db";
+import { CONTRACT_ANALYSIS_RESULT_OUTCOMES } from "@openlaw/shared";
 import { requireRole } from "../../auth/guards.js";
 import { NO_CONTRACT, reachedContract } from "../../lib/contract-access.js";
 import { httpError, problemResponse } from "../../lib/problem.js";
@@ -28,12 +30,25 @@ const AnalysisOutcomeSchema = z.object({
   unsupported: z.array(z.string()),
   invalid: z.array(z.string()),
   unmatched: z.string().optional(),
+  // Existing run rows predate the review-card detail. They remain
+  // readable and simply have no detailed rows to draw.
+  results: z
+    .array(
+      z.object({
+        slug: z.string(),
+        value: z.unknown(),
+        evidence: z.string().nullable(),
+        outcome: z.enum(CONTRACT_ANALYSIS_RESULT_OUTCOMES),
+      }),
+    )
+    .optional(),
 });
 
 export const AnalysisRunSchema = z.object({
   id: z.string(),
   contractId: z.string(),
   versionId: z.string().nullable(),
+  versionNumber: z.number().int().positive().nullable(),
   state: z.enum(["pending", "ready", "failed"]),
   trigger: z.enum(["automatic", "manual"]),
   requestedBy: z.string().nullable(),
@@ -46,22 +61,24 @@ export const AnalysisRunSchema = z.object({
   finishedAt: z.iso.datetime().nullable(),
 });
 
-export function toAnalysisRun(run: ContractAnalysisRun) {
+export function toAnalysisRun(run: ContractAnalysisRun, versionNumber: number | null = null) {
   return {
     ...run,
+    versionNumber,
     startedAt: run.startedAt?.toISOString() ?? null,
     finishedAt: run.finishedAt?.toISOString() ?? null,
   };
 }
 
 export async function latestAnalysisRun(db: Executor, contractId: string) {
-  const [run] = await db
-    .select()
+  const [row] = await db
+    .select({ run: contractAnalysisRuns, versionNumber: documentVersions.versionNumber })
     .from(contractAnalysisRuns)
+    .leftJoin(documentVersions, eq(contractAnalysisRuns.versionId, documentVersions.id))
     .where(eq(contractAnalysisRuns.contractId, contractId))
     .orderBy(desc(contractAnalysisRuns.id))
     .limit(1);
-  return run ? toAnalysisRun(run) : null;
+  return row ? toAnalysisRun(row.run, row.versionNumber) : null;
 }
 
 const requireMember = requireRole("administrator", "legal_team_member");

@@ -2073,6 +2073,40 @@ export interface paths {
     patch: operations["updateContract"];
     trace?: never;
   };
+  "/api/v1/contracts/{number}/analysis/confirm": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Confirm one AI-written Contract value, clear its unverified marker, and append one record-tier confirmation entry */
+    post: operations["confirmContractAnalysisField"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/contracts/{number}/analysis/confirm-all": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Confirm every AI-written Contract value in one transaction and append one record-tier confirmation entry per cleared slug */
+    post: operations["confirmAllContractAnalysisFields"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/v1/contracts/{number}/renewal": {
     parameters: {
       query?: never;
@@ -13513,6 +13547,7 @@ export interface operations {
                 id: string;
                 contractId: string;
                 versionId: string | null;
+                versionNumber: number | null;
                 /** @enum {string} */
                 state: "pending" | "ready" | "failed";
                 /** @enum {string} */
@@ -13535,6 +13570,13 @@ export interface operations {
                   unsupported: string[];
                   invalid: string[];
                   unmatched?: string;
+                  results?: {
+                    slug: string;
+                    value: unknown;
+                    evidence: string | null;
+                    /** @enum {string} */
+                    outcome: "written" | "kept" | "unsupported" | "invalid" | "unmatched";
+                  }[];
                 } | null;
                 failure: string | null;
                 startedAt: string | null;
@@ -13769,6 +13811,222 @@ export interface operations {
               path: string;
               message: string;
             }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  confirmContractAnalysisField: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        number: number;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          slug: string;
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            contract: {
+              id: string;
+              number: number;
+              title: string;
+              contractTypeId: string;
+              contractTypeName: string;
+              statusId: string;
+              statusName: string;
+              /** @enum {string} */
+              stage: "draft" | "review" | "approval" | "signature" | "active" | "ended";
+              manager: {
+                id: string;
+                displayName: string;
+                image: string | null;
+                archived: boolean;
+              } | null;
+              entity:
+                | (
+                    | {
+                        /** @enum {boolean} */
+                        restricted: false;
+                        id: string;
+                        legalName: string;
+                      }
+                    | {
+                        /** @enum {boolean} */
+                        restricted: true;
+                      }
+                  )
+                | null;
+              primaryCounterparty: {
+                id: string;
+                name: string;
+              } | null;
+              /** @enum {string} */
+              priority: "low" | "medium" | "high" | "critical";
+              risk: ("low" | "medium" | "high" | "critical") | null;
+              value: {
+                amount: number;
+                currency: string;
+                /** @enum {string} */
+                cadence: "one_time" | "monthly" | "annually";
+              } | null;
+              /** @enum {string} */
+              termType: "fixed" | "auto_renew" | "evergreen";
+              effectiveDate: string | null;
+              expiryDate: string | null;
+              renewalPeriodMonths: number | null;
+              noticePeriodDays: number | null;
+              noticeDeadline: string | null;
+              daysRemaining: number | null;
+              renewalPendingConfirmation: boolean;
+              proposedRenewalExpiry: string | null;
+              description: string | null;
+              customFields: {
+                [key: string]: string | number | boolean | string[];
+              };
+              aiUnverified: {
+                [key: string]: {
+                  evidence: string;
+                  runId: string;
+                  /** Format: date-time */
+                  writtenAt: string;
+                };
+              } | null;
+              isConfidential: boolean;
+              endedAt: string | null;
+              archivedAt: string | null;
+              /** Format: date-time */
+              createdAt: string;
+              /** Format: date-time */
+              updatedAt: string;
+            };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  confirmAllContractAnalysisFields: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        number: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            contract: {
+              id: string;
+              number: number;
+              title: string;
+              contractTypeId: string;
+              contractTypeName: string;
+              statusId: string;
+              statusName: string;
+              /** @enum {string} */
+              stage: "draft" | "review" | "approval" | "signature" | "active" | "ended";
+              manager: {
+                id: string;
+                displayName: string;
+                image: string | null;
+                archived: boolean;
+              } | null;
+              entity:
+                | (
+                    | {
+                        /** @enum {boolean} */
+                        restricted: false;
+                        id: string;
+                        legalName: string;
+                      }
+                    | {
+                        /** @enum {boolean} */
+                        restricted: true;
+                      }
+                  )
+                | null;
+              primaryCounterparty: {
+                id: string;
+                name: string;
+              } | null;
+              /** @enum {string} */
+              priority: "low" | "medium" | "high" | "critical";
+              risk: ("low" | "medium" | "high" | "critical") | null;
+              value: {
+                amount: number;
+                currency: string;
+                /** @enum {string} */
+                cadence: "one_time" | "monthly" | "annually";
+              } | null;
+              /** @enum {string} */
+              termType: "fixed" | "auto_renew" | "evergreen";
+              effectiveDate: string | null;
+              expiryDate: string | null;
+              renewalPeriodMonths: number | null;
+              noticePeriodDays: number | null;
+              noticeDeadline: string | null;
+              daysRemaining: number | null;
+              renewalPendingConfirmation: boolean;
+              proposedRenewalExpiry: string | null;
+              description: string | null;
+              customFields: {
+                [key: string]: string | number | boolean | string[];
+              };
+              aiUnverified: {
+                [key: string]: {
+                  evidence: string;
+                  runId: string;
+                  /** Format: date-time */
+                  writtenAt: string;
+                };
+              } | null;
+              isConfidential: boolean;
+              endedAt: string | null;
+              archivedAt: string | null;
+              /** Format: date-time */
+              createdAt: string;
+              /** Format: date-time */
+              updatedAt: string;
+            };
           };
         };
       };
@@ -14599,6 +14857,7 @@ export interface operations {
               id: string;
               contractId: string;
               versionId: string | null;
+              versionNumber: number | null;
               /** @enum {string} */
               state: "pending" | "ready" | "failed";
               /** @enum {string} */
@@ -14621,6 +14880,13 @@ export interface operations {
                 unsupported: string[];
                 invalid: string[];
                 unmatched?: string;
+                results?: {
+                  slug: string;
+                  value: unknown;
+                  evidence: string | null;
+                  /** @enum {string} */
+                  outcome: "written" | "kept" | "unsupported" | "invalid" | "unmatched";
+                }[];
               } | null;
               failure: string | null;
               startedAt: string | null;

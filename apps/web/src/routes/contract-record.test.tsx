@@ -390,11 +390,39 @@ function contractRow(overrides: Partial<Record<string, unknown>> = {}) {
     proposedRenewalExpiry: null,
     description: "Three-year platform engagement.",
     customFields: {},
+    aiUnverified: null,
     // Open by default; the flag is opt-in, per record (DD-014).
     isConfidential: false,
     archivedAt: null,
+    endedAt: null,
     createdAt: "2026-08-01T00:00:00.000Z",
     updatedAt: "2026-08-01T00:00:00.000Z",
+    ...overrides,
+  };
+}
+
+function analysisRun(overrides: Partial<Record<string, unknown>> = {}) {
+  return {
+    id: "run-ready",
+    contractId: "c1",
+    versionId: "v1",
+    versionNumber: 3,
+    state: "ready",
+    trigger: "manual",
+    requestedBy: MEMBER.id,
+    preset: "custom",
+    model: "gpt-analysis",
+    truncated: false,
+    outcome: {
+      written: [],
+      kept: [],
+      unsupported: [],
+      invalid: [],
+      results: [],
+    },
+    failure: null,
+    startedAt: "2026-08-12T10:00:00.000Z",
+    finishedAt: "2026-08-12T10:01:00.000Z",
     ...overrides,
   };
 }
@@ -500,8 +528,11 @@ function recordApi(
     users: Record<string, unknown>[];
     entities: Record<string, unknown>[];
   } = { users: [], entities: [] },
+  initialAnalysis: Record<string, unknown> = { available: false, latestRun: null },
 ) {
   let row = initial;
+  let analysis = initialAnalysis;
+  let recordReads = 0;
   /** The attached fields follow the row's type, exactly as the API
    * derives them from the `contract_type_fields` join (CTR-016). */
   const fieldsOf = (of: Record<string, unknown>) =>
@@ -520,6 +551,12 @@ function recordApi(
   const teamCalls: string[] = [];
   const counterpartyCalls: string[] = [];
   const searches: (string | null)[] = [];
+
+  const clearUnverified = (...slugs: string[]) => {
+    const current = { ...((row.aiUnverified as Record<string, unknown> | null) ?? {}) };
+    for (const slug of slugs) delete current[slug];
+    row = { ...row, aiUnverified: Object.keys(current).length > 0 ? current : null };
+  };
 
   /** The API answers the row's primary alongside the party list, so the
    * stub keeps the two in step the way the server does. */
@@ -549,13 +586,50 @@ function recordApi(
       });
     }
     if (call.url.pathname === "/api/v1/contracts/42" && call.method === "GET") {
+      recordReads += 1;
       return json(200, {
         contract: row,
         ...customEnvelope(),
         team,
         counterparties: parties,
         renewals: [],
+        analysis,
       });
+    }
+    if (call.url.pathname === "/api/v1/contracts/42/analysis" && call.method === "POST") {
+      posts.push("analysis");
+      const run = {
+        id: "run-pending",
+        contractId: "c1",
+        versionId: "v1",
+        versionNumber: 1,
+        state: "pending",
+        trigger: "manual",
+        requestedBy: MEMBER.id,
+        preset: "custom",
+        model: "gpt-analysis",
+        truncated: false,
+        outcome: null,
+        failure: null,
+        startedAt: null,
+        finishedAt: null,
+      };
+      analysis = { ...analysis, latestRun: run };
+      return json(202, { run });
+    }
+    if (call.url.pathname === "/api/v1/contracts/42/analysis/confirm" && call.method === "POST") {
+      const body = call.body as { slug: string };
+      posts.push(`confirm ${body.slug}`);
+      clearUnverified(body.slug);
+      return json(200, { contract: row });
+    }
+    if (
+      call.url.pathname === "/api/v1/contracts/42/analysis/confirm-all" &&
+      call.method === "POST"
+    ) {
+      posts.push("confirm all");
+      row = { ...row, aiUnverified: null };
+      return json(200, { contract: row });
     }
     if (call.url.pathname === "/api/v1/contracts/42/counterparties" && call.method === "POST") {
       const body = call.body as { counterpartyId?: string; name?: string };
@@ -587,6 +661,7 @@ function recordApi(
       parties = left.some((entry) => entry.isPrimary)
         ? left
         : left.map((entry, index) => ({ ...entry, isPrimary: index === 0 }));
+      clearUnverified("counterparty");
       return json(200, partiesEnvelope());
     }
     if (partyPath?.[2] && call.method === "POST") {
@@ -595,6 +670,7 @@ function recordApi(
       parties = parties.map((entry) => ({ ...entry, isPrimary: entry.id === counterpartyId }));
       // Primary first, as the API orders the list.
       parties = [...parties].sort((a, b) => Number(b.isPrimary) - Number(a.isPrimary));
+      clearUnverified("counterparty");
       return json(200, partiesEnvelope());
     }
     if (call.url.pathname === "/api/v1/contracts/42" && call.method === "PATCH") {
@@ -631,6 +707,20 @@ function recordApi(
               return merged;
             })()
           : row.customFields;
+      const coreSlugs = new Map([
+        ["termType", "term_type"],
+        ["effectiveDate", "effective_date"],
+        ["expiryDate", "expiry_date"],
+        ["renewalPeriodMonths", "renewal_period_months"],
+        ["noticePeriodDays", "notice_period_days"],
+        ["value", "value"],
+      ]);
+      for (const [key, slug] of coreSlugs) {
+        if (key in body) clearUnverified(slug);
+      }
+      if ("customFields" in body && body.customFields && typeof body.customFields === "object") {
+        clearUnverified(...Object.keys(body.customFields));
+      }
       row = {
         ...row,
         ...body,
@@ -669,7 +759,23 @@ function recordApi(
     }
     return undefined;
   };
-  return { handler, patches, posts, teamCalls, counterpartyCalls, searches };
+  return {
+    handler,
+    patches,
+    posts,
+    teamCalls,
+    counterpartyCalls,
+    searches,
+    get recordReads() {
+      return recordReads;
+    },
+    updateRow(next: Record<string, unknown>) {
+      row = { ...row, ...next };
+    },
+    updateAnalysis(next: Record<string, unknown>) {
+      analysis = next;
+    },
+  };
 }
 
 /**
@@ -747,6 +853,341 @@ describe("the /contracts/:number record page", () => {
     // treatment the settings rail already gives the group it sits in.
     expect(within(bar).getByRole("button", { name: "Comments" })).toBeInTheDocument();
     expect(within(bar).queryByRole("link", { name: "Contract settings" })).not.toBeInTheDocument();
+  });
+
+  describe("AI analysis review", () => {
+    it("hides the card and menu action when no connector or flags exist", async () => {
+      stubApi({ signedIn: MEMBER, extra: recordApi(contractRow()).handler });
+      renderAt("/contracts/42");
+
+      expect(await screen.findByLabelText("Title")).toBeInTheDocument();
+      expect(screen.queryByRole("heading", { name: "AI analysis" })).not.toBeInTheDocument();
+      expect(await recordActions(userEvent.setup())).toEqual([
+        "Copy link",
+        "Rename contract",
+        "Archive",
+      ]);
+    });
+
+    it("keeps flagged values visible without offering Run when the connector is unavailable", async () => {
+      stubApi({
+        signedIn: MEMBER,
+        extra: recordApi(
+          contractRow({ aiUnverified: { term_type: { evidence: "renews yearly" } } }),
+        ).handler,
+      });
+      renderAt("/contracts/42");
+
+      const card = (await screen.findByRole("heading", { name: "AI analysis" })).closest(
+        "section",
+      )!;
+      expect(within(card).getByText("No analysis has run yet.")).toBeInTheDocument();
+      expect(within(card).queryByRole("button", { name: "Run analysis" })).not.toBeInTheDocument();
+      expect(screen.getAllByText("Unverified").length).toBeGreaterThan(0);
+    });
+
+    it("draws the pending and failed run sentences", async () => {
+      const api = recordApi(contractRow(), undefined, undefined, undefined, {
+        available: true,
+        latestRun: analysisRun({ state: "pending", finishedAt: null }),
+      });
+      stubApi({ signedIn: MEMBER, extra: api.handler });
+      const rendered = renderAt("/contracts/42");
+
+      const card = (await screen.findByRole("heading", { name: "AI analysis" })).closest(
+        "section",
+      )!;
+      expect(within(card).getByText("Running…")).toBeInTheDocument();
+      expect(within(card).queryByRole("button", { name: "Run analysis" })).not.toBeInTheDocument();
+
+      rendered.view.unmount();
+      const failed = recordApi(contractRow(), undefined, undefined, undefined, {
+        available: true,
+        latestRun: analysisRun({
+          state: "failed",
+          failure: "The provider timed out.",
+          finishedAt: "2026-08-12T10:01:00.000Z",
+        }),
+      });
+      stubApi({ signedIn: MEMBER, extra: failed.handler });
+      renderAt("/contracts/42");
+      expect(
+        await screen.findByText(
+          /Failed .* on Version 3 with gpt-analysis: The provider timed out\./,
+        ),
+      ).toBeInTheDocument();
+    });
+
+    it("draws every outcome with its read value and evidence", async () => {
+      const outcome = {
+        written: ["term_type"],
+        kept: ["expiry_date"],
+        unsupported: ["effective_date"],
+        invalid: ["notice_period_days"],
+        unmatched: "Acme Trading",
+        results: [
+          {
+            slug: "term_type",
+            value: "auto_renew",
+            evidence: "renews each year",
+            outcome: "written",
+          },
+          { slug: "expiry_date", value: "2028-06-30", evidence: "ends June 2028", outcome: "kept" },
+          { slug: "effective_date", value: null, evidence: "not stated", outcome: "unsupported" },
+          {
+            slug: "notice_period_days",
+            value: "soon",
+            evidence: "reasonable notice",
+            outcome: "invalid",
+          },
+          {
+            slug: "counterparty",
+            value: "Acme Trading",
+            evidence: "Acme Trading LLC",
+            outcome: "unmatched",
+          },
+        ],
+      };
+      stubApi({
+        signedIn: MEMBER,
+        extra: recordApi(
+          contractRow({ aiUnverified: { term_type: { evidence: "renews each year" } } }),
+          undefined,
+          undefined,
+          undefined,
+          { available: true, latestRun: analysisRun({ outcome }) },
+        ).handler,
+      });
+      renderAt("/contracts/42");
+
+      const card = (await screen.findByRole("heading", { name: "AI analysis" })).closest(
+        "section",
+      )!;
+      expect(
+        within(card).getByText(/Completed .* on Version 3 with gpt-analysis\./),
+      ).toBeInTheDocument();
+      for (const word of ["written", "kept", "unsupported", "invalid", "unmatched"]) {
+        expect(within(card).getByText(word)).toBeInTheDocument();
+      }
+      expect(within(card).getByText("Auto-renewing")).toBeInTheDocument();
+      expect(within(card).getByText("renews each year")).toBeInTheDocument();
+      expect(within(card).getByText("Acme Trading LLC")).toBeInTheDocument();
+    });
+
+    it("runs from the card and the overflow menu", async () => {
+      const api = recordApi(contractRow(), undefined, undefined, undefined, {
+        available: true,
+        latestRun: null,
+      });
+      stubApi({ signedIn: MEMBER, extra: api.handler });
+      renderAt("/contracts/42");
+      const user = userEvent.setup();
+
+      await user.click(await screen.findByRole("button", { name: "Run analysis" }));
+      expect(await screen.findByText("Running…")).toBeInTheDocument();
+      expect(api.posts).toEqual(["analysis"]);
+      expect(await recordActions(user)).toEqual([
+        "Copy link",
+        "Rename contract",
+        "Run analysis",
+        "Archive",
+      ]);
+    });
+
+    it("withholds Run from an ended record even when the connector is available", async () => {
+      stubApi({
+        signedIn: MEMBER,
+        extra: recordApi(
+          contractRow({ endedAt: "2026-08-12T10:01:00.000Z" }),
+          undefined,
+          undefined,
+          undefined,
+          { available: true, latestRun: analysisRun() },
+        ).handler,
+      });
+      renderAt("/contracts/42");
+
+      const card = (await screen.findByRole("heading", { name: "AI analysis" })).closest(
+        "section",
+      )!;
+      expect(within(card).queryByRole("button", { name: "Run analysis" })).not.toBeInTheDocument();
+      expect(await recordActions(userEvent.setup())).toEqual([
+        "Copy link",
+        "Rename contract",
+        "Archive",
+      ]);
+    });
+
+    it("removes one marker from the confirmation response", async () => {
+      const outcome = {
+        written: ["term_type", "value"],
+        kept: [],
+        unsupported: [],
+        invalid: [],
+        results: [
+          { slug: "term_type", value: "fixed", evidence: "fixed term", outcome: "written" },
+          {
+            slug: "value",
+            value: { amount: 120000, currency: "USD", cadence: "annually" },
+            evidence: "$1,200 yearly",
+            outcome: "written",
+          },
+        ],
+      };
+      const api = recordApi(
+        contractRow({
+          aiUnverified: {
+            term_type: { evidence: "fixed term" },
+            value: { evidence: "$1,200 yearly" },
+          },
+        }),
+        undefined,
+        undefined,
+        undefined,
+        { available: true, latestRun: analysisRun({ outcome }) },
+      );
+      stubApi({ signedIn: MEMBER, extra: api.handler });
+      renderAt("/contracts/42");
+      const user = userEvent.setup();
+
+      const evidence = await screen.findByText("fixed term");
+      await user.click(within(evidence.closest("li")!).getByRole("button", { name: "Confirm" }));
+      await waitFor(() => expect(api.posts).toContain("confirm term_type"));
+      expect(within(evidence.closest("li")!).queryByText("Unverified")).not.toBeInTheDocument();
+      expect(screen.getAllByText("Unverified")).not.toHaveLength(0);
+    });
+
+    it("confirms every marker from the card header", async () => {
+      const api = recordApi(
+        contractRow({
+          aiUnverified: {
+            term_type: { evidence: "fixed term" },
+            value: { evidence: "$1,200 yearly" },
+          },
+        }),
+        undefined,
+        undefined,
+        undefined,
+        { available: true, latestRun: analysisRun() },
+      );
+      stubApi({ signedIn: MEMBER, extra: api.handler });
+      renderAt("/contracts/42");
+
+      await userEvent.setup().click(await screen.findByRole("button", { name: "Confirm all" }));
+      await waitFor(() => expect(api.posts).toContain("confirm all"));
+      expect(screen.queryByText("Unverified")).not.toBeInTheDocument();
+      expect(screen.queryByRole("button", { name: "Confirm all" })).not.toBeInTheDocument();
+    });
+
+    it("draws markers beside core fields and withholds Confirm from read-only viewers", async () => {
+      const flagged = {
+        term_type: { evidence: "fixed term" },
+        value: { evidence: "$1,200 yearly" },
+        counterparty: { evidence: "Helix Labs" },
+      };
+      stubApi({
+        signedIn: CONTRIBUTOR,
+        extra: recordApi(
+          contractRow({
+            aiUnverified: flagged,
+            value: { amount: 120000, currency: "USD", cadence: "annually" },
+          }),
+          [person("u3", "contributor")],
+          [party("cp-helix", true)],
+        ).handler,
+      });
+      renderAt("/contracts/42");
+
+      expect(await screen.findAllByText("Unverified")).toHaveLength(3);
+      expect(screen.queryByRole("button", { name: "Confirm" })).not.toBeInTheDocument();
+      expect(screen.queryByRole("button", { name: "Run analysis" })).not.toBeInTheDocument();
+    });
+
+    it("draws and clears a flagged custom Field when its typed edit commits", async () => {
+      const api = recordApi(
+        contractRow({
+          customFields: { payment_terms: "Net 30" },
+          aiUnverified: { payment_terms: { evidence: "payment in thirty days" } },
+        }),
+      );
+      stubApi({ signedIn: MEMBER, extra: api.handler });
+      renderAt("/contracts/42/fields");
+      const user = userEvent.setup();
+
+      expect(await screen.findByText("Unverified")).toBeInTheDocument();
+      const field = screen.getByLabelText("Payment terms");
+      await user.clear(field);
+      await user.type(field, "Net 45");
+      await user.tab();
+      await waitFor(() =>
+        expect(api.patches).toContainEqual({ customFields: { payment_terms: "Net 45" } }),
+      );
+      expect(screen.queryByText("Unverified")).not.toBeInTheDocument();
+    });
+
+    it("keeps markers but withholds confirmation on a frozen record", async () => {
+      stubApi({
+        signedIn: MEMBER,
+        extra: recordApi(
+          contractRow({
+            archivedAt: "2026-08-12T00:00:00.000Z",
+            aiUnverified: { term_type: { evidence: "fixed term" } },
+          }),
+        ).handler,
+      });
+      renderAt("/contracts/42");
+
+      expect(await screen.findAllByText("Unverified")).not.toHaveLength(0);
+      expect(screen.queryByRole("button", { name: "Confirm" })).not.toBeInTheDocument();
+      expect(await recordActions(userEvent.setup())).toEqual(["Copy link", "Restore"]);
+    });
+
+    it("re-adopts the whole record for analysis and confirmation frames", async () => {
+      const sources = stubEventSource();
+      const api = recordApi(contractRow());
+      stubApi({ signedIn: MEMBER, extra: api.handler });
+      renderAt("/contracts/42");
+
+      await screen.findByLabelText("Title");
+      expect(api.recordReads).toBe(1);
+      api.updateRow({
+        termType: "auto_renew",
+        aiUnverified: { term_type: { evidence: "renews each year" } },
+      });
+      api.updateAnalysis({ available: true, latestRun: analysisRun() });
+      act(() => {
+        sources[0]!.emit({
+          kind: "record",
+          action: "contract.analysis_completed",
+          entityType: "contract",
+          entityId: "c1",
+          entryId: "activity-analysis",
+          visibility: "working_team",
+        });
+      });
+
+      await waitFor(() => {
+        expect(api.recordReads).toBe(2);
+        expect(screen.getByLabelText("Term type")).toHaveValue("auto_renew");
+      });
+      expect(screen.getAllByText("Unverified")).not.toHaveLength(0);
+
+      api.updateRow({ aiUnverified: null });
+      act(() => {
+        sources[0]!.emit({
+          kind: "record",
+          action: "contract.field_confirmed",
+          entityType: "contract",
+          entityId: "c1",
+          entryId: "activity-confirmed",
+          visibility: "working_team",
+        });
+      });
+      await waitFor(() => {
+        expect(api.recordReads).toBe(3);
+        expect(screen.queryByText("Unverified")).not.toBeInTheDocument();
+      });
+    });
   });
 
   it("commits an edited field on blur as one PATCH (DES-017) and notes Saved", async () => {

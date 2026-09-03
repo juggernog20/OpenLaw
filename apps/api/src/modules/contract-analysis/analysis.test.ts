@@ -338,7 +338,30 @@ describe("the manual Contract analysis run", () => {
       kept: [],
       unsupported: ["jurisdiction"],
       invalid: ["our_position"],
+      results: expect.any(Array),
     });
+    expect(run.outcome!.results).toEqual(
+      expect.arrayContaining([
+        {
+          slug: "effective_date",
+          value: "2026-01-15",
+          evidence: "effective on 2026-01-15",
+          outcome: "written",
+        },
+        {
+          slug: "jurisdiction",
+          value: "Dubai",
+          evidence: "courts of Dubai",
+          outcome: "unsupported",
+        },
+        {
+          slug: "our_position",
+          value: "Buyer",
+          evidence: "customer receives services",
+          outcome: "invalid",
+        },
+      ]),
+    );
     expect(
       provider.extractions.at(-1)?.targets.find((target) => target.slug === "effective_date"),
     ).toMatchObject({ prompt: "Use the first effective date." });
@@ -363,7 +386,7 @@ describe("the manual Contract analysis run", () => {
     );
     expect(read.json().analysis).toMatchObject({
       available: true,
-      latestRun: { id: run.id, state: "ready" },
+      latestRun: { id: run.id, state: "ready", versionNumber: 1 },
     });
     const links = await harness.db
       .select()
@@ -509,6 +532,13 @@ describe("the manual Contract analysis run", () => {
       kept: expect.arrayContaining(["notice_period_days", "value"]),
       unmatched: "Acme LLC",
     });
+    expect(run.outcome!.results).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ slug: "notice_period_days", outcome: "kept" }),
+        expect.objectContaining({ slug: "value", outcome: "kept" }),
+        expect.objectContaining({ slug: "counterparty", outcome: "unmatched" }),
+      ]),
+    );
     const [row] = await harness.db.select().from(contracts).where(eq(contracts.id, contract.id));
     expect(row).toMatchObject({
       effectiveDate: "2026-02-01",
@@ -630,5 +660,132 @@ describe("the manual Contract analysis run", () => {
       .where(eq(contractAnalysisRuns.id, retrying!.id));
     expect(stillPending!.state).toBe("pending");
     provider.failure = "none";
+  });
+});
+
+describe("confirming AI-written Contract values", () => {
+  async function flaggedContract(title: string, slugs = ["effective_date", "notice_period_days"]) {
+    const contract = await newContract(title);
+    const writtenAt = new Date().toISOString();
+    await harness.db
+      .update(contracts)
+      .set({
+        effectiveDate: "2026-01-15",
+        noticePeriodDays: 60,
+        aiUnverified: Object.fromEntries(
+          slugs.map((slug) => [
+            slug,
+            { evidence: `Evidence for ${slug}`, runId: "confirm-run", writtenAt },
+          ]),
+        ),
+      })
+      .where(eq(contracts.id, contract.id));
+    return contract;
+  }
+
+  it("confirms one flagged slug and answers the fresh Contract record", async () => {
+    const contract = await flaggedContract("Confirm one analysis value");
+    const response = await harness.app.inject({
+      method: "POST",
+      url: `/api/v1/contracts/${String(contract.number)}/analysis/confirm`,
+      cookies: memberCookies,
+      payload: { slug: "effective_date" },
+    });
+
+    expect(response.statusCode, response.body).toBe(200);
+    expect(response.json().contract.aiUnverified).not.toHaveProperty("effective_date");
+    expect(response.json().contract.aiUnverified).toHaveProperty("notice_period_days");
+    const entries = await harness.db
+      .select({ action: activityLog.action, payload: activityLog.payload })
+      .from(activityLog)
+      .where(
+        and(
+          eq(activityLog.entityId, contract.id),
+          eq(activityLog.action, "contract.field_confirmed"),
+        ),
+      );
+    expect(entries).toEqual([
+      {
+        action: "contract.field_confirmed",
+        payload: expect.objectContaining({ slug: "effective_date" }),
+      },
+    ]);
+  });
+
+  it("confirms every flagged slug in one transaction and writes one entry per slug", async () => {
+    const contract = await flaggedContract("Confirm all analysis values", [
+      "effective_date",
+      "notice_period_days",
+      "governing_law",
+    ]);
+    const response = await harness.app.inject({
+      method: "POST",
+      url: `/api/v1/contracts/${String(contract.number)}/analysis/confirm-all`,
+      cookies: memberCookies,
+    });
+
+    expect(response.statusCode, response.body).toBe(200);
+    expect(response.json().contract.aiUnverified).toBeNull();
+    const entries = await harness.db
+      .select({ action: activityLog.action, payload: activityLog.payload })
+      .from(activityLog)
+      .where(
+        and(
+          eq(activityLog.entityId, contract.id),
+          eq(activityLog.action, "contract.field_confirmed"),
+        ),
+      );
+    expect(entries).toHaveLength(3);
+    expect(entries.map((entry) => entry.payload.slug).toSorted()).toEqual([
+      "effective_date",
+      "governing_law",
+      "notice_period_days",
+    ]);
+  });
+
+  it("refuses Contributors, frozen Contracts, and unknown or unflagged slugs", async () => {
+    const contract = await flaggedContract("Confirm analysis refusals");
+    await harness.db.insert(contractTeam).values({
+      contractId: contract.id,
+      userId: contributorId,
+      role: "contributor",
+    });
+
+    const contributor = await harness.app.inject({
+      method: "POST",
+      url: `/api/v1/contracts/${String(contract.number)}/analysis/confirm`,
+      cookies: contributorCookies,
+      payload: { slug: "effective_date" },
+    });
+    expect(contributor.statusCode).toBe(403);
+
+    const unknown = await harness.app.inject({
+      method: "POST",
+      url: `/api/v1/contracts/${String(contract.number)}/analysis/confirm`,
+      cookies: memberCookies,
+      payload: { slug: "not_a_target" },
+    });
+    expect(unknown.statusCode).toBe(400);
+    expect(unknown.json().type).toBe("about:blank");
+
+    const unflagged = await harness.app.inject({
+      method: "POST",
+      url: `/api/v1/contracts/${String(contract.number)}/analysis/confirm`,
+      cookies: memberCookies,
+      payload: { slug: "expiry_date" },
+    });
+    expect(unflagged.statusCode).toBe(400);
+    expect(unflagged.json().type).toBe("about:blank");
+
+    await harness.db
+      .update(contracts)
+      .set({ archivedAt: new Date() })
+      .where(eq(contracts.id, contract.id));
+    const frozen = await harness.app.inject({
+      method: "POST",
+      url: `/api/v1/contracts/${String(contract.number)}/analysis/confirm-all`,
+      cookies: memberCookies,
+    });
+    expect(frozen.statusCode).toBe(409);
   });
 });

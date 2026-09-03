@@ -33,6 +33,7 @@ import {
   AI_ANALYSIS_CHARACTER_BUDGET,
   type AiUnverifiedMap,
   type ContractAnalysisOutcome,
+  type ContractAnalysisResult,
 } from "@openlaw/shared";
 import { buildAnalysisTargets, type AnalysisTarget } from "../lib/analysis-targets.js";
 import { AiConfigError, isTerminalAiError, type AiExtraction } from "../lib/ai/provider.js";
@@ -350,17 +351,34 @@ async function applyAnswers(
       kept: [],
       unsupported: [],
       invalid: [],
+      results: [],
+    };
+    const results = new Map<string, ContractAnalysisResult>();
+    const noteResult = (
+      slug: string,
+      answer: { value?: unknown; evidence?: string } | undefined,
+      result: ContractAnalysisResult["outcome"],
+      value: unknown = answer?.value ?? null,
+    ) => {
+      results.set(slug, {
+        slug,
+        value,
+        evidence: answer?.evidence ?? null,
+        outcome: result,
+      });
     };
     const prepared = new Map<string, PreparedAnswer>();
     for (const target of targets) {
       const answer = answerBySlug.get(target.slug);
       if (!evidenceIsSupported(targetText.text, answer?.evidence)) {
         outcome.unsupported.push(target.slug);
+        noteResult(target.slug, answer, "unsupported");
         continue;
       }
       const value = coerce(target, answer?.value);
       if (value === null) {
         outcome.invalid.push(target.slug);
+        noteResult(target.slug, answer, "invalid");
         continue;
       }
       prepared.set(target.slug, { target, evidence: answer!.evidence!, value });
@@ -374,6 +392,7 @@ async function applyAnswers(
     if (term) {
       if (!writable(row, flags, "term_type", termWasSet)) {
         outcome.kept.push("term_type");
+        noteResult("term_type", term, "kept", term.value);
       } else {
         const proposed = term.value as Contract["termType"];
         const blocksEvergreen =
@@ -384,6 +403,7 @@ async function applyAnswers(
           !flags.renewal_period_months;
         if (blocksEvergreen || blocksNonRenewing) {
           outcome.invalid.push("term_type");
+          noteResult("term_type", term, "invalid", term.value);
         } else {
           patch.termType = proposed;
           nextTermType = proposed;
@@ -397,6 +417,7 @@ async function applyAnswers(
           }
           flags.term_type = flag(term.evidence, run.id);
           outcome.written.push("term_type");
+          noteResult("term_type", term, "written", term.value);
         }
       }
       prepared.delete("term_type");
@@ -417,14 +438,17 @@ async function applyAnswers(
       prepared.delete(slug);
       if (slug === "expiry_date" && nextTermType === "evergreen") {
         outcome.invalid.push(slug);
+        noteResult(slug, item, "invalid", item.value);
         continue;
       }
       if (slug === "renewal_period_months" && nextTermType !== "auto_renew") {
         outcome.invalid.push(slug);
+        noteResult(slug, item, "invalid", item.value);
         continue;
       }
       if (!writable(row, flags, slug, termWasSet)) {
         outcome.kept.push(slug);
+        noteResult(slug, item, "kept", item.value);
         continue;
       }
       if (slug === "effective_date") patch.effectiveDate = item.value as string;
@@ -443,6 +467,7 @@ async function applyAnswers(
       }
       flags[slug] = flag(item.evidence, run.id);
       outcome.written.push(slug);
+      noteResult(slug, item, "written", item.value);
     }
 
     const counterparty = prepared.get("counterparty");
@@ -472,8 +497,10 @@ async function applyAnswers(
         });
         flags.counterparty = flag(counterparty.evidence, run.id);
         outcome.written.push("counterparty");
+        noteResult("counterparty", counterparty, "written", name);
       } else {
         outcome.unmatched = name;
+        noteResult("counterparty", counterparty, "unmatched", name);
       }
       prepared.delete("counterparty");
     }
@@ -484,6 +511,7 @@ async function applyAnswers(
       if (item.target.core) continue;
       if (!writable(row, flags, slug, termWasSet)) {
         outcome.kept.push(slug);
+        noteResult(slug, item, "kept", item.value);
         continue;
       }
       const customFields = { ...(patch.customFields ?? row.customFields) };
@@ -491,7 +519,15 @@ async function applyAnswers(
       patch.customFields = customFields;
       flags[slug] = flag(item.evidence, run.id);
       outcome.written.push(slug);
+      noteResult(slug, item, "written", item.value);
     }
+
+    // The model saw the target list in this order, and the card reads
+    // it back in that same order. Every target takes exactly one arm.
+    outcome.results = targets.flatMap((target) => {
+      const result = results.get(target.slug);
+      return result ? [result] : [];
+    });
 
     if (outcome.written.length > 0) {
       patch.aiUnverified = Object.keys(flags).length > 0 ? flags : null;
@@ -515,7 +551,11 @@ async function applyAnswers(
         runId: run.id,
         versionId: targetText.versionId,
         model,
-        ...outcome,
+        written: outcome.written,
+        kept: outcome.kept,
+        unsupported: outcome.unsupported,
+        invalid: outcome.invalid,
+        ...(outcome.unmatched === undefined ? {} : { unmatched: outcome.unmatched }),
       },
     });
   });

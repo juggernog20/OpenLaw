@@ -1222,6 +1222,13 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
       defaultMessage: "{actor} could not complete an AI analysis of this contract",
     }),
   },
+  "contract.field_confirmed": {
+    icon: Check,
+    message: defineMessage({
+      id: "activity.contract.fieldConfirmed",
+      defaultMessage: "{actor} confirmed an AI-written value",
+    }),
+  },
   "contract.status_changed": {
     icon: GitCommitHorizontal,
     message: defineMessage({
