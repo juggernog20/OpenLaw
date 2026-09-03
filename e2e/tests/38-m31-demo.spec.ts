@@ -224,8 +224,13 @@ async function uploadDemoPdf(page: Page) {
   return CreatedDocument.parse(await uploaded.json()).document;
 }
 
-function markerBeside(page: Page, selector: string): Locator {
-  return page.locator(selector).locator("..").getByText("Unverified", { exact: true });
+function markerBeside(page: Page, label: string): Locator {
+  return page
+    .getByRole("heading", { level: 2, name: "Contract" })
+    .locator("xpath=ancestor::section[1]")
+    .getByText(label, { exact: true })
+    .locator("..")
+    .getByText("Unverified", { exact: true });
 }
 
 function analysisCard(page: Page): Locator {
@@ -314,9 +319,9 @@ test.describe.serial("M31 deployer journey", () => {
       await expect(observer.getByLabel("Currency")).toHaveValue("USD");
       await expect(observer.getByLabel("Cadence")).toHaveValue("annually");
       await expect(observer.getByLabel("Notice period (days)")).toHaveValue("90");
-      await expect(markerBeside(observer, 'label[for="contract-term-type"]')).toBeVisible();
-      await expect(markerBeside(observer, "#contract-value-label")).toBeVisible();
-      await expect(markerBeside(observer, 'label[for="contract-notice-period"]')).toBeVisible();
+      await expect(markerBeside(observer, "Term type")).toBeVisible();
+      await expect(markerBeside(observer, "Value")).toBeVisible();
+      await expect(markerBeside(observer, "Notice period (days)")).toBeVisible();
       expect(observerReloads).toBe(0);
       expect(stub.extractionCount).toBe(1);
 
@@ -333,9 +338,9 @@ test.describe.serial("M31 deployer journey", () => {
       const confirmed = await confirming;
       expect(confirmed.status(), await confirmed.text()).toBe(200);
       await expect(valueResult.getByText("Unverified", { exact: true })).toHaveCount(0);
-      await expect(markerBeside(observer, "#contract-value-label")).toHaveCount(0);
-      await expect(markerBeside(observer, 'label[for="contract-term-type"]')).toBeVisible();
-      await expect(markerBeside(observer, 'label[for="contract-notice-period"]')).toBeVisible();
+      await expect(markerBeside(observer, "Value")).toHaveCount(0);
+      await expect(markerBeside(observer, "Term type")).toBeVisible();
+      await expect(markerBeside(observer, "Notice period (days)")).toBeVisible();
       expect(observerReloads).toBe(0);
 
       expect(await reportAxeViolations(observer, testInfo, "M31 Contract record")).toEqual([]);
