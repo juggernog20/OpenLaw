@@ -1800,7 +1800,7 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
         customFieldsEnvelope(app.db, row, request.user),
         selectRenewals(app.db, row.row.id),
         app.resolveAiProvider(),
-        latestAnalysisRun(app.db, row.row.id),
+        latestAnalysisRun(app.db, row.row.id, request.user),
       ]);
       return {
         contract: toRow(row, custom.customFields),

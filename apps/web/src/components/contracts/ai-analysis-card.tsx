@@ -8,6 +8,7 @@ import { FormattedDate, FormattedMessage, useIntl, type IntlShape } from "react-
 import type { ContractAnalysis, ContractAnalysisResult, ContractRow } from "../../lib/contracts";
 import type { AttachedField } from "../../lib/custom-fields";
 import { formatContractValue, termTypeLabel } from "../../lib/contracts";
+import { formatShortDate } from "../../lib/format";
 import { Button } from "../ui/button";
 
 export function UnverifiedMarker() {
@@ -68,6 +69,19 @@ const CORE_LABELS: Readonly<Record<string, { id: string; defaultMessage: string 
   counterparty: { id: "contracts.analysis.counterparty", defaultMessage: "Counterparty" },
 };
 
+const OUTCOME_LABELS: Readonly<
+  Record<ContractAnalysisResult["outcome"], { id: string; defaultMessage: string }>
+> = {
+  written: { id: "contracts.analysis.outcome.written", defaultMessage: "Written" },
+  kept: { id: "contracts.analysis.outcome.kept", defaultMessage: "Kept" },
+  unsupported: {
+    id: "contracts.analysis.outcome.unsupported",
+    defaultMessage: "Unsupported",
+  },
+  invalid: { id: "contracts.analysis.outcome.invalid", defaultMessage: "Invalid" },
+  unmatched: { id: "contracts.analysis.outcome.unmatched", defaultMessage: "Unmatched" },
+};
+
 function resultLabel(slug: string, fields: readonly AttachedField[]): ReactNode {
   const core = CORE_LABELS[slug];
   return core ? (
@@ -87,7 +101,7 @@ function isContractValue(value: unknown): value is NonNullable<ContractRow["valu
   );
 }
 
-function resultValue(intl: IntlShape, value: unknown): string {
+function resultValue(intl: IntlShape, slug: string, value: unknown): string {
   if (value === null || value === undefined || value === "") {
     return intl.formatMessage({ id: "contracts.record.notRecorded", defaultMessage: "—" });
   }
@@ -105,6 +119,13 @@ function resultValue(intl: IntlShape, value: unknown): string {
   }
   if (typeof value === "string" && ["fixed", "auto_renew", "evergreen"].includes(value)) {
     return termTypeLabel(intl, value as ContractRow["termType"]);
+  }
+  if (
+    typeof value === "string" &&
+    (slug === "effective_date" || slug === "expiry_date") &&
+    /^\d{4}-\d{2}-\d{2}$/.test(value)
+  ) {
+    return formatShortDate(value, { locale: intl.locale });
   }
   return String(value);
 }
@@ -233,7 +254,7 @@ export function AiAnalysisCard({
         <h2 id="contract-ai-analysis-heading" className="me-auto text-base font-semibold">
           <FormattedMessage id="contracts.analysis.heading" defaultMessage="AI analysis" />
         </h2>
-        {canRun && analysis.latestRun?.state !== "pending" && (
+        {canRun && (
           <Button
             type="button"
             variant="secondary"
@@ -281,7 +302,9 @@ export function AiAnalysisCard({
                   {resultLabel(result.slug, fields)}
                   {marker && <UnverifiedMarker />}
                 </div>
-                <span className="break-words text-md">{resultValue(intl, result.value)}</span>
+                <span className="break-words text-md">
+                  {resultValue(intl, result.slug, result.value)}
+                </span>
                 <blockquote className="border-s-2 border-border-default ps-2 text-sm text-muted">
                   {result.evidence ?? marker?.evidence ?? (
                     <FormattedMessage
@@ -292,7 +315,7 @@ export function AiAnalysisCard({
                 </blockquote>
                 <div className="flex flex-wrap items-center justify-end gap-2">
                   <span className="rounded-pill bg-status-neutral-bg px-2 py-0.5 text-xs font-medium text-status-neutral-fg">
-                    {result.outcome}
+                    <FormattedMessage {...OUTCOME_LABELS[result.outcome]} />
                   </span>
                   {marker && canConfirm && (
                     <ConfirmUnverified onConfirm={() => onConfirm(result.slug)} />

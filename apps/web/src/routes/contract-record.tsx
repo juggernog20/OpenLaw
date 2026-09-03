@@ -990,10 +990,18 @@ export function ContractRecordPage() {
   const [termFields, setTermFields] = useState<Record<TermDraftKey, string>>(() =>
     termDrafts(contract),
   );
+  const seededText = useRef(textDrafts(contract));
+  const seededTerm = useRef(termDrafts(contract));
   const [fieldStatus, setFieldStatus] = useState<Partial<Record<FieldKey, FieldStatus>>>({});
   const [fieldError, setFieldError] = useState<Partial<Record<FieldKey, string | undefined>>>({});
   const [archiveStatus, setArchiveStatus] = useState<FieldStatus>("idle");
   const [archiveError, setArchiveError] = useState<string | undefined>(undefined);
+
+  function adoptSaved(row: ContractRow) {
+    seededText.current = textDrafts(row);
+    seededTerm.current = termDrafts(row);
+    setSaved(row);
+  }
 
   // TECH-024 clause 4's whole-record live re-read. React Router replaces
   // the loader answer after `revalidate()`; the screen then adopts that
@@ -1009,8 +1017,28 @@ export function ContractRecordPage() {
     setParties(counterparties);
     setRenewals(contractRenewals);
     setAnalysis(loadedAnalysis);
-    setDrafts(textDrafts(contract));
-    setTermFields(termDrafts(contract));
+    const nextText = textDrafts(contract);
+    const nextTerm = termDrafts(contract);
+    setDrafts(
+      (current) =>
+        Object.fromEntries(
+          Object.entries(nextText).map(([key, next]) => [
+            key,
+            next === seededText.current[key as TextFieldKey] ? current[key as TextFieldKey] : next,
+          ]),
+        ) as Record<TextFieldKey, string>,
+    );
+    setTermFields(
+      (current) =>
+        Object.fromEntries(
+          Object.entries(nextTerm).map(([key, next]) => [
+            key,
+            next === seededTerm.current[key as TermDraftKey] ? current[key as TermDraftKey] : next,
+          ]),
+        ) as Record<TermDraftKey, string>,
+    );
+    seededText.current = nextText;
+    seededTerm.current = nextTerm;
   }, [contract, fields, customFieldRefs, team, counterparties, contractRenewals, loadedAnalysis]);
 
   /**
@@ -1065,6 +1093,8 @@ export function ContractRecordPage() {
   const frozen = archived || !canEdit;
   const analysisConfirmable = canEdit && !archived;
   const analysisRunnable = analysisConfirmable && saved.endedAt === null;
+  const canRunAnalysis =
+    analysis.available && analysisRunnable && analysis.latestRun?.state !== "pending";
   const unverifiedMarker = (slug: string) =>
     saved.aiUnverified?.[slug] ? <UnverifiedMarker /> : null;
   const confirmationControl = (slug: string) =>
@@ -1264,7 +1294,7 @@ export function ContractRecordPage() {
       })
       .catch(() => undefined);
     if (!result?.data) return (await readProblem(result)).detail;
-    setSaved(result.data.contract);
+    adoptSaved(result.data.contract);
     return undefined;
   }
 
@@ -1275,7 +1305,7 @@ export function ContractRecordPage() {
       })
       .catch(() => undefined);
     if (!result?.data) return (await readProblem(result)).detail;
-    setSaved(result.data.contract);
+    adoptSaved(result.data.contract);
     return undefined;
   }
 
@@ -1305,7 +1335,7 @@ export function ContractRecordPage() {
     }
     const data = result.data;
     const row = data.contract;
-    setSaved(row);
+    adoptSaved(row);
     setAttached(data.fields);
     setRefs(data.customFieldRefs);
     if (key === "title" || key === "description") {
@@ -1376,7 +1406,7 @@ export function ContractRecordPage() {
           .GET("/api/v1/contracts/{number}", { params: { path: { number: saved.number } } })
           .catch(() => ({ data: undefined }));
         if (data) {
-          setSaved(data.contract);
+          adoptSaved(data.contract);
           setRenewals(data.renewals);
           setAttached(data.fields);
           setRefs(data.customFieldRefs);
@@ -1390,7 +1420,7 @@ export function ContractRecordPage() {
       // failed silently.
       return outcome.detail || failed();
     }
-    setSaved(outcome.contract);
+    adoptSaved(outcome.contract);
     setRenewals(outcome.renewals);
     // The expiry moved, so the derived notice deadline moved with it and
     // the CTR-009 union has to be read again — the same refresh a term
@@ -1577,7 +1607,7 @@ export function ContractRecordPage() {
       // every draft resets — an in-progress edit on a record being
       // archived is deliberately discarded, and a restore starts clean.
       const row = result.data.contract;
-      setSaved(row);
+      adoptSaved(row);
       setDrafts(textDrafts(row));
       setTermFields(termDrafts(row));
       setArchiveStatus("idle");
@@ -1873,9 +1903,7 @@ export function ContractRecordPage() {
                   archived={archived}
                   busy={archiveStatus === "saving"}
                   onRename={frozen ? undefined : startRename}
-                  onRunAnalysis={
-                    analysis.available && analysisRunnable ? () => void runAnalysis() : undefined
-                  }
+                  onRunAnalysis={canRunAnalysis ? () => void runAnalysis() : undefined}
                   onArchive={canEdit ? () => void archiveOrRestore() : undefined}
                 />
               </div>
@@ -2225,7 +2253,7 @@ export function ContractRecordPage() {
                       onChange={(row, next) => {
                         // The primary decides what the list column and the
                         // record hero show, so the row moves with the party.
-                        setSaved(row);
+                        adoptSaved(row);
                         setParties(next);
                       }}
                     />
@@ -2595,7 +2623,7 @@ export function ContractRecordPage() {
                   analysis={analysis}
                   contract={saved}
                   fields={attached}
-                  canRun={analysis.available && analysisRunnable}
+                  canRun={canRunAnalysis}
                   canConfirm={analysisConfirmable}
                   onRun={runAnalysis}
                   onConfirm={confirmAnalysisField}

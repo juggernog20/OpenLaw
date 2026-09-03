@@ -939,6 +939,7 @@ interface Arm {
     intl: IntlShape,
     payload: Payload,
     changes: readonly NarratedChange[],
+    context: NarrationContext,
   ) => Record<string, string | number>;
 }
 
@@ -1226,8 +1227,34 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
     icon: Check,
     message: defineMessage({
       id: "activity.contract.fieldConfirmed",
-      defaultMessage: "{actor} confirmed an AI-written value",
+      defaultMessage: "{actor} confirmed the AI-written value for {field}",
     }),
+    values: (intl, payload, _changes, context) => {
+      const slug = text(payload, "slug");
+      if (!slug) {
+        return {
+          field: intl.formatMessage({
+            id: "activity.contract.unknownField",
+            defaultMessage: "a field",
+          }),
+        };
+      }
+      const coreKey: Readonly<Record<string, string>> = {
+        term_type: "termType",
+        effective_date: "effectiveDate",
+        expiry_date: "expiryDate",
+        renewal_period_months: "renewalPeriodMonths",
+        notice_period_days: "noticePeriodDays",
+        value: "value",
+        counterparty: "primaryCounterparty",
+      };
+      const key = coreKey[slug];
+      return {
+        field: key
+          ? changeLabel(intl, key, context)
+          : (customField(context, slug)?.displayName ?? slug),
+      };
+    },
   },
   "contract.status_changed": {
     icon: GitCommitHorizontal,
@@ -3039,7 +3066,7 @@ export function narrateActivity(
     sentence: intl.formatMessage(arm.message, {
       actor,
       hasActor,
-      ...arm.values?.(intl, entry.payload, changes),
+      ...arm.values?.(intl, entry.payload, changes, context),
     }),
     changes,
   };

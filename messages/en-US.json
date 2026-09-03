@@ -132,7 +132,7 @@
     "defaultMessage": "{actor} created this contract from {request}"
   },
   "activity.contract.fieldConfirmed": {
-    "defaultMessage": "{actor} confirmed an AI-written value"
+    "defaultMessage": "{actor} confirmed the AI-written value for {field}"
   },
   "activity.contract.matterLinked": {
     "defaultMessage": "{actor} linked this contract to {matter}"
@@ -178,6 +178,9 @@
   },
   "activity.contract.typeReassigned": {
     "defaultMessage": "{actor} re-typed this contract"
+  },
+  "activity.contract.unknownField": {
+    "defaultMessage": "a field"
   },
   "activity.contract.unnamedRecord": {
     "defaultMessage": "another contract"

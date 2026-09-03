@@ -484,6 +484,64 @@ describe("the manual Contract analysis run", () => {
     expect(row!.aiUnverified).toBeNull();
   });
 
+  it("withholds detailed results outside the analyzed Document's audience", async () => {
+    const contract = await newContract("Confidential analysis result");
+    const paper = await addPaper(contract, ["A private effective date is 2027-02-03."]);
+    await harness.db
+      .update(documents)
+      .set({ isConfidential: true })
+      .where(eq(documents.id, paper.document.id));
+    await harness.db
+      .delete(contractTeam)
+      .where(and(eq(contractTeam.contractId, contract.id), eq(contractTeam.userId, memberId)));
+    const [run] = await harness.db
+      .insert(contractAnalysisRuns)
+      .values({
+        contractId: contract.id,
+        versionId: paper.versions[0]!.id,
+        state: "ready",
+        trigger: "manual",
+        requestedBy: memberId,
+        preset: "custom",
+        model: "analysis-test-model",
+        outcome: {
+          written: ["effective_date"],
+          kept: [],
+          unsupported: [],
+          invalid: [],
+          results: [
+            {
+              slug: "effective_date",
+              value: "2027-02-03",
+              evidence: "private effective date is 2027-02-03",
+              outcome: "written",
+            },
+          ],
+        },
+        finishedAt: new Date(),
+      })
+      .returning();
+
+    const restricted = await harness.app.inject({
+      method: "GET",
+      url: `/api/v1/contracts/${String(contract.number)}`,
+      cookies: memberCookies,
+    });
+    expect(restricted.statusCode, restricted.body).toBe(200);
+    expect(restricted.json().analysis.latestRun).toMatchObject({ id: run!.id, state: "ready" });
+    expect(restricted.json().analysis.latestRun.outcome).not.toHaveProperty("results");
+
+    const administrator = await harness.app.inject({
+      method: "GET",
+      url: `/api/v1/contracts/${String(contract.number)}`,
+      cookies: adminCookies,
+    });
+    expect(administrator.statusCode, administrator.body).toBe(200);
+    expect(administrator.json().analysis.latestRun.outcome.results).toEqual([
+      expect.objectContaining({ slug: "effective_date", value: "2027-02-03" }),
+    ]);
+  });
+
   it("keeps human and confirmed values, replaces earlier AI evidence, and reports an occupied Counterparty", async () => {
     const contract = await newContract("Analysis overwrite rules");
     await addPaper(contract, [

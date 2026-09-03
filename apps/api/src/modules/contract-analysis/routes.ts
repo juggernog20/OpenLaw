@@ -10,6 +10,7 @@ import {
   contractAnalysisRuns,
   contracts,
   desc,
+  documents,
   documentVersions,
   eq,
   isNull,
@@ -17,8 +18,8 @@ import {
   type Executor,
 } from "@openlaw/db";
 import { CONTRACT_ANALYSIS_RESULT_OUTCOMES } from "@openlaw/shared";
-import { requireRole } from "../../auth/guards.js";
-import { NO_CONTRACT, reachedContract } from "../../lib/contract-access.js";
+import { requireRole, type AuthenticatedUser } from "../../auth/guards.js";
+import { documentAudienceScope, NO_CONTRACT, reachedContract } from "../../lib/contract-access.js";
 import { httpError, problemResponse } from "../../lib/problem.js";
 import { analysisTargetText } from "../../pipeline/contract-analysis.js";
 
@@ -70,7 +71,7 @@ export function toAnalysisRun(run: ContractAnalysisRun, versionNumber: number | 
   };
 }
 
-export async function latestAnalysisRun(db: Executor, contractId: string) {
+export async function latestAnalysisRun(db: Executor, contractId: string, user: AuthenticatedUser) {
   const [row] = await db
     .select({ run: contractAnalysisRuns, versionNumber: documentVersions.versionNumber })
     .from(contractAnalysisRuns)
@@ -78,7 +79,27 @@ export async function latestAnalysisRun(db: Executor, contractId: string) {
     .where(eq(contractAnalysisRuns.contractId, contractId))
     .orderBy(desc(contractAnalysisRuns.id))
     .limit(1);
-  return row ? toAnalysisRun(row.run, row.versionNumber) : null;
+  if (!row) return null;
+
+  const [reachableVersion] = row.run.versionId
+    ? await db
+        .select({ id: documentVersions.id })
+        .from(documentVersions)
+        .innerJoin(documents, eq(documentVersions.documentId, documents.id))
+        .where(and(eq(documentVersions.id, row.run.versionId), documentAudienceScope(db, user)))
+        .limit(1)
+    : [];
+  if (!reachableVersion && row.run.outcome?.results) {
+    const visibleOutcome = {
+      written: row.run.outcome.written,
+      kept: row.run.outcome.kept,
+      unsupported: row.run.outcome.unsupported,
+      invalid: row.run.outcome.invalid,
+      ...(row.run.outcome.unmatched === undefined ? {} : { unmatched: row.run.outcome.unmatched }),
+    };
+    return { ...toAnalysisRun(row.run, row.versionNumber), outcome: visibleOutcome };
+  }
+  return toAnalysisRun(row.run, row.versionNumber);
 }
 
 const requireMember = requireRole("administrator", "legal_team_member");

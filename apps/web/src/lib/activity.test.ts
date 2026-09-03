@@ -921,6 +921,24 @@ describe("the vocabulary, slug by slug", () => {
   });
 });
 
+describe("AI field confirmation narration", () => {
+  it("names core and attached fields", () => {
+    const entry = (slug: string): NarratableEntry => ({
+      action: "contract.field_confirmed",
+      actor: ACTOR,
+      payload: { number: 41, title: "Agreement", slug },
+    });
+    expect(narrateActivity(intl, entry("effective_date")).sentence).toBe(
+      "Nadia Counsel confirmed the AI-written value for Effective date",
+    );
+    expect(
+      narrateActivity(intl, entry("governing_law"), {
+        fields: [{ slug: "governing_law", displayName: "Governing law", fieldType: "text" }],
+      }).sentence,
+    ).toBe("Nadia Counsel confirmed the AI-written value for Governing law");
+  });
+});
+
 describe("the counted branches of the connector and erasure sentences", () => {
   // `wholeCount` maps a missing or malformed count to 0, which is
   // exactly what an entry written by an older build produces. The

@@ -966,15 +966,17 @@ describe("the /contracts/:number record page", () => {
       expect(
         within(card).getByText(/Completed .* on Version 3 with gpt-analysis\./),
       ).toBeInTheDocument();
-      for (const word of ["written", "kept", "unsupported", "invalid", "unmatched"]) {
+      for (const word of ["Written", "Kept", "Unsupported", "Invalid", "Unmatched"]) {
         expect(within(card).getByText(word)).toBeInTheDocument();
       }
       expect(within(card).getByText("Auto-renewing")).toBeInTheDocument();
+      expect(within(card).getByText("Jun 30, 2028")).toBeInTheDocument();
       expect(within(card).getByText("renews each year")).toBeInTheDocument();
       expect(within(card).getByText("Acme Trading LLC")).toBeInTheDocument();
     });
 
     it("runs from the card and the overflow menu", async () => {
+      const sources = stubEventSource();
       const api = recordApi(contractRow(), undefined, undefined, undefined, {
         available: true,
         latestRun: null,
@@ -986,6 +988,21 @@ describe("the /contracts/:number record page", () => {
       await user.click(await screen.findByRole("button", { name: "Run analysis" }));
       expect(await screen.findByText("Running…")).toBeInTheDocument();
       expect(api.posts).toEqual(["analysis"]);
+      expect(await recordActions(user)).toEqual(["Copy link", "Rename contract", "Archive"]);
+      await user.keyboard("{Escape}");
+
+      api.updateAnalysis({ available: true, latestRun: analysisRun() });
+      act(() => {
+        sources[0]!.emit({
+          kind: "record",
+          action: "contract.analysis_completed",
+          entityType: "contract",
+          entityId: "c1",
+          entryId: "activity-analysis",
+          visibility: "working_team",
+        });
+      });
+      await screen.findByText(/Completed .* on Version 3 with gpt-analysis\./);
       expect(await recordActions(user)).toEqual([
         "Copy link",
         "Rename contract",
@@ -1148,7 +1165,10 @@ describe("the /contracts/:number record page", () => {
       stubApi({ signedIn: MEMBER, extra: api.handler });
       renderAt("/contracts/42");
 
-      await screen.findByLabelText("Title");
+      const title = await screen.findByLabelText("Title");
+      const expiry = screen.getByLabelText("Expiry date");
+      fireEvent.change(title, { target: { value: "Uncommitted title" } });
+      fireEvent.change(expiry, { target: { value: "2029-04-05" } });
       expect(api.recordReads).toBe(1);
       api.updateRow({
         termType: "auto_renew",
@@ -1170,6 +1190,9 @@ describe("the /contracts/:number record page", () => {
         expect(api.recordReads).toBe(2);
         expect(screen.getByLabelText("Term type")).toHaveValue("auto_renew");
       });
+      expect(title).toHaveValue("Uncommitted title");
+      expect(expiry).toHaveValue("2029-04-05");
+      expect(api.patches).toEqual([]);
       expect(screen.getAllByText("Unverified")).not.toHaveLength(0);
 
       api.updateRow({ aiUnverified: null });
