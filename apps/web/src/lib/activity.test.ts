@@ -857,6 +857,8 @@ const SAMPLE_PAYLOADS: { [A in ActivityAction]: ActivityPayloadMap[A] } = {
     baseUrl: "https://api.openai.com/v1",
     model: "gpt-test",
   },
+  "ai_field_prompt.updated": { slug: "effective_date" },
+  "ai_field_prompt.reset": { slug: "effective_date" },
 
   // Signature round
   "envelope.sent": {

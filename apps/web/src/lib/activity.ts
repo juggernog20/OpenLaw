@@ -2508,6 +2508,22 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
     }),
     values: (intl, payload) => ({ provider: aiPreset(intl, payload) }),
   },
+  "ai_field_prompt.updated": {
+    icon: FilePen,
+    message: defineMessage({
+      id: "activity.aiFieldPrompt.updated",
+      defaultMessage: "{actor} changed the core analysis prompt {slug}",
+    }),
+    values: (intl, payload) => ({ slug: named(intl, payload, "slug") }),
+  },
+  "ai_field_prompt.reset": {
+    icon: Undo2,
+    message: defineMessage({
+      id: "activity.aiFieldPrompt.reset",
+      defaultMessage: "{actor} reset the core analysis prompt {slug} to its default",
+    }),
+    values: (intl, payload) => ({ slug: named(intl, payload, "slug") }),
+  },
 
   // ---- The settings taxonomies and the field catalog ----
   ...taxonomyArms("contract_type", Tag, TAXONOMY_VERBS),

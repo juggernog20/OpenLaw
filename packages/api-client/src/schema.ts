@@ -576,6 +576,24 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/v1/ai-field-prompts": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Read the effective and default prompts for the seven core analysis targets */
+    get: operations["listAiFieldPrompts"];
+    /** Save or reset one core analysis prompt; null or blank resets it to the default */
+    put: operations["saveAiFieldPrompt"];
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/v1/signer-erasures": {
     parameters: {
       query?: never;
@@ -6427,6 +6445,109 @@ export interface operations {
               requiresApiKey: boolean;
               requiresBaseUrl: boolean;
             }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  listAiFieldPrompts: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            prompts: {
+              /** @enum {string} */
+              slug:
+                | "term_type"
+                | "effective_date"
+                | "expiry_date"
+                | "renewal_period_months"
+                | "notice_period_days"
+                | "value"
+                | "counterparty";
+              prompt: string;
+              defaultPrompt: string;
+              overridden: boolean;
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  saveAiFieldPrompt: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          /** @enum {string} */
+          slug:
+            | "term_type"
+            | "effective_date"
+            | "expiry_date"
+            | "renewal_period_months"
+            | "notice_period_days"
+            | "value"
+            | "counterparty";
+          prompt: string | null;
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            prompt: {
+              /** @enum {string} */
+              slug:
+                | "term_type"
+                | "effective_date"
+                | "expiry_date"
+                | "renewal_period_months"
+                | "notice_period_days"
+                | "value"
+                | "counterparty";
+              prompt: string;
+              defaultPrompt: string;
+              overridden: boolean;
+            };
           };
         };
       };

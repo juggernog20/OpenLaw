@@ -62,6 +62,12 @@
   "activity.aiConnector.updated": {
     "defaultMessage": "{actor} changed the AI connector {provider}"
   },
+  "activity.aiFieldPrompt.reset": {
+    "defaultMessage": "{actor} reset the core analysis prompt {slug} to its default"
+  },
+  "activity.aiFieldPrompt.updated": {
+    "defaultMessage": "{actor} changed the core analysis prompt {slug}"
+  },
   "activity.applet": {
     "defaultMessage": "History"
   },
@@ -5272,6 +5278,24 @@
   },
   "settings.aiAnalysis.pageTitle": {
     "defaultMessage": "AI analysis"
+  },
+  "settings.aiAnalysis.prompts.catalogLink": {
+    "defaultMessage": "Contracts → Fields"
+  },
+  "settings.aiAnalysis.prompts.catalogPointer": {
+    "defaultMessage": "Catalog Fields keep their own analysis prompts in {fields}."
+  },
+  "settings.aiAnalysis.prompts.inputLabel": {
+    "defaultMessage": "{label} prompt"
+  },
+  "settings.aiAnalysis.prompts.reset": {
+    "defaultMessage": "Reset to default"
+  },
+  "settings.aiAnalysis.prompts.resetLabel": {
+    "defaultMessage": "Reset {label} to default"
+  },
+  "settings.aiAnalysis.prompts.title": {
+    "defaultMessage": "Field prompts"
   },
   "settings.aiAnalysis.protocol": {
     "defaultMessage": "Protocol"

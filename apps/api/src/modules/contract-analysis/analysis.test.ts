@@ -3,7 +3,6 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import {
   activityLog,
-  aiFieldPrompts,
   and,
   contractAnalysisRuns,
   contractCounterparties,
@@ -291,13 +290,13 @@ describe("the manual Contract analysis run", () => {
       .insert(counterparties)
       .values({ name: "Acme LLC" })
       .returning();
-    await harness.db
-      .insert(aiFieldPrompts)
-      .values({ slug: "effective_date", prompt: "Use the first effective date." })
-      .onConflictDoUpdate({
-        target: aiFieldPrompts.slug,
-        set: { prompt: "Use the first effective date." },
-      });
+    const prompt = await harness.app.inject({
+      method: "PUT",
+      url: "/api/v1/ai-field-prompts",
+      cookies: adminCookies,
+      payload: { slug: "effective_date", prompt: "Use the first effective date." },
+    });
+    expect(prompt.statusCode, prompt.body).toBe(200);
     setAnswers({
       term_type: { value: "AUTO RENEW", evidence: "automatically renews" },
       effective_date: { value: "2026-01-15", evidence: "effective on 2026-01-15" },
