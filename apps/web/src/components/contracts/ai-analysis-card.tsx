@@ -4,7 +4,14 @@
 
 import { useMemo, useState, type ReactNode } from "react";
 import { CircleAlert, Sparkles } from "lucide-react";
-import { FormattedDate, FormattedMessage, useIntl, type IntlShape } from "react-intl";
+import {
+  FormattedDate,
+  FormattedMessage,
+  defineMessage,
+  useIntl,
+  type IntlShape,
+  type MessageDescriptor,
+} from "react-intl";
 import type { ContractAnalysis, ContractAnalysisResult, ContractRow } from "../../lib/contracts";
 import type { AttachedField } from "../../lib/custom-fields";
 import { formatContractValue, termTypeLabel } from "../../lib/contracts";
@@ -53,33 +60,43 @@ export function ConfirmUnverified({
   );
 }
 
-const CORE_LABELS: Readonly<Record<string, { id: string; defaultMessage: string }>> = {
-  term_type: { id: "contracts.form.termType", defaultMessage: "Term type" },
-  effective_date: { id: "contracts.form.effectiveDate", defaultMessage: "Effective date" },
-  expiry_date: { id: "contracts.form.expiryDate", defaultMessage: "Expiry date" },
-  renewal_period_months: {
+// Both tables are `defineMessage` calls so `i18n:extract` sees them; a
+// bare object literal spread into <FormattedMessage> never reaches the
+// catalog.
+const CORE_LABELS: Readonly<Record<string, MessageDescriptor>> = {
+  term_type: defineMessage({ id: "contracts.form.termType", defaultMessage: "Term type" }),
+  effective_date: defineMessage({
+    id: "contracts.form.effectiveDate",
+    defaultMessage: "Effective date",
+  }),
+  expiry_date: defineMessage({ id: "contracts.form.expiryDate", defaultMessage: "Expiry date" }),
+  renewal_period_months: defineMessage({
     id: "contracts.form.renewalPeriod",
     defaultMessage: "Renewal period (months)",
-  },
-  notice_period_days: {
+  }),
+  notice_period_days: defineMessage({
     id: "contracts.form.noticePeriod",
     defaultMessage: "Notice period (days)",
-  },
-  value: { id: "contracts.form.value", defaultMessage: "Value" },
-  counterparty: { id: "contracts.analysis.counterparty", defaultMessage: "Counterparty" },
+  }),
+  value: defineMessage({ id: "contracts.form.value", defaultMessage: "Value" }),
+  counterparty: defineMessage({
+    id: "contracts.analysis.counterparty",
+    defaultMessage: "Counterparty",
+  }),
 };
 
-const OUTCOME_LABELS: Readonly<
-  Record<ContractAnalysisResult["outcome"], { id: string; defaultMessage: string }>
-> = {
-  written: { id: "contracts.analysis.outcome.written", defaultMessage: "Written" },
-  kept: { id: "contracts.analysis.outcome.kept", defaultMessage: "Kept" },
-  unsupported: {
+const OUTCOME_LABELS: Readonly<Record<ContractAnalysisResult["outcome"], MessageDescriptor>> = {
+  written: defineMessage({ id: "contracts.analysis.outcome.written", defaultMessage: "Written" }),
+  kept: defineMessage({ id: "contracts.analysis.outcome.kept", defaultMessage: "Kept" }),
+  unsupported: defineMessage({
     id: "contracts.analysis.outcome.unsupported",
     defaultMessage: "Unsupported",
-  },
-  invalid: { id: "contracts.analysis.outcome.invalid", defaultMessage: "Invalid" },
-  unmatched: { id: "contracts.analysis.outcome.unmatched", defaultMessage: "Unmatched" },
+  }),
+  invalid: defineMessage({ id: "contracts.analysis.outcome.invalid", defaultMessage: "Invalid" }),
+  unmatched: defineMessage({
+    id: "contracts.analysis.outcome.unmatched",
+    defaultMessage: "Unmatched",
+  }),
 };
 
 function resultLabel(slug: string, fields: readonly AttachedField[]): ReactNode {
@@ -216,6 +233,8 @@ export function AiAnalysisCard({
   fields,
   canRun,
   canConfirm,
+  running,
+  runError,
   onRun,
   onConfirm,
   onConfirmAll,
@@ -225,25 +244,19 @@ export function AiAnalysisCard({
   fields: readonly AttachedField[];
   canRun: boolean;
   canConfirm: boolean;
-  onRun: () => Promise<string | undefined>;
+  /** The page owns the run's progress and refusal: the overflow menu
+   * starts the same run, and its refusal has to land here too. */
+  running: boolean;
+  runError?: string;
+  onRun: () => void;
   onConfirm: (slug: string) => Promise<string | undefined>;
   onConfirmAll: () => Promise<string | undefined>;
 }>) {
   const intl = useIntl();
-  const [running, setRunning] = useState(false);
-  const [runError, setRunError] = useState<string>();
   const results = useMemo(() => legacyResults(analysis), [analysis]);
   const flagged = Object.keys(contract.aiUnverified ?? {});
 
   if (!analysis.available && flagged.length === 0) return null;
-
-  async function run() {
-    if (running) return;
-    setRunning(true);
-    setRunError(undefined);
-    const refusal = await onRun().finally(() => setRunning(false));
-    setRunError(refusal);
-  }
 
   return (
     <section
@@ -255,13 +268,7 @@ export function AiAnalysisCard({
           <FormattedMessage id="contracts.analysis.heading" defaultMessage="AI analysis" />
         </h2>
         {canRun && (
-          <Button
-            type="button"
-            variant="secondary"
-            size="sm"
-            disabled={running}
-            onClick={() => void run()}
-          >
+          <Button type="button" variant="secondary" size="sm" disabled={running} onClick={onRun}>
             <Sparkles size={16} aria-hidden="true" />
             <FormattedMessage id="contracts.analysis.run" defaultMessage="Run analysis" />
           </Button>

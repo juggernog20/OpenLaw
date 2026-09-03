@@ -1334,6 +1334,9 @@
   "contracts.analysis.confirmAll": {
     "defaultMessage": "Confirm all"
   },
+  "contracts.analysis.counterparty": {
+    "defaultMessage": "Counterparty"
+  },
   "contracts.analysis.failed": {
     "defaultMessage": "Failed {when} on Version {version} with {model}: {reason}"
   },
@@ -1345,6 +1348,21 @@
   },
   "contracts.analysis.notRun": {
     "defaultMessage": "No analysis has run yet."
+  },
+  "contracts.analysis.outcome.invalid": {
+    "defaultMessage": "Invalid"
+  },
+  "contracts.analysis.outcome.kept": {
+    "defaultMessage": "Kept"
+  },
+  "contracts.analysis.outcome.unmatched": {
+    "defaultMessage": "Unmatched"
+  },
+  "contracts.analysis.outcome.unsupported": {
+    "defaultMessage": "Unsupported"
+  },
+  "contracts.analysis.outcome.written": {
+    "defaultMessage": "Written"
   },
   "contracts.analysis.results": {
     "defaultMessage": "Analysis results"

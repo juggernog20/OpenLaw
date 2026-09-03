@@ -1011,6 +1011,31 @@ describe("the /contracts/:number record page", () => {
       ]);
     });
 
+    it("draws the refusal on the card when the overflow menu's run is turned away", async () => {
+      const api = recordApi(contractRow(), undefined, undefined, undefined, {
+        available: true,
+        latestRun: null,
+      });
+      stubApi({
+        signedIn: MEMBER,
+        extra: (call: StubCall) =>
+          call.url.pathname === "/api/v1/contracts/42/analysis" && call.method === "POST"
+            ? problem(409, "This Contract has no primary Document to analyze.")
+            : api.handler(call),
+      });
+      renderAt("/contracts/42");
+      const user = userEvent.setup();
+
+      await screen.findByRole("heading", { name: "AI analysis" });
+      await user.click(await screen.findByRole("button", { name: "Contract actions" }));
+      await user.click(await screen.findByRole("menuitem", { name: "Run analysis" }));
+
+      const refusal = await screen.findByRole("alert");
+      expect(refusal).toHaveTextContent("This Contract has no primary Document to analyze.");
+      expect(api.posts).toEqual([]);
+      expect(screen.getByRole("button", { name: "Run analysis" })).toBeEnabled();
+    });
+
     it("withholds Run from an ended record even when the connector is available", async () => {
       stubApi({
         signedIn: MEMBER,

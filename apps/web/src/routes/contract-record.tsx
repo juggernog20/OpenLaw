@@ -626,6 +626,11 @@ export function ContractRecordPage() {
   /** The saved record — the server's truth after the last commit. */
   const [saved, setSaved] = useState<ContractRow>(contract);
   const [analysis, setAnalysis] = useState<ContractAnalysis>(loadedAnalysis);
+  /** One manual run in flight, and the refusal the last ask met. The
+   * card and the overflow menu both start the run, so the page holds
+   * both and the card draws them. */
+  const [runningAnalysis, setRunningAnalysis] = useState(false);
+  const [analysisRunError, setAnalysisRunError] = useState<string>();
   /** MTR-007's one linked Matter, redrawn from the canonical Contract datum. */
   const [linkedMatter, setLinkedMatter] = useState(loadedMatter);
 
@@ -1275,15 +1280,21 @@ export function ContractRecordPage() {
     setFieldError((current) => ({ ...current, [key]: detail }));
   }
 
-  async function runAnalysis(): Promise<string | undefined> {
+  async function runAnalysis(): Promise<void> {
+    if (runningAnalysis) return;
+    setRunningAnalysis(true);
+    setAnalysisRunError(undefined);
     const result = await api
       .POST("/api/v1/contracts/{number}/analysis", {
         params: { path: { number: saved.number } },
       })
-      .catch(() => undefined);
-    if (!result?.data) return (await readProblem(result)).detail;
+      .catch(() => undefined)
+      .finally(() => setRunningAnalysis(false));
+    if (!result?.data) {
+      setAnalysisRunError((await readProblem(result)).detail);
+      return;
+    }
     setAnalysis((current) => ({ ...current, latestRun: result.data.run }));
-    return undefined;
   }
 
   async function confirmAnalysisField(slug: string): Promise<string | undefined> {
@@ -2625,7 +2636,9 @@ export function ContractRecordPage() {
                   fields={attached}
                   canRun={canRunAnalysis}
                   canConfirm={analysisConfirmable}
-                  onRun={runAnalysis}
+                  running={runningAnalysis}
+                  runError={analysisRunError}
+                  onRun={() => void runAnalysis()}
                   onConfirm={confirmAnalysisField}
                   onConfirmAll={confirmAllAnalysisFields}
                 />
