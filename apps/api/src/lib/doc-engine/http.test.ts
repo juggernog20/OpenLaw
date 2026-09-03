@@ -54,6 +54,36 @@ const START_TIMEOUT_MS = 900_000;
 
 const repoRoot = fileURLToPath(new URL("../../../../../", import.meta.url));
 
+function compareBody(older: Buffer, newer: Buffer): Buffer {
+  const frame = (contents: Buffer): Buffer => {
+    const length = Buffer.alloc(4);
+    length.writeUInt32BE(contents.byteLength);
+    return Buffer.concat([length, contents, Buffer.alloc(4)]);
+  };
+  return Buffer.concat([Buffer.from("OPENLAW1"), frame(older), frame(newer)]);
+}
+
+async function hasCompareProcess(container: StartedTestContainer): Promise<boolean> {
+  const [bridge, office] = await Promise.all([
+    container.exec(["pgrep", "-f", "[c]ompare.py"]),
+    container.exec(["pgrep", "-f", "[s]office.*openlaw-"]),
+  ]);
+  return bridge.exitCode === 0 || office.exitCode === 0;
+}
+
+async function waitForCompareProcess(
+  container: StartedTestContainer,
+  expected: boolean,
+): Promise<void> {
+  const deadline = performance.now() + 10_000;
+  while ((await hasCompareProcess(container)) !== expected) {
+    if (performance.now() >= deadline) {
+      throw new Error(`A compare process did not become ${expected ? "visible" : "absent"}.`);
+    }
+    await delay(50);
+  }
+}
+
 /**
  * Builds the sidecar image once per test file.
  *
@@ -64,6 +94,8 @@ const repoRoot = fileURLToPath(new URL("../../../../../", import.meta.url));
  */
 let built: Promise<GenericContainer> | undefined;
 function image(): Promise<GenericContainer> {
+  const prebuilt = process.env.DOC_ENGINE_TEST_IMAGE;
+  if (prebuilt) return Promise.resolve(new GenericContainer(prebuilt));
   built ??= GenericContainer.fromDockerfile(repoRoot, "services/doc-engine/Dockerfile")
     .withBuildkit()
     .build(IMAGE_TAG, { deleteOnExit: false });
@@ -155,6 +187,25 @@ describe("doc-engine sidecar", () => {
     await expect(
       harness.engine.convertToPdf(Readable.from([DOC_ENGINE_FIXTURES.plainDocx]), "xlsx"),
     ).rejects.toBeInstanceOf(UnsupportedFormatError);
+  });
+
+  it("kills the comparison process tree when its caller disconnects", async () => {
+    const container = await running;
+    if (!container) throw new Error("The doc-engine sidecar did not start.");
+    const controller = new AbortController();
+    const url = `http://${container.getHost()}:${container.getMappedPort(SIDECAR_PORT)}/compare?olderFormat=docx&newerFormat=docx`;
+    const request = fetch(url, {
+      method: "POST",
+      body: Uint8Array.from(
+        compareBody(DOC_ENGINE_FIXTURES.compareOlderDocx, DOC_ENGINE_FIXTURES.compareNewerDocx),
+      ),
+      signal: controller.signal,
+    });
+
+    await waitForCompareProcess(container, true);
+    controller.abort();
+    await request.catch(() => undefined);
+    await waitForCompareProcess(container, false);
   });
 });
 
@@ -260,6 +311,25 @@ describe("doc-engine HTTP client", () => {
       await expect(
         engine.extractPdfText(Readable.from([DOC_ENGINE_FIXTURES.nativeTextPdf])),
       ).rejects.toBeInstanceOf(DocEngineTimeoutError);
+    });
+
+    it("uses compare's own bound", async () => {
+      const compareTimeoutMs = 200;
+      const engine = createHttpDocEngine({
+        baseUrl,
+        timeoutMs: 5_000,
+        compareTimeoutMs,
+      });
+      const startedAt = performance.now();
+      await expect(
+        engine.compare(
+          Readable.from([DOC_ENGINE_FIXTURES.compareOlderDocx]),
+          "docx",
+          Readable.from([DOC_ENGINE_FIXTURES.compareNewerDocx]),
+          "docx",
+        ),
+      ).rejects.toBeInstanceOf(DocEngineTimeoutError);
+      expect(performance.now() - startedAt).toBeLessThan(compareTimeoutMs * 10);
     });
   });
 

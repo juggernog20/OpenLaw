@@ -16,7 +16,11 @@ import {
   createDocEngineFromEnv,
   readDocEngineConfig,
 } from "./config.js";
-import { DEFAULT_DOC_ENGINE_TIMEOUT_MS, MAX_DOC_ENGINE_TIMEOUT_MS } from "./http.js";
+import {
+  DEFAULT_DOC_ENGINE_COMPARE_TIMEOUT_MS,
+  DEFAULT_DOC_ENGINE_TIMEOUT_MS,
+  MAX_DOC_ENGINE_TIMEOUT_MS,
+} from "./http.js";
 import {
   DISPLAY_CONVERSION_QUEUE_OPTIONS,
   TEXT_EXTRACTION_QUEUE_OPTIONS,
@@ -55,6 +59,20 @@ describe("doc engine configuration", () => {
     expect(DEFAULT_DOC_ENGINE_TIMEOUT_MS).toBeGreaterThan(0);
   });
 
+  it("takes a compare bound of its own, on the same shape as conversion's", () => {
+    // Compare is the slowest operation and is bounded separately, so an
+    // install can lengthen it without lengthening every other call.
+    expect(readDocEngineConfig({ DOC_ENGINE_COMPARE_TIMEOUT_MS: "900000" })).toEqual({
+      baseUrl: DEFAULT_DOC_ENGINE_URL,
+      compareTimeoutMs: 900_000,
+    });
+    expect(readDocEngineConfig({})).not.toHaveProperty("compareTimeoutMs");
+    expect(readDocEngineConfig({ DOC_ENGINE_COMPARE_TIMEOUT_MS: "" })).not.toHaveProperty(
+      "compareTimeoutMs",
+    );
+    expect(DEFAULT_DOC_ENGINE_COMPARE_TIMEOUT_MS).toBeGreaterThan(DEFAULT_DOC_ENGINE_TIMEOUT_MS);
+  });
+
   it.each(["not a url", "doc-engine:8080", "/convert", "ftp://engine", "ws://engine"])(
     "refuses the URL %j",
     (url) => {
@@ -65,6 +83,9 @@ describe("doc engine configuration", () => {
   it.each(["0", "-1", "soon", "1.5"])("refuses the bound %j", (timeout) => {
     expect(() => readDocEngineConfig({ DOC_ENGINE_TIMEOUT_MS: timeout })).toThrow(
       DocEngineConfigError,
+    );
+    expect(() => readDocEngineConfig({ DOC_ENGINE_COMPARE_TIMEOUT_MS: timeout })).toThrow(
+      "DOC_ENGINE_COMPARE_TIMEOUT_MS must be a whole number of milliseconds.",
     );
   });
 
@@ -116,6 +137,7 @@ describe("doc engine configuration", () => {
   it("builds an engine from a configured environment", () => {
     const engine = createDocEngineFromEnv({ DOC_ENGINE_URL: "http://engine.example.com:8080" });
     expect(typeof engine.convertToPdf).toBe("function");
+    expect(typeof engine.compare).toBe("function");
     expect(typeof engine.ocrPdf).toBe("function");
     expect(typeof engine.extractPdfText).toBe("function");
   });

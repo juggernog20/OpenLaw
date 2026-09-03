@@ -46,6 +46,15 @@ export function unsupportedFormat(format: string): OperationError {
   );
 }
 
+/** The engine does not compare this Word source format. */
+export function unsupportedCompareFormat(format: string): OperationError {
+  return new OperationError(
+    415,
+    "Unsupported source format",
+    `The doc engine does not compare the Word format ${JSON.stringify(format)}.`,
+  );
+}
+
 /** The bytes are not readable as the format they were declared to be. */
 export function sourceUnreadable(detail: string): OperationError {
   return new OperationError(422, "Source unreadable", detail);

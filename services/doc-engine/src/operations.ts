@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 /**
- * The three operations the sidecar performs, each one a tool in the
+ * The four operations the sidecar performs, each one a tool in the
  * image driven over a temporary directory (TECH-010).
  *
  * - **convert** — headless LibreOffice renders DOCX/PPTX and their
@@ -16,18 +16,25 @@
  * - **extract** — `pdftotext` reads a PDF's native text layer. An
  *   image-only PDF answers nothing, which is the signal the caller
  *   branches to OCR on.
+ * - **compare** — Writer compares an older Word file with a newer one
+ *   and exports their difference as tracked changes in a DOCX.
  *
  * Every operation is stateless. It writes its input under a temporary
  * directory it owns, runs one tool with a bounded lifetime, and removes
  * the directory before it answers. Nothing survives a request.
  */
 
-import { execFile } from "node:child_process";
-import { mkdir, mkdtemp, readFile, readdir, rm } from "node:fs/promises";
+import { spawn } from "node:child_process";
+import { mkdir, mkdtemp, open, readFile, readdir, rm, stat } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
-import { operationTimedOut, sourceUnreadable, unsupportedFormat } from "./problem.js";
+import {
+  operationTimedOut,
+  sourceUnreadable,
+  unsupportedCompareFormat,
+  unsupportedFormat,
+} from "./problem.js";
 
 /**
  * The source formats LibreOffice converts for us, each mapped to the
@@ -67,74 +74,177 @@ export function isConvertibleFormat(format: string): boolean {
   return Object.hasOwn(CONVERT_FILTERS, format);
 }
 
+/** Word formats accepted on either side of a comparison. */
+export const COMPARABLE_FORMATS = ["doc", "docx", "odt", "rtf"] as const;
+
+export function isComparableFormat(format: string): boolean {
+  return (COMPARABLE_FORMATS as readonly string[]).includes(format);
+}
+
+const ZIP_HEADER = Buffer.from([0x50, 0x4b, 0x03, 0x04]);
+const ZIP_END = Buffer.from([0x50, 0x4b, 0x05, 0x06]);
+const OLE_HEADER = Buffer.from([0xd0, 0xcf, 0x11, 0xe0, 0xa1, 0xb1, 0x1a, 0xe1]);
+const RTF_HEADER = Buffer.from("{\\rtf", "ascii");
+
+/** Refuses bytes that cannot be the Word container their format names. */
+async function assertWordSource(path: string, format: string): Promise<void> {
+  const { size } = await stat(path);
+  if (size === 0) throw sourceUnreadable(`The ${JSON.stringify(format)} source has no bytes.`);
+  const file = await open(path, "r");
+  try {
+    const first = Buffer.alloc(Math.max(OLE_HEADER.byteLength, RTF_HEADER.byteLength));
+    await file.read(first, 0, first.byteLength, 0);
+    if (format === "docx" || format === "odt") {
+      const tailSize = Math.min(size, 65_557);
+      const tail = Buffer.alloc(tailSize);
+      await file.read(tail, 0, tailSize, size - tailSize);
+      if (
+        !first.subarray(0, ZIP_HEADER.byteLength).equals(ZIP_HEADER) ||
+        tail.lastIndexOf(ZIP_END) < 0
+      ) {
+        throw sourceUnreadable(`The ${JSON.stringify(format)} source is not a whole ZIP package.`);
+      }
+      return;
+    }
+    if (format === "doc" && !first.subarray(0, OLE_HEADER.byteLength).equals(OLE_HEADER)) {
+      throw sourceUnreadable('The "doc" source is not an OLE compound file.');
+    }
+    if (format === "rtf" && !first.subarray(0, RTF_HEADER.byteLength).equals(RTF_HEADER)) {
+      throw sourceUnreadable('The "rtf" source has no RTF header.');
+    }
+  } finally {
+    await file.close();
+  }
+}
+
 /** How long one tool may run before it is killed, and what it is called. */
 export interface OperationOptions {
   /** Bound on one tool's lifetime. A tool that outlives it is killed. */
   timeoutMs: number;
-}
-
-/** A tool that failed, as `execFile` reports it. */
-interface ExecFailure {
-  /**
-   * A number when the tool ran and exited, and a string when it never
-   * ran at all — `ENOENT` for a tool that is not in the image,
-   * `ERR_CHILD_PROCESS_STDIO_MAXBUFFER` for one that outran the buffer.
-   * The two mean opposite things about whose fault the failure is, so
-   * the type says both rather than only the ordinary one.
-   */
-  code?: number | string | null;
-  signal?: NodeJS.Signals | null;
-  killed?: boolean;
-  stderr?: string;
+  /** Stops work whose caller has disconnected. */
+  signal?: AbortSignal;
 }
 
 /**
  * Runs one tool to completion under `timeoutMs`, answering its stderr on
  * failure so the caller can say what went wrong.
  *
- * A tool killed by the bound is reported as a timeout — the one
- * transient failure the sidecar has, and the one worth retrying. Any
- * other non-zero exit is the source's fault as far as the sidecar can
- * tell, so it is reported as unreadable.
+ * A tool killed by the bound is reported as a timeout. A tool abandoned
+ * by its caller, or one that failed for its own reasons, reaches the
+ * sidecar's retryable 5xx path. `terminalExitCodes` distinguishes tools
+ * that use a particular exit status to say their source was unreadable.
  */
-async function run(command: string, args: string[], options: OperationOptions): Promise<string> {
+async function run(
+  command: string,
+  args: string[],
+  options: OperationOptions,
+  terminalExitCodes: "all" | readonly number[] = "all",
+): Promise<string> {
   return new Promise((resolve, reject) => {
-    execFile(
-      command,
-      args,
-      {
-        timeout: options.timeoutMs,
-        // SIGTERM leaves a wedged LibreOffice running, and the bound
-        // exists precisely for the wedged case.
-        killSignal: "SIGKILL",
-        maxBuffer: 4 * 1024 * 1024,
-      },
-      (error, stdout, stderr) => {
-        if (!error) {
-          resolve(stdout);
-          return;
-        }
-        const failure = error as unknown as ExecFailure;
-        if (failure.killed === true || failure.signal === "SIGKILL") {
-          reject(operationTimedOut(`${command} ran past ${options.timeoutMs}ms and was killed.`));
-          return;
-        }
-        if (typeof failure.code !== "number") {
-          // The tool is not in the image, or could not be started at
-          // all, or wrote more than the buffer would hold. That is the
-          // sidecar's own fault, not the source's, so it must not be
-          // reported as an unreadable file — an unreadable file is
-          // terminal, and a missing tool would fail every derivation on
-          // the install for good. Only an exit code says the tool ran
-          // and refused these bytes.
-          reject(error);
-          return;
-        }
+    const maxBuffer = 4 * 1024 * 1024;
+    const stdout: Buffer[] = [];
+    const stderr: Buffer[] = [];
+    let outputBytes = 0;
+    let timedOut = false;
+    let abandoned = false;
+    let bufferExceeded = false;
+    let launchError: Error | undefined;
+    const child = spawn(command, args, {
+      // Linux gives every tool invocation its own process group. That
+      // is the only reliable unit to kill when a wrapper has children.
+      detached: true,
+      stdio: ["ignore", "pipe", "pipe"],
+    });
+
+    function killGroup(): void {
+      const pid = child.pid;
+      if (!pid) return;
+      try {
+        // The detached child is the leader of a process group.
+        // A comparison is Python → soffice → soffice.bin; killing only
+        // Python strands the office process and its profile.
+        process.kill(-pid, "SIGKILL");
+      } catch {
+        // ESRCH means the process finished between the callback and the
+        // signal. The callback remains the one place that settles this.
+      }
+    }
+
+    function settle(): void {
+      clearTimeout(timer);
+      options.signal?.removeEventListener("abort", abort);
+    }
+
+    function abort(): void {
+      abandoned = true;
+      killGroup();
+    }
+
+    function collect(chunks: Buffer[], chunk: Buffer): void {
+      if (bufferExceeded) return;
+      outputBytes += chunk.byteLength;
+      if (outputBytes > maxBuffer) {
+        bufferExceeded = true;
+        killGroup();
+        return;
+      }
+      chunks.push(chunk);
+    }
+
+    child.stdout.on("data", (chunk: Buffer) => collect(stdout, chunk));
+    child.stderr.on("data", (chunk: Buffer) => collect(stderr, chunk));
+    child.once("error", (error) => {
+      launchError = error;
+    });
+    child.once("close", (code, signal) => {
+      settle();
+      const stderrText = Buffer.concat(stderr).toString("utf8");
+      if (timedOut) {
+        reject(operationTimedOut(`${command} ran past ${options.timeoutMs}ms and was killed.`));
+        return;
+      }
+      if (abandoned) {
         reject(
-          sourceUnreadable(firstLine(stderr) || `${command} exited with code ${failure.code}.`),
+          new Error(`${command} was abandoned when its caller disconnected.`, {
+            cause: launchError,
+          }),
         );
-      },
-    );
+        return;
+      }
+      if (bufferExceeded) {
+        reject(new Error(`${command} wrote more than ${maxBuffer} bytes to stdout and stderr.`));
+        return;
+      }
+      if (launchError) {
+        // The tool is not in the image, or could not be started at all.
+        // That is the sidecar's fault, not a terminal source refusal.
+        reject(launchError);
+        return;
+      }
+      if (code === 0) {
+        resolve(Buffer.concat(stdout).toString("utf8"));
+        return;
+      }
+      if (
+        typeof code === "number" &&
+        (terminalExitCodes === "all" || terminalExitCodes.includes(code))
+      ) {
+        reject(sourceUnreadable(firstLine(stderrText) || `${command} exited with code ${code}.`));
+        return;
+      }
+      reject(
+        new Error(
+          firstLine(stderrText) ||
+            `${command} ${signal ? `was killed by ${signal}` : `exited with code ${String(code)}`}.`,
+        ),
+      );
+    });
+    const timer = setTimeout(() => {
+      timedOut = true;
+      killGroup();
+    }, options.timeoutMs);
+    if (options.signal?.aborted) abort();
+    else options.signal?.addEventListener("abort", abort, { once: true });
   });
 }
 
@@ -218,6 +328,42 @@ export async function convertToPdf<T>(
       );
     }
     return deliver(join(outDir, first));
+  });
+}
+
+/**
+ * Compares two Word files and hands a tracked-changes DOCX to `deliver`.
+ *
+ * The Python bridge starts one LibreOffice process over a uniquely named
+ * UNO pipe. Its profile sits inside this call's scratch directory, so two
+ * comparisons neither serialize nor share Writer state.
+ */
+export async function compareDocuments<T>(
+  older: string,
+  olderFormat: string,
+  newer: string,
+  newerFormat: string,
+  options: OperationOptions,
+  deliver: (docx: string) => Promise<T>,
+): Promise<T> {
+  if (!isComparableFormat(olderFormat)) throw unsupportedCompareFormat(olderFormat);
+  if (!isComparableFormat(newerFormat)) throw unsupportedCompareFormat(newerFormat);
+  await Promise.all([assertWordSource(older, olderFormat), assertWordSource(newer, newerFormat)]);
+
+  return inScratch(async (dir) => {
+    const output = join(dir, "comparison.docx");
+    const profile = join(dir, "profile");
+    // Exit 2 is the bridge's explicit "one operand could not be opened";
+    // any other failure belongs to the engine and is therefore retryable.
+    await run("python3", ["/app/compare.py", older, newer, output, profile], options, [2]);
+    let size: number;
+    try {
+      size = (await stat(output)).size;
+    } catch {
+      throw new Error("LibreOffice produced no tracked-changes Word file.");
+    }
+    if (size === 0) throw new Error("LibreOffice produced an empty comparison.");
+    return deliver(output);
   });
 }
 

@@ -22,10 +22,13 @@
 
 import { createHash } from "node:crypto";
 import { Readable } from "node:stream";
+import { crc32 } from "node:zlib";
 import {
   DocEngineUnavailableError,
   SourceUnreadableError,
+  isComparableFormat,
   isConvertibleFormat,
+  unsupportedCompareFormat,
   unsupportedFormat,
   type DocEngine,
 } from "./engine.js";
@@ -65,6 +68,88 @@ const ZIP_HEADER = Buffer.from([0x50, 0x4b, 0x03, 0x04]);
 const ZIP_END = Buffer.from([0x50, 0x4b, 0x05, 0x06]);
 /** Every PDF starts with this. */
 const PDF_HEADER = Buffer.from("%PDF-", "ascii");
+
+interface ZipPart {
+  name: string;
+  body: Buffer;
+}
+
+/** A small stored ZIP, enough to make the fake's canned answer a real DOCX. */
+function zip(parts: readonly ZipPart[]): Buffer {
+  const localParts: Buffer[] = [];
+  const directoryParts: Buffer[] = [];
+  let offset = 0;
+  for (const part of parts) {
+    const name = Buffer.from(part.name, "utf8");
+    const local = Buffer.alloc(30);
+    local.writeUInt32LE(0x04034b50, 0);
+    local.writeUInt16LE(20, 4);
+    local.writeUInt32LE(crc32(part.body), 14);
+    local.writeUInt32LE(part.body.byteLength, 18);
+    local.writeUInt32LE(part.body.byteLength, 22);
+    local.writeUInt16LE(name.byteLength, 26);
+    localParts.push(local, name, part.body);
+
+    const directory = Buffer.alloc(46);
+    directory.writeUInt32LE(0x02014b50, 0);
+    directory.writeUInt16LE(20, 4);
+    directory.writeUInt16LE(20, 6);
+    directory.writeUInt32LE(crc32(part.body), 16);
+    directory.writeUInt32LE(part.body.byteLength, 20);
+    directory.writeUInt32LE(part.body.byteLength, 24);
+    directory.writeUInt16LE(name.byteLength, 28);
+    directory.writeUInt32LE(offset, 42);
+    directoryParts.push(directory, name);
+    offset += local.byteLength + name.byteLength + part.body.byteLength;
+  }
+
+  const directory = Buffer.concat(directoryParts);
+  const end = Buffer.alloc(22);
+  end.writeUInt32LE(0x06054b50, 0);
+  end.writeUInt16LE(parts.length, 8);
+  end.writeUInt16LE(parts.length, 10);
+  end.writeUInt32LE(directory.byteLength, 12);
+  end.writeUInt32LE(offset, 16);
+  return Buffer.concat([...localParts, directory, end]);
+}
+
+function xml(name: string, body: string): ZipPart {
+  return {
+    name,
+    body: Buffer.from(`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>${body}`),
+  };
+}
+
+const WORD_NAMESPACE = "http://schemas.openxmlformats.org/wordprocessingml/2006/main";
+const FAKE_COMPARISON = zip([
+  xml(
+    "[Content_Types].xml",
+    `<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">` +
+      `<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>` +
+      `<Default Extension="xml" ContentType="application/xml"/>` +
+      `<Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/>` +
+      `</Types>`,
+  ),
+  xml(
+    "_rels/.rels",
+    `<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">` +
+      `<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/>` +
+      `</Relationships>`,
+  ),
+  xml(
+    "word/document.xml",
+    `<w:document xmlns:w="${WORD_NAMESPACE}"><w:body><w:p>` +
+      `<w:r><w:t xml:space="preserve">2.1 The notice period is </w:t></w:r>` +
+      `<w:del w:id="1"><w:r><w:delText>thirty days</w:delText></w:r></w:del>` +
+      `<w:ins w:id="2"><w:r><w:t>sixty days</w:t></w:r></w:ins>` +
+      `<w:r><w:t>.</w:t></w:r></w:p></w:body></w:document>`,
+  ),
+]);
+
+/** The canned tracked-changes Word file every successful fake compare answers. */
+export function fakeComparisonDocx(): Buffer {
+  return Buffer.from(FAKE_COMPARISON);
+}
 
 function digest(source: Buffer): string {
   return createHash("sha256").update(source).digest("hex").slice(0, 16);
@@ -204,6 +289,23 @@ export function createFakeDocEngine(): DocEngine {
       const bytes = await collect(source);
       assertReadableSource(bytes, format);
       return Readable.from([onePagePdf(MARKER, fakeConversionText(format, bytes), true)]);
+    },
+
+    async compare(older, olderFormat, newer, newerFormat) {
+      if (!isComparableFormat(olderFormat)) {
+        older.destroy();
+        newer.destroy();
+        throw unsupportedCompareFormat(olderFormat);
+      }
+      if (!isComparableFormat(newerFormat)) {
+        older.destroy();
+        newer.destroy();
+        throw unsupportedCompareFormat(newerFormat);
+      }
+      const [olderBytes, newerBytes] = await Promise.all([collect(older), collect(newer)]);
+      assertReadableSource(olderBytes, olderFormat);
+      assertReadableSource(newerBytes, newerFormat);
+      return Readable.from([fakeComparisonDocx()]);
     },
 
     async ocrPdf(pdf) {
