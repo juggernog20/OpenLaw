@@ -145,6 +145,9 @@ const DeadlineSchema = z.object({
   /** The earliest date still ahead — CTR-009's "next deadline". Exactly
    * one entry carries it, or none when every date has passed. */
   isNext: z.boolean(),
+  /** True only when a term-derived row reads an AI-written source no
+   * person has confirmed. Key dates are always false. */
+  unverified: z.boolean(),
 });
 
 const DeadlinesEnvelope = z.object({ deadlines: z.array(DeadlineSchema) });
@@ -205,6 +208,7 @@ export const contractKeyDatesRoutes: FastifyPluginAsyncZod = async (app) => {
           isConfidential: contracts.isConfidential,
           expiryDate: contracts.expiryDate,
           noticePeriodDays: contracts.noticePeriodDays,
+          aiUnverified: contracts.aiUnverified,
         },
       })
       .from(contractKeyDates)
@@ -252,6 +256,7 @@ export const contractKeyDatesRoutes: FastifyPluginAsyncZod = async (app) => {
       note: row.note,
       daysAway: daysBetween(today, row.date),
       isNext: false,
+      unverified: false,
     }));
 
     /** A term-derived date joins the union as a row with no row behind
@@ -266,6 +271,12 @@ export const contractKeyDatesRoutes: FastifyPluginAsyncZod = async (app) => {
         note: null,
         daysAway: daysBetween(today, date),
         isNext: false,
+        unverified:
+          source === "expiry"
+            ? Boolean(contract.aiUnverified?.expiry_date)
+            : Boolean(
+                contract.aiUnverified?.expiry_date ?? contract.aiUnverified?.notice_period_days,
+              ),
       });
     };
     derived("expiry", contract.expiryDate);

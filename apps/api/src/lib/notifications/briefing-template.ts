@@ -50,6 +50,9 @@ interface DigestRowBase {
   /** What somebody called this date (CTR-009), or null on the two the
    * term derives — they are named by their kind, not by a person. */
   label: string | null;
+  /** Whether this Contract date still reads from an unconfirmed AI
+   * source when the briefing is assembled. Other date kinds are false. */
+  unverified: boolean;
 }
 
 /** One date line handed over by the morning round. */
@@ -146,7 +149,8 @@ function digestLine(row: DigestRow): string {
     row.entityType === "entity"
       ? row.recordTitle
       : `${row.recordTitle} (${row.entityType === "matter" ? `M-${row.recordNumber}` : `#${row.recordNumber}`})`;
-  return `${whenIs(row.daysAway)} (${on}) — ${kind}: ${reference}`;
+  const verification = row.unverified ? " unverified" : "";
+  return `${whenIs(row.daysAway)} (${on})${verification} — ${kind}: ${reference}`;
 }
 
 function digestLink(row: DigestRow, baseUrl: string): string {

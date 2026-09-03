@@ -15634,6 +15634,7 @@ export interface operations {
               note: string | null;
               daysAway: number;
               isNext: boolean;
+              unverified: boolean;
             }[];
           };
         };
@@ -15686,6 +15687,7 @@ export interface operations {
               note: string | null;
               daysAway: number;
               isNext: boolean;
+              unverified: boolean;
             }[];
           };
         };
@@ -15729,6 +15731,7 @@ export interface operations {
               note: string | null;
               daysAway: number;
               isNext: boolean;
+              unverified: boolean;
             }[];
           };
         };
@@ -15781,6 +15784,7 @@ export interface operations {
               note: string | null;
               daysAway: number;
               isNext: boolean;
+              unverified: boolean;
             }[];
           };
         };
@@ -24610,6 +24614,7 @@ export interface operations {
                     date: string;
                     label: string | null;
                     noticePeriodDays: number | null;
+                    unverified: boolean;
                     record: {
                       /** @enum {string} */
                       kind: "contract" | "matter";

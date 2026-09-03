@@ -853,8 +853,13 @@ async function sendBriefing(
       entityId: notifications.entityId,
       payload: notifications.payload,
       reminderDate: notifications.reminderDate,
+      contractAiUnverified: contracts.aiUnverified,
     })
     .from(notifications)
+    .leftJoin(
+      contracts,
+      and(eq(notifications.entityType, CONTRACT_ENTITY), eq(notifications.entityId, contracts.id)),
+    )
     .where(
       and(
         eq(notifications.userId, person.id),
@@ -1071,6 +1076,7 @@ function digestRow(
     entityId: string;
     payload: Record<string, unknown>;
     reminderDate: string | null;
+    contractAiUnverified: Record<string, unknown> | null;
   },
   today: string,
 ): DigestRow | null {
@@ -1096,6 +1102,15 @@ function digestRow(
     // one, and "in 1 day" about yesterday would be a lie.
     daysAway: daysBetween(today, row.reminderDate),
     label,
+    unverified:
+      row.entityType === CONTRACT_ENTITY &&
+      (row.eventType === "date.expiry_approaching"
+        ? Boolean(row.contractAiUnverified?.expiry_date)
+        : row.eventType === "date.notice_deadline_approaching"
+          ? Boolean(
+              row.contractAiUnverified?.expiry_date ?? row.contractAiUnverified?.notice_period_days,
+            )
+          : false),
   };
   if (entity) return { ...common, entityType: ENTITY_ENTITY, recordId: row.entityId };
   return {

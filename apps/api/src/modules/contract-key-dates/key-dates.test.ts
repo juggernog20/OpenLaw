@@ -25,7 +25,7 @@
  */
 
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { activityLog, and, asc, eq, inArray, users } from "@openlaw/db";
+import { activityLog, and, asc, contracts, eq, inArray, users } from "@openlaw/db";
 import { provisionUser } from "../../auth/instance.js";
 import {
   signInCookies,
@@ -70,6 +70,7 @@ interface Deadline {
   note: string | null;
   daysAway: number;
   isNext: boolean;
+  unverified: boolean;
 }
 
 interface ContractRow {
@@ -426,6 +427,44 @@ describe("the deadline union (CTR-009)", () => {
 
     const rows = await list(contract.number);
     expect(rows[0]).toMatchObject({ daysAway: 0, isNext: true });
+  });
+
+  it("marks only derived dates whose Contract sources are unverified and clears them on confirmation", async () => {
+    const contract = await newContract("Union unverified sources");
+    await setTerm(contract.number, {
+      expiryDate: daysFromToday(120),
+      noticePeriodDays: 30,
+    });
+    await add(contract.number, { date: daysFromToday(20), label: "Typed by a person" });
+
+    const writtenAt = new Date().toISOString();
+    const marker = { evidence: "Evidence", runId: "deadline-run", writtenAt };
+    await harness.db
+      .update(contracts)
+      .set({ aiUnverified: { expiry_date: marker } })
+      .where(eq(contracts.id, contract.id));
+
+    const expiryFlagged = await list(contract.number);
+    expect(expiryFlagged.find((row) => row.source === "expiry")?.unverified).toBe(true);
+    expect(expiryFlagged.find((row) => row.source === "notice_deadline")?.unverified).toBe(true);
+    expect(expiryFlagged.find((row) => row.source === "key_date")?.unverified).toBe(false);
+
+    const confirmed = await harness.app.inject({
+      method: "POST",
+      url: `/api/v1/contracts/${String(contract.number)}/analysis/confirm`,
+      cookies: memberCookies,
+      payload: { slug: "expiry_date" },
+    });
+    expect(confirmed.statusCode, confirmed.body).toBe(200);
+    expect((await list(contract.number)).every((row) => !row.unverified)).toBe(true);
+
+    await harness.db
+      .update(contracts)
+      .set({ aiUnverified: { notice_period_days: marker } })
+      .where(eq(contracts.id, contract.id));
+    const noticeFlagged = await list(contract.number);
+    expect(noticeFlagged.find((row) => row.source === "expiry")?.unverified).toBe(false);
+    expect(noticeFlagged.find((row) => row.source === "notice_deadline")?.unverified).toBe(true);
   });
 });
 
