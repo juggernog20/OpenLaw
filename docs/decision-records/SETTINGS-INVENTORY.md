@@ -10,27 +10,27 @@ ActivityBar, Pill, Avatar) live in this file as local copies per the designs con
 
 ## Frames
 
-| Frame | Node ID  | Screen                                   | Ships in    |
-| ----- | -------- | ---------------------------------------- | ----------- |
-| ST1   | `t5FyJK` | Personal · Profile                       | M5 ✓        |
-| ST2   | `vVsIu`  | Personal · Appearance                    | M5 ✓        |
-| ST3   | `QQ3PT`  | Personal · Notification preferences      | M18 ✓       |
-| ST4   | `b3rJp`  | Organization · General                   | M5 ✓        |
-| ST5   | `vij2O`  | Organization · Users                     | M5 ✓        |
-| ST6   | `TRZzk`  | Matters settings · Types                 | M6 ✓        |
-| ST7   | `cW3R8`  | Organization · Integrations              | M15 ✓/M31 ✓ |
-| ST8   | `Kq7bz`  | Archive type modal (SET-003 guard)       | M6 ✓        |
-| ST10  | `Ptq2X`  | Contracts settings · Statuses            | M6 ✓        |
-| ST11  | `MaQ3Y`  | Contracts settings · Fields              | M6 ✓        |
-| ST12  | `kb2yb`  | Intake settings · Request types          | M19 ✓       |
-| ST13  | `V1LdY`  | Intake settings · Deflection links       | M19 ✓       |
-| ST14  | `rcP97`  | Intake settings · Request type editor    | M19 ✓       |
-| ST15  | `AuiXQ`  | Matters settings · Type editor           | M6 ✓        |
-| ST16  | `gQmoP`  | Contracts settings · Type editor         | M6 ✓        |
-| ST17  | `svBem`  | Organization · Security (Authentication) | M5 ✓        |
-| ST18  | `vpr5X`  | Organization · Security · OIDC           | M5 ✓        |
-| ST19  | `BWmsJ`  | Contracts settings · Types               | M6 ✓        |
-| ST22  | `TTsQ2`  | Knowledge settings · Types               | M28 ✓       |
+| Frame | Node ID  | Screen                                   | Ships in                           |
+| ----- | -------- | ---------------------------------------- | ---------------------------------- |
+| ST1   | `t5FyJK` | Personal · Profile                       | M5 ✓                               |
+| ST2   | `vVsIu`  | Personal · Appearance                    | M5 ✓                               |
+| ST3   | `QQ3PT`  | Personal · Notification preferences      | M18 ✓                              |
+| ST4   | `b3rJp`  | Organization · General                   | M5 ✓                               |
+| ST5   | `vij2O`  | Organization · Users                     | M5 ✓                               |
+| ST6   | `TRZzk`  | Matters settings · Types                 | M6 ✓                               |
+| ST7   | `cW3R8`  | Organization · Integrations              | M15 ✓ (AI half retired by SET-008) |
+| ST8   | `Kq7bz`  | Archive type modal (SET-003 guard)       | M6 ✓                               |
+| ST10  | `Ptq2X`  | Contracts settings · Statuses            | M6 ✓                               |
+| ST11  | `MaQ3Y`  | Contracts settings · Fields              | M6 ✓                               |
+| ST12  | `kb2yb`  | Intake settings · Request types          | M19 ✓                              |
+| ST13  | `V1LdY`  | Intake settings · Deflection links       | M19 ✓                              |
+| ST14  | `rcP97`  | Intake settings · Request type editor    | M19 ✓                              |
+| ST15  | `AuiXQ`  | Matters settings · Type editor           | M6 ✓                               |
+| ST16  | `gQmoP`  | Contracts settings · Type editor         | M6 ✓                               |
+| ST17  | `svBem`  | Organization · Security (Authentication) | M5 ✓                               |
+| ST18  | `vpr5X`  | Organization · Security · OIDC           | M5 ✓                               |
+| ST19  | `BWmsJ`  | Contracts settings · Types               | M6 ✓                               |
+| ST22  | `TTsQ2`  | Knowledge settings · Types               | M28 ✓                              |
 
 ## What the mocks already got right
 
@@ -354,3 +354,9 @@ No frame is added. The three screens are configurations of the shipped DES-020, 
 ST7's second milestone is live at **Settings → Organization → Integrations → AI analysis**, so the frame row now reads `M15 ✓/M31 ✓`. The pane uses two DES-054 disclosures: Provider for the singleton connector and Field prompts for the seven editable core prompts. Both arrive collapsed. Provider expands to the preset or custom protocol, base URL, model, and write-only API key plus Save connector and Test connection. Field prompts expands to one save-or-reset row per target and points catalog Field prompts to Contracts → Fields.
 
 The tick closes the product milestone, not the drawing debt. ST7 still shows a Configure button that does not exist and shows neither the two collapsed cards nor their expanded states. **The redraw stays open for a design pass.** That pass should decide whether the settled states need multiple 1440×940 frames or a taller reference; M31 does not edit the binary `.pen` merely to copy a built screen. DES-070 records the shipped normalization in the meantime.
+
+## Amendment (2026-09-03, #675, SET-008) — AI analysis leaves Integrations
+
+**AI analysis is an Organization section of its own.** The pane moved from `/settings/integrations/ai-analysis` to `/settings/ai-analysis` with a rail entry of its own: **AI analysis**, `sparkles` glyph, after Notifications and before Integrations. Its content is unchanged (the DES-070 Provider and Field prompts cards). Integrations keeps E-signature as its only pane; the ST7 row now reads `M15 ✓` for E-signature only, and the AI half of ST7 is retired.
+
+**No frame draws the new section.** The rail mocks in this file predate it, and no frame draws the pane standing alone. The ST7 redraw that DES-070 left open now owes two things: an Integrations frame with the E-signature card alone, and a new AI analysis frame with the rail entry and both cards. This is design debt, recorded here and not paid by editing the binary `.pen` to copy the built screen.

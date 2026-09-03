@@ -1,8 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 /**
- * The DES-054 AI analysis integration pane. Its loader enforces the
- * Administrator boundary and the form preserves the API key as write-only.
+ * The AI analysis section (SET-008, #675): one Organization rail entry
+ * at /settings/ai-analysis holding the DES-054 Provider card and the
+ * Field prompts card. Its loader enforces the Administrator boundary
+ * and the form preserves the API key as write-only.
  */
 
 import { useRef, useState, type ReactNode, type SubmitEvent as FormSubmitEvent } from "react";
@@ -10,7 +12,6 @@ import { redirect, useLoaderData } from "react-router";
 import { FormattedMessage, useIntl } from "react-intl";
 import type { paths } from "@openlaw/api-client";
 import { AiFieldPromptsCard } from "../components/ai-field-prompts-card";
-import { IntegrationsSettingsTabs } from "../components/integrations-settings-tabs";
 import { PageTitle } from "../components/page-title";
 import { SettingsCard } from "../components/settings-card";
 import { StatusNote, type FieldStatus } from "../components/status-note";
@@ -237,7 +238,6 @@ export function SettingsAiAnalysisPage() {
           defaultMessage: "AI analysis",
         })}
       />
-      <IntegrationsSettingsTabs />
       <SettingsCard
         title={<FormattedMessage id="settings.aiAnalysis.providerCard" defaultMessage="Provider" />}
         collapsible

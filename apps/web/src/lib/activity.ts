@@ -846,7 +846,7 @@ function teamRole(intl: IntlShape, payload: Payload): string {
   );
 }
 
-/** A stored AI preset slug in the same words as the Integrations pane. */
+/** A stored AI preset slug in the same words as the AI analysis pane. */
 function aiPreset(intl: IntlShape, payload: Payload): string {
   return intl.formatMessage(
     {

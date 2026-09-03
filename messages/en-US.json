@@ -6296,9 +6296,6 @@
   "settings.intakeLinks.urlLabel": {
     "defaultMessage": "Address"
   },
-  "settings.integrations.tab.aiAnalysis": {
-    "defaultMessage": "AI analysis"
-  },
   "settings.integrations.tab.eSignature": {
     "defaultMessage": "E-signature"
   },
@@ -7318,6 +7315,9 @@
   },
   "settings.requestTypes.title": {
     "defaultMessage": "Request types"
+  },
+  "settings.section.aiAnalysis": {
+    "defaultMessage": "AI analysis"
   },
   "settings.section.appearance": {
     "defaultMessage": "Appearance"

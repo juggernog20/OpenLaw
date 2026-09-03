@@ -484,8 +484,10 @@ export const routes: RouteObject[] = [
         loader: settingsESignatureLoader,
         element: <SettingsESignaturePage />,
       },
+      // #675 (SET-008): AI analysis is an Organization section of its
+      // own, no longer an Integrations tab.
       {
-        path: "integrations/ai-analysis",
+        path: "ai-analysis",
         loader: settingsAiAnalysisLoader,
         element: <SettingsAiAnalysisPage />,
       },
