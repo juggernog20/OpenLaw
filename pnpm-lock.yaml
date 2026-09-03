@@ -156,6 +156,9 @@ importers:
       '@fontsource-variable/inter':
         specifier: ^5.3.0
         version: 5.3.0
+      '@fontsource/tinos':
+        specifier: ^5.3.0
+        version: 5.3.0
       '@openlaw/api-client':
         specifier: workspace:*
         version: link:../../packages/api-client
@@ -1286,6 +1289,9 @@ packages:
 
   '@fontsource-variable/inter@5.3.0':
     resolution: {integrity: sha512-OupL48va4JNofb97w6NYeF9S7W/kHNKM0Er8Dem5nqi4jeOLrVJDoE8tZEpnMJmtkvNbB1EIPPwHcdkF6b1oUA==}
+
+  '@fontsource/tinos@5.3.0':
+    resolution: {integrity: sha512-VVDyyZdbcsLKxo/W7rClAvacD/7DsGc7J5xzzp51Tndib8kDkEe/0bqbb3Xb3iH6+IUjt07aRsvtQ9MGeGGi4w==}
 
   '@formatjs/cli-native-darwin-arm64@1.1.16':
     resolution: {integrity: sha512-ngpS7Wv0p56ZWD6NKfri/YDlY5zZftfPnBP5+CxqhvgeGh7raZF2KT1r6HUWGUU7YTyk4PIqMXctjP/XzM4Zxg==}
@@ -6036,6 +6042,8 @@ snapshots:
   '@floating-ui/utils@0.2.12': {}
 
   '@fontsource-variable/inter@5.3.0': {}
+
+  '@fontsource/tinos@5.3.0': {}
 
   '@formatjs/cli-native-darwin-arm64@1.1.16':
     optional: true

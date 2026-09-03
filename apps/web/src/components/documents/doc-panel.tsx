@@ -71,11 +71,15 @@
 import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import { Download, FileText, X } from "lucide-react";
 import { FormattedMessage, useIntl } from "react-intl";
+import { Link } from "react-router";
 import { formatFileSize } from "../../lib/format";
 import { ChunkBoundary } from "../chunk-boundary";
 import {
   documentDownloadHref,
+  documentComparisonPath,
   documentPreviewHref,
+  DOCUMENT_DERIVATION_POLL_MS,
+  findDocumentComparison,
   isConverted,
   readRenditionState,
   type DocumentVersion,
@@ -123,6 +127,7 @@ export function DocPanel({
   documentId,
   title,
   version,
+  previousVersion,
   initialFind,
   onClose,
   onDockedChange,
@@ -133,6 +138,8 @@ export function DocPanel({
   title: string;
   /** The one version being read. Any round in the chain may be it. */
   version: DocumentVersion;
+  /** The previous hand-set round, when this Version may be compared. */
+  previousVersion?: DocumentVersion;
   /** A global-search landing may carry the words that found this
    * Version. Only a PDF surface consumes them. */
   initialFind?: string | null;
@@ -147,6 +154,33 @@ export function DocPanel({
 }>) {
   const intl = useIntl();
   const panel = useRef<HTMLElement>(null);
+  const [knownComparison, setKnownComparison] = useState<{
+    fromVersionId: string;
+    toVersionId: string;
+    count: number | null;
+  } | null>(null);
+
+  useEffect(() => {
+    let live = true;
+    if (!previousVersion || version.kind === "generated_redline") return;
+    void findDocumentComparison(documentId, previousVersion.id, version.id).then((answer) => {
+      if (!live || !answer.ok) return;
+      setKnownComparison({
+        fromVersionId: previousVersion.id,
+        toVersionId: version.id,
+        count: answer.comparison?.state === "ready" ? answer.comparison.changeCount : null,
+      });
+    });
+    return () => {
+      live = false;
+    };
+  }, [documentId, previousVersion, version.id, version.kind]);
+
+  const comparisonCount =
+    knownComparison?.fromVersionId === previousVersion?.id &&
+    knownComparison?.toVersionId === version.id
+      ? (knownComparison?.count ?? null)
+      : null;
 
   // Focus moves into the panel when it opens, so the next Tab is inside
   // it and a screen reader reads what just appeared (DES-010). The
@@ -214,6 +248,28 @@ export function DocPanel({
               values={{ number: version.versionNumber }}
             />
           </span>
+          {previousVersion && version.kind !== "generated_redline" ? (
+            <Link
+              to={documentComparisonPath(documentId, previousVersion.id, version.id)}
+              className="shrink-0 rounded-chip bg-control px-2 py-px text-xs font-semibold text-accent hover:bg-section-header focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-link"
+            >
+              {comparisonCount === null ? (
+                <FormattedMessage id="docPanel.compare" defaultMessage="Compare" />
+              ) : (
+                <span
+                  aria-label={intl.formatMessage(
+                    {
+                      id: "docPanel.compareCount",
+                      defaultMessage: "{count, plural, one {# change} other {# changes}}",
+                    },
+                    { count: comparisonCount },
+                  )}
+                >
+                  {comparisonCount}
+                </span>
+              )}
+            </Link>
+          ) : null}
         </div>
         <button
           type="button"
@@ -391,8 +447,6 @@ function PdfSurface({
  * purpose: live push is M30's job, and a panel that waited for it would
  * ship nothing until then.
  */
-const RENDITION_POLL_MS = 1500;
-
 /**
  * How many polls in a row may go unanswered before the panel stops
  * asking.
@@ -457,7 +511,7 @@ function ConvertedSurface({
         // preview that is not coming and a preview nobody can ask about
         // are the same thing to somebody standing in front of the panel.
         if (unanswered >= MAX_UNANSWERED_POLLS) setState("failed");
-        else timer = setTimeout(() => void ask(), RENDITION_POLL_MS);
+        else timer = setTimeout(() => void ask(), DOCUMENT_DERIVATION_POLL_MS);
         return;
       }
       unanswered = 0;
@@ -465,7 +519,9 @@ function ConvertedSurface({
       // Only a pending conversion is worth asking about again. Ready and
       // failed are both settled, and `unsupported` means this file was
       // never being converted at all.
-      if (answer === "pending") timer = setTimeout(() => void ask(), RENDITION_POLL_MS);
+      if (answer === "pending") {
+        timer = setTimeout(() => void ask(), DOCUMENT_DERIVATION_POLL_MS);
+      }
     };
     void ask();
 

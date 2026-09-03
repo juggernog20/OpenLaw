@@ -25,6 +25,67 @@ const KnowledgeTypesEnvelope = z.object({
 const CreatedKnowledgeItem = z.object({ knowledgeItem: z.object({ id: z.string() }) });
 const Me = z.object({ user: z.object({ id: z.string() }) });
 
+function compareFixture() {
+  const version = (id: string, versionNumber: number, filename: string) => ({
+    id,
+    versionNumber,
+    kind: "draft_ours",
+    note: null,
+    originalFilename: filename,
+    mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    renderFamily: "word",
+    byteSize: 1200,
+    checksumSha256: "a".repeat(64),
+    uploadedBy: { id: "u-axe", displayName: "Axe Reader", image: null, archived: false },
+    createdAt: "2026-08-04T10:00:00.000Z",
+    isCurrent: versionNumber === 2,
+    isExecuted: false,
+  });
+  const fromVersion = version("v-axe-1", 1, "terms-v1.docx");
+  const toVersion = version("v-axe-2", 2, "terms-v2.docx");
+  return {
+    id: "cmp-axe",
+    documentId: "doc-axe",
+    mode: "word",
+    state: "ready",
+    fromVersion,
+    toVersion,
+    changeModel: {
+      paragraphs: [
+        {
+          index: 0,
+          style: "body",
+          label: "1.",
+          runs: [
+            { text: "Thirty days", change: "deleted" },
+            { text: "Sixty days", change: "inserted" },
+          ],
+        },
+      ],
+      changes: [
+        {
+          id: "change-axe",
+          paragraphIndex: 0,
+          kind: "replaced",
+          ref: "§1",
+          excerpt: "Thirty days → Sixty days",
+        },
+      ],
+    },
+    changeCount: 1,
+    failure: null,
+    exportedVersionId: null,
+    document: {
+      id: "doc-axe",
+      title: "Axe terms",
+      owner: { kind: "contract", id: "contract-axe", number: 1, title: "Axe contract" },
+      versions: [fromVersion, toVersion],
+    },
+    createdAt: "2026-08-04T10:00:00.000Z",
+    finishedAt: "2026-08-04T10:00:01.000Z",
+  };
+}
+
 test.describe("accessibility floor", () => {
   test("login page: axe scan, title, and document language", async ({ page }, testInfo) => {
     await page.goto("/auth/login");
@@ -77,6 +138,33 @@ test.describe("accessibility floor", () => {
     await expect(page).toHaveTitle("Documents · OpenLaw");
     await expect(page.getByRole("region", { name: "Documents" })).toBeVisible();
     await reportAxeViolations(page, testInfo, "documents");
+  });
+
+  test("Document comparison: clean axe scans in Light and Dark", async ({
+    page,
+    request,
+  }, testInfo) => {
+    await ensureAdminExists(request);
+    await signInAs(page, ADMIN.email, ADMIN.password, ADMIN.displayName);
+    let theme: "light" | "dark" = "light";
+    await page.route("**/api/v1/me", async (route) => {
+      const response = await route.fetch();
+      const body = (await response.json()) as { user: Record<string, unknown>; session: unknown };
+      await route.fulfill({ response, json: { ...body, user: { ...body.user, theme } } });
+    });
+    await page.route("**/api/v1/documents/doc-axe/comparisons", async (route) => {
+      await route.fulfill({ status: 200, json: { comparison: compareFixture() } });
+    });
+
+    for (theme of ["light", "dark"] as const) {
+      await page.goto("/documents/doc-axe/compare?from=v-axe-1&to=v-axe-2");
+      await expect(page.getByRole("button", { name: "§1, Replaced" })).toBeVisible();
+      expect(
+        await reportAxeViolations(page, testInfo, `document-compare-${theme}`, {
+          include: "main",
+        }),
+      ).toEqual([]);
+    }
   });
 
   test("Knowledge destination, record, and portal article: axe scans", async ({

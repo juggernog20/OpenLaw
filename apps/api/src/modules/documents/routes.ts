@@ -425,6 +425,24 @@ const ChangeModelSchema = z.object({
   ),
 });
 
+const ComparisonOwnerSchema = z.object({
+  kind: z.enum(DOCUMENT_OWNER_KINDS),
+  id: z.string(),
+  /** Numbered records use their immutable sequence; opaque-id records
+   * have no display number and answer null. */
+  number: z.int().positive().nullable(),
+  title: z.string(),
+});
+
+const ComparisonDocumentSchema = z.object({
+  id: z.string(),
+  title: z.string(),
+  owner: ComparisonOwnerSchema,
+  /** The selector draws the full immutable chain. Generated redlines
+   * remain present in the resource but are excluded by the control. */
+  versions: z.array(VersionSchema),
+});
+
 const ComparisonSchema = z.object({
   id: z.string(),
   documentId: z.string(),
@@ -437,11 +455,15 @@ const ComparisonSchema = z.object({
   failure: z.string().nullable(),
   /** M32/4 fills this when a ready Word result is exported. */
   exportedVersionId: z.null(),
+  /** Enough stable record context for the compare page to stand at its
+   * own address without a second owner-specific read. */
+  document: ComparisonDocumentSchema,
   createdAt: z.iso.datetime({ offset: true }),
   finishedAt: z.iso.datetime({ offset: true }).nullable(),
 });
 
 const ComparisonEnvelope = z.object({ comparison: ComparisonSchema });
+const ComparisonLookupEnvelope = z.object({ comparison: ComparisonSchema.nullable() });
 
 const DocumentSchema = z.object({
   id: z.string(),
@@ -940,6 +962,11 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
     createdBy: string;
     /** The owning contract's Owner (CTR-004), who is another. */
     ownerManagerId: string | null;
+    /** The owning record's own identity, carried by the comparison read
+     * so its full-page breadcrumb and close control need no polymorphic
+     * follow-up request. */
+    ownerNumber: number | null;
+    ownerTitle: string;
   }
 
   /**
@@ -993,6 +1020,12 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
         createdBy: documents.createdBy,
         contractManagerId: contracts.managerId,
         matterManagerId: matters.managerId,
+        contractNumber: contracts.number,
+        contractTitle: contracts.title,
+        matterNumber: matters.number,
+        matterTitle: matters.title,
+        entityTitle: entities.legalName,
+        knowledgeItemTitle: knowledgeItems.title,
       })
       .from(documents)
       .leftJoin(contracts, eq(documents.contractId, contracts.id))
@@ -1061,26 +1094,36 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
     let ownerArchivedAt: Date | null;
     let primaryDocumentId: string | null;
     let ownerManagerId: string | null;
+    let ownerNumber: number | null;
+    let ownerTitle: string;
     switch (owner.kind) {
       case "contract":
         ownerArchivedAt = row.contractArchivedAt;
         primaryDocumentId = row.contractPrimaryDocumentId;
         ownerManagerId = row.contractManagerId;
+        ownerNumber = row.contractNumber;
+        ownerTitle = row.contractTitle!;
         break;
       case "matter":
         ownerArchivedAt = row.matterArchivedAt;
         primaryDocumentId = null;
         ownerManagerId = row.matterManagerId;
+        ownerNumber = row.matterNumber;
+        ownerTitle = row.matterTitle!;
         break;
       case "entity":
         ownerArchivedAt = row.entityArchivedAt;
         primaryDocumentId = null;
         ownerManagerId = null;
+        ownerNumber = null;
+        ownerTitle = row.entityTitle!;
         break;
       case "knowledge_item":
         ownerArchivedAt = row.knowledgeItemArchivedAt;
         primaryDocumentId = row.knowledgePrimaryDocumentId;
         ownerManagerId = null;
+        ownerNumber = null;
+        ownerTitle = row.knowledgeItemTitle!;
         break;
     }
     return {
@@ -1101,6 +1144,8 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
       folderName: row.folderName,
       createdBy: row.createdBy,
       ownerManagerId,
+      ownerNumber,
+      ownerTitle,
     };
   }
 
@@ -1314,6 +1359,10 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
     const to = chain[toIndex];
     if (!from || !to) throw new Error("A comparison names a version outside its document chain.");
 
+    const versions = chain.map((version, index) =>
+      toVersion(version, index === last, version.id === target.executedVersionId),
+    );
+
     return {
       id: row.id,
       documentId: row.documentId,
@@ -1325,6 +1374,17 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
       changeCount: row.state === "ready" ? row.changeCount : null,
       failure: row.state === "failed" ? row.failure : null,
       exportedVersionId: null,
+      document: {
+        id: target.id,
+        title: target.title,
+        owner: {
+          kind: target.owner.kind,
+          id: target.owner.value,
+          number: target.ownerNumber,
+          title: target.ownerTitle,
+        },
+        versions,
+      },
       createdAt: row.createdAt.toISOString(),
       finishedAt: row.finishedAt?.toISOString() ?? null,
     };
@@ -2641,6 +2701,46 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
 
           return documentWithChain(tx, documentId, target.primaryDocumentId);
         }),
+      };
+    },
+  );
+
+  app.get(
+    "/documents/:documentId/comparisons",
+    {
+      preHandler: requireDocumentReader,
+      schema: {
+        operationId: "findDocumentComparison",
+        summary:
+          "Find the durable comparison for one exact Version pair without requesting one. " +
+          "This is the read-only probe used by the Document panel: an absent pair answers null, " +
+          "so opening a record never starts derived work. It inherits the owning record's reach " +
+          "and the Document's audience exactly as the comparison resource does",
+        tags: ["documents"],
+        params: DocumentParams,
+        querystring: ComparisonRequest,
+        response: { 200: ComparisonLookupEnvelope, default: problemResponse },
+      },
+    },
+    async (request, reply) => {
+      const { documentId } = request.params;
+      const { fromVersionId, toVersionId } = request.query;
+      const target = await reachedDocument(app.db, request.user, documentId);
+      assertReachedDocument(target);
+      const [row] = await app.db
+        .select({ id: documentComparisons.id })
+        .from(documentComparisons)
+        .where(
+          and(
+            eq(documentComparisons.documentId, documentId),
+            eq(documentComparisons.fromVersionId, fromVersionId),
+            eq(documentComparisons.toVersionId, toVersionId),
+          ),
+        )
+        .limit(1);
+      void reply.header("cache-control", "private, max-age=0, must-revalidate");
+      return {
+        comparison: row ? await comparisonWithVersions(app.db, target, row.id) : null,
       };
     },
   );

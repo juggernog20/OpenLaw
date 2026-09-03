@@ -81,10 +81,25 @@ interface ComparisonRow {
   changeCount: number | null;
   failure: string | null;
   exportedVersionId: null;
+  document: {
+    id: string;
+    title: string;
+    owner: {
+      kind: "contract" | "matter" | "entity" | "knowledge_item";
+      id: string;
+      number: number | null;
+      title: string;
+    };
+    versions: VersionRow[];
+  };
 }
 
 interface ComparisonEnvelope {
   comparison: ComparisonRow;
+}
+
+interface ComparisonLookupEnvelope {
+  comparison: ComparisonRow | null;
 }
 
 interface DocumentEnvelope {
@@ -268,6 +283,20 @@ function readComparison(cookies: Record<string, string>, documentId: string, com
   });
 }
 
+function findComparison(
+  cookies: Record<string, string>,
+  documentId: string,
+  fromVersionId: string,
+  toVersionId: string,
+) {
+  const query = new URLSearchParams({ fromVersionId, toVersionId });
+  return harness.app.inject({
+    method: "GET",
+    url: `/api/v1/documents/${documentId}/comparisons?${query.toString()}`,
+    cookies,
+  });
+}
+
 async function settled(documentId: string, comparisonId: string): Promise<ComparisonRow> {
   const deadline = Date.now() + 20_000;
   let last: ComparisonRow | undefined;
@@ -296,7 +325,7 @@ async function isStored(fileRef: string): Promise<boolean> {
 
 describe("a Word comparison", () => {
   it("runs through the pipeline once and keeps the parsed model and redline", async () => {
-    const { document, from, to } = await twoRounds("Comparison · ready");
+    const { contract, document, from, to } = await twoRounds("Comparison · ready");
     const requested = await requestComparison(contributorCookies, document.id, from.id, to.id);
     expect(requested.statusCode, requested.body).toBe(202);
     const pending = requested.json<ComparisonEnvelope>().comparison;
@@ -305,7 +334,18 @@ describe("a Word comparison", () => {
       mode: "word",
       state: "pending",
       exportedVersionId: null,
+      document: {
+        id: document.id,
+        title: "first.docx",
+        owner: {
+          kind: "contract",
+          id: contract.id,
+          number: contract.number,
+          title: "Comparison · ready",
+        },
+      },
     });
+    expect(pending.document.versions.map((version) => version.id)).toEqual([from.id, to.id]);
     expect(pending.fromVersion.id).toBe(from.id);
     expect(pending.toVersion.id).toBe(to.id);
 
@@ -327,6 +367,15 @@ describe("a Word comparison", () => {
     const repeated = await requestComparison(memberCookies, document.id, from.id, to.id);
     expect(repeated.statusCode, repeated.body).toBe(200);
     expect(repeated.json<ComparisonEnvelope>().comparison.id).toBe(ready.id);
+
+    const found = await findComparison(contributorCookies, document.id, from.id, to.id);
+    expect(found.statusCode, found.body).toBe(200);
+    expect(found.headers["cache-control"]).toBe("private, max-age=0, must-revalidate");
+    expect(found.json<ComparisonLookupEnvelope>().comparison?.id).toBe(ready.id);
+
+    const absent = await findComparison(contributorCookies, document.id, to.id, from.id);
+    expect(absent.statusCode, absent.body).toBe(200);
+    expect(absent.json<ComparisonLookupEnvelope>().comparison).toBeNull();
   });
 
   it("answers every invalid pair as an ordinary problem", async () => {
@@ -519,7 +568,7 @@ describe("comparison failures", () => {
 });
 
 describe("comparison access and lifecycle", () => {
-  it("inherits the Document audience and refuses a portal reader on both routes", async () => {
+  it("inherits the Document audience and refuses a portal reader on every route", async () => {
     const { document, from, to } = await twoRounds("Comparison · audience");
     const created = await requestComparison(memberCookies, document.id, from.id, to.id);
     const comparison = await settled(document.id, created.json<ComparisonEnvelope>().comparison.id);
@@ -532,18 +581,20 @@ describe("comparison access and lifecycle", () => {
     expect(confidential.statusCode, confidential.body).toBe(200);
 
     const deniedRead = await readComparison(outsiderCookies, document.id, comparison.id);
+    const deniedFind = await findComparison(outsiderCookies, document.id, from.id, to.id);
     const deniedRequest = await requestComparison(outsiderCookies, document.id, from.id, to.id);
     const ownRead = await harness.app.inject({
       method: "GET",
       url: `/api/v1/documents/${document.id}/versions/${from.id}/download`,
       cookies: outsiderCookies,
     });
-    for (const response of [deniedRead, deniedRequest, ownRead]) {
+    for (const response of [deniedRead, deniedFind, deniedRequest, ownRead]) {
       expect(response.statusCode, response.body).toBe(404);
       expect(response.json<ProblemEnvelope>().detail).toBe(ownRead.json<ProblemEnvelope>().detail);
     }
 
     expect((await readComparison(portalCookies, document.id, comparison.id)).statusCode).toBe(403);
+    expect((await findComparison(portalCookies, document.id, from.id, to.id)).statusCode).toBe(403);
     expect((await requestComparison(portalCookies, document.id, from.id, to.id)).statusCode).toBe(
       403,
     );

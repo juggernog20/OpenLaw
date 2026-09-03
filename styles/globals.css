@@ -201,7 +201,7 @@
 
   /* ------------------------------------------------------------------ *
    * Typography — per DES-006                                           *
-   * Inter as the only typeface; mono stack reserved for future use.    *
+   * Inter globally; Tinos is the recorded compare-document exception. *
    * Self-hosted woff2 (no Google Fonts) per DECISIONS.md DD-001.       *
    * ------------------------------------------------------------------ */
   /* "Inter Variable" is the family @fontsource-variable/inter registers
@@ -210,6 +210,7 @@
   --font-sans:
     "Inter Variable", "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", "Roboto",
     "Helvetica Neue", "Arial", sans-serif;
+  --font-serif: "Tinos", "Times New Roman", Times, serif;
   --font-mono:
     ui-monospace, "JetBrains Mono", "Fira Mono", "SFMono-Regular", Menlo, Consolas, monospace;
 
