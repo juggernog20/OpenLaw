@@ -15,6 +15,10 @@ from com.sun.star.beans import PropertyValue
 from com.sun.star.connection import NoConnectException
 
 
+class UnreadableSource(Exception):
+    """One compare operand is not a document Writer can open."""
+
+
 def property_value(name, value):
     prop = PropertyValue()
     prop.Name = name
@@ -44,6 +48,27 @@ def connect(pipe_name):
             time.sleep(0.05)
 
 
+def open_document(desktop, path, label, read_only):
+    try:
+        document = desktop.loadComponentFromURL(
+            path.resolve().as_uri(),
+            "_blank",
+            0,
+            (
+                property_value("Hidden", False),
+                property_value("ReadOnly", read_only),
+                property_value("ShowTrackedChanges", True),
+            ),
+        )
+    except Exception as error:
+        raise UnreadableSource(
+            f"LibreOffice could not open the {label} Word file"
+        ) from error
+    if document is None:
+        raise UnreadableSource(f"LibreOffice could not open the {label} Word file")
+    return document
+
+
 def main():
     if len(sys.argv) != 5:
         raise RuntimeError("compare.py needs OLD NEW OUTPUT PROFILE")
@@ -65,6 +90,9 @@ def main():
         stdin=subprocess.DEVNULL,
         stdout=subprocess.DEVNULL,
         stderr=subprocess.DEVNULL,
+        # Node starts Python as a process-group leader. Writer inherits
+        # that group, so a bound or a disconnected caller kills the
+        # whole Python → soffice → soffice.bin tree in one signal.
         preexec_fn=child_dies_with_parent,
     )
     document = None
@@ -72,18 +100,9 @@ def main():
         context = connect(pipe_name)
         services = context.ServiceManager
         desktop = services.createInstanceWithContext("com.sun.star.frame.Desktop", context)
-        document = desktop.loadComponentFromURL(
-            newer.resolve().as_uri(),
-            "_blank",
-            0,
-            (
-                property_value("Hidden", False),
-                property_value("ReadOnly", False),
-                property_value("ShowTrackedChanges", True),
-            ),
-        )
-        if document is None:
-            raise RuntimeError("LibreOffice could not open the newer Word file")
+        older_document = open_document(desktop, older, "older", True)
+        older_document.close(True)
+        document = open_document(desktop, newer, "newer", False)
 
         frame = document.getCurrentController().getFrame()
         dispatcher = services.createInstanceWithContext(
@@ -122,6 +141,9 @@ def main():
 if __name__ == "__main__":
     try:
         main()
+    except UnreadableSource as error:
+        print(f"LibreOffice compare refused a source: {error}", file=sys.stderr)
+        sys.exit(2)
     except Exception as error:
         print(f"LibreOffice compare failed: {error}", file=sys.stderr)
         sys.exit(1)

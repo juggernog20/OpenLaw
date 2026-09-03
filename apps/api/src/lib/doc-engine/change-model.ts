@@ -114,8 +114,9 @@ function readZipEntry(packageBytes: Buffer, entry: ZipEntry): Buffer {
   const compressed = packageBytes.subarray(start, end);
   let body: Buffer;
   if (entry.compression === 0) body = Buffer.from(compressed);
-  else if (entry.compression === 8) body = inflateRawSync(compressed);
-  else throw new Error(`The Word file uses unsupported ZIP compression ${entry.compression}.`);
+  else if (entry.compression === 8) {
+    body = inflateRawSync(compressed, { maxOutputLength: MAX_XML_PART_BYTES });
+  } else throw new Error(`The Word file uses unsupported ZIP compression ${entry.compression}.`);
   if (body.byteLength !== entry.uncompressedSize) {
     throw new Error("The Word file has an XML part whose size does not match its directory entry.");
   }
@@ -133,11 +134,22 @@ function xmlPart(
     if (required) throw new Error(`The Word file has no ${name} part.`);
     return undefined;
   }
-  const document = new DOMParser().parseFromString(
-    readZipEntry(packageBytes, entry).toString("utf8"),
-    "application/xml",
-  );
-  if (!document?.documentElement || document.getElementsByTagName("parsererror").length > 0) {
+  let invalid = false;
+  let document: XmlDocument;
+  try {
+    document = new DOMParser({
+      errorHandler(level) {
+        if (level !== "warning") invalid = true;
+      },
+    }).parseFromString(readZipEntry(packageBytes, entry).toString("utf8"), "application/xml");
+  } catch {
+    throw new Error(`The Word file has invalid XML in ${name}.`);
+  }
+  if (
+    invalid ||
+    !document.documentElement ||
+    document.getElementsByTagName("parsererror").length > 0
+  ) {
     throw new Error(`The Word file has invalid XML in ${name}.`);
   }
   return document;
@@ -364,24 +376,14 @@ function parseParagraph(
   };
 }
 
-function tableCells(table: XmlElement): XmlElement[] {
-  const answer: XmlElement[] = [];
-  for (const row of children(table, "tr")) answer.push(...children(row, "tc"));
-  return answer;
-}
-
-function documentParagraphs(
-  document: XmlDocument,
+function tableParagraphs(
+  table: XmlElement,
   headings: ReadonlySet<string>,
   numbering: Numbering,
 ): ParsedParagraph[] {
-  const body = document.getElementsByTagNameNS(W_NS, "body").item(0);
-  if (!body) throw new Error("The Word document has no body.");
   const answer: ParsedParagraph[] = [];
-  for (const block of elements(body)) {
-    if (block.localName === "p") answer.push(parseParagraph(block, headings, numbering));
-    if (block.localName !== "tbl") continue;
-    for (const cell of tableCells(block)) {
+  for (const row of children(table, "tr")) {
+    for (const cell of children(row, "tc")) {
       const cellParagraphs = children(cell, "p").map((paragraph) =>
         parseParagraph(paragraph, headings, numbering),
       );
@@ -396,6 +398,26 @@ function documentParagraphs(
         for (const run of paragraph.runs) appendRun(runs, run.text, run.change);
       });
       answer.push({ style: first.style, label: first.label, runs });
+      for (const nested of children(cell, "tbl")) {
+        answer.push(...tableParagraphs(nested, headings, numbering));
+      }
+    }
+  }
+  return answer;
+}
+
+function documentParagraphs(
+  document: XmlDocument,
+  headings: ReadonlySet<string>,
+  numbering: Numbering,
+): ParsedParagraph[] {
+  const body = document.getElementsByTagNameNS(W_NS, "body").item(0);
+  if (!body) throw new Error("The Word document has no body.");
+  const answer: ParsedParagraph[] = [];
+  for (const block of elements(body)) {
+    if (block.localName === "p") answer.push(parseParagraph(block, headings, numbering));
+    if (block.localName === "tbl") {
+      answer.push(...tableParagraphs(block, headings, numbering));
     }
   }
   return answer;

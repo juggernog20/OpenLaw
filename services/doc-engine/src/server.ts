@@ -202,7 +202,7 @@ async function receivePair(
   newerPath: string,
   maxBodyBytes: number,
 ): Promise<void> {
-  const files = [await open(olderPath, "wx"), await open(newerPath, "wx")];
+  const files: Array<Awaited<ReturnType<typeof open>>> = [];
   const written = [0, 0];
   let received = 0;
   let over = false;
@@ -212,6 +212,8 @@ async function receivePair(
   let chunkBytes: number | undefined;
 
   try {
+    files.push(await open(olderPath, "wx"));
+    files.push(await open(newerPath, "wx"));
     for await (const raw of request) {
       const incoming = Buffer.from(raw);
       received += incoming.byteLength;
@@ -394,17 +396,38 @@ export function createDocEngineServer(options: DocEngineServerOptions): Server {
         );
         return;
       }
-      await withPairBody(request, olderFormat, newerFormat, options.maxBodyBytes, (older, newer) =>
-        compareDocuments(older, olderFormat, newer, newerFormat, compareTimeout, async (docx) => {
-          const { size } = await stat(docx);
-          response.writeHead(200, {
-            "content-type":
-              "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-            "content-length": size,
-          });
-          await pipeline(createReadStream(docx), response);
-        }),
-      );
+      const abandoned = new AbortController();
+      const stopAbandonedWork = (): void => {
+        if (!response.writableEnded) abandoned.abort();
+      };
+      response.once("close", stopAbandonedWork);
+      try {
+        await withPairBody(
+          request,
+          olderFormat,
+          newerFormat,
+          options.maxBodyBytes,
+          (older, newer) =>
+            compareDocuments(
+              older,
+              olderFormat,
+              newer,
+              newerFormat,
+              { ...compareTimeout, signal: abandoned.signal },
+              async (docx) => {
+                const { size } = await stat(docx);
+                response.writeHead(200, {
+                  "content-type":
+                    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                  "content-length": size,
+                });
+                await pipeline(createReadStream(docx), response);
+              },
+            ),
+        );
+      } finally {
+        response.off("close", stopAbandonedWork);
+      }
       return;
     }
 

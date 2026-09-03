@@ -2,13 +2,46 @@
 
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
+import { crc32 } from "node:zlib";
 import { describe, expect, it } from "vitest";
 import { parseTrackedChangesDocx } from "./change-model.js";
+
+const W_NS = "http://schemas.openxmlformats.org/wordprocessingml/2006/main";
 
 function fixture(name: string): Buffer {
   return readFileSync(
     fileURLToPath(new URL(`../../testing/fixtures/doc-engine/${name}`, import.meta.url)),
   );
+}
+
+function zipEntry(name: string, body: string): Buffer {
+  const filename = Buffer.from(name);
+  const contents = Buffer.from(body);
+  const local = Buffer.alloc(30);
+  local.writeUInt32LE(0x04034b50, 0);
+  local.writeUInt16LE(20, 4);
+  local.writeUInt32LE(crc32(contents), 14);
+  local.writeUInt32LE(contents.byteLength, 18);
+  local.writeUInt32LE(contents.byteLength, 22);
+  local.writeUInt16LE(filename.byteLength, 26);
+
+  const central = Buffer.alloc(46);
+  central.writeUInt32LE(0x02014b50, 0);
+  central.writeUInt16LE(20, 4);
+  central.writeUInt16LE(20, 6);
+  central.writeUInt32LE(crc32(contents), 16);
+  central.writeUInt32LE(contents.byteLength, 20);
+  central.writeUInt32LE(contents.byteLength, 24);
+  central.writeUInt16LE(filename.byteLength, 28);
+
+  const directory = Buffer.concat([central, filename]);
+  const end = Buffer.alloc(22);
+  end.writeUInt32LE(0x06054b50, 0);
+  end.writeUInt16LE(1, 8);
+  end.writeUInt16LE(1, 10);
+  end.writeUInt32LE(directory.byteLength, 12);
+  end.writeUInt32LE(local.byteLength + filename.byteLength + contents.byteLength, 16);
+  return Buffer.concat([local, filename, contents, directory, end]);
 }
 
 describe("parseTrackedChangesDocx", () => {
@@ -70,6 +103,18 @@ describe("parseTrackedChangesDocx", () => {
           label: null,
           runs: [{ text: "Added cell text", change: "inserted" }],
         },
+        {
+          index: 7,
+          style: "body",
+          label: null,
+          runs: [{ text: "Outer table cell", change: "unchanged" }],
+        },
+        {
+          index: 8,
+          style: "body",
+          label: null,
+          runs: [{ text: "Nested removed text", change: "deleted" }],
+        },
       ],
       changes: [
         {
@@ -100,6 +145,13 @@ describe("parseTrackedChangesDocx", () => {
           ref: "2.4",
           excerpt: "Added cell text",
         },
+        {
+          id: "change-5",
+          paragraphIndex: 8,
+          kind: "deleted",
+          ref: "2.4",
+          excerpt: "Nested removed text",
+        },
       ],
     });
   });
@@ -123,5 +175,17 @@ describe("parseTrackedChangesDocx", () => {
     expect(model.changes).toEqual([
       expect.objectContaining({ paragraphIndex: 1, ref: "¶2", kind: "replaced" }),
     ]);
+  });
+
+  it.each([
+    [Buffer.from("not a ZIP"), "The Word file has no ZIP central directory."],
+    [zipEntry("other.xml", "<root/>"), "The Word file has no word/document.xml part."],
+    [zipEntry("word/document.xml", "<"), "The Word file has invalid XML"],
+    [
+      zipEntry("word/document.xml", `<w:document xmlns:w="${W_NS}"/>`),
+      "The Word document has no body.",
+    ],
+  ])("refuses a malformed Word package", (bytes, message) => {
+    expect(() => parseTrackedChangesDocx(bytes)).toThrow(message);
   });
 });

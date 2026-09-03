@@ -303,6 +303,10 @@ const CHANGE_MODEL_DOCX = docx(
     `<w:tbl><w:tr>` +
     `<w:tc><w:p><w:r><w:t>Table unchanged</w:t></w:r></w:p></w:tc>` +
     `<w:tc><w:p><w:ins w:id="5" w:author="Counsel" w:date="${AUTHORED_AT}"><w:r><w:t>Added cell text</w:t></w:r></w:ins></w:p></w:tc>` +
+    `<w:tc><w:p><w:r><w:t>Outer table cell</w:t></w:r></w:p>` +
+    `<w:tbl><w:tr><w:tc><w:p>` +
+    `<w:del w:id="6" w:author="Counsel" w:date="${AUTHORED_AT}"><w:r><w:delText>Nested removed text</w:delText></w:r></w:del>` +
+    `</w:p></w:tc></w:tr></w:tbl></w:tc>` +
     `</w:tr></w:tbl>` +
     `</w:body></w:document>`,
   {
