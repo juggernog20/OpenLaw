@@ -28,6 +28,10 @@ _Avoid_: file, attachment, upload
 An immutable file snapshot in a document's strictly linear chain; corrections append a new version rather than editing one [DOC-001].
 _Avoid_: revision, draft, copy
 
+**Analysis run**:
+One durable reading of a Contract's chosen Document Version against that Contract's current AI target schema. It is triggered automatically or manually, moves from pending to ready or failed, and records the provider model, evidence, and each writer outcome. It is an account of what the extraction did, not a proposal waiting to be accepted [CTR-008, TECH-012].
+_Avoid_: AI job, analysis result, extraction proposal
+
 **Knowledge Item**:
 A curated piece of know-how — template, precedent, playbook, or article — distinct from the documents it owns [KNW-001].
 _Avoid_: article, wiki page, resource
@@ -98,6 +102,10 @@ _Avoid_: phase, step, state
 **Status**:
 A configurable, renameable label mapping to exactly one Stage (contracts) or Category (matters). Presentation and workflow metadata — code never branches on it [CTR-001, MTR-002].
 _Avoid_: state, stage
+
+**Unverified value**:
+A Contract value written by an Analysis run and still carrying that run's exact evidence. It remains fully usable, including on deadline surfaces, but wears the literal Unverified marker until a person confirms or edits that field. Confirming one value never clears another [CTR-008, DES-070].
+_Avoid_: suggestion, draft value, untrusted value
 
 **Category**:
 The matter equivalent of Stage — `open` or `closed`, immutable once set on a status [MTR-002].
@@ -244,6 +252,10 @@ _Avoid_: approval group, approver team, sign-off rule
 **Signing connector**:
 The Administrator-configured credentials one e-signature provider is reached with — DocuSign in v1, adapter-keyed so a second provider is a second connector. It is org configuration, not deployment environment: it is saved in Settings → Organization → Integrations → E-signature and read live on every use, so a rotated key applies to the next call. An install with no connector loses nothing it has today — the manual hand-off (upload the executed PDF, pin it, mark active) is always available and needs no configuration [CTR-013, TECH-013, SET-007].
 _Avoid_: DocuSign integration, e-sign settings, signing provider (that is the code seam behind the connector, not the configuration)
+
+**AI connector**:
+The singleton provider configuration for Contract analysis, saved in Settings → Organization → Integrations → AI analysis. It chooses a preset or custom endpoint, one supported protocol, a base URL, model, and write-only API key. The API resolves it for Test connection and the worker resolves it for every Analysis run, so changes apply without a restart; the key is encrypted under `OPENLAW_SECRET_KEY` [CTR-008, TECH-012, SET-007].
+_Avoid_: AI integration, provider environment variable, model settings
 
 **Manual hand-off**:
 Signing a Contract outside OpenLaw and filing the result by hand: set the status, sign anywhere, upload the executed PDF, pin it, mark active. It is the zero-config path CTR-013 promises stays sufficient, and no part of it is coupled to a signing connector [CTR-013, CTR-014].

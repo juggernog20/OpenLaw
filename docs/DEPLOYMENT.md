@@ -33,7 +33,7 @@ All configuration is environment variables in `.env`; [`.env.example`](../.env.e
 | Variable                      | Required | Meaning                                                                                                                                                                                                                                                                                                          |
 | ----------------------------- | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `AUTH_SECRET`                 | yes      | Session signing + at-rest crypto for 2FA material and stored OIDC tokens. Changing it signs everyone out and breaks enrolled 2FA — put the old value back, or every enrolled user re-enrols. The stored OIDC tokens stop being readable as well, and that costs nothing: the next SSO sign-in writes fresh ones. |
-| `OPENLAW_SECRET_KEY`          | yes      | Encrypts the credentials saved in Settings — the DocuSign key, the Connect secret, the SMTP relay URL, the SSO client secret. Keep it out of the database backup — see [The credential encryption key](#the-credential-encryption-key).                                                                          |
+| `OPENLAW_SECRET_KEY`          | yes      | Encrypts the credentials saved in Settings — the DocuSign key, the Connect secret, the SMTP relay URL, the SSO client secret, and the AI provider key. Keep it out of the database backup — see [The credential encryption key](#the-credential-encryption-key).                                                 |
 | `OPENLAW_SECRET_KEY_PREVIOUS` | no       | The retiring key while `OPENLAW_SECRET_KEY` is being rotated. Set it for one boot, then remove it — see [The credential encryption key](#the-credential-encryption-key).                                                                                                                                         |
 | `DATABASE_URL`                | no       | Unset = the bundled Postgres. Set for external/managed Postgres (TECH-004 — equally supported).                                                                                                                                                                                                                  |
 | `BASE_URL`                    | in prod  | The public origin (e.g. `https://legal.example.com`). Emailed links and OIDC callbacks point here, and the auth layer checks request origins against it.                                                                                                                                                         |
@@ -234,6 +234,14 @@ Running more than one worker is supported and needs no configuration — they ta
 docker compose up -d --scale worker=2
 ```
 
+## AI contract analysis
+
+Configure AI analysis in **Settings → Organization → Integrations → AI analysis**. The connector stores the preset or custom protocol, base URL, model, and API key as organization data. There is no AI provider environment variable: changing the connector applies to the next call without restarting either process.
+
+The **worker makes the provider calls for Contract extraction**. The **API makes only the Test connection call** when an Administrator presses that button. In a restricted deployment, allow outbound HTTPS and provider DNS from the worker for ordinary runs and from the app for the test. A custom connector may point at another reachable HTTP endpoint, including a model server on your own network.
+
+The API key is write-only after save and encrypted at rest under `OPENLAW_SECRET_KEY`. The app and worker must therefore receive the same key, just as they do for the signing connector. Losing it does not damage Contracts or Analysis runs, but the stored provider key cannot be read until the old encryption key is restored or an Administrator replaces that provider key.
+
 ## Email
 
 OpenLaw sends through whatever SMTP relay you already run (TECH-011). Configure it one of two ways:
@@ -356,7 +364,7 @@ The same is true of the database backups in [Backups](#backups) below: a `pg_dum
 
 ## The credential encryption key
 
-Your Administrators paste four credentials into Settings: the DocuSign RSA private key, the DocuSign Connect secret, the SMTP relay URL with its password inline, and the SSO client secret. OpenLaw encrypts all four before they reach Postgres, with `OPENLAW_SECRET_KEY` (TECH-022). The app and the worker both read it at boot and refuse to start without it.
+Your Administrators paste five credentials into Settings: the DocuSign RSA private key, the DocuSign Connect secret, the SMTP relay URL with its password inline, the SSO client secret, and the AI provider key. OpenLaw encrypts all five before they reach Postgres, with `OPENLAW_SECRET_KEY` (TECH-022). The app and the worker both read it at boot and refuse to start without it.
 
 The exposure this closes is not "somebody reads a password". Whoever holds the DocuSign key can mint JWTs as your integration user — send, void, and read envelopes as you — and whoever holds the Connect secret can forge a delivery telling OpenLaw a contract was signed when it was not.
 
@@ -368,11 +376,11 @@ openssl rand -base64 32
 
 Use a different value from `AUTH_SECRET`, so rotating one never touches the other.
 
-The two keys guard different things, and neither can stand in for the other. `OPENLAW_SECRET_KEY` seals the four credentials above — the ones an Administrator types into Settings and can type again. `AUTH_SECRET` seals what better-auth stores for a person: 2FA material, and each SSO user's OIDC access and refresh tokens. Those are not re-typable, which is why they are not on this key and not part of the rotation below.
+The two keys guard different things, and neither can stand in for the other. `OPENLAW_SECRET_KEY` seals the five credentials above — the ones an Administrator types into Settings and can type again. `AUTH_SECRET` seals what better-auth stores for a person: 2FA material, and each SSO user's OIDC access and refresh tokens. Those are not re-typable, which is why they are not on this key and not part of the rotation below.
 
 ### Where it must not live
 
-**Not in the same archive as the database dump.** The key is what keeps the four sealed credentials unreadable in a stolen `pg_dump` — the rest of the dump is your data in the clear, so it still needs the care any database backup needs. A backup job that tars `.env` alongside `openlaw-2026-08-16.sql` puts the locked box and its key in one file and gives the whole thing back.
+**Not in the same archive as the database dump.** The key is what keeps the five sealed credentials unreadable in a stolen `pg_dump` — the rest of the dump is your data in the clear, so it still needs the care any database backup needs. A backup job that tars `.env` alongside `openlaw-2026-08-16.sql` puts the locked box and its key in one file and gives the whole thing back.
 
 Put the key in a password manager or a secret manager. Back it up somewhere your database backups are not, and check that whatever backs up `/opt/openlaw` (or wherever your `.env` lives) is not also the thing that writes your dumps.
 
@@ -398,9 +406,9 @@ The retiring key is accepted for reads only. Step 2 logs how many values it re-e
 
 ### If you lose it
 
-You lose those four credentials and nothing else. No Contract, Matter, Document, or activity record depends on this key — they are not encrypted with it and are unaffected.
+You lose those five credentials and nothing else. No Contract, Matter, Document, Analysis run, or activity record depends on this key — they are not encrypted with it and are unaffected.
 
-Set a new `OPENLAW_SECRET_KEY`, start the stack, and the four credentials read as unset: Settings shows the signing connector and the SMTP relay as unconfigured, and your Administrators paste them in again. OpenLaw leaves the unreadable values in place rather than overwriting them, and says so in the boot log — so if the old key turns up later, putting it back in `OPENLAW_SECRET_KEY_PREVIOUS` and restarting still recovers them.
+Set a new `OPENLAW_SECRET_KEY`, start the stack, and the five credentials read as unset: Settings shows the signing connector, SMTP relay, SSO provider, and AI connector as missing their secrets, and your Administrators paste them in again. OpenLaw leaves the unreadable values in place rather than overwriting them, and says so in the boot log — so if the old key turns up later, putting it back in `OPENLAW_SECRET_KEY_PREVIOUS` and restarting still recovers them.
 
 ### Upgrading from a version before this
 

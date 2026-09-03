@@ -4318,6 +4318,35 @@ Home answers a stable question: what needs this user's attention, and where can 
 
 `designs/home.pen` is the M29 source for populated Light, Warm, and Dark Home, the all-zero welcome, and the Contributor projection. Web tickets must preserve section order, role omission, row caps, full totals, and marker semantics, and must route continuation to the owning destination rather than adding Home-only workflows. Tests should pin the projection order, Contributor absence rules, all-zero switch, and confidentiality and renewal labels.
 
+## DES-070: AI analysis is one settings pane, one record card, and one unverified marker (normalizes F.3; extends DES-054, DES-032, DES-042, DES-069)
+
+- **Status:** Accepted
+- **Date:** 2026-09-03
+
+### Context
+
+ST7 predates the credential forms and draws one integration summary row with a Configure button. The Contracts F.3 ancestor separately names a `Key clauses` card for AI-extracted terms. M31 ships the connector, prompt controls, extraction results, field confirmation, and deadline propagation, so both ancestors need one recorded surface rather than two new interpretations.
+
+### Decision
+
+The Integrations destination keeps its E-signature and AI analysis tabs. The AI analysis pane contains a **Provider** card followed by a **Field prompts** card. Both use DES-054's disclosure header and arrive collapsed. Provider shows its connection state in the header; opening it reveals the provider preset or custom protocol, base URL, model, and write-only API key, followed by Save connector and Test connection. Field prompts exposes the seven core prompts, one row at a time, with save and reset. Its caption sends catalog Field prompts to Contracts → Fields.
+
+The Contract Overview contains an **AI analysis** card. It is not called `Key clauses`: a run extracts typed field outcomes rather than creating a clause model. The header holds Run analysis and, when more than one result remains unverified, Confirm all. The body identifies the latest run and lists each result's field label, value, exact evidence, outcome, and eligible Confirm action. A Contract with no configured connector has no run action or empty analysis card, but already-written unverified values remain visible and confirmable.
+
+Every AI-written value carries one shared neutral marker: a 12px `CircleAlert` icon and the literal word **Unverified** in a compact pill. Color is never its only meaning. The marker sits beside the value on the Contract and beside the corresponding analysis result. A human edit or confirmation clears that field's marker; confirming one result does not clear its siblings.
+
+The same marker follows a term-derived date onto deadline surfaces. Contract Key dates places it beside the Source chip. Home Dates does the same. Expiry is unverified when `expiry_date` is flagged; notice deadline is unverified when either `expiry_date` or `notice_period_days` is flagged. The date is still shown, sorted, and notified. The daily briefing carries the plain word `unverified` because email cannot rely on the app's pill.
+
+### Recorded normalization points
+
+1. F.3's **Key clauses** card is renamed **AI analysis**. The extraction stores field outcomes and evidence, not clauses, so the shipped name describes the model rather than pretending one exists.
+2. ST7's AI summary is normalized to the same in-place collapsible credential card as E-signature, with a second collapsible prompt card below it. There is no Configure sub-screen.
+3. The ST7 redraw remains open for a design pass. M31 records the two collapsed cards and their expanded states, but does not edit `designs/settings.pen` merely to restate a settled implementation.
+
+### Consequences
+
+`AiAnalysisCard` and the shared unverified marker are the built reference. The Contract's SSE revalidation keeps the card and fields on one server snapshot; deadline readers consume the same `ai_unverified` fact rather than inventing local trust state. The M31 acceptance journey runs axe over both the settings pane and the Contract record. `SETTINGS-INVENTORY.md` marks the pane shipped while retaining the redraw debt.
+
 ## Index of decisions
 
 | #       | Decision                                                                                                                                                             | Status                                                                                                     |
@@ -4391,3 +4420,4 @@ Home answers a stable question: what needs this user's attention, and where can 
 | DES-067 | The Entities destination uses the managed-list and record-shell patterns (extends DES-046, DES-032, DES-016, DES-018)                                                | Accepted                                                                                                   |
 | DES-068 | Knowledge is a file-first managed library (extends DES-046, DES-032, DES-016, DES-055, DES-020)                                                                      | Accepted                                                                                                   |
 | DES-069 | Home is a fixed personal read of seven capped sections (extends DES-056, DES-030, DES-018, DES-029, DES-043)                                                         | Accepted                                                                                                   |
+| DES-070 | AI analysis is one settings pane, one record card, and one unverified marker (normalizes F.3; extends DES-054, DES-032, DES-042, DES-069)                            | Accepted                                                                                                   |
