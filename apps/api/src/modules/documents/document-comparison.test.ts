@@ -16,6 +16,7 @@ import { and, documentComparisons, documentVersions, eq, users } from "@openlaw/
 import { provisionUser } from "../../auth/instance.js";
 import { buildApp } from "../../app.js";
 import { DocEngineUnavailableError, type DocEngine } from "../../lib/doc-engine/engine.js";
+import { BlobNotFoundError } from "../../lib/storage/adapter.js";
 import { DOCX_MIME_TYPE, officePackage } from "../../testing/fixtures/office.js";
 import { testDeps } from "../../testing/deps.js";
 import {
@@ -29,6 +30,7 @@ import {
   TEXT_COMPARISON_UNAVAILABLE,
 } from "../../pipeline/document-comparison.js";
 import type { JobQueue } from "../../pipeline/jobs.js";
+import { DOCUMENT_COMPARISON_QUEUE_OPTIONS } from "../../pipeline/pg-boss.js";
 
 const MEMBER = {
   email: "compare-member@example.com",
@@ -79,6 +81,18 @@ interface ComparisonRow {
   changeCount: number | null;
   failure: string | null;
   exportedVersionId: null;
+}
+
+interface ComparisonEnvelope {
+  comparison: ComparisonRow;
+}
+
+interface DocumentEnvelope {
+  document: DocumentRow;
+}
+
+interface ProblemEnvelope {
+  detail: string;
 }
 
 let harness: TestHarness;
@@ -137,9 +151,9 @@ async function ndaTypeId(): Promise<string> {
     cookies: adminCookies,
   });
   expect(response.statusCode, response.body).toBe(200);
-  const row = (response.json().contractTypes as { id: string; slug: string }[]).find(
-    (type) => type.slug === "nda",
-  );
+  const row = response
+    .json<{ contractTypes: { id: string; slug: string }[] }>()
+    .contractTypes.find((type) => type.slug === "nda");
   return row!.id;
 }
 
@@ -151,7 +165,7 @@ async function newContract(title: string): Promise<{ id: string; number: number 
     payload: { title, contractTypeId: await ndaTypeId() },
   });
   expect(response.statusCode, response.body).toBe(201);
-  const contract = response.json().contract as { id: string; number: number };
+  const contract = response.json<{ contract: { id: string; number: number } }>().contract;
   for (const [fixture, role] of [
     [MEMBER, "member"],
     [CONTRIBUTOR, "contributor"],
@@ -201,7 +215,7 @@ async function uploaded(
     ...form,
   });
   expect(response.statusCode, response.body).toBe(201);
-  return response.json().document as DocumentRow;
+  return response.json<DocumentEnvelope>().document;
 }
 
 async function appended(
@@ -217,7 +231,7 @@ async function appended(
     ...form,
   });
   expect(response.statusCode, response.body).toBe(201);
-  return response.json().document as DocumentRow;
+  return response.json<DocumentEnvelope>().document;
 }
 
 async function twoRounds(
@@ -260,7 +274,8 @@ async function settled(documentId: string, comparisonId: string): Promise<Compar
   while (Date.now() < deadline) {
     const response = await readComparison(memberCookies, documentId, comparisonId);
     expect(response.statusCode, response.body).toBe(200);
-    last = response.json().comparison as ComparisonRow;
+    expect(response.headers["cache-control"]).toBe("private, max-age=0, must-revalidate");
+    last = response.json<ComparisonEnvelope>().comparison;
     if (last.state !== "pending") return last;
     await new Promise((resolve) => setTimeout(resolve, 50));
   }
@@ -273,8 +288,9 @@ async function isStored(fileRef: string): Promise<boolean> {
   try {
     (await harness.storage.get(fileRef)).destroy();
     return true;
-  } catch {
-    return false;
+  } catch (error) {
+    if (error instanceof BlobNotFoundError) return false;
+    throw error;
   }
 }
 
@@ -283,7 +299,7 @@ describe("a Word comparison", () => {
     const { document, from, to } = await twoRounds("Comparison · ready");
     const requested = await requestComparison(contributorCookies, document.id, from.id, to.id);
     expect(requested.statusCode, requested.body).toBe(202);
-    const pending = requested.json().comparison as ComparisonRow;
+    const pending = requested.json<ComparisonEnvelope>().comparison;
     expect(pending).toMatchObject({
       documentId: document.id,
       mode: "word",
@@ -310,7 +326,7 @@ describe("a Word comparison", () => {
 
     const repeated = await requestComparison(memberCookies, document.id, from.id, to.id);
     expect(repeated.statusCode, repeated.body).toBe(200);
-    expect((repeated.json().comparison as ComparisonRow).id).toBe(ready.id);
+    expect(repeated.json<ComparisonEnvelope>().comparison.id).toBe(ready.id);
   });
 
   it("answers every invalid pair as an ordinary problem", async () => {
@@ -343,7 +359,7 @@ describe("a Word comparison", () => {
       first.to.id,
     );
     expect(generated.statusCode, generated.body).toBe(400);
-    expect(generated.json().detail).toMatch(/generated redline/i);
+    expect(generated.json<ProblemEnvelope>().detail).toMatch(/generated redline/i);
   });
 
   it("does not queue an existing pending pair again", async () => {
@@ -396,8 +412,10 @@ describe("a Word comparison", () => {
         detached,
       );
       expect(repeated.statusCode, repeated.body).toBe(200);
-      expect(repeated.json().comparison.id).toBe(created.json().comparison.id);
-      expect(asks).toEqual([created.json().comparison.id]);
+      expect(repeated.json<ComparisonEnvelope>().comparison.id).toBe(
+        created.json<ComparisonEnvelope>().comparison.id,
+      );
+      expect(asks).toEqual([created.json<ComparisonEnvelope>().comparison.id]);
     } finally {
       await detached.close();
     }
@@ -417,7 +435,10 @@ describe("comparison failures", () => {
       unreadable.from.id,
       unreadable.to.id,
     );
-    const failed = await settled(unreadable.document.id, requested.json().comparison.id);
+    const failed = await settled(
+      unreadable.document.id,
+      requested.json<ComparisonEnvelope>().comparison.id,
+    );
     expect(failed.state).toBe("failed");
     expect(failed.failure).toMatch(/readable|package|zip/i);
     expect(failed.changeModel).toBeNull();
@@ -433,8 +454,11 @@ describe("comparison failures", () => {
       text.from.id,
       text.to.id,
     );
-    expect((textRequest.json().comparison as ComparisonRow).mode).toBe("text");
-    const textFailed = await settled(text.document.id, textRequest.json().comparison.id);
+    expect(textRequest.json<ComparisonEnvelope>().comparison.mode).toBe("text");
+    const textFailed = await settled(
+      text.document.id,
+      textRequest.json<ComparisonEnvelope>().comparison.id,
+    );
     expect(textFailed).toMatchObject({
       mode: "text",
       state: "failed",
@@ -468,9 +492,10 @@ describe("comparison failures", () => {
       docEngine: unavailable,
       log: harness.app.log,
     };
-    for (const retryCount of [0, 1]) {
+    const retryLimit = DOCUMENT_COMPARISON_QUEUE_OPTIONS.retryLimit;
+    for (let retryCount = 0; retryCount < retryLimit; retryCount += 1) {
       await expect(
-        handleDocumentComparison(deps, { comparisonId, retryCount, retryLimit: 2 }),
+        handleDocumentComparison(deps, { comparisonId, retryCount, retryLimit }),
       ).rejects.toThrow(/unreachable/);
       const [row] = await harness.db
         .select({ state: documentComparisons.state })
@@ -479,13 +504,13 @@ describe("comparison failures", () => {
       expect(row?.state).toBe("pending");
     }
     await expect(
-      handleDocumentComparison(deps, { comparisonId, retryCount: 2, retryLimit: 2 }),
+      handleDocumentComparison(deps, { comparisonId, retryCount: retryLimit, retryLimit }),
     ).rejects.toThrow(/unreachable/);
     const [failed] = await harness.db
       .select({ state: documentComparisons.state, failure: documentComparisons.failure })
       .from(documentComparisons)
       .where(eq(documentComparisons.id, comparisonId));
-    expect(calls).toBe(3);
+    expect(calls).toBe(retryLimit + 1);
     expect(failed).toEqual({
       state: "failed",
       failure: "DocEngineUnavailableError: The comparison engine is unreachable.",
@@ -497,7 +522,7 @@ describe("comparison access and lifecycle", () => {
   it("inherits the Document audience and refuses a portal reader on both routes", async () => {
     const { document, from, to } = await twoRounds("Comparison · audience");
     const created = await requestComparison(memberCookies, document.id, from.id, to.id);
-    const comparison = await settled(document.id, created.json().comparison.id);
+    const comparison = await settled(document.id, created.json<ComparisonEnvelope>().comparison.id);
     const confidential = await harness.app.inject({
       method: "PATCH",
       url: `/api/v1/documents/${document.id}`,
@@ -515,7 +540,7 @@ describe("comparison access and lifecycle", () => {
     });
     for (const response of [deniedRead, deniedRequest, ownRead]) {
       expect(response.statusCode, response.body).toBe(404);
-      expect(response.json().detail).toBe(ownRead.json().detail);
+      expect(response.json<ProblemEnvelope>().detail).toBe(ownRead.json<ProblemEnvelope>().detail);
     }
 
     expect((await readComparison(portalCookies, document.id, comparison.id)).statusCode).toBe(403);
@@ -534,7 +559,7 @@ describe("comparison access and lifecycle", () => {
     expect(archived.statusCode, archived.body).toBe(200);
     const requested = await requestComparison(memberCookies, document.id, from.id, to.id);
     expect(requested.statusCode, requested.body).toBe(202);
-    const ready = await settled(document.id, requested.json().comparison.id);
+    const ready = await settled(document.id, requested.json<ComparisonEnvelope>().comparison.id);
     expect(ready.state).toBe("ready");
     const [before] = await harness.db
       .select({ fileRef: documentComparisons.redlineFileRef })

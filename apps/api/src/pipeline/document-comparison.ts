@@ -14,7 +14,7 @@ import { Readable } from "node:stream";
 import { alias, and, documentComparisons, documentVersions, eq } from "@openlaw/db";
 import { uuidv7 } from "uuidv7";
 import { parseTrackedChangesDocx } from "../lib/doc-engine/change-model.js";
-import { isComparableFormat } from "../lib/doc-engine/engine.js";
+import { isComparableFormat, UnsupportedFormatError } from "../lib/doc-engine/engine.js";
 import { conversionFormatOf } from "../lib/render-family.js";
 import { isTerminalFailure, reasonOf, type DerivationDeps } from "./derivations.js";
 
@@ -106,7 +106,7 @@ export async function compareDocumentVersions(
     !isComparableFormat(fromFormat) ||
     !isComparableFormat(toFormat)
   ) {
-    throw new Error("A word comparison no longer has two Word operands.");
+    throw new UnsupportedFormatError("A word comparison no longer has two Word operands.");
   }
 
   const older = await deps.storage.get(comparison.fromFileRef);

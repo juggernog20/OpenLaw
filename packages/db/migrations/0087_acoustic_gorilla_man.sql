@@ -1,3 +1,5 @@
+-- SPDX-License-Identifier: AGPL-3.0-only
+
 CREATE TABLE "document_comparisons" (
 	"id" text PRIMARY KEY NOT NULL,
 	"document_id" text NOT NULL,

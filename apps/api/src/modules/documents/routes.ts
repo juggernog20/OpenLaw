@@ -2773,10 +2773,11 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
         response: { 200: ComparisonEnvelope, default: problemResponse },
       },
     },
-    async (request) => {
+    async (request, reply) => {
       const { documentId, comparisonId } = request.params;
       const target = await reachedDocument(app.db, request.user, documentId);
       assertReachedDocument(target);
+      void reply.header("cache-control", "private, max-age=0, must-revalidate");
       return { comparison: await comparisonWithVersions(app.db, target, comparisonId) };
     },
   );
