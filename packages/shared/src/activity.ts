@@ -788,6 +788,8 @@ type ContractPayloads = {
     model: string;
     reason: string;
   };
+  /** A person accepted one AI-written value as the record's fact. */
+  "contract.field_confirmed": { number: number; title: string; slug: string };
   "contract.archived": { number: number; title: string };
   "contract.restored": { number: number; title: string };
 };

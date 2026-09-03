@@ -79,10 +79,29 @@ export interface AiUnverifiedEntry {
 
 export type AiUnverifiedMap = Record<string, AiUnverifiedEntry>;
 
+export const CONTRACT_ANALYSIS_RESULT_OUTCOMES = [
+  "written",
+  "kept",
+  "unsupported",
+  "invalid",
+  "unmatched",
+] as const;
+export type ContractAnalysisResultOutcome = (typeof CONTRACT_ANALYSIS_RESULT_OUTCOMES)[number];
+
+/** One target exactly as the review card must be able to read it back. */
+export interface ContractAnalysisResult {
+  slug: string;
+  value: unknown;
+  evidence: string | null;
+  outcome: ContractAnalysisResultOutcome;
+}
+
 export interface ContractAnalysisOutcome {
   written: string[];
   kept: string[];
   unsupported: string[];
   invalid: string[];
   unmatched?: string;
+  /** Added without a migration: `outcome` is JSON and older runs omit it. */
+  results: ContractAnalysisResult[];
 }

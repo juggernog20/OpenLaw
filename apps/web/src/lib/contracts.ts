@@ -27,6 +27,11 @@ import { formatCurrency } from "./format";
 type RecordResponse =
   paths["/api/v1/contracts/{number}"]["get"]["responses"]["200"]["content"]["application/json"];
 export type ContractRow = RecordResponse["contract"];
+export type ContractAnalysis = RecordResponse["analysis"];
+export type ContractAnalysisRun = NonNullable<ContractAnalysis["latestRun"]>;
+export type ContractAnalysisResult = NonNullable<
+  NonNullable<ContractAnalysisRun["outcome"]>["results"]
+>[number];
 
 export type ContractStage = ContractRow["stage"];
 export type SeverityLevel = ContractRow["priority"];

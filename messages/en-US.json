@@ -131,6 +131,9 @@
   "activity.contract.createdFromRequest": {
     "defaultMessage": "{actor} created this contract from {request}"
   },
+  "activity.contract.fieldConfirmed": {
+    "defaultMessage": "{actor} confirmed the AI-written value for {field}"
+  },
   "activity.contract.matterLinked": {
     "defaultMessage": "{actor} linked this contract to {matter}"
   },
@@ -175,6 +178,9 @@
   },
   "activity.contract.typeReassigned": {
     "defaultMessage": "{actor} re-typed this contract"
+  },
+  "activity.contract.unknownField": {
+    "defaultMessage": "a field"
   },
   "activity.contract.unnamedRecord": {
     "defaultMessage": "another contract"
@@ -1315,6 +1321,60 @@
   },
   "contractMatter.unlink.error": {
     "defaultMessage": "The Contract could not be unlinked from the Matter."
+  },
+  "contracts.analysis.booleanValue": {
+    "defaultMessage": "{value, select, true {Yes} other {No}}"
+  },
+  "contracts.analysis.completed": {
+    "defaultMessage": "Completed {when} on Version {version} with {model}."
+  },
+  "contracts.analysis.confirm": {
+    "defaultMessage": "Confirm"
+  },
+  "contracts.analysis.confirmAll": {
+    "defaultMessage": "Confirm all"
+  },
+  "contracts.analysis.counterparty": {
+    "defaultMessage": "Counterparty"
+  },
+  "contracts.analysis.failed": {
+    "defaultMessage": "Failed {when} on Version {version} with {model}: {reason}"
+  },
+  "contracts.analysis.heading": {
+    "defaultMessage": "AI analysis"
+  },
+  "contracts.analysis.noEvidence": {
+    "defaultMessage": "No evidence returned."
+  },
+  "contracts.analysis.notRun": {
+    "defaultMessage": "No analysis has run yet."
+  },
+  "contracts.analysis.outcome.invalid": {
+    "defaultMessage": "Invalid"
+  },
+  "contracts.analysis.outcome.kept": {
+    "defaultMessage": "Kept"
+  },
+  "contracts.analysis.outcome.unmatched": {
+    "defaultMessage": "Unmatched"
+  },
+  "contracts.analysis.outcome.unsupported": {
+    "defaultMessage": "Unsupported"
+  },
+  "contracts.analysis.outcome.written": {
+    "defaultMessage": "Written"
+  },
+  "contracts.analysis.results": {
+    "defaultMessage": "Analysis results"
+  },
+  "contracts.analysis.run": {
+    "defaultMessage": "Run analysis"
+  },
+  "contracts.analysis.running": {
+    "defaultMessage": "Running…"
+  },
+  "contracts.analysis.unverified": {
+    "defaultMessage": "Unverified"
   },
   "contracts.applet.settings": {
     "defaultMessage": "Contract settings"

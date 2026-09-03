@@ -10,13 +10,16 @@ import {
   contractAnalysisRuns,
   contracts,
   desc,
+  documents,
+  documentVersions,
   eq,
   isNull,
   type ContractAnalysisRun,
   type Executor,
 } from "@openlaw/db";
-import { requireRole } from "../../auth/guards.js";
-import { NO_CONTRACT, reachedContract } from "../../lib/contract-access.js";
+import { CONTRACT_ANALYSIS_RESULT_OUTCOMES } from "@openlaw/shared";
+import { requireRole, type AuthenticatedUser } from "../../auth/guards.js";
+import { documentAudienceScope, NO_CONTRACT, reachedContract } from "../../lib/contract-access.js";
 import { httpError, problemResponse } from "../../lib/problem.js";
 import { analysisTargetText } from "../../pipeline/contract-analysis.js";
 
@@ -28,12 +31,25 @@ const AnalysisOutcomeSchema = z.object({
   unsupported: z.array(z.string()),
   invalid: z.array(z.string()),
   unmatched: z.string().optional(),
+  // Existing run rows predate the review-card detail. They remain
+  // readable and simply have no detailed rows to draw.
+  results: z
+    .array(
+      z.object({
+        slug: z.string(),
+        value: z.unknown(),
+        evidence: z.string().nullable(),
+        outcome: z.enum(CONTRACT_ANALYSIS_RESULT_OUTCOMES),
+      }),
+    )
+    .optional(),
 });
 
 export const AnalysisRunSchema = z.object({
   id: z.string(),
   contractId: z.string(),
   versionId: z.string().nullable(),
+  versionNumber: z.number().int().positive().nullable(),
   state: z.enum(["pending", "ready", "failed"]),
   trigger: z.enum(["automatic", "manual"]),
   requestedBy: z.string().nullable(),
@@ -46,22 +62,44 @@ export const AnalysisRunSchema = z.object({
   finishedAt: z.iso.datetime().nullable(),
 });
 
-export function toAnalysisRun(run: ContractAnalysisRun) {
+export function toAnalysisRun(run: ContractAnalysisRun, versionNumber: number | null = null) {
   return {
     ...run,
+    versionNumber,
     startedAt: run.startedAt?.toISOString() ?? null,
     finishedAt: run.finishedAt?.toISOString() ?? null,
   };
 }
 
-export async function latestAnalysisRun(db: Executor, contractId: string) {
-  const [run] = await db
-    .select()
+export async function latestAnalysisRun(db: Executor, contractId: string, user: AuthenticatedUser) {
+  const [row] = await db
+    .select({ run: contractAnalysisRuns, versionNumber: documentVersions.versionNumber })
     .from(contractAnalysisRuns)
+    .leftJoin(documentVersions, eq(contractAnalysisRuns.versionId, documentVersions.id))
     .where(eq(contractAnalysisRuns.contractId, contractId))
     .orderBy(desc(contractAnalysisRuns.id))
     .limit(1);
-  return run ? toAnalysisRun(run) : null;
+  if (!row) return null;
+
+  const [reachableVersion] = row.run.versionId
+    ? await db
+        .select({ id: documentVersions.id })
+        .from(documentVersions)
+        .innerJoin(documents, eq(documentVersions.documentId, documents.id))
+        .where(and(eq(documentVersions.id, row.run.versionId), documentAudienceScope(db, user)))
+        .limit(1)
+    : [];
+  if (!reachableVersion && row.run.outcome?.results) {
+    const visibleOutcome = {
+      written: row.run.outcome.written,
+      kept: row.run.outcome.kept,
+      unsupported: row.run.outcome.unsupported,
+      invalid: row.run.outcome.invalid,
+      ...(row.run.outcome.unmatched === undefined ? {} : { unmatched: row.run.outcome.unmatched }),
+    };
+    return { ...toAnalysisRun(row.run, row.versionNumber), outcome: visibleOutcome };
+  }
+  return toAnalysisRun(row.run, row.versionNumber);
 }
 
 const requireMember = requireRole("administrator", "legal_team_member");

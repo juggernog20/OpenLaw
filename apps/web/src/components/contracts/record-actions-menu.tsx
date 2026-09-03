@@ -17,7 +17,15 @@
  */
 
 import { useEffect, useRef, useState } from "react";
-import { Archive, ArchiveRestore, Check, Link2, MoreHorizontal, Pencil } from "lucide-react";
+import {
+  Archive,
+  ArchiveRestore,
+  Check,
+  Link2,
+  MoreHorizontal,
+  Pencil,
+  Sparkles,
+} from "lucide-react";
 import { FormattedMessage, useIntl } from "react-intl";
 import { Button } from "../ui/button";
 import {
@@ -37,6 +45,7 @@ export function RecordActionsMenu({
   archived,
   busy,
   onRename,
+  onRunAnalysis,
   onArchive,
 }: Readonly<{
   /** The contract number, which is the link this copies. */
@@ -46,6 +55,8 @@ export function RecordActionsMenu({
   busy: boolean;
   /** Absent for a reader who may not write: the row is not drawn. */
   onRename?: () => void;
+  /** Absent below Member+, without a connector, or off a live record. */
+  onRunAnalysis?: () => void;
   onArchive?: () => void;
 }>) {
   const intl = useIntl();
@@ -137,6 +148,12 @@ export function RecordActionsMenu({
           <DropdownMenuItem onSelect={() => (renameWanted.current = true)}>
             <Pencil size={16} aria-hidden="true" />
             <FormattedMessage id="contracts.record.rename" defaultMessage="Rename contract" />
+          </DropdownMenuItem>
+        )}
+        {onRunAnalysis && (
+          <DropdownMenuItem onSelect={onRunAnalysis}>
+            <Sparkles size={16} aria-hidden="true" />
+            <FormattedMessage id="contracts.analysis.run" defaultMessage="Run analysis" />
           </DropdownMenuItem>
         )}
         {onArchive && (

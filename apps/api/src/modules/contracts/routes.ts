@@ -235,6 +235,10 @@ const requireMember = requireRole("administrator", "legal_team_member");
  */
 const requireContractReader = requireRole("administrator", "legal_team_member", "contributor");
 
+const ConfirmAnalysisFieldBody = z.object({
+  slug: z.string().trim().min(1).max(200),
+});
+
 /**
  * How many contracts one read answers (CTR-024).
  *
@@ -1796,7 +1800,7 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
         customFieldsEnvelope(app.db, row, request.user),
         selectRenewals(app.db, row.row.id),
         app.resolveAiProvider(),
-        latestAnalysisRun(app.db, row.row.id),
+        latestAnalysisRun(app.db, row.row.id, request.user),
       ]);
       return {
         contract: toRow(row, custom.customFields),
@@ -1808,6 +1812,87 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
         analysis: { available: provider !== null, latestRun },
       };
     },
+  );
+
+  /**
+   * Clears one or every unverified marker under the Contract row lock.
+   * The value itself does not move: confirmation is the person's
+   * assertion that the AI-written value already on the record is right.
+   */
+  async function confirmAnalysisFields(
+    number: number,
+    user: AuthenticatedUser,
+    requestedSlug?: string,
+  ) {
+    return app.db.transaction(async (tx) => {
+      const current = await editableContract(tx, number, user);
+      const flags = current.row.aiUnverified;
+      const slugs = requestedSlug === undefined ? Object.keys(flags ?? {}) : [requestedSlug];
+      if (
+        slugs.length === 0 ||
+        (requestedSlug !== undefined && (!flags || !Object.hasOwn(flags, requestedSlug)))
+      ) {
+        throw httpError(400, "That field is not awaiting confirmation.");
+      }
+
+      const remaining = { ...flags };
+      for (const slug of slugs) delete remaining[slug];
+      await tx
+        .update(contracts)
+        .set({ aiUnverified: Object.keys(remaining).length > 0 ? remaining : null })
+        .where(eq(contracts.id, current.row.id));
+      await recordActivity(
+        tx,
+        slugs.map((slug) => ({
+          entityType: "contract" as const,
+          entityId: current.row.id,
+          actorId: user.id,
+          action: "contract.field_confirmed" as const,
+          visibility: RECORD_ACTIVITY_TIER,
+          payload: { number: current.row.number, title: current.row.title, slug },
+        })),
+      );
+
+      const [fresh] = await selectContracts(tx, user)
+        .where(eq(contracts.id, current.row.id))
+        .limit(1);
+      if (!fresh) throw httpError(404, NO_CONTRACT);
+      return { contract: toRow(fresh) };
+    });
+  }
+
+  app.post(
+    "/contracts/:number/analysis/confirm",
+    {
+      preHandler: requireMember,
+      schema: {
+        operationId: "confirmContractAnalysisField",
+        summary:
+          "Confirm one AI-written Contract value, clear its unverified marker, and append one record-tier confirmation entry",
+        tags: ["contracts"],
+        params: NumberParams,
+        body: ConfirmAnalysisFieldBody,
+        response: { 200: ContractEnvelope, default: problemResponse },
+      },
+    },
+    async (request) =>
+      confirmAnalysisFields(request.params.number, request.user, request.body.slug),
+  );
+
+  app.post(
+    "/contracts/:number/analysis/confirm-all",
+    {
+      preHandler: requireMember,
+      schema: {
+        operationId: "confirmAllContractAnalysisFields",
+        summary:
+          "Confirm every AI-written Contract value in one transaction and append one record-tier confirmation entry per cleared slug",
+        tags: ["contracts"],
+        params: NumberParams,
+        response: { 200: ContractEnvelope, default: problemResponse },
+      },
+    },
+    async (request) => confirmAnalysisFields(request.params.number, request.user),
   );
 
   app.post(

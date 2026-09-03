@@ -543,6 +543,11 @@ const SAMPLE_PAYLOADS: { [A in ActivityAction]: ActivityPayloadMap[A] } = {
     model: "analysis-model",
     reason: "The provider did not answer.",
   },
+  "contract.field_confirmed": {
+    number: 41,
+    title: "Helix supply agreement",
+    slug: "effective_date",
+  },
   "contract.status_changed": {
     number: 41,
     title: "Helix supply agreement",
@@ -913,6 +918,24 @@ describe("the vocabulary, slug by slug", () => {
       expect(change.from.length).toBeGreaterThan(0);
       expect(change.to.length).toBeGreaterThan(0);
     }
+  });
+});
+
+describe("AI field confirmation narration", () => {
+  it("names core and attached fields", () => {
+    const entry = (slug: string): NarratableEntry => ({
+      action: "contract.field_confirmed",
+      actor: ACTOR,
+      payload: { number: 41, title: "Agreement", slug },
+    });
+    expect(narrateActivity(intl, entry("effective_date")).sentence).toBe(
+      "Nadia Counsel confirmed the AI-written value for Effective date",
+    );
+    expect(
+      narrateActivity(intl, entry("governing_law"), {
+        fields: [{ slug: "governing_law", displayName: "Governing law", fieldType: "text" }],
+      }).sentence,
+    ).toBe("Nadia Counsel confirmed the AI-written value for Governing law");
   });
 });
 
