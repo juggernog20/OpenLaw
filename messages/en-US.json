@@ -1073,6 +1073,9 @@
   "auth.twoFactor.useTotp": {
     "defaultMessage": "Use your authenticator app"
   },
+  "breadcrumb.label": {
+    "defaultMessage": "Breadcrumb"
+  },
   "chunkBoundary.notice": {
     "defaultMessage": "This part of OpenLaw was updated. Reload to continue."
   },
@@ -2162,6 +2165,12 @@
   "docPanel.close": {
     "defaultMessage": "Close the document"
   },
+  "docPanel.compare": {
+    "defaultMessage": "Compare"
+  },
+  "docPanel.compareCount": {
+    "defaultMessage": "{count, plural, one {# change} other {# changes}}"
+  },
   "docPanel.conversionFailed": {
     "defaultMessage": "This file could not be prepared for reading here. Download it to read it."
   },
@@ -2264,6 +2273,81 @@
   "docpanel.find.previous": {
     "defaultMessage": "Previous match"
   },
+  "documentCompare.changeCount": {
+    "defaultMessage": "{count, plural, one {# change} other {# changes}}"
+  },
+  "documentCompare.changeKind": {
+    "defaultMessage": "{kind, select, inserted {Inserted} deleted {Deleted} replaced {Replaced} other {Changed}}"
+  },
+  "documentCompare.changeName": {
+    "defaultMessage": "{ref}, {kind}"
+  },
+  "documentCompare.changes": {
+    "defaultMessage": "Changes"
+  },
+  "documentCompare.close": {
+    "defaultMessage": "Close comparison"
+  },
+  "documentCompare.deleted": {
+    "defaultMessage": "Deleted:"
+  },
+  "documentCompare.documentRegion": {
+    "defaultMessage": "Compared document"
+  },
+  "documentCompare.downloadOperand": {
+    "defaultMessage": "Download {filename}"
+  },
+  "documentCompare.failed.body": {
+    "defaultMessage": "These versions could not be compared."
+  },
+  "documentCompare.failed.title": {
+    "defaultMessage": "Comparison failed"
+  },
+  "documentCompare.header": {
+    "defaultMessage": "Compare {title}"
+  },
+  "documentCompare.inserted": {
+    "defaultMessage": "Inserted:"
+  },
+  "documentCompare.newer": {
+    "defaultMessage": "Newer"
+  },
+  "documentCompare.next": {
+    "defaultMessage": "Next change"
+  },
+  "documentCompare.noChanges.body": {
+    "defaultMessage": "These versions contain the same text."
+  },
+  "documentCompare.noChanges.title": {
+    "defaultMessage": "No changes"
+  },
+  "documentCompare.older": {
+    "defaultMessage": "Older"
+  },
+  "documentCompare.pageTitle": {
+    "defaultMessage": "Compare · {title}"
+  },
+  "documentCompare.pollFailed": {
+    "defaultMessage": "The comparison status could not be read. Try opening it again."
+  },
+  "documentCompare.preparing.body": {
+    "defaultMessage": "Comparing both versions. This page will update when it is ready."
+  },
+  "documentCompare.preparing.title": {
+    "defaultMessage": "Preparing comparison"
+  },
+  "documentCompare.previous": {
+    "defaultMessage": "Previous change"
+  },
+  "documentCompare.textMode": {
+    "defaultMessage": "This comparison was built from extracted text, so formatting is not shown."
+  },
+  "documentCompare.title": {
+    "defaultMessage": "Compare"
+  },
+  "documentCompare.versionPair": {
+    "defaultMessage": "v{from} → v{to}"
+  },
   "documents.action.addVersion": {
     "defaultMessage": "Add version"
   },
@@ -2272,6 +2356,9 @@
   },
   "documents.action.clearConfidential": {
     "defaultMessage": "Clear confidential mark"
+  },
+  "documents.action.comparePrevious": {
+    "defaultMessage": "Compare with previous"
   },
   "documents.action.delete": {
     "defaultMessage": "Delete"

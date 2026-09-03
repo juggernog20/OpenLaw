@@ -143,6 +143,7 @@ import {
   FolderInput,
   FolderOpen,
   FolderPlus,
+  GitCompareArrows,
   Lock,
   MoreHorizontal,
   Pencil,
@@ -151,6 +152,7 @@ import {
   Trash2,
   Upload,
 } from "lucide-react";
+import { useNavigate } from "react-router";
 import { Avatar } from "../avatar";
 import { BatchDialog, type BatchDestination, type BatchSource } from "./batch-dialog";
 import { ConfidentialMarker } from "../confidential-marker";
@@ -180,12 +182,14 @@ import {
   chainOf,
   clearExecutedVersion,
   documentDownloadHref,
+  documentComparisonPath,
   documentKindLabel,
   DOCUMENT_KIND_PILL,
   DOCUMENT_VERSION_KINDS,
   FOLDER_ROOT,
   hardDeleteDocument,
   isPreviewable,
+  previousComparableVersion,
   readRecordDocuments,
   restoreDocument,
   setExecutedVersion,
@@ -339,6 +343,7 @@ interface RowContext {
     version: DocumentVersion,
     trigger: HTMLElement | null,
   ) => void;
+  onCompare: (document: ContractDocument, from: DocumentVersion, to: DocumentVersion) => void;
   onPin: (document: ContractDocument, version: DocumentVersion) => void;
   onKindChange: (
     document: ContractDocument,
@@ -465,6 +470,7 @@ export function DocumentsCard({
   const role = viewer.role;
   const viewerId = viewer.id;
   const intl = useIntl();
+  const navigate = useNavigate();
   const [status, setStatus] = useState<FieldStatus>("idle");
   /** The seam's own refusal, when it sent one, so the section says what
    * the server said rather than a generic line over the top of it. */
@@ -1332,9 +1338,18 @@ export function DocumentsCard({
     // what the drop carried to `setBatch` and nothing else.
   }, [frozen]);
 
-  /** A Contributor gets one narrow Actions column on a live record;
-   * Member+ gets the full one. An archived record gets neither. */
-  const showActionColumn = !frozen || supportingUploads;
+  /** Administration and upload controls still obey the record freeze.
+   * A comparison is a read, so a frozen reader may nevertheless need
+   * the narrow Actions column for a Version pair they can reach. */
+  const showHeaderActions = !frozen || supportingUploads;
+  const comparisonActions = [
+    ...documents,
+    ...[...listings.values()].flatMap((listing) => listing.documents),
+  ].some(
+    (document) =>
+      document.versions.filter((version) => version.kind !== "generated_redline").length > 1,
+  );
+  const showActionColumn = showHeaderActions || comparisonActions;
 
   /** Everything a document row draws from, built once and handed to
    * every listing — the record root's and each open folder's. */
@@ -1356,6 +1371,8 @@ export function DocumentsCard({
     landing,
     onToggle: toggle,
     onRead,
+    onCompare: (document, from, to) =>
+      navigate(documentComparisonPath(document.id, from.id, to.id)),
     onPin: (document, version) => void togglePin(document, version),
     onKindChange: (document, version, kind) => void changeKind(document, version, kind),
     onMakePrimary: (document) => void makePrimary(document),
@@ -1436,7 +1453,7 @@ export function DocumentsCard({
             {intl.formatNumber(liveCount)}
           </span>
         </div>
-        {showActionColumn && (
+        {showHeaderActions && (
           <div className="flex shrink-0 items-center gap-2">
             <StatusNote status={status} detail={detail} />
             {!frozen && (
@@ -1758,6 +1775,7 @@ function DocumentRows({
         // without a file.
         if (!chain) return null;
         const isOpen = rows.opened.has(document.id);
+        const currentPredecessor = previousComparableVersion(document, chain.current);
         return (
           <tbody key={document.id}>
             <tr
@@ -1912,6 +1930,11 @@ function DocumentRows({
                         canErase={rows.canErase}
                         canFlag={rows.canFlag(document)}
                         intl={rows.intl}
+                        previousVersion={currentPredecessor}
+                        onCompare={() =>
+                          currentPredecessor &&
+                          rows.onCompare(document, currentPredecessor, chain.current)
+                        }
                         onMakePrimary={() => rows.onMakePrimary(document)}
                         onAddVersion={() => rows.onAddVersion(document)}
                         onEditDetails={() => rows.onEditDetails(document)}
@@ -1923,6 +1946,22 @@ function DocumentRows({
                         onToggleExecuted={() => rows.onPin(document, chain.current)}
                       />
                     )}
+                    {rows.frozen &&
+                      !(
+                        rows.supportingUploads &&
+                        document.archivedAt === null &&
+                        (!rows.designations || !document.isPrimary)
+                      ) &&
+                      currentPredecessor && (
+                        <VersionActions
+                          document={document}
+                          version={chain.current}
+                          previousVersion={currentPredecessor}
+                          busy={rows.busy}
+                          intl={rows.intl}
+                          onCompare={rows.onCompare}
+                        />
+                      )}
                   </span>
                 </td>
               )}
@@ -1978,17 +2017,26 @@ function DocumentRows({
                           from the document row and never administers an
                           existing round. */}
                       <span className="flex items-center justify-end gap-1">
-                        {!rows.frozen &&
-                          rows.executedDesignations &&
-                          document.archivedAt === null && (
-                            <VersionPinMenu
-                              document={document}
-                              version={version}
-                              busy={rows.busy}
-                              intl={rows.intl}
-                              onToggle={rows.onPin}
-                            />
-                          )}
+                        {(previousComparableVersion(document, version) ||
+                          (!rows.frozen &&
+                            rows.executedDesignations &&
+                            document.archivedAt === null)) && (
+                          <VersionActions
+                            document={document}
+                            version={version}
+                            previousVersion={previousComparableVersion(document, version)}
+                            busy={rows.busy}
+                            intl={rows.intl}
+                            onCompare={rows.onCompare}
+                            onToggle={
+                              !rows.frozen &&
+                              rows.executedDesignations &&
+                              document.archivedAt === null
+                                ? rows.onPin
+                                : undefined
+                            }
+                          />
+                        )}
                       </span>
                     </td>
                   )}
@@ -2243,9 +2291,8 @@ function FolderListingFoot({
   rows: RowContext;
   onShowMore: (folderId: string, cursor: string) => void;
 }>) {
-  /** Every column of the table, so a foot spans the row it sits in. The
-   * actions column is absent for a viewer who may not act. */
-  const columns = rows.frozen ? 5 : 6;
+  /** Every column of the table, so a foot spans the row it sits in. */
+  const columns = rows.showActionColumn ? 6 : 5;
   const loading = listing === undefined || listing.loading;
   if (!loading && listing.error === null && listing.nextCursor === null) return null;
 
@@ -2923,6 +2970,10 @@ const RECORD_COPY = {
 } as const;
 
 const ACTION_LABEL = {
+  compare: defineMessage({
+    id: "documents.action.comparePrevious",
+    defaultMessage: "Compare with previous",
+  }),
   makePrimary: defineMessage({
     id: "documents.action.makePrimary",
     defaultMessage: "Make primary",
@@ -2997,6 +3048,8 @@ function DocumentActions({
   canErase,
   canFlag,
   intl,
+  previousVersion,
+  onCompare,
   onMakePrimary,
   onAddVersion,
   onEditDetails,
@@ -3026,6 +3079,10 @@ function DocumentActions({
    * document. The item is absent for everybody else, not disabled. */
   canFlag: boolean;
   intl: IntlShape;
+  /** The previous hand-set round. Its presence is the whole compare
+   * eligibility rule for this row. */
+  previousVersion?: DocumentVersion;
+  onCompare: () => void;
   onMakePrimary: () => void;
   onAddVersion: () => void;
   onEditDetails: () => void;
@@ -3054,6 +3111,12 @@ function DocumentActions({
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
+        {previousVersion && (
+          <DropdownMenuItem onSelect={onCompare}>
+            <GitCompareArrows size={16} aria-hidden="true" />
+            <FormattedMessage {...ACTION_LABEL.compare} />
+          </DropdownMenuItem>
+        )}
         {supportingOnly ? (
           <DropdownMenuItem onSelect={onAddVersion}>
             <FilePlus2 size={16} aria-hidden="true" />
@@ -3361,18 +3424,22 @@ function VersionCell({ version, intl }: Readonly<{ version: DocumentVersion; int
  * than folding into the current row's `DocumentActions`, which speaks
  * for a different version.
  */
-function VersionPinMenu({
+function VersionActions({
   document,
   version,
+  previousVersion,
   busy,
   intl,
+  onCompare,
   onToggle,
 }: Readonly<{
   document: ContractDocument;
   version: DocumentVersion;
+  previousVersion?: DocumentVersion;
   busy: boolean;
   intl: IntlShape;
-  onToggle: (document: ContractDocument, version: DocumentVersion) => void;
+  onCompare: (document: ContractDocument, from: DocumentVersion, to: DocumentVersion) => void;
+  onToggle?: (document: ContractDocument, version: DocumentVersion) => void;
 }>) {
   return (
     <DropdownMenu>
@@ -3394,12 +3461,20 @@ function VersionPinMenu({
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
-        <DropdownMenuItem onSelect={() => onToggle(document, version)}>
-          <Pin size={16} aria-hidden="true" />
-          <FormattedMessage
-            {...(version.isExecuted ? ACTION_LABEL.unmarkExecuted : ACTION_LABEL.markExecuted)}
-          />
-        </DropdownMenuItem>
+        {previousVersion && (
+          <DropdownMenuItem onSelect={() => onCompare(document, previousVersion, version)}>
+            <GitCompareArrows size={16} aria-hidden="true" />
+            <FormattedMessage {...ACTION_LABEL.compare} />
+          </DropdownMenuItem>
+        )}
+        {onToggle && (
+          <DropdownMenuItem onSelect={() => onToggle(document, version)}>
+            <Pin size={16} aria-hidden="true" />
+            <FormattedMessage
+              {...(version.isExecuted ? ACTION_LABEL.unmarkExecuted : ACTION_LABEL.markExecuted)}
+            />
+          </DropdownMenuItem>
+        )}
       </DropdownMenuContent>
     </DropdownMenu>
   );

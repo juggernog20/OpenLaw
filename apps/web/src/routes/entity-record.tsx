@@ -47,6 +47,7 @@ import { ConfidentialToggle } from "../components/confidential-toggle";
 import { LinkedRecordsList } from "../components/linked-records-list";
 import {
   documentLandingParams,
+  previousComparableVersion,
   readDocumentLanding,
   readRecordDocuments,
   type ContractDocument,
@@ -420,6 +421,7 @@ export function EntityRecordPage() {
                 documentId={open.document.id}
                 title={open.document.title}
                 version={open.version}
+                previousVersion={previousComparableVersion(open.document, open.version)}
                 initialFind={loaded.documentFindQuery}
                 onClose={() => setReading(null)}
               />

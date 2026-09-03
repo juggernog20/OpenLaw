@@ -16,6 +16,7 @@ import { AuthLayout } from "./routes/auth-layout";
 import { ContractRecordPage, contractRecordLoader } from "./routes/contract-record";
 import { ContractsPage, contractsLoader } from "./routes/contracts";
 import { DocumentsPage, documentsLoader, documentsShouldRevalidate } from "./routes/documents";
+import { DocumentComparePage, documentCompareLoader } from "./routes/document-compare";
 import { MattersPage, mattersLoader } from "./routes/matters";
 import { MatterRecordPage, matterRecordLoader } from "./routes/matter-record";
 import { EntitiesPage, entitiesLoader, entitiesShouldRevalidate } from "./routes/entities";
@@ -241,6 +242,17 @@ export const routes: RouteObject[] = [
     loader: documentsLoader,
     shouldRevalidate: documentsShouldRevalidate,
     element: <DocumentsPage />,
+    errorElement: <RouteErrorPage />,
+    hydrateFallbackElement: <></>,
+  },
+  {
+    path: "/documents/:documentId/compare",
+    loader: documentCompareLoader,
+    element: (
+      <KeyedByParam name="documentId">
+        <DocumentComparePage />
+      </KeyedByParam>
+    ),
     errorElement: <RouteErrorPage />,
     hydrateFallbackElement: <></>,
   },

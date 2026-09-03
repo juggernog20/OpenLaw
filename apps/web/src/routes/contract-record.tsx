@@ -212,6 +212,7 @@ import { confirmContractRenewal, type ConfirmedRenewal } from "../lib/renewals";
 import {
   documentLandingParams,
   FOLDER_ROOT,
+  previousComparableVersion,
   readDocumentLanding,
   type ContractDocument,
 } from "../lib/documents";
@@ -2059,6 +2060,7 @@ export function ContractRecordPage() {
                 documentId={open.document.id}
                 title={open.document.title}
                 version={open.version}
+                previousVersion={previousComparableVersion(open.document, open.version)}
                 initialFind={
                   documentLanding?.document.id === open.document.id &&
                   documentLanding.versionId === open.version.id

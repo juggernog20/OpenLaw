@@ -154,6 +154,7 @@
   --spacing-section-gap: 24px;
   --spacing-card-x: 16px;
   --spacing-card-y: 10px;
+  --spacing-compare-page-x: 52px;
 
   /* The portal's request type picker (I5): as many cards across as the
      column fits, none narrower than 16rem. A named template rather than
@@ -187,8 +188,10 @@
      because both are drawn 36px in the C8 and C9 mocks. */
   --height-record-banner: 36px; /* per DES-009, DES-043 */
   --height-section-header: 38px; /* settings-card header strip (ST1/ST4 mocks) */
+  --height-compare-card: 32rem; /* comparison reader's minimum document-card height (DOC3) */
   --width-settings-card: 45rem; /* settings-card max width (ST1/ST4 mocks) */
   --width-portal-col: 55rem; /* portal centered column (I5–I7 mocks) */
+  --width-compare-page: 640px; /* comparison reader's paper width (DOC3) */
 
   /* ------------------------------------------------------------------ *
    * Focus ring — the default keyboard-focus treatment (M4 spec, #40).  *
@@ -201,7 +204,7 @@
 
   /* ------------------------------------------------------------------ *
    * Typography — per DES-006                                           *
-   * Inter as the only typeface; mono stack reserved for future use.    *
+   * Inter globally; Tinos is the recorded compare-document exception. *
    * Self-hosted woff2 (no Google Fonts) per DECISIONS.md DD-001.       *
    * ------------------------------------------------------------------ */
   /* "Inter Variable" is the family @fontsource-variable/inter registers
@@ -210,6 +213,7 @@
   --font-sans:
     "Inter Variable", "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", "Roboto",
     "Helvetica Neue", "Arial", sans-serif;
+  --font-serif: "Tinos", "Times New Roman", times, serif;
   --font-mono:
     ui-monospace, "JetBrains Mono", "Fira Mono", "SFMono-Regular", Menlo, Consolas, monospace;
 
@@ -232,12 +236,14 @@
   --text-2xl--line-height: 1.25;
   --text-3xl: 32px;
   --text-3xl--line-height: 1.2;
+  --leading-compare-document: 1.6;
 
-  /* Weight ramp — 3 weights only.
-   * Tailwind exposes these as font-normal / font-medium / font-semibold. */
+  /* Weight ramp — 4 weights only.
+   * Tailwind exposes these as font-normal / font-medium / font-semibold / font-bold. */
   --font-weight-normal: 400;
   --font-weight-medium: 500;
   --font-weight-semibold: 600;
+  --font-weight-bold: 700;
 }
 
 /* Base layer — minimal defaults from DES-003 / DES-005 / DES-006.
