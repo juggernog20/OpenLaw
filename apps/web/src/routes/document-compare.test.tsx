@@ -3,6 +3,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import type { DocumentComparison } from "../lib/documents";
 import { json, problem, renderAt, stubApi, type StubCall } from "../testing/helpers";
 
 const MEMBER = {
@@ -82,14 +83,14 @@ const model = {
   ],
 };
 
-function comparison(overrides: Record<string, unknown> = {}) {
+function comparison(overrides: Partial<DocumentComparison> = {}): DocumentComparison {
   return {
     id: "cmp-1",
     documentId: "doc-1",
     mode: "word",
     state: "ready",
-    fromVersion: versions[1],
-    toVersion: versions[3],
+    fromVersion: versions[1]!,
+    toVersion: versions[3]!,
     changeModel: model,
     changeCount: 2,
     failure: null,

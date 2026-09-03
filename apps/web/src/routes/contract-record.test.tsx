@@ -6677,20 +6677,39 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4, M11/5)",
     expect(within(section).getByRole("button", { name: "round_2.docx" })).toBeInTheDocument();
   });
 
-  it("opens the predecessor pair from every eligible Version row", async () => {
-    const api = documentsApi([CHAIN]);
-    stubApi({ signedIn: MEMBER, extra: api.handler });
-    const { router } = renderAt("/contracts/42/documents");
-    const user = userEvent.setup();
-    const section = await documentsSection();
+  it.each([
+    { versionNumber: 2, from: "ver-a", to: "ver-b", superseded: true },
+    { versionNumber: 3, from: "ver-b", to: "ver-c", superseded: false },
+  ])(
+    "opens the predecessor pair from eligible Version $versionNumber",
+    async ({ versionNumber, from, to, superseded }) => {
+      const api = documentsApi([CHAIN]);
+      stubApi({ signedIn: MEMBER, extra: api.handler });
+      const { router } = renderAt("/contracts/42/documents");
+      const user = userEvent.setup();
+      const section = await documentsSection();
 
-    await act(user, section, CHAIN.title, "Compare with previous");
-    await waitFor(() =>
-      expect(`${router.state.location.pathname}${router.state.location.search}`).toBe(
-        "/documents/doc-3/compare?from=ver-b&to=ver-c",
-      ),
-    );
-  });
+      if (superseded) {
+        await user.click(
+          within(section).getByRole("button", { name: /Show the 2 earlier versions of/ }),
+        );
+        await user.click(
+          within(section).getByRole("button", {
+            name: `Actions for version ${versionNumber} of ${CHAIN.title}`,
+          }),
+        );
+        await user.click(await screen.findByRole("menuitem", { name: "Compare with previous" }));
+      } else {
+        await act(user, section, CHAIN.title, "Compare with previous");
+      }
+
+      await waitFor(() =>
+        expect(`${router.state.location.pathname}${router.state.location.search}`).toBe(
+          `/documents/doc-3/compare?from=${from}&to=${to}`,
+        ),
+      );
+    },
+  );
 
   it("never reads the pin off a round's kind", async () => {
     const signed = {

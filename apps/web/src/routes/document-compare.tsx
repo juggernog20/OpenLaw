@@ -183,12 +183,18 @@ function CompareSubbar({
 }
 
 function VersionPairControl({ comparison }: Readonly<{ comparison: DocumentComparison }>) {
+  const intl = useIntl();
   const navigate = useNavigate();
   const handSet = comparison.document.versions.filter(
     (version) => version.kind !== "generated_redline",
   );
   const older = comparison.fromVersion;
   const newer = comparison.toVersion;
+  const versionLabel = (versionNumber: number) =>
+    intl.formatMessage(
+      { id: "documents.versionNumber", defaultMessage: "v{number}" },
+      { number: versionNumber },
+    );
   const openPair = (from: string, to: string) =>
     void navigate(documentComparisonPath(comparison.documentId, from, to));
   return (
@@ -221,7 +227,7 @@ function VersionPairControl({ comparison }: Readonly<{ comparison: DocumentCompa
                 .filter((version) => version.versionNumber < newer.versionNumber)
                 .map((version) => (
                   <option key={version.id} value={version.id}>
-                    {`v${version.versionNumber}`}
+                    {versionLabel(version.versionNumber)}
                   </option>
                 ))}
             </select>
@@ -240,7 +246,7 @@ function VersionPairControl({ comparison }: Readonly<{ comparison: DocumentCompa
                 .filter((version) => version.versionNumber > older.versionNumber)
                 .map((version) => (
                   <option key={version.id} value={version.id}>
-                    {`v${version.versionNumber}`}
+                    {versionLabel(version.versionNumber)}
                   </option>
                 ))}
             </select>
@@ -450,7 +456,7 @@ function ReadyComparison({ comparison }: Readonly<{ comparison: DocumentComparis
           id: "documentCompare.documentRegion",
           defaultMessage: "Compared document",
         })}
-        className="flex min-h-[32rem] min-w-0 flex-1 flex-col overflow-hidden rounded-card border border-border-default bg-raised"
+        className="flex min-h-(--height-compare-card) min-w-0 flex-1 flex-col overflow-hidden rounded-card border border-border-default bg-raised"
       >
         <header className="flex min-h-10 shrink-0 items-center gap-2 border-b border-border-default bg-section-header px-3 text-sm text-muted">
           <span className="min-w-0 truncate">{comparison.fromVersion.originalFilename}</span>
@@ -466,7 +472,7 @@ function ReadyComparison({ comparison }: Readonly<{ comparison: DocumentComparis
           </p>
         )}
         <div className="min-h-0 flex-1 overflow-auto bg-canvas p-4 @4xl/page:p-6">
-          <article className="mx-auto min-h-full w-full max-w-[640px] bg-raised px-8 py-10 font-serif text-base leading-[1.6] text-primary shadow-sm @2xl/page:px-[52px] @2xl/page:py-11">
+          <article className="mx-auto min-h-full w-full max-w-(--width-compare-page) bg-raised px-8 py-10 font-serif text-base leading-(--leading-compare-document) text-primary shadow-sm @2xl/page:px-compare-page-x @2xl/page:py-11">
             {model.paragraphs.map((paragraph) => {
               const selected = changes[current]?.paragraphIndex === paragraph.index;
               const Tag = paragraph.style === "heading" ? "h2" : "p";
@@ -480,11 +486,11 @@ function ReadyComparison({ comparison }: Readonly<{ comparison: DocumentComparis
                   data-paragraph-index={paragraph.index}
                   className={cn(
                     "mb-3.5 border-s-2 border-transparent ps-3",
-                    paragraph.style === "heading" && "font-[700]",
+                    paragraph.style === "heading" && "font-bold",
                     selected && "border-accent",
                   )}
                 >
-                  {paragraph.label && <span className="me-1 font-[700]">{paragraph.label}</span>}
+                  {paragraph.label && <span className="me-1 font-bold">{paragraph.label}</span>}
                   {paragraph.runs.map((run, index) => (
                     <ChangedRun key={index} change={run.change}>
                       {run.text}

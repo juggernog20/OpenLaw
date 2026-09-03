@@ -2291,9 +2291,8 @@ function FolderListingFoot({
   rows: RowContext;
   onShowMore: (folderId: string, cursor: string) => void;
 }>) {
-  /** Every column of the table, so a foot spans the row it sits in. The
-   * actions column is absent for a viewer who may not act. */
-  const columns = rows.frozen ? 5 : 6;
+  /** Every column of the table, so a foot spans the row it sits in. */
+  const columns = rows.showActionColumn ? 6 : 5;
   const loading = listing === undefined || listing.loading;
   if (!loading && listing.error === null && listing.nextCursor === null) return null;
 
