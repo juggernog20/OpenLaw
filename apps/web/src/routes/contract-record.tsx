@@ -585,6 +585,19 @@ function focusTitle() {
  * The router does that: `KeyedByParam` keys this screen by
  * `:contractNumber`, so a change of record is a remount (#372).
  */
+/** One ticketed re-read of the CTR-009 union. The ticket names the
+ * newest read in flight; an older answer that lands later is dropped. */
+function readNewestDeadlines(
+  number: number,
+  newest: { current: number },
+  land: (deadlines: ContractDeadline[]) => void,
+) {
+  const ticket = ++newest.current;
+  void readContractKeyDates(number).then((outcome) => {
+    if (outcome.ok && ticket === newest.current) land(outcome.deadlines);
+  });
+}
+
 export function ContractRecordPage() {
   // Which section is on screen (DES-032). The loader has already sent
   // an unknown segment to the Overview, so anything that survives to
@@ -757,6 +770,11 @@ export function ContractRecordPage() {
           event.action === "contract.field_confirmed"
         ) {
           void revalidate();
+          // The Key dates union is section state, not loader data, so
+          // the whole-record re-read above never reaches it. A run that
+          // wrote an expiry date or a notice period asks the union again,
+          // on the same ticket a term commit's re-read takes.
+          readNewestDeadlines(contract.number, deadlinesRead, setDeadlines);
         }
         if (event.action.startsWith("approval.")) void refreshApprovals();
         // The executed copy narrates as a document verb, not an envelope
@@ -770,7 +788,7 @@ export function ContractRecordPage() {
           void refreshSigning();
         }
       }),
-    [contract.id, refreshApprovals, refreshSigning, revalidate],
+    [contract.id, contract.number, refreshApprovals, refreshSigning, revalidate],
   );
   /**
    * Every confirmed roll on the record, most recent first (M16/4,
@@ -1022,7 +1040,6 @@ export function ContractRecordPage() {
     setParties(counterparties);
     setRenewals(contractRenewals);
     setAnalysis(loadedAnalysis);
-    setDeadlines(contractDeadlines);
     const nextText = textDrafts(contract);
     const nextTerm = termDrafts(contract);
     // Capture the refs before scheduling either updater. React may run a
@@ -1051,16 +1068,7 @@ export function ContractRecordPage() {
     );
     seededText.current = nextText;
     seededTerm.current = nextTerm;
-  }, [
-    contract,
-    fields,
-    customFieldRefs,
-    team,
-    counterparties,
-    contractRenewals,
-    loadedAnalysis,
-    contractDeadlines,
-  ]);
+  }, [contract, fields, customFieldRefs, team, counterparties, contractRenewals, loadedAnalysis]);
 
   /**
    * What happened to this record (DD-017), keyed by the same entity
@@ -1285,10 +1293,7 @@ export function ContractRecordPage() {
    * section is on another tab from the field that raised it.
    */
   function refreshDeadlines(number: number) {
-    const ticket = ++deadlinesRead.current;
-    void readContractKeyDates(number).then((outcome) => {
-      if (outcome.ok && ticket === deadlinesRead.current) setDeadlines(outcome.deadlines);
-    });
+    readNewestDeadlines(number, deadlinesRead, setDeadlines);
   }
 
   function note(key: FieldKey, status: FieldStatus, detail?: string) {

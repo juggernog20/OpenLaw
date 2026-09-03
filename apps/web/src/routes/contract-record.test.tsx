@@ -1017,7 +1017,35 @@ describe("the /contracts/:number record page", () => {
         available: true,
         latestRun: analysisRun({ state: "pending", finishedAt: null }),
       });
-      stubApi({ signedIn: MEMBER, extra: api.handler });
+      // The Key dates union is section state the whole-record re-read
+      // never reaches, so the frame has to ask the section to re-read.
+      // The loader's first read finds nothing; every read after the run
+      // finds the expiry the run wrote.
+      let keyDateReads = 0;
+      stubApi({
+        signedIn: MEMBER,
+        extra: (call: StubCall) => {
+          if (call.url.pathname === "/api/v1/contracts/42/key-dates" && call.method === "GET") {
+            keyDateReads += 1;
+            if (keyDateReads === 1) return json(200, { deadlines: [] });
+            return json(200, {
+              deadlines: [
+                {
+                  source: "contract_expiry",
+                  keyDateId: null,
+                  date: "2027-01-14",
+                  label: "Expiry",
+                  note: null,
+                  daysAway: 300,
+                  isNext: true,
+                  unverified: true,
+                },
+              ],
+            });
+          }
+          return api.handler(call);
+        },
+      });
       renderAt("/contracts/42");
 
       await screen.findByLabelText("Title");
@@ -1050,6 +1078,7 @@ describe("the /contracts/:number record page", () => {
         });
       });
 
+      await waitFor(() => expect(screen.getByLabelText("1 upcoming date")).toBeInTheDocument());
       await waitFor(() => {
         expect(screen.getByLabelText("Term type")).toHaveValue("auto_renew");
         expect(screen.getByLabelText("Effective date")).toHaveTextContent("Jan 15, 2026");
