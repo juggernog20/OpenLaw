@@ -31,6 +31,7 @@ import { runBackfillSweep } from "./backfill.js";
 import { handleContractAnalysis } from "./contract-analysis.js";
 import type { DerivationDeps } from "./derivations.js";
 import { handleDisplayConversion } from "./display-conversion.js";
+import { handleDocumentComparison } from "./document-comparison.js";
 import { createNotifier } from "../lib/notifications/notifier.js";
 import { handleExecutedCopyFetch } from "./executed-copy.js";
 import { handleNotificationEmail } from "./notification-email.js";
@@ -38,6 +39,7 @@ import {
   JOB_QUEUES,
   type ContractAnalysisJob,
   type DisplayConversionJob,
+  type DocumentComparisonJob,
   type ExecutedCopyFetchJob,
   type JobQueue,
   type NotificationEmailJob,
@@ -113,6 +115,15 @@ export const TEXT_EXTRACTION_QUEUE_OPTIONS = {
 export const DISPLAY_CONVERSION_QUEUE_OPTIONS = {
   /** The same fifteen minutes, and the same ceiling on
    * `DOC_ENGINE_TIMEOUT_MS` holds it — see the queue above. */
+  expireInSeconds: 900,
+  retryLimit: 2,
+  retryDelay: 30,
+  retryBackoff: true,
+} as const;
+
+/** One compare call at the engine's longer bound, plus a minute to read two
+ * sources, store the DOCX, parse it, and commit the answer. */
+export const DOCUMENT_COMPARISON_QUEUE_OPTIONS = {
   expireInSeconds: 900,
   retryLimit: 2,
   retryDelay: 30,
@@ -374,6 +385,10 @@ export async function startPipeline(options: PipelineOptions): Promise<Pipeline>
       const job: DisplayConversionJob = { versionId };
       await boss.send(JOB_QUEUES.displayConversion, job, { singletonKey: versionId });
     },
+    async requestDocumentComparison(comparisonId: string): Promise<void> {
+      const job: DocumentComparisonJob = { comparisonId };
+      await boss.send(JOB_QUEUES.documentComparison, job, { singletonKey: comparisonId });
+    },
     async requestExecutedCopyFetch(envelopeId: string): Promise<void> {
       const job: ExecutedCopyFetchJob = { envelopeId };
       // The envelope is the collapsing key here, for the version's
@@ -443,6 +458,15 @@ export async function startPipeline(options: PipelineOptions): Promise<Pipeline>
     await boss.updateQueue(JOB_QUEUES.displayConversion, {
       notify: true,
       ...DISPLAY_CONVERSION_QUEUE_OPTIONS,
+    });
+    await boss.createQueue(JOB_QUEUES.documentComparison, {
+      policy: "short",
+      notify: true,
+      ...DOCUMENT_COMPARISON_QUEUE_OPTIONS,
+    });
+    await boss.updateQueue(JOB_QUEUES.documentComparison, {
+      notify: true,
+      ...DOCUMENT_COMPARISON_QUEUE_OPTIONS,
     });
     await boss.createQueue(JOB_QUEUES.executedCopyFetch, {
       policy: "short",
@@ -597,6 +621,19 @@ export async function startPipeline(options: PipelineOptions): Promise<Pipeline>
         },
       );
       await boss.work(
+        JOB_QUEUES.documentComparison,
+        oneAtATime,
+        async (jobs: JobWithMetadata<DocumentComparisonJob>[]) => {
+          for (const job of jobs) {
+            await handleDocumentComparison(handlers, {
+              comparisonId: job.data.comparisonId,
+              retryCount: job.retryCount,
+              retryLimit: job.retryLimit,
+            });
+          }
+        },
+      );
+      await boss.work(
         JOB_QUEUES.executedCopyFetch,
         oneAtATime,
         async (jobs: JobWithMetadata<ExecutedCopyFetchJob>[]) => {
@@ -721,6 +758,7 @@ export async function startPipeline(options: PipelineOptions): Promise<Pipeline>
           queues: [
             JOB_QUEUES.textExtraction,
             JOB_QUEUES.displayConversion,
+            JOB_QUEUES.documentComparison,
             JOB_QUEUES.executedCopyFetch,
             JOB_QUEUES.notificationEmail,
             JOB_QUEUES.backfillSweep,

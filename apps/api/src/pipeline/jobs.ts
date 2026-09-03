@@ -48,6 +48,8 @@ export const JOB_QUEUES = {
    * system knows the rendition exists at that moment.
    */
   displayConversion: "document.display-conversion",
+  /** One durable DOC-003 comparison, collapsed by comparison id. */
+  documentComparison: "document.comparison",
   /**
    * The backfill sweep (M12/6), on a schedule rather than at boot alone.
    *
@@ -136,6 +138,12 @@ export interface DisplayConversionJob {
   versionId: string;
 }
 
+/** What the comparison queue carries. Both operands and the mode are read
+ * from the durable row so a retry cannot drift from the original request. */
+export interface DocumentComparisonJob {
+  comparisonId: string;
+}
+
 /** What the executed-copy queue carries: the envelope, and nothing
  * else. Which contract it is on, which document it files against, and
  * whether it is still owed are all read live when the job runs — so a
@@ -189,6 +197,9 @@ export interface JobQueue {
    * could not be reached.
    */
   requestDisplayConversion(versionId: string): Promise<void>;
+
+  /** Wakes the worker for one durable document comparison. */
+  requestDocumentComparison(comparisonId: string): Promise<void>;
 
   /**
    * Asks for one signed envelope's executed copy to be fetched and
@@ -281,6 +292,7 @@ export function createUnconfiguredJobQueue(): JobQueue {
   return {
     requestTextExtraction: refuse,
     requestDisplayConversion: refuse,
+    requestDocumentComparison: refuse,
     requestExecutedCopyFetch: refuse,
     requestNotificationEmail: refuse,
     requestContractAnalysis: refuse,

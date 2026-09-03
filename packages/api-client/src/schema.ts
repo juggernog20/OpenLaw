@@ -2821,6 +2821,40 @@ export interface paths {
     patch: operations["updateDocument"];
     trace?: never;
   };
+  "/api/v1/documents/{documentId}/comparisons": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Request one durable comparison between two rounds of this Document (DOC-003). Both operands must be distinct rounds on this chain, ordered older than newer, and neither may itself be a generated redline. Any Document reader may ask, including on an archived Document: a comparison derives from the chain and does not write to it (DOC-010). A new request answers 202; the same pair thereafter answers its existing resource with 200 and does not queue it again */
+    post: operations["requestDocumentComparison"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/documents/{documentId}/comparisons/{comparisonId}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Read one durable comparison (DOC-003): its state and mode, both rounds exactly as the Document chain draws them, its parsed model and count when ready, and its reason when failed. exportedVersionId remains null until M32/4. The route inherits the owning record's reach and the Document's audience, and remains readable while the Document is archived */
+    get: operations["readDocumentComparison"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/v1/documents/{documentId}/primary": {
     parameters: {
       query?: never;
@@ -18281,6 +18315,373 @@ export interface operations {
               createdAt: string;
               /** Format: date-time */
               updatedAt: string;
+            };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  requestDocumentComparison: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        documentId: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          fromVersionId: string;
+          toVersionId: string;
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            comparison: {
+              id: string;
+              documentId: string;
+              /** @enum {string} */
+              mode: "word" | "text";
+              /** @enum {string} */
+              state: "pending" | "ready" | "failed";
+              fromVersion: {
+                id: string;
+                versionNumber: number;
+                /** @enum {string} */
+                kind:
+                  | "draft_ours"
+                  | "draft_theirs"
+                  | "redline_theirs"
+                  | "redline_ours"
+                  | "executed"
+                  | "amendment"
+                  | "generated_redline";
+                note: string | null;
+                originalFilename: string;
+                mimeType: string;
+                /** @enum {string} */
+                renderFamily: "pdf" | "image" | "word" | "presentation" | "email" | "other";
+                byteSize: number;
+                checksumSha256: string;
+                uploadedBy: {
+                  id: string;
+                  displayName: string;
+                  image: string | null;
+                  archived: boolean;
+                };
+                /** Format: date-time */
+                createdAt: string;
+                isCurrent: boolean;
+                isExecuted: boolean;
+              };
+              toVersion: {
+                id: string;
+                versionNumber: number;
+                /** @enum {string} */
+                kind:
+                  | "draft_ours"
+                  | "draft_theirs"
+                  | "redline_theirs"
+                  | "redline_ours"
+                  | "executed"
+                  | "amendment"
+                  | "generated_redline";
+                note: string | null;
+                originalFilename: string;
+                mimeType: string;
+                /** @enum {string} */
+                renderFamily: "pdf" | "image" | "word" | "presentation" | "email" | "other";
+                byteSize: number;
+                checksumSha256: string;
+                uploadedBy: {
+                  id: string;
+                  displayName: string;
+                  image: string | null;
+                  archived: boolean;
+                };
+                /** Format: date-time */
+                createdAt: string;
+                isCurrent: boolean;
+                isExecuted: boolean;
+              };
+              changeModel: {
+                paragraphs: {
+                  index: number;
+                  /** @enum {string} */
+                  style: "heading" | "body";
+                  label: string | null;
+                  runs: {
+                    text: string;
+                    /** @enum {string} */
+                    change: "unchanged" | "inserted" | "deleted";
+                  }[];
+                }[];
+                changes: {
+                  id: string;
+                  paragraphIndex: number;
+                  /** @enum {string} */
+                  kind: "inserted" | "deleted" | "replaced";
+                  ref: string;
+                  excerpt: string;
+                }[];
+              } | null;
+              changeCount: number | null;
+              failure: string | null;
+              exportedVersionId: null;
+              /** Format: date-time */
+              createdAt: string;
+              finishedAt: string | null;
+            };
+          };
+        };
+      };
+      /** @description Default Response */
+      202: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            comparison: {
+              id: string;
+              documentId: string;
+              /** @enum {string} */
+              mode: "word" | "text";
+              /** @enum {string} */
+              state: "pending" | "ready" | "failed";
+              fromVersion: {
+                id: string;
+                versionNumber: number;
+                /** @enum {string} */
+                kind:
+                  | "draft_ours"
+                  | "draft_theirs"
+                  | "redline_theirs"
+                  | "redline_ours"
+                  | "executed"
+                  | "amendment"
+                  | "generated_redline";
+                note: string | null;
+                originalFilename: string;
+                mimeType: string;
+                /** @enum {string} */
+                renderFamily: "pdf" | "image" | "word" | "presentation" | "email" | "other";
+                byteSize: number;
+                checksumSha256: string;
+                uploadedBy: {
+                  id: string;
+                  displayName: string;
+                  image: string | null;
+                  archived: boolean;
+                };
+                /** Format: date-time */
+                createdAt: string;
+                isCurrent: boolean;
+                isExecuted: boolean;
+              };
+              toVersion: {
+                id: string;
+                versionNumber: number;
+                /** @enum {string} */
+                kind:
+                  | "draft_ours"
+                  | "draft_theirs"
+                  | "redline_theirs"
+                  | "redline_ours"
+                  | "executed"
+                  | "amendment"
+                  | "generated_redline";
+                note: string | null;
+                originalFilename: string;
+                mimeType: string;
+                /** @enum {string} */
+                renderFamily: "pdf" | "image" | "word" | "presentation" | "email" | "other";
+                byteSize: number;
+                checksumSha256: string;
+                uploadedBy: {
+                  id: string;
+                  displayName: string;
+                  image: string | null;
+                  archived: boolean;
+                };
+                /** Format: date-time */
+                createdAt: string;
+                isCurrent: boolean;
+                isExecuted: boolean;
+              };
+              changeModel: {
+                paragraphs: {
+                  index: number;
+                  /** @enum {string} */
+                  style: "heading" | "body";
+                  label: string | null;
+                  runs: {
+                    text: string;
+                    /** @enum {string} */
+                    change: "unchanged" | "inserted" | "deleted";
+                  }[];
+                }[];
+                changes: {
+                  id: string;
+                  paragraphIndex: number;
+                  /** @enum {string} */
+                  kind: "inserted" | "deleted" | "replaced";
+                  ref: string;
+                  excerpt: string;
+                }[];
+              } | null;
+              changeCount: number | null;
+              failure: string | null;
+              exportedVersionId: null;
+              /** Format: date-time */
+              createdAt: string;
+              finishedAt: string | null;
+            };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  readDocumentComparison: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        documentId: string;
+        comparisonId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            comparison: {
+              id: string;
+              documentId: string;
+              /** @enum {string} */
+              mode: "word" | "text";
+              /** @enum {string} */
+              state: "pending" | "ready" | "failed";
+              fromVersion: {
+                id: string;
+                versionNumber: number;
+                /** @enum {string} */
+                kind:
+                  | "draft_ours"
+                  | "draft_theirs"
+                  | "redline_theirs"
+                  | "redline_ours"
+                  | "executed"
+                  | "amendment"
+                  | "generated_redline";
+                note: string | null;
+                originalFilename: string;
+                mimeType: string;
+                /** @enum {string} */
+                renderFamily: "pdf" | "image" | "word" | "presentation" | "email" | "other";
+                byteSize: number;
+                checksumSha256: string;
+                uploadedBy: {
+                  id: string;
+                  displayName: string;
+                  image: string | null;
+                  archived: boolean;
+                };
+                /** Format: date-time */
+                createdAt: string;
+                isCurrent: boolean;
+                isExecuted: boolean;
+              };
+              toVersion: {
+                id: string;
+                versionNumber: number;
+                /** @enum {string} */
+                kind:
+                  | "draft_ours"
+                  | "draft_theirs"
+                  | "redline_theirs"
+                  | "redline_ours"
+                  | "executed"
+                  | "amendment"
+                  | "generated_redline";
+                note: string | null;
+                originalFilename: string;
+                mimeType: string;
+                /** @enum {string} */
+                renderFamily: "pdf" | "image" | "word" | "presentation" | "email" | "other";
+                byteSize: number;
+                checksumSha256: string;
+                uploadedBy: {
+                  id: string;
+                  displayName: string;
+                  image: string | null;
+                  archived: boolean;
+                };
+                /** Format: date-time */
+                createdAt: string;
+                isCurrent: boolean;
+                isExecuted: boolean;
+              };
+              changeModel: {
+                paragraphs: {
+                  index: number;
+                  /** @enum {string} */
+                  style: "heading" | "body";
+                  label: string | null;
+                  runs: {
+                    text: string;
+                    /** @enum {string} */
+                    change: "unchanged" | "inserted" | "deleted";
+                  }[];
+                }[];
+                changes: {
+                  id: string;
+                  paragraphIndex: number;
+                  /** @enum {string} */
+                  kind: "inserted" | "deleted" | "replaced";
+                  ref: string;
+                  excerpt: string;
+                }[];
+              } | null;
+              changeCount: number | null;
+              failure: string | null;
+              exportedVersionId: null;
+              /** Format: date-time */
+              createdAt: string;
+              finishedAt: string | null;
             };
           };
         };

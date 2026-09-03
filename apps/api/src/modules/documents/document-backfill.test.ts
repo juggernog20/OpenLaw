@@ -31,6 +31,7 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import {
   count,
+  documentComparisons,
   documentVersionRenditions,
   documentVersions,
   documentVersionText,
@@ -109,6 +110,13 @@ interface TextRow {
 /** What the rendition read answers. */
 interface RenditionRow {
   state: "pending" | "ready" | "failed" | "unsupported";
+}
+
+/** What the comparison read answers, as far as this suite reads it. */
+interface ComparisonRow {
+  id: string;
+  state: "pending" | "ready" | "failed";
+  changeCount: number | null;
 }
 
 beforeAll(async () => {
@@ -220,6 +228,20 @@ async function uploaded(number: number, file: FileSpec, app: App): Promise<Docum
   return res.json().document as DocumentRow;
 }
 
+/** Appends one more round to a document's chain, requiring success. */
+async function appended(documentId: string, file: FileSpec, app: App): Promise<DocumentRow> {
+  const { payload, headers } = uploadBody(file);
+  const res = await app.inject({
+    method: "POST",
+    url: `/api/v1/documents/${documentId}/versions`,
+    cookies: memberCookies,
+    headers,
+    payload,
+  });
+  expect(res.statusCode, res.body).toBe(201);
+  return res.json().document as DocumentRow;
+}
+
 const currentOf = (document: DocumentRow): VersionRow => {
   const current = document.versions.filter((version) => version.isCurrent);
   expect(current.length, "exactly one current version").toBe(1);
@@ -237,6 +259,13 @@ const readRendition = (documentId: string, versionId: string) =>
   harness.app.inject({
     method: "GET",
     url: `/api/v1/documents/${documentId}/versions/${versionId}/rendition`,
+    cookies: memberCookies,
+  });
+
+const readComparison = (documentId: string, comparisonId: string) =>
+  harness.app.inject({
+    method: "GET",
+    url: `/api/v1/documents/${documentId}/comparisons/${comparisonId}`,
     cookies: memberCookies,
   });
 
@@ -276,6 +305,23 @@ async function settledRendition(documentId: string, versionId: string): Promise<
   }
   throw new Error(
     `the rendition for version ${versionId} was still owed after ${SETTLE_TIMEOUT_MS}ms: ` +
+      `${JSON.stringify(last)}\n${JSON.stringify(harness.jobLog, null, 2)}`,
+  );
+}
+
+/** The same, for a comparison (DOC-003). */
+async function settledComparison(documentId: string, comparisonId: string): Promise<ComparisonRow> {
+  const deadline = Date.now() + SETTLE_TIMEOUT_MS;
+  let last: ComparisonRow | undefined;
+  while (Date.now() < deadline) {
+    const res = await readComparison(documentId, comparisonId);
+    expect(res.statusCode, res.body).toBe(200);
+    last = res.json().comparison as ComparisonRow;
+    if (last.state !== "pending") return last;
+    await new Promise((resolve) => setTimeout(resolve, 50));
+  }
+  throw new Error(
+    `the comparison ${comparisonId} was still owed after ${SETTLE_TIMEOUT_MS}ms: ` +
       `${JSON.stringify(last)}\n${JSON.stringify(harness.jobLog, null, 2)}`,
   );
 }
@@ -334,7 +380,17 @@ async function untilNothingIsOwed(): Promise<void> {
       .select({ owed: count() })
       .from(documentVersionRenditions)
       .where(eq(documentVersionRenditions.state, "pending"));
-    if ((texts?.owed ?? 0) === 0 && (renditions?.owed ?? 0) === 0) return;
+    const [comparisons] = await harness.db
+      .select({ owed: count() })
+      .from(documentComparisons)
+      .where(eq(documentComparisons.state, "pending"));
+    if (
+      (texts?.owed ?? 0) === 0 &&
+      (renditions?.owed ?? 0) === 0 &&
+      (comparisons?.owed ?? 0) === 0
+    ) {
+      return;
+    }
     await new Promise((resolve) => setTimeout(resolve, 50));
   }
   throw new Error(
@@ -427,6 +483,47 @@ describe("a request that never reached the queue", () => {
     expect(text.source).toBe("ocr");
     expect(text.text).toBe(fakeOcrText(scan));
   });
+
+  it("asks again for a comparison left pending by a lost send", async () => {
+    // A comparison (DOC-003) is owed the same way: its row is written
+    // `pending` in the request's transaction and the request answers 202
+    // whether or not the send after the commit reached the queue. A
+    // second request for the pair reads the row and does not ask again,
+    // so without this sweep a lost send would leave the pair pending for
+    // ever.
+    const contract = await newContract("Backfill · lost comparison send");
+    const first = await uploaded(
+      contract.number,
+      { filename: "first.docx", contentType: DOCX_MIME_TYPE, content: officePackage("first") },
+      m11,
+    );
+    const document = await appended(
+      first.id,
+      { filename: "second.docx", contentType: DOCX_MIME_TYPE, content: officePackage("second") },
+      m11,
+    );
+    const [from, to] = document.versions;
+    const requested = await m11.inject({
+      method: "POST",
+      url: `/api/v1/documents/${document.id}/comparisons`,
+      cookies: memberCookies,
+      payload: { fromVersionId: from!.id, toVersionId: to!.id },
+    });
+    expect(requested.statusCode, requested.body).toBe(202);
+    const comparison = requested.json().comparison as ComparisonRow;
+    expect(comparison.state).toBe("pending");
+
+    const summary = await sweep();
+    expect(summary.documentComparison).toBeGreaterThan(0);
+
+    const ready = await settledComparison(document.id, comparison.id);
+    expect(ready.state).toBe("ready");
+    expect(ready.changeCount).toBe(1);
+
+    // Settled is settled: the next sweep walks past it.
+    await untilNothingIsOwed();
+    expect((await sweep()).documentComparison).toBe(0);
+  });
 });
 
 describe("asking twice", () => {
@@ -441,6 +538,7 @@ describe("asking twice", () => {
     expect(again.scanned).toBeGreaterThan(0);
     expect(again.textExtraction).toBe(0);
     expect(again.displayConversion).toBe(0);
+    expect(again.documentComparison).toBe(0);
   });
 
   it("reads every version exactly once, however small its pages", async () => {
@@ -459,6 +557,7 @@ describe("asking twice", () => {
     expect(paged.scanned).toBe(total);
     expect(paged.textExtraction).toBe(0);
     expect(paged.displayConversion).toBe(0);
+    expect(paged.documentComparison).toBe(0);
     expect(paged.stopped).toBe(false);
   });
 
