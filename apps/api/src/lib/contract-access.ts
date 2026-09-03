@@ -222,7 +222,7 @@ export interface ReachedContract {
   noticePeriodDays: number | null;
   /** CTR-008's source flags. Deadline readers use the map to mark the
    * two term-derived dates without changing their order or eligibility. */
-  aiUnverified?: AiUnverifiedMap | null;
+  aiUnverified: AiUnverifiedMap | null;
 }
 
 /** The witness a {@link LockedContract} carries. It is `declare`d and
