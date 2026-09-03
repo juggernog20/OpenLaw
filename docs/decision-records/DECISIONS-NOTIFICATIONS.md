@@ -361,6 +361,10 @@ The body renders the present sections in one fixed order: Approvals, Tasks, Date
 
 Both HTML and plain text are authored outputs of `briefing-template.ts`. User-written values are escaped in HTML. The plain-text part keeps the same section order and links. DES-051 still owns the sentence register.
 
+### Amendment (2026-09-03, M31/6, [#660](https://github.com/juggernog20/OpenLaw/issues/660)): a date the term derives from an unconfirmed AI source says so
+
+Clause 3's sentence gains one word when the date is still unverified under CTR-008: `In 7 days (Mar 19, 2026) unverified — Notice deadline: Meridian Bio supply agreement (#14)`. The word sits between the date and the kind, in both bodies, in DES-051's register. The expiry line carries it when `expiry_date` is flagged; the notice-deadline line when `expiry_date` or `notice_period_days` is. A key date, a Matter date, and an Entity obligation never carry it. The flag is read from the Contract at send time, not from the reminder row, so a confirmation made after the reminder was created prints as confirmed. Clauses 5 and 7 are untouched: the word changes no order, no count, and no distance.
+
 ## NOT-007 — Email delivery is at-least-once; a duplicate is accepted over a drop
 
 - **Status:** Accepted

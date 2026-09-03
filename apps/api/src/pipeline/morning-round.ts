@@ -83,7 +83,9 @@ import {
   type NotificationEventType,
   type UserRole,
 } from "@openlaw/db";
+import type { AiUnverifiedMap } from "@openlaw/shared";
 import type { AuthenticatedUser } from "../auth/user.js";
+import { derivedDateUnverified } from "../lib/ai-unverified.js";
 import { civilDate, civilInstant, daysBetween } from "../lib/contract-term.js";
 import type { MailerResolver } from "../lib/mailer.js";
 import { recordActivity } from "../lib/activity.js";
@@ -1076,7 +1078,9 @@ function digestRow(
     entityId: string;
     payload: Record<string, unknown>;
     reminderDate: string | null;
-    contractAiUnverified: Record<string, unknown> | null;
+    /** The Contract's current CTR-008 flags, read at send time so a
+     * confirmation between the reminder and the briefing is honoured. */
+    contractAiUnverified: AiUnverifiedMap | null;
   },
   today: string,
 ): DigestRow | null {
@@ -1105,12 +1109,9 @@ function digestRow(
     unverified:
       row.entityType === CONTRACT_ENTITY &&
       (row.eventType === "date.expiry_approaching"
-        ? Boolean(row.contractAiUnverified?.expiry_date)
-        : row.eventType === "date.notice_deadline_approaching"
-          ? Boolean(
-              row.contractAiUnverified?.expiry_date ?? row.contractAiUnverified?.notice_period_days,
-            )
-          : false),
+        ? derivedDateUnverified(row.contractAiUnverified, "expiry")
+        : row.eventType === "date.notice_deadline_approaching" &&
+          derivedDateUnverified(row.contractAiUnverified, "notice_deadline")),
   };
   if (entity) return { ...common, entityType: ENTITY_ENTITY, recordId: row.entityId };
   return {

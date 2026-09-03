@@ -67,6 +67,7 @@ import {
 } from "@openlaw/shared";
 import { requireRole, type AuthenticatedUser } from "../../auth/guards.js";
 import { recordActivity, RECORD_ACTIVITY_TIER } from "../../lib/activity.js";
+import { derivedDateUnverified, type DerivedDateSource } from "../../lib/ai-unverified.js";
 import {
   contractTeamScope,
   NO_CONTRACT,
@@ -261,7 +262,7 @@ export const contractKeyDatesRoutes: FastifyPluginAsyncZod = async (app) => {
 
     /** A term-derived date joins the union as a row with no row behind
      * it: no id, no label, and nothing here to edit. */
-    const derived = (source: "expiry" | "notice_deadline", date: string | null) => {
+    const derived = (source: DerivedDateSource, date: string | null) => {
       if (date === null) return;
       entries.push({
         source,
@@ -271,12 +272,7 @@ export const contractKeyDatesRoutes: FastifyPluginAsyncZod = async (app) => {
         note: null,
         daysAway: daysBetween(today, date),
         isNext: false,
-        unverified:
-          source === "expiry"
-            ? Boolean(contract.aiUnverified?.expiry_date)
-            : Boolean(
-                contract.aiUnverified?.expiry_date ?? contract.aiUnverified?.notice_period_days,
-              ),
+        unverified: derivedDateUnverified(contract.aiUnverified, source),
       });
     };
     derived("expiry", contract.expiryDate);
