@@ -2312,6 +2312,9 @@
   "documentCompare.newer": {
     "defaultMessage": "Newer"
   },
+  "documentCompare.next": {
+    "defaultMessage": "Next change"
+  },
   "documentCompare.noChanges.body": {
     "defaultMessage": "These versions contain the same text."
   },
@@ -2332,6 +2335,9 @@
   },
   "documentCompare.preparing.title": {
     "defaultMessage": "Preparing comparison"
+  },
+  "documentCompare.previous": {
+    "defaultMessage": "Previous change"
   },
   "documentCompare.textMode": {
     "defaultMessage": "This comparison was built from extracted text, so formatting is not shown."

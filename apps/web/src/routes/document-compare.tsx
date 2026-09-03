@@ -12,7 +12,7 @@ import {
   Replace,
   X,
 } from "lucide-react";
-import { FormattedMessage, useIntl, type IntlShape } from "react-intl";
+import { defineMessage, FormattedMessage, useIntl, type IntlShape } from "react-intl";
 import { Link, redirect, useLoaderData, useNavigate, type LoaderFunctionArgs } from "react-router";
 import {
   DOCUMENT_DERIVATION_POLL_MS,
@@ -30,6 +30,13 @@ import { AppShell } from "../components/shell/app-shell";
 import { Popover, PopoverContent, PopoverTrigger } from "../components/ui/popover";
 
 const MAX_UNANSWERED_POLLS = 3;
+
+/** Declared as descriptors so the i18n extractor sees both ids; a
+ * conditional inside `formatMessage` is invisible to it. */
+const MOVE_LABEL = {
+  previous: defineMessage({ id: "documentCompare.previous", defaultMessage: "Previous change" }),
+  next: defineMessage({ id: "documentCompare.next", defaultMessage: "Next change" }),
+} as const;
 
 export async function documentCompareLoader({ params, request }: LoaderFunctionArgs) {
   const user = await requireUser();
@@ -511,11 +518,7 @@ function ChangeMoveButton({
   onPress,
 }: Readonly<{ direction: "previous" | "next"; onPress: () => void }>) {
   const intl = useIntl();
-  const label = intl.formatMessage(
-    direction === "previous"
-      ? { id: "documentCompare.previous", defaultMessage: "Previous change" }
-      : { id: "documentCompare.next", defaultMessage: "Next change" },
-  );
+  const label = intl.formatMessage(MOVE_LABEL[direction]);
   const Icon = direction === "previous" ? ChevronLeft : ChevronRight;
   return (
     <button
