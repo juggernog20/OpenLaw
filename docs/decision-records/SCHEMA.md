@@ -1046,6 +1046,36 @@ The blob behind `file_ref` is **not** cascaded — no database reaches a storage
 
 ---
 
+### `document_comparisons`
+
+Source: **DOC-003**
+
+One durable comparison between two rounds of one Document, landed in M32/2. A reader asks for a pair over HTTP and polls the row; the worker computes it once against the engine and keeps it, so every later reader reuses the same answer.
+
+It sits **beside** the version chain and never in it, for the same reason as the two tables above: a comparison is a derivation, not a round. That is also why a request on an archived Document is accepted (DOC-010). The row is the record of work **owed**, written `pending` inside the request's transaction; the queue send after the commit only wakes a worker, and a lost send leaves a `pending` row for the backfill sweep to find. A second request for the same pair answers the existing row and does not ask again.
+
+| Column             | Type        | Notes                                                                                                                                                                                                                               |
+| ------------------ | ----------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `id`               | UUID        | PK                                                                                                                                                                                                                                  |
+| `document_id`      | UUID        | FK → `documents.id`, `ON DELETE CASCADE` — lawful erasure (DOC-010) takes the comparison with the Document                                                                                                                          |
+| `from_version_id`  | UUID        | FK → `document_versions.id` — the older operand. Unique with `document_id` and `to_version_id`: one row per pair                                                                                                                    |
+| `to_version_id`    | UUID        | FK → `document_versions.id` — the newer operand. A check keeps the two distinct; the route holds the rest of the pair rules (same Document, older before newer by version number, neither a generated redline)                      |
+| `mode`             | text (enum) | `word` \| `text` — decided at request time off the DOC-004 routing table: `word` when both operands convert from a Word format (`doc`, `docx`, `odt`, `rtf`), `text` otherwise. Stored so the screen never guesses what it will get |
+| `state`            | text (enum) | `pending` \| `ready` \| `failed` — code branches on all three                                                                                                                                                                       |
+| `change_model`     | jsonb       | nullable; NULL unless `ready`. The parsed change model the compare screen draws. Typed at the API boundary, where its schema is owned                                                                                               |
+| `change_count`     | integer     | nullable; NULL unless `ready`. The number of changes in the model, kept beside it so a list can show the count without reading the model                                                                                            |
+| `redline_file_ref` | text        | nullable; set exactly when `ready` and `mode = 'word'`. Storage reference per DOC-012 to the tracked-changes Word file, keyed `comparisons/<comparison id>/<fresh id>`. Text mode has no derived file                               |
+| `failure`          | text        | nullable; NULL unless `failed`. The reason, in one line                                                                                                                                                                             |
+| `requested_by`     | UUID        | FK → `users.id`                                                                                                                                                                                                                     |
+| `created_at`       | timestamptz |                                                                                                                                                                                                                                     |
+| `finished_at`      | timestamptz | nullable; set when the state leaves `pending`                                                                                                                                                                                       |
+
+A check constraint holds each state to its columns: `pending` carries no outcome, `ready` carries a model and a count (and a file in word mode, none in text mode), and `failed` carries a reason and nothing else.
+
+The blob behind `redline_file_ref` is **not** cascaded, for the rendition's reason, so the hard-delete route destroys it explicitly, before its commit and ahead of the source blobs.
+
+---
+
 ### `notifications` / `notification_preferences`
 
 Source: **NOT-001**
