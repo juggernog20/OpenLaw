@@ -64,6 +64,7 @@ import {
 import { formatShortDate } from "../../lib/format";
 import { TEXTAREA_CLASS } from "../../lib/form-controls";
 import { StatusNote, type FieldStatus } from "../status-note";
+import { UnverifiedMarker } from "./ai-analysis-card";
 import { Button } from "../ui/button";
 import { Dialog, DialogContent, DialogTitle } from "../ui/dialog";
 import { Input } from "../ui/input";
@@ -356,10 +357,13 @@ function DeadlineRow({
         </div>
       </td>
       <td className="px-4 py-2.5">
-        <span
-          className={`inline-flex rounded-chip px-1.5 py-0.5 text-xs font-medium ${SOURCE_CHIP[row.source]}`}
-        >
-          <FormattedMessage {...SOURCE_LABEL[row.source]} />
+        <span className="flex items-center gap-2">
+          <span
+            className={`inline-flex rounded-chip px-1.5 py-0.5 text-xs font-medium ${SOURCE_CHIP[row.source]}`}
+          >
+            <FormattedMessage {...SOURCE_LABEL[row.source]} />
+          </span>
+          {row.unverified ? <UnverifiedMarker /> : null}
         </span>
       </td>
       {!frozen && (

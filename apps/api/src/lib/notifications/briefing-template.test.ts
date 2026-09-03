@@ -50,6 +50,7 @@ const FULL_BRIEFING: BriefingMail = {
       date: "2026-09-08",
       daysAway: 7,
       label: null,
+      unverified: true,
     },
     {
       eventType: "date.obligation_approaching",
@@ -59,6 +60,7 @@ const FULL_BRIEFING: BriefingMail = {
       date: "2026-09-02",
       daysAway: 1,
       label: "Annual return",
+      unverified: false,
     },
   ],
   knowledgeItems: [
@@ -101,6 +103,10 @@ describe("the full daily briefing template", () => {
       }
     }
     expect(message!.text).toContain("Sep 1, 2026");
+    expect(message!.text).toContain("In 7 days (Sep 8, 2026) unverified — Notice deadline");
+    expect(message!.html).toContain("In 7 days (Sep 8, 2026) unverified — Notice deadline");
+    expect(message!.text).not.toContain("Tomorrow (Sep 2, 2026) unverified");
+    expect(message!.html).not.toContain("Tomorrow (Sep 2, 2026) unverified");
     expect(message!.html).toContain("/contracts/1041/approvals");
     expect(message!.text).toContain("/matters/1017/tasks");
     expect(message!.html).toContain("/inbox/1029");

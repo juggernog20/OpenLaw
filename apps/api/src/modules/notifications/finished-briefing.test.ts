@@ -140,6 +140,14 @@ beforeAll(async () => {
       contractTypeId: contractType!.id,
       statusId: status!.id,
       managerId: idOf(DEFAULT_MEMBER),
+      expiryDate: today,
+      aiUnverified: {
+        expiry_date: {
+          evidence: "The term expires today.",
+          runId: "finished-briefing-run",
+          writtenAt: new Date().toISOString(),
+        },
+      },
     })
     .returning({ id: contracts.id });
   await harness.db.insert(contractTeam).values([
@@ -273,6 +281,10 @@ describe("the finished daily briefing", () => {
     expect(optedMail.text).toContain("Intake");
     expect(optedMail.text).toContain("Review the intake redline");
     expect(optedMail.text).toContain("Briefing control date");
+    expect(optedMail.text).toMatch(/unverified — Expiry: Finished briefing contract/);
+    expect(optedMail.html).toMatch(/unverified — Expiry: Finished briefing contract/);
+    expect(optedMail.text).not.toMatch(/unverified — Briefing control date/);
+    expect(optedMail.html).not.toMatch(/unverified — Briefing control date/);
     expect(optedMail.html).toContain("Review the intake redline");
     expect(harness.mailer.messagesTo(EMPTY_CONTRIBUTOR.email)).toEqual([]);
     expect(harness.mailer.messagesTo(REQUESTER.email)).toEqual([]);

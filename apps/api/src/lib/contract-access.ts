@@ -74,6 +74,7 @@ import {
   type Transaction,
   type UserRole,
 } from "@openlaw/db";
+import type { AiUnverifiedMap } from "@openlaw/shared";
 import type { AuthenticatedUser } from "../auth/user.js";
 
 /**
@@ -219,6 +220,9 @@ export interface ReachedContract {
    * date — the notice deadline — is this subtracted from the expiry, and
    * it is stored nowhere. */
   noticePeriodDays: number | null;
+  /** CTR-008's source flags. Deadline readers use the map to mark the
+   * two term-derived dates without changing their order or eligibility. */
+  aiUnverified: AiUnverifiedMap | null;
 }
 
 /** The witness a {@link LockedContract} carries. It is `declare`d and
@@ -294,6 +298,7 @@ export async function reachedContract(
       matterId: contracts.matterId,
       expiryDate: contracts.expiryDate,
       noticePeriodDays: contracts.noticePeriodDays,
+      aiUnverified: contracts.aiUnverified,
     })
     .from(contracts)
     .where(and(eq(contracts.number, number), contractTeamScope(db, user)))

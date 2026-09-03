@@ -29394,6 +29394,9 @@
                           },
                           "isNext": {
                             "type": "boolean"
+                          },
+                          "unverified": {
+                            "type": "boolean"
                           }
                         },
                         "required": [
@@ -29403,7 +29406,8 @@
                           "label",
                           "note",
                           "daysAway",
-                          "isNext"
+                          "isNext",
+                          "unverified"
                         ],
                         "additionalProperties": false
                       }
@@ -29516,6 +29520,9 @@
                           },
                           "isNext": {
                             "type": "boolean"
+                          },
+                          "unverified": {
+                            "type": "boolean"
                           }
                         },
                         "required": [
@@ -29525,7 +29532,8 @@
                           "label",
                           "note",
                           "daysAway",
-                          "isNext"
+                          "isNext",
+                          "unverified"
                         ],
                         "additionalProperties": false
                       }
@@ -29639,6 +29647,9 @@
                           },
                           "isNext": {
                             "type": "boolean"
+                          },
+                          "unverified": {
+                            "type": "boolean"
                           }
                         },
                         "required": [
@@ -29648,7 +29659,8 @@
                           "label",
                           "note",
                           "daysAway",
-                          "isNext"
+                          "isNext",
+                          "unverified"
                         ],
                         "additionalProperties": false
                       }
@@ -29726,6 +29738,9 @@
                           },
                           "isNext": {
                             "type": "boolean"
+                          },
+                          "unverified": {
+                            "type": "boolean"
                           }
                         },
                         "required": [
@@ -29735,7 +29750,8 @@
                           "label",
                           "note",
                           "daysAway",
-                          "isNext"
+                          "isNext",
+                          "unverified"
                         ],
                         "additionalProperties": false
                       }
@@ -52520,6 +52536,9 @@
                                         }
                                       ]
                                     },
+                                    "unverified": {
+                                      "type": "boolean"
+                                    },
                                     "record": {
                                       "type": "object",
                                       "properties": {
@@ -52558,6 +52577,7 @@
                                     "date",
                                     "label",
                                     "noticePeriodDays",
+                                    "unverified",
                                     "record"
                                   ],
                                   "additionalProperties": false
