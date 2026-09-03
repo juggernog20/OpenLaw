@@ -1024,12 +1024,18 @@ export function ContractRecordPage() {
     setAnalysis(loadedAnalysis);
     const nextText = textDrafts(contract);
     const nextTerm = termDrafts(contract);
+    // Capture the refs before scheduling either updater. React may run a
+    // functional state updater after this effect returns; reading the refs
+    // inside it after assigning the new snapshot below would make every new
+    // server value look unchanged and preserve stale drafts.
+    const previousText = seededText.current;
+    const previousTerm = seededTerm.current;
     setDrafts(
       (current) =>
         Object.fromEntries(
           Object.entries(nextText).map(([key, next]) => [
             key,
-            next === seededText.current[key as TextFieldKey] ? current[key as TextFieldKey] : next,
+            next === previousText[key as TextFieldKey] ? current[key as TextFieldKey] : next,
           ]),
         ) as Record<TextFieldKey, string>,
     );
@@ -1038,7 +1044,7 @@ export function ContractRecordPage() {
         Object.fromEntries(
           Object.entries(nextTerm).map(([key, next]) => [
             key,
-            next === seededTerm.current[key as TermDraftKey] ? current[key as TermDraftKey] : next,
+            next === previousTerm[key as TermDraftKey] ? current[key as TermDraftKey] : next,
           ]),
         ) as Record<TermDraftKey, string>,
     );

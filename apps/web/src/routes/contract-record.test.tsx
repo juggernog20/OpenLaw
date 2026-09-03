@@ -1011,6 +1011,55 @@ describe("the /contracts/:number record page", () => {
       ]);
     });
 
+    it("adopts AI-written term drafts from a whole-record live revalidation", async () => {
+      const sources = stubEventSource();
+      const api = recordApi(contractRow(), undefined, undefined, undefined, {
+        available: true,
+        latestRun: analysisRun({ state: "pending", finishedAt: null }),
+      });
+      stubApi({ signedIn: MEMBER, extra: api.handler });
+      renderAt("/contracts/42");
+
+      await screen.findByLabelText("Title");
+      api.updateRow({
+        termType: "auto_renew",
+        effectiveDate: "2026-01-15",
+        expiryDate: "2027-01-14",
+        renewalPeriodMonths: 12,
+        noticePeriodDays: 90,
+        value: { amount: 12_500_000, currency: "USD", cadence: "annually" },
+        aiUnverified: {
+          term_type: { evidence: "renews automatically" },
+          effective_date: { evidence: "effective on January 15" },
+          expiry_date: { evidence: "ends on January 14" },
+          renewal_period_months: { evidence: "twelve-month periods" },
+          notice_period_days: { evidence: "90 days written notice" },
+          value: { evidence: "USD 125,000" },
+        },
+      });
+      api.updateAnalysis({ available: true, latestRun: analysisRun() });
+
+      act(() => {
+        sources[0]!.emit({
+          kind: "record",
+          action: "contract.analysis_completed",
+          entityType: "contract",
+          entityId: "c1",
+          entryId: "activity-analysis",
+          visibility: "working_team",
+        });
+      });
+
+      await waitFor(() => {
+        expect(screen.getByLabelText("Term type")).toHaveValue("auto_renew");
+        expect(screen.getByLabelText("Effective date")).toHaveTextContent("Jan 15, 2026");
+        expect(screen.getByLabelText("Expiry date")).toHaveTextContent("Jan 14, 2027");
+        expect(screen.getByLabelText("Renewal period (months)")).toHaveValue(12);
+        expect(screen.getByLabelText("Notice period (days)")).toHaveValue(90);
+        expect(screen.getByLabelText("Amount")).toHaveValue(125000);
+      });
+    });
+
     it("draws the refusal on the card when the overflow menu's run is turned away", async () => {
       const api = recordApi(contractRow(), undefined, undefined, undefined, {
         available: true,

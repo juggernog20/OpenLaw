@@ -10,27 +10,27 @@ ActivityBar, Pill, Avatar) live in this file as local copies per the designs con
 
 ## Frames
 
-| Frame | Node ID  | Screen                                   | Ships in  |
-| ----- | -------- | ---------------------------------------- | --------- |
-| ST1   | `t5FyJK` | Personal · Profile                       | M5 ✓      |
-| ST2   | `vVsIu`  | Personal · Appearance                    | M5 ✓      |
-| ST3   | `QQ3PT`  | Personal · Notification preferences      | M18 ✓     |
-| ST4   | `b3rJp`  | Organization · General                   | M5 ✓      |
-| ST5   | `vij2O`  | Organization · Users                     | M5 ✓      |
-| ST6   | `TRZzk`  | Matters settings · Types                 | M6 ✓      |
-| ST7   | `cW3R8`  | Organization · Integrations              | M15 ✓/M31 |
-| ST8   | `Kq7bz`  | Archive type modal (SET-003 guard)       | M6 ✓      |
-| ST10  | `Ptq2X`  | Contracts settings · Statuses            | M6 ✓      |
-| ST11  | `MaQ3Y`  | Contracts settings · Fields              | M6 ✓      |
-| ST12  | `kb2yb`  | Intake settings · Request types          | M19 ✓     |
-| ST13  | `V1LdY`  | Intake settings · Deflection links       | M19 ✓     |
-| ST14  | `rcP97`  | Intake settings · Request type editor    | M19 ✓     |
-| ST15  | `AuiXQ`  | Matters settings · Type editor           | M6 ✓      |
-| ST16  | `gQmoP`  | Contracts settings · Type editor         | M6 ✓      |
-| ST17  | `svBem`  | Organization · Security (Authentication) | M5 ✓      |
-| ST18  | `vpr5X`  | Organization · Security · OIDC           | M5 ✓      |
-| ST19  | `BWmsJ`  | Contracts settings · Types               | M6 ✓      |
-| ST22  | `TTsQ2`  | Knowledge settings · Types               | M28 ✓     |
+| Frame | Node ID  | Screen                                   | Ships in    |
+| ----- | -------- | ---------------------------------------- | ----------- |
+| ST1   | `t5FyJK` | Personal · Profile                       | M5 ✓        |
+| ST2   | `vVsIu`  | Personal · Appearance                    | M5 ✓        |
+| ST3   | `QQ3PT`  | Personal · Notification preferences      | M18 ✓       |
+| ST4   | `b3rJp`  | Organization · General                   | M5 ✓        |
+| ST5   | `vij2O`  | Organization · Users                     | M5 ✓        |
+| ST6   | `TRZzk`  | Matters settings · Types                 | M6 ✓        |
+| ST7   | `cW3R8`  | Organization · Integrations              | M15 ✓/M31 ✓ |
+| ST8   | `Kq7bz`  | Archive type modal (SET-003 guard)       | M6 ✓        |
+| ST10  | `Ptq2X`  | Contracts settings · Statuses            | M6 ✓        |
+| ST11  | `MaQ3Y`  | Contracts settings · Fields              | M6 ✓        |
+| ST12  | `kb2yb`  | Intake settings · Request types          | M19 ✓       |
+| ST13  | `V1LdY`  | Intake settings · Deflection links       | M19 ✓       |
+| ST14  | `rcP97`  | Intake settings · Request type editor    | M19 ✓       |
+| ST15  | `AuiXQ`  | Matters settings · Type editor           | M6 ✓        |
+| ST16  | `gQmoP`  | Contracts settings · Type editor         | M6 ✓        |
+| ST17  | `svBem`  | Organization · Security (Authentication) | M5 ✓        |
+| ST18  | `vpr5X`  | Organization · Security · OIDC           | M5 ✓        |
+| ST19  | `BWmsJ`  | Contracts settings · Types               | M6 ✓        |
+| ST22  | `TTsQ2`  | Knowledge settings · Types               | M28 ✓       |
 
 ## What the mocks already got right
 
@@ -348,3 +348,9 @@ No frame is added. The three screens are configurations of the shipped DES-020, 
 **ST22 is live at `/settings/knowledge/types`.** The Organization rail places Knowledge after Entities and before Notifications. The pane mounts the shared DES-020 taxonomy editor with Template, Precedent, Playbook, and Article seeded once. Administrators add, rename, reorder, archive with reassignment, restore, and remove types through the shared routes. Member+ item pickers use the separate live-options read.
 
 **ST13 now edits both deflection target kinds.** The dialog switches between External address and Knowledge item, offers only live published portal-readable items, and keeps the label editable after it takes the item's title. Rows render the Knowledge title for an internal target and the scheme-less address for an external one. Personal Notification preferences also gains the Knowledge briefing-section email toggle recorded by NOT-008; no new Settings frame was needed for that row.
+
+## Amendment (2026-09-03, M31 close, #661) — AI analysis shipped; the ST7 redraw stays open
+
+ST7's second milestone is live at **Settings → Organization → Integrations → AI analysis**, so the frame row now reads `M15 ✓/M31 ✓`. The pane uses two DES-054 disclosures: Provider for the singleton connector and Field prompts for the seven editable core prompts. Both arrive collapsed. Provider expands to the preset or custom protocol, base URL, model, and write-only API key plus Save connector and Test connection. Field prompts expands to one save-or-reset row per target and points catalog Field prompts to Contracts → Fields.
+
+The tick closes the product milestone, not the drawing debt. ST7 still shows a Configure button that does not exist and shows neither the two collapsed cards nor their expanded states. **The redraw stays open for a design pass.** That pass should decide whether the settled states need multiple 1440×940 frames or a taller reference; M31 does not edit the binary `.pen` merely to copy a built screen. DES-070 records the shipped normalization in the meantime.
