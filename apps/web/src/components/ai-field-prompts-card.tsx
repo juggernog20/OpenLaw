@@ -4,9 +4,10 @@
 
 import { useState, type KeyboardEvent } from "react";
 import { Link } from "react-router";
-import { defineMessage, FormattedMessage, useIntl } from "react-intl";
+import { FormattedMessage, useIntl } from "react-intl";
 import type { paths } from "@openlaw/api-client";
 import { api } from "../lib/api";
+import { CORE_ANALYSIS_LABELS } from "../lib/core-analysis-labels";
 import { useFieldCommit } from "../lib/field-commit";
 import { SettingsCard } from "./settings-card";
 import { StatusNote } from "./status-note";
@@ -18,33 +19,11 @@ type PromptList =
 type Prompt = PromptList["prompts"][number];
 type Slug = Prompt["slug"];
 
-const LABELS = {
-  term_type: defineMessage({ id: "contracts.form.termType", defaultMessage: "Term type" }),
-  effective_date: defineMessage({
-    id: "contracts.form.effectiveDate",
-    defaultMessage: "Effective date",
-  }),
-  expiry_date: defineMessage({ id: "contracts.form.expiryDate", defaultMessage: "Expiry date" }),
-  renewal_period_months: defineMessage({
-    id: "contracts.form.renewalPeriod",
-    defaultMessage: "Renewal period (months)",
-  }),
-  notice_period_days: defineMessage({
-    id: "contracts.form.noticePeriod",
-    defaultMessage: "Notice period (days)",
-  }),
-  value: defineMessage({ id: "contracts.form.value", defaultMessage: "Value" }),
-  counterparty: defineMessage({
-    id: "contracts.analysis.counterparty",
-    defaultMessage: "Counterparty",
-  }),
-} as const;
-
 function PromptRow({ prompt, adopt }: Readonly<{ prompt: Prompt; adopt: (row: Prompt) => void }>) {
   const intl = useIntl();
   const [draft, setDraft] = useState(prompt.prompt);
   const { status, error, commit, commitText, revertText } = useFieldCommit<Slug>();
-  const label = intl.formatMessage(LABELS[prompt.slug]);
+  const label = intl.formatMessage(CORE_ANALYSIS_LABELS[prompt.slug]);
   const inputId = `ai-field-prompt-${prompt.slug}`;
 
   function take(updated: Prompt) {

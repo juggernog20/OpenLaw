@@ -941,6 +941,26 @@ describe("AI field confirmation narration", () => {
   });
 });
 
+describe("core prompt narration", () => {
+  it("names the target in the AI analysis pane's words", () => {
+    expect(narrate("ai_field_prompt.updated", { slug: "effective_date" }).sentence).toBe(
+      "Nadia Counsel changed the analysis prompt for Effective date",
+    );
+    expect(narrate("ai_field_prompt.reset", { slug: "counterparty" }).sentence).toBe(
+      "Nadia Counsel reset the analysis prompt for Counterparty to its default",
+    );
+  });
+
+  it("echoes a slug the pane does not label and names a missing one plainly", () => {
+    expect(narrate("ai_field_prompt.updated", { slug: "governing_law" }).sentence).toBe(
+      "Nadia Counsel changed the analysis prompt for governing_law",
+    );
+    expect(narrate("ai_field_prompt.reset", {}).sentence).toBe(
+      "Nadia Counsel reset the analysis prompt for a field to its default",
+    );
+  });
+});
+
 describe("the counted branches of the connector and erasure sentences", () => {
   // `wholeCount` maps a missing or malformed count to 0, which is
   // exactly what an entry written by an older build produces. The

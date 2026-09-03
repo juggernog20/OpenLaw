@@ -15,6 +15,7 @@ import {
 import type { ContractAnalysis, ContractAnalysisResult, ContractRow } from "../../lib/contracts";
 import type { AttachedField } from "../../lib/custom-fields";
 import { formatContractValue, termTypeLabel } from "../../lib/contracts";
+import { coreAnalysisLabel } from "../../lib/core-analysis-labels";
 import { formatShortDate } from "../../lib/format";
 import { Button } from "../ui/button";
 
@@ -60,31 +61,8 @@ export function ConfirmUnverified({
   );
 }
 
-// Both tables are `defineMessage` calls so `i18n:extract` sees them; a
-// bare object literal spread into <FormattedMessage> never reaches the
-// catalog.
-const CORE_LABELS: Readonly<Record<string, MessageDescriptor>> = {
-  term_type: defineMessage({ id: "contracts.form.termType", defaultMessage: "Term type" }),
-  effective_date: defineMessage({
-    id: "contracts.form.effectiveDate",
-    defaultMessage: "Effective date",
-  }),
-  expiry_date: defineMessage({ id: "contracts.form.expiryDate", defaultMessage: "Expiry date" }),
-  renewal_period_months: defineMessage({
-    id: "contracts.form.renewalPeriod",
-    defaultMessage: "Renewal period (months)",
-  }),
-  notice_period_days: defineMessage({
-    id: "contracts.form.noticePeriod",
-    defaultMessage: "Notice period (days)",
-  }),
-  value: defineMessage({ id: "contracts.form.value", defaultMessage: "Value" }),
-  counterparty: defineMessage({
-    id: "contracts.analysis.counterparty",
-    defaultMessage: "Counterparty",
-  }),
-};
-
+// A `defineMessage` table so `i18n:extract` sees it; a bare object
+// literal spread into <FormattedMessage> never reaches the catalog.
 const OUTCOME_LABELS: Readonly<Record<ContractAnalysisResult["outcome"], MessageDescriptor>> = {
   written: defineMessage({ id: "contracts.analysis.outcome.written", defaultMessage: "Written" }),
   kept: defineMessage({ id: "contracts.analysis.outcome.kept", defaultMessage: "Kept" }),
@@ -100,7 +78,7 @@ const OUTCOME_LABELS: Readonly<Record<ContractAnalysisResult["outcome"], Message
 };
 
 function resultLabel(slug: string, fields: readonly AttachedField[]): ReactNode {
-  const core = CORE_LABELS[slug];
+  const core = coreAnalysisLabel(slug);
   return core ? (
     <FormattedMessage {...core} />
   ) : (
