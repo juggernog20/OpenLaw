@@ -192,7 +192,7 @@ No `archived_at`: a connector is turned off with `disabled_at`, or deleted. The 
 
 Source: **CTR-008**, **TECH-012**, **TECH-022**, **SET-007**
 
-The one AI provider configuration for this install. A unique index on constant `true` makes the singleton rule a database fact. It is configured at runtime in Settings → Organization → AI analysis and resolved live for both the API's Test connection call and every worker analysis run. No provider environment variable exists.
+The one AI connector for this install: the singleton provider configuration for Contract analysis. A unique index on constant `true` makes the singleton rule a database fact. It is configured at runtime in Settings → Organization → AI analysis and resolved live for both the API's Test connection call and every worker analysis run. There is no environment variable for the AI connector; the row is the only source.
 
 | Column                     | Type        | Notes                                                                                                                                                   |
 | -------------------------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
