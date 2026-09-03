@@ -42,8 +42,9 @@ x-openlaw-dev-outbound: &openlaw-dev-outbound
 
 # host-gateway gives Linux engines the name Docker Desktop defines out
 # of the box, which is how both processes reach the suite's own servers
-# on the host: the mock OIDC issuer (10-settings.spec.ts) and the
-# signing stand-in (21-m15-demo.spec.ts).
+# on the host: the mock OIDC issuer (10-settings.spec.ts), the signing
+# stand-in (21-m15-demo.spec.ts), and the connector-addressed AI
+# provider stand-in (38-m31-demo.spec.ts).
 x-openlaw-dev-hosts: &openlaw-dev-hosts
   - "host.docker.internal:host-gateway"
 

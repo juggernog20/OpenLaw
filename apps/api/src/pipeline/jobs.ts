@@ -118,6 +118,8 @@ export const JOB_QUEUES = {
    * post.
    */
   morningRound: "notification.morning-round",
+  /** One CTR-008 analysis run, collapsed by Contract while waiting. */
+  contractAnalysis: "contract.analysis",
 } as const;
 
 /** What the text-extraction queue carries. */
@@ -154,6 +156,11 @@ export interface ExecutedCopyFetchJob {
  */
 export interface NotificationEmailJob {
   notificationId: string;
+}
+
+export interface ContractAnalysisJob {
+  contractId: string;
+  runId: string;
 }
 
 /**
@@ -206,6 +213,12 @@ export interface JobQueue {
    * scheduled round re-asks for every row still owed and unsent.
    */
   requestNotificationEmail(notificationId: string): Promise<void>;
+
+  /**
+   * Queues one durable analysis run under the Contract's singleton key.
+   * Answers false when another waiting job already holds that key.
+   */
+  requestContractAnalysis(contractId: string, runId: string): Promise<boolean>;
 }
 
 /**
@@ -228,7 +241,7 @@ export const QUEUE_ASK_TIMEOUT_MS = 2000;
  * unobserved; whichever side loses the race settles later with a
  * handler already attached, so neither becomes an unhandled rejection.
  */
-export async function boundedQueueAsk(asked: Promise<void>): Promise<void> {
+export async function boundedQueueAsk<T>(asked: Promise<T>): Promise<T> {
   asked.catch(() => {});
   let timer: NodeJS.Timeout | undefined;
   const bound = new Promise<never>((_resolve, reject) => {
@@ -240,7 +253,7 @@ export async function boundedQueueAsk(asked: Promise<void>): Promise<void> {
   });
   bound.catch(() => {});
   try {
-    await Promise.race([asked, bound]);
+    return await Promise.race([asked, bound]);
   } finally {
     clearTimeout(timer);
   }
@@ -270,5 +283,6 @@ export function createUnconfiguredJobQueue(): JobQueue {
     requestDisplayConversion: refuse,
     requestExecutedCopyFetch: refuse,
     requestNotificationEmail: refuse,
+    requestContractAnalysis: refuse,
   };
 }

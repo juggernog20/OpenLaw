@@ -34,6 +34,7 @@ import { requireUser } from "../lib/session";
 import { cn } from "../lib/utils";
 import { PageTitle } from "../components/page-title";
 import { SettingsCard } from "../components/settings-card";
+import { IntegrationsSettingsTabs } from "../components/integrations-settings-tabs";
 import { StatusNote, type FieldStatus } from "../components/status-note";
 import { Button } from "../components/ui/button";
 import { Dialog, DialogContent, DialogTitle } from "../components/ui/dialog";
@@ -309,6 +310,7 @@ export function SettingsESignaturePage() {
           defaultMessage: "E-signature",
         })}
       />
+      <IntegrationsSettingsTabs />
       <SettingsCard
         title={<FormattedMessage id="settings.eSignature.docusign" defaultMessage="DocuSign" />}
         collapsible

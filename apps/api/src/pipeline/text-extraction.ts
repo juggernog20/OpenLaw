@@ -231,7 +231,10 @@ interface VersionRow {
  * Throws whatever failed, classified by the caller. It never touches the
  * version row, and it never writes a blob.
  */
-export async function extractVersionText(deps: DerivationDeps, versionId: string): Promise<void> {
+export async function extractVersionText(
+  deps: DerivationDeps,
+  versionId: string,
+): Promise<boolean> {
   const [version] = await deps.db
     .select({
       fileRef: documentVersions.fileRef,
@@ -246,14 +249,14 @@ export async function extractVersionText(deps: DerivationDeps, versionId: string
     // owed for a version that no longer exists, and its derivation row
     // went with it.
     deps.log.info({ versionId }, "no document version to extract text from");
-    return;
+    return false;
   }
 
   // Text that is already there is not read again. It makes the job
   // idempotent, which is what lets the M12/6 sweep enqueue freely and a
   // retry after a partial failure converge. A failed row is not skipped:
   // something asking again is exactly how a failure gets another go.
-  if (await textIsReady(deps, versionId)) return;
+  if (await textIsReady(deps, versionId)) return false;
 
   if (!extractsText(version.mimeType, version.originalFilename)) {
     deps.log.warn({ versionId }, "no text extraction path for this file");
@@ -266,7 +269,7 @@ export async function extractVersionText(deps: DerivationDeps, versionId: string
     // "something went wrong".
     if (await textDerivationState(deps, versionId))
       await writeTextDerivation(deps, versionId, { state: "failed", source: null, text: null });
-    return;
+    return false;
   }
 
   if (conversionFormatOf(version.mimeType, version.originalFilename) !== null) {
@@ -279,7 +282,7 @@ export async function extractVersionText(deps: DerivationDeps, versionId: string
       { versionId },
       "this version's text comes from its display rendition; leaving it to the conversion job",
     );
-    return;
+    return false;
   }
 
   const { text, source, emailSubject } = isEmail(version.mimeType, version.originalFilename)
@@ -290,6 +293,7 @@ export async function extractVersionText(deps: DerivationDeps, versionId: string
     { versionId, source, characters: text.length },
     "extracted a document version's text",
   );
+  return true;
 }
 
 /**
@@ -360,9 +364,11 @@ export function readPdfTextLayer(deps: DerivationDeps, fileRef: string): Promise
 export async function handleTextExtraction(
   deps: DerivationDeps,
   attempt: JobAttempt,
+  onTextReady?: (versionId: string) => Promise<void>,
 ): Promise<void> {
+  let becameReady = false;
   try {
-    await extractVersionText(deps, attempt.versionId);
+    becameReady = await extractVersionText(deps, attempt.versionId);
   } catch (error) {
     const terminal = isTerminalFailure(error);
     const exhausted = attempt.retryCount >= attempt.retryLimit;
@@ -387,5 +393,18 @@ export async function handleTextExtraction(
     // back to the queue, so the operator's job list shows the failure
     // whether or not a retry is left.
     if (!terminal) throw error;
+  }
+  // The text is on the record by now. The analysis ask runs outside the
+  // block above, so a fault in it cannot mark ready text as failed or
+  // send this job back for bytes it already read (#664).
+  if (becameReady) {
+    try {
+      await onTextReady?.(attempt.versionId);
+    } catch (error) {
+      deps.log.warn(
+        { versionId: attempt.versionId, reason: reasonOf(error) },
+        "could not request automatic analysis for ready text",
+      );
+    }
   }
 }

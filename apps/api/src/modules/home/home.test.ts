@@ -120,6 +120,7 @@ interface DatesSection {
     date: string;
     label: string | null;
     noticePeriodDays: number | null;
+    unverified: boolean;
     record: {
       kind: "contract" | "matter";
       id: string;
@@ -633,6 +634,13 @@ describe("GET /api/v1/home", () => {
       .set({
         expiryDate: plusDays(today, 3),
         noticePeriodDays: 2,
+        aiUnverified: {
+          expiry_date: {
+            evidence: "The term ends in three days.",
+            runId: "home-dates-run",
+            writtenAt: new Date().toISOString(),
+          },
+        },
         isConfidential: true,
       })
       .where(eq(contracts.id, contract.id));
@@ -765,6 +773,7 @@ describe("GET /api/v1/home", () => {
       date: plusDays(today, 1),
       label: null,
       noticePeriodDays: 2,
+      unverified: true,
       record: {
         kind: "contract",
         number: contract.number,
@@ -776,7 +785,9 @@ describe("GET /api/v1/home", () => {
       keyDateId: contractKeyDate!.id,
       label: "Price review window opens",
       noticePeriodDays: null,
+      unverified: false,
     });
+    expect(section!.rows[2]).toMatchObject({ source: "expiry", unverified: true });
     expect(section!.rows.every((row) => !row.record.title.includes("Walled"))).toBe(true);
     expect(section!.rows.every((row) => !row.record.title.includes("Legacy ended"))).toBe(true);
 
@@ -793,8 +804,40 @@ describe("GET /api/v1/home", () => {
     ]);
     expect(shifted!.rows[2]).toMatchObject({
       label: "Response filing deadline",
+      unverified: false,
       record: { number: matter.number, title: "Regulatory response" },
     });
+
+    const noticeMarker = {
+      evidence: "The notice period is two days.",
+      runId: "home-notice-run",
+      writtenAt: new Date().toISOString(),
+    };
+    await harness.db
+      .update(contracts)
+      .set({ aiUnverified: { notice_period_days: noticeMarker } })
+      .where(eq(contracts.id, contract.id));
+    const noticeFlagged = datesIn(await home(APPROVER));
+    expect(
+      noticeFlagged!.rows.find(
+        (row) => row.record.id === contract.id && row.source === "notice_deadline",
+      )?.unverified,
+    ).toBe(true);
+    expect(
+      noticeFlagged!.rows.find((row) => row.record.id === contract.id && row.source === "expiry")
+        ?.unverified,
+    ).toBe(false);
+
+    await harness.db
+      .update(contracts)
+      .set({ aiUnverified: null })
+      .where(eq(contracts.id, contract.id));
+    const confirmed = datesIn(await home(APPROVER));
+    expect(
+      confirmed!.rows
+        .filter((row) => row.record.id === contract.id)
+        .every((row) => !row.unverified),
+    ).toBe(true);
 
     expect(datesIn(await home(OTHER))).toMatchObject({
       type: "dates",

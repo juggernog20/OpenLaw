@@ -768,6 +768,28 @@ type ContractPayloads = {
     matterNumber: number;
     matterTitle: string;
   };
+  "contract.analysis_completed": {
+    number: number;
+    title: string;
+    runId: string;
+    versionId: string;
+    model: string;
+    written: string[];
+    kept: string[];
+    unsupported: string[];
+    invalid: string[];
+    unmatched?: string;
+  };
+  "contract.analysis_failed": {
+    number: number;
+    title: string;
+    runId: string;
+    versionId: string | null;
+    model: string;
+    reason: string;
+  };
+  /** A person accepted one AI-written value as the record's fact. */
+  "contract.field_confirmed": { number: number; title: string; slug: string };
   "contract.archived": { number: number; title: string };
   "contract.restored": { number: number; title: string };
 };
@@ -1013,6 +1035,43 @@ type SigningConnectorPayloads = {
   };
 };
 
+/** The singleton AI connector follows the signing connector's settings history. */
+type AiConnectorPayloads = {
+  "ai_connector.configured": {
+    preset: string;
+    protocol: string;
+    baseUrl: string;
+    model: string;
+  };
+  "ai_connector.updated":
+    | {
+        preset: string;
+        field: "apiKey";
+        old: "[secret]";
+        new: "[secret]";
+      }
+    | {
+        preset: string;
+        field: "preset" | "protocol" | "baseUrl" | "model";
+        old: unknown;
+        new: unknown;
+      };
+  "ai_connector.disabled": { preset: string };
+  "ai_connector.enabled": { preset: string };
+  "ai_connector.removed": {
+    preset: string;
+    protocol: string;
+    baseUrl: string;
+    model: string;
+  };
+};
+
+/** Core prompt overrides are settings-tier changes and store no prompt text in the log. */
+type AiFieldPromptPayloads = {
+  "ai_field_prompt.updated": { slug: string };
+  "ai_field_prompt.reset": { slug: string };
+};
+
 /**
  * One round of signature on one contract (M15/2, M15/3, CTR-013). These
  * hang off the contract, not off the envelope, for the reason the
@@ -1160,6 +1219,8 @@ export type ActivityPayloadMap = UserPayloads &
   FolderPayloads &
   SsoProviderPayloads &
   SigningConnectorPayloads &
+  AiConnectorPayloads &
+  AiFieldPromptPayloads &
   EnvelopePayloads &
   SignerErasurePayloads &
   KnowledgePayloads &

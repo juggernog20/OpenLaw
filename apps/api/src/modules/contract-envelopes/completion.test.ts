@@ -41,6 +41,7 @@ import {
   activityLog,
   and,
   asc,
+  contractAnalysisRuns,
   contractEnvelopes,
   contracts,
   contractStatuses,
@@ -52,6 +53,7 @@ import {
   type ContractStage,
 } from "@openlaw/db";
 import { provisionUser } from "../../auth/instance.js";
+import { FAKE_VALID_AI_KEY } from "../../lib/ai/fake.js";
 import { crossesApprovalGate } from "../../lib/soft-gate.js";
 import { FAKE_SIGNATURE_HEADER, FAKE_VALID_INTEGRATION_KEY } from "../../lib/signing/fake.js";
 import type { WebhookDelivery } from "../../lib/signing/provider.js";
@@ -348,6 +350,24 @@ async function settledFetch(number: number, envelopeId: string): Promise<Envelop
   );
 }
 
+async function settledAnalysis(contractId: string, versionId: string) {
+  const deadline = Date.now() + SETTLE_TIMEOUT_MS;
+  while (Date.now() < deadline) {
+    const [run] = await harness.db
+      .select()
+      .from(contractAnalysisRuns)
+      .where(
+        and(
+          eq(contractAnalysisRuns.contractId, contractId),
+          eq(contractAnalysisRuns.versionId, versionId),
+        ),
+      );
+    if (run?.state === "ready") return run;
+    await new Promise((resolve) => setTimeout(resolve, 50));
+  }
+  throw new Error(`analysis of executed Version ${versionId} did not settle`);
+}
+
 /** Signs the envelope at the provider and tells the record, exactly as
  * a signer plus Connect would. */
 async function signIt(envelope: EnvelopeRow): Promise<string> {
@@ -451,12 +471,34 @@ describe("a signed envelope files its executed copy", () => {
   let mark: string;
 
   beforeAll(async () => {
+    const connector = await harness.app.inject({
+      method: "PUT",
+      url: "/api/v1/ai-connector",
+      cookies: as(ADMIN),
+      payload: {
+        preset: "custom",
+        protocol: "openai_chat_completions",
+        baseUrl: "https://completion-analysis.invalid/v1",
+        apiKey: FAKE_VALID_AI_KEY,
+        model: "completion-analysis-model",
+      },
+    });
+    expect(connector.statusCode, connector.body).toBe(200);
     contract = await recordWithPaper("Meridian Bio supply agreement");
     await moveTo(contract.number, "signature");
     envelope = await sendFrom(contract.number);
     mark = await activityMark();
     providerEnvelopeId = await signIt(envelope);
     settled = await settledFetch(contract.number, envelope.id);
+  });
+
+  afterAll(async () => {
+    const disabled = await harness.app.inject({
+      method: "POST",
+      url: "/api/v1/ai-connector/disable",
+      cookies: as(ADMIN),
+    });
+    expect(disabled.statusCode, disabled.body).toBe(200);
   });
 
   it("appends it to the primary chain as the next executed round", async () => {
@@ -475,6 +517,16 @@ describe("a signed envelope files its executed copy", () => {
   it("pins it, and the record answers the pin", async () => {
     const primary = await primaryOf(contract.number);
     expect(primary.versions.map((version) => version.isExecuted)).toEqual([false, true]);
+  });
+
+  it("analyzes the executed round when its pending text becomes ready", async () => {
+    const primary = await primaryOf(contract.number);
+    const run = await settledAnalysis(contract.id, primary.versions[1]!.id);
+    expect(run).toMatchObject({
+      trigger: "automatic",
+      requestedBy: null,
+      versionId: primary.versions[1]!.id,
+    });
   });
 
   it("is downloadable — the pinned bytes are the provider's own", async () => {

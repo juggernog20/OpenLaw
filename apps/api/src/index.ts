@@ -31,6 +31,7 @@ import { createNotifier } from "./lib/notifications/notifier.js";
 import { createPostgresEventHub } from "./lib/event-hub.js";
 import { createConsoleLogger } from "./pipeline/logger.js";
 import { createSigningResolver } from "./lib/signing/resolver.js";
+import { createAiResolver } from "./lib/ai/resolver.js";
 import { maxUploadBytes } from "./lib/uploads.js";
 import { startPipeline } from "./pipeline/pg-boss.js";
 
@@ -176,6 +177,9 @@ const resolveSigningProvider = createSigningResolver(
   db,
   createDocuSignDriverFactory(docusignBaseUrl),
 );
+// The AI connector is also Organization data. The resolver reads its
+// singleton row live, and the provider adapter follows the stored protocol.
+const resolveAiProvider = createAiResolver(db);
 
 // The upload ceiling, in whole mebibytes, read here for the storage
 // root's reason: startup reads the environment, and no module does. An
@@ -255,6 +259,7 @@ const app = await buildApp(
     docEngine,
     jobs,
     resolveSigningProvider,
+    resolveAiProvider,
     notifier,
     eventHub,
     maxUploadBytes: uploadCeiling,

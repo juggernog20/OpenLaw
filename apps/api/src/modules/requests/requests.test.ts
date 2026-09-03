@@ -108,7 +108,12 @@ beforeAll(async () => {
   // the required rule, the scope rule, and coercion in one form.
   fieldIds = new Map();
   for (const field of [
-    { displayName: "Counterparty", moduleScope: "contract", fieldType: "text", required: true },
+    {
+      displayName: "Counterparty name",
+      moduleScope: "contract",
+      fieldType: "text",
+      required: true,
+    },
     { displayName: "Deal desk region", moduleScope: "global", fieldType: "text", required: false },
     {
       displayName: "Paper side",
@@ -155,7 +160,7 @@ function completeBody(overrides: Record<string, unknown> = {}) {
     summary: "MSA renewal with Orion Cloud",
     description: "They sent a redline on the liability cap. We need it back by Friday.",
     urgency: "high",
-    customFields: { counterparty: "Orion Cloud" },
+    customFields: { counterparty_name: "Orion Cloud" },
     ...overrides,
   };
 }
@@ -183,7 +188,7 @@ describe("submitting a Request", () => {
     const answered = res.json().request;
     expect(answered.status).toBe("new");
     expect(answered.number).toBeGreaterThan(0);
-    expect(answered.customFields).toEqual({ counterparty: "Orion Cloud" });
+    expect(answered.customFields).toEqual({ counterparty_name: "Orion Cloud" });
 
     const stored = await storedRequest(answered.id);
     expect(stored.number).toBe(answered.number);
@@ -192,7 +197,7 @@ describe("submitting a Request", () => {
     expect(stored.urgency).toBe("high");
     // Keyed by the field's slug, not its id or its display name — the
     // slug is what survives a rename, and what conversion reads.
-    expect(stored.customFields).toEqual({ counterparty: "Orion Cloud" });
+    expect(stored.customFields).toEqual({ counterparty_name: "Orion Cloud" });
   });
 
   it("draws each number from the global sequence, in order", async () => {
@@ -230,12 +235,12 @@ describe("submitting a Request", () => {
 
   it("stores an optional field left blank as no key at all", async () => {
     const res = await submit(
-      completeBody({ customFields: { counterparty: "Orion Cloud", deal_desk_region: "  " } }),
+      completeBody({ customFields: { counterparty_name: "Orion Cloud", deal_desk_region: "  " } }),
     );
     expect(res.statusCode, res.body).toBe(201);
     // One shape for "nothing recorded", the contract column's rule.
     expect((await storedRequest(res.json().request.id)).customFields).toEqual({
-      counterparty: "Orion Cloud",
+      counterparty_name: "Orion Cloud",
     });
   });
 });
@@ -263,7 +268,7 @@ describe("the basics every form collects", () => {
     const detail = res.json().detail as string;
     expect(detail).toContain("Summary");
     expect(detail).toContain("Description");
-    expect(detail).toContain("Counterparty");
+    expect(detail).toContain("Counterparty name");
   });
 
   it("takes only the four severity levels for Urgency", async () => {
@@ -283,12 +288,12 @@ describe("the attached fields the type collects", () => {
   it("enforces the Administrator's required flag, naming the field", async () => {
     const res = await submit(completeBody({ customFields: {} }));
     expect(res.statusCode, res.body).toBe(400);
-    expect(res.json().detail).toContain("Counterparty");
+    expect(res.json().detail).toContain("Counterparty name");
   });
 
   it("accepts values for exactly the fields the type attaches", async () => {
     const res = await submit(
-      completeBody({ customFields: { counterparty: "Orion Cloud", not_on_this_form: "x" } }),
+      completeBody({ customFields: { counterparty_name: "Orion Cloud", not_on_this_form: "x" } }),
     );
     expect(res.statusCode, res.body).toBe(400);
     expect(res.json().detail).toContain("not on this request type's form");
@@ -296,7 +301,7 @@ describe("the attached fields the type collects", () => {
 
   it("checks a value against its field's type", async () => {
     const res = await submit(
-      completeBody({ customFields: { counterparty: "Orion Cloud", paper_side: "Nobody's" } }),
+      completeBody({ customFields: { counterparty_name: "Orion Cloud", paper_side: "Nobody's" } }),
     );
     expect(res.statusCode, res.body).toBe(400);
     expect(res.json().detail).toContain("Paper side");
@@ -309,7 +314,7 @@ describe("the attached fields the type collects", () => {
     // meets that state rather than preventing it — the field renders,
     // its required flag still applies, and its value is collected.
     const typeId = typeIds.get("contract_review")!;
-    const scoped = ["Counterparty", "Paper side"] as const;
+    const scoped = ["Counterparty name", "Paper side"] as const;
     // Inside the try from the first mutation on: an assertion that
     // fails half way through the setup must still put the shared seed
     // type back, or every suite after it inherits a matter-targeting
@@ -350,7 +355,7 @@ describe("the attached fields the type collects", () => {
         .where(
           and(
             eq(requestTypeFields.typeId, typeId),
-            eq(requestTypeFields.fieldId, fieldIds.get("Counterparty")!),
+            eq(requestTypeFields.fieldId, fieldIds.get("Counterparty name")!),
           ),
         );
       expect(stillAttached).toHaveLength(1);
@@ -358,12 +363,12 @@ describe("the attached fields the type collects", () => {
       // It is still required, and it still collects.
       const missing = await submit(completeBody({ customFields: {} }));
       expect(missing.statusCode, missing.body).toBe(400);
-      expect(missing.json().detail).toContain("Counterparty");
+      expect(missing.json().detail).toContain("Counterparty name");
 
       const res = await submit(completeBody());
       expect(res.statusCode, res.body).toBe(201);
       expect((await storedRequest(res.json().request.id)).customFields).toEqual({
-        counterparty: "Orion Cloud",
+        counterparty_name: "Orion Cloud",
       });
     } finally {
       const back = await harness.app.inject({
@@ -457,7 +462,7 @@ describe("the activity a submission writes", () => {
       number: created.number,
       requestType: "Contract review",
       urgency: "high",
-      customFields: ["counterparty"],
+      customFields: ["counterparty_name"],
     });
   });
 
@@ -499,7 +504,7 @@ describe("the form definition a requester reads", () => {
     const form = res.json();
     expect(form.requestType.displayName).toBe("Contract review");
     expect(form.fields.map((field: { displayName: string }) => field.displayName)).toEqual([
-      "Counterparty",
+      "Counterparty name",
       "Deal desk region",
       "Paper side",
     ]);
@@ -646,7 +651,7 @@ describe("the request detail", () => {
     const created = await submit(
       completeBody({
         summary: "Detail shape",
-        customFields: { counterparty: "Orion Cloud", paper_side: "Theirs" },
+        customFields: { counterparty_name: "Orion Cloud", paper_side: "Theirs" },
       }),
     );
     expect(created.statusCode, created.body).toBe(201);
@@ -662,13 +667,13 @@ describe("the request detail", () => {
     expect(detail.request.requestType.displayName).toBe("Contract review");
     expect(detail.request.declinedReason).toBeNull();
     expect(detail.request.customFields).toEqual({
-      counterparty: "Orion Cloud",
+      counterparty_name: "Orion Cloud",
       paper_side: "Theirs",
     });
     // The labels come from the same attached-fields read the form drew
     // its boxes from, so a value is named exactly as the box was.
     expect(detail.fields.map((field: { displayName: string }) => field.displayName)).toEqual([
-      "Counterparty",
+      "Counterparty name",
       "Deal desk region",
       "Paper side",
     ]);

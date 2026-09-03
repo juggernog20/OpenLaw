@@ -506,6 +506,94 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/v1/ai-connector": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Read the AI connector without returning its write-only API key */
+    get: operations["getAiConnector"];
+    /** Configure or update the AI connector; a blank API key keeps the stored key */
+    put: operations["saveAiConnector"];
+    post?: never;
+    /** Remove the AI connector and its API key */
+    delete: operations["deleteAiConnector"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/ai-connector/test": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Make one small call through the stored AI connector */
+    post: operations["testAiConnector"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/ai-connector/disable": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Turn off the AI connector without deleting its configuration */
+    post: operations["disableAiConnector"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/ai-connector/enable": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Turn on the stored AI connector */
+    post: operations["enableAiConnector"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/ai-field-prompts": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Read the effective and default prompts for the seven core analysis targets */
+    get: operations["listAiFieldPrompts"];
+    /** Save or reset one core analysis prompt; null or blank resets it to the default */
+    put: operations["saveAiFieldPrompt"];
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/v1/signer-erasures": {
     parameters: {
       query?: never;
@@ -2003,6 +2091,40 @@ export interface paths {
     patch: operations["updateContract"];
     trace?: never;
   };
+  "/api/v1/contracts/{number}/analysis/confirm": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Confirm one AI-written Contract value, clear its unverified marker, and append one record-tier confirmation entry */
+    post: operations["confirmContractAnalysisField"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/contracts/{number}/analysis/confirm-all": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Confirm every AI-written Contract value in one transaction and append one record-tier confirmation entry per cleared slug */
+    post: operations["confirmAllContractAnalysisFields"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/v1/contracts/{number}/renewal": {
     parameters: {
       query?: never;
@@ -2133,6 +2255,23 @@ export interface paths {
     put?: never;
     /** Restore an archived contract (archive's recovery story): it rejoins the list and becomes editable again */
     post: operations["restoreContract"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/contracts/{number}/analysis": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Queue one manual CTR-008 analysis of the primary Document's executed pin, or its current Version when no pin exists. One waiting run is allowed per Contract; a run that has already started does not block one follow-up. Member+ only, on a live record with ready text and an enabled AI connector */
+    post: operations["runContractAnalysis"];
     delete?: never;
     options?: never;
     head?: never;
@@ -5915,6 +6054,499 @@ export interface operations {
               hasWebhookSecret: boolean;
               webhookUrl: string;
               updatedAt: string | null;
+            };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  getAiConnector: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            connector: {
+              configured: boolean;
+              enabled: boolean;
+              preset:
+                | (
+                    | "anthropic"
+                    | "openai"
+                    | "azure_openai"
+                    | "gemini"
+                    | "openrouter"
+                    | "ollama"
+                    | "custom"
+                  )
+                | null;
+              protocol: ("anthropic_messages" | "openai_chat_completions" | "gemini") | null;
+              baseUrl: string | null;
+              hasApiKey: boolean;
+              model: string | null;
+              disabledAt: string | null;
+              updatedAt: string | null;
+            };
+            presets: {
+              /** @enum {string} */
+              preset:
+                | "anthropic"
+                | "openai"
+                | "azure_openai"
+                | "gemini"
+                | "openrouter"
+                | "ollama"
+                | "custom";
+              label: string;
+              /** @enum {string} */
+              protocol: "anthropic_messages" | "openai_chat_completions" | "gemini";
+              baseUrl: string | null;
+              defaultModel: string;
+              requiresApiKey: boolean;
+              requiresBaseUrl: boolean;
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  saveAiConnector: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          /** @enum {string} */
+          preset:
+            "anthropic" | "openai" | "azure_openai" | "gemini" | "openrouter" | "ollama" | "custom";
+          /** @enum {string} */
+          protocol?: "anthropic_messages" | "openai_chat_completions" | "gemini";
+          baseUrl?: string;
+          apiKey?: string;
+          model: string;
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            connector: {
+              configured: boolean;
+              enabled: boolean;
+              preset:
+                | (
+                    | "anthropic"
+                    | "openai"
+                    | "azure_openai"
+                    | "gemini"
+                    | "openrouter"
+                    | "ollama"
+                    | "custom"
+                  )
+                | null;
+              protocol: ("anthropic_messages" | "openai_chat_completions" | "gemini") | null;
+              baseUrl: string | null;
+              hasApiKey: boolean;
+              model: string | null;
+              disabledAt: string | null;
+              updatedAt: string | null;
+            };
+            presets: {
+              /** @enum {string} */
+              preset:
+                | "anthropic"
+                | "openai"
+                | "azure_openai"
+                | "gemini"
+                | "openrouter"
+                | "ollama"
+                | "custom";
+              label: string;
+              /** @enum {string} */
+              protocol: "anthropic_messages" | "openai_chat_completions" | "gemini";
+              baseUrl: string | null;
+              defaultModel: string;
+              requiresApiKey: boolean;
+              requiresBaseUrl: boolean;
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  deleteAiConnector: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            connector: {
+              configured: boolean;
+              enabled: boolean;
+              preset:
+                | (
+                    | "anthropic"
+                    | "openai"
+                    | "azure_openai"
+                    | "gemini"
+                    | "openrouter"
+                    | "ollama"
+                    | "custom"
+                  )
+                | null;
+              protocol: ("anthropic_messages" | "openai_chat_completions" | "gemini") | null;
+              baseUrl: string | null;
+              hasApiKey: boolean;
+              model: string | null;
+              disabledAt: string | null;
+              updatedAt: string | null;
+            };
+            presets: {
+              /** @enum {string} */
+              preset:
+                | "anthropic"
+                | "openai"
+                | "azure_openai"
+                | "gemini"
+                | "openrouter"
+                | "ollama"
+                | "custom";
+              label: string;
+              /** @enum {string} */
+              protocol: "anthropic_messages" | "openai_chat_completions" | "gemini";
+              baseUrl: string | null;
+              defaultModel: string;
+              requiresApiKey: boolean;
+              requiresBaseUrl: boolean;
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  testAiConnector: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            /** @enum {boolean} */
+            ok: true;
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  disableAiConnector: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            connector: {
+              configured: boolean;
+              enabled: boolean;
+              preset:
+                | (
+                    | "anthropic"
+                    | "openai"
+                    | "azure_openai"
+                    | "gemini"
+                    | "openrouter"
+                    | "ollama"
+                    | "custom"
+                  )
+                | null;
+              protocol: ("anthropic_messages" | "openai_chat_completions" | "gemini") | null;
+              baseUrl: string | null;
+              hasApiKey: boolean;
+              model: string | null;
+              disabledAt: string | null;
+              updatedAt: string | null;
+            };
+            presets: {
+              /** @enum {string} */
+              preset:
+                | "anthropic"
+                | "openai"
+                | "azure_openai"
+                | "gemini"
+                | "openrouter"
+                | "ollama"
+                | "custom";
+              label: string;
+              /** @enum {string} */
+              protocol: "anthropic_messages" | "openai_chat_completions" | "gemini";
+              baseUrl: string | null;
+              defaultModel: string;
+              requiresApiKey: boolean;
+              requiresBaseUrl: boolean;
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  enableAiConnector: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            connector: {
+              configured: boolean;
+              enabled: boolean;
+              preset:
+                | (
+                    | "anthropic"
+                    | "openai"
+                    | "azure_openai"
+                    | "gemini"
+                    | "openrouter"
+                    | "ollama"
+                    | "custom"
+                  )
+                | null;
+              protocol: ("anthropic_messages" | "openai_chat_completions" | "gemini") | null;
+              baseUrl: string | null;
+              hasApiKey: boolean;
+              model: string | null;
+              disabledAt: string | null;
+              updatedAt: string | null;
+            };
+            presets: {
+              /** @enum {string} */
+              preset:
+                | "anthropic"
+                | "openai"
+                | "azure_openai"
+                | "gemini"
+                | "openrouter"
+                | "ollama"
+                | "custom";
+              label: string;
+              /** @enum {string} */
+              protocol: "anthropic_messages" | "openai_chat_completions" | "gemini";
+              baseUrl: string | null;
+              defaultModel: string;
+              requiresApiKey: boolean;
+              requiresBaseUrl: boolean;
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  listAiFieldPrompts: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            prompts: {
+              /** @enum {string} */
+              slug:
+                | "term_type"
+                | "effective_date"
+                | "expiry_date"
+                | "renewal_period_months"
+                | "notice_period_days"
+                | "value"
+                | "counterparty";
+              prompt: string;
+              defaultPrompt: string;
+              overridden: boolean;
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  saveAiFieldPrompt: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          /** @enum {string} */
+          slug:
+            | "term_type"
+            | "effective_date"
+            | "expiry_date"
+            | "renewal_period_months"
+            | "notice_period_days"
+            | "value"
+            | "counterparty";
+          prompt: string | null;
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            prompt: {
+              /** @enum {string} */
+              slug:
+                | "term_type"
+                | "effective_date"
+                | "expiry_date"
+                | "renewal_period_months"
+                | "notice_period_days"
+                | "value"
+                | "counterparty";
+              prompt: string;
+              defaultPrompt: string;
+              overridden: boolean;
             };
           };
         };
@@ -12612,6 +13244,13 @@ export interface operations {
               customFields: {
                 [key: string]: string | number | boolean | string[];
               };
+              aiUnverified: {
+                [key: string]: {
+                  runId: string;
+                  /** Format: date-time */
+                  writtenAt: string;
+                };
+              } | null;
               isConfidential: boolean;
               endedAt: string | null;
               archivedAt: string | null;
@@ -12725,6 +13364,13 @@ export interface operations {
               customFields: {
                 [key: string]: string | number | boolean | string[];
               };
+              aiUnverified: {
+                [key: string]: {
+                  runId: string;
+                  /** Format: date-time */
+                  writtenAt: string;
+                };
+              } | null;
               isConfidential: boolean;
               endedAt: string | null;
               archivedAt: string | null;
@@ -12926,6 +13572,13 @@ export interface operations {
               customFields: {
                 [key: string]: string | number | boolean | string[];
               };
+              aiUnverified: {
+                [key: string]: {
+                  runId: string;
+                  /** Format: date-time */
+                  writtenAt: string;
+                };
+              } | null;
               isConfidential: boolean;
               endedAt: string | null;
               archivedAt: string | null;
@@ -13006,6 +13659,48 @@ export interface operations {
                 archived: boolean;
               } | null;
             }[];
+            analysis: {
+              available: boolean;
+              latestRun: {
+                id: string;
+                contractId: string;
+                versionId: string | null;
+                versionNumber: number | null;
+                /** @enum {string} */
+                state: "pending" | "ready" | "failed";
+                /** @enum {string} */
+                trigger: "automatic" | "manual";
+                requestedBy: string | null;
+                /** @enum {string} */
+                preset:
+                  | "anthropic"
+                  | "openai"
+                  | "azure_openai"
+                  | "gemini"
+                  | "openrouter"
+                  | "ollama"
+                  | "custom";
+                model: string;
+                truncated: boolean;
+                outcome: {
+                  written: string[];
+                  kept: string[];
+                  unsupported: string[];
+                  invalid: string[];
+                  unmatched?: string;
+                  results?: {
+                    slug: string;
+                    value: unknown;
+                    evidence: string | null;
+                    /** @enum {string} */
+                    outcome: "written" | "kept" | "unsupported" | "invalid" | "unmatched";
+                  }[];
+                } | null;
+                failure: string | null;
+                startedAt: string | null;
+                finishedAt: string | null;
+              } | null;
+            };
           };
         };
       };
@@ -13126,6 +13821,13 @@ export interface operations {
               customFields: {
                 [key: string]: string | number | boolean | string[];
               };
+              aiUnverified: {
+                [key: string]: {
+                  runId: string;
+                  /** Format: date-time */
+                  writtenAt: string;
+                };
+              } | null;
               isConfidential: boolean;
               endedAt: string | null;
               archivedAt: string | null;
@@ -13240,6 +13942,220 @@ export interface operations {
       };
     };
   };
+  confirmContractAnalysisField: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        number: number;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          slug: string;
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            contract: {
+              id: string;
+              number: number;
+              title: string;
+              contractTypeId: string;
+              contractTypeName: string;
+              statusId: string;
+              statusName: string;
+              /** @enum {string} */
+              stage: "draft" | "review" | "approval" | "signature" | "active" | "ended";
+              manager: {
+                id: string;
+                displayName: string;
+                image: string | null;
+                archived: boolean;
+              } | null;
+              entity:
+                | (
+                    | {
+                        /** @enum {boolean} */
+                        restricted: false;
+                        id: string;
+                        legalName: string;
+                      }
+                    | {
+                        /** @enum {boolean} */
+                        restricted: true;
+                      }
+                  )
+                | null;
+              primaryCounterparty: {
+                id: string;
+                name: string;
+              } | null;
+              /** @enum {string} */
+              priority: "low" | "medium" | "high" | "critical";
+              risk: ("low" | "medium" | "high" | "critical") | null;
+              value: {
+                amount: number;
+                currency: string;
+                /** @enum {string} */
+                cadence: "one_time" | "monthly" | "annually";
+              } | null;
+              /** @enum {string} */
+              termType: "fixed" | "auto_renew" | "evergreen";
+              effectiveDate: string | null;
+              expiryDate: string | null;
+              renewalPeriodMonths: number | null;
+              noticePeriodDays: number | null;
+              noticeDeadline: string | null;
+              daysRemaining: number | null;
+              renewalPendingConfirmation: boolean;
+              proposedRenewalExpiry: string | null;
+              description: string | null;
+              customFields: {
+                [key: string]: string | number | boolean | string[];
+              };
+              aiUnverified: {
+                [key: string]: {
+                  runId: string;
+                  /** Format: date-time */
+                  writtenAt: string;
+                };
+              } | null;
+              isConfidential: boolean;
+              endedAt: string | null;
+              archivedAt: string | null;
+              /** Format: date-time */
+              createdAt: string;
+              /** Format: date-time */
+              updatedAt: string;
+            };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  confirmAllContractAnalysisFields: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        number: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            contract: {
+              id: string;
+              number: number;
+              title: string;
+              contractTypeId: string;
+              contractTypeName: string;
+              statusId: string;
+              statusName: string;
+              /** @enum {string} */
+              stage: "draft" | "review" | "approval" | "signature" | "active" | "ended";
+              manager: {
+                id: string;
+                displayName: string;
+                image: string | null;
+                archived: boolean;
+              } | null;
+              entity:
+                | (
+                    | {
+                        /** @enum {boolean} */
+                        restricted: false;
+                        id: string;
+                        legalName: string;
+                      }
+                    | {
+                        /** @enum {boolean} */
+                        restricted: true;
+                      }
+                  )
+                | null;
+              primaryCounterparty: {
+                id: string;
+                name: string;
+              } | null;
+              /** @enum {string} */
+              priority: "low" | "medium" | "high" | "critical";
+              risk: ("low" | "medium" | "high" | "critical") | null;
+              value: {
+                amount: number;
+                currency: string;
+                /** @enum {string} */
+                cadence: "one_time" | "monthly" | "annually";
+              } | null;
+              /** @enum {string} */
+              termType: "fixed" | "auto_renew" | "evergreen";
+              effectiveDate: string | null;
+              expiryDate: string | null;
+              renewalPeriodMonths: number | null;
+              noticePeriodDays: number | null;
+              noticeDeadline: string | null;
+              daysRemaining: number | null;
+              renewalPendingConfirmation: boolean;
+              proposedRenewalExpiry: string | null;
+              description: string | null;
+              customFields: {
+                [key: string]: string | number | boolean | string[];
+              };
+              aiUnverified: {
+                [key: string]: {
+                  runId: string;
+                  /** Format: date-time */
+                  writtenAt: string;
+                };
+              } | null;
+              isConfidential: boolean;
+              endedAt: string | null;
+              archivedAt: string | null;
+              /** Format: date-time */
+              createdAt: string;
+              /** Format: date-time */
+              updatedAt: string;
+            };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
   confirmContractRenewal: {
     parameters: {
       query?: never;
@@ -13324,6 +14240,13 @@ export interface operations {
               customFields: {
                 [key: string]: string | number | boolean | string[];
               };
+              aiUnverified: {
+                [key: string]: {
+                  runId: string;
+                  /** Format: date-time */
+                  writtenAt: string;
+                };
+              } | null;
               isConfidential: boolean;
               endedAt: string | null;
               archivedAt: string | null;
@@ -13556,6 +14479,13 @@ export interface operations {
               customFields: {
                 [key: string]: string | number | boolean | string[];
               };
+              aiUnverified: {
+                [key: string]: {
+                  runId: string;
+                  /** Format: date-time */
+                  writtenAt: string;
+                };
+              } | null;
               isConfidential: boolean;
               endedAt: string | null;
               archivedAt: string | null;
@@ -13660,6 +14590,13 @@ export interface operations {
               customFields: {
                 [key: string]: string | number | boolean | string[];
               };
+              aiUnverified: {
+                [key: string]: {
+                  runId: string;
+                  /** Format: date-time */
+                  writtenAt: string;
+                };
+              } | null;
               isConfidential: boolean;
               endedAt: string | null;
               archivedAt: string | null;
@@ -13764,6 +14701,13 @@ export interface operations {
               customFields: {
                 [key: string]: string | number | boolean | string[];
               };
+              aiUnverified: {
+                [key: string]: {
+                  runId: string;
+                  /** Format: date-time */
+                  writtenAt: string;
+                };
+              } | null;
               isConfidential: boolean;
               endedAt: string | null;
               archivedAt: string | null;
@@ -13867,6 +14811,13 @@ export interface operations {
               customFields: {
                 [key: string]: string | number | boolean | string[];
               };
+              aiUnverified: {
+                [key: string]: {
+                  runId: string;
+                  /** Format: date-time */
+                  writtenAt: string;
+                };
+              } | null;
               isConfidential: boolean;
               endedAt: string | null;
               archivedAt: string | null;
@@ -13964,6 +14915,13 @@ export interface operations {
               customFields: {
                 [key: string]: string | number | boolean | string[];
               };
+              aiUnverified: {
+                [key: string]: {
+                  runId: string;
+                  /** Format: date-time */
+                  writtenAt: string;
+                };
+              } | null;
               isConfidential: boolean;
               endedAt: string | null;
               archivedAt: string | null;
@@ -13971,6 +14929,77 @@ export interface operations {
               createdAt: string;
               /** Format: date-time */
               updatedAt: string;
+            };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  runContractAnalysis: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        number: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      202: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            run: {
+              id: string;
+              contractId: string;
+              versionId: string | null;
+              versionNumber: number | null;
+              /** @enum {string} */
+              state: "pending" | "ready" | "failed";
+              /** @enum {string} */
+              trigger: "automatic" | "manual";
+              requestedBy: string | null;
+              /** @enum {string} */
+              preset:
+                | "anthropic"
+                | "openai"
+                | "azure_openai"
+                | "gemini"
+                | "openrouter"
+                | "ollama"
+                | "custom";
+              model: string;
+              truncated: boolean;
+              outcome: {
+                written: string[];
+                kept: string[];
+                unsupported: string[];
+                invalid: string[];
+                unmatched?: string;
+                results?: {
+                  slug: string;
+                  value: unknown;
+                  evidence: string | null;
+                  /** @enum {string} */
+                  outcome: "written" | "kept" | "unsupported" | "invalid" | "unmatched";
+                }[];
+              } | null;
+              failure: string | null;
+              startedAt: string | null;
+              finishedAt: string | null;
             };
           };
         };
@@ -14593,6 +15622,7 @@ export interface operations {
               note: string | null;
               daysAway: number;
               isNext: boolean;
+              unverified: boolean;
             }[];
           };
         };
@@ -14645,6 +15675,7 @@ export interface operations {
               note: string | null;
               daysAway: number;
               isNext: boolean;
+              unverified: boolean;
             }[];
           };
         };
@@ -14688,6 +15719,7 @@ export interface operations {
               note: string | null;
               daysAway: number;
               isNext: boolean;
+              unverified: boolean;
             }[];
           };
         };
@@ -14740,6 +15772,7 @@ export interface operations {
               note: string | null;
               daysAway: number;
               isNext: boolean;
+              unverified: boolean;
             }[];
           };
         };
@@ -23569,6 +24602,7 @@ export interface operations {
                     date: string;
                     label: string | null;
                     noticePeriodDays: number | null;
+                    unverified: boolean;
                     record: {
                       /** @enum {string} */
                       kind: "contract" | "matter";

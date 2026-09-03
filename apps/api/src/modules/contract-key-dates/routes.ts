@@ -67,6 +67,7 @@ import {
 } from "@openlaw/shared";
 import { requireRole, type AuthenticatedUser } from "../../auth/guards.js";
 import { recordActivity, RECORD_ACTIVITY_TIER } from "../../lib/activity.js";
+import { derivedDateUnverified, type DerivedDateSource } from "../../lib/ai-unverified.js";
 import {
   contractTeamScope,
   NO_CONTRACT,
@@ -145,6 +146,9 @@ const DeadlineSchema = z.object({
   /** The earliest date still ahead — CTR-009's "next deadline". Exactly
    * one entry carries it, or none when every date has passed. */
   isNext: z.boolean(),
+  /** True only when a term-derived row reads an AI-written source no
+   * person has confirmed. Key dates are always false. */
+  unverified: z.boolean(),
 });
 
 const DeadlinesEnvelope = z.object({ deadlines: z.array(DeadlineSchema) });
@@ -205,6 +209,7 @@ export const contractKeyDatesRoutes: FastifyPluginAsyncZod = async (app) => {
           isConfidential: contracts.isConfidential,
           expiryDate: contracts.expiryDate,
           noticePeriodDays: contracts.noticePeriodDays,
+          aiUnverified: contracts.aiUnverified,
         },
       })
       .from(contractKeyDates)
@@ -252,11 +257,12 @@ export const contractKeyDatesRoutes: FastifyPluginAsyncZod = async (app) => {
       note: row.note,
       daysAway: daysBetween(today, row.date),
       isNext: false,
+      unverified: false,
     }));
 
     /** A term-derived date joins the union as a row with no row behind
      * it: no id, no label, and nothing here to edit. */
-    const derived = (source: "expiry" | "notice_deadline", date: string | null) => {
+    const derived = (source: DerivedDateSource, date: string | null) => {
       if (date === null) return;
       entries.push({
         source,
@@ -266,6 +272,7 @@ export const contractKeyDatesRoutes: FastifyPluginAsyncZod = async (app) => {
         note: null,
         daysAway: daysBetween(today, date),
         isNext: false,
+        unverified: derivedDateUnverified(contract.aiUnverified, source),
       });
     };
     derived("expiry", contract.expiryDate);

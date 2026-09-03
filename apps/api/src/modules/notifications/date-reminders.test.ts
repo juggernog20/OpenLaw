@@ -831,6 +831,67 @@ describe("an immediate email whose wake-up was lost", () => {
   });
 });
 
+describe("unverified Contract dates in the briefing", () => {
+  const TODAY = "2026-10-14";
+  let flagged: ContractRow;
+  let confirmed: ContractRow;
+
+  beforeAll(async () => {
+    flagged = await newContract("Flagged expiry in the briefing", { expiryDate: TODAY });
+    confirmed = await newContract("Confirmed expiry in the briefing", { expiryDate: TODAY });
+    const marker = {
+      evidence: "The term expires today.",
+      runId: "briefing-verification-run",
+      writtenAt: new Date().toISOString(),
+    };
+    await harness.db
+      .update(contracts)
+      .set({ aiUnverified: { expiry_date: marker } })
+      .where(eq(contracts.id, flagged.id));
+    await harness.db
+      .update(contracts)
+      .set({ aiUnverified: { expiry_date: marker } })
+      .where(eq(contracts.id, confirmed.id));
+
+    const reminder = (contract: ContractRow) => ({
+      userId: idOf(OWNER),
+      eventType: "date.expiry_approaching" as const,
+      entityType: "contract" as const,
+      entityId: contract.id,
+      payload: {
+        contractNumber: contract.number,
+        contractTitle: contract.title,
+        actorId: null,
+        actorName: null,
+        reminderDate: TODAY,
+        offsetDays: 0,
+      },
+      emailOwed: true,
+      reminderDate: TODAY,
+      reminderOffsetDays: 0,
+    });
+    await harness.db.insert(notifications).values([reminder(flagged), reminder(confirmed)]);
+
+    const confirmation = await harness.app.inject({
+      method: "POST",
+      url: `/api/v1/contracts/${String(confirmed.number)}/analysis/confirm`,
+      cookies: as(OWNER),
+      payload: { slug: "expiry_date" },
+    });
+    expect(confirmation.statusCode, confirmation.body).toBe(200);
+    await round(at(TODAY, 8));
+  });
+
+  it("reads the current flag at send time in both bodies", () => {
+    const sent = lastDigestTo(OWNER);
+    for (const body of [sent.text, sent.html!]) {
+      expect(body).toMatch(/unverified — Expiry: Flagged expiry in the briefing/);
+      expect(body).not.toMatch(/unverified — Expiry: Confirmed expiry in the briefing/);
+      expect(body).toContain(`Expiry: Confirmed expiry in the briefing (#${confirmed.number})`);
+    }
+  });
+});
+
 /**
  * The round repeats, so it is on pg-boss's clock rather than on a timer
  * in the worker — the boot-versus-schedule rule (#277). Two things
@@ -849,6 +910,7 @@ describe("the scheduled shape", () => {
         storage: harness.storage,
         docEngine: harness.docEngine,
         resolveSigningProvider: harness.resolveSigningProvider,
+        resolveAiProvider: harness.resolveAiProvider,
         resolveMailer: harness.resolveMailer,
         baseUrl: "http://localhost",
         log: recordingLog().log,

@@ -32,6 +32,7 @@ export {
   SIGNING_STANDIN_VARIABLE,
 } from "../lib/signing/config.js";
 export { createSigningResolver, type SigningResolver } from "../lib/signing/resolver.js";
+export { createAiResolver, type AiResolver } from "../lib/ai/resolver.js";
 export { createStorageFromEnv } from "../lib/storage/config.js";
 // The mailer, for the one job that sends one (M18/1). The worker
 // resolves it exactly as the API does, env-else-database on every send,
@@ -62,6 +63,7 @@ export {
 } from "./executed-copy.js";
 export {
   JOB_QUEUES,
+  type ContractAnalysisJob,
   type DisplayConversionJob,
   type ExecutedCopyFetchJob,
   type JobQueue,
@@ -96,6 +98,7 @@ export {
 } from "./reconciliation.js";
 export {
   startPipeline,
+  CONTRACT_ANALYSIS_QUEUE_OPTIONS,
   DISPLAY_CONVERSION_QUEUE_OPTIONS,
   EXECUTED_COPY_QUEUE_OPTIONS,
   MORNING_ROUND_QUEUE_OPTIONS,

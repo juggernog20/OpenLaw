@@ -97,6 +97,7 @@ const datesSection = {
       date: noticeDate,
       label: null,
       noticePeriodDays: 30,
+      unverified: true,
       record: {
         kind: "contract",
         id: "contract-1",
@@ -111,6 +112,7 @@ const datesSection = {
       date: matterDate,
       label: "Response filing deadline",
       noticePeriodDays: null,
+      unverified: false,
       record: {
         kind: "matter",
         id: "matter-1",
@@ -125,6 +127,7 @@ const datesSection = {
       date: inDays(12),
       label: null,
       noticePeriodDays: null,
+      unverified: false,
       record: {
         kind: "contract",
         id: "contract-2",
@@ -341,15 +344,18 @@ describe("Home", () => {
     expect(within(card).getByText(/Confidential supplier renewal/)).toBeInTheDocument();
     expect(within(card).getByRole("img", { name: "Confidential" })).toBeInTheDocument();
     expect(within(notice.closest("a")!).getByText("Derived")).toBeInTheDocument();
+    expect(within(notice.closest("a")!).getByText("Unverified")).toBeInTheDocument();
     expect(within(notice.closest("a")!).getByText(formatDeadline(noticeDate))).toBeInTheDocument();
 
     const matter = within(card).getByText("Response filing deadline");
     expect(matter.closest("a")).toHaveAttribute("href", "/matters/12/key-dates");
     expect(within(matter.closest("a")!).getByText("Key date")).toBeInTheDocument();
+    expect(within(matter.closest("a")!).queryByText("Unverified")).not.toBeInTheDocument();
     expect(within(matter.closest("a")!).getByText(/Regulatory response/)).toBeInTheDocument();
 
     const expiry = within(card).getByText("Current term expires");
     expect(expiry.closest("a")).toHaveAttribute("href", "/contracts/43/key-dates");
+    expect(within(expiry.closest("a")!).queryByText("Unverified")).not.toBeInTheDocument();
   });
 
   it("renders Entity obligations with the severe and unassigned markers", async () => {

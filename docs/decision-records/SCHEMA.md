@@ -94,7 +94,7 @@ One row per authentication method per user: a **credential row** (holding the Ar
 
 Unique on (`provider_id`, `account_id`): one credential row per user, and one row per subject under a given provider registration. Unique on (`issuer`, `account_id`) as well — the pair better-auth itself looks an account up by from 1.7 on, and the stricter of the two: two provider registrations may name the same IdP, and then one person's subject reaches this table twice under two `provider_id`s that the first index is content to keep apart. No `archived_at`: offboarding archives the _user_; account rows die with the user via cascade.
 
-The two token columns are sealed by **better-auth**, not by `encryptedText`, so they are absent from `SEALED_COLUMNS` and there is no boot pass for them. better-auth owns every read and write of them, encrypts them under `AUTH_SECRET` when `account.encryptOAuthTokens` is set, and reads a pre-flag plaintext value straight through — so a later sign-in through the IdP rewrites the row sealed, with nothing to migrate. The rewrite is certain for `access_token`; `refresh_token` is only replaced when the IdP re-issues one, because better-auth keeps the stored value when the token response carries no new one. **TECH-022** records why the key differs from the one the four admin-pasted credentials use, and its #387 addendum records this residue.
+The two token columns are sealed by **better-auth**, not by `encryptedText`, so they are absent from `SEALED_COLUMNS` and there is no boot pass for them. better-auth owns every read and write of them, encrypts them under `AUTH_SECRET` when `account.encryptOAuthTokens` is set, and reads a pre-flag plaintext value straight through — so a later sign-in through the IdP rewrites the row sealed, with nothing to migrate. The rewrite is certain for `access_token`; `refresh_token` is only replaced when the IdP re-issues one, because better-auth keeps the stored value when the token response carries no new one. **TECH-022** records why the key differs from the one the five admin-pasted credentials use, and its #387 and M31 addenda record this residue and the fifth column.
 
 `issuer` arrived with better-auth 1.7 (#340), which identifies an account by who asserted the subject rather than by which provider row we filed it under. A password account carries the synthetic `local:credential`; an OIDC account carries the issuer its IdP publishes, which is what a verified `id_token`'s `iss` claim says and what `sso_providers.issuer` already held. Migration `0060_account_issuer` backfilled both and refuses an upgrade it cannot resolve, because a row with the wrong issuer is a person who cannot sign in.
 
@@ -185,6 +185,27 @@ The credentials one e-signature provider is reached with. **Adapter-keyed**: one
 | `created_at`, `updated_at` | timestamptz |                                                                                                                                                    |
 
 No `archived_at`: a connector is turned off with `disabled_at`, or deleted. The two secret columns are sealed by `encryptedText` with a key held outside the database (**TECH-022**), as `org_settings.smtp_url` and `sso_providers.oidc_config` are.
+
+---
+
+### `ai_connector`
+
+Source: **CTR-008**, **TECH-012**, **TECH-022**, **SET-007**
+
+The one AI provider configuration for this install. A unique index on constant `true` makes the singleton rule a database fact. It is configured at runtime in Settings → Organization → Integrations → AI analysis and resolved live for both the API's Test connection call and every worker analysis run. No provider environment variable exists.
+
+| Column                     | Type        | Notes                                                                                                                                                   |
+| -------------------------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `id`                       | UUID        | PK                                                                                                                                                      |
+| `preset`                   | text (enum) | `anthropic` \| `openai` \| `azure_openai` \| `gemini` \| `openrouter` \| `ollama` \| `custom`                                                           |
+| `protocol`                 | text (enum) | `anthropic_messages` \| `openai_chat_completions` \| `gemini`; a custom endpoint still chooses one supported wire protocol                              |
+| `base_url`                 | text        | not null; preset-supplied or Administrator-supplied endpoint                                                                                            |
+| `api_key`                  | text        | nullable for keyless local endpoints; write-only through the API and encrypted at rest with `OPENLAW_SECRET_KEY` through `encryptedText` (**TECH-022**) |
+| `model`                    | text        | not null; always editable, including for a preset                                                                                                       |
+| `disabled_at`              | timestamptz | nullable; a disabled row resolves as no connector without deleting its configuration                                                                    |
+| `created_at`, `updated_at` | timestamptz |                                                                                                                                                         |
+
+Landed in M31/1, migration `0085_loud_scourge`. No `archived_at`: the singleton is disabled or removed.
 
 ---
 
@@ -380,9 +401,25 @@ Custom-field catalog (Jira model), shared across modules with a scope. A field i
 | `field_type`               | text (enum) | `text` \| `long_text` \| `number` \| `date` \| `boolean` \| `single_select` \| `multi_select` \| `user` \| `entity` (**CTR-016** adds `entity`) — **immutable**                                     |
 | `options`                  | jsonb       | nullable; option list for select types                                                                                                                                                              |
 | `field_tag`                | text (enum) | `business` \| `legal` per **DD-015**; drives Contributor projection and write permission                                                                                                            |
-| `ai_prompt`                | text        | nullable per **CTR-008/CTR-016**; extraction prompt consumed by contract AI analysis; seeded defaults on contract core fields, editable                                                             |
+| `ai_prompt`                | text        | nullable per **CTR-008/CTR-016**; extraction prompt for this catalog Field when it is attached to a Contract Type. Core target prompts do not live here                                             |
 | `archived_at`              | timestamptz | nullable; archived fields hidden everywhere, stored values retained                                                                                                                                 |
 | `created_at`, `updated_at` | timestamptz |                                                                                                                                                                                                     |
+
+---
+
+### `ai_field_prompts`
+
+Source: **CTR-008**, **TECH-012**
+
+Administrator overrides for the seven core Contract-analysis prompts. The primary key is the canonical target slug. Absence means use the built-in prompt from `packages/shared/src/analysis.ts`; resetting a prompt deletes the row rather than copying the default into the database.
+
+| Column       | Type        | Notes                                                              |
+| ------------ | ----------- | ------------------------------------------------------------------ |
+| `slug`       | text        | PK; one of the seven core target slugs enforced by the write route |
+| `prompt`     | text        | not null; trimmed and bounded to 2,000 characters                  |
+| `updated_at` | timestamptz | not null; refreshed on update                                      |
+
+Landed in M31/5, migration `0086_free_invisible_woman`. No `id`, `created_at`, or `archived_at`: the slug is the identity and deleting the override restores the shipped default.
 
 ---
 
@@ -549,7 +586,7 @@ Source: **DD-007**, **DD-014**, **CTR-001**
 
 Workflow object with parties; owns one or more Documents (draft, redlines, executed version, amendments). Referenced by Matters; can also stand alone.
 
-All columns except `matter_id` landed through M17; the Matter link landed incrementally in M23/6. Schema details in `DECISIONS-CONTRACTS.md` (`CTR-###`).
+The Contract core landed through M17, the Matter link landed incrementally in M23/6, and `ai_unverified` landed in M31/2. Schema details live in `DECISIONS-CONTRACTS.md` (`CTR-###`).
 
 Columns:
 
@@ -570,7 +607,7 @@ Columns:
 - `value_cadence` — text enum `one_time|monthly|annually`, nullable per **CTR-010**; total value (annual × term) derived, never stored
 - `description` — text, nullable (long-form context rendered in the Description section; added in the 2026-08-06 screen sweep, replacing the mock's Memo tab)
 - `custom_fields` — jsonb keyed by field slug per **CTR-016** (fields attached via `contract_type_fields`; values retained on detach)
-- `ai_unverified` — jsonb, nullable per **CTR-008**: map of field slug → extraction meta (evidence snippet, run info) for AI-written values not yet human-confirmed; entry removed on confirmation.
+- `ai_unverified` — jsonb, nullable per **CTR-008**: map of field slug → extraction meta (exact evidence, Analysis run id, written time) for AI-written values not yet human-confirmed; a human write or confirmation removes that entry. Landed in M31/2, migration `0086_free_invisible_woman`
 - `entity_id` FK → `entities.id`, nullable until known per **CTR-011** — which of our entities signed
 - `parent_id` FK → `contracts.id`, nullable per **CTR-015** — single parent, arbitrary depth, no cycles (application-enforced); no inheritance semantics. Landed in M16/5, migration `0048_contract_relations`, with the routing that first writes it (CTR-007's child-contract vehicle). A `parent_id <> id` check states the shortest cycle as a row rule; the longer ones are the write path's walk. Indexed for the walk and the M17 hierarchy surfaces
 - `ended_at` — timestamptz, nullable per **CTR-019**: set on transition into the `ended` stage, cleared on reopen (activity log remains source of truth). Landed in M17/3, migration `0050_contract_ended_at`, with no backfill
@@ -589,6 +626,32 @@ Term shape per **CTR-006**. The five columns landed in M16/1, migration `0046_co
 - **Backfill.** Existing rows took `fixed`. That is an assertion about them, not a discovery: `fixed` is the least-asserting of the three kinds. Re-type an evergreen contract by editing it.
 - **Derived.** Four answers the record gives sit in no column, and all four are computed where the answer is assembled. The notice deadline above; days remaining (`expiry_date − today`), which goes negative once the expiry has passed; **renewal pending confirmation** (M16/4) — true when the contract is `auto_renew`, is not archived, is not ended, and its `expiry_date` is behind today; and the **proposed roll expiry**, `expiry_date` plus `renewal_period_months`, clamped at the target month's last day — null whenever the contract cannot roll, which is any term that is not `auto_renew` and any `auto_renew` term missing either `expiry_date` or `renewal_period_months`. None of the four needs a job, a sweep, or a clock.
 - **A renewal is not a row.** Confirming a roll (**CTR-007**) moves `expiry_date` and appends one `contract.renewal_confirmed` entry to `activity_log`; nothing else records it. The record's renewal history and its "Last renewal" fact are those entries read back. No renewal table exists, and none is planned.
+
+---
+
+### `contract_analysis_runs`
+
+Source: **CTR-008**, **TECH-006**, **TECH-012**
+
+One durable reading of one Contract's chosen Document Version against the Contract's current analysis target schema. Automatic and manual triggers use the same ledger and worker path. The outcome records every target as written, kept, unmatched, or invalid with its evidence; the row is the account of the run, not a proposal table.
+
+| Column         | Type        | Notes                                                                                                     |
+| -------------- | ----------- | --------------------------------------------------------------------------------------------------------- |
+| `id`           | UUID        | PK                                                                                                        |
+| `contract_id`  | UUID FK     | → `contracts.id`, not null, cascade delete                                                                |
+| `version_id`   | UUID FK     | → `document_versions.id`, nullable, `ON DELETE SET NULL`; lawful Document erasure keeps the run's account |
+| `state`        | text (enum) | `pending` \| `ready` \| `failed`, not null, default `pending`                                             |
+| `trigger`      | text (enum) | `automatic` \| `manual`, not null                                                                         |
+| `requested_by` | UUID FK     | → `users.id`, nullable; automatic runs have no requester                                                  |
+| `preset`       | text (enum) | connector preset used for this run                                                                        |
+| `model`        | text        | provider model used for this run                                                                          |
+| `truncated`    | boolean     | not null, default `false`; the provider saw the bounded prefix rather than the whole extracted text       |
+| `outcome`      | jsonb       | nullable until ready; typed per-target extraction and writer outcomes with evidence                       |
+| `failure`      | text        | nullable; stable failure account for a failed run                                                         |
+| `started_at`   | timestamptz | nullable until the worker claims the run                                                                  |
+| `finished_at`  | timestamptz | nullable until ready or failed                                                                            |
+
+Indexed on (`contract_id`, `id`) for the record's latest-run read. The state and trigger columns carry CHECK constraints. Landed in M31/2, migration `0086_free_invisible_woman`; the automatic scheduler began writing the same table in M31/3.
 
 ---
 

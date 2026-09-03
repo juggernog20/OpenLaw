@@ -217,6 +217,8 @@ import {
 import { httpError, problemResponse, problemTypeResponse } from "../../lib/problem.js";
 import { assertApprovalGate, type UnresolvedApproval } from "../../lib/soft-gate.js";
 import { createContract, CONTRACT_RENEWAL_VEHICLES } from "./create.js";
+import { AnalysisRunSchema, latestAnalysisRun } from "../contract-analysis/routes.js";
+import { clearAiUnverified } from "../../lib/ai-unverified.js";
 
 /** Every mutation, and every picker read behind one, is Member+. */
 const requireMember = requireRole("administrator", "legal_team_member");
@@ -232,6 +234,10 @@ const requireMember = requireRole("administrator", "legal_team_member");
  * surface.
  */
 const requireContractReader = requireRole("administrator", "legal_team_member", "contributor");
+
+const ConfirmAnalysisFieldBody = z.object({
+  slug: z.string().trim().min(1).max(200),
+});
 
 /**
  * How many contracts one read answers (CTR-024).
@@ -508,6 +514,19 @@ const ContractRowSchema = z.object({
    * `description` does — it is a column of the record, and the
    * per-field PATCH answers with the row. */
   customFields: CustomFieldsSchema,
+  /** Values written by AI and not yet confirmed or edited, keyed by
+   * slug. The evidence quote is Document text, so it stays on the run's
+   * results, which the Document audience gates; the row reaches readers
+   * the Document may not, and never carries the quote. */
+  aiUnverified: z
+    .record(
+      z.string(),
+      z.object({
+        runId: z.string(),
+        writtenAt: z.iso.datetime(),
+      }),
+    )
+    .nullable(),
   /** DD-014's opt-in gate. `true` means only the named team, the Owner,
    * and Administrators reach this record at all — so every viewer who
    * receives this row already reaches it, and the flag is here to be
@@ -595,6 +614,10 @@ const ContractRecordEnvelope = ContractFieldsEnvelope.extend({
    * a renewal history — and most-recent-first so the "Last renewal"
    * fact is the first row rather than a scan for a maximum. */
   renewals: z.array(ConfirmedRenewalSchema),
+  analysis: z.object({
+    available: z.boolean(),
+    latestRun: AnalysisRunSchema.nullable(),
+  }),
 });
 
 /** What the confirmed roll answers with: the record, because the roll
@@ -749,6 +772,21 @@ function sameValue(
   );
 }
 
+/** The row's marker map without the evidence quote. The quote is Document
+ * text, and only the run's results (audience-gated in `latestAnalysisRun`)
+ * may carry it; the row reaches readers the Document may not. */
+function publicUnverified(
+  map: Readonly<Record<string, { runId: string; writtenAt: string }>> | null,
+): Record<string, { runId: string; writtenAt: string }> | null {
+  if (!map) return null;
+  return Object.fromEntries(
+    Object.entries(map).map(([slug, entry]) => [
+      slug,
+      { runId: entry.runId, writtenAt: entry.writtenAt },
+    ]),
+  );
+}
+
 function toRow(
   context: ContractContext,
   customFields: Readonly<Record<string, CustomFieldValue>> = context.row.customFields,
@@ -800,6 +838,7 @@ function toRow(
     proposedRenewalExpiry: proposedRollExpiry(row),
     description: row.description,
     customFields,
+    aiUnverified: publicUnverified(row.aiUnverified),
     isConfidential: row.isConfidential,
     endedAt: row.endedAt?.toISOString() ?? null,
     archivedAt: row.archivedAt?.toISOString() ?? null,
@@ -1772,11 +1811,13 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
         .where(and(eq(contracts.number, request.params.number), teamScope(request.user)))
         .limit(1);
       if (!row) throw httpError(404, NO_CONTRACT);
-      const [team, parties, custom, renewals] = await Promise.all([
+      const [team, parties, custom, renewals, provider, latestRun] = await Promise.all([
         selectTeam(app.db, row.row.id),
         selectCounterparties(app.db, row.row.id),
         customFieldsEnvelope(app.db, row, request.user),
         selectRenewals(app.db, row.row.id),
+        app.resolveAiProvider(),
+        latestAnalysisRun(app.db, row.row.id, request.user),
       ]);
       return {
         contract: toRow(row, custom.customFields),
@@ -1785,8 +1826,90 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
         team,
         counterparties: parties,
         renewals,
+        analysis: { available: provider !== null, latestRun },
       };
     },
+  );
+
+  /**
+   * Clears one or every unverified marker under the Contract row lock.
+   * The value itself does not move: confirmation is the person's
+   * assertion that the AI-written value already on the record is right.
+   */
+  async function confirmAnalysisFields(
+    number: number,
+    user: AuthenticatedUser,
+    requestedSlug?: string,
+  ) {
+    return app.db.transaction(async (tx) => {
+      const current = await editableContract(tx, number, user);
+      const flags = current.row.aiUnverified;
+      const slugs = requestedSlug === undefined ? Object.keys(flags ?? {}) : [requestedSlug];
+      if (
+        slugs.length === 0 ||
+        (requestedSlug !== undefined && (!flags || !Object.hasOwn(flags, requestedSlug)))
+      ) {
+        throw httpError(400, "That field is not awaiting confirmation.");
+      }
+
+      const remaining = { ...flags };
+      for (const slug of slugs) delete remaining[slug];
+      await tx
+        .update(contracts)
+        .set({ aiUnverified: Object.keys(remaining).length > 0 ? remaining : null })
+        .where(eq(contracts.id, current.row.id));
+      await recordActivity(
+        tx,
+        slugs.map((slug) => ({
+          entityType: "contract" as const,
+          entityId: current.row.id,
+          actorId: user.id,
+          action: "contract.field_confirmed" as const,
+          visibility: RECORD_ACTIVITY_TIER,
+          payload: { number: current.row.number, title: current.row.title, slug },
+        })),
+      );
+
+      const [fresh] = await selectContracts(tx, user)
+        .where(eq(contracts.id, current.row.id))
+        .limit(1);
+      if (!fresh) throw httpError(404, NO_CONTRACT);
+      return { contract: toRow(fresh) };
+    });
+  }
+
+  app.post(
+    "/contracts/:number/analysis/confirm",
+    {
+      preHandler: requireMember,
+      schema: {
+        operationId: "confirmContractAnalysisField",
+        summary:
+          "Confirm one AI-written Contract value, clear its unverified marker, and append one record-tier confirmation entry",
+        tags: ["contracts"],
+        params: NumberParams,
+        body: ConfirmAnalysisFieldBody,
+        response: { 200: ContractEnvelope, default: problemResponse },
+      },
+    },
+    async (request) =>
+      confirmAnalysisFields(request.params.number, request.user, request.body.slug),
+  );
+
+  app.post(
+    "/contracts/:number/analysis/confirm-all",
+    {
+      preHandler: requireMember,
+      schema: {
+        operationId: "confirmAllContractAnalysisFields",
+        summary:
+          "Confirm every AI-written Contract value in one transaction and append one record-tier confirmation entry per cleared slug",
+        tags: ["contracts"],
+        params: NumberParams,
+        response: { 200: ContractEnvelope, default: problemResponse },
+      },
+    },
+    async (request) => confirmAnalysisFields(request.params.number, request.user),
   );
 
   app.post(
@@ -2322,6 +2445,33 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
             patch.valueCurrency = next?.currency ?? null;
             patch.valueCadence = next?.cadence ?? null;
             changed.value = { from: before, to: next };
+          }
+        }
+
+        // A person's write verifies that slot by definition. Clear every
+        // AI marker named by this PATCH in the same transaction and add
+        // no second activity entry for the clearing itself (CTR-008).
+        const humanWrittenSlugs = new Set<string>();
+        if (body.termType !== undefined) humanWrittenSlugs.add("term_type");
+        if (body.effectiveDate !== undefined) humanWrittenSlugs.add("effective_date");
+        if (body.expiryDate !== undefined) humanWrittenSlugs.add("expiry_date");
+        if (body.renewalPeriodMonths !== undefined) {
+          humanWrittenSlugs.add("renewal_period_months");
+        }
+        if (body.noticePeriodDays !== undefined) humanWrittenSlugs.add("notice_period_days");
+        if (body.value !== undefined) humanWrittenSlugs.add("value");
+        for (const slug of Object.keys(body.customFields ?? {})) humanWrittenSlugs.add(slug);
+        // A term-type write may clear a dependent even when the body did
+        // not name it. That clear is a human write to the slot too.
+        if (patch.expiryDate !== undefined) humanWrittenSlugs.add("expiry_date");
+        if (patch.renewalPeriodMonths !== undefined) {
+          humanWrittenSlugs.add("renewal_period_months");
+        }
+        if (target.aiUnverified && humanWrittenSlugs.size > 0) {
+          const remaining = { ...target.aiUnverified };
+          for (const slug of humanWrittenSlugs) delete remaining[slug];
+          if (Object.keys(remaining).length !== Object.keys(target.aiUnverified).length) {
+            patch.aiUnverified = Object.keys(remaining).length > 0 ? remaining : null;
           }
         }
 
@@ -2967,6 +3117,10 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
         // state with no primary and no parties either.
         let promotedName: string | undefined;
         if (removed.isPrimary) {
+          // A person taking the primary off verifies that slot (CTR-008):
+          // an analysis run may have linked it, and its marker must not
+          // outlive the link.
+          await clearAiUnverified(tx, current.row.id, "counterparty");
           const [next] = await tx
             .select({ id: counterparties.id, name: counterparties.name })
             .from(contractCounterparties)
@@ -3046,6 +3200,8 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
         if (target.isPrimary) throw httpError(409, "That counterparty is already the primary.");
 
         await promotePrimary(tx, current.row.id, target.id);
+        // The person chose the primary, so the slot is theirs (CTR-008).
+        await clearAiUnverified(tx, current.row.id, "counterparty");
         await recordActivity(tx, {
           entityType: "contract",
           entityId: current.row.id,

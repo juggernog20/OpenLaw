@@ -2871,6 +2871,1080 @@
         }
       }
     },
+    "/api/v1/ai-connector": {
+      "get": {
+        "operationId": "getAiConnector",
+        "summary": "Read the AI connector without returning its write-only API key",
+        "tags": ["ai-connector"],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "connector": {
+                      "type": "object",
+                      "properties": {
+                        "configured": {
+                          "type": "boolean"
+                        },
+                        "enabled": {
+                          "type": "boolean"
+                        },
+                        "preset": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "enum": [
+                                "anthropic",
+                                "openai",
+                                "azure_openai",
+                                "gemini",
+                                "openrouter",
+                                "ollama",
+                                "custom"
+                              ]
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "protocol": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "enum": ["anthropic_messages", "openai_chat_completions", "gemini"]
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "baseUrl": {
+                          "type": ["string", "null"]
+                        },
+                        "hasApiKey": {
+                          "type": "boolean"
+                        },
+                        "model": {
+                          "type": ["string", "null"]
+                        },
+                        "disabledAt": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "format": "date-time",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "updatedAt": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "format": "date-time",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        }
+                      },
+                      "required": [
+                        "configured",
+                        "enabled",
+                        "preset",
+                        "protocol",
+                        "baseUrl",
+                        "hasApiKey",
+                        "model",
+                        "disabledAt",
+                        "updatedAt"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "presets": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "preset": {
+                            "type": "string",
+                            "enum": [
+                              "anthropic",
+                              "openai",
+                              "azure_openai",
+                              "gemini",
+                              "openrouter",
+                              "ollama",
+                              "custom"
+                            ]
+                          },
+                          "label": {
+                            "type": "string"
+                          },
+                          "protocol": {
+                            "type": "string",
+                            "enum": ["anthropic_messages", "openai_chat_completions", "gemini"]
+                          },
+                          "baseUrl": {
+                            "type": ["string", "null"]
+                          },
+                          "defaultModel": {
+                            "type": "string"
+                          },
+                          "requiresApiKey": {
+                            "type": "boolean"
+                          },
+                          "requiresBaseUrl": {
+                            "type": "boolean"
+                          }
+                        },
+                        "required": [
+                          "preset",
+                          "label",
+                          "protocol",
+                          "baseUrl",
+                          "defaultModel",
+                          "requiresApiKey",
+                          "requiresBaseUrl"
+                        ],
+                        "additionalProperties": false
+                      }
+                    }
+                  },
+                  "required": ["connector", "presets"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "operationId": "saveAiConnector",
+        "summary": "Configure or update the AI connector; a blank API key keeps the stored key",
+        "tags": ["ai-connector"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "preset": {
+                    "type": "string",
+                    "enum": [
+                      "anthropic",
+                      "openai",
+                      "azure_openai",
+                      "gemini",
+                      "openrouter",
+                      "ollama",
+                      "custom"
+                    ]
+                  },
+                  "protocol": {
+                    "type": "string",
+                    "enum": ["anthropic_messages", "openai_chat_completions", "gemini"]
+                  },
+                  "baseUrl": {
+                    "type": "string",
+                    "maxLength": 2000
+                  },
+                  "apiKey": {
+                    "type": "string",
+                    "maxLength": 20000
+                  },
+                  "model": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 300
+                  }
+                },
+                "required": ["preset", "model"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "connector": {
+                      "type": "object",
+                      "properties": {
+                        "configured": {
+                          "type": "boolean"
+                        },
+                        "enabled": {
+                          "type": "boolean"
+                        },
+                        "preset": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "enum": [
+                                "anthropic",
+                                "openai",
+                                "azure_openai",
+                                "gemini",
+                                "openrouter",
+                                "ollama",
+                                "custom"
+                              ]
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "protocol": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "enum": ["anthropic_messages", "openai_chat_completions", "gemini"]
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "baseUrl": {
+                          "type": ["string", "null"]
+                        },
+                        "hasApiKey": {
+                          "type": "boolean"
+                        },
+                        "model": {
+                          "type": ["string", "null"]
+                        },
+                        "disabledAt": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "format": "date-time",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "updatedAt": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "format": "date-time",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        }
+                      },
+                      "required": [
+                        "configured",
+                        "enabled",
+                        "preset",
+                        "protocol",
+                        "baseUrl",
+                        "hasApiKey",
+                        "model",
+                        "disabledAt",
+                        "updatedAt"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "presets": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "preset": {
+                            "type": "string",
+                            "enum": [
+                              "anthropic",
+                              "openai",
+                              "azure_openai",
+                              "gemini",
+                              "openrouter",
+                              "ollama",
+                              "custom"
+                            ]
+                          },
+                          "label": {
+                            "type": "string"
+                          },
+                          "protocol": {
+                            "type": "string",
+                            "enum": ["anthropic_messages", "openai_chat_completions", "gemini"]
+                          },
+                          "baseUrl": {
+                            "type": ["string", "null"]
+                          },
+                          "defaultModel": {
+                            "type": "string"
+                          },
+                          "requiresApiKey": {
+                            "type": "boolean"
+                          },
+                          "requiresBaseUrl": {
+                            "type": "boolean"
+                          }
+                        },
+                        "required": [
+                          "preset",
+                          "label",
+                          "protocol",
+                          "baseUrl",
+                          "defaultModel",
+                          "requiresApiKey",
+                          "requiresBaseUrl"
+                        ],
+                        "additionalProperties": false
+                      }
+                    }
+                  },
+                  "required": ["connector", "presets"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "operationId": "deleteAiConnector",
+        "summary": "Remove the AI connector and its API key",
+        "tags": ["ai-connector"],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "connector": {
+                      "type": "object",
+                      "properties": {
+                        "configured": {
+                          "type": "boolean"
+                        },
+                        "enabled": {
+                          "type": "boolean"
+                        },
+                        "preset": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "enum": [
+                                "anthropic",
+                                "openai",
+                                "azure_openai",
+                                "gemini",
+                                "openrouter",
+                                "ollama",
+                                "custom"
+                              ]
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "protocol": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "enum": ["anthropic_messages", "openai_chat_completions", "gemini"]
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "baseUrl": {
+                          "type": ["string", "null"]
+                        },
+                        "hasApiKey": {
+                          "type": "boolean"
+                        },
+                        "model": {
+                          "type": ["string", "null"]
+                        },
+                        "disabledAt": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "format": "date-time",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "updatedAt": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "format": "date-time",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        }
+                      },
+                      "required": [
+                        "configured",
+                        "enabled",
+                        "preset",
+                        "protocol",
+                        "baseUrl",
+                        "hasApiKey",
+                        "model",
+                        "disabledAt",
+                        "updatedAt"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "presets": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "preset": {
+                            "type": "string",
+                            "enum": [
+                              "anthropic",
+                              "openai",
+                              "azure_openai",
+                              "gemini",
+                              "openrouter",
+                              "ollama",
+                              "custom"
+                            ]
+                          },
+                          "label": {
+                            "type": "string"
+                          },
+                          "protocol": {
+                            "type": "string",
+                            "enum": ["anthropic_messages", "openai_chat_completions", "gemini"]
+                          },
+                          "baseUrl": {
+                            "type": ["string", "null"]
+                          },
+                          "defaultModel": {
+                            "type": "string"
+                          },
+                          "requiresApiKey": {
+                            "type": "boolean"
+                          },
+                          "requiresBaseUrl": {
+                            "type": "boolean"
+                          }
+                        },
+                        "required": [
+                          "preset",
+                          "label",
+                          "protocol",
+                          "baseUrl",
+                          "defaultModel",
+                          "requiresApiKey",
+                          "requiresBaseUrl"
+                        ],
+                        "additionalProperties": false
+                      }
+                    }
+                  },
+                  "required": ["connector", "presets"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/ai-connector/test": {
+      "post": {
+        "operationId": "testAiConnector",
+        "summary": "Make one small call through the stored AI connector",
+        "tags": ["ai-connector"],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean",
+                      "enum": [true]
+                    }
+                  },
+                  "required": ["ok"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/ai-connector/disable": {
+      "post": {
+        "operationId": "disableAiConnector",
+        "summary": "Turn off the AI connector without deleting its configuration",
+        "tags": ["ai-connector"],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "connector": {
+                      "type": "object",
+                      "properties": {
+                        "configured": {
+                          "type": "boolean"
+                        },
+                        "enabled": {
+                          "type": "boolean"
+                        },
+                        "preset": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "enum": [
+                                "anthropic",
+                                "openai",
+                                "azure_openai",
+                                "gemini",
+                                "openrouter",
+                                "ollama",
+                                "custom"
+                              ]
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "protocol": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "enum": ["anthropic_messages", "openai_chat_completions", "gemini"]
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "baseUrl": {
+                          "type": ["string", "null"]
+                        },
+                        "hasApiKey": {
+                          "type": "boolean"
+                        },
+                        "model": {
+                          "type": ["string", "null"]
+                        },
+                        "disabledAt": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "format": "date-time",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "updatedAt": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "format": "date-time",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        }
+                      },
+                      "required": [
+                        "configured",
+                        "enabled",
+                        "preset",
+                        "protocol",
+                        "baseUrl",
+                        "hasApiKey",
+                        "model",
+                        "disabledAt",
+                        "updatedAt"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "presets": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "preset": {
+                            "type": "string",
+                            "enum": [
+                              "anthropic",
+                              "openai",
+                              "azure_openai",
+                              "gemini",
+                              "openrouter",
+                              "ollama",
+                              "custom"
+                            ]
+                          },
+                          "label": {
+                            "type": "string"
+                          },
+                          "protocol": {
+                            "type": "string",
+                            "enum": ["anthropic_messages", "openai_chat_completions", "gemini"]
+                          },
+                          "baseUrl": {
+                            "type": ["string", "null"]
+                          },
+                          "defaultModel": {
+                            "type": "string"
+                          },
+                          "requiresApiKey": {
+                            "type": "boolean"
+                          },
+                          "requiresBaseUrl": {
+                            "type": "boolean"
+                          }
+                        },
+                        "required": [
+                          "preset",
+                          "label",
+                          "protocol",
+                          "baseUrl",
+                          "defaultModel",
+                          "requiresApiKey",
+                          "requiresBaseUrl"
+                        ],
+                        "additionalProperties": false
+                      }
+                    }
+                  },
+                  "required": ["connector", "presets"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/ai-connector/enable": {
+      "post": {
+        "operationId": "enableAiConnector",
+        "summary": "Turn on the stored AI connector",
+        "tags": ["ai-connector"],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "connector": {
+                      "type": "object",
+                      "properties": {
+                        "configured": {
+                          "type": "boolean"
+                        },
+                        "enabled": {
+                          "type": "boolean"
+                        },
+                        "preset": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "enum": [
+                                "anthropic",
+                                "openai",
+                                "azure_openai",
+                                "gemini",
+                                "openrouter",
+                                "ollama",
+                                "custom"
+                              ]
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "protocol": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "enum": ["anthropic_messages", "openai_chat_completions", "gemini"]
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "baseUrl": {
+                          "type": ["string", "null"]
+                        },
+                        "hasApiKey": {
+                          "type": "boolean"
+                        },
+                        "model": {
+                          "type": ["string", "null"]
+                        },
+                        "disabledAt": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "format": "date-time",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "updatedAt": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "format": "date-time",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        }
+                      },
+                      "required": [
+                        "configured",
+                        "enabled",
+                        "preset",
+                        "protocol",
+                        "baseUrl",
+                        "hasApiKey",
+                        "model",
+                        "disabledAt",
+                        "updatedAt"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "presets": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "preset": {
+                            "type": "string",
+                            "enum": [
+                              "anthropic",
+                              "openai",
+                              "azure_openai",
+                              "gemini",
+                              "openrouter",
+                              "ollama",
+                              "custom"
+                            ]
+                          },
+                          "label": {
+                            "type": "string"
+                          },
+                          "protocol": {
+                            "type": "string",
+                            "enum": ["anthropic_messages", "openai_chat_completions", "gemini"]
+                          },
+                          "baseUrl": {
+                            "type": ["string", "null"]
+                          },
+                          "defaultModel": {
+                            "type": "string"
+                          },
+                          "requiresApiKey": {
+                            "type": "boolean"
+                          },
+                          "requiresBaseUrl": {
+                            "type": "boolean"
+                          }
+                        },
+                        "required": [
+                          "preset",
+                          "label",
+                          "protocol",
+                          "baseUrl",
+                          "defaultModel",
+                          "requiresApiKey",
+                          "requiresBaseUrl"
+                        ],
+                        "additionalProperties": false
+                      }
+                    }
+                  },
+                  "required": ["connector", "presets"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/ai-field-prompts": {
+      "get": {
+        "operationId": "listAiFieldPrompts",
+        "summary": "Read the effective and default prompts for the seven core analysis targets",
+        "tags": ["ai-field-prompts"],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "prompts": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "slug": {
+                            "type": "string",
+                            "enum": [
+                              "term_type",
+                              "effective_date",
+                              "expiry_date",
+                              "renewal_period_months",
+                              "notice_period_days",
+                              "value",
+                              "counterparty"
+                            ]
+                          },
+                          "prompt": {
+                            "type": "string"
+                          },
+                          "defaultPrompt": {
+                            "type": "string"
+                          },
+                          "overridden": {
+                            "type": "boolean"
+                          }
+                        },
+                        "required": ["slug", "prompt", "defaultPrompt", "overridden"],
+                        "additionalProperties": false
+                      }
+                    }
+                  },
+                  "required": ["prompts"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "operationId": "saveAiFieldPrompt",
+        "summary": "Save or reset one core analysis prompt; null or blank resets it to the default",
+        "tags": ["ai-field-prompts"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "slug": {
+                    "type": "string",
+                    "enum": [
+                      "term_type",
+                      "effective_date",
+                      "expiry_date",
+                      "renewal_period_months",
+                      "notice_period_days",
+                      "value",
+                      "counterparty"
+                    ]
+                  },
+                  "prompt": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "maxLength": 2000
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                },
+                "required": ["slug", "prompt"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "prompt": {
+                      "type": "object",
+                      "properties": {
+                        "slug": {
+                          "type": "string",
+                          "enum": [
+                            "term_type",
+                            "effective_date",
+                            "expiry_date",
+                            "renewal_period_months",
+                            "notice_period_days",
+                            "value",
+                            "counterparty"
+                          ]
+                        },
+                        "prompt": {
+                          "type": "string"
+                        },
+                        "defaultPrompt": {
+                          "type": "string"
+                        },
+                        "overridden": {
+                          "type": "boolean"
+                        }
+                      },
+                      "required": ["slug", "prompt", "defaultPrompt", "overridden"],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": ["prompt"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/signer-erasures": {
       "post": {
         "operationId": "eraseSigner",
@@ -20071,6 +21145,34 @@
                               ]
                             }
                           },
+                          "aiUnverified": {
+                            "anyOf": [
+                              {
+                                "type": "object",
+                                "propertyNames": {
+                                  "type": "string"
+                                },
+                                "additionalProperties": {
+                                  "type": "object",
+                                  "properties": {
+                                    "runId": {
+                                      "type": "string"
+                                    },
+                                    "writtenAt": {
+                                      "type": "string",
+                                      "format": "date-time",
+                                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                                    }
+                                  },
+                                  "required": ["runId", "writtenAt"],
+                                  "additionalProperties": false
+                                }
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
                           "isConfidential": {
                             "type": "boolean"
                           },
@@ -20135,6 +21237,7 @@
                           "proposedRenewalExpiry",
                           "description",
                           "customFields",
+                          "aiUnverified",
                           "isConfidential",
                           "endedAt",
                           "archivedAt",
@@ -20531,6 +21634,34 @@
                             ]
                           }
                         },
+                        "aiUnverified": {
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "propertyNames": {
+                                "type": "string"
+                              },
+                              "additionalProperties": {
+                                "type": "object",
+                                "properties": {
+                                  "runId": {
+                                    "type": "string"
+                                  },
+                                  "writtenAt": {
+                                    "type": "string",
+                                    "format": "date-time",
+                                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                                  }
+                                },
+                                "required": ["runId", "writtenAt"],
+                                "additionalProperties": false
+                              }
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
                         "isConfidential": {
                           "type": "boolean"
                         },
@@ -20595,6 +21726,7 @@
                         "proposedRenewalExpiry",
                         "description",
                         "customFields",
+                        "aiUnverified",
                         "isConfidential",
                         "endedAt",
                         "archivedAt",
@@ -21177,6 +22309,34 @@
                             ]
                           }
                         },
+                        "aiUnverified": {
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "propertyNames": {
+                                "type": "string"
+                              },
+                              "additionalProperties": {
+                                "type": "object",
+                                "properties": {
+                                  "runId": {
+                                    "type": "string"
+                                  },
+                                  "writtenAt": {
+                                    "type": "string",
+                                    "format": "date-time",
+                                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                                  }
+                                },
+                                "required": ["runId", "writtenAt"],
+                                "additionalProperties": false
+                              }
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
                         "isConfidential": {
                           "type": "boolean"
                         },
@@ -21241,6 +22401,7 @@
                         "proposedRenewalExpiry",
                         "description",
                         "customFields",
+                        "aiUnverified",
                         "isConfidential",
                         "endedAt",
                         "archivedAt",
@@ -21488,6 +22649,190 @@
                         "required": ["id", "from", "to", "confirmedAt", "confirmedBy"],
                         "additionalProperties": false
                       }
+                    },
+                    "analysis": {
+                      "type": "object",
+                      "properties": {
+                        "available": {
+                          "type": "boolean"
+                        },
+                        "latestRun": {
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "properties": {
+                                "id": {
+                                  "type": "string"
+                                },
+                                "contractId": {
+                                  "type": "string"
+                                },
+                                "versionId": {
+                                  "type": ["string", "null"]
+                                },
+                                "versionNumber": {
+                                  "anyOf": [
+                                    {
+                                      "type": "integer",
+                                      "exclusiveMinimum": 0,
+                                      "maximum": 9007199254740991
+                                    },
+                                    {
+                                      "type": "null"
+                                    }
+                                  ]
+                                },
+                                "state": {
+                                  "type": "string",
+                                  "enum": ["pending", "ready", "failed"]
+                                },
+                                "trigger": {
+                                  "type": "string",
+                                  "enum": ["automatic", "manual"]
+                                },
+                                "requestedBy": {
+                                  "type": ["string", "null"]
+                                },
+                                "preset": {
+                                  "type": "string",
+                                  "enum": [
+                                    "anthropic",
+                                    "openai",
+                                    "azure_openai",
+                                    "gemini",
+                                    "openrouter",
+                                    "ollama",
+                                    "custom"
+                                  ]
+                                },
+                                "model": {
+                                  "type": "string"
+                                },
+                                "truncated": {
+                                  "type": "boolean"
+                                },
+                                "outcome": {
+                                  "anyOf": [
+                                    {
+                                      "type": "object",
+                                      "properties": {
+                                        "written": {
+                                          "type": "array",
+                                          "items": {
+                                            "type": "string"
+                                          }
+                                        },
+                                        "kept": {
+                                          "type": "array",
+                                          "items": {
+                                            "type": "string"
+                                          }
+                                        },
+                                        "unsupported": {
+                                          "type": "array",
+                                          "items": {
+                                            "type": "string"
+                                          }
+                                        },
+                                        "invalid": {
+                                          "type": "array",
+                                          "items": {
+                                            "type": "string"
+                                          }
+                                        },
+                                        "unmatched": {
+                                          "type": "string"
+                                        },
+                                        "results": {
+                                          "type": "array",
+                                          "items": {
+                                            "type": "object",
+                                            "properties": {
+                                              "slug": {
+                                                "type": "string"
+                                              },
+                                              "value": {},
+                                              "evidence": {
+                                                "type": ["string", "null"]
+                                              },
+                                              "outcome": {
+                                                "type": "string",
+                                                "enum": [
+                                                  "written",
+                                                  "kept",
+                                                  "unsupported",
+                                                  "invalid",
+                                                  "unmatched"
+                                                ]
+                                              }
+                                            },
+                                            "required": ["slug", "value", "evidence", "outcome"],
+                                            "additionalProperties": false
+                                          }
+                                        }
+                                      },
+                                      "required": ["written", "kept", "unsupported", "invalid"],
+                                      "additionalProperties": false
+                                    },
+                                    {
+                                      "type": "null"
+                                    }
+                                  ]
+                                },
+                                "failure": {
+                                  "type": ["string", "null"]
+                                },
+                                "startedAt": {
+                                  "anyOf": [
+                                    {
+                                      "type": "string",
+                                      "format": "date-time",
+                                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                                    },
+                                    {
+                                      "type": "null"
+                                    }
+                                  ]
+                                },
+                                "finishedAt": {
+                                  "anyOf": [
+                                    {
+                                      "type": "string",
+                                      "format": "date-time",
+                                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                                    },
+                                    {
+                                      "type": "null"
+                                    }
+                                  ]
+                                }
+                              },
+                              "required": [
+                                "id",
+                                "contractId",
+                                "versionId",
+                                "versionNumber",
+                                "state",
+                                "trigger",
+                                "requestedBy",
+                                "preset",
+                                "model",
+                                "truncated",
+                                "outcome",
+                                "failure",
+                                "startedAt",
+                                "finishedAt"
+                              ],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        }
+                      },
+                      "required": ["available", "latestRun"],
+                      "additionalProperties": false
                     }
                   },
                   "required": [
@@ -21496,7 +22841,8 @@
                     "customFieldRefs",
                     "team",
                     "counterparties",
-                    "renewals"
+                    "renewals",
+                    "analysis"
                   ],
                   "additionalProperties": false
                 }
@@ -21986,6 +23332,34 @@
                             ]
                           }
                         },
+                        "aiUnverified": {
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "propertyNames": {
+                                "type": "string"
+                              },
+                              "additionalProperties": {
+                                "type": "object",
+                                "properties": {
+                                  "runId": {
+                                    "type": "string"
+                                  },
+                                  "writtenAt": {
+                                    "type": "string",
+                                    "format": "date-time",
+                                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                                  }
+                                },
+                                "required": ["runId", "writtenAt"],
+                                "additionalProperties": false
+                              }
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
                         "isConfidential": {
                           "type": "boolean"
                         },
@@ -22050,6 +23424,7 @@
                         "proposedRenewalExpiry",
                         "description",
                         "customFields",
+                        "aiUnverified",
                         "isConfidential",
                         "endedAt",
                         "archivedAt",
@@ -22303,6 +23678,866 @@
                   "required": ["type", "title", "status"],
                   "additionalProperties": false,
                   "description": "The status change crosses CTR-012's approval gate with approvals still unresolved. Re-send with `overrideSoftGate` to record it as an override."
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/contracts/{number}/analysis/confirm": {
+      "post": {
+        "operationId": "confirmContractAnalysisField",
+        "summary": "Confirm one AI-written Contract value, clear its unverified marker, and append one record-tier confirmation entry",
+        "tags": ["contracts"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "slug": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 200
+                  }
+                },
+                "required": ["slug"]
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
+            },
+            "in": "path",
+            "name": "number",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "contract": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "number": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "title": {
+                          "type": "string"
+                        },
+                        "contractTypeId": {
+                          "type": "string"
+                        },
+                        "contractTypeName": {
+                          "type": "string"
+                        },
+                        "statusId": {
+                          "type": "string"
+                        },
+                        "statusName": {
+                          "type": "string"
+                        },
+                        "stage": {
+                          "type": "string",
+                          "enum": ["draft", "review", "approval", "signature", "active", "ended"]
+                        },
+                        "manager": {
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "properties": {
+                                "id": {
+                                  "type": "string"
+                                },
+                                "displayName": {
+                                  "type": "string"
+                                },
+                                "image": {
+                                  "type": ["string", "null"]
+                                },
+                                "archived": {
+                                  "type": "boolean"
+                                }
+                              },
+                              "required": ["id", "displayName", "image", "archived"],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "entity": {
+                          "anyOf": [
+                            {
+                              "oneOf": [
+                                {
+                                  "type": "object",
+                                  "properties": {
+                                    "restricted": {
+                                      "type": "boolean",
+                                      "enum": [false]
+                                    },
+                                    "id": {
+                                      "type": "string"
+                                    },
+                                    "legalName": {
+                                      "type": "string"
+                                    }
+                                  },
+                                  "required": ["restricted", "id", "legalName"],
+                                  "additionalProperties": false
+                                },
+                                {
+                                  "type": "object",
+                                  "properties": {
+                                    "restricted": {
+                                      "type": "boolean",
+                                      "enum": [true]
+                                    }
+                                  },
+                                  "required": ["restricted"],
+                                  "additionalProperties": false
+                                }
+                              ]
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "primaryCounterparty": {
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "properties": {
+                                "id": {
+                                  "type": "string"
+                                },
+                                "name": {
+                                  "type": "string"
+                                }
+                              },
+                              "required": ["id", "name"],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "priority": {
+                          "type": "string",
+                          "enum": ["low", "medium", "high", "critical"]
+                        },
+                        "risk": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "enum": ["low", "medium", "high", "critical"]
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "value": {
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "properties": {
+                                "amount": {
+                                  "type": "integer",
+                                  "minimum": 0,
+                                  "maximum": 9007199254740991
+                                },
+                                "currency": {
+                                  "type": "string"
+                                },
+                                "cadence": {
+                                  "type": "string",
+                                  "enum": ["one_time", "monthly", "annually"]
+                                }
+                              },
+                              "required": ["amount", "currency", "cadence"],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "termType": {
+                          "type": "string",
+                          "enum": ["fixed", "auto_renew", "evergreen"]
+                        },
+                        "effectiveDate": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "format": "date",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "expiryDate": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "format": "date",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "renewalPeriodMonths": {
+                          "anyOf": [
+                            {
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "noticePeriodDays": {
+                          "anyOf": [
+                            {
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "noticeDeadline": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "format": "date",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "daysRemaining": {
+                          "anyOf": [
+                            {
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "renewalPendingConfirmation": {
+                          "type": "boolean"
+                        },
+                        "proposedRenewalExpiry": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "format": "date",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "description": {
+                          "type": ["string", "null"]
+                        },
+                        "customFields": {
+                          "type": "object",
+                          "propertyNames": {
+                            "type": "string"
+                          },
+                          "additionalProperties": {
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "number"
+                              },
+                              {
+                                "type": "boolean"
+                              },
+                              {
+                                "type": "array",
+                                "items": {
+                                  "type": "string"
+                                }
+                              }
+                            ]
+                          }
+                        },
+                        "aiUnverified": {
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "propertyNames": {
+                                "type": "string"
+                              },
+                              "additionalProperties": {
+                                "type": "object",
+                                "properties": {
+                                  "runId": {
+                                    "type": "string"
+                                  },
+                                  "writtenAt": {
+                                    "type": "string",
+                                    "format": "date-time",
+                                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                                  }
+                                },
+                                "required": ["runId", "writtenAt"],
+                                "additionalProperties": false
+                              }
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "isConfidential": {
+                          "type": "boolean"
+                        },
+                        "endedAt": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "format": "date-time",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "archivedAt": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "format": "date-time",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "createdAt": {
+                          "type": "string",
+                          "format": "date-time",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                        },
+                        "updatedAt": {
+                          "type": "string",
+                          "format": "date-time",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "number",
+                        "title",
+                        "contractTypeId",
+                        "contractTypeName",
+                        "statusId",
+                        "statusName",
+                        "stage",
+                        "manager",
+                        "entity",
+                        "primaryCounterparty",
+                        "priority",
+                        "risk",
+                        "value",
+                        "termType",
+                        "effectiveDate",
+                        "expiryDate",
+                        "renewalPeriodMonths",
+                        "noticePeriodDays",
+                        "noticeDeadline",
+                        "daysRemaining",
+                        "renewalPendingConfirmation",
+                        "proposedRenewalExpiry",
+                        "description",
+                        "customFields",
+                        "aiUnverified",
+                        "isConfidential",
+                        "endedAt",
+                        "archivedAt",
+                        "createdAt",
+                        "updatedAt"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": ["contract"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/contracts/{number}/analysis/confirm-all": {
+      "post": {
+        "operationId": "confirmAllContractAnalysisFields",
+        "summary": "Confirm every AI-written Contract value in one transaction and append one record-tier confirmation entry per cleared slug",
+        "tags": ["contracts"],
+        "parameters": [
+          {
+            "schema": {
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
+            },
+            "in": "path",
+            "name": "number",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "contract": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "number": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "title": {
+                          "type": "string"
+                        },
+                        "contractTypeId": {
+                          "type": "string"
+                        },
+                        "contractTypeName": {
+                          "type": "string"
+                        },
+                        "statusId": {
+                          "type": "string"
+                        },
+                        "statusName": {
+                          "type": "string"
+                        },
+                        "stage": {
+                          "type": "string",
+                          "enum": ["draft", "review", "approval", "signature", "active", "ended"]
+                        },
+                        "manager": {
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "properties": {
+                                "id": {
+                                  "type": "string"
+                                },
+                                "displayName": {
+                                  "type": "string"
+                                },
+                                "image": {
+                                  "type": ["string", "null"]
+                                },
+                                "archived": {
+                                  "type": "boolean"
+                                }
+                              },
+                              "required": ["id", "displayName", "image", "archived"],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "entity": {
+                          "anyOf": [
+                            {
+                              "oneOf": [
+                                {
+                                  "type": "object",
+                                  "properties": {
+                                    "restricted": {
+                                      "type": "boolean",
+                                      "enum": [false]
+                                    },
+                                    "id": {
+                                      "type": "string"
+                                    },
+                                    "legalName": {
+                                      "type": "string"
+                                    }
+                                  },
+                                  "required": ["restricted", "id", "legalName"],
+                                  "additionalProperties": false
+                                },
+                                {
+                                  "type": "object",
+                                  "properties": {
+                                    "restricted": {
+                                      "type": "boolean",
+                                      "enum": [true]
+                                    }
+                                  },
+                                  "required": ["restricted"],
+                                  "additionalProperties": false
+                                }
+                              ]
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "primaryCounterparty": {
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "properties": {
+                                "id": {
+                                  "type": "string"
+                                },
+                                "name": {
+                                  "type": "string"
+                                }
+                              },
+                              "required": ["id", "name"],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "priority": {
+                          "type": "string",
+                          "enum": ["low", "medium", "high", "critical"]
+                        },
+                        "risk": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "enum": ["low", "medium", "high", "critical"]
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "value": {
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "properties": {
+                                "amount": {
+                                  "type": "integer",
+                                  "minimum": 0,
+                                  "maximum": 9007199254740991
+                                },
+                                "currency": {
+                                  "type": "string"
+                                },
+                                "cadence": {
+                                  "type": "string",
+                                  "enum": ["one_time", "monthly", "annually"]
+                                }
+                              },
+                              "required": ["amount", "currency", "cadence"],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "termType": {
+                          "type": "string",
+                          "enum": ["fixed", "auto_renew", "evergreen"]
+                        },
+                        "effectiveDate": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "format": "date",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "expiryDate": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "format": "date",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "renewalPeriodMonths": {
+                          "anyOf": [
+                            {
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "noticePeriodDays": {
+                          "anyOf": [
+                            {
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "noticeDeadline": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "format": "date",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "daysRemaining": {
+                          "anyOf": [
+                            {
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "renewalPendingConfirmation": {
+                          "type": "boolean"
+                        },
+                        "proposedRenewalExpiry": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "format": "date",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "description": {
+                          "type": ["string", "null"]
+                        },
+                        "customFields": {
+                          "type": "object",
+                          "propertyNames": {
+                            "type": "string"
+                          },
+                          "additionalProperties": {
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "number"
+                              },
+                              {
+                                "type": "boolean"
+                              },
+                              {
+                                "type": "array",
+                                "items": {
+                                  "type": "string"
+                                }
+                              }
+                            ]
+                          }
+                        },
+                        "aiUnverified": {
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "propertyNames": {
+                                "type": "string"
+                              },
+                              "additionalProperties": {
+                                "type": "object",
+                                "properties": {
+                                  "runId": {
+                                    "type": "string"
+                                  },
+                                  "writtenAt": {
+                                    "type": "string",
+                                    "format": "date-time",
+                                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                                  }
+                                },
+                                "required": ["runId", "writtenAt"],
+                                "additionalProperties": false
+                              }
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "isConfidential": {
+                          "type": "boolean"
+                        },
+                        "endedAt": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "format": "date-time",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "archivedAt": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "format": "date-time",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "createdAt": {
+                          "type": "string",
+                          "format": "date-time",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                        },
+                        "updatedAt": {
+                          "type": "string",
+                          "format": "date-time",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "number",
+                        "title",
+                        "contractTypeId",
+                        "contractTypeName",
+                        "statusId",
+                        "statusName",
+                        "stage",
+                        "manager",
+                        "entity",
+                        "primaryCounterparty",
+                        "priority",
+                        "risk",
+                        "value",
+                        "termType",
+                        "effectiveDate",
+                        "expiryDate",
+                        "renewalPeriodMonths",
+                        "noticePeriodDays",
+                        "noticeDeadline",
+                        "daysRemaining",
+                        "renewalPendingConfirmation",
+                        "proposedRenewalExpiry",
+                        "description",
+                        "customFields",
+                        "aiUnverified",
+                        "isConfidential",
+                        "endedAt",
+                        "archivedAt",
+                        "createdAt",
+                        "updatedAt"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": ["contract"],
+                  "additionalProperties": false
                 }
               }
             }
@@ -22644,6 +24879,34 @@
                             ]
                           }
                         },
+                        "aiUnverified": {
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "propertyNames": {
+                                "type": "string"
+                              },
+                              "additionalProperties": {
+                                "type": "object",
+                                "properties": {
+                                  "runId": {
+                                    "type": "string"
+                                  },
+                                  "writtenAt": {
+                                    "type": "string",
+                                    "format": "date-time",
+                                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                                  }
+                                },
+                                "required": ["runId", "writtenAt"],
+                                "additionalProperties": false
+                              }
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
                         "isConfidential": {
                           "type": "boolean"
                         },
@@ -22708,6 +24971,7 @@
                         "proposedRenewalExpiry",
                         "description",
                         "customFields",
+                        "aiUnverified",
                         "isConfidential",
                         "endedAt",
                         "archivedAt",
@@ -23341,6 +25605,34 @@
                             ]
                           }
                         },
+                        "aiUnverified": {
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "propertyNames": {
+                                "type": "string"
+                              },
+                              "additionalProperties": {
+                                "type": "object",
+                                "properties": {
+                                  "runId": {
+                                    "type": "string"
+                                  },
+                                  "writtenAt": {
+                                    "type": "string",
+                                    "format": "date-time",
+                                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                                  }
+                                },
+                                "required": ["runId", "writtenAt"],
+                                "additionalProperties": false
+                              }
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
                         "isConfidential": {
                           "type": "boolean"
                         },
@@ -23405,6 +25697,7 @@
                         "proposedRenewalExpiry",
                         "description",
                         "customFields",
+                        "aiUnverified",
                         "isConfidential",
                         "endedAt",
                         "archivedAt",
@@ -23763,6 +26056,34 @@
                             ]
                           }
                         },
+                        "aiUnverified": {
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "propertyNames": {
+                                "type": "string"
+                              },
+                              "additionalProperties": {
+                                "type": "object",
+                                "properties": {
+                                  "runId": {
+                                    "type": "string"
+                                  },
+                                  "writtenAt": {
+                                    "type": "string",
+                                    "format": "date-time",
+                                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                                  }
+                                },
+                                "required": ["runId", "writtenAt"],
+                                "additionalProperties": false
+                              }
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
                         "isConfidential": {
                           "type": "boolean"
                         },
@@ -23827,6 +26148,7 @@
                         "proposedRenewalExpiry",
                         "description",
                         "customFields",
+                        "aiUnverified",
                         "isConfidential",
                         "endedAt",
                         "archivedAt",
@@ -24185,6 +26507,34 @@
                             ]
                           }
                         },
+                        "aiUnverified": {
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "propertyNames": {
+                                "type": "string"
+                              },
+                              "additionalProperties": {
+                                "type": "object",
+                                "properties": {
+                                  "runId": {
+                                    "type": "string"
+                                  },
+                                  "writtenAt": {
+                                    "type": "string",
+                                    "format": "date-time",
+                                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                                  }
+                                },
+                                "required": ["runId", "writtenAt"],
+                                "additionalProperties": false
+                              }
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
                         "isConfidential": {
                           "type": "boolean"
                         },
@@ -24249,6 +26599,7 @@
                         "proposedRenewalExpiry",
                         "description",
                         "customFields",
+                        "aiUnverified",
                         "isConfidential",
                         "endedAt",
                         "archivedAt",
@@ -24599,6 +26950,34 @@
                             ]
                           }
                         },
+                        "aiUnverified": {
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "propertyNames": {
+                                "type": "string"
+                              },
+                              "additionalProperties": {
+                                "type": "object",
+                                "properties": {
+                                  "runId": {
+                                    "type": "string"
+                                  },
+                                  "writtenAt": {
+                                    "type": "string",
+                                    "format": "date-time",
+                                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                                  }
+                                },
+                                "required": ["runId", "writtenAt"],
+                                "additionalProperties": false
+                              }
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
                         "isConfidential": {
                           "type": "boolean"
                         },
@@ -24663,6 +27042,7 @@
                         "proposedRenewalExpiry",
                         "description",
                         "customFields",
+                        "aiUnverified",
                         "isConfidential",
                         "endedAt",
                         "archivedAt",
@@ -24991,6 +27371,34 @@
                             ]
                           }
                         },
+                        "aiUnverified": {
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "propertyNames": {
+                                "type": "string"
+                              },
+                              "additionalProperties": {
+                                "type": "object",
+                                "properties": {
+                                  "runId": {
+                                    "type": "string"
+                                  },
+                                  "writtenAt": {
+                                    "type": "string",
+                                    "format": "date-time",
+                                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                                  }
+                                },
+                                "required": ["runId", "writtenAt"],
+                                "additionalProperties": false
+                              }
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
                         "isConfidential": {
                           "type": "boolean"
                         },
@@ -25055,6 +27463,7 @@
                         "proposedRenewalExpiry",
                         "description",
                         "customFields",
+                        "aiUnverified",
                         "isConfidential",
                         "endedAt",
                         "archivedAt",
@@ -25065,6 +27474,218 @@
                     }
                   },
                   "required": ["contract"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/contracts/{number}/analysis": {
+      "post": {
+        "operationId": "runContractAnalysis",
+        "summary": "Queue one manual CTR-008 analysis of the primary Document's executed pin, or its current Version when no pin exists. One waiting run is allowed per Contract; a run that has already started does not block one follow-up. Member+ only, on a live record with ready text and an enabled AI connector",
+        "tags": ["contracts"],
+        "parameters": [
+          {
+            "schema": {
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
+            },
+            "in": "path",
+            "name": "number",
+            "required": true
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "run": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "contractId": {
+                          "type": "string"
+                        },
+                        "versionId": {
+                          "type": ["string", "null"]
+                        },
+                        "versionNumber": {
+                          "anyOf": [
+                            {
+                              "type": "integer",
+                              "exclusiveMinimum": 0,
+                              "maximum": 9007199254740991
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "state": {
+                          "type": "string",
+                          "enum": ["pending", "ready", "failed"]
+                        },
+                        "trigger": {
+                          "type": "string",
+                          "enum": ["automatic", "manual"]
+                        },
+                        "requestedBy": {
+                          "type": ["string", "null"]
+                        },
+                        "preset": {
+                          "type": "string",
+                          "enum": [
+                            "anthropic",
+                            "openai",
+                            "azure_openai",
+                            "gemini",
+                            "openrouter",
+                            "ollama",
+                            "custom"
+                          ]
+                        },
+                        "model": {
+                          "type": "string"
+                        },
+                        "truncated": {
+                          "type": "boolean"
+                        },
+                        "outcome": {
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "properties": {
+                                "written": {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "string"
+                                  }
+                                },
+                                "kept": {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "string"
+                                  }
+                                },
+                                "unsupported": {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "string"
+                                  }
+                                },
+                                "invalid": {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "string"
+                                  }
+                                },
+                                "unmatched": {
+                                  "type": "string"
+                                },
+                                "results": {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "object",
+                                    "properties": {
+                                      "slug": {
+                                        "type": "string"
+                                      },
+                                      "value": {},
+                                      "evidence": {
+                                        "type": ["string", "null"]
+                                      },
+                                      "outcome": {
+                                        "type": "string",
+                                        "enum": [
+                                          "written",
+                                          "kept",
+                                          "unsupported",
+                                          "invalid",
+                                          "unmatched"
+                                        ]
+                                      }
+                                    },
+                                    "required": ["slug", "value", "evidence", "outcome"],
+                                    "additionalProperties": false
+                                  }
+                                }
+                              },
+                              "required": ["written", "kept", "unsupported", "invalid"],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "failure": {
+                          "type": ["string", "null"]
+                        },
+                        "startedAt": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "format": "date-time",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "finishedAt": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "format": "date-time",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "contractId",
+                        "versionId",
+                        "versionNumber",
+                        "state",
+                        "trigger",
+                        "requestedBy",
+                        "preset",
+                        "model",
+                        "truncated",
+                        "outcome",
+                        "failure",
+                        "startedAt",
+                        "finishedAt"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": ["run"],
                   "additionalProperties": false
                 }
               }
@@ -26737,6 +29358,9 @@
                           },
                           "isNext": {
                             "type": "boolean"
+                          },
+                          "unverified": {
+                            "type": "boolean"
                           }
                         },
                         "required": [
@@ -26746,7 +29370,8 @@
                           "label",
                           "note",
                           "daysAway",
-                          "isNext"
+                          "isNext",
+                          "unverified"
                         ],
                         "additionalProperties": false
                       }
@@ -26859,6 +29484,9 @@
                           },
                           "isNext": {
                             "type": "boolean"
+                          },
+                          "unverified": {
+                            "type": "boolean"
                           }
                         },
                         "required": [
@@ -26868,7 +29496,8 @@
                           "label",
                           "note",
                           "daysAway",
-                          "isNext"
+                          "isNext",
+                          "unverified"
                         ],
                         "additionalProperties": false
                       }
@@ -26982,6 +29611,9 @@
                           },
                           "isNext": {
                             "type": "boolean"
+                          },
+                          "unverified": {
+                            "type": "boolean"
                           }
                         },
                         "required": [
@@ -26991,7 +29623,8 @@
                           "label",
                           "note",
                           "daysAway",
-                          "isNext"
+                          "isNext",
+                          "unverified"
                         ],
                         "additionalProperties": false
                       }
@@ -27069,6 +29702,9 @@
                           },
                           "isNext": {
                             "type": "boolean"
+                          },
+                          "unverified": {
+                            "type": "boolean"
                           }
                         },
                         "required": [
@@ -27078,7 +29714,8 @@
                           "label",
                           "note",
                           "daysAway",
-                          "isNext"
+                          "isNext",
+                          "unverified"
                         ],
                         "additionalProperties": false
                       }
@@ -49863,6 +52500,9 @@
                                         }
                                       ]
                                     },
+                                    "unverified": {
+                                      "type": "boolean"
+                                    },
                                     "record": {
                                       "type": "object",
                                       "properties": {
@@ -49901,6 +52541,7 @@
                                     "date",
                                     "label",
                                     "noticePeriodDays",
+                                    "unverified",
                                     "record"
                                   ],
                                   "additionalProperties": false

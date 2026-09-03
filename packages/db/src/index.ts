@@ -13,11 +13,13 @@ import pg from "pg";
 export type { PoolClient } from "pg";
 import { guardMigrationJournal } from "./migration-journal.js";
 import * as activitySchema from "./schema/activity.js";
+import * as aiConnectorSchema from "./schema/ai-connector.js";
 import * as approverGroupsSchema from "./schema/approver-groups.js";
 import * as authSchema from "./schema/auth.js";
 import * as commentsSchema from "./schema/comments.js";
 import * as commentAttachmentsSchema from "./schema/comment-attachments.js";
 import * as contractApprovalsSchema from "./schema/contract-approvals.js";
+import * as contractAnalysisSchema from "./schema/contract-analysis.js";
 import * as contractCounterpartiesSchema from "./schema/contract-counterparties.js";
 import * as contractEnvelopesSchema from "./schema/contract-envelopes.js";
 import * as contractKeyDatesSchema from "./schema/contract-key-dates.js";
@@ -67,11 +69,13 @@ import * as signingConnectorsSchema from "./schema/signing-connectors.js";
 import { resealStoredSecrets, type SecretsRewrap } from "./rewrap.js";
 
 export * from "./schema/activity.js";
+export * from "./schema/ai-connector.js";
 export * from "./schema/approver-groups.js";
 export * from "./schema/auth.js";
 export * from "./schema/comments.js";
 export * from "./schema/comment-attachments.js";
 export * from "./schema/contract-approvals.js";
+export * from "./schema/contract-analysis.js";
 export * from "./schema/contract-counterparties.js";
 export * from "./schema/contract-envelopes.js";
 export * from "./schema/contract-key-dates.js";
@@ -123,11 +127,13 @@ export * from "./rewrap.js";
 export * from "./secrets.js";
 export const schema = {
   ...activitySchema,
+  ...aiConnectorSchema,
   ...approverGroupsSchema,
   ...authSchema,
   ...commentsSchema,
   ...commentAttachmentsSchema,
   ...contractApprovalsSchema,
+  ...contractAnalysisSchema,
   ...contractCounterpartiesSchema,
   ...contractEnvelopesSchema,
   ...contractKeyDatesSchema,

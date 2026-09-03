@@ -25,7 +25,10 @@
 import { PgBoss, type JobWithMetadata } from "pg-boss";
 import type { MailerResolver } from "../lib/mailer.js";
 import type { SigningResolver } from "../lib/signing/resolver.js";
+import type { AiResolver } from "../lib/ai/resolver.js";
+import { requestAutomaticContractAnalysis } from "./automatic-contract-analysis.js";
 import { runBackfillSweep } from "./backfill.js";
+import { handleContractAnalysis } from "./contract-analysis.js";
 import type { DerivationDeps } from "./derivations.js";
 import { handleDisplayConversion } from "./display-conversion.js";
 import { createNotifier } from "../lib/notifications/notifier.js";
@@ -33,6 +36,7 @@ import { handleExecutedCopyFetch } from "./executed-copy.js";
 import { handleNotificationEmail } from "./notification-email.js";
 import {
   JOB_QUEUES,
+  type ContractAnalysisJob,
   type DisplayConversionJob,
   type ExecutedCopyFetchJob,
   type JobQueue,
@@ -157,6 +161,14 @@ export const NOTIFICATION_EMAIL_QUEUE_OPTIONS = {
   retryBackoff: true,
 } as const;
 
+/** One provider call, with the pipeline's three-attempt backoff. */
+export const CONTRACT_ANALYSIS_QUEUE_OPTIONS = {
+  expireInSeconds: 300,
+  retryLimit: 2,
+  retryDelay: 30,
+  retryBackoff: true,
+} as const;
+
 /**
  * Everything a process that works the queue is built from.
  *
@@ -171,6 +183,8 @@ export interface PipelineHandlers extends DerivationDeps {
    * connector resolves to nothing, and an executed-copy job then
    * records a terminal failure rather than waiting for one. */
   resolveSigningProvider: SigningResolver;
+  /** The AI connector, read live for each future analysis run (TECH-012). */
+  resolveAiProvider: AiResolver;
   /**
    * The mailer, resolved per send (TECH-011, #37) exactly as the API
    * resolves it — so a relay saved in the wizard reaches the very next
@@ -375,6 +389,15 @@ export async function startPipeline(options: PipelineOptions): Promise<Pipeline>
       // leave one job between them rather than two messages.
       await boss.send(JOB_QUEUES.notificationEmail, job, { singletonKey: notificationId });
     },
+    async requestContractAnalysis(contractId: string, runId: string): Promise<boolean> {
+      const job: ContractAnalysisJob = { contractId, runId };
+      const jobId = await boss.send(JOB_QUEUES.contractAnalysis, job, {
+        singletonKey: contractId,
+      });
+      // A short queue reports a waiting singleton collision with `null`.
+      // The caller removes the row it made for a job the queue did not take.
+      return jobId !== null;
+    },
   };
 
   // Cut short when the process is stopping. Both scheduled sweeps
@@ -439,6 +462,15 @@ export async function startPipeline(options: PipelineOptions): Promise<Pipeline>
       notify: true,
       ...NOTIFICATION_EMAIL_QUEUE_OPTIONS,
     });
+    await boss.createQueue(JOB_QUEUES.contractAnalysis, {
+      policy: "short",
+      notify: true,
+      ...CONTRACT_ANALYSIS_QUEUE_OPTIONS,
+    });
+    await boss.updateQueue(JOB_QUEUES.contractAnalysis, {
+      notify: true,
+      ...CONTRACT_ANALYSIS_QUEUE_OPTIONS,
+    });
     // `singleton` allows one sweep to be running at a time. Two at once
     // would be correct — the sweep only asks, and the `short` policy
     // above collapses whatever they both asked for — but it would be two
@@ -487,6 +519,16 @@ export async function startPipeline(options: PipelineOptions): Promise<Pipeline>
        * same seam over the same queue.
        */
       const notifier = createNotifier({ db: handlers.db, jobs: queue, log });
+      const onTextReady = (versionId: string) =>
+        requestAutomaticContractAnalysis(
+          {
+            db: handlers.db,
+            jobs: queue,
+            resolveAiProvider: handlers.resolveAiProvider,
+            log,
+          },
+          versionId,
+        );
 
       // One at a time, with the job's own counters. The counters are
       // what let a handler tell "try again" from "this was the last
@@ -525,11 +567,15 @@ export async function startPipeline(options: PipelineOptions): Promise<Pipeline>
         oneAtATime,
         async (jobs: JobWithMetadata<TextExtractionJob>[]) => {
           for (const job of jobs) {
-            await handleTextExtraction(handlers, {
-              versionId: job.data.versionId,
-              retryCount: job.retryCount,
-              retryLimit: job.retryLimit,
-            });
+            await handleTextExtraction(
+              handlers,
+              {
+                versionId: job.data.versionId,
+                retryCount: job.retryCount,
+                retryLimit: job.retryLimit,
+              },
+              onTextReady,
+            );
           }
         },
       );
@@ -538,11 +584,15 @@ export async function startPipeline(options: PipelineOptions): Promise<Pipeline>
         oneAtATime,
         async (jobs: JobWithMetadata<DisplayConversionJob>[]) => {
           for (const job of jobs) {
-            await handleDisplayConversion(handlers, {
-              versionId: job.data.versionId,
-              retryCount: job.retryCount,
-              retryLimit: job.retryLimit,
-            });
+            await handleDisplayConversion(
+              handlers,
+              {
+                versionId: job.data.versionId,
+                retryCount: job.retryCount,
+                retryLimit: job.retryLimit,
+              },
+              onTextReady,
+            );
           }
         },
       );
@@ -552,7 +602,12 @@ export async function startPipeline(options: PipelineOptions): Promise<Pipeline>
         async (jobs: JobWithMetadata<ExecutedCopyFetchJob>[]) => {
           for (const job of jobs) {
             await handleExecutedCopyFetch(
-              { ...handlers, jobs: queue, notifier },
+              {
+                ...handlers,
+                jobs: queue,
+                notifier,
+                onExecutedVersionPinned: onTextReady,
+              },
               {
                 envelopeId: job.data.envelopeId,
                 retryCount: job.retryCount,
@@ -576,6 +631,22 @@ export async function startPipeline(options: PipelineOptions): Promise<Pipeline>
               },
               {
                 notificationId: job.data.notificationId,
+                retryCount: job.retryCount,
+                retryLimit: job.retryLimit,
+              },
+            );
+          }
+        },
+      );
+      await boss.work(
+        JOB_QUEUES.contractAnalysis,
+        oneAtATime,
+        async (jobs: JobWithMetadata<ContractAnalysisJob>[]) => {
+          for (const job of jobs) {
+            await handleContractAnalysis(
+              { db: handlers.db, resolveAiProvider: handlers.resolveAiProvider, log },
+              {
+                runId: job.data.runId,
                 retryCount: job.retryCount,
                 retryLimit: job.retryLimit,
               },
@@ -655,6 +726,7 @@ export async function startPipeline(options: PipelineOptions): Promise<Pipeline>
             JOB_QUEUES.backfillSweep,
             JOB_QUEUES.reconciliationSweep,
             JOB_QUEUES.morningRound,
+            JOB_QUEUES.contractAnalysis,
           ],
           backfillSweepCron: BACKFILL_SWEEP_CRON,
           reconciliationSweepCron: RECONCILIATION_SWEEP_CRON,

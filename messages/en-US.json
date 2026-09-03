@@ -44,6 +44,30 @@
   "activity.actor.system": {
     "defaultMessage": "OpenLaw"
   },
+  "activity.aiConnector.configured": {
+    "defaultMessage": "{actor} connected the AI provider {provider}"
+  },
+  "activity.aiConnector.disabled": {
+    "defaultMessage": "{actor} turned off the AI connector {provider}"
+  },
+  "activity.aiConnector.enabled": {
+    "defaultMessage": "{actor} turned on the AI connector {provider}"
+  },
+  "activity.aiConnector.preset": {
+    "defaultMessage": "{preset, select, anthropic {Anthropic} openai {OpenAI} azure_openai {Azure OpenAI} gemini {Gemini} openrouter {OpenRouter} ollama {Ollama} custom {Custom endpoint} other {{preset}}}"
+  },
+  "activity.aiConnector.removed": {
+    "defaultMessage": "{actor} removed the AI connector {provider} and its API key"
+  },
+  "activity.aiConnector.updated": {
+    "defaultMessage": "{actor} changed the AI connector {provider}"
+  },
+  "activity.aiFieldPrompt.reset": {
+    "defaultMessage": "{actor} reset the analysis prompt for {target} to its default"
+  },
+  "activity.aiFieldPrompt.updated": {
+    "defaultMessage": "{actor} changed the analysis prompt for {target}"
+  },
   "activity.applet": {
     "defaultMessage": "History"
   },
@@ -86,6 +110,12 @@
   "activity.comment.redacted": {
     "defaultMessage": "{actor} removed a comment from the record"
   },
+  "activity.contract.analysisCompleted": {
+    "defaultMessage": "{actor} completed an AI analysis of this contract"
+  },
+  "activity.contract.analysisFailed": {
+    "defaultMessage": "{actor} could not complete an AI analysis of this contract"
+  },
   "activity.contract.archived": {
     "defaultMessage": "{actor} archived this contract"
   },
@@ -106,6 +136,9 @@
   },
   "activity.contract.createdFromRequest": {
     "defaultMessage": "{actor} created this contract from {request}"
+  },
+  "activity.contract.fieldConfirmed": {
+    "defaultMessage": "{actor} confirmed the AI-written value for {field}"
   },
   "activity.contract.matterLinked": {
     "defaultMessage": "{actor} linked this contract to {matter}"
@@ -151,6 +184,9 @@
   },
   "activity.contract.typeReassigned": {
     "defaultMessage": "{actor} re-typed this contract"
+  },
+  "activity.contract.unknownField": {
+    "defaultMessage": "a field"
   },
   "activity.contract.unnamedRecord": {
     "defaultMessage": "another contract"
@@ -288,7 +324,7 @@
     "defaultMessage": "{actor} exported the audit log"
   },
   "activity.field": {
-    "defaultMessage": "{key, select, title {Title} description {Description} owner {Owner} entity {Signing entity} priority {Priority} risk {Risk} matterManager {Matter Manager} matterType {Matter type} contractType {Contract type} value {Value} status {Status} termType {Term type} effectiveDate {Effective date} expiryDate {Expiry date} renewalPeriodMonths {Renewal period (months)} noticePeriodDays {Notice period (days)} date {Date} label {Event} note {Note} kind {Kind} primaryCounterparty {Primary counterparty} primaryDocument {Primary document} displayName {Name} display_name {Display name} name {Name} role {Role} email {Email} stage {Stage} moduleScope {Scope} isRequired {Required} targetModule {Target} targetType {Target type} theme {Theme} timezone {Timezone} avatar {Avatar} logo {Logo} defaultLocale {Default language} defaultTimezone {Default timezone} authMode {Sign-in method} allowedEmailDomains {Allowed email domains} reminderOffsetDays {Reminder lead times} smtpUrl {SMTP server} smtpFrom {From address} issuer {Issuer} domain {Email domain} clientId {Client ID} clientSecret {Client secret} environment {Environment} integrationKey {Integration key} apiUserId {User ID} privateKey {RSA private key} webhookSecret {Connect HMAC secret} legalName {Legal name} entityType {Entity type} knowledgeType {Knowledge type} jurisdiction {Jurisdiction} formedOn {Formed on} registrationNumber {Registration number} taxId {Tax ID} registeredAgent {Registered agent} registeredAddress {Registered address} sharesAuthorized {Authorized shares} sharesIssued {Issued shares} parValue {Par value} appointedOn {Appointed on} resignedOn {Resigned on} linkedUser {Linked user} registrationId {Registration} recurrenceMonths {Repeat every (months)} nextDueOn {Due date} assigneeId {Assignee} matterId {Matter} audience {Audience} url {Address} target {Target} other {{key}}}"
+    "defaultMessage": "{key, select, title {Title} description {Description} owner {Owner} entity {Signing entity} priority {Priority} risk {Risk} matterManager {Matter Manager} matterType {Matter type} contractType {Contract type} value {Value} status {Status} termType {Term type} effectiveDate {Effective date} expiryDate {Expiry date} renewalPeriodMonths {Renewal period (months)} noticePeriodDays {Notice period (days)} date {Date} label {Event} note {Note} kind {Kind} primaryCounterparty {Primary counterparty} primaryDocument {Primary document} displayName {Name} display_name {Display name} name {Name} role {Role} email {Email} stage {Stage} moduleScope {Scope} isRequired {Required} targetModule {Target} targetType {Target type} theme {Theme} timezone {Timezone} avatar {Avatar} logo {Logo} defaultLocale {Default language} defaultTimezone {Default timezone} authMode {Sign-in method} allowedEmailDomains {Allowed email domains} reminderOffsetDays {Reminder lead times} smtpUrl {SMTP server} smtpFrom {From address} issuer {Issuer} domain {Email domain} clientId {Client ID} clientSecret {Client secret} environment {Environment} integrationKey {Integration key} apiUserId {User ID} privateKey {RSA private key} webhookSecret {Connect HMAC secret} preset {Provider} protocol {Protocol} baseUrl {Base URL} model {Model} apiKey {API key} legalName {Legal name} entityType {Entity type} knowledgeType {Knowledge type} jurisdiction {Jurisdiction} formedOn {Formed on} registrationNumber {Registration number} taxId {Tax ID} registeredAgent {Registered agent} registeredAddress {Registered address} sharesAuthorized {Authorized shares} sharesIssued {Issued shares} parValue {Par value} appointedOn {Appointed on} resignedOn {Resigned on} linkedUser {Linked user} registrationId {Registration} recurrenceMonths {Repeat every (months)} nextDueOn {Due date} assigneeId {Assignee} matterId {Matter} audience {Audience} url {Address} target {Target} other {{key}}}"
   },
   "activity.field.narrowed": {
     "defaultMessage": "{actor} narrowed the field {name} to one module"
@@ -1291,6 +1327,60 @@
   },
   "contractMatter.unlink.error": {
     "defaultMessage": "The Contract could not be unlinked from the Matter."
+  },
+  "contracts.analysis.booleanValue": {
+    "defaultMessage": "{value, select, true {Yes} other {No}}"
+  },
+  "contracts.analysis.completed": {
+    "defaultMessage": "Completed {when} on Version {version} with {model}."
+  },
+  "contracts.analysis.confirm": {
+    "defaultMessage": "Confirm"
+  },
+  "contracts.analysis.confirmAll": {
+    "defaultMessage": "Confirm all"
+  },
+  "contracts.analysis.counterparty": {
+    "defaultMessage": "Counterparty"
+  },
+  "contracts.analysis.failed": {
+    "defaultMessage": "Failed {when} on Version {version} with {model}: {reason}"
+  },
+  "contracts.analysis.heading": {
+    "defaultMessage": "AI analysis"
+  },
+  "contracts.analysis.noEvidence": {
+    "defaultMessage": "No evidence returned."
+  },
+  "contracts.analysis.notRun": {
+    "defaultMessage": "No analysis has run yet."
+  },
+  "contracts.analysis.outcome.invalid": {
+    "defaultMessage": "Invalid"
+  },
+  "contracts.analysis.outcome.kept": {
+    "defaultMessage": "Kept"
+  },
+  "contracts.analysis.outcome.unmatched": {
+    "defaultMessage": "Unmatched"
+  },
+  "contracts.analysis.outcome.unsupported": {
+    "defaultMessage": "Unsupported"
+  },
+  "contracts.analysis.outcome.written": {
+    "defaultMessage": "Written"
+  },
+  "contracts.analysis.results": {
+    "defaultMessage": "Analysis results"
+  },
+  "contracts.analysis.run": {
+    "defaultMessage": "Run analysis"
+  },
+  "contracts.analysis.running": {
+    "defaultMessage": "Running…"
+  },
+  "contracts.analysis.unverified": {
+    "defaultMessage": "Unverified"
   },
   "contracts.applet.settings": {
     "defaultMessage": "Contract settings"
@@ -5138,6 +5228,138 @@
   "search.seeAll": {
     "defaultMessage": "See all results"
   },
+  "settings.aiAnalysis.apiKey": {
+    "defaultMessage": "API key"
+  },
+  "settings.aiAnalysis.apiKey.keep": {
+    "defaultMessage": "Leave blank to keep the current key. Paste a new one to rotate."
+  },
+  "settings.aiAnalysis.apiKey.optional": {
+    "defaultMessage": "Ollama does not require an API key."
+  },
+  "settings.aiAnalysis.apiKey.placeholder": {
+    "defaultMessage": "••••••••••••••••"
+  },
+  "settings.aiAnalysis.apiKey.required": {
+    "defaultMessage": "Required for this provider. The key is write-only and encrypted at rest."
+  },
+  "settings.aiAnalysis.baseUrl": {
+    "defaultMessage": "Base URL"
+  },
+  "settings.aiAnalysis.chip.connected": {
+    "defaultMessage": "Connected"
+  },
+  "settings.aiAnalysis.chip.notConnected": {
+    "defaultMessage": "Not connected"
+  },
+  "settings.aiAnalysis.chip.turnedOff": {
+    "defaultMessage": "Turned off"
+  },
+  "settings.aiAnalysis.connected": {
+    "defaultMessage": "Connection successful."
+  },
+  "settings.aiAnalysis.deploymentEndpoint": {
+    "defaultMessage": "Deployment endpoint"
+  },
+  "settings.aiAnalysis.enabled": {
+    "defaultMessage": "Use AI analysis"
+  },
+  "settings.aiAnalysis.enabled.off": {
+    "defaultMessage": "Off since {when}. Turn it on to make AI analysis available again."
+  },
+  "settings.aiAnalysis.enabled.on": {
+    "defaultMessage": "Turn this off to hide AI analysis without deleting the connector."
+  },
+  "settings.aiAnalysis.intro": {
+    "defaultMessage": "Connect your own AI provider for contract analysis. OpenLaw sends contract text only when an analysis runs."
+  },
+  "settings.aiAnalysis.model": {
+    "defaultMessage": "Model"
+  },
+  "settings.aiAnalysis.pageTitle": {
+    "defaultMessage": "AI analysis"
+  },
+  "settings.aiAnalysis.prompts.catalogLink": {
+    "defaultMessage": "Contracts → Fields"
+  },
+  "settings.aiAnalysis.prompts.catalogPointer": {
+    "defaultMessage": "Catalog Fields keep their own analysis prompts in {fields}."
+  },
+  "settings.aiAnalysis.prompts.inputLabel": {
+    "defaultMessage": "{label} prompt"
+  },
+  "settings.aiAnalysis.prompts.reset": {
+    "defaultMessage": "Reset to default"
+  },
+  "settings.aiAnalysis.prompts.resetLabel": {
+    "defaultMessage": "Reset {label} to default"
+  },
+  "settings.aiAnalysis.prompts.title": {
+    "defaultMessage": "Field prompts"
+  },
+  "settings.aiAnalysis.protocol": {
+    "defaultMessage": "Protocol"
+  },
+  "settings.aiAnalysis.protocol.anthropic": {
+    "defaultMessage": "Anthropic Messages"
+  },
+  "settings.aiAnalysis.protocol.gemini": {
+    "defaultMessage": "Gemini"
+  },
+  "settings.aiAnalysis.protocol.openai": {
+    "defaultMessage": "OpenAI-compatible chat completions"
+  },
+  "settings.aiAnalysis.provider": {
+    "defaultMessage": "Provider"
+  },
+  "settings.aiAnalysis.provider.anthropic": {
+    "defaultMessage": "Anthropic"
+  },
+  "settings.aiAnalysis.provider.azureOpenAi": {
+    "defaultMessage": "Azure OpenAI"
+  },
+  "settings.aiAnalysis.provider.custom": {
+    "defaultMessage": "Custom endpoint"
+  },
+  "settings.aiAnalysis.provider.gemini": {
+    "defaultMessage": "Gemini"
+  },
+  "settings.aiAnalysis.provider.ollama": {
+    "defaultMessage": "Ollama"
+  },
+  "settings.aiAnalysis.provider.openRouter": {
+    "defaultMessage": "OpenRouter"
+  },
+  "settings.aiAnalysis.provider.openai": {
+    "defaultMessage": "OpenAI"
+  },
+  "settings.aiAnalysis.providerCard": {
+    "defaultMessage": "Provider"
+  },
+  "settings.aiAnalysis.remove": {
+    "defaultMessage": "Remove connector"
+  },
+  "settings.aiAnalysis.removeBody": {
+    "defaultMessage": "The API key is deleted with the connector. Reconnecting means entering it again."
+  },
+  "settings.aiAnalysis.removeConfirm": {
+    "defaultMessage": "Remove connector"
+  },
+  "settings.aiAnalysis.removeTitle": {
+    "defaultMessage": "Remove the AI connector"
+  },
+  "settings.aiAnalysis.save": {
+    "defaultMessage": "Save connector"
+  },
+  "settings.aiAnalysis.test": {
+    "defaultMessage": "Test connection"
+  },
+  "settings.aiAnalysis.testFailed": {
+    "defaultMessage": "The connection test failed. Check the connector and try again."
+  },
+  "settings.aiAnalysis.testing": {
+    "defaultMessage": "Testing the connection…"
+  },
   "settings.appearance.caption": {
     "defaultMessage": "Theme is a personal preference — it doesn't affect other users."
   },
@@ -6073,6 +6295,18 @@
   },
   "settings.intakeLinks.urlLabel": {
     "defaultMessage": "Address"
+  },
+  "settings.integrations.tab.aiAnalysis": {
+    "defaultMessage": "AI analysis"
+  },
+  "settings.integrations.tab.eSignature": {
+    "defaultMessage": "E-signature"
+  },
+  "settings.integrations.tabsLabel": {
+    "defaultMessage": "Integration panes"
+  },
+  "settings.integrations.title": {
+    "defaultMessage": "Integrations"
   },
   "settings.knowledge.tab.types": {
     "defaultMessage": "Types"

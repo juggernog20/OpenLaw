@@ -7,6 +7,7 @@ import { FormattedMessage } from "react-intl";
 import type { DatesHomeSection } from "../../lib/home";
 import { formatDeadline, formatFullDate } from "../../lib/format";
 import { ConfidentialMarker } from "../confidential-marker";
+import { UnverifiedMarker } from "../contracts/ai-analysis-card";
 import { HomeSectionCard } from "./section-card";
 
 type DateRow = DatesHomeSection["rows"][number];
@@ -70,6 +71,7 @@ export function HomeDatesCard({ section }: Readonly<{ section: DatesHomeSection 
                   <span className="shrink-0">
                     <SourceName source={row.source} />
                   </span>
+                  {row.unverified ? <UnverifiedMarker /> : null}
                   <span aria-hidden="true">·</span>
                   <span className="shrink-0">
                     <FormattedMessage

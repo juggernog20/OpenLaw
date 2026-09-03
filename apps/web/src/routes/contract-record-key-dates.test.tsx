@@ -102,6 +102,7 @@ function deadline(overrides: Record<string, unknown> = {}) {
     note: null,
     daysAway: 60,
     isNext: false,
+    unverified: false,
     ...overrides,
   };
 }
@@ -117,6 +118,7 @@ const UNION = [
     label: null,
     daysAway: 30,
     isNext: true,
+    unverified: true,
   }),
   deadline({ daysAway: 60 }),
   deadline({
@@ -232,6 +234,9 @@ describe("the record's Key dates section (CTR-009)", () => {
     expect(within(rows[0]!).getByText("Derived")).toBeInTheDocument();
     expect(within(rows[1]!).getByText("Key date")).toBeInTheDocument();
     expect(within(rows[2]!).getByText("Derived")).toBeInTheDocument();
+    expect(within(rows[0]!).getByText("Unverified")).toBeInTheDocument();
+    expect(within(rows[1]!).queryByText("Unverified")).not.toBeInTheDocument();
+    expect(within(rows[2]!).queryByText("Unverified")).not.toBeInTheDocument();
 
     // The head counts what is drawn and splits it the way the C6 mock's
     // toolbar does.

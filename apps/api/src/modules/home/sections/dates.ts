@@ -36,6 +36,7 @@ export const DateHomeRowSchema = z.object({
   date: z.iso.date(),
   label: z.string().nullable(),
   noticePeriodDays: z.number().int().nonnegative().nullable(),
+  unverified: z.boolean(),
   record: z.object({
     kind: z.enum(["contract", "matter"]),
     id: z.string(),
@@ -59,6 +60,7 @@ interface DateDbRow extends Record<string, unknown> {
   date: string;
   label: string | null;
   notice_period_days: number | null;
+  unverified: boolean;
   record_kind: "contract" | "matter";
   record_id: string;
   record_number: number;
@@ -128,6 +130,7 @@ export async function readDatesHomeSection(
         ${contractKeyDates.date} as date,
         ${contractKeyDates.label} as label,
         null::integer as notice_period_days,
+        false as unverified,
         'contract'::text as record_kind,
         ${contracts.id} as record_id,
         ${contracts.number} as record_number,
@@ -147,6 +150,7 @@ export async function readDatesHomeSection(
         ${contracts.expiryDate} as date,
         null::text as label,
         null::integer as notice_period_days,
+        coalesce(${contracts.aiUnverified} ? 'expiry_date', false) as unverified,
         'contract'::text as record_kind,
         ${contracts.id} as record_id,
         ${contracts.number} as record_number,
@@ -165,6 +169,11 @@ export async function readDatesHomeSection(
         ${noticeDeadline} as date,
         null::text as label,
         ${contracts.noticePeriodDays} as notice_period_days,
+        coalesce(
+          (${contracts.aiUnverified} ? 'expiry_date') or
+          (${contracts.aiUnverified} ? 'notice_period_days'),
+          false
+        ) as unverified,
         'contract'::text as record_kind,
         ${contracts.id} as record_id,
         ${contracts.number} as record_number,
@@ -188,6 +197,7 @@ export async function readDatesHomeSection(
         ${matterKeyDates.date} as date,
         ${matterKeyDates.label} as label,
         null::integer as notice_period_days,
+        false as unverified,
         'matter'::text as record_kind,
         ${matters.id} as record_id,
         ${matters.number} as record_number,
@@ -205,6 +215,7 @@ export async function readDatesHomeSection(
       date,
       label,
       notice_period_days,
+      unverified,
       record_kind,
       record_id,
       record_number,
@@ -227,6 +238,7 @@ export async function readDatesHomeSection(
       date: row.date,
       label: row.label,
       noticePeriodDays: row.notice_period_days,
+      unverified: row.unverified,
       record: {
         kind: row.record_kind,
         id: row.record_id,

@@ -523,6 +523,31 @@ const SAMPLE_PAYLOADS: { [A in ActivityAction]: ActivityPayloadMap[A] } = {
     title: "Helix supply agreement",
     changed: { title: { from: "Helix supply", to: "Helix supply agreement" } },
   },
+  "contract.analysis_completed": {
+    number: 41,
+    title: "Helix supply agreement",
+    runId: "analysis-run-1",
+    versionId: "version-1",
+    model: "analysis-model",
+    written: ["effective_date", "value"],
+    kept: ["notice_period_days"],
+    unsupported: ["counterparty"],
+    invalid: ["expiry_date"],
+    unmatched: "Northwind LLC",
+  },
+  "contract.analysis_failed": {
+    number: 41,
+    title: "Helix supply agreement",
+    runId: "analysis-run-2",
+    versionId: "version-1",
+    model: "analysis-model",
+    reason: "The provider did not answer.",
+  },
+  "contract.field_confirmed": {
+    number: 41,
+    title: "Helix supply agreement",
+    slug: "effective_date",
+  },
   "contract.status_changed": {
     number: 41,
     title: "Helix supply agreement",
@@ -811,6 +836,30 @@ const SAMPLE_PAYLOADS: { [A in ActivityAction]: ActivityPayloadMap[A] } = {
     integrationKey: "ik_1",
   },
 
+  // AI connector
+  "ai_connector.configured": {
+    preset: "openai",
+    protocol: "openai_chat_completions",
+    baseUrl: "https://api.openai.com/v1",
+    model: "gpt-test",
+  },
+  "ai_connector.updated": {
+    preset: "openai",
+    field: "apiKey",
+    old: "[secret]",
+    new: "[secret]",
+  },
+  "ai_connector.disabled": { preset: "openai" },
+  "ai_connector.enabled": { preset: "openai" },
+  "ai_connector.removed": {
+    preset: "openai",
+    protocol: "openai_chat_completions",
+    baseUrl: "https://api.openai.com/v1",
+    model: "gpt-test",
+  },
+  "ai_field_prompt.updated": { slug: "effective_date" },
+  "ai_field_prompt.reset": { slug: "effective_date" },
+
   // Signature round
   "envelope.sent": {
     envelopeId: "env_1",
@@ -871,6 +920,44 @@ describe("the vocabulary, slug by slug", () => {
       expect(change.from.length).toBeGreaterThan(0);
       expect(change.to.length).toBeGreaterThan(0);
     }
+  });
+});
+
+describe("AI field confirmation narration", () => {
+  it("names core and attached fields", () => {
+    const entry = (slug: string): NarratableEntry => ({
+      action: "contract.field_confirmed",
+      actor: ACTOR,
+      payload: { number: 41, title: "Agreement", slug },
+    });
+    expect(narrateActivity(intl, entry("effective_date")).sentence).toBe(
+      "Nadia Counsel confirmed the AI-written value for Effective date",
+    );
+    expect(
+      narrateActivity(intl, entry("governing_law"), {
+        fields: [{ slug: "governing_law", displayName: "Governing law", fieldType: "text" }],
+      }).sentence,
+    ).toBe("Nadia Counsel confirmed the AI-written value for Governing law");
+  });
+});
+
+describe("core prompt narration", () => {
+  it("names the target in the AI analysis pane's words", () => {
+    expect(narrate("ai_field_prompt.updated", { slug: "effective_date" }).sentence).toBe(
+      "Nadia Counsel changed the analysis prompt for Effective date",
+    );
+    expect(narrate("ai_field_prompt.reset", { slug: "counterparty" }).sentence).toBe(
+      "Nadia Counsel reset the analysis prompt for Counterparty to its default",
+    );
+  });
+
+  it("echoes a slug the pane does not label and names a missing one plainly", () => {
+    expect(narrate("ai_field_prompt.updated", { slug: "governing_law" }).sentence).toBe(
+      "Nadia Counsel changed the analysis prompt for governing_law",
+    );
+    expect(narrate("ai_field_prompt.reset", {}).sentence).toBe(
+      "Nadia Counsel reset the analysis prompt for a field to its default",
+    );
   });
 });
 
@@ -1102,6 +1189,18 @@ describe("the sentences a reader gets", () => {
     expect(narration.changes).toEqual([
       { label: "Role", from: "Contributor", to: "Legal team member" },
     ]);
+  });
+
+  it("names AI presets and connector fields as the Integrations pane does", () => {
+    expect(
+      narrate("ai_connector.configured", {
+        ...SAMPLE_PAYLOADS["ai_connector.configured"],
+        preset: "azure_openai",
+      }).sentence,
+    ).toBe("Nadia Counsel connected the AI provider Azure OpenAI");
+    expect(
+      narrate("ai_connector.updated", SAMPLE_PAYLOADS["ai_connector.updated"]).changes,
+    ).toEqual([{ label: "API key", from: "[secret]", to: "[secret]" }]);
   });
 
   it("names the far record of a relation by reference and title, one arm per type", () => {

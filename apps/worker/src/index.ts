@@ -42,6 +42,7 @@ import {
   createDocEngineFromEnv,
   createDocuSignDriverFactory,
   createMailerResolver,
+  createAiResolver,
   createSigningResolver,
   createStorageFromEnv,
   maxUploadBytes,
@@ -120,6 +121,7 @@ const resolveSigningProvider = createSigningResolver(
   db,
   createDocuSignDriverFactory(docusignBaseUrl),
 );
+const resolveAiProvider = createAiResolver(db);
 
 // A database that cannot be reached is fatal here, as it is in the API.
 // Caught rather than left to the runtime so the operator reads one line
@@ -157,6 +159,7 @@ const pipeline = await startPipeline({
     storage,
     docEngine,
     resolveSigningProvider,
+    resolveAiProvider,
     resolveMailer,
     baseUrl,
     log,

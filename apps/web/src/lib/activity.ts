@@ -111,6 +111,7 @@ import {
 import { defineMessage, type IntlShape, type MessageDescriptor } from "react-intl";
 import type { paths } from "@openlaw/api-client";
 import type { ActivityAction } from "@openlaw/shared";
+import { coreAnalysisLabel } from "./core-analysis-labels";
 import { formatShortDate } from "./format";
 import { roleLabel } from "./roles";
 import {
@@ -352,7 +353,8 @@ function changeLabel(intl: IntlShape, key: string, context: NarrationContext): s
         "clientSecret {Client secret} " +
         "environment {Environment} integrationKey {Integration key} " +
         "apiUserId {User ID} privateKey {RSA private key} " +
-        "webhookSecret {Connect HMAC secret} " +
+        "webhookSecret {Connect HMAC secret} preset {Provider} protocol {Protocol} " +
+        "baseUrl {Base URL} model {Model} apiKey {API key} " +
         "legalName {Legal name} entityType {Entity type} knowledgeType {Knowledge type} " +
         "jurisdiction {Jurisdiction} formedOn {Formed on} " +
         "registrationNumber {Registration number} taxId {Tax ID} " +
@@ -844,6 +846,34 @@ function teamRole(intl: IntlShape, payload: Payload): string {
   );
 }
 
+/** A stored AI preset slug in the same words as the Integrations pane. */
+function aiPreset(intl: IntlShape, payload: Payload): string {
+  return intl.formatMessage(
+    {
+      id: "activity.aiConnector.preset",
+      defaultMessage:
+        "{preset, select, anthropic {Anthropic} openai {OpenAI} " +
+        "azure_openai {Azure OpenAI} gemini {Gemini} openrouter {OpenRouter} " +
+        "ollama {Ollama} custom {Custom endpoint} other {{preset}}}",
+    },
+    { preset: text(payload, "preset") ?? "unknown" },
+  );
+}
+
+/**
+ * The core analysis target a prompt entry names, in the words the AI
+ * analysis pane uses for it. A slug the pane does not label reads as
+ * itself, and a payload with no slug says "a field".
+ */
+function coreTarget(intl: IntlShape, payload: Payload): string {
+  const slug = text(payload, "slug");
+  if (slug === null) {
+    return intl.formatMessage({ id: "activity.contract.unknownField", defaultMessage: "a field" });
+  }
+  const label = coreAnalysisLabel(slug);
+  return label ? intl.formatMessage(label) : slug;
+}
+
 /**
  * What a payload calls the thing it is about — a taxonomy row, a field,
  * a registry record. Display name first, because that is what the reader
@@ -924,6 +954,7 @@ interface Arm {
     intl: IntlShape,
     payload: Payload,
     changes: readonly NarratedChange[],
+    context: NarrationContext,
   ) => Record<string, string | number>;
 }
 
@@ -1192,6 +1223,53 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
       count: changes.length,
       field: changes[0]?.label ?? "",
     }),
+  },
+  "contract.analysis_completed": {
+    icon: Activity,
+    message: defineMessage({
+      id: "activity.contract.analysisCompleted",
+      defaultMessage: "{actor} completed an AI analysis of this contract",
+    }),
+  },
+  "contract.analysis_failed": {
+    icon: TriangleAlert,
+    message: defineMessage({
+      id: "activity.contract.analysisFailed",
+      defaultMessage: "{actor} could not complete an AI analysis of this contract",
+    }),
+  },
+  "contract.field_confirmed": {
+    icon: Check,
+    message: defineMessage({
+      id: "activity.contract.fieldConfirmed",
+      defaultMessage: "{actor} confirmed the AI-written value for {field}",
+    }),
+    values: (intl, payload, _changes, context) => {
+      const slug = text(payload, "slug");
+      if (!slug) {
+        return {
+          field: intl.formatMessage({
+            id: "activity.contract.unknownField",
+            defaultMessage: "a field",
+          }),
+        };
+      }
+      const coreKey: Readonly<Record<string, string>> = {
+        term_type: "termType",
+        effective_date: "effectiveDate",
+        expiry_date: "expiryDate",
+        renewal_period_months: "renewalPeriodMonths",
+        notice_period_days: "noticePeriodDays",
+        value: "value",
+        counterparty: "primaryCounterparty",
+      };
+      const key = coreKey[slug];
+      return {
+        field: key
+          ? changeLabel(intl, key, context)
+          : (customField(context, slug)?.displayName ?? slug),
+      };
+    },
   },
   "contract.status_changed": {
     icon: GitCommitHorizontal,
@@ -2403,6 +2481,65 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
     values: (intl, payload) => ({ provider: named(intl, payload, "provider") }),
   },
 
+  // ---- The AI connector (CTR-008, TECH-012) ----
+  "ai_connector.configured": {
+    icon: Plug,
+    message: defineMessage({
+      id: "activity.aiConnector.configured",
+      defaultMessage: "{actor} connected the AI provider {provider}",
+    }),
+    values: (intl, payload) => ({ provider: aiPreset(intl, payload) }),
+  },
+  "ai_connector.updated": {
+    icon: Plug,
+    message: defineMessage({
+      id: "activity.aiConnector.updated",
+      defaultMessage: "{actor} changed the AI connector {provider}",
+    }),
+    values: (intl, payload) => ({ provider: aiPreset(intl, payload) }),
+    changes: fieldChange,
+  },
+  "ai_connector.disabled": {
+    icon: Unplug,
+    message: defineMessage({
+      id: "activity.aiConnector.disabled",
+      defaultMessage: "{actor} turned off the AI connector {provider}",
+    }),
+    values: (intl, payload) => ({ provider: aiPreset(intl, payload) }),
+  },
+  "ai_connector.enabled": {
+    icon: Plug,
+    message: defineMessage({
+      id: "activity.aiConnector.enabled",
+      defaultMessage: "{actor} turned on the AI connector {provider}",
+    }),
+    values: (intl, payload) => ({ provider: aiPreset(intl, payload) }),
+  },
+  "ai_connector.removed": {
+    icon: Trash2,
+    message: defineMessage({
+      id: "activity.aiConnector.removed",
+      defaultMessage: "{actor} removed the AI connector {provider} and its API key",
+    }),
+    values: (intl, payload) => ({ provider: aiPreset(intl, payload) }),
+  },
+  "ai_field_prompt.updated": {
+    icon: FilePen,
+    message: defineMessage({
+      id: "activity.aiFieldPrompt.updated",
+      defaultMessage: "{actor} changed the analysis prompt for {target}",
+    }),
+    values: (intl, payload) => ({ target: coreTarget(intl, payload) }),
+  },
+  "ai_field_prompt.reset": {
+    icon: Undo2,
+    message: defineMessage({
+      id: "activity.aiFieldPrompt.reset",
+      defaultMessage: "{actor} reset the analysis prompt for {target} to its default",
+    }),
+    values: (intl, payload) => ({ target: coreTarget(intl, payload) }),
+  },
+
   // ---- The settings taxonomies and the field catalog ----
   ...taxonomyArms("contract_type", Tag, TAXONOMY_VERBS),
   ...taxonomyArms("matter_type", Tag, TAXONOMY_VERBS),
@@ -2960,7 +3097,7 @@ export function narrateActivity(
     sentence: intl.formatMessage(arm.message, {
       actor,
       hasActor,
-      ...arm.values?.(intl, entry.payload, changes),
+      ...arm.values?.(intl, entry.payload, changes, context),
     }),
     changes,
   };

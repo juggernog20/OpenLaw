@@ -275,6 +275,12 @@ The sweep this milestone promised (M12 story 23) runs in the worker, at boot, af
 
 **The sweep reads the version table in pages.** Which family a file belongs to is decided from its declared type and its filename (DOC-004), and no database can answer that, so every version is looked at. Keyset paging on the version id — a uuidv7, and so already in the order it was minted — keeps one boot from holding a result set over a large back catalogue.
 
+### Addendum (2026-09-03) — settled in M31/3: analysis follows the target
+
+The Contract analysis queue uses `short` with the Contract id as its singleton key, but its durable row distinguishes **waiting** (`pending` with no `started_at`) from **active** (`pending` with `started_at`). Automatic scheduling and worker start both lock the Contract row. That makes the queue policy's boundary explicit in the domain row: target changes collapse while a job waits, because that job reads the target when it starts; target changes after start leave one waiting successor, because `short` does not cover active jobs. The API never mistakes an active run for the successor and drops the new target.
+
+Unlike document derivation, analysis has no recovery sweep. A derivation row is a durable fact that work is owed, but an analysis run is itself the record of an ask; inventing one while walking old text would analyze a whole back catalogue merely because a worker restarted. A queue-send failure removes the unqueued run row, and the recovery boundary is the existing manual re-run.
+
 ### Addendum (2026-08-16) — settled in M15/6: the one sweep that repeats
 
 The reconciliation sweep (CTR-013) is the third sweep on the worker, and the first one that does not run once. The other two **recover work the rows already say is owed**, so one walk at boot is the whole job. This one is a **feed**: it is waiting for somebody to sign, which no single walk can see. So it keeps the M12/6 shape — keyset paging on the envelope id, a refusal bound, a signal that stops it between rows, and no cursor kept anywhere — and repeats it on an interval.
@@ -464,7 +470,7 @@ Recommended Anthropic-first + OpenAI-compatible second. Blair widened: "a list o
   1. **Anthropic Messages API**
   2. **OpenAI-compatible chat completions** — one adapter covering OpenAI, Azure OpenAI, **OpenRouter**, Ollama/vLLM (local models), Groq, Mistral, Together, and any compatible endpoint
   3. **Google Gemini API**
-- **Provider presets** in Settings → Contracts → AI Analysis: Anthropic, OpenAI, Azure OpenAI, Gemini, OpenRouter, Ollama (local) — each preset pins protocol + base URL and asks only for key + model.
+- ~~Provider presets live in Settings → Contracts → AI Analysis.~~ _(Placement superseded by **SET-007** (2026-08-16): the connector is configured in **Settings → Organization → Integrations → AI analysis**.)_ The presets are Anthropic, OpenAI, Azure OpenAI, Gemini, OpenRouter, and Ollama (local). Each preset pins its protocol and base URL and asks only for a key and model.
 - **Custom provider**: protocol picker + base URL + API key + model string — any current or future endpoint without a code change.
 - BYO key per CTR-008; no provider configured → AI surfaces hidden. Default model strings maintained per preset (e.g. `claude-sonnet-5` for Anthropic); always user-editable.
 
@@ -475,6 +481,18 @@ The provider universe collapses to three wire protocols; presets give the named 
 ### Consequences
 
 A "Test connection" affordance in settings. Extraction prompt/schema behavior must tolerate model variance — evidence-snippet validation guards against weak models hallucinating fields (values without matching document text get flagged, not written).
+
+### Addendum (2026-09-02, M31/1)
+
+The pane shipped in **Settings → Organization → Integrations → AI analysis**, beside the E-signature pane, rather than under Contracts. The connector is one sealed singleton row (TECH-022), and a resolver reads it live before each probe or run.
+
+Two wire facts changed the OpenAI-compatible adapter after the first cut. OpenAI's current reasoning models refuse `max_tokens` (they take `max_completion_tokens`) and refuse any `temperature` but the default, while Ollama, vLLM, and OpenRouter still take `max_tokens` and honor temperature zero. The adapter starts on `max_completion_tokens` for the OpenAI and Azure OpenAI presets, on `max_tokens` elsewhere, and when a refusal names one of the two fields it drops or renames that field and repeats the call once. Reasoning models on every protocol also spend their thinking inside the output token budget, so the probe allows 1024 tokens and an extraction 8192, and an extraction may take up to two minutes against a local model.
+
+### Addendum (2026-09-03, M31 close, [#661](https://github.com/juggernog20/OpenLaw/issues/661))
+
+The connector is a sealed singleton in `ai_connector`. The API resolves it for Test connection, and the worker resolves it for each analysis run. The seven built-in targets and default prompts live in `packages/shared/src/analysis.ts`: term type, effective date, expiry date, renewal period, notice period, value, and Counterparty. `ai_field_prompts` stores Administrator overrides for those prompts. A prompted catalog Field keeps its prompt in `fields.ai_prompt` and joins the target list only when its Contract Type attaches it.
+
+The protocol adapter only parses the provider's reply. The writer then requires an exact evidence quote in the analyzed text, coerces each answer through the target's stored type, keeps human-set or confirmed values, applies CTR-006's term rules, and treats Contract value as one amount-currency-cadence write. For a Counterparty, exactly one live case-insensitive name match may be linked, and only when the Contract has no Counterparty. Zero matches, several matches, or an existing Contract link produce an `unmatched` result. No analysis run creates or replaces a Counterparty.
 
 ## TECH-013: DocuSign auth — JWT grant (service integration)
 
@@ -940,6 +958,10 @@ The split follows the **recovery contract**, not the sensitivity. Consequence 6 
 
 **A fifth admin-pasted credential still joins `SEALED_COLUMNS`.** This addendum widens nothing about the rule above; it names the one category that sits outside it, so the next reader does not file a better-auth column in the wrong regime.
 
+### Addendum (2026-09-03, M31 close, [#661](https://github.com/juggernog20/OpenLaw/issues/661)) — the fifth credential landed
+
+`ai_connector.api_key` is the fifth Administrator-pasted credential and joins `SEALED_COLUMNS`. It uses `encryptedText`, is write-only through the API, rewraps on the existing boot pass, and reads as absent under the existing lost-key rule. The forecast above is now spent; no new key, cipher, rotation step, or provider environment variable was added.
+
 ## TECH-023: Shared machinery grows named per-mount hooks — a third mount is configuration, not a copy
 
 - **Status:** Accepted
@@ -1043,6 +1065,12 @@ This record describes the model as built and names the places where a different 
 - **TanStack Query with loaders as prefetch.** Rejected for now: a second concept (query keys) in a codebase whose stated virtue is that a self-hoster can reason about it, and a half-migrated tree for years. Revisit if a live surface needs cross-route invalidation.
 - **react-router actions and `useFetcher` for every mutation.** Rejected: the record page has dozens of typed JSON mutations; `useFetcher` wants forms, and actions are one per route.
 - **A root layout route with one session loader.** Rejected: the four top-level trees (`/`, `/welcome`, `/portal`, `/auth`) have different session needs, and `shouldRevalidate` would make the session stale until reload.
+
+### Clause 4 addendum (2026-09-03, M31 close, [#661](https://github.com/juggernog20/OpenLaw/issues/661))
+
+The Contract record is the first live surface to use clause 4's whole-record path. One completed analysis can change several core columns, `custom_fields`, `ai_unverified`, the latest Analysis run, and the Counterparty join in one transaction. An SSE frame therefore calls `revalidate()` instead of patching those values in the browser. Patching would copy the writer's term and value grouping rules into the web app and could show a mix of two server snapshots.
+
+The sync effect adopts the new record projection and Analysis run. It keeps an unrelated draft when the corresponding server value did not change, so an analysis completion does not discard a title or date the reader is still typing. Confirmation uses the same whole-record response for the browser that pressed it, and its SSE frame revalidates every other open browser.
 
 ### Consequences
 
