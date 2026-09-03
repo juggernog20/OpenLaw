@@ -9,6 +9,7 @@
 import { inflateRawSync } from "node:zlib";
 import {
   DOMParser,
+  type DOMParserOptions,
   type Document as XmlDocument,
   type Element as XmlElement,
   type Node as XmlNode,
@@ -136,20 +137,25 @@ function xmlPart(
   }
   let invalid = false;
   let document: XmlDocument;
+  // xmldom throws on a fatal error by itself. `onError` catches the
+  // recoverable kind, which a Word part must not have either. The
+  // options are a typed value, not a literal: an older xmldom typing
+  // reaches this program through samlify, and a literal is checked
+  // against its constructor overload too, which has no `onError`.
+  const options: DOMParserOptions = {
+    onError(level) {
+      if (level !== "warning") invalid = true;
+    },
+  };
   try {
-    document = new DOMParser({
-      errorHandler(level) {
-        if (level !== "warning") invalid = true;
-      },
-    }).parseFromString(readZipEntry(packageBytes, entry).toString("utf8"), "application/xml");
+    document = new DOMParser(options).parseFromString(
+      readZipEntry(packageBytes, entry).toString("utf8"),
+      "application/xml",
+    );
   } catch {
     throw new Error(`The Word file has invalid XML in ${name}.`);
   }
-  if (
-    invalid ||
-    !document.documentElement ||
-    document.getElementsByTagName("parsererror").length > 0
-  ) {
+  if (invalid || !document.documentElement) {
     throw new Error(`The Word file has invalid XML in ${name}.`);
   }
   return document;
@@ -169,6 +175,25 @@ function children(node: XmlNode, localName: string): XmlElement[] {
 
 function child(node: XmlNode, localName: string): XmlElement | undefined {
   return elements(node).find((candidate) => candidate.localName === localName);
+}
+
+/** Wrappers Word puts around block content without changing its reading order. */
+const TRANSPARENT_WRAPPERS = new Set(["sdt", "sdtContent", "customXml"]);
+
+/**
+ * The children of `node` named in `localNames`, in document order,
+ * looking through content controls and custom XML wrappers. A cover
+ * page or a table of contents sits inside a `w:sdt`, and a change
+ * model that skipped it would show nothing for a change made there.
+ */
+function blocks(node: XmlNode, localNames: readonly string[]): XmlElement[] {
+  const answer: XmlElement[] = [];
+  for (const element of elements(node)) {
+    const name = element.localName ?? "";
+    if (localNames.includes(name)) answer.push(element);
+    else if (TRANSPARENT_WRAPPERS.has(name)) answer.push(...blocks(element, localNames));
+  }
+  return answer;
 }
 
 function value(element: XmlElement | undefined, name = "val"): string | undefined {
@@ -323,6 +348,9 @@ function paragraphRuns(paragraph: XmlElement): ChangeRun[] {
     if (node.nodeType !== 1) return;
     const element = node as XmlElement;
     const name = element.localName;
+    // Properties carry no text. `w:pPr/w:tabs/w:tab` is a tab stop, not
+    // a tab character, and would otherwise read as one.
+    if (name === "pPr" || name === "rPr") return;
     if (name === "fldSimple" || name === "drawing" || name === "pict" || name === "object") return;
     if (name === "fldChar") {
       const kind = value(element, "fldCharType");
@@ -350,8 +378,9 @@ function paragraphRuns(paragraph: XmlElement): ChangeRun[] {
   return runs;
 }
 
+/** "2.", "2.4", or "2.4." at the start of the text, followed by a space. */
 function leadingClauseLabel(text: string): string | null {
-  const match = /^\s*((?:\d+\.)+\d+|\d+\.)(?=\s)/u.exec(text);
+  const match = /^\s*((?:\d+\.)+\d+\.?|\d+\.)(?=\s)/u.exec(text);
   return match?.[1] ?? null;
 }
 
@@ -382,9 +411,9 @@ function tableParagraphs(
   numbering: Numbering,
 ): ParsedParagraph[] {
   const answer: ParsedParagraph[] = [];
-  for (const row of children(table, "tr")) {
-    for (const cell of children(row, "tc")) {
-      const cellParagraphs = children(cell, "p").map((paragraph) =>
+  for (const row of blocks(table, ["tr"])) {
+    for (const cell of blocks(row, ["tc"])) {
+      const cellParagraphs = blocks(cell, ["p"]).map((paragraph) =>
         parseParagraph(paragraph, headings, numbering),
       );
       const first = cellParagraphs[0];
@@ -398,7 +427,7 @@ function tableParagraphs(
         for (const run of paragraph.runs) appendRun(runs, run.text, run.change);
       });
       answer.push({ style: first.style, label: first.label, runs });
-      for (const nested of children(cell, "tbl")) {
+      for (const nested of blocks(cell, ["tbl"])) {
         answer.push(...tableParagraphs(nested, headings, numbering));
       }
     }
@@ -414,7 +443,7 @@ function documentParagraphs(
   const body = document.getElementsByTagNameNS(W_NS, "body").item(0);
   if (!body) throw new Error("The Word document has no body.");
   const answer: ParsedParagraph[] = [];
-  for (const block of elements(body)) {
+  for (const block of blocks(body, ["p", "tbl"])) {
     if (block.localName === "p") answer.push(parseParagraph(block, headings, numbering));
     if (block.localName === "tbl") {
       answer.push(...tableParagraphs(block, headings, numbering));

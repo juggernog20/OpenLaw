@@ -50,7 +50,10 @@ const server = createDocEngineServer({
     process.env.DOC_ENGINE_OPERATION_TIMEOUT_MS,
     DEFAULT_OPERATION_TIMEOUT_MS,
   ),
-  compareTimeoutMs: DEFAULT_COMPARE_TIMEOUT_MS,
+  compareTimeoutMs: positiveInteger(
+    process.env.DOC_ENGINE_COMPARE_TIMEOUT_MS,
+    DEFAULT_COMPARE_TIMEOUT_MS,
+  ),
   maxBodyBytes: positiveInteger(process.env.DOC_ENGINE_MAX_BODY_BYTES, DEFAULT_MAX_BODY_BYTES),
 });
 

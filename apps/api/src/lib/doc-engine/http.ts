@@ -46,7 +46,8 @@ export const DEFAULT_DOC_ENGINE_TIMEOUT_MS = 300_000;
  *
  * Compare reads two complete Word files and is the sidecar's slowest
  * operation, so it has its own bound rather than inheriting conversion's.
- * This is an application default, not a new deployment variable.
+ * An install sets it with `DOC_ENGINE_COMPARE_TIMEOUT_MS`, the way it
+ * sets `DOC_ENGINE_TIMEOUT_MS` for the other three operations.
  */
 export const DEFAULT_DOC_ENGINE_COMPARE_TIMEOUT_MS = 600_000;
 

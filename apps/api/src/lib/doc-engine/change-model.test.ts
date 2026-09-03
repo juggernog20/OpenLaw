@@ -177,6 +177,47 @@ describe("parseTrackedChangesDocx", () => {
     ]);
   });
 
+  it("reads a tab stop as a property, not as a tab character", () => {
+    const model = parseTrackedChangesDocx(
+      zipEntry(
+        "word/document.xml",
+        `<w:document xmlns:w="${W_NS}"><w:body><w:p>` +
+          `<w:pPr><w:tabs><w:tab w:val="left" w:pos="720"/></w:tabs></w:pPr>` +
+          `<w:r><w:t>Clause</w:t></w:r><w:r><w:tab/></w:r><w:r><w:t>text</w:t></w:r>` +
+          `</w:p></w:body></w:document>`,
+      ),
+    );
+    expect(model.paragraphs[0]?.runs).toEqual([{ text: "Clause\ttext", change: "unchanged" }]);
+  });
+
+  it("reads paragraphs inside a content control in reading order", () => {
+    const model = parseTrackedChangesDocx(
+      zipEntry(
+        "word/document.xml",
+        `<w:document xmlns:w="${W_NS}"><w:body>` +
+          `<w:p><w:r><w:t>Before</w:t></w:r></w:p>` +
+          `<w:sdt><w:sdtPr/><w:sdtContent>` +
+          `<w:p><w:r><w:t xml:space="preserve">3.1. Inside </w:t></w:r>` +
+          `<w:ins w:id="1"><w:r><w:t>the control</w:t></w:r></w:ins></w:p>` +
+          `<w:tbl><w:tr><w:sdt><w:sdtContent><w:tc><w:p><w:r><w:t>Cell</w:t></w:r></w:p></w:tc>` +
+          `</w:sdtContent></w:sdt></w:tr></w:tbl>` +
+          `</w:sdtContent></w:sdt>` +
+          `<w:p><w:r><w:t>After</w:t></w:r></w:p>` +
+          `</w:body></w:document>`,
+      ),
+    );
+    expect(model.paragraphs.map((paragraph) => paragraph.runs.map((run) => run.text))).toEqual([
+      ["Before"],
+      ["3.1. Inside ", "the control"],
+      ["Cell"],
+      ["After"],
+    ]);
+    expect(model.paragraphs[1]?.label).toBe("3.1.");
+    expect(model.changes).toEqual([
+      { id: "change-1", paragraphIndex: 1, kind: "inserted", ref: "3.1.", excerpt: "the control" },
+    ]);
+  });
+
   it.each([
     [Buffer.from("not a ZIP"), "The Word file has no ZIP central directory."],
     [zipEntry("other.xml", "<root/>"), "The Word file has no word/document.xml part."],
