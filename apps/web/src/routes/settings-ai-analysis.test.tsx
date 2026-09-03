@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest";
 import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { paths } from "@openlaw/api-client";
+import { CORE_ANALYSIS_TARGETS } from "@openlaw/shared";
 import { json, problem, renderAt, stubApi, type StubCall } from "../testing/helpers";
 
 const ADMIN = {
@@ -19,6 +20,10 @@ type AiResponse =
   paths["/api/v1/ai-connector"]["get"]["responses"]["200"]["content"]["application/json"];
 type AiSaveRequest =
   paths["/api/v1/ai-connector"]["put"]["requestBody"]["content"]["application/json"];
+type PromptResponse =
+  paths["/api/v1/ai-field-prompts"]["get"]["responses"]["200"]["content"]["application/json"];
+type PromptSaveRequest =
+  paths["/api/v1/ai-field-prompts"]["put"]["requestBody"]["content"]["application/json"];
 
 const PRESETS = [
   {
@@ -86,6 +91,13 @@ const PRESETS = [
   },
 ] satisfies AiResponse["presets"];
 
+const DEFAULT_PROMPTS = CORE_ANALYSIS_TARGETS.map(({ slug, defaultPrompt }) => ({
+  slug,
+  prompt: defaultPrompt,
+  defaultPrompt,
+  overridden: false,
+})) satisfies PromptResponse["prompts"];
+
 function isRecord(value: unknown): value is Record<string, unknown> {
   return value !== null && typeof value === "object" && !Array.isArray(value);
 }
@@ -99,6 +111,14 @@ function isAiSaveRequest(value: unknown): value is AiSaveRequest {
     (value.protocol === undefined || typeof value.protocol === "string") &&
     (value.baseUrl === undefined || typeof value.baseUrl === "string") &&
     (value.apiKey === undefined || typeof value.apiKey === "string")
+  );
+}
+
+function isPromptSaveRequest(value: unknown): value is PromptSaveRequest {
+  return (
+    isRecord(value) &&
+    CORE_ANALYSIS_TARGETS.some((target) => target.slug === value.slug) &&
+    (typeof value.prompt === "string" || value.prompt === null)
   );
 }
 
@@ -131,10 +151,16 @@ function unconfigured(): AiResponse["connector"] {
 }
 
 function connectorApi(
-  options: { connector?: AiResponse["connector"]; test?: globalThis.Response } = {},
+  options: {
+    connector?: AiResponse["connector"];
+    test?: globalThis.Response;
+    prompts?: PromptResponse["prompts"];
+    promptSaves?: unknown[];
+  } = {},
   saves: unknown[] = [],
 ) {
   let stored = options.connector ?? connector();
+  let prompts = options.prompts ?? DEFAULT_PROMPTS;
   return (call: StubCall) => {
     if (call.url.pathname === "/api/v1/ai-connector") {
       if (call.method === "PUT") {
@@ -153,6 +179,22 @@ function connectorApi(
         });
       }
       return json(200, { connector: stored, presets: PRESETS });
+    }
+    if (call.url.pathname === "/api/v1/ai-field-prompts") {
+      if (call.method === "PUT") {
+        options.promptSaves?.push(call.body);
+        if (!isPromptSaveRequest(call.body)) throw new Error("Unexpected Field prompt save body");
+        const body = call.body;
+        const target = DEFAULT_PROMPTS.find((prompt) => prompt.slug === body.slug)!;
+        const saved = {
+          ...target,
+          prompt: body.prompt ?? target.defaultPrompt,
+          overridden: body.prompt !== null,
+        };
+        prompts = prompts.map((prompt) => (prompt.slug === saved.slug ? saved : prompt));
+        return json(200, { prompt: saved });
+      }
+      return json(200, { prompts });
     }
     if (call.url.pathname === "/api/v1/ai-connector/test" && call.method === "POST") {
       return options.test ?? json(200, { ok: true });
@@ -243,5 +285,71 @@ describe("the AI analysis connector pane (#662)", () => {
     await openProvider(user);
     await user.click(screen.getByRole("button", { name: "Test connection" }));
     expect(await screen.findByText(/provider rejected the API key/)).toBeVisible();
+  });
+});
+
+describe("the Field prompts card (#665)", () => {
+  it("edits one prompt in place and trims it on commit", async () => {
+    const user = userEvent.setup();
+    const promptSaves: unknown[] = [];
+    stubApi({ signedIn: ADMIN, extra: connectorApi({ promptSaves }) });
+    renderAt("/settings/integrations/ai-analysis");
+
+    const input = await screen.findByLabelText("Effective date prompt");
+    expect(input).toHaveValue(CORE_ANALYSIS_TARGETS[1].defaultPrompt);
+    await user.clear(input);
+    await user.type(input, "  Use the first stated effective date.  ");
+    await user.tab();
+
+    await waitFor(() =>
+      expect(promptSaves).toEqual([
+        { slug: "effective_date", prompt: "Use the first stated effective date." },
+      ]),
+    );
+    expect(await screen.findByText("Saved")).toBeVisible();
+  });
+
+  it("shows Reset to default only on an override and restores the built-in prompt", async () => {
+    const user = userEvent.setup();
+    const promptSaves: unknown[] = [];
+    const prompts = DEFAULT_PROMPTS.map((prompt) =>
+      prompt.slug === "effective_date"
+        ? { ...prompt, prompt: "Use the commencement clause.", overridden: true }
+        : prompt,
+    );
+    stubApi({ signedIn: ADMIN, extra: connectorApi({ prompts, promptSaves }) });
+    renderAt("/settings/integrations/ai-analysis");
+
+    const reset = await screen.findByRole("button", {
+      name: "Reset Effective date to default",
+    });
+    expect(
+      screen.queryByRole("button", { name: "Reset Term type to default" }),
+    ).not.toBeInTheDocument();
+    const input = screen.getByLabelText("Effective date prompt");
+    await user.clear(input);
+    await user.type(input, "This draft must not be saved.");
+    await user.click(reset);
+
+    await waitFor(() => expect(promptSaves).toEqual([{ slug: "effective_date", prompt: null }]));
+    expect(input).toHaveValue(CORE_ANALYSIS_TARGETS[1].defaultPrompt);
+    expect(
+      screen.queryByRole("button", { name: "Reset Effective date to default" }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("sits below Provider and points catalog Fields to Contracts → Fields", async () => {
+    stubApi({ signedIn: ADMIN, extra: connectorApi() });
+    renderAt("/settings/integrations/ai-analysis");
+
+    const provider = await screen.findByRole("heading", { level: 2, name: "Provider" });
+    const prompts = screen.getByRole("heading", { level: 2, name: "Field prompts" });
+    expect(
+      provider.compareDocumentPosition(prompts) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+    expect(screen.getByRole("link", { name: "Contracts → Fields" })).toHaveAttribute(
+      "href",
+      "/settings/contracts/fields",
+    );
   });
 });

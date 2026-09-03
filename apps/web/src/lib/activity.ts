@@ -111,6 +111,7 @@ import {
 import { defineMessage, type IntlShape, type MessageDescriptor } from "react-intl";
 import type { paths } from "@openlaw/api-client";
 import type { ActivityAction } from "@openlaw/shared";
+import { coreAnalysisLabel } from "./core-analysis-labels";
 import { formatShortDate } from "./format";
 import { roleLabel } from "./roles";
 import {
@@ -857,6 +858,20 @@ function aiPreset(intl: IntlShape, payload: Payload): string {
     },
     { preset: text(payload, "preset") ?? "unknown" },
   );
+}
+
+/**
+ * The core analysis target a prompt entry names, in the words the AI
+ * analysis pane uses for it. A slug the pane does not label reads as
+ * itself, and a payload with no slug says "a field".
+ */
+function coreTarget(intl: IntlShape, payload: Payload): string {
+  const slug = text(payload, "slug");
+  if (slug === null) {
+    return intl.formatMessage({ id: "activity.contract.unknownField", defaultMessage: "a field" });
+  }
+  const label = coreAnalysisLabel(slug);
+  return label ? intl.formatMessage(label) : slug;
 }
 
 /**
@@ -2507,6 +2522,22 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
       defaultMessage: "{actor} removed the AI connector {provider} and its API key",
     }),
     values: (intl, payload) => ({ provider: aiPreset(intl, payload) }),
+  },
+  "ai_field_prompt.updated": {
+    icon: FilePen,
+    message: defineMessage({
+      id: "activity.aiFieldPrompt.updated",
+      defaultMessage: "{actor} changed the analysis prompt for {target}",
+    }),
+    values: (intl, payload) => ({ target: coreTarget(intl, payload) }),
+  },
+  "ai_field_prompt.reset": {
+    icon: Undo2,
+    message: defineMessage({
+      id: "activity.aiFieldPrompt.reset",
+      defaultMessage: "{actor} reset the analysis prompt for {target} to its default",
+    }),
+    values: (intl, payload) => ({ target: coreTarget(intl, payload) }),
   },
 
   // ---- The settings taxonomies and the field catalog ----

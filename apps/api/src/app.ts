@@ -102,6 +102,7 @@ import { emailSettingsRoutes } from "./modules/email-settings/routes.js";
 import { signerErasureRoutes } from "./modules/signer-erasure/routes.js";
 import { signingConnectorRoutes } from "./modules/signing-connector/routes.js";
 import { aiConnectorRoutes } from "./modules/ai-connector/routes.js";
+import { aiFieldPromptRoutes } from "./modules/ai-field-prompts/routes.js";
 import { signingWebhookRoutes } from "./modules/signing-webhook/routes.js";
 import { eventRoutes } from "./modules/events/routes.js";
 import { searchRoutes } from "./modules/search/routes.js";
@@ -455,6 +456,7 @@ export async function buildApp(deps: AppDeps, opts: FastifyServerOptions = {}) {
   await app.register(emailSettingsRoutes, { prefix: "/api/v1" });
   await app.register(signingConnectorRoutes, { prefix: "/api/v1" });
   await app.register(aiConnectorRoutes, { prefix: "/api/v1" });
+  await app.register(aiFieldPromptRoutes, { prefix: "/api/v1" });
   await app.register(signerErasureRoutes, { prefix: "/api/v1" });
   await app.register(contractTypesRoutes, { prefix: "/api/v1" });
   await app.register(attachedFieldsRoutes, { prefix: "/api/v1" });

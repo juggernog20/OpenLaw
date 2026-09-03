@@ -12,19 +12,6 @@ export const CORE_ANALYSIS_TARGET_TYPES = [
 ] as const;
 export type CoreAnalysisTargetType = (typeof CORE_ANALYSIS_TARGET_TYPES)[number];
 
-export interface CoreAnalysisTarget {
-  slug:
-    | "term_type"
-    | "effective_date"
-    | "expiry_date"
-    | "renewal_period_months"
-    | "notice_period_days"
-    | "value"
-    | "counterparty";
-  defaultPrompt: string;
-  type: CoreAnalysisTargetType;
-}
-
 /** CTR-008's built-in field schema. Prompt overrides live in the database. */
 export const CORE_ANALYSIS_TARGETS = [
   {
@@ -64,9 +51,19 @@ export const CORE_ANALYSIS_TARGETS = [
     defaultPrompt: "Extract the full legal name of the primary Counterparty.",
     type: "counterparty",
   },
-] as const satisfies readonly CoreAnalysisTarget[];
+] as const satisfies readonly {
+  slug: string;
+  defaultPrompt: string;
+  type: CoreAnalysisTargetType;
+}[];
 
-export type CoreAnalysisSlug = (typeof CORE_ANALYSIS_TARGETS)[number]["slug"];
+export type CoreAnalysisTarget = (typeof CORE_ANALYSIS_TARGETS)[number];
+export type CoreAnalysisSlug = CoreAnalysisTarget["slug"];
+/** The route-validator view of the one canonical target list. */
+export const CORE_ANALYSIS_SLUGS = CORE_ANALYSIS_TARGETS.map((target) => target.slug) as [
+  CoreAnalysisSlug,
+  ...CoreAnalysisSlug[],
+];
 
 /** Maximum source characters sent to one provider call. */
 export const AI_ANALYSIS_CHARACTER_BUDGET = 200_000;

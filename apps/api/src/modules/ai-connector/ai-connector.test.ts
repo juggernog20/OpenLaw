@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
-import { activityLog, aiConnector, asc, inArray, sql, type Db } from "@openlaw/db";
+import { activityLog, aiConnector, aiFieldPrompts, asc, inArray, sql, type Db } from "@openlaw/db";
+import { CORE_ANALYSIS_TARGETS } from "@openlaw/shared";
 import { FAKE_VALID_AI_KEY } from "../../lib/ai/fake.js";
 import {
   signInCookies,
@@ -12,12 +13,15 @@ import {
 } from "../../testing/harness.js";
 
 const URL = "/api/v1/ai-connector";
+const PROMPTS_URL = "/api/v1/ai-field-prompts";
 const ACTIONS = [
   "ai_connector.configured",
   "ai_connector.updated",
   "ai_connector.disabled",
   "ai_connector.enabled",
   "ai_connector.removed",
+  "ai_field_prompt.updated",
+  "ai_field_prompt.reset",
 ] as const;
 const STAFF = {
   email: "member-ai@example.com",
@@ -39,6 +43,7 @@ function auditRows(db: Db) {
 
 async function clear(): Promise<void> {
   await harness.db.delete(aiConnector);
+  await harness.db.delete(aiFieldPrompts);
   await harness.db.delete(activityLog).where(inArray(activityLog.action, [...ACTIONS]));
 }
 
@@ -85,6 +90,12 @@ describe("the AI connector role gate", () => {
       { method: "POST" as const, url: `${URL}/disable` },
       { method: "POST" as const, url: `${URL}/enable` },
       { method: "DELETE" as const, url: URL },
+      { method: "GET" as const, url: PROMPTS_URL },
+      {
+        method: "PUT" as const,
+        url: PROMPTS_URL,
+        payload: { slug: "effective_date", prompt: "Find the start date." },
+      },
     ];
     for (const request of requests) {
       const anonymous = await harness.app.inject(request);
@@ -100,6 +111,114 @@ describe("the AI connector role gate", () => {
         title: "You do not have permission to perform this action.",
       });
     }
+  });
+});
+
+describe("the core Field prompts", () => {
+  it("reads all seven effective prompts, defaults, and override states", async () => {
+    const response = await harness.app.inject({
+      method: "GET",
+      url: PROMPTS_URL,
+      cookies: adminCookies,
+    });
+
+    expect(response.statusCode, response.body).toBe(200);
+    expect(response.json().prompts).toEqual(
+      CORE_ANALYSIS_TARGETS.map(({ slug, defaultPrompt }) => ({
+        slug,
+        prompt: defaultPrompt,
+        defaultPrompt,
+        overridden: false,
+      })),
+    );
+  });
+
+  it("trims one saved override, bounds it like a catalog Field prompt, and refuses unknown slugs", async () => {
+    const saved = await harness.app.inject({
+      method: "PUT",
+      url: PROMPTS_URL,
+      cookies: adminCookies,
+      payload: { slug: "effective_date", prompt: "  Find the first effective date.  " },
+    });
+    expect(saved.statusCode, saved.body).toBe(200);
+    expect(saved.json().prompt).toMatchObject({
+      slug: "effective_date",
+      prompt: "Find the first effective date.",
+      overridden: true,
+    });
+    expect(await harness.db.select().from(aiFieldPrompts)).toMatchObject([
+      { slug: "effective_date", prompt: "Find the first effective date." },
+    ]);
+
+    const tooLong = await harness.app.inject({
+      method: "PUT",
+      url: PROMPTS_URL,
+      cookies: adminCookies,
+      payload: { slug: "effective_date", prompt: "x".repeat(2_001) },
+    });
+    expect(tooLong.statusCode).toBe(400);
+
+    const unknown = await harness.app.inject({
+      method: "PUT",
+      url: PROMPTS_URL,
+      cookies: adminCookies,
+      payload: { slug: "governing_law", prompt: "Find the governing law." },
+    });
+    expect(unknown.statusCode).toBe(400);
+  });
+
+  it("deletes an override on reset, reads the default again, and records both changes at the settings tier", async () => {
+    const save = await harness.app.inject({
+      method: "PUT",
+      url: PROMPTS_URL,
+      cookies: adminCookies,
+      payload: { slug: "notice_period_days", prompt: "Find the notice period." },
+    });
+    expect(save.statusCode, save.body).toBe(200);
+
+    const reset = await harness.app.inject({
+      method: "PUT",
+      url: PROMPTS_URL,
+      cookies: adminCookies,
+      payload: { slug: "notice_period_days", prompt: null },
+    });
+    expect(reset.statusCode, reset.body).toBe(200);
+    expect(reset.json().prompt).toEqual({
+      slug: "notice_period_days",
+      prompt: CORE_ANALYSIS_TARGETS[4].defaultPrompt,
+      defaultPrompt: CORE_ANALYSIS_TARGETS[4].defaultPrompt,
+      overridden: false,
+    });
+    expect(await harness.db.select().from(aiFieldPrompts)).toHaveLength(0);
+
+    const read = await harness.app.inject({
+      method: "GET",
+      url: PROMPTS_URL,
+      cookies: adminCookies,
+    });
+    expect(
+      read.json().prompts.find((prompt: { slug: string }) => prompt.slug === "notice_period_days"),
+    ).toEqual(reset.json().prompt);
+
+    const entries = await auditRows(harness.db);
+    expect(entries.map((entry) => entry.action)).toEqual([
+      "ai_field_prompt.updated",
+      "ai_field_prompt.reset",
+    ]);
+    expect(entries).toMatchObject([
+      {
+        entityType: "system",
+        actorId: expect.any(String),
+        visibility: "admin_only",
+        payload: { slug: "notice_period_days" },
+      },
+      {
+        entityType: "system",
+        actorId: expect.any(String),
+        visibility: "admin_only",
+        payload: { slug: "notice_period_days" },
+      },
+    ]);
   });
 });
 

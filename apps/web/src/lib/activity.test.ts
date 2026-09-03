@@ -857,6 +857,8 @@ const SAMPLE_PAYLOADS: { [A in ActivityAction]: ActivityPayloadMap[A] } = {
     baseUrl: "https://api.openai.com/v1",
     model: "gpt-test",
   },
+  "ai_field_prompt.updated": { slug: "effective_date" },
+  "ai_field_prompt.reset": { slug: "effective_date" },
 
   // Signature round
   "envelope.sent": {
@@ -936,6 +938,26 @@ describe("AI field confirmation narration", () => {
         fields: [{ slug: "governing_law", displayName: "Governing law", fieldType: "text" }],
       }).sentence,
     ).toBe("Nadia Counsel confirmed the AI-written value for Governing law");
+  });
+});
+
+describe("core prompt narration", () => {
+  it("names the target in the AI analysis pane's words", () => {
+    expect(narrate("ai_field_prompt.updated", { slug: "effective_date" }).sentence).toBe(
+      "Nadia Counsel changed the analysis prompt for Effective date",
+    );
+    expect(narrate("ai_field_prompt.reset", { slug: "counterparty" }).sentence).toBe(
+      "Nadia Counsel reset the analysis prompt for Counterparty to its default",
+    );
+  });
+
+  it("echoes a slug the pane does not label and names a missing one plainly", () => {
+    expect(narrate("ai_field_prompt.updated", { slug: "governing_law" }).sentence).toBe(
+      "Nadia Counsel changed the analysis prompt for governing_law",
+    );
+    expect(narrate("ai_field_prompt.reset", {}).sentence).toBe(
+      "Nadia Counsel reset the analysis prompt for a field to its default",
+    );
   });
 });
 

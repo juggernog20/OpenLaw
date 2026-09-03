@@ -1066,6 +1066,12 @@ type AiConnectorPayloads = {
   };
 };
 
+/** Core prompt overrides are settings-tier changes and store no prompt text in the log. */
+type AiFieldPromptPayloads = {
+  "ai_field_prompt.updated": { slug: string };
+  "ai_field_prompt.reset": { slug: string };
+};
+
 /**
  * One round of signature on one contract (M15/2, M15/3, CTR-013). These
  * hang off the contract, not off the envelope, for the reason the
@@ -1214,6 +1220,7 @@ export type ActivityPayloadMap = UserPayloads &
   SsoProviderPayloads &
   SigningConnectorPayloads &
   AiConnectorPayloads &
+  AiFieldPromptPayloads &
   EnvelopePayloads &
   SignerErasurePayloads &
   KnowledgePayloads &

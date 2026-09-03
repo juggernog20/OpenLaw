@@ -9,6 +9,7 @@ import { useRef, useState, type ReactNode, type SubmitEvent as FormSubmitEvent }
 import { redirect, useLoaderData } from "react-router";
 import { FormattedMessage, useIntl } from "react-intl";
 import type { paths } from "@openlaw/api-client";
+import { AiFieldPromptsCard } from "../components/ai-field-prompts-card";
 import { IntegrationsSettingsTabs } from "../components/integrations-settings-tabs";
 import { PageTitle } from "../components/page-title";
 import { SettingsCard } from "../components/settings-card";
@@ -75,9 +76,14 @@ function presetLabel(preset: Preset, intl: ReturnType<typeof useIntl>): string {
 export async function settingsAiAnalysisLoader() {
   const user = await requireUser();
   if (user.role !== "administrator") return redirect("/settings/profile");
-  const result = await api.GET("/api/v1/ai-connector");
-  if (!result.data) throw new Error("The AI connector could not be read.");
-  return result.data;
+  const [connector, prompts] = await Promise.all([
+    api.GET("/api/v1/ai-connector"),
+    api.GET("/api/v1/ai-field-prompts"),
+  ]);
+  if (!connector.data || !prompts.data) {
+    throw new Error("The AI analysis settings could not be read.");
+  }
+  return { ...connector.data, ...prompts.data };
 }
 
 function FormField(props: Readonly<{ id: string; label: ReactNode; children: ReactNode }>) {
@@ -473,6 +479,7 @@ export function SettingsAiAnalysisPage() {
           </div>
         )}
       </SettingsCard>
+      <AiFieldPromptsCard initialPrompts={loaded.prompts} />
       {confirmingRemove && (
         <Dialog open onOpenChange={(open) => !open && setConfirmingRemove(false)}>
           <DialogContent aria-describedby={undefined}>
