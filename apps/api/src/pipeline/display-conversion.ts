@@ -242,7 +242,7 @@ async function convertAndStore(
 export async function convertVersionForDisplay(
   deps: DerivationDeps,
   versionId: string,
-): Promise<void> {
+): Promise<boolean> {
   const [version] = await deps.db
     .select({
       fileRef: documentVersions.fileRef,
@@ -257,7 +257,7 @@ export async function convertVersionForDisplay(
     // owed for a version that no longer exists, and its derivation rows
     // went with it.
     deps.log.info({ versionId }, "no document version to convert for display");
-    return;
+    return false;
   }
 
   const format = conversionFormatOf(version.mimeType, version.originalFilename);
@@ -283,7 +283,7 @@ export async function convertVersionForDisplay(
     if (text !== null && text !== "ready") {
       await writeTextDerivation(deps, versionId, { state: "failed", source: null, text: null });
     }
-    return;
+    return false;
   }
 
   // A rendition that is already there is not made again. It is what
@@ -297,18 +297,19 @@ export async function convertVersionForDisplay(
       ? existing.fileRef
       : await convertAndStore(deps, versionId, version.fileRef, format);
   // The version was erased while this ran. Nothing is owed for it.
-  if (fileRef === null) return;
+  if (fileRef === null) return false;
 
   // And now its words, out of the rendition — one extraction path, over
   // PDF (DOC-005). Skipped when the text is already there, so a retry
   // that only failed at this step does not read the same PDF twice.
-  if (await textIsReady(deps, versionId)) return;
+  if (await textIsReady(deps, versionId)) return false;
   const text = await readPdfTextLayer(deps, fileRef);
   await writeTextDerivation(deps, versionId, { state: "ready", source: "rendition", text });
   deps.log.info(
     { versionId, source: "rendition", characters: text.length },
     "extracted a document version's text",
   );
+  return true;
 }
 
 /**
@@ -342,9 +343,11 @@ async function failDerivations(deps: DerivationDeps, versionId: string): Promise
 export async function handleDisplayConversion(
   deps: DerivationDeps,
   attempt: JobAttempt,
+  onTextReady?: (versionId: string) => Promise<void>,
 ): Promise<void> {
+  let becameReady = false;
   try {
-    await convertVersionForDisplay(deps, attempt.versionId);
+    becameReady = await convertVersionForDisplay(deps, attempt.versionId);
   } catch (error) {
     const terminal = isTerminalFailure(error);
     const exhausted = attempt.retryCount >= attempt.retryLimit;
@@ -365,5 +368,18 @@ export async function handleDisplayConversion(
     // else goes back to the queue, so the operator's job list shows the
     // failure whether or not a retry is left.
     if (!terminal) throw error;
+  }
+  // The text is on the record by now. The analysis ask runs outside the
+  // block above, so a fault in it cannot mark ready derivations as
+  // failed or send this job back for bytes it already read (#664).
+  if (becameReady) {
+    try {
+      await onTextReady?.(attempt.versionId);
+    } catch (error) {
+      deps.log.warn(
+        { versionId: attempt.versionId, reason: reasonOf(error) },
+        "could not request automatic analysis for ready text",
+      );
+    }
   }
 }

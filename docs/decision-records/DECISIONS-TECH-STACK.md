@@ -275,6 +275,12 @@ The sweep this milestone promised (M12 story 23) runs in the worker, at boot, af
 
 **The sweep reads the version table in pages.** Which family a file belongs to is decided from its declared type and its filename (DOC-004), and no database can answer that, so every version is looked at. Keyset paging on the version id — a uuidv7, and so already in the order it was minted — keeps one boot from holding a result set over a large back catalogue.
 
+### Addendum (2026-09-03) — settled in M31/3: analysis follows the target
+
+The Contract analysis queue uses `short` with the Contract id as its singleton key, but its durable row distinguishes **waiting** (`pending` with no `started_at`) from **active** (`pending` with `started_at`). Automatic scheduling and worker start both lock the Contract row. That makes the queue policy's boundary explicit in the domain row: target changes collapse while a job waits, because that job reads the target when it starts; target changes after start leave one waiting successor, because `short` does not cover active jobs. The API never mistakes an active run for the successor and drops the new target.
+
+Unlike document derivation, analysis has no recovery sweep. A derivation row is a durable fact that work is owed, but an analysis run is itself the record of an ask; inventing one while walking old text would analyze a whole back catalogue merely because a worker restarted. A queue-send failure removes the unqueued run row, and the recovery boundary is the existing manual re-run.
+
 ### Addendum (2026-08-16) — settled in M15/6: the one sweep that repeats
 
 The reconciliation sweep (CTR-013) is the third sweep on the worker, and the first one that does not run once. The other two **recover work the rows already say is owed**, so one walk at boot is the whole job. This one is a **feed**: it is waiting for somebody to sign, which no single walk can see. So it keeps the M12/6 shape — keyset paging on the envelope id, a refusal bound, a signal that stops it between rows, and no cursor kept anywhere — and repeats it on an interval.

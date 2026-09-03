@@ -109,6 +109,10 @@ export interface ExecutedCopyDeps {
   /** Where the appended round's own derivations are asked for, after
    * this job's transaction commits. */
   jobs: JobQueue;
+  /** The executed-pin trigger. This normally skips here because the
+   * appended Version's text starts pending; its derivation calls the
+   * same scheduler again when that text becomes ready. */
+  onExecutedVersionPinned?: (versionId: string) => Promise<void>;
   /**
    * The biggest executed copy this install will file, in bytes.
    *
@@ -441,6 +445,16 @@ export async function fileExecutedCopy(deps: ExecutedCopyDeps, envelopeId: strin
     mimeType: "application/pdf",
     originalFilename: filename,
   });
+  // Analysis is not durable until its run row exists. It must not starve
+  // the derivation requests above if an injected callback misbehaves.
+  try {
+    await deps.onExecutedVersionPinned?.(versionId);
+  } catch (error) {
+    deps.log.warn(
+      { envelopeId: owed.envelopeId, versionId, reason: reasonOf(error) },
+      "could not request automatic analysis for a filed executed copy",
+    );
+  }
 }
 
 /**

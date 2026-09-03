@@ -2218,7 +2218,7 @@ export interface paths {
     };
     get?: never;
     put?: never;
-    /** Queue one manual CTR-008 analysis of the primary Document's executed pin, or its current Version when no pin exists. One pending run is allowed per Contract. Member+ only, on a live record with ready text and an enabled AI connector */
+    /** Queue one manual CTR-008 analysis of the primary Document's executed pin, or its current Version when no pin exists. One waiting run is allowed per Contract; a run that has already started does not block one follow-up. Member+ only, on a live record with ready text and an enabled AI connector */
     post: operations["runContractAnalysis"];
     delete?: never;
     options?: never;
