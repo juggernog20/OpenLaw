@@ -35,6 +35,7 @@
     "@openlaw/db": "workspace:*",
     "@openlaw/shared": "workspace:*",
     "@scalar/fastify-api-reference": "^1.67.0",
+    "@xmldom/xmldom": "^0.9.12",
     "better-auth": "~1.7.2",
     "fastify": "^5.12.1",
     "fastify-type-provider-zod": "^7.0.0",

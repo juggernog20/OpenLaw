@@ -1,11 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 /**
- * The thin HTTP wrapper around the three operations (TECH-010).
+ * The thin HTTP wrapper around the four operations (TECH-010).
  *
- * Three routes, one operation each, plus a readiness probe:
+ * Four routes, one operation each, plus a readiness probe:
  *
  * - `POST /convert?format=docx` — the source bytes in, a PDF out.
+ * - `POST /compare?olderFormat=docx&newerFormat=odt` — two Word files
+ *   in, one tracked-changes DOCX out.
  * - `POST /ocr` — a PDF in, the text OCR read out.
  * - `POST /extract` — a PDF in, its native text layer out.
  * - `GET /healthz` — for Compose.
@@ -25,7 +27,7 @@
 
 import { once } from "node:events";
 import { createReadStream, createWriteStream } from "node:fs";
-import { mkdtemp, rm, stat } from "node:fs/promises";
+import { mkdtemp, open, rm, stat } from "node:fs/promises";
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from "node:http";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -33,9 +35,12 @@ import { pipeline } from "node:stream/promises";
 import { Transform } from "node:stream";
 import {
   CONVERTIBLE_FORMATS,
+  COMPARABLE_FORMATS,
+  compareDocuments,
   convertToPdf,
   extractPdfText,
   isConvertibleFormat,
+  isComparableFormat,
   ocrPdf,
 } from "./operations.js";
 import {
@@ -49,12 +54,24 @@ import {
 export interface DocEngineServerOptions {
   /** Bound on one tool's lifetime, in milliseconds. */
   operationTimeoutMs: number;
+  /** Bound on LibreOffice comparison, in milliseconds. */
+  compareTimeoutMs: number;
   /** The largest request body the sidecar accepts, in bytes. */
   maxBodyBytes: number;
 }
 
 /** A format token has to be a filename extension, not a path fragment. */
 const FORMAT_PATTERN = /^[a-z0-9]{1,16}$/;
+const PAIR_MAGIC = Buffer.from("OPENLAW1", "ascii");
+
+async function writeAll(file: Awaited<ReturnType<typeof open>>, body: Buffer): Promise<void> {
+  let offset = 0;
+  while (offset < body.byteLength) {
+    const { bytesWritten } = await file.write(body, offset, body.byteLength - offset, null);
+    if (bytesWritten === 0) throw new Error("The doc engine could not write a compare operand.");
+    offset += bytesWritten;
+  }
+}
 
 /** Writes a problem body for a failure. */
 function sendProblem(
@@ -178,6 +195,100 @@ async function withBody<T>(
   }
 }
 
+/** Splits the private two-stream compare body into two files. */
+async function receivePair(
+  request: IncomingMessage,
+  olderPath: string,
+  newerPath: string,
+  maxBodyBytes: number,
+): Promise<void> {
+  const files = [await open(olderPath, "wx"), await open(newerPath, "wx")];
+  const written = [0, 0];
+  let received = 0;
+  let over = false;
+  let pending = Buffer.alloc(0);
+  let magicRead = false;
+  let fileIndex = 0;
+  let chunkBytes: number | undefined;
+
+  try {
+    for await (const raw of request) {
+      const incoming = Buffer.from(raw);
+      received += incoming.byteLength;
+      if (received > maxBodyBytes) {
+        over = true;
+        if (received > maxBodyBytes * 2) throw bodyTooLarge(maxBodyBytes);
+        continue;
+      }
+      pending = pending.byteLength === 0 ? incoming : Buffer.concat([pending, incoming]);
+
+      while (pending.byteLength > 0) {
+        if (!magicRead) {
+          if (pending.byteLength < PAIR_MAGIC.byteLength) break;
+          if (!pending.subarray(0, PAIR_MAGIC.byteLength).equals(PAIR_MAGIC)) {
+            throw sourceUnreadable("The compare request body has an invalid header.");
+          }
+          pending = pending.subarray(PAIR_MAGIC.byteLength);
+          magicRead = true;
+          continue;
+        }
+        if (fileIndex >= files.length) {
+          throw sourceUnreadable("The compare request body has bytes after the newer file.");
+        }
+        if (chunkBytes === undefined) {
+          if (pending.byteLength < 4) break;
+          chunkBytes = pending.readUInt32BE(0);
+          pending = pending.subarray(4);
+          if (chunkBytes === 0) {
+            fileIndex += 1;
+            chunkBytes = undefined;
+          }
+          continue;
+        }
+        if (pending.byteLength === 0) break;
+        const size = Math.min(chunkBytes, pending.byteLength);
+        const body = pending.subarray(0, size);
+        const file = files[fileIndex];
+        if (!file) throw sourceUnreadable("The compare request body has too many files.");
+        await writeAll(file, body);
+        written[fileIndex] = (written[fileIndex] ?? 0) + size;
+        pending = pending.subarray(size);
+        chunkBytes -= size;
+        if (chunkBytes === 0) chunkBytes = undefined;
+      }
+    }
+  } finally {
+    await Promise.all(files.map((file) => file.close()));
+  }
+
+  if (over) throw bodyTooLarge(maxBodyBytes);
+  if (!magicRead || fileIndex !== 2 || chunkBytes !== undefined || pending.byteLength > 0) {
+    throw sourceUnreadable("The compare request body ended before both files were whole.");
+  }
+  if (written[0] === 0 || written[1] === 0) {
+    throw sourceUnreadable("Both compare operands must have bytes.");
+  }
+}
+
+/** Runs one compare request under the body directory it owns. */
+async function withPairBody<T>(
+  request: IncomingMessage,
+  olderFormat: string,
+  newerFormat: string,
+  maxBodyBytes: number,
+  work: (older: string, newer: string) => Promise<T>,
+): Promise<T> {
+  const dir = await mkdtemp(join(tmpdir(), "doc-engine-pair-"));
+  try {
+    const older = join(dir, `older.${olderFormat}`);
+    const newer = join(dir, `newer.${newerFormat}`);
+    await receivePair(request, older, newer, maxBodyBytes);
+    return await work(older, newer);
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+}
+
 /** Writes text as the answer to an OCR or extraction request. */
 function sendText(response: ServerResponse, text: string): void {
   const body = Buffer.from(text, "utf8");
@@ -191,6 +302,7 @@ function sendText(response: ServerResponse, text: string): void {
 /** Builds the sidecar's HTTP server. Call `listen` on what it answers. */
 export function createDocEngineServer(options: DocEngineServerOptions): Server {
   const timeouts = { timeoutMs: options.operationTimeoutMs };
+  const compareTimeout = { timeoutMs: options.compareTimeoutMs };
 
   return createServer((request, response) => {
     void handle(request, response).catch((error: unknown) => {
@@ -222,7 +334,7 @@ export function createDocEngineServer(options: DocEngineServerOptions): Server {
       return;
     }
 
-    if (path !== "/convert" && path !== "/ocr" && path !== "/extract") {
+    if (path !== "/convert" && path !== "/compare" && path !== "/ocr" && path !== "/extract") {
       sendProblem(response, 404, "Not found", `The doc engine has no ${path} route.`);
       return;
     }
@@ -261,6 +373,36 @@ export function createDocEngineServer(options: DocEngineServerOptions): Server {
             "content-length": size,
           });
           await pipeline(createReadStream(pdf), response);
+        }),
+      );
+      return;
+    }
+
+    if (path === "/compare") {
+      const olderFormat = (url.searchParams.get("olderFormat") ?? "").toLowerCase();
+      const newerFormat = (url.searchParams.get("newerFormat") ?? "").toLowerCase();
+      const invalid = [olderFormat, newerFormat].find(
+        (format) => !FORMAT_PATTERN.test(format) || !isComparableFormat(format),
+      );
+      if (invalid !== undefined) {
+        await refuse(
+          request,
+          response,
+          415,
+          "Unsupported source format",
+          `Both format query parameters must name Word formats the doc engine compares: ${COMPARABLE_FORMATS.join(", ")}. Refused ${JSON.stringify(invalid)}.`,
+        );
+        return;
+      }
+      await withPairBody(request, olderFormat, newerFormat, options.maxBodyBytes, (older, newer) =>
+        compareDocuments(older, olderFormat, newer, newerFormat, compareTimeout, async (docx) => {
+          const { size } = await stat(docx);
+          response.writeHead(200, {
+            "content-type":
+              "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            "content-length": size,
+          });
+          await pipeline(createReadStream(docx), response);
         }),
       );
       return;

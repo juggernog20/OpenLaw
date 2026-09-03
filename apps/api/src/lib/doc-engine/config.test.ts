@@ -116,6 +116,7 @@ describe("doc engine configuration", () => {
   it("builds an engine from a configured environment", () => {
     const engine = createDocEngineFromEnv({ DOC_ENGINE_URL: "http://engine.example.com:8080" });
     expect(typeof engine.convertToPdf).toBe("function");
+    expect(typeof engine.compare).toBe("function");
     expect(typeof engine.ocrPdf).toBe("function");
     expect(typeof engine.extractPdfText).toBe("function");
   });

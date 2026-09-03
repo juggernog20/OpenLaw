@@ -20,6 +20,9 @@ const DEFAULT_PORT = 8080;
  */
 const DEFAULT_OPERATION_TIMEOUT_MS = 300_000;
 
+/** Compare reads two Word files and has its own, longer tool bound. */
+const DEFAULT_COMPARE_TIMEOUT_MS = 600_000;
+
 /**
  * The largest request body the sidecar accepts. Above the API's own
  * 100 MB upload ceiling, so the sidecar is never the thing that refuses
@@ -47,6 +50,7 @@ const server = createDocEngineServer({
     process.env.DOC_ENGINE_OPERATION_TIMEOUT_MS,
     DEFAULT_OPERATION_TIMEOUT_MS,
   ),
+  compareTimeoutMs: DEFAULT_COMPARE_TIMEOUT_MS,
   maxBodyBytes: positiveInteger(process.env.DOC_ENGINE_MAX_BODY_BYTES, DEFAULT_MAX_BODY_BYTES),
 });
 

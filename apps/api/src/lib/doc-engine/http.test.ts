@@ -64,6 +64,8 @@ const repoRoot = fileURLToPath(new URL("../../../../../", import.meta.url));
  */
 let built: Promise<GenericContainer> | undefined;
 function image(): Promise<GenericContainer> {
+  const prebuilt = process.env.DOC_ENGINE_TEST_IMAGE;
+  if (prebuilt) return Promise.resolve(new GenericContainer(prebuilt));
   built ??= GenericContainer.fromDockerfile(repoRoot, "services/doc-engine/Dockerfile")
     .withBuildkit()
     .build(IMAGE_TAG, { deleteOnExit: false });
@@ -259,6 +261,22 @@ describe("doc-engine HTTP client", () => {
       const engine = createHttpDocEngine({ baseUrl, timeoutMs: 200 });
       await expect(
         engine.extractPdfText(Readable.from([DOC_ENGINE_FIXTURES.nativeTextPdf])),
+      ).rejects.toBeInstanceOf(DocEngineTimeoutError);
+    });
+
+    it("uses compare's own bound", async () => {
+      const engine = createHttpDocEngine({
+        baseUrl,
+        timeoutMs: 5_000,
+        compareTimeoutMs: 200,
+      });
+      await expect(
+        engine.compare(
+          Readable.from([DOC_ENGINE_FIXTURES.compareOlderDocx]),
+          "docx",
+          Readable.from([DOC_ENGINE_FIXTURES.compareNewerDocx]),
+          "docx",
+        ),
       ).rejects.toBeInstanceOf(DocEngineTimeoutError);
     });
   });
