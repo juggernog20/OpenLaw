@@ -179,7 +179,7 @@ export const contractAnalysisRoutes: FastifyPluginAsyncZod = async (app) => {
       } catch (error) {
         await app.db.delete(contractAnalysisRuns).where(eq(contractAnalysisRuns.id, run.id));
         request.log.error({ err: error, runId: run.id }, "could not queue contract analysis");
-        throw httpError(503, "The analysis run could not be queued. Try again.");
+        throw httpError(503, "The analysis run could not be queued. Try again.", { expose: true });
       }
       if (!queued) {
         await app.db.delete(contractAnalysisRuns).where(eq(contractAnalysisRuns.id, run.id));

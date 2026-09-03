@@ -13246,7 +13246,6 @@ export interface operations {
               };
               aiUnverified: {
                 [key: string]: {
-                  evidence: string;
                   runId: string;
                   /** Format: date-time */
                   writtenAt: string;
@@ -13367,7 +13366,6 @@ export interface operations {
               };
               aiUnverified: {
                 [key: string]: {
-                  evidence: string;
                   runId: string;
                   /** Format: date-time */
                   writtenAt: string;
@@ -13576,7 +13574,6 @@ export interface operations {
               };
               aiUnverified: {
                 [key: string]: {
-                  evidence: string;
                   runId: string;
                   /** Format: date-time */
                   writtenAt: string;
@@ -13826,7 +13823,6 @@ export interface operations {
               };
               aiUnverified: {
                 [key: string]: {
-                  evidence: string;
                   runId: string;
                   /** Format: date-time */
                   writtenAt: string;
@@ -14029,7 +14025,6 @@ export interface operations {
               };
               aiUnverified: {
                 [key: string]: {
-                  evidence: string;
                   runId: string;
                   /** Format: date-time */
                   writtenAt: string;
@@ -14134,7 +14129,6 @@ export interface operations {
               };
               aiUnverified: {
                 [key: string]: {
-                  evidence: string;
                   runId: string;
                   /** Format: date-time */
                   writtenAt: string;
@@ -14248,7 +14242,6 @@ export interface operations {
               };
               aiUnverified: {
                 [key: string]: {
-                  evidence: string;
                   runId: string;
                   /** Format: date-time */
                   writtenAt: string;
@@ -14488,7 +14481,6 @@ export interface operations {
               };
               aiUnverified: {
                 [key: string]: {
-                  evidence: string;
                   runId: string;
                   /** Format: date-time */
                   writtenAt: string;
@@ -14600,7 +14592,6 @@ export interface operations {
               };
               aiUnverified: {
                 [key: string]: {
-                  evidence: string;
                   runId: string;
                   /** Format: date-time */
                   writtenAt: string;
@@ -14712,7 +14703,6 @@ export interface operations {
               };
               aiUnverified: {
                 [key: string]: {
-                  evidence: string;
                   runId: string;
                   /** Format: date-time */
                   writtenAt: string;
@@ -14823,7 +14813,6 @@ export interface operations {
               };
               aiUnverified: {
                 [key: string]: {
-                  evidence: string;
                   runId: string;
                   /** Format: date-time */
                   writtenAt: string;
@@ -14928,7 +14917,6 @@ export interface operations {
               };
               aiUnverified: {
                 [key: string]: {
-                  evidence: string;
                   runId: string;
                   /** Format: date-time */
                   writtenAt: string;

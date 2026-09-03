@@ -36,7 +36,8 @@ async function startServer(protocol: Protocol, refuse: Refusal = () => null) {
   const requests: CapturedRequest[] = [];
   const server: Server = createServer(async (request, response) => {
     const chunks: Buffer[] = [];
-    for await (const chunk of request) chunks.push(Buffer.from(chunk as Buffer));
+    for await (const chunk of request)
+      chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
     const body = JSON.parse(Buffer.concat(chunks).toString("utf8")) as Record<string, unknown>;
     requests.push({ url: request.url ?? "", headers: request.headers, body });
 

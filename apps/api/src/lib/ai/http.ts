@@ -10,6 +10,8 @@ import {
 } from "./provider.js";
 
 const MAX_REFUSAL_BYTES = 500;
+/** A reply is a small JSON object of values; anything near this is not one. */
+const MAX_REPLY_BYTES = 1_000_000;
 
 /** How long one call may take and how many tokens the model may spend answering it. */
 export interface AiCallBound {
@@ -61,31 +63,9 @@ function nestedReason(value: unknown): string | null {
 
 /** Reads the provider's own reason without copying an HTML error page into Settings. */
 async function refusalReason(response: Response): Promise<string> {
-  const reader = response.body?.getReader();
-  if (!reader) return response.statusText || `HTTP ${response.status}`;
-  const decoder = new TextDecoder();
-  let raw = "";
-  let readBytes = 0;
-  let truncated: boolean;
-  try {
-    while (readBytes <= MAX_REFUSAL_BYTES) {
-      const part = await reader.read();
-      if (part.done) {
-        raw += decoder.decode();
-        break;
-      }
-      const remaining = MAX_REFUSAL_BYTES + 1 - readBytes;
-      const bytes = part.value.subarray(0, remaining);
-      raw += decoder.decode(bytes, { stream: true });
-      readBytes += bytes.byteLength;
-      if (part.value.byteLength > bytes.byteLength) break;
-    }
-    truncated = readBytes > MAX_REFUSAL_BYTES;
-    if (truncated) await reader.cancel();
-  } finally {
-    reader.releaseLock();
-  }
-  if (truncated) return response.statusText || `HTTP ${response.status}`;
+  const reply = await readUpTo(response, MAX_REFUSAL_BYTES);
+  if (!reply || reply.truncated) return response.statusText || `HTTP ${response.status}`;
+  const raw = reply.raw;
   try {
     const reason = nestedReason(JSON.parse(raw));
     if (reason) return reason;
@@ -94,6 +74,39 @@ async function refusalReason(response: Response): Promise<string> {
   }
   const plain = raw.replace(/\s+/g, " ").trim();
   return plain || response.statusText || `HTTP ${response.status}`;
+}
+
+/** Reads at most `maxBytes` of the body, or says that it is longer and
+ * stops. `null` is a response with no body at all. */
+async function readUpTo(
+  response: Response,
+  maxBytes: number,
+): Promise<{ raw: string; truncated: boolean } | null> {
+  const reader = response.body?.getReader();
+  if (!reader) return null;
+  const decoder = new TextDecoder();
+  let raw = "";
+  let readBytes = 0;
+  let truncated: boolean;
+  try {
+    while (readBytes <= maxBytes) {
+      const part = await reader.read();
+      if (part.done) {
+        raw += decoder.decode();
+        break;
+      }
+      const remaining = maxBytes + 1 - readBytes;
+      const bytes = part.value.subarray(0, remaining);
+      raw += decoder.decode(bytes, { stream: true });
+      readBytes += bytes.byteLength;
+      if (part.value.byteLength > bytes.byteLength) break;
+    }
+    truncated = readBytes > maxBytes;
+    if (truncated) await reader.cancel();
+  } finally {
+    reader.releaseLock();
+  }
+  return { raw, truncated };
 }
 
 function transportReason(error: unknown): string {
@@ -144,12 +157,26 @@ export async function postJson(
     }
     throw new AiConfigError(message);
   }
+  let reply: { raw: string; truncated: boolean } | null;
   try {
-    return await response.json();
+    reply = await readUpTo(response, MAX_REPLY_BYTES);
   } catch (error) {
     if (isTimedOut(signal, error)) {
       throw new AiTimeoutError("The provider did not answer in time.", { cause: error });
     }
+    throw new AiUnavailableError(
+      `The provider response could not be read. ${transportReason(error)}`,
+      { cause: error },
+    );
+  }
+  if (reply?.truncated) {
+    throw new AiResponseError(
+      `The provider returned a reply longer than ${String(MAX_REPLY_BYTES)} bytes.`,
+    );
+  }
+  try {
+    return JSON.parse(reply?.raw ?? "") as unknown;
+  } catch (error) {
     throw new AiResponseError("The provider returned a response that was not JSON.", {
       cause: error,
     });

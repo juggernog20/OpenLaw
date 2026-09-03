@@ -514,12 +514,14 @@ const ContractRowSchema = z.object({
    * `description` does — it is a column of the record, and the
    * per-field PATCH answers with the row. */
   customFields: CustomFieldsSchema,
-  /** Evidence for values written by AI and not yet confirmed or edited. */
+  /** Values written by AI and not yet confirmed or edited, keyed by
+   * slug. The evidence quote is Document text, so it stays on the run's
+   * results, which the Document audience gates; the row reaches readers
+   * the Document may not, and never carries the quote. */
   aiUnverified: z
     .record(
       z.string(),
       z.object({
-        evidence: z.string(),
         runId: z.string(),
         writtenAt: z.iso.datetime(),
       }),
@@ -770,6 +772,21 @@ function sameValue(
   );
 }
 
+/** The row's marker map without the evidence quote. The quote is Document
+ * text, and only the run's results (audience-gated in `latestAnalysisRun`)
+ * may carry it; the row reaches readers the Document may not. */
+function publicUnverified(
+  map: Readonly<Record<string, { runId: string; writtenAt: string }>> | null,
+): Record<string, { runId: string; writtenAt: string }> | null {
+  if (!map) return null;
+  return Object.fromEntries(
+    Object.entries(map).map(([slug, entry]) => [
+      slug,
+      { runId: entry.runId, writtenAt: entry.writtenAt },
+    ]),
+  );
+}
+
 function toRow(
   context: ContractContext,
   customFields: Readonly<Record<string, CustomFieldValue>> = context.row.customFields,
@@ -821,7 +838,7 @@ function toRow(
     proposedRenewalExpiry: proposedRollExpiry(row),
     description: row.description,
     customFields,
-    aiUnverified: row.aiUnverified,
+    aiUnverified: publicUnverified(row.aiUnverified),
     isConfidential: row.isConfidential,
     endedAt: row.endedAt?.toISOString() ?? null,
     archivedAt: row.archivedAt?.toISOString() ?? null,

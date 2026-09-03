@@ -168,6 +168,11 @@ function legacyResults(analysis: ContractAnalysis): ContractAnalysisResult[] {
 }
 
 function RunSentence({ analysis }: Readonly<{ analysis: ContractAnalysis }>) {
+  const intl = useIntl();
+  const notRecorded = intl.formatMessage({
+    id: "contracts.record.notRecorded",
+    defaultMessage: "—",
+  });
   const run = analysis.latestRun;
   if (!run) {
     return (
@@ -177,18 +182,18 @@ function RunSentence({ analysis }: Readonly<{ analysis: ContractAnalysis }>) {
   if (run.state === "pending") {
     return <FormattedMessage id="contracts.analysis.running" defaultMessage="Running…" />;
   }
-  const version = run.versionNumber ?? run.versionId ?? "—";
+  const version = run.versionNumber ?? run.versionId ?? notRecorded;
   const when = run.finishedAt ? (
     <FormattedDate value={run.finishedAt} dateStyle="medium" timeStyle="short" />
   ) : (
-    "—"
+    notRecorded
   );
   if (run.state === "failed") {
     return (
       <FormattedMessage
         id="contracts.analysis.failed"
         defaultMessage="Failed {when} on Version {version} with {model}: {reason}"
-        values={{ when, version, model: run.model, reason: run.failure ?? "—" }}
+        values={{ when, version, model: run.model, reason: run.failure ?? notRecorded }}
       />
     );
   }
@@ -291,7 +296,7 @@ export function AiAnalysisCard({
                   {resultValue(intl, result.slug, result.value)}
                 </span>
                 <blockquote className="border-s-2 border-border-default ps-2 text-sm text-muted">
-                  {result.evidence ?? marker?.evidence ?? (
+                  {result.evidence ?? (
                     <FormattedMessage
                       id="contracts.analysis.noEvidence"
                       defaultMessage="No evidence returned."

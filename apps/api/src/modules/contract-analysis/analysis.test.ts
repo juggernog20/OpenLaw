@@ -617,12 +617,13 @@ describe("the manual Contract analysis run", () => {
     await addPaper(contract, [
       "This agreement is evergreen. It expires 2030-01-01. It renews every 12 months. Value is ZZQ 10 each century.",
     ]);
-    await harness.app.inject({
+    const seeded = await harness.app.inject({
       method: "PATCH",
       url: `/api/v1/contracts/${String(contract.number)}`,
       cookies: memberCookies,
       payload: { termType: "evergreen" },
     });
+    expect(seeded.statusCode).toBe(200);
     setAnswers({
       term_type: { value: "evergreen", evidence: "agreement is evergreen" },
       expiry_date: { value: "2030-01-01", evidence: "expires 2030-01-01" },

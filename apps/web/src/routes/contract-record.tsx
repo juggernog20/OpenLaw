@@ -1022,6 +1022,7 @@ export function ContractRecordPage() {
     setParties(counterparties);
     setRenewals(contractRenewals);
     setAnalysis(loadedAnalysis);
+    setDeadlines(contractDeadlines);
     const nextText = textDrafts(contract);
     const nextTerm = termDrafts(contract);
     // Capture the refs before scheduling either updater. React may run a
@@ -1050,7 +1051,16 @@ export function ContractRecordPage() {
     );
     seededText.current = nextText;
     seededTerm.current = nextTerm;
-  }, [contract, fields, customFieldRefs, team, counterparties, contractRenewals, loadedAnalysis]);
+  }, [
+    contract,
+    fields,
+    customFieldRefs,
+    team,
+    counterparties,
+    contractRenewals,
+    loadedAnalysis,
+    contractDeadlines,
+  ]);
 
   /**
    * What happened to this record (DD-017), keyed by the same entity
