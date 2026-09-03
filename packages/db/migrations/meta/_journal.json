@@ -610,6 +610,13 @@
       "when": 1788371351337,
       "tag": "0086_free_invisible_woman",
       "breakpoints": true
+    },
+    {
+      "idx": 87,
+      "version": "7",
+      "when": 1788458045947,
+      "tag": "0087_acoustic_gorilla_man",
+      "breakpoints": true
     }
   ]
 }

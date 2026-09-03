@@ -51,6 +51,11 @@ export const DEFAULT_DOC_ENGINE_TIMEOUT_MS = 300_000;
  */
 export const DEFAULT_DOC_ENGINE_COMPARE_TIMEOUT_MS = 600_000;
 
+/** The comparison queue gives one attempt fifteen minutes. One compare
+ * call plus a minute for two reads, one write, parsing, and the database
+ * update must fit inside that lease. */
+export const MAX_DOC_ENGINE_COMPARE_TIMEOUT_MS = 840_000;
+
 /**
  * The highest bound an install may set, and why there is one.
  *

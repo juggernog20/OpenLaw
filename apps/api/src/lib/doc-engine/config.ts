@@ -18,6 +18,7 @@ import {
   DEFAULT_DOC_ENGINE_TIMEOUT_MS,
   DEFAULT_DOC_ENGINE_URL,
   MAX_DOC_ENGINE_TIMEOUT_MS,
+  MAX_DOC_ENGINE_COMPARE_TIMEOUT_MS,
   createHttpDocEngine,
   type HttpDocEngineOptions,
 } from "./http.js";
@@ -106,11 +107,13 @@ export function readDocEngineConfig(env: DocEngineEnvironment): HttpDocEngineOpt
   }
   if (timeoutMs !== undefined) options.timeoutMs = timeoutMs;
 
-  // Compare has its own bound because it is the slowest operation, and
-  // no ceiling yet because no queue job makes the call. The job that
-  // does (M32, DOC-003) has to state its budget against this bound the
-  // way the derivation queues state theirs against MAX_DOC_ENGINE_TIMEOUT_MS.
   const compareTimeoutMs = readBound(env, "DOC_ENGINE_COMPARE_TIMEOUT_MS");
+  if (compareTimeoutMs !== undefined && compareTimeoutMs > MAX_DOC_ENGINE_COMPARE_TIMEOUT_MS) {
+    throw new DocEngineConfigError(
+      `DOC_ENGINE_COMPARE_TIMEOUT_MS must be at most ${MAX_DOC_ENGINE_COMPARE_TIMEOUT_MS} milliseconds, ` +
+        "so one engine call still fits inside a comparison job's queue budget.",
+    );
+  }
   if (compareTimeoutMs !== undefined) options.compareTimeoutMs = compareTimeoutMs;
 
   return options;
@@ -123,6 +126,7 @@ export {
   DEFAULT_DOC_ENGINE_TIMEOUT_MS,
   DEFAULT_DOC_ENGINE_URL,
   MAX_DOC_ENGINE_TIMEOUT_MS,
+  MAX_DOC_ENGINE_COMPARE_TIMEOUT_MS,
 };
 
 /** Builds the doc engine this install is configured for. */
