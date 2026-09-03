@@ -210,30 +210,29 @@ async function openProvider(user: ReturnType<typeof userEvent.setup>) {
 describe("the AI analysis connector pane (#662)", () => {
   it("bounces a non-Administrator to their settings home", async () => {
     stubApi({ signedIn: MEMBER });
-    renderAt("/settings/integrations/ai-analysis");
+    renderAt("/settings/ai-analysis");
     expect(await screen.findByLabelText("Full name")).toBeVisible();
-    expect(screen.queryByRole("link", { name: "Integrations" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "AI analysis" })).not.toBeInTheDocument();
   });
 
-  it("shows AI analysis as the Integrations section's second pane", async () => {
+  it("is an Organization section of its own, before Integrations (SET-008)", async () => {
     stubApi({ signedIn: ADMIN, extra: connectorApi() });
-    renderAt("/settings/integrations/ai-analysis");
-    const tabs = await screen.findByRole("navigation", { name: "Integration panes" });
-    expect(
-      within(tabs)
-        .getAllByRole("link")
-        .map((link) => link.textContent),
-    ).toEqual(["E-signature", "AI analysis"]);
-    expect(within(tabs).getByRole("link", { name: "AI analysis" })).toHaveAttribute(
-      "aria-current",
-      "page",
-    );
+    renderAt("/settings/ai-analysis");
+    const rail = await screen.findByRole("navigation", { name: "Settings sections" });
+    const entry = within(rail).getByRole("link", { name: "AI analysis" });
+    expect(entry).toHaveAttribute("aria-current", "page");
+    const labels = within(rail)
+      .getAllByRole("link")
+      .map((link) => link.textContent);
+    expect(labels.indexOf("AI analysis")).toBe(labels.indexOf("Integrations") - 1);
+    // No Integrations tab strip: the pane is not a tab any more.
+    expect(screen.queryByRole("navigation", { name: "Integration panes" })).not.toBeInTheDocument();
   });
 
   it("switches presets, prefills models, and shows custom-only fields", async () => {
     const user = userEvent.setup();
     stubApi({ signedIn: ADMIN, extra: connectorApi({ connector: unconfigured() }) });
-    renderAt("/settings/integrations/ai-analysis");
+    renderAt("/settings/ai-analysis");
     await openProvider(user);
     expect(screen.getByLabelText("Model")).toHaveValue("claude-sonnet-5");
     expect(screen.queryByLabelText("Protocol")).not.toBeInTheDocument();
@@ -253,7 +252,7 @@ describe("the AI analysis connector pane (#662)", () => {
     const user = userEvent.setup();
     const saves: unknown[] = [];
     stubApi({ signedIn: ADMIN, extra: connectorApi({}, saves) });
-    renderAt("/settings/integrations/ai-analysis");
+    renderAt("/settings/ai-analysis");
     await openProvider(user);
     expect(screen.getByLabelText("API key")).toHaveValue("");
     expect(screen.getByText(/Leave blank to keep the current key/)).toBeVisible();
@@ -267,7 +266,7 @@ describe("the AI analysis connector pane (#662)", () => {
   it("prints a successful connection test in place", async () => {
     const user = userEvent.setup();
     stubApi({ signedIn: ADMIN, extra: connectorApi() });
-    renderAt("/settings/integrations/ai-analysis");
+    renderAt("/settings/ai-analysis");
     await openProvider(user);
     await user.click(screen.getByRole("button", { name: "Test connection" }));
     expect(await screen.findByText("Connection successful.")).toBeVisible();
@@ -281,7 +280,7 @@ describe("the AI analysis connector pane (#662)", () => {
         test: problem(502, "The connection test failed. The provider rejected the API key."),
       }),
     });
-    renderAt("/settings/integrations/ai-analysis");
+    renderAt("/settings/ai-analysis");
     await openProvider(user);
     await user.click(screen.getByRole("button", { name: "Test connection" }));
     expect(await screen.findByText(/provider rejected the API key/)).toBeVisible();
@@ -293,7 +292,7 @@ describe("the Field prompts card (#665)", () => {
     const user = userEvent.setup();
     const promptSaves: unknown[] = [];
     stubApi({ signedIn: ADMIN, extra: connectorApi({ promptSaves }) });
-    renderAt("/settings/integrations/ai-analysis");
+    renderAt("/settings/ai-analysis");
 
     const input = await screen.findByLabelText("Effective date prompt");
     expect(input).toHaveValue(CORE_ANALYSIS_TARGETS[1].defaultPrompt);
@@ -318,7 +317,7 @@ describe("the Field prompts card (#665)", () => {
         : prompt,
     );
     stubApi({ signedIn: ADMIN, extra: connectorApi({ prompts, promptSaves }) });
-    renderAt("/settings/integrations/ai-analysis");
+    renderAt("/settings/ai-analysis");
 
     const reset = await screen.findByRole("button", {
       name: "Reset Effective date to default",
@@ -340,7 +339,7 @@ describe("the Field prompts card (#665)", () => {
 
   it("sits below Provider and points catalog Fields to Contracts → Fields", async () => {
     stubApi({ signedIn: ADMIN, extra: connectorApi() });
-    renderAt("/settings/integrations/ai-analysis");
+    renderAt("/settings/ai-analysis");
 
     const provider = await screen.findByRole("heading", { level: 2, name: "Provider" });
     const prompts = screen.getByRole("heading", { level: 2, name: "Field prompts" });

@@ -236,7 +236,7 @@ docker compose up -d --scale worker=2
 
 ## AI contract analysis
 
-Configure AI analysis in **Settings → Organization → Integrations → AI analysis**. The connector stores the preset or custom protocol, base URL, model, and API key as organization data. There is no AI provider environment variable: changing the connector applies to the next call without restarting either process.
+Configure AI analysis in **Settings → Organization → AI analysis**. The connector stores the preset or custom protocol, base URL, model, and API key as organization data. There is no AI provider environment variable: changing the connector applies to the next call without restarting either process.
 
 The **worker makes the provider calls for Contract extraction**. The **API makes only the Test connection call** when an Administrator presses that button. In a restricted deployment, allow outbound HTTPS and provider DNS from the worker for ordinary runs and from the app for the test. A custom connector may point at another reachable HTTP endpoint, including a model server on your own network.
 

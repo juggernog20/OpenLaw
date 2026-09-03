@@ -6,7 +6,8 @@
  * URL per pane. The Organization group renders for Administrators only
  * (SET-002) and carries General (#63) and Users (#65, #66) plus the
  * collapsible Security group with Authentication (#64) and the audit
- * log (#133), and the Integrations section (#245, SET-007). The
+ * log (#133), the AI analysis section (#675, SET-008), and the
+ * Integrations section (#245, SET-007). The
  * Personal group carries Profile (#67), Appearance (#62), and
  * Notifications (#320 — the pane M5 deferred until the engine existed).
  * The Organization group has a Notifications section of its own (#322):
@@ -39,6 +40,7 @@ import {
   Plug,
   ScrollText,
   Shield,
+  Sparkles,
   User,
   Users,
   type LucideIcon,
@@ -229,10 +231,21 @@ const ORGANIZATION_GROUP: SettingsGroup = {
         defaultMessage: "Notifications",
       }),
     },
+    // #675 (SET-008): AI analysis is a section of its own, not an
+    // Integrations tab. It holds the provider connector and the seven
+    // core Field prompts, and it drives Contract analysis across the
+    // product, so it gets a rail entry. It sits before Integrations so
+    // that section stays last, as the SET-001 rail order draws it.
+    {
+      id: "ai-analysis",
+      path: "/settings/ai-analysis",
+      icon: Sparkles,
+      label: defineMessage({ id: "settings.section.aiAnalysis", defaultMessage: "AI analysis" }),
+    },
     // The Integrations section (SET-007), born with the E-signature
     // pane in M15. It sits last in the Organization group, as the ST7
-    // mock and the SET-001 rail order both draw it, and grows the AI
-    // pane in M31.
+    // mock and the SET-001 rail order both draw it. E-signature is its
+    // only pane: the AI pane moved out under SET-008.
     {
       id: "integrations",
       path: "/settings/integrations/e-signature",

@@ -122,18 +122,14 @@ async function bareContractType(request: APIRequestContext): Promise<string> {
 }
 
 async function configureConnector(page: Page, stub: OpenAiStub, testInfo: TestInfo): Promise<void> {
-  await page.goto("/settings/integrations/ai-analysis");
+  // AI analysis is an Organization section of its own (SET-008, #675).
+  await page.goto("/settings/ai-analysis");
   await expect(
     page
       .getByRole("navigation", { name: "Settings sections" })
-      .getByRole("link", { name: "Integrations" }),
-  ).toBeVisible();
-  await expect(page.getByRole("heading", { level: 2, name: "Integrations" })).toBeVisible();
-  await expect(
-    page
-      .getByRole("navigation", { name: "Integration panes" })
       .getByRole("link", { name: "AI analysis" }),
   ).toHaveAttribute("aria-current", "page");
+  await expect(page.getByRole("heading", { level: 2, name: "Provider" })).toBeVisible();
 
   const provider = page.getByRole("button", { name: "Provider", exact: true });
   if ((await provider.getAttribute("aria-expanded")) === "false") await provider.click();

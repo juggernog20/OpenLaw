@@ -470,7 +470,7 @@ Recommended Anthropic-first + OpenAI-compatible second. Blair widened: "a list o
   1. **Anthropic Messages API**
   2. **OpenAI-compatible chat completions** — one adapter covering OpenAI, Azure OpenAI, **OpenRouter**, Ollama/vLLM (local models), Groq, Mistral, Together, and any compatible endpoint
   3. **Google Gemini API**
-- ~~Provider presets live in Settings → Contracts → AI Analysis.~~ _(Placement superseded by **SET-007** (2026-08-16): the connector is configured in **Settings → Organization → Integrations → AI analysis**.)_ The presets are Anthropic, OpenAI, Azure OpenAI, Gemini, OpenRouter, and Ollama (local). Each preset pins its protocol and base URL and asks only for a key and model.
+- ~~Provider presets live in Settings → Contracts → AI Analysis.~~ _(Placement superseded by **SET-007** (2026-08-16), then by **SET-008** (2026-09-03): the connector is configured in **Settings → Organization → AI analysis**, a section of its own.)_ The presets are Anthropic, OpenAI, Azure OpenAI, Gemini, OpenRouter, and Ollama (local). Each preset pins its protocol and base URL and asks only for a key and model.
 - **Custom provider**: protocol picker + base URL + API key + model string — any current or future endpoint without a code change.
 - BYO key per CTR-008; no provider configured → AI surfaces hidden. Default model strings maintained per preset (e.g. `claude-sonnet-5` for Anthropic); always user-editable.
 
@@ -484,7 +484,7 @@ A "Test connection" affordance in settings. Extraction prompt/schema behavior mu
 
 ### Addendum (2026-09-02, M31/1)
 
-The pane shipped in **Settings → Organization → Integrations → AI analysis**, beside the E-signature pane, rather than under Contracts. The connector is one sealed singleton row (TECH-022), and a resolver reads it live before each probe or run.
+The pane shipped in **Settings → Organization → Integrations → AI analysis**, beside the E-signature pane, rather than under Contracts, and moved the same day to **Settings → Organization → AI analysis** as a section of its own (SET-008). The connector is one sealed singleton row (TECH-022), and a resolver reads it live before each probe or run.
 
 Two wire facts changed the OpenAI-compatible adapter after the first cut. OpenAI's current reasoning models refuse `max_tokens` (they take `max_completion_tokens`) and refuse any `temperature` but the default, while Ollama, vLLM, and OpenRouter still take `max_tokens` and honor temperature zero. The adapter starts on `max_completion_tokens` for the OpenAI and Azure OpenAI presets, on `max_tokens` elsewhere, and when a refusal names one of the two fields it drops or renames that field and repeats the call once. Reasoning models on every protocol also spend their thinking inside the output token budget, so the probe allows 1024 tokens and an extraction 8192, and an extraction may take up to two minutes against a local model.
 

@@ -3,17 +3,13 @@
 import { FormattedMessage, useIntl } from "react-intl";
 import { SettingsSectionTabs } from "./settings-section-tabs";
 
+// One pane today. AI analysis left for a section of its own (#675,
+// SET-008); a second connector would join this strip as a second tab.
 const TABS = [
   {
     path: "/settings/integrations/e-signature",
     label: (
       <FormattedMessage id="settings.integrations.tab.eSignature" defaultMessage="E-signature" />
-    ),
-  },
-  {
-    path: "/settings/integrations/ai-analysis",
-    label: (
-      <FormattedMessage id="settings.integrations.tab.aiAnalysis" defaultMessage="AI analysis" />
     ),
   },
 ] as const;
