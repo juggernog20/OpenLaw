@@ -366,9 +366,9 @@ export async function handleTextExtraction(
   attempt: JobAttempt,
   onTextReady?: (versionId: string) => Promise<void>,
 ): Promise<void> {
+  let becameReady = false;
   try {
-    const becameReady = await extractVersionText(deps, attempt.versionId);
-    if (becameReady) await onTextReady?.(attempt.versionId);
+    becameReady = await extractVersionText(deps, attempt.versionId);
   } catch (error) {
     const terminal = isTerminalFailure(error);
     const exhausted = attempt.retryCount >= attempt.retryLimit;
@@ -393,5 +393,18 @@ export async function handleTextExtraction(
     // back to the queue, so the operator's job list shows the failure
     // whether or not a retry is left.
     if (!terminal) throw error;
+  }
+  // The text is on the record by now. The analysis ask runs outside the
+  // block above, so a fault in it cannot mark ready text as failed or
+  // send this job back for bytes it already read (#664).
+  if (becameReady) {
+    try {
+      await onTextReady?.(attempt.versionId);
+    } catch (error) {
+      deps.log.warn(
+        { versionId: attempt.versionId, reason: reasonOf(error) },
+        "could not request automatic analysis for ready text",
+      );
+    }
   }
 }

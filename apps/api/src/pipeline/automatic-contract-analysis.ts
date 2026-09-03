@@ -163,7 +163,15 @@ export async function requestAutomaticContractAnalysis(
 
     const queued = await boundedQueueAsk(deps.jobs.requestContractAnalysis(run.contractId, run.id));
     if (queued) return;
+    // The Contract lock above saw no waiting run row, yet the queue holds
+    // a waiting job under this key. That job has no row of its own, so
+    // its worker will do nothing, and this ask is lost until a person
+    // runs the analysis by hand. Say so, rather than dropping it quietly.
     await deps.db.delete(contractAnalysisRuns).where(eq(contractAnalysisRuns.id, run.id));
+    deps.log.warn(
+      { contractId: run.contractId, runId: run.id, versionId },
+      "the queue refused an automatic analysis run that no waiting run row explains",
+    );
   } catch (error) {
     if (createdRunId) {
       try {
