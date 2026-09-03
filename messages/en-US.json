@@ -131,6 +131,9 @@
   "activity.contract.createdFromRequest": {
     "defaultMessage": "{actor} created this contract from {request}"
   },
+  "activity.contract.fieldConfirmed": {
+    "defaultMessage": "{actor} confirmed an AI-written value"
+  },
   "activity.contract.matterLinked": {
     "defaultMessage": "{actor} linked this contract to {matter}"
   },
@@ -1315,6 +1318,42 @@
   },
   "contractMatter.unlink.error": {
     "defaultMessage": "The Contract could not be unlinked from the Matter."
+  },
+  "contracts.analysis.booleanValue": {
+    "defaultMessage": "{value, select, true {Yes} other {No}}"
+  },
+  "contracts.analysis.completed": {
+    "defaultMessage": "Completed {when} on Version {version} with {model}."
+  },
+  "contracts.analysis.confirm": {
+    "defaultMessage": "Confirm"
+  },
+  "contracts.analysis.confirmAll": {
+    "defaultMessage": "Confirm all"
+  },
+  "contracts.analysis.failed": {
+    "defaultMessage": "Failed {when} on Version {version} with {model}: {reason}"
+  },
+  "contracts.analysis.heading": {
+    "defaultMessage": "AI analysis"
+  },
+  "contracts.analysis.noEvidence": {
+    "defaultMessage": "No evidence returned."
+  },
+  "contracts.analysis.notRun": {
+    "defaultMessage": "No analysis has run yet."
+  },
+  "contracts.analysis.results": {
+    "defaultMessage": "Analysis results"
+  },
+  "contracts.analysis.run": {
+    "defaultMessage": "Run analysis"
+  },
+  "contracts.analysis.running": {
+    "defaultMessage": "Running…"
+  },
+  "contracts.analysis.unverified": {
+    "defaultMessage": "Unverified"
   },
   "contracts.applet.settings": {
     "defaultMessage": "Contract settings"
