@@ -170,10 +170,10 @@ test.describe.serial("M32 text comparison", () => {
         const erased = await page.request.delete(`/api/v1/documents/${document.id}`, {
           data: { confirmTitle: document.title },
         });
-        expect(erased.status(), await erased.text()).toBe(200);
+        expect.soft(erased.status(), await erased.text()).toBe(200);
       }
       const archived = await page.request.post(`/api/v1/contracts/${contract.number}/archive`);
-      expect(archived.status(), await archived.text()).toBe(200);
+      expect.soft(archived.status(), await archived.text()).toBe(200);
     }
   });
 });
