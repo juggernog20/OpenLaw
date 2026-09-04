@@ -1,16 +1,30 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 /**
- * "Welcome to OpenLaw", the SET-004 first-run onboarding wizard,
- * scoped to the steps whose features exist (issue #34): authentication
- * mode, the DD-010 portal (magic-link toggle plus domain allowlist),
- * SMTP setup (#37: save a relay in the app unless the environment pins
- * one; env always wins), and invites. Every step is skippable. Finishing
- * or skipping out marks onboarding complete, and a completed wizard
- * never shows again.
+ * "Welcome to OpenLaw", the SET-004 first-run onboarding wizard: the
+ * organization's identity (#697), authentication mode, the DD-010
+ * portal (magic-link toggle plus domain allowlist), SMTP setup (#37:
+ * save a relay in the app unless the environment pins one; env always
+ * wins), and invites. Every step writes through the route its Settings
+ * pane already uses, because SET-001 keeps one pane at one address and
+ * a second writer would be a second address.
+ *
+ * Every step is skippable and saves on Continue, in one request. That
+ * is the wizard's own shape rather than a departure from DES-017.
+ * Per-field commit on blur governs the Settings panes, where a field
+ * stands alone. Here a step is the unit an Administrator moves through.
+ *
+ * Finishing or skipping out marks onboarding complete, and a completed
+ * wizard never shows again.
  */
 
-import { useState, type ReactNode, type SubmitEvent as FormSubmitEvent } from "react";
+import {
+  useId,
+  useRef,
+  useState,
+  type ReactNode,
+  type SubmitEvent as FormSubmitEvent,
+} from "react";
 import { redirect, useLoaderData, useNavigate } from "react-router";
 import { FormattedMessage, useIntl } from "react-intl";
 import { X } from "lucide-react";
@@ -23,6 +37,7 @@ import { requireUser } from "../lib/session";
 import { cn } from "../lib/utils";
 import { PageTitle } from "../components/page-title";
 import { SkipLink } from "../components/skip-link";
+import { TimezonePicker } from "../components/timezone-picker";
 import { Alert } from "../components/ui/alert";
 import { Button } from "../components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
@@ -37,27 +52,48 @@ export async function welcomeLoader() {
   const onboarding = await api.GET("/api/v1/onboarding");
   if (!onboarding.data) throw new Error("The onboarding state could not be read.");
   if (onboarding.data.completed) return redirect("/");
-  const [methods, domains, email] = await Promise.all([
+  const [general, methods, domains, email] = await Promise.all([
+    api.GET("/api/v1/org/general"),
     api.GET("/api/v1/auth/methods"),
     api.GET("/api/v1/auth/allowed-domains"),
     api.GET("/api/v1/email-settings"),
   ]);
-  if (!methods.data || !domains.data || !email.data) {
+  if (!general.data || !methods.data || !domains.data || !email.data) {
     throw new Error("The onboarding state could not be read.");
   }
   return {
-    emailConfigured: onboarding.data.emailConfigured,
+    // The email step's own answer, which honours TECH-011's precedence:
+    // an environment-pinned relay counts exactly as an app-saved one.
+    emailConfigured: onboarding.data.steps.email.done,
+    general: general.data.general,
     methods: methods.data,
     domains: domains.data.domains,
     emailSettings: email.data,
   };
 }
 
-const STEPS = ["welcome", "authentication", "portal", "email", "invites"] as const;
+/** SET-004's order: who we are, then how people get in, then who they
+ * are. The splash configures nothing and opens the flow. */
+const STEPS = ["welcome", "organization", "authentication", "portal", "email", "invites"] as const;
 type Step = (typeof STEPS)[number];
 
 const INVITE_ROLES = ["legal_team_member", "contributor", "administrator"] as const;
 type InviteRole = (typeof INVITE_ROLES)[number];
+
+/** The GET/PATCH /org/general payload, as the client sees it. */
+interface General {
+  name: string;
+  logo: string | null;
+  defaultLocale: "en-US";
+  defaultTimezone: string;
+}
+
+/** ~256 KB of image; matches the API's cap on the encoded data: URI. */
+const LOGO_BYTE_LIMIT = 256 * 1024;
+const LOGO_TYPES = ["image/png", "image/jpeg", "image/webp", "image/svg+xml"];
+
+const selectClassName =
+  "h-8 w-full rounded-button border border-border-default bg-raised px-2 text-sm text-primary focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-link disabled:pointer-events-none disabled:opacity-50";
 
 /** Selectable option row (aria-pressed carries the state for readers). */
 function OptionButton(
@@ -95,6 +131,14 @@ export function WelcomePage() {
   const [step, setStep] = useState<Step>("welcome");
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const stepTitleId = useId();
+
+  // Organization step (#697): the same org_settings row the General
+  // pane writes. Held as a draft and sent on Continue in one PATCH,
+  // which is the wizard's unit of movement.
+  const [savedGeneral, setSavedGeneral] = useState<General>(loaded.general);
+  const [orgDraft, setOrgDraft] = useState<General>(loaded.general);
+  const logoInput = useRef<HTMLInputElement>(null);
 
   // Authentication step.
   // What the server holds right now. Starts from the loader and moves
@@ -145,6 +189,77 @@ export function WelcomePage() {
           id: "welcome.error.complete",
           defaultMessage: "Onboarding could not be marked finished. Try again.",
         }),
+      );
+    } catch {
+      setError(networkError(intl));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  function readLogo(file: File | undefined) {
+    if (!file) return;
+    if (!LOGO_TYPES.includes(file.type) || file.size > LOGO_BYTE_LIMIT) {
+      setError(
+        intl.formatMessage({
+          id: "welcome.org.logo.rejected",
+          defaultMessage:
+            "That logo must be a PNG, JPEG, WebP, or SVG image under 256 KB. Pick another file.",
+        }),
+      );
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      setError(null);
+      setOrgDraft((current) => ({ ...current, logo: reader.result as string }));
+    };
+    reader.onerror = () =>
+      setError(
+        intl.formatMessage({
+          id: "welcome.org.logo.unreadable",
+          defaultMessage: "That file could not be read. Pick another one.",
+        }),
+      );
+    reader.readAsDataURL(file);
+  }
+
+  async function applyOrganization() {
+    // Only what moved: an untouched field sends nothing, so a skipped
+    // name never overwrites a seeded row and the activity log stays a
+    // record of changes (DD-017).
+    const name = orgDraft.name.trim();
+    const patch = {
+      ...(name !== "" && name !== savedGeneral.name ? { name } : {}),
+      ...(orgDraft.logo !== savedGeneral.logo ? { logo: orgDraft.logo } : {}),
+      ...(orgDraft.defaultLocale !== savedGeneral.defaultLocale
+        ? { defaultLocale: orgDraft.defaultLocale }
+        : {}),
+      ...(orgDraft.defaultTimezone !== savedGeneral.defaultTimezone
+        ? { defaultTimezone: orgDraft.defaultTimezone }
+        : {}),
+    };
+    if (Object.keys(patch).length === 0) {
+      goTo("authentication");
+      return;
+    }
+    setBusy(true);
+    setError(null);
+    try {
+      const result = await api.PATCH("/api/v1/org/general", { body: patch });
+      const { data } = result;
+      if (data) {
+        setSavedGeneral(data.general);
+        setOrgDraft(data.general);
+        goTo("authentication");
+        return;
+      }
+      setError(
+        (await readProblem(result)).detail ??
+          intl.formatMessage({
+            id: "welcome.org.error.save",
+            defaultMessage: "The organization details could not be saved.",
+          }),
       );
     } catch {
       setError(networkError(intl));
@@ -417,6 +532,9 @@ export function WelcomePage() {
 
   const stepTitles: Record<Step, ReactNode> = {
     welcome: <FormattedMessage id="welcome.step.welcome" defaultMessage="Welcome to OpenLaw" />,
+    organization: (
+      <FormattedMessage id="welcome.step.organization" defaultMessage="Your organization" />
+    ),
     authentication: (
       <FormattedMessage id="welcome.step.authentication" defaultMessage="Authentication" />
     ),
@@ -442,7 +560,7 @@ export function WelcomePage() {
           </p>
           <Card>
             <CardHeader>
-              <CardTitle>{stepTitles[step]}</CardTitle>
+              <CardTitle id={stepTitleId}>{stepTitles[step]}</CardTitle>
               {step === "welcome" && (
                 <CardDescription>
                   <FormattedMessage
@@ -455,484 +573,632 @@ export function WelcomePage() {
             <CardContent className="flex flex-col gap-4">
               {error && <Alert variant="danger">{error}</Alert>}
 
-              {step === "welcome" && (
-                <div className="flex items-center gap-3">
-                  <Button onClick={() => goTo("authentication")}>
-                    <FormattedMessage id="welcome.start" defaultMessage="Get started" />
-                  </Button>
-                  <Button variant="ghost" disabled={busy} onClick={() => void finish()}>
-                    <FormattedMessage id="welcome.skipAll" defaultMessage="Set up later" />
-                  </Button>
-                </div>
-              )}
-
-              {step === "authentication" && (
-                <>
-                  <div className="flex flex-col gap-2">
-                    <OptionButton
-                      selected={mode === "built_in"}
-                      onClick={() => setMode("built_in")}
-                      title={
-                        <FormattedMessage
-                          id="welcome.auth.builtIn"
-                          defaultMessage="Built-in sign-in"
-                        />
-                      }
-                      description={
-                        <FormattedMessage
-                          id="welcome.auth.builtIn.hint"
-                          defaultMessage="Email and password, with optional two-factor authentication. The default."
-                        />
-                      }
-                    />
-                    <OptionButton
-                      selected={mode === "oidc"}
-                      onClick={() => setMode("oidc")}
-                      title={
-                        <FormattedMessage
-                          id="welcome.auth.oidc"
-                          defaultMessage="Single sign-on (OIDC)"
-                        />
-                      }
-                      description={
-                        <FormattedMessage
-                          id="welcome.auth.oidc.hint"
-                          defaultMessage="Bring your own identity provider. Administrators keep password sign-in as break-glass."
-                        />
-                      }
-                    />
+              {/* Each step is its own region, named by the card's
+                  heading, so a screen reader reaches the step's fields
+                  as one labelled group (DES-011). */}
+              <section aria-labelledby={stepTitleId} className="flex flex-col gap-4">
+                {step === "welcome" && (
+                  <div className="flex items-center gap-3">
+                    <Button onClick={() => goTo("organization")}>
+                      <FormattedMessage id="welcome.start" defaultMessage="Get started" />
+                    </Button>
+                    <Button variant="ghost" disabled={busy} onClick={() => void finish()}>
+                      <FormattedMessage id="welcome.skipAll" defaultMessage="Set up later" />
+                    </Button>
                   </div>
+                )}
 
-                  {mode === "oidc" && !ssoProviderId && (
-                    <form
-                      className="flex flex-col gap-3 rounded-card border border-border-default p-4"
-                      onSubmit={(e) => void registerProvider(e)}
-                    >
-                      <p className="text-md font-medium">
+                {step === "organization" && (
+                  <>
+                    <CardDescription>
+                      <FormattedMessage
+                        id="welcome.org.hint"
+                        defaultMessage="Your name and logo appear in the header. The locale and timezone defaults decide how dates read until somebody sets their own."
+                      />
+                    </CardDescription>
+                    <div className="flex flex-col gap-1.5">
+                      <Label htmlFor="org-name">
                         <FormattedMessage
-                          id="welcome.auth.register.title"
-                          defaultMessage="Register your identity provider"
+                          id="settings.general.name"
+                          defaultMessage="Organization name"
+                        />
+                      </Label>
+                      <Input
+                        id="org-name"
+                        value={orgDraft.name}
+                        autoComplete="organization"
+                        onChange={(event) =>
+                          setOrgDraft((current) => ({ ...current, name: event.target.value }))
+                        }
+                      />
+                    </div>
+
+                    <div className="flex flex-col gap-1.5">
+                      <span className="text-sm font-medium text-primary">
+                        <FormattedMessage id="settings.general.logo" defaultMessage="Logo" />
+                      </span>
+                      <div className="flex items-center gap-3">
+                        {orgDraft.logo ? (
+                          <img
+                            src={orgDraft.logo}
+                            alt=""
+                            className="size-10 rounded-button border border-border-default object-contain"
+                          />
+                        ) : (
+                          <span
+                            aria-hidden="true"
+                            className="flex size-10 items-center justify-center rounded-button bg-control text-lg font-semibold text-primary"
+                          >
+                            {(orgDraft.name || "O").charAt(0).toUpperCase()}
+                          </span>
+                        )}
+                        <input
+                          ref={logoInput}
+                          type="file"
+                          accept={LOGO_TYPES.join(",")}
+                          // Visually hidden but still in the accessibility
+                          // tree, so it carries its own name (the Upload
+                          // button drives it).
+                          aria-label={intl.formatMessage({
+                            id: "settings.general.uploadLogo",
+                            defaultMessage: "Upload a logo",
+                          })}
+                          className="sr-only"
+                          onChange={(event) => {
+                            readLogo(event.target.files?.[0]);
+                            event.target.value = "";
+                          }}
+                        />
+                        <Button
+                          type="button"
+                          variant="secondary"
+                          size="sm"
+                          onClick={() => logoInput.current?.click()}
+                        >
+                          <FormattedMessage id="settings.general.upload" defaultMessage="Upload" />
+                        </Button>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-col gap-1.5">
+                      <Label htmlFor="org-locale">
+                        <FormattedMessage
+                          id="settings.general.locale"
+                          defaultMessage="Default locale"
+                        />
+                      </Label>
+                      <select
+                        id="org-locale"
+                        className={selectClassName}
+                        value={orgDraft.defaultLocale}
+                        onChange={(event) =>
+                          setOrgDraft((current) => ({
+                            ...current,
+                            defaultLocale: event.target.value as General["defaultLocale"],
+                          }))
+                        }
+                      >
+                        <option value="en-US">
+                          {intl.formatMessage({
+                            id: "settings.general.locale.enUS",
+                            defaultMessage: "English (United States)",
+                          })}
+                        </option>
+                      </select>
+                      {/* One option today is honest, not broken: DES-013
+                        ships en-US alone, and the select comes alive
+                        with locale #2. */}
+                      <p className="text-sm text-muted">
+                        <FormattedMessage
+                          id="settings.general.locale.hint"
+                          defaultMessage="English (United States) is the only available locale for now."
                         />
                       </p>
-                      <div className="flex flex-col gap-1.5">
-                        <Label htmlFor="providerId">
-                          <FormattedMessage
-                            id="welcome.auth.field.providerId"
-                            defaultMessage="Provider ID"
-                          />
-                        </Label>
-                        <Input
-                          id="providerId"
-                          name="providerId"
-                          required
-                          placeholder={intl.formatMessage({
-                            id: "welcome.auth.field.providerIdPlaceholder",
-                            defaultMessage: "okta",
-                          })}
+                    </div>
+
+                    <div className="flex flex-col gap-1.5">
+                      <Label htmlFor="org-timezone">
+                        <FormattedMessage
+                          id="settings.general.timezone"
+                          defaultMessage="Default timezone"
                         />
-                      </div>
-                      <div className="flex flex-col gap-1.5">
-                        <Label htmlFor="issuer">
-                          <FormattedMessage
-                            id="welcome.auth.field.issuer"
-                            defaultMessage="Issuer URL"
-                          />
-                        </Label>
-                        <Input
-                          id="issuer"
-                          name="issuer"
-                          type="url"
-                          required
-                          placeholder={intl.formatMessage({
-                            id: "welcome.auth.field.issuerPlaceholder",
-                            defaultMessage: "https://idp.example.com",
-                          })}
+                      </Label>
+                      <TimezonePicker
+                        id="org-timezone"
+                        className="w-full"
+                        value={orgDraft.defaultTimezone}
+                        onCommit={(zone) => {
+                          if (zone)
+                            setOrgDraft((current) => ({ ...current, defaultTimezone: zone }));
+                        }}
+                      />
+                      <p className="text-sm text-muted">
+                        <FormattedMessage
+                          id="settings.general.timezone.hint"
+                          defaultMessage="Used for the daily digest and date displays until a user signs in."
                         />
-                      </div>
-                      <div className="flex flex-col gap-1.5">
-                        <Label htmlFor="idpDomain">
+                      </p>
+                    </div>
+                  </>
+                )}
+
+                {step === "authentication" && (
+                  <>
+                    <div className="flex flex-col gap-2">
+                      <OptionButton
+                        selected={mode === "built_in"}
+                        onClick={() => setMode("built_in")}
+                        title={
                           <FormattedMessage
-                            id="welcome.auth.field.domain"
-                            defaultMessage="Email domain"
+                            id="welcome.auth.builtIn"
+                            defaultMessage="Built-in sign-in"
                           />
-                        </Label>
+                        }
+                        description={
+                          <FormattedMessage
+                            id="welcome.auth.builtIn.hint"
+                            defaultMessage="Email and password, with optional two-factor authentication. The default."
+                          />
+                        }
+                      />
+                      <OptionButton
+                        selected={mode === "oidc"}
+                        onClick={() => setMode("oidc")}
+                        title={
+                          <FormattedMessage
+                            id="welcome.auth.oidc"
+                            defaultMessage="Single sign-on (OIDC)"
+                          />
+                        }
+                        description={
+                          <FormattedMessage
+                            id="welcome.auth.oidc.hint"
+                            defaultMessage="Bring your own identity provider. Administrators keep password sign-in as break-glass."
+                          />
+                        }
+                      />
+                    </div>
+
+                    {mode === "oidc" && !ssoProviderId && (
+                      <form
+                        className="flex flex-col gap-3 rounded-card border border-border-default p-4"
+                        onSubmit={(e) => void registerProvider(e)}
+                      >
+                        <p className="text-md font-medium">
+                          <FormattedMessage
+                            id="welcome.auth.register.title"
+                            defaultMessage="Register your identity provider"
+                          />
+                        </p>
+                        <div className="flex flex-col gap-1.5">
+                          <Label htmlFor="providerId">
+                            <FormattedMessage
+                              id="welcome.auth.field.providerId"
+                              defaultMessage="Provider ID"
+                            />
+                          </Label>
+                          <Input
+                            id="providerId"
+                            name="providerId"
+                            required
+                            placeholder={intl.formatMessage({
+                              id: "welcome.auth.field.providerIdPlaceholder",
+                              defaultMessage: "okta",
+                            })}
+                          />
+                        </div>
+                        <div className="flex flex-col gap-1.5">
+                          <Label htmlFor="issuer">
+                            <FormattedMessage
+                              id="welcome.auth.field.issuer"
+                              defaultMessage="Issuer URL"
+                            />
+                          </Label>
+                          <Input
+                            id="issuer"
+                            name="issuer"
+                            type="url"
+                            required
+                            placeholder={intl.formatMessage({
+                              id: "welcome.auth.field.issuerPlaceholder",
+                              defaultMessage: "https://idp.example.com",
+                            })}
+                          />
+                        </div>
+                        <div className="flex flex-col gap-1.5">
+                          <Label htmlFor="idpDomain">
+                            <FormattedMessage
+                              id="welcome.auth.field.domain"
+                              defaultMessage="Email domain"
+                            />
+                          </Label>
+                          <Input
+                            id="idpDomain"
+                            name="idpDomain"
+                            required
+                            placeholder={intl.formatMessage({
+                              id: "welcome.auth.field.domainPlaceholder",
+                              defaultMessage: "acme.example",
+                            })}
+                          />
+                        </div>
+                        <div className="flex flex-col gap-1.5">
+                          <Label htmlFor="clientId">
+                            <FormattedMessage
+                              id="welcome.auth.field.clientId"
+                              defaultMessage="Client ID"
+                            />
+                          </Label>
+                          <Input id="clientId" name="clientId" required />
+                        </div>
+                        <div className="flex flex-col gap-1.5">
+                          <Label htmlFor="clientSecret">
+                            <FormattedMessage
+                              id="welcome.auth.field.clientSecret"
+                              defaultMessage="Client secret"
+                            />
+                          </Label>
+                          <Input id="clientSecret" name="clientSecret" type="password" required />
+                        </div>
+                        <Button type="submit" variant="secondary" disabled={busy}>
+                          <FormattedMessage
+                            id="welcome.auth.register.submit"
+                            defaultMessage="Register provider"
+                          />
+                        </Button>
+                      </form>
+                    )}
+
+                    {mode === "oidc" && ssoProviderId && (
+                      <Alert variant="success">
+                        <FormattedMessage
+                          id="welcome.auth.registered"
+                          defaultMessage="Identity provider {providerId} is registered."
+                          values={{ providerId: ssoProviderId }}
+                        />
+                        {callbackUrl && (
+                          <span className="mt-1 block">
+                            <FormattedMessage
+                              id="welcome.auth.callback"
+                              defaultMessage="Paste this callback URL into your IdP console: {url}"
+                              values={{ url: <code className="break-all">{callbackUrl}</code> }}
+                            />
+                          </span>
+                        )}
+                      </Alert>
+                    )}
+                  </>
+                )}
+
+                {step === "portal" && (
+                  <>
+                    <CardDescription>
+                      <FormattedMessage
+                        id="welcome.portal.hint"
+                        defaultMessage="Business users sign in with emailed magic links, restricted to the domains you allow. An empty list admits nobody."
+                      />
+                    </CardDescription>
+                    <OptionButton
+                      selected={magicLinkEnabled}
+                      onClick={() => setMagicLinkEnabled(!magicLinkEnabled)}
+                      title={
+                        magicLinkEnabled ? (
+                          <FormattedMessage
+                            id="welcome.portal.enabled"
+                            defaultMessage="Magic-link sign-in is on"
+                          />
+                        ) : (
+                          <FormattedMessage
+                            id="welcome.portal.disabled"
+                            defaultMessage="Magic-link sign-in is off"
+                          />
+                        )
+                      }
+                      description={
+                        <FormattedMessage
+                          id="welcome.portal.toggle.hint"
+                          defaultMessage="Select to change. Off closes the portal entirely, even for allowed domains."
+                        />
+                      }
+                    />
+                    <div className="flex flex-col gap-1.5">
+                      <Label htmlFor="domain">
+                        <FormattedMessage
+                          id="welcome.portal.domains"
+                          defaultMessage="Allowed email domains"
+                        />
+                      </Label>
+                      <div className="flex gap-2">
                         <Input
-                          id="idpDomain"
-                          name="idpDomain"
-                          required
+                          id="domain"
+                          value={domainInput}
+                          onChange={(e) => setDomainInput(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                              e.preventDefault();
+                              addDomain();
+                            }
+                          }}
                           placeholder={intl.formatMessage({
                             id: "welcome.auth.field.domainPlaceholder",
                             defaultMessage: "acme.example",
                           })}
                         />
+                        <Button type="button" variant="secondary" onClick={addDomain}>
+                          <FormattedMessage id="welcome.portal.add" defaultMessage="Add" />
+                        </Button>
                       </div>
-                      <div className="flex flex-col gap-1.5">
-                        <Label htmlFor="clientId">
-                          <FormattedMessage
-                            id="welcome.auth.field.clientId"
-                            defaultMessage="Client ID"
-                          />
-                        </Label>
-                        <Input id="clientId" name="clientId" required />
-                      </div>
-                      <div className="flex flex-col gap-1.5">
-                        <Label htmlFor="clientSecret">
-                          <FormattedMessage
-                            id="welcome.auth.field.clientSecret"
-                            defaultMessage="Client secret"
-                          />
-                        </Label>
-                        <Input id="clientSecret" name="clientSecret" type="password" required />
-                      </div>
-                      <Button type="submit" variant="secondary" disabled={busy}>
-                        <FormattedMessage
-                          id="welcome.auth.register.submit"
-                          defaultMessage="Register provider"
-                        />
-                      </Button>
-                    </form>
-                  )}
-
-                  {mode === "oidc" && ssoProviderId && (
-                    <Alert variant="success">
-                      <FormattedMessage
-                        id="welcome.auth.registered"
-                        defaultMessage="Identity provider {providerId} is registered."
-                        values={{ providerId: ssoProviderId }}
-                      />
-                      {callbackUrl && (
-                        <span className="mt-1 block">
-                          <FormattedMessage
-                            id="welcome.auth.callback"
-                            defaultMessage="Paste this callback URL into your IdP console: {url}"
-                            values={{ url: <code className="break-all">{callbackUrl}</code> }}
-                          />
-                        </span>
-                      )}
-                    </Alert>
-                  )}
-                </>
-              )}
-
-              {step === "portal" && (
-                <>
-                  <CardDescription>
-                    <FormattedMessage
-                      id="welcome.portal.hint"
-                      defaultMessage="Business users sign in with emailed magic links, restricted to the domains you allow. An empty list admits nobody."
-                    />
-                  </CardDescription>
-                  <OptionButton
-                    selected={magicLinkEnabled}
-                    onClick={() => setMagicLinkEnabled(!magicLinkEnabled)}
-                    title={
-                      magicLinkEnabled ? (
-                        <FormattedMessage
-                          id="welcome.portal.enabled"
-                          defaultMessage="Magic-link sign-in is on"
-                        />
-                      ) : (
-                        <FormattedMessage
-                          id="welcome.portal.disabled"
-                          defaultMessage="Magic-link sign-in is off"
-                        />
-                      )
-                    }
-                    description={
-                      <FormattedMessage
-                        id="welcome.portal.toggle.hint"
-                        defaultMessage="Select to change. Off closes the portal entirely, even for allowed domains."
-                      />
-                    }
-                  />
-                  <div className="flex flex-col gap-1.5">
-                    <Label htmlFor="domain">
-                      <FormattedMessage
-                        id="welcome.portal.domains"
-                        defaultMessage="Allowed email domains"
-                      />
-                    </Label>
-                    <div className="flex gap-2">
-                      <Input
-                        id="domain"
-                        value={domainInput}
-                        onChange={(e) => setDomainInput(e.target.value)}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter") {
-                            e.preventDefault();
-                            addDomain();
-                          }
-                        }}
-                        placeholder={intl.formatMessage({
-                          id: "welcome.auth.field.domainPlaceholder",
-                          defaultMessage: "acme.example",
-                        })}
-                      />
-                      <Button type="button" variant="secondary" onClick={addDomain}>
-                        <FormattedMessage id="welcome.portal.add" defaultMessage="Add" />
-                      </Button>
                     </div>
-                  </div>
-                  {domains.length > 0 ? (
-                    <ul className="flex flex-wrap gap-2">
-                      {domains.map((domain) => (
-                        <li
-                          key={domain}
-                          className="flex items-center gap-1 rounded-chip border border-border-default bg-control px-2 py-0.5 text-sm"
-                        >
-                          {domain}
-                          <button
-                            type="button"
-                            aria-label={intl.formatMessage(
-                              {
-                                id: "welcome.portal.remove",
-                                defaultMessage: "Remove {domain}",
-                              },
-                              { domain },
-                            )}
-                            className="p-1 text-muted hover:text-primary focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-link"
-                            onClick={() => setDomains(domains.filter((d) => d !== domain))}
+                    {domains.length > 0 ? (
+                      <ul className="flex flex-wrap gap-2">
+                        {domains.map((domain) => (
+                          <li
+                            key={domain}
+                            className="flex items-center gap-1 rounded-chip border border-border-default bg-control px-2 py-0.5 text-sm"
                           >
-                            <X size={16} aria-hidden />
-                          </button>
-                        </li>
-                      ))}
-                    </ul>
-                  ) : (
-                    <p className="text-sm text-muted">
-                      <FormattedMessage
-                        id="welcome.portal.empty"
-                        defaultMessage="No domains allowed yet — the portal is closed."
-                      />
-                    </p>
-                  )}
-                </>
-              )}
+                            {domain}
+                            <button
+                              type="button"
+                              aria-label={intl.formatMessage(
+                                {
+                                  id: "welcome.portal.remove",
+                                  defaultMessage: "Remove {domain}",
+                                },
+                                { domain },
+                              )}
+                              className="p-1 text-muted hover:text-primary focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-link"
+                              onClick={() => setDomains(domains.filter((d) => d !== domain))}
+                            >
+                              <X size={16} aria-hidden />
+                            </button>
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <p className="text-sm text-muted">
+                        <FormattedMessage
+                          id="welcome.portal.empty"
+                          defaultMessage="No domains allowed yet — the portal is closed."
+                        />
+                      </p>
+                    )}
+                  </>
+                )}
 
-              {step === "email" && (
-                <>
-                  {emailNotice && <Alert variant="success">{emailNotice}</Alert>}
+                {step === "email" && (
+                  <>
+                    {emailNotice && <Alert variant="success">{emailNotice}</Alert>}
 
-                  {emailState.source === "env" && (
-                    <>
-                      {emailState.fromAddress ? (
+                    {emailState.source === "env" && (
+                      <>
+                        {emailState.fromAddress ? (
+                          <Alert variant="success">
+                            <FormattedMessage
+                              id="welcome.email.env"
+                              defaultMessage="Outbound email is set by the deployment environment. Mail is sent from {from}."
+                              values={{ from: emailState.fromAddress }}
+                            />
+                          </Alert>
+                        ) : (
+                          <Alert variant="warning">
+                            <FormattedMessage
+                              id="welcome.email.env.incomplete"
+                              defaultMessage="The deployment environment sets SMTP_URL but not SMTP_FROM, so mail cannot be sent. Set SMTP_FROM in the environment."
+                            />
+                          </Alert>
+                        )}
+                        <p className="text-md text-muted">
+                          <FormattedMessage
+                            id="welcome.email.env.hint"
+                            defaultMessage="Settings saved here would never apply — the environment always wins. To change the relay, change SMTP_URL and SMTP_FROM in the deployment environment (see the deployment guide)."
+                          />
+                        </p>
+                      </>
+                    )}
+
+                    {emailState.source === "app" && !replacingRelay && (
+                      <>
                         <Alert variant="success">
                           <FormattedMessage
-                            id="welcome.email.env"
-                            defaultMessage="Outbound email is set by the deployment environment. Mail is sent from {from}."
+                            id="welcome.email.app"
+                            defaultMessage="Outbound email is set in the app. Mail is sent from {from}."
                             values={{ from: emailState.fromAddress }}
                           />
                         </Alert>
-                      ) : (
-                        <Alert variant="warning">
-                          <FormattedMessage
-                            id="welcome.email.env.incomplete"
-                            defaultMessage="The deployment environment sets SMTP_URL but not SMTP_FROM, so mail cannot be sent. Set SMTP_FROM in the environment."
-                          />
-                        </Alert>
-                      )}
-                      <p className="text-md text-muted">
-                        <FormattedMessage
-                          id="welcome.email.env.hint"
-                          defaultMessage="Settings saved here would never apply — the environment always wins. To change the relay, change SMTP_URL and SMTP_FROM in the deployment environment (see the deployment guide)."
-                        />
-                      </p>
-                    </>
-                  )}
-
-                  {emailState.source === "app" && !replacingRelay && (
-                    <>
-                      <Alert variant="success">
-                        <FormattedMessage
-                          id="welcome.email.app"
-                          defaultMessage="Outbound email is set in the app. Mail is sent from {from}."
-                          values={{ from: emailState.fromAddress }}
-                        />
-                      </Alert>
-                      <div className="flex flex-wrap items-center gap-2">
-                        <Button
-                          type="button"
-                          variant="secondary"
-                          disabled={busy}
-                          onClick={() => void sendTestEmail()}
-                        >
-                          <FormattedMessage
-                            id="welcome.email.test"
-                            defaultMessage="Send test email"
-                          />
-                        </Button>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          disabled={busy}
-                          onClick={() => {
-                            setEmailNotice(null);
-                            setReplacingRelay(true);
-                          }}
-                        >
-                          <FormattedMessage
-                            id="welcome.email.replace"
-                            defaultMessage="Replace relay"
-                          />
-                        </Button>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          disabled={busy}
-                          onClick={() => void clearEmailSettings()}
-                        >
-                          <FormattedMessage id="welcome.email.clear" defaultMessage="Clear relay" />
-                        </Button>
-                      </div>
-                    </>
-                  )}
-
-                  {(emailState.source === "unset" || replacingRelay) && (
-                    <>
-                      {emailState.source === "unset" && (
-                        <Alert variant="warning">
-                          <FormattedMessage
-                            id="welcome.email.unset"
-                            defaultMessage="Outbound email is not set up. Invites and sign-in links cannot be delivered until you save an SMTP relay."
-                          />
-                        </Alert>
-                      )}
-                      <form
-                        className="flex flex-col gap-3"
-                        onSubmit={(e) => void saveEmailSettings(e)}
-                      >
-                        <div className="flex flex-col gap-1.5">
-                          <Label htmlFor="smtpUrl">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <Button
+                            type="button"
+                            variant="secondary"
+                            disabled={busy}
+                            onClick={() => void sendTestEmail()}
+                          >
                             <FormattedMessage
-                              id="welcome.email.field.url"
-                              defaultMessage="SMTP relay URL"
+                              id="welcome.email.test"
+                              defaultMessage="Send test email"
                             />
-                          </Label>
-                          <Input
-                            id="smtpUrl"
-                            name="smtpUrl"
-                            autoComplete="off"
-                            required
-                            placeholder={intl.formatMessage({
-                              id: "welcome.email.field.urlPlaceholder",
-                              defaultMessage: "smtp://user:password@mail.example.com:587",
-                            })}
-                          />
-                          <p className="text-sm text-muted">
-                            <FormattedMessage
-                              id="welcome.email.field.url.hint"
-                              defaultMessage="Starts with smtp:// or smtps://; credentials go in the URL. It is stored, never shown again."
-                            />
-                          </p>
-                        </div>
-                        <div className="flex flex-col gap-1.5">
-                          <Label htmlFor="smtpFrom">
-                            <FormattedMessage
-                              id="welcome.email.field.from"
-                              defaultMessage="From address"
-                            />
-                          </Label>
-                          <Input
-                            id="smtpFrom"
-                            name="smtpFrom"
-                            autoComplete="off"
-                            required
-                            placeholder={intl.formatMessage({
-                              id: "welcome.email.field.fromPlaceholder",
-                              // ICU MessageFormat parses bare `<...>` as a
-                              // rich-text tag; escape the angle brackets so
-                              // the literal placeholder text survives.
-                              defaultMessage: "OpenLaw '<'openlaw@example.com'>'",
-                            })}
-                          />
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Button type="submit" variant="secondary" disabled={busy}>
-                            <FormattedMessage id="welcome.email.save" defaultMessage="Save relay" />
                           </Button>
-                          {replacingRelay && (
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              disabled={busy}
-                              onClick={() => setReplacingRelay(false)}
-                            >
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            disabled={busy}
+                            onClick={() => {
+                              setEmailNotice(null);
+                              setReplacingRelay(true);
+                            }}
+                          >
+                            <FormattedMessage
+                              id="welcome.email.replace"
+                              defaultMessage="Replace relay"
+                            />
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            disabled={busy}
+                            onClick={() => void clearEmailSettings()}
+                          >
+                            <FormattedMessage
+                              id="welcome.email.clear"
+                              defaultMessage="Clear relay"
+                            />
+                          </Button>
+                        </div>
+                      </>
+                    )}
+
+                    {(emailState.source === "unset" || replacingRelay) && (
+                      <>
+                        {emailState.source === "unset" && (
+                          <Alert variant="warning">
+                            <FormattedMessage
+                              id="welcome.email.unset"
+                              defaultMessage="Outbound email is not set up. Invites and sign-in links cannot be delivered until you save an SMTP relay."
+                            />
+                          </Alert>
+                        )}
+                        <form
+                          className="flex flex-col gap-3"
+                          onSubmit={(e) => void saveEmailSettings(e)}
+                        >
+                          <div className="flex flex-col gap-1.5">
+                            <Label htmlFor="smtpUrl">
                               <FormattedMessage
-                                id="welcome.email.replace.cancel"
-                                defaultMessage="Keep current relay"
+                                id="welcome.email.field.url"
+                                defaultMessage="SMTP relay URL"
+                              />
+                            </Label>
+                            <Input
+                              id="smtpUrl"
+                              name="smtpUrl"
+                              autoComplete="off"
+                              required
+                              placeholder={intl.formatMessage({
+                                id: "welcome.email.field.urlPlaceholder",
+                                defaultMessage: "smtp://user:password@mail.example.com:587",
+                              })}
+                            />
+                            <p className="text-sm text-muted">
+                              <FormattedMessage
+                                id="welcome.email.field.url.hint"
+                                defaultMessage="Starts with smtp:// or smtps://; credentials go in the URL. It is stored, never shown again."
+                              />
+                            </p>
+                          </div>
+                          <div className="flex flex-col gap-1.5">
+                            <Label htmlFor="smtpFrom">
+                              <FormattedMessage
+                                id="welcome.email.field.from"
+                                defaultMessage="From address"
+                              />
+                            </Label>
+                            <Input
+                              id="smtpFrom"
+                              name="smtpFrom"
+                              autoComplete="off"
+                              required
+                              placeholder={intl.formatMessage({
+                                id: "welcome.email.field.fromPlaceholder",
+                                // ICU MessageFormat parses bare `<...>` as a
+                                // rich-text tag; escape the angle brackets so
+                                // the literal placeholder text survives.
+                                defaultMessage: "OpenLaw '<'openlaw@example.com'>'",
+                              })}
+                            />
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Button type="submit" variant="secondary" disabled={busy}>
+                              <FormattedMessage
+                                id="welcome.email.save"
+                                defaultMessage="Save relay"
                               />
                             </Button>
-                          )}
-                        </div>
-                      </form>
-                    </>
-                  )}
-                </>
-              )}
+                            {replacingRelay && (
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                disabled={busy}
+                                onClick={() => setReplacingRelay(false)}
+                              >
+                                <FormattedMessage
+                                  id="welcome.email.replace.cancel"
+                                  defaultMessage="Keep current relay"
+                                />
+                              </Button>
+                            )}
+                          </div>
+                        </form>
+                      </>
+                    )}
+                  </>
+                )}
 
-              {step === "invites" && (
-                <>
-                  {!emailConfigured && (
-                    <Alert variant="warning">
-                      <FormattedMessage
-                        id="welcome.invites.noEmail"
-                        defaultMessage="Without outbound email, invited people will not receive their set-password link."
-                      />
-                    </Alert>
-                  )}
-                  <form className="flex flex-col gap-3" onSubmit={(e) => void sendInvite(e)}>
-                    <div className="flex flex-col gap-1.5">
-                      <Label htmlFor="inviteName">
-                        <FormattedMessage id="auth.field.displayName" defaultMessage="Name" />
-                      </Label>
-                      <Input id="inviteName" name="inviteName" autoComplete="off" required />
-                    </div>
-                    <div className="flex flex-col gap-1.5">
-                      <Label htmlFor="inviteEmail">
-                        <FormattedMessage id="auth.field.email" defaultMessage="Email" />
-                      </Label>
-                      <Input
-                        id="inviteEmail"
-                        name="inviteEmail"
-                        type="email"
-                        autoComplete="off"
-                        required
-                      />
-                    </div>
-                    <fieldset className="flex flex-col gap-1.5">
-                      <legend className="mb-1.5 text-sm font-medium">
-                        <FormattedMessage id="welcome.invites.role" defaultMessage="Role" />
-                      </legend>
-                      <div className="flex flex-wrap gap-2">
-                        {INVITE_ROLES.map((role) => (
-                          <Button
-                            key={role}
-                            type="button"
-                            size="sm"
-                            variant={inviteRole === role ? "primary" : "secondary"}
-                            aria-pressed={inviteRole === role}
-                            onClick={() => setInviteRole(role)}
-                          >
-                            <FormattedMessage {...ROLE_MESSAGES[role]} />
-                          </Button>
-                        ))}
+                {step === "invites" && (
+                  <>
+                    {!emailConfigured && (
+                      <Alert variant="warning">
+                        <FormattedMessage
+                          id="welcome.invites.noEmail"
+                          defaultMessage="Without outbound email, invited people will not receive their set-password link."
+                        />
+                      </Alert>
+                    )}
+                    <form className="flex flex-col gap-3" onSubmit={(e) => void sendInvite(e)}>
+                      <div className="flex flex-col gap-1.5">
+                        <Label htmlFor="inviteName">
+                          <FormattedMessage id="auth.field.displayName" defaultMessage="Name" />
+                        </Label>
+                        <Input id="inviteName" name="inviteName" autoComplete="off" required />
                       </div>
-                    </fieldset>
-                    <Button type="submit" variant="secondary" disabled={busy}>
-                      <FormattedMessage id="welcome.invites.submit" defaultMessage="Send invite" />
-                    </Button>
-                  </form>
-                  {invited.length > 0 && (
-                    <Alert variant="success">
-                      <FormattedMessage
-                        id="welcome.invites.sent"
-                        defaultMessage="{count, plural, one {# invite sent:} other {# invites sent:}} {emails}"
-                        values={{ count: invited.length, emails: invited.join(", ") }}
-                      />
-                    </Alert>
-                  )}
-                </>
-              )}
+                      <div className="flex flex-col gap-1.5">
+                        <Label htmlFor="inviteEmail">
+                          <FormattedMessage id="auth.field.email" defaultMessage="Email" />
+                        </Label>
+                        <Input
+                          id="inviteEmail"
+                          name="inviteEmail"
+                          type="email"
+                          autoComplete="off"
+                          required
+                        />
+                      </div>
+                      <fieldset className="flex flex-col gap-1.5">
+                        <legend className="mb-1.5 text-sm font-medium">
+                          <FormattedMessage id="welcome.invites.role" defaultMessage="Role" />
+                        </legend>
+                        <div className="flex flex-wrap gap-2">
+                          {INVITE_ROLES.map((role) => (
+                            <Button
+                              key={role}
+                              type="button"
+                              size="sm"
+                              variant={inviteRole === role ? "primary" : "secondary"}
+                              aria-pressed={inviteRole === role}
+                              onClick={() => setInviteRole(role)}
+                            >
+                              <FormattedMessage {...ROLE_MESSAGES[role]} />
+                            </Button>
+                          ))}
+                        </div>
+                      </fieldset>
+                      <Button type="submit" variant="secondary" disabled={busy}>
+                        <FormattedMessage
+                          id="welcome.invites.submit"
+                          defaultMessage="Send invite"
+                        />
+                      </Button>
+                    </form>
+                    {invited.length > 0 && (
+                      <Alert variant="success">
+                        <FormattedMessage
+                          id="welcome.invites.sent"
+                          defaultMessage="{count, plural, one {# invite sent:} other {# invites sent:}} {emails}"
+                          values={{ count: invited.length, emails: invited.join(", ") }}
+                        />
+                      </Alert>
+                    )}
+                  </>
+                )}
+              </section>
 
               {step !== "welcome" && (
                 <div className="flex items-center justify-between border-t border-border-default pt-4">
@@ -959,7 +1225,8 @@ export function WelcomePage() {
                         <Button
                           disabled={busy}
                           onClick={() => {
-                            if (step === "authentication") void applyAuthentication();
+                            if (step === "organization") void applyOrganization();
+                            else if (step === "authentication") void applyAuthentication();
                             else if (step === "portal") void applyPortal();
                             else goTo(STEPS[stepIndex + 1] ?? "invites");
                           }}

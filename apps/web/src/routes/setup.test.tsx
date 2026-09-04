@@ -26,7 +26,7 @@ describe("first-run setup", () => {
     const state: ApiState = {
       signedIn: null,
       needsSetup: true,
-      onboarding: { completed: false, emailConfigured: true },
+      onboarding: { completed: false },
     };
     state.extra = (call) => {
       if (call.url.pathname === "/api/v1/auth/setup" && call.method === "POST") {
