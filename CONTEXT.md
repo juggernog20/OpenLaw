@@ -29,7 +29,7 @@ An immutable file snapshot in a document's strictly linear chain; corrections ap
 _Avoid_: revision, draft, copy
 
 **Comparison**:
-One derived reading of two Versions of one Document, the older against the newer, held as a change model; for a Word pair it also retains a tracked-changes file, but it is computed once, kept, and never a Version [DOC-003].
+One derived reading of two Versions of one Document, the older against the newer, held as a change model. A Word pair also retains a tracked-changes file. It is computed once and kept, and it is never a Version [DOC-003].
 
 **Generated redline**:
 The Version a Comparison's export appends to the chain, kind `generated_redline`, source `generated`, carrying both operands; it is a fact about how a file was made and is never correctable [CTR-014, DOC-001, DOC-003].

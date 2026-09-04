@@ -420,7 +420,7 @@ DOC-004 named the doc panel as the surface that would settle the deferred pick, 
 
 **The mocks agree.** `designs/documents.pen` DOC2 draws its simulated contract page in **Tinos** at 13px on a 1.6 line-height, with 700-weight section headings — a Times-metric serif. That is a drawing of what a PDF looks like, not a specification for type we render. The one place in the same file where OpenLaw really does set document text — DOC6's parsed email body — is drawn in **Inter**, the app face, and M12/4 builds it that way.
 
-**The deferral therefore moves rather than closing.** The surface that would settle it is DOC-003's in-app compare view over extracted text (M32): a formatted comparison of two versions is the one place OpenLaw sets long-form clause text itself, and it is where a serif would earn its licence, its subsetting, and its dark-mode legibility check. Tinos is where that decision should start from, because it is what the mocks already draw and it is Apache-2.0-licensed and Times-metric. This corrects the earlier OFL attribution.
+**The deferral therefore moves rather than closing.** The surface that would settle it is DOC-003's in-app compare view over extracted text (M32): a formatted comparison of two versions is the one place OpenLaw sets long-form clause text itself, and it is where a serif would earn its licence, its subsetting, and its dark-mode legibility check. Tinos is where that decision should start from, because it is what the mocks already draw and it is OFL-licensed and Times-metric.
 
 Nothing ships from this addendum: no second `@font-face`, no `--font-serif` token. A face nothing renders is weight in the bundle and a token nobody picks.
 
@@ -428,7 +428,9 @@ Nothing ships from this addendum: no second `@font-face`, no `--font-serif` toke
 
 The compare document is the first long-form legal text that OpenLaw sets. It uses **Tinos** behind `--font-serif`, at 13px on a 1.6 line height, with 400-weight body text and 700-weight headings. No other product text adopts the serif.
 
-Tinos is Apache-2.0. The self-hosted build carries only the Latin normal subsets at weights 400 and 700, in WOFF2 with WOFF fallback. The compare screen therefore needs no font network request and does not ship scripts or weights it does not use.
+The face ships as the `@fontsource/tinos` package, which states the SIL Open Font License 1.1 in both its licence text and its metadata. The M12/2 addendum's OFL attribution therefore stands. The original Croscore release of Tinos was Apache-2.0, which is where the Apache reading comes from, but the Google Fonts release the build takes is OFL-1.1, and OFL-1.1 is what OpenLaw redistributes. That sits beside AGPL-3.0-only without conflict, and the one thing OFL-1.1 forbids, selling the font on its own, is not something OpenLaw does. Inter arrives under the same licence, so the app carries one font licence rather than two.
+
+The build carries only the Latin normal subsets at weights 400 and 700, in WOFF2 with WOFF fallback. Every file is served from the app's own origin, so nothing is fetched from a font CDN (DD-001), and no script or weight the compare screen does not set is shipped.
 
 The Dark-theme check closes with the M32 built-stack journey. The same Comparison was read and axe-scanned in Light and Dark with no accessibility violations. The type remains at the same size, weight, and line height in both themes; theme tokens supply its foreground and the insertion, deletion, replacement, and current-paragraph treatments.
 
@@ -4372,7 +4374,7 @@ The compare screen has its own Document address, with the older and newer Versio
 
 **The ready screen is one change pane beside one compare card.** The 320px pane names Changes, shows the total in the count-badge pair, and holds previous and next controls. Each change is a button. It shows a 20px semantic glyph, the nearest clause reference, and an excerpt. Its accessible name states the reference and whether the change is inserted, deleted, or replaced. Pressing it scrolls its paragraph into view and marks that paragraph with the accent rule.
 
-The compare card names both operand filenames in its toolbar. Its canvas well holds one raised document page at the doc panel's reading width. Paragraphs use DES-006's Tinos setting. Insertions use the success foreground and an underline. Deletions use the danger foreground and a strikethrough. Replacements use the warning pair in the pane. Changed runs carry a hidden spoken label, so color never carries the meaning alone.
+The compare card names both operand filenames in its toolbar. Its canvas well holds one raised document page at its own 640px paper width, narrower than the 720px doc panel layer. Paragraphs use DES-006's Tinos setting. Insertions use the success foreground and an underline. Deletions use the danger foreground and a strikethrough. Replacements use the warning pair in the pane. Changed runs carry a hidden spoken label, so color never carries the meaning alone.
 
 **Three cards replace the ready layout when there is no document to draw.** Preparing is a status card and polls until the Comparison becomes terminal. Failed names the reason and offers both operand downloads. No changes states that both Versions contain the same text. A ready text-mode Comparison adds one line above the well that says it was built from extracted text and does not show formatting. It has no export action, and Member+ sees the reason in the sub-bar.
 
