@@ -56,12 +56,14 @@ describe("buildTextChangeModel", () => {
         index: 0,
         style: "body",
         label: "1.",
+        numberPrefix: null,
         runs: [{ text: "1. Same words here.", change: "unchanged" }],
       },
       {
         index: 1,
         style: "body",
         label: null,
+        numberPrefix: null,
         runs: [{ text: "Second clause.", change: "unchanged" }],
       },
     ]);
@@ -77,6 +79,7 @@ describe("buildTextChangeModel", () => {
       index: 1,
       style: "body",
       label: "2.",
+      numberPrefix: null,
       runs: [{ text: "2. Removed words.", change: "deleted" }],
     });
     expect(model.changes).toEqual([

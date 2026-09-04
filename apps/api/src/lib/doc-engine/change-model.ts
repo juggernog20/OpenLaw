@@ -32,7 +32,25 @@ export interface ChangeRun {
 export interface ChangeParagraph {
   index: number;
   style: "heading" | "body";
+  /**
+   * The clause this paragraph is under, for the change pane's reference.
+   *
+   * It comes from Word's numbering when the paragraph has some, and is
+   * otherwise read off the front of the text. Either way it names the
+   * clause; it does not say whether the text already prints it.
+   */
   label: string | null;
+  /**
+   * The number Word generates for this paragraph, which its text does
+   * not contain.
+   *
+   * Word holds an auto-numbered paragraph's number outside the runs, so
+   * a comparison that drew only the runs would lose the numbering of
+   * every auto-numbered contract. This carries it back. It is null when
+   * the number is already the first thing in the text, because drawing
+   * it then would print the clause number twice.
+   */
+  numberPrefix: string | null;
   runs: ChangeRun[];
 }
 
@@ -384,9 +402,15 @@ export function leadingClauseLabel(text: string): string | null {
   return match?.[1] ?? null;
 }
 
+/** Whether `text` already opens with `label`, ignoring leading space. */
+function startsWithLabel(text: string, label: string): boolean {
+  return text.trimStart().startsWith(label);
+}
+
 interface ParsedParagraph {
   style: "heading" | "body";
   label: string | null;
+  numberPrefix: string | null;
   runs: ChangeRun[];
 }
 
@@ -398,9 +422,15 @@ function parseParagraph(
   const styleId = value(child(child(paragraph, "pPr") ?? paragraph, "pStyle"));
   const runs = paragraphRuns(paragraph);
   const text = runs.map((run) => run.text).join("");
+  const generated = numberingLabel(paragraph, numbering);
   return {
     style: styleId && (headingName(styleId) || headings.has(styleId)) ? "heading" : "body",
-    label: numberingLabel(paragraph, numbering) ?? leadingClauseLabel(text),
+    label: generated ?? leadingClauseLabel(text),
+    // A generated number that the text already opens with is not drawn
+    // again. Word does not normally write one twice, but a document
+    // converted from another tool can carry both, and one number read
+    // twice is worse than a number the file itself already shows.
+    numberPrefix: generated && !startsWithLabel(text, generated) ? generated : null,
     runs,
   };
 }
@@ -418,7 +448,7 @@ function tableParagraphs(
       );
       const first = cellParagraphs[0];
       if (!first) {
-        answer.push({ style: "body", label: null, runs: [] });
+        answer.push({ style: "body", label: null, numberPrefix: null, runs: [] });
         continue;
       }
       const runs: ChangeRun[] = [];
@@ -426,7 +456,15 @@ function tableParagraphs(
         if (index > 0) appendRun(runs, "\n", "unchanged");
         for (const run of paragraph.runs) appendRun(runs, run.text, run.change);
       });
-      answer.push({ style: first.style, label: first.label, runs });
+      // A cell's paragraphs are flattened into one, so the cell keeps
+      // the first paragraph's numbering rather than repeating it per
+      // line.
+      answer.push({
+        style: first.style,
+        label: first.label,
+        numberPrefix: first.numberPrefix,
+        runs,
+      });
       for (const nested of blocks(cell, ["tbl"])) {
         answer.push(...tableParagraphs(nested, headings, numbering));
       }

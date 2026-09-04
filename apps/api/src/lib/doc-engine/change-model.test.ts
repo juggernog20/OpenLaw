@@ -52,18 +52,21 @@ describe("parseTrackedChangesDocx", () => {
           index: 0,
           style: "heading",
           label: null,
+          numberPrefix: null,
           runs: [{ text: "Agreement terms", change: "unchanged" }],
         },
         {
           index: 1,
           style: "body",
           label: "1.",
+          numberPrefix: "1.",
           runs: [{ text: "Definitions apply.", change: "unchanged" }],
         },
         {
           index: 2,
           style: "body",
           label: "2.4",
+          numberPrefix: null,
           runs: [
             { text: "2.4 Liability cap is ", change: "unchanged" },
             { text: "ten million", change: "deleted" },
@@ -74,6 +77,7 @@ describe("parseTrackedChangesDocx", () => {
           index: 3,
           style: "body",
           label: null,
+          numberPrefix: null,
           runs: [
             { text: "The term includes ", change: "unchanged" },
             { text: "two extensions", change: "inserted" },
@@ -84,6 +88,7 @@ describe("parseTrackedChangesDocx", () => {
           index: 4,
           style: "body",
           label: null,
+          numberPrefix: null,
           runs: [
             { text: "Notice is ", change: "unchanged" },
             { text: "thirty days", change: "deleted" },
@@ -95,24 +100,28 @@ describe("parseTrackedChangesDocx", () => {
           index: 5,
           style: "body",
           label: null,
+          numberPrefix: null,
           runs: [{ text: "Table unchanged", change: "unchanged" }],
         },
         {
           index: 6,
           style: "body",
           label: null,
+          numberPrefix: null,
           runs: [{ text: "Added cell text", change: "inserted" }],
         },
         {
           index: 7,
           style: "body",
           label: null,
+          numberPrefix: null,
           runs: [{ text: "Outer table cell", change: "unchanged" }],
         },
         {
           index: 8,
           style: "body",
           label: null,
+          numberPrefix: null,
           runs: [{ text: "Nested removed text", change: "deleted" }],
         },
       ],
@@ -163,6 +172,7 @@ describe("parseTrackedChangesDocx", () => {
           index: 0,
           style: "body",
           label: null,
+          numberPrefix: null,
           runs: [{ text: "No tracked changes here.", change: "unchanged" }],
         },
       ],
@@ -199,6 +209,22 @@ describe("parseTrackedChangesDocx", () => {
     expect(
       parseTrackedChangesDocx(zipEntry("word/document.xml", substitution("ins", "del"))).changes,
     ).toEqual([expect.objectContaining({ kind: "replaced", excerpt: "sixty days → thirty days" })]);
+  });
+
+  it("gives a paragraph a number prefix only when its text does not already carry one", () => {
+    // Word holds an auto-numbered paragraph's number outside the runs,
+    // so the model carries it back for the screen to draw. A number the
+    // author typed at the front of the text is already in the runs, and
+    // carrying it again would print the clause number twice.
+    const model = parseTrackedChangesDocx(fixture("change-model.docx"));
+    const numbered = model.paragraphs.find((paragraph) => paragraph.label === "1.");
+    const typed = model.paragraphs.find((paragraph) => paragraph.label === "2.4");
+
+    expect(numbered?.runs.map((run) => run.text).join("")).toBe("Definitions apply.");
+    expect(numbered?.numberPrefix).toBe("1.");
+
+    expect(typed?.runs.map((run) => run.text).join("")).toMatch(/^2\.4 /u);
+    expect(typed?.numberPrefix).toBeNull();
   });
 
   it("reads a tab stop as a property, not as a tab character", () => {

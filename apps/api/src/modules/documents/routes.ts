@@ -412,6 +412,10 @@ const ChangeModelSchema = z.object({
       index: z.int().nonnegative(),
       style: z.enum(["heading", "body"]),
       label: z.string().nullable(),
+      // Defaulted, not required: a Comparison stored before this field
+      // existed is still read rather than refused, and it answers the
+      // reading that cannot print a clause number twice.
+      numberPrefix: z.string().nullable().default(null),
       runs: z.array(
         z.object({
           text: z.string(),

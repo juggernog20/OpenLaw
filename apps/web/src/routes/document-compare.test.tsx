@@ -59,6 +59,7 @@ const model = {
       index: 0,
       style: "heading" as const,
       label: "1.",
+      numberPrefix: "1.",
       runs: [
         { text: "Services", change: "unchanged" as const },
         { text: " and support", change: "inserted" as const },
@@ -68,6 +69,7 @@ const model = {
       index: 1,
       style: "body" as const,
       label: null,
+      numberPrefix: null,
       runs: [
         { text: "Thirty days", change: "deleted" as const },
         { text: "Sixty days", change: "inserted" as const },
@@ -283,6 +285,54 @@ describe("the Document comparison screen", () => {
       { timeout: 3_000 },
     );
     expect(reads).toBe(1);
+  });
+
+  it("draws a paragraph's number only when the model supplies one", async () => {
+    const api = comparisonApi(
+      comparison({
+        changeModel: {
+          paragraphs: [
+            // Word numbering: the number is not in the runs, so the
+            // screen draws it.
+            {
+              index: 0,
+              style: "body" as const,
+              label: "1.",
+              numberPrefix: "1.",
+              runs: [{ text: "Definitions apply.", change: "unchanged" as const }],
+            },
+            // Typed by the author: the number is already the first
+            // thing in the text and must not be printed twice.
+            {
+              index: 1,
+              style: "body" as const,
+              label: "2.4",
+              numberPrefix: null,
+              runs: [{ text: "2.4 Liability cap applies.", change: "unchanged" as const }],
+            },
+          ],
+          changes: [
+            {
+              id: "change-1",
+              paragraphIndex: 1,
+              kind: "inserted" as const,
+              ref: "2.4",
+              excerpt: "Liability cap applies.",
+            },
+          ],
+        },
+        changeCount: 1,
+      }),
+    );
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/documents/doc-1/compare?from=v2&to=v4");
+
+    const paragraph = (index: number) =>
+      document.querySelector(`[data-paragraph-index="${index}"]`)?.textContent;
+    await waitFor(() => expect(paragraph(0)).toBeDefined());
+
+    expect(paragraph(0)).toBe("1.Definitions apply.");
+    expect(paragraph(1)).toBe("2.4 Liability cap applies.");
   });
 
   it("labels a text-mode comparison", async () => {
