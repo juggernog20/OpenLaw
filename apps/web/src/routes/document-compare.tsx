@@ -158,7 +158,15 @@ function CompareSubbar({
     const answer = await exportDocumentComparison(comparison.documentId, comparison.id);
     setExporting(false);
     if (answer.ok) setExportedVersionId(answer.version.id);
-    else setExportFailure(answer.detail ?? "The redline could not be exported.");
+    else {
+      setExportFailure(
+        answer.detail ??
+          intl.formatMessage({
+            id: "documentCompare.exportFailed",
+            defaultMessage: "The redline could not be exported.",
+          }),
+      );
+    }
   };
   return (
     <section

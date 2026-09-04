@@ -95,7 +95,7 @@ interface ComparisonRow {
   } | null;
   changeCount: number | null;
   failure: string | null;
-  exportedVersionId: null;
+  exportedVersionId: string | null;
   document: {
     id: string;
     title: string;
@@ -123,7 +123,11 @@ interface DocumentEnvelope {
 }
 
 interface ProblemEnvelope {
+  type: string;
+  title: string;
+  status: number;
   detail: string;
+  instance: string;
 }
 
 let harness: TestHarness;
@@ -308,6 +312,24 @@ function exportComparison(
     method: "POST",
     url: `/api/v1/documents/${documentId}/comparisons/${comparisonId}/export`,
     cookies,
+  });
+}
+
+function expectExportProblem(
+  response: Awaited<ReturnType<typeof exportComparison>>,
+  status: number,
+  detail: string,
+  documentId: string,
+  comparisonId: string,
+) {
+  expect(response.statusCode, response.body).toBe(status);
+  expect(response.headers["content-type"]).toContain("application/problem+json");
+  expect(response.json<ProblemEnvelope>()).toEqual({
+    type: "about:blank",
+    title: detail,
+    status,
+    detail,
+    instance: `/api/v1/documents/${documentId}/comparisons/${comparisonId}/export`,
   });
 }
 
@@ -650,7 +672,13 @@ describe("a Word comparison", () => {
     );
 
     const contributor = await exportComparison(contributorCookies, word.document.id, ready.id);
-    expect(contributor.statusCode, contributor.body).toBe(403);
+    expectExportProblem(
+      contributor,
+      403,
+      "You do not have permission to perform this action.",
+      word.document.id,
+      ready.id,
+    );
 
     const archived = await harness.app.inject({
       method: "POST",
@@ -659,7 +687,13 @@ describe("a Word comparison", () => {
     });
     expect(archived.statusCode, archived.body).toBe(200);
     const frozen = await exportComparison(memberCookies, word.document.id, ready.id);
-    expect(frozen.statusCode, frozen.body).toBe(409);
+    expectExportProblem(
+      frozen,
+      409,
+      "This document is archived. Restore it before changing it.",
+      word.document.id,
+      ready.id,
+    );
 
     const pending = await twoRounds("Comparison · pending export");
     const pendingId = "0198f2ab-0000-7000-8000-00000000e001";
@@ -673,7 +707,13 @@ describe("a Word comparison", () => {
       requestedBy: idOf(MEMBER),
     });
     const early = await exportComparison(memberCookies, pending.document.id, pendingId);
-    expect(early.statusCode, early.body).toBe(409);
+    expectExportProblem(
+      early,
+      409,
+      "Wait for the comparison to finish before exporting it.",
+      pending.document.id,
+      pendingId,
+    );
 
     const text = await twoRounds(
       "Comparison · text export",
@@ -694,7 +734,7 @@ describe("a Word comparison", () => {
       finishedAt: new Date(),
     });
     const degraded = await exportComparison(memberCookies, text.document.id, textId);
-    expect(degraded.statusCode, degraded.body).toBe(409);
+    expectExportProblem(degraded, 409, "Export needs two Word files.", text.document.id, textId);
   });
 });
 

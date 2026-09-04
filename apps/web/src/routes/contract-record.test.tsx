@@ -45,6 +45,7 @@ import {
 } from "../testing/helpers";
 import type { CustomFieldValue, CustomFieldValues } from "../lib/custom-fields";
 import type { Comment } from "../lib/comments";
+import type { DocumentVersion } from "../lib/documents";
 
 const PDF_PAGE_TEXT = vi.hoisted(() => [
   ["The first termination right is on this page."],
@@ -5923,7 +5924,7 @@ describe("the contract record's confidentiality surfaces (M10/4)", () => {
  */
 describe("the contract record's Documents section (M11/2, M11/3, M11/4, M11/5)", () => {
   /** One version of a chain, as the API answers it. */
-  const version = (over: Record<string, unknown> = {}) => ({
+  const version = (over: Partial<DocumentVersion> = {}): DocumentVersion => ({
     id: "ver-1",
     versionNumber: 1,
     kind: "draft_ours",
@@ -7308,10 +7309,13 @@ describe("the paged Documents section (CTR-024, DES-031)", () => {
  * drawing them.
  */
 describe("the doc panel (M12/2)", () => {
-  const version = (over: Record<string, unknown> = {}) => ({
+  const version = (over: Partial<DocumentVersion> = {}): DocumentVersion => ({
     id: "pv-1",
     versionNumber: 1,
     kind: "draft_ours",
+    source: "uploaded",
+    comparedFromVersionNumber: null,
+    comparedToVersionNumber: null,
     note: null,
     originalFilename: "msa-signed.pdf",
     mimeType: "application/pdf",
@@ -8531,10 +8535,13 @@ describe("the folder tree on the contract record (M13/2, DES-033)", () => {
  * of.
  */
 describe("filing documents into folders (M13/3, DES-033)", () => {
-  const version = (over: Record<string, unknown> = {}) => ({
+  const version = (over: Partial<DocumentVersion> = {}): DocumentVersion => ({
     id: "ver-1",
     versionNumber: 1,
     kind: "draft_ours",
+    source: "uploaded",
+    comparedFromVersionNumber: null,
+    comparedToVersionNumber: null,
     note: null,
     originalFilename: "signed.pdf",
     mimeType: "text/plain",
@@ -9264,10 +9271,13 @@ describe("filing documents into folders (M13/3, DES-033)", () => {
 });
 
 describe("the multi-file batch on the contract record (M13/4, DOC-011, DES-033)", () => {
-  const version = (over: Record<string, unknown> = {}) => ({
+  const version = (over: Partial<DocumentVersion> = {}): DocumentVersion => ({
     id: "ver-1",
     versionNumber: 1,
     kind: "draft_ours",
+    source: "uploaded",
+    comparedFromVersionNumber: null,
+    comparedToVersionNumber: null,
     note: null,
     originalFilename: "signed.pdf",
     mimeType: "text/plain",
@@ -9929,10 +9939,13 @@ describe("the multi-file batch on the contract record (M13/4, DOC-011, DES-033)"
  * upload would recreate.
  */
 describe("dropping a folder tree on the contract record (M13/5, DOC-011, DES-033)", () => {
-  const version = (over: Record<string, unknown> = {}) => ({
+  const version = (over: Partial<DocumentVersion> = {}): DocumentVersion => ({
     id: "ver-1",
     versionNumber: 1,
     kind: "draft_ours",
+    source: "uploaded",
+    comparedFromVersionNumber: null,
+    comparedToVersionNumber: null,
     note: null,
     originalFilename: "signed.pdf",
     mimeType: "text/plain",

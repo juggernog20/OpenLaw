@@ -313,6 +313,36 @@ describe("the Document comparison screen", () => {
     );
   });
 
+  it("shows an export refusal and lets the Member try again", async () => {
+    let attempts = 0;
+    stubApi({
+      signedIn: MEMBER,
+      extra(call) {
+        if (call.url.pathname === "/api/v1/documents/doc-1/comparisons" && call.method === "POST") {
+          return json(200, { comparison: comparison() });
+        }
+        if (
+          call.url.pathname === "/api/v1/documents/doc-1/comparisons/cmp-1/export" &&
+          call.method === "POST"
+        ) {
+          attempts += 1;
+          return problem(503, "The redline service is temporarily unavailable.");
+        }
+        return undefined;
+      },
+    });
+    renderAt("/documents/doc-1/compare?from=v2&to=v4");
+
+    const exportButton = await screen.findByRole("button", { name: "Export track changes" });
+    await userEvent.click(exportButton);
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "The redline service is temporarily unavailable.",
+    );
+    expect(exportButton).toBeEnabled();
+    await userEvent.click(exportButton);
+    expect(attempts).toBe(2);
+  });
+
   it("shows Open redline for an existing export", async () => {
     const api = comparisonApi(comparison({ exportedVersionId: "v3" }));
     stubApi({ signedIn: MEMBER, extra: api.handler });

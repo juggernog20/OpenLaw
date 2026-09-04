@@ -2865,7 +2865,7 @@ export interface paths {
     };
     get?: never;
     put?: never;
-    /** Append a ready Word Comparison's tracked-changes file to its Document chain. The generated Version records both operands, owes the ordinary Word derivations, and raises the ordinary version-added notification with its own Activity feed narration. The same pair returns its existing generated Version without appending another */
+    /** Allow an Administrator or Legal Team Member to append a ready Word Comparison's tracked-changes file to its Document chain; a Contributor is refused with 403. The generated Version records both operands, owes the ordinary Word derivations, and raises the ordinary version-added notification with its own Activity feed narration. The same pair returns its existing generated Version without appending another */
     post: operations["exportDocumentComparison"];
     delete?: never;
     options?: never;

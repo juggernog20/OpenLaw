@@ -2300,6 +2300,9 @@
   "documentCompare.downloadOperand": {
     "defaultMessage": "Download {filename}"
   },
+  "documentCompare.exportFailed": {
+    "defaultMessage": "The redline could not be exported."
+  },
   "documentCompare.exportNeedsWord": {
     "defaultMessage": "Export needs two Word files."
   },
