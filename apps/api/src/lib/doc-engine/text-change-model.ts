@@ -16,11 +16,20 @@ import {
   type ChangeRun,
 } from "./change-model.js";
 
+/**
+ * A blank line, or a form feed. `pdftotext` and the OCR sidecar text put
+ * a form feed between pages with no blank line before it, so without the
+ * second alternative the last paragraph of one page and the first of the
+ * next would read as one, and a pair that paginates differently (a Word
+ * rendition against a PDF) would misalign around every page break.
+ */
+const PARAGRAPH_BREAK = /\f|\r?\n[\t ]*\r?\n(?:[\t ]*\r?\n)*/u;
+
 function paragraphsOf(text: string): string[] {
   const trimmed = text.trim();
   if (!trimmed) return [];
   return trimmed
-    .split(/\r?\n[\t ]*\r?\n(?:[\t ]*\r?\n)*/u)
+    .split(PARAGRAPH_BREAK)
     .map((paragraph) => paragraph.replaceAll(/\s+/gu, " ").trim())
     .filter(Boolean);
 }

@@ -89,4 +89,17 @@ describe("buildTextChangeModel", () => {
       },
     ]);
   });
+
+  it("reads a form feed page break as a paragraph boundary", () => {
+    const model = buildTextChangeModel(
+      "Last clause of page one.\n\fFirst clause of page two.\n\f",
+      "Last clause of page one.\n\nFirst clause of page two.",
+    );
+
+    expect(model.changes).toEqual([]);
+    expect(model.paragraphs.map(({ runs }) => runs[0]?.text)).toEqual([
+      "Last clause of page one.",
+      "First clause of page two.",
+    ]);
+  });
 });

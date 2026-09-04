@@ -21,10 +21,10 @@ import {
   eq,
 } from "@openlaw/db";
 import { uuidv7 } from "uuidv7";
-import { parseTrackedChangesDocx } from "../lib/doc-engine/change-model.js";
+import { parseTrackedChangesDocx, type ChangeModel } from "../lib/doc-engine/change-model.js";
 import { isComparableFormat, UnsupportedFormatError } from "../lib/doc-engine/engine.js";
-import { conversionFormatOf } from "../lib/render-family.js";
 import { buildTextChangeModel } from "../lib/doc-engine/text-change-model.js";
+import { conversionFormatOf } from "../lib/render-family.js";
 import { isTerminalFailure, reasonOf, type DerivationDeps } from "./derivations.js";
 import { extractsText } from "./text-extraction.js";
 
@@ -77,7 +77,7 @@ async function failComparison(
 async function finishComparison(
   deps: DerivationDeps,
   comparisonId: string,
-  model: ReturnType<typeof buildTextChangeModel>,
+  model: ChangeModel,
   redlineFileRef: string | null,
 ): Promise<boolean> {
   const updated = await deps.db
@@ -137,22 +137,23 @@ export async function compareDocumentVersions(
 
   if (!comparison || comparison.state !== "pending") return;
   if (comparison.mode === "text") {
-    const operands = [
-      {
-        number: comparison.fromVersionNumber,
-        mimeType: comparison.fromMimeType,
-        filename: comparison.fromFilename,
-        state: comparison.fromTextState,
-        text: comparison.fromText,
-      },
-      {
-        number: comparison.toVersionNumber,
-        mimeType: comparison.toMimeType,
-        filename: comparison.toFilename,
-        state: comparison.toTextState,
-        text: comparison.toText,
-      },
-    ];
+    const older = {
+      number: comparison.fromVersionNumber,
+      mimeType: comparison.fromMimeType,
+      filename: comparison.fromFilename,
+      state: comparison.fromTextState,
+      text: comparison.fromText,
+    };
+    const newer = {
+      number: comparison.toVersionNumber,
+      mimeType: comparison.toMimeType,
+      filename: comparison.toFilename,
+      state: comparison.toTextState,
+      text: comparison.toText,
+    };
+    const operands = [older, newer];
+    // Terminal facts about either operand settle the row before a pending
+    // one sends the attempt back to the queue.
     for (const operand of operands) {
       if (operand.state === "failed") {
         await failComparison(
@@ -173,16 +174,10 @@ export async function compareDocumentVersions(
     }
     const pending = operands.find((operand) => operand.state !== "ready");
     if (pending) throw new Error(`Version ${pending.number} extracted text is still pending.`);
-    const [older, newer] = operands;
-    if (older?.text === null || newer?.text === null) {
+    if (older.text === null || newer.text === null) {
       throw new Error("A ready text derivation has no extracted text.");
     }
-    await finishComparison(
-      deps,
-      comparisonId,
-      buildTextChangeModel(older!.text!, newer!.text!),
-      null,
-    );
+    await finishComparison(deps, comparisonId, buildTextChangeModel(older.text, newer.text), null);
     return;
   }
 
