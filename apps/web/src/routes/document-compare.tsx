@@ -18,15 +18,17 @@ import {
   DOCUMENT_DERIVATION_POLL_MS,
   documentComparisonPath,
   documentDownloadHref,
+  exportDocumentComparison,
   readDocumentComparison,
   requestDocumentComparison,
   type DocumentComparison,
 } from "../lib/documents";
-import { canReadContracts } from "../lib/roles";
+import { canReadContracts, isMemberPlus, type Role } from "../lib/roles";
 import { requireUser, useSignOut } from "../lib/session";
 import { cn } from "../lib/utils";
 import { PageTitle } from "../components/page-title";
 import { AppShell } from "../components/shell/app-shell";
+import { Button } from "../components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "../components/ui/popover";
 
 const MAX_UNANSWERED_POLLS = 3;
@@ -109,7 +111,9 @@ function DocumentCompareScreen() {
       user={loaded.user}
       onSignOut={() => void signOut()}
       flush
-      subbar={<CompareSubbar comparison={comparison} closeHref={closeHref} />}
+      subbar={
+        <CompareSubbar comparison={comparison} closeHref={closeHref} userRole={loaded.user.role} />
+      }
     >
       <PageTitle
         title={intl.formatMessage(
@@ -141,8 +145,21 @@ function ownerDocumentsPath(comparison: DocumentComparison): string {
 function CompareSubbar({
   comparison,
   closeHref,
-}: Readonly<{ comparison: DocumentComparison; closeHref: string }>) {
+  userRole,
+}: Readonly<{ comparison: DocumentComparison; closeHref: string; userRole: Role }>) {
   const intl = useIntl();
+  const [exportedVersionId, setExportedVersionId] = useState(comparison.exportedVersionId);
+  const [exporting, setExporting] = useState(false);
+  const [exportFailure, setExportFailure] = useState<string | null>(null);
+  const exportRedline = async () => {
+    if (exporting) return;
+    setExporting(true);
+    setExportFailure(null);
+    const answer = await exportDocumentComparison(comparison.documentId, comparison.id);
+    setExporting(false);
+    if (answer.ok) setExportedVersionId(answer.version.id);
+    else setExportFailure(answer.detail ?? "The redline could not be exported.");
+  };
   return (
     <section
       aria-label={intl.formatMessage(
@@ -173,7 +190,37 @@ function CompareSubbar({
         </ol>
       </nav>
       <VersionPairControl comparison={comparison} />
-      <div className="flex justify-end">
+      <div className="flex items-center justify-end gap-3">
+        {comparison.document.archivedAt === null && comparison.mode === "text" ? (
+          <p className="text-sm text-muted">
+            <FormattedMessage
+              id="documentCompare.exportNeedsWord"
+              defaultMessage="Export needs two Word files."
+            />
+          </p>
+        ) : comparison.document.archivedAt === null &&
+          comparison.state === "ready" &&
+          isMemberPlus(userRole) ? (
+          exportedVersionId ? (
+            <Button asChild>
+              <Link to={ownerDocumentVersionPath(comparison, exportedVersionId)}>
+                <FormattedMessage id="documentCompare.openRedline" defaultMessage="Open redline" />
+              </Link>
+            </Button>
+          ) : (
+            <Button type="button" disabled={exporting} onClick={() => void exportRedline()}>
+              <FormattedMessage
+                id="documentCompare.exportTrackChanges"
+                defaultMessage="Export track changes"
+              />
+            </Button>
+          )
+        ) : null}
+        {exportFailure && (
+          <span role="alert" className="max-w-64 text-sm text-status-danger-fg">
+            {exportFailure}
+          </span>
+        )}
         <Link
           to={closeHref}
           aria-label={intl.formatMessage({
@@ -187,6 +234,11 @@ function CompareSubbar({
       </div>
     </section>
   );
+}
+
+function ownerDocumentVersionPath(comparison: DocumentComparison, versionId: string): string {
+  const query = new URLSearchParams({ doc: comparison.documentId, version: versionId });
+  return `${ownerDocumentsPath(comparison)}?${query.toString()}`;
 }
 
 function VersionPairControl({ comparison }: Readonly<{ comparison: DocumentComparison }>) {

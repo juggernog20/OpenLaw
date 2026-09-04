@@ -1881,6 +1881,7 @@ function DocumentRows({
                         </span>
                       )}
                     </span>
+                    <GeneratedRedlineProvenance version={chain.current} />
                     {/* Two muted lines at most, and each says
                         which one it is to a reader who cannot see
                         the difference — the DES-021 sr-only
@@ -1991,6 +1992,7 @@ function DocumentRows({
                           onRead={rows.onRead}
                           className="min-w-0 truncate text-base"
                         />
+                        <GeneratedRedlineProvenance version={version} />
                         {version.note && (
                           <span className="text-sm text-muted">
                             <span className="sr-only">
@@ -3411,6 +3413,28 @@ function VersionCell({ version, intl }: Readonly<{ version: DocumentVersion; int
         )}
       </span>
     </td>
+  );
+}
+
+function GeneratedRedlineProvenance({ version }: Readonly<{ version: DocumentVersion }>) {
+  if (
+    version.kind !== "generated_redline" ||
+    version.comparedFromVersionNumber === null ||
+    version.comparedToVersionNumber === null
+  ) {
+    return null;
+  }
+  return (
+    <span className="text-sm text-muted">
+      <FormattedMessage
+        id="documents.generatedRedlineProvenance"
+        defaultMessage="Compares v{from} and v{to}"
+        values={{
+          from: version.comparedFromVersionNumber,
+          to: version.comparedToVersionNumber,
+        }}
+      />
+    </span>
   );
 }
 

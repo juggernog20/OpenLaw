@@ -221,6 +221,9 @@
   "activity.document.primarySet": {
     "defaultMessage": "{actor} made {title} the primary document"
   },
+  "activity.document.redlineGenerated": {
+    "defaultMessage": "{actor} generated version {version} of {title} from versions {fromVersion} and {toVersion}"
+  },
   "activity.document.restored": {
     "defaultMessage": "{actor} restored {title}"
   },
@@ -2297,6 +2300,12 @@
   "documentCompare.downloadOperand": {
     "defaultMessage": "Download {filename}"
   },
+  "documentCompare.exportNeedsWord": {
+    "defaultMessage": "Export needs two Word files."
+  },
+  "documentCompare.exportTrackChanges": {
+    "defaultMessage": "Export track changes"
+  },
   "documentCompare.failed.body": {
     "defaultMessage": "These versions could not be compared."
   },
@@ -2323,6 +2332,9 @@
   },
   "documentCompare.older": {
     "defaultMessage": "Older"
+  },
+  "documentCompare.openRedline": {
+    "defaultMessage": "Open redline"
   },
   "documentCompare.pageTitle": {
     "defaultMessage": "Compare · {title}"
@@ -2782,6 +2794,9 @@
   },
   "documents.format.word": {
     "defaultMessage": "Word"
+  },
+  "documents.generatedRedlineProvenance": {
+    "defaultMessage": "Compares v{from} and v{to}"
   },
   "documents.kind": {
     "defaultMessage": "{kind, select, draft_ours {Draft · ours} draft_theirs {Draft · theirs} redline_theirs {Redline · theirs} redline_ours {Redline · ours} executed {Executed} amendment {Amendment} generated_redline {Generated redline} other {Unknown}}"

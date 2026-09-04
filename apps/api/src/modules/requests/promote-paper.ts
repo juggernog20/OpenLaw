@@ -262,6 +262,9 @@ async function promotePaper(
       versionNumber: 1,
       fileRef: copied.fileRef,
       kind: "draft_ours",
+      source: "uploaded",
+      comparedFromVersionId: null,
+      comparedToVersionId: null,
       // A version note is what somebody wrote about a round. Nobody
       // wrote one here, and inventing a sentence about the conversion
       // would put words on the chain that no person chose.

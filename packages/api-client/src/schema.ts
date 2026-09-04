@@ -2856,6 +2856,23 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/v1/documents/{documentId}/comparisons/{comparisonId}/export": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Append a ready Word Comparison's tracked-changes file to its Document chain. The generated Version records both operands, owes the ordinary Word derivations, and raises the ordinary version-added notification with its own Activity feed narration. The same pair returns its existing generated Version without appending another */
+    post: operations["exportDocumentComparison"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/v1/documents/{documentId}/primary": {
     parameters: {
       query?: never;
@@ -17221,6 +17238,10 @@ export interface operations {
                   | "executed"
                   | "amendment"
                   | "generated_redline";
+                /** @enum {string} */
+                source: "uploaded" | "generated";
+                comparedFromVersionNumber: number | null;
+                comparedToVersionNumber: number | null;
                 note: string | null;
                 originalFilename: string;
                 mimeType: string;
@@ -17326,6 +17347,10 @@ export interface operations {
                   | "executed"
                   | "amendment"
                   | "generated_redline";
+                /** @enum {string} */
+                source: "uploaded" | "generated";
+                comparedFromVersionNumber: number | null;
+                comparedToVersionNumber: number | null;
                 note: string | null;
                 originalFilename: string;
                 mimeType: string;
@@ -17411,6 +17436,10 @@ export interface operations {
                   | "executed"
                   | "amendment"
                   | "generated_redline";
+                /** @enum {string} */
+                source: "uploaded" | "generated";
+                comparedFromVersionNumber: number | null;
+                comparedToVersionNumber: number | null;
                 note: string | null;
                 originalFilename: string;
                 mimeType: string;
@@ -17520,6 +17549,10 @@ export interface operations {
                   | "executed"
                   | "amendment"
                   | "generated_redline";
+                /** @enum {string} */
+                source: "uploaded" | "generated";
+                comparedFromVersionNumber: number | null;
+                comparedToVersionNumber: number | null;
                 note: string | null;
                 originalFilename: string;
                 mimeType: string;
@@ -17605,6 +17638,10 @@ export interface operations {
                   | "executed"
                   | "amendment"
                   | "generated_redline";
+                /** @enum {string} */
+                source: "uploaded" | "generated";
+                comparedFromVersionNumber: number | null;
+                comparedToVersionNumber: number | null;
                 note: string | null;
                 originalFilename: string;
                 mimeType: string;
@@ -17714,6 +17751,10 @@ export interface operations {
                   | "executed"
                   | "amendment"
                   | "generated_redline";
+                /** @enum {string} */
+                source: "uploaded" | "generated";
+                comparedFromVersionNumber: number | null;
+                comparedToVersionNumber: number | null;
                 note: string | null;
                 originalFilename: string;
                 mimeType: string;
@@ -17799,6 +17840,10 @@ export interface operations {
                   | "executed"
                   | "amendment"
                   | "generated_redline";
+                /** @enum {string} */
+                source: "uploaded" | "generated";
+                comparedFromVersionNumber: number | null;
+                comparedToVersionNumber: number | null;
                 note: string | null;
                 originalFilename: string;
                 mimeType: string;
@@ -17908,6 +17953,10 @@ export interface operations {
                   | "executed"
                   | "amendment"
                   | "generated_redline";
+                /** @enum {string} */
+                source: "uploaded" | "generated";
+                comparedFromVersionNumber: number | null;
+                comparedToVersionNumber: number | null;
                 note: string | null;
                 originalFilename: string;
                 mimeType: string;
@@ -18012,6 +18061,10 @@ export interface operations {
                   | "executed"
                   | "amendment"
                   | "generated_redline";
+                /** @enum {string} */
+                source: "uploaded" | "generated";
+                comparedFromVersionNumber: number | null;
+                comparedToVersionNumber: number | null;
                 note: string | null;
                 originalFilename: string;
                 mimeType: string;
@@ -18107,6 +18160,10 @@ export interface operations {
                   | "executed"
                   | "amendment"
                   | "generated_redline";
+                /** @enum {string} */
+                source: "uploaded" | "generated";
+                comparedFromVersionNumber: number | null;
+                comparedToVersionNumber: number | null;
                 note: string | null;
                 originalFilename: string;
                 mimeType: string;
@@ -18194,6 +18251,10 @@ export interface operations {
                   | "executed"
                   | "amendment"
                   | "generated_redline";
+                /** @enum {string} */
+                source: "uploaded" | "generated";
+                comparedFromVersionNumber: number | null;
+                comparedToVersionNumber: number | null;
                 note: string | null;
                 originalFilename: string;
                 mimeType: string;
@@ -18285,6 +18346,10 @@ export interface operations {
                   | "executed"
                   | "amendment"
                   | "generated_redline";
+                /** @enum {string} */
+                source: "uploaded" | "generated";
+                comparedFromVersionNumber: number | null;
+                comparedToVersionNumber: number | null;
                 note: string | null;
                 originalFilename: string;
                 mimeType: string;
@@ -18371,6 +18436,10 @@ export interface operations {
                   | "executed"
                   | "amendment"
                   | "generated_redline";
+                /** @enum {string} */
+                source: "uploaded" | "generated";
+                comparedFromVersionNumber: number | null;
+                comparedToVersionNumber: number | null;
                 note: string | null;
                 originalFilename: string;
                 mimeType: string;
@@ -18401,6 +18470,10 @@ export interface operations {
                   | "executed"
                   | "amendment"
                   | "generated_redline";
+                /** @enum {string} */
+                source: "uploaded" | "generated";
+                comparedFromVersionNumber: number | null;
+                comparedToVersionNumber: number | null;
                 note: string | null;
                 originalFilename: string;
                 mimeType: string;
@@ -18442,7 +18515,7 @@ export interface operations {
               } | null;
               changeCount: number | null;
               failure: string | null;
-              exportedVersionId: null;
+              exportedVersionId: string | null;
               document: {
                 id: string;
                 title: string;
@@ -18465,6 +18538,10 @@ export interface operations {
                     | "executed"
                     | "amendment"
                     | "generated_redline";
+                  /** @enum {string} */
+                  source: "uploaded" | "generated";
+                  comparedFromVersionNumber: number | null;
+                  comparedToVersionNumber: number | null;
                   note: string | null;
                   originalFilename: string;
                   mimeType: string;
@@ -18483,6 +18560,7 @@ export interface operations {
                   isCurrent: boolean;
                   isExecuted: boolean;
                 }[];
+                archivedAt: string | null;
               };
               /** Format: date-time */
               createdAt: string;
@@ -18546,6 +18624,10 @@ export interface operations {
                   | "executed"
                   | "amendment"
                   | "generated_redline";
+                /** @enum {string} */
+                source: "uploaded" | "generated";
+                comparedFromVersionNumber: number | null;
+                comparedToVersionNumber: number | null;
                 note: string | null;
                 originalFilename: string;
                 mimeType: string;
@@ -18576,6 +18658,10 @@ export interface operations {
                   | "executed"
                   | "amendment"
                   | "generated_redline";
+                /** @enum {string} */
+                source: "uploaded" | "generated";
+                comparedFromVersionNumber: number | null;
+                comparedToVersionNumber: number | null;
                 note: string | null;
                 originalFilename: string;
                 mimeType: string;
@@ -18617,7 +18703,7 @@ export interface operations {
               } | null;
               changeCount: number | null;
               failure: string | null;
-              exportedVersionId: null;
+              exportedVersionId: string | null;
               document: {
                 id: string;
                 title: string;
@@ -18640,6 +18726,10 @@ export interface operations {
                     | "executed"
                     | "amendment"
                     | "generated_redline";
+                  /** @enum {string} */
+                  source: "uploaded" | "generated";
+                  comparedFromVersionNumber: number | null;
+                  comparedToVersionNumber: number | null;
                   note: string | null;
                   originalFilename: string;
                   mimeType: string;
@@ -18658,6 +18748,7 @@ export interface operations {
                   isCurrent: boolean;
                   isExecuted: boolean;
                 }[];
+                archivedAt: string | null;
               };
               /** Format: date-time */
               createdAt: string;
@@ -18692,6 +18783,10 @@ export interface operations {
                   | "executed"
                   | "amendment"
                   | "generated_redline";
+                /** @enum {string} */
+                source: "uploaded" | "generated";
+                comparedFromVersionNumber: number | null;
+                comparedToVersionNumber: number | null;
                 note: string | null;
                 originalFilename: string;
                 mimeType: string;
@@ -18722,6 +18817,10 @@ export interface operations {
                   | "executed"
                   | "amendment"
                   | "generated_redline";
+                /** @enum {string} */
+                source: "uploaded" | "generated";
+                comparedFromVersionNumber: number | null;
+                comparedToVersionNumber: number | null;
                 note: string | null;
                 originalFilename: string;
                 mimeType: string;
@@ -18763,7 +18862,7 @@ export interface operations {
               } | null;
               changeCount: number | null;
               failure: string | null;
-              exportedVersionId: null;
+              exportedVersionId: string | null;
               document: {
                 id: string;
                 title: string;
@@ -18786,6 +18885,10 @@ export interface operations {
                     | "executed"
                     | "amendment"
                     | "generated_redline";
+                  /** @enum {string} */
+                  source: "uploaded" | "generated";
+                  comparedFromVersionNumber: number | null;
+                  comparedToVersionNumber: number | null;
                   note: string | null;
                   originalFilename: string;
                   mimeType: string;
@@ -18804,6 +18907,7 @@ export interface operations {
                   isCurrent: boolean;
                   isExecuted: boolean;
                 }[];
+                archivedAt: string | null;
               };
               /** Format: date-time */
               createdAt: string;
@@ -18861,6 +18965,10 @@ export interface operations {
                   | "executed"
                   | "amendment"
                   | "generated_redline";
+                /** @enum {string} */
+                source: "uploaded" | "generated";
+                comparedFromVersionNumber: number | null;
+                comparedToVersionNumber: number | null;
                 note: string | null;
                 originalFilename: string;
                 mimeType: string;
@@ -18891,6 +18999,10 @@ export interface operations {
                   | "executed"
                   | "amendment"
                   | "generated_redline";
+                /** @enum {string} */
+                source: "uploaded" | "generated";
+                comparedFromVersionNumber: number | null;
+                comparedToVersionNumber: number | null;
                 note: string | null;
                 originalFilename: string;
                 mimeType: string;
@@ -18932,7 +19044,7 @@ export interface operations {
               } | null;
               changeCount: number | null;
               failure: string | null;
-              exportedVersionId: null;
+              exportedVersionId: string | null;
               document: {
                 id: string;
                 title: string;
@@ -18955,6 +19067,10 @@ export interface operations {
                     | "executed"
                     | "amendment"
                     | "generated_redline";
+                  /** @enum {string} */
+                  source: "uploaded" | "generated";
+                  comparedFromVersionNumber: number | null;
+                  comparedToVersionNumber: number | null;
                   note: string | null;
                   originalFilename: string;
                   mimeType: string;
@@ -18973,10 +19089,122 @@ export interface operations {
                   isCurrent: boolean;
                   isExecuted: boolean;
                 }[];
+                archivedAt: string | null;
               };
               /** Format: date-time */
               createdAt: string;
               finishedAt: string | null;
+            };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  exportDocumentComparison: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        documentId: string;
+        comparisonId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            version: {
+              id: string;
+              versionNumber: number;
+              /** @enum {string} */
+              kind:
+                | "draft_ours"
+                | "draft_theirs"
+                | "redline_theirs"
+                | "redline_ours"
+                | "executed"
+                | "amendment"
+                | "generated_redline";
+              /** @enum {string} */
+              source: "uploaded" | "generated";
+              comparedFromVersionNumber: number | null;
+              comparedToVersionNumber: number | null;
+              note: string | null;
+              originalFilename: string;
+              mimeType: string;
+              /** @enum {string} */
+              renderFamily: "pdf" | "image" | "word" | "presentation" | "email" | "other";
+              byteSize: number;
+              checksumSha256: string;
+              uploadedBy: {
+                id: string;
+                displayName: string;
+                image: string | null;
+                archived: boolean;
+              };
+              /** Format: date-time */
+              createdAt: string;
+              isCurrent: boolean;
+              isExecuted: boolean;
+            };
+          };
+        };
+      };
+      /** @description Default Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            version: {
+              id: string;
+              versionNumber: number;
+              /** @enum {string} */
+              kind:
+                | "draft_ours"
+                | "draft_theirs"
+                | "redline_theirs"
+                | "redline_ours"
+                | "executed"
+                | "amendment"
+                | "generated_redline";
+              /** @enum {string} */
+              source: "uploaded" | "generated";
+              comparedFromVersionNumber: number | null;
+              comparedToVersionNumber: number | null;
+              note: string | null;
+              originalFilename: string;
+              mimeType: string;
+              /** @enum {string} */
+              renderFamily: "pdf" | "image" | "word" | "presentation" | "email" | "other";
+              byteSize: number;
+              checksumSha256: string;
+              uploadedBy: {
+                id: string;
+                displayName: string;
+                image: string | null;
+                archived: boolean;
+              };
+              /** Format: date-time */
+              createdAt: string;
+              isCurrent: boolean;
+              isExecuted: boolean;
             };
           };
         };
@@ -19027,6 +19255,10 @@ export interface operations {
                   | "executed"
                   | "amendment"
                   | "generated_redline";
+                /** @enum {string} */
+                source: "uploaded" | "generated";
+                comparedFromVersionNumber: number | null;
+                comparedToVersionNumber: number | null;
                 note: string | null;
                 originalFilename: string;
                 mimeType: string;
@@ -19115,6 +19347,10 @@ export interface operations {
                   | "executed"
                   | "amendment"
                   | "generated_redline";
+                /** @enum {string} */
+                source: "uploaded" | "generated";
+                comparedFromVersionNumber: number | null;
+                comparedToVersionNumber: number | null;
                 note: string | null;
                 originalFilename: string;
                 mimeType: string;
@@ -19196,6 +19432,10 @@ export interface operations {
                   | "executed"
                   | "amendment"
                   | "generated_redline";
+                /** @enum {string} */
+                source: "uploaded" | "generated";
+                comparedFromVersionNumber: number | null;
+                comparedToVersionNumber: number | null;
                 note: string | null;
                 originalFilename: string;
                 mimeType: string;
@@ -19277,6 +19517,10 @@ export interface operations {
                   | "executed"
                   | "amendment"
                   | "generated_redline";
+                /** @enum {string} */
+                source: "uploaded" | "generated";
+                comparedFromVersionNumber: number | null;
+                comparedToVersionNumber: number | null;
                 note: string | null;
                 originalFilename: string;
                 mimeType: string;
@@ -19358,6 +19602,10 @@ export interface operations {
                   | "executed"
                   | "amendment"
                   | "generated_redline";
+                /** @enum {string} */
+                source: "uploaded" | "generated";
+                comparedFromVersionNumber: number | null;
+                comparedToVersionNumber: number | null;
                 note: string | null;
                 originalFilename: string;
                 mimeType: string;

@@ -29,6 +29,9 @@ function version(
     id,
     versionNumber,
     kind,
+    source: kind === "generated_redline" ? "generated" : "uploaded",
+    comparedFromVersionNumber: kind === "generated_redline" ? 1 : null,
+    comparedToVersionNumber: kind === "generated_redline" ? 2 : null,
     note: null,
     originalFilename: `services-v${versionNumber}.docx`,
     mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
@@ -105,6 +108,7 @@ function comparison(overrides: Partial<DocumentComparison> = {}): DocumentCompar
         title: "Acme Services",
       },
       versions,
+      archivedAt: null,
     },
     createdAt: "2026-08-04T10:00:00.000Z",
     finishedAt: "2026-08-04T10:00:01.000Z",
@@ -276,6 +280,77 @@ describe("the Document comparison screen", () => {
     expect(
       await screen.findByText(/built from extracted text, so formatting is not shown/i),
     ).toBeInTheDocument();
+    expect(screen.getByText("Export needs two Word files.")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Export track changes" })).not.toBeInTheDocument();
+  });
+
+  it("exports track changes and offers the generated round in its Document panel", async () => {
+    const calls: StubCall[] = [];
+    const exported = version("redline-6", 6, "generated_redline");
+    stubApi({
+      signedIn: MEMBER,
+      extra(call) {
+        if (call.url.pathname === "/api/v1/documents/doc-1/comparisons" && call.method === "POST") {
+          return json(200, { comparison: comparison() });
+        }
+        if (
+          call.url.pathname === "/api/v1/documents/doc-1/comparisons/cmp-1/export" &&
+          call.method === "POST"
+        ) {
+          calls.push(call);
+          return json(201, { version: exported });
+        }
+        return undefined;
+      },
+    });
+    renderAt("/documents/doc-1/compare?from=v2&to=v4");
+
+    await userEvent.click(await screen.findByRole("button", { name: "Export track changes" }));
+    expect(calls).toHaveLength(1);
+    expect(await screen.findByRole("link", { name: "Open redline" })).toHaveAttribute(
+      "href",
+      "/contracts/42/documents?doc=doc-1&version=redline-6",
+    );
+  });
+
+  it("shows Open redline for an existing export", async () => {
+    const api = comparisonApi(comparison({ exportedVersionId: "v3" }));
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/documents/doc-1/compare?from=v2&to=v4");
+    expect(await screen.findByRole("link", { name: "Open redline" })).toHaveAttribute(
+      "href",
+      "/contracts/42/documents?doc=doc-1&version=v3",
+    );
+  });
+
+  it("hides export from a Contributor, pending work, and an archived Document", async () => {
+    const cases = [
+      {
+        user: { ...MEMBER, role: "contributor" as const },
+        value: comparison(),
+      },
+      {
+        user: MEMBER,
+        value: comparison({ state: "pending", changeModel: null, changeCount: null }),
+      },
+      {
+        user: MEMBER,
+        value: comparison({
+          document: { ...comparison().document, archivedAt: "2026-08-05T10:00:00.000Z" },
+        }),
+      },
+    ];
+    for (const value of cases) {
+      const api = comparisonApi(value.value);
+      stubApi({ signedIn: value.user, extra: api.handler });
+      const view = renderAt("/documents/doc-1/compare?from=v2&to=v4");
+      expect(await screen.findByText("Acme Services")).toBeInTheDocument();
+      expect(
+        screen.queryByRole("button", { name: "Export track changes" }),
+      ).not.toBeInTheDocument();
+      expect(screen.queryByRole("link", { name: "Open redline" })).not.toBeInTheDocument();
+      view.view.unmount();
+    }
   });
 
   it.each([

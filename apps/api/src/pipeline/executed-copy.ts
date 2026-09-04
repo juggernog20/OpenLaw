@@ -349,6 +349,9 @@ export async function fileExecutedCopy(deps: ExecutedCopyDeps, envelopeId: strin
         // What the round **is** (CTR-014). The pin below is a separate
         // write, and this value is never read as one.
         kind: "executed",
+        source: "uploaded",
+        comparedFromVersionId: null,
+        comparedToVersionId: null,
         note: null,
         originalFilename: filename,
         // The provider answers a PDF. Declared rather than sniffed, as

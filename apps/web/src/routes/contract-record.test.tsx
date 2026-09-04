@@ -5927,6 +5927,9 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4, M11/5)",
     id: "ver-1",
     versionNumber: 1,
     kind: "draft_ours",
+    source: "uploaded",
+    comparedFromVersionNumber: null,
+    comparedToVersionNumber: null,
     note: null,
     originalFilename: "Orion_MSA_2026_draft.docx",
     mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
@@ -6356,13 +6359,21 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4, M11/5)",
   it("shows a generated redline but never offers a picker for it", async () => {
     const generated = {
       ...DRAFT,
-      versions: [version({ kind: "generated_redline" })],
+      versions: [
+        version({
+          kind: "generated_redline",
+          source: "generated",
+          comparedFromVersionNumber: 2,
+          comparedToVersionNumber: 4,
+        }),
+      ],
     };
     stubApi({ signedIn: MEMBER, extra: documentsApi([generated]).handler });
     renderAt("/contracts/42/documents");
 
     const section = await documentsSection();
     expect(within(section).getByText("Generated redline")).toBeVisible();
+    expect(within(section).getByText("Compares v2 and v4")).toBeVisible();
     expect(within(section).queryByRole("combobox")).not.toBeInTheDocument();
     expect(await menuVerbs(userEvent.setup(), section, DRAFT.title)).not.toContain(
       "Compare with previous",
