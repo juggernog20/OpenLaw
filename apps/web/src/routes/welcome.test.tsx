@@ -533,7 +533,7 @@ describe("welcome wizard e-signature step (#698)", () => {
     expect(screen.getByRole("region", { name: "E-signature" })).toBeInTheDocument();
     // Optional, and what an install without a connector does instead.
     expect(screen.getByText(/Optional/)).toBeInTheDocument();
-    expect(screen.getByText(/the manual hand-off stays the path/)).toBeInTheDocument();
+    expect(screen.getByText(/manual hand-off stays the path/)).toBeInTheDocument();
     // And where it is finished after the first run.
     expect(
       screen.getByText(/Settings → Organization → Integrations → E-signature/),
