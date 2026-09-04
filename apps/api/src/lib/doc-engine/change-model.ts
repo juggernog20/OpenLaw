@@ -402,9 +402,18 @@ export function leadingClauseLabel(text: string): string | null {
   return match?.[1] ?? null;
 }
 
-/** Whether `text` already opens with `label`, ignoring leading space. */
+/**
+ * Whether `text` already opens with `label` as a whole clause number.
+ *
+ * The boundary matters: "1.1 Liability" opens with the characters of
+ * "1." without carrying that clause, and treating it as a repeat would
+ * drop a generated "1." that the paragraph really does need drawn.
+ */
 function startsWithLabel(text: string, label: string): boolean {
-  return text.trimStart().startsWith(label);
+  const trimmed = text.trimStart();
+  if (!trimmed.startsWith(label)) return false;
+  const next = trimmed.charAt(label.length);
+  return next === "" || /\s/u.test(next);
 }
 
 interface ParsedParagraph {

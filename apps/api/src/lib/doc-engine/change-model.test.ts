@@ -14,6 +14,53 @@ function fixture(name: string): Buffer {
   );
 }
 
+/**
+ * A package of several parts, for the cases that need more than the
+ * document body — numbering, in particular, which lives in its own part
+ * and without which Word generates no number at all.
+ */
+function zipOf(parts: Readonly<Record<string, string>>): Buffer {
+  const locals: Buffer[] = [];
+  const centrals: Buffer[] = [];
+  let offset = 0;
+  for (const [name, body] of Object.entries(parts)) {
+    const filename = Buffer.from(name);
+    const contents = Buffer.from(body);
+    const local = Buffer.alloc(30);
+    local.writeUInt32LE(0x04034b50, 0);
+    local.writeUInt16LE(20, 4);
+    local.writeUInt32LE(crc32(contents), 14);
+    local.writeUInt32LE(contents.byteLength, 18);
+    local.writeUInt32LE(contents.byteLength, 22);
+    local.writeUInt16LE(filename.byteLength, 26);
+
+    const central = Buffer.alloc(46);
+    central.writeUInt32LE(0x02014b50, 0);
+    central.writeUInt16LE(20, 4);
+    central.writeUInt16LE(20, 6);
+    central.writeUInt32LE(crc32(contents), 16);
+    central.writeUInt32LE(contents.byteLength, 20);
+    central.writeUInt32LE(contents.byteLength, 24);
+    central.writeUInt16LE(filename.byteLength, 28);
+    central.writeUInt32LE(offset, 42);
+
+    locals.push(local, filename, contents);
+    centrals.push(central, filename);
+    offset += local.byteLength + filename.byteLength + contents.byteLength;
+  }
+
+  const body = Buffer.concat(locals);
+  const directory = Buffer.concat(centrals);
+  const count = Object.keys(parts).length;
+  const end = Buffer.alloc(22);
+  end.writeUInt32LE(0x06054b50, 0);
+  end.writeUInt16LE(count, 8);
+  end.writeUInt16LE(count, 10);
+  end.writeUInt32LE(directory.byteLength, 12);
+  end.writeUInt32LE(body.byteLength, 16);
+  return Buffer.concat([body, directory, end]);
+}
+
 function zipEntry(name: string, body: string): Buffer {
   const filename = Buffer.from(name);
   const contents = Buffer.from(body);
@@ -225,6 +272,29 @@ describe("parseTrackedChangesDocx", () => {
 
     expect(typed?.runs.map((run) => run.text).join("")).toMatch(/^2\.4 /u);
     expect(typed?.numberPrefix).toBeNull();
+  });
+
+  it("keeps a generated number whose text opens with a deeper clause", () => {
+    // The text carries clause 1.1 and Word generates "1." for the
+    // paragraph. Those are different numbers, so treating the text as a
+    // repeat would drop a number the reader needs.
+    const model = parseTrackedChangesDocx(
+      zipOf({
+        "word/numbering.xml":
+          `<w:numbering xmlns:w="${W_NS}">` +
+          `<w:abstractNum w:abstractNumId="7"><w:lvl w:ilvl="0">` +
+          `<w:start w:val="1"/><w:numFmt w:val="decimal"/><w:lvlText w:val="%1."/>` +
+          `</w:lvl></w:abstractNum>` +
+          `<w:num w:numId="1"><w:abstractNumId w:val="7"/></w:num>` +
+          `</w:numbering>`,
+        "word/document.xml":
+          `<w:document xmlns:w="${W_NS}"><w:body><w:p>` +
+          `<w:pPr><w:numPr><w:ilvl w:val="0"/><w:numId w:val="1"/></w:numPr></w:pPr>` +
+          `<w:r><w:t xml:space="preserve">1.1 Liability cap applies.</w:t></w:r>` +
+          `</w:p></w:body></w:document>`,
+      }),
+    );
+    expect(model.paragraphs[0]?.numberPrefix).toBe("1.");
   });
 
   it("reads a tab stop as a property, not as a tab character", () => {
