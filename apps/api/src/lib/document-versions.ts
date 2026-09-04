@@ -39,6 +39,7 @@ import {
   documentVersions,
   eq,
   type DocumentVersionKind,
+  type DocumentVersionSource,
   type Executor,
   type HandSetDocumentVersionKind,
 } from "@openlaw/db";
@@ -88,6 +89,18 @@ export interface AppendedVersion {
   versionNumber: number;
   fileRef: string;
   kind: DocumentVersionKind;
+  /**
+   * How the file was made, and which two rounds it compares.
+   *
+   * The three move together and the database enforces it: a
+   * `generated_redline` is `generated` and names both operands, and
+   * every other kind is `uploaded` and names neither. They are typed
+   * separately here, so a caller can spell an invalid combination and
+   * only learn of it when the check constraint refuses the insert.
+   */
+  source: DocumentVersionSource;
+  comparedFromVersionId: string | null;
+  comparedToVersionId: string | null;
   /** What changed in this round, or NULL when nobody wrote one. */
   note: string | null;
   originalFilename: string;
@@ -116,6 +129,9 @@ export async function insertDocumentVersion(
     versionNumber: row.versionNumber,
     fileRef: row.fileRef,
     kind: row.kind,
+    source: row.source,
+    comparedFromVersionId: row.comparedFromVersionId,
+    comparedToVersionId: row.comparedToVersionId,
     note: row.note,
     originalFilename: row.originalFilename,
     mimeType: row.mimeType,

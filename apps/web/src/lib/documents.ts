@@ -196,6 +196,25 @@ export const FOLDER_ROOT = "root";
 /** One immutable file snapshot (DOC-001). */
 export type DocumentVersion = ContractDocument["versions"][number];
 
+type ComparisonResponse =
+  paths["/api/v1/documents/{documentId}/comparisons/{comparisonId}"]["get"]["responses"]["200"]["content"]["application/json"];
+
+/** One durable redline between two immutable rounds (DOC-003). */
+export type DocumentComparison = ComparisonResponse["comparison"];
+
+export type ComparisonOutcome =
+  { ok: true; comparison: DocumentComparison } | ({ ok: false } & Problem);
+
+export type ExportComparisonOutcome =
+  { ok: true; version: DocumentVersion } | ({ ok: false } & Problem);
+
+/** The read-only pair probe also has an honest absent answer. */
+export type ComparisonLookupOutcome =
+  { ok: true; comparison: DocumentComparison | null } | ({ ok: false } & Problem);
+
+/** The comparison and rendition pipelines deliberately share a beat. */
+export const DOCUMENT_DERIVATION_POLL_MS = 1500;
+
 /** What a version is in the negotiation (CTR-014). */
 export type DocumentVersionKind = DocumentVersion["kind"];
 
@@ -362,6 +381,96 @@ export function chainOf(
     // reaches for, and it should not be at the bottom of a long chain.
     superseded: document.versions.filter((version) => version.id !== current.id).reverse(),
   };
+}
+
+/** The previous hand-set round for a Version. Generated redlines do not
+ * participate in comparisons and therefore do not break adjacency. */
+export function previousComparableVersion(
+  document: Pick<ContractDocument, "versions">,
+  version: DocumentVersion,
+): DocumentVersion | undefined {
+  if (version.kind === "generated_redline") return undefined;
+  const handSet = document.versions.filter((candidate) => candidate.kind !== "generated_redline");
+  const index = handSet.findIndex((candidate) => candidate.id === version.id);
+  return index > 0 ? handSet[index - 1] : undefined;
+}
+
+/** The full-page address for one ordered Version pair. */
+export function documentComparisonPath(
+  documentId: string,
+  fromVersionId: string,
+  toVersionId: string,
+): string {
+  const query = new URLSearchParams({ from: fromVersionId, to: toVersionId });
+  return `/documents/${encodeURIComponent(documentId)}/compare?${query.toString()}`;
+}
+
+/** Ask for a pair, idempotently creating its durable Comparison when
+ * this is the first explicit request. */
+export async function requestDocumentComparison(
+  documentId: string,
+  fromVersionId: string,
+  toVersionId: string,
+): Promise<ComparisonOutcome> {
+  const result = await api
+    .POST("/api/v1/documents/{documentId}/comparisons", {
+      params: { path: { documentId } },
+      body: { fromVersionId, toVersionId },
+    })
+    .catch(() => undefined);
+  return result?.data
+    ? { ok: true, comparison: result.data.comparison }
+    : { ok: false, ...(await problem(result)) };
+}
+
+/** Look for an already-requested pair without starting derived work. */
+export async function findDocumentComparison(
+  documentId: string,
+  fromVersionId: string,
+  toVersionId: string,
+): Promise<ComparisonLookupOutcome> {
+  const result = await api
+    .GET("/api/v1/documents/{documentId}/comparisons", {
+      params: {
+        path: { documentId },
+        query: { fromVersionId, toVersionId },
+      },
+    })
+    .catch(() => undefined);
+  return result?.data
+    ? { ok: true, comparison: result.data.comparison }
+    : { ok: false, ...(await problem(result)) };
+}
+
+/** Poll one known Comparison. A dropped/refused read is kept separate
+ * from its durable state so the screen never invents a failure. */
+export async function readDocumentComparison(
+  documentId: string,
+  comparisonId: string,
+): Promise<DocumentComparison | "unreachable"> {
+  try {
+    const { data } = await api.GET("/api/v1/documents/{documentId}/comparisons/{comparisonId}", {
+      params: { path: { documentId, comparisonId } },
+    });
+    return data?.comparison ?? "unreachable";
+  } catch {
+    return "unreachable";
+  }
+}
+
+/** Append a ready Word comparison's tracked-changes file to its chain. */
+export async function exportDocumentComparison(
+  documentId: string,
+  comparisonId: string,
+): Promise<ExportComparisonOutcome> {
+  const result = await api
+    .POST("/api/v1/documents/{documentId}/comparisons/{comparisonId}/export", {
+      params: { path: { documentId, comparisonId } },
+    })
+    .catch(() => undefined);
+  return result?.data
+    ? { ok: true, version: result.data.version }
+    : { ok: false, ...(await problem(result)) };
 }
 
 /**

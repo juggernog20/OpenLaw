@@ -256,6 +256,15 @@ export function stubApi(state: ApiState) {
     if (/^\/api\/v1\/contracts\/\d+\/documents$/.test(call.url.pathname) && call.method === "GET") {
       return json(200, { documents: [], nextCursor: null });
     }
+    // Opening a Version after the first probes for an already-requested
+    // comparison so the panel can show its count without starting work.
+    // Absent is the ordinary answer outside the comparison suites.
+    if (
+      /^\/api\/v1\/documents\/[^/]+\/comparisons$/.test(call.url.pathname) &&
+      call.method === "GET"
+    ) {
+      return json(200, { comparison: null });
+    }
     // And how that paper is filed (M13/2). Empty by default for the
     // documents read's reason: a record with no folders is the ordinary
     // case, and only the suites that are about the tree supply one.

@@ -1036,7 +1036,12 @@ describe("correcting a version's kind", () => {
 
     await harness.db
       .update(documentVersions)
-      .set({ kind: "generated_redline" })
+      .set({
+        kind: "generated_redline",
+        source: "generated",
+        comparedFromVersionId: version.id,
+        comparedToVersionId: version.id,
+      })
       .where(eq(documentVersions.id, version.id));
     const source = await patchVersionKind(adminCookies, document.id, version.id, {
       kind: "redline_ours",

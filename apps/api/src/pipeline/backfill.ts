@@ -31,6 +31,13 @@
  * boot would convert the same file for ever and never answer anything
  * new. This is the one state the sweep will not re-ask for.
  *
+ * **A pending comparison is work owed too (DOC-003, M32/2).** Its row is
+ * written in the request's transaction on the rendition's pattern, and
+ * the request answers 202 even when the queue send after the commit is
+ * lost. A second request for the same pair reads the row and does not
+ * ask again, so this sweep is the only thing that would. It walks the
+ * `pending` comparisons after the versions and asks for each one.
+ *
  * **Asking twice is free, so the sweep does not try to be clever about
  * it.** pg-boss's `short` policy collapses a second request for a
  * version whose job is still waiting, and both handlers stop early when
@@ -40,7 +47,9 @@
  */
 
 import {
+  and,
   asc,
+  documentComparisons,
   documentVersionRenditions,
   documentVersions,
   documentVersionText,
@@ -110,6 +119,8 @@ export interface BackfillSummary {
   textExtraction: number;
   /** Display conversions asked for (DOC-004). */
   displayConversion: number;
+  /** Comparisons still `pending` that were asked for again (DOC-003). */
+  documentComparison: number;
   /** Requests the queue refused. The derivation rows still say what is
    * owed, so the next boot asks again. */
   notEnqueued: number;
@@ -181,14 +192,10 @@ export async function runBackfillSweep(
     scanned: 0,
     textExtraction: 0,
     displayConversion: 0,
+    documentComparison: 0,
     notEnqueued: 0,
     stopped: false,
   };
-  // Keyset paging on the version id, which is a uuidv7 and so sorts by
-  // the moment it was minted. An offset would re-read rows as the table
-  // grows underneath a long sweep; a cursor holds no connection open
-  // between pages.
-  let after: string | undefined;
   // The queue being unreachable would otherwise write one line per
   // version. The count in the summary is what says how wide it went.
   let reported = false;
@@ -196,67 +203,132 @@ export async function runBackfillSweep(
   // like. Reset by anything the queue takes.
   let refusals = 0;
 
-  for (;;) {
-    if (options.signal?.aborted) {
-      summary.stopped = true;
-      return summary;
-    }
-    const page = await deps.db
-      .select({
-        id: documentVersions.id,
-        mimeType: documentVersions.mimeType,
-        originalFilename: documentVersions.originalFilename,
-        textState: documentVersionText.state,
-        renditionState: documentVersionRenditions.state,
-      })
-      .from(documentVersions)
-      .leftJoin(documentVersionText, eq(documentVersionText.versionId, documentVersions.id))
-      .leftJoin(
-        documentVersionRenditions,
-        eq(documentVersionRenditions.versionId, documentVersions.id),
-      )
-      .where(after === undefined ? undefined : gt(documentVersions.id, after))
-      .orderBy(asc(documentVersions.id))
-      .limit(pageSize);
-    if (page.length === 0) return summary;
-
-    for (const version of page) {
-      if (options.signal?.aborted) {
+  /** Sends one request and applies the refusal bound. Answers whether
+   * the sweep may go on asking. */
+  async function ask(
+    subject: Record<string, string>,
+    counter: "textExtraction" | "displayConversion" | "documentComparison",
+    send: () => Promise<void>,
+  ): Promise<boolean> {
+    try {
+      await send();
+      summary[counter] += 1;
+      refusals = 0;
+      return true;
+    } catch (error) {
+      summary.notEnqueued += 1;
+      refusals += 1;
+      if (!reported) {
+        reported = true;
+        deps.log.warn(
+          { ...subject, reason: reasonOf(error) },
+          "the backfill sweep could not reach the job queue",
+        );
+      }
+      if (refusals >= BACKFILL_REFUSAL_LIMIT) {
         summary.stopped = true;
-        return summary;
+        return false;
       }
-      summary.scanned += 1;
-      const wanted = derivationOwedBy(version);
-      if (wanted === null) continue;
-      try {
-        if (wanted === "display-conversion") {
-          await jobs.requestDisplayConversion(version.id);
-          summary.displayConversion += 1;
-        } else {
-          await jobs.requestTextExtraction(version.id);
-          summary.textExtraction += 1;
-        }
-        refusals = 0;
-      } catch (error) {
-        summary.notEnqueued += 1;
-        refusals += 1;
-        if (!reported) {
-          reported = true;
-          deps.log.warn(
-            { versionId: version.id, wanted, reason: reasonOf(error) },
-            "the backfill sweep could not reach the job queue",
-          );
-        }
-        if (refusals >= BACKFILL_REFUSAL_LIMIT) {
-          summary.stopped = true;
-          return summary;
-        }
-      }
+      return true;
     }
-
-    after = page[page.length - 1]!.id;
-    // A short page is the last one. Asking for another would cost a
-    // round trip to be told the same thing.
-    if (page.length < pageSize) return summary;
   }
+
+  function stoppedBySignal(): boolean {
+    if (!options.signal?.aborted) return false;
+    summary.stopped = true;
+    return true;
+  }
+
+  /** Walks the versions. Answers whether the sweep may go on. */
+  async function sweepVersions(): Promise<boolean> {
+    // Keyset paging on the version id, which is a uuidv7 and so sorts by
+    // the moment it was minted. An offset would re-read rows as the table
+    // grows underneath a long sweep; a cursor holds no connection open
+    // between pages.
+    let after: string | undefined;
+    for (;;) {
+      if (stoppedBySignal()) return false;
+      const page = await deps.db
+        .select({
+          id: documentVersions.id,
+          mimeType: documentVersions.mimeType,
+          originalFilename: documentVersions.originalFilename,
+          textState: documentVersionText.state,
+          renditionState: documentVersionRenditions.state,
+        })
+        .from(documentVersions)
+        .leftJoin(documentVersionText, eq(documentVersionText.versionId, documentVersions.id))
+        .leftJoin(
+          documentVersionRenditions,
+          eq(documentVersionRenditions.versionId, documentVersions.id),
+        )
+        .where(after === undefined ? undefined : gt(documentVersions.id, after))
+        .orderBy(asc(documentVersions.id))
+        .limit(pageSize);
+      if (page.length === 0) return true;
+
+      for (const version of page) {
+        if (stoppedBySignal()) return false;
+        summary.scanned += 1;
+        const wanted = derivationOwedBy(version);
+        if (wanted === null) continue;
+        const taken = await ask(
+          { versionId: version.id, wanted },
+          wanted === "display-conversion" ? "displayConversion" : "textExtraction",
+          () =>
+            wanted === "display-conversion"
+              ? jobs.requestDisplayConversion(version.id)
+              : jobs.requestTextExtraction(version.id),
+        );
+        if (!taken) return false;
+      }
+
+      after = page[page.length - 1]!.id;
+      // A short page is the last one. Asking for another would cost a
+      // round trip to be told the same thing.
+      if (page.length < pageSize) return true;
+    }
+  }
+
+  /**
+   * Walks the comparisons still `pending` and asks for each one.
+   *
+   * Only `pending` rows are read, so the page is the work owed and
+   * nothing else: a `ready` or `failed` comparison is settled, and the
+   * handler would stop early on it anyway. Asking for one whose job is
+   * queued or running costs nothing, for the reason above.
+   */
+  async function sweepComparisons(): Promise<void> {
+    let after: string | undefined;
+    for (;;) {
+      if (stoppedBySignal()) return;
+      const page = await deps.db
+        .select({ id: documentComparisons.id })
+        .from(documentComparisons)
+        .where(
+          after === undefined
+            ? eq(documentComparisons.state, "pending")
+            : and(eq(documentComparisons.state, "pending"), gt(documentComparisons.id, after)),
+        )
+        .orderBy(asc(documentComparisons.id))
+        .limit(pageSize);
+      if (page.length === 0) return;
+
+      for (const comparison of page) {
+        if (stoppedBySignal()) return;
+        const taken = await ask(
+          { comparisonId: comparison.id, wanted: "document-comparison" },
+          "documentComparison",
+          () => jobs.requestDocumentComparison(comparison.id),
+        );
+        if (!taken) return;
+      }
+
+      after = page[page.length - 1]!.id;
+      if (page.length < pageSize) return;
+    }
+  }
+
+  if (await sweepVersions()) await sweepComparisons();
+  return summary;
 }

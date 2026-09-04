@@ -37,7 +37,11 @@ import {
   type MatterTypeOption,
 } from "../lib/matters";
 import { problem } from "../lib/problem";
-import { documentLandingParams, readDocumentLanding } from "../lib/documents";
+import {
+  documentLandingParams,
+  previousComparableVersion,
+  readDocumentLanding,
+} from "../lib/documents";
 import { canReadMatters, isMemberPlus } from "../lib/roles";
 import { requireUser, useSignOut } from "../lib/session";
 import { ConfidentialBanner } from "../components/confidential-banner";
@@ -666,6 +670,7 @@ export function MatterRecordPage() {
                 documentId={open.document.id}
                 title={open.document.title}
                 version={open.version}
+                previousVersion={previousComparableVersion(open.document, open.version)}
                 initialFind={
                   loader.documentLanding?.document.id === open.document.id &&
                   loader.documentLanding.versionId === open.version.id

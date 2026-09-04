@@ -424,6 +424,16 @@ DOC-004 named the doc panel as the surface that would settle the deferred pick, 
 
 Nothing ships from this addendum: no second `@font-face`, no `--font-serif` token. A face nothing renders is weight in the bundle and a token nobody picks.
 
+### Addendum (2026-09-04, M32 close, [#684](https://github.com/juggernog20/OpenLaw/issues/684)): Tinos closes the secondary-typeface deferral
+
+The compare document is the first long-form legal text that OpenLaw sets. It uses **Tinos** behind `--font-serif`, at 13px on a 1.6 line height, with 400-weight body text and 700-weight headings. No other product text adopts the serif.
+
+The face ships as the `@fontsource/tinos` package, which states the SIL Open Font License 1.1 in both its licence text and its metadata. The M12/2 addendum's OFL attribution therefore stands. The original Croscore release of Tinos was Apache-2.0, which is where the Apache reading comes from, but the Google Fonts release the build takes is OFL-1.1, and OFL-1.1 is what OpenLaw redistributes. That sits beside AGPL-3.0-only without conflict, and the one thing OFL-1.1 forbids, selling the font on its own, is not something OpenLaw does. Inter arrives under the same licence, so the app carries one font licence rather than two.
+
+The build carries only the Latin normal subsets at weights 400 and 700, in WOFF2 with WOFF fallback. Every file is served from the app's own origin, so nothing is fetched from a font CDN (DD-001), and no script or weight the compare screen does not set is shipped.
+
+The Dark-theme check closes with the M32 built-stack journey. The same Comparison was read and axe-scanned in Light and Dark with no accessibility violations. The type remains at the same size, weight, and line height in both themes; theme tokens supply its foreground and the insertion, deletion, replacement, and current-paragraph treatments.
+
 ### Addendum (2026-08-18): a record's own title is `text-md`, not `text-lg` or `text-xl`
 
 The size ramp's "page title (h1)" role names `text-xl` (20px); the contract and entity record headers shipped at `text-lg` (18px) instead — already smaller than the documented role before this addendum, and still too large in practice. Both sit inside a single-line subbar crowded with a breadcrumb link, a reference badge, a status pill, and the stage pipeline, all set at 13px or smaller — a role built for a standalone page heading does not fit a title squeezed among that much other chrome on one row.
@@ -4347,6 +4357,41 @@ The same marker follows a term-derived date onto deadline surfaces. Contract Key
 
 `AiAnalysisCard` and the shared unverified marker are the built reference. The Contract's SSE revalidation keeps the card and fields on one server snapshot; deadline readers consume the same `ai_unverified` fact rather than inventing local trust state. The M31 acceptance journey runs axe over both the settings pane and the Contract record. `SETTINGS-INVENTORY.md` marks the pane shipped while retaining the redraw debt.
 
+## DES-071: A Comparison is one change pane beside one compare card (extends DES-006, DES-016, DES-063)
+
+- **Status:** Accepted
+- **Date:** 2026-09-04
+
+### Context
+
+DOC-003 fixes two outputs from one Comparison: the in-app reading and the Word track-changes export. The document-detail ancestor names K.H4 as a redlines pill, but it does not define what the pill counts or where it opens. M32 needs one screen that works for Word and text-mode Comparisons, shows a long change list without losing the document, and keeps every entry point tied to one Version pair.
+
+### Decision
+
+The compare screen has its own Document address, with the older and newer Version ids in the query. Its sub-bar holds the Documents and owning-record breadcrumb, a central pair control, the export action when eligible, and a close control back to the owning record's Documents section.
+
+**The pair control is a pill that reads `v1 → v2`.** It opens an Older select and a Newer select. Each choice must keep the older Version before the newer one. Generated redlines are absent from both lists. Choosing either side navigates to the address for that pair, so a copied link opens the same Comparison.
+
+**The ready screen is one change pane beside one compare card.** The 320px pane names Changes, shows the total in the count-badge pair, and holds previous and next controls. Each change is a button. It shows a 20px semantic glyph, the nearest clause reference, and an excerpt. Its accessible name states the reference and whether the change is inserted, deleted, or replaced. Pressing it scrolls its paragraph into view and marks that paragraph with the accent rule.
+
+The compare card names both operand filenames in its toolbar. Its canvas well holds one raised document page at its own 640px paper width, narrower than the 720px doc panel layer. Paragraphs use DES-006's Tinos setting. Insertions use the success foreground and an underline. Deletions use the danger foreground and a strikethrough. Replacements use the warning pair in the pane. Changed runs carry a hidden spoken label, so color never carries the meaning alone.
+
+**Three cards replace the ready layout when there is no document to draw.** Preparing is a status card and polls until the Comparison becomes terminal. Failed names the reason and offers both operand downloads. No changes states that both Versions contain the same text. A ready text-mode Comparison adds one line above the well that says it was built from extracted text and does not show formatting. It has no export action, and Member+ sees the reason in the sub-bar.
+
+**K.H4 has two readings for the predecessor pair.** It reads `Compare` when the current hand-set Version has a predecessor but no ready Comparison. It reads the ready Comparison's change count when one exists. Both readings open the same predecessor pair on the compare screen. K.H4 is absent on version 1 and on a Generated redline.
+
+**The chain supplies the other entry point.** Every hand-set Version after the first has Compare with previous in its row menu, including a superseded round. Member+ keeps the other row actions it can perform. A Contributor gets a menu with comparison alone. A Generated redline gets no compare entry point; its row instead keeps DES-063's read-only kind pill and states which two Versions it compares.
+
+### Alternatives considered
+
+- **Put comparison inside the doc panel.** Rejected. A 320px change pane beside a readable document needs the full record width, and the pair control and export would overload the panel header.
+- **Use one change table without running text.** Rejected. It answers what changed but removes the clause context that makes the change reviewable.
+- **Open only the latest predecessor pair.** Rejected. The chain is a negotiation history, and an older-to-newer pair in the address lets a reader inspect drift across several rounds.
+
+### Consequences
+
+The Comparison address is shareable and belongs to the Document rather than one owner kind. The pane and document remain one keyboard and screen-reader surface. The M32 acceptance journey enters through the version row, presses a change, exports, reads the Generated redline on the chain and in the doc panel, and runs axe over the ready screen in Light and Dark.
+
 ## Index of decisions
 
 | #       | Decision                                                                                                                                                             | Status                                                                                                     |
@@ -4421,3 +4466,4 @@ The same marker follows a term-derived date onto deadline surfaces. Contract Key
 | DES-068 | Knowledge is a file-first managed library (extends DES-046, DES-032, DES-016, DES-055, DES-020)                                                                      | Accepted                                                                                                   |
 | DES-069 | Home is a fixed personal read of seven capped sections (extends DES-056, DES-030, DES-018, DES-029, DES-043)                                                         | Accepted                                                                                                   |
 | DES-070 | AI analysis is one settings pane, one record card, and one unverified marker (normalizes F.3; extends DES-054, DES-032, DES-042, DES-069)                            | Accepted                                                                                                   |
+| DES-071 | A Comparison is one change pane beside one compare card (extends DES-006, DES-016, DES-063)                                                                          | Accepted                                                                                                   |

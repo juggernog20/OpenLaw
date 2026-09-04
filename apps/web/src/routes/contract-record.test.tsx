@@ -45,6 +45,7 @@ import {
 } from "../testing/helpers";
 import type { CustomFieldValue, CustomFieldValues } from "../lib/custom-fields";
 import type { Comment } from "../lib/comments";
+import type { DocumentVersion } from "../lib/documents";
 
 const PDF_PAGE_TEXT = vi.hoisted(() => [
   ["The first termination right is on this page."],
@@ -5923,10 +5924,13 @@ describe("the contract record's confidentiality surfaces (M10/4)", () => {
  */
 describe("the contract record's Documents section (M11/2, M11/3, M11/4, M11/5)", () => {
   /** One version of a chain, as the API answers it. */
-  const version = (over: Record<string, unknown> = {}) => ({
+  const version = (over: Partial<DocumentVersion> = {}): DocumentVersion => ({
     id: "ver-1",
     versionNumber: 1,
     kind: "draft_ours",
+    source: "uploaded",
+    comparedFromVersionNumber: null,
+    comparedToVersionNumber: null,
     note: null,
     originalFilename: "Orion_MSA_2026_draft.docx",
     mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
@@ -6356,14 +6360,25 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4, M11/5)",
   it("shows a generated redline but never offers a picker for it", async () => {
     const generated = {
       ...DRAFT,
-      versions: [version({ kind: "generated_redline" })],
+      versions: [
+        version({
+          kind: "generated_redline",
+          source: "generated",
+          comparedFromVersionNumber: 2,
+          comparedToVersionNumber: 4,
+        }),
+      ],
     };
     stubApi({ signedIn: MEMBER, extra: documentsApi([generated]).handler });
     renderAt("/contracts/42/documents");
 
     const section = await documentsSection();
     expect(within(section).getByText("Generated redline")).toBeVisible();
+    expect(within(section).getByText("Compares v2 and v4")).toBeVisible();
     expect(within(section).queryByRole("combobox")).not.toBeInTheDocument();
+    expect(await menuVerbs(userEvent.setup(), section, DRAFT.title)).not.toContain(
+      "Compare with previous",
+    );
   });
 
   it("says so plainly when the record has no paper on it", async () => {
@@ -6674,6 +6689,40 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4, M11/5)",
     expect(within(section).getByRole("button", { name: "round_2.docx" })).toBeInTheDocument();
   });
 
+  it.each([
+    { versionNumber: 2, from: "ver-a", to: "ver-b", superseded: true },
+    { versionNumber: 3, from: "ver-b", to: "ver-c", superseded: false },
+  ])(
+    "opens the predecessor pair from eligible Version $versionNumber",
+    async ({ versionNumber, from, to, superseded }) => {
+      const api = documentsApi([CHAIN]);
+      stubApi({ signedIn: MEMBER, extra: api.handler });
+      const { router } = renderAt("/contracts/42/documents");
+      const user = userEvent.setup();
+      const section = await documentsSection();
+
+      if (superseded) {
+        await user.click(
+          within(section).getByRole("button", { name: /Show the 2 earlier versions of/ }),
+        );
+        await user.click(
+          within(section).getByRole("button", {
+            name: `Actions for version ${versionNumber} of ${CHAIN.title}`,
+          }),
+        );
+        await user.click(await screen.findByRole("menuitem", { name: "Compare with previous" }));
+      } else {
+        await act(user, section, CHAIN.title, "Compare with previous");
+      }
+
+      await waitFor(() =>
+        expect(`${router.state.location.pathname}${router.state.location.search}`).toBe(
+          `/documents/doc-3/compare?from=${from}&to=${to}`,
+        ),
+      );
+    },
+  );
+
   it("never reads the pin off a round's kind", async () => {
     const signed = {
       ...DRAFT,
@@ -6749,6 +6798,30 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4, M11/5)",
     expect(within(section).queryByRole("button", { name: "New folder" })).not.toBeInTheDocument();
     expect(within(section).queryByRole("combobox")).not.toBeInTheDocument();
     expect(within(section).queryByRole("switch")).not.toBeInTheDocument();
+  });
+
+  it("offers a Contributor comparison alone on a primary Version row", async () => {
+    const api = documentsApi([CHAIN], {}, [person("u1", "creator"), person("u3", "contributor")]);
+    stubApi({ signedIn: CONTRIBUTOR, extra: api.handler });
+    renderAt("/contracts/42/documents");
+    const user = userEvent.setup();
+
+    const section = await documentsSection();
+    await user.click(
+      within(section).getByRole("button", {
+        name: `Actions for version 3 of ${CHAIN.title}`,
+      }),
+    );
+    expect(
+      within(await screen.findByRole("menu"))
+        .getAllByRole("menuitem")
+        .map((item) => item.textContent),
+    ).toEqual(["Compare with previous"]);
+    await user.keyboard("{Escape}");
+    // Supporting upload is the Contributor's existing DD-015 control;
+    // comparison adds no administration action beside it.
+    expect(within(section).getByRole("button", { name: "Upload" })).toBeInTheDocument();
+    expect(within(section).queryByRole("button", { name: "New folder" })).not.toBeInTheDocument();
   });
 
   it("freezes the section's controls on an archived record", async () => {
@@ -7236,10 +7309,13 @@ describe("the paged Documents section (CTR-024, DES-031)", () => {
  * drawing them.
  */
 describe("the doc panel (M12/2)", () => {
-  const version = (over: Record<string, unknown> = {}) => ({
+  const version = (over: Partial<DocumentVersion> = {}): DocumentVersion => ({
     id: "pv-1",
     versionNumber: 1,
     kind: "draft_ours",
+    source: "uploaded",
+    comparedFromVersionNumber: null,
+    comparedToVersionNumber: null,
     note: null,
     originalFilename: "msa-signed.pdf",
     mimeType: "application/pdf",
@@ -7350,6 +7426,7 @@ describe("the doc panel (M12/2)", () => {
     );
     expect(within(reading).getByText("v1")).toBeVisible();
     expect(within(reading).getByText("msa-signed.pdf")).toBeVisible();
+    expect(within(reading).queryByRole("link", { name: "Compare" })).not.toBeInTheDocument();
     // The download is still one click away, from inside the panel.
     expect(within(reading).getByRole("link", { name: "Download" })).toHaveAttribute(
       "href",
@@ -7555,6 +7632,38 @@ describe("the doc panel (M12/2)", () => {
       "href",
       "/api/v1/documents/pdoc-chain/versions/pv-a/download",
     );
+  });
+
+  it("shows the ready predecessor comparison count in the panel header", async () => {
+    const chain = document({
+      id: "pdoc-chain",
+      title: "Negotiated agreement",
+      versions: [
+        version({ id: "pv-a", versionNumber: 1, isCurrent: false }),
+        version({ id: "pv-b", versionNumber: 2 }),
+      ],
+    });
+    const base = panelApi([chain]);
+    stubApi({
+      signedIn: MEMBER,
+      extra: (call) =>
+        call.url.pathname === "/api/v1/documents/pdoc-chain/comparisons" && call.method === "GET"
+          ? json(200, { comparison: { state: "ready", changeCount: 7 } })
+          : base(call),
+    });
+    renderAt("/contracts/42/documents");
+    const user = userEvent.setup();
+
+    await user.click(within(await section()).getByRole("button", { name: "Negotiated agreement" }));
+    const reading = await panel(/Negotiated agreement, version 2/);
+    // The name says what the link does and then the count; the count
+    // alone would leave a screen reader with "7 changes" and no hint
+    // that it goes anywhere.
+    const compare = await within(reading).findByRole("link", {
+      name: "Compare with the previous version, 7 changes",
+    });
+    expect(compare).toHaveAttribute("href", "/documents/pdoc-chain/compare?from=pv-a&to=pv-b");
+    expect(compare).toHaveTextContent("7");
   });
 
   it("closes on Esc and puts focus back on the row that opened it", async () => {
@@ -8430,10 +8539,13 @@ describe("the folder tree on the contract record (M13/2, DES-033)", () => {
  * of.
  */
 describe("filing documents into folders (M13/3, DES-033)", () => {
-  const version = (over: Record<string, unknown> = {}) => ({
+  const version = (over: Partial<DocumentVersion> = {}): DocumentVersion => ({
     id: "ver-1",
     versionNumber: 1,
     kind: "draft_ours",
+    source: "uploaded",
+    comparedFromVersionNumber: null,
+    comparedToVersionNumber: null,
     note: null,
     originalFilename: "signed.pdf",
     mimeType: "text/plain",
@@ -9163,10 +9275,13 @@ describe("filing documents into folders (M13/3, DES-033)", () => {
 });
 
 describe("the multi-file batch on the contract record (M13/4, DOC-011, DES-033)", () => {
-  const version = (over: Record<string, unknown> = {}) => ({
+  const version = (over: Partial<DocumentVersion> = {}): DocumentVersion => ({
     id: "ver-1",
     versionNumber: 1,
     kind: "draft_ours",
+    source: "uploaded",
+    comparedFromVersionNumber: null,
+    comparedToVersionNumber: null,
     note: null,
     originalFilename: "signed.pdf",
     mimeType: "text/plain",
@@ -9828,10 +9943,13 @@ describe("the multi-file batch on the contract record (M13/4, DOC-011, DES-033)"
  * upload would recreate.
  */
 describe("dropping a folder tree on the contract record (M13/5, DOC-011, DES-033)", () => {
-  const version = (over: Record<string, unknown> = {}) => ({
+  const version = (over: Partial<DocumentVersion> = {}): DocumentVersion => ({
     id: "ver-1",
     versionNumber: 1,
     kind: "draft_ours",
+    source: "uploaded",
+    comparedFromVersionNumber: null,
+    comparedToVersionNumber: null,
     note: null,
     originalFilename: "signed.pdf",
     mimeType: "text/plain",

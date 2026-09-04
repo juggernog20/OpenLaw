@@ -1365,6 +1365,9 @@ export const commentsRoutes: FastifyPluginAsyncZod = async (app) => {
             versionNumber,
             fileRef: copied.fileRef,
             kind: request.body.kind,
+            source: "uploaded",
+            comparedFromVersionId: null,
+            comparedToVersionId: null,
             note:
               request.body.destination === "new_version" && request.body.note
                 ? request.body.note

@@ -7,6 +7,8 @@ import { RouterProvider } from "react-router/dom";
 import { IntlProvider } from "react-intl";
 
 import "@fontsource-variable/inter";
+import "@fontsource/tinos/latin-400.css";
+import "@fontsource/tinos/latin-700.css";
 import "../../../styles/globals.css";
 
 import { routes } from "./router";

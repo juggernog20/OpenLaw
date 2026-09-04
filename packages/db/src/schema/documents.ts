@@ -25,11 +25,8 @@
  * owning record. NULL is the record root, which is where every document
  * uploaded before folders existed sits and where most of them stay.
  *
- * What is deliberately not here yet, and the step that brings it: the
- * version chain's `source` plus the two comparison-provenance columns
- * (M32's generated redlines). The fixed kind already includes
- * `generated_redline` so reads and the M21A correction guard can name
- * it. M32 brings the first writer and its provenance columns.
+ * M32 adds the version chain's `source` and the two comparison-provenance
+ * columns with the first writer of `generated_redline`.
  */
 
 import { sql } from "drizzle-orm";
@@ -83,6 +80,9 @@ export const DOCUMENT_VERSION_KINDS = [
 ] as const;
 export type DocumentVersionKind = (typeof DOCUMENT_VERSION_KINDS)[number];
 export type HandSetDocumentVersionKind = (typeof HAND_SET_DOCUMENT_VERSION_KINDS)[number];
+
+export const DOCUMENT_VERSION_SOURCES = ["uploaded", "generated"] as const;
+export type DocumentVersionSource = (typeof DOCUMENT_VERSION_SOURCES)[number];
 
 /**
  * The logical file record (DOC-001). It holds identity and ownership;
@@ -318,6 +318,20 @@ export const documentVersions = pgTable(
      * read what the old one wrote. */
     fileRef: text("file_ref").notNull(),
     kind: text("kind", { enum: DOCUMENT_VERSION_KINDS }).notNull(),
+    /** Whether a person supplied the bytes or OpenLaw derived them.
+     * Generated means exactly one thing in this chain: a tracked-changes
+     * export with both comparison operands recorded below. */
+    source: text("source", { enum: DOCUMENT_VERSION_SOURCES }).notNull().default("uploaded"),
+    /** The older operand behind a generated redline. NULL on an
+     * uploaded round. */
+    comparedFromVersionId: text("compared_from_version_id").references(
+      (): AnyPgColumn => documentVersions.id,
+    ),
+    /** The newer operand behind a generated redline. NULL on an
+     * uploaded round. */
+    comparedToVersionId: text("compared_to_version_id").references(
+      (): AnyPgColumn => documentVersions.id,
+    ),
     /** What changed in this round; NULL when the uploader said nothing. */
     note: text("note"),
     /** The name the file arrived under. Kept verbatim: it is what the
@@ -348,6 +362,19 @@ export const documentVersions = pgTable(
     // The filed-comment marker references the exact pair, so deleting
     // a chain can clear both of its marker columns in one FK action.
     uniqueIndex("document_versions_document_id_id_idx").on(table.documentId, table.id),
+    // Both provenance columns point back into this same table, so
+    // deleting a chain makes PostgreSQL ask, for every row it removes,
+    // whether any row still names it as an operand. Unindexed that is a
+    // scan of the whole table per deleted round. Both indexes are
+    // partial because a generated redline is the only kind that fills
+    // these columns: the index then holds one entry per redline rather
+    // than one per round in the install.
+    index("document_versions_compared_from_idx")
+      .on(table.comparedFromVersionId)
+      .where(sql`${table.comparedFromVersionId} IS NOT NULL`),
+    index("document_versions_compared_to_idx")
+      .on(table.comparedToVersionId)
+      .where(sql`${table.comparedToVersionId} IS NOT NULL`),
     check("document_versions_number_check", sql`${table.versionNumber} >= 1`),
     check("document_versions_byte_size_check", sql`${table.byteSize} >= 0`),
     // Exactly 64 lowercase hex characters. The column's whole value is
@@ -361,6 +388,15 @@ export const documentVersions = pgTable(
     check(
       "document_versions_kind_check",
       sql`${table.kind} in ('draft_ours', 'draft_theirs', 'redline_theirs', 'redline_ours', 'executed', 'amendment', 'generated_redline')`,
+    ),
+    check("document_versions_source_check", sql`${table.source} in ('uploaded', 'generated')`),
+    check(
+      "document_versions_generated_provenance_check",
+      sql`(
+        (${table.kind} = 'generated_redline' and ${table.source} = 'generated' and ${table.comparedFromVersionId} is not null and ${table.comparedToVersionId} is not null)
+        or
+        (${table.kind} <> 'generated_redline' and ${table.source} = 'uploaded' and ${table.comparedFromVersionId} is null and ${table.comparedToVersionId} is null)
+      )`,
     ),
   ],
 );

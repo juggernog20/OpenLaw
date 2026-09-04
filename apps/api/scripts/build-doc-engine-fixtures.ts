@@ -3,8 +3,7 @@
 /**
  * Builds the doc-engine contract suite's fixtures.
  *
- * The fixtures are committed binaries — five small files that stand for
- * the five things the engine has to do. They are committed rather than
+ * The fixtures are committed binaries. They are committed rather than
  * generated at test time because a contract suite must measure the
  * engine, not the fixture generator, and because two of them need the
  * sidecar image's own tooling to make. This script is how they were
@@ -26,6 +25,14 @@
  *   must read without OCR.
  * - `scan.pdf` — the same page as a picture of itself: an image-only
  *   PDF with no text layer at all, which is what OCR is for (DOC-005).
+ * - `compare-older.docx` / `compare-newer.docx` — the clean Word pair
+ *   LibreOffice compares in the DOC-003 fidelity case.
+ * - `compare-newer.odt` — the newer fixture as a real ODT, proving the
+ *   shape tier's cross-format comparison rather than only its filename.
+ * - `change-model.docx` — every structure the tracked-change parser
+ *   reads: a heading, numbering, a clause label, three change kinds,
+ *   and a table.
+ * - `no-changes.docx` — the parser's empty-change case.
  *
  * The two PowerPoint/PDF fixtures are produced by running LibreOffice
  * and poppler inside the sidecar image. Making a valid PPTX by hand
@@ -135,16 +142,28 @@ const REL_TYPES = "http://schemas.openxmlformats.org/officeDocument/2006/relatio
 /** The date every tracked change and comment in the fixtures carries. */
 const AUTHORED_AT = "2026-08-14T09:00:00Z";
 
-/** The OOXML package around one `word/document.xml`, with comments when given. */
-function docx(documentXml: string, commentsXml?: string): Buffer {
+interface DocxParts {
+  comments?: string;
+  numbering?: string;
+  styles?: string;
+}
+
+/** The OOXML package around one `word/document.xml`, with its optional Word parts. */
+function docx(documentXml: string, parts: DocxParts = {}): Buffer {
   const contentTypes = part(
     "[Content_Types].xml",
     `<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">` +
       `<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>` +
       `<Default Extension="xml" ContentType="application/xml"/>` +
       `<Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/>` +
-      (commentsXml
+      (parts.comments
         ? `<Override PartName="/word/comments.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.comments+xml"/>`
+        : "") +
+      (parts.numbering
+        ? `<Override PartName="/word/numbering.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.numbering+xml"/>`
+        : "") +
+      (parts.styles
+        ? `<Override PartName="/word/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml"/>`
         : "") +
       `</Types>`,
   );
@@ -157,14 +176,46 @@ function docx(documentXml: string, commentsXml?: string): Buffer {
   const documentRels = part(
     "word/_rels/document.xml.rels",
     `<Relationships xmlns="${RELS_NS}">` +
-      (commentsXml
+      (parts.comments
         ? `<Relationship Id="rId1" Type="${REL_TYPES}/comments" Target="comments.xml"/>`
+        : "") +
+      (parts.numbering
+        ? `<Relationship Id="rId2" Type="${REL_TYPES}/numbering" Target="numbering.xml"/>`
+        : "") +
+      (parts.styles
+        ? `<Relationship Id="rId3" Type="${REL_TYPES}/styles" Target="styles.xml"/>`
         : "") +
       `</Relationships>`,
   );
   const entries = [contentTypes, packageRels, documentRels, part("word/document.xml", documentXml)];
-  if (commentsXml) entries.push(part("word/comments.xml", commentsXml));
+  if (parts.comments) entries.push(part("word/comments.xml", parts.comments));
+  if (parts.numbering) entries.push(part("word/numbering.xml", parts.numbering));
+  if (parts.styles) entries.push(part("word/styles.xml", parts.styles));
   return zip(entries);
+}
+
+/** A minimal OpenDocument Text package used as a real cross-format operand. */
+function odt(paragraphs: readonly string[]): Buffer {
+  return zip([
+    {
+      name: "mimetype",
+      body: Buffer.from("application/vnd.oasis.opendocument.text"),
+    },
+    part(
+      "META-INF/manifest.xml",
+      `<manifest:manifest xmlns:manifest="urn:oasis:names:tc:opendocument:xmlns:manifest:1.0" manifest:version="1.3">` +
+        `<manifest:file-entry manifest:full-path="/" manifest:media-type="application/vnd.oasis.opendocument.text"/>` +
+        `<manifest:file-entry manifest:full-path="content.xml" manifest:media-type="text/xml"/>` +
+        `</manifest:manifest>`,
+    ),
+    part(
+      "content.xml",
+      `<office:document-content xmlns:office="urn:oasis:names:tc:opendocument:xmlns:office:1.0" ` +
+        `xmlns:text="urn:oasis:names:tc:opendocument:xmlns:text:1.0" office:version="1.3">` +
+        `<office:body><office:text>${paragraphs.map((text) => `<text:p>${text}</text:p>`).join("")}` +
+        `</office:text></office:body></office:document-content>`,
+    ),
+  ]);
 }
 
 /** A paragraph of one plain run. */
@@ -201,11 +252,75 @@ const TRACKED_CHANGES_DOCX = docx(
     `<w:r><w:commentReference w:id="0"/></w:r>` +
     `</w:p>` +
     `</w:body></w:document>`,
-  `<w:comments xmlns:w="${W_NS}">` +
-    `<w:comment w:id="0" w:author="Counterparty Counsel" w:initials="CC" w:date="${AUTHORED_AT}">` +
-    paragraph("Confirm the DIFC Courts have exclusive jurisdiction.") +
-    `</w:comment>` +
-    `</w:comments>`,
+  {
+    comments:
+      `<w:comments xmlns:w="${W_NS}">` +
+      `<w:comment w:id="0" w:author="Counterparty Counsel" w:initials="CC" w:date="${AUTHORED_AT}">` +
+      paragraph("Confirm the DIFC Courts have exclusive jurisdiction.") +
+      `</w:comment>` +
+      `</w:comments>`,
+  },
+);
+
+const COMPARE_OLDER_DOCX = docx(
+  `<w:document xmlns:w="${W_NS}"><w:body>` +
+    paragraph("Services Agreement") +
+    paragraph("2.1 The notice period is thirty days.") +
+    paragraph("Fees are payable monthly.") +
+    `</w:body></w:document>`,
+);
+
+const COMPARE_NEWER_DOCX = docx(
+  `<w:document xmlns:w="${W_NS}"><w:body>` +
+    paragraph("Services Agreement") +
+    paragraph("2.1 The notice period is sixty days.") +
+    paragraph("Fees are payable quarterly.") +
+    `</w:body></w:document>`,
+);
+
+const COMPARE_NEWER_ODT = odt([
+  "Services Agreement",
+  "2.1 The notice period is sixty days.",
+  "Fees are payable quarterly.",
+]);
+
+const CHANGE_MODEL_DOCX = docx(
+  `<w:document xmlns:w="${W_NS}"><w:body>` +
+    `<w:p><w:pPr><w:pStyle w:val="Heading1"/></w:pPr><w:r><w:t>Agreement terms</w:t></w:r>` +
+    `<w:fldSimple w:instr="PAGE"><w:r><w:t>1</w:t></w:r></w:fldSimple></w:p>` +
+    `<w:p><w:pPr><w:numPr><w:ilvl w:val="0"/><w:numId w:val="7"/></w:numPr></w:pPr>` +
+    `<w:r><w:t>Definitions apply.</w:t></w:r></w:p>` +
+    `<w:p><w:r><w:t xml:space="preserve">2.4 Liability cap is </w:t></w:r>` +
+    `<w:del w:id="1" w:author="Counsel" w:date="${AUTHORED_AT}"><w:r><w:delText>ten million</w:delText></w:r></w:del>` +
+    `<w:r><w:t>.</w:t></w:r></w:p>` +
+    `<w:p><w:r><w:t xml:space="preserve">The term includes </w:t></w:r>` +
+    `<w:ins w:id="2" w:author="Counsel" w:date="${AUTHORED_AT}"><w:r><w:t>two extensions</w:t></w:r></w:ins>` +
+    `<w:r><w:t>.</w:t></w:r></w:p>` +
+    `<w:p><w:r><w:t xml:space="preserve">Notice is </w:t></w:r>` +
+    `<w:del w:id="3" w:author="Counsel" w:date="${AUTHORED_AT}"><w:r><w:delText>thirty days</w:delText></w:r></w:del>` +
+    `<w:ins w:id="4" w:author="Counsel" w:date="${AUTHORED_AT}"><w:r><w:t>sixty days</w:t></w:r></w:ins>` +
+    `<w:r><w:t>.</w:t></w:r></w:p>` +
+    `<w:tbl><w:tr>` +
+    `<w:tc><w:p><w:r><w:t>Table unchanged</w:t></w:r></w:p></w:tc>` +
+    `<w:tc><w:p><w:ins w:id="5" w:author="Counsel" w:date="${AUTHORED_AT}"><w:r><w:t>Added cell text</w:t></w:r></w:ins></w:p></w:tc>` +
+    `<w:tc><w:p><w:r><w:t>Outer table cell</w:t></w:r></w:p>` +
+    `<w:tbl><w:tr><w:tc><w:p>` +
+    `<w:del w:id="6" w:author="Counsel" w:date="${AUTHORED_AT}"><w:r><w:delText>Nested removed text</w:delText></w:r></w:del>` +
+    `</w:p></w:tc></w:tr></w:tbl></w:tc>` +
+    `</w:tr></w:tbl>` +
+    `</w:body></w:document>`,
+  {
+    numbering:
+      `<w:numbering xmlns:w="${W_NS}">` +
+      `<w:abstractNum w:abstractNumId="2"><w:lvl w:ilvl="0"><w:start w:val="1"/>` +
+      `<w:numFmt w:val="decimal"/><w:lvlText w:val="%1."/></w:lvl></w:abstractNum>` +
+      `<w:num w:numId="7"><w:abstractNumId w:val="2"/></w:num>` +
+      `</w:numbering>`,
+  },
+);
+
+const NO_CHANGES_DOCX = docx(
+  `<w:document xmlns:w="${W_NS}"><w:body>${paragraph("No tracked changes here.")}</w:body></w:document>`,
 );
 
 // --- The LibreOffice-built fixtures ------------------------------------
@@ -291,6 +406,16 @@ function main(): void {
   mkdirSync(fixtures, { recursive: true });
   writeFileSync(join(fixtures, "plain.docx"), PLAIN_DOCX);
   writeFileSync(join(fixtures, "tracked-changes.docx"), TRACKED_CHANGES_DOCX);
+  writeFileSync(join(fixtures, "compare-older.docx"), COMPARE_OLDER_DOCX);
+  writeFileSync(join(fixtures, "compare-newer.docx"), COMPARE_NEWER_DOCX);
+  writeFileSync(join(fixtures, "compare-newer.odt"), COMPARE_NEWER_ODT);
+  writeFileSync(join(fixtures, "change-model.docx"), CHANGE_MODEL_DOCX);
+  writeFileSync(join(fixtures, "no-changes.docx"), NO_CHANGES_DOCX);
+
+  if (process.env.DOC_ENGINE_WORD_FIXTURES_ONLY === "1") {
+    console.log(`wrote the Word fixtures to ${fixtures}`);
+    return;
+  }
 
   const work = mkdtempSync(join(tmpdir(), "doc-engine-fixtures-"));
   try {

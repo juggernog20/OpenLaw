@@ -65,6 +65,7 @@ export {
   JOB_QUEUES,
   type ContractAnalysisJob,
   type DisplayConversionJob,
+  type DocumentComparisonJob,
   type ExecutedCopyFetchJob,
   type JobQueue,
   type NotificationEmailJob,
@@ -99,6 +100,7 @@ export {
 export {
   startPipeline,
   CONTRACT_ANALYSIS_QUEUE_OPTIONS,
+  DOCUMENT_COMPARISON_QUEUE_OPTIONS,
   DISPLAY_CONVERSION_QUEUE_OPTIONS,
   EXECUTED_COPY_QUEUE_OPTIONS,
   MORNING_ROUND_QUEUE_OPTIONS,

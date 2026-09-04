@@ -22,7 +22,9 @@ import {
   DocEngineUnavailableError,
   SourceUnreadableError,
   UnsupportedFormatError,
+  isComparableFormat,
   isConvertibleFormat,
+  unsupportedCompareFormat,
   unsupportedFormat,
   type DocEngine,
 } from "./engine.js";
@@ -38,6 +40,21 @@ export const DEFAULT_DOC_ENGINE_URL = "http://doc-engine:8080";
  * the outer bound for the case where the sidecar itself stops answering.
  */
 export const DEFAULT_DOC_ENGINE_TIMEOUT_MS = 300_000;
+
+/**
+ * How long a compare may run before the client gives up.
+ *
+ * Compare reads two complete Word files and is the sidecar's slowest
+ * operation, so it has its own bound rather than inheriting conversion's.
+ * An install sets it with `DOC_ENGINE_COMPARE_TIMEOUT_MS`, the way it
+ * sets `DOC_ENGINE_TIMEOUT_MS` for the other three operations.
+ */
+export const DEFAULT_DOC_ENGINE_COMPARE_TIMEOUT_MS = 600_000;
+
+/** The comparison queue gives one attempt fifteen minutes. One compare
+ * call plus a minute for two reads, one write, parsing, and the database
+ * update must fit inside that lease. */
+export const MAX_DOC_ENGINE_COMPARE_TIMEOUT_MS = 840_000;
 
 /**
  * The highest bound an install may set, and why there is one.
@@ -65,6 +82,43 @@ export interface HttpDocEngineOptions {
   baseUrl: string;
   /** Bound on one call. Defaults to {@link DEFAULT_DOC_ENGINE_TIMEOUT_MS}. */
   timeoutMs?: number;
+  /** Bound on one compare call. Defaults to {@link DEFAULT_DOC_ENGINE_COMPARE_TIMEOUT_MS}. */
+  compareTimeoutMs?: number;
+}
+
+const PAIR_MAGIC = Buffer.from("OPENLAW1", "ascii");
+const PAIR_CONTENT_TYPE = "application/vnd.openlaw.document-pair";
+
+/**
+ * Streams two files in one request without buffering either one.
+ *
+ * Each file is a series of uint32-length-prefixed chunks followed by a
+ * zero length. The fixed magic comes first. The sidecar is the only
+ * reader of this private wire format.
+ */
+function framedPair(older: Readable, newer: Readable): Readable {
+  return Readable.from(
+    (async function* () {
+      const length = Buffer.alloc(4);
+      try {
+        yield PAIR_MAGIC;
+        for (const source of [older, newer]) {
+          for await (const raw of source) {
+            const chunk = Buffer.from(raw);
+            if (chunk.byteLength === 0) continue;
+            length.writeUInt32BE(chunk.byteLength);
+            yield Buffer.from(length);
+            yield chunk;
+          }
+          length.writeUInt32BE(0);
+          yield Buffer.from(length);
+        }
+      } finally {
+        older.destroy();
+        newer.destroy();
+      }
+    })(),
+  );
 }
 
 /**
@@ -216,6 +270,7 @@ function withIdleBound(source: Readable, path: string, timeoutMs: number): Reada
 /** Builds the HTTP client for a running sidecar. */
 export function createHttpDocEngine(options: HttpDocEngineOptions): DocEngine {
   const timeoutMs = options.timeoutMs ?? DEFAULT_DOC_ENGINE_TIMEOUT_MS;
+  const compareTimeoutMs = options.compareTimeoutMs ?? DEFAULT_DOC_ENGINE_COMPARE_TIMEOUT_MS;
   // Parsed once, at construction: a malformed base URL is a
   // configuration fault, and it must not wait for the first upload to
   // show itself. The trailing slash keeps a base URL that carries a path
@@ -227,10 +282,12 @@ export function createHttpDocEngine(options: HttpDocEngineOptions): DocEngine {
     path: string,
     body: Readable,
     search?: URLSearchParams,
+    attemptTimeoutMs = timeoutMs,
+    contentType = "application/octet-stream",
   ): Promise<{ response: Response; call: Attempt }> {
     const url = new URL(path, base);
     if (search) url.search = search.toString();
-    const call = new Attempt(path, timeoutMs);
+    const call = new Attempt(path, attemptTimeoutMs);
     let response: Response;
     const init: StreamingRequestInit = {
       method: "POST",
@@ -238,7 +295,7 @@ export function createHttpDocEngine(options: HttpDocEngineOptions): DocEngine {
       // Required whenever the body is a stream: the request starts
       // before the body has finished being written.
       duplex: "half",
-      headers: { "content-type": "application/octet-stream" },
+      headers: { "content-type": contentType },
       signal: call.signal,
     };
     try {
@@ -293,6 +350,35 @@ export function createHttpDocEngine(options: HttpDocEngineOptions): DocEngine {
         Readable.fromWeb(response.body as WebReadableStream<Uint8Array>),
         "convert",
         timeoutMs,
+      );
+    },
+
+    async compare(older, olderFormat, newer, newerFormat) {
+      if (!isComparableFormat(olderFormat)) {
+        older.destroy();
+        newer.destroy();
+        throw unsupportedCompareFormat(olderFormat);
+      }
+      if (!isComparableFormat(newerFormat)) {
+        older.destroy();
+        newer.destroy();
+        throw unsupportedCompareFormat(newerFormat);
+      }
+      const { response, call } = await post(
+        "compare",
+        framedPair(older, newer),
+        new URLSearchParams({ olderFormat, newerFormat }),
+        compareTimeoutMs,
+        PAIR_CONTENT_TYPE,
+      );
+      call.settle();
+      if (!response.body) {
+        throw new DocEngineUnavailableError("The doc engine answered /compare with no body.");
+      }
+      return withIdleBound(
+        Readable.fromWeb(response.body as WebReadableStream<Uint8Array>),
+        "compare",
+        compareTimeoutMs,
       );
     },
 

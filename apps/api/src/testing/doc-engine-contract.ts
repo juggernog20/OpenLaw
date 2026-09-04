@@ -31,6 +31,7 @@ import { readFileSync } from "node:fs";
 import { Readable } from "node:stream";
 import { fileURLToPath } from "node:url";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { parseTrackedChangesDocx } from "../lib/doc-engine/change-model.js";
 import {
   // Imported, never restated: a format this list declares convertible
   // must convert, and a suite holding a copy of the list would stay
@@ -46,7 +47,7 @@ function fixture(name: string): Buffer {
 }
 
 /**
- * The five files the contract is stated over.
+ * The small fixture set the contract is stated over.
  *
  * They are small on purpose. A contract suite that takes a minute per
  * case stops being run, and none of what is asserted here needs a long
@@ -63,6 +64,12 @@ export const DOC_ENGINE_FIXTURES = {
   nativeTextPdf: fixture("native-text.pdf"),
   /** The same page as a picture of itself — an image-only scan. */
   scanPdf: fixture("scan.pdf"),
+  /** The older clean Word document in the compare fidelity pair. */
+  compareOlderDocx: fixture("compare-older.docx"),
+  /** The newer clean Word document in the compare fidelity pair. */
+  compareNewerDocx: fixture("compare-newer.docx"),
+  /** The same newer text as a real OpenDocument Text package. */
+  compareNewerOdt: fixture("compare-newer.odt"),
 } as const;
 
 export interface DocEngineContractHarness {
@@ -241,6 +248,68 @@ export function describeDocEngineContract(
       });
     });
 
+    describe("compare", () => {
+      it("answers a tracked-changes Word file for a mixed-format Word pair", async () => {
+        const compared = await collect(
+          await engine.compare(
+            bytes(DOC_ENGINE_FIXTURES.compareOlderDocx),
+            "docx",
+            bytes(DOC_ENGINE_FIXTURES.compareNewerOdt),
+            "odt",
+          ),
+        );
+        expect(compared.subarray(0, 4)).toEqual(Buffer.from([0x50, 0x4b, 0x03, 0x04]));
+        expect(compared.lastIndexOf(Buffer.from([0x50, 0x4b, 0x05, 0x06]))).toBeGreaterThan(0);
+      });
+
+      it("refuses a non-Word operand as unsupported and names its format", async () => {
+        const error = await engine
+          .compare(
+            bytes(DOC_ENGINE_FIXTURES.nativeTextPdf),
+            "pdf",
+            bytes(DOC_ENGINE_FIXTURES.compareNewerDocx),
+            "docx",
+          )
+          .then(
+            () => undefined,
+            (raised: unknown) => raised,
+          );
+        expect(error).toBeInstanceOf(UnsupportedFormatError);
+        expect((error as Error).message).toContain(JSON.stringify("pdf"));
+      });
+
+      it("refuses unreadable Word bytes", async () => {
+        await expect(
+          engine.compare(
+            bytes("not a Word package"),
+            "docx",
+            bytes(DOC_ENGINE_FIXTURES.compareNewerDocx),
+            "docx",
+          ),
+        ).rejects.toBeInstanceOf(SourceUnreadableError);
+      });
+
+      it("compares two pairs at once", async () => {
+        const answers = await Promise.all([
+          engine.compare(
+            bytes(DOC_ENGINE_FIXTURES.compareOlderDocx),
+            "docx",
+            bytes(DOC_ENGINE_FIXTURES.compareNewerDocx),
+            "docx",
+          ),
+          engine.compare(
+            bytes(DOC_ENGINE_FIXTURES.compareOlderDocx),
+            "docx",
+            bytes(DOC_ENGINE_FIXTURES.compareNewerOdt),
+            "odt",
+          ),
+        ]);
+        const compared = await Promise.all(answers.map(collect));
+        expect(compared).toHaveLength(2);
+        expect(compared.every((answer) => answer.subarray(0, 2).toString() === "PK")).toBe(true);
+      });
+    });
+
     describe("ocrPdf", () => {
       it("answers text for a scanned PDF", async () => {
         const text = await engine.ocrPdf(bytes(DOC_ENGINE_FIXTURES.scanPdf));
@@ -350,6 +419,26 @@ export function describeDocEngineFidelity(
       expect(text).toContain("England and Wales");
       expect(text).toContain("Dubai International Financial Centre");
       expect(text).toContain("DIFC Courts have exclusive jurisdiction");
+    });
+
+    it("records the older words as deleted and the newer words as inserted", async () => {
+      const compared = await collect(
+        await engine.compare(
+          bytes(DOC_ENGINE_FIXTURES.compareOlderDocx),
+          "docx",
+          bytes(DOC_ENGINE_FIXTURES.compareNewerDocx),
+          "docx",
+        ),
+      );
+      const runs = parseTrackedChangesDocx(compared).paragraphs.flatMap(
+        (paragraph) => paragraph.runs,
+      );
+      expect(runs.some((run) => run.change === "deleted" && run.text.includes("thirty"))).toBe(
+        true,
+      );
+      expect(runs.some((run) => run.change === "inserted" && run.text.includes("sixty"))).toBe(
+        true,
+      );
     });
 
     it("reads a native text layer without OCR", async () => {

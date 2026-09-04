@@ -42,7 +42,7 @@ RUN pnpm --filter @openlaw/doc-engine build
 FROM node:24-trixie-slim
 ENV NODE_ENV=production
 
-# `--no-install-recommends` keeps the image to the tools the three
+# `--no-install-recommends` keeps the image to the tools the four
 # operations actually run. Two font packages are deliberate, not
 # incidental: a conversion with no fonts installed renders boxes, and
 # the Liberation family is metric-compatible with the Microsoft core
@@ -62,6 +62,7 @@ RUN apt-get update \
         libreoffice-writer \
         ocrmypdf \
         poppler-utils \
+        python3-uno \
         tesseract-ocr-eng \
     && rm -rf /var/lib/apt/lists/*
 
@@ -69,6 +70,7 @@ WORKDIR /app
 # The wrapper has no runtime dependencies of its own, so the built
 # JavaScript is the whole application layer — no node_modules to copy.
 COPY --from=build /app/services/doc-engine/dist ./dist
+COPY services/doc-engine/src/compare.py ./compare.py
 
 # LibreOffice and OCRmyPDF both want somewhere to write. Every operation
 # already works under a temporary directory it removes afterwards; HOME

@@ -42,7 +42,12 @@ import {
 import { DocumentsCard } from "../components/documents/documents-card";
 import { DocPanel } from "../components/documents/doc-panel";
 import { RecordContext } from "../components/record-context";
-import { readDocumentLanding, readRecordDocuments, type ContractDocument } from "../lib/documents";
+import {
+  previousComparableVersion,
+  readDocumentLanding,
+  readRecordDocuments,
+  type ContractDocument,
+} from "../lib/documents";
 
 type PatchBody =
   paths["/api/v1/knowledge/{id}"]["patch"]["requestBody"]["content"]["application/json"];
@@ -364,6 +369,7 @@ export function KnowledgeRecordPage() {
                 documentId={open.document.id}
                 title={open.document.title}
                 version={open.version}
+                previousVersion={previousComparableVersion(open.document, open.version)}
                 initialFind={loaded.documentFindQuery}
                 onClose={() => setReading(null)}
               />

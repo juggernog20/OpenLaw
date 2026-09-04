@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 /**
- * The doc engine (TECH-010): one narrow interface over the three things
+ * The doc engine (TECH-010): one narrow interface over the four things
  * a document engine does for us, with an implementation behind it.
  *
- * The interface has three operations — convert a source to PDF, read an
- * image-only PDF with OCR, read a PDF's native text layer — and nothing
- * else. It stays narrow and stream-based for the reason the storage
+ * The interface converts a source to PDF, compares two Word files, reads
+ * an image-only PDF with OCR, and reads a PDF's native text layer. It
+ * stays narrow and stream-based for the reason the storage
  * adapter does: TECH-010 keeps a commercial SDK (Aspose-class) as the
  * documented swap-in if LibreOffice fidelity fails, and an interface
  * shaped around LibreOffice's command line could not carry one. Nothing
@@ -55,6 +55,13 @@ export class UnsupportedFormatError extends DocEngineError {
 export function unsupportedFormat(format: string): UnsupportedFormatError {
   return new UnsupportedFormatError(
     `The doc engine does not convert ${JSON.stringify(format)} to PDF.`,
+  );
+}
+
+/** The refusal for a format the engine cannot use as a compare operand. */
+export function unsupportedCompareFormat(format: string): UnsupportedFormatError {
+  return new UnsupportedFormatError(
+    `The doc engine does not compare the Word format ${JSON.stringify(format)}.`,
   );
 }
 
@@ -110,6 +117,22 @@ export const CONVERTIBLE_FORMATS = [
 /** A source format the engine converts. */
 export type ConvertibleFormat = (typeof CONVERTIBLE_FORMATS)[number];
 
+/** The Word formats LibreOffice accepts as either compare operand. */
+export const COMPARABLE_FORMATS = [
+  "doc",
+  "docx",
+  "odt",
+  "rtf",
+] as const satisfies readonly string[];
+
+/** A Word format accepted by {@link DocEngine.compare}. */
+export type ComparableFormat = (typeof COMPARABLE_FORMATS)[number];
+
+/** Whether `format` is a Word compare operand. */
+export function isComparableFormat(format: string): format is ComparableFormat {
+  return (COMPARABLE_FORMATS as readonly string[]).includes(format);
+}
+
 /**
  * Whether the engine converts `format`.
  *
@@ -140,6 +163,22 @@ export interface DocEngine {
    * cannot be read as a document.
    */
   convertToPdf(source: Readable, format: string): Promise<Readable>;
+
+  /**
+   * Compares an older Word file with a newer one and opens the resulting
+   * DOCX for reading. The result carries the older text as tracked
+   * deletions and the newer text as tracked insertions (DOC-003).
+   *
+   * Each operand has its own lowercase format. Rejects with
+   * {@link UnsupportedFormatError} when either operand is not Word, and
+   * with {@link SourceUnreadableError} when either file cannot be read.
+   */
+  compare(
+    older: Readable,
+    olderFormat: string,
+    newer: Readable,
+    newerFormat: string,
+  ): Promise<Readable>;
 
   /**
    * Reads an image-only PDF with OCR and answers the text (DOC-005).

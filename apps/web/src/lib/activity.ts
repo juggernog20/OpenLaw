@@ -307,6 +307,23 @@ function wholeCount(payload: Payload, key: string): number {
   return typeof value === "number" && Number.isInteger(value) && value > 0 ? value : 0;
 }
 
+/**
+ * Whether a redline entry carries all three numbers its sentence names.
+ *
+ * The sentence's whole content is which two rounds were compared and
+ * which round the redline became, so one missing number makes it a
+ * false statement rather than a shorter one. `wholeCount` answers zero
+ * for a missing key, and "versions 0 and 0" is worse than saying a
+ * redline was generated and leaving it there.
+ */
+function redlineVersions(payload: Payload): boolean {
+  return (
+    versionNumber(payload) !== "unknown" &&
+    wholeCount(payload, "fromVersionNumber") > 0 &&
+    wholeCount(payload, "toVersionNumber") > 0
+  );
+}
+
 /** What an unrecorded value reads as, on either side of a change. */
 function notSet(intl: IntlShape): string {
   return intl.formatMessage({ id: "activity.notSet", defaultMessage: "Not set" });
@@ -1889,6 +1906,26 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
     values: (intl, payload) => ({
       title: named(intl, payload, "title"),
       version: versionNumber(payload),
+    }),
+  },
+  "document.redline_generated": {
+    icon: ArrowRightLeft,
+    // The numbers are what the sentence is for, so a payload missing
+    // one falls back to the generic wording rather than printing
+    // "versions 0 and 0" — a false fact reads worse than a vague one.
+    // The kind-changed entry below guards its version the same way.
+    message: defineMessage({
+      id: "activity.document.redlineGenerated",
+      defaultMessage:
+        "{version, select, unknown {{actor} generated a redline of {title}} " +
+        "other {{actor} generated version {version} of {title} " +
+        "from versions {fromVersion} and {toVersion}}}",
+    }),
+    values: (intl, payload) => ({
+      title: named(intl, payload, "title"),
+      version: redlineVersions(payload) ? versionNumber(payload) : "unknown",
+      fromVersion: wholeCount(payload, "fromVersionNumber"),
+      toVersion: wholeCount(payload, "toVersionNumber"),
     }),
   },
   "document.version_kind_changed": {

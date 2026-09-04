@@ -748,6 +748,14 @@ const SAMPLE_PAYLOADS: { [A in ActivityAction]: ActivityPayloadMap[A] } = {
     versionNumber: 2,
     kind: "negotiation",
   },
+  "document.redline_generated": {
+    documentId: "doc_1",
+    versionId: "ver_3",
+    title: "Supply agreement v1.pdf",
+    fromVersionNumber: 1,
+    toVersionNumber: 2,
+    versionNumber: 3,
+  },
   "document.version_kind_changed": {
     documentId: "doc_1",
     versionId: "ver_2",
@@ -1096,6 +1104,12 @@ describe("the sentences a reader gets", () => {
     expect(narration.changes).toEqual([
       { label: "Kind", from: "Draft · ours", to: "Draft · theirs" },
     ]);
+  });
+
+  it("names both operands and the new round for a generated redline", () => {
+    expect(
+      narrate("document.redline_generated", SAMPLE_PAYLOADS["document.redline_generated"]).sentence,
+    ).toBe("Nadia Counsel generated version 3 of Supply agreement v1.pdf from versions 1 and 2");
   });
 
   it("names the actor and the pair behind a status move", () => {
