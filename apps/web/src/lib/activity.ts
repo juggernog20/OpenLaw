@@ -1891,6 +1891,20 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
       version: versionNumber(payload),
     }),
   },
+  "document.redline_generated": {
+    icon: ArrowRightLeft,
+    message: defineMessage({
+      id: "activity.document.redlineGenerated",
+      defaultMessage:
+        "{actor} generated version {version} of {title} from versions {fromVersion} and {toVersion}",
+    }),
+    values: (intl, payload) => ({
+      title: named(intl, payload, "title"),
+      version: versionNumber(payload),
+      fromVersion: wholeCount(payload, "fromVersionNumber"),
+      toVersion: wholeCount(payload, "toVersionNumber"),
+    }),
+  },
   "document.version_kind_changed": {
     icon: FilePen,
     message: defineMessage({

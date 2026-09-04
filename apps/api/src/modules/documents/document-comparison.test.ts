@@ -10,9 +10,20 @@
  * test wait through production backoff delays.
  */
 
+import { createHash } from "node:crypto";
 import { Readable } from "node:stream";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { and, documentComparisons, documentVersions, eq, users } from "@openlaw/db";
+import {
+  activityLog,
+  and,
+  documentComparisons,
+  documentVersionRenditions,
+  documentVersions,
+  documentVersionText,
+  eq,
+  notifications,
+  users,
+} from "@openlaw/db";
 import { provisionUser } from "../../auth/instance.js";
 import { buildApp } from "../../app.js";
 import { DocEngineUnavailableError, type DocEngine } from "../../lib/doc-engine/engine.js";
@@ -57,7 +68,11 @@ interface VersionRow {
   id: string;
   versionNumber: number;
   kind: string;
+  source: "uploaded" | "generated";
+  comparedFromVersionNumber: number | null;
+  comparedToVersionNumber: number | null;
   originalFilename: string;
+  mimeType: string;
   isCurrent: boolean;
 }
 
@@ -80,7 +95,7 @@ interface ComparisonRow {
   } | null;
   changeCount: number | null;
   failure: string | null;
-  exportedVersionId: null;
+  exportedVersionId: string | null;
   document: {
     id: string;
     title: string;
@@ -91,6 +106,7 @@ interface ComparisonRow {
       title: string;
     };
     versions: VersionRow[];
+    archivedAt: string | null;
   };
 }
 
@@ -107,7 +123,11 @@ interface DocumentEnvelope {
 }
 
 interface ProblemEnvelope {
+  type: string;
+  title: string;
+  status: number;
   detail: string;
+  instance: string;
 }
 
 let harness: TestHarness;
@@ -283,6 +303,36 @@ function readComparison(cookies: Record<string, string>, documentId: string, com
   });
 }
 
+function exportComparison(
+  cookies: Record<string, string>,
+  documentId: string,
+  comparisonId: string,
+) {
+  return harness.app.inject({
+    method: "POST",
+    url: `/api/v1/documents/${documentId}/comparisons/${comparisonId}/export`,
+    cookies,
+  });
+}
+
+function expectExportProblem(
+  response: Awaited<ReturnType<typeof exportComparison>>,
+  status: number,
+  detail: string,
+  documentId: string,
+  comparisonId: string,
+) {
+  expect(response.statusCode, response.body).toBe(status);
+  expect(response.headers["content-type"]).toContain("application/problem+json");
+  expect(response.json<ProblemEnvelope>()).toEqual({
+    type: "about:blank",
+    title: detail,
+    status,
+    detail,
+    instance: `/api/v1/documents/${documentId}/comparisons/${comparisonId}/export`,
+  });
+}
+
 function findComparison(
   cookies: Record<string, string>,
   documentId: string,
@@ -346,6 +396,15 @@ describe("a Word comparison", () => {
       },
     });
     expect(pending.document.versions.map((version) => version.id)).toEqual([from.id, to.id]);
+    expect(pending.document.versions).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          source: "uploaded",
+          comparedFromVersionNumber: null,
+          comparedToVersionNumber: null,
+        }),
+      ]),
+    );
     expect(pending.fromVersion.id).toBe(from.id);
     expect(pending.toVersion.id).toBe(to.id);
 
@@ -399,7 +458,12 @@ describe("a Word comparison", () => {
 
     await harness.db
       .update(documentVersions)
-      .set({ kind: "generated_redline" })
+      .set({
+        kind: "generated_redline",
+        source: "generated",
+        comparedFromVersionId: first.from.id,
+        comparedToVersionId: first.to.id,
+      })
       .where(eq(documentVersions.id, first.to.id));
     const generated = await requestComparison(
       memberCookies,
@@ -468,6 +532,209 @@ describe("a Word comparison", () => {
     } finally {
       await detached.close();
     }
+  });
+
+  it("exports one generated round with provenance, copied bytes, derivations, activity, and notification", async () => {
+    const { contract, document, from, to } = await twoRounds("Comparison · export");
+    const requested = await requestComparison(memberCookies, document.id, from.id, to.id);
+    const ready = await settled(document.id, requested.json<ComparisonEnvelope>().comparison.id);
+    expect(ready.state).toBe("ready");
+
+    const first = await exportComparison(memberCookies, document.id, ready.id);
+    expect(first.statusCode, first.body).toBe(201);
+    const exported = first.json<{ version: VersionRow }>().version;
+    expect(exported).toMatchObject({
+      versionNumber: 3,
+      kind: "generated_redline",
+      source: "generated",
+      comparedFromVersionNumber: 1,
+      comparedToVersionNumber: 2,
+      originalFilename: "first.docx v1-v2 redline.docx",
+    });
+
+    const [stored] = await harness.db
+      .select({
+        fileRef: documentVersions.fileRef,
+        byteSize: documentVersions.byteSize,
+        checksumSha256: documentVersions.checksumSha256,
+        source: documentVersions.source,
+        comparedFromVersionId: documentVersions.comparedFromVersionId,
+        comparedToVersionId: documentVersions.comparedToVersionId,
+      })
+      .from(documentVersions)
+      .where(eq(documentVersions.id, exported.id));
+    expect(stored).toMatchObject({
+      source: "generated",
+      comparedFromVersionId: from.id,
+      comparedToVersionId: to.id,
+    });
+    expect(stored?.fileRef).toContain(`documents/${document.id}/${exported.id}`);
+    const stream = await harness.storage.get(stored!.fileRef!);
+    const chunks: Buffer[] = [];
+    for await (const chunk of stream) chunks.push(chunk);
+    const copied = Buffer.concat(chunks);
+    expect(copied.byteLength).toBe(stored?.byteSize);
+    expect(copied.byteLength).toBeGreaterThan(0);
+    expect(stored?.checksumSha256).toBe(createHash("sha256").update(copied).digest("hex"));
+    expect(exported.mimeType).toBe(DOCX_MIME_TYPE);
+
+    const [rendition] = await harness.db
+      .select({ state: documentVersionRenditions.state })
+      .from(documentVersionRenditions)
+      .where(eq(documentVersionRenditions.versionId, exported.id));
+    const [text] = await harness.db
+      .select({ state: documentVersionText.state })
+      .from(documentVersionText)
+      .where(eq(documentVersionText.versionId, exported.id));
+    expect(rendition?.state).toBe("pending");
+    expect(text?.state).toBe("pending");
+
+    const entries = await harness.db
+      .select({
+        action: activityLog.action,
+        visibility: activityLog.visibility,
+        payload: activityLog.payload,
+      })
+      .from(activityLog)
+      .where(eq(activityLog.entityId, contract.id));
+    expect(
+      entries.find(
+        (entry) =>
+          entry.action === "document.redline_generated" && entry.payload.versionId === exported.id,
+      ),
+    ).toMatchObject({
+      visibility: "working_team",
+      payload: {
+        documentId: document.id,
+        versionId: exported.id,
+        title: "first.docx",
+        fromVersionNumber: 1,
+        toVersionNumber: 2,
+        versionNumber: 3,
+      },
+    });
+    expect(
+      entries.filter(
+        (entry) =>
+          entry.action === "document.version_added" && entry.payload.versionId === exported.id,
+      ),
+    ).toHaveLength(0);
+
+    const notices = await harness.db
+      .select({ eventType: notifications.eventType, payload: notifications.payload })
+      .from(notifications)
+      .where(eq(notifications.userId, idOf(CONTRIBUTOR)));
+    expect(
+      notices.filter(
+        (notice) =>
+          notice.eventType === "document.version_added" && notice.payload.versionId === exported.id,
+      ),
+    ).toHaveLength(1);
+
+    const read = await readComparison(memberCookies, document.id, ready.id);
+    expect(read.json<ComparisonEnvelope>().comparison.exportedVersionId).toBe(exported.id);
+    expect(
+      read
+        .json<ComparisonEnvelope>()
+        .comparison.document.versions.find((version) => version.id === exported.id),
+    ).toMatchObject({
+      source: "generated",
+      comparedFromVersionNumber: 1,
+      comparedToVersionNumber: 2,
+    });
+
+    const second = await exportComparison(memberCookies, document.id, ready.id);
+    expect(second.statusCode, second.body).toBe(200);
+    expect(second.json<{ version: VersionRow }>().version.id).toBe(exported.id);
+    const generated = await harness.db
+      .select({ id: documentVersions.id })
+      .from(documentVersions)
+      .where(
+        and(
+          eq(documentVersions.documentId, document.id),
+          eq(documentVersions.kind, "generated_redline"),
+        ),
+      );
+    expect(generated).toEqual([{ id: exported.id }]);
+  });
+
+  it("refuses a Contributor, an archived Document, text mode, and pending work", async () => {
+    const word = await twoRounds("Comparison · export refusals");
+    const requested = await requestComparison(
+      memberCookies,
+      word.document.id,
+      word.from.id,
+      word.to.id,
+    );
+    const ready = await settled(
+      word.document.id,
+      requested.json<ComparisonEnvelope>().comparison.id,
+    );
+
+    const contributor = await exportComparison(contributorCookies, word.document.id, ready.id);
+    expectExportProblem(
+      contributor,
+      403,
+      "You do not have permission to perform this action.",
+      word.document.id,
+      ready.id,
+    );
+
+    const archived = await harness.app.inject({
+      method: "POST",
+      url: `/api/v1/documents/${word.document.id}/archive`,
+      cookies: memberCookies,
+    });
+    expect(archived.statusCode, archived.body).toBe(200);
+    const frozen = await exportComparison(memberCookies, word.document.id, ready.id);
+    expectExportProblem(
+      frozen,
+      409,
+      "This document is archived. Restore it before changing it.",
+      word.document.id,
+      ready.id,
+    );
+
+    const pending = await twoRounds("Comparison · pending export");
+    const pendingId = "0198f2ab-0000-7000-8000-00000000e001";
+    await harness.db.insert(documentComparisons).values({
+      id: pendingId,
+      documentId: pending.document.id,
+      fromVersionId: pending.from.id,
+      toVersionId: pending.to.id,
+      mode: "word",
+      state: "pending",
+      requestedBy: idOf(MEMBER),
+    });
+    const early = await exportComparison(memberCookies, pending.document.id, pendingId);
+    expectExportProblem(
+      early,
+      409,
+      "Wait for the comparison to finish before exporting it.",
+      pending.document.id,
+      pendingId,
+    );
+
+    const text = await twoRounds(
+      "Comparison · text export",
+      { filename: "first.pdf", type: "application/pdf", bytes: Buffer.from("%PDF-1.7 first") },
+      { filename: "second.pdf", type: "application/pdf", bytes: Buffer.from("%PDF-1.7 second") },
+    );
+    const textId = "0198f2ab-0000-7000-8000-00000000e002";
+    await harness.db.insert(documentComparisons).values({
+      id: textId,
+      documentId: text.document.id,
+      fromVersionId: text.from.id,
+      toVersionId: text.to.id,
+      mode: "text",
+      state: "ready",
+      changeModel: { paragraphs: [], changes: [] },
+      changeCount: 0,
+      requestedBy: idOf(MEMBER),
+      finishedAt: new Date(),
+    });
+    const degraded = await exportComparison(memberCookies, text.document.id, textId);
+    expectExportProblem(degraded, 409, "Export needs two Word files.", text.document.id, textId);
   });
 });
 

@@ -205,6 +205,9 @@ export type DocumentComparison = ComparisonResponse["comparison"];
 export type ComparisonOutcome =
   { ok: true; comparison: DocumentComparison } | ({ ok: false } & Problem);
 
+export type ExportComparisonOutcome =
+  { ok: true; version: DocumentVersion } | ({ ok: false } & Problem);
+
 /** The read-only pair probe also has an honest absent answer. */
 export type ComparisonLookupOutcome =
   { ok: true; comparison: DocumentComparison | null } | ({ ok: false } & Problem);
@@ -416,10 +419,7 @@ export async function requestDocumentComparison(
     })
     .catch(() => undefined);
   return result?.data
-    ? {
-        ok: true,
-        comparison: { ...result.data.comparison, exportedVersionId: null },
-      }
+    ? { ok: true, comparison: result.data.comparison }
     : { ok: false, ...(await problem(result)) };
 }
 
@@ -438,12 +438,7 @@ export async function findDocumentComparison(
     })
     .catch(() => undefined);
   return result?.data
-    ? {
-        ok: true,
-        comparison: result.data.comparison
-          ? { ...result.data.comparison, exportedVersionId: null }
-          : null,
-      }
+    ? { ok: true, comparison: result.data.comparison }
     : { ok: false, ...(await problem(result)) };
 }
 
@@ -457,10 +452,25 @@ export async function readDocumentComparison(
     const { data } = await api.GET("/api/v1/documents/{documentId}/comparisons/{comparisonId}", {
       params: { path: { documentId, comparisonId } },
     });
-    return data?.comparison ? { ...data.comparison, exportedVersionId: null } : "unreachable";
+    return data?.comparison ?? "unreachable";
   } catch {
     return "unreachable";
   }
+}
+
+/** Append a ready Word comparison's tracked-changes file to its chain. */
+export async function exportDocumentComparison(
+  documentId: string,
+  comparisonId: string,
+): Promise<ExportComparisonOutcome> {
+  const result = await api
+    .POST("/api/v1/documents/{documentId}/comparisons/{comparisonId}/export", {
+      params: { path: { documentId, comparisonId } },
+    })
+    .catch(() => undefined);
+  return result?.data
+    ? { ok: true, version: result.data.version }
+    : { ok: false, ...(await problem(result)) };
 }
 
 /**

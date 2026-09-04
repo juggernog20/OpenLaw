@@ -33177,6 +33177,34 @@
                                     "generated_redline"
                                   ]
                                 },
+                                "source": {
+                                  "type": "string",
+                                  "enum": ["uploaded", "generated"]
+                                },
+                                "comparedFromVersionNumber": {
+                                  "anyOf": [
+                                    {
+                                      "type": "integer",
+                                      "exclusiveMinimum": 0,
+                                      "maximum": 9007199254740991
+                                    },
+                                    {
+                                      "type": "null"
+                                    }
+                                  ]
+                                },
+                                "comparedToVersionNumber": {
+                                  "anyOf": [
+                                    {
+                                      "type": "integer",
+                                      "exclusiveMinimum": 0,
+                                      "maximum": 9007199254740991
+                                    },
+                                    {
+                                      "type": "null"
+                                    }
+                                  ]
+                                },
                                 "note": {
                                   "type": ["string", "null"]
                                 },
@@ -33233,6 +33261,9 @@
                                 "id",
                                 "versionNumber",
                                 "kind",
+                                "source",
+                                "comparedFromVersionNumber",
+                                "comparedToVersionNumber",
                                 "note",
                                 "originalFilename",
                                 "mimeType",
@@ -33432,6 +33463,34 @@
                                   "generated_redline"
                                 ]
                               },
+                              "source": {
+                                "type": "string",
+                                "enum": ["uploaded", "generated"]
+                              },
+                              "comparedFromVersionNumber": {
+                                "anyOf": [
+                                  {
+                                    "type": "integer",
+                                    "exclusiveMinimum": 0,
+                                    "maximum": 9007199254740991
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "comparedToVersionNumber": {
+                                "anyOf": [
+                                  {
+                                    "type": "integer",
+                                    "exclusiveMinimum": 0,
+                                    "maximum": 9007199254740991
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
                               "note": {
                                 "type": ["string", "null"]
                               },
@@ -33488,6 +33547,9 @@
                               "id",
                               "versionNumber",
                               "kind",
+                              "source",
+                              "comparedFromVersionNumber",
+                              "comparedToVersionNumber",
                               "note",
                               "originalFilename",
                               "mimeType",
@@ -33689,6 +33751,34 @@
                                     "generated_redline"
                                   ]
                                 },
+                                "source": {
+                                  "type": "string",
+                                  "enum": ["uploaded", "generated"]
+                                },
+                                "comparedFromVersionNumber": {
+                                  "anyOf": [
+                                    {
+                                      "type": "integer",
+                                      "exclusiveMinimum": 0,
+                                      "maximum": 9007199254740991
+                                    },
+                                    {
+                                      "type": "null"
+                                    }
+                                  ]
+                                },
+                                "comparedToVersionNumber": {
+                                  "anyOf": [
+                                    {
+                                      "type": "integer",
+                                      "exclusiveMinimum": 0,
+                                      "maximum": 9007199254740991
+                                    },
+                                    {
+                                      "type": "null"
+                                    }
+                                  ]
+                                },
                                 "note": {
                                   "type": ["string", "null"]
                                 },
@@ -33745,6 +33835,9 @@
                                 "id",
                                 "versionNumber",
                                 "kind",
+                                "source",
+                                "comparedFromVersionNumber",
+                                "comparedToVersionNumber",
                                 "note",
                                 "originalFilename",
                                 "mimeType",
@@ -33954,6 +34047,34 @@
                                   "generated_redline"
                                 ]
                               },
+                              "source": {
+                                "type": "string",
+                                "enum": ["uploaded", "generated"]
+                              },
+                              "comparedFromVersionNumber": {
+                                "anyOf": [
+                                  {
+                                    "type": "integer",
+                                    "exclusiveMinimum": 0,
+                                    "maximum": 9007199254740991
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "comparedToVersionNumber": {
+                                "anyOf": [
+                                  {
+                                    "type": "integer",
+                                    "exclusiveMinimum": 0,
+                                    "maximum": 9007199254740991
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
                               "note": {
                                 "type": ["string", "null"]
                               },
@@ -34010,6 +34131,9 @@
                               "id",
                               "versionNumber",
                               "kind",
+                              "source",
+                              "comparedFromVersionNumber",
+                              "comparedToVersionNumber",
                               "note",
                               "originalFilename",
                               "mimeType",
@@ -34211,6 +34335,34 @@
                                     "generated_redline"
                                   ]
                                 },
+                                "source": {
+                                  "type": "string",
+                                  "enum": ["uploaded", "generated"]
+                                },
+                                "comparedFromVersionNumber": {
+                                  "anyOf": [
+                                    {
+                                      "type": "integer",
+                                      "exclusiveMinimum": 0,
+                                      "maximum": 9007199254740991
+                                    },
+                                    {
+                                      "type": "null"
+                                    }
+                                  ]
+                                },
+                                "comparedToVersionNumber": {
+                                  "anyOf": [
+                                    {
+                                      "type": "integer",
+                                      "exclusiveMinimum": 0,
+                                      "maximum": 9007199254740991
+                                    },
+                                    {
+                                      "type": "null"
+                                    }
+                                  ]
+                                },
                                 "note": {
                                   "type": ["string", "null"]
                                 },
@@ -34267,6 +34419,9 @@
                                 "id",
                                 "versionNumber",
                                 "kind",
+                                "source",
+                                "comparedFromVersionNumber",
+                                "comparedToVersionNumber",
                                 "note",
                                 "originalFilename",
                                 "mimeType",
@@ -34476,6 +34631,34 @@
                                   "generated_redline"
                                 ]
                               },
+                              "source": {
+                                "type": "string",
+                                "enum": ["uploaded", "generated"]
+                              },
+                              "comparedFromVersionNumber": {
+                                "anyOf": [
+                                  {
+                                    "type": "integer",
+                                    "exclusiveMinimum": 0,
+                                    "maximum": 9007199254740991
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "comparedToVersionNumber": {
+                                "anyOf": [
+                                  {
+                                    "type": "integer",
+                                    "exclusiveMinimum": 0,
+                                    "maximum": 9007199254740991
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
                               "note": {
                                 "type": ["string", "null"]
                               },
@@ -34532,6 +34715,9 @@
                               "id",
                               "versionNumber",
                               "kind",
+                              "source",
+                              "comparedFromVersionNumber",
+                              "comparedToVersionNumber",
                               "note",
                               "originalFilename",
                               "mimeType",
@@ -34733,6 +34919,34 @@
                                     "generated_redline"
                                   ]
                                 },
+                                "source": {
+                                  "type": "string",
+                                  "enum": ["uploaded", "generated"]
+                                },
+                                "comparedFromVersionNumber": {
+                                  "anyOf": [
+                                    {
+                                      "type": "integer",
+                                      "exclusiveMinimum": 0,
+                                      "maximum": 9007199254740991
+                                    },
+                                    {
+                                      "type": "null"
+                                    }
+                                  ]
+                                },
+                                "comparedToVersionNumber": {
+                                  "anyOf": [
+                                    {
+                                      "type": "integer",
+                                      "exclusiveMinimum": 0,
+                                      "maximum": 9007199254740991
+                                    },
+                                    {
+                                      "type": "null"
+                                    }
+                                  ]
+                                },
                                 "note": {
                                   "type": ["string", "null"]
                                 },
@@ -34789,6 +35003,9 @@
                                 "id",
                                 "versionNumber",
                                 "kind",
+                                "source",
+                                "comparedFromVersionNumber",
+                                "comparedToVersionNumber",
                                 "note",
                                 "originalFilename",
                                 "mimeType",
@@ -34998,6 +35215,34 @@
                                   "generated_redline"
                                 ]
                               },
+                              "source": {
+                                "type": "string",
+                                "enum": ["uploaded", "generated"]
+                              },
+                              "comparedFromVersionNumber": {
+                                "anyOf": [
+                                  {
+                                    "type": "integer",
+                                    "exclusiveMinimum": 0,
+                                    "maximum": 9007199254740991
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "comparedToVersionNumber": {
+                                "anyOf": [
+                                  {
+                                    "type": "integer",
+                                    "exclusiveMinimum": 0,
+                                    "maximum": 9007199254740991
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
                               "note": {
                                 "type": ["string", "null"]
                               },
@@ -35054,6 +35299,9 @@
                               "id",
                               "versionNumber",
                               "kind",
+                              "source",
+                              "comparedFromVersionNumber",
+                              "comparedToVersionNumber",
                               "note",
                               "originalFilename",
                               "mimeType",
@@ -35251,6 +35499,34 @@
                                   "generated_redline"
                                 ]
                               },
+                              "source": {
+                                "type": "string",
+                                "enum": ["uploaded", "generated"]
+                              },
+                              "comparedFromVersionNumber": {
+                                "anyOf": [
+                                  {
+                                    "type": "integer",
+                                    "exclusiveMinimum": 0,
+                                    "maximum": 9007199254740991
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "comparedToVersionNumber": {
+                                "anyOf": [
+                                  {
+                                    "type": "integer",
+                                    "exclusiveMinimum": 0,
+                                    "maximum": 9007199254740991
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
                               "note": {
                                 "type": ["string", "null"]
                               },
@@ -35307,6 +35583,9 @@
                               "id",
                               "versionNumber",
                               "kind",
+                              "source",
+                              "comparedFromVersionNumber",
+                              "comparedToVersionNumber",
                               "note",
                               "originalFilename",
                               "mimeType",
@@ -35504,6 +35783,34 @@
                                   "generated_redline"
                                 ]
                               },
+                              "source": {
+                                "type": "string",
+                                "enum": ["uploaded", "generated"]
+                              },
+                              "comparedFromVersionNumber": {
+                                "anyOf": [
+                                  {
+                                    "type": "integer",
+                                    "exclusiveMinimum": 0,
+                                    "maximum": 9007199254740991
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "comparedToVersionNumber": {
+                                "anyOf": [
+                                  {
+                                    "type": "integer",
+                                    "exclusiveMinimum": 0,
+                                    "maximum": 9007199254740991
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
                               "note": {
                                 "type": ["string", "null"]
                               },
@@ -35560,6 +35867,9 @@
                               "id",
                               "versionNumber",
                               "kind",
+                              "source",
+                              "comparedFromVersionNumber",
+                              "comparedToVersionNumber",
                               "note",
                               "originalFilename",
                               "mimeType",
@@ -35765,6 +36075,34 @@
                                   "generated_redline"
                                 ]
                               },
+                              "source": {
+                                "type": "string",
+                                "enum": ["uploaded", "generated"]
+                              },
+                              "comparedFromVersionNumber": {
+                                "anyOf": [
+                                  {
+                                    "type": "integer",
+                                    "exclusiveMinimum": 0,
+                                    "maximum": 9007199254740991
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "comparedToVersionNumber": {
+                                "anyOf": [
+                                  {
+                                    "type": "integer",
+                                    "exclusiveMinimum": 0,
+                                    "maximum": 9007199254740991
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
                               "note": {
                                 "type": ["string", "null"]
                               },
@@ -35821,6 +36159,9 @@
                               "id",
                               "versionNumber",
                               "kind",
+                              "source",
+                              "comparedFromVersionNumber",
+                              "comparedToVersionNumber",
                               "note",
                               "originalFilename",
                               "mimeType",
@@ -36001,6 +36342,34 @@
                                     "generated_redline"
                                   ]
                                 },
+                                "source": {
+                                  "type": "string",
+                                  "enum": ["uploaded", "generated"]
+                                },
+                                "comparedFromVersionNumber": {
+                                  "anyOf": [
+                                    {
+                                      "type": "integer",
+                                      "exclusiveMinimum": 0,
+                                      "maximum": 9007199254740991
+                                    },
+                                    {
+                                      "type": "null"
+                                    }
+                                  ]
+                                },
+                                "comparedToVersionNumber": {
+                                  "anyOf": [
+                                    {
+                                      "type": "integer",
+                                      "exclusiveMinimum": 0,
+                                      "maximum": 9007199254740991
+                                    },
+                                    {
+                                      "type": "null"
+                                    }
+                                  ]
+                                },
                                 "note": {
                                   "type": ["string", "null"]
                                 },
@@ -36057,6 +36426,9 @@
                                 "id",
                                 "versionNumber",
                                 "kind",
+                                "source",
+                                "comparedFromVersionNumber",
+                                "comparedToVersionNumber",
                                 "note",
                                 "originalFilename",
                                 "mimeType",
@@ -36245,96 +36617,32 @@
                                     "generated_redline"
                                   ]
                                 },
-                                "note": {
-                                  "type": ["string", "null"]
-                                },
-                                "originalFilename": {
-                                  "type": "string"
-                                },
-                                "mimeType": {
-                                  "type": "string"
-                                },
-                                "renderFamily": {
+                                "source": {
                                   "type": "string",
-                                  "enum": ["pdf", "image", "word", "presentation", "email", "other"]
+                                  "enum": ["uploaded", "generated"]
                                 },
-                                "byteSize": {
-                                  "type": "integer",
-                                  "minimum": 0,
-                                  "maximum": 9007199254740991
-                                },
-                                "checksumSha256": {
-                                  "type": "string"
-                                },
-                                "uploadedBy": {
-                                  "type": "object",
-                                  "properties": {
-                                    "id": {
-                                      "type": "string"
+                                "comparedFromVersionNumber": {
+                                  "anyOf": [
+                                    {
+                                      "type": "integer",
+                                      "exclusiveMinimum": 0,
+                                      "maximum": 9007199254740991
                                     },
-                                    "displayName": {
-                                      "type": "string"
-                                    },
-                                    "image": {
-                                      "type": ["string", "null"]
-                                    },
-                                    "archived": {
-                                      "type": "boolean"
+                                    {
+                                      "type": "null"
                                     }
-                                  },
-                                  "required": ["id", "displayName", "image", "archived"],
-                                  "additionalProperties": false
+                                  ]
                                 },
-                                "createdAt": {
-                                  "type": "string",
-                                  "format": "date-time",
-                                  "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
-                                },
-                                "isCurrent": {
-                                  "type": "boolean"
-                                },
-                                "isExecuted": {
-                                  "type": "boolean"
-                                }
-                              },
-                              "required": [
-                                "id",
-                                "versionNumber",
-                                "kind",
-                                "note",
-                                "originalFilename",
-                                "mimeType",
-                                "renderFamily",
-                                "byteSize",
-                                "checksumSha256",
-                                "uploadedBy",
-                                "createdAt",
-                                "isCurrent",
-                                "isExecuted"
-                              ],
-                              "additionalProperties": false
-                            },
-                            "toVersion": {
-                              "type": "object",
-                              "properties": {
-                                "id": {
-                                  "type": "string"
-                                },
-                                "versionNumber": {
-                                  "type": "integer",
-                                  "exclusiveMinimum": 0,
-                                  "maximum": 9007199254740991
-                                },
-                                "kind": {
-                                  "type": "string",
-                                  "enum": [
-                                    "draft_ours",
-                                    "draft_theirs",
-                                    "redline_theirs",
-                                    "redline_ours",
-                                    "executed",
-                                    "amendment",
-                                    "generated_redline"
+                                "comparedToVersionNumber": {
+                                  "anyOf": [
+                                    {
+                                      "type": "integer",
+                                      "exclusiveMinimum": 0,
+                                      "maximum": 9007199254740991
+                                    },
+                                    {
+                                      "type": "null"
+                                    }
                                   ]
                                 },
                                 "note": {
@@ -36393,6 +36701,132 @@
                                 "id",
                                 "versionNumber",
                                 "kind",
+                                "source",
+                                "comparedFromVersionNumber",
+                                "comparedToVersionNumber",
+                                "note",
+                                "originalFilename",
+                                "mimeType",
+                                "renderFamily",
+                                "byteSize",
+                                "checksumSha256",
+                                "uploadedBy",
+                                "createdAt",
+                                "isCurrent",
+                                "isExecuted"
+                              ],
+                              "additionalProperties": false
+                            },
+                            "toVersion": {
+                              "type": "object",
+                              "properties": {
+                                "id": {
+                                  "type": "string"
+                                },
+                                "versionNumber": {
+                                  "type": "integer",
+                                  "exclusiveMinimum": 0,
+                                  "maximum": 9007199254740991
+                                },
+                                "kind": {
+                                  "type": "string",
+                                  "enum": [
+                                    "draft_ours",
+                                    "draft_theirs",
+                                    "redline_theirs",
+                                    "redline_ours",
+                                    "executed",
+                                    "amendment",
+                                    "generated_redline"
+                                  ]
+                                },
+                                "source": {
+                                  "type": "string",
+                                  "enum": ["uploaded", "generated"]
+                                },
+                                "comparedFromVersionNumber": {
+                                  "anyOf": [
+                                    {
+                                      "type": "integer",
+                                      "exclusiveMinimum": 0,
+                                      "maximum": 9007199254740991
+                                    },
+                                    {
+                                      "type": "null"
+                                    }
+                                  ]
+                                },
+                                "comparedToVersionNumber": {
+                                  "anyOf": [
+                                    {
+                                      "type": "integer",
+                                      "exclusiveMinimum": 0,
+                                      "maximum": 9007199254740991
+                                    },
+                                    {
+                                      "type": "null"
+                                    }
+                                  ]
+                                },
+                                "note": {
+                                  "type": ["string", "null"]
+                                },
+                                "originalFilename": {
+                                  "type": "string"
+                                },
+                                "mimeType": {
+                                  "type": "string"
+                                },
+                                "renderFamily": {
+                                  "type": "string",
+                                  "enum": ["pdf", "image", "word", "presentation", "email", "other"]
+                                },
+                                "byteSize": {
+                                  "type": "integer",
+                                  "minimum": 0,
+                                  "maximum": 9007199254740991
+                                },
+                                "checksumSha256": {
+                                  "type": "string"
+                                },
+                                "uploadedBy": {
+                                  "type": "object",
+                                  "properties": {
+                                    "id": {
+                                      "type": "string"
+                                    },
+                                    "displayName": {
+                                      "type": "string"
+                                    },
+                                    "image": {
+                                      "type": ["string", "null"]
+                                    },
+                                    "archived": {
+                                      "type": "boolean"
+                                    }
+                                  },
+                                  "required": ["id", "displayName", "image", "archived"],
+                                  "additionalProperties": false
+                                },
+                                "createdAt": {
+                                  "type": "string",
+                                  "format": "date-time",
+                                  "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+                                },
+                                "isCurrent": {
+                                  "type": "boolean"
+                                },
+                                "isExecuted": {
+                                  "type": "boolean"
+                                }
+                              },
+                              "required": [
+                                "id",
+                                "versionNumber",
+                                "kind",
+                                "source",
+                                "comparedFromVersionNumber",
+                                "comparedToVersionNumber",
                                 "note",
                                 "originalFilename",
                                 "mimeType",
@@ -36509,7 +36943,7 @@
                               "type": ["string", "null"]
                             },
                             "exportedVersionId": {
-                              "type": "null"
+                              "type": ["string", "null"]
                             },
                             "document": {
                               "type": "object",
@@ -36572,6 +37006,34 @@
                                           "executed",
                                           "amendment",
                                           "generated_redline"
+                                        ]
+                                      },
+                                      "source": {
+                                        "type": "string",
+                                        "enum": ["uploaded", "generated"]
+                                      },
+                                      "comparedFromVersionNumber": {
+                                        "anyOf": [
+                                          {
+                                            "type": "integer",
+                                            "exclusiveMinimum": 0,
+                                            "maximum": 9007199254740991
+                                          },
+                                          {
+                                            "type": "null"
+                                          }
+                                        ]
+                                      },
+                                      "comparedToVersionNumber": {
+                                        "anyOf": [
+                                          {
+                                            "type": "integer",
+                                            "exclusiveMinimum": 0,
+                                            "maximum": 9007199254740991
+                                          },
+                                          {
+                                            "type": "null"
+                                          }
                                         ]
                                       },
                                       "note": {
@@ -36637,6 +37099,9 @@
                                       "id",
                                       "versionNumber",
                                       "kind",
+                                      "source",
+                                      "comparedFromVersionNumber",
+                                      "comparedToVersionNumber",
                                       "note",
                                       "originalFilename",
                                       "mimeType",
@@ -36650,9 +37115,21 @@
                                     ],
                                     "additionalProperties": false
                                   }
+                                },
+                                "archivedAt": {
+                                  "anyOf": [
+                                    {
+                                      "type": "string",
+                                      "format": "date-time",
+                                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+                                    },
+                                    {
+                                      "type": "null"
+                                    }
+                                  ]
                                 }
                               },
-                              "required": ["id", "title", "owner", "versions"],
+                              "required": ["id", "title", "owner", "versions", "archivedAt"],
                               "additionalProperties": false
                             },
                             "createdAt": {
@@ -36802,96 +37279,32 @@
                                 "generated_redline"
                               ]
                             },
-                            "note": {
-                              "type": ["string", "null"]
-                            },
-                            "originalFilename": {
-                              "type": "string"
-                            },
-                            "mimeType": {
-                              "type": "string"
-                            },
-                            "renderFamily": {
+                            "source": {
                               "type": "string",
-                              "enum": ["pdf", "image", "word", "presentation", "email", "other"]
+                              "enum": ["uploaded", "generated"]
                             },
-                            "byteSize": {
-                              "type": "integer",
-                              "minimum": 0,
-                              "maximum": 9007199254740991
-                            },
-                            "checksumSha256": {
-                              "type": "string"
-                            },
-                            "uploadedBy": {
-                              "type": "object",
-                              "properties": {
-                                "id": {
-                                  "type": "string"
+                            "comparedFromVersionNumber": {
+                              "anyOf": [
+                                {
+                                  "type": "integer",
+                                  "exclusiveMinimum": 0,
+                                  "maximum": 9007199254740991
                                 },
-                                "displayName": {
-                                  "type": "string"
-                                },
-                                "image": {
-                                  "type": ["string", "null"]
-                                },
-                                "archived": {
-                                  "type": "boolean"
+                                {
+                                  "type": "null"
                                 }
-                              },
-                              "required": ["id", "displayName", "image", "archived"],
-                              "additionalProperties": false
+                              ]
                             },
-                            "createdAt": {
-                              "type": "string",
-                              "format": "date-time",
-                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
-                            },
-                            "isCurrent": {
-                              "type": "boolean"
-                            },
-                            "isExecuted": {
-                              "type": "boolean"
-                            }
-                          },
-                          "required": [
-                            "id",
-                            "versionNumber",
-                            "kind",
-                            "note",
-                            "originalFilename",
-                            "mimeType",
-                            "renderFamily",
-                            "byteSize",
-                            "checksumSha256",
-                            "uploadedBy",
-                            "createdAt",
-                            "isCurrent",
-                            "isExecuted"
-                          ],
-                          "additionalProperties": false
-                        },
-                        "toVersion": {
-                          "type": "object",
-                          "properties": {
-                            "id": {
-                              "type": "string"
-                            },
-                            "versionNumber": {
-                              "type": "integer",
-                              "exclusiveMinimum": 0,
-                              "maximum": 9007199254740991
-                            },
-                            "kind": {
-                              "type": "string",
-                              "enum": [
-                                "draft_ours",
-                                "draft_theirs",
-                                "redline_theirs",
-                                "redline_ours",
-                                "executed",
-                                "amendment",
-                                "generated_redline"
+                            "comparedToVersionNumber": {
+                              "anyOf": [
+                                {
+                                  "type": "integer",
+                                  "exclusiveMinimum": 0,
+                                  "maximum": 9007199254740991
+                                },
+                                {
+                                  "type": "null"
+                                }
                               ]
                             },
                             "note": {
@@ -36950,6 +37363,132 @@
                             "id",
                             "versionNumber",
                             "kind",
+                            "source",
+                            "comparedFromVersionNumber",
+                            "comparedToVersionNumber",
+                            "note",
+                            "originalFilename",
+                            "mimeType",
+                            "renderFamily",
+                            "byteSize",
+                            "checksumSha256",
+                            "uploadedBy",
+                            "createdAt",
+                            "isCurrent",
+                            "isExecuted"
+                          ],
+                          "additionalProperties": false
+                        },
+                        "toVersion": {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string"
+                            },
+                            "versionNumber": {
+                              "type": "integer",
+                              "exclusiveMinimum": 0,
+                              "maximum": 9007199254740991
+                            },
+                            "kind": {
+                              "type": "string",
+                              "enum": [
+                                "draft_ours",
+                                "draft_theirs",
+                                "redline_theirs",
+                                "redline_ours",
+                                "executed",
+                                "amendment",
+                                "generated_redline"
+                              ]
+                            },
+                            "source": {
+                              "type": "string",
+                              "enum": ["uploaded", "generated"]
+                            },
+                            "comparedFromVersionNumber": {
+                              "anyOf": [
+                                {
+                                  "type": "integer",
+                                  "exclusiveMinimum": 0,
+                                  "maximum": 9007199254740991
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            },
+                            "comparedToVersionNumber": {
+                              "anyOf": [
+                                {
+                                  "type": "integer",
+                                  "exclusiveMinimum": 0,
+                                  "maximum": 9007199254740991
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            },
+                            "note": {
+                              "type": ["string", "null"]
+                            },
+                            "originalFilename": {
+                              "type": "string"
+                            },
+                            "mimeType": {
+                              "type": "string"
+                            },
+                            "renderFamily": {
+                              "type": "string",
+                              "enum": ["pdf", "image", "word", "presentation", "email", "other"]
+                            },
+                            "byteSize": {
+                              "type": "integer",
+                              "minimum": 0,
+                              "maximum": 9007199254740991
+                            },
+                            "checksumSha256": {
+                              "type": "string"
+                            },
+                            "uploadedBy": {
+                              "type": "object",
+                              "properties": {
+                                "id": {
+                                  "type": "string"
+                                },
+                                "displayName": {
+                                  "type": "string"
+                                },
+                                "image": {
+                                  "type": ["string", "null"]
+                                },
+                                "archived": {
+                                  "type": "boolean"
+                                }
+                              },
+                              "required": ["id", "displayName", "image", "archived"],
+                              "additionalProperties": false
+                            },
+                            "createdAt": {
+                              "type": "string",
+                              "format": "date-time",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+                            },
+                            "isCurrent": {
+                              "type": "boolean"
+                            },
+                            "isExecuted": {
+                              "type": "boolean"
+                            }
+                          },
+                          "required": [
+                            "id",
+                            "versionNumber",
+                            "kind",
+                            "source",
+                            "comparedFromVersionNumber",
+                            "comparedToVersionNumber",
                             "note",
                             "originalFilename",
                             "mimeType",
@@ -37060,7 +37599,7 @@
                           "type": ["string", "null"]
                         },
                         "exportedVersionId": {
-                          "type": "null"
+                          "type": ["string", "null"]
                         },
                         "document": {
                           "type": "object",
@@ -37123,6 +37662,34 @@
                                       "executed",
                                       "amendment",
                                       "generated_redline"
+                                    ]
+                                  },
+                                  "source": {
+                                    "type": "string",
+                                    "enum": ["uploaded", "generated"]
+                                  },
+                                  "comparedFromVersionNumber": {
+                                    "anyOf": [
+                                      {
+                                        "type": "integer",
+                                        "exclusiveMinimum": 0,
+                                        "maximum": 9007199254740991
+                                      },
+                                      {
+                                        "type": "null"
+                                      }
+                                    ]
+                                  },
+                                  "comparedToVersionNumber": {
+                                    "anyOf": [
+                                      {
+                                        "type": "integer",
+                                        "exclusiveMinimum": 0,
+                                        "maximum": 9007199254740991
+                                      },
+                                      {
+                                        "type": "null"
+                                      }
                                     ]
                                   },
                                   "note": {
@@ -37188,6 +37755,9 @@
                                   "id",
                                   "versionNumber",
                                   "kind",
+                                  "source",
+                                  "comparedFromVersionNumber",
+                                  "comparedToVersionNumber",
                                   "note",
                                   "originalFilename",
                                   "mimeType",
@@ -37201,9 +37771,21 @@
                                 ],
                                 "additionalProperties": false
                               }
+                            },
+                            "archivedAt": {
+                              "anyOf": [
+                                {
+                                  "type": "string",
+                                  "format": "date-time",
+                                  "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
                             }
                           },
-                          "required": ["id", "title", "owner", "versions"],
+                          "required": ["id", "title", "owner", "versions", "archivedAt"],
                           "additionalProperties": false
                         },
                         "createdAt": {
@@ -37295,96 +37877,32 @@
                                 "generated_redline"
                               ]
                             },
-                            "note": {
-                              "type": ["string", "null"]
-                            },
-                            "originalFilename": {
-                              "type": "string"
-                            },
-                            "mimeType": {
-                              "type": "string"
-                            },
-                            "renderFamily": {
+                            "source": {
                               "type": "string",
-                              "enum": ["pdf", "image", "word", "presentation", "email", "other"]
+                              "enum": ["uploaded", "generated"]
                             },
-                            "byteSize": {
-                              "type": "integer",
-                              "minimum": 0,
-                              "maximum": 9007199254740991
-                            },
-                            "checksumSha256": {
-                              "type": "string"
-                            },
-                            "uploadedBy": {
-                              "type": "object",
-                              "properties": {
-                                "id": {
-                                  "type": "string"
+                            "comparedFromVersionNumber": {
+                              "anyOf": [
+                                {
+                                  "type": "integer",
+                                  "exclusiveMinimum": 0,
+                                  "maximum": 9007199254740991
                                 },
-                                "displayName": {
-                                  "type": "string"
-                                },
-                                "image": {
-                                  "type": ["string", "null"]
-                                },
-                                "archived": {
-                                  "type": "boolean"
+                                {
+                                  "type": "null"
                                 }
-                              },
-                              "required": ["id", "displayName", "image", "archived"],
-                              "additionalProperties": false
+                              ]
                             },
-                            "createdAt": {
-                              "type": "string",
-                              "format": "date-time",
-                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
-                            },
-                            "isCurrent": {
-                              "type": "boolean"
-                            },
-                            "isExecuted": {
-                              "type": "boolean"
-                            }
-                          },
-                          "required": [
-                            "id",
-                            "versionNumber",
-                            "kind",
-                            "note",
-                            "originalFilename",
-                            "mimeType",
-                            "renderFamily",
-                            "byteSize",
-                            "checksumSha256",
-                            "uploadedBy",
-                            "createdAt",
-                            "isCurrent",
-                            "isExecuted"
-                          ],
-                          "additionalProperties": false
-                        },
-                        "toVersion": {
-                          "type": "object",
-                          "properties": {
-                            "id": {
-                              "type": "string"
-                            },
-                            "versionNumber": {
-                              "type": "integer",
-                              "exclusiveMinimum": 0,
-                              "maximum": 9007199254740991
-                            },
-                            "kind": {
-                              "type": "string",
-                              "enum": [
-                                "draft_ours",
-                                "draft_theirs",
-                                "redline_theirs",
-                                "redline_ours",
-                                "executed",
-                                "amendment",
-                                "generated_redline"
+                            "comparedToVersionNumber": {
+                              "anyOf": [
+                                {
+                                  "type": "integer",
+                                  "exclusiveMinimum": 0,
+                                  "maximum": 9007199254740991
+                                },
+                                {
+                                  "type": "null"
+                                }
                               ]
                             },
                             "note": {
@@ -37443,6 +37961,132 @@
                             "id",
                             "versionNumber",
                             "kind",
+                            "source",
+                            "comparedFromVersionNumber",
+                            "comparedToVersionNumber",
+                            "note",
+                            "originalFilename",
+                            "mimeType",
+                            "renderFamily",
+                            "byteSize",
+                            "checksumSha256",
+                            "uploadedBy",
+                            "createdAt",
+                            "isCurrent",
+                            "isExecuted"
+                          ],
+                          "additionalProperties": false
+                        },
+                        "toVersion": {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string"
+                            },
+                            "versionNumber": {
+                              "type": "integer",
+                              "exclusiveMinimum": 0,
+                              "maximum": 9007199254740991
+                            },
+                            "kind": {
+                              "type": "string",
+                              "enum": [
+                                "draft_ours",
+                                "draft_theirs",
+                                "redline_theirs",
+                                "redline_ours",
+                                "executed",
+                                "amendment",
+                                "generated_redline"
+                              ]
+                            },
+                            "source": {
+                              "type": "string",
+                              "enum": ["uploaded", "generated"]
+                            },
+                            "comparedFromVersionNumber": {
+                              "anyOf": [
+                                {
+                                  "type": "integer",
+                                  "exclusiveMinimum": 0,
+                                  "maximum": 9007199254740991
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            },
+                            "comparedToVersionNumber": {
+                              "anyOf": [
+                                {
+                                  "type": "integer",
+                                  "exclusiveMinimum": 0,
+                                  "maximum": 9007199254740991
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            },
+                            "note": {
+                              "type": ["string", "null"]
+                            },
+                            "originalFilename": {
+                              "type": "string"
+                            },
+                            "mimeType": {
+                              "type": "string"
+                            },
+                            "renderFamily": {
+                              "type": "string",
+                              "enum": ["pdf", "image", "word", "presentation", "email", "other"]
+                            },
+                            "byteSize": {
+                              "type": "integer",
+                              "minimum": 0,
+                              "maximum": 9007199254740991
+                            },
+                            "checksumSha256": {
+                              "type": "string"
+                            },
+                            "uploadedBy": {
+                              "type": "object",
+                              "properties": {
+                                "id": {
+                                  "type": "string"
+                                },
+                                "displayName": {
+                                  "type": "string"
+                                },
+                                "image": {
+                                  "type": ["string", "null"]
+                                },
+                                "archived": {
+                                  "type": "boolean"
+                                }
+                              },
+                              "required": ["id", "displayName", "image", "archived"],
+                              "additionalProperties": false
+                            },
+                            "createdAt": {
+                              "type": "string",
+                              "format": "date-time",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+                            },
+                            "isCurrent": {
+                              "type": "boolean"
+                            },
+                            "isExecuted": {
+                              "type": "boolean"
+                            }
+                          },
+                          "required": [
+                            "id",
+                            "versionNumber",
+                            "kind",
+                            "source",
+                            "comparedFromVersionNumber",
+                            "comparedToVersionNumber",
                             "note",
                             "originalFilename",
                             "mimeType",
@@ -37553,7 +38197,7 @@
                           "type": ["string", "null"]
                         },
                         "exportedVersionId": {
-                          "type": "null"
+                          "type": ["string", "null"]
                         },
                         "document": {
                           "type": "object",
@@ -37616,6 +38260,34 @@
                                       "executed",
                                       "amendment",
                                       "generated_redline"
+                                    ]
+                                  },
+                                  "source": {
+                                    "type": "string",
+                                    "enum": ["uploaded", "generated"]
+                                  },
+                                  "comparedFromVersionNumber": {
+                                    "anyOf": [
+                                      {
+                                        "type": "integer",
+                                        "exclusiveMinimum": 0,
+                                        "maximum": 9007199254740991
+                                      },
+                                      {
+                                        "type": "null"
+                                      }
+                                    ]
+                                  },
+                                  "comparedToVersionNumber": {
+                                    "anyOf": [
+                                      {
+                                        "type": "integer",
+                                        "exclusiveMinimum": 0,
+                                        "maximum": 9007199254740991
+                                      },
+                                      {
+                                        "type": "null"
+                                      }
                                     ]
                                   },
                                   "note": {
@@ -37681,6 +38353,9 @@
                                   "id",
                                   "versionNumber",
                                   "kind",
+                                  "source",
+                                  "comparedFromVersionNumber",
+                                  "comparedToVersionNumber",
                                   "note",
                                   "originalFilename",
                                   "mimeType",
@@ -37694,9 +38369,21 @@
                                 ],
                                 "additionalProperties": false
                               }
+                            },
+                            "archivedAt": {
+                              "anyOf": [
+                                {
+                                  "type": "string",
+                                  "format": "date-time",
+                                  "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
                             }
                           },
-                          "required": ["id", "title", "owner", "versions"],
+                          "required": ["id", "title", "owner", "versions", "archivedAt"],
                           "additionalProperties": false
                         },
                         "createdAt": {
@@ -37757,7 +38444,7 @@
     "/api/v1/documents/{documentId}/comparisons/{comparisonId}": {
       "get": {
         "operationId": "readDocumentComparison",
-        "summary": "Read one durable comparison (DOC-003): its state and mode, both rounds exactly as the Document chain draws them, its parsed model and count when ready, and its reason when failed. exportedVersionId remains null until M32/4. The route inherits the owning record's reach and the Document's audience, and remains readable while the Document is archived",
+        "summary": "Read one durable comparison (DOC-003): its state and mode, both rounds exactly as the Document chain draws them, its parsed model and count when ready, and its reason when failed. exportedVersionId names the generated round once the pair has been exported, and is null before that. The route inherits the owning record's reach and the Document's audience, and remains readable while the Document is archived",
         "tags": ["documents"],
         "parameters": [
           {
@@ -37829,96 +38516,32 @@
                                 "generated_redline"
                               ]
                             },
-                            "note": {
-                              "type": ["string", "null"]
-                            },
-                            "originalFilename": {
-                              "type": "string"
-                            },
-                            "mimeType": {
-                              "type": "string"
-                            },
-                            "renderFamily": {
+                            "source": {
                               "type": "string",
-                              "enum": ["pdf", "image", "word", "presentation", "email", "other"]
+                              "enum": ["uploaded", "generated"]
                             },
-                            "byteSize": {
-                              "type": "integer",
-                              "minimum": 0,
-                              "maximum": 9007199254740991
-                            },
-                            "checksumSha256": {
-                              "type": "string"
-                            },
-                            "uploadedBy": {
-                              "type": "object",
-                              "properties": {
-                                "id": {
-                                  "type": "string"
+                            "comparedFromVersionNumber": {
+                              "anyOf": [
+                                {
+                                  "type": "integer",
+                                  "exclusiveMinimum": 0,
+                                  "maximum": 9007199254740991
                                 },
-                                "displayName": {
-                                  "type": "string"
-                                },
-                                "image": {
-                                  "type": ["string", "null"]
-                                },
-                                "archived": {
-                                  "type": "boolean"
+                                {
+                                  "type": "null"
                                 }
-                              },
-                              "required": ["id", "displayName", "image", "archived"],
-                              "additionalProperties": false
+                              ]
                             },
-                            "createdAt": {
-                              "type": "string",
-                              "format": "date-time",
-                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
-                            },
-                            "isCurrent": {
-                              "type": "boolean"
-                            },
-                            "isExecuted": {
-                              "type": "boolean"
-                            }
-                          },
-                          "required": [
-                            "id",
-                            "versionNumber",
-                            "kind",
-                            "note",
-                            "originalFilename",
-                            "mimeType",
-                            "renderFamily",
-                            "byteSize",
-                            "checksumSha256",
-                            "uploadedBy",
-                            "createdAt",
-                            "isCurrent",
-                            "isExecuted"
-                          ],
-                          "additionalProperties": false
-                        },
-                        "toVersion": {
-                          "type": "object",
-                          "properties": {
-                            "id": {
-                              "type": "string"
-                            },
-                            "versionNumber": {
-                              "type": "integer",
-                              "exclusiveMinimum": 0,
-                              "maximum": 9007199254740991
-                            },
-                            "kind": {
-                              "type": "string",
-                              "enum": [
-                                "draft_ours",
-                                "draft_theirs",
-                                "redline_theirs",
-                                "redline_ours",
-                                "executed",
-                                "amendment",
-                                "generated_redline"
+                            "comparedToVersionNumber": {
+                              "anyOf": [
+                                {
+                                  "type": "integer",
+                                  "exclusiveMinimum": 0,
+                                  "maximum": 9007199254740991
+                                },
+                                {
+                                  "type": "null"
+                                }
                               ]
                             },
                             "note": {
@@ -37977,6 +38600,132 @@
                             "id",
                             "versionNumber",
                             "kind",
+                            "source",
+                            "comparedFromVersionNumber",
+                            "comparedToVersionNumber",
+                            "note",
+                            "originalFilename",
+                            "mimeType",
+                            "renderFamily",
+                            "byteSize",
+                            "checksumSha256",
+                            "uploadedBy",
+                            "createdAt",
+                            "isCurrent",
+                            "isExecuted"
+                          ],
+                          "additionalProperties": false
+                        },
+                        "toVersion": {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string"
+                            },
+                            "versionNumber": {
+                              "type": "integer",
+                              "exclusiveMinimum": 0,
+                              "maximum": 9007199254740991
+                            },
+                            "kind": {
+                              "type": "string",
+                              "enum": [
+                                "draft_ours",
+                                "draft_theirs",
+                                "redline_theirs",
+                                "redline_ours",
+                                "executed",
+                                "amendment",
+                                "generated_redline"
+                              ]
+                            },
+                            "source": {
+                              "type": "string",
+                              "enum": ["uploaded", "generated"]
+                            },
+                            "comparedFromVersionNumber": {
+                              "anyOf": [
+                                {
+                                  "type": "integer",
+                                  "exclusiveMinimum": 0,
+                                  "maximum": 9007199254740991
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            },
+                            "comparedToVersionNumber": {
+                              "anyOf": [
+                                {
+                                  "type": "integer",
+                                  "exclusiveMinimum": 0,
+                                  "maximum": 9007199254740991
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            },
+                            "note": {
+                              "type": ["string", "null"]
+                            },
+                            "originalFilename": {
+                              "type": "string"
+                            },
+                            "mimeType": {
+                              "type": "string"
+                            },
+                            "renderFamily": {
+                              "type": "string",
+                              "enum": ["pdf", "image", "word", "presentation", "email", "other"]
+                            },
+                            "byteSize": {
+                              "type": "integer",
+                              "minimum": 0,
+                              "maximum": 9007199254740991
+                            },
+                            "checksumSha256": {
+                              "type": "string"
+                            },
+                            "uploadedBy": {
+                              "type": "object",
+                              "properties": {
+                                "id": {
+                                  "type": "string"
+                                },
+                                "displayName": {
+                                  "type": "string"
+                                },
+                                "image": {
+                                  "type": ["string", "null"]
+                                },
+                                "archived": {
+                                  "type": "boolean"
+                                }
+                              },
+                              "required": ["id", "displayName", "image", "archived"],
+                              "additionalProperties": false
+                            },
+                            "createdAt": {
+                              "type": "string",
+                              "format": "date-time",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+                            },
+                            "isCurrent": {
+                              "type": "boolean"
+                            },
+                            "isExecuted": {
+                              "type": "boolean"
+                            }
+                          },
+                          "required": [
+                            "id",
+                            "versionNumber",
+                            "kind",
+                            "source",
+                            "comparedFromVersionNumber",
+                            "comparedToVersionNumber",
                             "note",
                             "originalFilename",
                             "mimeType",
@@ -38087,7 +38836,7 @@
                           "type": ["string", "null"]
                         },
                         "exportedVersionId": {
-                          "type": "null"
+                          "type": ["string", "null"]
                         },
                         "document": {
                           "type": "object",
@@ -38150,6 +38899,34 @@
                                       "executed",
                                       "amendment",
                                       "generated_redline"
+                                    ]
+                                  },
+                                  "source": {
+                                    "type": "string",
+                                    "enum": ["uploaded", "generated"]
+                                  },
+                                  "comparedFromVersionNumber": {
+                                    "anyOf": [
+                                      {
+                                        "type": "integer",
+                                        "exclusiveMinimum": 0,
+                                        "maximum": 9007199254740991
+                                      },
+                                      {
+                                        "type": "null"
+                                      }
+                                    ]
+                                  },
+                                  "comparedToVersionNumber": {
+                                    "anyOf": [
+                                      {
+                                        "type": "integer",
+                                        "exclusiveMinimum": 0,
+                                        "maximum": 9007199254740991
+                                      },
+                                      {
+                                        "type": "null"
+                                      }
                                     ]
                                   },
                                   "note": {
@@ -38215,6 +38992,9 @@
                                   "id",
                                   "versionNumber",
                                   "kind",
+                                  "source",
+                                  "comparedFromVersionNumber",
+                                  "comparedToVersionNumber",
                                   "note",
                                   "originalFilename",
                                   "mimeType",
@@ -38228,9 +39008,21 @@
                                 ],
                                 "additionalProperties": false
                               }
+                            },
+                            "archivedAt": {
+                              "anyOf": [
+                                {
+                                  "type": "string",
+                                  "format": "date-time",
+                                  "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
                             }
                           },
-                          "required": ["id", "title", "owner", "versions"],
+                          "required": ["id", "title", "owner", "versions", "archivedAt"],
                           "additionalProperties": false
                         },
                         "createdAt": {
@@ -38270,6 +39062,321 @@
                     }
                   },
                   "required": ["comparison"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/documents/{documentId}/comparisons/{comparisonId}/export": {
+      "post": {
+        "operationId": "exportDocumentComparison",
+        "summary": "Allow an Administrator or Legal Team Member to append a ready Word Comparison's tracked-changes file to its Document chain; a Contributor is refused with 403. The generated Version records both operands, owes the ordinary Word derivations, and raises the ordinary version-added notification with its own Activity feed narration. The same pair returns its existing generated Version without appending another",
+        "tags": ["documents"],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 64
+            },
+            "in": "path",
+            "name": "documentId",
+            "required": true
+          },
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 64
+            },
+            "in": "path",
+            "name": "comparisonId",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "version": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "versionNumber": {
+                          "type": "integer",
+                          "exclusiveMinimum": 0,
+                          "maximum": 9007199254740991
+                        },
+                        "kind": {
+                          "type": "string",
+                          "enum": [
+                            "draft_ours",
+                            "draft_theirs",
+                            "redline_theirs",
+                            "redline_ours",
+                            "executed",
+                            "amendment",
+                            "generated_redline"
+                          ]
+                        },
+                        "source": {
+                          "type": "string",
+                          "enum": ["uploaded", "generated"]
+                        },
+                        "comparedFromVersionNumber": {
+                          "anyOf": [
+                            {
+                              "type": "integer",
+                              "exclusiveMinimum": 0,
+                              "maximum": 9007199254740991
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "comparedToVersionNumber": {
+                          "anyOf": [
+                            {
+                              "type": "integer",
+                              "exclusiveMinimum": 0,
+                              "maximum": 9007199254740991
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "note": {
+                          "type": ["string", "null"]
+                        },
+                        "originalFilename": {
+                          "type": "string"
+                        },
+                        "mimeType": {
+                          "type": "string"
+                        },
+                        "renderFamily": {
+                          "type": "string",
+                          "enum": ["pdf", "image", "word", "presentation", "email", "other"]
+                        },
+                        "byteSize": {
+                          "type": "integer",
+                          "minimum": 0,
+                          "maximum": 9007199254740991
+                        },
+                        "checksumSha256": {
+                          "type": "string"
+                        },
+                        "uploadedBy": {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string"
+                            },
+                            "displayName": {
+                              "type": "string"
+                            },
+                            "image": {
+                              "type": ["string", "null"]
+                            },
+                            "archived": {
+                              "type": "boolean"
+                            }
+                          },
+                          "required": ["id", "displayName", "image", "archived"],
+                          "additionalProperties": false
+                        },
+                        "createdAt": {
+                          "type": "string",
+                          "format": "date-time",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+                        },
+                        "isCurrent": {
+                          "type": "boolean"
+                        },
+                        "isExecuted": {
+                          "type": "boolean"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "versionNumber",
+                        "kind",
+                        "source",
+                        "comparedFromVersionNumber",
+                        "comparedToVersionNumber",
+                        "note",
+                        "originalFilename",
+                        "mimeType",
+                        "renderFamily",
+                        "byteSize",
+                        "checksumSha256",
+                        "uploadedBy",
+                        "createdAt",
+                        "isCurrent",
+                        "isExecuted"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": ["version"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "201": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "version": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "versionNumber": {
+                          "type": "integer",
+                          "exclusiveMinimum": 0,
+                          "maximum": 9007199254740991
+                        },
+                        "kind": {
+                          "type": "string",
+                          "enum": [
+                            "draft_ours",
+                            "draft_theirs",
+                            "redline_theirs",
+                            "redline_ours",
+                            "executed",
+                            "amendment",
+                            "generated_redline"
+                          ]
+                        },
+                        "source": {
+                          "type": "string",
+                          "enum": ["uploaded", "generated"]
+                        },
+                        "comparedFromVersionNumber": {
+                          "anyOf": [
+                            {
+                              "type": "integer",
+                              "exclusiveMinimum": 0,
+                              "maximum": 9007199254740991
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "comparedToVersionNumber": {
+                          "anyOf": [
+                            {
+                              "type": "integer",
+                              "exclusiveMinimum": 0,
+                              "maximum": 9007199254740991
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "note": {
+                          "type": ["string", "null"]
+                        },
+                        "originalFilename": {
+                          "type": "string"
+                        },
+                        "mimeType": {
+                          "type": "string"
+                        },
+                        "renderFamily": {
+                          "type": "string",
+                          "enum": ["pdf", "image", "word", "presentation", "email", "other"]
+                        },
+                        "byteSize": {
+                          "type": "integer",
+                          "minimum": 0,
+                          "maximum": 9007199254740991
+                        },
+                        "checksumSha256": {
+                          "type": "string"
+                        },
+                        "uploadedBy": {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string"
+                            },
+                            "displayName": {
+                              "type": "string"
+                            },
+                            "image": {
+                              "type": ["string", "null"]
+                            },
+                            "archived": {
+                              "type": "boolean"
+                            }
+                          },
+                          "required": ["id", "displayName", "image", "archived"],
+                          "additionalProperties": false
+                        },
+                        "createdAt": {
+                          "type": "string",
+                          "format": "date-time",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+                        },
+                        "isCurrent": {
+                          "type": "boolean"
+                        },
+                        "isExecuted": {
+                          "type": "boolean"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "versionNumber",
+                        "kind",
+                        "source",
+                        "comparedFromVersionNumber",
+                        "comparedToVersionNumber",
+                        "note",
+                        "originalFilename",
+                        "mimeType",
+                        "renderFamily",
+                        "byteSize",
+                        "checksumSha256",
+                        "uploadedBy",
+                        "createdAt",
+                        "isCurrent",
+                        "isExecuted"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": ["version"],
                   "additionalProperties": false
                 }
               }
@@ -38355,6 +39462,34 @@
                                     "generated_redline"
                                   ]
                                 },
+                                "source": {
+                                  "type": "string",
+                                  "enum": ["uploaded", "generated"]
+                                },
+                                "comparedFromVersionNumber": {
+                                  "anyOf": [
+                                    {
+                                      "type": "integer",
+                                      "exclusiveMinimum": 0,
+                                      "maximum": 9007199254740991
+                                    },
+                                    {
+                                      "type": "null"
+                                    }
+                                  ]
+                                },
+                                "comparedToVersionNumber": {
+                                  "anyOf": [
+                                    {
+                                      "type": "integer",
+                                      "exclusiveMinimum": 0,
+                                      "maximum": 9007199254740991
+                                    },
+                                    {
+                                      "type": "null"
+                                    }
+                                  ]
+                                },
                                 "note": {
                                   "type": ["string", "null"]
                                 },
@@ -38411,6 +39546,9 @@
                                 "id",
                                 "versionNumber",
                                 "kind",
+                                "source",
+                                "comparedFromVersionNumber",
+                                "comparedToVersionNumber",
                                 "note",
                                 "originalFilename",
                                 "mimeType",
@@ -38595,6 +39733,34 @@
                                   "generated_redline"
                                 ]
                               },
+                              "source": {
+                                "type": "string",
+                                "enum": ["uploaded", "generated"]
+                              },
+                              "comparedFromVersionNumber": {
+                                "anyOf": [
+                                  {
+                                    "type": "integer",
+                                    "exclusiveMinimum": 0,
+                                    "maximum": 9007199254740991
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "comparedToVersionNumber": {
+                                "anyOf": [
+                                  {
+                                    "type": "integer",
+                                    "exclusiveMinimum": 0,
+                                    "maximum": 9007199254740991
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
                               "note": {
                                 "type": ["string", "null"]
                               },
@@ -38651,6 +39817,9 @@
                               "id",
                               "versionNumber",
                               "kind",
+                              "source",
+                              "comparedFromVersionNumber",
+                              "comparedToVersionNumber",
                               "note",
                               "originalFilename",
                               "mimeType",
@@ -38811,6 +39980,34 @@
                                   "generated_redline"
                                 ]
                               },
+                              "source": {
+                                "type": "string",
+                                "enum": ["uploaded", "generated"]
+                              },
+                              "comparedFromVersionNumber": {
+                                "anyOf": [
+                                  {
+                                    "type": "integer",
+                                    "exclusiveMinimum": 0,
+                                    "maximum": 9007199254740991
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "comparedToVersionNumber": {
+                                "anyOf": [
+                                  {
+                                    "type": "integer",
+                                    "exclusiveMinimum": 0,
+                                    "maximum": 9007199254740991
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
                               "note": {
                                 "type": ["string", "null"]
                               },
@@ -38867,6 +40064,9 @@
                               "id",
                               "versionNumber",
                               "kind",
+                              "source",
+                              "comparedFromVersionNumber",
+                              "comparedToVersionNumber",
                               "note",
                               "originalFilename",
                               "mimeType",
@@ -39029,6 +40229,34 @@
                                   "generated_redline"
                                 ]
                               },
+                              "source": {
+                                "type": "string",
+                                "enum": ["uploaded", "generated"]
+                              },
+                              "comparedFromVersionNumber": {
+                                "anyOf": [
+                                  {
+                                    "type": "integer",
+                                    "exclusiveMinimum": 0,
+                                    "maximum": 9007199254740991
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "comparedToVersionNumber": {
+                                "anyOf": [
+                                  {
+                                    "type": "integer",
+                                    "exclusiveMinimum": 0,
+                                    "maximum": 9007199254740991
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
                               "note": {
                                 "type": ["string", "null"]
                               },
@@ -39085,6 +40313,9 @@
                               "id",
                               "versionNumber",
                               "kind",
+                              "source",
+                              "comparedFromVersionNumber",
+                              "comparedToVersionNumber",
                               "note",
                               "originalFilename",
                               "mimeType",
@@ -39247,6 +40478,34 @@
                                   "generated_redline"
                                 ]
                               },
+                              "source": {
+                                "type": "string",
+                                "enum": ["uploaded", "generated"]
+                              },
+                              "comparedFromVersionNumber": {
+                                "anyOf": [
+                                  {
+                                    "type": "integer",
+                                    "exclusiveMinimum": 0,
+                                    "maximum": 9007199254740991
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "comparedToVersionNumber": {
+                                "anyOf": [
+                                  {
+                                    "type": "integer",
+                                    "exclusiveMinimum": 0,
+                                    "maximum": 9007199254740991
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
                               "note": {
                                 "type": ["string", "null"]
                               },
@@ -39303,6 +40562,9 @@
                               "id",
                               "versionNumber",
                               "kind",
+                              "source",
+                              "comparedFromVersionNumber",
+                              "comparedToVersionNumber",
                               "note",
                               "originalFilename",
                               "mimeType",

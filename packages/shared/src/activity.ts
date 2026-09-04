@@ -912,6 +912,14 @@ type DocumentPayloads = {
     /** Preserves DD-015's narrower writer at append time. */
     actorRole?: "contributor";
   };
+  "document.redline_generated": {
+    documentId: string;
+    versionId: string;
+    title: string;
+    fromVersionNumber: number;
+    toVersionNumber: number;
+    versionNumber: number;
+  };
   "document.version_kind_changed": {
     documentId: string;
     versionId: string;
