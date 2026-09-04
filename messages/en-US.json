@@ -7997,6 +7997,21 @@
   "welcome.invites.submit": {
     "defaultMessage": "Send invite"
   },
+  "welcome.org.error.save": {
+    "defaultMessage": "The organization details could not be saved."
+  },
+  "welcome.org.hint": {
+    "defaultMessage": "Your name and logo appear in the header. The locale and timezone defaults decide how dates read until somebody sets their own."
+  },
+  "welcome.org.logo.preview": {
+    "defaultMessage": "Organization logo"
+  },
+  "welcome.org.logo.rejected": {
+    "defaultMessage": "That logo must be a PNG, JPEG, WebP, or SVG image under 256 KB. Pick another file."
+  },
+  "welcome.org.logo.unreadable": {
+    "defaultMessage": "That file could not be read. Pick another one."
+  },
   "welcome.pageTitle": {
     "defaultMessage": "Welcome"
   },
@@ -8050,6 +8065,9 @@
   },
   "welcome.step.invites": {
     "defaultMessage": "Invite your team"
+  },
+  "welcome.step.organization": {
+    "defaultMessage": "Your organization"
   },
   "welcome.step.portal": {
     "defaultMessage": "Business-user portal"

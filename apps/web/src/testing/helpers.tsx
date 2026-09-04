@@ -154,6 +154,35 @@ export function stubFetch(handler: (call: StubCall) => StubAnswer) {
   return impl;
 }
 
+/** The wizard's configuring steps, as `GET /api/v1/onboarding` names
+ * them. The welcome splash configures nothing, so it has no entry. */
+const ONBOARDING_STEPS = [
+  "organization",
+  "authentication",
+  "portal",
+  "email",
+  "invites",
+  "e-signature",
+  "ai-analysis",
+] as const;
+
+type OnboardingStep = (typeof ONBOARDING_STEPS)[number];
+
+/**
+ * The Settings pane that owns each step, as the route answers it. Email
+ * has none: no pane edits an SMTP relay (TECH-011). The Record type is
+ * what keeps this table complete as the step list grows.
+ */
+const ONBOARDING_SETTINGS_PATHS: Record<OnboardingStep, string | null> = {
+  organization: "/settings/general",
+  authentication: "/settings/authentication",
+  portal: "/settings/authentication",
+  email: null,
+  invites: "/settings/users",
+  "e-signature": "/settings/integrations/e-signature",
+  "ai-analysis": "/settings/ai-analysis",
+};
+
 /** The three answers every guard consults, plus per-test overrides. */
 export interface ApiState {
   signedIn?: {
@@ -180,10 +209,21 @@ export interface ApiState {
     emailConfigured?: boolean;
     ssoProviderId: string | null;
   };
-  /** Defaults to completed, so guard tests land on home, not the wizard. */
-  onboarding?: { completed: boolean; emailConfigured: boolean };
+  /**
+   * Defaults to completed with every step done, so guard tests land on
+   * home rather than the wizard and no setup checklist is outstanding.
+   * A step left out of `steps` is done.
+   */
+  onboarding?: { completed: boolean; steps?: Partial<Record<OnboardingStep, boolean>> };
   /** Defaults to env-pinned — the wizard's email step reads it (#37). */
   emailSettings?: { source: "env" | "app" | "unset"; fromAddress: string | null };
+  /** Defaults to an unnamed organization, as a fresh install holds. */
+  orgGeneral?: {
+    name: string;
+    logo: string | null;
+    defaultLocale: "en-US";
+    defaultTimezone: string;
+  };
   extra?: (call: StubCall) => StubAnswer;
 }
 
@@ -490,7 +530,33 @@ export function stubApi(state: ApiState) {
       return json(200, { folders: [] });
     }
     if (call.url.pathname === "/api/v1/onboarding" && call.method === "GET") {
-      return json(200, state.onboarding ?? { completed: true, emailConfigured: true });
+      const onboarding: NonNullable<ApiState["onboarding"]> = state.onboarding ?? {
+        completed: true,
+      };
+      return json(200, {
+        completed: onboarding.completed,
+        steps: Object.fromEntries(
+          ONBOARDING_STEPS.map((step) => [
+            step,
+            {
+              done: onboarding.steps?.[step] ?? true,
+              settingsPath: ONBOARDING_SETTINGS_PATHS[step],
+            },
+          ]),
+        ),
+      });
+    }
+    // The wizard's Organization step and the General pane read the same
+    // row. Unnamed by default, which is what a fresh install holds.
+    if (call.url.pathname === "/api/v1/org/general" && call.method === "GET") {
+      return json(200, {
+        general: state.orgGeneral ?? {
+          name: "",
+          logo: null,
+          defaultLocale: "en-US",
+          defaultTimezone: "UTC",
+        },
+      });
     }
     if (call.url.pathname === "/api/v1/email-settings" && call.method === "GET") {
       return json(

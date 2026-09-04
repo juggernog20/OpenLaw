@@ -1,13 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 /**
- * The SET-004 wizard's guard and its portal step — the step that closes
- * the fresh-install gap (issue #34): an un-onboarded Administrator is
- * routed in from home, non-admins and completed instances never see it,
- * and saving the portal step writes the allowlist through the API.
+ * The SET-004 wizard's guard and its steps: an un-onboarded
+ * Administrator is routed in from home, non-admins and completed
+ * instances never see it, and each step saves on Continue through the
+ * route its own Settings pane uses: the organization's identity through
+ * the General pane's route (#697), the allowlist through the portal's.
  */
 
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { json, problem, renderAt, stubApi, type StubCall } from "../testing/helpers";
@@ -20,6 +21,40 @@ const ADMIN = {
 };
 
 const MEMBER = { ...ADMIN, id: "u2", email: "sam@example.com", role: "legal_team_member" };
+
+/** A one-pixel PNG, small enough to ride a data: URI in a fixture. */
+const LOGO_DATA_URI =
+  "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==";
+
+const LOGO_FILE = new File(
+  [Uint8Array.from(atob(LOGO_DATA_URI.split(",")[1]!), (c) => c.charCodeAt(0))],
+  "logo.png",
+  { type: "image/png" },
+);
+
+/** A PNG one byte past the API's ~256 KB cap on the encoded data: URI. */
+const OVERSIZED_LOGO_FILE = new File([new Uint8Array(256 * 1024 + 1)], "huge.png", {
+  type: "image/png",
+});
+
+/** Answers the General pane's route and records what the wizard sent.
+ * The same handler shape `settings.test.tsx` uses for that pane. */
+function captureGeneral(patches: unknown[]) {
+  let general = {
+    name: "",
+    logo: null as string | null,
+    defaultLocale: "en-US",
+    defaultTimezone: "UTC",
+  };
+  return (call: StubCall) => {
+    if (call.url.pathname !== "/api/v1/org/general") return undefined;
+    if (call.method === "PATCH") {
+      patches.push(call.body);
+      general = { ...general, ...(call.body as Partial<typeof general>) };
+    }
+    return json(200, { general });
+  };
+}
 
 /** Loader answers the wizard needs beyond stubApi's defaults. */
 function wizardExtra(domains: string[] = []) {
@@ -43,10 +78,13 @@ function emailWizardExtra(handler?: (call: StubCall) => Response | undefined) {
   };
 }
 
-/** Clicks from the welcome card to the email step (auth and portal pass through). */
+/** Clicks from the welcome card to the email step; the organization,
+ * authentication, and portal steps pass through unchanged, so none of
+ * them sends a request. */
 async function goToEmailStep(user: ReturnType<typeof userEvent.setup>) {
   await user.click(await screen.findByRole("button", { name: "Get started" }));
   await user.click(await screen.findByRole("button", { name: "Continue" }));
+  await user.click(screen.getByRole("button", { name: "Continue" }));
   await user.click(screen.getByRole("button", { name: "Continue" }));
   expect(await screen.findByRole("heading", { name: "Outbound email" })).toBeInTheDocument();
 }
@@ -55,7 +93,7 @@ describe("welcome wizard guard", () => {
   it("routes an un-onboarded Administrator from home into the wizard", async () => {
     stubApi({
       signedIn: ADMIN,
-      onboarding: { completed: false, emailConfigured: true },
+      onboarding: { completed: false },
       extra: wizardExtra(),
     });
     renderAt("/");
@@ -63,7 +101,7 @@ describe("welcome wizard guard", () => {
   });
 
   it("keeps a completed instance on home", async () => {
-    stubApi({ signedIn: ADMIN, onboarding: { completed: true, emailConfigured: true } });
+    stubApi({ signedIn: ADMIN, onboarding: { completed: true } });
     renderAt("/welcome");
     expect(await screen.findByRole("heading", { name: "Home" })).toBeInTheDocument();
   });
@@ -80,7 +118,7 @@ describe("welcome wizard portal step", () => {
     let putBody: unknown;
     stubApi({
       signedIn: ADMIN,
-      onboarding: { completed: false, emailConfigured: false },
+      onboarding: { completed: false, steps: { email: false } },
       emailSettings: { source: "unset", fromAddress: null },
       extra: (call) => {
         const fromLoader = wizardExtra()(call);
@@ -96,8 +134,10 @@ describe("welcome wizard portal step", () => {
     const user = userEvent.setup();
 
     await user.click(await screen.findByRole("button", { name: "Get started" }));
-    // Authentication step: keep built-in and continue (no API call needed).
+    // Organization step: nothing entered, so Continue sends nothing.
     await user.click(await screen.findByRole("button", { name: "Continue" }));
+    // Authentication step: keep built-in and continue (no API call needed).
+    await user.click(screen.getByRole("button", { name: "Continue" }));
 
     // Portal step: add a domain and continue — the PUT must carry it.
     await user.type(screen.getByLabelText("Allowed email domains"), "acme.example");
@@ -111,11 +151,182 @@ describe("welcome wizard portal step", () => {
   });
 });
 
+describe("welcome wizard organization step (#697)", () => {
+  it("opens the wizard, ahead of authentication", async () => {
+    stubApi({ signedIn: ADMIN, onboarding: { completed: false }, extra: wizardExtra() });
+    renderAt("/welcome");
+    const user = userEvent.setup();
+
+    await user.click(await screen.findByRole("button", { name: "Get started" }));
+    expect(await screen.findByRole("heading", { name: "Your organization" })).toBeInTheDocument();
+    // Six steps now, and this is the one after the splash.
+    expect(screen.getByText("Step 2 of 6")).toBeInTheDocument();
+    // The step's fields are one region, named by the step's heading.
+    expect(screen.getByRole("region", { name: "Your organization" })).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Continue" }));
+    expect(await screen.findByRole("heading", { name: "Authentication" })).toBeInTheDocument();
+  });
+
+  it("saves the name, the logo, and the defaults in one PATCH on Continue", async () => {
+    const patches: unknown[] = [];
+    const general = captureGeneral(patches);
+    stubApi({
+      signedIn: ADMIN,
+      onboarding: { completed: false },
+      extra: (call) => wizardExtra()(call) ?? general(call),
+    });
+    renderAt("/welcome");
+    const user = userEvent.setup();
+
+    await user.click(await screen.findByRole("button", { name: "Get started" }));
+    await user.type(await screen.findByLabelText("Organization name"), "Acme Legal");
+    // The file input carries its own name; the Upload button drives it.
+    await user.upload(screen.getByLabelText("Upload a logo"), LOGO_FILE);
+    // The preview appearing is what tells an Administrator the file was
+    // read, so it is what the test waits on too.
+    expect(await screen.findByRole("img", { name: "Organization logo" })).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Continue" }));
+
+    expect(await screen.findByRole("heading", { name: "Authentication" })).toBeInTheDocument();
+    // One request, carrying only what the Administrator changed.
+    expect(patches).toEqual([{ name: "Acme Legal", logo: LOGO_DATA_URI }]);
+  });
+
+  it("puts what the wizard saved on the General pane", async () => {
+    const general = captureGeneral([]);
+    stubApi({
+      signedIn: ADMIN,
+      onboarding: { completed: false },
+      extra: (call) => wizardExtra()(call) ?? general(call),
+    });
+    const { router } = renderAt("/welcome");
+    const user = userEvent.setup();
+
+    await user.click(await screen.findByRole("button", { name: "Get started" }));
+    await user.type(await screen.findByLabelText("Organization name"), "Acme Legal");
+    await user.click(screen.getByRole("button", { name: "Continue" }));
+    expect(await screen.findByRole("heading", { name: "Authentication" })).toBeInTheDocument();
+
+    // Same row, same route: Settings → Organization → General holds it.
+    await router.navigate("/settings/general");
+    expect(await screen.findByDisplayValue("Acme Legal")).toBeInTheDocument();
+  });
+
+  it("skips without writing anything", async () => {
+    const patches: unknown[] = [];
+    const general = captureGeneral(patches);
+    stubApi({
+      signedIn: ADMIN,
+      onboarding: { completed: false },
+      extra: (call) => wizardExtra()(call) ?? general(call),
+    });
+    renderAt("/welcome");
+    const user = userEvent.setup();
+
+    await user.click(await screen.findByRole("button", { name: "Get started" }));
+    await user.type(await screen.findByLabelText("Organization name"), "Acme Legal");
+    await user.click(screen.getByRole("button", { name: "Set up later" }));
+
+    expect(await screen.findByRole("heading", { name: "Authentication" })).toBeInTheDocument();
+    expect(patches).toEqual([]);
+  });
+
+  it("surfaces a save failure's plain-language reason", async () => {
+    stubApi({
+      signedIn: ADMIN,
+      onboarding: { completed: false },
+      extra: (call) => {
+        const fromLoader = wizardExtra()(call);
+        if (fromLoader) return fromLoader;
+        if (call.url.pathname === "/api/v1/org/general" && call.method === "PATCH") {
+          return problem(400, "The organization name cannot be blank.");
+        }
+        return undefined;
+      },
+    });
+    renderAt("/welcome");
+    const user = userEvent.setup();
+
+    await user.click(await screen.findByRole("button", { name: "Get started" }));
+    await user.type(await screen.findByLabelText("Organization name"), "Acme Legal");
+    await user.click(screen.getByRole("button", { name: "Continue" }));
+
+    expect(await screen.findByText("The organization name cannot be blank.")).toBeInTheDocument();
+    // Refused, so the wizard stays put rather than moving on.
+    expect(screen.getByRole("heading", { name: "Your organization" })).toBeInTheDocument();
+  });
+
+  it("does not silently discard a cleared existing name", async () => {
+    let patch: unknown;
+    stubApi({
+      signedIn: ADMIN,
+      onboarding: { completed: false },
+      orgGeneral: {
+        name: "Acme Legal",
+        logo: null,
+        defaultLocale: "en-US",
+        defaultTimezone: "UTC",
+      },
+      extra: (call) => {
+        const fromLoader = wizardExtra()(call);
+        if (fromLoader) return fromLoader;
+        if (call.url.pathname === "/api/v1/org/general" && call.method === "PATCH") {
+          patch = call.body;
+          return problem(400, "The organization name cannot be blank.");
+        }
+        return undefined;
+      },
+    });
+    renderAt("/welcome");
+    const user = userEvent.setup();
+
+    await user.click(await screen.findByRole("button", { name: "Get started" }));
+    await user.clear(await screen.findByLabelText("Organization name"));
+    await user.click(screen.getByRole("button", { name: "Continue" }));
+
+    expect(patch).toEqual({ name: "" });
+    expect(await screen.findByText("The organization name cannot be blank.")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Your organization" })).toBeInTheDocument();
+  });
+
+  it("cannot advance while an accepted logo is still being read", async () => {
+    const read = vi
+      .spyOn(FileReader.prototype, "readAsDataURL")
+      .mockImplementation(() => undefined);
+    try {
+      stubApi({ signedIn: ADMIN, onboarding: { completed: false }, extra: wizardExtra() });
+      renderAt("/welcome");
+      const user = userEvent.setup();
+
+      await user.click(await screen.findByRole("button", { name: "Get started" }));
+      await user.upload(await screen.findByLabelText("Upload a logo"), LOGO_FILE);
+
+      expect(screen.getByRole("button", { name: "Continue" })).toBeDisabled();
+      expect(screen.getByRole("button", { name: "Set up later" })).toBeDisabled();
+      expect(screen.getByRole("button", { name: "Upload" })).toBeDisabled();
+    } finally {
+      read.mockRestore();
+    }
+  });
+
+  it("refuses a logo the API's cap would refuse", async () => {
+    stubApi({ signedIn: ADMIN, onboarding: { completed: false }, extra: wizardExtra() });
+    renderAt("/welcome");
+    const user = userEvent.setup();
+
+    await user.click(await screen.findByRole("button", { name: "Get started" }));
+    await user.upload(await screen.findByLabelText("Upload a logo"), OVERSIZED_LOGO_FILE);
+
+    expect(await screen.findByText(/under 256 KB/)).toBeInTheDocument();
+  });
+});
+
 describe("welcome wizard email step (#37)", () => {
   it("shows an env-pinned relay read-only, naming the variables to change", async () => {
     stubApi({
       signedIn: ADMIN,
-      onboarding: { completed: false, emailConfigured: true },
+      onboarding: { completed: false },
       emailSettings: { source: "env", fromAddress: "OpenLaw <openlaw@example.com>" },
       extra: emailWizardExtra(),
     });
@@ -136,7 +347,7 @@ describe("welcome wizard email step (#37)", () => {
     let putBody: unknown;
     stubApi({
       signedIn: ADMIN,
-      onboarding: { completed: false, emailConfigured: false },
+      onboarding: { completed: false, steps: { email: false } },
       emailSettings: { source: "unset", fromAddress: null },
       extra: emailWizardExtra((call) => {
         if (call.url.pathname === "/api/v1/email-settings" && call.method === "PUT") {
@@ -169,7 +380,7 @@ describe("welcome wizard email step (#37)", () => {
   it("surfaces a save failure's plain-language reason", async () => {
     stubApi({
       signedIn: ADMIN,
-      onboarding: { completed: false, emailConfigured: false },
+      onboarding: { completed: false, steps: { email: false } },
       emailSettings: { source: "unset", fromAddress: null },
       extra: emailWizardExtra((call) => {
         if (call.url.pathname === "/api/v1/email-settings" && call.method === "PUT") {
@@ -194,7 +405,7 @@ describe("welcome wizard email step (#37)", () => {
   it("sends a test email from the app-configured state and reports the recipient", async () => {
     stubApi({
       signedIn: ADMIN,
-      onboarding: { completed: false, emailConfigured: true },
+      onboarding: { completed: false },
       emailSettings: { source: "app", fromAddress: "Acme <legal@acme.example>" },
       extra: emailWizardExtra((call) => {
         if (call.url.pathname === "/api/v1/email-settings/test" && call.method === "POST") {
@@ -215,7 +426,7 @@ describe("welcome wizard email step (#37)", () => {
     let putBody: unknown;
     stubApi({
       signedIn: ADMIN,
-      onboarding: { completed: false, emailConfigured: true },
+      onboarding: { completed: false },
       emailSettings: { source: "app", fromAddress: "Acme <legal@acme.example>" },
       extra: emailWizardExtra((call) => {
         if (call.url.pathname === "/api/v1/email-settings" && call.method === "PUT") {

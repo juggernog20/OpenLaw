@@ -21,7 +21,13 @@ description = "Fixture values that look like credentials and are not"
 # body says in words that it is neither a key nor real. The DocuSign
 # driver's own suite generates a genuine key pair at run time and stores
 # none.
+#
+# The same shape again in
+# apps/api/src/modules/onboarding/onboarding.test.ts, where the
+# wizard's e-signature step reads whether a connector row exists and
+# a connector row has to hold something key-shaped to be one.
 regexes = [
   '''bm90LWEtcmVhbC1rZXk=''',
   '''openlawfixturekeyneverused''',
+  '''openlawonboardingfixturekey''',
 ]

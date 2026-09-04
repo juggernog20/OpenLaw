@@ -253,7 +253,7 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** First-run onboarding state (SET-004), plus whether email is configured */
+    /** First-run onboarding state (SET-004): whether the wizard is finished, and for each of its steps whether the thing it configures is configured and which Settings pane owns it */
     get: operations["getOnboardingStatus"];
     put?: never;
     post?: never;
@@ -5336,7 +5336,36 @@ export interface operations {
         content: {
           "application/json": {
             completed: boolean;
-            emailConfigured: boolean;
+            steps: {
+              organization: {
+                done: boolean;
+                settingsPath: string | null;
+              };
+              authentication: {
+                done: boolean;
+                settingsPath: string | null;
+              };
+              portal: {
+                done: boolean;
+                settingsPath: string | null;
+              };
+              email: {
+                done: boolean;
+                settingsPath: string | null;
+              };
+              invites: {
+                done: boolean;
+                settingsPath: string | null;
+              };
+              "e-signature": {
+                done: boolean;
+                settingsPath: string | null;
+              };
+              "ai-analysis": {
+                done: boolean;
+                settingsPath: string | null;
+              };
+            };
           };
         };
       };
@@ -5368,7 +5397,36 @@ export interface operations {
         content: {
           "application/json": {
             completed: boolean;
-            emailConfigured: boolean;
+            steps: {
+              organization: {
+                done: boolean;
+                settingsPath: string | null;
+              };
+              authentication: {
+                done: boolean;
+                settingsPath: string | null;
+              };
+              portal: {
+                done: boolean;
+                settingsPath: string | null;
+              };
+              email: {
+                done: boolean;
+                settingsPath: string | null;
+              };
+              invites: {
+                done: boolean;
+                settingsPath: string | null;
+              };
+              "e-signature": {
+                done: boolean;
+                settingsPath: string | null;
+              };
+              "ai-analysis": {
+                done: boolean;
+                settingsPath: string | null;
+              };
+            };
           };
         };
       };
