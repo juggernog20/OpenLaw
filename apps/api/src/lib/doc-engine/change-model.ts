@@ -379,7 +379,7 @@ function paragraphRuns(paragraph: XmlElement): ChangeRun[] {
 }
 
 /** "2.", "2.4", or "2.4." at the start of the text, followed by a space. */
-function leadingClauseLabel(text: string): string | null {
+export function leadingClauseLabel(text: string): string | null {
   const match = /^\s*((?:\d+\.)+\d+\.?|\d+\.)(?=\s)/u.exec(text);
   return match?.[1] ?? null;
 }
@@ -457,7 +457,7 @@ function oneLine(text: string): string {
   return flat.length <= EXCERPT_LENGTH ? flat : `${flat.slice(0, EXCERPT_LENGTH - 1).trimEnd()}…`;
 }
 
-function changesOf(paragraphs: ChangeParagraph[]): DocumentChange[] {
+export function changesOf(paragraphs: ChangeParagraph[]): DocumentChange[] {
   const answer: DocumentChange[] = [];
   let nearestLabel: string | null = null;
   for (const paragraph of paragraphs) {
