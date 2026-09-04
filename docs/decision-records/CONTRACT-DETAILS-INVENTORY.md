@@ -246,14 +246,14 @@ Container: `nKd02 @ 48,0,392×1334` inside `i4DfDF`. Renders the live document n
 
 ### K.header `un018`
 
-| #    | Element       | ID                 | What                    |
-| ---- | ------------- | ------------------ | ----------------------- |
-| K.H1 | File icon     | `XTDT0`            | Document glyph          |
-| K.H2 | Filename      | `zH1CE`            | "MSA-Acme-v7.pdf"       |
-| K.H3 | Version pill  | `MKtcn` → `Vqj7F`  | "v7"                    |
-| K.H4 | Redlines pill | `W1rI1` → `A20fup` | "42 redlines" (amber)   |
-| K.H5 | Action icon 1 | `Z8e3M`            | (open-in-full presumed) |
-| K.H6 | Action icon 2 | `Pq0xP`            | (close presumed)        |
+| #    | Element       | ID                 | What                                                                                                                                                                                             |
+| ---- | ------------- | ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| K.H1 | File icon     | `XTDT0`            | Document glyph                                                                                                                                                                                   |
+| K.H2 | Filename      | `zH1CE`            | "MSA-Acme-v7.pdf"                                                                                                                                                                                |
+| K.H3 | Version pill  | `MKtcn` → `Vqj7F`  | "v7"                                                                                                                                                                                             |
+| K.H4 | Redlines pill | `W1rI1` → `A20fup` | **Built in M32:** reads "Compare" until the predecessor Comparison is ready, then reads its change count; opens that pair's compare screen and is absent on v1 and a Generated redline (DES-071) |
+| K.H5 | Action icon 1 | `Z8e3M`            | (open-in-full presumed)                                                                                                                                                                          |
+| K.H6 | Action icon 2 | `Pq0xP`            | (close presumed)                                                                                                                                                                                 |
 
 ### K.toolbar `vLiAa`
 
