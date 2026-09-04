@@ -6578,6 +6578,9 @@
   "settings.matterTemplateEditor.taskDueNumber": {
     "defaultMessage": "Task {number} due offset in days"
   },
+  "settings.matterTemplateEditor.taskDuePlaceholder": {
+    "defaultMessage": "—"
+  },
   "settings.matterTemplateEditor.taskNumber": {
     "defaultMessage": "Task {number}"
   },
