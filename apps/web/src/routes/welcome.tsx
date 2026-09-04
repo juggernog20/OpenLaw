@@ -212,13 +212,16 @@ export function WelcomePage() {
       );
       return;
     }
-    const unreadable = () =>
+    setBusy(true);
+    const unreadable = () => {
       setError(
         intl.formatMessage({
           id: "welcome.org.logo.unreadable",
           defaultMessage: "That file could not be read. Pick another one.",
         }),
       );
+      setBusy(false);
+    };
     const reader = new FileReader();
     reader.onload = () => {
       // readAsDataURL resolves to a string, but the API takes a data:
@@ -230,18 +233,25 @@ export function WelcomePage() {
       }
       setError(null);
       setOrgDraft((current) => ({ ...current, logo: dataUri }));
+      setBusy(false);
     };
     reader.onerror = unreadable;
-    reader.readAsDataURL(file);
+    reader.onabort = unreadable;
+    try {
+      reader.readAsDataURL(file);
+    } catch {
+      unreadable();
+    }
   }
 
   async function applyOrganization() {
-    // Only what moved: an untouched field sends nothing, so a skipped
-    // name never overwrites a seeded row and the activity log stays a
-    // record of changes (DD-017).
+    // Only what moved: an untouched field sends nothing and the
+    // activity log stays a record of changes (DD-017). A changed blank
+    // name still reaches the route, whose validation refuses it; the
+    // wizard must not silently retain the old name while advancing.
     const name = orgDraft.name.trim();
     const patch = {
-      ...(name !== "" && name !== savedGeneral.name ? { name } : {}),
+      ...(name !== savedGeneral.name ? { name } : {}),
       ...(orgDraft.logo !== savedGeneral.logo ? { logo: orgDraft.logo } : {}),
       ...(orgDraft.defaultLocale !== savedGeneral.defaultLocale
         ? { defaultLocale: orgDraft.defaultLocale }
@@ -251,6 +261,9 @@ export function WelcomePage() {
         : {}),
     };
     if (Object.keys(patch).length === 0) {
+      // Revert presentation-only whitespace trimmed above, so Back
+      // shows the saved row rather than a draft that was never sent.
+      setOrgDraft(savedGeneral);
       goTo("authentication");
       return;
     }
@@ -652,6 +665,7 @@ export function WelcomePage() {
                         <input
                           ref={logoInput}
                           type="file"
+                          disabled={busy}
                           accept={LOGO_TYPES.join(",")}
                           // Visually hidden but still in the accessibility
                           // tree, so it carries its own name (the Upload
@@ -670,6 +684,7 @@ export function WelcomePage() {
                           type="button"
                           variant="secondary"
                           size="sm"
+                          disabled={busy}
                           onClick={() => logoInput.current?.click()}
                         >
                           <FormattedMessage id="settings.general.upload" defaultMessage="Upload" />

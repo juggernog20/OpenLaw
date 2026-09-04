@@ -8,7 +8,7 @@
  * the General pane's route (#697), the allowlist through the portal's.
  */
 
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { json, problem, renderAt, stubApi, type StubCall } from "../testing/helpers";
@@ -255,6 +255,59 @@ describe("welcome wizard organization step (#697)", () => {
     expect(await screen.findByText("The organization name cannot be blank.")).toBeInTheDocument();
     // Refused, so the wizard stays put rather than moving on.
     expect(screen.getByRole("heading", { name: "Your organization" })).toBeInTheDocument();
+  });
+
+  it("does not silently discard a cleared existing name", async () => {
+    let patch: unknown;
+    stubApi({
+      signedIn: ADMIN,
+      onboarding: { completed: false },
+      orgGeneral: {
+        name: "Acme Legal",
+        logo: null,
+        defaultLocale: "en-US",
+        defaultTimezone: "UTC",
+      },
+      extra: (call) => {
+        const fromLoader = wizardExtra()(call);
+        if (fromLoader) return fromLoader;
+        if (call.url.pathname === "/api/v1/org/general" && call.method === "PATCH") {
+          patch = call.body;
+          return problem(400, "The organization name cannot be blank.");
+        }
+        return undefined;
+      },
+    });
+    renderAt("/welcome");
+    const user = userEvent.setup();
+
+    await user.click(await screen.findByRole("button", { name: "Get started" }));
+    await user.clear(await screen.findByLabelText("Organization name"));
+    await user.click(screen.getByRole("button", { name: "Continue" }));
+
+    expect(patch).toEqual({ name: "" });
+    expect(await screen.findByText("The organization name cannot be blank.")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Your organization" })).toBeInTheDocument();
+  });
+
+  it("cannot advance while an accepted logo is still being read", async () => {
+    const read = vi
+      .spyOn(FileReader.prototype, "readAsDataURL")
+      .mockImplementation(() => undefined);
+    try {
+      stubApi({ signedIn: ADMIN, onboarding: { completed: false }, extra: wizardExtra() });
+      renderAt("/welcome");
+      const user = userEvent.setup();
+
+      await user.click(await screen.findByRole("button", { name: "Get started" }));
+      await user.upload(await screen.findByLabelText("Upload a logo"), LOGO_FILE);
+
+      expect(screen.getByRole("button", { name: "Continue" })).toBeDisabled();
+      expect(screen.getByRole("button", { name: "Set up later" })).toBeDisabled();
+      expect(screen.getByRole("button", { name: "Upload" })).toBeDisabled();
+    } finally {
+      read.mockRestore();
+    }
   });
 
   it("refuses a logo the API's cap would refuse", async () => {
