@@ -5,9 +5,10 @@
  * organization's identity (#697), authentication mode, the DD-010
  * portal (magic-link toggle plus domain allowlist), SMTP setup (#37:
  * save a relay in the app unless the environment pins one; env always
- * wins), and invites. Every step writes through the route its Settings
- * pane already uses, because SET-001 keeps one pane at one address and
- * a second writer would be a second address.
+ * wins), invites, and the DocuSign connector (#698). Every step writes
+ * through the route its Settings pane already uses, because SET-001
+ * keeps one pane at one address and a second writer would be a second
+ * address.
  *
  * Every step is skippable and saves on Continue, in one request. That
  * is the wizard's own shape rather than a departure from DES-017.
@@ -28,6 +29,7 @@ import {
 import { redirect, useLoaderData, useNavigate } from "react-router";
 import { FormattedMessage, useIntl } from "react-intl";
 import { X } from "lucide-react";
+import type { paths } from "@openlaw/api-client";
 import { api } from "../lib/api";
 import { field } from "../lib/forms";
 import { networkError } from "../lib/messages";
@@ -44,6 +46,16 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../co
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
 
+/** The one adapter v1 ships (CTR-013), as the pane names it too. */
+const SIGNING_PROVIDER = "docusign" as const;
+
+/** The estates DocuSign runs, as the API's own enum has them. */
+const SIGNING_ENVIRONMENTS = ["demo", "production"] as const;
+
+/** The connector as the API answers it. Never either secret. */
+type SigningConnector =
+  paths["/api/v1/signing-connectors/{provider}"]["get"]["responses"]["200"]["content"]["application/json"]["connector"];
+
 export async function welcomeLoader() {
   const user = await requireUser();
   if (user.role !== "administrator") return redirect("/");
@@ -52,13 +64,16 @@ export async function welcomeLoader() {
   const onboarding = await api.GET("/api/v1/onboarding");
   if (!onboarding.data) throw new Error("The onboarding state could not be read.");
   if (onboarding.data.completed) return redirect("/");
-  const [general, methods, domains, email] = await Promise.all([
+  const [general, methods, domains, email, signing] = await Promise.all([
     api.GET("/api/v1/org/general"),
     api.GET("/api/v1/auth/methods"),
     api.GET("/api/v1/auth/allowed-domains"),
     api.GET("/api/v1/email-settings"),
+    api.GET("/api/v1/signing-connectors/{provider}", {
+      params: { path: { provider: SIGNING_PROVIDER } },
+    }),
   ]);
-  if (!general.data || !methods.data || !domains.data || !email.data) {
+  if (!general.data || !methods.data || !domains.data || !email.data || !signing.data) {
     throw new Error("The onboarding state could not be read.");
   }
   return {
@@ -69,12 +84,25 @@ export async function welcomeLoader() {
     methods: methods.data,
     domains: domains.data.domains,
     emailSettings: email.data,
+    // Read here rather than derived from the onboarding status, because
+    // the step draws the stored estate and integration key and needs
+    // the row itself, not the one boolean the status carries.
+    signingConnector: signing.data.connector,
   };
 }
 
 /** SET-004's order: who we are, then how people get in, then who they
- * are. The splash configures nothing and opens the flow. */
-const STEPS = ["welcome", "organization", "authentication", "portal", "email", "invites"] as const;
+ * are, then what we connect to. The splash configures nothing and opens
+ * the flow. */
+const STEPS = [
+  "welcome",
+  "organization",
+  "authentication",
+  "portal",
+  "email",
+  "invites",
+  "e-signature",
+] as const;
 type Step = (typeof STEPS)[number];
 
 const INVITE_ROLES = ["legal_team_member", "contributor", "administrator"] as const;
@@ -170,12 +198,44 @@ export function WelcomePage() {
   const [inviteRole, setInviteRole] = useState<InviteRole>("legal_team_member");
   const [invited, setInvited] = useState<string[]>([]);
 
+  // E-signature step (#698): the DocuSign connector, through the PUT
+  // the Integrations pane already uses. Both secrets are write-only, so
+  // their boxes start blank on a configured connector too — blank keeps
+  // what is stored, and this step never receives either one to resend.
+  const [signingConnector, setSigningConnector] = useState<SigningConnector>(
+    loaded.signingConnector,
+  );
+  const [signingEnvironment, setSigningEnvironment] = useState<
+    (typeof SIGNING_ENVIRONMENTS)[number]
+  >(loaded.signingConnector.environment ?? "demo");
+  const [integrationKey, setIntegrationKey] = useState(
+    loaded.signingConnector.integrationKey ?? "",
+  );
+  const [apiUserId, setApiUserId] = useState(loaded.signingConnector.apiUserId ?? "");
+  const [privateKey, setPrivateKey] = useState("");
+  const [webhookSecret, setWebhookSecret] = useState("");
+  /** Whether a configured connector's form is open for new credentials.
+   * A configured connector reads as configured until it is. */
+  const [replacingConnector, setReplacingConnector] = useState(false);
+  const signingFormOpen = !signingConnector.configured || replacingConnector;
+
   const stepIndex = STEPS.indexOf(step);
+  const isLastStep = stepIndex === STEPS.length - 1;
 
   function goTo(next: Step) {
     setError(null);
     setEmailNotice(null);
     setStep(next);
+  }
+
+  /** Onward from this step: the next one, or the end of the wizard. */
+  async function advance() {
+    const next = STEPS[stepIndex + 1];
+    if (!next) {
+      await finish();
+      return;
+    }
+    goTo(next);
   }
 
   async function finish() {
@@ -264,7 +324,7 @@ export function WelcomePage() {
       // Revert presentation-only whitespace trimmed above, so Back
       // shows the saved row rather than a draft that was never sent.
       setOrgDraft(savedGeneral);
-      goTo("authentication");
+      await advance();
       return;
     }
     setBusy(true);
@@ -275,7 +335,7 @@ export function WelcomePage() {
       if (data) {
         setSavedGeneral(data.general);
         setOrgDraft(data.general);
-        goTo("authentication");
+        await advance();
         return;
       }
       setError(
@@ -340,7 +400,7 @@ export function WelcomePage() {
       return;
     }
     if (mode === savedMethods.mode) {
-      goTo("portal");
+      await advance();
       return;
     }
     setBusy(true);
@@ -350,7 +410,7 @@ export function WelcomePage() {
       const { data } = result;
       if (data) {
         setSavedMethods((current) => ({ ...current, mode: data.mode }));
-        goTo("portal");
+        await advance();
         return;
       }
       setError(
@@ -404,7 +464,7 @@ export function WelcomePage() {
         const saved = toggled.data.magicLinkEnabled;
         setSavedMethods((current) => ({ ...current, magicLinkEnabled: saved }));
       }
-      goTo("email");
+      await advance();
     } catch {
       setError(networkError(intl));
     } finally {
@@ -554,6 +614,94 @@ export function WelcomePage() {
     }
   }
 
+  /**
+   * Saves the connector on Continue, if there is anything to save.
+   *
+   * Leaving the boxes as they were is how this step is skipped from the
+   * Continue button, and it writes nothing: an install with no
+   * connector keeps the manual hand-off, which is the whole promise
+   * (CTR-013). Both secrets are omitted when blank rather than sent
+   * empty, so a configured connector is never asked for a credential it
+   * already holds.
+   */
+  async function applyESignature() {
+    if (!signingFormOpen) {
+      await advance();
+      return;
+    }
+    const key = integrationKey.trim();
+    const userId = apiUserId.trim();
+    const untouched =
+      signingEnvironment === (signingConnector.environment ?? "demo") &&
+      key === (signingConnector.integrationKey ?? "") &&
+      userId === (signingConnector.apiUserId ?? "") &&
+      privateKey.trim() === "" &&
+      webhookSecret.trim() === "";
+    if (untouched) {
+      await advance();
+      return;
+    }
+    // The route refuses a blank integration key with a schema message,
+    // which reads like a wire fault rather than an instruction. The two
+    // secrets are left to the route, whose refusals are written for an
+    // Administrator to act on.
+    if (!key || !userId) {
+      setError(
+        intl.formatMessage({
+          id: "welcome.eSignature.error.incomplete",
+          defaultMessage:
+            "Enter the integration key and the user ID from your DocuSign integration, or choose Set up later.",
+        }),
+      );
+      return;
+    }
+    setBusy(true);
+    setError(null);
+    try {
+      const result = await api.PUT("/api/v1/signing-connectors/{provider}", {
+        params: { path: { provider: SIGNING_PROVIDER } },
+        body: {
+          environment: signingEnvironment,
+          integrationKey: key,
+          apiUserId: userId,
+          ...(privateKey.trim() === "" ? {} : { privateKey }),
+          ...(webhookSecret.trim() === "" ? {} : { webhookSecret }),
+        },
+      });
+      const { data } = result;
+      if (data) {
+        setSigningConnector(data.connector);
+        // The boxes go back to blank because that is what they mean on
+        // a stored connector: keep what is there.
+        setPrivateKey("");
+        setWebhookSecret("");
+        setReplacingConnector(false);
+        await advance();
+        return;
+      }
+      setError(
+        (await readProblem(result)).detail ??
+          intl.formatMessage({
+            id: "welcome.eSignature.error.save",
+            defaultMessage: "The e-signature connector could not be saved.",
+          }),
+      );
+    } catch {
+      setError(networkError(intl));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  /** What Continue does on this step, before it moves on. */
+  async function continueStep() {
+    if (step === "organization") return applyOrganization();
+    if (step === "authentication") return applyAuthentication();
+    if (step === "portal") return applyPortal();
+    if (step === "e-signature") return applyESignature();
+    return advance();
+  }
+
   const stepTitles: Record<Step, ReactNode> = {
     welcome: <FormattedMessage id="welcome.step.welcome" defaultMessage="Welcome to OpenLaw" />,
     organization: (
@@ -565,6 +713,7 @@ export function WelcomePage() {
     portal: <FormattedMessage id="welcome.step.portal" defaultMessage="Business-user portal" />,
     email: <FormattedMessage id="welcome.step.email" defaultMessage="Outbound email" />,
     invites: <FormattedMessage id="welcome.step.invites" defaultMessage="Invite your team" />,
+    "e-signature": <FormattedMessage id="welcome.step.eSignature" defaultMessage="E-signature" />,
   };
 
   return (
@@ -1234,6 +1383,206 @@ export function WelcomePage() {
                     )}
                   </>
                 )}
+
+                {step === "e-signature" && (
+                  <>
+                    <CardDescription>
+                      <FormattedMessage
+                        id="welcome.eSignature.hint"
+                        defaultMessage="Optional. Connect DocuSign and contracts are sent for signature from their own records. Skip it and nothing else is lost. The manual hand-off stays the path, so you send the paper yourself, then upload the executed PDF and pin it to the record."
+                      />
+                    </CardDescription>
+
+                    {/* A configured connector reads as configured. A
+                        resumed wizard must never ask for a credential
+                        the install already holds. */}
+                    {signingConnector.configured && !replacingConnector && (
+                      <>
+                        <Alert variant="success">
+                          <FormattedMessage
+                            id="welcome.eSignature.configured"
+                            defaultMessage="DocuSign is connected in the {environment, select, production {production} other {demo}} environment, as integration key {integrationKey}."
+                            values={{
+                              environment: signingConnector.environment ?? "demo",
+                              integrationKey: signingConnector.integrationKey ?? "",
+                            }}
+                          />
+                        </Alert>
+                        <div className="flex flex-col gap-1.5">
+                          <Label htmlFor="welcome-ds-webhook-url">
+                            <FormattedMessage
+                              id="settings.eSignature.webhookUrl"
+                              defaultMessage="Webhook URL"
+                            />
+                          </Label>
+                          <Input
+                            id="welcome-ds-webhook-url"
+                            readOnly
+                            value={signingConnector.webhookUrl}
+                          />
+                          <p className="text-sm text-muted">
+                            <FormattedMessage
+                              id="settings.eSignature.webhookUrl.hint"
+                              defaultMessage="Paste this into a DocuSign Connect configuration so envelope status reaches this install."
+                            />
+                          </p>
+                        </div>
+                        <div>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            disabled={busy}
+                            onClick={() => setReplacingConnector(true)}
+                          >
+                            <FormattedMessage
+                              id="welcome.eSignature.replace"
+                              defaultMessage="Replace credentials"
+                            />
+                          </Button>
+                        </div>
+                      </>
+                    )}
+
+                    {signingFormOpen && (
+                      <>
+                        <div className="flex flex-col gap-1.5">
+                          <Label htmlFor="welcome-ds-environment">
+                            <FormattedMessage
+                              id="settings.eSignature.environment"
+                              defaultMessage="Environment"
+                            />
+                          </Label>
+                          <select
+                            id="welcome-ds-environment"
+                            className={selectClassName}
+                            value={signingEnvironment}
+                            onChange={(event) => {
+                              // A lookup, not a cast: a value outside
+                              // the two estates is not one we can save.
+                              const chosen = SIGNING_ENVIRONMENTS.find(
+                                (estate) => estate === event.target.value,
+                              );
+                              if (chosen) setSigningEnvironment(chosen);
+                            }}
+                          >
+                            <option value="demo">
+                              {intl.formatMessage({
+                                id: "settings.eSignature.environment.demo",
+                                defaultMessage: "Demo",
+                              })}
+                            </option>
+                            <option value="production">
+                              {intl.formatMessage({
+                                id: "settings.eSignature.environment.production",
+                                defaultMessage: "Production",
+                              })}
+                            </option>
+                          </select>
+                        </div>
+                        <div className="flex flex-col gap-1.5">
+                          <Label htmlFor="welcome-ds-integration-key">
+                            <FormattedMessage
+                              id="settings.eSignature.integrationKey"
+                              defaultMessage="Integration key"
+                            />
+                          </Label>
+                          <Input
+                            id="welcome-ds-integration-key"
+                            autoComplete="off"
+                            value={integrationKey}
+                            onChange={(event) => setIntegrationKey(event.target.value)}
+                          />
+                        </div>
+                        <div className="flex flex-col gap-1.5">
+                          <Label htmlFor="welcome-ds-user-id">
+                            <FormattedMessage
+                              id="settings.eSignature.userId"
+                              defaultMessage="User ID"
+                            />
+                          </Label>
+                          <Input
+                            id="welcome-ds-user-id"
+                            autoComplete="off"
+                            value={apiUserId}
+                            onChange={(event) => setApiUserId(event.target.value)}
+                          />
+                          <p className="text-sm text-muted">
+                            <FormattedMessage
+                              id="settings.eSignature.userId.hint"
+                              defaultMessage="The DocuSign user envelopes are sent as. Grant that user consent to the integration once, from the DocuSign console."
+                            />
+                          </p>
+                        </div>
+                        <div className="flex flex-col gap-1.5">
+                          <Label htmlFor="welcome-ds-private-key">
+                            <FormattedMessage
+                              id="settings.eSignature.privateKey"
+                              defaultMessage="RSA private key"
+                            />
+                          </Label>
+                          <textarea
+                            id="welcome-ds-private-key"
+                            rows={4}
+                            value={privateKey}
+                            onChange={(event) => setPrivateKey(event.target.value)}
+                            placeholder={intl.formatMessage({
+                              id: "settings.eSignature.privateKey.placeholder",
+                              defaultMessage: "-----BEGIN RSA PRIVATE KEY-----",
+                            })}
+                            className="w-full rounded-button border border-border-default bg-raised px-2.5 py-1.5 text-sm text-primary placeholder:text-muted focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-link"
+                          />
+                          {signingConnector.hasPrivateKey && (
+                            <p className="text-sm text-muted">
+                              <FormattedMessage
+                                id="settings.eSignature.secret.hint"
+                                defaultMessage="Leave blank to keep the current value. Paste a new one to rotate."
+                              />
+                            </p>
+                          )}
+                        </div>
+                        <div className="flex flex-col gap-1.5">
+                          <Label htmlFor="welcome-ds-webhook-secret">
+                            <FormattedMessage
+                              id="settings.eSignature.webhookSecret"
+                              defaultMessage="Connect HMAC secret"
+                            />
+                          </Label>
+                          <Input
+                            id="welcome-ds-webhook-secret"
+                            type="password"
+                            autoComplete="off"
+                            value={webhookSecret}
+                            onChange={(event) => setWebhookSecret(event.target.value)}
+                          />
+                          <p className="text-sm text-muted">
+                            {signingConnector.hasWebhookSecret ? (
+                              <FormattedMessage
+                                id="settings.eSignature.secret.hint"
+                                defaultMessage="Leave blank to keep the current value. Paste a new one to rotate."
+                              />
+                            ) : (
+                              <FormattedMessage
+                                id="settings.eSignature.webhookSecret.hint"
+                                defaultMessage="Required. OpenLaw checks it on every delivery, so nothing unsigned can change a record."
+                              />
+                            )}
+                          </p>
+                        </div>
+                      </>
+                    )}
+
+                    {/* Named rather than linked: leaving the wizard for
+                        Settings mid-flow is not the offer. An
+                        Administrator who skips needs the address, and
+                        SET-001 says there is exactly one. */}
+                    <p className="text-sm text-muted">
+                      <FormattedMessage
+                        id="welcome.eSignature.address"
+                        defaultMessage="This connector lives at Settings → Organization → Integrations → E-signature. Set it up there whenever you like."
+                      />
+                    </p>
+                  </>
+                )}
               </section>
 
               {step !== "welcome" && (
@@ -1248,38 +1597,19 @@ export function WelcomePage() {
                   <div className="flex items-center gap-2">
                     {/* Every step defers, none is required (SET-004).
                         Only the Administrator account is, and that was
-                        first-run setup, before this flow. */}
-                    {step !== "invites" ? (
-                      <>
-                        <Button
-                          variant="ghost"
-                          disabled={busy}
-                          onClick={() => goTo(STEPS[stepIndex + 1] ?? "invites")}
-                        >
-                          <FormattedMessage id="welcome.skip" defaultMessage="Set up later" />
-                        </Button>
-                        <Button
-                          disabled={busy}
-                          onClick={() => {
-                            if (step === "organization") void applyOrganization();
-                            else if (step === "authentication") void applyAuthentication();
-                            else if (step === "portal") void applyPortal();
-                            else goTo(STEPS[stepIndex + 1] ?? "invites");
-                          }}
-                        >
-                          <FormattedMessage id="welcome.continue" defaultMessage="Continue" />
-                        </Button>
-                      </>
-                    ) : (
-                      <>
-                        <Button variant="ghost" disabled={busy} onClick={() => void finish()}>
-                          <FormattedMessage id="welcome.skip" defaultMessage="Set up later" />
-                        </Button>
-                        <Button disabled={busy} onClick={() => void finish()}>
-                          <FormattedMessage id="welcome.finish" defaultMessage="Finish" />
-                        </Button>
-                      </>
-                    )}
+                        first-run setup, before this flow. Deferring the
+                        last step ends the wizard, which is what the two
+                        buttons share there. */}
+                    <Button variant="ghost" disabled={busy} onClick={() => void advance()}>
+                      <FormattedMessage id="welcome.skip" defaultMessage="Set up later" />
+                    </Button>
+                    <Button disabled={busy} onClick={() => void continueStep()}>
+                      {isLastStep ? (
+                        <FormattedMessage id="welcome.finish" defaultMessage="Finish" />
+                      ) : (
+                        <FormattedMessage id="welcome.continue" defaultMessage="Continue" />
+                      )}
+                    </Button>
                   </div>
                 </div>
               )}

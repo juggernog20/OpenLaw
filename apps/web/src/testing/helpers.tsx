@@ -224,6 +224,17 @@ export interface ApiState {
     defaultLocale: "en-US";
     defaultTimezone: string;
   };
+  /**
+   * The DocuSign connector the wizard's E-signature step reads (#698).
+   * Defaults to the zero-config install CTR-013 promises: no connector,
+   * and the manual hand-off is the path. Only the suites about signing
+   * supply one.
+   */
+  signingConnector?: {
+    environment: "demo" | "production";
+    integrationKey: string;
+    apiUserId: string;
+  };
   extra?: (call: StubCall) => StubAnswer;
 }
 
@@ -555,6 +566,26 @@ export function stubApi(state: ApiState) {
           logo: null,
           defaultLocale: "en-US",
           defaultTimezone: "UTC",
+        },
+      });
+    }
+    // The wizard's E-signature step and the Integrations pane read the
+    // same connector. Unconfigured by default, as a fresh install is.
+    if (/^\/api\/v1\/signing-connectors\/[^/]+$/.test(call.url.pathname) && call.method === "GET") {
+      const saved = state.signingConnector;
+      return json(200, {
+        connector: {
+          provider: call.url.pathname.split("/").pop(),
+          configured: saved !== undefined,
+          enabled: saved !== undefined,
+          disabledAt: null,
+          environment: saved?.environment ?? null,
+          integrationKey: saved?.integrationKey ?? null,
+          apiUserId: saved?.apiUserId ?? null,
+          hasPrivateKey: saved !== undefined,
+          hasWebhookSecret: saved !== undefined,
+          webhookUrl: "http://localhost:3000/api/v1/signing/docusign/webhook",
+          updatedAt: saved === undefined ? null : "2026-08-16T09:00:00.000Z",
         },
       });
     }
