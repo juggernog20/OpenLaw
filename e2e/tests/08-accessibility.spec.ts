@@ -40,6 +40,9 @@ function compareFixture() {
     createdAt: "2026-08-04T10:00:00.000Z",
     isCurrent: versionNumber === 2,
     isExecuted: false,
+    source: "uploaded",
+    comparedFromVersionNumber: null,
+    comparedToVersionNumber: null,
   });
   const fromVersion = version("v-axe-1", 1, "terms-v1.docx");
   const toVersion = version("v-axe-2", 2, "terms-v2.docx");
@@ -78,6 +81,10 @@ function compareFixture() {
     document: {
       id: "doc-axe",
       title: "Axe terms",
+      // The export control is drawn only on a live Document, so a
+      // payload without this key hides it and the sweep would scan a
+      // screen the product never shows.
+      archivedAt: null,
       owner: { kind: "contract", id: "contract-axe", number: 1, title: "Axe contract" },
       versions: [fromVersion, toVersion],
     },

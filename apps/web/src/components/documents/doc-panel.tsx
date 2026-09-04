@@ -251,22 +251,32 @@ export function DocPanel({
           {previousVersion && version.kind !== "generated_redline" ? (
             <Link
               to={documentComparisonPath(documentId, previousVersion.id, version.id)}
+              // The count alone would be the link's whole accessible
+              // name, so a screen reader would hear "2 changes" with
+              // nothing saying it goes anywhere. The name says what the
+              // link does; the count stays as the visible text.
+              aria-label={
+                comparisonCount === null
+                  ? intl.formatMessage({
+                      id: "docPanel.compareLink",
+                      defaultMessage: "Compare with the previous version",
+                    })
+                  : intl.formatMessage(
+                      {
+                        id: "docPanel.compareCountLink",
+                        defaultMessage:
+                          "Compare with the previous version, " +
+                          "{count, plural, one {# change} other {# changes}}",
+                      },
+                      { count: comparisonCount },
+                    )
+              }
               className="shrink-0 rounded-chip bg-control px-2 py-px text-xs font-semibold text-accent hover:bg-section-header focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-link"
             >
               {comparisonCount === null ? (
                 <FormattedMessage id="docPanel.compare" defaultMessage="Compare" />
               ) : (
-                <span
-                  aria-label={intl.formatMessage(
-                    {
-                      id: "docPanel.compareCount",
-                      defaultMessage: "{count, plural, one {# change} other {# changes}}",
-                    },
-                    { count: comparisonCount },
-                  )}
-                >
-                  {comparisonCount}
-                </span>
+                comparisonCount
               )}
             </Link>
           ) : null}

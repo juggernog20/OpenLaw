@@ -177,6 +177,30 @@ describe("parseTrackedChangesDocx", () => {
     ]);
   });
 
+  it("folds a substitution into one change whichever order Word wrote it in", () => {
+    const substitution = (first: "ins" | "del", second: "ins" | "del") =>
+      `<w:document xmlns:w="${W_NS}"><w:body><w:p>` +
+      `<w:r><w:t xml:space="preserve">Notice of </w:t></w:r>` +
+      `<w:${first} w:id="1" w:author="A"><w:r>` +
+      `<w:${first === "del" ? "delText" : "t"}>thirty days</w:${first === "del" ? "delText" : "t"}>` +
+      `</w:r></w:${first}>` +
+      `<w:${second} w:id="2" w:author="A"><w:r>` +
+      `<w:${second === "del" ? "delText" : "t"}>sixty days</w:${second === "del" ? "delText" : "t"}>` +
+      `</w:r></w:${second}>` +
+      `</w:p></w:body></w:document>`;
+
+    // Deletion first: the old words are the ones struck out.
+    expect(
+      parseTrackedChangesDocx(zipEntry("word/document.xml", substitution("del", "ins"))).changes,
+    ).toEqual([expect.objectContaining({ kind: "replaced", excerpt: "thirty days → sixty days" })]);
+
+    // Insertion first, which Word also writes. One change, and the
+    // excerpt still reads old → new rather than in run order.
+    expect(
+      parseTrackedChangesDocx(zipEntry("word/document.xml", substitution("ins", "del"))).changes,
+    ).toEqual([expect.objectContaining({ kind: "replaced", excerpt: "sixty days → thirty days" })]);
+  });
+
   it("reads a tab stop as a property, not as a tab character", () => {
     const model = parseTrackedChangesDocx(
       zipEntry(

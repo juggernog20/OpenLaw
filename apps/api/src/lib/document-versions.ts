@@ -89,6 +89,15 @@ export interface AppendedVersion {
   versionNumber: number;
   fileRef: string;
   kind: DocumentVersionKind;
+  /**
+   * How the file was made, and which two rounds it compares.
+   *
+   * The three move together and the database enforces it: a
+   * `generated_redline` is `generated` and names both operands, and
+   * every other kind is `uploaded` and names neither. They are typed
+   * separately here, so a caller can spell an invalid combination and
+   * only learn of it when the check constraint refuses the insert.
+   */
   source: DocumentVersionSource;
   comparedFromVersionId: string | null;
   comparedToVersionId: string | null;

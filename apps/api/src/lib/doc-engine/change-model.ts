@@ -477,14 +477,27 @@ export function changesOf(paragraphs: ChangeParagraph[]): DocumentChange[] {
       }
       let kind: DocumentChange["kind"] = firstKind;
       let excerpt = oneLine(firstText);
-      if (firstKind === "deleted" && paragraph.runs[runIndex]?.change === "inserted") {
-        let inserted = "";
-        while (paragraph.runs[runIndex]?.change === "inserted") {
-          inserted += paragraph.runs[runIndex]?.text ?? "";
+      // A substitution reaches the file as a deletion beside an
+      // insertion, and Word writes the pair in either order depending on
+      // how the edit was made. Both orders are one change to a reader,
+      // so both fold into one `replaced` entry — otherwise the count
+      // overstates the edit and the change pane offers two navigation
+      // stops for one substitution. The excerpt always reads old → new,
+      // whichever order the runs arrived in.
+      const secondKind = firstKind === "deleted" ? "inserted" : "deleted";
+      if (
+        (firstKind === "deleted" || firstKind === "inserted") &&
+        paragraph.runs[runIndex]?.change === secondKind
+      ) {
+        let secondText = "";
+        while (paragraph.runs[runIndex]?.change === secondKind) {
+          secondText += paragraph.runs[runIndex]?.text ?? "";
           runIndex += 1;
         }
+        const [before, after] =
+          firstKind === "deleted" ? [firstText, secondText] : [secondText, firstText];
         kind = "replaced";
-        excerpt = oneLine(`${firstText} → ${inserted}`);
+        excerpt = oneLine(`${before} → ${after}`);
       }
       answer.push({
         id: `change-${answer.length + 1}`,

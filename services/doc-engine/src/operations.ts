@@ -88,10 +88,14 @@ const RTF_HEADER = Buffer.from("{\\rtf", "ascii");
 
 /** Refuses bytes that cannot be the Word container their format names. */
 async function assertWordSource(path: string, format: string): Promise<void> {
-  const { size } = await stat(path);
-  if (size === 0) throw sourceUnreadable(`The ${JSON.stringify(format)} source has no bytes.`);
+  // Opened first, then measured through the handle rather than the
+  // name. Checking a path and then opening it are two lookups of the
+  // same name and nothing promises they answer the same file; one
+  // lookup cannot disagree with itself.
   const file = await open(path, "r");
   try {
+    const { size } = await file.stat();
+    if (size === 0) throw sourceUnreadable(`The ${JSON.stringify(format)} source has no bytes.`);
     const first = Buffer.alloc(Math.max(OLE_HEADER.byteLength, RTF_HEADER.byteLength));
     await file.read(first, 0, first.byteLength, 0);
     if (format === "docx" || format === "odt") {

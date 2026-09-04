@@ -148,7 +148,13 @@ function CompareSubbar({
   userRole,
 }: Readonly<{ comparison: DocumentComparison; closeHref: string; userRole: Role }>) {
   const intl = useIntl();
-  const [exportedVersionId, setExportedVersionId] = useState(comparison.exportedVersionId);
+  // The local value is an optimistic override, never the source of
+  // truth: the subbar stays mounted across a poll, so a comparison that
+  // was exported in another tab arrives on `comparison` while this
+  // state is still its initial null. Reading the record first means the
+  // control says Open redline as soon as the redline exists.
+  const [exported, setExported] = useState<string | null>(null);
+  const exportedVersionId = exported ?? comparison.exportedVersionId;
   const [exporting, setExporting] = useState(false);
   const [exportFailure, setExportFailure] = useState<string | null>(null);
   const exportRedline = async () => {
@@ -157,7 +163,7 @@ function CompareSubbar({
     setExportFailure(null);
     const answer = await exportDocumentComparison(comparison.documentId, comparison.id);
     setExporting(false);
-    if (answer.ok) setExportedVersionId(answer.version.id);
+    if (answer.ok) setExported(answer.version.id);
     else {
       setExportFailure(
         answer.detail ??

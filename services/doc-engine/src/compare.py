@@ -13,6 +13,7 @@ from pathlib import Path
 import uno
 from com.sun.star.beans import PropertyValue
 from com.sun.star.connection import NoConnectException
+from com.sun.star.lang import DisposedException
 
 
 class UnreadableSource(Exception):
@@ -60,6 +61,14 @@ def open_document(desktop, path, label, read_only):
                 property_value("ShowTrackedChanges", True),
             ),
         )
+    except DisposedException:
+        # The bridge died rather than the file being bad. These are not
+        # the same fact and they must not exit the same way: the caller
+        # treats an unreadable source as terminal, and a terminal
+        # verdict on a disposed bridge would fail a comparison that a
+        # retry would have completed. Raised on, so `main` exits 1 and
+        # the operation is retried.
+        raise
     except Exception as error:
         raise UnreadableSource(
             f"LibreOffice could not open the {label} Word file"

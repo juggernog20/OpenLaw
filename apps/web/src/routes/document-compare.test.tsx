@@ -201,6 +201,18 @@ describe("the Document comparison screen", () => {
     fireEvent.change(older, { target: { value: "v1" } });
     await waitFor(() => expect(router.state.location.search).toBe("?from=v1&to=v4"));
     expect(calls.at(-1)?.body).toEqual({ fromVersionId: "v1", toVersionId: "v4" });
+
+    // Navigating closes the pair control, so the newer select is reached
+    // by opening it again on the pair the first change landed on.
+    await userEvent.click(await screen.findByRole("button", { name: "v1 → v4" }));
+
+    // A generated redline is never an operand on either side, and the
+    // newer select drives the same navigation as the older one.
+    const newer = screen.getByRole("combobox", { name: "Newer" });
+    expect(within(newer).queryByRole("option", { name: "v3" })).not.toBeInTheDocument();
+    fireEvent.change(newer, { target: { value: "v2" } });
+    await waitFor(() => expect(router.state.location.search).toBe("?from=v1&to=v2"));
+    expect(calls.at(-1)?.body).toEqual({ fromVersionId: "v1", toVersionId: "v2" });
   });
 
   it.each([

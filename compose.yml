@@ -179,6 +179,16 @@ services:
     build:
       context: .
       dockerfile: services/doc-engine/Dockerfile
+    environment:
+      # The compare bound is the one setting both sides of the call read.
+      # The API abandons a compare after it, and the sidecar kills the
+      # tool after it, so an operator who raises one and not the other
+      # gets a client that waits for an answer the server already gave
+      # up on. It is passed here rather than merged from
+      # `x-openlaw-environment` because that block carries the database
+      # URL and every secret, and this container is deliberately given
+      # neither.
+      DOC_ENGINE_COMPARE_TIMEOUT_MS: ${DOC_ENGINE_COMPARE_TIMEOUT_MS:-}
     # Stateless by design: it streams a file in, runs one tool, streams
     # the answer out, and keeps nothing. No volume, and nothing to back
     # up.

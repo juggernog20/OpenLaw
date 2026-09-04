@@ -222,7 +222,7 @@
     "defaultMessage": "{actor} made {title} the primary document"
   },
   "activity.document.redlineGenerated": {
-    "defaultMessage": "{actor} generated version {version} of {title} from versions {fromVersion} and {toVersion}"
+    "defaultMessage": "{version, select, unknown {{actor} generated a redline of {title}} other {{actor} generated version {version} of {title} from versions {fromVersion} and {toVersion}}}"
   },
   "activity.document.restored": {
     "defaultMessage": "{actor} restored {title}"
@@ -2171,8 +2171,11 @@
   "docPanel.compare": {
     "defaultMessage": "Compare"
   },
-  "docPanel.compareCount": {
-    "defaultMessage": "{count, plural, one {# change} other {# changes}}"
+  "docPanel.compareCountLink": {
+    "defaultMessage": "Compare with the previous version, {count, plural, one {# change} other {# changes}}"
+  },
+  "docPanel.compareLink": {
+    "defaultMessage": "Compare with the previous version"
   },
   "docPanel.conversionFailed": {
     "defaultMessage": "This file could not be prepared for reading here. Download it to read it."

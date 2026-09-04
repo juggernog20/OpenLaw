@@ -55,18 +55,26 @@ async function waitForText(
   documentId: string,
   versionId: string,
 ): Promise<void> {
-  await expect
-    .poll(
-      async () => {
-        const response = await request.get(
-          `/api/v1/documents/${documentId}/versions/${versionId}/text`,
-        );
-        expect(response.status(), await response.text()).toBe(200);
-        return TextState.parse(await response.json()).text.state;
-      },
-      { timeout: 180_000, intervals: [500, 1_000, 2_000] },
-    )
-    .toBe("ready");
+  // `expect.poll` retries a thrown error, so a terminal state inside the
+  // callback would be swallowed and reported as a timeout on the last
+  // value seen. A state that will never become `ready` is failed now,
+  // while the reason is still in hand.
+  const deadline = Date.now() + 180_000;
+  for (;;) {
+    const response = await request.get(
+      `/api/v1/documents/${documentId}/versions/${versionId}/text`,
+    );
+    expect(response.status(), await response.text()).toBe(200);
+    const { state } = TextState.parse(await response.json()).text;
+    if (state === "ready") return;
+    if (state !== "pending") {
+      throw new Error(`Version ${versionId} text ended ${state}, so it will never be ready.`);
+    }
+    if (Date.now() >= deadline) {
+      throw new Error(`Version ${versionId} text was still pending after 180s.`);
+    }
+    await new Promise((resolve) => setTimeout(resolve, 1_000));
+  }
 }
 
 test.describe.serial("M32 text comparison", () => {
@@ -133,19 +141,25 @@ test.describe.serial("M32 text comparison", () => {
       const pending = Comparison.parse(await requested.json()).comparison;
       expect(pending.mode).toBe("text");
       let ready = pending;
-      await expect
-        .poll(
-          async () => {
-            const response = await page.request.get(
-              `/api/v1/documents/${document!.id}/comparisons/${pending.id}`,
-            );
-            expect(response.status(), await response.text()).toBe(200);
-            ready = Comparison.parse(await response.json()).comparison;
-            return ready.state;
-          },
-          { timeout: 60_000, intervals: [250, 500, 1_000] },
-        )
-        .toBe("ready");
+      // Same reason as `waitForText`: a failed comparison is reported
+      // now, carrying the reason the worker recorded, rather than after
+      // a full minute of retries that could only report the state.
+      const comparisonDeadline = Date.now() + 60_000;
+      for (;;) {
+        const response = await page.request.get(
+          `/api/v1/documents/${document!.id}/comparisons/${pending.id}`,
+        );
+        expect(response.status(), await response.text()).toBe(200);
+        ready = Comparison.parse(await response.json()).comparison;
+        if (ready.state === "ready") break;
+        if (ready.state !== "pending") {
+          throw new Error(`The comparison ended ${ready.state}: ${ready.failure ?? "no reason"}`);
+        }
+        if (Date.now() >= comparisonDeadline) {
+          throw new Error("The comparison was still pending after 60s.");
+        }
+        await new Promise((resolve) => setTimeout(resolve, 500));
+      }
       expect(ready.failure).toBeNull();
       expect(ready.changeCount).toBeGreaterThan(0);
 

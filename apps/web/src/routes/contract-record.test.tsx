@@ -7656,10 +7656,14 @@ describe("the doc panel (M12/2)", () => {
 
     await user.click(within(await section()).getByRole("button", { name: "Negotiated agreement" }));
     const reading = await panel(/Negotiated agreement, version 2/);
-    expect(await within(reading).findByRole("link", { name: "7 changes" })).toHaveAttribute(
-      "href",
-      "/documents/pdoc-chain/compare?from=pv-a&to=pv-b",
-    );
+    // The name says what the link does and then the count; the count
+    // alone would leave a screen reader with "7 changes" and no hint
+    // that it goes anywhere.
+    const compare = await within(reading).findByRole("link", {
+      name: "Compare with the previous version, 7 changes",
+    });
+    expect(compare).toHaveAttribute("href", "/documents/pdoc-chain/compare?from=pv-a&to=pv-b");
+    expect(compare).toHaveTextContent("7");
   });
 
   it("closes on Esc and puts focus back on the row that opened it", async () => {

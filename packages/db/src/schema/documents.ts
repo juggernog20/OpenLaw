@@ -362,6 +362,19 @@ export const documentVersions = pgTable(
     // The filed-comment marker references the exact pair, so deleting
     // a chain can clear both of its marker columns in one FK action.
     uniqueIndex("document_versions_document_id_id_idx").on(table.documentId, table.id),
+    // Both provenance columns point back into this same table, so
+    // deleting a chain makes PostgreSQL ask, for every row it removes,
+    // whether any row still names it as an operand. Unindexed that is a
+    // scan of the whole table per deleted round. Both indexes are
+    // partial because a generated redline is the only kind that fills
+    // these columns: the index then holds one entry per redline rather
+    // than one per round in the install.
+    index("document_versions_compared_from_idx")
+      .on(table.comparedFromVersionId)
+      .where(sql`${table.comparedFromVersionId} IS NOT NULL`),
+    index("document_versions_compared_to_idx")
+      .on(table.comparedToVersionId)
+      .where(sql`${table.comparedToVersionId} IS NOT NULL`),
     check("document_versions_number_check", sql`${table.versionNumber} >= 1`),
     check("document_versions_byte_size_check", sql`${table.byteSize} >= 0`),
     // Exactly 64 lowercase hex characters. The column's whole value is
