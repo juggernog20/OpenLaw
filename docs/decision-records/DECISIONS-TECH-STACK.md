@@ -446,9 +446,11 @@ This decision named compare from the start and left how it is driven open. This 
 
 **The sidecar drives Writer through the UNO bridge, not a Basic macro.** `python3-uno` is added to the image; it is LibreOffice's own Python binding (MPL-2.0, AGPL-compatible), so no new upstream is trusted. Each call starts its own `soffice` under its own profile inside its own scratch directory and talks to it over a uniquely named pipe, so two compares run at once and share nothing. The Python bridge is started as the leader of a process group, and the whole group is killed when the bound expires or the caller disconnects, so a wedged Writer never outlives the request that started it.
 
-**Compare has its own bound, on conversion's shape.** `DOC_ENGINE_COMPARE_TIMEOUT_MS` defaults to ten minutes and is read beside `DOC_ENGINE_TIMEOUT_MS`. It has no ceiling yet because no queue job makes the call; the job that does has to state its budget against this bound, as the derivation queues do against `MAX_DOC_ENGINE_TIMEOUT_MS`.
+**Compare has its own bound, on conversion's shape.** `DOC_ENGINE_COMPARE_TIMEOUT_MS` defaults to ten minutes and is read beside `DOC_ENGINE_TIMEOUT_MS`. The comparison queue gives one attempt fifteen minutes. The configured engine bound may be at most fourteen minutes, which leaves one minute to read both sources, store and parse the result, and commit the Comparison. Startup refuses a larger value, and the configuration suite keeps this arithmetic in step with the queue.
 
 **The change-model parser is a pure function in the API package**, over the DOCX the engine answers. It reads paragraphs and tables (one paragraph per cell), tracked insertions and deletions, headings, numbering labels and leading clause numbers, and drops headers, footers, footnotes, images, and fields. It is tested on fixtures with no engine at all, so the compare screen's model is pinned independently of LibreOffice's output. The fidelity tier feeds the real engine's answer through the same parser; that is where the flagged compare-fidelity risk is measured.
+
+**The real-image fidelity tier passes.** LibreOffice compares the committed edit pair, and the same parser used by the product reads `thirty` as deleted and `sixty` as inserted. The M32 built-stack journey also reaches the ready change model, exports its tracked-changes file, and reads the Generated redline's PDF rendition. The reserved commercial swap-in is not needed for this tier.
 
 ## TECH-011: Email sending — SMTP first + provider adapter
 

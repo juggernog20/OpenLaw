@@ -28,6 +28,12 @@ _Avoid_: file, attachment, upload
 An immutable file snapshot in a document's strictly linear chain; corrections append a new version rather than editing one [DOC-001].
 _Avoid_: revision, draft, copy
 
+**Comparison**:
+One derived reading of two Versions of one Document, the older against the newer, held as a change model and, for a Word pair, as a tracked-changes file; it is computed once, kept, and never a Version [DOC-003].
+
+**Generated redline**:
+The Version a Comparison's export appends to the chain, kind `generated_redline`, source `generated`, carrying both operands; it is a fact about how a file was made and is never correctable [CTR-014, DOC-001, DOC-003].
+
 **Analysis run**:
 One durable reading of a Contract's chosen Document Version against that Contract's current AI target schema. It is triggered automatically or manually, moves from pending to ready or failed, and records the provider model, evidence, and each writer outcome. It is an account of what the extraction did, not a proposal waiting to be accepted [CTR-008, TECH-012].
 _Avoid_: AI job, analysis result, extraction proposal

@@ -996,6 +996,8 @@ File-immutable snapshots, strictly linear per document (`version_number` 1..n). 
 | `created_by`               | UUID        | FK → `users.id`, not null                                                                                                                                                                                                                                                                                  |
 | `created_at`               | timestamptz | no `updated_at` — the kind correction narrates before and after rather than changing a row timestamp                                                                                                                                                                                                       |
 
+The shared append write now supplies all three provenance columns. Ordinary uploads write `source = uploaded` with both operands NULL. A Comparison export writes `source = generated` and both operand ids in the same insert that appends the Generated redline. The columns are therefore both present in the database and written by their first product path.
+
 ---
 
 ### `document_version_text`

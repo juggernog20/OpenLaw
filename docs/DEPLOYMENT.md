@@ -203,6 +203,7 @@ One upload may carry at most `MAX_UPLOAD_MB` megabytes (default 100), on every d
 Reading a Word draft in the app, previewing a deck, and getting text out of a scanned PDF all need document tooling that does not belong in the application process: headless LibreOffice, OCRmyPDF/Tesseract, and poppler. They live in one sidecar container, `doc-engine`, built from this repository (TECH-010).
 
 There is nothing to configure. `docker compose up` starts it, and the app finds it by its service name.
+M32's Word compare uses this same sidecar. It adds no service and requires no new setting. The separate compare timeout below is an optional bound for installs that need to change the ten-minute default.
 
 Three properties are worth knowing about, because all three are deliberate:
 

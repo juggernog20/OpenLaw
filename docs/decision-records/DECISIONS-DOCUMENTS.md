@@ -73,6 +73,14 @@ Recent is the first five rows from the repository's default order. It means the 
 - **Alternatives considered** — Artifact-only (recommended initially): loses the rich review UX. View-only: redline can't be emailed. Pass-through only: contradicts CTR-014.
 - **Consequences** — Compare engine is now a load-bearing tech-stack decision (must yield both a renderable change model and a track-changes .docx). K.H4 unblocked: the Redlines pill opens compare (view mode), with export as an action inside it.
 
+### Addendum (2026-09-04, M32 close, [#684](https://github.com/juggernog20/OpenLaw/issues/684)): the stored Comparison is the shared result
+
+M32 settles the two outputs around one stored **Comparison**. The worker computes a pair once. Every later request for that same older and newer Version reuses the row, including its terminal result.
+
+The in-app view reads the Comparison's change model. The model holds ordered paragraphs with unchanged, inserted, and deleted runs, plus the change list that drives the pane. A Word pair gets that model from the tracked-changes file returned by the document engine. A non-Word pair gets the same model from both Versions' extracted text and states that formatting is not shown. Text mode has no export because it has no tracked-changes file.
+
+Export copies the Word Comparison's tracked-changes file into the immutable chain as a **Generated redline**. The Version records the older and newer operands. A unique pair produces at most one Generated redline: another export returns the existing Version and appends nothing. The Comparison remains beside the chain as the stored derivation; it never becomes a Version itself.
+
 ## DOC-004 — In-app rendering: PDF, Word, images, PowerPoint, emails; rest download-only
 
 - **Status** — Accepted
