@@ -199,7 +199,12 @@ function CompareSubbar({
       </nav>
       <VersionPairControl comparison={comparison} />
       <div className="flex items-center justify-end gap-3">
-        {comparison.document.archivedAt === null && comparison.mode === "text" ? (
+        {/* The sentence stands where the CTA would. A Contributor never
+            has the CTA, so the sentence would only tell them about an
+            action they cannot take. */}
+        {comparison.document.archivedAt === null &&
+        comparison.mode === "text" &&
+        isMemberPlus(userRole) ? (
           <p className="text-sm text-muted">
             <FormattedMessage
               id="documentCompare.exportNeedsWord"

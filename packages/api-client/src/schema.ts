@@ -2846,7 +2846,7 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** Read one durable comparison (DOC-003): its state and mode, both rounds exactly as the Document chain draws them, its parsed model and count when ready, and its reason when failed. exportedVersionId remains null until M32/4. The route inherits the owning record's reach and the Document's audience, and remains readable while the Document is archived */
+    /** Read one durable comparison (DOC-003): its state and mode, both rounds exactly as the Document chain draws them, its parsed model and count when ready, and its reason when failed. exportedVersionId names the generated round once the pair has been exported, and is null before that. The route inherits the owning record's reach and the Document's audience, and remains readable while the Document is archived */
     get: operations["readDocumentComparison"];
     put?: never;
     post?: never;
