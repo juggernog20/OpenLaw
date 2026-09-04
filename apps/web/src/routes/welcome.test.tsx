@@ -4,13 +4,12 @@
  * The SET-004 wizard's guard and its steps: an un-onboarded
  * Administrator is routed in from home, non-admins and completed
  * instances never see it, and each step saves on Continue through the
- * route its own Settings pane uses — the organization's identity
- * through the General pane's route (#697), the allowlist through the
- * portal's.
+ * route its own Settings pane uses: the organization's identity through
+ * the General pane's route (#697), the allowlist through the portal's.
  */
 
 import { describe, expect, it } from "vitest";
-import { screen, waitFor } from "@testing-library/react";
+import { screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { json, problem, renderAt, stubApi, type StubCall } from "../testing/helpers";
 
@@ -38,10 +37,15 @@ const OVERSIZED_LOGO_FILE = new File([new Uint8Array(256 * 1024 + 1)], "huge.png
   type: "image/png",
 });
 
-/** Answers the General pane's route and records what the wizard sent —
- * the same handler shape `settings.test.tsx` uses for that pane. */
+/** Answers the General pane's route and records what the wizard sent.
+ * The same handler shape `settings.test.tsx` uses for that pane. */
 function captureGeneral(patches: unknown[]) {
-  let general = { name: "", logo: null, defaultLocale: "en-US", defaultTimezone: "UTC" };
+  let general = {
+    name: "",
+    logo: null as string | null,
+    defaultLocale: "en-US",
+    defaultTimezone: "UTC",
+  };
   return (call: StubCall) => {
     if (call.url.pathname !== "/api/v1/org/general") return undefined;
     if (call.method === "PATCH") {
@@ -157,6 +161,8 @@ describe("welcome wizard organization step (#697)", () => {
     expect(await screen.findByRole("heading", { name: "Your organization" })).toBeInTheDocument();
     // Six steps now, and this is the one after the splash.
     expect(screen.getByText("Step 2 of 6")).toBeInTheDocument();
+    // The step's fields are one region, named by the step's heading.
+    expect(screen.getByRole("region", { name: "Your organization" })).toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: "Continue" }));
     expect(await screen.findByRole("heading", { name: "Authentication" })).toBeInTheDocument();
@@ -170,16 +176,16 @@ describe("welcome wizard organization step (#697)", () => {
       onboarding: { completed: false },
       extra: (call) => wizardExtra()(call) ?? general(call),
     });
-    const { view } = renderAt("/welcome");
+    renderAt("/welcome");
     const user = userEvent.setup();
 
     await user.click(await screen.findByRole("button", { name: "Get started" }));
     await user.type(await screen.findByLabelText("Organization name"), "Acme Legal");
     // The file input carries its own name; the Upload button drives it.
     await user.upload(screen.getByLabelText("Upload a logo"), LOGO_FILE);
-    // The preview replaces the initial once the file has been read; the
-    // image is decorative, so there is no role to wait on.
-    await waitFor(() => expect(view.container.querySelector("img")).not.toBeNull());
+    // The preview appearing is what tells an Administrator the file was
+    // read, so it is what the test waits on too.
+    expect(await screen.findByRole("img", { name: "Organization logo" })).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "Continue" }));
 
     expect(await screen.findByRole("heading", { name: "Authentication" })).toBeInTheDocument();

@@ -92,6 +92,9 @@ interface General {
 const LOGO_BYTE_LIMIT = 256 * 1024;
 const LOGO_TYPES = ["image/png", "image/jpeg", "image/webp", "image/svg+xml"];
 
+/** The locales the UI ships, as the API's own enum has them (DES-013). */
+const SHIPPED_LOCALES = ["en-US"] as const;
+
 const selectClassName =
   "h-8 w-full rounded-button border border-border-default bg-raised px-2 text-sm text-primary focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-link disabled:pointer-events-none disabled:opacity-50";
 
@@ -209,18 +212,26 @@ export function WelcomePage() {
       );
       return;
     }
-    const reader = new FileReader();
-    reader.onload = () => {
-      setError(null);
-      setOrgDraft((current) => ({ ...current, logo: reader.result as string }));
-    };
-    reader.onerror = () =>
+    const unreadable = () =>
       setError(
         intl.formatMessage({
           id: "welcome.org.logo.unreadable",
           defaultMessage: "That file could not be read. Pick another one.",
         }),
       );
+    const reader = new FileReader();
+    reader.onload = () => {
+      // readAsDataURL resolves to a string, but the API takes a data:
+      // URI and nothing else, so anything else is a read that failed.
+      const dataUri = reader.result;
+      if (typeof dataUri !== "string") {
+        unreadable();
+        return;
+      }
+      setError(null);
+      setOrgDraft((current) => ({ ...current, logo: dataUri }));
+    };
+    reader.onerror = unreadable;
     reader.readAsDataURL(file);
   }
 
@@ -619,9 +630,15 @@ export function WelcomePage() {
                       </span>
                       <div className="flex items-center gap-3">
                         {orgDraft.logo ? (
+                          // Named rather than decorative: on this step
+                          // the preview is the confirmation that the
+                          // upload landed, so a reader needs it too.
                           <img
                             src={orgDraft.logo}
-                            alt=""
+                            alt={intl.formatMessage({
+                              id: "welcome.org.logo.preview",
+                              defaultMessage: "Organization logo",
+                            })}
                             className="size-10 rounded-button border border-border-default object-contain"
                           />
                         ) : (
@@ -671,12 +688,16 @@ export function WelcomePage() {
                         id="org-locale"
                         className={selectClassName}
                         value={orgDraft.defaultLocale}
-                        onChange={(event) =>
-                          setOrgDraft((current) => ({
-                            ...current,
-                            defaultLocale: event.target.value as General["defaultLocale"],
-                          }))
-                        }
+                        onChange={(event) => {
+                          // A lookup, not a cast: a value outside the
+                          // shipped set is not a locale we can save.
+                          const locale = SHIPPED_LOCALES.find(
+                            (shipped) => shipped === event.target.value,
+                          );
+                          if (locale) {
+                            setOrgDraft((current) => ({ ...current, defaultLocale: locale }));
+                          }
+                        }}
                       >
                         <option value="en-US">
                           {intl.formatMessage({

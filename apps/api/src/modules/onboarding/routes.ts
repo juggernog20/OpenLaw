@@ -39,7 +39,7 @@ import { problemResponse } from "../../lib/problem.js";
  * Review step is absent because its done-ness reads a column that
  * arrives with the step that writes it (#700, TECH-014).
  */
-const ONBOARDING_STEPS = [
+export const ONBOARDING_STEPS = [
   "organization",
   "authentication",
   "portal",
@@ -101,10 +101,14 @@ const StatusSchema = z.object({
   }),
 });
 
-type Status = z.infer<typeof StatusSchema>;
+/** The status envelope, for the suite that reads it over HTTP. */
+export type OnboardingStatus = z.infer<typeof StatusSchema>;
 
 /** Reads every step's state from the rows that step configures. */
-async function readStatus(app: { db: Db; resolveMailer: MailerResolver }): Promise<Status> {
+async function readStatus(app: {
+  db: Db;
+  resolveMailer: MailerResolver;
+}): Promise<OnboardingStatus> {
   const [settings, resolved, [userRows], [signing], [ai]] = await Promise.all([
     getOrgSettings(app.db),
     app.resolveMailer(),
@@ -113,35 +117,35 @@ async function readStatus(app: { db: Db; resolveMailer: MailerResolver }): Promi
     app.db.select({ id: aiConnector.id }).from(aiConnector).limit(1),
   ]);
 
-  const done: Record<OnboardingStep, boolean> = {
-    organization: settings.name.trim() !== "",
-    // `auth_mode` is NOT NULL and defaults to built_in, so this is
-    // always true. That is the honest answer: built-in sign-in works on
-    // a fresh install and nothing about it is outstanding, so the step
-    // never reaches the checklist card.
-    authentication: AUTH_MODES.includes(settings.authMode),
-    // An empty allowlist admits nobody, so an untouched portal is not a
-    // configured one.
-    portal: settings.allowedEmailDomains.length > 0,
-    // The resolved mailer, so an environment-pinned relay counts exactly
-    // as an app-saved one does (TECH-011: the environment wins, and
-    // either way the instance can send).
-    email: resolved.mailer.configured,
-    // No user is seeded and setup creates the first Administrator, so a
-    // second row is somebody who was invited, signed in or not.
-    invites: (userRows?.value ?? 0) > 1,
-    "e-signature": signing !== undefined,
-    "ai-analysis": ai !== undefined,
-  };
+  // Written out step by step rather than assembled from a list, so the
+  // compiler checks that every step the schema names is answered.
+  const state = (step: OnboardingStep, done: boolean) => ({
+    done,
+    settingsPath: SETTINGS_PATHS[step],
+  });
 
   return {
     completed: settings.onboardingCompletedAt !== null,
-    steps: Object.fromEntries(
-      ONBOARDING_STEPS.map((step) => [
-        step,
-        { done: done[step], settingsPath: SETTINGS_PATHS[step] },
-      ]),
-    ) as Status["steps"],
+    steps: {
+      organization: state("organization", settings.name.trim() !== ""),
+      // `auth_mode` is NOT NULL and defaults to built_in, so this is
+      // always true. That is the honest answer: built-in sign-in works
+      // on a fresh install and nothing about it is outstanding, so the
+      // step never reaches the checklist card.
+      authentication: state("authentication", AUTH_MODES.includes(settings.authMode)),
+      // An empty allowlist admits nobody, so an untouched portal is not
+      // a configured one.
+      portal: state("portal", settings.allowedEmailDomains.length > 0),
+      // The resolved mailer, so an environment-pinned relay counts
+      // exactly as an app-saved one does (TECH-011: the environment
+      // wins, and either way the instance can send).
+      email: state("email", resolved.mailer.configured),
+      // No user is seeded and setup creates the first Administrator, so
+      // a second row is somebody who was invited, signed in or not.
+      invites: state("invites", (userRows?.value ?? 0) > 1),
+      "e-signature": state("e-signature", signing !== undefined),
+      "ai-analysis": state("ai-analysis", ai !== undefined),
+    },
   };
 }
 

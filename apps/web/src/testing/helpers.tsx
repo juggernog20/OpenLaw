@@ -154,12 +154,26 @@ export function stubFetch(handler: (call: StubCall) => StubAnswer) {
   return impl;
 }
 
+/** The wizard's configuring steps, as `GET /api/v1/onboarding` names
+ * them. The welcome splash configures nothing, so it has no entry. */
+const ONBOARDING_STEPS = [
+  "organization",
+  "authentication",
+  "portal",
+  "email",
+  "invites",
+  "e-signature",
+  "ai-analysis",
+] as const;
+
+type OnboardingStep = (typeof ONBOARDING_STEPS)[number];
+
 /**
- * The Settings pane that owns each onboarding step, as
- * `GET /api/v1/onboarding` answers it. Email has none: no pane edits an
- * SMTP relay (TECH-011).
+ * The Settings pane that owns each step, as the route answers it. Email
+ * has none: no pane edits an SMTP relay (TECH-011). The Record type is
+ * what keeps this table complete as the step list grows.
  */
-const ONBOARDING_SETTINGS_PATHS = {
+const ONBOARDING_SETTINGS_PATHS: Record<OnboardingStep, string | null> = {
   organization: "/settings/general",
   authentication: "/settings/authentication",
   portal: "/settings/authentication",
@@ -167,11 +181,7 @@ const ONBOARDING_SETTINGS_PATHS = {
   invites: "/settings/users",
   "e-signature": "/settings/integrations/e-signature",
   "ai-analysis": "/settings/ai-analysis",
-} as const;
-
-type OnboardingStep = keyof typeof ONBOARDING_SETTINGS_PATHS;
-
-const ONBOARDING_STEPS = Object.keys(ONBOARDING_SETTINGS_PATHS) as OnboardingStep[];
+};
 
 /** The three answers every guard consults, plus per-test overrides. */
 export interface ApiState {
@@ -520,7 +530,9 @@ export function stubApi(state: ApiState) {
       return json(200, { folders: [] });
     }
     if (call.url.pathname === "/api/v1/onboarding" && call.method === "GET") {
-      const onboarding = state.onboarding ?? { completed: true };
+      const onboarding: NonNullable<ApiState["onboarding"]> = state.onboarding ?? {
+        completed: true,
+      };
       return json(200, {
         completed: onboarding.completed,
         steps: Object.fromEntries(

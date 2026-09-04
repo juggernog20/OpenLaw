@@ -10,6 +10,7 @@
 
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { aiConnector, orgSettings, signingConnectors } from "@openlaw/db";
+import { ONBOARDING_STEPS, type OnboardingStatus } from "./routes.js";
 import {
   settingsAuditRows,
   signInCookies,
@@ -91,27 +92,11 @@ afterAll(async () => {
   await harness.stop();
 });
 
-/** The status envelope as the wizard and the checklist card read it. */
-const STEP_NAMES = [
-  "organization",
-  "authentication",
-  "portal",
-  "email",
-  "invites",
-  "e-signature",
-  "ai-analysis",
-] as const;
+type StepName = (typeof ONBOARDING_STEPS)[number];
+type StepState = OnboardingStatus["steps"][StepName];
 
-type StepName = (typeof STEP_NAMES)[number];
-interface StepState {
-  done: boolean;
-  settingsPath: string | null;
-}
-interface OnboardingStatus {
-  completed: boolean;
-  steps: Record<StepName, StepState>;
-}
-
+/** The status envelope as the wizard and the checklist card read it.
+ * `inject().json()` is untyped, so the route's own schema names it. */
 async function status(cookies: Record<string, string>): Promise<OnboardingStatus> {
   const res = await harness.app.inject({
     method: "GET",
@@ -122,13 +107,13 @@ async function status(cookies: Record<string, string>): Promise<OnboardingStatus
   return res.json() as OnboardingStatus;
 }
 
-/** One field of every step, keyed by step — the shape both derivation
- * assertions below compare against, so a missing step fails loudly. */
+/** One field of every step, keyed by step. Both derivation assertions
+ * below compare against this shape, so a missing step fails loudly. */
 function byStep<T>(
   steps: OnboardingStatus["steps"],
   read: (state: StepState) => T,
 ): Record<StepName, T> {
-  return Object.fromEntries(STEP_NAMES.map((step) => [step, read(steps[step])])) as Record<
+  return Object.fromEntries(ONBOARDING_STEPS.map((step) => [step, read(steps[step])])) as Record<
     StepName,
     T
   >;
