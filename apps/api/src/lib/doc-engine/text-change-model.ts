@@ -106,6 +106,10 @@ export function buildTextChangeModel(olderText: string, newerText: string): Chan
     index,
     style: "body",
     label: leadingClauseLabel(paragraph.text),
+    // Extracted text has no numbering held outside it: whatever number
+    // a paragraph carries is already the first thing a reader sees, so
+    // there is never a prefix to restore.
+    numberPrefix: null,
     runs: paragraph.runs,
   }));
   return { paragraphs, changes: changesOf(paragraphs) };

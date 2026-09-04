@@ -568,7 +568,13 @@ function ReadyComparison({ comparison }: Readonly<{ comparison: DocumentComparis
                     selected && "border-accent",
                   )}
                 >
-                  {paragraph.label && <span className="me-1 font-bold">{paragraph.label}</span>}
+                  {/* Only the number Word holds outside the text. The
+                      clause label is the change pane's reference
+                      (DES-071); drawing it here as well would print a
+                      number the paragraph already opens with. */}
+                  {paragraph.numberPrefix && (
+                    <span className="me-1 font-bold">{paragraph.numberPrefix}</span>
+                  )}
                   {paragraph.runs.map((run, index) => (
                     <ChangedRun key={index} change={run.change}>
                       {run.text}

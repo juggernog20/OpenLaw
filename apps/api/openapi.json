@@ -36862,6 +36862,10 @@
                                           "label": {
                                             "type": ["string", "null"]
                                           },
+                                          "numberPrefix": {
+                                            "default": null,
+                                            "type": ["string", "null"]
+                                          },
                                           "runs": {
                                             "type": "array",
                                             "items": {
@@ -36880,7 +36884,13 @@
                                             }
                                           }
                                         },
-                                        "required": ["index", "style", "label", "runs"],
+                                        "required": [
+                                          "index",
+                                          "style",
+                                          "label",
+                                          "numberPrefix",
+                                          "runs"
+                                        ],
                                         "additionalProperties": false
                                       }
                                     },
@@ -37524,6 +37534,10 @@
                                       "label": {
                                         "type": ["string", "null"]
                                       },
+                                      "numberPrefix": {
+                                        "default": null,
+                                        "type": ["string", "null"]
+                                      },
                                       "runs": {
                                         "type": "array",
                                         "items": {
@@ -37542,7 +37556,7 @@
                                         }
                                       }
                                     },
-                                    "required": ["index", "style", "label", "runs"],
+                                    "required": ["index", "style", "label", "numberPrefix", "runs"],
                                     "additionalProperties": false
                                   }
                                 },
@@ -38122,6 +38136,10 @@
                                       "label": {
                                         "type": ["string", "null"]
                                       },
+                                      "numberPrefix": {
+                                        "default": null,
+                                        "type": ["string", "null"]
+                                      },
                                       "runs": {
                                         "type": "array",
                                         "items": {
@@ -38140,7 +38158,7 @@
                                         }
                                       }
                                     },
-                                    "required": ["index", "style", "label", "runs"],
+                                    "required": ["index", "style", "label", "numberPrefix", "runs"],
                                     "additionalProperties": false
                                   }
                                 },
@@ -38761,6 +38779,10 @@
                                       "label": {
                                         "type": ["string", "null"]
                                       },
+                                      "numberPrefix": {
+                                        "default": null,
+                                        "type": ["string", "null"]
+                                      },
                                       "runs": {
                                         "type": "array",
                                         "items": {
@@ -38779,7 +38801,7 @@
                                         }
                                       }
                                     },
-                                    "required": ["index", "style", "label", "runs"],
+                                    "required": ["index", "style", "label", "numberPrefix", "runs"],
                                     "additionalProperties": false
                                   }
                                 },

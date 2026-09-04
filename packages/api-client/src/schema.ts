@@ -18498,6 +18498,8 @@ export interface operations {
                   /** @enum {string} */
                   style: "heading" | "body";
                   label: string | null;
+                  /** @default null */
+                  numberPrefix: string | null;
                   runs: {
                     text: string;
                     /** @enum {string} */
@@ -18686,6 +18688,8 @@ export interface operations {
                   /** @enum {string} */
                   style: "heading" | "body";
                   label: string | null;
+                  /** @default null */
+                  numberPrefix: string | null;
                   runs: {
                     text: string;
                     /** @enum {string} */
@@ -18845,6 +18849,8 @@ export interface operations {
                   /** @enum {string} */
                   style: "heading" | "body";
                   label: string | null;
+                  /** @default null */
+                  numberPrefix: string | null;
                   runs: {
                     text: string;
                     /** @enum {string} */
@@ -19027,6 +19033,8 @@ export interface operations {
                   /** @enum {string} */
                   style: "heading" | "body";
                   label: string | null;
+                  /** @default null */
+                  numberPrefix: string | null;
                   runs: {
                     text: string;
                     /** @enum {string} */
