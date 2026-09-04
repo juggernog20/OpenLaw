@@ -41,11 +41,6 @@ function fixture(name: string): Buffer {
 const OLDER_DOCX = fixture("compare-older.docx");
 const NEWER_DOCX = fixture("compare-newer.docx");
 
-const ContractRows = z.object({
-  contracts: z.array(z.object({ number: z.number().int(), title: z.string() })),
-  nextCursor: z.string().nullable(),
-});
-
 const ContractOptions = z.object({
   contractTypes: z.array(
     z.object({
@@ -72,46 +67,9 @@ const Document = z.object({
 });
 
 const DocumentEnvelope = z.object({ document: Document });
-const DocumentRows = z.object({ documents: z.array(Document) });
 const RenditionEnvelope = z.object({ rendition: z.object({ state: z.string() }) });
 
 type DocumentRow = z.infer<typeof Document>;
-
-async function listContracts(request: APIRequestContext) {
-  const rows: z.infer<typeof ContractRows>["contracts"] = [];
-  let cursor: string | undefined;
-  do {
-    const response = await request.get("/api/v1/contracts", {
-      params: cursor ? { cursor } : undefined,
-    });
-    expect(response.status(), await response.text()).toBe(200);
-    const page = ContractRows.parse(await response.json());
-    rows.push(...page.contracts);
-    cursor = page.nextCursor ?? undefined;
-  } while (cursor);
-  return rows;
-}
-
-async function readPaper(request: APIRequestContext, number: number): Promise<DocumentRow[]> {
-  const response = await request.get(`/api/v1/contracts/${number}/documents?includeArchived=true`);
-  expect(response.status(), await response.text()).toBe(200);
-  return DocumentRows.parse(await response.json()).documents;
-}
-
-async function ensureDemoContractsInert(request: APIRequestContext): Promise<void> {
-  for (const contract of (await listContracts(request)).filter((row) =>
-    row.title.startsWith(CONTRACT_PREFIX),
-  )) {
-    for (const document of await readPaper(request, contract.number)) {
-      const erased = await request.delete(`/api/v1/documents/${document.id}`, {
-        data: { confirmTitle: document.title },
-      });
-      expect(erased.status(), await erased.text()).toBe(200);
-    }
-    const archived = await request.post(`/api/v1/contracts/${contract.number}/archive`);
-    expect(archived.status(), await archived.text()).toBe(200);
-  }
-}
 
 async function bareContractTypeName(request: APIRequestContext): Promise<string> {
   const response = await request.get("/api/v1/contracts/options");
@@ -195,7 +153,6 @@ test.describe.serial("M32 deployer journey", () => {
     page,
   }, testInfo) => {
     await signInAs(page, ADMIN.email, ADMIN.password, ADMIN.displayName);
-    await ensureDemoContractsInert(page.request);
     await switchTheme(page, ADMIN.displayName, "Light");
 
     const stamp = Date.now();
@@ -303,9 +260,9 @@ test.describe.serial("M32 deployer journey", () => {
       await expect(panel).toBeVisible();
       await waitForRendition(page.request, document.id, generated.id);
       await expect(
-        panel.locator(".textLayer").first(),
+        panel.getByRole("img", { name: `${generated.originalFilename}, page 1` }),
         "the generated redline has no rendition",
-      ).toBeAttached({
+      ).toBeVisible({
         timeout: 30_000,
       });
     } catch (error) {

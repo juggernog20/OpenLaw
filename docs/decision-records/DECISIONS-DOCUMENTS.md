@@ -77,6 +77,8 @@ Recent is the first five rows from the repository's default order. It means the 
 
 M32 settles the two outputs around one stored **Comparison**. The worker computes a pair once. Every later request for that same older and newer Version reuses the row, including its terminal result.
 
+The stored lifecycle is `pending`, `ready`, or `failed`. Pending is the preparing reading; ready with zero changes is the unchanged reading. A failure records its reason and is terminal for that Version pair. Repeating the ordinary request returns that failed Comparison without queuing work again. There is no user retry in M32: retrying a failed pair requires a future, explicit recovery policy that deliberately resets or replaces the stored derivation rather than treating a repeat request as new work.
+
 The in-app view reads the Comparison's change model. The model holds ordered paragraphs with unchanged, inserted, and deleted runs, plus the change list that drives the pane. A Word pair gets that model from the tracked-changes file returned by the document engine. A non-Word pair gets the same model from both Versions' extracted text and states that formatting is not shown. Text mode has no export because it has no tracked-changes file.
 
 Export copies the Word Comparison's tracked-changes file into the immutable chain as a **Generated redline**. The Version records the older and newer operands. A unique pair produces at most one Generated redline: another export returns the existing Version and appends nothing. The Comparison remains beside the chain as the stored derivation; it never becomes a Version itself.
