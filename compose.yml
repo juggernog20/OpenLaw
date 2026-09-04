@@ -53,6 +53,7 @@ x-openlaw-environment: &openlaw-environment
   # there to point at an engine you run yourself.
   DOC_ENGINE_URL: ${DOC_ENGINE_URL:-http://doc-engine:8080}
   DOC_ENGINE_TIMEOUT_MS: ${DOC_ENGINE_TIMEOUT_MS:-}
+  DOC_ENGINE_COMPARE_TIMEOUT_MS: ${DOC_ENGINE_COMPARE_TIMEOUT_MS:-}
   # Public origin (emailed links, Origin/CSRF checks — TECH-008),
   # interpolated from .env or the shell — the shell wins, so a stack
   # published on another port (the E2E fresh stack) can match its
@@ -165,8 +166,9 @@ services:
 
   doc-engine:
     # The document engine (TECH-010): headless LibreOffice for DOCX/PPTX
-    # display conversion, OCRmyPDF/Tesseract for image-only PDFs, and a
-    # thin HTTP wrapper over both. Our own image, built from this repo.
+    # display conversion and for Word compare, OCRmyPDF/Tesseract for
+    # image-only PDFs, and a thin HTTP wrapper over both. Our own image,
+    # built from this repo.
     #
     # No `ports` — like Postgres, it is reachable only on the compose
     # network and never published to the host. It carries no
@@ -177,6 +179,16 @@ services:
     build:
       context: .
       dockerfile: services/doc-engine/Dockerfile
+    environment:
+      # The compare bound is the one setting both sides of the call read.
+      # The API abandons a compare after it, and the sidecar kills the
+      # tool after it, so an operator who raises one and not the other
+      # gets a client that waits for an answer the server already gave
+      # up on. It is passed here rather than merged from
+      # `x-openlaw-environment` because that block carries the database
+      # URL and every secret, and this container is deliberately given
+      # neither.
+      DOC_ENGINE_COMPARE_TIMEOUT_MS: ${DOC_ENGINE_COMPARE_TIMEOUT_MS:-}
     # Stateless by design: it streams a file in, runs one tool, streams
     # the answer out, and keeps nothing. No volume, and nothing to back
     # up.

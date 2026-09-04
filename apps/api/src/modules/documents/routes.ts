@@ -136,12 +136,14 @@ import {
   asc,
   contracts,
   desc,
+  documentComparisons,
   documentFolders,
   documents,
   documentVersionRenditions,
   documentVersions,
   documentVersionText,
   DOCUMENT_VERSION_KINDS,
+  DOCUMENT_VERSION_SOURCES,
   HAND_SET_DOCUMENT_VERSION_KINDS,
   eq,
   entities,
@@ -168,6 +170,7 @@ import {
   type ResolvedDocumentOwner,
 } from "@openlaw/shared";
 import { requireRole, type AuthenticatedUser } from "../../auth/guards.js";
+import { copyStoredBlob } from "../../lib/copy-stored-blob.js";
 import { requireDocumentReader } from "../../lib/document-access.js";
 import { recordActivity, RECORD_ACTIVITY_TIER } from "../../lib/activity.js";
 import {
@@ -187,6 +190,8 @@ import {
   type ParsedEmail,
 } from "../../lib/email/parse.js";
 import { httpError, problemResponse } from "../../lib/problem.js";
+import { formatBlobRef } from "../../lib/storage/adapter.js";
+import { isComparableFormat } from "../../lib/doc-engine/engine.js";
 import {
   conversionFormatOf,
   previewContentType,
@@ -231,6 +236,7 @@ import {
   versionStorageKey,
 } from "../../lib/document-versions.js";
 import { requestAutomaticContractAnalysis } from "../../pipeline/automatic-contract-analysis.js";
+import { boundedQueueAsk } from "../../pipeline/jobs.js";
 import { needsDisplayRendition } from "../../pipeline/display-conversion.js";
 import { extractsText } from "../../pipeline/text-extraction.js";
 
@@ -270,6 +276,16 @@ const DocumentParams = z.object({ documentId: RecordIdSchema });
 const VersionParams = z.object({
   documentId: RecordIdSchema,
   versionId: RecordIdSchema,
+});
+
+const ComparisonParams = z.object({
+  documentId: RecordIdSchema,
+  comparisonId: RecordIdSchema,
+});
+
+const ComparisonRequest = z.strictObject({
+  fromVersionId: RecordIdSchema,
+  toVersionId: RecordIdSchema,
 });
 
 /**
@@ -332,6 +348,9 @@ const VersionSchema = z.object({
   /** 1..n; the highest is the current version (DOC-001). */
   versionNumber: z.int().positive(),
   kind: KindSchema,
+  source: z.enum(DOCUMENT_VERSION_SOURCES),
+  comparedFromVersionNumber: z.int().positive().nullable(),
+  comparedToVersionNumber: z.int().positive().nullable(),
   /** What the uploader said about this round; NULL when they said
    * nothing. */
   note: z.string().nullable(),
@@ -386,6 +405,78 @@ const VersionSchema = z.object({
    */
   isExecuted: z.boolean(),
 });
+
+const ChangeModelSchema = z.object({
+  paragraphs: z.array(
+    z.object({
+      index: z.int().nonnegative(),
+      style: z.enum(["heading", "body"]),
+      label: z.string().nullable(),
+      // Defaulted, not required: a Comparison stored before this field
+      // existed is still read rather than refused, and it answers the
+      // reading that cannot print a clause number twice.
+      numberPrefix: z.string().nullable().default(null),
+      runs: z.array(
+        z.object({
+          text: z.string(),
+          change: z.enum(["unchanged", "inserted", "deleted"]),
+        }),
+      ),
+    }),
+  ),
+  changes: z.array(
+    z.object({
+      id: z.string(),
+      paragraphIndex: z.int().nonnegative(),
+      kind: z.enum(["inserted", "deleted", "replaced"]),
+      ref: z.string(),
+      excerpt: z.string(),
+    }),
+  ),
+});
+
+const ComparisonOwnerSchema = z.object({
+  kind: z.enum(DOCUMENT_OWNER_KINDS),
+  id: z.string(),
+  /** Numbered records use their immutable sequence; opaque-id records
+   * have no display number and answer null. */
+  number: z.int().positive().nullable(),
+  title: z.string(),
+});
+
+const ComparisonDocumentSchema = z.object({
+  id: z.string(),
+  title: z.string(),
+  owner: ComparisonOwnerSchema,
+  /** The selector draws the full immutable chain. Generated redlines
+   * remain present in the resource but are excluded by the control. */
+  versions: z.array(VersionSchema),
+  archivedAt: z.iso.datetime({ offset: true }).nullable(),
+});
+
+const ComparisonSchema = z.object({
+  id: z.string(),
+  documentId: z.string(),
+  mode: z.enum(["word", "text"]),
+  state: z.enum(["pending", "ready", "failed"]),
+  fromVersion: VersionSchema,
+  toVersion: VersionSchema,
+  changeModel: ChangeModelSchema.nullable(),
+  changeCount: z.int().nonnegative().nullable(),
+  failure: z.string().nullable(),
+  /** The generated round for this pair, once the tracked-changes file
+   * has joined the chain. */
+  exportedVersionId: z.string().nullable(),
+  /** Enough stable record context for the compare page to stand at its
+   * own address without a second owner-specific read. */
+  document: ComparisonDocumentSchema,
+  createdAt: z.iso.datetime({ offset: true }),
+  finishedAt: z.iso.datetime({ offset: true }).nullable(),
+});
+
+const ComparisonEnvelope = z.object({ comparison: ComparisonSchema });
+const ComparisonLookupEnvelope = z.object({ comparison: ComparisonSchema.nullable() });
+const VersionEnvelope = z.object({ version: VersionSchema });
 
 const DocumentSchema = z.object({
   id: z.string(),
@@ -884,6 +975,11 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
     createdBy: string;
     /** The owning contract's Owner (CTR-004), who is another. */
     ownerManagerId: string | null;
+    /** The owning record's own identity, carried by the comparison read
+     * so its full-page breadcrumb and close control need no polymorphic
+     * follow-up request. */
+    ownerNumber: number | null;
+    ownerTitle: string;
   }
 
   /**
@@ -937,6 +1033,12 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
         createdBy: documents.createdBy,
         contractManagerId: contracts.managerId,
         matterManagerId: matters.managerId,
+        contractNumber: contracts.number,
+        contractTitle: contracts.title,
+        matterNumber: matters.number,
+        matterTitle: matters.title,
+        entityTitle: entities.legalName,
+        knowledgeItemTitle: knowledgeItems.title,
       })
       .from(documents)
       .leftJoin(contracts, eq(documents.contractId, contracts.id))
@@ -1005,26 +1107,36 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
     let ownerArchivedAt: Date | null;
     let primaryDocumentId: string | null;
     let ownerManagerId: string | null;
+    let ownerNumber: number | null;
+    let ownerTitle: string;
     switch (owner.kind) {
       case "contract":
         ownerArchivedAt = row.contractArchivedAt;
         primaryDocumentId = row.contractPrimaryDocumentId;
         ownerManagerId = row.contractManagerId;
+        ownerNumber = row.contractNumber;
+        ownerTitle = row.contractTitle!;
         break;
       case "matter":
         ownerArchivedAt = row.matterArchivedAt;
         primaryDocumentId = null;
         ownerManagerId = row.matterManagerId;
+        ownerNumber = row.matterNumber;
+        ownerTitle = row.matterTitle!;
         break;
       case "entity":
         ownerArchivedAt = row.entityArchivedAt;
         primaryDocumentId = null;
         ownerManagerId = null;
+        ownerNumber = null;
+        ownerTitle = row.entityTitle!;
         break;
       case "knowledge_item":
         ownerArchivedAt = row.knowledgeItemArchivedAt;
         primaryDocumentId = row.knowledgePrimaryDocumentId;
         ownerManagerId = null;
+        ownerNumber = null;
+        ownerTitle = row.knowledgeItemTitle!;
         break;
     }
     return {
@@ -1045,6 +1157,8 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
       folderName: row.folderName,
       createdBy: row.createdBy,
       ownerManagerId,
+      ownerNumber,
+      ownerTitle,
     };
   }
 
@@ -1093,6 +1207,9 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
     documentId: documentVersions.documentId,
     versionNumber: documentVersions.versionNumber,
     kind: documentVersions.kind,
+    source: documentVersions.source,
+    comparedFromVersionId: documentVersions.comparedFromVersionId,
+    comparedToVersionId: documentVersions.comparedToVersionId,
     note: documentVersions.note,
     originalFilename: documentVersions.originalFilename,
     mimeType: documentVersions.mimeType,
@@ -1126,11 +1243,31 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
     };
   }
 
-  function toVersion(row: VersionRow, isCurrent: boolean, isExecuted: boolean) {
+  function comparedVersionNumber(
+    id: string | null,
+    numbers: ReadonlyMap<string, number>,
+  ): number | null {
+    if (id === null) return null;
+    const number = numbers.get(id);
+    if (number === undefined) {
+      throw new Error("A generated redline names an operand outside its document chain.");
+    }
+    return number;
+  }
+
+  function toVersion(
+    row: VersionRow,
+    isCurrent: boolean,
+    isExecuted: boolean,
+    numbers: ReadonlyMap<string, number>,
+  ) {
     return {
       id: row.id,
       versionNumber: row.versionNumber,
       kind: row.kind,
+      source: row.source,
+      comparedFromVersionNumber: comparedVersionNumber(row.comparedFromVersionId, numbers),
+      comparedToVersionNumber: comparedVersionNumber(row.comparedToVersionId, numbers),
       note: row.note,
       originalFilename: row.originalFilename,
       mimeType: row.mimeType,
@@ -1166,13 +1303,14 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
     primaryDocumentId: string | null,
   ) {
     const last = chain.length - 1;
+    const numbers = new Map(chain.map((version) => [version.id, version.versionNumber]));
     return {
       id: row.id,
       title: row.title,
       description: row.description,
       isPrimary: row.id === primaryDocumentId,
       versions: chain.map((version, index) =>
-        toVersion(version, index === last, version.id === row.executedVersionId),
+        toVersion(version, index === last, version.id === row.executedVersionId, numbers),
       ),
       archivedAt: row.archivedAt?.toISOString() ?? null,
       isConfidential: row.isConfidential,
@@ -1228,6 +1366,78 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
     // Both are written in one transaction, so neither can be missing
     // for a document this code just wrote or edited.
     return toDocument(row!, chain!, primaryDocumentId);
+  }
+
+  /** One comparison projected with the exact Version shape the chain uses. */
+  async function comparisonWithVersions(
+    db: Executor,
+    target: ReachedDocument,
+    comparisonId: string,
+  ) {
+    const [row] = await db
+      .select()
+      .from(documentComparisons)
+      .where(
+        and(
+          eq(documentComparisons.id, comparisonId),
+          eq(documentComparisons.documentId, target.id),
+        ),
+      )
+      .limit(1);
+    if (!row) throw httpError(404, "No comparison exists with this reference.");
+
+    const chain = await selectVersions(db)
+      .where(eq(documentVersions.documentId, target.id))
+      .orderBy(asc(documentVersions.versionNumber));
+    const last = chain.length - 1;
+    const fromIndex = chain.findIndex((version) => version.id === row.fromVersionId);
+    const toIndex = chain.findIndex((version) => version.id === row.toVersionId);
+    const from = chain[fromIndex];
+    const to = chain[toIndex];
+    if (!from || !to) throw new Error("A comparison names a version outside its document chain.");
+    const numbers = new Map(chain.map((version) => [version.id, version.versionNumber]));
+
+    const versions = chain.map((version, index) =>
+      toVersion(version, index === last, version.id === target.executedVersionId, numbers),
+    );
+    const exported = chain.find(
+      (version) =>
+        version.kind === "generated_redline" &&
+        version.comparedFromVersionId === row.fromVersionId &&
+        version.comparedToVersionId === row.toVersionId,
+    );
+
+    return {
+      id: row.id,
+      documentId: row.documentId,
+      mode: row.mode,
+      state: row.state,
+      fromVersion: toVersion(
+        from,
+        fromIndex === last,
+        from.id === target.executedVersionId,
+        numbers,
+      ),
+      toVersion: toVersion(to, toIndex === last, to.id === target.executedVersionId, numbers),
+      changeModel: row.state === "ready" ? ChangeModelSchema.parse(row.changeModel) : null,
+      changeCount: row.state === "ready" ? row.changeCount : null,
+      failure: row.state === "failed" ? row.failure : null,
+      exportedVersionId: exported?.id ?? null,
+      document: {
+        id: target.id,
+        title: target.title,
+        owner: {
+          kind: target.owner.kind,
+          id: target.owner.value,
+          number: target.ownerNumber,
+          title: target.ownerTitle,
+        },
+        versions,
+        archivedAt: target.archivedAt?.toISOString() ?? null,
+      },
+      createdAt: row.createdAt.toISOString(),
+      finishedAt: row.finishedAt?.toISOString() ?? null,
+    };
   }
 
   /**
@@ -2545,6 +2755,353 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
     },
   );
 
+  app.get(
+    "/documents/:documentId/comparisons",
+    {
+      preHandler: requireDocumentReader,
+      schema: {
+        operationId: "findDocumentComparison",
+        summary:
+          "Find the durable comparison for one exact Version pair without requesting one. " +
+          "This is the read-only probe used by the Document panel: an absent pair answers null, " +
+          "so opening a record never starts derived work. It inherits the owning record's reach " +
+          "and the Document's audience exactly as the comparison resource does",
+        tags: ["documents"],
+        params: DocumentParams,
+        querystring: ComparisonRequest,
+        response: { 200: ComparisonLookupEnvelope, default: problemResponse },
+      },
+    },
+    async (request, reply) => {
+      const { documentId } = request.params;
+      const { fromVersionId, toVersionId } = request.query;
+      const target = await reachedDocument(app.db, request.user, documentId);
+      assertReachedDocument(target);
+      const [row] = await app.db
+        .select({ id: documentComparisons.id })
+        .from(documentComparisons)
+        .where(
+          and(
+            eq(documentComparisons.documentId, documentId),
+            eq(documentComparisons.fromVersionId, fromVersionId),
+            eq(documentComparisons.toVersionId, toVersionId),
+          ),
+        )
+        .limit(1);
+      void reply.header("cache-control", "private, max-age=0, must-revalidate");
+      return {
+        comparison: row ? await comparisonWithVersions(app.db, target, row.id) : null,
+      };
+    },
+  );
+
+  app.post(
+    "/documents/:documentId/comparisons",
+    {
+      preHandler: requireDocumentReader,
+      schema: {
+        operationId: "requestDocumentComparison",
+        summary:
+          "Request one durable comparison between two rounds of this Document (DOC-003). " +
+          "Both operands must be distinct rounds on this chain, ordered older than newer, " +
+          "and neither may itself be a generated redline. Any Document reader may ask, " +
+          "including on an archived Document: a comparison derives from the chain and does " +
+          "not write to it (DOC-010). A new request answers 202; the same pair thereafter " +
+          "answers its existing resource with 200 and does not queue it again",
+        tags: ["documents"],
+        params: DocumentParams,
+        body: ComparisonRequest,
+        response: {
+          200: ComparisonEnvelope,
+          202: ComparisonEnvelope,
+          default: problemResponse,
+        },
+      },
+    },
+    async (request, reply) => {
+      const { documentId } = request.params;
+      const { fromVersionId, toVersionId } = request.body;
+      const result = await app.db.transaction(async (tx) => {
+        // The owner lock serializes two requests for the same pair. It
+        // does not impose either archive freeze: this is a derivation,
+        // not a write to the chain.
+        const target = await reachedDocument(tx, request.user, documentId, true);
+        assertReachedDocument(target);
+        if (fromVersionId === toVersionId) {
+          throw httpError(400, "Choose two distinct versions to compare.");
+        }
+
+        const operands = await selectVersions(tx)
+          .where(
+            and(
+              eq(documentVersions.documentId, documentId),
+              inArray(documentVersions.id, [fromVersionId, toVersionId]),
+            ),
+          )
+          .orderBy(asc(documentVersions.versionNumber));
+        const from = operands.find((version) => version.id === fromVersionId);
+        const to = operands.find((version) => version.id === toVersionId);
+        if (!from || !to) {
+          throw httpError(400, "Both versions must belong to this document.");
+        }
+        if (from.versionNumber >= to.versionNumber) {
+          throw httpError(400, "The older version must come before the newer version.");
+        }
+        if (from.kind === "generated_redline" || to.kind === "generated_redline") {
+          throw httpError(400, "A generated redline cannot be compared again.");
+        }
+
+        const [existing] = await tx
+          .select({ id: documentComparisons.id })
+          .from(documentComparisons)
+          .where(
+            and(
+              eq(documentComparisons.documentId, documentId),
+              eq(documentComparisons.fromVersionId, fromVersionId),
+              eq(documentComparisons.toVersionId, toVersionId),
+            ),
+          )
+          .limit(1);
+        if (existing) {
+          return {
+            created: false,
+            comparison: await comparisonWithVersions(tx, target, existing.id),
+          };
+        }
+
+        const fromFormat = conversionFormatOf(from.mimeType, from.originalFilename);
+        const toFormat = conversionFormatOf(to.mimeType, to.originalFilename);
+        const mode =
+          fromFormat && toFormat && isComparableFormat(fromFormat) && isComparableFormat(toFormat)
+            ? "word"
+            : "text";
+        const comparisonId = uuidv7();
+        await tx.insert(documentComparisons).values({
+          id: comparisonId,
+          documentId,
+          fromVersionId,
+          toVersionId,
+          mode,
+          state: "pending",
+          requestedBy: request.user.id,
+        });
+        return {
+          created: true,
+          comparison: await comparisonWithVersions(tx, target, comparisonId),
+        };
+      });
+
+      if (result.created) {
+        try {
+          await boundedQueueAsk(app.jobs.requestDocumentComparison(result.comparison.id));
+        } catch (error) {
+          app.log.error(
+            { err: error, comparisonId: result.comparison.id },
+            "could not ask the pipeline for a document comparison",
+          );
+        }
+      }
+      reply.code(result.created ? 202 : 200);
+      return { comparison: result.comparison };
+    },
+  );
+
+  app.get(
+    "/documents/:documentId/comparisons/:comparisonId",
+    {
+      preHandler: requireDocumentReader,
+      schema: {
+        operationId: "readDocumentComparison",
+        summary:
+          "Read one durable comparison (DOC-003): its state and mode, both rounds exactly " +
+          "as the Document chain draws them, its parsed model and count when ready, and its " +
+          "reason when failed. exportedVersionId names the generated round once the pair has " +
+          "been exported, and is null before that. The route inherits the owning record's " +
+          "reach and the Document's audience, and remains readable while the Document is " +
+          "archived",
+        tags: ["documents"],
+        params: ComparisonParams,
+        response: { 200: ComparisonEnvelope, default: problemResponse },
+      },
+    },
+    async (request, reply) => {
+      const { documentId, comparisonId } = request.params;
+      const target = await reachedDocument(app.db, request.user, documentId);
+      assertReachedDocument(target);
+      void reply.header("cache-control", "private, max-age=0, must-revalidate");
+      return { comparison: await comparisonWithVersions(app.db, target, comparisonId) };
+    },
+  );
+
+  app.post(
+    "/documents/:documentId/comparisons/:comparisonId/export",
+    {
+      preHandler: requireMember,
+      schema: {
+        operationId: "exportDocumentComparison",
+        summary:
+          "Allow an Administrator or Legal Team Member to append a ready Word Comparison's " +
+          "tracked-changes file to its Document chain; a Contributor is refused with 403. " +
+          "The generated Version records both operands, owes the ordinary Word derivations, " +
+          "and raises the ordinary version-added notification with its own Activity feed narration. " +
+          "The same pair returns its existing generated Version without appending another",
+        tags: ["documents"],
+        params: ComparisonParams,
+        response: {
+          200: VersionEnvelope,
+          201: VersionEnvelope,
+          default: problemResponse,
+        },
+      },
+    },
+    async (request, reply) => {
+      const { documentId, comparisonId } = request.params;
+      const versionId = uuidv7();
+      const key = versionStorageKey(documentId, versionId);
+      const expectedFileRef = formatBlobRef(app.storage.driver, key);
+      const result = await withStoredBlob(app.storage, request.log, expectedFileRef, () =>
+        app.notifier.notifying(async (tx) => {
+          const target = await reachedDocument(tx, request.user, documentId, true);
+          assertOpenDocument(target);
+
+          const [comparison] = await tx
+            .select({
+              mode: documentComparisons.mode,
+              state: documentComparisons.state,
+              fromVersionId: documentComparisons.fromVersionId,
+              toVersionId: documentComparisons.toVersionId,
+              redlineFileRef: documentComparisons.redlineFileRef,
+            })
+            .from(documentComparisons)
+            .where(
+              and(
+                eq(documentComparisons.id, comparisonId),
+                eq(documentComparisons.documentId, documentId),
+              ),
+            )
+            .limit(1);
+          if (!comparison) throw httpError(404, "No comparison exists with this reference.");
+          if (comparison.mode !== "word") {
+            throw httpError(409, "Export needs two Word files.");
+          }
+          if (comparison.state !== "ready") {
+            throw httpError(409, "Wait for the comparison to finish before exporting it.");
+          }
+          if (comparison.redlineFileRef === null) {
+            throw new Error("A ready Word comparison has no tracked-changes file.");
+          }
+
+          const [existing] = await tx
+            .select({ id: documentVersions.id })
+            .from(documentVersions)
+            .where(
+              and(
+                eq(documentVersions.documentId, documentId),
+                eq(documentVersions.kind, "generated_redline"),
+                eq(documentVersions.source, "generated"),
+                eq(documentVersions.comparedFromVersionId, comparison.fromVersionId),
+                eq(documentVersions.comparedToVersionId, comparison.toVersionId),
+              ),
+            )
+            .limit(1);
+          if (existing) {
+            const document = await documentWithChain(tx, documentId, target.primaryDocumentId);
+            const version = document.versions.find((row) => row.id === existing.id);
+            if (!version) throw new Error("An exported redline is outside its document chain.");
+            return { created: false as const, version, derivation: null };
+          }
+
+          const operands = await tx
+            .select({ id: documentVersions.id, versionNumber: documentVersions.versionNumber })
+            .from(documentVersions)
+            .where(
+              and(
+                eq(documentVersions.documentId, documentId),
+                inArray(documentVersions.id, [comparison.fromVersionId, comparison.toVersionId]),
+              ),
+            );
+          const from = operands.find((row) => row.id === comparison.fromVersionId);
+          const to = operands.find((row) => row.id === comparison.toVersionId);
+          if (!from || !to) {
+            throw new Error("A comparison names a version outside its document chain.");
+          }
+
+          const originalFilename = `${target.title} v${from.versionNumber}-v${to.versionNumber} redline.docx`;
+          const copied = await copyStoredBlob(app.storage, comparison.redlineFileRef, {
+            key,
+            filename: originalFilename,
+          });
+          const versionNumber = await nextVersionNumber(tx, documentId);
+          await insertDocumentVersion(tx, {
+            documentId,
+            versionId,
+            versionNumber,
+            fileRef: copied.fileRef,
+            kind: "generated_redline",
+            source: "generated",
+            comparedFromVersionId: comparison.fromVersionId,
+            comparedToVersionId: comparison.toVersionId,
+            note: null,
+            originalFilename,
+            mimeType: copied.mimeType,
+            byteSize: copied.byteSize,
+            checksumSha256: copied.checksumSha256,
+            createdBy: request.user.id,
+          });
+          await tx
+            .update(documents)
+            .set({ updatedAt: new Date() })
+            .where(eq(documents.id, documentId));
+          await recordActivity(tx, {
+            entityType: target.owner.kind,
+            entityId: target.owner.value,
+            actorId: request.user.id,
+            action: "document.redline_generated",
+            visibility: RECORD_ACTIVITY_TIER,
+            payload: {
+              documentId,
+              versionId,
+              title: target.title,
+              fromVersionNumber: from.versionNumber,
+              toVersionNumber: to.versionNumber,
+              versionNumber,
+            },
+          });
+          if (target.contractId) {
+            await app.notifier.documentVersionAdded(tx, {
+              contractId: target.contractId,
+              actorId: request.user.id,
+              actorName: request.user.displayName,
+              documentId,
+              documentTitle: target.title,
+              isConfidential: target.isConfidential,
+              versionId,
+              versionNumber,
+            });
+          }
+
+          const document = await documentWithChain(tx, documentId, target.primaryDocumentId);
+          const version = document.versions.find((row) => row.id === versionId);
+          if (!version) throw new Error("The generated redline did not join its document chain.");
+          return {
+            created: true as const,
+            version,
+            derivation: {
+              versionId,
+              mimeType: copied.mimeType,
+              originalFilename,
+            },
+          };
+        }),
+      );
+
+      if (result.derivation) {
+        await requestDerivations(app.jobs, app.log, result.derivation);
+      }
+      return reply.status(result.created ? 201 : 200).send({ version: result.version });
+    },
+  );
+
   app.post(
     "/documents/:documentId/primary",
     {
@@ -2991,6 +3548,19 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
             ),
           );
 
+        // A Word comparison is another derived copy beside the chain.
+        // Its row cascades directly with the Document, but its stored
+        // DOCX has to be removed explicitly before the source blobs.
+        const comparisons = await tx
+          .select({ fileRef: documentComparisons.redlineFileRef })
+          .from(documentComparisons)
+          .where(
+            and(
+              eq(documentComparisons.documentId, documentId),
+              isNotNull(documentComparisons.redlineFileRef),
+            ),
+          );
+
         // The entry is written first and it hangs off the owning
         // contract, never off the document (DOC-008), so nothing
         // cascades it away with the row it describes. It names the
@@ -3070,6 +3640,7 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
         // made again from anything.
         const blobs = [
           ...renditions.flatMap((row) => (row.fileRef === null ? [] : [row.fileRef])),
+          ...comparisons.flatMap((row) => (row.fileRef === null ? [] : [row.fileRef])),
           ...chain.map((version) => version.fileRef),
         ];
         for (const fileRef of blobs) await app.storage.delete(fileRef);
@@ -3995,6 +4566,9 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
       versionNumber: row.versionNumber,
       fileRef: row.file.fileRef,
       kind: row.file.kind,
+      source: "uploaded",
+      comparedFromVersionId: null,
+      comparedToVersionId: null,
       note: row.file.note,
       originalFilename: row.file.filename,
       mimeType: row.file.mimeType,

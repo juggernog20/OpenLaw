@@ -16,10 +16,10 @@
  * makes the work durable, and what the M12/6 backfill sweep reads to
  * find versions that never got theirs.
  *
- * **The text is an index, never a displayed conversion** (DOC-005). What
- * renders is always the original a person uploaded. This table exists so
- * a scanned contract can be found in M25's search, and for nothing else
- * yet.
+ * **The text is derived data, never a replacement preview** (DOC-005).
+ * What the Document panel renders is always the original a person uploaded.
+ * Search reads this text directly, and M32 text-mode Comparison reads two
+ * rows to build its explicit no-formatting view.
  *
  * The display rendition's own table landed in M12/4 beside this one, in
  * `document-rendition.ts`. The `email_body` source landed in M12/5 with

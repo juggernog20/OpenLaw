@@ -237,7 +237,10 @@ export function TemplateTasksEditor({
                         step={1}
                         value={row.dueOffsetDays}
                         disabled={disabled}
-                        placeholder="—"
+                        placeholder={intl.formatMessage({
+                          id: "settings.matterTemplateEditor.taskDuePlaceholder",
+                          defaultMessage: "—",
+                        })}
                         aria-label={intl.formatMessage(
                           {
                             id: "settings.matterTemplateEditor.taskDueNumber",
