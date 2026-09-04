@@ -231,20 +231,22 @@ describe("onboarding state (GET /api/v1/onboarding, POST /api/v1/onboarding/comp
     // follow that route's write. The narration the write leaves is the
     // signing-connector suite's own assertion.
     expect((await status(adminCookies)).steps["e-signature"].done).toBe(false);
-    const saved = await harness.app.inject({
-      method: "PUT",
-      url: "/api/v1/signing-connectors/docusign",
-      cookies: adminCookies,
-      payload: {
-        environment: SIGNING_CONNECTOR.environment,
-        integrationKey: SIGNING_CONNECTOR.integrationKey,
-        apiUserId: SIGNING_CONNECTOR.apiUserId,
-        privateKey: SIGNING_CONNECTOR.privateKey,
-        webhookSecret: SIGNING_CONNECTOR.webhookSecret,
-      },
-    });
-    expect(saved.statusCode, saved.body).toBe(200);
+    // The write is inside the try, so a refusal after the row lands
+    // still clears it. The suite's later steps read a fresh install.
     try {
+      const saved = await harness.app.inject({
+        method: "PUT",
+        url: "/api/v1/signing-connectors/docusign",
+        cookies: adminCookies,
+        payload: {
+          environment: SIGNING_CONNECTOR.environment,
+          integrationKey: SIGNING_CONNECTOR.integrationKey,
+          apiUserId: SIGNING_CONNECTOR.apiUserId,
+          privateKey: SIGNING_CONNECTOR.privateKey,
+          webhookSecret: SIGNING_CONNECTOR.webhookSecret,
+        },
+      });
+      expect(saved.statusCode, saved.body).toBe(200);
       expect((await status(adminCookies)).steps["e-signature"].done).toBe(true);
     } finally {
       await harness.db.delete(signingConnectors);

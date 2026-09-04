@@ -631,6 +631,12 @@ describe("welcome wizard e-signature step (#698)", () => {
     expect(screen.getByLabelText("Connect HMAC secret")).toHaveValue("");
     expect(screen.getAllByText(/Leave blank to keep the current value/)).toHaveLength(2);
 
+    // The way back, so opening the form is not a one-way door.
+    await user.click(screen.getByRole("button", { name: "Keep current credentials" }));
+    expect(screen.getByText(/DocuSign is connected/)).toBeInTheDocument();
+    expect(screen.queryByLabelText("RSA private key")).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Replace credentials" }));
     await user.clear(screen.getByLabelText("Integration key"));
     await user.type(screen.getByLabelText("Integration key"), "the-new-key");
     await user.click(screen.getByRole("button", { name: "Finish" }));

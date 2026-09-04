@@ -7928,6 +7928,9 @@
   "welcome.eSignature.replace": {
     "defaultMessage": "Replace credentials"
   },
+  "welcome.eSignature.replace.cancel": {
+    "defaultMessage": "Keep current credentials"
+  },
   "welcome.email.app": {
     "defaultMessage": "Outbound email is set in the app. Mail is sent from {from}."
   },

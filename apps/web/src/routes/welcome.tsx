@@ -1568,6 +1568,33 @@ export function WelcomePage() {
                             )}
                           </p>
                         </div>
+
+                        {/* The way back from Replace credentials, the
+                            email step's own shape. Without it the
+                            configured summary is gone for the rest of
+                            the wizard, because Back does not reset it. */}
+                        {signingConnector.configured && (
+                          <div>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              disabled={busy}
+                              onClick={() => {
+                                setReplacingConnector(false);
+                                setSigningEnvironment(signingConnector.environment ?? "demo");
+                                setIntegrationKey(signingConnector.integrationKey ?? "");
+                                setApiUserId(signingConnector.apiUserId ?? "");
+                                setPrivateKey("");
+                                setWebhookSecret("");
+                              }}
+                            >
+                              <FormattedMessage
+                                id="welcome.eSignature.replace.cancel"
+                                defaultMessage="Keep current credentials"
+                              />
+                            </Button>
+                          </div>
+                        )}
                       </>
                     )}
 

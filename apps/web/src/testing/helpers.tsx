@@ -571,11 +571,13 @@ export function stubApi(state: ApiState) {
     }
     // The wizard's E-signature step and the Integrations pane read the
     // same connector. Unconfigured by default, as a fresh install is.
-    if (/^\/api\/v1\/signing-connectors\/[^/]+$/.test(call.url.pathname) && call.method === "GET") {
+    if (call.url.pathname === "/api/v1/signing-connectors/docusign" && call.method === "GET") {
       const saved = state.signingConnector;
       return json(200, {
         connector: {
-          provider: call.url.pathname.split("/").pop(),
+          // DocuSign is the one adapter v1 ships (CTR-013), so the
+          // answer names it rather than echoing back the path.
+          provider: "docusign",
           configured: saved !== undefined,
           enabled: saved !== undefined,
           disabledAt: null,
