@@ -14,6 +14,7 @@
     "dev:hot": "bash scripts/dev-hot.sh",
     "dev:infra": "docker compose -f compose.yml -f compose.dev.yml -f compose.hostdev.yml up -d postgres doc-engine mailpit",
     "dev:infra:down": "docker compose -f compose.yml -f compose.dev.yml -f compose.hostdev.yml stop postgres doc-engine mailpit",
+    "seed:demo": "node scripts/seed/index.mjs",
     "lint": "turbo run lint",
     "lint:fix": "turbo run lint -- --fix",
     "typecheck": "turbo run typecheck",

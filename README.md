@@ -45,6 +45,33 @@ pnpm test
 
 Two things to know about it. Emailed links point at `http://localhost:3000`, because that is the origin the API is configured for; open one on 5173 by changing the port by hand. And uploaded files go to `.storage/` in the repo rather than to the stack's volume, which the container's user owns — so a file uploaded here is not visible to `pnpm stack`, or the other way round. The database _is_ the same one, so accounts and every record are shared.
 
+### Seeding a demo instance
+
+`pnpm seed:demo` fills a running dev loop with a whole fictional company, Helix Software Group: a legal team of twelve, thirty group entities, a contract pipeline across every stage, matters, an intake queue with triage history, and a knowledge library. It exists for design and UX review, where an empty instance tells you nothing and a hand-made record or two tells you almost as little.
+
+```sh
+docker compose -f compose.yml -f compose.dev.yml down -v   # start from nothing
+pnpm dev:hot
+pnpm seed:demo                          # about 180 contracts, 90 matters, 70 requests
+pnpm seed:demo --scale medium           # a third of that, for faster reseeding
+pnpm seed:demo --seed 42                # a different but equally repeatable instance
+```
+
+Sign in as `blair@helix.example` with `correct-horse-battery`. Every seeded person shares that password; the Business Users sign in through a magic link instead, which lands in Mailpit.
+
+Everything goes through the HTTP API as the person who would have done it, so the instance has the activity entries, notifications and numbering a real one has, and nothing is written behind the app's back. The seed also runs its own OpenAI-compatible stand-in for the length of the run, so a slice of the contracts carry genuine CTR-008 Analysis runs with the Unverified marker on them. The connector is switched off when the run ends, because the stand-in dies with it.
+
+E-signature is opt-in, because the DocuSign driver takes its host from the environment rather than from the connector row (TECH-013). Start the loop in stand-in mode and ask for the phase:
+
+```sh
+SIGNING_STANDIN=true DOCUSIGN_BASE_URL=http://127.0.0.1:8129 pnpm dev:hot
+pnpm seed:demo --with-signing
+```
+
+That sends real Envelopes through the real driver: some still out, some signed with the executed copy pulled back onto the document chain, some declined, some voided. The connector is switched off at the end for the same reason as the AI one. To make signing work again while you review, run `node scripts/seed/signing-stub.mjs` and turn the connector back on in Settings.
+
+It writes a lot and cleans up nothing. Point it at a database you are willing to lose. Dates are anchored to the day it runs, so deadlines stay overdue, due and upcoming however long ago you seeded. A heavy run takes two to three minutes on a laptop; the long pole is the seed waiting on the document queue, because an Analysis run cannot start until the text extraction it reads has finished.
+
 `pnpm dev:infra` brings up only the containers, for when you start the watch processes yourself; `pnpm dev:infra:down` stops them. Ports move with `POSTGRES_PORT`, `DOC_ENGINE_PORT`, `MAILPIT_SMTP_PORT`. All of it is [`compose.hostdev.yml`](compose.hostdev.yml) plus [`scripts/dev-hot.sh`](scripts/dev-hot.sh), and none of it touches what a deployment runs.
 
 Everything E2E and every milestone acceptance runs against the built Compose stack instead (TECH-018):
