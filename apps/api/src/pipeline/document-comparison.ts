@@ -6,19 +6,27 @@
  * The comparison row, not the pg-boss job, is the durable request. A
  * handler therefore reads every input live, does nothing once the row has
  * settled, and moves `pending` to one terminal state in a single update.
- * Word mode stores the tracked-changes DOCX and the parser's model together;
- * text mode is deliberately closed as unavailable until M32/5 supplies it.
+ * Word mode stores the tracked-changes DOCX and the parser's model together.
+ * Text mode reads the two Versions' extracted text and stores the same model
+ * without a derived file.
  */
 
 import { Readable } from "node:stream";
-import { alias, and, documentComparisons, documentVersions, eq } from "@openlaw/db";
+import {
+  alias,
+  and,
+  documentComparisons,
+  documentVersions,
+  documentVersionText,
+  eq,
+} from "@openlaw/db";
 import { uuidv7 } from "uuidv7";
-import { parseTrackedChangesDocx } from "../lib/doc-engine/change-model.js";
+import { parseTrackedChangesDocx, type ChangeModel } from "../lib/doc-engine/change-model.js";
 import { isComparableFormat, UnsupportedFormatError } from "../lib/doc-engine/engine.js";
+import { buildTextChangeModel } from "../lib/doc-engine/text-change-model.js";
 import { conversionFormatOf } from "../lib/render-family.js";
 import { isTerminalFailure, reasonOf, type DerivationDeps } from "./derivations.js";
-
-export const TEXT_COMPARISON_UNAVAILABLE = "Text comparison is not available yet.";
+import { extractsText } from "./text-extraction.js";
 
 /** One comparison attempt carries only the durable row's id and pg-boss's
  * retry counters. */
@@ -66,6 +74,31 @@ async function failComparison(
     .where(and(eq(documentComparisons.id, comparisonId), eq(documentComparisons.state, "pending")));
 }
 
+async function finishComparison(
+  deps: DerivationDeps,
+  comparisonId: string,
+  model: ChangeModel,
+  redlineFileRef: string | null,
+): Promise<boolean> {
+  const updated = await deps.db
+    .update(documentComparisons)
+    .set({
+      state: "ready",
+      changeModel: model,
+      changeCount: model.changes.length,
+      redlineFileRef,
+      finishedAt: new Date(),
+    })
+    .where(and(eq(documentComparisons.id, comparisonId), eq(documentComparisons.state, "pending")))
+    .returning({ id: documentComparisons.id });
+  if (updated.length === 0) return false;
+  deps.log.info(
+    { comparisonId, changeCount: model.changes.length },
+    "compared two document versions",
+  );
+  return true;
+}
+
 /** Computes one pending comparison. Returns without work when erasure or an
  * earlier job has already settled the row. */
 export async function compareDocumentVersions(
@@ -74,27 +107,77 @@ export async function compareDocumentVersions(
 ): Promise<void> {
   const fromVersion = alias(documentVersions, "comparison_from_version");
   const toVersion = alias(documentVersions, "comparison_to_version");
+  const fromText = alias(documentVersionText, "comparison_from_text");
+  const toText = alias(documentVersionText, "comparison_to_text");
   const [comparison] = await deps.db
     .select({
       id: documentComparisons.id,
       mode: documentComparisons.mode,
       state: documentComparisons.state,
+      fromVersionNumber: fromVersion.versionNumber,
       fromFileRef: fromVersion.fileRef,
       fromMimeType: fromVersion.mimeType,
       fromFilename: fromVersion.originalFilename,
+      fromTextState: fromText.state,
+      fromText: fromText.text,
+      toVersionNumber: toVersion.versionNumber,
       toFileRef: toVersion.fileRef,
       toMimeType: toVersion.mimeType,
       toFilename: toVersion.originalFilename,
+      toTextState: toText.state,
+      toText: toText.text,
     })
     .from(documentComparisons)
     .innerJoin(fromVersion, eq(documentComparisons.fromVersionId, fromVersion.id))
     .innerJoin(toVersion, eq(documentComparisons.toVersionId, toVersion.id))
+    .leftJoin(fromText, eq(documentComparisons.fromVersionId, fromText.versionId))
+    .leftJoin(toText, eq(documentComparisons.toVersionId, toText.versionId))
     .where(eq(documentComparisons.id, comparisonId))
     .limit(1);
 
   if (!comparison || comparison.state !== "pending") return;
   if (comparison.mode === "text") {
-    await failComparison(deps, comparisonId, TEXT_COMPARISON_UNAVAILABLE);
+    const older = {
+      number: comparison.fromVersionNumber,
+      mimeType: comparison.fromMimeType,
+      filename: comparison.fromFilename,
+      state: comparison.fromTextState,
+      text: comparison.fromText,
+    };
+    const newer = {
+      number: comparison.toVersionNumber,
+      mimeType: comparison.toMimeType,
+      filename: comparison.toFilename,
+      state: comparison.toTextState,
+      text: comparison.toText,
+    };
+    const operands = [older, newer];
+    // Terminal facts about either operand settle the row before a pending
+    // one sends the attempt back to the queue.
+    for (const operand of operands) {
+      if (operand.state === "failed") {
+        await failComparison(
+          deps,
+          comparisonId,
+          `Version ${operand.number} text extraction failed.`,
+        );
+        return;
+      }
+      if (!operand.state && !extractsText(operand.mimeType, operand.filename)) {
+        await failComparison(
+          deps,
+          comparisonId,
+          `Version ${operand.number} does not support extracted text.`,
+        );
+        return;
+      }
+    }
+    const pending = operands.find((operand) => operand.state !== "ready");
+    if (pending) throw new Error(`Version ${pending.number} extracted text is still pending.`);
+    if (older.text === null || newer.text === null) {
+      throw new Error("A ready text derivation has no extracted text.");
+    }
+    await finishComparison(deps, comparisonId, buildTextChangeModel(older.text, newer.text), null);
     return;
   }
 
@@ -118,27 +201,10 @@ export async function compareDocumentVersions(
     const redline = await collect(answer);
     fileRef = await deps.storage.put(comparisonStorageKey(comparisonId), Readable.from([redline]));
     const model = parseTrackedChangesDocx(redline);
-    const updated = await deps.db
-      .update(documentComparisons)
-      .set({
-        state: "ready",
-        changeModel: model,
-        changeCount: model.changes.length,
-        redlineFileRef: fileRef,
-        finishedAt: new Date(),
-      })
-      .where(
-        and(eq(documentComparisons.id, comparisonId), eq(documentComparisons.state, "pending")),
-      )
-      .returning({ id: documentComparisons.id });
-    if (updated.length === 0) {
+    if (!(await finishComparison(deps, comparisonId, model, fileRef))) {
       await forget(deps, fileRef);
       return;
     }
-    deps.log.info(
-      { comparisonId, changeCount: model.changes.length },
-      "compared two document versions",
-    );
   } catch (error) {
     if (fileRef) await forget(deps, fileRef);
     throw error;

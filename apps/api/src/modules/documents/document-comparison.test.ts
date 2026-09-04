@@ -36,10 +36,7 @@ import {
   TEST_ADMIN as ADMIN,
   type TestHarness,
 } from "../../testing/harness.js";
-import {
-  handleDocumentComparison,
-  TEXT_COMPARISON_UNAVAILABLE,
-} from "../../pipeline/document-comparison.js";
+import { handleDocumentComparison } from "../../pipeline/document-comparison.js";
 import type { JobQueue } from "../../pipeline/jobs.js";
 import { DOCUMENT_COMPARISON_QUEUE_OPTIONS } from "../../pipeline/pg-boss.js";
 
@@ -371,6 +368,52 @@ async function isStored(fileRef: string): Promise<boolean> {
     if (error instanceof BlobNotFoundError) return false;
     throw error;
   }
+}
+
+async function waitForText(versionId: string): Promise<void> {
+  const deadline = Date.now() + 20_000;
+  while (Date.now() < deadline) {
+    const [row] = await harness.db
+      .select({ state: documentVersionText.state })
+      .from(documentVersionText)
+      .where(eq(documentVersionText.versionId, versionId));
+    if (row?.state === "ready") return;
+    if (row?.state === "failed") throw new Error(`Version ${versionId} text extraction failed.`);
+    await new Promise((resolve) => setTimeout(resolve, 50));
+  }
+  throw new Error(`Version ${versionId} text did not become ready.`);
+}
+
+async function setText(
+  versionId: string,
+  state: "pending" | "ready" | "failed",
+  text: string | null = null,
+): Promise<void> {
+  await harness.db
+    .insert(documentVersionText)
+    .values({
+      versionId,
+      state,
+      source: state === "ready" ? "native_layer" : null,
+      text: state === "ready" ? (text ?? "") : null,
+    })
+    .onConflictDoUpdate({
+      target: documentVersionText.versionId,
+      set: {
+        state,
+        source: state === "ready" ? "native_layer" : null,
+        text: state === "ready" ? (text ?? "") : null,
+      },
+    });
+}
+
+function comparisonDeps() {
+  return {
+    db: harness.db,
+    storage: harness.storage,
+    docEngine: harness.docEngine,
+    log: harness.app.log,
+  };
 }
 
 describe("a Word comparison", () => {
@@ -720,26 +763,224 @@ describe("a Word comparison", () => {
       { filename: "first.pdf", type: "application/pdf", bytes: Buffer.from("%PDF-1.7 first") },
       { filename: "second.pdf", type: "application/pdf", bytes: Buffer.from("%PDF-1.7 second") },
     );
-    const textId = "0198f2ab-0000-7000-8000-00000000e002";
+    await Promise.all([waitForText(text.from.id), waitForText(text.to.id)]);
+    const textRequest = await requestComparison(
+      memberCookies,
+      text.document.id,
+      text.from.id,
+      text.to.id,
+    );
+    const textReady = await settled(
+      text.document.id,
+      textRequest.json<ComparisonEnvelope>().comparison.id,
+    );
+    expect(textReady.state).toBe("ready");
+    const degraded = await exportComparison(memberCookies, text.document.id, textReady.id);
+    expectExportProblem(
+      degraded,
+      409,
+      "Export needs two Word files.",
+      text.document.id,
+      textReady.id,
+    );
+  });
+});
+
+describe("a text comparison", () => {
+  it("runs PDF and mixed pairs from their extracted text and keeps Word pairs in Word mode", async () => {
+    const pairs = [
+      await twoRounds(
+        "Comparison · PDF text",
+        { filename: "first.pdf", type: "application/pdf", bytes: Buffer.from("%PDF-1.7 first") },
+        { filename: "second.pdf", type: "application/pdf", bytes: Buffer.from("%PDF-1.7 second") },
+      ),
+      await twoRounds(
+        "Comparison · mixed text",
+        { filename: "draft.docx", type: DOCX_MIME_TYPE, bytes: officePackage("draft") },
+        { filename: "signed.pdf", type: "application/pdf", bytes: Buffer.from("%PDF-1.7 signed") },
+      ),
+    ];
+
+    for (const pair of pairs) {
+      await Promise.all([waitForText(pair.from.id), waitForText(pair.to.id)]);
+      await setText(pair.from.id, "ready", "1. Services\n\nPayment is due within thirty days.");
+      await setText(pair.to.id, "ready", "1. Services\n\nPayment is due within sixty days.");
+
+      const requested = await requestComparison(
+        memberCookies,
+        pair.document.id,
+        pair.from.id,
+        pair.to.id,
+      );
+      expect(requested.statusCode, requested.body).toBe(202);
+      expect(requested.json<ComparisonEnvelope>().comparison.mode).toBe("text");
+      const ready = await settled(
+        pair.document.id,
+        requested.json<ComparisonEnvelope>().comparison.id,
+      );
+      expect(ready).toMatchObject({
+        mode: "text",
+        state: "ready",
+        changeCount: 1,
+        failure: null,
+      });
+      expect(ready.changeModel?.changes).toEqual([
+        expect.objectContaining({ kind: "replaced", excerpt: "thirty → sixty" }),
+      ]);
+      const [stored] = await harness.db
+        .select({ fileRef: documentComparisons.redlineFileRef })
+        .from(documentComparisons)
+        .where(eq(documentComparisons.id, ready.id));
+      expect(stored?.fileRef).toBeNull();
+    }
+
+    const word = await twoRounds("Comparison · Word mode remains");
+    const requested = await requestComparison(
+      memberCookies,
+      word.document.id,
+      word.from.id,
+      word.to.id,
+    );
+    expect(requested.json<ComparisonEnvelope>().comparison.mode).toBe("word");
+  });
+
+  it("answers matching extracted words with a ready Comparison and no changes", async () => {
+    const pair = await twoRounds(
+      "Comparison · same text",
+      { filename: "first.pdf", type: "application/pdf", bytes: Buffer.from("%PDF-1.7 same-one") },
+      { filename: "second.pdf", type: "application/pdf", bytes: Buffer.from("%PDF-1.7 same-two") },
+    );
+    await Promise.all([waitForText(pair.from.id), waitForText(pair.to.id)]);
+    await setText(pair.from.id, "ready", "1. Same   words here.\n\nSecond clause.");
+    await setText(pair.to.id, "ready", "1. Same words\nhere.\n\nSecond clause.");
+
+    const requested = await requestComparison(
+      memberCookies,
+      pair.document.id,
+      pair.from.id,
+      pair.to.id,
+    );
+    const ready = await settled(
+      pair.document.id,
+      requested.json<ComparisonEnvelope>().comparison.id,
+    );
+    expect(ready).toMatchObject({ mode: "text", state: "ready", changeCount: 0 });
+    expect(ready.changeModel?.changes).toEqual([]);
+  });
+
+  it("retries pending text, then succeeds after both readings land", async () => {
+    const pair = await twoRounds(
+      "Comparison · pending text",
+      {
+        filename: "first.pdf",
+        type: "application/pdf",
+        bytes: Buffer.from("%PDF-1.7 pending-one"),
+      },
+      {
+        filename: "second.pdf",
+        type: "application/pdf",
+        bytes: Buffer.from("%PDF-1.7 pending-two"),
+      },
+    );
+    await Promise.all([waitForText(pair.from.id), waitForText(pair.to.id)]);
+    await setText(pair.from.id, "ready", "Old words.");
+    await setText(pair.to.id, "pending");
+    const comparisonId = "0198f2ab-0000-7000-8000-00000000c011";
     await harness.db.insert(documentComparisons).values({
-      id: textId,
-      documentId: text.document.id,
-      fromVersionId: text.from.id,
-      toVersionId: text.to.id,
+      id: comparisonId,
+      documentId: pair.document.id,
+      fromVersionId: pair.from.id,
+      toVersionId: pair.to.id,
       mode: "text",
-      state: "ready",
-      changeModel: { paragraphs: [], changes: [] },
-      changeCount: 0,
+      state: "pending",
       requestedBy: idOf(MEMBER),
-      finishedAt: new Date(),
     });
-    const degraded = await exportComparison(memberCookies, text.document.id, textId);
-    expectExportProblem(degraded, 409, "Export needs two Word files.", text.document.id, textId);
+    const attempt = { comparisonId, retryCount: 0, retryLimit: 2 };
+
+    await expect(handleDocumentComparison(comparisonDeps(), attempt)).rejects.toThrow(/Version 2/);
+    const [pending] = await harness.db
+      .select({ state: documentComparisons.state })
+      .from(documentComparisons)
+      .where(eq(documentComparisons.id, comparisonId));
+    expect(pending?.state).toBe("pending");
+
+    await setText(pair.to.id, "ready", "New words.");
+    await handleDocumentComparison(comparisonDeps(), { ...attempt, retryCount: 1 });
+    const ready = await readComparison(memberCookies, pair.document.id, comparisonId);
+    expect(ready.json<ComparisonEnvelope>().comparison).toMatchObject({
+      state: "ready",
+      changeCount: 1,
+    });
+  });
+
+  it("fails for a failed or unsupported operand and names its Version", async () => {
+    const failedPair = await twoRounds(
+      "Comparison · failed text",
+      { filename: "first.pdf", type: "application/pdf", bytes: Buffer.from("%PDF-1.7 failed-one") },
+      {
+        filename: "second.pdf",
+        type: "application/pdf",
+        bytes: Buffer.from("%PDF-1.7 failed-two"),
+      },
+    );
+    await Promise.all([waitForText(failedPair.from.id), waitForText(failedPair.to.id)]);
+    await setText(failedPair.from.id, "failed");
+    const failedId = "0198f2ab-0000-7000-8000-00000000c012";
+    await harness.db.insert(documentComparisons).values({
+      id: failedId,
+      documentId: failedPair.document.id,
+      fromVersionId: failedPair.from.id,
+      toVersionId: failedPair.to.id,
+      mode: "text",
+      state: "pending",
+      requestedBy: idOf(MEMBER),
+    });
+    await handleDocumentComparison(comparisonDeps(), {
+      comparisonId: failedId,
+      retryCount: 0,
+      retryLimit: 2,
+    });
+    const failed = await readComparison(memberCookies, failedPair.document.id, failedId);
+    expect(failed.json<ComparisonEnvelope>().comparison).toMatchObject({
+      state: "failed",
+      failure: expect.stringMatching(/Version 1/),
+    });
+
+    const unsupportedPair = await twoRounds(
+      "Comparison · unsupported text",
+      { filename: "photo.png", type: "image/png", bytes: Buffer.from("not-read-as-text") },
+      { filename: "draft.pdf", type: "application/pdf", bytes: Buffer.from("%PDF-1.7 supported") },
+    );
+    await waitForText(unsupportedPair.to.id);
+    const unsupportedId = "0198f2ab-0000-7000-8000-00000000c013";
+    await harness.db.insert(documentComparisons).values({
+      id: unsupportedId,
+      documentId: unsupportedPair.document.id,
+      fromVersionId: unsupportedPair.from.id,
+      toVersionId: unsupportedPair.to.id,
+      mode: "text",
+      state: "pending",
+      requestedBy: idOf(MEMBER),
+    });
+    await handleDocumentComparison(comparisonDeps(), {
+      comparisonId: unsupportedId,
+      retryCount: 0,
+      retryLimit: 2,
+    });
+    const unsupported = await readComparison(
+      memberCookies,
+      unsupportedPair.document.id,
+      unsupportedId,
+    );
+    expect(unsupported.json<ComparisonEnvelope>().comparison).toMatchObject({
+      state: "failed",
+      failure: expect.stringMatching(/Version 1.*does not support extracted text/i),
+    });
   });
 });
 
 describe("comparison failures", () => {
-  it("settles an unreadable operand and the not-yet-available text mode", async () => {
+  it("settles an unreadable Word operand", async () => {
     const unreadable = await twoRounds("Comparison · unreadable", {
       filename: "bad.docx",
       type: DOCX_MIME_TYPE,
@@ -758,28 +999,6 @@ describe("comparison failures", () => {
     expect(failed.state).toBe("failed");
     expect(failed.failure).toMatch(/readable|package|zip/i);
     expect(failed.changeModel).toBeNull();
-
-    const text = await twoRounds(
-      "Comparison · text",
-      { filename: "first.pdf", type: "application/pdf", bytes: Buffer.from("%PDF-1.7 first") },
-      { filename: "second.pdf", type: "application/pdf", bytes: Buffer.from("%PDF-1.7 second") },
-    );
-    const textRequest = await requestComparison(
-      memberCookies,
-      text.document.id,
-      text.from.id,
-      text.to.id,
-    );
-    expect(textRequest.json<ComparisonEnvelope>().comparison.mode).toBe("text");
-    const textFailed = await settled(
-      text.document.id,
-      textRequest.json<ComparisonEnvelope>().comparison.id,
-    );
-    expect(textFailed).toMatchObject({
-      mode: "text",
-      state: "failed",
-      failure: TEXT_COMPARISON_UNAVAILABLE,
-    });
   });
 
   it("retries an unreachable engine and fails only after the configured attempt bound", async () => {
