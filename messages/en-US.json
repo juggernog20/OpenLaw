@@ -7916,6 +7916,9 @@
   "welcome.eSignature.configured": {
     "defaultMessage": "DocuSign is connected in the {environment, select, production {production} other {demo}} environment, as integration key {integrationKey}."
   },
+  "welcome.eSignature.configured.disabled": {
+    "defaultMessage": "DocuSign is configured in the {environment, select, production {production} other {demo}} environment, as integration key {integrationKey}, but sending from records is turned off. Contracts use the manual hand-off until it is turned back on."
+  },
   "welcome.eSignature.error.incomplete": {
     "defaultMessage": "Enter the integration key and the user ID from your DocuSign integration, or choose Set up later."
   },

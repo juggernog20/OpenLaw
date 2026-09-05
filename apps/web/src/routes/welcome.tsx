@@ -1398,15 +1398,26 @@ export function WelcomePage() {
                         the install already holds. */}
                     {signingConnector.configured && !replacingConnector && (
                       <>
-                        <Alert variant="success">
-                          <FormattedMessage
-                            id="welcome.eSignature.configured"
-                            defaultMessage="DocuSign is connected in the {environment, select, production {production} other {demo}} environment, as integration key {integrationKey}."
-                            values={{
-                              environment: signingConnector.environment ?? "demo",
-                              integrationKey: signingConnector.integrationKey ?? "",
-                            }}
-                          />
+                        <Alert variant={signingConnector.enabled ? "success" : "warning"}>
+                          {signingConnector.enabled ? (
+                            <FormattedMessage
+                              id="welcome.eSignature.configured"
+                              defaultMessage="DocuSign is connected in the {environment, select, production {production} other {demo}} environment, as integration key {integrationKey}."
+                              values={{
+                                environment: signingConnector.environment ?? "demo",
+                                integrationKey: signingConnector.integrationKey ?? "",
+                              }}
+                            />
+                          ) : (
+                            <FormattedMessage
+                              id="welcome.eSignature.configured.disabled"
+                              defaultMessage="DocuSign is configured in the {environment, select, production {production} other {demo}} environment, as integration key {integrationKey}, but sending from records is turned off. Contracts use the manual hand-off until it is turned back on."
+                              values={{
+                                environment: signingConnector.environment ?? "demo",
+                                integrationKey: signingConnector.integrationKey ?? "",
+                              }}
+                            />
+                          )}
                         </Alert>
                         <div className="flex flex-col gap-1.5">
                           <Label htmlFor="welcome-ds-webhook-url">

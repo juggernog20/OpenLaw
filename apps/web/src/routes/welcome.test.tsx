@@ -609,6 +609,31 @@ describe("welcome wizard e-signature step (#698)", () => {
     expect(calls.saves).toEqual([]);
   });
 
+  it("does not call a configured connector connected while it is turned off", async () => {
+    const calls: SigningCalls = { saves: [], completed: 0 };
+    stubApi({
+      signedIn: ADMIN,
+      onboarding: { completed: false },
+      signingConnector: {
+        environment: "production",
+        integrationKey: "the-integration-key",
+        apiUserId: "the-user-id",
+        enabled: false,
+        disabledAt: "2026-09-05T09:00:00.000Z",
+      },
+      extra: signingWizardExtra(calls),
+    });
+    renderAt("/welcome");
+    const user = userEvent.setup();
+    await goToESignatureStep(user);
+
+    expect(
+      screen.getByText(/DocuSign is configured in the production environment/),
+    ).toHaveTextContent("sending from records is turned off");
+    expect(screen.queryByText(/DocuSign is connected/)).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("RSA private key")).not.toBeInTheDocument();
+  });
+
   it("rotates the estate without asking for either stored secret again", async () => {
     const calls: SigningCalls = { saves: [], completed: 0 };
     stubApi({

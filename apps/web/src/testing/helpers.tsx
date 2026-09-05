@@ -234,6 +234,9 @@ export interface ApiState {
     environment: "demo" | "production";
     integrationKey: string;
     apiUserId: string;
+    /** Defaults to on; set false for a configured connector that was turned off. */
+    enabled?: boolean;
+    disabledAt?: string | null;
   };
   extra?: (call: StubCall) => StubAnswer;
 }
@@ -579,8 +582,8 @@ export function stubApi(state: ApiState) {
           // answer names it rather than echoing back the path.
           provider: "docusign",
           configured: saved !== undefined,
-          enabled: saved !== undefined,
-          disabledAt: null,
+          enabled: saved?.enabled ?? saved !== undefined,
+          disabledAt: saved?.disabledAt ?? null,
           environment: saved?.environment ?? null,
           integrationKey: saved?.integrationKey ?? null,
           apiUserId: saved?.apiUserId ?? null,
