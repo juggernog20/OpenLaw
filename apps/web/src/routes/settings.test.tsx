@@ -165,15 +165,27 @@ describe("the settings destination (#62)", () => {
     expect(within(rail).getByRole("link", { name: "Authentication" })).toBeVisible();
   });
 
-  it("bounces a non-Administrator off /settings/general to their settings home", async () => {
-    stubApi({ signedIn: MEMBER });
-    renderAt("/settings/general");
+  it.each(["legal_team_member", "contributor"])(
+    "bounces a %s off /settings/general to their settings home",
+    async (role) => {
+      const reads: string[] = [];
+      stubApi({
+        signedIn: { ...MEMBER, role },
+        extra: (call) => {
+          reads.push(call.url.pathname);
+          return undefined;
+        },
+      });
+      renderAt("/settings/general");
 
-    // Landed on Profile — and the rail never teases the group (SET-002).
-    expect(await screen.findByLabelText("Full name")).toBeVisible();
-    const rail = screen.getByRole("navigation", { name: "Settings sections" });
-    expect(within(rail).queryByText("Organization")).not.toBeInTheDocument();
-  });
+      // Landed on Profile — and the rail never teases the group (SET-002).
+      expect(await screen.findByLabelText("Full name")).toBeVisible();
+      const rail = screen.getByRole("navigation", { name: "Settings sections" });
+      expect(within(rail).queryByText("Organization")).not.toBeInTheDocument();
+      expect(screen.queryByRole("heading", { name: "Setup checklist" })).not.toBeInTheDocument();
+      expect(reads).not.toContain("/api/v1/onboarding");
+    },
+  );
 
   it("commits the organization name per field on blur (DES-017)", async () => {
     const user = userEvent.setup();
@@ -242,5 +254,199 @@ describe("the settings destination (#62)", () => {
     await user.click(await screen.findByRole("option", { name: /Europe\/Berlin/ }));
 
     await waitFor(() => expect(patches).toEqual([{ defaultTimezone: "Europe/Berlin" }]));
+  });
+});
+
+describe("the setup checklist (#701)", () => {
+  it("lists outstanding steps above Organization using their Settings addresses", async () => {
+    stubApi({
+      signedIn: ADMIN,
+      onboarding: {
+        completed: true,
+        steps: {
+          organization: false,
+          portal: false,
+          email: false,
+          invites: false,
+          "e-signature": false,
+          "ai-analysis": false,
+          review: false,
+        },
+      },
+      extra: captureGeneralPatches([]),
+    });
+    renderAt("/settings/general");
+
+    await screen.findByRole("heading", { name: "Setup checklist" });
+    const rail = screen.getByRole("navigation", { name: "Settings sections" });
+    const headings = screen
+      .getAllByRole("heading", { level: 2 })
+      .filter((heading) => !rail.contains(heading));
+    expect(headings.map((heading) => heading.textContent)).toEqual([
+      "Setup checklist",
+      "Organization",
+    ]);
+    const list = screen.getByRole("list", { name: "Outstanding setup steps" });
+    expect(within(list).getAllByRole("listitem")).toHaveLength(7);
+    for (const [name, path] of [
+      ["Organization", "/settings/general"],
+      ["Business-user portal", "/settings/authentication"],
+      ["Invite your team", "/settings/users"],
+      ["E-signature", "/settings/integrations/e-signature"],
+      ["AI analysis", "/settings/ai-analysis"],
+    ]) {
+      expect(within(list).getByRole("link", { name })).toHaveAttribute("href", path);
+    }
+    expect(within(list).getAllByRole("link")).toHaveLength(5);
+    for (const name of ["Email", "Review seeded types"]) {
+      expect(within(list).getByText(name)).toBeVisible();
+      expect(within(list).queryByRole("link", { name })).not.toBeInTheDocument();
+    }
+    // Review alone carries its own action: no pane finishes it.
+    expect(within(list).getAllByRole("button")).toHaveLength(1);
+    expect(within(list).getByRole("button", { name: "Mark as reviewed" })).toBeVisible();
+    expect(within(list).queryByText("Authentication")).not.toBeInTheDocument();
+    expect(within(list).queryByText("Welcome")).not.toBeInTheDocument();
+  });
+
+  it("omits configured steps, including email configured by the environment", async () => {
+    stubApi({
+      signedIn: ADMIN,
+      onboarding: { completed: true, steps: { "ai-analysis": false, email: true } },
+      extra: captureGeneralPatches([]),
+    });
+    renderAt("/settings/general");
+
+    const list = await screen.findByRole("list", { name: "Outstanding setup steps" });
+    expect(within(list).getAllByRole("listitem")).toHaveLength(1);
+    expect(within(list).getByRole("link", { name: "AI analysis" })).toBeVisible();
+    expect(within(list).queryByText("Email")).not.toBeInTheDocument();
+  });
+
+  it("renders no card when every step is done", async () => {
+    stubApi({ signedIn: ADMIN, extra: captureGeneralPatches([]) });
+    renderAt("/settings/general");
+
+    await screen.findByLabelText("Organization name");
+    expect(screen.queryByRole("heading", { name: "Setup checklist" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("list", { name: "Outstanding setup steps" })).not.toBeInTheDocument();
+    expect(
+      screen
+        .getAllByRole("heading", { level: 2 })
+        .filter(
+          (heading) =>
+            !screen.getByRole("navigation", { name: "Settings sections" }).contains(heading),
+        )
+        .map((heading) => heading.textContent),
+    ).toEqual(["Organization"]);
+  });
+
+  it("drops Organization immediately after its name is saved in General", async () => {
+    const user = userEvent.setup();
+    const onboarding = { completed: true, steps: { organization: false, "ai-analysis": false } };
+    const general = { ...GENERAL, name: "" };
+    stubApi({
+      signedIn: ADMIN,
+      onboarding,
+      extra: (call) => {
+        if (call.url.pathname !== "/api/v1/org/general") return undefined;
+        if (call.method === "PATCH") {
+          Object.assign(general, call.body);
+          onboarding.steps.organization = true;
+        }
+        return json(200, { general });
+      },
+    });
+    renderAt("/settings/general");
+
+    const list = await screen.findByRole("list", { name: "Outstanding setup steps" });
+    expect(within(list).getByRole("link", { name: "Organization" })).toBeVisible();
+    await user.type(screen.getByLabelText("Organization name"), "Acme Holdings");
+    await user.tab();
+
+    await waitFor(() =>
+      expect(within(list).queryByRole("link", { name: "Organization" })).not.toBeInTheDocument(),
+    );
+    expect(within(list).getByRole("link", { name: "AI analysis" })).toBeVisible();
+    expect(screen.getByLabelText("Organization name")).toHaveValue("Acme Holdings");
+  });
+
+  it("removes the whole card after the last outstanding step is saved", async () => {
+    const user = userEvent.setup();
+    const onboarding = { completed: true, steps: { organization: false } };
+    const general = { ...GENERAL, name: "" };
+    stubApi({
+      signedIn: ADMIN,
+      onboarding,
+      extra: (call) => {
+        if (call.url.pathname !== "/api/v1/org/general") return undefined;
+        if (call.method === "PATCH") {
+          Object.assign(general, call.body);
+          onboarding.steps.organization = true;
+        }
+        return json(200, { general });
+      },
+    });
+    renderAt("/settings/general");
+
+    await screen.findByRole("heading", { name: "Setup checklist" });
+    await user.type(screen.getByLabelText("Organization name"), "Acme Holdings");
+    await user.tab();
+
+    await waitFor(() =>
+      expect(screen.queryByRole("heading", { name: "Setup checklist" })).not.toBeInTheDocument(),
+    );
+    expect(screen.queryByRole("list", { name: "Outstanding setup steps" })).not.toBeInTheDocument();
+  });
+
+  it("drops Review once it is marked reviewed from the card", async () => {
+    const user = userEvent.setup();
+    const onboarding = { completed: true, steps: { review: false, "ai-analysis": false } };
+    const writes: string[] = [];
+    stubApi({
+      signedIn: ADMIN,
+      onboarding,
+      extra: (call) => {
+        if (call.url.pathname === "/api/v1/onboarding/reviewed" && call.method === "POST") {
+          writes.push(call.url.pathname);
+          onboarding.steps.review = true;
+          return json(200, { completed: true, steps: {} });
+        }
+        return captureGeneralPatches([])(call);
+      },
+    });
+    renderAt("/settings/general");
+
+    const list = await screen.findByRole("list", { name: "Outstanding setup steps" });
+    expect(within(list).getByText("Review seeded types")).toBeVisible();
+    await user.click(within(list).getByRole("button", { name: "Mark as reviewed" }));
+
+    await waitFor(() =>
+      expect(within(list).queryByText("Review seeded types")).not.toBeInTheDocument(),
+    );
+    expect(writes).toEqual(["/api/v1/onboarding/reviewed"]);
+    expect(within(list).getByRole("link", { name: "AI analysis" })).toBeVisible();
+  });
+
+  it("keeps Review on the card and shows the refusal when the mark fails", async () => {
+    const user = userEvent.setup();
+    stubApi({
+      signedIn: ADMIN,
+      onboarding: { completed: true, steps: { review: false } },
+      extra: (call) => {
+        if (call.url.pathname === "/api/v1/onboarding/reviewed" && call.method === "POST") {
+          return problem(503, "Review could not be saved. Try again.");
+        }
+        return captureGeneralPatches([])(call);
+      },
+    });
+    renderAt("/settings/general");
+
+    const list = await screen.findByRole("list", { name: "Outstanding setup steps" });
+    await user.click(within(list).getByRole("button", { name: "Mark as reviewed" }));
+
+    expect(await within(list).findByText("Review could not be saved. Try again.")).toBeVisible();
+    expect(within(list).getByText("Review seeded types")).toBeVisible();
+    expect(within(list).getByRole("button", { name: "Mark as reviewed" })).toBeEnabled();
   });
 });
