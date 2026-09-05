@@ -1807,7 +1807,7 @@ export function WelcomePage() {
                     <CardDescription>
                       <FormattedMessage
                         id="welcome.aiAnalysis.hint"
-                        defaultMessage="Optional. Connect your own AI provider and an Analysis run reads a Contract's executed Document for you, filling its Fields and flagging what is unusual. Skip it and Contract analysis does not run. Every Field you would have got automatically stays manual, and nothing else is lost. Contract text reaches your provider only while an Analysis run is working."
+                        defaultMessage="Optional. Connect your own AI provider and an Analysis run reads a Contract's primary Document for you and fills its Fields, each marked Unverified until a person confirms it. Skip it and Contract analysis does not run. Every Field you would have got automatically stays manual, and nothing else is lost. Contract text reaches your provider only while an Analysis run is working."
                       />
                     </CardDescription>
 
