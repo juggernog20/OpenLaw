@@ -105,6 +105,67 @@ test.describe("accessibility floor", () => {
     await reportAxeViolations(page, testInfo, "login");
   });
 
+  test("E-signature onboarding step: clean axe scan", async ({ page, request }, testInfo) => {
+    await ensureAdminExists(request);
+    await signInAs(page, ADMIN.email, ADMIN.password, ADMIN.displayName);
+
+    // The shared E2E instance is already onboarded. Reopen only this
+    // browser's read of the wizard and pin the connector to the
+    // blank-start answer, so the scan always covers every credential
+    // control without changing persistent instance state.
+    await page.route("**/api/v1/onboarding", async (route) => {
+      if (route.request().method() !== "GET") {
+        await route.continue();
+        return;
+      }
+      const response = await route.fetch();
+      const status = (await response.json()) as Record<string, unknown>;
+      await route.fulfill({ response, json: { ...status, completed: false } });
+    });
+    await page.route("**/api/v1/signing-connectors/docusign", async (route) => {
+      if (route.request().method() !== "GET") {
+        await route.continue();
+        return;
+      }
+      await route.fulfill({
+        status: 200,
+        json: {
+          connector: {
+            provider: "docusign",
+            configured: false,
+            enabled: false,
+            disabledAt: null,
+            environment: null,
+            integrationKey: null,
+            apiUserId: null,
+            hasPrivateKey: false,
+            hasWebhookSecret: false,
+            webhookUrl: "http://localhost:3000/api/v1/signing/docusign/webhook",
+            updatedAt: null,
+          },
+        },
+      });
+    });
+
+    await page.goto("/welcome");
+    await page.getByRole("button", { name: "Get started" }).click();
+    for (const heading of [
+      "Authentication",
+      "Business-user portal",
+      "Outbound email",
+      "Invite your team",
+      "E-signature",
+    ]) {
+      await page.getByRole("button", { name: "Set up later" }).click();
+      await expect(page.getByRole("heading", { name: heading })).toBeVisible();
+    }
+
+    await expect(page.getByRole("region", { name: "E-signature" })).toBeVisible();
+    expect(
+      await reportAxeViolations(page, testInfo, "welcome-e-signature", { include: "main" }),
+    ).toEqual([]);
+  });
+
   test("populated Home: axe scan and title", async ({ page, request }, testInfo) => {
     await ensureAdminExists(request);
     await signInAs(page, ADMIN.email, ADMIN.password, ADMIN.displayName);
