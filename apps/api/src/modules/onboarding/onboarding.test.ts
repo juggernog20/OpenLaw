@@ -11,6 +11,8 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { aiConnector, orgSettings, signingConnectors } from "@openlaw/db";
 import { ONBOARDING_STEPS, type OnboardingStatus } from "./routes.js";
+import { NO_PERMISSION } from "../../auth/guards.js";
+import { PROBLEM_CONTENT_TYPE, UNNAMED_PROBLEM_TYPE } from "../../lib/problem.js";
 import {
   settingsAuditRows,
   signInCookies,
@@ -365,6 +367,15 @@ describe("onboarding state (GET /api/v1/onboarding, POST /api/v1/onboarding/comp
         cookies,
       });
       expect(response.statusCode, response.body).toBe(code);
+      expect(response.headers["content-type"]).toBe(PROBLEM_CONTENT_TYPE);
+      const detail = code === 401 ? "Authentication required." : NO_PERMISSION;
+      expect(response.json()).toMatchObject({
+        type: UNNAMED_PROBLEM_TYPE,
+        status: code,
+        title: detail,
+        detail,
+        instance: "/api/v1/onboarding/reviewed",
+      });
     }
     expect(await harness.db.select().from(orgSettings)).toEqual(before);
   });
@@ -402,8 +413,13 @@ describe("onboarding state (GET /api/v1/onboarding, POST /api/v1/onboarding/comp
       cookies: adminCookies,
     });
     expect(completed.json()).toMatchObject({ completed: true, steps: { review: { done: true } } });
-    await mark();
-    expect((await status(adminCookies)).steps.review.done).toBe(true);
+    const markedAfterCompletion = await mark();
+    expect(markedAfterCompletion.statusCode, markedAfterCompletion.body).toBe(200);
+    expect(markedAfterCompletion.json()).toMatchObject({ completed: true });
+    expect(await status(adminCookies)).toMatchObject({
+      completed: true,
+      steps: { review: { done: true } },
+    });
   });
 });
 
