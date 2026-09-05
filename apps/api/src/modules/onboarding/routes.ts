@@ -71,7 +71,7 @@ const StepSchema = z.object({
   settingsPath: z.string().nullable(),
 });
 
-const StatusSchema = z.object({
+export const StatusSchema = z.object({
   /**
    * Whether the wizard has been finished or skipped out of. The
    * `/welcome` guard and the home redirect both branch on this before

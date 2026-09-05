@@ -238,7 +238,7 @@ describe("welcome wizard organization step (#697)", () => {
 
     await user.click(await screen.findByRole("button", { name: "Get started" }));
     expect(await screen.findByRole("heading", { name: "Your organization" })).toBeInTheDocument();
-    // Eight steps now, and this is the one after the splash.
+    // Nine steps now, and this is the one after the splash.
     expect(screen.getByText("Step 2 of 9")).toBeInTheDocument();
     // The step's fields are one region, named by the step's heading.
     expect(screen.getByRole("region", { name: "Your organization" })).toBeInTheDocument();

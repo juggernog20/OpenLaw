@@ -10,7 +10,7 @@
 
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { aiConnector, orgSettings, signingConnectors } from "@openlaw/db";
-import { ONBOARDING_STEPS, type OnboardingStatus } from "./routes.js";
+import { ONBOARDING_STEPS, StatusSchema, type OnboardingStatus } from "./routes.js";
 import { NO_PERMISSION } from "../../auth/guards.js";
 import { PROBLEM_CONTENT_TYPE, UNNAMED_PROBLEM_TYPE } from "../../lib/problem.js";
 import {
@@ -106,7 +106,7 @@ async function status(cookies: Record<string, string>): Promise<OnboardingStatus
     cookies,
   });
   expect(res.statusCode, res.body).toBe(200);
-  return res.json() as OnboardingStatus;
+  return StatusSchema.parse(res.json());
 }
 
 /** One field of every step, keyed by step. Both derivation assertions
@@ -392,9 +392,15 @@ describe("onboarding state (GET /api/v1/onboarding, POST /api/v1/onboarding/comp
         url: "/api/v1/onboarding/reviewed",
         cookies: adminCookies,
       });
-    const first = await mark();
-    expect(first.statusCode, first.body).toBe(200);
-    expect(first.json()).toMatchObject({ completed: false, steps: { review: { done: true } } });
+    // Both first marks start while the column is still NULL, so the
+    // route's `WHERE onboarding_reviewed_types_at IS NULL` guard is what
+    // decides which write lands; a sequential first call would only
+    // prove idempotency, never the first-write race.
+    const firsts = await Promise.all([mark(), mark()]);
+    for (const first of firsts) {
+      expect(first.statusCode, first.body).toBe(200);
+      expect(first.json()).toMatchObject({ completed: false, steps: { review: { done: true } } });
+    }
     const [after] = await harness.db.select().from(orgSettings);
     expect(after?.onboardingReviewedTypesAt).toBeInstanceOf(Date);
     expect(after).toEqual({
@@ -402,8 +408,8 @@ describe("onboarding state (GET /api/v1/onboarding, POST /api/v1/onboarding/comp
       onboardingReviewedTypesAt: expect.any(Date),
       updatedAt: expect.any(Date),
     });
-    const repeats = await Promise.all([mark(), mark()]);
-    for (const repeat of repeats) expect(repeat.statusCode, repeat.body).toBe(200);
+    const repeat = await mark();
+    expect(repeat.statusCode, repeat.body).toBe(200);
     expect(await harness.db.select().from(orgSettings)).toEqual([after]);
     expect(await settingsAuditRows(harness.db)).toEqual(auditBefore);
     expect((await status(adminCookies)).steps.review.done).toBe(true);

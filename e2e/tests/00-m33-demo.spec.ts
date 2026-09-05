@@ -106,8 +106,10 @@ test("M33: the first run leaves a named, populated system and skipped steps in S
   const cleanup = async () => {
     try {
       if (createdConnector) {
+        // 404 when the save never landed: the failure that stopped the
+        // save is the one to surface, not a cleanup of nothing.
         const removed = await page.request.delete("/api/v1/ai-connector");
-        expect(removed.status(), await removed.text()).toBe(200);
+        expect([200, 404], await removed.text()).toContain(removed.status());
       }
     } finally {
       if (fresh) await ensureMemberInert(page.request, inviteEmail);

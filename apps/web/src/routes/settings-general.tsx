@@ -45,6 +45,18 @@ type OnboardingSteps =
   paths["/api/v1/onboarding"]["get"]["responses"]["200"]["content"]["application/json"]["steps"];
 
 // Welcome configures nothing; built-in authentication is already configured.
+/** The card's rows, in order. `SETUP_LABELS` must satisfy this list and the
+ * API contract at once, so a step missing from either fails the build. */
+const SETUP_STEPS = [
+  "organization",
+  "portal",
+  "email",
+  "invites",
+  "e-signature",
+  "ai-analysis",
+  "review",
+] as const satisfies readonly Exclude<keyof OnboardingSteps, "authentication">[];
+
 const SETUP_LABELS = defineMessages({
   organization: { id: "settings.setup.organization", defaultMessage: "Organization" },
   portal: { id: "settings.setup.portal", defaultMessage: "Business-user portal" },
@@ -53,19 +65,15 @@ const SETUP_LABELS = defineMessages({
   "e-signature": { id: "settings.setup.eSignature", defaultMessage: "E-signature" },
   "ai-analysis": { id: "settings.setup.aiAnalysis", defaultMessage: "AI analysis" },
   review: { id: "settings.setup.review", defaultMessage: "Review seeded types" },
-} satisfies Record<
-  Exclude<keyof OnboardingSteps, "authentication">,
-  { id: string; defaultMessage: string }
->);
+} satisfies Record<(typeof SETUP_STEPS)[number], { id: string; defaultMessage: string }> &
+  Record<Exclude<keyof OnboardingSteps, "authentication">, { id: string; defaultMessage: string }>);
 
 function SetupChecklist({ steps }: { steps: OnboardingSteps }) {
   const intl = useIntl();
   const revalidator = useRevalidator();
   const [reviewStatus, setReviewStatus] = useState<FieldStatus>("idle");
   const [reviewDetail, setReviewDetail] = useState<string | undefined>();
-  const outstanding = (Object.keys(SETUP_LABELS) as (keyof typeof SETUP_LABELS)[]).filter(
-    (step) => !steps[step].done,
-  );
+  const outstanding = SETUP_STEPS.filter((step) => !steps[step].done);
   if (outstanding.length === 0) return null;
 
   // Review has no pane and no setting behind it: only its own mark

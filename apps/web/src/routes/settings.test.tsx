@@ -12,7 +12,14 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { json, problem, renderAt, stubApi, type StubCall } from "../testing/helpers";
+import {
+  json,
+  onboardingEnvelope,
+  problem,
+  renderAt,
+  stubApi,
+  type StubCall,
+} from "../testing/helpers";
 
 const MEMBER = {
   id: "u2",
@@ -410,7 +417,7 @@ describe("the setup checklist (#701)", () => {
         if (call.url.pathname === "/api/v1/onboarding/reviewed" && call.method === "POST") {
           writes.push(call.url.pathname);
           onboarding.steps.review = true;
-          return json(200, { completed: true, steps: {} });
+          return json(200, onboardingEnvelope(onboarding));
         }
         return captureGeneralPatches([])(call);
       },

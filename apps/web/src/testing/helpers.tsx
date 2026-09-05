@@ -337,6 +337,21 @@ export interface ApiState {
   extra?: (call: StubCall) => StubAnswer;
 }
 
+/** The `GET /api/v1/onboarding` envelope a fixture expands to. The
+ * reviewed-mark route answers this same shape, so a stub for it should
+ * answer this too rather than an empty `steps` object. */
+export function onboardingEnvelope(onboarding: NonNullable<ApiState["onboarding"]>) {
+  return {
+    completed: onboarding.completed,
+    steps: Object.fromEntries(
+      ONBOARDING_STEPS.map((step) => [
+        step,
+        { done: onboarding.steps?.[step] ?? true, settingsPath: ONBOARDING_SETTINGS_PATHS[step] },
+      ]),
+    ),
+  };
+}
+
 export function stubApi(state: ApiState) {
   return stubFetch((call) => {
     const fromExtra = state.extra?.(call);
@@ -640,21 +655,7 @@ export function stubApi(state: ApiState) {
       return json(200, { folders: [] });
     }
     if (call.url.pathname === "/api/v1/onboarding" && call.method === "GET") {
-      const onboarding: NonNullable<ApiState["onboarding"]> = state.onboarding ?? {
-        completed: true,
-      };
-      return json(200, {
-        completed: onboarding.completed,
-        steps: Object.fromEntries(
-          ONBOARDING_STEPS.map((step) => [
-            step,
-            {
-              done: onboarding.steps?.[step] ?? true,
-              settingsPath: ONBOARDING_SETTINGS_PATHS[step],
-            },
-          ]),
-        ),
-      });
+      return json(200, onboardingEnvelope(state.onboarding ?? { completed: true }));
     }
     // Review reads these catalogues on arrival, including after first-run setup.
     if (call.method === "GET") {
