@@ -7469,6 +7469,33 @@
   "settings.section.users": {
     "defaultMessage": "Users"
   },
+  "settings.setup.aiAnalysis": {
+    "defaultMessage": "AI analysis"
+  },
+  "settings.setup.eSignature": {
+    "defaultMessage": "E-signature"
+  },
+  "settings.setup.email": {
+    "defaultMessage": "Email"
+  },
+  "settings.setup.invites": {
+    "defaultMessage": "Invite your team"
+  },
+  "settings.setup.organization": {
+    "defaultMessage": "Organization"
+  },
+  "settings.setup.outstanding": {
+    "defaultMessage": "Outstanding setup steps"
+  },
+  "settings.setup.portal": {
+    "defaultMessage": "Business-user portal"
+  },
+  "settings.setup.review": {
+    "defaultMessage": "Review seeded types"
+  },
+  "settings.setup.title": {
+    "defaultMessage": "Setup checklist"
+  },
   "settings.title": {
     "defaultMessage": "Settings"
   },

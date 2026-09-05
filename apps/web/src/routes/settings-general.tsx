@@ -11,8 +11,9 @@
  */
 
 import { useRef, useState } from "react";
-import { redirect, useLoaderData } from "react-router";
-import { FormattedMessage, useIntl } from "react-intl";
+import { Link, redirect, useLoaderData, useRevalidator } from "react-router";
+import { defineMessages, FormattedMessage, useIntl } from "react-intl";
+import type { paths } from "@openlaw/api-client";
 import { api } from "../lib/api";
 import { problem, type ProblemResult } from "../lib/problem";
 import { requireUser } from "../lib/session";
@@ -27,9 +28,71 @@ import { Label } from "../components/ui/label";
 export async function settingsGeneralLoader() {
   const user = await requireUser();
   if (user.role !== "administrator") return redirect("/settings/profile");
-  const { data } = await api.GET("/api/v1/org/general");
-  if (!data) throw new Error("The organization settings could not be read.");
-  return { general: data.general };
+  const [general, onboarding] = await Promise.all([
+    api.GET("/api/v1/org/general"),
+    api.GET("/api/v1/onboarding"),
+  ]);
+  if (!general.data) throw new Error("The organization settings could not be read.");
+  if (!onboarding.data) throw new Error("The setup checklist could not be read.");
+  return { general: general.data.general, onboarding: onboarding.data };
+}
+
+type OnboardingSteps =
+  paths["/api/v1/onboarding"]["get"]["responses"]["200"]["content"]["application/json"]["steps"];
+
+// Welcome configures nothing; built-in authentication is already configured.
+const SETUP_LABELS = defineMessages({
+  organization: { id: "settings.setup.organization", defaultMessage: "Organization" },
+  portal: { id: "settings.setup.portal", defaultMessage: "Business-user portal" },
+  email: { id: "settings.setup.email", defaultMessage: "Email" },
+  invites: { id: "settings.setup.invites", defaultMessage: "Invite your team" },
+  "e-signature": { id: "settings.setup.eSignature", defaultMessage: "E-signature" },
+  "ai-analysis": { id: "settings.setup.aiAnalysis", defaultMessage: "AI analysis" },
+  review: { id: "settings.setup.review", defaultMessage: "Review seeded types" },
+} satisfies Record<
+  Exclude<keyof OnboardingSteps, "authentication">,
+  { id: string; defaultMessage: string }
+>);
+
+function SetupChecklist({ steps }: Readonly<{ steps: OnboardingSteps }>) {
+  const intl = useIntl();
+  const outstanding = (Object.keys(SETUP_LABELS) as (keyof typeof SETUP_LABELS)[]).filter(
+    (step) => !steps[step].done,
+  );
+  if (outstanding.length === 0) return null;
+
+  return (
+    <SettingsCard
+      title={<FormattedMessage id="settings.setup.title" defaultMessage="Setup checklist" />}
+    >
+      <ul
+        aria-label={intl.formatMessage({
+          id: "settings.setup.outstanding",
+          defaultMessage: "Outstanding setup steps",
+        })}
+        className="flex flex-col gap-3 text-sm text-primary"
+      >
+        {outstanding.map((step) => {
+          const { settingsPath } = steps[step];
+          const label = intl.formatMessage(SETUP_LABELS[step]);
+          return (
+            <li key={step}>
+              {settingsPath === null ? (
+                label
+              ) : (
+                <Link
+                  to={settingsPath}
+                  className="rounded-button text-link underline underline-offset-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-link"
+                >
+                  {label}
+                </Link>
+              )}
+            </li>
+          );
+        })}
+      </ul>
+    </SettingsCard>
+  );
 }
 
 /** The GET/PATCH /org/general envelope's payload, as the client sees it. */
@@ -60,8 +123,9 @@ const selectClassName =
   "h-8 w-80 max-w-full rounded-button border border-border-default bg-raised px-2 text-sm text-primary focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-link disabled:pointer-events-none disabled:opacity-50";
 
 export function SettingsGeneralPage() {
-  const { general } = useLoaderData<typeof settingsGeneralLoader>();
+  const { general, onboarding } = useLoaderData<typeof settingsGeneralLoader>();
   const intl = useIntl();
+  const revalidator = useRevalidator();
 
   const [saved, setSaved] = useState<General>(general);
   const [nameDraft, setNameDraft] = useState(saved.name);
@@ -82,7 +146,10 @@ export function SettingsGeneralPage() {
   async function commit(field: keyof General, body: Parameters<typeof patchGeneral>[0]) {
     setStatus((s) => ({ ...s, [field]: "saving" }));
     const { data: next, detail: message } = await patchGeneral(body);
-    if (next) setSaved(next);
+    if (next) {
+      setSaved(next);
+      void revalidator.revalidate();
+    }
     setStatus((s) => ({ ...s, [field]: next ? "saved" : "error" }));
     setDetail((s) => ({ ...s, [field]: next ? undefined : message }));
     return next;
@@ -117,6 +184,7 @@ export function SettingsGeneralPage() {
       <PageTitle
         title={intl.formatMessage({ id: "settings.section.general", defaultMessage: "General" })}
       />
+      <SetupChecklist steps={onboarding.steps} />
       <SettingsCard
         title={
           <FormattedMessage id="settings.general.organization" defaultMessage="Organization" />
