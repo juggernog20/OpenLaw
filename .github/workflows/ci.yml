@@ -101,7 +101,7 @@ jobs:
         run: docker compose -f compose.yml -f compose.dev.yml build
 
       # Fresh volumes by construction — the runner has none. The suite's
-      # bootstrap probe takes the fresh-instance path via first-run setup.
+      # M33 demo takes first-run setup; the bootstrap probe follows it warm.
       - name: Start the stack
         run: docker compose -f compose.yml -f compose.dev.yml up -d
 
