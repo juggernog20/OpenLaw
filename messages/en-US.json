@@ -7910,6 +7910,30 @@
   "welcome.continue": {
     "defaultMessage": "Continue"
   },
+  "welcome.eSignature.address": {
+    "defaultMessage": "This connector lives at Settings → Organization → Integrations → E-signature. Set it up there whenever you like."
+  },
+  "welcome.eSignature.configured": {
+    "defaultMessage": "DocuSign is connected in the {environment, select, production {production} other {demo}} environment, as integration key {integrationKey}."
+  },
+  "welcome.eSignature.configured.disabled": {
+    "defaultMessage": "DocuSign is configured in the {environment, select, production {production} other {demo}} environment, as integration key {integrationKey}, but sending from records is turned off. Contracts use the manual hand-off until it is turned back on."
+  },
+  "welcome.eSignature.error.incomplete": {
+    "defaultMessage": "Enter the integration key and the user ID from your DocuSign integration, or choose Set up later."
+  },
+  "welcome.eSignature.error.save": {
+    "defaultMessage": "The e-signature connector could not be saved."
+  },
+  "welcome.eSignature.hint": {
+    "defaultMessage": "Optional. Connect DocuSign and contracts are sent for signature from their own records. Skip it and nothing else is lost. The manual hand-off stays the path, so you send the paper yourself, then upload the executed PDF and pin it to the record."
+  },
+  "welcome.eSignature.replace": {
+    "defaultMessage": "Replace credentials"
+  },
+  "welcome.eSignature.replace.cancel": {
+    "defaultMessage": "Keep current credentials"
+  },
   "welcome.email.app": {
     "defaultMessage": "Outbound email is set in the app. Mail is sent from {from}."
   },
@@ -8059,6 +8083,9 @@
   },
   "welcome.step.authentication": {
     "defaultMessage": "Authentication"
+  },
+  "welcome.step.eSignature": {
+    "defaultMessage": "E-signature"
   },
   "welcome.step.email": {
     "defaultMessage": "Outbound email"

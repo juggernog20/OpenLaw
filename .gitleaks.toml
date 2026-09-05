@@ -26,8 +26,16 @@ description = "Fixture values that look like credentials and are not"
 # apps/api/src/modules/onboarding/onboarding.test.ts, where the
 # wizard's e-signature step reads whether a connector row exists and
 # a connector row has to hold something key-shaped to be one.
+#
+# A bare PEM header typed into a key box by a web route test: the
+# default private-key rule reads from one header to the next and calls
+# everything between them a key, so two such lines in one file are read
+# as one long secret. The header is followed here by the close of the
+# `user.type()` call that typed it, which is why the pattern ends in
+# `");` — a real key carries base64 there, never a string terminator.
 regexes = [
   '''bm90LWEtcmVhbC1rZXk=''',
   '''openlawfixturekeyneverused''',
   '''openlawonboardingfixturekey''',
+  '''-----BEGIN RSA PRIVATE KEY-----"\);''',
 ]

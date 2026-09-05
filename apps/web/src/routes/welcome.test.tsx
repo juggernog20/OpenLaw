@@ -5,7 +5,8 @@
  * Administrator is routed in from home, non-admins and completed
  * instances never see it, and each step saves on Continue through the
  * route its own Settings pane uses: the organization's identity through
- * the General pane's route (#697), the allowlist through the portal's.
+ * the General pane's route (#697), the allowlist through the portal's,
+ * the DocuSign connector through the Integrations pane's (#698).
  */
 
 import { describe, expect, it, vi } from "vitest";
@@ -89,6 +90,64 @@ async function goToEmailStep(user: ReturnType<typeof userEvent.setup>) {
   expect(await screen.findByRole("heading", { name: "Outbound email" })).toBeInTheDocument();
 }
 
+/** Clicks on to the last step. Email and invites pass through
+ * unchanged, so neither sends a request. */
+async function goToESignatureStep(user: ReturnType<typeof userEvent.setup>) {
+  await goToEmailStep(user);
+  await user.click(screen.getByRole("button", { name: "Continue" }));
+  await user.click(screen.getByRole("button", { name: "Continue" }));
+  expect(await screen.findByRole("heading", { name: "E-signature" })).toBeInTheDocument();
+}
+
+/** What the wizard sent on its last step, and whether it finished. */
+interface SigningCalls {
+  saves: unknown[];
+  completed: number;
+}
+
+/** Answers the connector's save and the completion the last step ends
+ * on, so a walk to the end never reaches an unstubbed route. */
+function signingWizardExtra(calls: SigningCalls, save?: () => Response) {
+  return (call: StubCall) => {
+    const handled = emailWizardExtra()(call);
+    if (handled) return handled;
+    if (call.url.pathname === "/api/v1/signing-connectors/docusign" && call.method === "PUT") {
+      calls.saves.push(call.body);
+      if (save) return save();
+      const body = call.body as Record<string, string>;
+      return json(200, {
+        connector: {
+          provider: "docusign",
+          configured: true,
+          enabled: true,
+          disabledAt: null,
+          environment: body.environment,
+          integrationKey: body.integrationKey,
+          apiUserId: body.apiUserId,
+          hasPrivateKey: true,
+          hasWebhookSecret: true,
+          webhookUrl: "http://localhost:3000/api/v1/signing/docusign/webhook",
+          updatedAt: "2026-09-05T09:00:00.000Z",
+        },
+      });
+    }
+    if (call.url.pathname === "/api/v1/onboarding/complete" && call.method === "POST") {
+      calls.completed += 1;
+      return json(200, { completed: true, steps: {} });
+    }
+    // A finished wizard answers as finished, so the navigation home
+    // lands on home instead of bouncing back into the flow.
+    if (
+      call.url.pathname === "/api/v1/onboarding" &&
+      call.method === "GET" &&
+      calls.completed > 0
+    ) {
+      return json(200, { completed: true, steps: {} });
+    }
+    return undefined;
+  };
+}
+
 describe("welcome wizard guard", () => {
   it("routes an un-onboarded Administrator from home into the wizard", async () => {
     stubApi({
@@ -159,8 +218,8 @@ describe("welcome wizard organization step (#697)", () => {
 
     await user.click(await screen.findByRole("button", { name: "Get started" }));
     expect(await screen.findByRole("heading", { name: "Your organization" })).toBeInTheDocument();
-    // Six steps now, and this is the one after the splash.
-    expect(screen.getByText("Step 2 of 6")).toBeInTheDocument();
+    // Seven steps now, and this is the one after the splash.
+    expect(screen.getByText("Step 2 of 7")).toBeInTheDocument();
     // The step's fields are one region, named by the step's heading.
     expect(screen.getByRole("region", { name: "Your organization" })).toBeInTheDocument();
 
@@ -446,5 +505,240 @@ describe("welcome wizard email step (#37)", () => {
     // Back on the setup form, warned that mail cannot be delivered.
     expect(screen.getByText(/Outbound email is not set up/)).toBeInTheDocument();
     expect(screen.getByLabelText("SMTP relay URL")).toBeInTheDocument();
+  });
+});
+
+describe("welcome wizard e-signature step (#698)", () => {
+  it("comes after invites and says what an install without a connector does", async () => {
+    const calls: SigningCalls = { saves: [], completed: 0 };
+    stubApi({
+      signedIn: ADMIN,
+      onboarding: { completed: false },
+      extra: signingWizardExtra(calls),
+    });
+    renderAt("/welcome");
+    const user = userEvent.setup();
+
+    await user.click(await screen.findByRole("button", { name: "Get started" }));
+    await user.click(await screen.findByRole("button", { name: "Continue" }));
+    await user.click(screen.getByRole("button", { name: "Continue" }));
+    await user.click(screen.getByRole("button", { name: "Continue" }));
+    await user.click(screen.getByRole("button", { name: "Continue" }));
+    expect(await screen.findByRole("heading", { name: "Invite your team" })).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Continue" }));
+
+    expect(await screen.findByRole("heading", { name: "E-signature" })).toBeInTheDocument();
+    expect(screen.getByText("Step 7 of 7")).toBeInTheDocument();
+    // The step's fields are one region, named by the step's heading.
+    expect(screen.getByRole("region", { name: "E-signature" })).toBeInTheDocument();
+    // Optional, and what an install without a connector does instead.
+    expect(screen.getByText(/Optional/)).toBeInTheDocument();
+    expect(screen.getByText(/manual hand-off stays the path/)).toBeInTheDocument();
+    // And where it is finished after the first run.
+    expect(
+      screen.getByText(/Settings → Organization → Integrations → E-signature/),
+    ).toBeInTheDocument();
+    // The last step ends the wizard rather than offering another one.
+    expect(screen.getByRole("button", { name: "Finish" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Continue" })).not.toBeInTheDocument();
+  });
+
+  it("saves the connector through the pane's own route and finishes", async () => {
+    const calls: SigningCalls = { saves: [], completed: 0 };
+    stubApi({
+      signedIn: ADMIN,
+      onboarding: { completed: false },
+      extra: signingWizardExtra(calls),
+    });
+    renderAt("/welcome");
+    const user = userEvent.setup();
+    await goToESignatureStep(user);
+
+    await user.selectOptions(screen.getByLabelText("Environment"), "production");
+    await user.type(screen.getByLabelText("Integration key"), "the-integration-key");
+    await user.type(screen.getByLabelText("User ID"), "the-user-id");
+    await user.type(screen.getByLabelText("RSA private key"), "-----BEGIN RSA PRIVATE KEY-----");
+    await user.type(screen.getByLabelText("Connect HMAC secret"), "the-connect-secret");
+    await user.click(screen.getByRole("button", { name: "Finish" }));
+
+    expect(await screen.findByRole("heading", { name: "Home" })).toBeInTheDocument();
+    expect(calls.saves).toEqual([
+      {
+        environment: "production",
+        integrationKey: "the-integration-key",
+        apiUserId: "the-user-id",
+        privateKey: "-----BEGIN RSA PRIVATE KEY-----",
+        webhookSecret: "the-connect-secret",
+      },
+    ]);
+    expect(calls.completed).toBe(1);
+  });
+
+  it("renders a configured connector as configured, not as an empty form", async () => {
+    const calls: SigningCalls = { saves: [], completed: 0 };
+    stubApi({
+      signedIn: ADMIN,
+      onboarding: { completed: false },
+      signingConnector: {
+        environment: "production",
+        integrationKey: "the-integration-key",
+        apiUserId: "the-user-id",
+      },
+      extra: signingWizardExtra(calls),
+    });
+    renderAt("/welcome");
+    const user = userEvent.setup();
+    await goToESignatureStep(user);
+
+    expect(
+      screen.getByText(
+        /DocuSign is connected in the production environment, as integration key the-integration-key/,
+      ),
+    ).toBeInTheDocument();
+    // No credential is asked for twice.
+    expect(screen.queryByLabelText("RSA private key")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("Connect HMAC secret")).not.toBeInTheDocument();
+    // The address to paste into DocuSign Connect is here to be read.
+    expect(screen.getByLabelText("Webhook URL")).toHaveValue(
+      "http://localhost:3000/api/v1/signing/docusign/webhook",
+    );
+
+    await user.click(screen.getByRole("button", { name: "Finish" }));
+    expect(await screen.findByRole("heading", { name: "Home" })).toBeInTheDocument();
+    // Nothing changed, so nothing was rewritten.
+    expect(calls.saves).toEqual([]);
+  });
+
+  it("does not call a configured connector connected while it is turned off", async () => {
+    const calls: SigningCalls = { saves: [], completed: 0 };
+    stubApi({
+      signedIn: ADMIN,
+      onboarding: { completed: false },
+      signingConnector: {
+        environment: "production",
+        integrationKey: "the-integration-key",
+        apiUserId: "the-user-id",
+        enabled: false,
+        disabledAt: "2026-09-05T09:00:00.000Z",
+      },
+      extra: signingWizardExtra(calls),
+    });
+    renderAt("/welcome");
+    const user = userEvent.setup();
+    await goToESignatureStep(user);
+
+    expect(
+      screen.getByText(/DocuSign is configured in the production environment/),
+    ).toHaveTextContent("sending from records is turned off");
+    expect(screen.queryByText(/DocuSign is connected/)).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("RSA private key")).not.toBeInTheDocument();
+  });
+
+  it("rotates the estate without asking for either stored secret again", async () => {
+    const calls: SigningCalls = { saves: [], completed: 0 };
+    stubApi({
+      signedIn: ADMIN,
+      onboarding: { completed: false },
+      signingConnector: {
+        environment: "demo",
+        integrationKey: "the-old-key",
+        apiUserId: "the-user-id",
+      },
+      extra: signingWizardExtra(calls),
+    });
+    renderAt("/welcome");
+    const user = userEvent.setup();
+    await goToESignatureStep(user);
+
+    await user.click(screen.getByRole("button", { name: "Replace credentials" }));
+    // Both secret boxes open blank, and blank keeps what is stored.
+    expect(screen.getByLabelText("RSA private key")).toHaveValue("");
+    expect(screen.getByLabelText("Connect HMAC secret")).toHaveValue("");
+    expect(screen.getAllByText(/Leave blank to keep the current value/)).toHaveLength(2);
+
+    // The way back, so opening the form is not a one-way door.
+    await user.click(screen.getByRole("button", { name: "Keep current credentials" }));
+    expect(screen.getByText(/DocuSign is connected/)).toBeInTheDocument();
+    expect(screen.queryByLabelText("RSA private key")).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Replace credentials" }));
+    await user.clear(screen.getByLabelText("Integration key"));
+    await user.type(screen.getByLabelText("Integration key"), "the-new-key");
+    await user.click(screen.getByRole("button", { name: "Finish" }));
+
+    expect(await screen.findByRole("heading", { name: "Home" })).toBeInTheDocument();
+    // Neither secret is on the wire: the route keeps both.
+    expect(calls.saves).toEqual([
+      { environment: "demo", integrationKey: "the-new-key", apiUserId: "the-user-id" },
+    ]);
+  });
+
+  it("skips without touching the connector", async () => {
+    const calls: SigningCalls = { saves: [], completed: 0 };
+    stubApi({
+      signedIn: ADMIN,
+      onboarding: { completed: false },
+      extra: signingWizardExtra(calls),
+    });
+    renderAt("/welcome");
+    const user = userEvent.setup();
+    await goToESignatureStep(user);
+
+    await user.type(screen.getByLabelText("Integration key"), "the-integration-key");
+    await user.click(screen.getByRole("button", { name: "Set up later" }));
+
+    expect(await screen.findByRole("heading", { name: "Home" })).toBeInTheDocument();
+    expect(calls.saves).toEqual([]);
+    expect(calls.completed).toBe(1);
+  });
+
+  it("surfaces a save failure's plain-language reason and stays put", async () => {
+    const calls: SigningCalls = { saves: [], completed: 0 };
+    stubApi({
+      signedIn: ADMIN,
+      onboarding: { completed: false },
+      extra: signingWizardExtra(calls, () =>
+        problem(
+          400,
+          "Paste the DocuSign Connect HMAC secret. Without it this install would answer unsigned webhook deliveries.",
+        ),
+      ),
+    });
+    renderAt("/welcome");
+    const user = userEvent.setup();
+    await goToESignatureStep(user);
+
+    await user.type(screen.getByLabelText("Integration key"), "the-integration-key");
+    await user.type(screen.getByLabelText("User ID"), "the-user-id");
+    await user.type(screen.getByLabelText("RSA private key"), "-----BEGIN RSA PRIVATE KEY-----");
+    await user.click(screen.getByRole("button", { name: "Finish" }));
+
+    expect(await screen.findByText(/Paste the DocuSign Connect HMAC secret/)).toBeInTheDocument();
+    // Refused, so the wizard stays on the step and does not finish.
+    expect(screen.getByRole("heading", { name: "E-signature" })).toBeInTheDocument();
+    expect(calls.completed).toBe(0);
+  });
+
+  it("names the two fields the route would refuse in schema language", async () => {
+    const calls: SigningCalls = { saves: [], completed: 0 };
+    stubApi({
+      signedIn: ADMIN,
+      onboarding: { completed: false },
+      extra: signingWizardExtra(calls),
+    });
+    renderAt("/welcome");
+    const user = userEvent.setup();
+    await goToESignatureStep(user);
+
+    // A pasted key with no integration key names what is missing rather
+    // than sending a request the schema answers with "invalid".
+    await user.type(screen.getByLabelText("RSA private key"), "-----BEGIN RSA PRIVATE KEY-----");
+    await user.click(screen.getByRole("button", { name: "Finish" }));
+
+    expect(
+      await screen.findByText(/Enter the integration key and the user ID/),
+    ).toBeInTheDocument();
+    expect(calls.saves).toEqual([]);
+    expect(calls.completed).toBe(0);
   });
 });
