@@ -663,8 +663,9 @@ leaves a coherent product; none of them is optional in the sense that we intend 
 
 - [x] **M33 — The finished first run**
       _Demo:_ On a fresh install, the first Administrator is walked from sign-in to a configured, populated
-      system by the onboarding wizard alone — org identity, authentication, domains, email, invites, connectors, and the
-      seeded types reviewed — with every skipped step waiting on the Settings checklist card.
+      system by the onboarding wizard alone: org identity, authentication, domains, email, invites, and
+      the seeded types reviewed. E-signature and AI analysis are skipped in `/welcome` and wait on the
+      Settings checklist card; configuring AI analysis in its Settings pane removes that row.
   - The SET-004 wizard, completed: the auth, portal, email, and invite steps shipped with M2; the org
     identity, E-signature, AI analysis, and review-seeded-types steps land here, once the features behind them exist
   - Sits deliberately last-but-one: building these steps earlier would mean wizard steps for features

@@ -18,6 +18,8 @@ import {
 import { extractLink, waitForMailTo } from "./mailpit.js";
 
 const ORGANIZATION = "M33 Legal";
+const LOGO =
+  '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><path fill="#154e41" d="M0 0h32v32H0z"/></svg>';
 const STEP_LABELS = {
   organization: "Organization",
   authentication: "Authentication",
@@ -72,14 +74,18 @@ async function expectChecklist(page: Page, status: z.infer<typeof Status>) {
   await expect(list.getByRole("listitem")).toHaveCount(outstanding.length);
   for (const step of outstanding) {
     const row = list.getByRole("listitem").filter({ hasText: STEP_LABELS[step] });
-    await expect(row.getByText(STEP_LABELS[step], { exact: true })).toBeVisible();
+    await expect(row).toBeVisible();
+    await expect(row).toContainText(STEP_LABELS[step]);
     const path = SETTINGS_PATHS[step];
     expect(status.steps[step].settingsPath).toBe(path);
     if (path === null) {
       // Email has no Settings pane. Review carries an action in this card.
       await expect(row.getByRole("link")).toHaveCount(0);
-      if (step === "review")
+      if (step === "review") {
         await expect(row.getByRole("button", { name: "Mark as reviewed" })).toBeVisible();
+      } else {
+        await expect(row).toHaveText(STEP_LABELS[step]);
+      }
     } else {
       await expect(row.getByRole("link", { name: STEP_LABELS[step] })).toHaveAttribute(
         "href",
@@ -132,9 +138,7 @@ test("M33: the first run leaves a named, populated system and skipped steps in S
         await page.getByLabel("Upload a logo").setInputFiles({
           name: "m33-logo.svg",
           mimeType: "image/svg+xml",
-          buffer: Buffer.from(
-            '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><path fill="#154e41" d="M0 0h32v32H0z"/></svg>',
-          ),
+          buffer: Buffer.from(LOGO),
         });
         await expect(page.getByRole("img", { name: "Organization logo" })).toBeVisible();
         await page.getByLabel("Default locale").selectOption("en-US");
@@ -234,7 +238,20 @@ test("M33: the first run leaves a named, populated system and skipped steps in S
       const before = await readStatus(page.request);
       await page.goto("/settings/general");
       await expectChecklist(page, before);
-      if (fresh) await expect(page.getByLabel("Organization name")).toHaveValue(ORGANIZATION);
+      if (fresh) {
+        await expect(page.getByLabel("Organization name")).toHaveValue(ORGANIZATION);
+        await expect(page.getByRole("main").locator("img")).toHaveAttribute(
+          "src",
+          `data:image/svg+xml;base64,${Buffer.from(LOGO).toString("base64")}`,
+        );
+        await page.goto("/settings/authentication");
+        await expect(page.getByLabel("Allowed email domains")).toBeVisible();
+        const domains = page.getByRole("list").filter({
+          has: page.getByRole("button", { name: "Remove example.com", exact: true }),
+        });
+        await expect(domains.getByRole("listitem")).toHaveText(["example.com"]);
+        await page.goto("/settings/general");
+      }
       if (before.steps["ai-analysis"].done) {
         testInfo.annotations.push({
           type: "checklist",
