@@ -670,7 +670,7 @@ leaves a coherent product; none of them is optional in the sense that we intend 
     identity, E-signature, AI analysis, and review-seeded-types steps land here, once the features behind them exist
   - Sits deliberately last-but-one: building these steps earlier would mean wizard steps for features
     that don't exist, which the no-stubbed-demos rule forbids
-  - _Decisions:_ SET-004, SET-008 · _Issues:_ #697–#702
+  - _Decisions:_ SET-004, SET-008 · _Issues:_ #697–#702 · _Parent:_ #696
 
 - [ ] **M34 — Release**
       _Demo:_ A stranger with a clean Linux VM has OpenLaw running in under an hour, from the README alone.

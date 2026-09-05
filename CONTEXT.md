@@ -211,7 +211,7 @@ The first Administrator's guided configuration at `/welcome`. Its nine steps inc
 _Avoid_: installation wizard, integrations step
 
 **Setup checklist**:
-The Administrator-only card above Organization in Settings → Organization → General. It lists currently unfinished onboarding steps and disappears when none remain. Each row links to its Settings pane, except Email, which has no pane and is plain text, and Review seeded types, which has a Mark as reviewed action. Completion follows current configuration, so a later removal can bring a row back without reopening the wizard [SET-004]. The card calls the wizard's Your organization step Organization and its Outbound email step Email to fit the Settings context. It expands Review to Review seeded types because the card has no surrounding wizard to explain what to review. All other step labels match.
+The Administrator-only card above Organization in Settings → Organization → General. It lists currently unfinished onboarding steps and disappears when none remain. Each row links to its Settings pane, except Email, which has no pane and is plain text, and Review seeded types, which has a Mark as reviewed action. Completion follows current configuration, so a later removal can bring a row back without reopening the wizard. The card calls the wizard's Your organization step Organization and its Outbound email step Email to fit the Settings context. It expands Review to Review seeded types because the card has no surrounding wizard to explain what to review. All other step labels match [SET-004].
 _Avoid_: onboarding dashboard, skip history, restart setup
 
 **Type**:

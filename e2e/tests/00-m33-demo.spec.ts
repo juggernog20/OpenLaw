@@ -183,7 +183,20 @@ test("M33: the first run leaves a named, populated system and skipped steps in S
         await page.getByRole("button", { name: "Set up later" }).click();
         await step("Review", 9);
         const review = page.getByRole("region", { name: "Review", exact: true });
-        await expect(review.getByRole("link")).toHaveCount(10);
+        // Every seeded list the install started with, plus the reminder
+        // offsets, each linking to the pane that edits it.
+        await expect(review.getByRole("link")).toHaveText([
+          "Matter types",
+          "Matter statuses",
+          "Contract types",
+          "Contract statuses",
+          "Entity types",
+          "Officer roles",
+          "Knowledge types",
+          "Request types",
+          "Fields",
+          "Reminder offsets",
+        ]);
         for (const label of [
           "Matter types",
           "Contract types",
