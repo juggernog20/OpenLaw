@@ -15,7 +15,7 @@ ActivityBar, Pill, Avatar) live in this file as local copies per the designs con
 | ST1   | `t5FyJK` | Personal · Profile                       | M5 ✓                               |
 | ST2   | `vVsIu`  | Personal · Appearance                    | M5 ✓                               |
 | ST3   | `QQ3PT`  | Personal · Notification preferences      | M18 ✓                              |
-| ST4   | `b3rJp`  | Organization · General                   | M5 ✓                               |
+| ST4   | `b3rJp`  | Organization · General                   | M5 ✓; M33 checklist ✓              |
 | ST5   | `vij2O`  | Organization · Users                     | M5 ✓                               |
 | ST6   | `TRZzk`  | Matters settings · Types                 | M6 ✓                               |
 | ST7   | `cW3R8`  | Organization · Integrations              | M15 ✓ (AI half retired by SET-008) |
@@ -360,3 +360,9 @@ The tick closes the product milestone, not the drawing debt. ST7 still shows a C
 **AI analysis is an Organization section of its own.** The pane moved from `/settings/integrations/ai-analysis` to `/settings/ai-analysis` with a rail entry of its own: **AI analysis**, `sparkles` glyph, after Notifications and before Integrations. Its content is unchanged (the DES-070 Provider and Field prompts cards). Integrations keeps E-signature as its only pane; the ST7 row now reads `M15 ✓` for E-signature only, and the AI half of ST7 is retired.
 
 **No frame draws the new section.** The rail mocks in this file predate it, and no frame draws the pane standing alone. The ST7 redraw that DES-070 left open now owes two things: an Integrations frame with the E-signature card alone, and a new AI analysis frame with the rail entry and both cards. This is design debt, recorded here and not paid by editing the binary `.pen` to copy the built screen.
+
+## M33 amendment (2026-09-05, #701–#702)
+
+ST4 General now includes the Administrator-only Setup checklist card above the Organization card. It lists only outstanding steps from `GET /api/v1/onboarding` and disappears when all are done. Rows link to their Settings destinations. Email is plain text because no Settings pane edits SMTP. Review seeded types carries Mark as reviewed in the card. Built-in Authentication is already complete and does not appear. E-signature and AI analysis are separate rows, each at its SET-008 destination.
+
+The built card ships in M33; ST4 still owes this redraw. The labels and their differences from the wizard headings are recorded in `CONTEXT.md`. The built-stack demo gates axe on the checklist, and `08-accessibility.spec.ts` scans `/settings/general` as part of the Settings sweep.

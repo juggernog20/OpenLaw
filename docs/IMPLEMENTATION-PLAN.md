@@ -661,15 +661,15 @@ leaves a coherent product; none of them is optional in the sense that we intend 
   - _Decisions:_ DD-014, DD-017, CTR-014, DOC-001, DOC-003 to DOC-005, DOC-008, DOC-010, DES-006,
     DES-071, TECH-007, TECH-010, TECH-020 · _Issues:_ #679–#684
 
-- [ ] **M33 — The finished first run**
+- [x] **M33 — The finished first run**
       _Demo:_ On a fresh install, the first Administrator is walked from sign-in to a configured, populated
-      system by the onboarding wizard alone — org identity, domains, email, invites, integrations, and the
+      system by the onboarding wizard alone — org identity, authentication, domains, email, invites, connectors, and the
       seeded types reviewed — with every skipped step waiting on the Settings checklist card.
   - The SET-004 wizard, completed: the auth, portal, email, and invite steps shipped with M2; the org
-    identity, integrations, and review-seeded-types steps land here, once the features behind them exist
+    identity, E-signature, AI analysis, and review-seeded-types steps land here, once the features behind them exist
   - Sits deliberately last-but-one: building these steps earlier would mean wizard steps for features
     that don't exist, which the no-stubbed-demos rule forbids
-  - _Decisions:_ SET-004
+  - _Decisions:_ SET-004, SET-008 · _Issues:_ #697–#702
 
 - [ ] **M34 — Release**
       _Demo:_ A stranger with a clean Linux VM has OpenLaw running in under an hour, from the README alone.
