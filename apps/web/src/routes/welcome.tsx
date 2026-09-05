@@ -5,10 +5,15 @@
  * organization's identity (#697), authentication mode, the DD-010
  * portal (magic-link toggle plus domain allowlist), SMTP setup (#37:
  * save a relay in the app unless the environment pins one; env always
- * wins), invites, and the DocuSign connector (#698). Every step writes
- * through the route its Settings pane already uses, because SET-001
- * keeps one pane at one address and a second writer would be a second
- * address.
+ * wins), invites, the DocuSign connector (#698), and the AI connector
+ * (#699). Every step writes through the route its Settings pane
+ * already uses, because SET-001 keeps one pane at one address and a
+ * second writer would be a second address.
+ *
+ * The two connectors are two steps and not one Integrations step.
+ * SET-008 moved AI analysis out of Integrations because an
+ * integrations label files a product feature under plumbing, and one
+ * combined step would put it back.
  *
  * Every step is skippable and saves on Continue, in one request. That
  * is the wizard's own shape rather than a departure from DES-017.
@@ -30,6 +35,7 @@ import { redirect, useLoaderData, useNavigate } from "react-router";
 import { FormattedMessage, useIntl } from "react-intl";
 import { X } from "lucide-react";
 import type { paths } from "@openlaw/api-client";
+import { aiPresetLabel } from "../lib/ai-presets";
 import { api } from "../lib/api";
 import { field } from "../lib/forms";
 import { networkError } from "../lib/messages";
@@ -56,6 +62,27 @@ const SIGNING_ENVIRONMENTS = ["demo", "production"] as const;
 type SigningConnector =
   paths["/api/v1/signing-connectors/{provider}"]["get"]["responses"]["200"]["content"]["application/json"]["connector"];
 
+type AiResponse =
+  paths["/api/v1/ai-connector"]["get"]["responses"]["200"]["content"]["application/json"];
+/** The AI connector as the API answers it. Never the API key. */
+type AiConnector = AiResponse["connector"];
+/** One server-owned provider preset (TECH-012). The server fixes each
+ * preset's protocol, host, and default model; the client only picks. */
+type AiPresetOption = AiResponse["presets"][number];
+type AiPreset = AiPresetOption["preset"];
+type AiProtocol = AiPresetOption["protocol"];
+
+/** The preset a fresh install starts the AI step on. */
+const DEFAULT_AI_PRESET = "anthropic" as const;
+
+/** The wire protocols a custom endpoint can be reached over, as the
+ * API's own enum has them. A hosted preset fixes its own. */
+const AI_PROTOCOLS = [
+  "anthropic_messages",
+  "openai_chat_completions",
+  "gemini",
+] as const satisfies readonly AiProtocol[];
+
 export async function welcomeLoader() {
   const user = await requireUser();
   if (user.role !== "administrator") return redirect("/");
@@ -64,7 +91,7 @@ export async function welcomeLoader() {
   const onboarding = await api.GET("/api/v1/onboarding");
   if (!onboarding.data) throw new Error("The onboarding state could not be read.");
   if (onboarding.data.completed) return redirect("/");
-  const [general, methods, domains, email, signing] = await Promise.all([
+  const [general, methods, domains, email, signing, ai] = await Promise.all([
     api.GET("/api/v1/org/general"),
     api.GET("/api/v1/auth/methods"),
     api.GET("/api/v1/auth/allowed-domains"),
@@ -72,10 +99,16 @@ export async function welcomeLoader() {
     api.GET("/api/v1/signing-connectors/{provider}", {
       params: { path: { provider: SIGNING_PROVIDER } },
     }),
+    api.GET("/api/v1/ai-connector"),
   ]);
-  if (!general.data || !methods.data || !domains.data || !email.data || !signing.data) {
+  if (!general.data || !methods.data || !domains.data || !email.data || !signing.data || !ai.data) {
     throw new Error("The onboarding state could not be read.");
   }
+  // Split so the step holds a list that is known non-empty. The route
+  // always answers every preset, and a step with none to offer is an
+  // instance the wizard cannot walk.
+  const [firstPreset, ...otherPresets] = ai.data.presets;
+  if (!firstPreset) throw new Error("The onboarding state could not be read.");
   return {
     // The email step's own answer, which honours TECH-011's precedence:
     // an environment-pinned relay counts exactly as an app-saved one.
@@ -88,6 +121,11 @@ export async function welcomeLoader() {
     // the step draws the stored estate and integration key and needs
     // the row itself, not the one boolean the status carries.
     signingConnector: signing.data.connector,
+    // Same reason for the AI connector, plus the presets: the provider
+    // list is server-owned (TECH-012), so the step reads it rather than
+    // holding its own copy of the protocols and default models.
+    aiConnector: ai.data.connector,
+    aiPresets: [firstPreset, ...otherPresets] as const,
   };
 }
 
@@ -102,6 +140,7 @@ const STEPS = [
   "email",
   "invites",
   "e-signature",
+  "ai-analysis",
 ] as const;
 type Step = (typeof STEPS)[number];
 
@@ -218,6 +257,68 @@ export function WelcomePage() {
    * A configured connector reads as configured until it is. */
   const [replacingConnector, setReplacingConnector] = useState(false);
   const signingFormOpen = !signingConnector.configured || replacingConnector;
+
+  // AI analysis step (#699): the AI connector, through the PUT the AI
+  // analysis pane already uses. SET-008 keeps AI analysis out of
+  // Integrations, so the wizard gives it a step and not a tab. The API
+  // key is write-only, so its box starts blank on a configured
+  // connector too — blank keeps the stored key.
+  const [aiConnector, setAiConnector] = useState<AiConnector>(loaded.aiConnector);
+  const [aiPreset, setAiPreset] = useState<AiPreset>(
+    loaded.aiConnector.preset ?? DEFAULT_AI_PRESET,
+  );
+  /** The chosen preset's server-owned definition. The route answers
+   * every preset it accepts, so the fallback is only what keeps the
+   * lookup total. */
+  const chosenPreset =
+    loaded.aiPresets.find((option) => option.preset === aiPreset) ?? loaded.aiPresets[0];
+  const [aiProtocol, setAiProtocol] = useState<AiProtocol>(
+    loaded.aiConnector.protocol ?? chosenPreset.protocol,
+  );
+  const [aiBaseUrl, setAiBaseUrl] = useState(
+    loaded.aiConnector.baseUrl ?? chosenPreset.baseUrl ?? "",
+  );
+  const [aiModel, setAiModel] = useState(loaded.aiConnector.model ?? chosenPreset.defaultModel);
+  const [aiApiKey, setAiApiKey] = useState("");
+  /** Whether a configured connector's form is open for a new key. */
+  const [replacingAiConnector, setReplacingAiConnector] = useState(false);
+  const aiFormOpen = !aiConnector.configured || replacingAiConnector;
+
+  /** The step's boxes as they read on the stored connector, or on a
+   * fresh install as the default preset leaves them. Both the reset out
+   * of Replace credentials and the untouched check compare with this. */
+  function aiBaseline(connector: AiConnector): {
+    preset: AiPreset;
+    protocol: AiProtocol;
+    baseUrl: string;
+    model: string;
+  } {
+    const preset = connector.preset ?? DEFAULT_AI_PRESET;
+    const definition =
+      loaded.aiPresets.find((option) => option.preset === preset) ?? loaded.aiPresets[0];
+    return {
+      preset,
+      protocol: connector.protocol ?? definition.protocol,
+      baseUrl: connector.baseUrl ?? definition.baseUrl ?? "",
+      model: connector.model ?? definition.defaultModel,
+    };
+  }
+
+  /** Moves every box to one preset's own defaults, which is what the
+   * AI analysis pane does too. A preset fixes the protocol, the host,
+   * and the model it is usually run with. */
+  function chooseAiPreset(next: string) {
+    // A lookup, not a cast: a preset the route did not answer is not
+    // one this install can save.
+    const definition = loaded.aiPresets.find((option) => option.preset === next);
+    if (!definition) return;
+    setAiPreset(definition.preset);
+    setAiProtocol(definition.protocol);
+    setAiBaseUrl(definition.baseUrl ?? "");
+    setAiModel(definition.defaultModel);
+    setAiApiKey("");
+    setError(null);
+  }
 
   const stepIndex = STEPS.indexOf(step);
   const isLastStep = stepIndex === STEPS.length - 1;
@@ -693,12 +794,90 @@ export function WelcomePage() {
     }
   }
 
+  /**
+   * Saves the AI connector, or moves on without writing.
+   *
+   * Leaving the boxes as they are is how this step is skipped from the
+   * Continue button, and it writes nothing. An install with no
+   * connector runs no Contract analysis, and every Field an
+   * Administrator would otherwise get automatically stays manual. The
+   * API key is omitted when blank rather than sent empty, so a
+   * configured connector is never asked for the key it already holds.
+   */
+  async function applyAiAnalysis() {
+    if (!aiFormOpen) {
+      await advance();
+      return;
+    }
+    const baseUrl = aiBaseUrl.trim();
+    const model = aiModel.trim();
+    const baseline = aiBaseline(aiConnector);
+    const untouched =
+      aiPreset === baseline.preset &&
+      aiProtocol === baseline.protocol &&
+      baseUrl === baseline.baseUrl.trim() &&
+      model === baseline.model.trim() &&
+      aiApiKey.trim() === "";
+    if (untouched) {
+      await advance();
+      return;
+    }
+    // The route refuses a blank model with a schema message, which
+    // reads like a wire fault rather than an instruction. The key and
+    // the base URL are left to the route, whose refusals are written
+    // for an Administrator to act on.
+    if (!model) {
+      setError(
+        intl.formatMessage({
+          id: "welcome.aiAnalysis.error.noModel",
+          defaultMessage: "Enter the model to analyze with, or choose Set up later.",
+        }),
+      );
+      return;
+    }
+    setBusy(true);
+    setError(null);
+    try {
+      const result = await api.PUT("/api/v1/ai-connector", {
+        body: {
+          preset: aiPreset,
+          model,
+          ...(aiPreset === "custom" ? { protocol: aiProtocol } : {}),
+          ...(chosenPreset.requiresBaseUrl ? { baseUrl } : {}),
+          ...(aiApiKey.trim() === "" ? {} : { apiKey: aiApiKey }),
+        },
+      });
+      const { data } = result;
+      if (data) {
+        setAiConnector(data.connector);
+        // The box goes back to blank because that is what it means on
+        // a stored connector: keep the key that is there.
+        setAiApiKey("");
+        setReplacingAiConnector(false);
+        await advance();
+        return;
+      }
+      setError(
+        (await readProblem(result)).detail ??
+          intl.formatMessage({
+            id: "welcome.aiAnalysis.error.save",
+            defaultMessage: "The AI connector could not be saved.",
+          }),
+      );
+    } catch {
+      setError(networkError(intl));
+    } finally {
+      setBusy(false);
+    }
+  }
+
   /** What Continue does on this step, before it moves on. */
   async function continueStep() {
     if (step === "organization") return applyOrganization();
     if (step === "authentication") return applyAuthentication();
     if (step === "portal") return applyPortal();
     if (step === "e-signature") return applyESignature();
+    if (step === "ai-analysis") return applyAiAnalysis();
     return advance();
   }
 
@@ -714,6 +893,7 @@ export function WelcomePage() {
     email: <FormattedMessage id="welcome.step.email" defaultMessage="Outbound email" />,
     invites: <FormattedMessage id="welcome.step.invites" defaultMessage="Invite your team" />,
     "e-signature": <FormattedMessage id="welcome.step.eSignature" defaultMessage="E-signature" />,
+    "ai-analysis": <FormattedMessage id="welcome.step.aiAnalysis" defaultMessage="AI analysis" />,
   };
 
   return (
@@ -1617,6 +1797,238 @@ export function WelcomePage() {
                       <FormattedMessage
                         id="welcome.eSignature.address"
                         defaultMessage="This connector lives at Settings → Organization → Integrations → E-signature. Set it up there whenever you like."
+                      />
+                    </p>
+                  </>
+                )}
+
+                {step === "ai-analysis" && (
+                  <>
+                    <CardDescription>
+                      <FormattedMessage
+                        id="welcome.aiAnalysis.hint"
+                        defaultMessage="Optional. Connect your own AI provider and an Analysis run reads a Contract's executed Document for you, filling its Fields and flagging what is unusual. Skip it and Contract analysis does not run. Every Field you would have got automatically stays manual, and nothing else is lost. Contract text reaches your provider only while an Analysis run is working."
+                      />
+                    </CardDescription>
+
+                    {/* A configured connector reads as configured. A
+                        resumed wizard must never ask for a key the
+                        install already holds. */}
+                    {aiConnector.configured && !replacingAiConnector && (
+                      <>
+                        <Alert variant={aiConnector.enabled ? "success" : "warning"}>
+                          {aiConnector.enabled ? (
+                            <FormattedMessage
+                              id="welcome.aiAnalysis.configured"
+                              defaultMessage="Contract analysis runs through {provider}, on model {model}."
+                              values={{
+                                provider: aiPresetLabel(intl, aiConnector.preset ?? ""),
+                                model: aiConnector.model ?? "",
+                              }}
+                            />
+                          ) : (
+                            <FormattedMessage
+                              id="welcome.aiAnalysis.configured.disabled"
+                              defaultMessage="{provider} is configured on model {model}, but analysis is turned off. Every Field stays manual until it is turned back on."
+                              values={{
+                                provider: aiPresetLabel(intl, aiConnector.preset ?? ""),
+                                model: aiConnector.model ?? "",
+                              }}
+                            />
+                          )}
+                        </Alert>
+                        <div>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            disabled={busy}
+                            onClick={() => setReplacingAiConnector(true)}
+                          >
+                            <FormattedMessage
+                              id="welcome.aiAnalysis.replace"
+                              defaultMessage="Replace credentials"
+                            />
+                          </Button>
+                        </div>
+                      </>
+                    )}
+
+                    {aiFormOpen && (
+                      <>
+                        <div className="flex flex-col gap-1.5">
+                          <Label htmlFor="welcome-ai-preset">
+                            <FormattedMessage
+                              id="settings.aiAnalysis.provider"
+                              defaultMessage="Provider"
+                            />
+                          </Label>
+                          <select
+                            id="welcome-ai-preset"
+                            className={selectClassName}
+                            value={aiPreset}
+                            onChange={(event) => chooseAiPreset(event.target.value)}
+                          >
+                            {loaded.aiPresets.map((option) => (
+                              <option key={option.preset} value={option.preset}>
+                                {aiPresetLabel(intl, option.preset)}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+
+                        {aiPreset === "custom" && (
+                          <div className="flex flex-col gap-1.5">
+                            <Label htmlFor="welcome-ai-protocol">
+                              <FormattedMessage
+                                id="settings.aiAnalysis.protocol"
+                                defaultMessage="Protocol"
+                              />
+                            </Label>
+                            <select
+                              id="welcome-ai-protocol"
+                              className={selectClassName}
+                              value={aiProtocol}
+                              onChange={(event) => {
+                                const chosen = AI_PROTOCOLS.find(
+                                  (wire) => wire === event.target.value,
+                                );
+                                if (chosen) setAiProtocol(chosen);
+                              }}
+                            >
+                              <option value="anthropic_messages">
+                                {intl.formatMessage({
+                                  id: "settings.aiAnalysis.protocol.anthropic",
+                                  defaultMessage: "Anthropic Messages",
+                                })}
+                              </option>
+                              <option value="openai_chat_completions">
+                                {intl.formatMessage({
+                                  id: "settings.aiAnalysis.protocol.openai",
+                                  defaultMessage: "OpenAI-compatible chat completions",
+                                })}
+                              </option>
+                              <option value="gemini">
+                                {intl.formatMessage({
+                                  id: "settings.aiAnalysis.protocol.gemini",
+                                  defaultMessage: "Gemini",
+                                })}
+                              </option>
+                            </select>
+                          </div>
+                        )}
+
+                        {chosenPreset.requiresBaseUrl && (
+                          <div className="flex flex-col gap-1.5">
+                            <Label htmlFor="welcome-ai-base-url">
+                              {aiPreset === "azure_openai" ? (
+                                <FormattedMessage
+                                  id="settings.aiAnalysis.deploymentEndpoint"
+                                  defaultMessage="Deployment endpoint"
+                                />
+                              ) : (
+                                <FormattedMessage
+                                  id="settings.aiAnalysis.baseUrl"
+                                  defaultMessage="Base URL"
+                                />
+                              )}
+                            </Label>
+                            <Input
+                              id="welcome-ai-base-url"
+                              type="url"
+                              autoComplete="off"
+                              value={aiBaseUrl}
+                              onChange={(event) => setAiBaseUrl(event.target.value)}
+                            />
+                          </div>
+                        )}
+
+                        <div className="flex flex-col gap-1.5">
+                          <Label htmlFor="welcome-ai-api-key">
+                            <FormattedMessage
+                              id="settings.aiAnalysis.apiKey"
+                              defaultMessage="API key"
+                            />
+                          </Label>
+                          <Input
+                            id="welcome-ai-api-key"
+                            type="password"
+                            autoComplete="off"
+                            value={aiApiKey}
+                            onChange={(event) => setAiApiKey(event.target.value)}
+                          />
+                          <p className="text-sm text-muted">
+                            {aiConnector.hasApiKey ? (
+                              <FormattedMessage
+                                id="settings.aiAnalysis.apiKey.keep"
+                                defaultMessage="Leave blank to keep the current key. Paste a new one to rotate."
+                              />
+                            ) : chosenPreset.requiresApiKey ? (
+                              <FormattedMessage
+                                id="settings.aiAnalysis.apiKey.required"
+                                defaultMessage="Required for this provider. The key is write-only and encrypted at rest."
+                              />
+                            ) : (
+                              <FormattedMessage
+                                id="settings.aiAnalysis.apiKey.optional"
+                                defaultMessage="Ollama does not require an API key."
+                              />
+                            )}
+                          </p>
+                        </div>
+
+                        <div className="flex flex-col gap-1.5">
+                          <Label htmlFor="welcome-ai-model">
+                            <FormattedMessage
+                              id="settings.aiAnalysis.model"
+                              defaultMessage="Model"
+                            />
+                          </Label>
+                          <Input
+                            id="welcome-ai-model"
+                            autoComplete="off"
+                            value={aiModel}
+                            onChange={(event) => setAiModel(event.target.value)}
+                          />
+                        </div>
+
+                        {/* The way back from Replace credentials, the
+                            E-signature step's own shape. Without it the
+                            configured summary is gone for the rest of
+                            the wizard, because Back does not reset it. */}
+                        {aiConnector.configured && (
+                          <div>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              disabled={busy}
+                              onClick={() => {
+                                const baseline = aiBaseline(aiConnector);
+                                setReplacingAiConnector(false);
+                                setAiPreset(baseline.preset);
+                                setAiProtocol(baseline.protocol);
+                                setAiBaseUrl(baseline.baseUrl);
+                                setAiModel(baseline.model);
+                                setAiApiKey("");
+                              }}
+                            >
+                              <FormattedMessage
+                                id="welcome.aiAnalysis.replace.cancel"
+                                defaultMessage="Keep current credentials"
+                              />
+                            </Button>
+                          </div>
+                        )}
+                      </>
+                    )}
+
+                    {/* Named rather than linked: leaving the wizard for
+                        Settings mid-flow is not the offer. SET-008 puts
+                        AI analysis in its own Organization section, so
+                        this is the one address that owns it. */}
+                    <p className="text-sm text-muted">
+                      <FormattedMessage
+                        id="welcome.aiAnalysis.address"
+                        defaultMessage="This connector lives at Settings → Organization → AI analysis. Set it up there whenever you like."
                       />
                     </p>
                   </>

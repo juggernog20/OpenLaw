@@ -7847,6 +7847,30 @@
   "views.setDefault": {
     "defaultMessage": "Set as default"
   },
+  "welcome.aiAnalysis.address": {
+    "defaultMessage": "This connector lives at Settings → Organization → AI analysis. Set it up there whenever you like."
+  },
+  "welcome.aiAnalysis.configured": {
+    "defaultMessage": "Contract analysis runs through {provider}, on model {model}."
+  },
+  "welcome.aiAnalysis.configured.disabled": {
+    "defaultMessage": "{provider} is configured on model {model}, but analysis is turned off. Every Field stays manual until it is turned back on."
+  },
+  "welcome.aiAnalysis.error.noModel": {
+    "defaultMessage": "Enter the model to analyze with, or choose Set up later."
+  },
+  "welcome.aiAnalysis.error.save": {
+    "defaultMessage": "The AI connector could not be saved."
+  },
+  "welcome.aiAnalysis.hint": {
+    "defaultMessage": "Optional. Connect your own AI provider and an Analysis run reads a Contract's executed Document for you, filling its Fields and flagging what is unusual. Skip it and Contract analysis does not run. Every Field you would have got automatically stays manual, and nothing else is lost. Contract text reaches your provider only while an Analysis run is working."
+  },
+  "welcome.aiAnalysis.replace": {
+    "defaultMessage": "Replace credentials"
+  },
+  "welcome.aiAnalysis.replace.cancel": {
+    "defaultMessage": "Keep current credentials"
+  },
   "welcome.auth.builtIn": {
     "defaultMessage": "Built-in sign-in"
   },
@@ -8080,6 +8104,9 @@
   },
   "welcome.start": {
     "defaultMessage": "Get started"
+  },
+  "welcome.step.aiAnalysis": {
+    "defaultMessage": "AI analysis"
   },
   "welcome.step.authentication": {
     "defaultMessage": "Authentication"
