@@ -54,7 +54,7 @@ const SETUP_LABELS = defineMessages({
   { id: string; defaultMessage: string }
 >);
 
-function SetupChecklist({ steps }: Readonly<{ steps: OnboardingSteps }>) {
+function SetupChecklist({ steps }: { steps: OnboardingSteps }) {
   const intl = useIntl();
   const outstanding = (Object.keys(SETUP_LABELS) as (keyof typeof SETUP_LABELS)[]).filter(
     (step) => !steps[step].done,
