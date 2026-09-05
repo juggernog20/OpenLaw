@@ -11,6 +11,8 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { aiConnector, orgSettings, signingConnectors } from "@openlaw/db";
 import { ONBOARDING_STEPS, type OnboardingStatus } from "./routes.js";
+import { NO_PERMISSION } from "../../auth/guards.js";
+import { PROBLEM_CONTENT_TYPE, UNNAMED_PROBLEM_TYPE } from "../../lib/problem.js";
 import {
   settingsAuditRows,
   signInCookies,
@@ -158,6 +160,7 @@ describe("onboarding state (GET /api/v1/onboarding, POST /api/v1/onboarding/comp
       invites: "/settings/users",
       "e-signature": "/settings/integrations/e-signature",
       "ai-analysis": "/settings/ai-analysis",
+      review: null,
     });
   });
 
@@ -180,6 +183,7 @@ describe("onboarding state (GET /api/v1/onboarding, POST /api/v1/onboarding/comp
       invites: true,
       "e-signature": false,
       "ai-analysis": false,
+      review: false,
     });
 
     // Naming the organization is what the organization step is for, and
@@ -327,6 +331,7 @@ describe("onboarding state (GET /api/v1/onboarding, POST /api/v1/onboarding/comp
     });
     expect(first.statusCode, first.body).toBe(200);
     expect(first.json().completed).toBe(true);
+    expect(first.json().steps.review.done).toBe(false);
     // Completion answers the same derived steps the status route does.
     expect(first.json().steps).toEqual((await status(adminCookies)).steps);
 
@@ -348,6 +353,73 @@ describe("onboarding state (GET /api/v1/onboarding, POST /api/v1/onboarding/comp
     expect(afterSecond?.at?.getTime()).toBe(afterFirst?.at?.getTime());
 
     expect((await status(adminCookies)).completed).toBe(true);
+  });
+
+  it("refuses anonymous and non-Administrator review marks without changing state", async () => {
+    const before = await harness.db.select().from(orgSettings);
+    for (const [cookies, code] of [
+      [undefined, 401],
+      [staffCookies, 403],
+    ] as const) {
+      const response = await harness.app.inject({
+        method: "POST",
+        url: "/api/v1/onboarding/reviewed",
+        cookies,
+      });
+      expect(response.statusCode, response.body).toBe(code);
+      expect(response.headers["content-type"]).toBe(PROBLEM_CONTENT_TYPE);
+      const detail = code === 401 ? "Authentication required." : NO_PERMISSION;
+      expect(response.json()).toMatchObject({
+        type: UNNAMED_PROBLEM_TYPE,
+        status: code,
+        title: detail,
+        detail,
+        instance: "/api/v1/onboarding/reviewed",
+      });
+    }
+    expect(await harness.db.select().from(orgSettings)).toEqual(before);
+  });
+
+  it("marks Review once, including concurrent retries, without editing settings or completing", async () => {
+    // This fixture reopens the wizard so review and completion can be tested separately.
+    await harness.db.update(orgSettings).set({ onboardingCompletedAt: null });
+    const [before] = await harness.db.select().from(orgSettings);
+    const auditBefore = await settingsAuditRows(harness.db);
+    expect((await status(adminCookies)).steps.review.done).toBe(false);
+    const mark = () =>
+      harness.app.inject({
+        method: "POST",
+        url: "/api/v1/onboarding/reviewed",
+        cookies: adminCookies,
+      });
+    const first = await mark();
+    expect(first.statusCode, first.body).toBe(200);
+    expect(first.json()).toMatchObject({ completed: false, steps: { review: { done: true } } });
+    const [after] = await harness.db.select().from(orgSettings);
+    expect(after?.onboardingReviewedTypesAt).toBeInstanceOf(Date);
+    expect(after).toEqual({
+      ...before,
+      onboardingReviewedTypesAt: expect.any(Date),
+      updatedAt: expect.any(Date),
+    });
+    const repeats = await Promise.all([mark(), mark()]);
+    for (const repeat of repeats) expect(repeat.statusCode, repeat.body).toBe(200);
+    expect(await harness.db.select().from(orgSettings)).toEqual([after]);
+    expect(await settingsAuditRows(harness.db)).toEqual(auditBefore);
+    expect((await status(adminCookies)).steps.review.done).toBe(true);
+    const completed = await harness.app.inject({
+      method: "POST",
+      url: "/api/v1/onboarding/complete",
+      cookies: adminCookies,
+    });
+    expect(completed.json()).toMatchObject({ completed: true, steps: { review: { done: true } } });
+    const markedAfterCompletion = await mark();
+    expect(markedAfterCompletion.statusCode, markedAfterCompletion.body).toBe(200);
+    expect(markedAfterCompletion.json()).toMatchObject({ completed: true });
+    expect(await status(adminCookies)).toMatchObject({
+      completed: true,
+      steps: { review: { done: true } },
+    });
   });
 });
 

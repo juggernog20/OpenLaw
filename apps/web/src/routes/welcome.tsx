@@ -6,8 +6,9 @@
  * portal (magic-link toggle plus domain allowlist), SMTP setup (#37:
  * save a relay in the app unless the environment pins one; env always
  * wins), invites, the DocuSign connector (#698), and the AI connector
- * (#699). Every step writes through the route its Settings pane
- * already uses, because SET-001 keeps one pane at one address and a
+ * (#699), then a summary of the seeded lists (#700). Configuring steps
+ * write through the route their Settings pane already uses, because
+ * SET-001 keeps one pane at one address and a
  * second writer would be a second address.
  *
  * The two connectors are two steps and not one Integrations step.
@@ -15,8 +16,8 @@
  * integrations label files a product feature under plumbing, and one
  * combined step would put it back.
  *
- * Every step is skippable and saves on Continue, in one request. That
- * is the wizard's own shape rather than a departure from DES-017.
+ * Every step is skippable. Configuring steps save on Continue; Review
+ * records its acknowledgement on Finish, then completes onboarding.
  * Per-field commit on blur governs the Settings panes, where a field
  * stands alone. Here a step is the unit an Administrator moves through.
  *
@@ -31,8 +32,8 @@ import {
   type ReactNode,
   type SubmitEvent as FormSubmitEvent,
 } from "react";
-import { redirect, useLoaderData, useNavigate } from "react-router";
-import { FormattedMessage, useIntl } from "react-intl";
+import { Link, redirect, useLoaderData, useNavigate } from "react-router";
+import { defineMessage, FormattedMessage, useIntl } from "react-intl";
 import { X } from "lucide-react";
 import type { paths } from "@openlaw/api-client";
 import { aiPresetLabel } from "../lib/ai-presets";
@@ -83,6 +84,119 @@ const AI_PROTOCOLS = [
   "gemini",
 ] as const satisfies readonly AiProtocol[];
 
+/** The same complete lists the Settings panes load, including archived rows. */
+async function readReview() {
+  const query = { params: { query: { includeArchived: "true" as const } } };
+  const [
+    matterTypes,
+    matterStatuses,
+    contractTypes,
+    contractStatuses,
+    entityTypes,
+    officerRoles,
+    knowledgeTypes,
+    requestTypes,
+    fields,
+    reminders,
+  ] = await Promise.all([
+    api.GET("/api/v1/matter-types", query),
+    api.GET("/api/v1/matter-statuses", query),
+    api.GET("/api/v1/contract-types", query),
+    api.GET("/api/v1/contract-statuses", query),
+    api.GET("/api/v1/entity-types", query),
+    api.GET("/api/v1/officer-roles", query),
+    api.GET("/api/v1/knowledge/types", query),
+    api.GET("/api/v1/request-types", query),
+    api.GET("/api/v1/fields", query),
+    api.GET("/api/v1/org/reminder-offsets"),
+  ]);
+  if (
+    !matterTypes.data ||
+    !matterStatuses.data ||
+    !contractTypes.data ||
+    !contractStatuses.data ||
+    !entityTypes.data ||
+    !officerRoles.data ||
+    !knowledgeTypes.data ||
+    !requestTypes.data ||
+    !fields.data ||
+    !reminders.data
+  ) {
+    throw new Error("The seeded lists could not be read.");
+  }
+  return {
+    counts: {
+      matterTypes: matterTypes.data.matterTypes.length,
+      matterStatuses: matterStatuses.data.matterStatuses.length,
+      contractTypes: contractTypes.data.contractTypes.length,
+      contractStatuses: contractStatuses.data.contractStatuses.length,
+      entityTypes: entityTypes.data.entityTypes.length,
+      officerRoles: officerRoles.data.officerRoles.length,
+      knowledgeTypes: knowledgeTypes.data.knowledgeTypes.length,
+      requestTypes: requestTypes.data.requestTypes.length,
+      fields: fields.data.fields.length,
+    },
+    offsets: reminders.data.offsets,
+  };
+}
+
+const REVIEW_TAXONOMIES = [
+  {
+    key: "matterTypes",
+    label: defineMessage({ id: "welcome.review.matterTypes", defaultMessage: "Matter types" }),
+    settingsPath: "/settings/matters/types",
+  },
+  {
+    key: "matterStatuses",
+    label: defineMessage({
+      id: "welcome.review.matterStatuses",
+      defaultMessage: "Matter statuses",
+    }),
+    settingsPath: "/settings/matters/statuses",
+  },
+  {
+    key: "contractTypes",
+    label: defineMessage({ id: "welcome.review.contractTypes", defaultMessage: "Contract types" }),
+    settingsPath: "/settings/contracts/types",
+  },
+  {
+    key: "contractStatuses",
+    label: defineMessage({
+      id: "welcome.review.contractStatuses",
+      defaultMessage: "Contract statuses",
+    }),
+    settingsPath: "/settings/contracts/statuses",
+  },
+  {
+    key: "entityTypes",
+    label: defineMessage({ id: "welcome.review.entityTypes", defaultMessage: "Entity types" }),
+    settingsPath: "/settings/entities/types",
+  },
+  {
+    key: "officerRoles",
+    label: defineMessage({ id: "welcome.review.officerRoles", defaultMessage: "Officer roles" }),
+    settingsPath: "/settings/entities/officer-roles",
+  },
+  {
+    key: "knowledgeTypes",
+    label: defineMessage({
+      id: "welcome.review.knowledgeTypes",
+      defaultMessage: "Knowledge types",
+    }),
+    settingsPath: "/settings/knowledge/types",
+  },
+  {
+    key: "requestTypes",
+    label: defineMessage({ id: "welcome.review.requestTypes", defaultMessage: "Request types" }),
+    settingsPath: "/settings/intake/request-types",
+  },
+  {
+    key: "fields",
+    label: defineMessage({ id: "welcome.review.fields", defaultMessage: "Fields" }),
+    settingsPath: "/settings/contracts/fields",
+  },
+] as const;
+
 export async function welcomeLoader() {
   const user = await requireUser();
   if (user.role !== "administrator") return redirect("/");
@@ -91,7 +205,7 @@ export async function welcomeLoader() {
   const onboarding = await api.GET("/api/v1/onboarding");
   if (!onboarding.data) throw new Error("The onboarding state could not be read.");
   if (onboarding.data.completed) return redirect("/");
-  const [general, methods, domains, email, signing, ai] = await Promise.all([
+  const [general, methods, domains, email, signing, ai, review] = await Promise.all([
     api.GET("/api/v1/org/general"),
     api.GET("/api/v1/auth/methods"),
     api.GET("/api/v1/auth/allowed-domains"),
@@ -100,6 +214,7 @@ export async function welcomeLoader() {
       params: { path: { provider: SIGNING_PROVIDER } },
     }),
     api.GET("/api/v1/ai-connector"),
+    readReview(),
   ]);
   if (!general.data || !methods.data || !domains.data || !email.data || !signing.data || !ai.data) {
     throw new Error("The onboarding state could not be read.");
@@ -125,6 +240,7 @@ export async function welcomeLoader() {
     // list is server-owned (TECH-012), so the step reads it rather than
     // holding its own copy of the protocols and default models.
     aiConnector: ai.data.connector,
+    review,
     aiPresets: [firstPreset, ...otherPresets] as const,
   };
 }
@@ -141,6 +257,7 @@ const STEPS = [
   "invites",
   "e-signature",
   "ai-analysis",
+  "review",
 ] as const;
 type Step = (typeof STEPS)[number];
 
@@ -339,10 +456,23 @@ export function WelcomePage() {
     goTo(next);
   }
 
-  async function finish() {
+  async function finish(reviewed = false) {
     setBusy(true);
     setError(null);
     try {
+      if (reviewed) {
+        const result = await api.POST("/api/v1/onboarding/reviewed");
+        if (!result.response.ok) {
+          setError(
+            (await readProblem(result)).detail ??
+              intl.formatMessage({
+                id: "welcome.review.error",
+                defaultMessage: "Review could not be saved. Try again.",
+              }),
+          );
+          return;
+        }
+      }
       const { response } = await api.POST("/api/v1/onboarding/complete");
       if (response.ok) {
         void navigate("/", { replace: true });
@@ -878,6 +1008,7 @@ export function WelcomePage() {
     if (step === "portal") return applyPortal();
     if (step === "e-signature") return applyESignature();
     if (step === "ai-analysis") return applyAiAnalysis();
+    if (step === "review") return finish(true);
     return advance();
   }
 
@@ -894,6 +1025,7 @@ export function WelcomePage() {
     invites: <FormattedMessage id="welcome.step.invites" defaultMessage="Invite your team" />,
     "e-signature": <FormattedMessage id="welcome.step.eSignature" defaultMessage="E-signature" />,
     "ai-analysis": <FormattedMessage id="welcome.step.aiAnalysis" defaultMessage="AI analysis" />,
+    review: <FormattedMessage id="welcome.step.review" defaultMessage="Review" />,
   };
 
   return (
@@ -2029,6 +2161,81 @@ export function WelcomePage() {
                       <FormattedMessage
                         id="welcome.aiAnalysis.address"
                         defaultMessage="This connector lives at Settings → Organization → AI analysis. Set it up there whenever you like."
+                      />
+                    </p>
+                  </>
+                )}
+                {step === "review" && (
+                  <>
+                    <CardDescription>
+                      <FormattedMessage
+                        id="welcome.review.hint"
+                        defaultMessage="Your install started with these lists and reminder offsets. These are their current counts, including archived rows. Open a list in Settings to make changes."
+                      />
+                    </CardDescription>
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="border-b border-border-default text-left">
+                          <th scope="col" className="py-2 font-medium">
+                            <FormattedMessage id="welcome.review.list" defaultMessage="List" />
+                          </th>
+                          <th scope="col" className="py-2 text-right font-medium">
+                            <FormattedMessage id="welcome.review.count" defaultMessage="Rows" />
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {REVIEW_TAXONOMIES.map(({ key, label, settingsPath }) => (
+                          <tr key={key} className="border-b border-border-default">
+                            <th scope="row" className="py-2 text-left font-normal">
+                              <Link
+                                to={settingsPath}
+                                className="text-link underline underline-offset-2"
+                              >
+                                <FormattedMessage {...label} />
+                              </Link>
+                            </th>
+                            <td className="py-2 text-right tabular-nums">
+                              {intl.formatNumber(loaded.review.counts[key])}
+                            </td>
+                          </tr>
+                        ))}
+                        <tr className="border-b border-border-default">
+                          <th scope="row" className="py-2 text-left font-normal">
+                            <Link
+                              to="/settings/reminders"
+                              className="text-link underline underline-offset-2"
+                            >
+                              <FormattedMessage
+                                id="welcome.review.reminders"
+                                defaultMessage="Reminder offsets"
+                              />
+                            </Link>
+                            <p className="mt-1 text-muted">
+                              {intl.formatList(
+                                loaded.review.offsets.map((days) =>
+                                  intl.formatMessage(
+                                    {
+                                      id: "settings.reminders.offset",
+                                      defaultMessage:
+                                        "{days, plural, =0 {On the day} one {# day before} other {# days before}}",
+                                    },
+                                    { days },
+                                  ),
+                                ),
+                              )}
+                            </p>
+                          </th>
+                          <td className="py-2 text-right align-top tabular-nums">
+                            {intl.formatNumber(loaded.review.offsets.length)}
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                    <p className="text-sm text-muted">
+                      <FormattedMessage
+                        id="welcome.review.reminders.address"
+                        defaultMessage="Reminder offsets live at Settings → Organization → Notifications."
                       />
                     </p>
                   </>

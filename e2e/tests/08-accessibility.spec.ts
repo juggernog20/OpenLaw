@@ -229,6 +229,31 @@ test.describe("accessibility floor", () => {
     ).toEqual([]);
   });
 
+  test("Review onboarding step: clean axe scan", async ({ page, request }, testInfo) => {
+    await ensureAdminExists(request);
+    await signInAs(page, ADMIN.email, ADMIN.password, ADMIN.displayName);
+    await reopenWizard(page);
+    await page.goto("/welcome");
+    await page.getByRole("button", { name: "Get started" }).click();
+    for (const heading of [
+      "Authentication",
+      "Business-user portal",
+      "Outbound email",
+      "Invite your team",
+      "E-signature",
+      "AI analysis",
+      "Review",
+    ]) {
+      await page.getByRole("button", { name: "Set up later" }).click();
+      await expect(page.getByRole("heading", { name: heading, exact: true })).toBeVisible();
+    }
+    await expect(page.getByRole("region", { name: "Review" })).toBeVisible();
+    await expect(page.getByRole("region", { name: "Review" }).getByRole("link")).toHaveCount(10);
+    expect(
+      await reportAxeViolations(page, testInfo, "welcome-review", { include: "main" }),
+    ).toEqual([]);
+  });
+
   test("populated Home: axe scan and title", async ({ page, request }, testInfo) => {
     await ensureAdminExists(request);
     await signInAs(page, ADMIN.email, ADMIN.password, ADMIN.displayName);
