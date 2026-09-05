@@ -253,6 +253,32 @@ describe("onboarding state (GET /api/v1/onboarding, POST /api/v1/onboarding/comp
     }
   });
 
+  it("reports the AI analysis step done once the wizard's own save lands", async () => {
+    // The wizard's AI analysis step (#699) writes through the pane's
+    // route and adds none of its own, so the step's done-ness has to
+    // follow that route's write. The narration the write leaves is the
+    // ai-connector suite's own assertion.
+    expect((await status(adminCookies)).steps["ai-analysis"].done).toBe(false);
+    // The write is inside the try, so a refusal after the row lands
+    // still clears it. The suite's later steps read a fresh install.
+    try {
+      const saved = await harness.app.inject({
+        method: "PUT",
+        url: "/api/v1/ai-connector",
+        cookies: adminCookies,
+        payload: {
+          preset: AI_CONNECTOR.preset,
+          model: AI_CONNECTOR.model,
+          apiKey: "onboarding-fixture-key-used-nowhere", // NOSONAR — inert fixture
+        },
+      });
+      expect(saved.statusCode, saved.body).toBe(200);
+      expect((await status(adminCookies)).steps["ai-analysis"].done).toBe(true);
+    } finally {
+      await harness.db.delete(aiConnector);
+    }
+  });
+
   it("reports the email step done for an env-pinned relay and for an app-saved one", async () => {
     // Env-pinned: the harness starts this way (TECH-011 precedence).
     expect((await status(adminCookies)).steps.email.done).toBe(true);

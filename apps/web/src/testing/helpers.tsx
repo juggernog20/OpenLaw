@@ -12,6 +12,7 @@ import { vi } from "vitest";
 import { render } from "@testing-library/react";
 import { createMemoryRouter, RouterProvider } from "react-router";
 import { IntlProvider } from "react-intl";
+import type { paths } from "@openlaw/api-client";
 import type { LiveEvent } from "@openlaw/shared";
 import { routes } from "../router";
 
@@ -154,6 +155,82 @@ export function stubFetch(handler: (call: StubCall) => StubAnswer) {
   return impl;
 }
 
+type AiResponse =
+  paths["/api/v1/ai-connector"]["get"]["responses"]["200"]["content"]["application/json"];
+type AiPreset = AiResponse["presets"][number]["preset"];
+type AiProtocol = AiResponse["presets"][number]["protocol"];
+
+/**
+ * The server-owned provider presets (TECH-012), as the API answers
+ * them. Copied rather than imported: the definitions live in the API
+ * package and the web tests must not reach across that line.
+ */
+const AI_PRESETS: AiResponse["presets"] = [
+  {
+    preset: "anthropic",
+    label: "Anthropic",
+    protocol: "anthropic_messages",
+    baseUrl: "https://api.anthropic.com/v1",
+    defaultModel: "claude-sonnet-5",
+    requiresApiKey: true,
+    requiresBaseUrl: false,
+  },
+  {
+    preset: "openai",
+    label: "OpenAI",
+    protocol: "openai_chat_completions",
+    baseUrl: "https://api.openai.com/v1",
+    defaultModel: "gpt-5.6-luna",
+    requiresApiKey: true,
+    requiresBaseUrl: false,
+  },
+  {
+    preset: "azure_openai",
+    label: "Azure OpenAI",
+    protocol: "openai_chat_completions",
+    baseUrl: null,
+    defaultModel: "gpt-5.6-luna",
+    requiresApiKey: true,
+    requiresBaseUrl: true,
+  },
+  {
+    preset: "gemini",
+    label: "Gemini",
+    protocol: "gemini",
+    baseUrl: "https://generativelanguage.googleapis.com/v1beta",
+    defaultModel: "gemini-3.6-flash",
+    requiresApiKey: true,
+    requiresBaseUrl: false,
+  },
+  {
+    preset: "openrouter",
+    label: "OpenRouter",
+    protocol: "openai_chat_completions",
+    baseUrl: "https://openrouter.ai/api/v1",
+    defaultModel: "~openai/gpt-latest",
+    requiresApiKey: true,
+    requiresBaseUrl: false,
+  },
+  {
+    preset: "ollama",
+    label: "Ollama",
+    protocol: "openai_chat_completions",
+    baseUrl: "http://localhost:11434/v1",
+    defaultModel: "llama3.2",
+    requiresApiKey: false,
+    requiresBaseUrl: false,
+  },
+  {
+    preset: "custom",
+    label: "Custom endpoint",
+    protocol: "openai_chat_completions",
+    baseUrl: null,
+    defaultModel: "",
+    requiresApiKey: true,
+    requiresBaseUrl: true,
+  },
+];
+
 /** The wizard's configuring steps, as `GET /api/v1/onboarding` names
  * them. The welcome splash configures nothing, so it has no entry. */
 const ONBOARDING_STEPS = [
@@ -234,6 +311,23 @@ export interface ApiState {
     environment: "demo" | "production";
     integrationKey: string;
     apiUserId: string;
+    /** Defaults to on; set false for a configured connector that was turned off. */
+    enabled?: boolean;
+    disabledAt?: string | null;
+  };
+  /**
+   * The AI connector the wizard's AI analysis step reads (#699).
+   * Defaults to none, which is what a fresh install holds: no Contract
+   * analysis runs and every Field stays manual. Only the suites about
+   * AI analysis supply one.
+   */
+  aiConnector?: {
+    preset: AiPreset;
+    protocol: AiProtocol;
+    baseUrl: string | null;
+    model: string;
+    /** Defaults to true; the write-only key is never answered. */
+    hasApiKey?: boolean;
     /** Defaults to on; set false for a configured connector that was turned off. */
     enabled?: boolean;
     disabledAt?: string | null;
@@ -592,6 +686,26 @@ export function stubApi(state: ApiState) {
           webhookUrl: "http://localhost:3000/api/v1/signing/docusign/webhook",
           updatedAt: saved === undefined ? null : "2026-08-16T09:00:00.000Z",
         },
+      });
+    }
+    // The wizard's AI analysis step and the AI analysis pane read the
+    // same connector, and the preset list is server-owned (TECH-012).
+    // Unconfigured by default, as a fresh install is.
+    if (call.url.pathname === "/api/v1/ai-connector" && call.method === "GET") {
+      const saved = state.aiConnector;
+      return json(200, {
+        connector: {
+          configured: saved !== undefined,
+          enabled: saved?.enabled ?? saved !== undefined,
+          preset: saved?.preset ?? null,
+          protocol: saved?.protocol ?? null,
+          baseUrl: saved?.baseUrl ?? null,
+          hasApiKey: saved === undefined ? false : (saved.hasApiKey ?? true),
+          model: saved?.model ?? null,
+          disabledAt: saved?.disabledAt ?? null,
+          updatedAt: saved === undefined ? null : "2026-08-16T09:00:00.000Z",
+        },
+        presets: AI_PRESETS,
       });
     }
     if (call.url.pathname === "/api/v1/email-settings" && call.method === "GET") {

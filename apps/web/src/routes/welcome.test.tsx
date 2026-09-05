@@ -6,7 +6,8 @@
  * instances never see it, and each step saves on Continue through the
  * route its own Settings pane uses: the organization's identity through
  * the General pane's route (#697), the allowlist through the portal's,
- * the DocuSign connector through the Integrations pane's (#698).
+ * the DocuSign connector through the Integrations pane's (#698), and
+ * the AI connector through the AI analysis pane's (#699).
  */
 
 import { describe, expect, it, vi } from "vitest";
@@ -90,7 +91,7 @@ async function goToEmailStep(user: ReturnType<typeof userEvent.setup>) {
   expect(await screen.findByRole("heading", { name: "Outbound email" })).toBeInTheDocument();
 }
 
-/** Clicks on to the last step. Email and invites pass through
+/** Clicks on to the E-signature step. Email and invites pass through
  * unchanged, so neither sends a request. */
 async function goToESignatureStep(user: ReturnType<typeof userEvent.setup>) {
   await goToEmailStep(user);
@@ -99,7 +100,22 @@ async function goToESignatureStep(user: ReturnType<typeof userEvent.setup>) {
   expect(await screen.findByRole("heading", { name: "E-signature" })).toBeInTheDocument();
 }
 
-/** What the wizard sent on its last step, and whether it finished. */
+/** Clicks on to the last step, leaving the signing connector alone. */
+async function goToAiAnalysisStep(user: ReturnType<typeof userEvent.setup>) {
+  await goToESignatureStep(user);
+  await user.click(screen.getByRole("button", { name: "Continue" }));
+  expect(await screen.findByRole("heading", { name: "AI analysis" })).toBeInTheDocument();
+}
+
+/** Walks off the E-signature step and out of the wizard, so a signing
+ * assertion can still end on home. The AI analysis step follows it and
+ * is left untouched, which writes nothing. */
+async function finishFromESignature(user: ReturnType<typeof userEvent.setup>) {
+  await user.click(screen.getByRole("button", { name: "Continue" }));
+  await user.click(await screen.findByRole("button", { name: "Finish" }));
+}
+
+/** What the wizard sent on a connector step, and whether it finished. */
 interface SigningCalls {
   saves: unknown[];
   completed: number;
@@ -218,8 +234,8 @@ describe("welcome wizard organization step (#697)", () => {
 
     await user.click(await screen.findByRole("button", { name: "Get started" }));
     expect(await screen.findByRole("heading", { name: "Your organization" })).toBeInTheDocument();
-    // Seven steps now, and this is the one after the splash.
-    expect(screen.getByText("Step 2 of 7")).toBeInTheDocument();
+    // Eight steps now, and this is the one after the splash.
+    expect(screen.getByText("Step 2 of 8")).toBeInTheDocument();
     // The step's fields are one region, named by the step's heading.
     expect(screen.getByRole("region", { name: "Your organization" })).toBeInTheDocument();
 
@@ -528,7 +544,7 @@ describe("welcome wizard e-signature step (#698)", () => {
     await user.click(screen.getByRole("button", { name: "Continue" }));
 
     expect(await screen.findByRole("heading", { name: "E-signature" })).toBeInTheDocument();
-    expect(screen.getByText("Step 7 of 7")).toBeInTheDocument();
+    expect(screen.getByText("Step 7 of 8")).toBeInTheDocument();
     // The step's fields are one region, named by the step's heading.
     expect(screen.getByRole("region", { name: "E-signature" })).toBeInTheDocument();
     // Optional, and what an install without a connector does instead.
@@ -538,9 +554,9 @@ describe("welcome wizard e-signature step (#698)", () => {
     expect(
       screen.getByText(/Settings → Organization → Integrations → E-signature/),
     ).toBeInTheDocument();
-    // The last step ends the wizard rather than offering another one.
-    expect(screen.getByRole("button", { name: "Finish" })).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "Continue" })).not.toBeInTheDocument();
+    // AI analysis follows, so this step offers another one.
+    expect(screen.getByRole("button", { name: "Continue" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Finish" })).not.toBeInTheDocument();
   });
 
   it("saves the connector through the pane's own route and finishes", async () => {
@@ -559,7 +575,7 @@ describe("welcome wizard e-signature step (#698)", () => {
     await user.type(screen.getByLabelText("User ID"), "the-user-id");
     await user.type(screen.getByLabelText("RSA private key"), "-----BEGIN RSA PRIVATE KEY-----");
     await user.type(screen.getByLabelText("Connect HMAC secret"), "the-connect-secret");
-    await user.click(screen.getByRole("button", { name: "Finish" }));
+    await finishFromESignature(user);
 
     expect(await screen.findByRole("heading", { name: "Home" })).toBeInTheDocument();
     expect(calls.saves).toEqual([
@@ -603,7 +619,7 @@ describe("welcome wizard e-signature step (#698)", () => {
       "http://localhost:3000/api/v1/signing/docusign/webhook",
     );
 
-    await user.click(screen.getByRole("button", { name: "Finish" }));
+    await finishFromESignature(user);
     expect(await screen.findByRole("heading", { name: "Home" })).toBeInTheDocument();
     // Nothing changed, so nothing was rewritten.
     expect(calls.saves).toEqual([]);
@@ -664,7 +680,7 @@ describe("welcome wizard e-signature step (#698)", () => {
     await user.click(screen.getByRole("button", { name: "Replace credentials" }));
     await user.clear(screen.getByLabelText("Integration key"));
     await user.type(screen.getByLabelText("Integration key"), "the-new-key");
-    await user.click(screen.getByRole("button", { name: "Finish" }));
+    await finishFromESignature(user);
 
     expect(await screen.findByRole("heading", { name: "Home" })).toBeInTheDocument();
     // Neither secret is on the wire: the route keeps both.
@@ -685,6 +701,9 @@ describe("welcome wizard e-signature step (#698)", () => {
     await goToESignatureStep(user);
 
     await user.type(screen.getByLabelText("Integration key"), "the-integration-key");
+    await user.click(screen.getByRole("button", { name: "Set up later" }));
+    // Deferring the AI step too ends the wizard.
+    expect(await screen.findByRole("heading", { name: "AI analysis" })).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "Set up later" }));
 
     expect(await screen.findByRole("heading", { name: "Home" })).toBeInTheDocument();
@@ -711,7 +730,7 @@ describe("welcome wizard e-signature step (#698)", () => {
     await user.type(screen.getByLabelText("Integration key"), "the-integration-key");
     await user.type(screen.getByLabelText("User ID"), "the-user-id");
     await user.type(screen.getByLabelText("RSA private key"), "-----BEGIN RSA PRIVATE KEY-----");
-    await user.click(screen.getByRole("button", { name: "Finish" }));
+    await user.click(screen.getByRole("button", { name: "Continue" }));
 
     expect(await screen.findByText(/Paste the DocuSign Connect HMAC secret/)).toBeInTheDocument();
     // Refused, so the wizard stays on the step and does not finish.
@@ -733,11 +752,303 @@ describe("welcome wizard e-signature step (#698)", () => {
     // A pasted key with no integration key names what is missing rather
     // than sending a request the schema answers with "invalid".
     await user.type(screen.getByLabelText("RSA private key"), "-----BEGIN RSA PRIVATE KEY-----");
-    await user.click(screen.getByRole("button", { name: "Finish" }));
+    await user.click(screen.getByRole("button", { name: "Continue" }));
 
     expect(
       await screen.findByText(/Enter the integration key and the user ID/),
     ).toBeInTheDocument();
+    expect(calls.saves).toEqual([]);
+    expect(calls.completed).toBe(0);
+  });
+});
+
+/** What the AI analysis step sent, and whether the wizard finished. */
+interface AiCalls {
+  saves: unknown[];
+  completed: number;
+}
+
+/** Answers the AI connector's save and the completion the last step
+ * ends on, so a walk to the end never reaches an unstubbed route. */
+function aiWizardExtra(calls: AiCalls, save?: () => Response) {
+  return (call: StubCall) => {
+    const handled = emailWizardExtra()(call);
+    if (handled) return handled;
+    if (call.url.pathname === "/api/v1/ai-connector" && call.method === "PUT") {
+      calls.saves.push(call.body);
+      if (save) return save();
+      const body = call.body as Record<string, string>;
+      return json(200, {
+        connector: {
+          configured: true,
+          enabled: true,
+          preset: body.preset,
+          protocol: body.protocol ?? "anthropic_messages",
+          baseUrl: body.baseUrl ?? "https://api.anthropic.com/v1",
+          hasApiKey: true,
+          model: body.model,
+          disabledAt: null,
+          updatedAt: "2026-09-05T09:00:00.000Z",
+        },
+        presets: [],
+      });
+    }
+    if (call.url.pathname === "/api/v1/onboarding/complete" && call.method === "POST") {
+      calls.completed += 1;
+      return json(200, { completed: true, steps: {} });
+    }
+    if (
+      call.url.pathname === "/api/v1/onboarding" &&
+      call.method === "GET" &&
+      calls.completed > 0
+    ) {
+      return json(200, { completed: true, steps: {} });
+    }
+    return undefined;
+  };
+}
+
+describe("welcome wizard AI analysis step (#699)", () => {
+  it("comes after e-signature and says what an install without a connector does", async () => {
+    const calls: AiCalls = { saves: [], completed: 0 };
+    stubApi({ signedIn: ADMIN, onboarding: { completed: false }, extra: aiWizardExtra(calls) });
+    renderAt("/welcome");
+    const user = userEvent.setup();
+    await goToESignatureStep(user);
+    await user.click(screen.getByRole("button", { name: "Continue" }));
+
+    expect(await screen.findByRole("heading", { name: "AI analysis" })).toBeInTheDocument();
+    expect(screen.getByText("Step 8 of 8")).toBeInTheDocument();
+    // The step's fields are one region, named by the step's heading.
+    expect(screen.getByRole("region", { name: "AI analysis" })).toBeInTheDocument();
+    // Optional, and what an install without a connector does instead.
+    expect(screen.getByText(/Optional/)).toBeInTheDocument();
+    expect(screen.getByText(/Contract analysis does not run/)).toHaveTextContent(
+      "Every Field you would have got automatically stays manual",
+    );
+    // And where it is finished after the first run (SET-008).
+    expect(screen.getByText(/Settings → Organization → AI analysis/)).toBeInTheDocument();
+    // The last step ends the wizard rather than offering another one.
+    expect(screen.getByRole("button", { name: "Finish" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Continue" })).not.toBeInTheDocument();
+  });
+
+  it("saves the connector through the pane's own route and finishes", async () => {
+    const calls: AiCalls = { saves: [], completed: 0 };
+    stubApi({ signedIn: ADMIN, onboarding: { completed: false }, extra: aiWizardExtra(calls) });
+    renderAt("/welcome");
+    const user = userEvent.setup();
+    await goToAiAnalysisStep(user);
+
+    await user.selectOptions(screen.getByLabelText("Provider"), "openai");
+    // Choosing a preset moves the model to that provider's default.
+    expect(screen.getByLabelText("Model")).toHaveValue("gpt-5.6-luna");
+    await user.type(screen.getByLabelText("API key"), "the-api-key");
+    await user.click(screen.getByRole("button", { name: "Finish" }));
+
+    expect(await screen.findByRole("heading", { name: "Home" })).toBeInTheDocument();
+    // A hosted preset fixes its own protocol and host, so neither is
+    // on the wire: the server owns both (TECH-012).
+    expect(calls.saves).toEqual([
+      { preset: "openai", model: "gpt-5.6-luna", apiKey: "the-api-key" },
+    ]);
+    expect(calls.completed).toBe(1);
+  });
+
+  it("sends the endpoint for a preset that has no shared host", async () => {
+    const calls: AiCalls = { saves: [], completed: 0 };
+    stubApi({ signedIn: ADMIN, onboarding: { completed: false }, extra: aiWizardExtra(calls) });
+    renderAt("/welcome");
+    const user = userEvent.setup();
+    await goToAiAnalysisStep(user);
+
+    await user.selectOptions(screen.getByLabelText("Provider"), "azure_openai");
+    await user.type(
+      screen.getByLabelText("Deployment endpoint"),
+      "https://acme.openai.azure.example/v1",
+    );
+    await user.type(screen.getByLabelText("API key"), "the-api-key");
+    await user.click(screen.getByRole("button", { name: "Finish" }));
+
+    expect(await screen.findByRole("heading", { name: "Home" })).toBeInTheDocument();
+    expect(calls.saves).toEqual([
+      {
+        preset: "azure_openai",
+        model: "gpt-5.6-luna",
+        baseUrl: "https://acme.openai.azure.example/v1",
+        apiKey: "the-api-key",
+      },
+    ]);
+  });
+
+  it("names the protocol only for a custom endpoint", async () => {
+    const calls: AiCalls = { saves: [], completed: 0 };
+    stubApi({ signedIn: ADMIN, onboarding: { completed: false }, extra: aiWizardExtra(calls) });
+    renderAt("/welcome");
+    const user = userEvent.setup();
+    await goToAiAnalysisStep(user);
+
+    expect(screen.queryByLabelText("Protocol")).not.toBeInTheDocument();
+    await user.selectOptions(screen.getByLabelText("Provider"), "custom");
+    await user.selectOptions(screen.getByLabelText("Protocol"), "gemini");
+    await user.type(screen.getByLabelText("Base URL"), "https://ai.acme.example/v1");
+    await user.type(screen.getByLabelText("Model"), "acme-large");
+    await user.type(screen.getByLabelText("API key"), "the-api-key");
+    await user.click(screen.getByRole("button", { name: "Finish" }));
+
+    expect(await screen.findByRole("heading", { name: "Home" })).toBeInTheDocument();
+    expect(calls.saves).toEqual([
+      {
+        preset: "custom",
+        model: "acme-large",
+        protocol: "gemini",
+        baseUrl: "https://ai.acme.example/v1",
+        apiKey: "the-api-key",
+      },
+    ]);
+  });
+
+  it("renders a configured connector as configured, not as an empty form", async () => {
+    const calls: AiCalls = { saves: [], completed: 0 };
+    stubApi({
+      signedIn: ADMIN,
+      onboarding: { completed: false },
+      aiConnector: {
+        preset: "anthropic",
+        protocol: "anthropic_messages",
+        baseUrl: "https://api.anthropic.com/v1",
+        model: "claude-sonnet-5",
+      },
+      extra: aiWizardExtra(calls),
+    });
+    renderAt("/welcome");
+    const user = userEvent.setup();
+    await goToAiAnalysisStep(user);
+
+    expect(
+      screen.getByText(/Contract analysis runs through Anthropic, on model claude-sonnet-5/),
+    ).toBeInTheDocument();
+    // The key is write-only, so it is never asked for twice.
+    expect(screen.queryByLabelText("API key")).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Finish" }));
+    expect(await screen.findByRole("heading", { name: "Home" })).toBeInTheDocument();
+    // Nothing changed, so nothing was rewritten.
+    expect(calls.saves).toEqual([]);
+    expect(calls.completed).toBe(1);
+  });
+
+  it("does not call a configured connector running while it is turned off", async () => {
+    const calls: AiCalls = { saves: [], completed: 0 };
+    stubApi({
+      signedIn: ADMIN,
+      onboarding: { completed: false },
+      aiConnector: {
+        preset: "anthropic",
+        protocol: "anthropic_messages",
+        baseUrl: "https://api.anthropic.com/v1",
+        model: "claude-sonnet-5",
+        enabled: false,
+        disabledAt: "2026-09-05T09:00:00.000Z",
+      },
+      extra: aiWizardExtra(calls),
+    });
+    renderAt("/welcome");
+    const user = userEvent.setup();
+    await goToAiAnalysisStep(user);
+
+    expect(screen.getByText(/Anthropic is configured on model claude-sonnet-5/)).toHaveTextContent(
+      "Every Field stays manual until it is turned back on",
+    );
+    expect(screen.queryByText(/Contract analysis runs through/)).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("API key")).not.toBeInTheDocument();
+  });
+
+  it("rotates the model without asking for the stored key again", async () => {
+    const calls: AiCalls = { saves: [], completed: 0 };
+    stubApi({
+      signedIn: ADMIN,
+      onboarding: { completed: false },
+      aiConnector: {
+        preset: "anthropic",
+        protocol: "anthropic_messages",
+        baseUrl: "https://api.anthropic.com/v1",
+        model: "claude-sonnet-5",
+      },
+      extra: aiWizardExtra(calls),
+    });
+    renderAt("/welcome");
+    const user = userEvent.setup();
+    await goToAiAnalysisStep(user);
+
+    await user.click(screen.getByRole("button", { name: "Replace credentials" }));
+    // The key box opens blank, and blank keeps what is stored.
+    expect(screen.getByLabelText("API key")).toHaveValue("");
+    expect(screen.getByText(/Leave blank to keep the current key/)).toBeInTheDocument();
+
+    // The way back, so opening the form is not a one-way door.
+    await user.click(screen.getByRole("button", { name: "Keep current credentials" }));
+    expect(screen.getByText(/Contract analysis runs through Anthropic/)).toBeInTheDocument();
+    expect(screen.queryByLabelText("API key")).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Replace credentials" }));
+    await user.clear(screen.getByLabelText("Model"));
+    await user.type(screen.getByLabelText("Model"), "claude-opus-5");
+    await user.click(screen.getByRole("button", { name: "Finish" }));
+
+    expect(await screen.findByRole("heading", { name: "Home" })).toBeInTheDocument();
+    // The key is not on the wire: the route keeps the stored one.
+    expect(calls.saves).toEqual([{ preset: "anthropic", model: "claude-opus-5" }]);
+  });
+
+  it("skips without touching the connector", async () => {
+    const calls: AiCalls = { saves: [], completed: 0 };
+    stubApi({ signedIn: ADMIN, onboarding: { completed: false }, extra: aiWizardExtra(calls) });
+    renderAt("/welcome");
+    const user = userEvent.setup();
+    await goToAiAnalysisStep(user);
+
+    await user.type(screen.getByLabelText("API key"), "the-api-key");
+    await user.click(screen.getByRole("button", { name: "Set up later" }));
+
+    expect(await screen.findByRole("heading", { name: "Home" })).toBeInTheDocument();
+    expect(calls.saves).toEqual([]);
+    expect(calls.completed).toBe(1);
+  });
+
+  it("surfaces a save failure's plain-language reason and stays put", async () => {
+    const calls: AiCalls = { saves: [], completed: 0 };
+    stubApi({
+      signedIn: ADMIN,
+      onboarding: { completed: false },
+      extra: aiWizardExtra(calls, () => problem(400, "Paste the API key for this provider.")),
+    });
+    renderAt("/welcome");
+    const user = userEvent.setup();
+    await goToAiAnalysisStep(user);
+
+    await user.clear(screen.getByLabelText("Model"));
+    await user.type(screen.getByLabelText("Model"), "claude-opus-5");
+    await user.click(screen.getByRole("button", { name: "Finish" }));
+
+    expect(await screen.findByText(/Paste the API key for this provider/)).toBeInTheDocument();
+    // Refused, so the wizard stays on the step and does not finish.
+    expect(screen.getByRole("heading", { name: "AI analysis" })).toBeInTheDocument();
+    expect(calls.completed).toBe(0);
+  });
+
+  it("names the model the route would refuse in schema language", async () => {
+    const calls: AiCalls = { saves: [], completed: 0 };
+    stubApi({ signedIn: ADMIN, onboarding: { completed: false }, extra: aiWizardExtra(calls) });
+    renderAt("/welcome");
+    const user = userEvent.setup();
+    await goToAiAnalysisStep(user);
+
+    await user.type(screen.getByLabelText("API key"), "the-api-key");
+    await user.clear(screen.getByLabelText("Model"));
+    await user.click(screen.getByRole("button", { name: "Finish" }));
+
+    expect(await screen.findByText(/Enter the model to analyze with/)).toBeInTheDocument();
     expect(calls.saves).toEqual([]);
     expect(calls.completed).toBe(0);
   });
