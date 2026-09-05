@@ -20,6 +20,7 @@ import { Dialog, DialogContent, DialogTitle } from "../components/ui/dialog";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
 import { Switch } from "../components/ui/switch";
+import { aiPresetLabel } from "../lib/ai-presets";
 import { api } from "../lib/api";
 import { formatShortDate } from "../lib/format";
 import { problem } from "../lib/problem";
@@ -33,46 +34,6 @@ type PresetOption = Response["presets"][number];
 type Preset = PresetOption["preset"];
 type Protocol = PresetOption["protocol"];
 type Field = "connector" | "test" | "lifecycle";
-
-function presetLabel(preset: Preset, intl: ReturnType<typeof useIntl>): string {
-  switch (preset) {
-    case "anthropic":
-      return intl.formatMessage({
-        id: "settings.aiAnalysis.provider.anthropic",
-        defaultMessage: "Anthropic",
-      });
-    case "openai":
-      return intl.formatMessage({
-        id: "settings.aiAnalysis.provider.openai",
-        defaultMessage: "OpenAI",
-      });
-    case "azure_openai":
-      return intl.formatMessage({
-        id: "settings.aiAnalysis.provider.azureOpenAi",
-        defaultMessage: "Azure OpenAI",
-      });
-    case "gemini":
-      return intl.formatMessage({
-        id: "settings.aiAnalysis.provider.gemini",
-        defaultMessage: "Gemini",
-      });
-    case "openrouter":
-      return intl.formatMessage({
-        id: "settings.aiAnalysis.provider.openRouter",
-        defaultMessage: "OpenRouter",
-      });
-    case "ollama":
-      return intl.formatMessage({
-        id: "settings.aiAnalysis.provider.ollama",
-        defaultMessage: "Ollama",
-      });
-    case "custom":
-      return intl.formatMessage({
-        id: "settings.aiAnalysis.provider.custom",
-        defaultMessage: "Custom endpoint",
-      });
-  }
-}
 
 export async function settingsAiAnalysisLoader() {
   const user = await requireUser();
@@ -263,7 +224,7 @@ export function SettingsAiAnalysisPage() {
             >
               {loaded.presets.map((option) => (
                 <option key={option.preset} value={option.preset}>
-                  {presetLabel(option.preset, intl)}
+                  {aiPresetLabel(intl, option.preset)}
                 </option>
               ))}
             </select>

@@ -1,0 +1,1 @@
+ALTER TABLE "org_settings" ADD COLUMN "onboarding_reviewed_types_at" timestamp with time zone;

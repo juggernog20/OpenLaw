@@ -162,7 +162,7 @@ describe("resolved from the database when the environment sets no SMTP", () => {
       url: "/api/v1/onboarding",
       cookies: adminCookies,
     });
-    expect(status.json()).toMatchObject({ emailConfigured: false });
+    expect(status.json().steps.email.done).toBe(false);
 
     // The magic-link path refuses uniformly while nothing can send.
     const magic = await harness.app.inject({
@@ -237,13 +237,13 @@ describe("resolved from the database when the environment sets no SMTP", () => {
     expect(invited.statusCode, invited.body).toBe(201);
     expect(harness.mailer.messagesTo("june@example.com")).toHaveLength(1);
 
-    // The onboarding flag now reads configured — source is the app.
+    // The wizard's email step now reads done — source is the app.
     const status = await harness.app.inject({
       method: "GET",
       url: "/api/v1/onboarding",
       cookies: adminCookies,
     });
-    expect(status.json()).toMatchObject({ emailConfigured: true });
+    expect(status.json().steps.email.done).toBe(true);
   });
 
   it("replaces a saved relay in place — rotation without a reveal", async () => {
@@ -280,12 +280,12 @@ describe("resolved from the database when the environment sets no SMTP", () => {
     expect(test.statusCode, test.body).toBe(502);
     expect(test.json().detail).toContain("SMTP is not configured");
 
-    // …and the onboarding flag tracks the resolved source back down.
+    // …and the wizard's email step tracks the resolved source back down.
     const status = await harness.app.inject({
       method: "GET",
       url: "/api/v1/onboarding",
       cookies: adminCookies,
     });
-    expect(status.json()).toMatchObject({ emailConfigured: false });
+    expect(status.json().steps.email.done).toBe(false);
   });
 });

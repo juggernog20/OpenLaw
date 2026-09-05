@@ -7469,6 +7469,36 @@
   "settings.section.users": {
     "defaultMessage": "Users"
   },
+  "settings.setup.aiAnalysis": {
+    "defaultMessage": "AI analysis"
+  },
+  "settings.setup.eSignature": {
+    "defaultMessage": "E-signature"
+  },
+  "settings.setup.email": {
+    "defaultMessage": "Email"
+  },
+  "settings.setup.invites": {
+    "defaultMessage": "Invite your team"
+  },
+  "settings.setup.markReviewed": {
+    "defaultMessage": "Mark as reviewed"
+  },
+  "settings.setup.organization": {
+    "defaultMessage": "Organization"
+  },
+  "settings.setup.outstanding": {
+    "defaultMessage": "Outstanding setup steps"
+  },
+  "settings.setup.portal": {
+    "defaultMessage": "Business-user portal"
+  },
+  "settings.setup.review": {
+    "defaultMessage": "Review seeded types"
+  },
+  "settings.setup.title": {
+    "defaultMessage": "Setup checklist"
+  },
   "settings.title": {
     "defaultMessage": "Settings"
   },
@@ -7847,6 +7877,30 @@
   "views.setDefault": {
     "defaultMessage": "Set as default"
   },
+  "welcome.aiAnalysis.address": {
+    "defaultMessage": "This connector lives at Settings → Organization → AI analysis. Set it up there whenever you like."
+  },
+  "welcome.aiAnalysis.configured": {
+    "defaultMessage": "Contract analysis runs through {provider}, on model {model}."
+  },
+  "welcome.aiAnalysis.configured.disabled": {
+    "defaultMessage": "{provider} is configured on model {model}, but analysis is turned off. Every Field stays manual until it is turned back on."
+  },
+  "welcome.aiAnalysis.error.noModel": {
+    "defaultMessage": "Enter the model to analyze with, or choose Set up later."
+  },
+  "welcome.aiAnalysis.error.save": {
+    "defaultMessage": "The AI connector could not be saved."
+  },
+  "welcome.aiAnalysis.hint": {
+    "defaultMessage": "Optional. Connect your own AI provider and an Analysis run reads a Contract's primary Document for you and fills its Fields, each marked Unverified until a person confirms it. Skip it and Contract analysis does not run. Every Field you would have got automatically stays manual, and nothing else is lost. Contract text reaches your provider only while an Analysis run is working."
+  },
+  "welcome.aiAnalysis.replace": {
+    "defaultMessage": "Replace credentials"
+  },
+  "welcome.aiAnalysis.replace.cancel": {
+    "defaultMessage": "Keep current credentials"
+  },
   "welcome.auth.builtIn": {
     "defaultMessage": "Built-in sign-in"
   },
@@ -7909,6 +7963,30 @@
   },
   "welcome.continue": {
     "defaultMessage": "Continue"
+  },
+  "welcome.eSignature.address": {
+    "defaultMessage": "This connector lives at Settings → Organization → Integrations → E-signature. Set it up there whenever you like."
+  },
+  "welcome.eSignature.configured": {
+    "defaultMessage": "DocuSign is connected in the {environment, select, production {production} other {demo}} environment, as integration key {integrationKey}."
+  },
+  "welcome.eSignature.configured.disabled": {
+    "defaultMessage": "DocuSign is configured in the {environment, select, production {production} other {demo}} environment, as integration key {integrationKey}, but sending from records is turned off. Contracts use the manual hand-off until it is turned back on."
+  },
+  "welcome.eSignature.error.incomplete": {
+    "defaultMessage": "Enter the integration key and the user ID from your DocuSign integration, or choose Set up later."
+  },
+  "welcome.eSignature.error.save": {
+    "defaultMessage": "The e-signature connector could not be saved."
+  },
+  "welcome.eSignature.hint": {
+    "defaultMessage": "Optional. Connect DocuSign and contracts are sent for signature from their own records. Skip it and nothing else is lost. The manual hand-off stays the path, so you send the paper yourself, then upload the executed PDF and pin it to the record."
+  },
+  "welcome.eSignature.replace": {
+    "defaultMessage": "Replace credentials"
+  },
+  "welcome.eSignature.replace.cancel": {
+    "defaultMessage": "Keep current credentials"
   },
   "welcome.email.app": {
     "defaultMessage": "Outbound email is set in the app. Mail is sent from {from}."
@@ -7997,6 +8075,21 @@
   "welcome.invites.submit": {
     "defaultMessage": "Send invite"
   },
+  "welcome.org.error.save": {
+    "defaultMessage": "The organization details could not be saved."
+  },
+  "welcome.org.hint": {
+    "defaultMessage": "Your name and logo appear in the header. The locale and timezone defaults decide how dates read until somebody sets their own."
+  },
+  "welcome.org.logo.preview": {
+    "defaultMessage": "Organization logo"
+  },
+  "welcome.org.logo.rejected": {
+    "defaultMessage": "That logo must be a PNG, JPEG, WebP, or SVG image under 256 KB. Pick another file."
+  },
+  "welcome.org.logo.unreadable": {
+    "defaultMessage": "That file could not be read. Pick another one."
+  },
   "welcome.pageTitle": {
     "defaultMessage": "Welcome"
   },
@@ -8033,6 +8126,51 @@
   "welcome.progress": {
     "defaultMessage": "Step {current} of {total}"
   },
+  "welcome.review.contractStatuses": {
+    "defaultMessage": "Contract statuses"
+  },
+  "welcome.review.contractTypes": {
+    "defaultMessage": "Contract types"
+  },
+  "welcome.review.count": {
+    "defaultMessage": "Rows"
+  },
+  "welcome.review.entityTypes": {
+    "defaultMessage": "Entity types"
+  },
+  "welcome.review.error": {
+    "defaultMessage": "Review could not be saved. Try again."
+  },
+  "welcome.review.fields": {
+    "defaultMessage": "Fields"
+  },
+  "welcome.review.hint": {
+    "defaultMessage": "Your install started with these lists and reminder offsets. These are their current counts, including archived rows. Open a list in Settings to make changes."
+  },
+  "welcome.review.knowledgeTypes": {
+    "defaultMessage": "Knowledge types"
+  },
+  "welcome.review.list": {
+    "defaultMessage": "List"
+  },
+  "welcome.review.matterStatuses": {
+    "defaultMessage": "Matter statuses"
+  },
+  "welcome.review.matterTypes": {
+    "defaultMessage": "Matter types"
+  },
+  "welcome.review.officerRoles": {
+    "defaultMessage": "Officer roles"
+  },
+  "welcome.review.reminders": {
+    "defaultMessage": "Reminder offsets"
+  },
+  "welcome.review.reminders.address": {
+    "defaultMessage": "Reminder offsets live at Settings → Organization → Notifications."
+  },
+  "welcome.review.requestTypes": {
+    "defaultMessage": "Request types"
+  },
   "welcome.skip": {
     "defaultMessage": "Set up later"
   },
@@ -8042,8 +8180,14 @@
   "welcome.start": {
     "defaultMessage": "Get started"
   },
+  "welcome.step.aiAnalysis": {
+    "defaultMessage": "AI analysis"
+  },
   "welcome.step.authentication": {
     "defaultMessage": "Authentication"
+  },
+  "welcome.step.eSignature": {
+    "defaultMessage": "E-signature"
   },
   "welcome.step.email": {
     "defaultMessage": "Outbound email"
@@ -8051,8 +8195,14 @@
   "welcome.step.invites": {
     "defaultMessage": "Invite your team"
   },
+  "welcome.step.organization": {
+    "defaultMessage": "Your organization"
+  },
   "welcome.step.portal": {
     "defaultMessage": "Business-user portal"
+  },
+  "welcome.step.review": {
+    "defaultMessage": "Review"
   },
   "welcome.step.welcome": {
     "defaultMessage": "Welcome to OpenLaw"

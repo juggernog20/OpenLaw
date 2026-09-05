@@ -1328,7 +1328,7 @@
     "/api/v1/onboarding": {
       "get": {
         "operationId": "getOnboardingStatus",
-        "summary": "First-run onboarding state (SET-004), plus whether email is configured",
+        "summary": "First-run onboarding state (SET-004): whether the wizard is finished, and for each of its steps whether the thing it configures is configured and which Settings pane owns it",
         "tags": ["onboarding"],
         "responses": {
           "200": {
@@ -1341,11 +1341,284 @@
                     "completed": {
                       "type": "boolean"
                     },
-                    "emailConfigured": {
-                      "type": "boolean"
+                    "steps": {
+                      "type": "object",
+                      "properties": {
+                        "organization": {
+                          "type": "object",
+                          "properties": {
+                            "done": {
+                              "type": "boolean"
+                            },
+                            "settingsPath": {
+                              "type": ["string", "null"]
+                            }
+                          },
+                          "required": ["done", "settingsPath"],
+                          "additionalProperties": false
+                        },
+                        "authentication": {
+                          "type": "object",
+                          "properties": {
+                            "done": {
+                              "type": "boolean"
+                            },
+                            "settingsPath": {
+                              "type": ["string", "null"]
+                            }
+                          },
+                          "required": ["done", "settingsPath"],
+                          "additionalProperties": false
+                        },
+                        "portal": {
+                          "type": "object",
+                          "properties": {
+                            "done": {
+                              "type": "boolean"
+                            },
+                            "settingsPath": {
+                              "type": ["string", "null"]
+                            }
+                          },
+                          "required": ["done", "settingsPath"],
+                          "additionalProperties": false
+                        },
+                        "email": {
+                          "type": "object",
+                          "properties": {
+                            "done": {
+                              "type": "boolean"
+                            },
+                            "settingsPath": {
+                              "type": ["string", "null"]
+                            }
+                          },
+                          "required": ["done", "settingsPath"],
+                          "additionalProperties": false
+                        },
+                        "invites": {
+                          "type": "object",
+                          "properties": {
+                            "done": {
+                              "type": "boolean"
+                            },
+                            "settingsPath": {
+                              "type": ["string", "null"]
+                            }
+                          },
+                          "required": ["done", "settingsPath"],
+                          "additionalProperties": false
+                        },
+                        "e-signature": {
+                          "type": "object",
+                          "properties": {
+                            "done": {
+                              "type": "boolean"
+                            },
+                            "settingsPath": {
+                              "type": ["string", "null"]
+                            }
+                          },
+                          "required": ["done", "settingsPath"],
+                          "additionalProperties": false
+                        },
+                        "ai-analysis": {
+                          "type": "object",
+                          "properties": {
+                            "done": {
+                              "type": "boolean"
+                            },
+                            "settingsPath": {
+                              "type": ["string", "null"]
+                            }
+                          },
+                          "required": ["done", "settingsPath"],
+                          "additionalProperties": false
+                        },
+                        "review": {
+                          "type": "object",
+                          "properties": {
+                            "done": {
+                              "type": "boolean"
+                            },
+                            "settingsPath": {
+                              "type": ["string", "null"]
+                            }
+                          },
+                          "required": ["done", "settingsPath"],
+                          "additionalProperties": false
+                        }
+                      },
+                      "required": [
+                        "organization",
+                        "authentication",
+                        "portal",
+                        "email",
+                        "invites",
+                        "e-signature",
+                        "ai-analysis",
+                        "review"
+                      ],
+                      "additionalProperties": false
                     }
                   },
-                  "required": ["completed", "emailConfigured"],
+                  "required": ["completed", "steps"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/onboarding/reviewed": {
+      "post": {
+        "operationId": "reviewOnboardingTypes",
+        "summary": "Mark the seeded types reviewed (SET-004); one-way and idempotent",
+        "tags": ["onboarding"],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "completed": {
+                      "type": "boolean"
+                    },
+                    "steps": {
+                      "type": "object",
+                      "properties": {
+                        "organization": {
+                          "type": "object",
+                          "properties": {
+                            "done": {
+                              "type": "boolean"
+                            },
+                            "settingsPath": {
+                              "type": ["string", "null"]
+                            }
+                          },
+                          "required": ["done", "settingsPath"],
+                          "additionalProperties": false
+                        },
+                        "authentication": {
+                          "type": "object",
+                          "properties": {
+                            "done": {
+                              "type": "boolean"
+                            },
+                            "settingsPath": {
+                              "type": ["string", "null"]
+                            }
+                          },
+                          "required": ["done", "settingsPath"],
+                          "additionalProperties": false
+                        },
+                        "portal": {
+                          "type": "object",
+                          "properties": {
+                            "done": {
+                              "type": "boolean"
+                            },
+                            "settingsPath": {
+                              "type": ["string", "null"]
+                            }
+                          },
+                          "required": ["done", "settingsPath"],
+                          "additionalProperties": false
+                        },
+                        "email": {
+                          "type": "object",
+                          "properties": {
+                            "done": {
+                              "type": "boolean"
+                            },
+                            "settingsPath": {
+                              "type": ["string", "null"]
+                            }
+                          },
+                          "required": ["done", "settingsPath"],
+                          "additionalProperties": false
+                        },
+                        "invites": {
+                          "type": "object",
+                          "properties": {
+                            "done": {
+                              "type": "boolean"
+                            },
+                            "settingsPath": {
+                              "type": ["string", "null"]
+                            }
+                          },
+                          "required": ["done", "settingsPath"],
+                          "additionalProperties": false
+                        },
+                        "e-signature": {
+                          "type": "object",
+                          "properties": {
+                            "done": {
+                              "type": "boolean"
+                            },
+                            "settingsPath": {
+                              "type": ["string", "null"]
+                            }
+                          },
+                          "required": ["done", "settingsPath"],
+                          "additionalProperties": false
+                        },
+                        "ai-analysis": {
+                          "type": "object",
+                          "properties": {
+                            "done": {
+                              "type": "boolean"
+                            },
+                            "settingsPath": {
+                              "type": ["string", "null"]
+                            }
+                          },
+                          "required": ["done", "settingsPath"],
+                          "additionalProperties": false
+                        },
+                        "review": {
+                          "type": "object",
+                          "properties": {
+                            "done": {
+                              "type": "boolean"
+                            },
+                            "settingsPath": {
+                              "type": ["string", "null"]
+                            }
+                          },
+                          "required": ["done", "settingsPath"],
+                          "additionalProperties": false
+                        }
+                      },
+                      "required": [
+                        "organization",
+                        "authentication",
+                        "portal",
+                        "email",
+                        "invites",
+                        "e-signature",
+                        "ai-analysis",
+                        "review"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": ["completed", "steps"],
                   "additionalProperties": false
                 }
               }
@@ -1380,11 +1653,128 @@
                     "completed": {
                       "type": "boolean"
                     },
-                    "emailConfigured": {
-                      "type": "boolean"
+                    "steps": {
+                      "type": "object",
+                      "properties": {
+                        "organization": {
+                          "type": "object",
+                          "properties": {
+                            "done": {
+                              "type": "boolean"
+                            },
+                            "settingsPath": {
+                              "type": ["string", "null"]
+                            }
+                          },
+                          "required": ["done", "settingsPath"],
+                          "additionalProperties": false
+                        },
+                        "authentication": {
+                          "type": "object",
+                          "properties": {
+                            "done": {
+                              "type": "boolean"
+                            },
+                            "settingsPath": {
+                              "type": ["string", "null"]
+                            }
+                          },
+                          "required": ["done", "settingsPath"],
+                          "additionalProperties": false
+                        },
+                        "portal": {
+                          "type": "object",
+                          "properties": {
+                            "done": {
+                              "type": "boolean"
+                            },
+                            "settingsPath": {
+                              "type": ["string", "null"]
+                            }
+                          },
+                          "required": ["done", "settingsPath"],
+                          "additionalProperties": false
+                        },
+                        "email": {
+                          "type": "object",
+                          "properties": {
+                            "done": {
+                              "type": "boolean"
+                            },
+                            "settingsPath": {
+                              "type": ["string", "null"]
+                            }
+                          },
+                          "required": ["done", "settingsPath"],
+                          "additionalProperties": false
+                        },
+                        "invites": {
+                          "type": "object",
+                          "properties": {
+                            "done": {
+                              "type": "boolean"
+                            },
+                            "settingsPath": {
+                              "type": ["string", "null"]
+                            }
+                          },
+                          "required": ["done", "settingsPath"],
+                          "additionalProperties": false
+                        },
+                        "e-signature": {
+                          "type": "object",
+                          "properties": {
+                            "done": {
+                              "type": "boolean"
+                            },
+                            "settingsPath": {
+                              "type": ["string", "null"]
+                            }
+                          },
+                          "required": ["done", "settingsPath"],
+                          "additionalProperties": false
+                        },
+                        "ai-analysis": {
+                          "type": "object",
+                          "properties": {
+                            "done": {
+                              "type": "boolean"
+                            },
+                            "settingsPath": {
+                              "type": ["string", "null"]
+                            }
+                          },
+                          "required": ["done", "settingsPath"],
+                          "additionalProperties": false
+                        },
+                        "review": {
+                          "type": "object",
+                          "properties": {
+                            "done": {
+                              "type": "boolean"
+                            },
+                            "settingsPath": {
+                              "type": ["string", "null"]
+                            }
+                          },
+                          "required": ["done", "settingsPath"],
+                          "additionalProperties": false
+                        }
+                      },
+                      "required": [
+                        "organization",
+                        "authentication",
+                        "portal",
+                        "email",
+                        "invites",
+                        "e-signature",
+                        "ai-analysis",
+                        "review"
+                      ],
+                      "additionalProperties": false
                     }
                   },
-                  "required": ["completed", "emailConfigured"],
+                  "required": ["completed", "steps"],
                   "additionalProperties": false
                 }
               }

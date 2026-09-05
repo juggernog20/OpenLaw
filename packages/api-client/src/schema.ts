@@ -253,10 +253,27 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** First-run onboarding state (SET-004), plus whether email is configured */
+    /** First-run onboarding state (SET-004): whether the wizard is finished, and for each of its steps whether the thing it configures is configured and which Settings pane owns it */
     get: operations["getOnboardingStatus"];
     put?: never;
     post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/onboarding/reviewed": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Mark the seeded types reviewed (SET-004); one-way and idempotent */
+    post: operations["reviewOnboardingTypes"];
     delete?: never;
     options?: never;
     head?: never;
@@ -5336,7 +5353,105 @@ export interface operations {
         content: {
           "application/json": {
             completed: boolean;
-            emailConfigured: boolean;
+            steps: {
+              organization: {
+                done: boolean;
+                settingsPath: string | null;
+              };
+              authentication: {
+                done: boolean;
+                settingsPath: string | null;
+              };
+              portal: {
+                done: boolean;
+                settingsPath: string | null;
+              };
+              email: {
+                done: boolean;
+                settingsPath: string | null;
+              };
+              invites: {
+                done: boolean;
+                settingsPath: string | null;
+              };
+              "e-signature": {
+                done: boolean;
+                settingsPath: string | null;
+              };
+              "ai-analysis": {
+                done: boolean;
+                settingsPath: string | null;
+              };
+              review: {
+                done: boolean;
+                settingsPath: string | null;
+              };
+            };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  reviewOnboardingTypes: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            completed: boolean;
+            steps: {
+              organization: {
+                done: boolean;
+                settingsPath: string | null;
+              };
+              authentication: {
+                done: boolean;
+                settingsPath: string | null;
+              };
+              portal: {
+                done: boolean;
+                settingsPath: string | null;
+              };
+              email: {
+                done: boolean;
+                settingsPath: string | null;
+              };
+              invites: {
+                done: boolean;
+                settingsPath: string | null;
+              };
+              "e-signature": {
+                done: boolean;
+                settingsPath: string | null;
+              };
+              "ai-analysis": {
+                done: boolean;
+                settingsPath: string | null;
+              };
+              review: {
+                done: boolean;
+                settingsPath: string | null;
+              };
+            };
           };
         };
       };
@@ -5368,7 +5483,40 @@ export interface operations {
         content: {
           "application/json": {
             completed: boolean;
-            emailConfigured: boolean;
+            steps: {
+              organization: {
+                done: boolean;
+                settingsPath: string | null;
+              };
+              authentication: {
+                done: boolean;
+                settingsPath: string | null;
+              };
+              portal: {
+                done: boolean;
+                settingsPath: string | null;
+              };
+              email: {
+                done: boolean;
+                settingsPath: string | null;
+              };
+              invites: {
+                done: boolean;
+                settingsPath: string | null;
+              };
+              "e-signature": {
+                done: boolean;
+                settingsPath: string | null;
+              };
+              "ai-analysis": {
+                done: boolean;
+                settingsPath: string | null;
+              };
+              review: {
+                done: boolean;
+                settingsPath: string | null;
+              };
+            };
           };
         };
       };

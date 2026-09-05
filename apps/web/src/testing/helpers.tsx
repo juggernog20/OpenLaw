@@ -12,6 +12,7 @@ import { vi } from "vitest";
 import { render } from "@testing-library/react";
 import { createMemoryRouter, RouterProvider } from "react-router";
 import { IntlProvider } from "react-intl";
+import type { paths } from "@openlaw/api-client";
 import type { LiveEvent } from "@openlaw/shared";
 import { routes } from "../router";
 
@@ -154,6 +155,113 @@ export function stubFetch(handler: (call: StubCall) => StubAnswer) {
   return impl;
 }
 
+type AiResponse =
+  paths["/api/v1/ai-connector"]["get"]["responses"]["200"]["content"]["application/json"];
+type AiPreset = AiResponse["presets"][number]["preset"];
+type AiProtocol = AiResponse["presets"][number]["protocol"];
+
+/**
+ * The server-owned provider presets (TECH-012), as the API answers
+ * them. Copied rather than imported: the definitions live in the API
+ * package and the web tests must not reach across that line.
+ */
+const AI_PRESETS: AiResponse["presets"] = [
+  {
+    preset: "anthropic",
+    label: "Anthropic",
+    protocol: "anthropic_messages",
+    baseUrl: "https://api.anthropic.com/v1",
+    defaultModel: "claude-sonnet-5",
+    requiresApiKey: true,
+    requiresBaseUrl: false,
+  },
+  {
+    preset: "openai",
+    label: "OpenAI",
+    protocol: "openai_chat_completions",
+    baseUrl: "https://api.openai.com/v1",
+    defaultModel: "gpt-5.6-luna",
+    requiresApiKey: true,
+    requiresBaseUrl: false,
+  },
+  {
+    preset: "azure_openai",
+    label: "Azure OpenAI",
+    protocol: "openai_chat_completions",
+    baseUrl: null,
+    defaultModel: "gpt-5.6-luna",
+    requiresApiKey: true,
+    requiresBaseUrl: true,
+  },
+  {
+    preset: "gemini",
+    label: "Gemini",
+    protocol: "gemini",
+    baseUrl: "https://generativelanguage.googleapis.com/v1beta",
+    defaultModel: "gemini-3.6-flash",
+    requiresApiKey: true,
+    requiresBaseUrl: false,
+  },
+  {
+    preset: "openrouter",
+    label: "OpenRouter",
+    protocol: "openai_chat_completions",
+    baseUrl: "https://openrouter.ai/api/v1",
+    defaultModel: "~openai/gpt-latest",
+    requiresApiKey: true,
+    requiresBaseUrl: false,
+  },
+  {
+    preset: "ollama",
+    label: "Ollama",
+    protocol: "openai_chat_completions",
+    baseUrl: "http://localhost:11434/v1",
+    defaultModel: "llama3.2",
+    requiresApiKey: false,
+    requiresBaseUrl: false,
+  },
+  {
+    preset: "custom",
+    label: "Custom endpoint",
+    protocol: "openai_chat_completions",
+    baseUrl: null,
+    defaultModel: "",
+    requiresApiKey: true,
+    requiresBaseUrl: true,
+  },
+];
+
+/** The wizard's configuring steps, as `GET /api/v1/onboarding` names
+ * them. The welcome splash configures nothing, so it has no entry. */
+const ONBOARDING_STEPS = [
+  "organization",
+  "authentication",
+  "portal",
+  "email",
+  "invites",
+  "e-signature",
+  "ai-analysis",
+  "review",
+] as const;
+
+type OnboardingStep = (typeof ONBOARDING_STEPS)[number];
+
+/**
+ * The Settings pane that owns each step, as the route answers it. Email
+ * has none: no pane edits an SMTP relay (TECH-011). The Record type is
+ * what keeps this table complete as the step list grows.
+ */
+const ONBOARDING_SETTINGS_PATHS: Record<OnboardingStep, string | null> = {
+  organization: "/settings/general",
+  authentication: "/settings/authentication",
+  portal: "/settings/authentication",
+  email: null,
+  invites: "/settings/users",
+  "e-signature": "/settings/integrations/e-signature",
+  "ai-analysis": "/settings/ai-analysis",
+  review: null,
+};
+
 /** The three answers every guard consults, plus per-test overrides. */
 export interface ApiState {
   signedIn?: {
@@ -180,11 +288,68 @@ export interface ApiState {
     emailConfigured?: boolean;
     ssoProviderId: string | null;
   };
-  /** Defaults to completed, so guard tests land on home, not the wizard. */
-  onboarding?: { completed: boolean; emailConfigured: boolean };
+  /**
+   * Defaults to completed with every step done, so guard tests land on
+   * home rather than the wizard and no setup checklist is outstanding.
+   * A step left out of `steps` is done.
+   */
+  onboarding?: { completed: boolean; steps?: Partial<Record<OnboardingStep, boolean>> };
   /** Defaults to env-pinned — the wizard's email step reads it (#37). */
   emailSettings?: { source: "env" | "app" | "unset"; fromAddress: string | null };
+  /** Defaults to an unnamed organization, as a fresh install holds. */
+  orgGeneral?: {
+    name: string;
+    logo: string | null;
+    defaultLocale: "en-US";
+    defaultTimezone: string;
+  };
+  /**
+   * The DocuSign connector the wizard's E-signature step reads (#698).
+   * Defaults to the zero-config install CTR-013 promises: no connector,
+   * and the manual hand-off is the path. Only the suites about signing
+   * supply one.
+   */
+  signingConnector?: {
+    environment: "demo" | "production";
+    integrationKey: string;
+    apiUserId: string;
+    /** Defaults to on; set false for a configured connector that was turned off. */
+    enabled?: boolean;
+    disabledAt?: string | null;
+  };
+  /**
+   * The AI connector the wizard's AI analysis step reads (#699).
+   * Defaults to none, which is what a fresh install holds: no Contract
+   * analysis runs and every Field stays manual. Only the suites about
+   * AI analysis supply one.
+   */
+  aiConnector?: {
+    preset: AiPreset;
+    protocol: AiProtocol;
+    baseUrl: string | null;
+    model: string;
+    /** Defaults to true; the write-only key is never answered. */
+    hasApiKey?: boolean;
+    /** Defaults to on; set false for a configured connector that was turned off. */
+    enabled?: boolean;
+    disabledAt?: string | null;
+  };
   extra?: (call: StubCall) => StubAnswer;
+}
+
+/** The `GET /api/v1/onboarding` envelope a fixture expands to. The
+ * reviewed-mark route answers this same shape, so a stub for it should
+ * answer this too rather than an empty `steps` object. */
+export function onboardingEnvelope(onboarding: NonNullable<ApiState["onboarding"]>) {
+  return {
+    completed: onboarding.completed,
+    steps: Object.fromEntries(
+      ONBOARDING_STEPS.map((step) => [
+        step,
+        { done: onboarding.steps?.[step] ?? true, settingsPath: ONBOARDING_SETTINGS_PATHS[step] },
+      ]),
+    ),
+  };
 }
 
 export function stubApi(state: ApiState) {
@@ -490,7 +655,92 @@ export function stubApi(state: ApiState) {
       return json(200, { folders: [] });
     }
     if (call.url.pathname === "/api/v1/onboarding" && call.method === "GET") {
-      return json(200, state.onboarding ?? { completed: true, emailConfigured: true });
+      return json(200, onboardingEnvelope(state.onboarding ?? { completed: true }));
+    }
+    // Review reads these catalogues on arrival, including after first-run setup.
+    if (call.method === "GET") {
+      const lists = {
+        "/api/v1/matter-types": { matterTypes: [] },
+        "/api/v1/matter-statuses": { matterStatuses: [] },
+        "/api/v1/contract-types": { contractTypes: [] },
+        "/api/v1/contract-statuses": { contractStatuses: [] },
+        "/api/v1/entity-types": { entityTypes: [] },
+        "/api/v1/officer-roles": { officerRoles: [] },
+        "/api/v1/knowledge/types": { knowledgeTypes: [] },
+        "/api/v1/request-types": { requestTypes: [] },
+        "/api/v1/fields": { fields: [] },
+        "/api/v1/org/reminder-offsets": { offsets: [7, 1, 0] },
+      } satisfies {
+        [
+          P in
+            | "/api/v1/matter-types"
+            | "/api/v1/matter-statuses"
+            | "/api/v1/contract-types"
+            | "/api/v1/contract-statuses"
+            | "/api/v1/entity-types"
+            | "/api/v1/officer-roles"
+            | "/api/v1/knowledge/types"
+            | "/api/v1/request-types"
+            | "/api/v1/fields"
+            | "/api/v1/org/reminder-offsets"
+        ]: paths[P]["get"]["responses"][200]["content"]["application/json"];
+      };
+      const list = Object.entries(lists).find(([path]) => path === call.url.pathname);
+      if (list) return json(200, list[1]);
+    }
+    // The wizard's Organization step and the General pane read the same
+    // row. Unnamed by default, which is what a fresh install holds.
+    if (call.url.pathname === "/api/v1/org/general" && call.method === "GET") {
+      return json(200, {
+        general: state.orgGeneral ?? {
+          name: "",
+          logo: null,
+          defaultLocale: "en-US",
+          defaultTimezone: "UTC",
+        },
+      });
+    }
+    // The wizard's E-signature step and the Integrations pane read the
+    // same connector. Unconfigured by default, as a fresh install is.
+    if (call.url.pathname === "/api/v1/signing-connectors/docusign" && call.method === "GET") {
+      const saved = state.signingConnector;
+      return json(200, {
+        connector: {
+          // DocuSign is the one adapter v1 ships (CTR-013), so the
+          // answer names it rather than echoing back the path.
+          provider: "docusign",
+          configured: saved !== undefined,
+          enabled: saved?.enabled ?? saved !== undefined,
+          disabledAt: saved?.disabledAt ?? null,
+          environment: saved?.environment ?? null,
+          integrationKey: saved?.integrationKey ?? null,
+          apiUserId: saved?.apiUserId ?? null,
+          hasPrivateKey: saved !== undefined,
+          hasWebhookSecret: saved !== undefined,
+          webhookUrl: "http://localhost:3000/api/v1/signing/docusign/webhook",
+          updatedAt: saved === undefined ? null : "2026-08-16T09:00:00.000Z",
+        },
+      });
+    }
+    // The wizard's AI analysis step and the AI analysis pane read the
+    // same connector, and the preset list is server-owned (TECH-012).
+    // Unconfigured by default, as a fresh install is.
+    if (call.url.pathname === "/api/v1/ai-connector" && call.method === "GET") {
+      const saved = state.aiConnector;
+      return json(200, {
+        connector: {
+          configured: saved !== undefined,
+          enabled: saved?.enabled ?? saved !== undefined,
+          preset: saved?.preset ?? null,
+          protocol: saved?.protocol ?? null,
+          baseUrl: saved?.baseUrl ?? null,
+          hasApiKey: saved === undefined ? false : (saved.hasApiKey ?? true),
+          model: saved?.model ?? null,
+          disabledAt: saved?.disabledAt ?? null,
+          updatedAt: saved === undefined ? null : "2026-08-16T09:00:00.000Z",
+        },
+        presets: AI_PRESETS,
+      });
     }
     if (call.url.pathname === "/api/v1/email-settings" && call.method === "GET") {
       return json(

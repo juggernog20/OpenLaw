@@ -1,19 +1,42 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 /**
- * "Welcome to OpenLaw", the SET-004 first-run onboarding wizard,
- * scoped to the steps whose features exist (issue #34): authentication
- * mode, the DD-010 portal (magic-link toggle plus domain allowlist),
- * SMTP setup (#37: save a relay in the app unless the environment pins
- * one; env always wins), and invites. Every step is skippable. Finishing
- * or skipping out marks onboarding complete, and a completed wizard
- * never shows again.
+ * "Welcome to OpenLaw", the SET-004 first-run onboarding wizard: the
+ * organization's identity (#697), authentication mode, the DD-010
+ * portal (magic-link toggle plus domain allowlist), SMTP setup (#37:
+ * save a relay in the app unless the environment pins one; env always
+ * wins), invites, the DocuSign connector (#698), and the AI connector
+ * (#699), then a summary of the seeded lists (#700). Configuring steps
+ * write through the route their Settings pane already uses, because
+ * SET-001 keeps one pane at one address and a
+ * second writer would be a second address.
+ *
+ * The two connectors are two steps and not one Integrations step.
+ * SET-008 moved AI analysis out of Integrations because an
+ * integrations label files a product feature under plumbing, and one
+ * combined step would put it back.
+ *
+ * Every step is skippable. Configuring steps save on Continue; Review
+ * records its acknowledgement on Finish, then completes onboarding.
+ * Per-field commit on blur governs the Settings panes, where a field
+ * stands alone. Here a step is the unit an Administrator moves through.
+ *
+ * Finishing or skipping out marks onboarding complete, and a completed
+ * wizard never shows again.
  */
 
-import { useState, type ReactNode, type SubmitEvent as FormSubmitEvent } from "react";
-import { redirect, useLoaderData, useNavigate } from "react-router";
-import { FormattedMessage, useIntl } from "react-intl";
+import {
+  useId,
+  useRef,
+  useState,
+  type ReactNode,
+  type SubmitEvent as FormSubmitEvent,
+} from "react";
+import { Link, redirect, useLoaderData, useNavigate } from "react-router";
+import { defineMessage, FormattedMessage, useIntl } from "react-intl";
 import { X } from "lucide-react";
+import type { paths } from "@openlaw/api-client";
+import { aiPresetLabel } from "../lib/ai-presets";
 import { api } from "../lib/api";
 import { field } from "../lib/forms";
 import { networkError } from "../lib/messages";
@@ -23,11 +46,156 @@ import { requireUser } from "../lib/session";
 import { cn } from "../lib/utils";
 import { PageTitle } from "../components/page-title";
 import { SkipLink } from "../components/skip-link";
+import { TimezonePicker } from "../components/timezone-picker";
 import { Alert } from "../components/ui/alert";
 import { Button } from "../components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
+
+/** The one adapter v1 ships (CTR-013), as the pane names it too. */
+const SIGNING_PROVIDER = "docusign" as const;
+
+/** The estates DocuSign runs, as the API's own enum has them. */
+const SIGNING_ENVIRONMENTS = ["demo", "production"] as const;
+
+/** The connector as the API answers it. Never either secret. */
+type SigningConnector =
+  paths["/api/v1/signing-connectors/{provider}"]["get"]["responses"]["200"]["content"]["application/json"]["connector"];
+
+type AiResponse =
+  paths["/api/v1/ai-connector"]["get"]["responses"]["200"]["content"]["application/json"];
+/** The AI connector as the API answers it. Never the API key. */
+type AiConnector = AiResponse["connector"];
+/** One server-owned provider preset (TECH-012). The server fixes each
+ * preset's protocol, host, and default model; the client only picks. */
+type AiPresetOption = AiResponse["presets"][number];
+type AiPreset = AiPresetOption["preset"];
+type AiProtocol = AiPresetOption["protocol"];
+
+/** The preset a fresh install starts the AI step on. */
+const DEFAULT_AI_PRESET = "anthropic" as const;
+
+/** The wire protocols a custom endpoint can be reached over, as the
+ * API's own enum has them. A hosted preset fixes its own. */
+const AI_PROTOCOLS = [
+  "anthropic_messages",
+  "openai_chat_completions",
+  "gemini",
+] as const satisfies readonly AiProtocol[];
+
+/** The same complete lists the Settings panes load, including archived rows. */
+async function readReview() {
+  const query = { params: { query: { includeArchived: "true" as const } } };
+  const [
+    matterTypes,
+    matterStatuses,
+    contractTypes,
+    contractStatuses,
+    entityTypes,
+    officerRoles,
+    knowledgeTypes,
+    requestTypes,
+    fields,
+    reminders,
+  ] = await Promise.all([
+    api.GET("/api/v1/matter-types", query),
+    api.GET("/api/v1/matter-statuses", query),
+    api.GET("/api/v1/contract-types", query),
+    api.GET("/api/v1/contract-statuses", query),
+    api.GET("/api/v1/entity-types", query),
+    api.GET("/api/v1/officer-roles", query),
+    api.GET("/api/v1/knowledge/types", query),
+    api.GET("/api/v1/request-types", query),
+    api.GET("/api/v1/fields", query),
+    api.GET("/api/v1/org/reminder-offsets"),
+  ]);
+  if (
+    !matterTypes.data ||
+    !matterStatuses.data ||
+    !contractTypes.data ||
+    !contractStatuses.data ||
+    !entityTypes.data ||
+    !officerRoles.data ||
+    !knowledgeTypes.data ||
+    !requestTypes.data ||
+    !fields.data ||
+    !reminders.data
+  ) {
+    throw new Error("The seeded lists could not be read.");
+  }
+  return {
+    counts: {
+      matterTypes: matterTypes.data.matterTypes.length,
+      matterStatuses: matterStatuses.data.matterStatuses.length,
+      contractTypes: contractTypes.data.contractTypes.length,
+      contractStatuses: contractStatuses.data.contractStatuses.length,
+      entityTypes: entityTypes.data.entityTypes.length,
+      officerRoles: officerRoles.data.officerRoles.length,
+      knowledgeTypes: knowledgeTypes.data.knowledgeTypes.length,
+      requestTypes: requestTypes.data.requestTypes.length,
+      fields: fields.data.fields.length,
+    },
+    offsets: reminders.data.offsets,
+  };
+}
+
+const REVIEW_TAXONOMIES = [
+  {
+    key: "matterTypes",
+    label: defineMessage({ id: "welcome.review.matterTypes", defaultMessage: "Matter types" }),
+    settingsPath: "/settings/matters/types",
+  },
+  {
+    key: "matterStatuses",
+    label: defineMessage({
+      id: "welcome.review.matterStatuses",
+      defaultMessage: "Matter statuses",
+    }),
+    settingsPath: "/settings/matters/statuses",
+  },
+  {
+    key: "contractTypes",
+    label: defineMessage({ id: "welcome.review.contractTypes", defaultMessage: "Contract types" }),
+    settingsPath: "/settings/contracts/types",
+  },
+  {
+    key: "contractStatuses",
+    label: defineMessage({
+      id: "welcome.review.contractStatuses",
+      defaultMessage: "Contract statuses",
+    }),
+    settingsPath: "/settings/contracts/statuses",
+  },
+  {
+    key: "entityTypes",
+    label: defineMessage({ id: "welcome.review.entityTypes", defaultMessage: "Entity types" }),
+    settingsPath: "/settings/entities/types",
+  },
+  {
+    key: "officerRoles",
+    label: defineMessage({ id: "welcome.review.officerRoles", defaultMessage: "Officer roles" }),
+    settingsPath: "/settings/entities/officer-roles",
+  },
+  {
+    key: "knowledgeTypes",
+    label: defineMessage({
+      id: "welcome.review.knowledgeTypes",
+      defaultMessage: "Knowledge types",
+    }),
+    settingsPath: "/settings/knowledge/types",
+  },
+  {
+    key: "requestTypes",
+    label: defineMessage({ id: "welcome.review.requestTypes", defaultMessage: "Request types" }),
+    settingsPath: "/settings/intake/request-types",
+  },
+  {
+    key: "fields",
+    label: defineMessage({ id: "welcome.review.fields", defaultMessage: "Fields" }),
+    settingsPath: "/settings/contracts/fields",
+  },
+] as const;
 
 export async function welcomeLoader() {
   const user = await requireUser();
@@ -37,27 +205,82 @@ export async function welcomeLoader() {
   const onboarding = await api.GET("/api/v1/onboarding");
   if (!onboarding.data) throw new Error("The onboarding state could not be read.");
   if (onboarding.data.completed) return redirect("/");
-  const [methods, domains, email] = await Promise.all([
+  const [general, methods, domains, email, signing, ai, review] = await Promise.all([
+    api.GET("/api/v1/org/general"),
     api.GET("/api/v1/auth/methods"),
     api.GET("/api/v1/auth/allowed-domains"),
     api.GET("/api/v1/email-settings"),
+    api.GET("/api/v1/signing-connectors/{provider}", {
+      params: { path: { provider: SIGNING_PROVIDER } },
+    }),
+    api.GET("/api/v1/ai-connector"),
+    readReview(),
   ]);
-  if (!methods.data || !domains.data || !email.data) {
+  if (!general.data || !methods.data || !domains.data || !email.data || !signing.data || !ai.data) {
     throw new Error("The onboarding state could not be read.");
   }
+  // Split so the step holds a list that is known non-empty. The route
+  // always answers every preset, and a step with none to offer is an
+  // instance the wizard cannot walk.
+  const [firstPreset, ...otherPresets] = ai.data.presets;
+  if (!firstPreset) throw new Error("The onboarding state could not be read.");
   return {
-    emailConfigured: onboarding.data.emailConfigured,
+    // The email step's own answer, which honours TECH-011's precedence:
+    // an environment-pinned relay counts exactly as an app-saved one.
+    emailConfigured: onboarding.data.steps.email.done,
+    general: general.data.general,
     methods: methods.data,
     domains: domains.data.domains,
     emailSettings: email.data,
+    // Read here rather than derived from the onboarding status, because
+    // the step draws the stored estate and integration key and needs
+    // the row itself, not the one boolean the status carries.
+    signingConnector: signing.data.connector,
+    // Same reason for the AI connector, plus the presets: the provider
+    // list is server-owned (TECH-012), so the step reads it rather than
+    // holding its own copy of the protocols and default models.
+    aiConnector: ai.data.connector,
+    review,
+    aiPresets: [firstPreset, ...otherPresets] as const,
   };
 }
 
-const STEPS = ["welcome", "authentication", "portal", "email", "invites"] as const;
+/** SET-004's order: who we are, then how people get in, then who they
+ * are, then what we connect to. The splash configures nothing and opens
+ * the flow. */
+const STEPS = [
+  "welcome",
+  "organization",
+  "authentication",
+  "portal",
+  "email",
+  "invites",
+  "e-signature",
+  "ai-analysis",
+  "review",
+] as const;
 type Step = (typeof STEPS)[number];
 
 const INVITE_ROLES = ["legal_team_member", "contributor", "administrator"] as const;
 type InviteRole = (typeof INVITE_ROLES)[number];
+
+/** The GET/PATCH /org/general payload, as the client sees it. */
+interface General {
+  name: string;
+  logo: string | null;
+  defaultLocale: "en-US";
+  defaultTimezone: string;
+}
+
+/** ~256 KB of image; matches the API's cap on the encoded data: URI. */
+const LOGO_BYTE_LIMIT = 256 * 1024;
+const LOGO_TYPES = ["image/png", "image/jpeg", "image/webp", "image/svg+xml"];
+
+/** The locales the UI ships, as the API's own enum has them (DES-013). */
+const SHIPPED_LOCALES = ["en-US"] as const;
+
+const selectClassName =
+  "h-8 w-full rounded-button border border-border-default bg-raised px-2 text-sm text-primary focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-link disabled:pointer-events-none disabled:opacity-50";
 
 /** Selectable option row (aria-pressed carries the state for readers). */
 function OptionButton(
@@ -95,6 +318,14 @@ export function WelcomePage() {
   const [step, setStep] = useState<Step>("welcome");
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const stepTitleId = useId();
+
+  // Organization step (#697): the same org_settings row the General
+  // pane writes. Held as a draft and sent on Continue in one PATCH,
+  // which is the wizard's unit of movement.
+  const [savedGeneral, setSavedGeneral] = useState<General>(loaded.general);
+  const [orgDraft, setOrgDraft] = useState<General>(loaded.general);
+  const logoInput = useRef<HTMLInputElement>(null);
 
   // Authentication step.
   // What the server holds right now. Starts from the loader and moves
@@ -123,7 +354,91 @@ export function WelcomePage() {
   const [inviteRole, setInviteRole] = useState<InviteRole>("legal_team_member");
   const [invited, setInvited] = useState<string[]>([]);
 
+  // E-signature step (#698): the DocuSign connector, through the PUT
+  // the Integrations pane already uses. Both secrets are write-only, so
+  // their boxes start blank on a configured connector too — blank keeps
+  // what is stored, and this step never receives either one to resend.
+  const [signingConnector, setSigningConnector] = useState<SigningConnector>(
+    loaded.signingConnector,
+  );
+  const [signingEnvironment, setSigningEnvironment] = useState<
+    (typeof SIGNING_ENVIRONMENTS)[number]
+  >(loaded.signingConnector.environment ?? "demo");
+  const [integrationKey, setIntegrationKey] = useState(
+    loaded.signingConnector.integrationKey ?? "",
+  );
+  const [apiUserId, setApiUserId] = useState(loaded.signingConnector.apiUserId ?? "");
+  const [privateKey, setPrivateKey] = useState("");
+  const [webhookSecret, setWebhookSecret] = useState("");
+  /** Whether a configured connector's form is open for new credentials.
+   * A configured connector reads as configured until it is. */
+  const [replacingConnector, setReplacingConnector] = useState(false);
+  const signingFormOpen = !signingConnector.configured || replacingConnector;
+
+  // AI analysis step (#699): the AI connector, through the PUT the AI
+  // analysis pane already uses. SET-008 keeps AI analysis out of
+  // Integrations, so the wizard gives it a step and not a tab. The API
+  // key is write-only, so its box starts blank on a configured
+  // connector too — blank keeps the stored key.
+  const [aiConnector, setAiConnector] = useState<AiConnector>(loaded.aiConnector);
+  const [aiPreset, setAiPreset] = useState<AiPreset>(
+    loaded.aiConnector.preset ?? DEFAULT_AI_PRESET,
+  );
+  /** The chosen preset's server-owned definition. The route answers
+   * every preset it accepts, so the fallback is only what keeps the
+   * lookup total. */
+  const chosenPreset =
+    loaded.aiPresets.find((option) => option.preset === aiPreset) ?? loaded.aiPresets[0];
+  const [aiProtocol, setAiProtocol] = useState<AiProtocol>(
+    loaded.aiConnector.protocol ?? chosenPreset.protocol,
+  );
+  const [aiBaseUrl, setAiBaseUrl] = useState(
+    loaded.aiConnector.baseUrl ?? chosenPreset.baseUrl ?? "",
+  );
+  const [aiModel, setAiModel] = useState(loaded.aiConnector.model ?? chosenPreset.defaultModel);
+  const [aiApiKey, setAiApiKey] = useState("");
+  /** Whether a configured connector's form is open for a new key. */
+  const [replacingAiConnector, setReplacingAiConnector] = useState(false);
+  const aiFormOpen = !aiConnector.configured || replacingAiConnector;
+
+  /** The step's boxes as they read on the stored connector, or on a
+   * fresh install as the default preset leaves them. Both the reset out
+   * of Replace credentials and the untouched check compare with this. */
+  function aiBaseline(connector: AiConnector): {
+    preset: AiPreset;
+    protocol: AiProtocol;
+    baseUrl: string;
+    model: string;
+  } {
+    const preset = connector.preset ?? DEFAULT_AI_PRESET;
+    const definition =
+      loaded.aiPresets.find((option) => option.preset === preset) ?? loaded.aiPresets[0];
+    return {
+      preset,
+      protocol: connector.protocol ?? definition.protocol,
+      baseUrl: connector.baseUrl ?? definition.baseUrl ?? "",
+      model: connector.model ?? definition.defaultModel,
+    };
+  }
+
+  /** Moves every box to one preset's own defaults, which is what the
+   * AI analysis pane does too. A preset fixes the protocol, the host,
+   * and the model it is usually run with. */
+  function chooseAiPreset(next: string) {
+    // A lookup, not a cast: a preset the route did not answer is not
+    // one this install can save.
+    const definition = loaded.aiPresets.find((option) => option.preset === next);
+    if (!definition) return;
+    setAiPreset(definition.preset);
+    setAiProtocol(definition.protocol);
+    setAiBaseUrl(definition.baseUrl ?? "");
+    setAiModel(definition.defaultModel);
+    setAiApiKey("");
+    setError(null);
+  }
+
   const stepIndex = STEPS.indexOf(step);
+  const isLastStep = stepIndex === STEPS.length - 1;
 
   function goTo(next: Step) {
     setError(null);
@@ -131,10 +446,33 @@ export function WelcomePage() {
     setStep(next);
   }
 
-  async function finish() {
+  /** Onward from this step: the next one, or the end of the wizard. */
+  async function advance() {
+    const next = STEPS[stepIndex + 1];
+    if (!next) {
+      await finish();
+      return;
+    }
+    goTo(next);
+  }
+
+  async function finish(reviewed = false) {
     setBusy(true);
     setError(null);
     try {
+      if (reviewed) {
+        const result = await api.POST("/api/v1/onboarding/reviewed");
+        if (!result.response.ok) {
+          setError(
+            (await readProblem(result)).detail ??
+              intl.formatMessage({
+                id: "welcome.review.error",
+                defaultMessage: "Review could not be saved. Try again.",
+              }),
+          );
+          return;
+        }
+      }
       const { response } = await api.POST("/api/v1/onboarding/complete");
       if (response.ok) {
         void navigate("/", { replace: true });
@@ -145,6 +483,98 @@ export function WelcomePage() {
           id: "welcome.error.complete",
           defaultMessage: "Onboarding could not be marked finished. Try again.",
         }),
+      );
+    } catch {
+      setError(networkError(intl));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  function readLogo(file: File | undefined) {
+    if (!file) return;
+    if (!LOGO_TYPES.includes(file.type) || file.size > LOGO_BYTE_LIMIT) {
+      setError(
+        intl.formatMessage({
+          id: "welcome.org.logo.rejected",
+          defaultMessage:
+            "That logo must be a PNG, JPEG, WebP, or SVG image under 256 KB. Pick another file.",
+        }),
+      );
+      return;
+    }
+    setBusy(true);
+    const unreadable = () => {
+      setError(
+        intl.formatMessage({
+          id: "welcome.org.logo.unreadable",
+          defaultMessage: "That file could not be read. Pick another one.",
+        }),
+      );
+      setBusy(false);
+    };
+    const reader = new FileReader();
+    reader.onload = () => {
+      // readAsDataURL resolves to a string, but the API takes a data:
+      // URI and nothing else, so anything else is a read that failed.
+      const dataUri = reader.result;
+      if (typeof dataUri !== "string") {
+        unreadable();
+        return;
+      }
+      setError(null);
+      setOrgDraft((current) => ({ ...current, logo: dataUri }));
+      setBusy(false);
+    };
+    reader.onerror = unreadable;
+    reader.onabort = unreadable;
+    try {
+      reader.readAsDataURL(file);
+    } catch {
+      unreadable();
+    }
+  }
+
+  async function applyOrganization() {
+    // Only what moved: an untouched field sends nothing and the
+    // activity log stays a record of changes (DD-017). A changed blank
+    // name still reaches the route, whose validation refuses it; the
+    // wizard must not silently retain the old name while advancing.
+    const name = orgDraft.name.trim();
+    const patch = {
+      ...(name !== savedGeneral.name ? { name } : {}),
+      ...(orgDraft.logo !== savedGeneral.logo ? { logo: orgDraft.logo } : {}),
+      ...(orgDraft.defaultLocale !== savedGeneral.defaultLocale
+        ? { defaultLocale: orgDraft.defaultLocale }
+        : {}),
+      ...(orgDraft.defaultTimezone !== savedGeneral.defaultTimezone
+        ? { defaultTimezone: orgDraft.defaultTimezone }
+        : {}),
+    };
+    if (Object.keys(patch).length === 0) {
+      // Revert presentation-only whitespace trimmed above, so Back
+      // shows the saved row rather than a draft that was never sent.
+      setOrgDraft(savedGeneral);
+      await advance();
+      return;
+    }
+    setBusy(true);
+    setError(null);
+    try {
+      const result = await api.PATCH("/api/v1/org/general", { body: patch });
+      const { data } = result;
+      if (data) {
+        setSavedGeneral(data.general);
+        setOrgDraft(data.general);
+        await advance();
+        return;
+      }
+      setError(
+        (await readProblem(result)).detail ??
+          intl.formatMessage({
+            id: "welcome.org.error.save",
+            defaultMessage: "The organization details could not be saved.",
+          }),
       );
     } catch {
       setError(networkError(intl));
@@ -201,7 +631,7 @@ export function WelcomePage() {
       return;
     }
     if (mode === savedMethods.mode) {
-      goTo("portal");
+      await advance();
       return;
     }
     setBusy(true);
@@ -211,7 +641,7 @@ export function WelcomePage() {
       const { data } = result;
       if (data) {
         setSavedMethods((current) => ({ ...current, mode: data.mode }));
-        goTo("portal");
+        await advance();
         return;
       }
       setError(
@@ -265,7 +695,7 @@ export function WelcomePage() {
         const saved = toggled.data.magicLinkEnabled;
         setSavedMethods((current) => ({ ...current, magicLinkEnabled: saved }));
       }
-      goTo("email");
+      await advance();
     } catch {
       setError(networkError(intl));
     } finally {
@@ -415,14 +845,187 @@ export function WelcomePage() {
     }
   }
 
+  /**
+   * Saves the connector on Continue, if there is anything to save.
+   *
+   * Leaving the boxes as they were is how this step is skipped from the
+   * Continue button, and it writes nothing: an install with no
+   * connector keeps the manual hand-off, which is the whole promise
+   * (CTR-013). Both secrets are omitted when blank rather than sent
+   * empty, so a configured connector is never asked for a credential it
+   * already holds.
+   */
+  async function applyESignature() {
+    if (!signingFormOpen) {
+      await advance();
+      return;
+    }
+    const key = integrationKey.trim();
+    const userId = apiUserId.trim();
+    const untouched =
+      signingEnvironment === (signingConnector.environment ?? "demo") &&
+      key === (signingConnector.integrationKey ?? "") &&
+      userId === (signingConnector.apiUserId ?? "") &&
+      privateKey.trim() === "" &&
+      webhookSecret.trim() === "";
+    if (untouched) {
+      await advance();
+      return;
+    }
+    // The route refuses a blank integration key with a schema message,
+    // which reads like a wire fault rather than an instruction. The two
+    // secrets are left to the route, whose refusals are written for an
+    // Administrator to act on.
+    if (!key || !userId) {
+      setError(
+        intl.formatMessage({
+          id: "welcome.eSignature.error.incomplete",
+          defaultMessage:
+            "Enter the integration key and the user ID from your DocuSign integration, or choose Set up later.",
+        }),
+      );
+      return;
+    }
+    setBusy(true);
+    setError(null);
+    try {
+      const result = await api.PUT("/api/v1/signing-connectors/{provider}", {
+        params: { path: { provider: SIGNING_PROVIDER } },
+        body: {
+          environment: signingEnvironment,
+          integrationKey: key,
+          apiUserId: userId,
+          ...(privateKey.trim() === "" ? {} : { privateKey }),
+          ...(webhookSecret.trim() === "" ? {} : { webhookSecret }),
+        },
+      });
+      const { data } = result;
+      if (data) {
+        setSigningConnector(data.connector);
+        // The boxes go back to blank because that is what they mean on
+        // a stored connector: keep what is there.
+        setPrivateKey("");
+        setWebhookSecret("");
+        setReplacingConnector(false);
+        await advance();
+        return;
+      }
+      setError(
+        (await readProblem(result)).detail ??
+          intl.formatMessage({
+            id: "welcome.eSignature.error.save",
+            defaultMessage: "The e-signature connector could not be saved.",
+          }),
+      );
+    } catch {
+      setError(networkError(intl));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  /**
+   * Saves the AI connector, or moves on without writing.
+   *
+   * Leaving the boxes as they are is how this step is skipped from the
+   * Continue button, and it writes nothing. An install with no
+   * connector runs no Contract analysis, and every Field an
+   * Administrator would otherwise get automatically stays manual. The
+   * API key is omitted when blank rather than sent empty, so a
+   * configured connector is never asked for the key it already holds.
+   */
+  async function applyAiAnalysis() {
+    if (!aiFormOpen) {
+      await advance();
+      return;
+    }
+    const baseUrl = aiBaseUrl.trim();
+    const model = aiModel.trim();
+    const baseline = aiBaseline(aiConnector);
+    const untouched =
+      aiPreset === baseline.preset &&
+      aiProtocol === baseline.protocol &&
+      baseUrl === baseline.baseUrl.trim() &&
+      model === baseline.model.trim() &&
+      aiApiKey.trim() === "";
+    if (untouched) {
+      await advance();
+      return;
+    }
+    // The route refuses a blank model with a schema message, which
+    // reads like a wire fault rather than an instruction. The key and
+    // the base URL are left to the route, whose refusals are written
+    // for an Administrator to act on.
+    if (!model) {
+      setError(
+        intl.formatMessage({
+          id: "welcome.aiAnalysis.error.noModel",
+          defaultMessage: "Enter the model to analyze with, or choose Set up later.",
+        }),
+      );
+      return;
+    }
+    setBusy(true);
+    setError(null);
+    try {
+      const result = await api.PUT("/api/v1/ai-connector", {
+        body: {
+          preset: aiPreset,
+          model,
+          ...(aiPreset === "custom" ? { protocol: aiProtocol } : {}),
+          ...(chosenPreset.requiresBaseUrl ? { baseUrl } : {}),
+          ...(aiApiKey.trim() === "" ? {} : { apiKey: aiApiKey }),
+        },
+      });
+      const { data } = result;
+      if (data) {
+        setAiConnector(data.connector);
+        // The box goes back to blank because that is what it means on
+        // a stored connector: keep the key that is there.
+        setAiApiKey("");
+        setReplacingAiConnector(false);
+        await advance();
+        return;
+      }
+      setError(
+        (await readProblem(result)).detail ??
+          intl.formatMessage({
+            id: "welcome.aiAnalysis.error.save",
+            defaultMessage: "The AI connector could not be saved.",
+          }),
+      );
+    } catch {
+      setError(networkError(intl));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  /** What Continue does on this step, before it moves on. */
+  async function continueStep() {
+    if (step === "organization") return applyOrganization();
+    if (step === "authentication") return applyAuthentication();
+    if (step === "portal") return applyPortal();
+    if (step === "e-signature") return applyESignature();
+    if (step === "ai-analysis") return applyAiAnalysis();
+    if (step === "review") return finish(true);
+    return advance();
+  }
+
   const stepTitles: Record<Step, ReactNode> = {
     welcome: <FormattedMessage id="welcome.step.welcome" defaultMessage="Welcome to OpenLaw" />,
+    organization: (
+      <FormattedMessage id="welcome.step.organization" defaultMessage="Your organization" />
+    ),
     authentication: (
       <FormattedMessage id="welcome.step.authentication" defaultMessage="Authentication" />
     ),
     portal: <FormattedMessage id="welcome.step.portal" defaultMessage="Business-user portal" />,
     email: <FormattedMessage id="welcome.step.email" defaultMessage="Outbound email" />,
     invites: <FormattedMessage id="welcome.step.invites" defaultMessage="Invite your team" />,
+    "e-signature": <FormattedMessage id="welcome.step.eSignature" defaultMessage="E-signature" />,
+    "ai-analysis": <FormattedMessage id="welcome.step.aiAnalysis" defaultMessage="AI analysis" />,
+    review: <FormattedMessage id="welcome.step.review" defaultMessage="Review" />,
   };
 
   return (
@@ -442,7 +1045,7 @@ export function WelcomePage() {
           </p>
           <Card>
             <CardHeader>
-              <CardTitle>{stepTitles[step]}</CardTitle>
+              <CardTitle id={stepTitleId}>{stepTitles[step]}</CardTitle>
               {step === "welcome" && (
                 <CardDescription>
                   <FormattedMessage
@@ -455,484 +1058,1189 @@ export function WelcomePage() {
             <CardContent className="flex flex-col gap-4">
               {error && <Alert variant="danger">{error}</Alert>}
 
-              {step === "welcome" && (
-                <div className="flex items-center gap-3">
-                  <Button onClick={() => goTo("authentication")}>
-                    <FormattedMessage id="welcome.start" defaultMessage="Get started" />
-                  </Button>
-                  <Button variant="ghost" disabled={busy} onClick={() => void finish()}>
-                    <FormattedMessage id="welcome.skipAll" defaultMessage="Set up later" />
-                  </Button>
-                </div>
-              )}
-
-              {step === "authentication" && (
-                <>
-                  <div className="flex flex-col gap-2">
-                    <OptionButton
-                      selected={mode === "built_in"}
-                      onClick={() => setMode("built_in")}
-                      title={
-                        <FormattedMessage
-                          id="welcome.auth.builtIn"
-                          defaultMessage="Built-in sign-in"
-                        />
-                      }
-                      description={
-                        <FormattedMessage
-                          id="welcome.auth.builtIn.hint"
-                          defaultMessage="Email and password, with optional two-factor authentication. The default."
-                        />
-                      }
-                    />
-                    <OptionButton
-                      selected={mode === "oidc"}
-                      onClick={() => setMode("oidc")}
-                      title={
-                        <FormattedMessage
-                          id="welcome.auth.oidc"
-                          defaultMessage="Single sign-on (OIDC)"
-                        />
-                      }
-                      description={
-                        <FormattedMessage
-                          id="welcome.auth.oidc.hint"
-                          defaultMessage="Bring your own identity provider. Administrators keep password sign-in as break-glass."
-                        />
-                      }
-                    />
+              {/* Each step is its own region, named by the card's
+                  heading, so a screen reader reaches the step's fields
+                  as one labelled group (DES-011). */}
+              <section aria-labelledby={stepTitleId} className="flex flex-col gap-4">
+                {step === "welcome" && (
+                  <div className="flex items-center gap-3">
+                    <Button onClick={() => goTo("organization")}>
+                      <FormattedMessage id="welcome.start" defaultMessage="Get started" />
+                    </Button>
+                    <Button variant="ghost" disabled={busy} onClick={() => void finish()}>
+                      <FormattedMessage id="welcome.skipAll" defaultMessage="Set up later" />
+                    </Button>
                   </div>
+                )}
 
-                  {mode === "oidc" && !ssoProviderId && (
-                    <form
-                      className="flex flex-col gap-3 rounded-card border border-border-default p-4"
-                      onSubmit={(e) => void registerProvider(e)}
-                    >
-                      <p className="text-md font-medium">
+                {step === "organization" && (
+                  <>
+                    <CardDescription>
+                      <FormattedMessage
+                        id="welcome.org.hint"
+                        defaultMessage="Your name and logo appear in the header. The locale and timezone defaults decide how dates read until somebody sets their own."
+                      />
+                    </CardDescription>
+                    <div className="flex flex-col gap-1.5">
+                      <Label htmlFor="org-name">
                         <FormattedMessage
-                          id="welcome.auth.register.title"
-                          defaultMessage="Register your identity provider"
+                          id="settings.general.name"
+                          defaultMessage="Organization name"
+                        />
+                      </Label>
+                      <Input
+                        id="org-name"
+                        value={orgDraft.name}
+                        autoComplete="organization"
+                        onChange={(event) =>
+                          setOrgDraft((current) => ({ ...current, name: event.target.value }))
+                        }
+                      />
+                    </div>
+
+                    <div className="flex flex-col gap-1.5">
+                      <span className="text-sm font-medium text-primary">
+                        <FormattedMessage id="settings.general.logo" defaultMessage="Logo" />
+                      </span>
+                      <div className="flex items-center gap-3">
+                        {orgDraft.logo ? (
+                          // Named rather than decorative: on this step
+                          // the preview is the confirmation that the
+                          // upload landed, so a reader needs it too.
+                          <img
+                            src={orgDraft.logo}
+                            alt={intl.formatMessage({
+                              id: "welcome.org.logo.preview",
+                              defaultMessage: "Organization logo",
+                            })}
+                            className="size-10 rounded-button border border-border-default object-contain"
+                          />
+                        ) : (
+                          <span
+                            aria-hidden="true"
+                            className="flex size-10 items-center justify-center rounded-button bg-control text-lg font-semibold text-primary"
+                          >
+                            {(orgDraft.name || "O").charAt(0).toUpperCase()}
+                          </span>
+                        )}
+                        <input
+                          ref={logoInput}
+                          type="file"
+                          disabled={busy}
+                          accept={LOGO_TYPES.join(",")}
+                          // Visually hidden but still in the accessibility
+                          // tree, so it carries its own name (the Upload
+                          // button drives it).
+                          aria-label={intl.formatMessage({
+                            id: "settings.general.uploadLogo",
+                            defaultMessage: "Upload a logo",
+                          })}
+                          className="sr-only"
+                          onChange={(event) => {
+                            readLogo(event.target.files?.[0]);
+                            event.target.value = "";
+                          }}
+                        />
+                        <Button
+                          type="button"
+                          variant="secondary"
+                          size="sm"
+                          disabled={busy}
+                          onClick={() => logoInput.current?.click()}
+                        >
+                          <FormattedMessage id="settings.general.upload" defaultMessage="Upload" />
+                        </Button>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-col gap-1.5">
+                      <Label htmlFor="org-locale">
+                        <FormattedMessage
+                          id="settings.general.locale"
+                          defaultMessage="Default locale"
+                        />
+                      </Label>
+                      <select
+                        id="org-locale"
+                        className={selectClassName}
+                        value={orgDraft.defaultLocale}
+                        onChange={(event) => {
+                          // A lookup, not a cast: a value outside the
+                          // shipped set is not a locale we can save.
+                          const locale = SHIPPED_LOCALES.find(
+                            (shipped) => shipped === event.target.value,
+                          );
+                          if (locale) {
+                            setOrgDraft((current) => ({ ...current, defaultLocale: locale }));
+                          }
+                        }}
+                      >
+                        <option value="en-US">
+                          {intl.formatMessage({
+                            id: "settings.general.locale.enUS",
+                            defaultMessage: "English (United States)",
+                          })}
+                        </option>
+                      </select>
+                      {/* One option today is honest, not broken: DES-013
+                        ships en-US alone, and the select comes alive
+                        with locale #2. */}
+                      <p className="text-sm text-muted">
+                        <FormattedMessage
+                          id="settings.general.locale.hint"
+                          defaultMessage="English (United States) is the only available locale for now."
                         />
                       </p>
-                      <div className="flex flex-col gap-1.5">
-                        <Label htmlFor="providerId">
-                          <FormattedMessage
-                            id="welcome.auth.field.providerId"
-                            defaultMessage="Provider ID"
-                          />
-                        </Label>
-                        <Input
-                          id="providerId"
-                          name="providerId"
-                          required
-                          placeholder={intl.formatMessage({
-                            id: "welcome.auth.field.providerIdPlaceholder",
-                            defaultMessage: "okta",
-                          })}
+                    </div>
+
+                    <div className="flex flex-col gap-1.5">
+                      <Label htmlFor="org-timezone">
+                        <FormattedMessage
+                          id="settings.general.timezone"
+                          defaultMessage="Default timezone"
                         />
-                      </div>
-                      <div className="flex flex-col gap-1.5">
-                        <Label htmlFor="issuer">
-                          <FormattedMessage
-                            id="welcome.auth.field.issuer"
-                            defaultMessage="Issuer URL"
-                          />
-                        </Label>
-                        <Input
-                          id="issuer"
-                          name="issuer"
-                          type="url"
-                          required
-                          placeholder={intl.formatMessage({
-                            id: "welcome.auth.field.issuerPlaceholder",
-                            defaultMessage: "https://idp.example.com",
-                          })}
+                      </Label>
+                      <TimezonePicker
+                        id="org-timezone"
+                        className="w-full"
+                        value={orgDraft.defaultTimezone}
+                        onCommit={(zone) => {
+                          if (zone)
+                            setOrgDraft((current) => ({ ...current, defaultTimezone: zone }));
+                        }}
+                      />
+                      <p className="text-sm text-muted">
+                        <FormattedMessage
+                          id="settings.general.timezone.hint"
+                          defaultMessage="Used for the daily digest and date displays until a user signs in."
                         />
-                      </div>
-                      <div className="flex flex-col gap-1.5">
-                        <Label htmlFor="idpDomain">
+                      </p>
+                    </div>
+                  </>
+                )}
+
+                {step === "authentication" && (
+                  <>
+                    <div className="flex flex-col gap-2">
+                      <OptionButton
+                        selected={mode === "built_in"}
+                        onClick={() => setMode("built_in")}
+                        title={
                           <FormattedMessage
-                            id="welcome.auth.field.domain"
-                            defaultMessage="Email domain"
+                            id="welcome.auth.builtIn"
+                            defaultMessage="Built-in sign-in"
                           />
-                        </Label>
+                        }
+                        description={
+                          <FormattedMessage
+                            id="welcome.auth.builtIn.hint"
+                            defaultMessage="Email and password, with optional two-factor authentication. The default."
+                          />
+                        }
+                      />
+                      <OptionButton
+                        selected={mode === "oidc"}
+                        onClick={() => setMode("oidc")}
+                        title={
+                          <FormattedMessage
+                            id="welcome.auth.oidc"
+                            defaultMessage="Single sign-on (OIDC)"
+                          />
+                        }
+                        description={
+                          <FormattedMessage
+                            id="welcome.auth.oidc.hint"
+                            defaultMessage="Bring your own identity provider. Administrators keep password sign-in as break-glass."
+                          />
+                        }
+                      />
+                    </div>
+
+                    {mode === "oidc" && !ssoProviderId && (
+                      <form
+                        className="flex flex-col gap-3 rounded-card border border-border-default p-4"
+                        onSubmit={(e) => void registerProvider(e)}
+                      >
+                        <p className="text-md font-medium">
+                          <FormattedMessage
+                            id="welcome.auth.register.title"
+                            defaultMessage="Register your identity provider"
+                          />
+                        </p>
+                        <div className="flex flex-col gap-1.5">
+                          <Label htmlFor="providerId">
+                            <FormattedMessage
+                              id="welcome.auth.field.providerId"
+                              defaultMessage="Provider ID"
+                            />
+                          </Label>
+                          <Input
+                            id="providerId"
+                            name="providerId"
+                            required
+                            placeholder={intl.formatMessage({
+                              id: "welcome.auth.field.providerIdPlaceholder",
+                              defaultMessage: "okta",
+                            })}
+                          />
+                        </div>
+                        <div className="flex flex-col gap-1.5">
+                          <Label htmlFor="issuer">
+                            <FormattedMessage
+                              id="welcome.auth.field.issuer"
+                              defaultMessage="Issuer URL"
+                            />
+                          </Label>
+                          <Input
+                            id="issuer"
+                            name="issuer"
+                            type="url"
+                            required
+                            placeholder={intl.formatMessage({
+                              id: "welcome.auth.field.issuerPlaceholder",
+                              defaultMessage: "https://idp.example.com",
+                            })}
+                          />
+                        </div>
+                        <div className="flex flex-col gap-1.5">
+                          <Label htmlFor="idpDomain">
+                            <FormattedMessage
+                              id="welcome.auth.field.domain"
+                              defaultMessage="Email domain"
+                            />
+                          </Label>
+                          <Input
+                            id="idpDomain"
+                            name="idpDomain"
+                            required
+                            placeholder={intl.formatMessage({
+                              id: "welcome.auth.field.domainPlaceholder",
+                              defaultMessage: "acme.example",
+                            })}
+                          />
+                        </div>
+                        <div className="flex flex-col gap-1.5">
+                          <Label htmlFor="clientId">
+                            <FormattedMessage
+                              id="welcome.auth.field.clientId"
+                              defaultMessage="Client ID"
+                            />
+                          </Label>
+                          <Input id="clientId" name="clientId" required />
+                        </div>
+                        <div className="flex flex-col gap-1.5">
+                          <Label htmlFor="clientSecret">
+                            <FormattedMessage
+                              id="welcome.auth.field.clientSecret"
+                              defaultMessage="Client secret"
+                            />
+                          </Label>
+                          <Input id="clientSecret" name="clientSecret" type="password" required />
+                        </div>
+                        <Button type="submit" variant="secondary" disabled={busy}>
+                          <FormattedMessage
+                            id="welcome.auth.register.submit"
+                            defaultMessage="Register provider"
+                          />
+                        </Button>
+                      </form>
+                    )}
+
+                    {mode === "oidc" && ssoProviderId && (
+                      <Alert variant="success">
+                        <FormattedMessage
+                          id="welcome.auth.registered"
+                          defaultMessage="Identity provider {providerId} is registered."
+                          values={{ providerId: ssoProviderId }}
+                        />
+                        {callbackUrl && (
+                          <span className="mt-1 block">
+                            <FormattedMessage
+                              id="welcome.auth.callback"
+                              defaultMessage="Paste this callback URL into your IdP console: {url}"
+                              values={{ url: <code className="break-all">{callbackUrl}</code> }}
+                            />
+                          </span>
+                        )}
+                      </Alert>
+                    )}
+                  </>
+                )}
+
+                {step === "portal" && (
+                  <>
+                    <CardDescription>
+                      <FormattedMessage
+                        id="welcome.portal.hint"
+                        defaultMessage="Business users sign in with emailed magic links, restricted to the domains you allow. An empty list admits nobody."
+                      />
+                    </CardDescription>
+                    <OptionButton
+                      selected={magicLinkEnabled}
+                      onClick={() => setMagicLinkEnabled(!magicLinkEnabled)}
+                      title={
+                        magicLinkEnabled ? (
+                          <FormattedMessage
+                            id="welcome.portal.enabled"
+                            defaultMessage="Magic-link sign-in is on"
+                          />
+                        ) : (
+                          <FormattedMessage
+                            id="welcome.portal.disabled"
+                            defaultMessage="Magic-link sign-in is off"
+                          />
+                        )
+                      }
+                      description={
+                        <FormattedMessage
+                          id="welcome.portal.toggle.hint"
+                          defaultMessage="Select to change. Off closes the portal entirely, even for allowed domains."
+                        />
+                      }
+                    />
+                    <div className="flex flex-col gap-1.5">
+                      <Label htmlFor="domain">
+                        <FormattedMessage
+                          id="welcome.portal.domains"
+                          defaultMessage="Allowed email domains"
+                        />
+                      </Label>
+                      <div className="flex gap-2">
                         <Input
-                          id="idpDomain"
-                          name="idpDomain"
-                          required
+                          id="domain"
+                          value={domainInput}
+                          onChange={(e) => setDomainInput(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                              e.preventDefault();
+                              addDomain();
+                            }
+                          }}
                           placeholder={intl.formatMessage({
                             id: "welcome.auth.field.domainPlaceholder",
                             defaultMessage: "acme.example",
                           })}
                         />
+                        <Button type="button" variant="secondary" onClick={addDomain}>
+                          <FormattedMessage id="welcome.portal.add" defaultMessage="Add" />
+                        </Button>
                       </div>
-                      <div className="flex flex-col gap-1.5">
-                        <Label htmlFor="clientId">
-                          <FormattedMessage
-                            id="welcome.auth.field.clientId"
-                            defaultMessage="Client ID"
-                          />
-                        </Label>
-                        <Input id="clientId" name="clientId" required />
-                      </div>
-                      <div className="flex flex-col gap-1.5">
-                        <Label htmlFor="clientSecret">
-                          <FormattedMessage
-                            id="welcome.auth.field.clientSecret"
-                            defaultMessage="Client secret"
-                          />
-                        </Label>
-                        <Input id="clientSecret" name="clientSecret" type="password" required />
-                      </div>
-                      <Button type="submit" variant="secondary" disabled={busy}>
-                        <FormattedMessage
-                          id="welcome.auth.register.submit"
-                          defaultMessage="Register provider"
-                        />
-                      </Button>
-                    </form>
-                  )}
-
-                  {mode === "oidc" && ssoProviderId && (
-                    <Alert variant="success">
-                      <FormattedMessage
-                        id="welcome.auth.registered"
-                        defaultMessage="Identity provider {providerId} is registered."
-                        values={{ providerId: ssoProviderId }}
-                      />
-                      {callbackUrl && (
-                        <span className="mt-1 block">
-                          <FormattedMessage
-                            id="welcome.auth.callback"
-                            defaultMessage="Paste this callback URL into your IdP console: {url}"
-                            values={{ url: <code className="break-all">{callbackUrl}</code> }}
-                          />
-                        </span>
-                      )}
-                    </Alert>
-                  )}
-                </>
-              )}
-
-              {step === "portal" && (
-                <>
-                  <CardDescription>
-                    <FormattedMessage
-                      id="welcome.portal.hint"
-                      defaultMessage="Business users sign in with emailed magic links, restricted to the domains you allow. An empty list admits nobody."
-                    />
-                  </CardDescription>
-                  <OptionButton
-                    selected={magicLinkEnabled}
-                    onClick={() => setMagicLinkEnabled(!magicLinkEnabled)}
-                    title={
-                      magicLinkEnabled ? (
-                        <FormattedMessage
-                          id="welcome.portal.enabled"
-                          defaultMessage="Magic-link sign-in is on"
-                        />
-                      ) : (
-                        <FormattedMessage
-                          id="welcome.portal.disabled"
-                          defaultMessage="Magic-link sign-in is off"
-                        />
-                      )
-                    }
-                    description={
-                      <FormattedMessage
-                        id="welcome.portal.toggle.hint"
-                        defaultMessage="Select to change. Off closes the portal entirely, even for allowed domains."
-                      />
-                    }
-                  />
-                  <div className="flex flex-col gap-1.5">
-                    <Label htmlFor="domain">
-                      <FormattedMessage
-                        id="welcome.portal.domains"
-                        defaultMessage="Allowed email domains"
-                      />
-                    </Label>
-                    <div className="flex gap-2">
-                      <Input
-                        id="domain"
-                        value={domainInput}
-                        onChange={(e) => setDomainInput(e.target.value)}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter") {
-                            e.preventDefault();
-                            addDomain();
-                          }
-                        }}
-                        placeholder={intl.formatMessage({
-                          id: "welcome.auth.field.domainPlaceholder",
-                          defaultMessage: "acme.example",
-                        })}
-                      />
-                      <Button type="button" variant="secondary" onClick={addDomain}>
-                        <FormattedMessage id="welcome.portal.add" defaultMessage="Add" />
-                      </Button>
                     </div>
-                  </div>
-                  {domains.length > 0 ? (
-                    <ul className="flex flex-wrap gap-2">
-                      {domains.map((domain) => (
-                        <li
-                          key={domain}
-                          className="flex items-center gap-1 rounded-chip border border-border-default bg-control px-2 py-0.5 text-sm"
-                        >
-                          {domain}
-                          <button
-                            type="button"
-                            aria-label={intl.formatMessage(
-                              {
-                                id: "welcome.portal.remove",
-                                defaultMessage: "Remove {domain}",
-                              },
-                              { domain },
-                            )}
-                            className="p-1 text-muted hover:text-primary focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-link"
-                            onClick={() => setDomains(domains.filter((d) => d !== domain))}
+                    {domains.length > 0 ? (
+                      <ul className="flex flex-wrap gap-2">
+                        {domains.map((domain) => (
+                          <li
+                            key={domain}
+                            className="flex items-center gap-1 rounded-chip border border-border-default bg-control px-2 py-0.5 text-sm"
                           >
-                            <X size={16} aria-hidden />
-                          </button>
-                        </li>
-                      ))}
-                    </ul>
-                  ) : (
-                    <p className="text-sm text-muted">
-                      <FormattedMessage
-                        id="welcome.portal.empty"
-                        defaultMessage="No domains allowed yet — the portal is closed."
-                      />
-                    </p>
-                  )}
-                </>
-              )}
+                            {domain}
+                            <button
+                              type="button"
+                              aria-label={intl.formatMessage(
+                                {
+                                  id: "welcome.portal.remove",
+                                  defaultMessage: "Remove {domain}",
+                                },
+                                { domain },
+                              )}
+                              className="p-1 text-muted hover:text-primary focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-link"
+                              onClick={() => setDomains(domains.filter((d) => d !== domain))}
+                            >
+                              <X size={16} aria-hidden />
+                            </button>
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <p className="text-sm text-muted">
+                        <FormattedMessage
+                          id="welcome.portal.empty"
+                          defaultMessage="No domains allowed yet — the portal is closed."
+                        />
+                      </p>
+                    )}
+                  </>
+                )}
 
-              {step === "email" && (
-                <>
-                  {emailNotice && <Alert variant="success">{emailNotice}</Alert>}
+                {step === "email" && (
+                  <>
+                    {emailNotice && <Alert variant="success">{emailNotice}</Alert>}
 
-                  {emailState.source === "env" && (
-                    <>
-                      {emailState.fromAddress ? (
+                    {emailState.source === "env" && (
+                      <>
+                        {emailState.fromAddress ? (
+                          <Alert variant="success">
+                            <FormattedMessage
+                              id="welcome.email.env"
+                              defaultMessage="Outbound email is set by the deployment environment. Mail is sent from {from}."
+                              values={{ from: emailState.fromAddress }}
+                            />
+                          </Alert>
+                        ) : (
+                          <Alert variant="warning">
+                            <FormattedMessage
+                              id="welcome.email.env.incomplete"
+                              defaultMessage="The deployment environment sets SMTP_URL but not SMTP_FROM, so mail cannot be sent. Set SMTP_FROM in the environment."
+                            />
+                          </Alert>
+                        )}
+                        <p className="text-md text-muted">
+                          <FormattedMessage
+                            id="welcome.email.env.hint"
+                            defaultMessage="Settings saved here would never apply — the environment always wins. To change the relay, change SMTP_URL and SMTP_FROM in the deployment environment (see the deployment guide)."
+                          />
+                        </p>
+                      </>
+                    )}
+
+                    {emailState.source === "app" && !replacingRelay && (
+                      <>
                         <Alert variant="success">
                           <FormattedMessage
-                            id="welcome.email.env"
-                            defaultMessage="Outbound email is set by the deployment environment. Mail is sent from {from}."
+                            id="welcome.email.app"
+                            defaultMessage="Outbound email is set in the app. Mail is sent from {from}."
                             values={{ from: emailState.fromAddress }}
                           />
                         </Alert>
-                      ) : (
-                        <Alert variant="warning">
-                          <FormattedMessage
-                            id="welcome.email.env.incomplete"
-                            defaultMessage="The deployment environment sets SMTP_URL but not SMTP_FROM, so mail cannot be sent. Set SMTP_FROM in the environment."
-                          />
-                        </Alert>
-                      )}
-                      <p className="text-md text-muted">
-                        <FormattedMessage
-                          id="welcome.email.env.hint"
-                          defaultMessage="Settings saved here would never apply — the environment always wins. To change the relay, change SMTP_URL and SMTP_FROM in the deployment environment (see the deployment guide)."
-                        />
-                      </p>
-                    </>
-                  )}
+                        <div className="flex flex-wrap items-center gap-2">
+                          <Button
+                            type="button"
+                            variant="secondary"
+                            disabled={busy}
+                            onClick={() => void sendTestEmail()}
+                          >
+                            <FormattedMessage
+                              id="welcome.email.test"
+                              defaultMessage="Send test email"
+                            />
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            disabled={busy}
+                            onClick={() => {
+                              setEmailNotice(null);
+                              setReplacingRelay(true);
+                            }}
+                          >
+                            <FormattedMessage
+                              id="welcome.email.replace"
+                              defaultMessage="Replace relay"
+                            />
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            disabled={busy}
+                            onClick={() => void clearEmailSettings()}
+                          >
+                            <FormattedMessage
+                              id="welcome.email.clear"
+                              defaultMessage="Clear relay"
+                            />
+                          </Button>
+                        </div>
+                      </>
+                    )}
 
-                  {emailState.source === "app" && !replacingRelay && (
-                    <>
-                      <Alert variant="success">
+                    {(emailState.source === "unset" || replacingRelay) && (
+                      <>
+                        {emailState.source === "unset" && (
+                          <Alert variant="warning">
+                            <FormattedMessage
+                              id="welcome.email.unset"
+                              defaultMessage="Outbound email is not set up. Invites and sign-in links cannot be delivered until you save an SMTP relay."
+                            />
+                          </Alert>
+                        )}
+                        <form
+                          className="flex flex-col gap-3"
+                          onSubmit={(e) => void saveEmailSettings(e)}
+                        >
+                          <div className="flex flex-col gap-1.5">
+                            <Label htmlFor="smtpUrl">
+                              <FormattedMessage
+                                id="welcome.email.field.url"
+                                defaultMessage="SMTP relay URL"
+                              />
+                            </Label>
+                            <Input
+                              id="smtpUrl"
+                              name="smtpUrl"
+                              autoComplete="off"
+                              required
+                              placeholder={intl.formatMessage({
+                                id: "welcome.email.field.urlPlaceholder",
+                                defaultMessage: "smtp://user:password@mail.example.com:587",
+                              })}
+                            />
+                            <p className="text-sm text-muted">
+                              <FormattedMessage
+                                id="welcome.email.field.url.hint"
+                                defaultMessage="Starts with smtp:// or smtps://; credentials go in the URL. It is stored, never shown again."
+                              />
+                            </p>
+                          </div>
+                          <div className="flex flex-col gap-1.5">
+                            <Label htmlFor="smtpFrom">
+                              <FormattedMessage
+                                id="welcome.email.field.from"
+                                defaultMessage="From address"
+                              />
+                            </Label>
+                            <Input
+                              id="smtpFrom"
+                              name="smtpFrom"
+                              autoComplete="off"
+                              required
+                              placeholder={intl.formatMessage({
+                                id: "welcome.email.field.fromPlaceholder",
+                                // ICU MessageFormat parses bare `<...>` as a
+                                // rich-text tag; escape the angle brackets so
+                                // the literal placeholder text survives.
+                                defaultMessage: "OpenLaw '<'openlaw@example.com'>'",
+                              })}
+                            />
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Button type="submit" variant="secondary" disabled={busy}>
+                              <FormattedMessage
+                                id="welcome.email.save"
+                                defaultMessage="Save relay"
+                              />
+                            </Button>
+                            {replacingRelay && (
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                disabled={busy}
+                                onClick={() => setReplacingRelay(false)}
+                              >
+                                <FormattedMessage
+                                  id="welcome.email.replace.cancel"
+                                  defaultMessage="Keep current relay"
+                                />
+                              </Button>
+                            )}
+                          </div>
+                        </form>
+                      </>
+                    )}
+                  </>
+                )}
+
+                {step === "invites" && (
+                  <>
+                    {!emailConfigured && (
+                      <Alert variant="warning">
                         <FormattedMessage
-                          id="welcome.email.app"
-                          defaultMessage="Outbound email is set in the app. Mail is sent from {from}."
-                          values={{ from: emailState.fromAddress }}
+                          id="welcome.invites.noEmail"
+                          defaultMessage="Without outbound email, invited people will not receive their set-password link."
                         />
                       </Alert>
-                      <div className="flex flex-wrap items-center gap-2">
-                        <Button
-                          type="button"
-                          variant="secondary"
-                          disabled={busy}
-                          onClick={() => void sendTestEmail()}
-                        >
-                          <FormattedMessage
-                            id="welcome.email.test"
-                            defaultMessage="Send test email"
-                          />
-                        </Button>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          disabled={busy}
-                          onClick={() => {
-                            setEmailNotice(null);
-                            setReplacingRelay(true);
-                          }}
-                        >
-                          <FormattedMessage
-                            id="welcome.email.replace"
-                            defaultMessage="Replace relay"
-                          />
-                        </Button>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          disabled={busy}
-                          onClick={() => void clearEmailSettings()}
-                        >
-                          <FormattedMessage id="welcome.email.clear" defaultMessage="Clear relay" />
-                        </Button>
+                    )}
+                    <form className="flex flex-col gap-3" onSubmit={(e) => void sendInvite(e)}>
+                      <div className="flex flex-col gap-1.5">
+                        <Label htmlFor="inviteName">
+                          <FormattedMessage id="auth.field.displayName" defaultMessage="Name" />
+                        </Label>
+                        <Input id="inviteName" name="inviteName" autoComplete="off" required />
                       </div>
-                    </>
-                  )}
+                      <div className="flex flex-col gap-1.5">
+                        <Label htmlFor="inviteEmail">
+                          <FormattedMessage id="auth.field.email" defaultMessage="Email" />
+                        </Label>
+                        <Input
+                          id="inviteEmail"
+                          name="inviteEmail"
+                          type="email"
+                          autoComplete="off"
+                          required
+                        />
+                      </div>
+                      <fieldset className="flex flex-col gap-1.5">
+                        <legend className="mb-1.5 text-sm font-medium">
+                          <FormattedMessage id="welcome.invites.role" defaultMessage="Role" />
+                        </legend>
+                        <div className="flex flex-wrap gap-2">
+                          {INVITE_ROLES.map((role) => (
+                            <Button
+                              key={role}
+                              type="button"
+                              size="sm"
+                              variant={inviteRole === role ? "primary" : "secondary"}
+                              aria-pressed={inviteRole === role}
+                              onClick={() => setInviteRole(role)}
+                            >
+                              <FormattedMessage {...ROLE_MESSAGES[role]} />
+                            </Button>
+                          ))}
+                        </div>
+                      </fieldset>
+                      <Button type="submit" variant="secondary" disabled={busy}>
+                        <FormattedMessage
+                          id="welcome.invites.submit"
+                          defaultMessage="Send invite"
+                        />
+                      </Button>
+                    </form>
+                    {invited.length > 0 && (
+                      <Alert variant="success">
+                        <FormattedMessage
+                          id="welcome.invites.sent"
+                          defaultMessage="{count, plural, one {# invite sent:} other {# invites sent:}} {emails}"
+                          values={{ count: invited.length, emails: invited.join(", ") }}
+                        />
+                      </Alert>
+                    )}
+                  </>
+                )}
 
-                  {(emailState.source === "unset" || replacingRelay) && (
-                    <>
-                      {emailState.source === "unset" && (
-                        <Alert variant="warning">
-                          <FormattedMessage
-                            id="welcome.email.unset"
-                            defaultMessage="Outbound email is not set up. Invites and sign-in links cannot be delivered until you save an SMTP relay."
-                          />
-                        </Alert>
-                      )}
-                      <form
-                        className="flex flex-col gap-3"
-                        onSubmit={(e) => void saveEmailSettings(e)}
-                      >
-                        <div className="flex flex-col gap-1.5">
-                          <Label htmlFor="smtpUrl">
+                {step === "e-signature" && (
+                  <>
+                    <CardDescription>
+                      <FormattedMessage
+                        id="welcome.eSignature.hint"
+                        defaultMessage="Optional. Connect DocuSign and contracts are sent for signature from their own records. Skip it and nothing else is lost. The manual hand-off stays the path, so you send the paper yourself, then upload the executed PDF and pin it to the record."
+                      />
+                    </CardDescription>
+
+                    {/* A configured connector reads as configured. A
+                        resumed wizard must never ask for a credential
+                        the install already holds. */}
+                    {signingConnector.configured && !replacingConnector && (
+                      <>
+                        <Alert variant={signingConnector.enabled ? "success" : "warning"}>
+                          {signingConnector.enabled ? (
                             <FormattedMessage
-                              id="welcome.email.field.url"
-                              defaultMessage="SMTP relay URL"
+                              id="welcome.eSignature.configured"
+                              defaultMessage="DocuSign is connected in the {environment, select, production {production} other {demo}} environment, as integration key {integrationKey}."
+                              values={{
+                                environment: signingConnector.environment ?? "demo",
+                                integrationKey: signingConnector.integrationKey ?? "",
+                              }}
+                            />
+                          ) : (
+                            <FormattedMessage
+                              id="welcome.eSignature.configured.disabled"
+                              defaultMessage="DocuSign is configured in the {environment, select, production {production} other {demo}} environment, as integration key {integrationKey}, but sending from records is turned off. Contracts use the manual hand-off until it is turned back on."
+                              values={{
+                                environment: signingConnector.environment ?? "demo",
+                                integrationKey: signingConnector.integrationKey ?? "",
+                              }}
+                            />
+                          )}
+                        </Alert>
+                        <div className="flex flex-col gap-1.5">
+                          <Label htmlFor="welcome-ds-webhook-url">
+                            <FormattedMessage
+                              id="settings.eSignature.webhookUrl"
+                              defaultMessage="Webhook URL"
                             />
                           </Label>
                           <Input
-                            id="smtpUrl"
-                            name="smtpUrl"
-                            autoComplete="off"
-                            required
-                            placeholder={intl.formatMessage({
-                              id: "welcome.email.field.urlPlaceholder",
-                              defaultMessage: "smtp://user:password@mail.example.com:587",
-                            })}
+                            id="welcome-ds-webhook-url"
+                            readOnly
+                            value={signingConnector.webhookUrl}
                           />
                           <p className="text-sm text-muted">
                             <FormattedMessage
-                              id="welcome.email.field.url.hint"
-                              defaultMessage="Starts with smtp:// or smtps://; credentials go in the URL. It is stored, never shown again."
+                              id="settings.eSignature.webhookUrl.hint"
+                              defaultMessage="Paste this into a DocuSign Connect configuration so envelope status reaches this install."
+                            />
+                          </p>
+                        </div>
+                        <div>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            disabled={busy}
+                            onClick={() => setReplacingConnector(true)}
+                          >
+                            <FormattedMessage
+                              id="welcome.eSignature.replace"
+                              defaultMessage="Replace credentials"
+                            />
+                          </Button>
+                        </div>
+                      </>
+                    )}
+
+                    {signingFormOpen && (
+                      <>
+                        <div className="flex flex-col gap-1.5">
+                          <Label htmlFor="welcome-ds-environment">
+                            <FormattedMessage
+                              id="settings.eSignature.environment"
+                              defaultMessage="Environment"
+                            />
+                          </Label>
+                          <select
+                            id="welcome-ds-environment"
+                            className={selectClassName}
+                            value={signingEnvironment}
+                            onChange={(event) => {
+                              // A lookup, not a cast: a value outside
+                              // the two estates is not one we can save.
+                              const chosen = SIGNING_ENVIRONMENTS.find(
+                                (estate) => estate === event.target.value,
+                              );
+                              if (chosen) setSigningEnvironment(chosen);
+                            }}
+                          >
+                            <option value="demo">
+                              {intl.formatMessage({
+                                id: "settings.eSignature.environment.demo",
+                                defaultMessage: "Demo",
+                              })}
+                            </option>
+                            <option value="production">
+                              {intl.formatMessage({
+                                id: "settings.eSignature.environment.production",
+                                defaultMessage: "Production",
+                              })}
+                            </option>
+                          </select>
+                        </div>
+                        <div className="flex flex-col gap-1.5">
+                          <Label htmlFor="welcome-ds-integration-key">
+                            <FormattedMessage
+                              id="settings.eSignature.integrationKey"
+                              defaultMessage="Integration key"
+                            />
+                          </Label>
+                          <Input
+                            id="welcome-ds-integration-key"
+                            autoComplete="off"
+                            value={integrationKey}
+                            onChange={(event) => setIntegrationKey(event.target.value)}
+                          />
+                        </div>
+                        <div className="flex flex-col gap-1.5">
+                          <Label htmlFor="welcome-ds-user-id">
+                            <FormattedMessage
+                              id="settings.eSignature.userId"
+                              defaultMessage="User ID"
+                            />
+                          </Label>
+                          <Input
+                            id="welcome-ds-user-id"
+                            autoComplete="off"
+                            value={apiUserId}
+                            onChange={(event) => setApiUserId(event.target.value)}
+                          />
+                          <p className="text-sm text-muted">
+                            <FormattedMessage
+                              id="settings.eSignature.userId.hint"
+                              defaultMessage="The DocuSign user envelopes are sent as. Grant that user consent to the integration once, from the DocuSign console."
                             />
                           </p>
                         </div>
                         <div className="flex flex-col gap-1.5">
-                          <Label htmlFor="smtpFrom">
+                          <Label htmlFor="welcome-ds-private-key">
                             <FormattedMessage
-                              id="welcome.email.field.from"
-                              defaultMessage="From address"
+                              id="settings.eSignature.privateKey"
+                              defaultMessage="RSA private key"
+                            />
+                          </Label>
+                          <textarea
+                            id="welcome-ds-private-key"
+                            rows={4}
+                            value={privateKey}
+                            onChange={(event) => setPrivateKey(event.target.value)}
+                            placeholder={intl.formatMessage({
+                              id: "settings.eSignature.privateKey.placeholder",
+                              defaultMessage: "-----BEGIN RSA PRIVATE KEY-----",
+                            })}
+                            className="w-full rounded-button border border-border-default bg-raised px-2.5 py-1.5 text-sm text-primary placeholder:text-muted focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-link"
+                          />
+                          {signingConnector.hasPrivateKey && (
+                            <p className="text-sm text-muted">
+                              <FormattedMessage
+                                id="settings.eSignature.secret.hint"
+                                defaultMessage="Leave blank to keep the current value. Paste a new one to rotate."
+                              />
+                            </p>
+                          )}
+                        </div>
+                        <div className="flex flex-col gap-1.5">
+                          <Label htmlFor="welcome-ds-webhook-secret">
+                            <FormattedMessage
+                              id="settings.eSignature.webhookSecret"
+                              defaultMessage="Connect HMAC secret"
                             />
                           </Label>
                           <Input
-                            id="smtpFrom"
-                            name="smtpFrom"
+                            id="welcome-ds-webhook-secret"
+                            type="password"
                             autoComplete="off"
-                            required
-                            placeholder={intl.formatMessage({
-                              id: "welcome.email.field.fromPlaceholder",
-                              // ICU MessageFormat parses bare `<...>` as a
-                              // rich-text tag; escape the angle brackets so
-                              // the literal placeholder text survives.
-                              defaultMessage: "OpenLaw '<'openlaw@example.com'>'",
-                            })}
+                            value={webhookSecret}
+                            onChange={(event) => setWebhookSecret(event.target.value)}
                           />
+                          <p className="text-sm text-muted">
+                            {signingConnector.hasWebhookSecret ? (
+                              <FormattedMessage
+                                id="settings.eSignature.secret.hint"
+                                defaultMessage="Leave blank to keep the current value. Paste a new one to rotate."
+                              />
+                            ) : (
+                              <FormattedMessage
+                                id="settings.eSignature.webhookSecret.hint"
+                                defaultMessage="Required. OpenLaw checks it on every delivery, so nothing unsigned can change a record."
+                              />
+                            )}
+                          </p>
                         </div>
-                        <div className="flex items-center gap-2">
-                          <Button type="submit" variant="secondary" disabled={busy}>
-                            <FormattedMessage id="welcome.email.save" defaultMessage="Save relay" />
-                          </Button>
-                          {replacingRelay && (
+
+                        {/* The way back from Replace credentials, the
+                            email step's own shape. Without it the
+                            configured summary is gone for the rest of
+                            the wizard, because Back does not reset it. */}
+                        {signingConnector.configured && (
+                          <div>
                             <Button
                               type="button"
                               variant="ghost"
                               disabled={busy}
-                              onClick={() => setReplacingRelay(false)}
+                              onClick={() => {
+                                setReplacingConnector(false);
+                                setSigningEnvironment(signingConnector.environment ?? "demo");
+                                setIntegrationKey(signingConnector.integrationKey ?? "");
+                                setApiUserId(signingConnector.apiUserId ?? "");
+                                setPrivateKey("");
+                                setWebhookSecret("");
+                              }}
                             >
                               <FormattedMessage
-                                id="welcome.email.replace.cancel"
-                                defaultMessage="Keep current relay"
+                                id="welcome.eSignature.replace.cancel"
+                                defaultMessage="Keep current credentials"
                               />
                             </Button>
-                          )}
-                        </div>
-                      </form>
-                    </>
-                  )}
-                </>
-              )}
+                          </div>
+                        )}
+                      </>
+                    )}
 
-              {step === "invites" && (
-                <>
-                  {!emailConfigured && (
-                    <Alert variant="warning">
+                    {/* Named rather than linked: leaving the wizard for
+                        Settings mid-flow is not the offer. An
+                        Administrator who skips needs the address, and
+                        SET-001 says there is exactly one. */}
+                    <p className="text-sm text-muted">
                       <FormattedMessage
-                        id="welcome.invites.noEmail"
-                        defaultMessage="Without outbound email, invited people will not receive their set-password link."
+                        id="welcome.eSignature.address"
+                        defaultMessage="This connector lives at Settings → Organization → Integrations → E-signature. Set it up there whenever you like."
                       />
-                    </Alert>
-                  )}
-                  <form className="flex flex-col gap-3" onSubmit={(e) => void sendInvite(e)}>
-                    <div className="flex flex-col gap-1.5">
-                      <Label htmlFor="inviteName">
-                        <FormattedMessage id="auth.field.displayName" defaultMessage="Name" />
-                      </Label>
-                      <Input id="inviteName" name="inviteName" autoComplete="off" required />
-                    </div>
-                    <div className="flex flex-col gap-1.5">
-                      <Label htmlFor="inviteEmail">
-                        <FormattedMessage id="auth.field.email" defaultMessage="Email" />
-                      </Label>
-                      <Input
-                        id="inviteEmail"
-                        name="inviteEmail"
-                        type="email"
-                        autoComplete="off"
-                        required
+                    </p>
+                  </>
+                )}
+
+                {step === "ai-analysis" && (
+                  <>
+                    <CardDescription>
+                      <FormattedMessage
+                        id="welcome.aiAnalysis.hint"
+                        defaultMessage="Optional. Connect your own AI provider and an Analysis run reads a Contract's primary Document for you and fills its Fields, each marked Unverified until a person confirms it. Skip it and Contract analysis does not run. Every Field you would have got automatically stays manual, and nothing else is lost. Contract text reaches your provider only while an Analysis run is working."
                       />
-                    </div>
-                    <fieldset className="flex flex-col gap-1.5">
-                      <legend className="mb-1.5 text-sm font-medium">
-                        <FormattedMessage id="welcome.invites.role" defaultMessage="Role" />
-                      </legend>
-                      <div className="flex flex-wrap gap-2">
-                        {INVITE_ROLES.map((role) => (
+                    </CardDescription>
+
+                    {/* A configured connector reads as configured. A
+                        resumed wizard must never ask for a key the
+                        install already holds. */}
+                    {aiConnector.configured && !replacingAiConnector && (
+                      <>
+                        <Alert variant={aiConnector.enabled ? "success" : "warning"}>
+                          {aiConnector.enabled ? (
+                            <FormattedMessage
+                              id="welcome.aiAnalysis.configured"
+                              defaultMessage="Contract analysis runs through {provider}, on model {model}."
+                              values={{
+                                provider: aiPresetLabel(intl, aiConnector.preset ?? ""),
+                                model: aiConnector.model ?? "",
+                              }}
+                            />
+                          ) : (
+                            <FormattedMessage
+                              id="welcome.aiAnalysis.configured.disabled"
+                              defaultMessage="{provider} is configured on model {model}, but analysis is turned off. Every Field stays manual until it is turned back on."
+                              values={{
+                                provider: aiPresetLabel(intl, aiConnector.preset ?? ""),
+                                model: aiConnector.model ?? "",
+                              }}
+                            />
+                          )}
+                        </Alert>
+                        <div>
                           <Button
-                            key={role}
                             type="button"
-                            size="sm"
-                            variant={inviteRole === role ? "primary" : "secondary"}
-                            aria-pressed={inviteRole === role}
-                            onClick={() => setInviteRole(role)}
+                            variant="ghost"
+                            disabled={busy}
+                            onClick={() => setReplacingAiConnector(true)}
                           >
-                            <FormattedMessage {...ROLE_MESSAGES[role]} />
+                            <FormattedMessage
+                              id="welcome.aiAnalysis.replace"
+                              defaultMessage="Replace credentials"
+                            />
                           </Button>
-                        ))}
-                      </div>
-                    </fieldset>
-                    <Button type="submit" variant="secondary" disabled={busy}>
-                      <FormattedMessage id="welcome.invites.submit" defaultMessage="Send invite" />
-                    </Button>
-                  </form>
-                  {invited.length > 0 && (
-                    <Alert variant="success">
+                        </div>
+                      </>
+                    )}
+
+                    {aiFormOpen && (
+                      <>
+                        <div className="flex flex-col gap-1.5">
+                          <Label htmlFor="welcome-ai-preset">
+                            <FormattedMessage
+                              id="settings.aiAnalysis.provider"
+                              defaultMessage="Provider"
+                            />
+                          </Label>
+                          <select
+                            id="welcome-ai-preset"
+                            className={selectClassName}
+                            value={aiPreset}
+                            onChange={(event) => chooseAiPreset(event.target.value)}
+                          >
+                            {loaded.aiPresets.map((option) => (
+                              <option key={option.preset} value={option.preset}>
+                                {aiPresetLabel(intl, option.preset)}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+
+                        {aiPreset === "custom" && (
+                          <div className="flex flex-col gap-1.5">
+                            <Label htmlFor="welcome-ai-protocol">
+                              <FormattedMessage
+                                id="settings.aiAnalysis.protocol"
+                                defaultMessage="Protocol"
+                              />
+                            </Label>
+                            <select
+                              id="welcome-ai-protocol"
+                              className={selectClassName}
+                              value={aiProtocol}
+                              onChange={(event) => {
+                                const chosen = AI_PROTOCOLS.find(
+                                  (wire) => wire === event.target.value,
+                                );
+                                if (chosen) setAiProtocol(chosen);
+                              }}
+                            >
+                              <option value="anthropic_messages">
+                                {intl.formatMessage({
+                                  id: "settings.aiAnalysis.protocol.anthropic",
+                                  defaultMessage: "Anthropic Messages",
+                                })}
+                              </option>
+                              <option value="openai_chat_completions">
+                                {intl.formatMessage({
+                                  id: "settings.aiAnalysis.protocol.openai",
+                                  defaultMessage: "OpenAI-compatible chat completions",
+                                })}
+                              </option>
+                              <option value="gemini">
+                                {intl.formatMessage({
+                                  id: "settings.aiAnalysis.protocol.gemini",
+                                  defaultMessage: "Gemini",
+                                })}
+                              </option>
+                            </select>
+                          </div>
+                        )}
+
+                        {chosenPreset.requiresBaseUrl && (
+                          <div className="flex flex-col gap-1.5">
+                            <Label htmlFor="welcome-ai-base-url">
+                              {aiPreset === "azure_openai" ? (
+                                <FormattedMessage
+                                  id="settings.aiAnalysis.deploymentEndpoint"
+                                  defaultMessage="Deployment endpoint"
+                                />
+                              ) : (
+                                <FormattedMessage
+                                  id="settings.aiAnalysis.baseUrl"
+                                  defaultMessage="Base URL"
+                                />
+                              )}
+                            </Label>
+                            <Input
+                              id="welcome-ai-base-url"
+                              type="url"
+                              autoComplete="off"
+                              value={aiBaseUrl}
+                              onChange={(event) => setAiBaseUrl(event.target.value)}
+                            />
+                          </div>
+                        )}
+
+                        <div className="flex flex-col gap-1.5">
+                          <Label htmlFor="welcome-ai-api-key">
+                            <FormattedMessage
+                              id="settings.aiAnalysis.apiKey"
+                              defaultMessage="API key"
+                            />
+                          </Label>
+                          <Input
+                            id="welcome-ai-api-key"
+                            type="password"
+                            autoComplete="off"
+                            value={aiApiKey}
+                            onChange={(event) => setAiApiKey(event.target.value)}
+                          />
+                          <p className="text-sm text-muted">
+                            {aiConnector.hasApiKey ? (
+                              <FormattedMessage
+                                id="settings.aiAnalysis.apiKey.keep"
+                                defaultMessage="Leave blank to keep the current key. Paste a new one to rotate."
+                              />
+                            ) : chosenPreset.requiresApiKey ? (
+                              <FormattedMessage
+                                id="settings.aiAnalysis.apiKey.required"
+                                defaultMessage="Required for this provider. The key is write-only and encrypted at rest."
+                              />
+                            ) : (
+                              <FormattedMessage
+                                id="settings.aiAnalysis.apiKey.optional"
+                                defaultMessage="Ollama does not require an API key."
+                              />
+                            )}
+                          </p>
+                        </div>
+
+                        <div className="flex flex-col gap-1.5">
+                          <Label htmlFor="welcome-ai-model">
+                            <FormattedMessage
+                              id="settings.aiAnalysis.model"
+                              defaultMessage="Model"
+                            />
+                          </Label>
+                          <Input
+                            id="welcome-ai-model"
+                            autoComplete="off"
+                            value={aiModel}
+                            onChange={(event) => setAiModel(event.target.value)}
+                          />
+                        </div>
+
+                        {/* The way back from Replace credentials, the
+                            E-signature step's own shape. Without it the
+                            configured summary is gone for the rest of
+                            the wizard, because Back does not reset it. */}
+                        {aiConnector.configured && (
+                          <div>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              disabled={busy}
+                              onClick={() => {
+                                const baseline = aiBaseline(aiConnector);
+                                setReplacingAiConnector(false);
+                                setAiPreset(baseline.preset);
+                                setAiProtocol(baseline.protocol);
+                                setAiBaseUrl(baseline.baseUrl);
+                                setAiModel(baseline.model);
+                                setAiApiKey("");
+                              }}
+                            >
+                              <FormattedMessage
+                                id="welcome.aiAnalysis.replace.cancel"
+                                defaultMessage="Keep current credentials"
+                              />
+                            </Button>
+                          </div>
+                        )}
+                      </>
+                    )}
+
+                    {/* Named rather than linked: leaving the wizard for
+                        Settings mid-flow is not the offer. SET-008 puts
+                        AI analysis in its own Organization section, so
+                        this is the one address that owns it. */}
+                    <p className="text-sm text-muted">
                       <FormattedMessage
-                        id="welcome.invites.sent"
-                        defaultMessage="{count, plural, one {# invite sent:} other {# invites sent:}} {emails}"
-                        values={{ count: invited.length, emails: invited.join(", ") }}
+                        id="welcome.aiAnalysis.address"
+                        defaultMessage="This connector lives at Settings → Organization → AI analysis. Set it up there whenever you like."
                       />
-                    </Alert>
-                  )}
-                </>
-              )}
+                    </p>
+                  </>
+                )}
+                {step === "review" && (
+                  <>
+                    <CardDescription>
+                      <FormattedMessage
+                        id="welcome.review.hint"
+                        defaultMessage="Your install started with these lists and reminder offsets. These are their current counts, including archived rows. Open a list in Settings to make changes."
+                      />
+                    </CardDescription>
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="border-b border-border-default text-left">
+                          <th scope="col" className="py-2 font-medium">
+                            <FormattedMessage id="welcome.review.list" defaultMessage="List" />
+                          </th>
+                          <th scope="col" className="py-2 text-right font-medium">
+                            <FormattedMessage id="welcome.review.count" defaultMessage="Rows" />
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {REVIEW_TAXONOMIES.map(({ key, label, settingsPath }) => (
+                          <tr key={key} className="border-b border-border-default">
+                            <th scope="row" className="py-2 text-left font-normal">
+                              <Link
+                                to={settingsPath}
+                                className="text-link underline underline-offset-2"
+                              >
+                                <FormattedMessage {...label} />
+                              </Link>
+                            </th>
+                            <td className="py-2 text-right tabular-nums">
+                              {intl.formatNumber(loaded.review.counts[key])}
+                            </td>
+                          </tr>
+                        ))}
+                        <tr className="border-b border-border-default">
+                          <th scope="row" className="py-2 text-left font-normal">
+                            <Link
+                              to="/settings/reminders"
+                              className="text-link underline underline-offset-2"
+                            >
+                              <FormattedMessage
+                                id="welcome.review.reminders"
+                                defaultMessage="Reminder offsets"
+                              />
+                            </Link>
+                            <p className="mt-1 text-muted">
+                              {intl.formatList(
+                                loaded.review.offsets.map((days) =>
+                                  intl.formatMessage(
+                                    {
+                                      id: "settings.reminders.offset",
+                                      defaultMessage:
+                                        "{days, plural, =0 {On the day} one {# day before} other {# days before}}",
+                                    },
+                                    { days },
+                                  ),
+                                ),
+                              )}
+                            </p>
+                          </th>
+                          <td className="py-2 text-right align-top tabular-nums">
+                            {intl.formatNumber(loaded.review.offsets.length)}
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                    <p className="text-sm text-muted">
+                      <FormattedMessage
+                        id="welcome.review.reminders.address"
+                        defaultMessage="Reminder offsets live at Settings → Organization → Notifications."
+                      />
+                    </p>
+                  </>
+                )}
+              </section>
 
               {step !== "welcome" && (
                 <div className="flex items-center justify-between border-t border-border-default pt-4">
@@ -946,37 +2254,19 @@ export function WelcomePage() {
                   <div className="flex items-center gap-2">
                     {/* Every step defers, none is required (SET-004).
                         Only the Administrator account is, and that was
-                        first-run setup, before this flow. */}
-                    {step !== "invites" ? (
-                      <>
-                        <Button
-                          variant="ghost"
-                          disabled={busy}
-                          onClick={() => goTo(STEPS[stepIndex + 1] ?? "invites")}
-                        >
-                          <FormattedMessage id="welcome.skip" defaultMessage="Set up later" />
-                        </Button>
-                        <Button
-                          disabled={busy}
-                          onClick={() => {
-                            if (step === "authentication") void applyAuthentication();
-                            else if (step === "portal") void applyPortal();
-                            else goTo(STEPS[stepIndex + 1] ?? "invites");
-                          }}
-                        >
-                          <FormattedMessage id="welcome.continue" defaultMessage="Continue" />
-                        </Button>
-                      </>
-                    ) : (
-                      <>
-                        <Button variant="ghost" disabled={busy} onClick={() => void finish()}>
-                          <FormattedMessage id="welcome.skip" defaultMessage="Set up later" />
-                        </Button>
-                        <Button disabled={busy} onClick={() => void finish()}>
-                          <FormattedMessage id="welcome.finish" defaultMessage="Finish" />
-                        </Button>
-                      </>
-                    )}
+                        first-run setup, before this flow. Deferring the
+                        last step ends the wizard, which is what the two
+                        buttons share there. */}
+                    <Button variant="ghost" disabled={busy} onClick={() => void advance()}>
+                      <FormattedMessage id="welcome.skip" defaultMessage="Set up later" />
+                    </Button>
+                    <Button disabled={busy} onClick={() => void continueStep()}>
+                      {isLastStep ? (
+                        <FormattedMessage id="welcome.finish" defaultMessage="Finish" />
+                      ) : (
+                        <FormattedMessage id="welcome.continue" defaultMessage="Continue" />
+                      )}
+                    </Button>
                   </div>
                 </div>
               )}

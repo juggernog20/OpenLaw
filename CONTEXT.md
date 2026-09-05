@@ -202,6 +202,18 @@ _Avoid_: hidden Matter, redacted Matter, inaccessible Matter
 
 ### Configuration
 
+**First run**:
+The one-time setup of a fresh instance. `/auth/setup` creates the first Administrator and signs them in to the onboarding wizard at `/welcome`. Once setup succeeds, it can never create another Administrator. Once the wizard is finished or skipped through, `onboarding_completed_at` prevents it from opening again [SET-004, TECH-008].
+_Avoid_: resettable setup, recurring onboarding
+
+**Onboarding wizard**:
+The first Administrator's guided configuration at `/welcome`. Its nine steps include the welcome splash, organization identity, authentication, the Business-user portal allowlist, outbound email, team invites, E-signature, AI analysis, and Review of the seeded lists. Each step is skippable. The two connectors have separate steps because SET-008 gives each its own Settings destination. Finish on Review records the seeded-list acknowledgement before completing onboarding [SET-004].
+_Avoid_: installation wizard, integrations step
+
+**Setup checklist**:
+The Administrator-only card above Organization in Settings → Organization → General. It lists currently unfinished onboarding steps and disappears when none remain. Each row links to its Settings pane, except Email, which has no pane and is plain text, and Review seeded types, which has a Mark as reviewed action. Completion follows current configuration, so a later removal can bring a row back without reopening the wizard. The card calls the wizard's Your organization step Organization and its Outbound email step Email to fit the Settings context. It expands Review to Review seeded types because the card has no surrounding wizard to explain what to review. All other step labels match [SET-004].
+_Avoid_: onboarding dashboard, skip history, restart setup
+
 **Type**:
 The configurable taxonomy on a Matter, Contract, or Request, and the designated carrier for policy — fields, templates, approvals attach here [CTR-002, MTR-001, INT-002].
 

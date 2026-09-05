@@ -14,7 +14,7 @@
  * anything reported here is new.
  */
 
-import { test, expect } from "@playwright/test";
+import { test, expect, type Page } from "@playwright/test";
 import { z } from "zod";
 import { ADMIN, ensureAdminExists, reportAxeViolations, signInAs, sweepOrSay } from "./helpers.js";
 import { createPopulatedHomeFixture } from "./home-fixture.js";
@@ -103,6 +103,155 @@ test.describe("accessibility floor", () => {
     await expect(page).toHaveTitle("Sign in · OpenLaw");
 
     await reportAxeViolations(page, testInfo, "login");
+  });
+
+  /**
+   * The shared E2E instance is already onboarded. This reopens only
+   * this browser's read of the wizard, so a step can be scanned without
+   * changing persistent instance state.
+   */
+  async function reopenWizard(page: Page): Promise<void> {
+    await page.route("**/api/v1/onboarding", async (route) => {
+      if (route.request().method() !== "GET") {
+        await route.continue();
+        return;
+      }
+      const response = await route.fetch();
+      const status = (await response.json()) as Record<string, unknown>;
+      await route.fulfill({ response, json: { ...status, completed: false } });
+    });
+  }
+
+  test("E-signature onboarding step: clean axe scan", async ({ page, request }, testInfo) => {
+    await ensureAdminExists(request);
+    await signInAs(page, ADMIN.email, ADMIN.password, ADMIN.displayName);
+
+    // Pin the connector to the blank-start answer, so the scan always
+    // covers every credential control.
+    await reopenWizard(page);
+    await page.route("**/api/v1/signing-connectors/docusign", async (route) => {
+      if (route.request().method() !== "GET") {
+        await route.continue();
+        return;
+      }
+      await route.fulfill({
+        status: 200,
+        json: {
+          connector: {
+            provider: "docusign",
+            configured: false,
+            enabled: false,
+            disabledAt: null,
+            environment: null,
+            integrationKey: null,
+            apiUserId: null,
+            hasPrivateKey: false,
+            hasWebhookSecret: false,
+            webhookUrl: "http://localhost:3000/api/v1/signing/docusign/webhook",
+            updatedAt: null,
+          },
+        },
+      });
+    });
+
+    await page.goto("/welcome");
+    await page.getByRole("button", { name: "Get started" }).click();
+    for (const heading of [
+      "Authentication",
+      "Business-user portal",
+      "Outbound email",
+      "Invite your team",
+      "E-signature",
+    ]) {
+      await page.getByRole("button", { name: "Set up later" }).click();
+      await expect(page.getByRole("heading", { name: heading })).toBeVisible();
+    }
+
+    await expect(page.getByRole("region", { name: "E-signature" })).toBeVisible();
+    expect(
+      await reportAxeViolations(page, testInfo, "welcome-e-signature", { include: "main" }),
+    ).toEqual([]);
+  });
+
+  test("AI analysis onboarding step: clean axe scan", async ({ page, request }, testInfo) => {
+    await ensureAdminExists(request);
+    await signInAs(page, ADMIN.email, ADMIN.password, ADMIN.displayName);
+
+    await reopenWizard(page);
+    // The AI connector is pinned to the blank-start answer too. Earlier
+    // specs configure one on the shared instance, and the scan has to
+    // reach the provider, key, and model controls either way.
+    await page.route("**/api/v1/ai-connector", async (route) => {
+      if (route.request().method() !== "GET") {
+        await route.continue();
+        return;
+      }
+      const response = await route.fetch();
+      const body = (await response.json()) as { presets: unknown };
+      await route.fulfill({
+        response,
+        json: {
+          connector: {
+            configured: false,
+            enabled: false,
+            preset: null,
+            protocol: null,
+            baseUrl: null,
+            hasApiKey: false,
+            model: null,
+            disabledAt: null,
+            updatedAt: null,
+          },
+          // The presets are server-owned (TECH-012), so the real list
+          // is what the step renders.
+          presets: body.presets,
+        },
+      });
+    });
+
+    await page.goto("/welcome");
+    await page.getByRole("button", { name: "Get started" }).click();
+    for (const heading of [
+      "Authentication",
+      "Business-user portal",
+      "Outbound email",
+      "Invite your team",
+      "E-signature",
+      "AI analysis",
+    ]) {
+      await page.getByRole("button", { name: "Set up later" }).click();
+      await expect(page.getByRole("heading", { name: heading })).toBeVisible();
+    }
+
+    await expect(page.getByRole("region", { name: "AI analysis" })).toBeVisible();
+    expect(
+      await reportAxeViolations(page, testInfo, "welcome-ai-analysis", { include: "main" }),
+    ).toEqual([]);
+  });
+
+  test("Review onboarding step: clean axe scan", async ({ page, request }, testInfo) => {
+    await ensureAdminExists(request);
+    await signInAs(page, ADMIN.email, ADMIN.password, ADMIN.displayName);
+    await reopenWizard(page);
+    await page.goto("/welcome");
+    await page.getByRole("button", { name: "Get started" }).click();
+    for (const heading of [
+      "Authentication",
+      "Business-user portal",
+      "Outbound email",
+      "Invite your team",
+      "E-signature",
+      "AI analysis",
+      "Review",
+    ]) {
+      await page.getByRole("button", { name: "Set up later" }).click();
+      await expect(page.getByRole("heading", { name: heading, exact: true })).toBeVisible();
+    }
+    await expect(page.getByRole("region", { name: "Review" })).toBeVisible();
+    await expect(page.getByRole("region", { name: "Review" }).getByRole("link")).toHaveCount(10);
+    expect(
+      await reportAxeViolations(page, testInfo, "welcome-review", { include: "main" }),
+    ).toEqual([]);
   });
 
   test("populated Home: axe scan and title", async ({ page, request }, testInfo) => {
