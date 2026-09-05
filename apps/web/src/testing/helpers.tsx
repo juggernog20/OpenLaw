@@ -241,6 +241,7 @@ const ONBOARDING_STEPS = [
   "invites",
   "e-signature",
   "ai-analysis",
+  "review",
 ] as const;
 
 type OnboardingStep = (typeof ONBOARDING_STEPS)[number];
@@ -258,6 +259,7 @@ const ONBOARDING_SETTINGS_PATHS: Record<OnboardingStep, string | null> = {
   invites: "/settings/users",
   "e-signature": "/settings/integrations/e-signature",
   "ai-analysis": "/settings/ai-analysis",
+  review: null,
 };
 
 /** The three answers every guard consults, plus per-test overrides. */
@@ -653,6 +655,37 @@ export function stubApi(state: ApiState) {
           ]),
         ),
       });
+    }
+    // Review reads these catalogues on arrival, including after first-run setup.
+    if (call.method === "GET") {
+      const lists = {
+        "/api/v1/matter-types": { matterTypes: [] },
+        "/api/v1/matter-statuses": { matterStatuses: [] },
+        "/api/v1/contract-types": { contractTypes: [] },
+        "/api/v1/contract-statuses": { contractStatuses: [] },
+        "/api/v1/entity-types": { entityTypes: [] },
+        "/api/v1/officer-roles": { officerRoles: [] },
+        "/api/v1/knowledge/types": { knowledgeTypes: [] },
+        "/api/v1/request-types": { requestTypes: [] },
+        "/api/v1/fields": { fields: [] },
+        "/api/v1/org/reminder-offsets": { offsets: [7, 1, 0] },
+      } satisfies {
+        [
+          P in
+            | "/api/v1/matter-types"
+            | "/api/v1/matter-statuses"
+            | "/api/v1/contract-types"
+            | "/api/v1/contract-statuses"
+            | "/api/v1/entity-types"
+            | "/api/v1/officer-roles"
+            | "/api/v1/knowledge/types"
+            | "/api/v1/request-types"
+            | "/api/v1/fields"
+            | "/api/v1/org/reminder-offsets"
+        ]: paths[P]["get"]["responses"][200]["content"]["application/json"];
+      };
+      const list = Object.entries(lists).find(([path]) => path === call.url.pathname);
+      if (list) return json(200, list[1]);
     }
     // The wizard's Organization step and the General pane read the same
     // row. Unnamed by default, which is what a fresh install holds.

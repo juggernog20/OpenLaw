@@ -11,7 +11,8 @@
  */
 
 import { describe, expect, it, vi } from "vitest";
-import { screen } from "@testing-library/react";
+import type { paths } from "@openlaw/api-client";
+import { screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { json, problem, renderAt, stubApi, type StubCall } from "../testing/helpers";
 
@@ -64,7 +65,10 @@ function wizardExtra(domains: string[] = []) {
     if (call.url.pathname === "/api/v1/auth/allowed-domains" && call.method === "GET") {
       return json(200, { domains });
     }
-    return undefined;
+    if (call.url.pathname === "/api/v1/onboarding/reviewed" && call.method === "POST") {
+      return json(200, { completed: false, steps: {} });
+    }
+    return reviewReads(call);
   };
 }
 
@@ -100,7 +104,7 @@ async function goToESignatureStep(user: ReturnType<typeof userEvent.setup>) {
   expect(await screen.findByRole("heading", { name: "E-signature" })).toBeInTheDocument();
 }
 
-/** Clicks on to the last step, leaving the signing connector alone. */
+/** Clicks on to AI analysis, leaving the signing connector alone. */
 async function goToAiAnalysisStep(user: ReturnType<typeof userEvent.setup>) {
   await goToESignatureStep(user);
   await user.click(screen.getByRole("button", { name: "Continue" }));
@@ -112,7 +116,7 @@ async function goToAiAnalysisStep(user: ReturnType<typeof userEvent.setup>) {
  * is left untouched, which writes nothing. */
 async function finishFromESignature(user: ReturnType<typeof userEvent.setup>) {
   await user.click(screen.getByRole("button", { name: "Continue" }));
-  await user.click(await screen.findByRole("button", { name: "Finish" }));
+  await finishFromAiAnalysis(user);
 }
 
 /** What the wizard sent on a connector step, and whether it finished. */
@@ -235,7 +239,7 @@ describe("welcome wizard organization step (#697)", () => {
     await user.click(await screen.findByRole("button", { name: "Get started" }));
     expect(await screen.findByRole("heading", { name: "Your organization" })).toBeInTheDocument();
     // Eight steps now, and this is the one after the splash.
-    expect(screen.getByText("Step 2 of 8")).toBeInTheDocument();
+    expect(screen.getByText("Step 2 of 9")).toBeInTheDocument();
     // The step's fields are one region, named by the step's heading.
     expect(screen.getByRole("region", { name: "Your organization" })).toBeInTheDocument();
 
@@ -544,7 +548,7 @@ describe("welcome wizard e-signature step (#698)", () => {
     await user.click(screen.getByRole("button", { name: "Continue" }));
 
     expect(await screen.findByRole("heading", { name: "E-signature" })).toBeInTheDocument();
-    expect(screen.getByText("Step 7 of 8")).toBeInTheDocument();
+    expect(screen.getByText("Step 7 of 9")).toBeInTheDocument();
     // The step's fields are one region, named by the step's heading.
     expect(screen.getByRole("region", { name: "E-signature" })).toBeInTheDocument();
     // Optional, and what an install without a connector does instead.
@@ -702,8 +706,10 @@ describe("welcome wizard e-signature step (#698)", () => {
 
     await user.type(screen.getByLabelText("Integration key"), "the-integration-key");
     await user.click(screen.getByRole("button", { name: "Set up later" }));
-    // Deferring the AI step too ends the wizard.
+    // Deferring AI analysis leads to Review.
     expect(await screen.findByRole("heading", { name: "AI analysis" })).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Set up later" }));
+    expect(await screen.findByRole("heading", { name: "Review" })).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "Set up later" }));
 
     expect(await screen.findByRole("heading", { name: "Home" })).toBeInTheDocument();
@@ -818,7 +824,7 @@ describe("welcome wizard AI analysis step (#699)", () => {
     await user.click(screen.getByRole("button", { name: "Continue" }));
 
     expect(await screen.findByRole("heading", { name: "AI analysis" })).toBeInTheDocument();
-    expect(screen.getByText("Step 8 of 8")).toBeInTheDocument();
+    expect(screen.getByText("Step 8 of 9")).toBeInTheDocument();
     // The step's fields are one region, named by the step's heading.
     expect(screen.getByRole("region", { name: "AI analysis" })).toBeInTheDocument();
     // Optional, and what an install without a connector does instead.
@@ -828,9 +834,8 @@ describe("welcome wizard AI analysis step (#699)", () => {
     );
     // And where it is finished after the first run (SET-008).
     expect(screen.getByText(/Settings → Organization → AI analysis/)).toBeInTheDocument();
-    // The last step ends the wizard rather than offering another one.
-    expect(screen.getByRole("button", { name: "Finish" })).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "Continue" })).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Continue" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Finish" })).not.toBeInTheDocument();
   });
 
   it("saves the connector through the pane's own route and finishes", async () => {
@@ -844,7 +849,7 @@ describe("welcome wizard AI analysis step (#699)", () => {
     // Choosing a preset moves the model to that provider's default.
     expect(screen.getByLabelText("Model")).toHaveValue("gpt-5.6-luna");
     await user.type(screen.getByLabelText("API key"), "the-api-key");
-    await user.click(screen.getByRole("button", { name: "Finish" }));
+    await finishFromAiAnalysis(user);
 
     expect(await screen.findByRole("heading", { name: "Home" })).toBeInTheDocument();
     // A hosted preset fixes its own protocol and host, so neither is
@@ -868,7 +873,7 @@ describe("welcome wizard AI analysis step (#699)", () => {
       "https://acme.openai.azure.example/v1",
     );
     await user.type(screen.getByLabelText("API key"), "the-api-key");
-    await user.click(screen.getByRole("button", { name: "Finish" }));
+    await finishFromAiAnalysis(user);
 
     expect(await screen.findByRole("heading", { name: "Home" })).toBeInTheDocument();
     expect(calls.saves).toEqual([
@@ -894,7 +899,7 @@ describe("welcome wizard AI analysis step (#699)", () => {
     await user.type(screen.getByLabelText("Base URL"), "https://ai.acme.example/v1");
     await user.type(screen.getByLabelText("Model"), "acme-large");
     await user.type(screen.getByLabelText("API key"), "the-api-key");
-    await user.click(screen.getByRole("button", { name: "Finish" }));
+    await finishFromAiAnalysis(user);
 
     expect(await screen.findByRole("heading", { name: "Home" })).toBeInTheDocument();
     expect(calls.saves).toEqual([
@@ -931,7 +936,7 @@ describe("welcome wizard AI analysis step (#699)", () => {
     // The key is write-only, so it is never asked for twice.
     expect(screen.queryByLabelText("API key")).not.toBeInTheDocument();
 
-    await user.click(screen.getByRole("button", { name: "Finish" }));
+    await finishFromAiAnalysis(user);
     expect(await screen.findByRole("heading", { name: "Home" })).toBeInTheDocument();
     // Nothing changed, so nothing was rewritten.
     expect(calls.saves).toEqual([]);
@@ -994,7 +999,7 @@ describe("welcome wizard AI analysis step (#699)", () => {
     await user.click(screen.getByRole("button", { name: "Replace credentials" }));
     await user.clear(screen.getByLabelText("Model"));
     await user.type(screen.getByLabelText("Model"), "claude-opus-5");
-    await user.click(screen.getByRole("button", { name: "Finish" }));
+    await finishFromAiAnalysis(user);
 
     expect(await screen.findByRole("heading", { name: "Home" })).toBeInTheDocument();
     // The key is not on the wire: the route keeps the stored one.
@@ -1009,6 +1014,8 @@ describe("welcome wizard AI analysis step (#699)", () => {
     await goToAiAnalysisStep(user);
 
     await user.type(screen.getByLabelText("API key"), "the-api-key");
+    await user.click(screen.getByRole("button", { name: "Set up later" }));
+    expect(await screen.findByRole("heading", { name: "Review" })).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "Set up later" }));
 
     expect(await screen.findByRole("heading", { name: "Home" })).toBeInTheDocument();
@@ -1029,7 +1036,7 @@ describe("welcome wizard AI analysis step (#699)", () => {
 
     await user.clear(screen.getByLabelText("Model"));
     await user.type(screen.getByLabelText("Model"), "claude-opus-5");
-    await user.click(screen.getByRole("button", { name: "Finish" }));
+    await user.click(screen.getByRole("button", { name: "Continue" }));
 
     expect(await screen.findByText(/Paste the API key for this provider/)).toBeInTheDocument();
     // Refused, so the wizard stays on the step and does not finish.
@@ -1046,10 +1053,230 @@ describe("welcome wizard AI analysis step (#699)", () => {
 
     await user.type(screen.getByLabelText("API key"), "the-api-key");
     await user.clear(screen.getByLabelText("Model"));
-    await user.click(screen.getByRole("button", { name: "Finish" }));
+    await user.click(screen.getByRole("button", { name: "Continue" }));
 
     expect(await screen.findByText(/Enter the model to analyze with/)).toBeInTheDocument();
     expect(calls.saves).toEqual([]);
     expect(calls.completed).toBe(0);
+  });
+});
+
+const REVIEW_ROWS = [
+  ["Matter types", "/api/v1/matter-types", "matterTypes", "/settings/matters/types"],
+  ["Matter statuses", "/api/v1/matter-statuses", "matterStatuses", "/settings/matters/statuses"],
+  ["Contract types", "/api/v1/contract-types", "contractTypes", "/settings/contracts/types"],
+  [
+    "Contract statuses",
+    "/api/v1/contract-statuses",
+    "contractStatuses",
+    "/settings/contracts/statuses",
+  ],
+  ["Entity types", "/api/v1/entity-types", "entityTypes", "/settings/entities/types"],
+  ["Officer roles", "/api/v1/officer-roles", "officerRoles", "/settings/entities/officer-roles"],
+  ["Knowledge types", "/api/v1/knowledge/types", "knowledgeTypes", "/settings/knowledge/types"],
+  ["Request types", "/api/v1/request-types", "requestTypes", "/settings/intake/request-types"],
+  ["Fields", "/api/v1/fields", "fields", "/settings/contracts/fields"],
+] as const;
+
+type ReviewPath = (typeof REVIEW_ROWS)[number][1];
+type ReviewResponse<P extends ReviewPath> =
+  paths[P]["get"]["responses"][200]["content"]["application/json"];
+const TYPE_ROW = {
+  id: "type-1",
+  slug: "other",
+  displayName: "Other",
+  description: null,
+  displayOrder: 1,
+  isSystemDefault: true,
+  archivedAt: null,
+  inUseCount: 0,
+} satisfies ReviewResponse<"/api/v1/matter-types">["matterTypes"][number];
+const REVIEW_RESPONSES = {
+  "/api/v1/matter-types": { matterTypes: [TYPE_ROW] },
+  "/api/v1/matter-statuses": { matterStatuses: [{ ...TYPE_ROW, category: "open" }] },
+  "/api/v1/contract-types": { contractTypes: [TYPE_ROW] },
+  "/api/v1/contract-statuses": { contractStatuses: [{ ...TYPE_ROW, stage: "draft" }] },
+  "/api/v1/entity-types": { entityTypes: [TYPE_ROW] },
+  "/api/v1/officer-roles": { officerRoles: [TYPE_ROW] },
+  "/api/v1/knowledge/types": { knowledgeTypes: [TYPE_ROW] },
+  "/api/v1/request-types": {
+    requestTypes: [{ ...TYPE_ROW, targetModule: null, targetTypeId: null, formFieldCount: 0 }],
+  },
+  "/api/v1/fields": {
+    fields: [
+      {
+        ...TYPE_ROW,
+        moduleScope: "contract",
+        fieldType: "text",
+        options: null,
+        fieldTag: "business",
+        aiPrompt: null,
+      },
+    ],
+  },
+} satisfies { [P in ReviewPath]: ReviewResponse<P> };
+
+function reviewReads(call: StubCall) {
+  if (call.method !== "GET") return undefined;
+  const row = REVIEW_ROWS.find(([, path]) => path === call.url.pathname);
+  if (row) {
+    const response = REVIEW_RESPONSES[row[1]];
+    const rows = Object.values(response)[0]!;
+    // Different counts catch crossed wires; custom and archived rows count too.
+    return json(200, {
+      [row[2]]: Array.from({ length: REVIEW_ROWS.indexOf(row) }, (_, index) => ({
+        ...rows[0],
+        id: `row-${index}`,
+        isSystemDefault: false,
+        archivedAt: "2026-09-05T09:00:00.000Z",
+      })),
+    });
+  }
+  if (call.url.pathname === "/api/v1/org/reminder-offsets") {
+    return json(200, {
+      offsets: [7, 1, 0],
+    } satisfies paths["/api/v1/org/reminder-offsets"]["get"]["responses"]["200"]["content"]["application/json"]);
+  }
+  return undefined;
+}
+
+async function goToReviewStep(user: ReturnType<typeof userEvent.setup>) {
+  await goToAiAnalysisStep(user);
+  await user.click(screen.getByRole("button", { name: "Continue" }));
+  expect(await screen.findByRole("heading", { name: "Review" })).toBeInTheDocument();
+}
+
+async function finishFromAiAnalysis(user: ReturnType<typeof userEvent.setup>) {
+  await user.click(screen.getByRole("button", { name: "Continue" }));
+  await user.click(await screen.findByRole("button", { name: "Finish" }));
+}
+
+describe("welcome wizard Review step (#700)", () => {
+  function setup(handler?: (call: StubCall) => Response | undefined) {
+    const writes: string[] = [];
+    const reads: StubCall[] = [];
+    let completed = false;
+    stubApi({
+      signedIn: ADMIN,
+      onboarding: { completed: false },
+      extra: emailWizardExtra((call) => {
+        if (call.method === "GET") reads.push(call);
+        else if (call.url.pathname.startsWith("/api/v1/onboarding/"))
+          writes.push(call.url.pathname);
+        const handled = handler?.(call);
+        if (handled) return handled;
+        if (call.url.pathname === "/api/v1/onboarding/complete" && call.method === "POST") {
+          completed = true;
+          return json(200, { completed, steps: {} });
+        }
+        if (call.url.pathname === "/api/v1/onboarding" && completed)
+          return json(200, { completed, steps: {} });
+        return undefined;
+      }),
+    });
+    renderAt("/welcome");
+    return { writes, reads, user: userEvent.setup() };
+  }
+
+  it("is last after AI analysis, names its region, and links all ten current counts without editors", async () => {
+    const { user, writes, reads } = setup();
+    await goToReviewStep(user);
+    expect(screen.getByText("Step 9 of 9")).toBeInTheDocument();
+    const review = within(screen.getByRole("region", { name: "Review" }));
+    expect(review.getAllByRole("link")).toHaveLength(10);
+    for (const [index, [label, path, , address]] of REVIEW_ROWS.entries()) {
+      const link = review.getByRole("link", { name: label });
+      expect(link).toHaveAttribute("href", address);
+      expect(
+        within(link.closest("tr")!).getByRole("cell", { name: String(index) }),
+      ).toBeInTheDocument();
+      expect(
+        reads.find((call) => call.url.pathname === path)?.url.searchParams.get("includeArchived"),
+      ).toBe("true");
+    }
+    expect(review.getByRole("link", { name: "Reminder offsets" })).toHaveAttribute(
+      "href",
+      "/settings/reminders",
+    );
+    for (const text of ["7 days before", "1 day before", "On the day"])
+      expect(review.getByText(text, { exact: false })).toBeInTheDocument();
+    expect(review.getByText(/Settings → Organization → Notifications/)).toBeInTheDocument();
+    expect(review.queryByRole("textbox")).not.toBeInTheDocument();
+    expect(review.queryByRole("button")).not.toBeInTheDocument();
+    expect(writes).toEqual([]);
+    expect(screen.getByRole("button", { name: "Finish" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Continue" })).not.toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Back" }));
+    expect(screen.getByRole("heading", { name: "AI analysis" })).toBeInTheDocument();
+    expect(writes).toEqual([]);
+  });
+
+  it("marks reviewed before completing on Finish", async () => {
+    const { user, writes } = setup();
+    await goToReviewStep(user);
+    await user.click(screen.getByRole("button", { name: "Finish" }));
+    expect(await screen.findByRole("heading", { name: "Home" })).toBeInTheDocument();
+    expect(writes).toEqual(["/api/v1/onboarding/reviewed", "/api/v1/onboarding/complete"]);
+  });
+
+  it("completes without a review mark on Set up later", async () => {
+    const { user, writes } = setup();
+    await goToReviewStep(user);
+    await user.click(screen.getByRole("button", { name: "Set up later" }));
+    expect(await screen.findByRole("heading", { name: "Home" })).toBeInTheDocument();
+    expect(writes).toEqual(["/api/v1/onboarding/complete"]);
+  });
+
+  it("stays on Review and does not complete if marking fails, then permits retry", async () => {
+    let fail = true;
+    const { user, writes } = setup((call) =>
+      call.url.pathname === "/api/v1/onboarding/reviewed" && fail
+        ? problem(503, "Review could not be saved. Try again.")
+        : undefined,
+    );
+    await goToReviewStep(user);
+    await user.click(screen.getByRole("button", { name: "Finish" }));
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "Review could not be saved. Try again.",
+    );
+    expect(screen.getByRole("region", { name: "Review" })).toBeInTheDocument();
+    expect(writes).toEqual(["/api/v1/onboarding/reviewed"]);
+    fail = false;
+    await user.click(screen.getByRole("button", { name: "Finish" }));
+    expect(await screen.findByRole("heading", { name: "Home" })).toBeInTheDocument();
+  });
+
+  it("stays on Review if completion fails and retries both idempotent marks", async () => {
+    let fail = true;
+    const { user, writes } = setup((call) =>
+      call.url.pathname === "/api/v1/onboarding/complete" && fail
+        ? problem(503, "Unavailable")
+        : undefined,
+    );
+    await goToReviewStep(user);
+    await user.click(screen.getByRole("button", { name: "Finish" }));
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "Onboarding could not be marked finished",
+    );
+    expect(screen.getByRole("region", { name: "Review" })).toBeInTheDocument();
+    fail = false;
+    await user.click(screen.getByRole("button", { name: "Finish" }));
+    expect(await screen.findByRole("heading", { name: "Home" })).toBeInTheDocument();
+    expect(writes).toEqual([
+      "/api/v1/onboarding/reviewed",
+      "/api/v1/onboarding/complete",
+      "/api/v1/onboarding/reviewed",
+      "/api/v1/onboarding/complete",
+    ]);
+  });
+
+  it("refuses a failed list read instead of showing an invented zero", async () => {
+    setup((call) =>
+      call.url.pathname === "/api/v1/matter-types" ? problem(503, "Unavailable") : undefined,
+    );
+    expect(
+      await screen.findByRole("heading", { name: "Something went wrong." }),
+    ).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Get started" })).not.toBeInTheDocument();
   });
 });

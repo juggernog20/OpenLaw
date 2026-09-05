@@ -67,6 +67,8 @@ export const orgSettings = pgTable(
      * login; set once, never cleared — the wizard is first-run only.
      */
     onboardingCompletedAt: timestamp("onboarding_completed_at", { withTimezone: true }),
+    /** Review changes no settings. This records its first acknowledgement (SET-004). */
+    onboardingReviewedTypesAt: timestamp("onboarding_reviewed_types_at", { withTimezone: true }),
     /**
      * App-saved SMTP relay URL (TECH-011 revision), credentials inline —
      * the same single-URL shape as the SMTP_URL env variable, one mental

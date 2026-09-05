@@ -1,18 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 /**
- * First-run onboarding state (SET-004). The "Welcome to OpenLaw" wizard
- * is a web flow over the settings routes it walks an Administrator
- * through. These two routes carry the two things no one of those routes
- * can answer: whether the wizard has been finished, and how far each of
- * its steps has got.
- *
- * **Step done-ness is derived, never stored.** Every entry below reads
- * the rows the step configures, so a step counts as done whether it was
- * completed in the wizard, completed later in its own Settings pane, or
- * pinned by the deployment environment. That is what lets the M33/5
- * setup checklist card drop a row without the wizard ever being run,
- * and it is why no step but Review gets a column of its own.
+ * First-run onboarding state (SET-004). Configuring steps read their
+ * existing settings. Review reads its own mark because looking at a
+ * seeded list changes none of those settings.
  */
 
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
@@ -32,13 +23,7 @@ import type { MailerResolver } from "../../lib/mailer.js";
 import { getOrgSettings } from "../../lib/org-settings.js";
 import { problemResponse } from "../../lib/problem.js";
 
-/**
- * The wizard's configuring steps, in the order the wizard walks them.
- *
- * The welcome splash is absent because it configures nothing. The
- * Review step is absent because its done-ness reads a column that
- * arrives with the step that writes it (#700, TECH-014).
- */
+/** Wizard steps in order, excluding the welcome splash. */
 export const ONBOARDING_STEPS = [
   "organization",
   "authentication",
@@ -47,6 +32,7 @@ export const ONBOARDING_STEPS = [
   "invites",
   "e-signature",
   "ai-analysis",
+  "review",
 ] as const;
 
 type OnboardingStep = (typeof ONBOARDING_STEPS)[number];
@@ -74,10 +60,12 @@ const SETTINGS_PATHS: Record<OnboardingStep, string | null> = {
   invites: "/settings/users",
   "e-signature": "/settings/integrations/e-signature",
   "ai-analysis": "/settings/ai-analysis",
+  // Review spans several panes, so no single Settings address owns it.
+  review: null,
 };
 
 const StepSchema = z.object({
-  /** Whether the thing this step configures is configured, right now. */
+  /** Whether the step is configured, or Review has been acknowledged. */
   done: z.boolean(),
   /** The Settings pane that owns it, or null where none does. */
   settingsPath: z.string().nullable(),
@@ -98,13 +86,14 @@ const StatusSchema = z.object({
     invites: StepSchema,
     "e-signature": StepSchema,
     "ai-analysis": StepSchema,
+    review: StepSchema,
   }),
 });
 
 /** The status envelope, for the suite that reads it over HTTP. */
 export type OnboardingStatus = z.infer<typeof StatusSchema>;
 
-/** Reads every step's state from the rows that step configures. */
+/** Reads current configuration and the Review mark. */
 async function readStatus(app: {
   db: Db;
   resolveMailer: MailerResolver;
@@ -145,6 +134,7 @@ async function readStatus(app: {
       invites: state("invites", (userRows?.value ?? 0) > 1),
       "e-signature": state("e-signature", signing !== undefined),
       "ai-analysis": state("ai-analysis", ai !== undefined),
+      review: state("review", settings.onboardingReviewedTypesAt !== null),
     },
   };
 }
@@ -165,6 +155,29 @@ export const onboardingRoutes: FastifyPluginAsyncZod = async (app) => {
       },
     },
     () => readStatus(app),
+  );
+
+  app.post(
+    "/onboarding/reviewed",
+    {
+      preHandler: requireRole("administrator"),
+      schema: {
+        operationId: "reviewOnboardingTypes",
+        summary: "Mark the seeded types reviewed (SET-004); one-way and idempotent",
+        tags: ["onboarding"],
+        response: { 200: StatusSchema, default: problemResponse },
+      },
+    },
+    async () => {
+      const settings = await getOrgSettings(app.db);
+      if (settings.onboardingReviewedTypesAt === null) {
+        await app.db
+          .update(orgSettings)
+          .set({ onboardingReviewedTypesAt: new Date() })
+          .where(isNull(orgSettings.onboardingReviewedTypesAt));
+      }
+      return readStatus(app);
+    },
   );
 
   app.post(

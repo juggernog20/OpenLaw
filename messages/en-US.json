@@ -8096,6 +8096,51 @@
   "welcome.progress": {
     "defaultMessage": "Step {current} of {total}"
   },
+  "welcome.review.contractStatuses": {
+    "defaultMessage": "Contract statuses"
+  },
+  "welcome.review.contractTypes": {
+    "defaultMessage": "Contract types"
+  },
+  "welcome.review.count": {
+    "defaultMessage": "Rows"
+  },
+  "welcome.review.entityTypes": {
+    "defaultMessage": "Entity types"
+  },
+  "welcome.review.error": {
+    "defaultMessage": "Review could not be saved. Try again."
+  },
+  "welcome.review.fields": {
+    "defaultMessage": "Fields"
+  },
+  "welcome.review.hint": {
+    "defaultMessage": "Your install started with these lists and reminder offsets. These are their current counts, including archived rows. Open a list in Settings to make changes."
+  },
+  "welcome.review.knowledgeTypes": {
+    "defaultMessage": "Knowledge types"
+  },
+  "welcome.review.list": {
+    "defaultMessage": "List"
+  },
+  "welcome.review.matterStatuses": {
+    "defaultMessage": "Matter statuses"
+  },
+  "welcome.review.matterTypes": {
+    "defaultMessage": "Matter types"
+  },
+  "welcome.review.officerRoles": {
+    "defaultMessage": "Officer roles"
+  },
+  "welcome.review.reminders": {
+    "defaultMessage": "Reminder offsets"
+  },
+  "welcome.review.reminders.address": {
+    "defaultMessage": "Reminder offsets live at Settings → Organization → Notifications."
+  },
+  "welcome.review.requestTypes": {
+    "defaultMessage": "Request types"
+  },
   "welcome.skip": {
     "defaultMessage": "Set up later"
   },
@@ -8125,6 +8170,9 @@
   },
   "welcome.step.portal": {
     "defaultMessage": "Business-user portal"
+  },
+  "welcome.step.review": {
+    "defaultMessage": "Review"
   },
   "welcome.step.welcome": {
     "defaultMessage": "Welcome to OpenLaw"
