@@ -302,6 +302,9 @@ describe("the setup checklist (#701)", () => {
       expect(within(list).getByText(name)).toBeVisible();
       expect(within(list).queryByRole("link", { name })).not.toBeInTheDocument();
     }
+    // Review alone carries its own action: no pane finishes it.
+    expect(within(list).getAllByRole("button")).toHaveLength(1);
+    expect(within(list).getByRole("button", { name: "Mark as reviewed" })).toBeVisible();
     expect(within(list).queryByText("Authentication")).not.toBeInTheDocument();
     expect(within(list).queryByText("Welcome")).not.toBeInTheDocument();
   });
@@ -394,5 +397,56 @@ describe("the setup checklist (#701)", () => {
       expect(screen.queryByRole("heading", { name: "Setup checklist" })).not.toBeInTheDocument(),
     );
     expect(screen.queryByRole("list", { name: "Outstanding setup steps" })).not.toBeInTheDocument();
+  });
+
+  it("drops Review once it is marked reviewed from the card", async () => {
+    const user = userEvent.setup();
+    const onboarding = { completed: true, steps: { review: false, "ai-analysis": false } };
+    const writes: string[] = [];
+    stubApi({
+      signedIn: ADMIN,
+      onboarding,
+      extra: (call) => {
+        if (call.url.pathname === "/api/v1/onboarding/reviewed" && call.method === "POST") {
+          writes.push(call.url.pathname);
+          onboarding.steps.review = true;
+          return json(200, { completed: true, steps: {} });
+        }
+        return captureGeneralPatches([])(call);
+      },
+    });
+    renderAt("/settings/general");
+
+    const list = await screen.findByRole("list", { name: "Outstanding setup steps" });
+    expect(within(list).getByText("Review seeded types")).toBeVisible();
+    await user.click(within(list).getByRole("button", { name: "Mark as reviewed" }));
+
+    await waitFor(() =>
+      expect(within(list).queryByText("Review seeded types")).not.toBeInTheDocument(),
+    );
+    expect(writes).toEqual(["/api/v1/onboarding/reviewed"]);
+    expect(within(list).getByRole("link", { name: "AI analysis" })).toBeVisible();
+  });
+
+  it("keeps Review on the card and shows the refusal when the mark fails", async () => {
+    const user = userEvent.setup();
+    stubApi({
+      signedIn: ADMIN,
+      onboarding: { completed: true, steps: { review: false } },
+      extra: (call) => {
+        if (call.url.pathname === "/api/v1/onboarding/reviewed" && call.method === "POST") {
+          return problem(503, "Review could not be saved. Try again.");
+        }
+        return captureGeneralPatches([])(call);
+      },
+    });
+    renderAt("/settings/general");
+
+    const list = await screen.findByRole("list", { name: "Outstanding setup steps" });
+    await user.click(within(list).getByRole("button", { name: "Mark as reviewed" }));
+
+    expect(await within(list).findByText("Review could not be saved. Try again.")).toBeVisible();
+    expect(within(list).getByText("Review seeded types")).toBeVisible();
+    expect(within(list).getByRole("button", { name: "Mark as reviewed" })).toBeEnabled();
   });
 });

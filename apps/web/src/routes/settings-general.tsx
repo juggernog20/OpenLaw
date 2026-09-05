@@ -8,6 +8,10 @@
  * Save chrome), with the saving/saved/error micro-states beside it. The
  * loader is the client half of SET-002's gate: non-Administrators
  * bounce to their own settings home; the API's 403 is the real refusal.
+ *
+ * The setup checklist card (#701, SET-004) sits above the Organization
+ * card and lists the wizard steps still outstanding, read from the same
+ * route the wizard reads. It renders nothing once every step is done.
  */
 
 import { useRef, useState } from "react";
@@ -56,10 +60,31 @@ const SETUP_LABELS = defineMessages({
 
 function SetupChecklist({ steps }: { steps: OnboardingSteps }) {
   const intl = useIntl();
+  const revalidator = useRevalidator();
+  const [reviewStatus, setReviewStatus] = useState<FieldStatus>("idle");
+  const [reviewDetail, setReviewDetail] = useState<string | undefined>();
   const outstanding = (Object.keys(SETUP_LABELS) as (keyof typeof SETUP_LABELS)[]).filter(
     (step) => !steps[step].done,
   );
   if (outstanding.length === 0) return null;
+
+  // Review has no pane and no setting behind it: only its own mark
+  // finishes it, and the wizard's Finish is the one other place that
+  // writes the mark. Without this action, "Set up later" would leave
+  // the row on the card for good.
+  async function markReviewed() {
+    setReviewStatus("saving");
+    const result = await api.POST("/api/v1/onboarding/reviewed").catch(() => undefined);
+    if (result?.data) {
+      // The row leaves with the loader's next read.
+      await revalidator.revalidate();
+      setReviewStatus("idle");
+      return;
+    }
+    const { detail } = await problem(result);
+    setReviewStatus("error");
+    setReviewDetail(detail);
+  }
 
   return (
     <SettingsCard
@@ -76,7 +101,7 @@ function SetupChecklist({ steps }: { steps: OnboardingSteps }) {
           const { settingsPath } = steps[step];
           const label = intl.formatMessage(SETUP_LABELS[step]);
           return (
-            <li key={step}>
+            <li key={step} className="flex items-center gap-3">
               {settingsPath === null ? (
                 label
               ) : (
@@ -86,6 +111,22 @@ function SetupChecklist({ steps }: { steps: OnboardingSteps }) {
                 >
                   {label}
                 </Link>
+              )}
+              {step === "review" && (
+                <>
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    disabled={reviewStatus === "saving"}
+                    onClick={() => void markReviewed()}
+                  >
+                    <FormattedMessage
+                      id="settings.setup.markReviewed"
+                      defaultMessage="Mark as reviewed"
+                    />
+                  </Button>
+                  <StatusNote status={reviewStatus} detail={reviewDetail} />
+                </>
               )}
             </li>
           );

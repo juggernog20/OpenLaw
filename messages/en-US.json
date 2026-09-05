@@ -7481,6 +7481,9 @@
   "settings.setup.invites": {
     "defaultMessage": "Invite your team"
   },
+  "settings.setup.markReviewed": {
+    "defaultMessage": "Mark as reviewed"
+  },
   "settings.setup.organization": {
     "defaultMessage": "Organization"
   },
