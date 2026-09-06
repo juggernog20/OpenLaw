@@ -195,10 +195,13 @@ async function openCreateDialog(user: ReturnType<typeof userEvent.setup>) {
 async function toggleListFlag(user: ReturnType<typeof userEvent.setup>, label: string) {
   const remove = screen.queryByRole("button", { name: `Remove ${label} filter` });
   if (remove) {
+    await waitFor(() => expect(remove).toBeEnabled());
     await user.click(remove);
     return;
   }
-  await user.click(await screen.findByRole("button", { name: /^Filter/ }));
+  const filter = await screen.findByRole("button", { name: /^Filter/ });
+  await waitFor(() => expect(filter).toBeEnabled());
+  await user.click(filter);
   await user.click(
     within(screen.getByRole("dialog", { name: "Filter" })).getByRole("button", {
       name: label,
