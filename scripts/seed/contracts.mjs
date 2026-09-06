@@ -282,7 +282,7 @@ function draftFor(plan, reference, ourEntity, fields) {
 }
 
 export async function seedContracts(admin, context, log) {
-  const { random, taxonomy, people, fields, attached, entities, plans } = context;
+  const { random, taxonomy, people, fields, attached, entities, plans, analysisEnabled } = context;
   const staff = memberPlus(people);
   const helpers = contributors(people);
   const entityRows = [...entities.values()].filter((row) => row.definition.status === "active");
@@ -442,7 +442,7 @@ export async function seedContracts(admin, context, log) {
   // minority, which is the picture a team a few months into using this
   // would actually have.
   const documented = contracts.filter((contract) => contract.documentId);
-  if (documented.length > 0) {
+  if (analysisEnabled && documented.length > 0) {
     log(`waiting for ${documented.length} analysis runs`);
     let carrying = 0;
     let confirmed = 0;

@@ -282,7 +282,16 @@ async function main() {
     const contractPlans = planContracts({ random, scale });
     const contracts = await seedContracts(
       admin,
-      { random, taxonomy, people, fields, attached, entities, plans: contractPlans },
+      {
+        random,
+        taxonomy,
+        people,
+        fields,
+        attached,
+        entities,
+        plans: contractPlans,
+        analysisEnabled: !options.skipAi,
+      },
       log,
     );
 
