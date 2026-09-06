@@ -200,7 +200,8 @@ test.describe.serial("M21A demo path", () => {
       const requestNumber = RequestEnvelope.parse(await createdResponse.json()).request.number;
 
       await page.goto(`/inbox/${String(requestNumber)}`);
-      await page.getByRole("button", { name: "Convert to contract" }).click();
+      await page.getByRole("button", { name: "Triage", exact: true }).click();
+      await page.getByRole("menuitem", { name: "Convert to contract", exact: true }).click();
       const conversion = page.waitForResponse(
         (response) =>
           response.url().endsWith(`/api/v1/requests/${String(requestNumber)}/convert`) &&

@@ -298,7 +298,7 @@ test.describe.serial("M20 demo path", () => {
       // way out, and exactly two destinations — a bell and a gear.
       const banner = portal.getByRole("banner");
       await expect(banner.getByText("Legal request portal")).toBeVisible();
-      await expect(banner.getByText(REQUESTER)).toBeVisible();
+      await expect(banner.getByText(REQUESTER, { exact: true }).first()).toBeVisible();
       await expect(banner.getByRole("button", { name: "Sign out" })).toBeVisible();
       await expect(banner.getByRole("link", { name: "Notification settings" })).toBeVisible();
 

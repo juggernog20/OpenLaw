@@ -145,6 +145,7 @@ jobs:
       - name: Build the stack from the real Dockerfiles
         uses: docker/bake-action@v6
         with:
+          source: .
           files: |
             compose.yml
             compose.dev.yml
@@ -277,6 +278,8 @@ jobs:
       - name: Build the baseline images
         uses: docker/bake-action@v6
         with:
+          # Bake's default Git context would ignore the baseline checkout.
+          source: .
           files: |
             compose.yml
             compose.dev.yml
@@ -322,6 +325,7 @@ jobs:
       - name: Build this commit's images
         uses: docker/bake-action@v6
         with:
+          source: .
           files: |
             compose.yml
             compose.dev.yml

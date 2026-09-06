@@ -258,6 +258,9 @@ async function sourceRows(
   const withoutLaterDocumentColumns = migrated
     ? sql.raw(" - 'search_vector' - 'entity_id' - 'knowledge_item_id'")
     : sql.raw("");
+  const withoutLaterRequestColumns = migrated
+    ? sql.raw(" - 'search_vector' - 'assignee_id'")
+    : sql.raw("");
   const tableNames = SEARCH_TABLE_NAMES.map((name) => sql`${name}`);
   const result = await db.execute<{ table_name: string; rows: unknown[] }>(sql`
     select table_name, rows
@@ -281,7 +284,7 @@ async function sourceRows(
         jsonb_agg(to_jsonb(row)${withoutDerivedSearch} order by row.id) from matters row
       union all
       select 'requests',
-        jsonb_agg(to_jsonb(row)${withoutDerivedSearch} order by row.id) from requests row
+        jsonb_agg(to_jsonb(row)${withoutLaterRequestColumns} order by row.id) from requests row
     ) source_rows
     where table_name in (${sql.join(tableNames, sql`, `)})
     order by table_name

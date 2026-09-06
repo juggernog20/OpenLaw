@@ -949,8 +949,14 @@ describe("quick contract filters", () => {
         expiryTo: "2027-12-31",
       },
     });
-    await user.click(await screen.findByRole("button", { name: "Clear all" }));
+    await screen.findByRole("button", { name: /My renewals/ });
     await waitFor(() => expect(router.state.navigation.state).toBe("idle"));
+    await user.click(await screen.findByRole("button", { name: "Clear all" }));
+    await waitFor(() => {
+      expect(new URLSearchParams(router.state.location.search).has("status")).toBe(false);
+      expect(screen.queryByRole("button", { name: "Clear all" })).not.toBeInTheDocument();
+      expect(router.state.navigation.state).toBe("idle");
+    });
     await user.click(screen.getByRole("button", { name: /My renewals/ }));
     await user.click(screen.getByRole("menuitemradio", { name: "My renewals" }));
     await waitFor(() => expect(surface.queries.at(-1)?.get("status")).toBe("s-draft,s-active"));

@@ -514,24 +514,24 @@ describe("sorting the contracts list", () => {
     await user.click(header);
     await waitFor(() => {
       expect(lastQuery(surface.queries).get("dir")).toBe("asc");
+      expect(cell()).toHaveAttribute("aria-sort", "ascending");
     });
     expect(lastQuery(surface.queries).get("sort")).toBe("title");
-    expect(cell()).toHaveAttribute("aria-sort", "ascending");
 
     await user.click(header);
     await waitFor(() => {
       expect(lastQuery(surface.queries).get("dir")).toBe("desc");
+      expect(cell()).toHaveAttribute("aria-sort", "descending");
     });
-    expect(cell()).toHaveAttribute("aria-sort", "descending");
 
     // Off is a state, not the absence of one: on contracts it is newest
     // reference first (CTR-024), so it has to be reachable.
     await user.click(header);
     await waitFor(() => {
       expect(lastQuery(surface.queries).has("sort")).toBe(false);
+      expect(cell()).not.toHaveAttribute("aria-sort");
     });
     expect(lastQuery(surface.queries).has("dir")).toBe(false);
-    expect(cell()).not.toHaveAttribute("aria-sort");
   });
 
   it("leaves a column the list cannot order by as plain text", async () => {
