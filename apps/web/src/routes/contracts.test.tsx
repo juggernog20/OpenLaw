@@ -17,7 +17,7 @@
  * on login.
  */
 
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { act, fireEvent, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { json, problem, renderAt, stubApi, type StubCall } from "../testing/helpers";
@@ -192,7 +192,48 @@ async function openCreateDialog(user: ReturnType<typeof userEvent.setup>) {
   await user.click(within(subbar).getByRole("button", { name: "Create contract" }));
 }
 
-async function toggleListFlag(user: ReturnType<typeof userEvent.setup>, label: string) {
+/**
+ * Runs an action that starts a navigation and, inside the same act
+ * scope, waits for the router to reach a URL `arrived` accepts and go
+ * idle. Renders the router schedules while the scope is open queue
+ * behind it and commit before this returns, so the list's read-version
+ * bump has landed by the time the test clicks again.
+ *
+ * A waitFor on router.state outside act is not enough. The router
+ * settles outside React, and the render it schedules can still be
+ * pending when the next click lands. That click starts a list read the
+ * late bump then discards, and the URL keeps the old filter. This is
+ * the gap 98e894b6 narrowed and CI still fell into.
+ */
+async function navigated(
+  router: ReturnType<typeof renderAt>["router"],
+  action: () => Promise<void>,
+  arrived: (search: URLSearchParams) => boolean,
+) {
+  await act(async () => {
+    await action();
+    await vi.waitFor(
+      () => {
+        expect(arrived(new URLSearchParams(router.state.location.search))).toBe(true);
+        expect(router.state.navigation.state).toBe("idle");
+      },
+      { timeout: 3000 },
+    );
+  });
+}
+
+/**
+ * Flips a list flag through the chip when it is on, or the Filter
+ * dialog when it is off. With `settle`, the click runs through
+ * `navigated`, so the flag's navigation has committed before the
+ * caller's next click; leave it out when the read is expected to fail
+ * and no navigation follows.
+ */
+async function toggleListFlag(
+  user: ReturnType<typeof userEvent.setup>,
+  label: string,
+  settle?: { router: ReturnType<typeof renderAt>["router"]; flag: string },
+) {
   // The chip is what says the flag is on. While the Filter dialog is
   // still closing, Radix keeps the rest of the page aria-hidden, and a
   // role query that skips hidden elements would miss the chip, fall
@@ -200,18 +241,28 @@ async function toggleListFlag(user: ReturnType<typeof userEvent.setup>, label: s
   // it. So look for the chip hidden or not, then click it once it is
   // reachable.
   const name = `Remove ${label} filter`;
-  if (screen.queryByRole("button", { name, hidden: true })) {
+  const turningOff = screen.queryByRole("button", { name, hidden: true }) !== null;
+  let control: HTMLElement;
+  if (turningOff) {
     await waitFor(() => expect(screen.getByRole("button", { name })).toBeEnabled());
-    await user.click(screen.getByRole("button", { name }));
+    control = screen.getByRole("button", { name });
+  } else {
+    const filter = await screen.findByRole("button", { name: /^Filter/ });
+    await waitFor(() => expect(filter).toBeEnabled());
+    await user.click(filter);
+    control = within(screen.getByRole("dialog", { name: "Filter" })).getByRole("button", {
+      name: label,
+    });
+  }
+  if (!settle) {
+    await user.click(control);
     return;
   }
-  const filter = await screen.findByRole("button", { name: /^Filter/ });
-  await waitFor(() => expect(filter).toBeEnabled());
-  await user.click(filter);
-  await user.click(
-    within(screen.getByRole("dialog", { name: "Filter" })).getByRole("button", {
-      name: label,
-    }),
+  const { router, flag } = settle;
+  await navigated(
+    router,
+    () => user.click(control),
+    (search) => (turningOff ? !search.has(flag) : search.get(flag) === "true"),
   );
 }
 
@@ -517,20 +568,14 @@ describe("the /contracts destination", () => {
     expect(await screen.findByText("C-42")).toBeInTheDocument();
     expect(screen.queryByText("C-9")).not.toBeInTheDocument();
 
-    // The toggle re-reads with includeEnded and the deal appears. The
-    // list commits its rows and the chip before it navigates, so wait
-    // for the URL to carry the flag and the navigation to settle: a
-    // chip click in that gap lands while the list is busy and is
-    // dropped.
-    await toggleListFlag(user, "Show ended");
+    // The toggle re-reads with includeEnded and the deal appears. Each
+    // toggle settles its navigation before the next click: a chip click
+    // that lands before the list's re-render commits is dropped.
+    await toggleListFlag(user, "Show ended", { router, flag: "includeEnded" });
     expect(await screen.findByText("C-9")).toBeInTheDocument();
-    await waitFor(() => {
-      expect(new URLSearchParams(router.state.location.search).get("includeEnded")).toBe("true");
-      expect(router.state.navigation.state).toBe("idle");
-    });
 
     // And back: the toggle off re-reads the default list.
-    await toggleListFlag(user, "Show ended");
+    await toggleListFlag(user, "Show ended", { router, flag: "includeEnded" });
     await waitFor(() => {
       expect(screen.queryByText("C-9")).not.toBeInTheDocument();
       expect(screen.getByText("C-42")).toBeInTheDocument();
@@ -906,18 +951,14 @@ describe("quick contract filters", () => {
     await user.click(screen.getByRole("checkbox", { name: "Draft" }));
     await user.clear(screen.getByRole("textbox", { name: "Search choices" }));
     await user.click(screen.getByRole("checkbox", { name: "Active" }));
-    await user.click(screen.getByRole("button", { name: "Apply" }));
-    await waitFor(() =>
-      expect(new URLSearchParams(router.state.location.search).get("status")).toBe(
-        "s-draft,s-active",
-      ),
+    await navigated(
+      router,
+      () => user.click(screen.getByRole("button", { name: "Apply" })),
+      (search) => search.get("status") === "s-draft,s-active",
     );
     expect(surface.queries.at(-1)?.get("owner")).toBe("me");
     expect(surface.queries.at(-1)?.get("status")).toBe("s-draft,s-active");
-    await waitFor(() => {
-      expect(router.state.navigation.state).toBe("idle");
-      expect(screen.getByRole("button", { name: /^Filter/ })).toBeEnabled();
-    });
+    expect(screen.getByRole("button", { name: /^Filter/ })).toBeEnabled();
     await user.click(screen.getByRole("button", { name: /^Filter/ }));
     await user.click(
       within(screen.getByRole("dialog", { name: "Filter" })).getByRole("button", {
@@ -926,17 +967,16 @@ describe("quick contract filters", () => {
     );
     fireEvent.change(screen.getByLabelText("From"), { target: { value: "2027-01-01" } });
     fireEvent.change(screen.getByLabelText("To"), { target: { value: "2027-01-31" } });
-    await user.click(screen.getByRole("button", { name: "Apply" }));
-    await waitFor(() =>
-      expect(new URLSearchParams(router.state.location.search).get("expiryTo")).toBe("2027-01-31"),
+    await navigated(
+      router,
+      () => user.click(screen.getByRole("button", { name: "Apply" })),
+      (search) => search.get("expiryTo") === "2027-01-31",
     );
-    await waitFor(() => {
-      expect(router.state.navigation.state).toBe("idle");
-      expect(screen.getByRole("button", { name: /^Filter/ })).toBeEnabled();
-    });
-    await user.click(screen.getByRole("button", { name: "Remove Status filter" }));
-    await waitFor(() =>
-      expect(new URLSearchParams(router.state.location.search).has("status")).toBe(false),
+    expect(screen.getByRole("button", { name: /^Filter/ })).toBeEnabled();
+    await navigated(
+      router,
+      () => user.click(screen.getByRole("button", { name: "Remove Status filter" })),
+      (search) => !search.has("status"),
     );
     await act(() => router.navigate(-1));
     expect(
@@ -944,12 +984,13 @@ describe("quick contract filters", () => {
     ).toBeInTheDocument();
     await act(() => router.navigate(1));
     expect(screen.queryByRole("button", { name: "Status: Draft, Active" })).not.toBeInTheDocument();
-    await user.click(screen.getByRole("button", { name: "Clear all" }));
-    await waitFor(() => {
-      expect(screen.queryByRole("button", { name: "Clear all" })).not.toBeInTheDocument();
-      expect(router.state.navigation.state).toBe("idle");
-      expect(screen.getByRole("button", { name: /^Filter/ })).toBeEnabled();
-    });
+    await navigated(
+      router,
+      () => user.click(screen.getByRole("button", { name: "Clear all" })),
+      (search) => !search.has("owner") && !search.has("expiryTo"),
+    );
+    expect(screen.queryByRole("button", { name: "Clear all" })).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /^Filter/ })).toBeEnabled();
     expect(surface.queries.at(-1)?.has("owner")).toBe(false);
     expect(surface.queries.at(-1)?.has("expiryTo")).toBe(false);
     await act(() => router.revalidate());
@@ -968,8 +1009,15 @@ describe("quick contract filters", () => {
     const name = screen.getByLabelText("Name");
     await user.clear(name);
     await user.type(name, "My renewals");
-    await user.click(screen.getByRole("button", { name: "Save" }));
-    await waitFor(() => expect(surface.saved).toHaveLength(1));
+    // Saving adopts the view and navigates to it. Settle that navigation
+    // before clearing: a Clear all click that lands before the list's
+    // re-render commits is dropped.
+    await navigated(
+      router,
+      () => user.click(screen.getByRole("button", { name: "Save" })),
+      (search) => search.get("view") === "saved-1",
+    );
+    expect(surface.saved).toHaveLength(1);
     expect(surface.saved[0]?.config).toMatchObject({
       filters: {
         owner: "me",
@@ -978,21 +1026,15 @@ describe("quick contract filters", () => {
         expiryTo: "2027-12-31",
       },
     });
-    await screen.findByRole("button", { name: /My renewals/ });
-    await waitFor(() => {
-      expect(screen.queryByRole("dialog", { name: "Save this view" })).not.toBeInTheDocument();
-      expect(new URLSearchParams(router.state.location.search).get("view")).toBe("saved-1");
-      expect(router.state.navigation.state).toBe("idle");
-      expect(screen.getByRole("button", { name: /^Filter/ })).toBeEnabled();
-    });
-    await act(async () => {
-      await user.click(screen.getByRole("button", { name: "Clear all" }));
-    });
-    await waitFor(() => {
-      expect(new URLSearchParams(router.state.location.search).has("status")).toBe(false);
-      expect(screen.queryByRole("button", { name: "Clear all" })).not.toBeInTheDocument();
-      expect(router.state.navigation.state).toBe("idle");
-    });
+    expect(screen.getByRole("button", { name: /My renewals/ })).toBeInTheDocument();
+    expect(screen.queryByRole("dialog", { name: "Save this view" })).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /^Filter/ })).toBeEnabled();
+    await navigated(
+      router,
+      () => user.click(screen.getByRole("button", { name: "Clear all" })),
+      (search) => !search.has("status"),
+    );
+    expect(screen.queryByRole("button", { name: "Clear all" })).not.toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: /My renewals/ }));
     await user.click(screen.getByRole("menuitemradio", { name: "My renewals" }));
     await waitFor(() => expect(surface.queries.at(-1)?.get("status")).toBe("s-draft,s-active"));
