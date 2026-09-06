@@ -9,7 +9,7 @@
 # What it is for, and why the comparison is what it is, is in
 # upgrade-fidelity.mjs beside this file.
 #
-#   pnpm upgrade-fidelity              # baseline = origin/dev
+#   pnpm upgrade-fidelity              # newest release, else dev (its parent on dev)
 #   BASELINE=v0.3.0 pnpm upgrade-fidelity
 #
 # It runs in its own compose project (`openlaw-upgrade`) on its own
@@ -26,7 +26,7 @@
 set -euo pipefail
 cd "$(dirname "$0")/../.."
 
-BASELINE="${BASELINE:-origin/dev}"
+BASELINE="$(node e2e/scripts/upgrade-baseline.mjs "${BASELINE:-}")"
 APP_PORT="${APP_PORT:-3200}"
 MAILPIT_HOST_PORT="${MAILPIT_PORT:-8225}"
 SIGNING_STUB_PORT="${SIGNING_STUB_PORT:-8229}"

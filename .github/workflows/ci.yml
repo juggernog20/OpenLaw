@@ -15,25 +15,78 @@ permissions:
   contents: read
 
 jobs:
-  check:
-    name: Lint, typecheck, test
+  quality:
+    name: Lint and typecheck
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v5
-
-      - uses: pnpm/action-setup@v4
-
-      - uses: actions/setup-node@v5
+      - uses: ./.github/actions/setup-workspace
         with:
-          node-version: 24
-          cache: pnpm
+          cache-scope: quality
 
-      - run: pnpm install --frozen-lockfile
+      - run: pnpm check:static
+      - run: pnpm test:ci-tools
 
-      # Non-mutating counterpart to `pnpm fix`: format:check, secretlint,
-      # then lint + typecheck + test across the workspace. `--continue`
-      # so one failing package still reports the rest.
-      - run: pnpm check
+  tests:
+    name: ${{ matrix.package }} tests (${{ matrix.shard }}/2)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        package: [api, web]
+        shard: [1, 2]
+    steps:
+      - uses: actions/checkout@v5
+      - uses: ./.github/actions/setup-workspace
+        with:
+          cache-scope: tests-${{ matrix.package }}-${{ matrix.shard }}
+
+      - uses: docker/setup-buildx-action@v3
+        if: matrix.package == 'api'
+
+      - name: Build the real doc-engine image
+        if: matrix.package == 'api'
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: services/doc-engine/Dockerfile
+          load: true
+          tags: openlaw-doc-engine:test
+          cache-from: type=gha,scope=ci-doc-engine-v1
+          # E2E is the sole writer for the candidate's shared image cache.
+
+      - name: Run the test shard
+        env:
+          TEST_PACKAGE: ${{ matrix.package }}
+          TEST_SHARD: ${{ matrix.shard }}/2
+          DOC_ENGINE_TEST_IMAGE: openlaw-doc-engine:test
+        run: >-
+          pnpm exec turbo run test --filter="@openlaw/$TEST_PACKAGE" --summarize
+          -- --shard="$TEST_SHARD"
+
+      - name: Upload task timings
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: timings-${{ matrix.package }}-${{ matrix.shard }}
+          path: .turbo/runs/*.json
+          if-no-files-found: ignore
+          retention-days: 7
+
+  # Keep the existing check name as the aggregate for branch protection.
+  check:
+    name: Lint, typecheck, test
+    needs: [quality, tests]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Require every static check and test shard
+        env:
+          QUALITY_RESULT: ${{ needs.quality.result }}
+          TEST_RESULT: ${{ needs.tests.result }}
+        run: test "$QUALITY_RESULT" = success && test "$TEST_RESULT" = success
 
   openapi-current:
     name: OpenAPI artifact is current
@@ -41,14 +94,9 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
-      - uses: pnpm/action-setup@v4
-
-      - uses: actions/setup-node@v5
+      - uses: ./.github/actions/setup-workspace
         with:
-          node-version: 24
-          cache: pnpm
-
-      - run: pnpm install --frozen-lockfile
+          cache-scope: openapi
 
       # openapi.json and the generated client are committed artifacts
       # (TECH-003). Regenerate and fail if the result differs from what
@@ -66,8 +114,8 @@ jobs:
   # against images built by the real Dockerfiles, brought up by the
   # blessed compose.yml plus the dev overlay (Mailpit only). This is what
   # catches "works with vite dev / breaks in the built image" drift. The
-  # e2e package's lint/typecheck ride in `pnpm check` above; only the
-  # browser run lives here, because it needs the live stack.
+  # e2e package's lint/typecheck ride in the `quality` job above; only
+  # the browser run lives here, because it needs the live stack.
   e2e:
     name: E2E against the built Compose stack
     runs-on: ubuntu-latest
@@ -75,14 +123,11 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
-      - uses: pnpm/action-setup@v4
-
-      - uses: actions/setup-node@v5
+      - uses: ./.github/actions/setup-workspace
         with:
-          node-version: 24
-          cache: pnpm
+          cache-scope: e2e
 
-      - run: pnpm install --frozen-lockfile
+      - uses: docker/setup-buildx-action@v3
 
       - name: Install the Playwright browser
         run: pnpm --filter @openlaw/e2e exec playwright install --with-deps chromium
@@ -98,12 +143,25 @@ jobs:
           } > .env
 
       - name: Build the stack from the real Dockerfiles
-        run: docker compose -f compose.yml -f compose.dev.yml build
+        uses: docker/bake-action@v6
+        with:
+          source: .
+          files: |
+            compose.yml
+            compose.dev.yml
+          # The worker uses the app's image with a different command.
+          targets: app,doc-engine
+          load: true
+          set: |
+            app.cache-from=type=gha,scope=ci-app-v1
+            app.cache-to=type=gha,scope=ci-app-v1,mode=max
+            doc-engine.cache-from=type=gha,scope=ci-doc-engine-v1
+            doc-engine.cache-to=type=gha,scope=ci-doc-engine-v1,mode=max
 
       # Fresh volumes by construction — the runner has none. The suite's
       # bootstrap probe takes the fresh-instance path via first-run setup.
       - name: Start the stack
-        run: docker compose -f compose.yml -f compose.dev.yml up -d
+        run: docker compose -f compose.yml -f compose.dev.yml up -d --no-build
 
       # Poll the readiness probe directly instead of `up --wait`: the
       # container healthcheck's 30s interval would add most of a minute
@@ -151,8 +209,8 @@ jobs:
   # exists for is a migration that is fine against an empty table and
   # wrong against one with rows in it.
   #
-  # The baseline is the newest release tag, or `dev` until one exists.
-  # `main` is deliberately never used: it is vestigial here.
+  # Before the first release, use the event's base revision so a dev
+  # push cannot silently rehearse an upgrade to the same commit.
   #
   # `pnpm upgrade-fidelity` runs the same rehearsal locally, on its own
   # compose project and ports. Keep the two in step.
@@ -185,6 +243,8 @@ jobs:
           node-version: 24
           package-manager-cache: false
 
+      - uses: docker/setup-buildx-action@v3
+
       # Throwaway per-run secrets, as in the E2E job. Written once and
       # kept across both halves: OPENLAW_SECRET_KEY has to be the same
       # value after the upgrade as before it, or the credentials the
@@ -207,24 +267,32 @@ jobs:
       - name: Pick the baseline and check it out
         id: baseline
         run: |
-          # Explicit, so the job does not depend on what the checkout
+          # Explicit, so the selector does not depend on what the checkout
           # action happened to fetch for this event type.
           git fetch --force origin --tags "+refs/heads/dev:refs/remotes/origin/dev"
-          # Release tags only, and no pre-releases. An unfiltered list
-          # would let a tooling tag or an `-rc` become the baseline, and
-          # the job would quietly test the wrong upgrade path.
-          ref=$(git tag --list 'v[0-9]*.[0-9]*.[0-9]*' --sort=-v:refname | grep -v -- '-' | head -n 1)
-          if [ -z "$ref" ]; then
-            ref=origin/dev
-            echo "::notice::No release tag yet — upgrading from $ref instead."
-          fi
+          ref=$(node e2e/scripts/upgrade-baseline.mjs)
           echo "ref=$ref" >> "$GITHUB_OUTPUT"
+          echo "Upgrading $ref to $GITHUB_SHA" >> "$GITHUB_STEP_SUMMARY"
           git checkout --detach "$ref"
 
-      - name: Build and start the baseline stack
-        run: |
-          docker compose -f compose.yml -f compose.dev.yml build
-          docker compose -f compose.yml -f compose.dev.yml up -d
+      - name: Build the baseline images
+        uses: docker/bake-action@v6
+        with:
+          # Bake's default Git context would ignore the baseline checkout.
+          source: .
+          files: |
+            compose.yml
+            compose.dev.yml
+          targets: app,doc-engine
+          load: true
+          set: |
+            app.cache-from=type=gha,scope=ci-baseline-app-v1
+            app.cache-to=type=gha,scope=ci-baseline-app-v1,mode=max
+            doc-engine.cache-from=type=gha,scope=ci-baseline-doc-engine-v1
+            doc-engine.cache-to=type=gha,scope=ci-baseline-doc-engine-v1,mode=max
+
+      - name: Start the baseline stack
+        run: docker compose -f compose.yml -f compose.dev.yml up -d --no-build
 
       - name: Wait for the baseline to answer /readyz
         run: |
@@ -254,10 +322,23 @@ jobs:
           HEAD_SHA: ${{ github.sha }}
         run: git checkout --force "$HEAD_SHA"
 
-      - name: Build and start this commit against the baseline's data
-        run: |
-          docker compose -f compose.yml -f compose.dev.yml build
-          docker compose -f compose.yml -f compose.dev.yml up -d
+      - name: Build this commit's images
+        uses: docker/bake-action@v6
+        with:
+          source: .
+          files: |
+            compose.yml
+            compose.dev.yml
+          targets: app,doc-engine
+          load: true
+          set: |
+            app.cache-from=type=gha,scope=ci-app-v1
+            app.cache-from+=type=gha,scope=ci-baseline-app-v1
+            doc-engine.cache-from=type=gha,scope=ci-doc-engine-v1
+            doc-engine.cache-from+=type=gha,scope=ci-baseline-doc-engine-v1
+
+      - name: Start this commit against the baseline's data
+        run: docker compose -f compose.yml -f compose.dev.yml up -d --no-build
 
       - name: Wait for the upgraded stack to answer /readyz
         run: |

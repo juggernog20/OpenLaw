@@ -36,8 +36,10 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "fix": "pnpm lint:fix && pnpm format && pnpm secretlint && turbo run typecheck --continue",
-    "check": "pnpm format:check && pnpm secretlint && pnpm lint:contrast && pnpm lint:migrations && pnpm lint:versions && turbo run lint typecheck test --continue",
-    "check:security": "pnpm audit --audit-level=high && pnpm licenses list"
+    "check": "pnpm check:static && pnpm test:ci-tools && turbo run test --continue",
+    "check:security": "pnpm audit --audit-level=high && pnpm licenses list",
+    "check:static": "pnpm format:check && pnpm secretlint && pnpm lint:contrast && pnpm lint:migrations && pnpm lint:versions && turbo run lint typecheck --continue",
+    "test:ci-tools": "node --test e2e/scripts/upgrade-baseline.test.mjs"
   },
   "pnpm": {
     "overrides": {

@@ -193,12 +193,21 @@ async function openCreateDialog(user: ReturnType<typeof userEvent.setup>) {
 }
 
 async function toggleListFlag(user: ReturnType<typeof userEvent.setup>, label: string) {
-  const remove = screen.queryByRole("button", { name: `Remove ${label} filter` });
-  if (remove) {
-    await user.click(remove);
+  // The chip is what says the flag is on. While the Filter dialog is
+  // still closing, Radix keeps the rest of the page aria-hidden, and a
+  // role query that skips hidden elements would miss the chip, fall
+  // through to the dialog, and set the flag again instead of clearing
+  // it. So look for the chip hidden or not, then click it once it is
+  // reachable.
+  const name = `Remove ${label} filter`;
+  if (screen.queryByRole("button", { name, hidden: true })) {
+    await waitFor(() => expect(screen.getByRole("button", { name })).toBeEnabled());
+    await user.click(screen.getByRole("button", { name }));
     return;
   }
-  await user.click(await screen.findByRole("button", { name: /^Filter/ }));
+  const filter = await screen.findByRole("button", { name: /^Filter/ });
+  await waitFor(() => expect(filter).toBeEnabled());
+  await user.click(filter);
   await user.click(
     within(screen.getByRole("dialog", { name: "Filter" })).getByRole("button", {
       name: label,
@@ -895,7 +904,10 @@ describe("quick contract filters", () => {
     );
     expect(surface.queries.at(-1)?.get("owner")).toBe("me");
     expect(surface.queries.at(-1)?.get("status")).toBe("s-draft,s-active");
-    await waitFor(() => expect(router.state.navigation.state).toBe("idle"));
+    await waitFor(() => {
+      expect(router.state.navigation.state).toBe("idle");
+      expect(screen.getByRole("button", { name: /^Filter/ })).toBeEnabled();
+    });
     await user.click(screen.getByRole("button", { name: /^Filter/ }));
     await user.click(
       within(screen.getByRole("dialog", { name: "Filter" })).getByRole("button", {
@@ -908,7 +920,10 @@ describe("quick contract filters", () => {
     await waitFor(() =>
       expect(new URLSearchParams(router.state.location.search).get("expiryTo")).toBe("2027-01-31"),
     );
-    await waitFor(() => expect(router.state.navigation.state).toBe("idle"));
+    await waitFor(() => {
+      expect(router.state.navigation.state).toBe("idle");
+      expect(screen.getByRole("button", { name: /^Filter/ })).toBeEnabled();
+    });
     await user.click(screen.getByRole("button", { name: "Remove Status filter" }));
     await waitFor(() =>
       expect(new URLSearchParams(router.state.location.search).has("status")).toBe(false),
@@ -920,7 +935,11 @@ describe("quick contract filters", () => {
     await act(() => router.navigate(1));
     expect(screen.queryByRole("button", { name: "Status: Draft, Active" })).not.toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "Clear all" }));
-    await waitFor(() => expect(router.state.navigation.state).toBe("idle"));
+    await waitFor(() => {
+      expect(screen.queryByRole("button", { name: "Clear all" })).not.toBeInTheDocument();
+      expect(router.state.navigation.state).toBe("idle");
+      expect(screen.getByRole("button", { name: /^Filter/ })).toBeEnabled();
+    });
     expect(surface.queries.at(-1)?.has("owner")).toBe(false);
     expect(surface.queries.at(-1)?.has("expiryTo")).toBe(false);
     await act(() => router.revalidate());
@@ -949,8 +968,17 @@ describe("quick contract filters", () => {
         expiryTo: "2027-12-31",
       },
     });
+    await screen.findByRole("button", { name: /My renewals/ });
+    await waitFor(() => {
+      expect(router.state.navigation.state).toBe("idle");
+      expect(screen.getByRole("button", { name: /^Filter/ })).toBeEnabled();
+    });
     await user.click(await screen.findByRole("button", { name: "Clear all" }));
-    await waitFor(() => expect(router.state.navigation.state).toBe("idle"));
+    await waitFor(() => {
+      expect(new URLSearchParams(router.state.location.search).has("status")).toBe(false);
+      expect(screen.queryByRole("button", { name: "Clear all" })).not.toBeInTheDocument();
+      expect(router.state.navigation.state).toBe("idle");
+    });
     await user.click(screen.getByRole("button", { name: /My renewals/ }));
     await user.click(screen.getByRole("menuitemradio", { name: "My renewals" }));
     await waitFor(() => expect(surface.queries.at(-1)?.get("status")).toBe("s-draft,s-active"));

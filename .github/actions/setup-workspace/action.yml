@@ -1,0 +1,38 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+name: Set up the workspace
+description: Install dependencies and restore cached builds and static checks.
+inputs:
+  cache-scope:
+    description: Separate writers so parallel jobs can each save their task outputs.
+    required: true
+runs:
+  using: composite
+  steps:
+    - uses: pnpm/action-setup@v4
+
+    - uses: actions/setup-node@v5
+      id: node
+      with:
+        node-version: 24
+        cache: pnpm
+
+    - uses: actions/cache@v4
+      with:
+        path: .turbo/cache
+        key: turbo-v1-${{ runner.os }}-${{ runner.arch }}-${{ steps.node.outputs.node-version }}-${{ inputs.cache-scope }}-${{ hashFiles('pnpm-lock.yaml') }}-${{ github.sha }}-${{ github.run_attempt }}
+        restore-keys: |
+          turbo-v1-${{ runner.os }}-${{ runner.arch }}-${{ steps.node.outputs.node-version }}-${{ inputs.cache-scope }}-${{ hashFiles('pnpm-lock.yaml') }}-
+          turbo-v1-${{ runner.os }}-${{ runner.arch }}-${{ steps.node.outputs.node-version }}-${{ inputs.cache-scope }}-
+
+    # Every save carries the restored entries forward, and Turbo never
+    # evicts. Without this the tarball grows by one commit's outputs per
+    # run for ever. tar keeps mtimes, so age is the file's real age.
+    - name: Drop cache entries older than a week
+      run: |
+        if [ -d .turbo/cache ]; then
+          find .turbo/cache -type f -mtime +7 -delete
+        fi
+      shell: bash
+
+    - run: pnpm install --frozen-lockfile
+      shell: bash
