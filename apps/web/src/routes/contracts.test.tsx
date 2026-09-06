@@ -193,10 +193,16 @@ async function openCreateDialog(user: ReturnType<typeof userEvent.setup>) {
 }
 
 async function toggleListFlag(user: ReturnType<typeof userEvent.setup>, label: string) {
-  const remove = screen.queryByRole("button", { name: `Remove ${label} filter` });
-  if (remove) {
-    await waitFor(() => expect(remove).toBeEnabled());
-    await user.click(remove);
+  // The chip is what says the flag is on. While the Filter dialog is
+  // still closing, Radix keeps the rest of the page aria-hidden, and a
+  // role query that skips hidden elements would miss the chip, fall
+  // through to the dialog, and set the flag again instead of clearing
+  // it. So look for the chip hidden or not, then click it once it is
+  // reachable.
+  const name = `Remove ${label} filter`;
+  if (screen.queryByRole("button", { name, hidden: true })) {
+    await waitFor(() => expect(screen.getByRole("button", { name })).toBeEnabled());
+    await user.click(screen.getByRole("button", { name }));
     return;
   }
   const filter = await screen.findByRole("button", { name: /^Filter/ });
