@@ -17,7 +17,11 @@
     },
     "lint": {},
     "test": {
-      "dependsOn": ["^build"]
+      "dependsOn": ["^build"],
+      // Run assertions on every candidate. Integration tests depend on
+      // containers and mutable upstream images outside Turbo's graph.
+      "cache": false,
+      "env": ["DOC_ENGINE_TEST_IMAGE"]
     },
     "dev": {
       "dependsOn": ["^build"],
