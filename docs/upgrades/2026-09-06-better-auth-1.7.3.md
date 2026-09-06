@@ -62,7 +62,7 @@ provider, Nuxt/Vue/Expo clients, `@better-auth/test-utils`.
 
 Bumping the three packages on `dev` and building:
 
-```
+```text
 apps/api:build: src/auth/instance.ts(642,5): error TS2353: Object literal may
 only specify known properties, and 'issuer' does not exist in type '...'
 ```
@@ -72,7 +72,7 @@ object, exactly as the adapter does at boot (probe run in this sandbox,
 `usePlural: true`, all six tables better-auth writes — `users`, `sessions`,
 `accounts`, `verifications`, `ssoProviders`, `twoFactors`):
 
-```
+```text
 findings: 1
  - Column "issuer" on table "accounts" is required but Better Auth never
    writes it, so every insert into "accounts" fails.
