@@ -163,6 +163,37 @@ describe("the Profile pane (SET-006, #67)", () => {
     expect(screen.getByRole("button", { name: "Turn off two-factor" })).toBeVisible();
   });
 
+  it("re-enrols by turning two-factor off and then enrolling afresh", async () => {
+    // better-auth 1.7.3 refuses `enable` while an authenticator is active
+    // (TOTP_ALREADY_ENABLED), so Re-enroll is a disable followed by an
+    // enable, both with the one password the dialog asked for.
+    const user = userEvent.setup();
+    const calls: string[] = [];
+    stubApi({
+      signedIn: { ...MEMBER, twoFactorEnabled: true },
+      extra: (call: StubCall) => {
+        if (call.url.pathname === "/api/auth/two-factor/disable" && call.method === "POST") {
+          calls.push(`disable:${(call.body as { password: string }).password}`);
+          return json(200, { status: true });
+        }
+        if (call.url.pathname === "/api/auth/two-factor/enable" && call.method === "POST") {
+          calls.push(`enable:${(call.body as { password: string }).password}`);
+          return json(200, { method: "totp", totpURI: TOTP_URI, backupCodes: ["AAAAA-11111"] });
+        }
+        return undefined;
+      },
+    });
+    renderAt("/settings/profile");
+
+    await user.click(await screen.findByRole("button", { name: "Re-enroll" }));
+    const dialog = await screen.findByRole("dialog");
+    await user.type(within(dialog).getByLabelText("Password"), "correct-horse-battery");
+    await user.click(within(dialog).getByRole("button", { name: "Continue" }));
+
+    expect(await within(dialog).findByText("JBSWY3DPEHPK3PXP")).toBeVisible();
+    expect(calls).toEqual(["disable:correct-horse-battery", "enable:correct-horse-battery"]);
+  });
+
   it("changes the password through better-auth's change-password", async () => {
     const user = userEvent.setup();
     const changes: unknown[] = [];

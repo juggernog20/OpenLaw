@@ -382,6 +382,8 @@ The "version pin" line above stopped being true at [#340](https://github.com/jug
 
 **1.7.3 also validates the schema at boot, in every environment.** The Drizzle adapter compares the schema object it is handed with the tables better-auth writes; a required column it never writes, or a column it writes that is absent, is a mismatch. Left alone the library logs it once and then throws it on every auth request, so `apps/api/src/index.ts` awaits the check beside the migrations and exits on a mismatch — TECH-005's refusal-to-start, applied to schema drift. The check reads the schema object, not the database, and costs no round trip.
 
+**One behaviour change rode along.** `two-factor/enable` now refuses while a verified authenticator is active (`TOTP_ALREADY_ENABLED`) instead of replacing the secret in place, which is what SET-006's Re-enroll relied on. Re-enrol is a disable and then an enrolment from here — SET-006's 1.7.3 addendum has the reasoning. Found by the harness suite in CI, not by reading the release notes: a "bug fix" line was a contract change for us, which is the sweep rule below in miniature.
+
 **The rule for the routine dependency sweep from here:** `@better-auth/*` is never a drop-in bump at any semver level. 1.7.0 broke as a minor and 1.7.3 broke as a patch. A sweep that finds the three packages outdated diffs the published tarballs' `dist/db/` and `dist/api/` — and runs the adapter's own schema check against `packages/db` — before classifying, as `docs/upgrades/2026-09-06-better-auth-1.7.3.md` did.
 
 ## TECH-009: Real-time — SSE on live surfaces

@@ -49,8 +49,14 @@ schema (1.7 upgrade guide, Postgres): drop the `(issuer, accountId)` unique
 index and relax `issuer`'s NOT NULL; skipping it means "sign-ups fail because
 the NOT NULL constraint rejects new accounts".
 
-Other 1.7.3 changes that touch code we run, none needing action: TOTP
-re-enrolment no longer replaces an active authenticator (#11037); trusted
+One more 1.7.3 change lands on us: **`two-factor/enable` refuses while a
+verified authenticator is active** (`TOTP_ALREADY_ENABLED`, #11037), where
+1.7.2 replaced the secret in place. SET-006's Re-enroll button called
+`enable` on an enabled account, so it breaks on the bump. Re-enrolment
+becomes a disable followed by an enrolment, both under the one password
+the dialog asks for; the Activity log shows both transitions.
+
+Other 1.7.3 changes that touch code we run, none needing action: trusted
 -origin parsing hardened against control characters (our
 `withTrustedIssuerOrigin` and async `trustedOrigins` are unaffected);
 `getSession` with cookie caching disabled (we do not disable it);
