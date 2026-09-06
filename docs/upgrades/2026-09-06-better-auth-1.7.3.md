@@ -1,10 +1,10 @@
 # better-auth 1.7.2 → 1.7.3 — upgrade spec
 
-**Status:** spec for review. Classified **Breaking (medium effort)** on the
+**Status:** approved and built (go given 2026-09-06); the PR carrying it is
+the one this file arrives in. Classified **Breaking (medium effort)** on the
 routine-sweep rubric — it needs a schema migration and touches the
 credential/SSO path, so it is not a drop-in bump — but it is the light end
-of medium: one PR, three work items that must land together. No PR is open;
-the work starts on a go.
+of medium: one PR, three work items that land together.
 
 The precedent is #340, the 1.6 → 1.7 spec. This is that change's mirror
 image: upstream has un-shipped the account-identity scoping that #340
