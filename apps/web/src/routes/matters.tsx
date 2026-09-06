@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 /** The scoped, filterable, saved-view Matters destination. */
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { BriefcaseBusiness, Plus } from "lucide-react";
 import { MATTER_SORT_KEYS, type MatterSortKey } from "@openlaw/shared";
 import { FormattedMessage, useIntl } from "react-intl";
@@ -125,7 +125,11 @@ export function MattersPage() {
   const navigation = useNavigation();
   const busy = requestBusy || navigation.state !== "idle";
   const readVersion = useRef(0);
-  useEffect(() => {
+  // A layout effect, not a passive one: the bump has to land in the
+  // same commit as the render that shows the new list. A passive effect
+  // runs a scheduler tick later, and a click in that gap starts a read
+  // that the late bump then discards, so the click is silently lost.
+  useLayoutEffect(() => {
     readVersion.current += 1;
   }, [loaded, navigation.location]);
   const [listError, setListError] = useState<string | null>(null);

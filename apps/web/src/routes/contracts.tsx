@@ -40,7 +40,7 @@
  * Users are bounced home; the API's 403 is the real refusal.
  */
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import {
   redirect,
   useLoaderData,
@@ -199,7 +199,11 @@ export function ContractsPage() {
   const navigation = useNavigation();
   const listBusy = requestBusy || navigation.state !== "idle";
   const readVersion = useRef(0);
-  useEffect(() => {
+  // A layout effect, not a passive one: the bump has to land in the
+  // same commit as the render that shows the new list. A passive effect
+  // runs a scheduler tick later, and a click in that gap starts a read
+  // that the late bump then discards, so the click is silently lost.
+  useLayoutEffect(() => {
     readVersion.current += 1;
   }, [loaded, navigation.location]);
 
