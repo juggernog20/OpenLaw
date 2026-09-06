@@ -950,6 +950,44 @@ The Documents destination adopts `list_views` under the `documents` surface slug
 
 The Entity registry adopts `list_views` under the `entities` surface slug. Its chosen columns, Type, Status, Jurisdiction, Majority owner, and archived filters, and sort are one whole config under clauses 2 and 4. The fourth adopter adds no schema, sharing, or default-view exception; unknown catalogue keys remain a read-past.
 
+## DD-020: Product documentation is public, versioned, and separate from Knowledge
+
+- **Status:** Accepted
+- **Date:** 2026-09-07
+- **Task:** [#724](https://github.com/juggernog20/OpenLaw/issues/724)
+
+### Context
+
+Generic OpenLaw instructions must be available before sign-in and during recovery.
+Organization Knowledge Items have their own authors, audience rules, and lifecycle;
+they are not the product manual.
+
+### Decision
+
+Publish the formal manual at `/documentation` on each instance without requiring
+an app session, completed setup, or record API access. Its content is generic and
+uses fictional examples. Administrator and operator instructions are public too;
+reading them grants no app permissions. Keep record and action authorization intact.
+
+Staff Help and Business Portal Help present selected canonical articles in their
+existing authenticated shells. Signed-out Help deep links go to the public article.
+Documentation search reads only compiled product content, never organization records,
+Knowledge Items, account details, or review evidence. It sends no queries to a service.
+
+Bundle the corresponding documentation edition with the app and distribute a
+standalone HTML edition for operators to retain outside the instance. Older apps
+keep their bundled edition. No external "latest" site, public domain, analytics,
+or hosted search service is required. Identify development previews and their
+publication target; a feature preview is not a production release.
+
+### Consequences
+
+The web/platform engineer owns the reader and export, the documentation lead owns
+content, and the release maintainer owns edition alignment. The scope, publication
+states, compatibility evidence, and support behavior are specified in
+[the publishing design](../documentation/PUBLISHING.md). Existing app permissions
+and organization-authored Knowledge remain governed by their current decisions.
+
 ## Index of decisions
 
 | #      | Decision                                                                                  | Status   |
@@ -973,3 +1011,4 @@ The Entity registry adopts `list_views` under the `entities` surface slug. Its c
 | DD-017 | Activity tracking — two-layer model (per-entity activity feed + system-wide audit log)    | Accepted |
 | DD-018 | Work-model doctrine — dual workspaces with the deliverable rule                           | Accepted |
 | DD-019 | Saved list views — private to one person, one `jsonb` config, saving is an act            | Accepted |
+| DD-020 | Product documentation is public, versioned, and separate from Knowledge                   | Accepted |

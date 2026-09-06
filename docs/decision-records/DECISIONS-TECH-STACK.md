@@ -1156,6 +1156,58 @@ The rule of this decision stands unchanged. When a third page needs a relations 
 - TECH-024 remains the data rule for the page. A lazy applet reads once per mount through its seam and holds nothing across tabs; it does not become a client cache.
 - The incremental migration is reviewable and preserves per-link access doctrine while converging the presentation.
 
+## TECH-026: Compile one Markdown source set for bundled Help and standalone documentation
+
+- **Status:** Accepted
+- **Date:** 2026-09-07
+- **Task:** [#724](https://github.com/juggernog20/OpenLaw/issues/724)
+
+### Context
+
+OpenLaw already builds a Vite/React client and serves its static assets from the
+API process (TECH-017). Product instructions must work on an isolated network and
+remain readable from a retained copy when that process is down.
+
+### Decision
+
+Keep articles under `docs/user-guides/` and discovery, edition, redirect, and review
+metadata under `docs/documentation/`. Use Node build tooling with Marked for Markdown
+and sanitize-html for the generated HTML. Reject raw HTML and unsupported URLs or
+assets, transform links/anchors, and then sanitize with explicit tag and attribute
+allowlists. Compiler dependencies belong to the build, not the API runtime. Lock
+and audit them when introduced in DOC-006.
+
+Compile the article outline, plain search text, and reader HTML from the same source.
+Generate the app payload and standalone HTML edition from that compiler, resolving
+internal links for each destination. The standalone edition uses relative links,
+local assets, and embedded search data; its index and prose work without JavaScript.
+Do not reuse or expand the organization Knowledge renderer for product documentation.
+
+Integrate generation with Vite dev/build and include all canonical source, metadata,
+and compiler inputs in Turbo's cache graph. Selectively admit the required docs paths
+through `.dockerignore`. Supply immutable app source identity for release image builds:
+`.git` is excluded, and the package version alone does not identify a development build.
+
+Normal readers expose verified/published content with matching evidence. Explicit
+previews can include marked drafts. Complete-suite publication separately requires
+all P0/P1 coverage. Preserve the tested app commit, content hash, distribution commit,
+and compatibility review instead of rewriting old verification evidence.
+
+### Alternatives considered
+
+An external docs/search service introduces an internet dependency. A separate site
+framework duplicates build/theming work at this scale. The existing Knowledge
+renderer lacks the required grammar and has different heading/link semantics.
+Raw Markdown alone does not provide the agreed reading and recovery surfaces.
+
+### Consequences
+
+The compiler and export add build maintenance but require no new runtime service,
+database, or account. DOC-006 verifies safe rendering, links, evidence selection,
+search, build invalidation, and offline export. Detailed paths and failure behavior
+are in [the publishing design](../documentation/PUBLISHING.md). The primary library
+references consulted for this choice are linked there.
+
 ## Index of decisions
 
 | #        | Decision                                                                      | Status                 |
@@ -1185,3 +1237,4 @@ The rule of this decision stands unchanged. When a third page needs a relations 
 | TECH-023 | Shared machinery grows named per-mount hooks — a third mount is configuration | Accepted               |
 | TECH-024 | Web data and state model — loaders read, screens own what they show           | Accepted               |
 | TECH-025 | A record applet's third web mount becomes configuration                       | Accepted               |
+| TECH-026 | Compile one Markdown source set for bundled Help and standalone documentation | Accepted               |
