@@ -333,7 +333,11 @@ async function main() {
 
     phase("done");
     log(`${ORG.name} is seeded.`);
-    log(`API at ${DEFAULT_BASE_URL}; account ${ADMIN.email} / ${ADMIN.password}`);
+    // The dev loop serves the app from Vite on 5173 while the API answers
+    // on 3000. A seed pointed elsewhere (SEED_BASE_URL) targets a built
+    // image, which serves the app and the API at the same address.
+    const signIn = process.env.SEED_BASE_URL ?? "http://localhost:5173";
+    log(`sign in at ${signIn} as ${ADMIN.email} / ${ADMIN.password}`);
     log("every seeded person shares that password; business users sign in with a magic link.");
   } finally {
     if (stub) await stub.close();

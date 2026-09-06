@@ -82,7 +82,7 @@ The seed intentionally uses dates relative to the current UTC day. Record its
 start/end timestamps and the organization's `Europe/London` timezone. Randomized
 choices repeat; UUIDs, activity timestamps, and calendar dates do not form a
 byte-identical database image. Use named scenario fixtures and their actual dates
-in evidence, not a hard-coded record UUID or an assumed "today" from the author’s
+in evidence, not a hard-coded record UUID or an assumed "today" from the author's
 local timezone.
 
 Use these separate browser contexts for the primary role checks:

@@ -36,7 +36,7 @@
         "Request and redeem a magic link, sign out, then try an expired or already-used link."
       ],
       "expectedResults": [
-        "Only the intended Business User session opens; the portal shows that person\u2019s Requests."
+        "Only the intended Business User session opens; the portal shows that person's Requests."
       ],
       "negativeChecks": [
         "An unapproved domain gets the supported refusal/neutral response; a bad link offers a working recovery route."
@@ -98,7 +98,7 @@
         "Preferences persist for the intended user and the documented app-view path works on this baseline."
       ],
       "negativeChecks": [
-        "Another account\u2019s preferences remain unchanged; no absent M33 App view route is claimed."
+        "Another account's preferences remain unchanged; no absent M33 App view route is claimed."
       ],
       "requiredMethods": ["browser-walkthrough"],
       "status": "not-run"
@@ -193,7 +193,7 @@
       "articles": ["follow-request"],
       "roles": ["business_user"],
       "environment": "authoring",
-      "prerequisites": ["Jonas\u2019s open Request and a Legal Team Member able to act on it."],
+      "prerequisites": ["Jonas's open Request and a Legal Team Member able to act on it."],
       "actions": [
         "Reply from both roles, supply additional paper, and follow the Request through disposition."
       ],
@@ -323,7 +323,7 @@
         "Approval requests remain independent; the confirmed override is recorded and the Stage move succeeds."
       ],
       "negativeChecks": [
-        "A different user cannot answer someone else\u2019s request; unresolved approval is a warning, not an invented hard lock."
+        "A different user cannot answer someone else's request; unresolved approval is a warning, not an invented hard lock."
       ],
       "requiredMethods": ["browser-walkthrough"],
       "status": "not-run"
@@ -523,7 +523,7 @@
         "Contributor actions succeed only on reached work and the guide identifies the actual legal-action limits."
       ],
       "negativeChecks": [
-        "Stage/Status moves and other reserved legal actions remain unavailable; removing Ravi\u2019s reach stops access."
+        "Stage/Status moves and other reserved legal actions remain unavailable; removing Ravi's reach stops access."
       ],
       "requiredMethods": ["browser-walkthrough"],
       "status": "not-run"
@@ -541,7 +541,7 @@
         "Upload a Document, append a Document Version, inspect provenance/kind, and file conversation paper."
       ],
       "expectedResults": [
-        "A logical Document retains its linear Version chain and the paper\u2019s ownership/provenance is visible."
+        "A logical Document retains its linear Version chain and the paper's ownership/provenance is visible."
       ],
       "negativeChecks": [
         "Unsupported corrections, failed uploads, and insufficient access do not silently alter a Version or its provenance."
@@ -732,9 +732,7 @@
       "articles": ["organisation-and-users"],
       "roles": ["administrator"],
       "environment": "authoring",
-      "prerequisites": [
-        "Daniel\u2019s Administrator account, Mailpit, and disposable invited users."
-      ],
+      "prerequisites": ["Daniel's Administrator account, Mailpit, and disposable invited users."],
       "actions": [
         "Edit organization identity, invite/activate a user, change role, revoke sessions, and archive the user."
       ],
@@ -1003,7 +1001,7 @@
         "Named app error fixtures from access, upload, preview, notifications, approvals, signing, and Analysis scenarios."
       ],
       "actions": [
-        "Start from each visible symptom and follow the troubleshooting article\u2019s checks and recovery links."
+        "Start from each visible symptom and follow the troubleshooting article's checks and recovery links."
       ],
       "expectedResults": [
         "The intended reader reaches an accurate resolution or a specific escalation with useful non-sensitive facts."
@@ -1021,7 +1019,7 @@
       "roles": ["legal_team_member", "administrator", "contributor", "business_user", "operator"],
       "environment": "authoring",
       "prerequisites": [
-        "The target build\u2019s glossary, configured labels, role fixtures, and file-behavior examples."
+        "The target build's glossary, configured labels, role fixtures, and file-behavior examples."
       ],
       "actions": [
         "Look up representative terms and limits, then compare the references with the relevant app actions."
