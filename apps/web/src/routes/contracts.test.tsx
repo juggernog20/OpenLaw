@@ -980,10 +980,14 @@ describe("quick contract filters", () => {
     });
     await screen.findByRole("button", { name: /My renewals/ });
     await waitFor(() => {
+      expect(screen.queryByRole("dialog", { name: "Save this view" })).not.toBeInTheDocument();
+      expect(new URLSearchParams(router.state.location.search).get("view")).toBe("saved-1");
       expect(router.state.navigation.state).toBe("idle");
       expect(screen.getByRole("button", { name: /^Filter/ })).toBeEnabled();
     });
-    await user.click(await screen.findByRole("button", { name: "Clear all" }));
+    await act(async () => {
+      await user.click(screen.getByRole("button", { name: "Clear all" }));
+    });
     await waitFor(() => {
       expect(new URLSearchParams(router.state.location.search).has("status")).toBe(false);
       expect(screen.queryByRole("button", { name: "Clear all" })).not.toBeInTheDocument();
