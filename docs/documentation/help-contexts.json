@@ -1,0 +1,315 @@
+{
+  "schemaVersion": 1,
+  "status": "specified",
+  "bindings": [
+    {
+      "routes": ["/", "/home/tasks"],
+      "contexts": ["home", "home.obligations"],
+      "surface": "staff",
+      "pilotEntry": false
+    },
+    {
+      "routes": [
+        "/auth/login",
+        "/auth/two-factor",
+        "/auth/two-factor/enroll",
+        "/auth/set-password",
+        "/auth/link-expired"
+      ],
+      "contexts": ["auth"],
+      "surface": "formal",
+      "pilotEntry": false
+    },
+    {
+      "routes": ["/auth/setup", "/welcome"],
+      "contexts": ["setup", "welcome"],
+      "surface": "formal",
+      "pilotEntry": false
+    },
+    {
+      "routes": ["/portal/enter"],
+      "contexts": ["portal.entry"],
+      "surface": "formal",
+      "pilotEntry": false
+    },
+    {
+      "routes": ["/portal"],
+      "contexts": ["portal.home"],
+      "surface": "portal",
+      "pilotEntry": true
+    },
+    {
+      "routes": ["/portal/new/:slug"],
+      "contexts": ["portal.form"],
+      "surface": "portal",
+      "pilotEntry": true
+    },
+    {
+      "routes": ["/portal/requests/:number"],
+      "contexts": ["portal.request", "portal.files"],
+      "surface": "portal",
+      "pilotEntry": true
+    },
+    {
+      "routes": ["/portal/knowledge/:id"],
+      "contexts": ["portal.knowledge"],
+      "surface": "portal",
+      "pilotEntry": false
+    },
+    {
+      "routes": ["/inbox"],
+      "contexts": ["inbox"],
+      "surface": "staff",
+      "pilotEntry": true
+    },
+    {
+      "routes": ["/inbox/:number"],
+      "contexts": ["inbox.convert"],
+      "surface": "staff",
+      "pilotEntry": true
+    },
+    {
+      "routes": [
+        "/contracts",
+        "/matters",
+        "/documents",
+        "/entities",
+        "/knowledge",
+        "/inbox",
+        "/search"
+      ],
+      "contexts": ["lists", "search"],
+      "surface": "staff",
+      "pilotEntry": false
+    },
+    {
+      "routes": ["/contracts"],
+      "contexts": ["contracts.list"],
+      "surface": "staff",
+      "pilotEntry": false
+    },
+    {
+      "routes": ["/contracts/:contractNumber/:tab?"],
+      "contexts": [
+        "contracts.overview",
+        "contracts.progression",
+        "contracts.approvals",
+        "contracts.signing",
+        "contracts.term",
+        "contracts.renewal",
+        "contracts.tasks",
+        "contracts.dates",
+        "contracts.relations",
+        "contracts.actions",
+        "contracts.analysis"
+      ],
+      "surface": "staff",
+      "pilotEntry": false
+    },
+    {
+      "routes": ["/matters"],
+      "contexts": ["matters.list"],
+      "surface": "staff",
+      "pilotEntry": false
+    },
+    {
+      "routes": ["/matters/:matterNumber/:tab?"],
+      "contexts": [
+        "matters.overview",
+        "matters.progression",
+        "matters.actions",
+        "matters.tasks",
+        "matters.dates",
+        "matters.relations"
+      ],
+      "surface": "staff",
+      "pilotEntry": false
+    },
+    {
+      "routes": ["/documents"],
+      "contexts": ["documents.repository"],
+      "surface": "staff",
+      "pilotEntry": false
+    },
+    {
+      "routes": ["/documents/:documentId/compare"],
+      "contexts": ["documents.compare"],
+      "surface": "staff",
+      "pilotEntry": false
+    },
+    {
+      "routes": [
+        "/contracts/:contractNumber/:tab?",
+        "/matters/:matterNumber/:tab?",
+        "/entities/:entityId/:tab?",
+        "/knowledge/:id"
+      ],
+      "contexts": [
+        "documents.versions",
+        "documents.folders",
+        "documents.upload",
+        "documents.preview",
+        "documents.actions"
+      ],
+      "surface": "staff",
+      "pilotEntry": false
+    },
+    {
+      "routes": [
+        "/contracts/:contractNumber/:tab?",
+        "/matters/:matterNumber/:tab?",
+        "/inbox/:number",
+        "/portal/requests/:number"
+      ],
+      "contexts": ["comments", "activity", "comments.files"],
+      "surface": "both",
+      "pilotEntry": false
+    },
+    {
+      "routes": [
+        "/contracts/:contractNumber/:tab?",
+        "/matters/:matterNumber/:tab?",
+        "/entities/:entityId/:tab?"
+      ],
+      "contexts": ["access", "contributor", "counterparties"],
+      "surface": "staff",
+      "pilotEntry": false
+    },
+    {
+      "routes": ["/entities"],
+      "contexts": ["entities.list"],
+      "surface": "staff",
+      "pilotEntry": false
+    },
+    {
+      "routes": ["/entities/:entityId/:tab?"],
+      "contexts": [
+        "entities.overview",
+        "entities.holdings",
+        "entities.officers",
+        "entities.registrations",
+        "entities.obligations",
+        "entities.capital",
+        "entities.chart",
+        "entities.links",
+        "entities.access"
+      ],
+      "surface": "staff",
+      "pilotEntry": false
+    },
+    {
+      "routes": ["/knowledge"],
+      "contexts": ["knowledge.list"],
+      "surface": "staff",
+      "pilotEntry": false
+    },
+    {
+      "routes": ["/knowledge/:id"],
+      "contexts": ["knowledge.overview", "knowledge.publishing"],
+      "surface": "staff",
+      "pilotEntry": false
+    },
+    {
+      "routes": ["/settings/profile", "/settings/appearance", "/settings/notifications"],
+      "contexts": ["settings.personal"],
+      "surface": "staff",
+      "pilotEntry": false
+    },
+    {
+      "routes": ["/settings/notifications", "/portal/settings"],
+      "contexts": ["notifications"],
+      "surface": "both",
+      "pilotEntry": false
+    },
+    {
+      "routes": ["/settings/general"],
+      "contexts": ["settings.general"],
+      "surface": "staff",
+      "pilotEntry": false
+    },
+    {
+      "routes": ["/settings/users"],
+      "contexts": ["settings.users"],
+      "surface": "staff",
+      "pilotEntry": false
+    },
+    {
+      "routes": ["/settings/authentication"],
+      "contexts": ["settings.authentication", "settings.email"],
+      "surface": "staff",
+      "pilotEntry": false
+    },
+    {
+      "routes": [
+        "/settings/matters/types",
+        "/settings/matters/types/:typeId",
+        "/settings/matters/statuses",
+        "/settings/matters/fields",
+        "/settings/contracts/types",
+        "/settings/contracts/types/:typeId",
+        "/settings/contracts/statuses",
+        "/settings/contracts/fields",
+        "/settings/entities/types",
+        "/settings/entities/types/:typeId",
+        "/settings/entities/officer-roles",
+        "/settings/entities/fields",
+        "/settings/knowledge/types"
+      ],
+      "contexts": ["settings.taxonomies"],
+      "surface": "staff",
+      "pilotEntry": false
+    },
+    {
+      "routes": ["/settings/matters/templates", "/settings/matters/templates/:templateId"],
+      "contexts": ["settings.matter-templates"],
+      "surface": "staff",
+      "pilotEntry": false
+    },
+    {
+      "routes": [
+        "/settings/intake/request-types",
+        "/settings/intake/request-types/:typeId",
+        "/settings/intake/links"
+      ],
+      "contexts": ["settings.intake"],
+      "surface": "staff",
+      "pilotEntry": false
+    },
+    {
+      "routes": ["/settings/reminders"],
+      "contexts": ["settings.reminders"],
+      "surface": "staff",
+      "pilotEntry": false
+    },
+    {
+      "routes": ["/settings/audit-log"],
+      "contexts": ["settings.audit"],
+      "surface": "staff",
+      "pilotEntry": false
+    },
+    {
+      "routes": ["/settings/integrations/e-signature"],
+      "contexts": ["settings.signing"],
+      "surface": "staff",
+      "pilotEntry": false
+    },
+    {
+      "routes": ["/settings/ai-analysis"],
+      "contexts": ["settings.analysis"],
+      "surface": "staff",
+      "pilotEntry": false
+    },
+    {
+      "routes": ["/settings/contracts/approver-groups"],
+      "contexts": ["settings.approver-groups"],
+      "surface": "staff",
+      "pilotEntry": false
+    },
+    {
+      "routes": ["*"],
+      "contexts": ["notifications", "errors", "reference", "support"],
+      "surface": "both",
+      "pilotEntry": false
+    }
+  ]
+}

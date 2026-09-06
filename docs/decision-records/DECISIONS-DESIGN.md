@@ -4449,6 +4449,50 @@ The Comparison address is shareable and belongs to the Document rather than one 
 
 Two tokens change in `globals.css`: `--width-portal-col` is 64rem and `--grid-template-columns-portal-split` is new. The back link is one component, `components/portal/back-link.tsx`. I5–I7 in `intake.pen` now differ from the build at every point above and are due a back-port when the intake frames are next touched. The Knowledge article on the portal caps its cards at `--width-settings-card` because it is prose. No new colour token, no new radius, no new type size.
 
+## DES-073: Help has a discoverable entry in each shell and a public formal reader (extends DES-072)
+
+- **Status:** Accepted
+- **Date:** 2026-09-07
+- **Task:** [#724](https://github.com/juggernog20/OpenLaw/issues/724)
+
+### Context
+
+The documentation project needs a visible place to find product instructions in
+both app surfaces while preserving the existing navigation and shortcut contracts.
+
+### Decision
+
+Add a persistent Help entry to the staff and portal headers. At narrow widths an
+accessible labeled icon may replace the visible word. Staff Help uses AppShell;
+portal Help uses PortalShell. Help is a reading destination, not another portal
+work module. Public formal documentation uses an independent frame.
+
+Help offers documentation search, audience starting paths, sections, and the full
+manual. Articles use the same canonical content, with a title, useful outline,
+related guides, edition details, and a route back to the index. Use the existing
+typography, spacing, color, and focus tokens; test Light, Dark, and Warm themes.
+Navigation stacks above prose on small screens; tables and code scroll locally.
+
+Keep `?` for keyboard shortcuts, `/` for app search, and existing Escape behavior.
+Documentation search has its own label and normal focus. Preserve link semantics,
+Back/Forward, page titles, and keyboard navigation. The public reader needs no
+session fetch to choose its content or render the page.
+
+Route/topic bindings live in
+[help-contexts.json](../documentation/help-contexts.json). The intake pilot adds
+contextual links on the portal home, submission form, and Request surfaces and
+staff Inbox/Request surfaces. Other keys provide recommendations through general
+Help; they do not require a control beside every Field. Unknown contexts fall back
+to Help's index.
+An unavailable article is identified explicitly, with search and navigation.
+
+### Consequences
+
+This extends the portal header in DES-072 without adding staff work navigation.
+The Knowledge destination and shortcut sheet retain their purposes. DOC-007
+implements and verifies these surfaces against
+[the publishing design](../documentation/PUBLISHING.md).
+
 ## Index of decisions
 
 | #       | Decision                                                                                                                                                             | Status                                                                                                     |
@@ -4525,3 +4569,4 @@ Two tokens change in `globals.css`: `--width-portal-col` is 64rem and `--grid-te
 | DES-070 | AI analysis is one settings pane, one record card, and one unverified marker (normalizes F.3; extends DES-054, DES-032, DES-042, DES-069)                            | Accepted                                                                                                   |
 | DES-071 | A Comparison is one change pane beside one compare card (extends DES-006, DES-016, DES-063)                                                                          | Accepted                                                                                                   |
 | DES-072 | The portal page is a main column beside an aside (amends the I5–I7 column; extends DES-012, DES-003, DES-068)                                                        | Accepted                                                                                                   |
+| DES-073 | Help has a discoverable entry in each shell and a public formal reader (extends DES-072)                                                                             | Accepted                                                                                                   |
