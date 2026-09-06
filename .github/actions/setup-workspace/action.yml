@@ -24,5 +24,15 @@ runs:
           turbo-v1-${{ runner.os }}-${{ runner.arch }}-${{ steps.node.outputs.node-version }}-${{ inputs.cache-scope }}-${{ hashFiles('pnpm-lock.yaml') }}-
           turbo-v1-${{ runner.os }}-${{ runner.arch }}-${{ steps.node.outputs.node-version }}-${{ inputs.cache-scope }}-
 
+    # Every save carries the restored entries forward, and Turbo never
+    # evicts. Without this the tarball grows by one commit's outputs per
+    # run for ever. tar keeps mtimes, so age is the file's real age.
+    - name: Drop cache entries older than a week
+      run: |
+        if [ -d .turbo/cache ]; then
+          find .turbo/cache -type f -mtime +7 -delete
+        fi
+      shell: bash
+
     - run: pnpm install --frozen-lockfile
       shell: bash

@@ -114,8 +114,8 @@ jobs:
   # against images built by the real Dockerfiles, brought up by the
   # blessed compose.yml plus the dev overlay (Mailpit only). This is what
   # catches "works with vite dev / breaks in the built image" drift. The
-  # e2e package's lint/typecheck ride in `pnpm check` above; only the
-  # browser run lives here, because it needs the live stack.
+  # e2e package's lint/typecheck ride in the `quality` job above; only
+  # the browser run lives here, because it needs the live stack.
   e2e:
     name: E2E against the built Compose stack
     runs-on: ubuntu-latest
@@ -266,6 +266,8 @@ jobs:
       - name: Pick the baseline and check it out
         id: baseline
         run: |
+          # Explicit, so the selector does not depend on what the checkout
+          # action happened to fetch for this event type.
           git fetch --force origin --tags "+refs/heads/dev:refs/remotes/origin/dev"
           ref=$(node e2e/scripts/upgrade-baseline.mjs)
           echo "ref=$ref" >> "$GITHUB_OUTPUT"

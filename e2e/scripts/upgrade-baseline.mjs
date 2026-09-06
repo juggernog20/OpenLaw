@@ -10,6 +10,14 @@ export function upgradeBaseline({ cwd, event = {}, eventName, head = "HEAD", exp
   const git = (...args) => execFileSync("git", args, { cwd, encoding: "utf8" }).trim();
   const commit = (ref) => git("rev-parse", "--verify", "--end-of-options", `${ref}^{commit}`);
   const candidate = commit(head);
+  const resolves = (ref) => {
+    try {
+      commit(ref);
+      return true;
+    } catch {
+      return false;
+    }
+  };
   const distinct = (ref) => {
     const sha = commit(ref);
     if (sha === candidate)
@@ -30,7 +38,10 @@ export function upgradeBaseline({ cwd, event = {}, eventName, head = "HEAD", exp
     return distinct(event.pull_request.base.sha);
   }
   if (eventName === "push" && event.before && !/^0+$/.test(event.before)) {
-    return distinct(event.before);
+    // A force push names a `before` that nothing refers to any more, so
+    // the checkout never fetched it. Say so and use the fallback below.
+    if (resolves(event.before)) return distinct(event.before);
+    console.error(`Previous revision ${event.before} is gone (force push?); using the fallback.`);
   }
 
   // Manual/local runs have no event base. On dev itself, use its parent

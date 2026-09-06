@@ -43,15 +43,18 @@ that variable so strict environment filtering does not discard it. Local tests
 without the variable continue to build the sidecar themselves.
 
 Cache misses affect speed only. Cache mounts inside Docker are not persisted by
-this configuration. Cache scope versions can be bumped to discard old entries;
-retention and GitHub's repository cache limit determine how much survives between runs.
+this configuration. Each Turbo cache save carries the restored entries forward, so
+the setup action deletes entries older than seven days after restoring; a task whose
+entry was dropped simply runs again. Cache scope versions can be bumped to discard
+everything at once. GitHub's repository cache limit bounds the Docker layer caches.
 
 ## Upgrade baseline
 
 The baseline is resolved to an immutable SHA before checkout. The newest stable
 `vMAJOR.MINOR.PATCH` tag distinct from the candidate wins. Before a release exists,
 PRs use their recorded base SHA and pushes use the event's previous SHA. A manual
-run uses `origin/dev`, or the candidate's first parent when dev is the candidate.
+run, or a push whose previous SHA no longer exists after a force push, uses
+`origin/dev`, or the candidate's first parent when dev is the candidate.
 No rehearsal silently compares a commit with itself.
 
 Local `pnpm upgrade-fidelity` uses the same selector and the locally fetched tags

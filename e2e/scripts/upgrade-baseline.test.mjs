@@ -68,6 +68,11 @@ test("a manual run on dev and a new-branch push fall back to the parent", () => 
   );
 });
 
+test("a force push whose before SHA is gone falls back to the parent", () => {
+  const gone = "1".repeat(40);
+  assert.equal(upgradeBaseline({ cwd, eventName: "push", event: { before: gone } }), base);
+});
+
 test("a local feature branch uses the resolved dev tip", () => {
   git("update-ref", "refs/remotes/origin/dev", first);
   assert.equal(upgradeBaseline({ cwd }), first);
